@@ -364,10 +364,25 @@ def _validate_catalogue_joins(
             revision = revision_by_id.get(revision_id)
             if revision is None or revision.work_unit_id != unit.work_unit_id:
                 raise DeclarationsWorkspaceProjectionError("declaration revision pointer is missing or contradictory")
-        if unit.current_filing_record_id is not None:
-            record = filing_by_id.get(unit.current_filing_record_id)
-            if record is None or record.work_unit_id != unit.work_unit_id:
-                raise DeclarationsWorkspaceProjectionError("declaration filing pointer is missing or contradictory")
+        filed_revision_id = unit.filed_calculation_revision_id
+        current_filing_id = unit.current_filing_record_id
+        if (filed_revision_id is None) != (current_filing_id is None):
+            raise DeclarationsWorkspaceProjectionError("declaration filing pointers must be present or absent together")
+        if filed_revision_id is not None and current_filing_id is not None:
+            revision = revision_by_id.get(filed_revision_id)
+            record = filing_by_id.get(current_filing_id)
+            if (
+                revision is None
+                or record is None
+                or revision.work_unit_id != unit.work_unit_id
+                or record.work_unit_id != unit.work_unit_id
+                or record.calculation_revision_id != revision.calculation_revision_id
+                or record.status is not ModeloRecordStatus.VIGENTE
+                or revision.state is not CalculationRevisionState.PRESENTADO
+            ):
+                raise DeclarationsWorkspaceProjectionError(
+                    "declaration filing pointers do not resolve to one current filing"
+                )
 
     for record in filings:
         unit = unit_by_id.get(record.work_unit_id)
@@ -386,8 +401,33 @@ def _validate_catalogue_joins(
             raise DeclarationsWorkspaceProjectionError("current filing pointers or revision state contradict")
         if record.status is ModeloRecordStatus.SUPERSEDIDO:
             successor = filing_by_id.get(record.superseded_by_filing_record_id or "")
-            if successor is None or successor.work_unit_id != record.work_unit_id:
+            if (
+                revision.state is not CalculationRevisionState.PRESENTADO_SUPERSEDIDO
+                or successor is None
+                or successor.work_unit_id != record.work_unit_id
+                or (
+                    successor.modelo,
+                    successor.filing_year,
+                    successor.period,
+                    successor.member_nif,
+                )
+                != (record.modelo, record.filing_year, record.period, record.member_nif)
+            ):
                 raise DeclarationsWorkspaceProjectionError("superseded filing successor is missing or contradictory")
+
+    records_by_revision: dict[str, list[ModeloRecord]] = {}
+    for record in filings:
+        records_by_revision.setdefault(record.calculation_revision_id, []).append(record)
+    for revision in revisions:
+        matching_records = records_by_revision.get(revision.calculation_revision_id, [])
+        if revision.state is CalculationRevisionState.PRESENTADO and not any(
+            record.status is ModeloRecordStatus.VIGENTE for record in matching_records
+        ):
+            raise DeclarationsWorkspaceProjectionError("current filed revision has no current filing record")
+        if revision.state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO and not any(
+            record.status is ModeloRecordStatus.SUPERSEDIDO for record in matching_records
+        ):
+            raise DeclarationsWorkspaceProjectionError("superseded revision has no superseded filing record")
 
     if any(fact.work_unit_id not in unit_by_id for fact in lifecycle_facts):
         raise DeclarationsWorkspaceProjectionError("lifecycle fact has no declaration")

@@ -32,6 +32,40 @@ _AVAILABLE = HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=
 _LOCKED = HomeZoneState(availability=HomeAvailability.LOCKED, reason_code="profile.locked")
 
 
+def _agenda_entry(
+    *,
+    modelo: str = "303",
+    filing_year: int = 2026,
+    period_code: str = "3T",
+    due_on: date = date(2026, 10, 20),
+) -> HomeAgendaEntry:
+    return HomeAgendaEntry(
+        modelo=modelo,
+        filing_year=filing_year,
+        period=Period.from_year_and_code(filing_year, period_code),
+        due_on=due_on,
+        period_state=OverviewPeriodState.DUE,
+        local_filing_state=OverviewLocalFilingState.READY_TO_FILE,
+        aeat_submission_state=OverviewAeatSubmissionState.NOT_OBSERVED,
+    )
+
+
+def _projection(*, agenda: tuple[HomeAgendaEntry, ...] = ()) -> HomeProjectionV1:
+    return HomeProjectionV1(
+        generated_at=_NOW,
+        account=HomeAccountSession(posture=HomeSessionPosture.ACTIVE, profile_label="Example profile"),
+        actions_state=_AVAILABLE,
+        declarations_state=_AVAILABLE,
+        ledger_state=_AVAILABLE,
+        ledger=HomeLedgerReadiness(entries=0, requiring_review=0, unclassified=0, missing_evidence=0),
+        agenda_state=_AVAILABLE,
+        agenda_evidence_state=_AVAILABLE,
+        agenda=agenda,
+        messages_state=_AVAILABLE,
+        messages_requiring_attention=0,
+    )
+
+
 def test_available_empty_projection_preserves_proven_zero_counts() -> None:
     projection = HomeProjectionV1(
         generated_at=_NOW,
@@ -127,11 +161,11 @@ def test_local_agenda_survives_when_aeat_evidence_was_never_captured() -> None:
 
 
 def test_agenda_requires_chronological_order_and_preview_bound() -> None:
-    def entry(due_on: date) -> HomeAgendaEntry:
+    def entry(due_on: date, period_code: str) -> HomeAgendaEntry:
         return HomeAgendaEntry(
             modelo="303",
             filing_year=2026,
-            period=Period.from_year_and_code(2026, "3T"),
+            period=Period.from_year_and_code(2026, period_code),
             due_on=due_on,
             period_state=OverviewPeriodState.DUE,
             local_filing_state=OverviewLocalFilingState.NOT_READY_TO_FILE,
@@ -148,10 +182,45 @@ def test_agenda_requires_chronological_order_and_preview_bound() -> None:
             ledger=HomeLedgerReadiness(entries=0, requiring_review=0, unclassified=0, missing_evidence=0),
             agenda_state=_AVAILABLE,
             agenda_evidence_state=_AVAILABLE,
-            agenda=(entry(date(2026, 10, 21)), entry(date(2026, 10, 20))),
+            agenda=(entry(date(2026, 10, 21), "3T"), entry(date(2026, 10, 20), "2T")),
             messages_state=_AVAILABLE,
             messages_requiring_attention=0,
         )
+
+
+def test_agenda_rejects_duplicate_natural_address_before_tui_rendering() -> None:
+    duplicate = _agenda_entry()
+
+    with pytest.raises(ValidationError, match="unique natural addresses"):
+        _projection(
+            agenda=(
+                duplicate,
+                duplicate.model_copy(update={"due_on": date(2026, 10, 21)}),
+            )
+        )
+
+
+@pytest.mark.parametrize(
+    ("modelo", "filing_year", "period_code"),
+    (
+        ("130", 2026, "3T"),
+        ("303", 2027, "3T"),
+        ("303", 2026, "2T"),
+    ),
+)
+def test_agenda_accepts_a_distinct_natural_address(
+    modelo: str,
+    filing_year: int,
+    period_code: str,
+) -> None:
+    projection = _projection(
+        agenda=(
+            _agenda_entry(),
+            _agenda_entry(modelo=modelo, filing_year=filing_year, period_code=period_code),
+        )
+    )
+
+    assert len(projection.agenda) == 2
 
 
 def test_declaration_state_is_closed_and_period_year_must_match() -> None:

@@ -21,6 +21,7 @@ from ....domain.modelos.filing_record import (
     ExternalEvidenceKind,
     ModeloRecord,
     ModeloRecordCatalogue,
+    ModeloRecordStatus,
     derive_filing_record_id,
 )
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
@@ -51,10 +52,10 @@ _PRIVATE_AMOUNT = "987654.32"
 _CASILLA = validated_casilla_id("01")
 
 
-def _revision_id(work_unit_id: str) -> str:
+def _revision_id(work_unit_id: str, *, amount: str = _PRIVATE_AMOUNT) -> str:
     return derive_calculation_revision_id(
         work_unit_id=work_unit_id,
-        input_values_by_casilla_id={_CASILLA: _PRIVATE_AMOUNT},
+        input_values_by_casilla_id={_CASILLA: amount},
         binding_overrides={},
         casilla_values={},
         filing_instance_evidence=None,
@@ -198,6 +199,8 @@ def test_projection_preserves_exact_zone_source_state_and_count_matrix() -> None
         ),
     )
     filing = projection.filings[0]
+    assert projection.declarations[0].has_current_filing is True
+    assert projection.calculation_revisions[0].is_filed is True
     assert filing.local_status.value == "vigente"
     assert filing.aeat_accepted is True
     assert filing.evidence_kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
@@ -361,6 +364,114 @@ def test_orphan_revision_and_duplicate_lifecycle_identity_refuse() -> None:
             calculation_revisions=revisions,
             filing_records=filings,
             lifecycle_facts=(duplicate, duplicate),
+            zone_observations=_observations(),
+        )
+
+
+@pytest.mark.parametrize(
+    "case",
+    (
+        "filed_revision_pointer_only",
+        "current_filing_pointer_only",
+        "missing_filed_revision",
+        "missing_current_record",
+        "record_revision_mismatch",
+        "current_record_not_current",
+        "filed_revision_not_presented",
+        "presented_revision_without_record",
+        "current_record_without_pointers",
+        "superseded_record_with_current_revision",
+    ),
+)
+def test_filing_pointer_record_and_revision_matrix_refuses_every_contradiction(case: str) -> None:
+    work, revisions, filings = _filed_snapshot()
+    unit = next(iter(work.values()))
+    revision = next(iter(revisions.values()))
+    record = next(iter(filings.records.values()))
+    work_rows = {unit.work_unit_id: unit}
+    revision_rows = {revision.calculation_revision_id: revision}
+    filing_rows = {record.filing_record_id: record}
+
+    if case == "filed_revision_pointer_only":
+        work_rows[unit.work_unit_id] = unit.model_copy(update={"current_filing_record_id": None})
+    elif case == "current_filing_pointer_only":
+        work_rows[unit.work_unit_id] = unit.model_copy(update={"filed_calculation_revision_id": None})
+    elif case == "missing_filed_revision":
+        work_rows[unit.work_unit_id] = unit.model_copy(update={"filed_calculation_revision_id": "b" * 64})
+    elif case == "missing_current_record":
+        work_rows[unit.work_unit_id] = unit.model_copy(update={"current_filing_record_id": "c" * 64})
+    elif case == "record_revision_mismatch":
+        alternate_amount = "123.45"
+        alternate_revision_id = _revision_id(unit.work_unit_id, amount=alternate_amount)
+        alternate_revision = revision.model_copy(
+            update={
+                "calculation_revision_id": alternate_revision_id,
+                "input_values_by_casilla_id": {_CASILLA: alternate_amount},
+            }
+        )
+        alternate_record_id = derive_filing_record_id(
+            work_unit_id=unit.work_unit_id,
+            calculation_revision_id=alternate_revision_id,
+            filed_by=record.filed_by,
+            member_nif=record.member_nif,
+        )
+        alternate_record = record.model_copy(
+            update={
+                "filing_record_id": alternate_record_id,
+                "calculation_revision_id": alternate_revision_id,
+            }
+        )
+        revision_rows[alternate_revision_id] = alternate_revision
+        filing_rows = {alternate_record_id: alternate_record}
+        work_rows[unit.work_unit_id] = unit.model_copy(update={"current_filing_record_id": alternate_record_id})
+    elif case == "current_record_not_current":
+        filing_rows[record.filing_record_id] = record.model_copy(
+            update={
+                "status": ModeloRecordStatus.SUPERSEDIDO,
+                "superseded_at": _T2,
+                "superseded_by_filing_record_id": "e" * 64,
+            }
+        )
+    elif case == "filed_revision_not_presented":
+        revision_rows[revision.calculation_revision_id] = revision.model_copy(
+            update={"state": CalculationRevisionState.VERIFICADO_COMPLETO}
+        )
+    elif case == "presented_revision_without_record":
+        work_rows[unit.work_unit_id] = unit.model_copy(
+            update={"filed_calculation_revision_id": None, "current_filing_record_id": None}
+        )
+        filing_rows = {}
+    elif case == "current_record_without_pointers":
+        work_rows[unit.work_unit_id] = unit.model_copy(
+            update={"filed_calculation_revision_id": None, "current_filing_record_id": None}
+        )
+    elif case == "superseded_record_with_current_revision":
+        superseded_actor = "prior-operator"
+        superseded_id = derive_filing_record_id(
+            work_unit_id=unit.work_unit_id,
+            calculation_revision_id=revision.calculation_revision_id,
+            filed_by=superseded_actor,
+            member_nif=record.member_nif,
+        )
+        filing_rows[superseded_id] = record.model_copy(
+            update={
+                "filing_record_id": superseded_id,
+                "filed_by": superseded_actor,
+                "status": ModeloRecordStatus.SUPERSEDIDO,
+                "superseded_at": _T2,
+                "superseded_by_filing_record_id": record.filing_record_id,
+            }
+        )
+    else:  # pragma: no cover - parameter census is closed above
+        raise AssertionError(case)
+
+    with pytest.raises(DeclarationsWorkspaceProjectionError):
+        project_declarations_workspace(
+            bucket_id=_BUCKET,
+            work_units=WorkUnitCatalogue.model_construct(work_units=work_rows),
+            calculation_revisions=CalculationRevisionCatalogue.model_construct(revisions=revision_rows),
+            filing_records=ModeloRecordCatalogue.model_construct(records=filing_rows),
+            lifecycle_facts=(),
             zone_observations=_observations(),
         )
 
