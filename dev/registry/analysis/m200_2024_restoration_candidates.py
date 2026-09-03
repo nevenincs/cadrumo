@@ -9,6 +9,7 @@ document only; it has no registry-fragment or patch writer.
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import shutil
 import subprocess
@@ -32,13 +33,12 @@ from .m200_semantic_casilla_candidates import M200CasillaDisposition, _load_bund
 
 HISTORIC_COMMIT = "17eb283313"
 HISTORIC_ROOT = "src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/casillas"
+_CANONICAL_REGISTRY_ROOT = Path("src/cadrumo/_data/registry/aeat")
 
 __all__ = [
     "HISTORIC_COMMIT",
-    "RestorationCandidate",
     "RestorationProposal",
     "RestorationRefusal",
-    "build_bundled_restoration_candidates",
     "build_bundled_restoration_proposals",
     "main",
     "render_review_toml",
@@ -70,11 +70,6 @@ class RestorationProposal:
     target_source_sha256: str
     historic_commit: str
     historic_path: str
-
-
-# Keep the old import name as a type alias for development callers while making
-# the non-authoritative status explicit in the canonical class name.
-RestorationCandidate = RestorationProposal
 
 
 @dataclass(frozen=True, slots=True)
@@ -158,11 +153,6 @@ def build_bundled_restoration_proposals() -> tuple[tuple[RestorationProposal, ..
     )
 
 
-def build_bundled_restoration_candidates() -> tuple[tuple[RestorationProposal, ...], tuple[RestorationRefusal, ...]]:
-    """Compatibility spelling for the proposal-only builder."""
-    return build_bundled_restoration_proposals()
-
-
 def render_review_toml(
     proposals: tuple[RestorationProposal, ...],
     refusals: tuple[RestorationRefusal, ...] = (),
@@ -193,24 +183,52 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.check and args.output is None:
         parser.error("--check requires --output")
+    output_path: Path | None = None
+    if args.output is not None:
+        try:
+            output_path = _resolve_review_output_path(args.output)
+        except ValueError as exc:
+            parser.error(str(exc))
 
     proposals, refusals = build_bundled_restoration_proposals()
     print(f"proposals={len(proposals)}")
     print(f"refused={len(refusals)}")
     for item in refusals[:10]:
         print(f"refusal[{item.export_field_id}]={item.reason}")
-    if args.output is not None:
+    if output_path is not None:
         rendered = render_review_toml(proposals, refusals)
         if args.check:
-            if not args.output.is_file() or args.output.read_text(encoding="utf-8") != rendered:
-                print(f"stale={args.output}")
+            if not output_path.is_file() or output_path.read_text(encoding="utf-8") != rendered:
+                print(f"stale={output_path}")
                 return 1
-            print(f"current={args.output}")
+            print(f"current={output_path}")
         else:
-            args.output.parent.mkdir(parents=True, exist_ok=True)
-            args.output.write_text(rendered, encoding="utf-8", newline="\n")
-            print(f"wrote={args.output}")
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_text(rendered, encoding="utf-8", newline="\n")
+            print(f"wrote={output_path}")
     return 1 if refusals else 0
+
+
+def _resolve_review_output_path(path: Path) -> Path:
+    """Resolve a review destination and reject the canonical registry root."""
+    configured_root = _CANONICAL_REGISTRY_ROOT
+    if not configured_root.is_absolute():
+        configured_root = Path(__file__).resolve().parents[3] / configured_root
+    canonical_root = configured_root.resolve(strict=False)
+    lexical_root = Path(os.path.abspath(os.fspath(configured_root)))
+    lexical_path = Path(os.path.abspath(os.fspath(path)))
+    resolved_path = path.resolve(strict=False)
+    if _path_is_within(lexical_path, lexical_root) or _path_is_within(resolved_path, canonical_root):
+        raise ValueError("--output must resolve outside the canonical registry root")
+    return resolved_path
+
+
+def _path_is_within(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+    except ValueError:
+        return False
+    return True
 
 
 def _historic_index() -> dict[str, tuple[tuple[str, dict[str, Any]], ...]]:

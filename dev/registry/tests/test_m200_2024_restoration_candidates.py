@@ -94,6 +94,13 @@ def test_build_returns_target_first_proposal_without_authority_writer(monkeypatc
     assert not hasattr(subject, "_render_registry_fragment")
 
 
+def test_legacy_candidate_aliases_are_not_exported() -> None:
+    assert "RestorationCandidate" not in subject.__all__
+    assert "build_bundled_restoration_candidates" not in subject.__all__
+    assert not hasattr(subject, "RestorationCandidate")
+    assert not hasattr(subject, "build_bundled_restoration_candidates")
+
+
 def test_build_refuses_ambiguous_historic_export_identity(monkeypatch) -> None:
     match = ("z2024only-dp200012.toml", _historic())
     monkeypatch.setattr(subject, "_load_bundled_candidates", lambda: (_gap(),))
@@ -128,6 +135,55 @@ def test_cli_writes_then_checks_explicit_review_path(monkeypatch, tmp_path: Path
 
     assert subject.main(["--output", str(output)]) == 0
     assert subject.main(["--output", str(output), "--check"]) == 0
+
+
+def test_cli_rejects_output_inside_canonical_registry_root(monkeypatch, tmp_path: Path) -> None:
+    canonical_root = tmp_path / "src" / "cadrumo" / "_data" / "registry" / "aeat"
+    canonical_root.mkdir(parents=True)
+    monkeypatch.setattr(subject, "_CANONICAL_REGISTRY_ROOT", canonical_root)
+    monkeypatch.setattr(
+        subject,
+        "build_bundled_restoration_proposals",
+        lambda: pytest.fail("authority-root output must be rejected before loading evidence"),
+    )
+
+    for output in (
+        canonical_root / "review.toml",
+        canonical_root / "nested" / ".." / "review.toml",
+    ):
+        with pytest.raises(SystemExit) as error:
+            subject.main(["--output", str(output)])
+        assert error.value.code == 2
+
+
+def test_cli_rejects_output_symlink_containment(monkeypatch, tmp_path: Path) -> None:
+    canonical_root = tmp_path / "authority"
+    canonical_root.mkdir()
+    monkeypatch.setattr(subject, "_CANONICAL_REGISTRY_ROOT", canonical_root)
+    monkeypatch.setattr(
+        subject,
+        "build_bundled_restoration_proposals",
+        lambda: pytest.fail("authority-root output must be rejected before loading evidence"),
+    )
+
+    try:
+        authority_alias = tmp_path / "authority-alias"
+        authority_alias.symlink_to(canonical_root, target_is_directory=True)
+        outside_link = tmp_path / "outside-link.toml"
+        outside_link.symlink_to(canonical_root / "review.toml")
+        authority_escape = canonical_root / "escape"
+        authority_escape.symlink_to(tmp_path / "outside", target_is_directory=True)
+    except (OSError, NotImplementedError):
+        pytest.skip("the current platform does not permit test symlinks")
+
+    for output in (
+        authority_alias / "review.toml",
+        outside_link,
+        authority_escape / "review.toml",
+    ):
+        with pytest.raises(SystemExit) as error:
+            subject.main(["--output", str(output)])
+        assert error.value.code == 2
 
 
 def test_cli_rejects_retired_patch_switch() -> None:
