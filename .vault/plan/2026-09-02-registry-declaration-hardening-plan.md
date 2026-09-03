@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:77bb98b997d87f09b3800d4e41c0f6fdabca1bcc39b86f44f229936de1c123d0'
+body_hash: 'sha256:22541f31d237f183d43b57075108e285671eeb01846617cf436f792a5cb9ccac'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -311,7 +311,7 @@ Wire a standing regression gate comparing the satisfied filing-coordinate set by
 - [x] `W02.P04.S139` - Count the actionable unit in the screen runner census, not every site exhibiting it; `dev/registry/analysis/screens.py`.
 - [x] `W02.P04.S140` - Stop counting the official part split as a finding in the suite census, since the screen reports it for visibility and not as a defect; `dev/registry/analysis/screens.py`.
 - [x] `W02.P04.S141` - Report a revision that reaches filing grade with a layout while declaring no deadline window; `dev/registry/analysis/modelo_capability.py`.
-- [ ] `W02.P04.S142` - Author deadline windows for the five filing-grade revisions of modelos 145, 151, 165, 308 and 309 that declare none; `src/cadrumo/_data/registry/aeat/modelos`.
+- [ ] `W02.P04.S142` - Author deadline windows for the five filing-grade revisions declaring none: modelo 145's 2012-01-31-y-siguientes, 151's 2015-2022, 165's 2016-2022, 308's 2019-y-siguientes and 309's 2023-y-siguientes; `src/cadrumo/_data/registry/aeat/modelos`.
 - [x] `W02.P04.S143` - Report a filing-grade revision whose modelo claims a filing calculation class while declaring no formula; `dev/registry/analysis/modelo_capability.py`.
 - [ ] `W02.P04.S144` - Resolve modelos 296, 308, 349 and 360, which claim a filing calculation class with no formula behind it; `src/cadrumo/_data/registry/aeat/modelos`.
 - [x] `W02.P04.S145` - Gate that a screen stating how many conditions it reports agrees with what it documents and emits; `dev/registry/tests/test_declaration_invariant_gates.py`.
@@ -644,6 +644,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S344` - Name the screen the description referred to by position, and sweep for the same shape elsewhere; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md dev/registry`.
 - [x] `W06.P13.S345` - Re-derive the capability paragraph's figures from the census and note the qualifier that has become vacuous; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S346` - Re-measure the below-filing layout population and name the two revisions whose bytes are already committed; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S347` - Verify the deadline and formula Step premises and give the deadline Step its revision identifiers; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 

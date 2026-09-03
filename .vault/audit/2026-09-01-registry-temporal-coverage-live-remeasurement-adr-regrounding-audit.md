@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:240f50957fa7b3a4cf8d20172fa7f245eb4df59c1f0a362f8468e3bc878ee64c'
+body_hash: 'sha256:f00ea78f7ec8c46469027705c004945b12133a89247ba5ab0b7616f3a79ae47f'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -8902,3 +8902,30 @@ That is the value of measuring a premise rather than confirming it. The count
 was right and told nobody what to do first; the census answers that in the same
 query, and the Step now names the two coordinates where the evidence is already
 on disk.
+
+### two-more-step-premises-hold-and-one-of-them-only-under-the-boundary-it-never-stated | high | Five deadline-less filing revisions exactly; four formula-less filing claims under a narrow reading and thirty-five under a wide one
+
+Two further open Steps were measured against the census rather than trusted.
+
+The deadline Step holds exactly: five revisions reach filing grade while
+declaring no deadline window, and they are the five modelos it names. The Step
+now carries their revision identifiers, which it did not - modelo 145's
+2012-01-31-y-siguientes, 151's 2015-2022, 165's 2016-2022, 308's
+2019-y-siguientes and 309's 2023-y-siguientes - because a Step naming five
+modelos leaves the next person to find which revision of each, and the census
+answers that in the same query that verified the count.
+
+The formula Step holds only under a boundary it never wrote down. Read as
+"revisions claiming a filing calculation class with no formula behind it", the
+population is thirty-five revisions across eighteen modelos. Read as revisions
+that ALSO reach filing grade, it is four, and they are exactly the modelos the
+Step names: 296, 308, 349 and 360. The Step meant the narrow reading and its
+count proves it, but a reader applying the sentence as written would find nine
+times the work and conclude the Step was stale.
+
+The wider population is left recorded and unexamined. Thirty-one revisions claim
+a filing calculation class while not reaching filing grade, which may be
+entirely correct - a revision can be able to compute what it cannot submit - or
+may be the same defect at a rung where nobody has looked. Deciding that is not
+this Step's job, and saying so is better than letting the number sit in a
+measurement nobody wrote down.
