@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:f00ea78f7ec8c46469027705c004945b12133a89247ba5ab0b7616f3a79ae47f'
+body_hash: 'sha256:00a1b7ddb30a0bb6a3e4bd8e5cd71d0ca7381b903ab389b712b75267722e6e31'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -8929,3 +8929,32 @@ entirely correct - a revision can be able to compute what it cannot submit - or
 may be the same defect at a rung where nobody has looked. Deciding that is not
 this Step's job, and saying so is better than letting the number sit in a
 measurement nobody wrote down.
+
+### the-multi-axis-step-said-four-and-three-and-the-live-answer-is-one-and-two | high | Fourteen revisions fail several axes; exactly one of them reaches filing grade
+
+The Step proposing to resolve "the four filing-grade revisions failing more than
+one capability axis, modelo 308 failing three of them" measures differently
+today. Fourteen revisions fail more than one axis. Exactly one of them reaches
+filing grade - modelo 308's 2019-y-siguientes - and it fails two axes, not
+three: it claims a calculation class with no formulas, and it files without a
+deadline window.
+
+Both numbers in the Step moved, which is a stronger signal than either alone. A
+count changing suggests the corpus moved; a count AND a per-item figure changing
+together suggests the measurement did. This one cannot be settled from here -
+whether three axes became two because a defect was repaired or because the axis
+set changed is not recoverable from the plan, and the screen that measures it
+has had two of its own conditions corrected during this campaign.
+
+What replaces it is a Step naming the coordinate and the two axes, plus the
+question the old wording hid: thirteen further revisions fail multiple axes
+below filing grade, mostly the same pair - an envelope spelled as a record
+beside a layout without filing grade, across modelos 490 and 604 - and the Step
+now asks whether they belong with the filing-grade one or are a separate
+condition. The original sentence excluded them silently by saying "filing-grade"
+and gave no sign that a larger population sat just outside it.
+
+This is the third Step premise re-measured this session and the first to have
+moved materially. Two held exactly and one held only under a boundary it never
+stated. That distribution is worth keeping in view: most premises in this plan
+are sound, which is precisely why the one that is not would have been believed.

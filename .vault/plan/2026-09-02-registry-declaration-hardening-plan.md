@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:22541f31d237f183d43b57075108e285671eeb01846617cf436f792a5cb9ccac'
+body_hash: 'sha256:90ae637106c3375da614dbfed67a633e4395152ef3a01dfb1aa2ede04da90d3f'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -315,7 +315,7 @@ Wire a standing regression gate comparing the satisfied filing-coordinate set by
 - [x] `W02.P04.S143` - Report a filing-grade revision whose modelo claims a filing calculation class while declaring no formula; `dev/registry/analysis/modelo_capability.py`.
 - [ ] `W02.P04.S144` - Resolve modelos 296, 308, 349 and 360, which claim a filing calculation class with no formula behind it; `src/cadrumo/_data/registry/aeat/modelos`.
 - [x] `W02.P04.S145` - Gate that a screen stating how many conditions it reports agrees with what it documents and emits; `dev/registry/tests/test_declaration_invariant_gates.py`.
-- [ ] `W02.P04.S146` - Resolve the four filing-grade revisions failing more than one capability axis, modelo 308 failing three of them; `src/cadrumo/_data/registry/aeat/modelos`.
+- [ ] `W02.P04.S146` - Resolve modelo 308's 2019-y-siguientes, the one filing-grade revision failing two capability axes at once, and decide whether the fourteen below-filing multi-axis revisions belong with it; `src/cadrumo/_data/registry/aeat/modelos`.
 - [ ] `W02.P04.S147` - Author the missing Scope and Summary sections in the two feature documents whose attested body schema requires them; `.vault`.
 - [x] `W02.P04.S151` - Document the distinction between a screen and an authoring aid in the contributor README, and how the gates tell them apart; `dev/registry/README.md`.
 
@@ -645,6 +645,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S345` - Re-derive the capability paragraph's figures from the census and note the qualifier that has become vacuous; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S346` - Re-measure the below-filing layout population and name the two revisions whose bytes are already committed; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S347` - Verify the deadline and formula Step premises and give the deadline Step its revision identifiers; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [ ] `W06.P13.S348` - Re-measure the multi-axis premise, which moved on both its figures, and surface the below-filing population it excluded; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
