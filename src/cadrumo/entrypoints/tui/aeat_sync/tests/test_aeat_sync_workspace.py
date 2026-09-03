@@ -905,7 +905,8 @@ async def test_overview_census_label_is_distinct_and_notification_listing_has_no
 
 
 @pytest.mark.asyncio
-async def test_completing_one_overview_operation_keeps_the_other_action_reachable() -> None:
+@pytest.mark.parametrize("first_fails", (False, True))
+async def test_completing_one_overview_operation_keeps_the_other_action_reachable(first_fails: bool) -> None:
     """The global in-flight guard must not become a global consumed-state guard."""
     rows = (
         AeatSyncWorkspaceOverviewRowV1(
@@ -959,6 +960,8 @@ async def test_completing_one_overview_operation_keeps_the_other_action_reachabl
 
     async def handoff(request: AeatSyncOperationRequestV1) -> None:
         calls.append(request)
+        if first_fails and request.action.action_id == "operator.profile.edit":
+            raise RuntimeError("C:\\protected\\taxpayer.txt 12345678Z")
 
     screen = AeatSyncOverviewScreen(
         AeatSyncWorkspaceController(
@@ -975,6 +978,11 @@ async def test_completing_one_overview_operation_keeps_the_other_action_reachabl
         await pilot.click(first)
         assert first.disabled
         assert not second.disabled
+        if first_fails:
+            status = str(screen.query_one("#aeat-sync-status", Static).render())
+            assert status == tr("tui.aeat_sync.operation.failed")
+            assert "protected" not in status
+            assert "12345678Z" not in status
         await pilot.click(second)
     assert tuple(call.action.action_id for call in calls) == (
         "operator.profile.edit",

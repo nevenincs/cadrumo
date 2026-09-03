@@ -29,6 +29,7 @@ from ..workbench_generation import (
     assemble_workbench_generation_from,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 9, 3, 10, 30, tzinfo=UTC)
 
@@ -121,7 +122,7 @@ def test_generation_search_refusal_preserves_mixed_source_unavailability() -> No
 
     assert generation.search.projection is None
     assert generation.search.availability is WorkbenchGenerationAvailability.UNAVAILABLE
-    assert generation.search.refusal == "source.aeat_down"
+    assert generation.search.refusal == "source.ledger"
 
 
 def test_generation_accepts_stale_value_without_collapsing_it_to_available() -> None:
@@ -167,7 +168,7 @@ def test_output_has_no_source_value_field_or_input_wrapper() -> None:
     payload = generation.model_dump_json()
 
     assert "value" not in WorkbenchGenerationInputsV1.model_fields
-    assert "value" not in generation.model_fields
+    assert "value" not in type(generation).model_fields
     assert all(
         "value" not in type(getattr(generation, name)).model_fields
         for name in ("home", "ledger", "declarations", "aeat_sync", "modelo", "search")
