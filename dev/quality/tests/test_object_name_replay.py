@@ -114,20 +114,21 @@ def _module_case(tmp_path: Path) -> tuple[Path, Any, Any, Any, ObjectNameRehears
     return repo, inventory, manifest, component, receipt
 
 
-def _generated_case(tmp_path: Path) -> tuple[Path, Any, Any, Any, ObjectNameRehearsalReceipt]:
+def _generated_case(
+    tmp_path: Path, *, delete: bool = False
+) -> tuple[Path, Any, Any, Any, ObjectNameRehearsalReceipt]:
     repo = tmp_path / "repo"
     inventory, manifest, _component = _fixture(repo)
     generated_path = "dev/generated.txt"
     generated_before = b"generated Widgets\n"
     _write(repo, generated_path, generated_before)
     inventory = scan((repo / "src", repo / "dev"), repo)
-    command = (
-        (
-            sys.executable,
-            "-c",
-            "from pathlib import Path; Path('dev/generated.txt').write_bytes(b'generated Widget\\n')",
-        ),
+    script = (
+        "from pathlib import Path; Path('dev/generated.txt').unlink()"
+        if delete
+        else "from pathlib import Path; Path('dev/generated.txt').write_bytes(b'generated Widget\\n')"
     )
+    command = ((sys.executable, "-c", script),)
     operation = manifest.operations[0].model_copy(
         update={
             "expected_reference_classes": ("definition", "generated-artifact"),
@@ -226,6 +227,18 @@ def test_successful_generator_backed_replay_runs_owner_in_isolated_post_transfor
     assert result.generator_outcomes[0].argv == manifest.operations[0].generator_commands[0]
     assert result.generator_outcomes[0].return_code == 0
     assert (repo / "dev/generated.txt").read_bytes() == b"generated Widget\n"
+    assert (repo / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"
+
+
+def test_successful_generator_backed_replay_applies_reviewed_deletion(tmp_path: Path) -> None:
+    repo, inventory, manifest, component, receipt = _generated_case(tmp_path, delete=True)
+
+    result = replay_object_name_component(
+        manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
+    )
+
+    assert result.generator_outcomes == receipt.generator_outcomes
+    assert not (repo / "dev/generated.txt").exists()
     assert (repo / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"
 
 
