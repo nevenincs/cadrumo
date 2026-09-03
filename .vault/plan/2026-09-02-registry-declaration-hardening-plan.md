@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:ca48f3789dbadbacabeac6550a8351580192e744fc3ce7ae34526a0eb93f7c15'
+body_hash: 'sha256:cd76eb53028c1a1be2d5908f8f631270cece121144d7e28ac5511a04ca5d0db3'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -456,6 +456,8 @@ Screen and then gate child citations against the source manifest of their owning
 - [x] `W04.P09.S417` - Screen the mirror direction, 263 manifest references no child cites, since the two surfaces disagree both ways: 59 revisions declare a subset of what their children cite and 69 declare references nothing cites, so the citing-side population measures a contract nobody declared; `dev/registry/analysis/provenance_consistency.py dev/registry/tests/test_provenance_consistency.py`.
 - [ ] `W04.P09.S418` - Decide what a revision manifest declares relative to its childrens citations before correcting either side, since the two disagree in both directions and no rule states which contains which; `src/cadrumo/_data/registry/aeat/modelos`.
 - [x] `W04.P09.S419` - Give the mirror condition its own module so the runner reports it, since it landed reachable only from source and the runner showed the citing side alone, which is the invisibility failure this package had just corrected elsewhere; `dev/registry/analysis/manifest_uncited_references.py dev/registry/tests/test_manifest_uncited_references.py dev/registry/analysis/screens.py dev/registry/README.md`.
+- [x] `W04.P09.S420` - Test a published export tree by its generation provenance manifest rather than by the directory that also holds authored layout fragments, and record that modelos 185 and 222 ship published filing bytes for revisions declaring applicability grade; `dev/registry/analysis/modelo_capability.py`.
+- [ ] `W04.P09.S421` - Resolve the contradiction in modelos 185 and 222 revision 2025-y-siguientes, which ship a provenance-attested published export tree while declaring applicability grade, so the registry says they cannot file and the repository ships their filing bytes; `src/cadrumo/_data/registry/aeat/modelos/185 src/cadrumo/_data/registry/aeat/modelos/222`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 

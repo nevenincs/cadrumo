@@ -11176,3 +11176,57 @@ sibling, and the sibling's CLI now calls the new screen rather than a local
 copy of it. Their populations are asserted disjoint - one cited-not-declared,
 the other declared-not-cited - which is also the check that would fail if either
 started reading the other's surface.
+
+
+## Two modelos ship published filing bytes while declaring they cannot file
+
+The capability screen's 67 findings divide into five conditions:
+`envelope_spelled_as_record` 31, `layout_without_filing_grade` 25,
+`files_here_without_deadline` 5, `claims_calculation_without_formulas` 4, and
+`tree_ships_below_filing_grade` 2. The last three are small enough to read, and
+all three are declaration contradictions of the kind this campaign exists for.
+
+The most serious is the smallest. **Modelos 185 and 222, revision
+`2025-y-siguientes`, each carry a published export tree - four fragment files and
+a `_generation.provenance.json` attesting the generation - while declaring
+`applicability` grade.** The registry says these revisions cannot file, and the
+repository ships their filing bytes. Modelo 296, 308, 349 and 360 declare a
+filing calculation class with no formula in the revision, and modelos 145, 151,
+165, 308 and 309 reach filing grade with a layout and declare no deadline
+window, so they cannot say when the filing is due.
+
+### Three wrong readings on the way, and the third was a repeat
+
+Verifying the shipped-bytes claim rather than trusting it was right; the
+verification was wrong three times.
+
+First I read the `export/` directory as holding only authored layout fragments,
+and concluded the finding's wording overstated - a declared layout is not
+shipped bytes. Second I concluded the condition was subsumed by
+`layout_without_filing_grade`, which reports the same two revisions. Both fell
+to the same fact: publication writes the generated tree INTO that directory, and
+the provenance manifest is what distinguishes a published tree from an authored
+declaration. Both revisions carry one. The finding is exact and the two
+conditions are properly distinct - one reports a layout declared below filing
+grade, the other reports bytes published below it, and the second is strictly
+graver.
+
+The third error is the one worth recording. I listed modelo 303's export
+directory with `head -6` and read the absence of `_generation.provenance.json`
+as evidence that authored-only directories exist. The filename sorts after
+`0004-...` and `head` cut it off. That is the truncation failure recorded near
+the start of this campaign - a measurement piped through `head` or `tail` is not
+a measurement - made again, in the middle of correcting two other misreadings.
+Measured properly: **all 28 export directories in the corpus carry a manifest**,
+so every one is a published tree.
+
+### The predicate was right by luck
+
+`_committed_tree` tested whether the export DIRECTORY exists. Since all 28 carry
+a manifest, that agrees exactly with testing the manifest, and the screen has
+never reported a false positive. But they are different claims: the directory is
+where authored layout fragments live, and a revision that declared layouts
+without ever being published would have the directory and no manifest, and would
+be reported as shipping bytes it had never produced. The predicate now tests the
+manifest. The census is unchanged at 67, which is the evidence that the tightening
+altered nothing about the corpus and only about what the code claims.
