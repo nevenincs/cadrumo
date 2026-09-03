@@ -132,7 +132,6 @@ export_field_id = "m200-2024.dp200016b.f0168"
 profile = "canarias_producer_live"
 column = "Productor"
 [[adjudications]]
-[[adjudications]]
 casilla_id = "02576"
 export_field_id = "m200-2024.dp200018c.f0063"
 profile = "donation_general"
