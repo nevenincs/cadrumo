@@ -1,8 +1,10 @@
-"""Real-behavior tests for _record_spec.ENCODING_ALIAS_MAP.
+"""Real-behavior tests for ``record_spec.ENCODING_ALIAS_MAP``.
 
-Asserts the canonical mapping entries and the structural invariant that
-the schema's encoding-consistency validator routes through this single
-constant rather than a private inline dict.
+Asserts the canonical mapping entries, and -- separately -- what the
+schema's encoding-consistency validator actually does. Those are two
+different things: the validator does NOT route through this constant.
+Its encoding field is the closed ``ExportEncoding`` enum, so an alias
+spelling is refused at parse and never reaches the comparison.
 """
 
 from __future__ import annotations
@@ -91,10 +93,8 @@ def _record(*, record_id: str, encoding: str) -> ExportRecordDefinition:
     )
 
 
-def test_layout_accepts_latin_1_iso_8859_1_mix_via_alias_map() -> None:
-    """``latin-1`` and ``iso-8859-1`` are Python codec aliases for the same
-    charset.  The schema validator must accept a layout that mixes both
-    forms, normalising through ENCODING_ALIAS_MAP before comparing."""
+def test_layout_accepts_records_sharing_one_canonical_encoding() -> None:
+    """The normal path: every record declares the same canonical member."""
     layout = ExportLayoutDefinition(
         id="test.layout",
         source_refs=("aeat-src-1",),
@@ -104,8 +104,36 @@ def test_layout_accepts_latin_1_iso_8859_1_mix_via_alias_map() -> None:
             _record(record_id="rec.b", encoding="iso-8859-1"),
         ),
     )
-    # Both records survive; validator did not raise
+
     assert len(layout.records) == 2
+
+
+def test_layout_refuses_an_alias_spelling_rather_than_normalising_it() -> None:
+    """``latin-1`` is REFUSED at parse; it is not normalised to ``iso-8859-1``.
+
+    This replaces a test that claimed to prove the opposite. That one was
+    named for a ``latin-1``/``iso-8859-1`` mix but passed ``iso-8859-1``
+    for both records, so it exercised no alias and would have failed had
+    it done what its name said.
+
+    The refusal is the real contract, and it is stricter than the alias
+    map suggests: ``ExportEncoding`` is a closed enum of canonical
+    spellings and the coercion in front of it resolves exact members
+    only. A registry author who writes ``latin-1`` gets a validation
+    error, not silent acceptance.
+    """
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        ExportLayoutDefinition(
+            id="test.layout",
+            source_refs=("aeat-src-1",),
+            legal_refs=("ley-37-1992:art-1",),
+            records=(
+                _record(record_id="rec.a", encoding="latin-1"),
+                _record(record_id="rec.b", encoding="iso-8859-1"),
+            ),
+        )
 
 
 def test_layout_rejects_mixed_canonical_encodings() -> None:
