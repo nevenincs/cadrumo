@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import shutil
 from dataclasses import replace
 from datetime import date
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 import rtoml
 
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..analysis import m200_2024_full_reconciliation as subject
@@ -17,6 +20,19 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 @pytest.fixture(scope="module")
 def census():
     return subject.reconcile_bundled_m200_2024()
+
+
+@pytest.fixture(scope="module")
+def source_rebind_plan(census):
+    return subject.build_m200_source_rebind_plan(census)
+
+
+@pytest.fixture
+def rebind_registry_root(tmp_path: Path) -> Path:
+    source = bundled_path("registry", "aeat", "modelos", "200", "revisions", "2024", "casillas")
+    destination = tmp_path / "registry" / "modelos" / "200" / "revisions" / "2024" / "casillas"
+    shutil.copytree(source, destination)
+    return tmp_path / "registry"
 
 
 def test_full_reconciliation_accounts_for_every_declaration_candidate_and_target_anchor(census) -> None:
@@ -174,3 +190,97 @@ def test_missing_map_legal_ref_is_visible_and_unreviewed_candidates_cannot_seed_
     )
     assert peers == {"same-template": {trusted_payload}}
     assert candidate_payload not in peers["same-template"]
+
+
+def test_source_rebind_plan_is_complete_target_map_owned_and_refuses_only_true_orphans(source_rebind_plan) -> None:
+    assert source_rebind_plan.source_ref == subject.TARGET_SOURCE_REF
+    assert source_rebind_plan.source_sha256 == subject.TARGET_SOURCE_SHA256
+    assert source_rebind_plan.semantic_map_source_ref == subject.TARGET_SOURCE_REF
+    assert source_rebind_plan.semantic_map_source_sha256 == subject.TARGET_SOURCE_SHA256
+    assert len(source_rebind_plan.rebinds) == 3171
+    assert len(source_rebind_plan.refused_orphan_ids) == 2
+    assert len(source_rebind_plan.expected_current_ids) == 3173
+    assert {item.casilla_id for item in source_rebind_plan.rebinds}.isdisjoint(source_rebind_plan.refused_orphan_ids)
+    assert all(item.expected_source_refs[0] == subject.SIBLING_SOURCE_REF for item in source_rebind_plan.rebinds)
+    assert all(item.target_source_refs[0] == subject.TARGET_SOURCE_REF for item in source_rebind_plan.rebinds)
+    assert all(len(item.non_source_payload_sha256) == 64 for item in source_rebind_plan.rebinds)
+
+
+def test_source_rebind_dry_run_and_apply_change_only_planned_source_lines(
+    source_rebind_plan, rebind_registry_root: Path
+) -> None:
+    before = _tree_bytes(rebind_registry_root)
+    preview = subject.apply_m200_source_rebind_plan(
+        source_rebind_plan, registry_root=rebind_registry_root, dry_run=True
+    )
+    assert preview.dry_run
+    assert preview.planned_rebind_count == 3171
+    assert len(preview.changed_paths) == 965
+    assert _tree_bytes(rebind_registry_root) == before
+
+    applied = subject.apply_m200_source_rebind_plan(source_rebind_plan, registry_root=rebind_registry_root)
+    assert not applied.dry_run
+    assert applied.changed_paths == preview.changed_paths
+    after = _tree_bytes(rebind_registry_root)
+    changed = {path for path in before if before[path] != after[path]}
+    assert changed == {path.relative_to(rebind_registry_root) for path in applied.changed_paths}
+    for path in changed:
+        _assert_only_direct_source_refs_changed(before[path], after[path])
+
+
+def test_source_rebind_refuses_missing_anchor_source_drift_payload_drift_and_partial_application(
+    source_rebind_plan, rebind_registry_root: Path
+) -> None:
+    first = source_rebind_plan.rebinds[0]
+    path = rebind_registry_root / "modelos" / "200" / "revisions" / "2024" / "casillas" / f"c{first.casilla_id}.toml"
+    original = path.read_text(encoding="utf-8")
+    path.write_text(original.replace("source_refs =", "missing_refs =", 1), encoding="utf-8", newline="\n")
+    missing_anchor_snapshot = _tree_bytes(rebind_registry_root)
+    with pytest.raises(RegistryValidationError, match="source_refs anchors"):
+        subject.apply_m200_source_rebind_plan(source_rebind_plan, registry_root=rebind_registry_root)
+    assert _tree_bytes(rebind_registry_root) == missing_anchor_snapshot
+
+    path.write_text(original.replace("aeat-dr-200-2025", "aeat-dr-200-2099", 1), encoding="utf-8", newline="\n")
+    source_drift_snapshot = _tree_bytes(rebind_registry_root)
+    with pytest.raises(RegistryValidationError, match="input drifted"):
+        subject.apply_m200_source_rebind_plan(source_rebind_plan, registry_root=rebind_registry_root)
+    assert _tree_bytes(rebind_registry_root) == source_drift_snapshot
+
+    path.write_text(original.replace('number = "00001"', 'number = "99999"', 1), encoding="utf-8", newline="\n")
+    payload_drift_snapshot = _tree_bytes(rebind_registry_root)
+    with pytest.raises(RegistryValidationError, match="non-source payload drifted"):
+        subject.apply_m200_source_rebind_plan(source_rebind_plan, registry_root=rebind_registry_root)
+    assert _tree_bytes(rebind_registry_root) == payload_drift_snapshot
+
+    path.write_text(original.replace("aeat-dr-200-2025", "aeat-dr-200-2024", 1), encoding="utf-8", newline="\n")
+    partial_snapshot = _tree_bytes(rebind_registry_root)
+    with pytest.raises(RegistryValidationError, match="partially applied"):
+        subject.apply_m200_source_rebind_plan(source_rebind_plan, registry_root=rebind_registry_root)
+    assert _tree_bytes(rebind_registry_root) == partial_snapshot
+
+
+def test_source_rebind_refuses_duplicate_output_before_touching_the_tree(
+    source_rebind_plan, rebind_registry_root: Path
+) -> None:
+    first = source_rebind_plan.rebinds[0]
+    duplicate = replace(first, target_source_refs=(subject.TARGET_SOURCE_REF, subject.TARGET_SOURCE_REF))
+    invalid = replace(source_rebind_plan, rebinds=(duplicate, *source_rebind_plan.rebinds[1:]))
+    before = _tree_bytes(rebind_registry_root)
+    with pytest.raises(RegistryValidationError, match="duplicates a source reference"):
+        subject.apply_m200_source_rebind_plan(invalid, registry_root=rebind_registry_root)
+    assert _tree_bytes(rebind_registry_root) == before
+
+
+def _tree_bytes(root: Path) -> dict[Path, bytes]:
+    return {path.relative_to(root): path.read_bytes() for path in root.rglob("*.toml")}
+
+
+def _assert_only_direct_source_refs_changed(before: bytes, after: bytes) -> None:
+    before_lines = before.decode("utf-8").splitlines(keepends=True)
+    after_lines = after.decode("utf-8").splitlines(keepends=True)
+    assert len(before_lines) == len(after_lines)
+    for left, right in zip(before_lines, after_lines, strict=True):
+        if left.startswith("source_refs ="):
+            assert left.replace(subject.SIBLING_SOURCE_REF, subject.TARGET_SOURCE_REF) == right
+        else:
+            assert left == right

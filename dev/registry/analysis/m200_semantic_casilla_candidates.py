@@ -272,7 +272,7 @@ def classify_m200_target_identities(
         if owner is None:
             raise ValueError(f"casilla map entry {entry.export_field_id!r} omits its owner")
         owner = str(owner)
-        printed = _printed_number(field)
+        printed = _printed_target_number(field)
         if owner in known_ids:
             map_owner_ids.add(owner)
             printed_state = _printed_identity_state(printed, owner, proposal=None)
@@ -319,7 +319,7 @@ def classify_m200_target_identities(
         M200OrphanedDeclaration(
             casilla_id=str(casilla_id),
             disposition=M200OrphanDisposition.UNMAPPED_DECLARATION,
-            source_refs=tuple(getattr(declaration, "source_refs")),
+            source_refs=tuple(declaration.source_refs),
         )
         for casilla_id, declaration in sorted(target_declarations.items())
         if casilla_id not in map_owner_ids
@@ -560,6 +560,12 @@ def _printed_identity_state(
     if proposal is not None and (printed == proposal or printed == proposal.rsplit(":", 1)[-1]):
         return M200PrintedIdentityState.MATCHES_IDENTITY_PROPOSAL
     return M200PrintedIdentityState.CONFLICTS_WITH_MAP_OWNER
+
+
+def _printed_target_number(field: RecordDesignIntermediateField) -> str | None:
+    """Return only the complete five-digit printed identity used by the 2024 census."""
+    matches = re.findall(r"\[([0-9]{5})\]", field.normalized_description)
+    return matches[0] if len(matches) == 1 else None
 
 
 def _serialise(value: object) -> object:

@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 import argparse
-from hashlib import sha256
+import re
 import sys
 from collections import Counter, defaultdict
 from collections.abc import Iterable, Mapping
 from dataclasses import asdict, dataclass
 from datetime import date
+from hashlib import sha256
 from pathlib import Path
-import re
 
 import rtoml
 
@@ -327,11 +327,14 @@ def build_m200_source_rebind_plan(census: M200ReconciliationCensus) -> M200Sourc
             )
         elif row.source_ref_state == "unmapped_no_rebind":
             if row.fields:
-                raise RegistryValidationError(f"source rebind orphan {row.casilla_id!r} unexpectedly owns a target anchor")
+                raise RegistryValidationError(
+                    f"source rebind orphan {row.casilla_id!r} unexpectedly owns a target anchor"
+                )
             orphans.append(row.casilla_id)
         else:
             raise RegistryValidationError(
-                f"source rebind plan refuses unexpected declaration state {row.source_ref_state!r} for {row.casilla_id!r}",
+                "source rebind plan refuses unexpected declaration state "
+                f"{row.source_ref_state!r} for {row.casilla_id!r}",
             )
 
     planned = tuple(sorted(rebinds, key=lambda item: item.casilla_id))
@@ -404,7 +407,9 @@ def apply_m200_source_rebind_plan(
     if actual_ids != expected_ids:
         missing = sorted(expected_ids - actual_ids)
         extra = sorted(actual_ids - expected_ids)
-        raise RegistryValidationError(f"source rebind declaration anchors drifted: missing={missing[:5]!r}, extra={extra[:5]!r}")
+        raise RegistryValidationError(
+            f"source rebind declaration anchors drifted: missing={missing[:5]!r}, extra={extra[:5]!r}"
+        )
 
     replacements: dict[Path, dict[int, str]] = defaultdict(dict)
     for item in plan.rebinds:
@@ -464,15 +469,21 @@ def _require_rebind_plan_identity(plan: M200SourceRebindPlan) -> None:
 
 def _require_rebind_source_refs(rebind: M200SourceRebind) -> None:
     if SIBLING_SOURCE_REF not in rebind.expected_source_refs or TARGET_SOURCE_REF in rebind.expected_source_refs:
-        raise RegistryValidationError(f"source rebind input is not an exact 2025-only design binding: {rebind.casilla_id!r}")
+        raise RegistryValidationError(
+            f"source rebind input is not an exact 2025-only design binding: {rebind.casilla_id!r}"
+        )
     if TARGET_SOURCE_REF not in rebind.target_source_refs or SIBLING_SOURCE_REF in rebind.target_source_refs:
-        raise RegistryValidationError(f"source rebind output is not an exact 2024 design binding: {rebind.casilla_id!r}")
+        raise RegistryValidationError(
+            f"source rebind output is not an exact 2024 design binding: {rebind.casilla_id!r}"
+        )
     if len(set(rebind.target_source_refs)) != len(rebind.target_source_refs):
         raise RegistryValidationError(f"source rebind output duplicates a source reference: {rebind.casilla_id!r}")
     expected_other = tuple(ref for ref in rebind.expected_source_refs if ref != SIBLING_SOURCE_REF)
     target_other = tuple(ref for ref in rebind.target_source_refs if ref != TARGET_SOURCE_REF)
     if expected_other != target_other:
-        raise RegistryValidationError(f"source rebind output alters non-design source references: {rebind.casilla_id!r}")
+        raise RegistryValidationError(
+            f"source rebind output alters non-design source references: {rebind.casilla_id!r}"
+        )
 
 
 def _read_m200_2024_casilla_records(registry_root: Path) -> dict[str, _M200CasillaSourceRecord]:
@@ -510,7 +521,8 @@ def _read_m200_2024_casilla_records(registry_root: Path) -> dict[str, _M200Casil
             )
             if record.casilla_id in records:
                 raise RegistryValidationError(
-                    f"duplicate source rebind declaration anchor {record.casilla_id!r}: {records[record.casilla_id].path}, {path}",
+                    f"duplicate source rebind declaration anchor {record.casilla_id!r}: "
+                    f"{records[record.casilla_id].path}, {path}",
                 )
             records[record.casilla_id] = record
     return records
@@ -616,7 +628,7 @@ def main(argv: list[str] | None = None) -> int:
         "--registry-root",
         type=Path,
         default=bundled_path("registry", "aeat"),
-        help="registry root to inspect (defaults to the canonical bundled registry; use an isolated temp root to review)",
+        help="registry root (default: canonical bundle; use an isolated temporary root for review)",
     )
     args = parser.parse_args(argv)
     if args.dry_run and not args.apply_source_rebinds:
