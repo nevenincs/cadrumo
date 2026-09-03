@@ -30,7 +30,9 @@ from ..duplication import (
     run_duplication_scan,
 )
 from ._duplication_support import (
+    _CLASSIFICATIONS,
     _REPO_ROOT,
+    _load_dispositions,
     _recorded_dispositions,
     _uncovered_groups,
 )
@@ -290,3 +292,83 @@ def test_a_landed_consolidation_does_not_fail_the_coverage_read() -> None:
     """
     recorded = _recorded_dispositions()
     assert _uncovered_groups((), recorded) == []
+
+
+def test_dispositions_arithmetic_reconciles() -> None:
+    """The dispositions file's own counts must add up.
+
+    The record once declared 65 observed groups while carrying 66 group blocks
+    whose own summary section summed to 66 -- an internal contradiction nobody
+    caught because nothing read the file. This pins two identities: the
+    summary section's four counts must equal the number of ``[[group]]``
+    blocks, and the non-actionable counts (the groups within jscpd's own
+    inventory) must equal the declared ``observed_groups``.
+    """
+    dispositions = _load_dispositions()
+
+    groups = dispositions.get("group", ())
+    summary = dispositions["summary"]
+
+    assert groups, "the record declares no groups at all; nothing was parsed"
+    assert sum(summary.values()) == len(groups), (
+        f"summary sums to {sum(summary.values())} but there are {len(groups)} recorded groups"
+    )
+    observed = summary["cluster_owned"] + summary["intentional"] + summary["advisory_residue"]
+    assert observed == dispositions["meta"]["observed_groups"], (
+        f"cluster_owned + intentional + advisory_residue ({observed}) must equal "
+        f"meta.observed_groups ({dispositions['meta']['observed_groups']})"
+    )
+
+
+def test_every_recorded_group_carries_exactly_one_known_classification() -> None:
+    """A disposition with no classification, or an invented one, is not adjudication.
+
+    The record's whole value is that each entry states what a reviewer decided.
+    An unrecognised classification string would read as a decision while
+    belonging to no vocabulary the summary counts, so the arithmetic gate above
+    would keep passing while the entry meant nothing.
+    """
+    groups = _load_dispositions()["group"]
+
+    assert groups, "the record declares no groups at all; nothing was parsed"
+    unknown = sorted({group.get("classification", "<missing>") for group in groups} - _CLASSIFICATIONS)
+
+    assert unknown == [], f"unrecognised classification(s) in the record: {unknown}"
+
+
+def test_a_cluster_owned_group_names_the_cluster_that_owns_it() -> None:
+    """`cluster-owned` without an `owner` names no owner, so it adjudicates nothing.
+
+    This is the classification's entire content: it defers the group to a named
+    consolidation cluster. An entry missing the name is indistinguishable from
+    an unreviewed group that someone labelled to make the record look complete.
+    """
+    groups = _load_dispositions()["group"]
+    cluster_owned = [group for group in groups if group.get("classification") == "cluster-owned"]
+
+    assert cluster_owned, "no cluster-owned groups were parsed; the guard has no subject"
+    unowned = [group["where"][0] for group in cluster_owned if not group.get("owner", "").strip()]
+
+    assert unowned == [], f"cluster-owned group(s) naming no owning cluster: {unowned}"
+
+
+def test_an_unavailable_scan_cannot_be_read_as_full_coverage() -> None:
+    """An unavailable scan yields no groups, which trivially satisfies coverage.
+
+    This is the false green the live reconciliation gate must refuse. A failed
+    scan carries an empty ``groups`` tuple, so feeding it to the coverage read
+    returns "nothing uncovered" -- the same answer a genuinely covered tree
+    gives. The verdict is therefore meaningless without first proving the scan
+    ran, which is why the live gate asserts the outcome before it reconciles.
+
+    Pinning the failure mode here keeps that precondition from being deleted as
+    redundant by someone reading only the coverage arithmetic.
+    """
+    unavailable = DuplicationResult.unavailable("npx was not found on PATH")
+
+    assert unavailable.is_green is False
+    assert unavailable.groups == ()
+    assert _uncovered_groups(unavailable.groups, _recorded_dispositions()) == [], (
+        "an unavailable scan trivially reports full coverage; the live gate must "
+        "reject the outcome before trusting this read"
+    )

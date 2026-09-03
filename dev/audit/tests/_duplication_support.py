@@ -23,6 +23,25 @@ _REPO_ROOT = REPO_ROOT
 
 _WHERE_PATH = re.compile(r"^-?\s*(.+?\.py) \[")
 
+_DISPOSITIONS_PATH = _REPO_ROOT / "dev" / "audit" / "duplication_dispositions.toml"
+
+# The classification vocabulary the record's own header defines. Held here so
+# the parsing gates check membership against one list rather than each
+# restating it, and so adding a classification is a deliberate edit.
+_CLASSIFICATIONS = frozenset(
+    {
+        "cluster-owned",
+        "intentional",
+        "advisory-residue",
+        "actionable",
+    }
+)
+
+
+def _load_dispositions() -> dict[str, object]:
+    """Parse the committed disposition record."""
+    return tomllib.loads(_DISPOSITIONS_PATH.read_text(encoding="utf-8"))
+
 
 def _paths_from_where(entries: list[str]) -> frozenset[str]:
     """Extract the bare file paths a disposition's ``where`` list names."""
@@ -54,8 +73,7 @@ def _paths_from_group(group: CloneGroup) -> frozenset[str]:
 
 def _recorded_dispositions() -> Counter[frozenset[str]]:
     """Count how many clone groups the dispositions file records per file-set."""
-    dispositions_path = _REPO_ROOT / "dev" / "audit" / "duplication_dispositions.toml"
-    dispositions = tomllib.loads(dispositions_path.read_text(encoding="utf-8"))
+    dispositions = _load_dispositions()
     return Counter(_paths_from_where(group["where"]) for group in dispositions.get("group", ()))
 
 

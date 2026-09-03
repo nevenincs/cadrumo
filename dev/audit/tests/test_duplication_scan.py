@@ -23,7 +23,12 @@ from ..duplication import (
     run_duplication_scan,
 )
 from ..report import Status, audit_duplication
-from ._duplication_support import _REPO_ROOT
+from ._duplication_support import (
+    _REPO_ROOT,
+    _load_dispositions,
+    _recorded_dispositions,
+    _uncovered_groups,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -143,3 +148,61 @@ def test_health_report_duplication_dimension_reflects_the_live_scan() -> None:
         assert dimension.status is Status.AMBER
         assert str(result.clone_count) in dimension.headline
         assert "no clones found" not in dimension.headline
+
+
+def test_every_observed_clone_group_has_a_recorded_disposition() -> None:
+    """Every clone group the live scan observes must carry a recorded disposition.
+
+    This asserts COVERAGE, never a COUNT of clones: the clone count is advisory
+    debt by design, so a clone-count assertion would fight that and go red on
+    every genuine consolidation. The record is a superset by design -- a group
+    disappearing is progress, not a gate failure -- while a NEW, unrecorded
+    group is exactly what this gate exists to catch.
+
+    Coverage is measured per file-set as a MULTISET, not a set. A self-clone
+    names one file twice, so its file-set collapses to a single path; under a
+    plain set membership test any second, entirely unrelated clone group inside
+    that same file matched the first one's entry and passed unseen.
+
+    The outcome guard is load-bearing rather than defensive: an unavailable
+    scan carries an empty ``groups`` tuple and so reports full coverage for
+    free. See ``test_an_unavailable_scan_cannot_be_read_as_full_coverage``.
+    """
+    _require_npx()
+    result = run_duplication_scan(_REPO_ROOT)
+
+    assert result.outcome is not DuplicationOutcome.UNAVAILABLE, result.reason
+    assert result.files_analyzed > 0, "coverage over a scan that inspected nothing proves nothing"
+
+    recorded = _recorded_dispositions()
+    assert recorded, "the disposition record parsed empty; coverage would pass vacuously"
+
+    uncovered = [group.render() for group in _uncovered_groups(result.groups, recorded)]
+
+    assert not uncovered, (
+        "the live scan observed clone group(s) with no recorded disposition in "
+        f"duplication_dispositions.toml:\n\n{chr(10).join(uncovered)}"
+    )
+
+
+def test_the_record_may_not_declare_fewer_groups_than_the_scan_observes() -> None:
+    """A changed scan must invalidate the record rather than be absorbed by it.
+
+    The closure evidence is revision-scoped: it has to be regenerated when the
+    revision, the detector configuration, or the accounted paths change. This
+    pins the dishonest DIRECTION of that drift. Declaring FEWER groups than the
+    tree carries under-declares the debt, which is the false green; declaring
+    more is a landed consolidation the record has not yet dropped, which is
+    progress and stays allowed, exactly as the coverage read's asymmetry does.
+    """
+    _require_npx()
+    result = run_duplication_scan(_REPO_ROOT)
+
+    assert result.outcome is not DuplicationOutcome.UNAVAILABLE, result.reason
+
+    declared = _load_dispositions()["meta"]["observed_groups"]
+
+    assert declared >= len(result.groups), (
+        f"the record declares {declared} observed group(s) but the live scan found "
+        f"{len(result.groups)}; regenerate the record rather than leaving debt undeclared"
+    )
