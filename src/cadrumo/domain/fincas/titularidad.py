@@ -129,7 +129,10 @@ class Titularidad(BaseModel):
             ("[0063]", self.porcentaje_propiedad),
             ("[0064]", self.porcentaje_usufructo),
         ):
-            if value.as_tuple().exponent < _DECLARED_PERCENTAGE_EXPONENT:
+            exponent = value.as_tuple().exponent
+            # A non-finite Decimal reports its exponent as ``"n"``/``"N"``/``"F"``
+            # rather than an integer; such a share is undeclarable outright.
+            if not isinstance(exponent, int) or exponent < _DECLARED_PERCENTAGE_EXPONENT:
                 raise FincaValidationError(
                     f"casilla {casilla} is declared with at most two decimals; "
                     f"{value} carries more precision than the declaration accepts",
