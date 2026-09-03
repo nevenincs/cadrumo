@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:038a28a22af40bbca6c894236b0887325bde70e70f6c9218a17691774b55ef1c'
+body_hash: 'sha256:64b62fe5988380e4f2b6fa0f41d883e3b4ac62af34590a3da8c4260536d57472'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -108,9 +108,13 @@ decisions rather than waiting on them.
 The capability screen answers the question that opened this work directly, because it turned out to
 be answerable from the declarations rather than needing judgement. It is named rather than numbered:
 it was the tenth when this was written, and an eleventh would have silently re-pointed the sentence
-at a screen that answers something else. Of 58 modelos, 22 declare
-applicability only - the censal and informational ones, correctly carrying no filing machinery - and
-5 declare calculation only. Sixty-eight revisions reach filing grade with a layout. What that claim
+at a screen that answers something else. Its census is the source for what follows, so these figures move as the registry does and are
+re-derivable by running it. Of 58 modelos, 23 declare applicability only - the censal and
+informational ones, correctly carrying no filing machinery - and 4 declare calculation only. Sixty-nine
+revisions reach filing grade, and every one of them carries a layout, which is stronger than the
+qualifier this sentence used to attach: there is no filing-grade revision today with nowhere to put
+its answer. When first written these read 22, 5 and 68; each moved by one while the argument they
+support did not, which is what a figure quoted from a live census does. What that claim
 rests on is thinner than the number suggests: 31 layouts spell their envelope as a record where the
 export boundary cannot see it, 5 revisions can render a fichero and cannot say when it is due, and 4
 declare a filing calculation class with no formula behind it.
@@ -638,6 +642,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S342` - Add the three screen-property gates the criterion had not caught up with, naming properties before totals; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S343` - Replace the criterion's leading count and its ordinal back-references, which pointed at positions in a list that grew; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S344` - Name the screen the description referred to by position, and sweep for the same shape elsewhere; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md dev/registry`.
+- [ ] `W06.P13.S345` - Re-derive the capability paragraph's figures from the census and note the qualifier that has become vacuous; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
