@@ -84,10 +84,11 @@ actions, and textual rather than colour-only source state.
 The suite also proves local census-adoption wording with no remote-push control,
 no mount-time callback, unread-notification refusal before the document door,
 exact action/operation admission, double-submit prevention, missing-host
-refusal, sanitized generic failure, and opaque notification focus across
-reorder, refresh, resize, and child return.
+refusal, sanitized generic failure, continued reachability of sibling actions
+after either successful or failed submission, and opaque notification focus
+across reorder, refresh, resize, and child return.
 
-Final evidence: 60 focused tests passed with all lanes enabled; Ruff lint and
+Final evidence: 62 focused tests passed with all lanes enabled; Ruff lint and
 format checks passed; ty passed; basedpyright reported zero errors, warnings,
 and notes.
 

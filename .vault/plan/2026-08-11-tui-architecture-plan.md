@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-03'
-body_hash: 'sha256:1972971ea2043c2af55f6d8c8b033df6952f0e096f1571173942b5811095ca03'
+body_hash: 'sha256:3a919b1492002caf67e856e72cbe5838bd6ca33e3d33e3c86f8d389a9e2145dd'
 ---
 
 <!-- RETIRED: S370 -->
@@ -592,7 +592,7 @@ Compose the production Home projection, destination catalogue, global search and
 - [x] `W08.P28.S381` - Build the responsive Home screen from the selected projection-only candidate with status, next actions, Ledger readiness, resumable declarations, and filing agenda; `src/cadrumo/entrypoints/tui/home.py`.
 - [x] `W08.P28.S382` - Add global workbench search and command-palette providers that route stable result and action identities to admitted destinations; `src/cadrumo/entrypoints/tui/search.py`.
 - [x] `W08.P28.S383` - Compose the root destination stack, account header, semantic focus restoration, session expiry, and post-journey Home refresh; `src/cadrumo/entrypoints/tui/app.py`.
-- [x] `W08.P28.S398` - Connect cadrumo.application.search to the installed workbench by assembling one immutable redacted document snapshot from the current Ledger, Declarations, filing-history, reconciliation, notification, and Modelo projections, injecting its service into the root host, and rebuilding it after authoritative child returns without implicit I/O; `src/cadrumo/application/search/, src/cadrumo/entrypoints/tui/launcher.py, and focused installed-search tests`.
+- [ ] `W08.P28.S398` - Connect cadrumo.application.search to the installed workbench by assembling one immutable redacted document snapshot from the current Ledger, Declarations, filing-history, reconciliation, notification, and Modelo projections, injecting its service into the root host, and rebuilding it after authoritative child returns without implicit I/O; `src/cadrumo/application/search/, src/cadrumo/entrypoints/tui/launcher.py, and focused installed-search tests`.
 - [ ] `W08.P28.S400` - Build the child-owned installed-workbench generation provider from secure profile repositories and application projection builders, representing authorities without production loaders as explicit unavailable or never-captured sources rather than empty fixtures; `src/cadrumo/application/workbench_generation.py, src/cadrumo/entrypoints/tui/launcher.py, and focused production-composition tests`.
 - [x] `W08.P28.S384` - Compose secure profile, overview, Ledger, declaration, evidence, notification, operation, and destination factories for one installed session; `src/cadrumo/entrypoints/tui/launcher.py`.
 - [ ] `W08.P28.S385` - Add complete localized workbench, account, Ledger, Declarations, calendar, AEAT Sync, search, availability, and refusal messages through the canonical locale workflow; `src/cadrumo/locales/`.

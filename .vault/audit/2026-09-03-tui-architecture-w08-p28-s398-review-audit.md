@@ -15,10 +15,6 @@ Reviewed the S398 immutable installed-workbench snapshot assembly, root-service 
 
 ## Findings
 
-### refresh-withdrawal-regression | high | A later edit restored stale search retention after a failed authoritative refresh
-
-Resolved. The failure branch again clears the installed service before setting `workbench.search.refresh_unavailable`; the focused regression proves the former service is no longer queryable after a real child dismissal.
-
 ### missing-installed-provider | high | The production child still has no authority that can build the installed root generation
 
 Open. The launcher now accepts one immutable `InstalledWorkbenchRootInputsV1`
