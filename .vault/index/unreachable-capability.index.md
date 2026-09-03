@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#unreachable-capability'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:89e3bb91da092f060ec3b41203c3b4ec8234107a15374f8f08b11005d8ac2151'
+body_hash: 'sha256:92b6db6516f842a6ed3a0ce94ff794146caa471586fa3b5fcb749ec21b64b8e0'
 related:
   - '[[2026-09-02-unreachable-capability-disconnected-capability-inventory-reference]]'
   - '[[2026-09-02-unreachable-capability-fincas-unblock-research]]'
@@ -14,6 +14,7 @@ related:
   - '[[2026-09-02-unreachable-capability-tui-homepage-product-design-research]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
   - '[[2026-09-02-unreachable-capability-tui-root-composition-research]]'
+  - '[[2026-09-03-unreachable-capability-fincas-titularidad-adr]]'
 ---
 
 # `unreachable-capability` feature index
@@ -25,6 +26,7 @@ Auto-generated index of all documents tagged with `#unreachable-capability`.
 ### adr
 
 - `2026-09-02-unreachable-capability-tui-navigation-join-adr` - `unreachable-capability` adr: `one tui entrypoint and a home-screen navigation join` | (**status:** `accepted`)
+- `2026-09-03-unreachable-capability-fincas-titularidad-adr` - `unreachable-capability` adr: `per-property titularidad and usufructo attribution for the rental engine` | (**status:** `accepted`)
 
 ### reference
 
