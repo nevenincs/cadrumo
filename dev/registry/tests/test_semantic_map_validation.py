@@ -218,6 +218,27 @@ def test_exact_and_segment_qualified_casilla_identities_are_preserved() -> None:
     assert resolved.entries[0].casilla_id == qualified
 
 
+def test_receipt_bound_qualified_identity_admission_is_exact_and_not_generic_padding() -> None:
+    semantic_map = _casilla_token_map("588")
+    qualified = validated_casilla_id("DP200018:00588", surface="test")
+
+    resolved = _semantic_map_validation._resolve_semantic_map_casilla_tokens(
+        semantic_map,
+        casilla_ids=frozenset({qualified}),
+        qualified_identity_admissions={"generated.casilla.one": qualified},
+    )
+
+    assert resolved.entries[0].casilla_id == qualified
+    with pytest.raises(RegistryValidationError, match="reviewed qualified identity admission drifted"):
+        _semantic_map_validation._resolve_semantic_map_casilla_tokens(
+            semantic_map,
+            casilla_ids=frozenset({qualified}),
+            qualified_identity_admissions={
+                "generated.casilla.one": validated_casilla_id("DP200018:00589", surface="test")
+            },
+        )
+
+
 def test_numeric_official_casilla_token_refuses_ambiguous_left_padding() -> None:
     semantic_map = _casilla_token_map("93")
 

@@ -126,7 +126,7 @@ class JoinedRecordDesign(_StrictModel):
             ):
                 raise ValueError("compiled semantic map may change only casilla tokens")
             if any(
-                not _entry_is_exact_or_left_padded(authored, compiled)
+                not _entry_is_exact_or_compiled_token(authored, compiled)
                 for authored, compiled in zip(
                     self.authored_semantic_map.entries,
                     self.compiled_semantic_map.entries,
@@ -166,8 +166,8 @@ class JoinedRecordDesign(_StrictModel):
         return self
 
 
-def _entry_is_exact_or_left_padded(authored: SemanticMapEntry, compiled: SemanticMapEntry) -> bool:
-    """Prove one compiled entry changed no meaning beyond numeric zero padding."""
+def _entry_is_exact_or_compiled_token(authored: SemanticMapEntry, compiled: SemanticMapEntry) -> bool:
+    """Prove validation changed an authored token only through its admitted form."""
     if authored == compiled:
         return True
     if authored.casilla_id is None or compiled.casilla_id is None:
@@ -176,13 +176,18 @@ def _entry_is_exact_or_left_padded(authored: SemanticMapEntry, compiled: Semanti
         return False
     token = authored.casilla_id
     resolved = compiled.casilla_id
-    return (
+    if (
         token.isdecimal()
         and resolved.isdecimal()
         and len(resolved) > len(token)
         and resolved.endswith(token)
         and set(resolved[: -len(token)]) == {"0"}
-    )
+    ):
+        return True
+    if token.isdecimal() and ":" in resolved:
+        _segment, tail = resolved.rsplit(":", 1)
+        return tail.isdecimal() and tail.lstrip("0") == token.lstrip("0") and bool(tail.lstrip("0"))
+    return False
 
 
 def join_record_design_semantics(

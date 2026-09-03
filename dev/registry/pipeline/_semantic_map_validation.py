@@ -8,6 +8,7 @@ does not render, derive, or publish export fragments.
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Mapping
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -83,9 +84,10 @@ def validate_semantic_map(
     _validate_exact_bijection(semantic_map, intermediate)
     _validate_exact_record_bijection(semantic_map, intermediate)
     _validate_variable_envelope_boundary(semantic_map, intermediate)
-    resolved_map = resolve_semantic_map_casilla_tokens(
+    resolved_map = _resolve_semantic_map_casilla_tokens(
         semantic_map,
         casilla_ids=inspection.casilla_ids,
+        qualified_identity_admissions=_reviewed_qualified_identity_admissions(semantic_map, inspection),
     )
     _validate_entry_references(
         resolved_map,
@@ -102,6 +104,20 @@ def resolve_semantic_map_casilla_tokens(
     semantic_map: SemanticMap,
     *,
     casilla_ids: frozenset[CasillaId],
+) -> SemanticMap:
+    """Resolve generic numeric tokens without inferring a segment identity."""
+    return _resolve_semantic_map_casilla_tokens(
+        semantic_map,
+        casilla_ids=casilla_ids,
+        qualified_identity_admissions={},
+    )
+
+
+def _resolve_semantic_map_casilla_tokens(
+    semantic_map: SemanticMap,
+    *,
+    casilla_ids: frozenset[CasillaId],
+    qualified_identity_admissions: Mapping[str, CasillaId],
 ) -> SemanticMap:
     """Compile official numeric box tokens to exact revision-owned identifiers.
 
@@ -120,6 +136,16 @@ def resolve_semantic_map_casilla_tokens(
             resolved_entries.append(entry)
             continue
 
+        admitted = qualified_identity_admissions.get(str(entry.export_field_id))
+        if admitted is not None:
+            if admitted not in casilla_ids or not _is_qualified_token_match(token, admitted):
+                raise RegistryValidationError(
+                    "semantic map export field "
+                    f"{entry.export_field_id!r} reviewed qualified identity admission drifted",
+                )
+            resolved_entries.append(entry.model_copy(update={"casilla_id": admitted}))
+            continue
+
         candidates = _left_padded_casilla_candidates(token, casilla_ids=casilla_ids)
         if len(candidates) == 1:
             resolved_entries.append(entry.model_copy(update={"casilla_id": candidates[0]}))
@@ -135,6 +161,53 @@ def resolve_semantic_map_casilla_tokens(
         )
 
     return semantic_map.model_copy(update={"entries": tuple(resolved_entries)})
+
+
+def _reviewed_qualified_identity_admissions(
+    semantic_map: SemanticMap,
+    inspection: GeneratedArtifactInspection,
+) -> dict[str, CasillaId]:
+    """Admit only M200/2024 unique-receipt identities missing map qualification.
+
+    This is deliberately a target-specific compiler boundary, not a generic
+    segment inference rule.  The closed, issuer-bound promotion snapshot owns
+    the exact export-field-to-qualified-id relation and its canonical bytes.
+    """
+    if (str(semantic_map.modelo), semantic_map.design_epoch, str(inspection.revision_id)) != ("200", "2024", "2024"):
+        return {}
+    from ..analysis.m200_2024_reviewed_promotions import (
+        _receipt_candidate_ids,
+        build_m200_2024_reviewed_promotion_snapshot,
+    )
+    from ..analysis.m200_2024_unique_adjudications import verify_canonical_declarations
+
+    snapshot = build_m200_2024_reviewed_promotion_snapshot()
+    _receipt_candidate_ids(snapshot)
+    verify_canonical_declarations(snapshot.unique_authority)
+    entries = {str(entry.export_field_id): entry for entry in semantic_map.entries}
+    admissions: dict[str, CasillaId] = {}
+    for row in snapshot.unique_authority.adjudications:
+        identifier = row.casilla_id
+        if ":" not in identifier:
+            continue
+        entry = entries.get(row.export_field_id)
+        if entry is None or entry.casilla_id is None or not _is_qualified_token_match(entry.casilla_id, identifier):
+            raise RegistryValidationError(
+                f"M200/2024 reviewed qualified identity {identifier!r} does not match its semantic-map token",
+            )
+        if identifier not in inspection.casilla_ids:
+            raise RegistryValidationError(
+                f"M200/2024 reviewed qualified identity {identifier!r} is absent from the target revision",
+            )
+        admissions[str(entry.export_field_id)] = identifier
+    return admissions
+
+
+def _is_qualified_token_match(token: CasillaId, identifier: CasillaId) -> bool:
+    if not token.isdecimal() or ":" not in identifier:
+        return False
+    _segment, tail = identifier.rsplit(":", 1)
+    return tail.isdecimal() and tail.lstrip("0") == token.lstrip("0") and bool(tail.lstrip("0"))
 
 
 def _left_padded_casilla_candidates(
