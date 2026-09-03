@@ -1048,6 +1048,9 @@ tui:
       filed: Filed
       not_observed: Not observed
       ready: Ready
+    notification:
+      already_handled: This notification has already been opened.
+      document_handed_off: Notification document handed to the host.
     notification_category:
       communication: Communication
       formal: Formal
@@ -1060,8 +1063,10 @@ tui:
     notifications:
       title: AEAT Sync notifications
     operation:
+      already_handled: This operation has already been handed off.
       failed: Operation could not be started.
       handed_off: Operation handed to the host.
+      in_flight: An operation is already in progress.
     overview:
       title: AEAT Sync overview
     reconciliation:
@@ -1073,8 +1078,10 @@ tui:
       no_action: No action
       unresolved: Unresolved
     refusal:
+      notification_handoff: Notification document retrieval is unavailable.
       operation_handoff: Operation handoff is unavailable.
       source: This source is unavailable for viewing.
+      unread_notification: Unread notifications cannot open documents.
     source:
       aeat:
         census: AEAT census

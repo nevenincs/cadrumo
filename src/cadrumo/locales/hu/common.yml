@@ -993,38 +993,148 @@ transactions:
     verified: Az import sikeresen ellenőrizve.
 tui:
   aeat_sync:
+    action:
+      pull_comparison: Összehasonlítási bizonyítékok lekérése
+      pull_filed: Benyújtott bevallások lekérése
+      review_census: Nyilvántartás áttekintése
+    address:
+      declaration: 'Modelo: %{modelo} · %{filing_year} · %{period}'
+    aeat_observation_state:
+      accepted: Elfogadva
+      not_observed: Nem figyelték meg
+      rejected: Elutasítva
+      submitted: Benyújtva
     area:
+      census: Nyilvántartás
       evidence_comparison: Evidence comparison
+      filed_declarations: Benyújtott bevallások
+      notifications: Értesítések
       reconciliation: Reconciliation
+    availability:
+      available: Elérhető
+      locked: Zárolva
+      never_captured: Még nincs rögzítve
+      stale: Elavult
+      unavailable: Nem érhető el
+    census:
+      title: AEAT-szinkronizálási nyilvántartás
     census_category:
       activity: Activity
+      address: Cím
+      contact: Kapcsolat
+      obligation: Kötelezettség
+      other: Egyéb
     census_status:
       adopted: Adopted
       conflict: Conflict
+      unchanged: Változatlan
+      unset: Nincs beállítva
     column:
+      aeat: AEAT
+      area: Terület
+      availability: Elérhetőség
+      category: Kategória
+      declaration: Bevallás
+      difference: Eltérés
       document_custody: Document custody
+      field: Mező
+      issued: Kiállítva
+      local: Helyi
+      local_filing: Helyi benyújtás
       read: Read
+      receipt: Igazolás
+      resolution: Rendezés
+      sources: Források
+      status: Állapot
     discrepancy:
+      aeat_only: Csak AEAT
+      contradictory_source: Ellentmondó forrás
+      local_only: Csak helyi
+      none: Nincs eltérés
       state_mismatch: State mismatch
+      unobserved: Nem figyelték meg
     document_custody_state:
+      held: Megőrzött
       not_captured: Not captured
+      refused: Elutasítva
+      unavailable: Nem érhető el
+    evidence_comparison:
+      title: Az AEAT-szinkron bizonyítékainak összehasonlítása
     filed_declarations:
       title: AEAT Sync filed declarations
     justificante_state:
       available: Available
+      not_observed: Nem figyelték meg
       unavailable: Unavailable
+      verified: Ellenőrizve
     local_filing_state:
+      draft: Piszkozat
+      filed: Benyújtva
       not_observed: Not observed
+      ready: Benyújtható
+    notification:
+      already_handled: Ezt az értesítést már megnyitották.
+      document_handed_off: Az értesítési dokumentumot átadták a gazdának.
+    notification_category:
+      communication: Közlemény
+      formal: Hivatalos
+      other: Egyéb
+      pending: Függőben
+    notification_read_state:
+      read: Elolvasva
+      unknown: Ismeretlen
+      unread: Olvasatlan
+    notifications:
+      title: Az AEAT-szinkron értesítései
+    operation:
+      already_handled: Ezt a műveletet már átadták a gazdának.
+      failed: A műveletet nem sikerült elindítani.
+      handed_off: A művelet át lett adva a gazdagépnek.
+      in_flight: Már folyamatban van egy művelet.
+    overview:
+      title: Az AEAT-szinkron áttekintése
+    reconciliation:
+      title: Az AEAT-szinkron egyeztetése
     reconciliation_state:
+      accept_aeat: AEAT elfogadása
+      dismissed: Elvetve
       keep_local: Keep local
+      no_action: Nincs teendő
+      unresolved: Megoldatlan
+    refusal:
+      notification_handoff: Az értesítési dokumentum lekérése nem érhető el.
+      operation_handoff: A művelet átadása nem érhető el.
+      source: Ez a forrás nem érhető el megtekintésre.
+      unread_notification: Olvasatlan értesítések dokumentumai nem nyithatók meg.
     source:
       aeat:
+        census: AEAT-nyilvántartás
+        filed_declarations: AEAT-benyújtott bevallások
         notifications: AEAT notifications
+      local:
+        filings: Helyi benyújtások
+        notification_custody: Helyi értesítési megőrzés
+        profile: Helyi profil
+        reconciliation: Helyi egyeztetés
+    source_state:
+      absent: Hiányzik
+      accepted: Elfogadva
+      conflict: Konfliktus
+      not_observed: Nem figyelték meg
+      present: Jelen van
+      rejected: Elutasítva
     sources:
       entry: '%{source}: %{availability}'
       joined: '%{entries}'
+    value:
+      none: —
     zone:
+      census: Nyilvántartás
       evidence_comparison: Evidence comparison
+      filed_declarations: Benyújtott bevallások
+      notifications: Értesítések
+      overview: Áttekintés
+      reconciliation: Egyeztetés
   declarations:
     availability:
       available: Elérhető

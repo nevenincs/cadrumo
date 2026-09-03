@@ -32,19 +32,6 @@ _DESTINATION_BY_ZONE: Final = {
     AeatSyncWorkspaceZone.EVIDENCE_COMPARISON: "aeat_sync.evidence_comparison",
     AeatSyncWorkspaceZone.RECONCILIATION: "aeat_sync.reconciliation",
 }
-_MUTATION_PAIRS: Final = frozenset(
-    {
-        ("operator.profile.edit", "user-profile.censo-review"),
-        ("operator.live.filed.pull", "live.filed-history.pull"),
-        ("operator.live.filed.pull_all", "live.filed-history.pull"),
-    }
-)
-_EXPECTED_ACTION_COMMANDS: Final = {
-    "operator.profile.edit": "config.profile.edit",
-    "operator.live.filed.pull": "app.live.filed.pull",
-    "operator.live.filed.pull_all": "app.live.filed.pull_all",
-}
-_CANONICAL_OPERATION_IDS: Final = frozenset({"user-profile.censo-review", "live.filed-history.pull"})
 
 
 class AeatSyncWorkspaceController:
@@ -99,33 +86,31 @@ class AeatSyncWorkspaceController:
 
         The S397 projection admits action and operation axes independently.  This
         TUI layer deliberately does not infer a generic pairing: it can hand off
-        only a singleton pair in the closed operator vocabulary above.
+        only a singleton pair whose exact join is declared by the injected
+        public operation contract.
         """
         if len(actions) != 1 or len(operations) != 1:
             return None
         action, operation = actions[0], operations[0]
         action_id = str(action.action_id)
         operation_id = str(operation)
-        if (action_id, operation_id) not in _MUTATION_PAIRS:
-            return None
         try:
             canonical = OPERATOR_ACTION_CATALOGUE.lookup(action_id)
             admitted = self.action_catalogue.lookup(action_id)
         except KeyError:
             return None
-        if admitted != canonical or canonical.target_command_key != _EXPECTED_ACTION_COMMANDS[action_id]:
+        if admitted != canonical:
             return None
-        if operation_id not in _CANONICAL_OPERATION_IDS:
+        if self.operation_contracts is None:
             return None
-        if self.operation_contracts is not None:
-            contract = next(
-                (item for item in self.operation_contracts.definitions if str(item.definition_id) == operation_id),
-                None,
-            )
-            if contract is None:
-                return None
-            if OperationFrontendProjection.TUI not in contract.permitted_frontends:
-                return None
+        contract = next(
+            (item for item in self.operation_contracts.definitions if str(item.definition_id) == operation_id),
+            None,
+        )
+        if contract is None or contract.action_reference != action:
+            return None
+        if OperationFrontendProjection.TUI not in contract.permitted_frontends:
+            return None
         return AeatSyncOperationRequestV1(action=action, operation=operation)
 
     async def retrieve_notification_document(self, row: object) -> bool:

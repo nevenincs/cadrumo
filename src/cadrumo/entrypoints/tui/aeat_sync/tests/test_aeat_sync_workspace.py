@@ -36,11 +36,13 @@ from .....application.aeat_sync.workspace import (
 )
 from .....application.operations.models import OperationDefinitionId
 from .....application.operations.registry import OperationPublicContractSetV1
+from .....application.operator_actions.catalogue import ActionCatalogue, ActionCatalogueEntry
 from .....application.operator_actions.models import ActionReference
 from .....application.user_profile.censal_operation import (
     CENSAL_OPERATION_DEFINITION,
     build_censal_operation_registration,
 )
+from .....core.i18n.render import I18N_STRICT_MISSING_KEYS, tr
 from .....core.period import Period
 from .....domain.modelos.codes import ModeloCode
 from ...components.host import ScreenHostApp
@@ -169,10 +171,12 @@ def _projection(
     )
 
 
-def _contracts() -> OperationPublicContractSetV1:
-    return OperationPublicContractSetV1.build(
-        (build_censal_operation_registration(CENSAL_OPERATION_DEFINITION).contract,)
+def _contracts(action_id: str = "operator.profile.edit") -> OperationPublicContractSetV1:
+    """Build a public contract whose operation/action join is explicit."""
+    definition = CENSAL_OPERATION_DEFINITION.model_copy(
+        update={"action_reference": ActionReference(action_id=action_id)}
     )
+    return OperationPublicContractSetV1.build((build_censal_operation_registration(definition).contract,))
 
 
 def _controller(
@@ -283,7 +287,7 @@ async def test_unknown_pair_is_visible_refusal_and_unread_notification_never_cal
         table = screen.query_one("#aeat-sync-rows", DataTable)
         table.focus()
         await pilot.press("enter")
-        assert "unread" in str(screen.query_one("#aeat-sync-status", Static).render()).lower()
+        assert "documentos" in str(screen.query_one("#aeat-sync-status", Static).render()).lower()
     assert calls == []
 
 
@@ -297,3 +301,48 @@ def test_controller_admits_only_exact_singleton_pairs() -> None:
     assert (
         controller.admitted_operation((ActionReference(action_id="operator.overview.explain"),), (operation,)) is None
     )
+
+
+def test_controller_refuses_forged_contract_join_and_catalogue_command() -> None:
+    """An operation ID alone cannot authorize a different action or command."""
+    action = ActionReference(action_id="operator.profile.edit")
+    operation: OperationDefinitionId = "user-profile.censo-review"
+    forged_contract = _controller()
+    forged_contract.operation_contracts = _contracts("operator.live.filed.pull")
+    assert forged_contract.admitted_operation((action,), (operation,)) is None
+
+    forged_catalogue = ActionCatalogue(
+        entries=(
+            ActionCatalogueEntry(
+                action_id="operator.profile.edit",
+                target_command_key="forged.command",
+            ),
+        )
+    )
+    canonical_guard = AeatSyncWorkspaceController(
+        TuiScreenContextV1(destination="workbench.aeat_sync"),
+        _projection(),
+        action_catalogue=forged_catalogue,
+        operation_contracts=_contracts(),
+    )
+    assert canonical_guard.admitted_operation((action,), (operation,)) is None
+
+
+def test_aeat_sync_status_keys_are_present_in_every_supported_locale() -> None:
+    """Status/refusal copy must never fall back to a key in a shipped locale."""
+    keys = (
+        "tui.aeat_sync.operation.in_flight",
+        "tui.aeat_sync.operation.already_handled",
+        "tui.aeat_sync.notification.already_handled",
+        "tui.aeat_sync.notification.document_handed_off",
+        "tui.aeat_sync.refusal.notification_handoff",
+        "tui.aeat_sync.refusal.unread_notification",
+    )
+    token = I18N_STRICT_MISSING_KEYS.set(True)
+    try:
+        for locale in ("en", "es", "ca", "hu"):
+            for key in keys:
+                rendered = tr(key, locale=locale)
+                assert rendered != key
+    finally:
+        I18N_STRICT_MISSING_KEYS.reset(token)

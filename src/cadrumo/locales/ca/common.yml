@@ -1077,6 +1077,9 @@ tui:
       filed: Filed
       not_observed: Not observed
       ready: Ready
+    notification:
+      already_handled: Aquesta notificació ja s'ha obert.
+      document_handed_off: Document de notificació lliurat a l'amfitrió.
     notification_category:
       communication: Communication
       formal: Formal
@@ -1089,8 +1092,10 @@ tui:
     notifications:
       title: AEAT Sync notifications
     operation:
+      already_handled: Aquesta operació ja s'ha lliurat a l'amfitrió.
       failed: Operation could not be started.
       handed_off: Operation handed to the host.
+      in_flight: Ja hi ha una operació en curs.
     overview:
       title: AEAT Sync overview
     reconciliation:
@@ -1102,8 +1107,10 @@ tui:
       no_action: No action
       unresolved: Unresolved
     refusal:
+      notification_handoff: La recuperació del document de notificació no està disponible.
       operation_handoff: Operation handoff is unavailable.
       source: This source is unavailable for viewing.
+      unread_notification: Les notificacions no llegides no poden obrir documents.
     source:
       aeat:
         census: AEAT census
