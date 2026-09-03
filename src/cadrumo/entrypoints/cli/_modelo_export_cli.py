@@ -33,6 +33,7 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
+from ...domain.deadlines.models import TaxpayerProfile
 from ._common import emit_envelope, filing_taxpayer_or_refuse
 from ._modelo_behavior_support import resolve_exportable_revision_for_cli
 from ._modelo_cli_support import (
@@ -96,6 +97,52 @@ def _export_text_lines(result: ModeloExportResult) -> list[str]:
     ]
 
 
+def _export_modelo_revision_for_cli(
+    *,
+    calculation_revision_id: str,
+    output_path: Path,
+    actor: str,
+    refund_election: RefundElection,
+    payment_election: PaymentElection,
+    prior_domiciliation_election: PriorDomiciliationElection,
+    workflow_profile: TaxpayerProfile,
+) -> ModeloExportResult:
+    """Run the canonical export service and translate its CLI-owned refusals.
+
+    Both the standalone export and review-package builder create a fichero-BOE
+    draft through this boundary. Their output contracts remain separate.
+    """
+    try:
+        from ...adapters.persistence.profile.justificante import JustificanteRepository
+
+        return export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=calculation_revision_id,
+                output_path=output_path,
+                actor=actor,
+                refund_election=refund_election,
+                payment_election=payment_election,
+                prior_domiciliation_election=prior_domiciliation_election,
+            ),
+            workflow_profile=workflow_profile,
+            justificante_repository=JustificanteRepository(),
+        )
+    except (
+        CalculationRevisionNotFoundError,
+        CalculationRevisionStateError,
+        WorkUnitNotFoundError,
+        ModeloExportCrossBucketRefusedError,
+        ModeloExportNoActiveBucketError,
+        ModeloExportOutputPathError,
+        ModeloIvaWalletReconciliationBlocked,
+        ModeloPaymentElectionCapabilityRefusedError,
+        ModeloPaymentElectionIncompatibleError,
+        ModeloPriorDomiciliationElectionRefusedError,
+        ModeloRefundElectionNotEligibleError,
+    ) as exc:
+        raise bad_parameter_from_error(exc) from exc
+
+
 __all__ = ["modelo_export_verb"]
 
 
@@ -136,35 +183,15 @@ def modelo_export_verb(
         select=select,
     )
     target_revision_id = selected_revision.calculation_revision_id
-    try:
-        from ...adapters.persistence.profile.justificante import JustificanteRepository
-
-        result = export_modelo_revision(
-            ModeloExportCommand(
-                calculation_revision_id=target_revision_id,
-                output_path=output,
-                actor=actor or resolve_default_actor(),
-                refund_election=refund_election,
-                payment_election=payment_election,
-                prior_domiciliation_election=prior_domiciliation_election,
-            ),
-            workflow_profile=workflow_profile,
-            justificante_repository=JustificanteRepository(),
-        )
-    except (
-        CalculationRevisionNotFoundError,
-        CalculationRevisionStateError,
-        WorkUnitNotFoundError,
-        ModeloExportCrossBucketRefusedError,
-        ModeloExportNoActiveBucketError,
-        ModeloExportOutputPathError,
-        ModeloIvaWalletReconciliationBlocked,
-        ModeloPaymentElectionCapabilityRefusedError,
-        ModeloPaymentElectionIncompatibleError,
-        ModeloPriorDomiciliationElectionRefusedError,
-        ModeloRefundElectionNotEligibleError,
-    ) as exc:
-        raise bad_parameter_from_error(exc) from exc
+    result = _export_modelo_revision_for_cli(
+        calculation_revision_id=target_revision_id,
+        output_path=output,
+        actor=actor or resolve_default_actor(),
+        refund_election=refund_election,
+        payment_election=payment_election,
+        prior_domiciliation_election=prior_domiciliation_election,
+        workflow_profile=workflow_profile,
+    )
     export_result = ModeloExportPayload.from_result(result)
     emit_envelope(
         ctx,

@@ -127,7 +127,7 @@ class ModeloWorkspaceFilingScreen(TypedAppAccess, Screen[None]):
 
     def action_quit_filing(self) -> None:
         """Leave the destination without returning a value; this screen decides nothing."""
-        self.app.exit(None)
+        self.dismiss(None)
 
     def action_toggle_appearance(self) -> None:
         """Switch between the two shipped appearances."""

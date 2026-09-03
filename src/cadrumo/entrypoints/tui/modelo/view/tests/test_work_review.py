@@ -9,6 +9,7 @@ from typing import cast, get_args
 
 import pytest
 import yaml
+from textual.app import App, ComposeResult
 from textual.widget import Widget
 from textual.widgets import (
     Button,
@@ -61,6 +62,37 @@ def test_modelo_view_namespace_is_inert_and_review_types_have_one_defining_modul
     assert "ModeloWorkReviewScreen" not in vars(namespace)
     assert ModeloWorkReviewApp.__module__ == "cadrumo.entrypoints.tui.modelo.view.work_review"
     assert ModeloWorkReviewScreen.__module__ == "cadrumo.entrypoints.tui.modelo.view.work_review"
+
+
+@pytest.mark.asyncio
+async def test_review_screen_dismisses_only_itself_under_a_generic_root(tmp_path: Path) -> None:
+    """Review cancellation calls its exact caller and restores root focus."""
+
+    class _RootApp(App[None]):
+        def compose(self) -> ComposeResult:
+            yield Button("Root", id="root-focus")
+
+    review = build_real_modelo_work_review(
+        tmp_path,
+        modelo="130",
+        filing_year=2026,
+        period_code="1T",
+        blocked=True,
+    )
+    outcomes: list[None] = []
+    app = _RootApp()
+    async with app.run_test(size=(100, 30)) as pilot:
+        root_focus = app.query_one("#root-focus", Button)
+        root_focus.focus()
+        await pilot.pause()
+        app.push_screen(ModeloWorkReviewScreen(review), callback=outcomes.append)
+        await pilot.pause()
+        await pilot.press("escape")
+        await pilot.pause()
+
+        assert outcomes == [None]
+        assert app.screen is app.screen_stack[0]
+        assert app.focused is root_focus
 
 
 def _cells(table: DataTable[str]) -> tuple[str, ...]:

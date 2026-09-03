@@ -108,6 +108,32 @@ def _wizard_dependencies() -> _WizardDeps:
     )
 
 
+def _resolve_modelo_work_unit_for_wizard(
+    *,
+    activate_output_language: Callable[[typer.Context, OutputLanguage | None], None],
+    require_active_profile: Callable[[], None],
+    resolve_work_unit_for_cli: Callable[..., Any],
+    ctx: typer.Context,
+    work_unit_id: str | None,
+    modelo: str | None,
+    year: int | None,
+    period: str | None,
+    revision: str | None,
+    bucket_id: str | None,
+    output_language_opt: OutputLanguage | None,
+) -> Any:
+    """Set up a modelo work wizard and resolve its target work unit.
+
+    The input and amendment wizards deliberately share profile, localization,
+    and target-resolution semantics before their domain workflows diverge.
+    """
+    activate_output_language(ctx, output_language_opt)
+    require_active_profile()
+    return resolve_work_unit_for_cli(
+        work_unit_id=work_unit_id, modelo=modelo, year=year, period=period, revision=revision, bucket_id=bucket_id
+    )
+
+
 def run_modelo_work_wizard(
     *,
     deps: _WizardDeps,
@@ -121,10 +147,18 @@ def run_modelo_work_wizard(
     actor: str | None,
     output_language_opt: OutputLanguage | None,
 ) -> None:
-    deps.activate_output_language(ctx, output_language_opt)
-    deps.require_active_profile()
-    unit = deps.resolve_work_unit_for_cli(
-        work_unit_id=work_unit_id, modelo=modelo, year=year, period=period, revision=revision, bucket_id=bucket_id
+    unit = _resolve_modelo_work_unit_for_wizard(
+        activate_output_language=deps.activate_output_language,
+        require_active_profile=deps.require_active_profile,
+        resolve_work_unit_for_cli=deps.resolve_work_unit_for_cli,
+        ctx=ctx,
+        work_unit_id=work_unit_id,
+        modelo=modelo,
+        year=year,
+        period=period,
+        revision=revision,
+        bucket_id=bucket_id,
+        output_language_opt=output_language_opt,
     )
     try:
         with open_modelo_work_wizard(unit) as wizard:

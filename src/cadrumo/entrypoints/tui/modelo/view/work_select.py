@@ -48,6 +48,11 @@ class ModeloWorkSelectScreen(TypedAppAccess, Screen["str | None"]):
         Binding("f3", "toggle_appearance", "", show=False),
     ]
 
+    def __init__(self, units: tuple[WorkUnit, ...]) -> None:
+        """Retain the immutable catalogue supplied by any screen host."""
+        super().__init__()
+        self._units = units
+
     @override
     def compose(self) -> ComposeResult:
         yield Static(id="modelo-select-header", classes="cadrumo-banner")
@@ -64,7 +69,7 @@ class ModeloWorkSelectScreen(TypedAppAccess, Screen["str | None"]):
         table = cast("ContentDataTable[str]", self.query_one("#modelo-select-table", ContentDataTable))
         for column_key in _COLUMN_KEYS:
             table.add_column(tr(f"flows.modelo_select.column.{column_key}"), key=column_key)
-        units = self.select_app.units
+        units = self._units
         for unit in units:
             table.add_row(*_row_values(unit), key=unit.work_unit_id)
         empty = self.query_one("#modelo-select-empty", Static)
@@ -92,21 +97,7 @@ class ModeloWorkSelectScreen(TypedAppAccess, Screen["str | None"]):
 
     def action_toggle_appearance(self) -> None:
         """Toggle the shared presentation theme for the select host."""
-        toggle_appearance(self.select_app)
-
-    @property
-    def select_app(self) -> ModeloWorkSelectApp:
-        """Return the one owning application, refusing a foreign screen host."""
-        return _require_select_app(self.app)
-
-
-def _require_select_app(app: object) -> ModeloWorkSelectApp:
-    """Narrow a screen host without leaving an unknown generic App type."""
-    if not isinstance(app, ModeloWorkSelectApp):
-        raise TypeError(
-            f"{ModeloWorkSelectScreen.__name__} requires {ModeloWorkSelectApp.__name__}, got {type(app).__name__}",
-        )
-    return app
+        toggle_appearance(self.app)
 
 
 class ModeloWorkSelectApp(ScreenHostApp[str]):
@@ -131,7 +122,7 @@ class ModeloWorkSelectApp(ScreenHostApp[str]):
 
     def __init__(self, units: tuple[WorkUnit, ...]) -> None:
         """Bind the one immutable work-unit tuple rendered by this host."""
-        super().__init__(ModeloWorkSelectScreen())
+        super().__init__(ModeloWorkSelectScreen(units))
         self.units = units
 
 

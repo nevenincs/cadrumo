@@ -108,6 +108,11 @@ class ModeloWorkReviewScreen(TypedAppAccess, Screen[None]):
         Binding("f3", "toggle_appearance", "", show=False),
     ]
 
+    def __init__(self, review: ModeloWorkReview) -> None:
+        """Retain the immutable application review supplied by any host."""
+        super().__init__()
+        self._review = review
+
     @override
     def compose(self) -> ComposeResult:
         yield Static(id="modelo-review-header", classes="cadrumo-banner")
@@ -247,7 +252,7 @@ class ModeloWorkReviewScreen(TypedAppAccess, Screen[None]):
     def on_mount(self) -> None:
         """Render the immutable review when the screen enters the application."""
         self._localize_bindings()
-        review = self.review_app.review
+        review = self._review
         self.query_one("#modelo-review-header", Static).update(
             tr(
                 "flows.modelo_review.title",
@@ -273,11 +278,6 @@ class ModeloWorkReviewScreen(TypedAppAccess, Screen[None]):
         for chooser in self.query("#modelo-review-filters Select"):
             cast("Select[str]", chooser).clear()
         self._refresh_filtered_rows()
-
-    @property
-    def review_app(self) -> ModeloWorkReviewApp:
-        """Return the one owning application, refusing a foreign screen host."""
-        return _require_review_app(cast(object, self.app))
 
     def _localize_bindings(self) -> None:
         localize_key_descriptions(self, {"quit_review": tr("flows.status.binding_quit")})
@@ -368,7 +368,7 @@ class ModeloWorkReviewScreen(TypedAppAccess, Screen[None]):
         return axis is None or blocker.axis.value == axis
 
     def _refresh_filtered_rows(self) -> None:
-        review = self.review_app.review
+        review = self._review
         casillas = tuple(row for row in review.casillas if self._casilla_matches(row))
         self._populate_casillas(casillas)
         if review.findings:
@@ -556,7 +556,7 @@ class ModeloWorkReviewScreen(TypedAppAccess, Screen[None]):
 
     def action_toggle_appearance(self) -> None:
         """Toggle the shared presentation theme for the review host."""
-        toggle_appearance(self.review_app)
+        toggle_appearance(self.app)
 
 
 def _casilla_row_values(row: ModeloWorkReviewCasilla) -> tuple[str, ...]:
@@ -655,15 +655,6 @@ addressing. Copying belongs there rather than on a summary.
 """
 
 
-def _require_review_app(app: object) -> ModeloWorkReviewApp:
-    """Narrow a screen host without leaving an unknown generic App type."""
-    if not isinstance(app, ModeloWorkReviewApp):
-        raise TypeError(
-            f"{ModeloWorkReviewScreen.__name__} requires {ModeloWorkReviewApp.__name__}, got {type(app).__name__}",
-        )
-    return app
-
-
 class ModeloWorkReviewApp(ScreenHostApp[None]):
     """Standalone host for a canonical modelo work review screen."""
 
@@ -691,7 +682,7 @@ class ModeloWorkReviewApp(ScreenHostApp[None]):
 
     def __init__(self, review: ModeloWorkReview) -> None:
         """Bind the one immutable application review rendered by this host."""
-        super().__init__(ModeloWorkReviewScreen())
+        super().__init__(ModeloWorkReviewScreen(review))
         self.review = review
 
 
