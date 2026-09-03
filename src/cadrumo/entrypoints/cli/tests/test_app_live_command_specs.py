@@ -130,6 +130,8 @@ def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
         "app_live_verify_latest",
     ):
         assert verify[key].policy is _ENCRYPTED_LOCAL_READ_POLICY
+    for key in ("app_live_portals_list", "app_live_portals_view"):
+        assert portals[key].policy is _METADATA_POLICY
     for key in (
         "app_live_notifications_list",
         "app_live_notifications_view",
