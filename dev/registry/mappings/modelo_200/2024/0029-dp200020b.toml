@@ -436,8 +436,8 @@ record_identity = "DP200020B"
 [[entries]]
 export_field_id = "m200-2024.dp200020b.f0034"
 kind = "casilla"
-casilla_id = "2239"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+casilla_id = "02239"
+legal_refs = ["ley-27-2014:art-105"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]
 sheet = "DP200020B"
@@ -449,8 +449,8 @@ record_identity = "DP200020B"
 [[entries]]
 export_field_id = "m200-2024.dp200020b.f0035"
 kind = "casilla"
-casilla_id = "1603"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+casilla_id = "01603"
+legal_refs = ["ley-27-2014:art-105"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]
 sheet = "DP200020B"
@@ -501,8 +501,8 @@ record_identity = "DP200020B"
 [[entries]]
 export_field_id = "m200-2024.dp200020b.f0039"
 kind = "casilla"
-casilla_id = "2412"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+casilla_id = "02412"
+legal_refs = ["ley-27-2014:art-105"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]
 sheet = "DP200020B"

@@ -21,6 +21,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.loader import load_catalogue_file
 from cadrumo.domain.calculations.registry.schema_references import governed_period_span
 
+from ..pipeline._semantic_map_loader import load_semantic_map
 from .m200_restored_semantic_audit import AuditDisposition, RestoredSemanticAudit, audit_bundled_restorations
 
 TARGET_SOURCE_REF = "aeat-dr-200-2024"
@@ -75,6 +76,7 @@ def compile_m200_2024_same_template_authority(
     for entry in entries:
         _require_target_audit(entry, audit_by_id.get(entry.casilla_id))
     _require_legal_coverage(entries)
+    _require_canonical_map_entries(entries)
     return CompiledM200Same2024TemplateAuthority(
         source_ref=TARGET_SOURCE_REF,
         source_sha256=TARGET_SOURCE_SHA256,
@@ -168,6 +170,23 @@ def _semantic_payload_digest(entry: M200Same2024TemplateAdjudication) -> str:
             "source_refs": (TARGET_SOURCE_REF, MANUAL_SOURCE_REF),
         }
     )
+
+
+def _require_canonical_map_entries(entries: tuple[M200Same2024TemplateAdjudication, ...]) -> None:
+    semantic_map = load_semantic_map(Path(__file__).parents[1] / "mappings" / "modelo_200" / "2024")
+    if (semantic_map.source_ref, semantic_map.source_sha256) != (TARGET_SOURCE_REF, TARGET_SOURCE_SHA256):
+        raise RegistryValidationError("M200/2024 same-template semantic map source drifted")
+    by_export_id = {str(entry.export_field_id): entry for entry in semantic_map.entries}
+    for adjudication in entries:
+        map_entry = by_export_id.get(adjudication.export_field_id)
+        if map_entry is None or str(map_entry.casilla_id) != adjudication.casilla_id:
+            raise RegistryValidationError(
+                f"M200/2024 same-template adjudication {adjudication.casilla_id!r} lacks its canonical map owner"
+            )
+        if tuple(map_entry.legal_refs) != adjudication.legal_refs:
+            raise RegistryValidationError(
+                f"M200/2024 same-template adjudication {adjudication.casilla_id!r} map legal authority drifted"
+            )
 
 
 def _parse_entry(raw: object) -> M200Same2024TemplateAdjudication:

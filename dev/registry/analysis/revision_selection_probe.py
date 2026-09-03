@@ -62,6 +62,13 @@ class SelectionProbe:
     filing_year: int
     resolved: str | None
     refusal: str | None
+    #: Whether the filing year ALONE could not choose, so a date inside the
+    #: revision's own window was needed. Recorded rather than discarded: a
+    #: successful retry leaves `resolved` set and clears `refusal`, so without
+    #: this a coordinate the year cannot decide is reported exactly like one it
+    #: decides outright, and the class this screen exists to find disappears
+    #: into the ordinary rows.
+    year_alone_ambiguous: bool = False
 
     @property
     def resolves_to_itself(self) -> bool:
@@ -120,7 +127,8 @@ def probe_modelo(
             # decide between windows splitting inside it, which a date does
             # decide. Any other refusal is the revision's own answer, and
             # retrying it with a date doubles the work to hear the same thing.
-            if refusal == AmbiguousRevisionSelectionError.__name__:
+            year_alone_ambiguous = refusal == AmbiguousRevisionSelectionError.__name__
+            if year_alone_ambiguous:
                 for grade in _GRADES:
                     try:
                         resolved = str(
@@ -145,6 +153,7 @@ def probe_modelo(
                     filing_year=year,
                     resolved=resolved,
                     refusal=None if resolved else refusal,
+                    year_alone_ambiguous=year_alone_ambiguous,
                 )
             )
     return tuple(probes)
@@ -168,9 +177,14 @@ def main(argv: list[str] | None = None) -> int:
         outcome = probe.resolved or f"refused({probe.refusal})"
         sys.stdout.write(
             f"selection modelo={probe.modelo} revision={probe.revision} period={probe.period} "
-            f"year={probe.filing_year} resolved={outcome}\n"
+            f"year={probe.filing_year} resolved={outcome} "
+            f"year_alone_ambiguous={str(probe.year_alone_ambiguous).lower()}\n"
         )
-    sys.stdout.write(f"summary probes={len(probes)} not_resolving_to_themselves={surprising}\n")
+    ambiguous = sum(1 for probe in probes if probe.year_alone_ambiguous)
+    sys.stdout.write(
+        f"summary probes={len(probes)} not_resolving_to_themselves={surprising} "
+        f"year_alone_ambiguous={ambiguous}\n"
+    )
     return 0
 
 

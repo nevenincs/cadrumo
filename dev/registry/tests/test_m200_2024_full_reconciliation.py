@@ -44,13 +44,13 @@ def test_full_reconciliation_accounts_for_every_declaration_candidate_and_target
     anchors = census.anchors
 
     assert len(rows) == 3329
-    assert sum(row.origin == "current_declaration" for row in rows) == 3173
-    assert sum(row.origin == "restoration_candidate" for row in rows) == 156
+    assert sum(row.origin == "current_declaration" for row in rows) == 3177
+    assert sum(row.origin == "restoration_candidate" for row in rows) == 152
     assert len(anchors) == 6709
     assert len({anchor.anchor for anchor in anchors}) == len(anchors)
     assert len({anchor.export_field_id for anchor in anchors}) == len(anchors)
-    assert sum(anchor.owner_state == "exact_planned_owner" for anchor in anchors) == 5288
-    assert sum(anchor.owner_state == "zero_padding_mismatch_refused" for anchor in anchors) == 184
+    assert sum(anchor.owner_state == "exact_planned_owner" for anchor in anchors) == 5292
+    assert sum(anchor.owner_state == "zero_padding_mismatch_refused" for anchor in anchors) == 180
     assert sum(anchor.owner_state == "qualified_identity_mismatch_refused" for anchor in anchors) == 1
     assert sum(anchor.owner_state == "non_casilla" for anchor in anchors) == 1236
     assert sum(anchor.owner_state == "unknown_map_owner_refused" for anchor in anchors) == 0
@@ -62,7 +62,7 @@ def test_rebind_census_preserves_exact_map_ownership_and_withholds_identity_anom
 
     assert sum(row.source_ref_state == "mechanical_rebind" for row in current) == 3171
     assert sum(row.source_ref_state == "unmapped_no_rebind" for row in current) == 2
-    assert sum(bool(row.fields) for row in current) == 3171
+    assert sum(bool(row.fields) for row in current) == 3175
     assert sum(row.identity_review_required for row in current) == 15
     assert all(
         row.source_ref_state == "candidate_non_authoritative"
@@ -345,7 +345,7 @@ def test_source_rebind_plan_is_complete_target_map_owned_and_refuses_only_true_o
     assert source_rebind_plan.semantic_map_source_sha256 == subject.TARGET_SOURCE_SHA256
     assert len(source_rebind_plan.rebinds) == 3171
     assert len(source_rebind_plan.refused_orphan_ids) == 2
-    assert len(source_rebind_plan.expected_current_ids) == 3173
+    assert len(source_rebind_plan.expected_current_ids) == 3177
     assert {item.casilla_id for item in source_rebind_plan.rebinds}.isdisjoint(source_rebind_plan.refused_orphan_ids)
     assert all(item.expected_source_refs[0] == subject.SIBLING_SOURCE_REF for item in source_rebind_plan.rebinds)
     assert all(item.target_source_refs[0] == subject.TARGET_SOURCE_REF for item in source_rebind_plan.rebinds)
