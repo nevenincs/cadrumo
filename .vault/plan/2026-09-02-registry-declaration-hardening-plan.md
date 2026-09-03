@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:f823b6a25f0f6518a660185c1a7257b1599ab6609fbd40c682e327c0bc440298'
+body_hash: 'sha256:cb76805ff8c5c1ee0d200657e3db8c94600555735b554f62fcbccdd64ca59c20'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -368,7 +368,7 @@ Screen and then gate the mapping between a casilla's declared type and the type 
 - [ ] `W04.P07.S27` - Declare the twenty-seven distinct casilla-to-wire type transitions as validated registry data, the largest being money to decimal and ratio to decimal; `src/cadrumo/domain/calculations/registry/export_value_policy.py`.
 - [x] `W04.P07.S69` - Screen every monetary field for a wire type that applies no scale to the emitted digits; `dev/registry/analysis/monetary_scale.py`.
 - [x] `W04.P07.S70` - Prove the monetary scale screen exempts the self-scaling wire types and reports the unscaled ones; `dev/registry/tests/test_monetary_scale.py`.
-- [ ] `W04.P07.S75` - Give the existing publication authority an invocable entry point, since publish_validated_generated_export_tree has no caller, then publish the two enrolled trees that render but were never committed; `dev/registry/pipeline/_tree_publication.py`.
+- [ ] `W04.P07.S75` - Publish the two enrolled trees that render but were never committed, using the operator publish verb that already reaches the publication authority; `dev/registry/pipeline/_tree_publication.py`.
 - [ ] `W04.P07.S71` - Declare the scale the official design specifies for each monetary field rendered by an unscaled wire type; `src/cadrumo/_data/registry/aeat/modelos`.
 - [x] `W04.P07.S72` - Gate that every monetary field declares a scale or is rendered by a self-scaling wire type; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W04.P07.S74` - Screen sibling amount fields of one record for disagreeing scale representations; `dev/registry/analysis/monetary_scale.py`.
@@ -650,6 +650,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S350` - Attribute the registry failures the manifest and publication entries do not cover; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S351` - Characterise the last four registry failures so every one in the suite is attributed; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S352` - Record the completed registry attribution in the lane criterion, with its causes rather than its count; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [ ] `W06.P13.S353` - Lift the unreachable-publication constraint, which a September second commit had already made false; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
@@ -689,11 +690,14 @@ first does not avoid the work; it converts it from authoring into a correction o
 The generator verb must be reachable before any generated-tree defect can be corrected. A defect whose
 root cause is proven, whose corrected value is stated in the official design, and whose authored input
 is uncontended is still unfixable while no supported path regenerates one revision from its inputs.
-This constraint was first written as though the verb had to be built. It does not: the pipeline
-implements `publish_validated_generated_export_tree`, and a search for its callers returns one hit, a
-test asserting that a different module does not reference it. So the limb exists and nothing can reach
-it, which is a worse state than absence because it reads as capability. The constraint stands and its
-remedy shrinks: expose the existing authority, do not write a second one. It gates every correction
+This constraint was written twice and is wrong both times. It first said the verb had to be built; it
+does not, because the pipeline implements `publish_validated_generated_export_tree`. It then said the
+limb existed and nothing could reach it, which was true when written and stopped being true on
+2026-09-02, when an operator invocation surface was added. `python -m dev.registry.pipeline publish`
+is a registered verb today and it calls that authority through the same prepared candidate the
+read-only check validates. The constraint is therefore lifted, and the republication it was blocking -
+the single repair behind twenty-seven of this directory's thirty-five failures - needs no new
+machinery, only somebody with the scope to run it. It gates every correction
 Step touching a generated modelo, whatever Wave the Step sits in, and it also gates the two enrolled
 trees that render successfully and have never been committed.
 
