@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:1572efe78df4a896cfecf3b160fff7f667e2ca866d9e60bec493ba35082861f4'
+body_hash: 'sha256:1805b8edb4f2d232c9aeb571ce5adbcd4cb890bfcd81f283897b466e3d5ad90d'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -438,6 +438,7 @@ Screen and then gate the mapping between a casilla's declared type and the type 
 - [ ] `W04.P07.S413` - Let a render profile declare a field eligible with its representation unsupported, since exact coverage plus a two-valued authority discriminator obliges an author to assert official source or reviewed policy for twenty-nine fields whose only located wording is about applicability; `dev/registry/pipeline/_render_profile.py dev/registry/render_profiles`.
 - [x] `W04.P07.S414` - Rewrite the note-evidence criterion to record that zero ungrounded is not readiness: twelve of forty-one fields have wording that settles representation, four of thirteen notes drift between designs, and the correction is blocked on a profile that cannot declare a representation unsupported; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W04.P07.S424` - Read gates from each screens own entry point rather than the runner table, since projections hid four emitted kinds from the kind-naming gate including all three grounded kinds behind an empty residue, and guard the direction that holds by refusing a projection that reports a kind its screen never emits; `dev/registry/analysis/screens.py dev/registry/tests/test_declaration_invariant_gates.py`.
+- [x] `W04.P07.S427` - Record that all twenty-six unscaled monetary fields sit in filing-grade revisions rather than below it, and that a gate forbidding two conditions of one screen from firing on one revision would be wrong since per-field findings share a revision coordinate legitimately; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W04.P08` - grade earned gate
 
@@ -1000,7 +1001,11 @@ what the sibling conditions in the same module already do.
 No monetary amount is emitted at a magnitude the registry does not determine. Every monetary field is
 rendered by a wire type that scales, carries a declared scale, or is one half of the official part
 split, and no field disagrees with the amounts beside it in its own record. Twenty-six fields fail
-the first test and two fail the second, and those two are the plan's known filing-correctness
+the first test and two fail the second, and **every one of the twenty-six sits in a revision declaring
+filing grade** - eight and six in the two revisions of modelo 347, four and four in modelo 184's, two
+in modelo 200, one each in modelos 296 and 353. Each is a monetary field rendered as text, which
+applies no scale, in a revision that says it can be filed. Five more declare four decimals where the
+corpus otherwise uses two. The two that fail the second test are the plan's known filing-correctness
 defects: modelo 200's casilla 03594 and modelo 353's casilla 10, each emitting unscaled where the
 amounts beside it in the same record emit cents. The second appeared through a commit while this
 plan was being executed and was caught by the gate that pins the first, which is what a gate

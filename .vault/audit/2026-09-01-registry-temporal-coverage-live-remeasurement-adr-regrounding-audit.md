@@ -11392,3 +11392,40 @@ was reworded. The computation now lives once, as
 it and by the screen that narrows it. A test asserts the census agrees with that
 function for every revision, so a future second implementation fails rather than
 drifts.
+
+
+## Every unscaled monetary field sits in a revision that can be filed
+
+The monetary screen emits 165 findings; the runner shows 33 because its entry
+projects onto those needing action. The 132 excluded are
+`money_split_representation`, the official integer-and-decimal part split, which
+is the design rather than a defect.
+
+Of the 33 that remain, the largest condition is **26 fields rendered as text -
+applying no scale - and declaring no decimals. All 26 are in revisions declaring
+filing grade**: modelo 347 with eight and six across its two revisions, modelo
+184 with four and four, modelo 200 with two, and modelos 296 and 353 with one
+each. Five more declare four decimals where the corpus otherwise uses two, and
+two are the known sibling-disagreement defects.
+
+The plan's verification criterion already carried the figure 26. What it did not
+say is that not one of them sits below filing grade, where an undetermined
+magnitude would cost nothing. That is now stated.
+
+## A guard that would have been wrong, measured before writing it
+
+Having twice created two conditions of one screen that both fire on one
+revision, the obvious guard is a gate forbidding it. Measured first, and it
+would have been wrong: within-screen overlap is normal and legitimate. The
+monetary screen has seven revisions carrying several kinds at once because its
+findings are per FIELD and the coordinate is the revision - one revision can
+hold a field without scale, a part split and a sibling disagreement, and all
+three are true. The pointer, grounding and capability screens overlap for the
+same reason.
+
+The exclusivity that was violated is narrower and cannot be derived: it holds
+between two conditions that both key on the revision ITSELF and describe the
+same property of it, which is the pair of deadline conditions and nothing else.
+That is where the test was put. A screen-wide gate would have failed on four
+screens reporting correctly, which is the second methodological guard this
+campaign has declined after measuring rather than after it broke something.
