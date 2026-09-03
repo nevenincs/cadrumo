@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-03'
-body_hash: 'sha256:4518e303a47ebf76003e5d1e899db8b6115a1b93ee091993a51815d2e3adb008'
+body_hash: 'sha256:ca5c1279ff2ad1a97dfa2b7a63d4a5db06b879dac1f4707712bc3e33bfa7afbf'
 ---
 
 <!-- RETIRED: S370 -->
@@ -594,7 +594,7 @@ Compose the production Home projection, destination catalogue, global search and
 - [x] `W08.P28.S383` - Compose the root destination stack, account header, semantic focus restoration, session expiry, and post-journey Home refresh; `src/cadrumo/entrypoints/tui/app.py`.
 - [ ] `W08.P28.S398` - Connect cadrumo.application.search to the installed workbench by assembling one immutable redacted document snapshot from the current Ledger, Declarations, filing-history, reconciliation, notification, and Modelo projections, injecting its service into the root host, and rebuilding it after authoritative child returns without implicit I/O; `src/cadrumo/application/search/, src/cadrumo/entrypoints/tui/launcher.py, and focused installed-search tests`.
 - [ ] `W08.P28.S400` - Build the child-owned installed-workbench generation provider from secure profile repositories and application projection builders, representing authorities without production loaders as explicit unavailable or never-captured sources rather than empty fixtures; `src/cadrumo/application/workbench_generation.py, src/cadrumo/entrypoints/tui/launcher.py, and focused production-composition tests`.
-- [ ] `W08.P28.S384` - Compose secure profile, overview, Ledger, declaration, evidence, notification, operation, and destination factories for one installed session; `src/cadrumo/entrypoints/tui/launcher.py`.
+- [x] `W08.P28.S384` - Compose secure profile, overview, Ledger, declaration, evidence, notification, operation, and destination factories for one installed session; `src/cadrumo/entrypoints/tui/launcher.py`.
 - [ ] `W08.P28.S385` - Add complete localized workbench, account, Ledger, Declarations, calendar, AEAT Sync, search, availability, and refusal messages through the canonical locale workflow; `src/cadrumo/locales/`.
 - [ ] `W08.P28.S394` - Generate and enforce an exhaustive visual-review inventory that maps every production TUI page, dialog, and editor factory to a stable review surface identity and fails when a concrete surface is undiscovered or unclassified; `src/cadrumo/entrypoints/tui/devtools/surfaces.py, dev/tui/_inventory.py, dev/tui/_coverage.py, and dev/tui/tests/test_tui_visual_inventory.py`.
 - [ ] `W08.P28.S395` - Provide deterministic non-sensitive review fixtures for every inventoried page, dialog, and editor, including meaningful ready, empty, blocked, stale, unavailable, validation, confirmation, and failure states wherever that surface supports them; `dev/tui/_harness.py, src/cadrumo/entrypoints/tui/devtools/, and dev/tui/tests/test_tui_visual_inventory.py`.
