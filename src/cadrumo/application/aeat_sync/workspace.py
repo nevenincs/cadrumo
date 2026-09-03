@@ -632,7 +632,7 @@ def _actions(
                     for contract in contracts.definitions
                     if contract.action_reference == action and contract.definition_id in operation_ids
                 )
-                if not joined and action.action_id in {
+                if not joined and str(action.action_id) in {
                     "operator.live.filed.pull",
                     "operator.live.filed.pull_all",
                 }:

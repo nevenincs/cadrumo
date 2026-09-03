@@ -48,6 +48,7 @@ class AeatSyncWorkspaceController:
         *,
         operation_handoff: AeatSyncOperationHandoffV1 | None = None,
     ) -> None:
+        """Validate the outer context and retain only injected public facts."""
         if context.destination != "workbench.aeat_sync":
             raise ValueError("AEAT Sync requires the workbench.aeat_sync context")
         if projection.contract_version != AEAT_SYNC_WORKSPACE_CONTRACT_VERSION:
@@ -63,9 +64,7 @@ class AeatSyncWorkspaceController:
 
     def target(self, zone: AeatSyncWorkspaceZone) -> AeatSyncRouteTargetV1:
         """Build a semantic internal target without resolving I/O or a screen."""
-        return AeatSyncRouteTargetV1(
-            destination=cast("AeatSyncDestinationIdV1", _DESTINATION_BY_ZONE[zone]), zone=zone
-        )
+        return AeatSyncRouteTargetV1(destination=cast("AeatSyncDestinationIdV1", _DESTINATION_BY_ZONE[zone]), zone=zone)
 
     def admitted_operation(
         self, actions: tuple[ActionReference, ...], operations: tuple[OperationDefinitionId, ...]

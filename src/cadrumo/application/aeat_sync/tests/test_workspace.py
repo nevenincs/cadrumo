@@ -14,7 +14,7 @@ from pydantic import ValidationError
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ...operations.registry import OperationPublicContractSetV1
-from ...operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
+from ...operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogue, ActionCatalogueEntry
 from ...operator_actions.models import ActionReference
 from ...user_profile.censal_operation import CENSAL_OPERATION_DEFINITION, build_censal_operation_registration
 from ..workspace import (
@@ -160,7 +160,6 @@ def _notification() -> AeatSyncWorkspaceNotificationRowV1:
         category=AeatSyncNotificationCategory.FORMAL,
         document_custody_state=AeatSyncDocumentCustodyState.HELD,
         document_custody_observed_at=T2,
-        supported_actions=(_action("operator.live.notifications.list"),),
     )
 
 
@@ -287,6 +286,8 @@ def test_logical_duplicates_refuse_disagreement() -> None:
         _projection(overview=(_fact(_overview()), _fact(_overview())))
     with pytest.raises(AeatSyncWorkspaceProjectionError, match="census paths"):
         _projection(census=(_fact(_census("Address")), _fact(_census("address", AeatSyncCensusCategory.OTHER))))
+    with pytest.raises(AeatSyncWorkspaceProjectionError, match="census paths"):
+        _projection(census=(_fact(_census("tax   address")), _fact(_census(" Tax Address "))))
     with pytest.raises(AeatSyncWorkspaceProjectionError, match="notification identities"):
         _projection(
             notifications=(
@@ -297,9 +298,10 @@ def test_logical_duplicates_refuse_disagreement() -> None:
 
 
 def test_actions_require_catalogue_admission_and_area_state_closure() -> None:
-    census_action = _action("operator.not.in.catalogue")
-    with pytest.raises(AeatSyncWorkspaceProjectionError, match="not admitted"):
-        _projection(census=(_fact(_census().model_copy(update={"supported_actions": (census_action,)})),))
+    canonical = OPERATOR_ACTION_CATALOGUE.lookup("operator.profile.edit")
+    forged = ActionCatalogueEntry(action_id=canonical.action_id, target_command_key="forged.command")
+    with pytest.raises(AeatSyncWorkspaceProjectionError, match="differs from canonical"):
+        _projection(action_catalogue=ActionCatalogue(entries=(forged,)))
     with pytest.raises(AeatSyncWorkspaceProjectionError, match="not allowed"):
         _projection(overview=(_fact(_overview(actions=(_action("operator.live.notifications.list"),))),))
     with pytest.raises(ValidationError, match="NO_ACTION"):
@@ -311,9 +313,9 @@ def test_actions_require_catalogue_admission_and_area_state_closure() -> None:
     assert _projection(overview=(_fact(admitted_operation),)).overview[0].supported_operations == (
         "user-profile.censo-review",
     )
-    pull_without_join = _filed().model_copy(update={"supported_actions": (_action("operator.live.filed.pull"),)})
-    with pytest.raises(AeatSyncWorkspaceProjectionError, match="operation join"):
-        _projection(filed_declarations=(_fact(pull_without_join),))
+    for row_without_actions in (_census(), _filed(), _notification()):
+        assert not hasattr(row_without_actions, "supported_actions")
+        assert not hasattr(row_without_actions, "supported_operations")
 
 
 def test_row_subclass_protected_fields_are_reconstructed_away() -> None:
@@ -371,6 +373,21 @@ def test_unavailable_sources_cannot_carry_confident_rows() -> None:
     }
     with pytest.raises(AeatSyncWorkspaceProjectionError, match="unobservable zone"):
         _projection(zone_observations=_observations(overrides=overrides), census=(_fact(_census()),))
+
+
+def test_zero_count_source_rejects_confident_rows() -> None:
+    observations = list(_observations())
+    census = observations[1]
+    observations[1] = census.model_copy(
+        update={
+            "sources": (
+                census.sources[0],
+                census.sources[1].model_copy(update={"item_count": 0}),
+            )
+        }
+    )
+    with pytest.raises(AeatSyncWorkspaceProjectionError, match="AEAT census"):
+        _projection(zone_observations=tuple(observations), census=(_fact(_census()),))
 
 
 def test_no_adapter_entrypoint_io_imports_and_initializer_is_inert() -> None:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Final, cast, get_args
+from typing import Final, get_args
 
 from textual.screen import Screen
 
@@ -27,6 +27,8 @@ type AeatSyncInternalScreenFactoryV1 = Callable[[AeatSyncWorkspaceController], A
 
 @dataclass(frozen=True, slots=True)
 class AeatSyncRouteV1:
+    """One total internal route over one public projection zone."""
+
     destination: AeatSyncDestinationIdV1
     zone: AeatSyncWorkspaceZone
     factory: AeatSyncInternalScreenFactoryV1
@@ -35,9 +37,13 @@ class AeatSyncRouteV1:
 AEAT_SYNC_ROUTES: Final = (
     AeatSyncRouteV1("aeat_sync.overview", AeatSyncWorkspaceZone.OVERVIEW, AeatSyncOverviewScreen),
     AeatSyncRouteV1("aeat_sync.census", AeatSyncWorkspaceZone.CENSUS, AeatSyncCensusScreen),
-    AeatSyncRouteV1("aeat_sync.filed_declarations", AeatSyncWorkspaceZone.FILED_DECLARATIONS, AeatSyncFiledDeclarationsScreen),
+    AeatSyncRouteV1(
+        "aeat_sync.filed_declarations", AeatSyncWorkspaceZone.FILED_DECLARATIONS, AeatSyncFiledDeclarationsScreen
+    ),
     AeatSyncRouteV1("aeat_sync.notifications", AeatSyncWorkspaceZone.NOTIFICATIONS, AeatSyncNotificationsScreen),
-    AeatSyncRouteV1("aeat_sync.evidence_comparison", AeatSyncWorkspaceZone.EVIDENCE_COMPARISON, AeatSyncEvidenceComparisonScreen),
+    AeatSyncRouteV1(
+        "aeat_sync.evidence_comparison", AeatSyncWorkspaceZone.EVIDENCE_COMPARISON, AeatSyncEvidenceComparisonScreen
+    ),
     AeatSyncRouteV1("aeat_sync.reconciliation", AeatSyncWorkspaceZone.RECONCILIATION, AeatSyncReconciliationScreen),
 )
 _ROUTES_BY_ID: Final = {route.destination: route for route in AEAT_SYNC_ROUTES}
@@ -48,7 +54,9 @@ def declared_aeat_sync_destination_ids() -> frozenset[str]:
     return frozenset(item for item in get_args(AeatSyncDestinationIdV1.__value__) if isinstance(item, str))
 
 
-if frozenset(_ROUTES_BY_ID) != declared_aeat_sync_destination_ids() or tuple(route.zone for route in AEAT_SYNC_ROUTES) != tuple(AeatSyncWorkspaceZone):
+if frozenset(_ROUTES_BY_ID) != declared_aeat_sync_destination_ids() or tuple(
+    route.zone for route in AEAT_SYNC_ROUTES
+) != tuple(AeatSyncWorkspaceZone):
     raise ValueError("AEAT Sync routes must cover the closed zone catalogue exactly once and in order")
 
 
