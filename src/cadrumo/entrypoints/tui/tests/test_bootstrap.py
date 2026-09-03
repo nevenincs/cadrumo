@@ -162,6 +162,26 @@ def test_coordinator_routes_degraded_inventory_without_opening_login() -> None:
     assert observed == [degraded]
 
 
+def test_coordinator_routes_concurrent_inventory_without_opening_login() -> None:
+    concurrent = WorkbenchBootstrapV1(
+        inventory_state=WorkbenchBootstrapInventoryState.CONCURRENT_CHANGE,
+        reason_code="workbench.bootstrap.profile_inventory_concurrent_change",
+    )
+    observed: list[WorkbenchBootstrapV1] = []
+
+    result = run_workbench_bootstrap(
+        prepare=lambda: concurrent,
+        run_login=lambda _screen: pytest.fail("concurrent inventory must not open login"),
+        registration_door=lambda _requirement: pytest.fail("concurrent inventory must not register"),
+        authenticated_door=lambda _state: pytest.fail("concurrent inventory must not authenticate"),
+        cancelled_door=lambda _state: pytest.fail("concurrent inventory must not cancel"),
+        degraded_door=observed.append,
+    )
+
+    assert result is concurrent
+    assert observed == [concurrent]
+
+
 def test_coordinator_hands_empty_inventory_to_registration_once() -> None:
     empty = WorkbenchBootstrapV1(inventory_state=WorkbenchBootstrapInventoryState.EMPTY)
     requirements: list[WorkbenchRegistrationRequiredV1] = []

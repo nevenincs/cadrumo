@@ -96,7 +96,10 @@ def run_workbench_bootstrap(
     a recognized non-resumed inventory opens the real Login screen.
     """
     preparation = prepare()
-    if preparation.inventory_state is WorkbenchBootstrapInventoryState.DEGRADED:
+    if preparation.inventory_state in {
+        WorkbenchBootstrapInventoryState.CONCURRENT_CHANGE,
+        WorkbenchBootstrapInventoryState.DEGRADED,
+    }:
         degraded_door(preparation)
         return preparation
     if preparation.registration_required is not None:

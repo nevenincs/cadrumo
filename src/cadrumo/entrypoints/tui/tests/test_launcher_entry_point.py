@@ -112,7 +112,7 @@ def _root_inputs(
 
 def _root_inputs_provider(service: WorkbenchSearchService | None = None):
     """Return an explicit root generation provider without storage reads."""
-    return lambda: _root_inputs(service)
+    return lambda _operation_runtime: _root_inputs(service)
 
 
 def test_root_composition_preserves_existing_area_factories_and_refuses_search_admission_drift() -> None:
@@ -198,7 +198,7 @@ def test_entry_point_injects_and_rebuilds_the_installed_search_provider() -> Non
     supplied = [_root_inputs(initial, refresh_search=refreshed_inputs)]
     calls: list[InstalledWorkbenchRootInputsV1] = []
 
-    def provider() -> InstalledWorkbenchRootInputsV1:
+    def provider(_operation_runtime: object) -> InstalledWorkbenchRootInputsV1:
         current = supplied.pop(0)
         calls.append(current)
         return current

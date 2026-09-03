@@ -57,6 +57,21 @@ def test_degraded_inventory_never_reads_choices_or_attempts_resume() -> None:
     assert calls == []
 
 
+def test_concurrent_inventory_is_a_distinct_refusal_without_choices_or_resume() -> None:
+    calls: list[str] = []
+    result = prepare_workbench_bootstrap(
+        inventory_reader=lambda: ProfileSummaryInventory(outcome=ProfileSummaryOutcome.CONCURRENT_CHANGE),
+        choice_reader=lambda: calls.append("choices") or (),
+        preselection_reader=lambda _name: calls.append("preselection") or None,
+        resume_session=lambda *, bucket_id: calls.append(bucket_id),
+    )
+
+    assert result.inventory_state is WorkbenchBootstrapInventoryState.CONCURRENT_CHANGE
+    assert result.session_state is None
+    assert result.reason_code == "workbench.bootstrap.profile_inventory_concurrent_change"
+    assert calls == []
+
+
 def test_empty_inventory_is_explicit_registration_requirement_not_login() -> None:
     result = prepare_workbench_bootstrap(
         inventory_reader=ProfileSummaryInventory,
@@ -140,6 +155,27 @@ def test_login_outcome_cannot_select_profile_absent_from_recognized_inventory() 
             ProfileLoginOutcome(
                 bucket_id="22222222-2222-4222-8222-222222222222",
                 label="Foreign",
+                authenticated_at=_NOW,
+                idle_deadline=_NOW + timedelta(minutes=30),
+                absolute_deadline=_NOW + timedelta(hours=8),
+                session_persisted=False,
+                already_authenticated=False,
+            ),
+        )
+
+
+def test_login_outcome_label_must_match_the_admitted_profile_choice() -> None:
+    prepared = prepare_workbench_bootstrap(
+        inventory_reader=_inventory,
+        choice_reader=_choice,
+        preselection_reader=lambda _name: None,
+    )
+    with pytest.raises(ValueError, match="label disagrees with the recognized bootstrap inventory"):
+        complete_workbench_login(
+            prepared,
+            ProfileLoginOutcome(
+                bucket_id=_PROFILE,
+                label="Injected mismatch",
                 authenticated_at=_NOW,
                 idle_deadline=_NOW + timedelta(minutes=30),
                 absolute_deadline=_NOW + timedelta(hours=8),

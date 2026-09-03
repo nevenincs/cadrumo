@@ -26,6 +26,7 @@ from ....application.modelo.declarations_workspace import (
     project_declarations_workspace,
 )
 from ....application.modelo.workspace_models import ModeloWorkspaceProjectionV1
+from ....application.operations.composition import OperationComposedServices
 from ....application.operations.registry import OperationPublicContractSetV1
 from ....application.operator_actions.catalogue import lookup_action
 from ....application.operator_actions.models import ActionReference
@@ -216,6 +217,34 @@ def test_generation_provider_binds_real_declarations_factory_and_calendar_projec
     assert declarations.controller.calendar_projection is not None
     target = declarations.controller.target("declarations.calendar")
     assert isinstance(resolve_declarations_screen(declarations.controller, target), DeclarationsCalendarScreen)
+
+
+def test_generation_factory_receives_exact_session_operation_contract_object(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """AEAT Sync authority comes from the active service graph, not dependencies."""
+    captured: list[OperationPublicContractSetV1] = []
+
+    def capture_contracts(
+        _current: list[object],
+        _dependencies: InstalledWorkbenchFactoryDependenciesV1,
+        contracts: OperationPublicContractSetV1,
+    ) -> None:
+        captured.append(contracts)
+
+    monkeypatch.setattr(
+        "cadrumo.entrypoints.tui.launcher._aeat_sync_generation_factory",
+        capture_contracts,
+    )
+    runtime = _operation_runtime()
+    provider = InstalledWorkbenchGenerationProviderV1(
+        CallableWorkbenchGenerationReadDoorV1(lambda: _inputs(_NOW))
+    )
+
+    compose_installed_workbench_generation_provider(provider, _dependencies())(runtime)
+
+    assert captured == [runtime.public_contracts]
+    assert captured[0] is runtime.services.public_contracts
 
 
 def test_available_declarations_admission_requires_calendar_projection() -> None:
