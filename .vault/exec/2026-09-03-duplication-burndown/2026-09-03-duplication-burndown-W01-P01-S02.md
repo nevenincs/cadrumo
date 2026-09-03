@@ -5,16 +5,11 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:8858d9caca5a5d02649c6e978ac9c9b7a9ec5f441422e42473565e6699d94057'
+body_hash: 'sha256:bfc2b02fc213f64f6bbdf8c3dc68c8a4dbcd758cb5f08461cbcf5995cc492898'
 step_id: 'S02'
 related:
   - "[[2026-09-03-duplication-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Restore and run the deleted duplication instrument tests against the current typed runner
 

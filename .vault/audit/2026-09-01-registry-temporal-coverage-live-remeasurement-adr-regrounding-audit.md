@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:b8bdfb07699ca6d11f510943c2317a8a5a6f1873b9f3559100c39471af322af7'
+body_hash: 'sha256:4e5a403a181249fdb06e8d8f7691a905a70eb86e8a095dd8ddfb0f1235897a77'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -9838,3 +9838,79 @@ already recognises a rename as a MOVE rather than a translate. What is missing
 is the derivation: one label per casilla per modelo, with a per-revision
 override only where the official text genuinely differs, which for modelo 200 is
 zero casillas out of 3,173.
+
+## The restatement measurement, made durable and corrected
+
+The ad-hoc query behind the previous section is now a module,
+`dev/locales/revision_label_restatement.py`, and running it corrected two of its
+figures. Recorded as a correction rather than an update, because the earlier
+numbers were published in this audit and in the plan's Description.
+
+The Spanish catalogue carries **27,569 casilla label strings, of which 10,586
+are the surplus of a label restated under a further revision** - not the 29,522
+and 11,286 stated earlier. The per-modelo top of the list is unchanged where it
+matters (modelo 100 restates 4,733, modelo 200 restates 3,173, both figures
+reproduced exactly), and the discrepancy is concentrated in modelo 390, reported
+earlier as 1,057 and now as 280. The 280 is checkable and checks: modelo 390
+carries 102 labelled casillas spread over up to five revisions, distributed
+10 at five revisions, 72 at four, 4 at three and 16 at two, and the surplus of a
+population like that is 10x4 + 72x3 + 4x2 + 16x1 = 280. The earlier figure was
+measured on some other basis and cannot be reproduced; it should not be cited.
+
+The corpus-wide figure is also lower than the extrapolation. Across all four
+shipped locales the surplus is **28,129 strings**, not the ~45,000 that came
+from applying the Spanish rate to every locale. The rate does not carry, because
+the other three catalogues are less complete than the source:
+
+| locale | label strings | restated surplus | divergent casillas | single-revision |
+| ------ | ------------- | ---------------- | ------------------ | --------------- |
+| es | 27,569 | 10,586 | 1,091 | 5,451 |
+| ca | 19,953 | 6,022 | 1,620 | 5,594 |
+| en | 19,917 | 5,832 | 1,800 | 5,512 |
+| hu | 19,859 | 5,689 | 1,933 | 5,522 |
+
+## Translations diverge where the official text does not
+
+The table above carries a finding the duplication count does not. The Spanish
+source diverges across revisions on **1,091** casillas; Hungarian diverges on
+**1,933**, Catalan on 1,620, English on 1,800 - every translation diverges on
+more casillas than the text being translated does. That is impossible as a
+translation of divergent source text, so the excess is divergence the
+translations introduced.
+
+Measured directly rather than inferred from the difference: the casillas whose
+Spanish text is byte-identical under two or more revisions while the
+translation's text differs number **931 in Hungarian, 807 in English and 687 in
+Catalan**. Each one is two different renderings of one official string, under
+two revisions of one modelo, and a reader looking at one revision has no way to
+tell which rendering is current or that another exists.
+
+This reclassifies the derivation. Keying labels per revision was described here
+as a cost - strings retyped that a generator could carry. It is also a
+correctness defect: the per-revision key does not merely permit the duplication,
+it permits the copies to disagree, and roughly 2,400 of them across the three
+target locales already do. A per-modelo label with a per-revision override where
+the official text genuinely differs removes the cost and makes the disagreement
+unrepresentable in the same change.
+
+The module reports and gates nothing, deliberately: a gate on a condition
+carrying five figures of findings needs a tolerance, and a tolerance is the
+ratchet this project retired. Its classification is proven on constructed input
+holding one restated, one divergent and one single-revision casilla, with a
+second constructed case whose revisions all differ - present because the first
+case alone would pass an implementation that returned the restated count from
+the revision count. The live assertions are orderings, not figures, so a landing
+revision or translation cannot fail them without changing the property.
+
+Every root, catalogue path and flattening step is borrowed from the tooling that
+owns it - `_paths.LOCALES_DIR`, `manager.discover_locale_codes`,
+`manager.locale_catalogue_source`, `manager._flatten_raw_locale_leaves`. The
+first draft of this module lived under `dev/registry/analysis`, re-derived
+`REPO_ROOT` from its own parent count, wrote a fourth catalogue flattener beside
+the two the manager already has, and reached the catalogues with a glob for one
+directory shape. That glob is the mistake `discover_locale_codes` documents in
+its own docstring as the more dangerous of the two available: a hardcoded path
+raises, while a glob for a shape the tree does not carry returns empty, and
+empty reads exactly like a clean corpus. The module was moved into
+`dev/locales`, where those helpers are same-package, before it measured
+anything.

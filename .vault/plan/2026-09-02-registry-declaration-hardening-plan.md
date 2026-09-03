@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:19f4e2562798685bf51e2a938c223f6ccd6f41b29c8c4206afb8fcb2abb69da8'
+body_hash: 'sha256:bed2c2df7796014f8812d283a84ec0c38df5c0e6708622e83561ae4d2dcbca55'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -90,11 +90,14 @@ answer, that they are delegated to the software house and this product must not 
 the typed slot states in a field and the record spelling cannot state at all.
 
 A second live example is larger and cost this campaign a wrong recommendation. A casilla's label is a
-property of the casilla, and the catalogues key it by revision, so the Spanish catalogues carry 29,522
-casilla label strings of which 11,286 are the same text repeated under a second revision - 4,733 for
-modelo 100 alone, and 3,173 for modelo 200, where the two revisions' shared labels are byte-identical
-on every one. Four shipped locales multiply it. The consequence is that declaring a revision costs a
-full re-translation of text that has not changed, and 156 labels missing from one revision were first
+property of the casilla, and the catalogues key it by revision, so the Spanish catalogues carry 27,569
+casilla label strings of which 10,586 are the surplus of a label restated under a further revision -
+4,733 for modelo 100 alone, and 3,173 for modelo 200, where the two revisions' shared labels are
+byte-identical on every one. Across all four shipped locales the surplus is 28,129 strings. Both
+Spanish figures are corrections: the ad-hoc query that first produced them reported 29,522 and 11,286,
+and only became reproducible once it was made a module. The consequence is that declaring a revision
+costs a full re-translation of text that has not changed, and 156 labels missing from one revision were
+first
 recorded here as work to author by hand before the operator pointed out that the derivation, not the
 translation, is the deliverable. The tooling exists - `dev.locales` scaffolds keys, carries a
 revision's keys onto renamed ids, and applies generated migrations - and what is missing is one label
@@ -715,7 +718,9 @@ Apply the accepted contract across the registry so restatement becomes unconstru
 - [ ] `W06.P14.S52` - Move the non-temporal scheme axis of modelo 369 out of the revision slot; `src/cadrumo/_data/registry/aeat/modelos/369/revisions`.
 - [ ] `W06.P14.S368` - Split the casilla number field by what it holds: 25,615 plain box numbers, 2,002 position ranges and 2,061 slugs that are not numbers at all; `src/cadrumo/domain/calculations/registry/schema.py`.
 - [ ] `W06.P14.S371` - Transliterate the one semantic role identifier retaining an accent, which six casillas of modelo 100 carry while the other 24,042 are ASCII; `src/cadrumo/_data/registry/aeat/modelos/100`.
-- [ ] `W06.P14.S380` - Derive casilla labels per modelo rather than per revision: modelo 200's two revisions carry 3,173 byte-identical label strings each, so a revision costs a full re-translation today, and only genuinely new casillas need text; `dev/locales src/cadrumo/locales`.
+- [ ] `W06.P14.S380` - Derive casilla labels per modelo with a per-revision override only where the official text genuinely differs: keying per revision does not merely duplicate 28,129 strings across the four locales, it lets the copies disagree, and 931 Hungarian, 807 English and 687 Catalan casillas already carry two renderings of one byte-identical Spanish string; `dev/locales src/cadrumo/locales`.
+- [x] `W06.P14.S384` - Make the cross-revision label restatement measurable: a census module in `dev/locales` reusing the roots, catalogue discovery and flattener the locale tooling already owns, reporting restated surplus, genuine divergence and single-revision labels per locale, with the classification proven on constructed input rather than against whatever the live corpus says; `dev/locales`.
+- [x] `W06.P14.S385` - Measure the divergence the duplication count hides: report the casillas whose Spanish label is byte-identical across revisions while a translation of it differs, since every translation diverges on more casillas than the source text does and the excess is divergence the translations introduced; `dev/locales`.
 
 ## Parallelization
 
