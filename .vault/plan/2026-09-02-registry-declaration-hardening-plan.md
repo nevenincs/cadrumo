@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:5fa85f0cb7ad00347f39ac881c6db95dde50757095de32b548695447e8edf941'
+body_hash: 'sha256:b2f0ae94b1137416c6277a3b9b8df67f2eff2ac14d17ce6dd4b119acb2826f5f'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -514,6 +514,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S289` - Make the selection probe record the ambiguity its own retry was erasing, and re-ground the temporal criterion on the measured figure; `dev/registry/analysis/revision_selection_probe.py dev/registry/tests/test_revision_selection_probe.py`.
 - [x] `W06.P13.S290` - Hold the sibling-scale pin by coordinate identity instead of a count that failed when the screen detected a second defect; `dev/registry/tests/test_monetary_scale.py`.
 - [x] `W06.P13.S291` - Sweep the screen tests for frozen live-corpus counts and hold the two survivors by identity; `dev/registry/tests/test_continuity_integrity.py`.
+- [x] `W06.P13.S292` - Replace the drifted proportion in the screen census and state that the eligibility figure has no reproducer in this tree; `dev/registry/analysis/screens.py dev/registry/analysis/footnote_pointer_notes.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

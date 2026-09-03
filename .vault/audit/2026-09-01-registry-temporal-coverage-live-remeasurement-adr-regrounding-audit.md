@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:efdd8516e158359584f097dcaacc7c05018d19d97e20cdd761e93936c0fbb121'
+body_hash: 'sha256:70718b9665fb319b54bdcf6c0792a41cd79da922d2e5356aeda213284ec74b14'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -7292,3 +7292,37 @@ temporary directory rather than the live registry - a frozen snapshot being
 described, not a live population being fenced. Applying the rule there would
 have been the same error as the heuristics this campaign has already got wrong
 twice: taking one shape of a concept for the whole of it.
+
+### two-criteria-verified-live-and-two-figures-in-my-own-prose-found-stale | medium | The monetary criterion reproduces exactly; the explanation beside it had drifted, and the eligibility figure has no reproducer at all
+
+The plan's monetary criterion says twenty-six fields fail the first test and two
+fail the second. Both reproduce from a live command: the screen reports
+`money_without_scale=26` and `sibling_scale_disagrees=2`. A criterion that can
+be re-run is worth more than one that was true when written, and this one can.
+
+Checking it turned up a discrepancy that was not one. The screens runner reports
+33 findings for this screen while the screen's own CLI reports 165, which looked
+like two entry points disagreeing about the same measurement. It is deliberate
+and documented at both ends: the runner excludes `money_split_representation`,
+which is the official integer-and-decimal part split and not a defect, and 165
+less those 132 rows is 33. The fourth hypothesis this campaign has killed by
+reading the code rather than trusting the shape of the numbers.
+
+What was wrong was the explanation. The runner's docstring said the split was
+"132 of the 158 rows"; the live totals are 132 of 165. The argument it supports
+- that counting them would overstate the work several-fold as the first number a
+maintainer reads - is still exactly right, and only the frozen pair had drifted.
+The proportion is now stated as the argument rather than as two numbers, with a
+line saying why: the same defect this package exists to find, occurring in the
+explanation of a screen rather than in a declaration.
+
+The second figure is worse and is now labelled. A screen's docstring states that
+correcting the eligibility predicate makes 183 fields newly eligible. Nothing in
+this tree reproduces that: the predicate still reads the old way, so re-running
+the measurement requires making the correction first, and no module scripts it.
+The number is quoted in the plan as well. It is not withdrawn - it was measured,
+and it is the order of the work - but the docstring now says it was measured
+once, is not reproducible from here, and must be re-measured as part of the
+correction rather than trusted afterwards. A figure whose reproducer does not
+exist should say so where it is quoted, not be discovered to be unverifiable by
+the next person who needs it.
