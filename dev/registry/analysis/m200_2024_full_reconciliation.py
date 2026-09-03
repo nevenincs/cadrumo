@@ -29,6 +29,7 @@ from cadrumo.domain.calculations.registry.loader import load_catalogue_file, loa
 from cadrumo.domain.calculations.registry.schema_references import governed_period_span
 
 from ..pipeline._record_design_ir import intermediate_anchor_key, load_record_design_intermediate
+from ..pipeline.casilla_tree_transaction import publish_verified_casilla_tree
 from ..pipeline._semantic_map import semantic_anchor_key
 from ..pipeline._semantic_map_loader import load_semantic_map
 from .m200_restored_semantic_audit import SemanticPayload, _candidate_payloads, _payload, _template
@@ -758,33 +759,15 @@ def _publish_m200_source_rebind_transaction(
 ) -> None:
     """Stage a whole casilla tree, then cut it over with journaled directory moves."""
     casillas_root = registry_root / "modelos" / "200" / "revisions" / "2024" / "casillas"
-    revision_root = casillas_root.parent
-    token = secrets.token_hex(8)
-    stage = revision_root / f"{_REBIND_STAGE_PREFIX}{token}"
-    backup = revision_root / f"{_REBIND_BACKUP_PREFIX}{token}"
-    journal_path = revision_root / _REBIND_JOURNAL
-    journal = {"schema_version": 1, "state": "intent", "stage": stage.name, "backup": backup.name}
-    _write_rebind_journal(journal_path, journal)
-    try:
-        shutil.copytree(casillas_root, stage)
-        for path, text in rendered.items():
-            atomic_write_text(stage / path.relative_to(casillas_root), text, encoding="utf-8")
-        _require_rebound_tree(plan, stage, reviewed_promotions=reviewed_promotions)
-        _replace_rebind_tree(casillas_root, backup)
-        journal["state"] = "backup_staged"
-        _write_rebind_journal(journal_path, journal)
-        _replace_rebind_tree(stage, casillas_root)
-        journal["state"] = "candidate_live"
-        _write_rebind_journal(journal_path, journal)
-        _require_rebound_tree(plan, casillas_root, reviewed_promotions=reviewed_promotions)
-    except BaseException:
-        _restore_rebind_backup(casillas_root, backup)
-        _remove_rebind_tree(stage, revision_root)
-        if casillas_root.exists():
-            _delete_rebind_journal(journal_path)
-        raise
-    _remove_rebind_tree(backup, revision_root)
-    _delete_rebind_journal(journal_path)
+    publish_verified_casilla_tree(
+        casillas_root=casillas_root,
+        rendered=rendered,
+        verifier=lambda root: _require_rebound_tree(plan, root, reviewed_promotions=reviewed_promotions),
+        journal_name=_REBIND_JOURNAL,
+        stage_prefix=_REBIND_STAGE_PREFIX,
+        backup_prefix=_REBIND_BACKUP_PREFIX,
+        replace_tree=_replace_rebind_tree,
+    )
 
 
 def _read_m200_2024_casilla_records_for_root(casillas_root: Path) -> dict[str, _M200CasillaSourceRecord]:
