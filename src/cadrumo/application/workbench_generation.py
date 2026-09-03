@@ -26,6 +26,7 @@ from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.time.utc import UtcInstant
 from .aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
 from .ledger.workspace import LedgerWorkspaceProjectionV1
+from .modelo.declarations_calendar import DeclarationsCalendarProjectionV1
 from .modelo.declarations_workspace import DeclarationsWorkspaceProjectionV1
 from .modelo.workspace_models import ModeloWorkspaceProjectionV1
 from .overview.home import HomeProjectionInput, HomeProjectionV1, compose_home_projection
@@ -177,6 +178,7 @@ class WorkbenchGenerationInputsV1(BaseModel):
     home: WorkbenchGenerationSourceResultV1[HomeProjectionInput]
     ledger: WorkbenchGenerationSourceResultV1[LedgerWorkspaceProjectionV1]
     declarations: WorkbenchGenerationSourceResultV1[DeclarationsWorkspaceProjectionV1]
+    declarations_calendar: WorkbenchGenerationSourceResultV1[DeclarationsCalendarProjectionV1]
     aeat_sync: WorkbenchGenerationSourceResultV1[AeatSyncWorkspaceProjectionV1]
     modelo: WorkbenchGenerationSourceResultV1[tuple[ModeloWorkspaceProjectionV1, ...]]
     ledger_admission: WorkbenchDestinationAdmission
@@ -206,9 +208,13 @@ class WorkbenchGenerationV1(BaseModel):
     home: WorkbenchGenerationProjectionResultV1[HomeProjectionV1]
     ledger: WorkbenchGenerationProjectionResultV1[LedgerWorkspaceProjectionV1]
     declarations: WorkbenchGenerationProjectionResultV1[DeclarationsWorkspaceProjectionV1]
+    declarations_calendar: WorkbenchGenerationProjectionResultV1[DeclarationsCalendarProjectionV1]
     aeat_sync: WorkbenchGenerationProjectionResultV1[AeatSyncWorkspaceProjectionV1]
     modelo: WorkbenchGenerationProjectionResultV1[tuple[ModeloWorkspaceProjectionV1, ...]]
     search: WorkbenchGenerationProjectionResultV1[InstalledWorkbenchSearchSnapshotV1]
+    ledger_admission: WorkbenchDestinationAdmission
+    declarations_admission: WorkbenchDestinationAdmission
+    aeat_sync_admission: WorkbenchDestinationAdmission
 
 
 class WorkbenchGenerationReadDoorV1(Protocol):
@@ -217,6 +223,22 @@ class WorkbenchGenerationReadDoorV1(Protocol):
     def read_workbench_generation_inputs(self) -> WorkbenchGenerationInputsV1:
         """Return one coherent, preloaded input set without frontend work."""
         ...
+
+
+@dataclass(frozen=True, slots=True)
+class InstalledWorkbenchGenerationProviderV1:
+    """Child-owned provider for one immutable installed-session generation.
+
+    The read door is composed with secure repositories and application
+    projectors by the process owner.  Calling the provider captures that door
+    once and immediately discards its source bundle after projection.
+    """
+
+    read_door: WorkbenchGenerationReadDoorV1
+
+    def __call__(self) -> WorkbenchGenerationV1:
+        """Capture and assemble exactly one coherent generation."""
+        return assemble_workbench_generation_from(self.read_door)
 
 
 @dataclass(frozen=True, slots=True)
@@ -244,6 +266,7 @@ def assemble_workbench_generation(inputs: WorkbenchGenerationInputsV1) -> Workbe
     home = _project_home(inputs.home)
     ledger = _carry_projection(inputs.ledger)
     declarations = _carry_projection(inputs.declarations)
+    declarations_calendar = _carry_projection(inputs.declarations_calendar)
     aeat_sync = _carry_projection(inputs.aeat_sync)
     modelo = _carry_projection(inputs.modelo)
     search = _assemble_search(
@@ -260,9 +283,13 @@ def assemble_workbench_generation(inputs: WorkbenchGenerationInputsV1) -> Workbe
         home=home,
         ledger=ledger,
         declarations=declarations,
+        declarations_calendar=declarations_calendar,
         aeat_sync=aeat_sync,
         modelo=modelo,
         search=search,
+        ledger_admission=inputs.ledger_admission,
+        declarations_admission=inputs.declarations_admission,
+        aeat_sync_admission=inputs.aeat_sync_admission,
     )
 
 
@@ -382,6 +409,7 @@ def _missing_search(
 
 __all__ = [
     "CallableWorkbenchGenerationReadDoorV1",
+    "InstalledWorkbenchGenerationProviderV1",
     "WorkbenchGenerationAvailability",
     "WorkbenchGenerationInputsV1",
     "WorkbenchGenerationProjectionResultV1",

@@ -9,9 +9,10 @@ from typing import override
 
 import pytest
 from textual.containers import VerticalScroll
-from textual.widgets import DataTable, Static
+from textual.widgets import Button, DataTable, Static
 
 from .....application.ledger.attachment_review import AttachmentReviewItem
+from .....application.ledger.models import LedgerSourceImportCommand
 from .....application.ledger.workspace import (
     LedgerAffectedDeclarationRefV1,
     LedgerInvoiceReconciliationRefV1,
@@ -28,9 +29,10 @@ from ....tui.devtools.frame import geometry_band
 from ....tui.navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ..controller import LedgerWorkspaceController
 from ..evidence import LedgerEvidenceScreen
-from ..models import LedgerFlowState, LedgerLinkResultV1, LedgerLinkSubmissionV1
+from ..models import LedgerFlowState, LedgerLinkResultV1, LedgerLinkSubmissionV1, LedgerPreparedImportV1
 from ..reconciliation import LedgerReconciliationScreen
 from ..routes import LedgerUnavailableScreen, resolve_ledger_screen
+from .test_ledger_flows import _ClassificationDoor, _ImportDoor, _classify_action
 from .test_ledger_workspace import _projection, _review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -169,6 +171,9 @@ async def test_evidence_renders_only_safe_metadata_and_restores_semantic_focus()
         assert app.focused is table
         assert table.ordered_rows[table.cursor_row].key.value == _EVIDENCE
         await pilot.press("enter")
+        assert screen.requested_review is not None
+        assert screen.requested_review.attachment_id == _EVIDENCE
+        assert screen.requested_review.action == _evidence_action()
         rendered = "\n".join(str(widget.render()) for widget in screen.query(Static))
         assert "512" in rendered
         assert "protected-provider-locator" not in rendered
@@ -326,8 +331,14 @@ def test_slice3_routes_and_actions_fail_closed_without_declared_dependencies() -
     controller = LedgerWorkspaceController(
         TuiScreenContextV1(destination="workbench.ledger"), _projection(), review_action=_review_action()
     )
-    for area in (LedgerWorkspaceArea.EVIDENCE, LedgerWorkspaceArea.RECONCILIATION):
-        assert isinstance(resolve_ledger_screen(controller, controller.route_target(area)), LedgerUnavailableScreen)
+    assert isinstance(
+        resolve_ledger_screen(controller, controller.route_target(LedgerWorkspaceArea.EVIDENCE)),
+        LedgerUnavailableScreen,
+    )
+    assert isinstance(
+        resolve_ledger_screen(controller, controller.route_target(LedgerWorkspaceArea.RECONCILIATION)),
+        LedgerReconciliationScreen,
+    )
     with pytest.raises(ValueError, match="canonical review query"):
         LedgerWorkspaceController(
             TuiScreenContextV1(destination="workbench.ledger"),
@@ -344,6 +355,83 @@ def test_slice3_routes_and_actions_fail_closed_without_declared_dependencies() -
             link_action=_evidence_action(),
             link_submitter=_LinkDoor(),
         )
+
+
+@pytest.mark.asyncio
+async def test_reconciliation_without_mutation_door_preserves_read_only_drift_and_hides_controls() -> None:
+    controller = LedgerWorkspaceController(
+        TuiScreenContextV1(destination="workbench.ledger"),
+        _reconciled_projection(),
+        review_action=_review_action(),
+    )
+    screen = LedgerReconciliationScreen(controller)
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(80, 24)) as pilot:
+        await pilot.pause()
+        assert screen.query_one("#ledger-suggestions", DataTable).row_count == 1
+        assert screen.query_one("#ledger-inconsistencies", DataTable).row_count == 1
+        assert screen.query_one("#ledger-affected", DataTable).row_count == 1
+        assert not screen.query_one("#ledger-reconciliation-confirm", Button).display
+        assert not screen.query_one("#ledger-reconciliation-cancel", Button).display
+        assert screen.flow_state is LedgerFlowState.EDITING
+        await pilot.press("enter")
+        assert screen.flow_state is LedgerFlowState.EDITING
+        assert screen.selected_pair is None
+        assert str(screen.query_one("#ledger-flow-status", Static).render())
+
+
+def _all_routes_controller() -> LedgerWorkspaceController:
+    command = LedgerSourceImportCommand(path=Path("C:/synthetic/input.csv"), provider="bank")
+    prepared = LedgerPreparedImportV1(
+        choice_id="synthetic-bank",
+        provider_label_key="tui.ledger.import.provider.bank",
+        source_label_key="tui.ledger.import.source.prepared",
+        command=command,
+    )
+    projection = _reconciled_projection()
+    return LedgerWorkspaceController(
+        TuiScreenContextV1(destination="workbench.ledger"),
+        projection,
+        review_action=_review_action(),
+        classify_action=_classify_action(),
+        classification_target=projection.entries[0].transaction_id,
+        classification_submitter=_ClassificationDoor(),
+        prepared_imports=(prepared,),
+        import_submitter=_ImportDoor(),
+        evidence_action=_evidence_action(),
+        evidence_items=(_evidence_item(),),
+        link_action=_link_action(),
+        link_submitter=_LinkDoor(),
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("size", ((80, 24), (100, 30), (120, 40), (200, 50)))
+@pytest.mark.parametrize("area", tuple(LedgerWorkspaceArea))
+async def test_all_seven_routes_are_focus_reachable_with_one_scroll_owner_and_no_overflow(
+    area: LedgerWorkspaceArea,
+    size: tuple[int, int],
+) -> None:
+    controller = _all_routes_controller()
+    screen = resolve_ledger_screen(controller, controller.route_target(area))
+    assert not isinstance(screen, LedgerUnavailableScreen)
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=size) as pilot:
+        await pilot.pause()
+        assert geometry_band(app, size[0]) == []
+        assert all(table.max_scroll_x == 0 for table in screen.query(DataTable))
+        owners = tuple(
+            widget for widget in screen.query(VerticalScroll) if widget.display and widget.show_vertical_scrollbar
+        )
+        assert len(owners) <= 1
+        assert all(owner.id == "ledger-page" for owner in owners)
+        focus_chain = tuple(screen.focus_chain)
+        assert focus_chain
+        reached = {app.focused}
+        for _ in range(len(focus_chain) * 2):
+            await pilot.press("tab")
+            reached.add(app.focused)
+        assert set(focus_chain) <= reached
 
 
 @pytest.mark.asyncio

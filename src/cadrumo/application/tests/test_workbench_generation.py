@@ -10,6 +10,7 @@ from pydantic import ValidationError
 
 from ..aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
 from ..ledger.workspace import LedgerWorkspaceProjectionV1
+from ..modelo.declarations_calendar import DeclarationsCalendarProjectionV1
 from ..modelo.declarations_workspace import DeclarationsWorkspaceProjectionV1
 from ..modelo.workspace_models import ModeloWorkspaceProjectionV1
 from ..overview.home import (
@@ -36,6 +37,7 @@ _NOW = datetime(2026, 9, 3, 10, 30, tzinfo=UTC)
 
 def _home_input() -> HomeProjectionInput:
     """Return a safe Home input with every optional source explicitly absent."""
+
     def zone(name: str) -> HomeZoneState:
         return HomeZoneState(
             availability=HomeAvailability.NEVER_CAPTURED,
@@ -66,6 +68,7 @@ def _inputs(
     *,
     ledger: WorkbenchGenerationSourceResultV1[LedgerWorkspaceProjectionV1] | None = None,
     declarations: WorkbenchGenerationSourceResultV1[DeclarationsWorkspaceProjectionV1] | None = None,
+    declarations_calendar: WorkbenchGenerationSourceResultV1[DeclarationsCalendarProjectionV1] | None = None,
     aeat_sync: WorkbenchGenerationSourceResultV1[AeatSyncWorkspaceProjectionV1] | None = None,
     modelo: WorkbenchGenerationSourceResultV1[tuple[ModeloWorkspaceProjectionV1, ...]] | None = None,
 ) -> WorkbenchGenerationInputsV1:
@@ -75,6 +78,8 @@ def _inputs(
         home=WorkbenchGenerationSourceResultV1.available(_home_input(), observed_at=_NOW),
         ledger=ledger or WorkbenchGenerationSourceResultV1.never_captured(refusal="source.ledger"),
         declarations=declarations or WorkbenchGenerationSourceResultV1.never_captured(refusal="source.declarations"),
+        declarations_calendar=declarations_calendar
+        or WorkbenchGenerationSourceResultV1.never_captured(refusal="source.declarations_calendar"),
         aeat_sync=aeat_sync or WorkbenchGenerationSourceResultV1.never_captured(refusal="source.aeat_sync"),
         modelo=modelo or WorkbenchGenerationSourceResultV1.never_captured(refusal="source.modelo"),
         ledger_admission=_admission("workbench.ledger"),
@@ -107,6 +112,7 @@ def test_generation_projects_home_and_never_turns_missing_areas_into_empty() -> 
     assert generation.home.availability is WorkbenchGenerationAvailability.AVAILABLE
     assert generation.ledger.projection is None
     assert generation.declarations.projection is None
+    assert generation.declarations_calendar.projection is None
     assert generation.aeat_sync.projection is None
     assert generation.modelo.projection is None
     assert generation.search.projection is None
@@ -171,7 +177,15 @@ def test_output_has_no_source_value_field_or_input_wrapper() -> None:
     assert "value" not in type(generation).model_fields
     assert all(
         "value" not in type(getattr(generation, name)).model_fields
-        for name in ("home", "ledger", "declarations", "aeat_sync", "modelo", "search")
+        for name in (
+            "home",
+            "ledger",
+            "declarations",
+            "declarations_calendar",
+            "aeat_sync",
+            "modelo",
+            "search",
+        )
     )
     assert '"value"' not in payload
     assert "WorkbenchGenerationSourceResultV1" not in repr(generation)

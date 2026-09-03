@@ -306,12 +306,8 @@ class LedgerWorkspaceController:
                 or self.classification_submitter is None
             )
         ) or (area is LedgerWorkspaceArea.IMPORT and (not self.prepared_imports or self.import_submitter is None))
-        missing_door = (
-            missing_door
-            or (area is LedgerWorkspaceArea.EVIDENCE and (self.evidence_action is None or self.evidence_items is None))
-            or (
-                area is LedgerWorkspaceArea.RECONCILIATION and (self.link_action is None or self.link_submitter is None)
-            )
+        missing_door = missing_door or (
+            area is LedgerWorkspaceArea.EVIDENCE and (self.evidence_action is None or self.evidence_items is None)
         )
         if area not in _IMPLEMENTED_AREAS or missing_door:
             return LedgerRouteRefusalV1(
@@ -410,6 +406,10 @@ class LedgerWorkspaceController:
             else None
         )
 
+    def can_submit_links(self) -> bool:
+        """Report whether the optional local link-mutation door is admitted."""
+        return self.link_action is not None and self.link_submitter is not None
+
     async def submit_link(self, transaction_id: TransactionId, invoice_id: InvoiceId) -> LedgerLinkResultV1:
         """Admit a visible suggestion and submit it through the authorized door."""
         if self.link_action is None or self.link_submitter is None:
@@ -446,6 +446,16 @@ class LedgerReviewRequested(Message):
         """Store the safe transaction identity and canonical query action."""
         super().__init__()
         self.transaction_id = transaction_id
+        self.action = action
+
+
+class LedgerEvidenceReviewRequested(Message):
+    """Host-facing request carrying the canonical evidence-review query."""
+
+    def __init__(self, *, attachment_id: str, action: ActionReference) -> None:
+        """Store one visible attachment identity and its admitted action."""
+        super().__init__()
+        self.attachment_id = attachment_id
         self.action = action
 
 
@@ -522,6 +532,7 @@ class LedgerWorkspaceScreen(Screen[None]):
 __all__ = [
     "LedgerBackRequested",
     "LedgerEntrySelected",
+    "LedgerEvidenceReviewRequested",
     "LedgerReviewRequested",
     "LedgerRouteRequested",
     "LedgerWorkspaceController",

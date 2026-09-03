@@ -184,7 +184,6 @@ class CadrumoTuiApp(App[None]):
             try:
                 refreshed = refresh_workbench_search()
             except Exception:  # projection failures must not leak protected diagnostics
-                self._workbench_search_service = None
                 self._workbench_search_refusal_code = "workbench.search.refresh_unavailable"
                 return
             self._workbench_search_service = refreshed

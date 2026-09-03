@@ -107,6 +107,9 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
             or self.controller.projection.affected_declarations
         ):
             self.query_one("#ledger-flow-status", Static).update(ledger_copy("tui.ledger.reconciliation.empty"))
+        if not self.controller.can_submit_links():
+            self.query_one("#ledger-reconciliation-confirm", Button).display = False
+            self.query_one("#ledger-reconciliation-cancel", Button).display = False
         restored = self.controller.restored_transaction_id()
         if restored is not None:
             index = next(
@@ -119,7 +122,7 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
             )
             if index is not None:
                 suggestions.move_cursor(row=index)
-        suggestions.focus()
+        next((table for table in (suggestions, inconsistencies, affected) if table.row_count), suggestions).focus()
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         """Admit only a semantic pair supplied by the visible suggestion projection."""
@@ -127,6 +130,11 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
             return
         table = cast("DataTable[str]", event.data_table)
         if self.flow_state is not LedgerFlowState.EDITING or table.id != "ledger-suggestions":
+            return
+        if not self.controller.can_submit_links():
+            self.query_one("#ledger-flow-status", Static).update(
+                ledger_copy("tui.ledger.refusal.submission_unavailable")
+            )
             return
         semantic_key = str(event.row_key.value)
         source = next(
