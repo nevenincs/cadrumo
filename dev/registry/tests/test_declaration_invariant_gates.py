@@ -623,7 +623,11 @@ def test_a_screen_that_counts_its_conditions_states_the_right_number(
     for entry in SCREENS:
         module = importlib.import_module(f"dev.registry.analysis.{entry.name}")
         doc = module.__doc__ or ""
-        claim = re.search(r"\b([A-Za-z]+) conditions are reported\b", doc)
+        # Any noun, not just "conditions". The screens say conditions,
+        # disagreements, kinds - the claim is "N somethings are reported", and a
+        # gate keyed to one spelling read four screens while a fifth stated its
+        # count in a synonym and went unchecked.
+        claim = re.search(r"([A-Za-z]+) [a-z]+ are reported", doc)
         if claim is None:
             continue
         stated = _NUMBER_WORDS.get(claim.group(1).lower())
