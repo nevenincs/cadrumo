@@ -10,7 +10,7 @@ import sys
 from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
@@ -148,10 +148,20 @@ def _fixture(
     return inventory, manifest, component
 
 
-def test_rehearsal_receipt_binds_only_declared_component_paths(tmp_path: Path) -> None:
+def test_rehearsal_receipt_binds_only_declared_component_paths(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     repo = tmp_path / "repo"
     inventory, manifest, component = _fixture(repo)
     before = _live_bytes(repo)
+    original_components = rehearsal_module.canonical_object_name_component_set
+    graph_cache_directories: list[str | None] = []
+
+    def observe_graph_cache(*args: Any, graph_cache_dir: str | None = None, **kwargs: Any) -> Any:
+        graph_cache_directories.append(graph_cache_dir)
+        return original_components(*args, graph_cache_dir=graph_cache_dir, **kwargs)
+
+    monkeypatch.setattr(rehearsal_module, "canonical_object_name_component_set", observe_graph_cache)
 
     receipt = rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
 
@@ -162,6 +172,9 @@ def test_rehearsal_receipt_binds_only_declared_component_paths(tmp_path: Path) -
     assert receipt.component_id == component.component_id
     assert receipt.operation_ids == component.operation_ids
     assert receipt.changed_paths == ("src/example/contracts.py",)
+    assert len(graph_cache_directories) == 2
+    assert graph_cache_directories[0] == graph_cache_directories[1]
+    assert Path(cast("str", graph_cache_directories[0])).parent == Path(receipt.rehearsal_root).parent
     assert receipt.baseline_tree_digest == _digest(
         canonical_json_bytes({"schema_version": 1, "files": list(receipt.baseline_files)})
     )

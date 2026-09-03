@@ -287,10 +287,11 @@ def _copy_snapshot(
             continue
         target = target_root.joinpath(*PurePosixPath(relative).parts)
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source, target, follow_symlinks=False)
+        shutil.copyfile(source, target, follow_symlinks=False)
         actual_digest = f"{_DIGEST_PREFIX}{sha256_file(target)}"
         if relative in exact_paths and actual_digest != expected_digest:
             raise ObjectNameRehearsalError(f"temporary copy hash differs for {relative}")
+        shutil.copystat(source, target, follow_symlinks=False)
 
 
 def _materialise(target_root: Path, result: ObjectNameTransformResult) -> None:
@@ -487,27 +488,7 @@ def rehearse_object_name_component(
     root = repo_root.resolve()
     if not (root / ".git").exists() or not (root / "src").is_dir() or not (root / "dev").is_dir():
         raise ObjectNameRehearsalError(f"rehearsal root is not a repository worktree: {root}")
-    graph_cache = tempfile.TemporaryDirectory(prefix="cadrumo-object-name-graph-")
     executable = {operation.operation_id: operation for operation in select_object_name_execution(manifest)}
-    canonical_components = canonical_object_name_component_set(
-        manifest,
-        inventory=inventory,
-        repo_root=root,
-        graph_cache_dir=graph_cache.name,
-    )
-    canonical = next((item for item in canonical_components if item.component_id == component.component_id), None)
-    if canonical is None or (
-        canonical.component_id,
-        canonical.operation_ids,
-        canonical.affected_paths,
-        canonical.hard_edges,
-    ) != (
-        component.component_id,
-        component.operation_ids,
-        component.affected_paths,
-        component.hard_edges,
-    ):
-        raise ObjectNameRehearsalError("supplied component differs from the canonical repository graph")
     try:
         selected = tuple(executable[operation_id] for operation_id in component.operation_ids)
     except KeyError as exc:
@@ -581,6 +562,27 @@ def rehearse_object_name_component(
     try:
         if temporary_parent.parent != system_temporary_root or is_link_like(temporary_parent):
             raise ObjectNameRehearsalError(f"allocated rehearsal parent is unsafe: {temporary_parent}")
+        graph_cache_dir = temporary_parent / "graph-cache"
+        graph_cache_dir.mkdir()
+        canonical_components = canonical_object_name_component_set(
+            manifest,
+            inventory=inventory,
+            repo_root=root,
+            graph_cache_dir=str(graph_cache_dir),
+        )
+        canonical = next((item for item in canonical_components if item.component_id == component.component_id), None)
+        if canonical is None or (
+            canonical.component_id,
+            canonical.operation_ids,
+            canonical.affected_paths,
+            canonical.hard_edges,
+        ) != (
+            component.component_id,
+            component.operation_ids,
+            component.affected_paths,
+            component.hard_edges,
+        ):
+            raise ObjectNameRehearsalError("supplied component differs from the canonical repository graph")
         temporary_root.mkdir()
         _copy_snapshot(root, temporary_root, baseline_files, guarded_paths=frozenset(guarded_paths))
         copied_baseline_files = _snapshot(temporary_root, tuple(path for path, _digest in baseline_files))
@@ -592,7 +594,7 @@ def rehearse_object_name_component(
                 manifest,
                 inventory=copied_inventory,
                 repo_root=temporary_root,
-                graph_cache_dir=graph_cache.name,
+                graph_cache_dir=str(graph_cache_dir),
             )
         copied_component = next(
             (item for item in copied_components if item.component_id == component.component_id),
@@ -718,7 +720,6 @@ def rehearse_object_name_component(
     except Exception as exc:
         raise ObjectNameRehearsalError(f"rehearsal failed; retained rehearsal root: {temporary_root}") from exc
     finally:
-        graph_cache.cleanup()
         try:
             final_source_unchanged = _snapshot(root, guarded_paths) == receipt_baseline_files
         except Exception as exc:
