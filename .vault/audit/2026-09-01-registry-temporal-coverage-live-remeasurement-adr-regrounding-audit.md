@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:6af6be2fd6cfb9d9a461d8f6c19596a5bc4a82f571e3db5edfec071ef1ab1653'
+body_hash: 'sha256:2a31213840375b8240bf8fa1f1ba3f1eb7a6690f37a9fa362d06121a76590a20'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -8261,3 +8261,30 @@ proved to reproduce from their pinned sources. A second test asserts the
 refusing flag rather than the writing default is the one under test, because the
 distinction is one keystroke wide and the wrong side of it regenerates registry
 artefacts from a test run.
+
+### the-coverage-question-is-now-a-gate-rather-than-a-sweep-somebody-remembers-to-run | high | Twenty-five gates pass; the measure that took four attempts is now standing, with a planted proof
+
+The import-coverage measure that took four attempts to get right is now a gate.
+It asks the only question that survived those attempts - which public modules no
+test imports - and it asks it the only way that proved reliable, by reading both
+import forms out of every test module under the registry tree rather than by
+matching filenames against a convention this tree follows in three different
+ways.
+
+It carries two non-vacuity guards rather than one, and the second is specific to
+how this measure failed before. The first asserts a public module was found. The
+second asserts some test import was read at all, because an extractor returning
+nothing makes every module in the tree look untested - which is not a
+hypothetical, it is the seventeen-module phantom this sweep produced twice
+before the extractor was right.
+
+The proof is planted under an injectable root: two modules with a public
+function, one imported by a test module written beside them in the temporary
+tree and one not, with the gate asserting it sees exactly the orphan. Both
+directions matter. Without the first it protects nothing; without the second it
+would flag every module reached through the import form the earlier extractor
+could not read, which is precisely the failure the guard above exists to catch.
+
+The helpers are shared between the live gate and its proof rather than
+reimplemented for each, so the thing proved is the thing that runs. A detector
+proved against a reimplementation of itself proves the reimplementation.
