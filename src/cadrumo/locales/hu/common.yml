@@ -1066,24 +1066,30 @@ tui:
       title: Főkönyvi áttekintés
     reconciliation:
       affected: Érintett bevallások
+      amount_match: Összeg egyezik
       cancel: Mégse
       changes: Módosított / eltávolított
       confirm: Kapcsolat megerősítése
       confirming: Erősítse meg ezt a helyi kapcsolatot.
+      counterparty_match: Partner egyezik
+      direction:
+        invoice_only: Csak a számla hivatkozik a tételre
+        transaction_only: Csak a tétel hivatkozik a számlára
       empty: Nincs elérhető helyi egyeztetési feladat.
       entry: Tétel
       failure: A kapcsolat nem menthető.
       inconsistencies: Hivatkozási eltérések
       invoice: Számla
       local_only: Csak helyi főkönyvi adatok. Az AEAT-szinkron külön munkaterület.
-      match:
-        full: Teljes
-        partial: Részleges
+      match_evidence: Kanonikus egyezési adatok
       modelo: Nyomtatvány
+      'no': Nem
       period: Időszak
       progress: Kapcsolás…
+      score: Kanonikus pontszám
       success: Kapcsolat mentve.
       title: Helyi főkönyvi egyeztetés
+      'yes': Igen
     refusal:
       application_state: Ez a terület a főkönyv jelenlegi állapotában nem érhető el.
       destination_pending: Ez a terület ebben a verzióban még nem érhető el.

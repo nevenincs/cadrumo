@@ -1042,24 +1042,30 @@ tui:
       title: Ledger overview
     reconciliation:
       affected: Affected declarations
+      amount_match: Amount matches
       cancel: Cancel
       changes: Changed / removed
       confirm: Confirm link
       confirming: Confirm this local link.
+      counterparty_match: Counterparty matches
+      direction:
+        invoice_only: Invoice cites entry only
+        transaction_only: Entry cites invoice only
       empty: No local reconciliation work is available.
       entry: Entry
       failure: The link could not be saved.
       inconsistencies: Link inconsistencies
       invoice: Invoice
       local_only: Local Ledger evidence only. AEAT Sync is a separate workspace.
-      match:
-        full: Full
-        partial: Partial
+      match_evidence: Canonical match evidence
       modelo: Form
+      'no': 'No'
       period: Period
       progress: Linking…
+      score: Canonical score
       success: Link saved.
       title: Local Ledger reconciliation
+      'yes': 'Yes'
     refusal:
       application_state: This area is unavailable in the current Ledger state.
       destination_pending: This area is not available in this version yet.

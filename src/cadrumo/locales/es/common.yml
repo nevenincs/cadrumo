@@ -1083,10 +1083,15 @@ tui:
       title: Resumen del libro contable
     reconciliation:
       affected: Declaraciones afectadas
+      amount_match: Coincide el importe
       cancel: Cancelar
       changes: Cambiados / eliminados
       confirm: Confirmar enlace
       confirming: Confirma este enlace local.
+      counterparty_match: Coincide la contraparte
+      direction:
+        invoice_only: Solo la factura cita el apunte
+        transaction_only: Solo el apunte cita la factura
       empty: No hay tareas locales de conciliación disponibles.
       entry: Apunte
       failure: No se pudo guardar el enlace.
@@ -1094,14 +1099,15 @@ tui:
       invoice: Factura
       local_only: Solo datos locales del libro. Sincronización AEAT es un espacio
         distinto.
-      match:
-        full: Completa
-        partial: Parcial
+      match_evidence: Evidencia canónica de coincidencia
       modelo: Modelo
+      'no': 'No'
       period: Periodo
       progress: Enlazando…
+      score: Puntuación canónica
       success: Enlace guardado.
       title: Conciliación local del libro
+      'yes': Sí
     refusal:
       application_state: Esta área no está disponible en el estado actual del libro
         contable.

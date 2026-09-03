@@ -1071,24 +1071,30 @@ tui:
       title: Resum del llibre comptable
     reconciliation:
       affected: Declaracions afectades
+      amount_match: Coincideix l'import
       cancel: Cancel·la
       changes: Canviats / eliminats
       confirm: Confirma l'enllaç
       confirming: Confirma aquest enllaç local.
+      counterparty_match: Coincideix la contrapart
+      direction:
+        invoice_only: Només la factura cita l'assentament
+        transaction_only: Només l'assentament cita la factura
       empty: No hi ha tasques locals de conciliació disponibles.
       entry: Assentament
       failure: No s'ha pogut desar l'enllaç.
       inconsistencies: Incoherències d'enllaços
       invoice: Factura
       local_only: Només dades locals del llibre. Sincronització AEAT és un espai diferent.
-      match:
-        full: Completa
-        partial: Parcial
+      match_evidence: Evidència canònica de coincidència
       modelo: Model
+      'no': 'No'
       period: Període
       progress: S'està enllaçant…
+      score: Puntuació canònica
       success: Enllaç desat.
       title: Conciliació local del llibre
+      'yes': Sí
     refusal:
       application_state: Aquesta àrea no està disponible en l'estat actual del llibre
         comptable.

@@ -61,37 +61,32 @@ class LedgerReconciliationScreen(LedgerWorkspaceScreen):
         """Populate all three local authorities without joining remote AEAT state."""
         self.populate_navigation()
         suggestions = cast("DataTable[str]", self.query_one("#ledger-suggestions", DataTable))
-        suggestions.add_columns(
-            ledger_copy("tui.ledger.reconciliation.entry"),
-            ledger_copy("tui.ledger.reconciliation.invoice"),
-            ledger_copy("tui.ledger.reconciliation.score"),
-            ledger_copy("tui.ledger.reconciliation.amount_match"),
-            ledger_copy("tui.ledger.reconciliation.counterparty_match"),
-        )
+        suggestions.add_column(ledger_copy("tui.ledger.reconciliation.entry"), key="entry", width=12)
+        suggestions.add_column(ledger_copy("tui.ledger.reconciliation.invoice"), key="invoice", width=12)
+        suggestions.add_column(ledger_copy("tui.ledger.reconciliation.match_evidence"), key="evidence", width=38)
         for row in self.controller.projection.invoice_reconciliations:
             key = f"{row.transaction_id}:{row.invoice_id}"
+            yes = ledger_copy("tui.ledger.reconciliation.yes")
+            no = ledger_copy("tui.ledger.reconciliation.no")
+            evidence = "\n".join(
+                (
+                    f"{ledger_copy('tui.ledger.reconciliation.score')}: {row.score}",
+                    f"{ledger_copy('tui.ledger.reconciliation.amount_match')}: {yes if row.amount_match else no}",
+                    f"{ledger_copy('tui.ledger.reconciliation.counterparty_match')}: "
+                    f"{yes if row.counterparty_match else no}",
+                )
+            )
             suggestions.add_row(
                 str(row.transaction_id)[:12],
                 str(row.invoice_id)[:12],
-                row.score,
-                ledger_copy(
-                    "tui.ledger.reconciliation.yes"
-                    if row.amount_match
-                    else "tui.ledger.reconciliation.no"
-                ),
-                ledger_copy(
-                    "tui.ledger.reconciliation.yes"
-                    if row.counterparty_match
-                    else "tui.ledger.reconciliation.no"
-                ),
+                evidence,
                 key=key,
+                height=3,
             )
         inconsistencies = cast("DataTable[str]", self.query_one("#ledger-inconsistencies", DataTable))
-        inconsistencies.add_columns(
-            ledger_copy("tui.ledger.reconciliation.entry"),
-            ledger_copy("tui.ledger.reconciliation.invoice"),
-            ledger_copy("tui.ledger.reconciliation.direction"),
-        )
+        inconsistencies.add_column(ledger_copy("tui.ledger.reconciliation.entry"), width=12)
+        inconsistencies.add_column(ledger_copy("tui.ledger.reconciliation.invoice"), width=12)
+        inconsistencies.add_column(ledger_copy("tui.ledger.reconciliation.direction"), width=30)
         for row in self.controller.projection.link_inconsistencies:
             direction_keys = {
                 "invoice-only": "tui.ledger.reconciliation.direction.invoice_only",

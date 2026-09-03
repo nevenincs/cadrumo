@@ -158,6 +158,7 @@ _LEDGER_LOCALE_KEYS: Final = (
     "tui.ledger.reconciliation.score",
     "tui.ledger.reconciliation.amount_match",
     "tui.ledger.reconciliation.counterparty_match",
+    "tui.ledger.reconciliation.match_evidence",
     "tui.ledger.reconciliation.yes",
     "tui.ledger.reconciliation.no",
     "tui.ledger.reconciliation.direction",

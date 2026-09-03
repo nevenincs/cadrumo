@@ -36,7 +36,9 @@ from .test_ledger_workspace import _projection, _review_action
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _TX = "a" * 64
+_TX_B = "b" * 64
 _INVOICE = "c" * 64
+_INVOICE_D = "d" * 64
 _EVIDENCE = "e" * 64
 
 
@@ -76,7 +78,7 @@ def _reconciled_projection():
                 ),
             ),
             "link_inconsistencies": (
-                LedgerLinkInconsistencyRefV1(invoice_id="f" * 64, transaction_id=_TX, direction="invoice_only"),
+                LedgerLinkInconsistencyRefV1(invoice_id="f" * 64, transaction_id=_TX, direction="invoice-only"),
             ),
             "affected_declarations": (
                 LedgerAffectedDeclarationRefV1(
@@ -90,6 +92,29 @@ def _reconciled_projection():
             ),
         }
     )
+
+
+def _two_suggestion_projection():
+    projection = _reconciled_projection()
+    second = LedgerInvoiceReconciliationRefV1(
+        invoice_id=_INVOICE_D,
+        transaction_id=_TX_B,
+        amount_match=True,
+        counterparty_match=False,
+        score="0.5",
+    )
+    return projection.model_copy(update={"invoice_reconciliations": (*projection.invoice_reconciliations, second)})
+
+
+def _render_all(screen: LedgerReconciliationScreen) -> str:
+    values = [str(widget.render()) for widget in screen.query(Static)]
+    values.extend(
+        str(cell)
+        for table in screen.query(DataTable)
+        for row_index in range(table.row_count)
+        for cell in table.get_row_at(row_index)
+    )
+    return "\n".join(values)
 
 
 class _LinkDoor:
@@ -178,6 +203,33 @@ async def test_local_reconciliation_renders_distinct_source_and_submits_exact_vi
         assert len(door.calls) == 1
         affected = screen.query_one("#ledger-affected", DataTable)
         assert tuple(str(value) for value in affected.get_row_at(0)) == ("303", "2026 2T", "2/1")
+
+
+@pytest.mark.asyncio
+async def test_reordered_table_selection_resolves_exact_semantic_pair_not_cursor_position() -> None:
+    door = _LinkDoor()
+    controller = LedgerWorkspaceController(
+        TuiScreenContextV1(destination="workbench.ledger"),
+        _two_suggestion_projection(),
+        review_action=_review_action(),
+        link_action=_link_action(),
+        link_submitter=door,
+    )
+    screen = LedgerReconciliationScreen(controller)
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(80, 24)) as pilot:
+        await pilot.pause()
+        table = screen.query_one("#ledger-suggestions", DataTable)
+        table.sort("invoice", reverse=True)
+        await pilot.pause()
+        assert table.ordered_rows[0].key.value == f"{_TX_B}:{_INVOICE_D}"
+        table.move_cursor(row=0)
+        await pilot.press("enter", "enter")
+        await app.workers.wait_for_complete()
+        assert screen.selected_pair == (_TX_B, _INVOICE_D)
+        assert len(door.calls) == 1
+        assert door.calls[0].transaction_id == _TX_B
+        assert door.calls[0].invoice_id == _INVOICE_D
 
 
 @pytest.mark.asyncio
@@ -328,6 +380,73 @@ async def test_slice3_copy_is_real_across_locales_without_semantic_drift() -> No
                 titles.append(str(next(iter(screen.query(".cadrumo-banner"))).render()))
                 assert screen.query_one("#ledger-evidence", DataTable).ordered_rows[0].key.value == _EVIDENCE
     assert len(set(titles)) == 4
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("locale", "expected"),
+    (
+        (
+            "en",
+            (
+                "Local Ledger evidence only. AEAT Sync is a separate workspace.",
+                "Canonical score: 1.0",
+                "Amount matches: Yes",
+                "Counterparty matches: Yes",
+                "Invoice cites entry only",
+            ),
+        ),
+        (
+            "es",
+            (
+                "Solo datos locales del libro. Sincronización AEAT es un espacio distinto.",
+                "Puntuación canónica: 1.0",
+                "Coincide el importe: Sí",
+                "Coincide la contraparte: Sí",
+                "Solo la factura cita el apunte",
+            ),
+        ),
+        (
+            "ca",
+            (
+                "Només dades locals del llibre. Sincronització AEAT és un espai diferent.",
+                "Puntuació canònica: 1.0",
+                "Coincideix l'import: Sí",
+                "Coincideix la contrapart: Sí",
+                "Només la factura cita l'assentament",
+            ),
+        ),
+        (
+            "hu",
+            (
+                "Csak helyi főkönyvi adatok. Az AEAT-szinkron külön munkaterület.",
+                "Kanonikus pontszám: 1.0",
+                "Összeg egyezik: Igen",
+                "Partner egyezik: Igen",
+                "Csak a számla hivatkozik a tételre",
+            ),
+        ),
+    ),
+)
+async def test_reconciliation_copy_pins_local_source_and_canonical_semantics(
+    locale: str, expected: tuple[str, ...]
+) -> None:
+    with override_settings(cadrumo_output_language=locale):
+        controller = LedgerWorkspaceController(
+            TuiScreenContextV1(destination="workbench.ledger"),
+            _reconciled_projection(),
+            review_action=_review_action(),
+            link_action=_link_action(),
+            link_submitter=_LinkDoor(),
+        )
+        screen = LedgerReconciliationScreen(controller)
+        app = ScreenHostApp[None](screen)
+        async with app.run_test(size=(80, 24)) as pilot:
+            await pilot.pause()
+            rendered = _render_all(screen)
+            assert all(text in rendered for text in expected)
+            suggestion = screen.query_one("#ledger-suggestions", DataTable)
+            assert suggestion.ordered_rows[0].key.value == f"{_TX}:{_INVOICE}"
 
 
 def test_slice3_modules_have_no_io_cli_adapter_or_sensitive_content_access() -> None:
