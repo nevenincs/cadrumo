@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:b42a60a99368de207c6719c4b2c5a7fdab5f78c2f1d892a90960a706d5ac4bda'
+body_hash: 'sha256:0a55fe4ccae494f5bf1b8866ca7d00cdaa4caebf138806e97de0f333ae8e5d10'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -7378,3 +7378,75 @@ conclude the gate had rotted, when in fact it was never there and did not need
 to be. An overstated proof costs more than an honest gap, because the gap can be
 filled by whoever finds it and the overstatement sends them looking for a defect
 that does not exist.
+
+### the-restatement-count-this-plan-rests-on-is-now-data-instead-of-prose | high | Six year-level temporal sites are declared, each gated against the live schema, with the boundary stated
+
+This plan opens by counting how many places one fact is restated - temporal
+validity at eight sites, a citation at eleven, applicability at seven. Those
+figures justify the whole campaign and none of them could be re-derived from the
+tree. An attempt to recover the temporal one mechanically failed in the way this
+campaign's heuristics keep failing: scanning the revision model for fields whose
+name or annotation carries a date or a year returns six, and two of them are
+`continuidad_validation`, matched because its name contains "valid", and
+`reviewed_at`, which is a review stamp rather than a filing-temporal claim. A
+count built that way would have been the fourth heuristic in this campaign to
+encode one shape of a concept and miss the rest.
+
+The sites are now declared where the screen that compares them lives, as dotted
+paths from the revision, with the definition written beside them: a year-level
+claim about which years the revision serves. Six qualify - `valid_from`,
+`valid_to`, the selector's `year_from`, `year_to` and `years`, and a deadline
+window's `filing_year`. The revision directory name is a seventh site and is
+deliberately excluded, because it is not a declared field and the
+name-against-window comparison belongs to the sibling screen; counting it here
+would give one condition two owners.
+
+The exclusion that matters most is the one a bare count would have got wrong. A
+deadline window also carries `opens_on`, `closes_on` and `payment_cutoff_on`.
+Those say when within a year a filing is due, not which years the revision
+serves, so they cannot disagree with the window and folding them in would have
+inflated a restatement measurement with facts that are not restatements. A test
+asserts they stay out, so the boundary is enforced rather than remembered.
+
+A second test resolves every declared path through the model definitions rather
+than an instance, so a field renamed in the schema fails here instead of leaving
+the list naming a site that no longer exists. Seven tests pass, exit 0. The
+figure is still six rather than the eight the description quotes, and that gap is
+now a readable difference between two definitions rather than an unverifiable
+number: whoever wrote eight counted something this list names its reasons for
+excluding.
+
+### the-validator-family-is-not-all-reconciliation-and-one-screen-condition-is-a-canary | high | The fifty-one figure verifies exactly, but only a minority of the family exists because a fact is stated twice
+
+The description cites the registry's validator modules as evidence that
+detection after the fact is the wrong shape. The count verifies: the
+`_validate*` family in the registry package holds fifty-one modules, and the
+sentence now names the family so a reader can re-derive it rather than trust it.
+
+Reading their docstrings refines the argument rather than supporting it as
+written. Most are structural closure validators - reference closure, section
+shape, formula graphs, producer inventory - and would exist whatever the
+declaration strategy. A readable minority exist specifically because one fact is
+declared twice and the copies must be made to agree: the revision-id window
+agreement, the `valid_from` ejercicio convention, layout coverage against the
+official design, a claim needing its backing layout, previous-filing year
+coverage. A clean count is not available at module granularity, because some
+modules validate both kinds - the revision-rules module checks window overlap
+and reconciliation-total closure in one place - and a number produced by
+classifying whole modules would be a judgement wearing a measurement's clothes.
+So the finding is the shape, not a figure: reconciliation is a substantial
+minority of that surface, not the whole of it, and the campaign's argument is
+better for saying which validators it means.
+
+One of those agreement validators turned out to own a condition this campaign's
+own screen also declares. `_validate_revision_id_window_agreement` refuses an id
+asserting open-endedness over a window closed on either axis, at build time. The
+name-window screen declares exactly that condition as `name_claims_open_ended`,
+and it reports zero - not because the corpus is clean, but because no loaded
+authority can contain one. The division is correct and was undocumented: the
+validator refuses the direction it can refuse, the screen reports the directions
+it cannot. The screen now says so, and says what a finding there would mean -
+that the upstream refusal stopped happening, which is a larger fact than the
+finding. A condition reporting zero for a reason nobody wrote down is
+indistinguishable from a condition that no longer works, which is the state this
+campaign has now found twice in its own tooling.

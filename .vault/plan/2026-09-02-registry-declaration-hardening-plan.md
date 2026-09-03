@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:139b8de1cd52ffa513a765cdb214425496ecbf7731f4e9259f8204994349a7e9'
+body_hash: 'sha256:9f60c18debe24af0ac47fa24c190f7f1a611304f808de51896c2b7e2849c8760'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -23,8 +23,10 @@ body_hash: 'sha256:139b8de1cd52ffa513a765cdb214425496ecbf7731f4e9259f8204994349a
 The registry declares the same fact in many places and reconciles the copies afterwards with
 agreement validators. The governing audit measured the breadth: a revision's temporal validity is
 expressed at eight sites, one citation can be restated at eleven, applicability at seven, capability
-grade in five encodings, and a rendered amount's semantics at six, against 51 validator modules whose
-job is to notice when the copies disagree. Detection after the fact is the wrong shape. This plan
+grade in five encodings, and a rendered amount's semantics at six, against the validator modules in
+the registry package whose job is to notice when the copies disagree - the `_validate*` family, fifty-one
+of them when last counted, which is a figure a reader can re-derive by listing the package rather than
+trusting this sentence. Detection after the fact is the wrong shape. This plan
 moves the registry toward declaring a fact once and deriving its projections, and builds the tooling
 that can prove it.
 
@@ -520,6 +522,9 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S292` - Replace the drifted proportion in the screen census and state that the eligibility figure has no reproducer in this tree; `dev/registry/analysis/screens.py dev/registry/analysis/footnote_pointer_notes.py`.
 - [x] `W06.P13.S293` - Re-ground the gate and detector-proof figures on the live module and verify the nine screen-property gates exist; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S294` - Correct the accessor criterion to the two drop proofs that exist and say which paths they cover; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S295` - Declare the year-level temporal sites as data and gate each path against the live schema; `dev/registry/analysis/temporal_site_agreement.py dev/registry/tests/test_temporal_site_agreement.py`.
+- [x] `W06.P13.S296` - Verify the validator-module figure against the package and give it a re-derivable form; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S297` - Record that one name-window condition is refused upstream and is a canary, and refine the validator-family claim to the agreement subset; `dev/registry/analysis/revision_name_window.py .vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
