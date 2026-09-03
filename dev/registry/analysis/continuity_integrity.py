@@ -45,6 +45,7 @@ __all__ = [
     "ContinuityFinding",
     "chain_index",
     "continuity_census",
+    "definition_findings",
     "screen_authority",
 ]
 
@@ -89,48 +90,62 @@ def chain_index(definition: ModeloDefinition) -> tuple[dict[str, set[str]], dict
     return dict(grammars), dict(revisions), dict(evolutions)
 
 
+def definition_findings(definition: ModeloDefinition, *, modelo_id: str) -> tuple[ContinuityFinding, ...]:
+    """Return one modelo definition's continuity findings.
+
+    Takes the definition rather than the authority, as the sibling screens'
+    per-unit functions do, so a test can hand it a copy of a real definition
+    carrying a constructed defect and assert the KIND the screen would report.
+    Without this a detector proof can only reach the index underneath, which
+    shows the defect is visible without showing that the screen reports it -
+    and two of this screen's conditions were proven exactly that far.
+    """
+    findings: list[ContinuityFinding] = []
+    grammars, revisions, evolutions = chain_index(definition)
+    if not grammars and len(definition.revisions) > 1:
+        findings.append(
+            ContinuityFinding(
+                modelo=modelo_id,
+                kind="modelo_without_continuity",
+                detail=f"{len(definition.revisions)} revisions and no casilla carries a chain",
+            )
+        )
+    for chain, used in sorted(grammars.items()):
+        if len(used) > 1:
+            findings.append(
+                ContinuityFinding(
+                    modelo=modelo_id,
+                    kind="chain_crosses_grammar",
+                    detail=f"chain {chain} spans grammars {sorted(used)}",
+                )
+            )
+    for chain, seen in sorted(revisions.items()):
+        if len(seen) == 1:
+            findings.append(
+                ContinuityFinding(
+                    modelo=modelo_id,
+                    kind="singleton_chain",
+                    detail=f"chain {chain} appears only in revision {next(iter(seen))}",
+                )
+            )
+    findings.extend(
+        ContinuityFinding(
+            modelo=modelo_id,
+            kind="evolution_without_members",
+            detail=f"evolution names chain {chain} that no casilla carries",
+        )
+        for chain in sorted(set(evolutions) - set(grammars))
+    )
+    return tuple(findings)
+
+
 def screen_authority(
     authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
 ) -> tuple[ContinuityFinding, ...]:
     """Screen every modelo's continuity chains through the validated authority."""
     findings: list[ContinuityFinding] = []
     for modelo_id in modelo_ids:
-        definition = authority.modelo(modelo_id)
-        grammars, revisions, evolutions = chain_index(definition)
-        if not grammars and len(definition.revisions) > 1:
-            findings.append(
-                ContinuityFinding(
-                    modelo=modelo_id,
-                    kind="modelo_without_continuity",
-                    detail=f"{len(definition.revisions)} revisions and no casilla carries a chain",
-                )
-            )
-        for chain, used in sorted(grammars.items()):
-            if len(used) > 1:
-                findings.append(
-                    ContinuityFinding(
-                        modelo=modelo_id,
-                        kind="chain_crosses_grammar",
-                        detail=f"chain {chain} spans grammars {sorted(used)}",
-                    )
-                )
-        for chain, seen in sorted(revisions.items()):
-            if len(seen) == 1:
-                findings.append(
-                    ContinuityFinding(
-                        modelo=modelo_id,
-                        kind="singleton_chain",
-                        detail=f"chain {chain} appears only in revision {next(iter(seen))}",
-                    )
-                )
-        for chain in sorted(set(evolutions) - set(grammars)):
-            findings.append(
-                ContinuityFinding(
-                    modelo=modelo_id,
-                    kind="evolution_without_members",
-                    detail=f"evolution names chain {chain} that no casilla carries",
-                )
-            )
+        findings.extend(definition_findings(authority.modelo(modelo_id), modelo_id=modelo_id))
     return tuple(findings)
 
 

@@ -14,7 +14,7 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 
 from ..analysis.casilla_id_grammar import classify_casilla_id
-from ..analysis.continuity_integrity import chain_index, continuity_census, screen_authority
+from ..analysis.continuity_integrity import chain_index, continuity_census, definition_findings, screen_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -112,6 +112,13 @@ def test_screen_detects_a_chain_spanning_two_identifier_grammars(
     grammars, _, _ = chain_index(definition)
     assert len(grammars[str(donor.continuidad_id)]) > 1
 
+    # Assert what the SCREEN reports, not only what the index underneath shows.
+    # The index seeing two grammars is the precondition; the finding is the
+    # claim, and this test was named for the screen while only reaching the
+    # precondition.
+    kinds = {finding.kind for finding in definition_findings(definition, modelo_id="303")}
+    assert "chain_crosses_grammar" in kinds
+
 
 def test_screen_detects_an_evolution_naming_a_chain_no_casilla_carries(
     authority: ValidatedRegistryAuthority,
@@ -150,3 +157,7 @@ def test_screen_detects_an_evolution_naming_a_chain_no_casilla_carries(
     grammars, _, evolutions = chain_index(patched)
     assert orphaned in evolutions
     assert orphaned not in grammars
+
+    findings = definition_findings(patched, modelo_id="100")
+    reported = [finding for finding in findings if finding.kind == "evolution_without_members"]
+    assert [finding.detail for finding in reported] == [f"evolution names chain {orphaned} that no casilla carries"]
