@@ -11,7 +11,7 @@ from .....core.modelo import Modelo
 from .....core.resources.bundled_data import bundled_path
 from ..authority import ValidatedRegistryAuthority
 from ..errors import RegistryLoadError
-from ..loader import _load_shared_catalogue_files, load_registry_tree
+from ..loader import load_registry_tree, load_shared_catalogues
 from ..schema import SupportedFilingYearsCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -70,16 +70,20 @@ def test_supported_year_declaration_is_fingerprinted_registry_data() -> None:
 
 
 def test_shared_catalogue_refuses_missing_supported_year_declaration(tmp_path: Path) -> None:
-    (tmp_path / "empty.toml").write_text("", encoding="utf-8")
+    legal_dir = tmp_path / "legal"
+    legal_dir.mkdir()
+    (legal_dir / "empty.toml").write_text("", encoding="utf-8")
 
     with pytest.raises(RegistryLoadError, match="missing supported_filing_years"):
-        _load_shared_catalogue_files(tmp_path)
+        load_shared_catalogues(tmp_path)
 
 
 def test_shared_catalogue_refuses_duplicate_supported_year_declarations(tmp_path: Path) -> None:
     declaration = "[supported_filing_years]\nyears = [2025]\n"
-    (tmp_path / "first.toml").write_text(declaration, encoding="utf-8")
-    (tmp_path / "second.toml").write_text(declaration, encoding="utf-8")
+    legal_dir = tmp_path / "legal"
+    legal_dir.mkdir()
+    (legal_dir / "first.toml").write_text(declaration, encoding="utf-8")
+    (legal_dir / "second.toml").write_text(declaration, encoding="utf-8")
 
     with pytest.raises(RegistryLoadError, match="already declared"):
-        _load_shared_catalogue_files(tmp_path)
+        load_shared_catalogues(tmp_path)

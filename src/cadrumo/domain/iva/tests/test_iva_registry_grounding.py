@@ -42,10 +42,12 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from shutil import copytree
 
 import pytest
 
 from ....core.resources.bundled_data import bundled_path
+from ...calculations.registry.loader import load_shared_catalogues
 from ...calculations.registry.schema_references import LegalReference
 from .._grounding import registry_catalogues, verify_table_legal_refs
 from ..errors import IvaCatalogueError
@@ -72,6 +74,18 @@ def _catalogue_entry(reference_id: str) -> LegalReference:
     entry = legal.get(reference_id)
     assert entry is not None, f"{reference_id} is absent from the legal catalogue, so this case cannot discriminate"
     return entry
+
+
+def test_shared_catalogue_loader_needs_no_modelo_or_binding_tree(tmp_path: Path) -> None:
+    """The cycle-safe legal/source boundary works against a cold, models-free root."""
+    registry_root = tmp_path / "registry" / "aeat"
+    copytree(bundled_path("registry", "aeat", "legal"), registry_root / "legal")
+
+    catalogues = load_shared_catalogues(registry_root)
+
+    assert catalogues.legal
+    assert catalogues.sources
+    assert not (registry_root / "modelos").exists()
 
 
 # --------------------------------------------------------------------------

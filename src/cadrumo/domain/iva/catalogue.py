@@ -18,6 +18,7 @@ from collections.abc import Mapping
 from datetime import date
 from functools import lru_cache
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
@@ -26,11 +27,20 @@ from ...core.resources.bundled_data import bundled_path
 from ...core.toml import read_toml
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ...core.validity_window import years_covered_by_every_group
+from ._grounding import legal_evidence_fingerprints, registry_catalogues
 from .errors import IvaCatalogueError
 from .schema import IvaCatalogue, IvaCategory, IvaCitation, IvaRegulation
 
+if TYPE_CHECKING:
+    from ..calculations.registry.schema_references import LegalReference
 
-def load_iva_catalogue(path: Path) -> IvaCatalogue:
+
+def load_iva_catalogue(
+    path: Path,
+    *,
+    registry_root: Path | None = None,
+    source_root: Path | None = None,
+) -> IvaCatalogue:
     """Load one IVA catalogue TOML file.
 
     Returns:
@@ -41,7 +51,28 @@ def load_iva_catalogue(path: Path) -> IvaCatalogue:
         stat = resolved.stat()
     except OSError as exc:
         raise IvaCatalogueError(f"{resolved}: cannot stat IVA catalogue: {exc}") from exc
-    return _load_iva_catalogue_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+    resolved_source_root = bundled_path() if source_root is None else source_root.resolve()
+    resolved_registry_root = (
+        resolved_source_root / "registry" / "aeat" if registry_root is None else registry_root.resolve()
+    )
+    parsed = _load_iva_catalogue_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+    legal, _sources, loaded_source_root = registry_catalogues(
+        registry_root=resolved_registry_root,
+        source_root=resolved_source_root,
+    )
+    evidence_fingerprints = legal_evidence_fingerprints(
+        (citation.legal_reference for regulation in parsed for citation in regulation.citations),
+        legal=legal,
+        source_root=loaded_source_root,
+    )
+    return _load_verified_iva_catalogue_cached(
+        str(resolved),
+        stat.st_size,
+        stat.st_mtime_ns,
+        str(resolved_registry_root),
+        str(loaded_source_root),
+        evidence_fingerprints,
+    )
 
 
 @lru_cache(maxsize=32)
@@ -69,22 +100,43 @@ def _load_iva_catalogue_cached(path: str, byte_count: int, modified_ns: int) -> 
     missing = sorted(category.value for category in set(IvaCategory) - set(regulations))
     if missing:
         raise IvaCatalogueError(f"{target}: IVA catalogue missing categories: {missing}")
-    catalogue = IvaCatalogue(regulations=regulations)
-    _require_verified_catalogue(catalogue, target=target)
+    return IvaCatalogue(regulations=regulations)
+
+
+@lru_cache(maxsize=32)
+def _load_verified_iva_catalogue_cached(
+    path: str,
+    byte_count: int,
+    modified_ns: int,
+    registry_root: str,
+    source_root: str,
+    evidence_fingerprints: tuple[tuple[str, ...], ...],
+) -> IvaCatalogue:
+    """Return a parsed catalogue only after its cited evidence cache key is green."""
+    del evidence_fingerprints
+    catalogue = _load_iva_catalogue_cached(path, byte_count, modified_ns)
+    legal, _sources, loaded_source_root = registry_catalogues(
+        registry_root=Path(registry_root),
+        source_root=Path(source_root),
+    )
+    _require_verified_catalogue(catalogue, target=Path(path), legal=legal, source_root=loaded_source_root)
     return catalogue
 
 
-def _require_verified_catalogue(catalogue: IvaCatalogue, *, target: Path) -> None:
+def _require_verified_catalogue(
+    catalogue: IvaCatalogue,
+    *,
+    target: Path,
+    legal: Mapping[str, LegalReference],
+    source_root: Path,
+) -> None:
     """Refuse a parsed catalogue whose legal evidence fails cross-record review."""
     # Keep the verifier import local.  Its legal-catalogue access is deliberately
     # cycle-safe: IVA registry loaders are themselves consumers of the registry
     # catalogue and must not construct the full validated registry authority.
-    from .verify import verify_catalogue
+    from .verify import _verify_catalogue_against_legal
 
-    try:
-        report = verify_catalogue(catalogue)
-    except Exception as exc:
-        raise IvaCatalogueError(f"{target}: IVA catalogue verification could not complete: {exc}") from exc
+    report = _verify_catalogue_against_legal(catalogue, legal=legal, source_root=source_root)
     if report.ok:
         return
     failures = "\n".join(f" - [{issue.category_id}] {issue.code}: {issue.message}" for issue in report.errors)
