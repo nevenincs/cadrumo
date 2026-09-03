@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:c39f3046003e66966d3374d4b85cd1ed64fc8619efbb670bc6f5a3f2fa24518d'
+body_hash: 'sha256:111d6440ce356cdfe7f01e33188610592899d984a2abde3e014f1b4b01c4c096'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -345,6 +345,7 @@ Wire a standing regression gate comparing the satisfied filing-coordinate set by
 - [ ] `W02.P04.S146` - Resolve modelo 308's 2019-y-siguientes, the one filing-grade revision failing two capability axes at once, and decide whether the fourteen below-filing multi-axis revisions belong with it; `src/cadrumo/_data/registry/aeat/modelos`.
 - [ ] `W02.P04.S147` - Author the missing Scope and Summary sections in the two feature documents whose attested body schema requires them; `.vault`.
 - [x] `W02.P04.S151` - Document the distinction between a screen and an authoring aid in the contributor README, and how the gates tell them apart; `dev/registry/README.md`.
+- [ ] `W02.P04.S436` - Restore the typed filing envelope on modelo 322 revision 2026-y-siguientes, which reverted to the record spelling its three predecessors did not use and so exports without the product software identity that revision 2024-2025 refuses to omit; `src/cadrumo/_data/registry/aeat/modelos/322/revisions`.
 
 ## Wave `W03` - filing-export proof made measurable
 
@@ -471,7 +472,8 @@ Screen and then gate child citations against the source manifest of their owning
 - [ ] `W04.P09.S432` - Resolve the five revisions declaring filing grade without the completeness manifest their grade requires, in modelos 145, 165 twice, 308 and 360, since every other grade finding under-declares and these five over-declare; `src/cadrumo/_data/registry/aeat/modelos`.
 - [x] `W04.P09.S433` - Declare which screen a screen is built on and exclude derived screens from the revision ranking, since the grounding screen re-describes the pointer screens 41 findings and made modelo 200 look like nine conditions where seven are independent, gating the containment that is verifiable; `dev/registry/analysis/screens.py dev/registry/analysis/filing_exposure.py dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W04.P09.S434` - Sweep for other undeclared screen derivations and record that none exists: the two flags are a CLI-only import and a screen consuming others for attributes rather than population, so import-reach is a prompt not a verdict, and give both entry types the same declarations; `dev/registry/analysis/screens.py`.
-- [ ] `W04.P09.S435` - Verify the record-spelled envelope consequence in the shipped export path rather than from the screens docstring, confirming that renders_filing_envelope is set from the typed slot alone and that all eighteen typed layouts declare a product identity requirement while the thirty-one record-spelled ones cannot; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W04.P09.S435` - Verify the record-spelled envelope consequence in the shipped export path rather than from the screens docstring, confirming that renders_filing_envelope is set from the typed slot alone and that all eighteen typed layouts declare a product identity requirement while the thirty-one record-spelled ones cannot; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [ ] `W04.P09.S437` - Compare a revisions declared capability with its predecessors in the same modelo, since nothing does: modelo 322 lost its typed envelope and product identity requirement between two consecutive filing-grade revisions and the capability screen reports each revision alone; `dev/registry/analysis`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 

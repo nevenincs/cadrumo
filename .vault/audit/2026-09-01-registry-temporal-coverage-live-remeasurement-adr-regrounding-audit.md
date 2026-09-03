@@ -11708,3 +11708,47 @@ The migration step describes the typed slot as one "twenty others already use".
 Measured: **eighteen** layouts, in eighteen revisions, across seven modelos -
 151, 200, 202, 222, 303, 322 and 353. Not twenty, and the figure matters because
 it is the population a migration would follow as its worked example.
+
+
+## Modelo 322's newest revision lost the envelope its predecessor carried
+
+Checking the rest of the migration step's sentence - "thirty-one revisions across
+sixteen modelos" - confirmed both figures, and turned up one modelo appearing on
+both sides of the split. Modelo 322 uses the typed `filing_envelope` slot in
+`2008-2022`, `2023` and `2024-2025`, and spells its envelope as a record in
+`2026-y-siguientes`.
+
+That is not a migration waiting to happen. It is a **regression**, between two
+consecutive filing-grade revisions:
+
+| | `2024-2025` | `2026-y-siguientes` |
+| - | - | - |
+| declared grade | filing | filing |
+| typed `filing_envelope` | yes | no |
+| `product_identity_requirement` | declared | absent |
+| first record | `m322-page-01` | `modelo-322-envelope-header` |
+
+The newest revision of a modelo that files lost a capability its immediate
+predecessor had, and gained a pseudo-record in its place. By the export path
+verified above, its filings now render through the plain-records branch: nothing
+requires the product software identity and nothing stamps it, where the 2024
+revision would refuse to export without it.
+
+The record naming changed at the same time - `m322-page-01` became
+`modelo-322-page-01` - which suggests the 2026 revision was authored fresh rather
+than carried forward from the one beside it. That is consistent with the
+regression being an oversight rather than a decision, and it is the more useful
+reading for whoever repairs it: the shape to copy is three revisions back in the
+same modelo.
+
+Modelo 322 is the only modelo carrying both spellings, so it is also the only
+place the migration has a worked precedent inside its own directory.
+
+### Why the screen could not say this
+
+The capability screen reports each record-spelled revision on its own row, which
+is right - each is a defect. What it cannot see is that one of them sits directly
+after three revisions of the same modelo that did it correctly. Continuity
+between revisions is not this screen's unit, and nothing else compares a
+revision's capability with its predecessor's. That is a gap worth naming even
+though this instance was found by hand.
