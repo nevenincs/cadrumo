@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:38cca488af0d441fe322caae3d6d3d0d039e78757bd51cfa9650789f580789fa'
+body_hash: 'sha256:70b3e9a1b7840802bcc11417cf6846fe44bf46416fa0ca8a6774eaf59f2c879d'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -396,7 +396,7 @@ Screen and then gate the mapping between a casilla's declared type and the type 
 - [ ] `W04.P07.S27` - Declare the twenty-seven distinct casilla-to-wire type transitions as validated registry data, the largest being money to decimal and ratio to decimal; `src/cadrumo/domain/calculations/registry/export_value_policy.py`.
 - [x] `W04.P07.S69` - Screen every monetary field for a wire type that applies no scale to the emitted digits; `dev/registry/analysis/monetary_scale.py`.
 - [x] `W04.P07.S70` - Prove the monetary scale screen exempts the self-scaling wire types and reports the unscaled ones; `dev/registry/tests/test_monetary_scale.py`.
-- [ ] `W04.P07.S75` - Publish the two enrolled trees that render but were never committed, using the operator publish verb that already reaches the publication authority; `dev/registry/pipeline/_tree_publication.py`.
+- [ ] `W04.P07.S75` - Publish the three enrolled trees that render but were never committed, using the operator publish verb that already reaches the publication authority: modelo 308 2019-y-siguientes, modelo 360 2010-y-siguientes and modelo 390 2022, against twenty-eight revisions that render and carry a publication manifest; `dev/registry/pipeline/_tree_publication.py`.
 - [ ] `W04.P07.S71` - Declare the scale the official design specifies for each monetary field rendered by an unscaled wire type; `src/cadrumo/_data/registry/aeat/modelos`.
 - [x] `W04.P07.S72` - Gate that every monetary field declares a scale or is rendered by a self-scaling wire type; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W04.P07.S74` - Screen sibling amount fields of one record for disagreeing scale representations; `dev/registry/analysis/monetary_scale.py`.
@@ -475,6 +475,8 @@ Screen and then gate child citations against the source manifest of their owning
 - [x] `W04.P09.S435` - Verify the record-spelled envelope consequence in the shipped export path rather than from the screens docstring, confirming that renders_filing_envelope is set from the typed slot alone and that all eighteen typed layouts declare a product identity requirement while the thirty-one record-spelled ones cannot; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W04.P09.S437` - Compare a revisions declared capability with its predecessors in the same modelo, since nothing does: modelo 322 lost its typed envelope and product identity requirement between two consecutive filing-grade revisions and the capability screen reports each revision alone; `dev/registry/analysis`.
 - [x] `W04.P09.S438` - Retire the spent ordering constraint in the parallelization prose, which carried the retired 183 figure and sequenced the predicate ahead of publication to prevent a conversion that has already happened, since all forty-one newly eligible fields sit in revisions whose trees are published; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W04.P09.S439` - Re-measure all three parallelization constraints: the generator verb is registered and its lifted status holds, the conformance vector tuple is still empty so that constraint binds, and the unpublished renderable trees are three not two in modelos 308, 360 and 390; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W04.P09.S440` - Re-measure the registry directorys failure figures: 1,152 passing and 36 failing with 30 in the four generated-tree modules, against the twenty-seven of thirty-five written in the constraint, and confirm the single conformance failure the third constraint rests on; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W04.P10` - export reference symmetry guard
 
@@ -816,10 +818,17 @@ limb existed and nothing could reach it, which was true when written and stopped
 2026-09-02, when an operator invocation surface was added. `python -m dev.registry.pipeline publish`
 is a registered verb today and it calls that authority through the same prepared candidate the
 read-only check validates. The constraint is therefore lifted, and the republication it was blocking -
-the single repair behind twenty-seven of this directory's thirty-five failures - needs no new
-machinery, only somebody with the scope to run it. It gates every correction
-Step touching a generated modelo, whatever Wave the Step sits in, and it also gates the two enrolled
-trees that render successfully and have never been committed.
+the single repair behind most of this directory's failures - needs no new
+machinery, only somebody with the scope to run it. Re-measured on 2026-09-03, the directory runs
+1,152 passing and **36 failing** tests in twelve minutes, of which **30 sit in the four
+generated-tree modules**: twenty-six in the tree comparison itself and the rest across its
+publication, CLI and envelope proofs. The figures written here were twenty-seven of thirty-five, and
+the proportion they expressed still holds while both numbers have moved. It gates every correction
+Step touching a generated modelo, whatever Wave the Step sits in, and it also gates the enrolled
+trees that render successfully and have never been committed - **three** of them on re-measurement,
+not the two written here: modelo 308's `2019-y-siguientes`, modelo 360's `2010-y-siguientes` and
+modelo 390's `2022`. Twenty-eight revisions produce render inputs and carry a publication manifest;
+these three produce them and carry none.
 
 One missing artefact gates work in three Waves, and it is external to the repository. No
 official emitted-byte reference for any modelo revision has been acquired, and

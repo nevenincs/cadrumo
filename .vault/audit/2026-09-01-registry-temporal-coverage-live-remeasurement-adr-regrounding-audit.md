@@ -11841,3 +11841,83 @@ revision and carry real values, so this is a measured absence rather than a
 `getattr` returning `None` on a name that was never there. That check is worth
 naming because the same shape - a probe for an attribute that does not exist,
 reporting clean - is a defect this audit has recorded more than once.
+
+
+## Re-measuring the other two ordering constraints
+
+Finding one constraint spent made the other two worth checking, since all three
+were "discovered by measurement" and measurements age.
+
+**The generator-verb constraint is stated correctly and still holds as written.**
+`python -m dev.registry.pipeline` registers both `check` and `publish` today, so
+the section's own account - that the constraint was written twice, wrong both
+times, and is lifted - is accurate. Verified rather than assumed, because that
+paragraph has already been wrong twice and a third reading was cheap.
+
+**The external-artefact constraint still binds.**
+`CANONICAL_FILING_EXPORT_CONFORMANCE_VECTORS` is the empty tuple. Three Steps in
+three Waves still wait on one reference nobody in this execution can acquire.
+
+**A figure inside the first is stale.** It gates "the two enrolled trees that
+render successfully and have never been committed". Measured: **three** -
+modelo 308's `2019-y-siguientes`, modelo 360's `2010-y-siguientes` and modelo
+390's `2022`. Twenty-eight revisions produce render inputs and carry a
+publication manifest; those three produce them and carry none. The constraint
+prose and the step that acts on it both said two.
+
+Modelos 308 and 360 are becoming familiar. They over-declare their grade against
+the completeness manifest, they declare a filing calculation class with no
+formula, and they render a tree nobody published. Three screens, three
+independent conditions, two modelos - which is the argument for the revision
+ranking added earlier, arriving from a fourth direction.
+
+### Three figures wrong in one section, and none of them linked
+
+The parallelization section carried the retired field count, a spent ordering
+constraint, and a tree count of two where the corpus has three. Each was true
+when written. Nothing in the plan connects a figure to the measurement that
+produced it, so each aged independently and silently, and each was found only by
+someone re-running the measurement by hand.
+
+That is the same defect this campaign screens the registry for, in the plan that
+directs the screening: a declaration with no link to its authority drifts, and
+nothing reports it.
+
+
+## The directory's failure figures, re-measured
+
+The last figure in the parallelization section was "twenty-seven of this
+directory's thirty-five failures". Measured on 2026-09-03, the whole of
+`dev/registry` runs in twelve minutes forty-five seconds: **1,152 passing, 36
+failing**.
+
+The failures group cleanly. **Thirty of the thirty-six sit in the four
+generated-tree modules** - twenty-six in the tree comparison itself, two in its
+publication proof, one in its CLI and one in the modelo 303 envelope proof. The
+remaining six are spread one apiece across static inspection, the prose-parser
+channel, embed classification, the modelo 200 candidate suite (two) and the
+conformance directory.
+
+So the proportion the constraint expressed survives - most of the directory's
+failures are one repair - while both of its numbers have moved. **Exactly one
+failure sits in the conformance directory**, which is what the third constraint
+asserts about the modelo 151 closure test, so that figure holds unchanged.
+
+None of the thirty-six is in a module this campaign has written or edited.
+
+### Counting from progress output gave exactly double
+
+The first attempt at this count read pytest's progress characters, because the
+run had been backgrounded and its summary was not yet written. It returned
+seventy-two failures. The authoritative summary says thirty-six.
+
+The doubling is the tell: the log held the progress stream twice, and counting
+characters across it counted every test twice without anything looking wrong -
+seventy-two of fourteen hundred is as plausible a failure rate as thirty-six of
+eleven hundred. A count derived from a progress display is not a measurement,
+and the summary line exists precisely because the display is not one.
+
+That is the same shape as the truncation rule this audit recorded early - a
+measurement piped through `head` or `tail` is not a measurement - reached from a
+different direction, and it cost nothing this time only because the real summary
+arrived a minute later.
