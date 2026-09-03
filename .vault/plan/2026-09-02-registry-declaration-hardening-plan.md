@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-03'
 body_schema: body-v2
-body_hash: 'sha256:e2c70e0ef13d147420abdee7e9128dd14045d57c8bc03804df2e74989160b5b7'
+body_hash: 'sha256:4ecb1a0f0e8f591ed46c3fdc5cfc40cdcbf04f68ca09147e14c1fced020be5d0'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -657,7 +657,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S357` - Establish that the 714 envelope offsets lie past the footer's declared extent, which itself has no length; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S358` - Withdraw the declared-length request after counting the corpus, and name the official design as the authority on record extent; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S359` - Resolve why the layout coverage validator accepts modelo 714 while its cited design declares an uncovered developer-identity position; `src/cadrumo/domain/calculations/registry/_validate_export_layout_coverage.py`.
-- [x] `W06.P13.S360` - Connect the envelope migration to the modelo 714 offsets it explains, and measure both declaration forms; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [ ] `W06.P13.S360` - Connect the envelope migration to the modelo 714 offsets it explains, and measure both declaration forms; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 
