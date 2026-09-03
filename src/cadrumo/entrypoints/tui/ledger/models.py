@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from enum import StrEnum
+import re
 from typing import Literal, Protocol, override
+from weakref import WeakKeyDictionary
 
 from pydantic import BaseModel, model_validator
 
@@ -114,6 +116,12 @@ class LedgerClassificationSubmitterV1(Protocol):
         ...
 
 
+_SAFE_CHOICE_ID = re.compile(r"[a-z0-9][a-z0-9._-]{0,63}\Z")
+_SAFE_PROVIDER_KEYS = frozenset({"tui.ledger.import.provider.bank"})
+_SAFE_SOURCE_KEYS = frozenset({"tui.ledger.import.source.prepared"})
+_IMPORT_COMMAND_VAULT: WeakKeyDictionary[LedgerPreparedImportV1, LedgerSourceImportCommand] = WeakKeyDictionary()
+
+
 class LedgerPreparedImportV1:
     """Opaque pre-resolved import command plus safe catalogue display keys.
 
@@ -122,7 +130,7 @@ class LedgerPreparedImportV1:
     the injected command boundary.
     """
 
-    __slots__ = ("_command", "choice_id", "provider_label_key", "source_label_key")
+    __slots__ = ("__weakref__", "_choice_id", "_provider_label_key", "_source_label_key", "_sealed")
 
     def __init__(
         self,
@@ -134,24 +142,51 @@ class LedgerPreparedImportV1:
     ) -> None:
         """Seal one pre-resolved command behind safe authored display identities."""
         if (
-            not choice_id
-            or not provider_label_key.startswith("tui.ledger.")
-            or not source_label_key.startswith("tui.ledger.")
+            _SAFE_CHOICE_ID.fullmatch(choice_id) is None
+            or provider_label_key not in _SAFE_PROVIDER_KEYS
+            or source_label_key not in _SAFE_SOURCE_KEYS
         ):
             raise ValueError("prepared imports require safe Ledger catalogue identities")
-        self.choice_id = choice_id
-        self.provider_label_key = provider_label_key
-        self.source_label_key = source_label_key
-        self._command = command
+        object.__setattr__(self, "_choice_id", choice_id)
+        object.__setattr__(self, "_provider_label_key", provider_label_key)
+        object.__setattr__(self, "_source_label_key", source_label_key)
+        object.__setattr__(self, "_sealed", True)
+        _IMPORT_COMMAND_VAULT[self] = command
+
+    @property
+    def choice_id(self) -> str:
+        """Return the safe semantic choice identity."""
+        return self._choice_id
+
+    @property
+    def provider_label_key(self) -> str:
+        """Return an admitted authored provider label key."""
+        return self._provider_label_key
+
+    @property
+    def source_label_key(self) -> str:
+        """Return an admitted authored source label key."""
+        return self._source_label_key
+
+    @override
+    def __setattr__(self, name: str, value: object) -> None:
+        """Prevent command or safe metadata replacement after admission."""
+        del name, value
+        raise AttributeError("prepared import capabilities are immutable")
 
     @override
     def __repr__(self) -> str:
         """Return a path- and provider-free diagnostic representation."""
         return f"LedgerPreparedImportV1(choice_id={self.choice_id!r})"
 
+    def __reduce_ex__(self, protocol: int) -> object:
+        """Refuse serialization so the vaulted command cannot be recovered."""
+        del protocol
+        raise TypeError("prepared import capabilities cannot be serialized")
+
     async def submit_with(self, submitter: LedgerImportSubmitterV1) -> LedgerSourceImportResult:
         """Submit the sealed command without exposing it to presentation code."""
-        return await submitter(self._command)
+        return await submitter(_IMPORT_COMMAND_VAULT[self])
 
 
 class LedgerImportSubmitterV1(Protocol):

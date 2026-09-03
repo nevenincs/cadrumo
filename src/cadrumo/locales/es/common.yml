@@ -1034,6 +1034,7 @@ tui:
       progress: Guardando clasificación…
       prompt: Elige una clasificación para el apunte seleccionado.
       success: Clasificación guardada.
+      target: Apunte {position} de {total} · referencia {short_id}
       title: Clasificar apunte contable
     column:
       area: Área

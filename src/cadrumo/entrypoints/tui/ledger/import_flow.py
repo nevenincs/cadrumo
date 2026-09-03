@@ -18,8 +18,23 @@ class LedgerImportScreen(LedgerWorkspaceScreen):
     def __init__(self, controller: LedgerWorkspaceController) -> None:
         """Retain only injected, pre-resolved import choices and their door."""
         super().__init__(controller, id="ledger-import-screen")
-        self.flow_state = LedgerFlowState.EDITING
+        self._flow_state = LedgerFlowState.EDITING
         self.selected_choice: LedgerPreparedImportV1 | None = None
+
+    @property
+    def flow_state(self) -> LedgerFlowState:
+        """Expose the monotonic interaction state without a public setter."""
+        return self._flow_state
+
+    def _transition(self, target: LedgerFlowState) -> None:
+        allowed = {
+            LedgerFlowState.EDITING: {LedgerFlowState.CONFIRMING, LedgerFlowState.CANCELLED},
+            LedgerFlowState.CONFIRMING: {LedgerFlowState.SUBMITTING, LedgerFlowState.CANCELLED},
+            LedgerFlowState.SUBMITTING: {LedgerFlowState.SUCCEEDED, LedgerFlowState.FAILED},
+        }
+        if target not in allowed.get(self._flow_state, set()):
+            raise RuntimeError("invalid import flow transition")
+        self._flow_state = target
 
     @override
     def compose(self) -> ComposeResult:
@@ -52,12 +67,16 @@ class LedgerImportScreen(LedgerWorkspaceScreen):
         if self.handle_navigation_selection(event):
             return
         event_table = cast("DataTable[str]", event.data_table)
-        if event_table.id != "ledger-import-choices" or event.row_key.value is None:
+        if (
+            self.flow_state is not LedgerFlowState.EDITING
+            or event_table.id != "ledger-import-choices"
+            or event.row_key.value is None
+        ):
             return
         self.selected_choice = next(
             choice for choice in self.controller.prepared_imports if choice.choice_id == event.row_key.value
         )
-        self.flow_state = LedgerFlowState.CONFIRMING
+        self._transition(LedgerFlowState.CONFIRMING)
         self.query_one("#ledger-flow-status", Static).update(ledger_copy("tui.ledger.import.confirming"))
         confirm = self.query_one("#ledger-import-confirm", Button)
         confirm.disabled = False
@@ -65,29 +84,40 @@ class LedgerImportScreen(LedgerWorkspaceScreen):
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         """Submit through the injected door or cancel without touching I/O."""
-        if event.button.id == "ledger-import-cancel":
+        if event.button.id == "ledger-import-cancel" and self.flow_state in {
+            LedgerFlowState.EDITING,
+            LedgerFlowState.CONFIRMING,
+        }:
             self._cancel()
             return
-        if event.button.id != "ledger-import-confirm" or self.selected_choice is None:
+        if (
+            self.flow_state is not LedgerFlowState.CONFIRMING
+            or event.button.id != "ledger-import-confirm"
+            or self.selected_choice is None
+        ):
             return
-        self.flow_state = LedgerFlowState.SUBMITTING
+        self._transition(LedgerFlowState.SUBMITTING)
+        event.button.disabled = True
+        self.query_one("#ledger-import-cancel", Button).disabled = True
         status = self.query_one("#ledger-flow-status", Static)
         status.update(ledger_copy("tui.ledger.import.progress"))
         try:
             result = await self.controller.submit_import(self.selected_choice)
         except Exception:
-            self.flow_state = LedgerFlowState.FAILED
+            self._transition(LedgerFlowState.FAILED)
             status.update(ledger_copy("tui.ledger.import.failure"))
         else:
-            self.flow_state = LedgerFlowState.SUCCEEDED
+            self._transition(LedgerFlowState.SUCCEEDED)
             status.update(ledger_copy("tui.ledger.import.success", imported=result.imported, skipped=result.skipped))
 
     def _cancel(self) -> None:
+        if self.flow_state not in {LedgerFlowState.EDITING, LedgerFlowState.CONFIRMING}:
+            return
         self.selected_choice = None
-        self.flow_state = LedgerFlowState.CANCELLED
+        self._transition(LedgerFlowState.CANCELLED)
         self.query_one("#ledger-flow-status", Static).update("")
         self.query_one("#ledger-import-confirm", Button).disabled = True
-        self.query_one("#ledger-import-choices", DataTable).focus()
+        self.query_one("#ledger-import-cancel", Button).disabled = True
 
     @override
     def action_back(self) -> None:

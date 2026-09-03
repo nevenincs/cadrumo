@@ -1018,6 +1018,7 @@ tui:
       progress: Besorolás mentése…
       prompt: Válasszon besorolást a kijelölt tételhez.
       success: Besorolás mentve.
+      target: '{position}/{total}. tétel · hivatkozás: {short_id}'
       title: Főkönyvi tétel besorolása
     column:
       area: Terület

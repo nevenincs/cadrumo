@@ -23,6 +23,7 @@ from ....application.ledger.workspace import (
     LedgerWorkspaceStatus,
 )
 from ....application.operator_actions.models import ActionReference
+from ....application.operator_actions.catalogue import lookup_action
 from ....core.i18n.render import tr
 from ....core.identity import TransactionId
 from ..components.theme import BASE_CSS, tokenised
@@ -111,6 +112,7 @@ _LEDGER_LOCALE_KEYS: Final = (
     "tui.ledger.refusal.submission_unavailable",
     "tui.ledger.classification.title",
     "tui.ledger.classification.prompt",
+    "tui.ledger.classification.target",
     "tui.ledger.classification.business",
     "tui.ledger.classification.personal",
     "tui.ledger.classification.excluded",
@@ -193,6 +195,14 @@ class LedgerWorkspaceController:
             raise ValueError("unsupported Ledger workspace projection contract")
         self.context = context
         self.projection = projection
+        visible_ids = {row.transaction_id for row in projection.entries}
+        if classification_target is not None and classification_target not in visible_ids:
+            raise ValueError("classification target is absent from the visible Ledger projection")
+        if classify_action is not None and lookup_action(classify_action.action_id).target_command_key != "ledger.classify":
+            raise ValueError("injected Ledger classification action does not resolve to the canonical command")
+        choice_ids = tuple(choice.choice_id for choice in prepared_imports)
+        if len(choice_ids) != len(set(choice_ids)):
+            raise ValueError("prepared import choice identities must be unique")
         self.review_action = review_action
         self.classify_action = classify_action
         self.classification_target = classification_target
@@ -200,6 +210,16 @@ class LedgerWorkspaceController:
         self.prepared_imports = prepared_imports
         self.import_submitter = import_submitter
         self._states = {row.area: row for row in projection.areas}
+
+    def classification_target_coordinate(self) -> tuple[int, int, str]:
+        """Return a safe position and redacted identifier from the visible projection."""
+        target = self.classification_target
+        if target is None:
+            raise RuntimeError("classification target is unavailable")
+        position = next(
+            index for index, row in enumerate(self.projection.entries, start=1) if row.transaction_id == target
+        )
+        return position, len(self.projection.entries), str(target)[:12]
 
     def state_for(self, area: LedgerWorkspaceArea) -> LedgerWorkspaceAreaStateV1:
         """Return the application-owned area state."""

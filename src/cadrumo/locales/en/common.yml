@@ -994,6 +994,7 @@ tui:
       progress: Saving classification…
       prompt: Choose a classification for the selected entry.
       success: Classification saved.
+      target: Entry {position} of {total} · reference {short_id}
       title: Classify ledger entry
     column:
       area: Area

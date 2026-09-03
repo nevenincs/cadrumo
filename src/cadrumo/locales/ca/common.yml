@@ -1023,6 +1023,7 @@ tui:
       progress: S'està desant la classificació…
       prompt: Tria una classificació per a l'assentament seleccionat.
       success: Classificació desada.
+      target: Assentament {position} de {total} · referència {short_id}
       title: Classificar assentament comptable
     column:
       area: Àrea
