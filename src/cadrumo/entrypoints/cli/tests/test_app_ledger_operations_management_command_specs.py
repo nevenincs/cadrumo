@@ -152,13 +152,29 @@ def _expected_option(
     )
 
 
+type _ExpectedResultSchema = tuple[str, str | None, str | None, str | None]
+type _ExpectedCommand = tuple[
+    str,
+    str,
+    str,
+    str,
+    str,
+    None,
+    tuple[object, ...],
+    tuple[tuple[object, ...], ...],
+    str,
+    str | None,
+    _ExpectedResultSchema,
+]
+
+
 def _expected_result_schema(
     state: str,
     target: str | None,
     identity: str | None,
     *,
     reason_key: str | None = None,
-) -> tuple[object, ...]:
+) -> _ExpectedResultSchema:
     """Build a complete expected ResultSchemaSpec projection from literal facts."""
     return (state, target, reason_key, identity)
 
@@ -171,11 +187,11 @@ def _expected_command(
     help_key: str,
     write_route: str,
     handler: str | None,
-    result_schema: tuple[object, ...],
+    result_schema: _ExpectedResultSchema,
     parameters: tuple[tuple[object, ...], ...] = (),
     *,
     invocation: tuple[object, ...] = _LEAF_INVOCATION_CONTRACT,
-) -> tuple[object, ...]:
+) -> _ExpectedCommand:
     """Build a complete expected CommandSpec projection from literal facts."""
     return (
         key,
@@ -194,7 +210,7 @@ def _expected_command(
 
 _TARGET = "target"
 
-_EXPECTED_COMMANDS: Final[tuple[tuple[object, ...], ...]] = (
+_EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
     _expected_command(
         "app_ledger_counterparty",
         "app_ledger",
@@ -670,7 +686,7 @@ _EXPECTED_SHARED_PARAMETERS: Final[tuple[tuple[str, tuple[object, ...]], ...]] =
     ("optional_year", _expected_option("year", "--year", "cli.ledger.check.year_help", annotation="builtins:int")),
 )
 
-_EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[tuple[object, ...], ...]] = (
+_EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
     _expected_command(
         "app_ledger_remove",
         "app_ledger",
@@ -970,7 +986,10 @@ def _target_identity(target: object | None) -> str | None:
     """Project a deferred target or translation key to its stable identity."""
     if target is None:
         return None
-    return getattr(target, "identity", getattr(target, "value", None))
+    identity = getattr(target, "identity", None)
+    if identity is None:
+        identity = getattr(target, "value", None)
+    return identity if isinstance(identity, str) else None
 
 
 def _value_contract(parameter: ParameterSpec) -> tuple[object, ...]:
@@ -1086,7 +1105,7 @@ def _graph_path(spec: CommandSpec) -> tuple[str, ...]:
     return ("aeat", "app", "ledger", spec.token)
 
 
-def _assert_live_targets_match_expected(spec: CommandSpec, expected: tuple[object, ...]) -> None:
+def _assert_live_targets_match_expected(spec: CommandSpec, expected: _ExpectedCommand) -> None:
     expected_handler = expected[9]
     if expected_handler is None:
         assert spec.handler is None
