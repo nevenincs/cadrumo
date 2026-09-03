@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING
 from ...core.citation_grounding import CitationGrounding
 from ...core.errors.severity import BaseSeverity
 from ...core.logging import get_logger
+from ._grounding import registry_catalogues
 from .schema import (
     IvaCatalogue,
     IvaCategory,
@@ -48,11 +49,12 @@ def verify_catalogue(catalogue: IvaCatalogue) -> IvaVerificationReport:
         A :class:`cadrumo.domain.iva.IvaVerificationReport` aggregating every
         finding.
     """
-    # Keep this local: registry binding modules consume the IVA public facade.
-    from ..calculations.registry.authority import bundled_authority
-
     issues: list[IvaVerificationIssue] = []
-    legal = bundled_authority().catalogues.legal
+    # The registry authority constructs every modelo and consumes IVA modules
+    # while doing so.  Loading it here would therefore make a catalogue load
+    # re-enter that construction path.  The IVA grounding helper is the
+    # established cycle-safe access path for the parsed shared catalogues.
+    legal, _sources, source_root = registry_catalogues()
 
     present = set(catalogue.regulations.keys())
     missing = [member for member in IvaCategory if member not in present]
@@ -78,7 +80,12 @@ def verify_catalogue(catalogue: IvaCatalogue) -> IvaVerificationReport:
             )
         for citation in regulation.citations:
             issues.extend(
-                _citation_issues(citation, category_id=regulation.category.value, legal=legal),
+                _citation_issues(
+                    citation,
+                    category_id=regulation.category.value,
+                    legal=legal,
+                    source_root=source_root,
+                ),
             )
     _logger.debug("verify_catalogue produced %d issue(s)", len(issues))
     return IvaVerificationReport(issues=tuple(issues))
@@ -89,6 +96,7 @@ def _citation_issues(
     *,
     category_id: str,
     legal: Mapping[LegalRefId, LegalReference],
+    source_root: Path,
 ) -> list[IvaVerificationIssue]:
     """Run every registry and corpus check for one citation, in refusal order.
 
@@ -97,8 +105,6 @@ def _citation_issues(
     citation's remaining checks, which would otherwise report a second failure
     caused solely by the first.
     """
-    # Keep this local: registry binding modules consume the IVA public facade.
-    from ...core.resources.bundled_data import bundled_path
     from ..calculations.registry.legal import legal_reference_quotes_corpus, verify_legal_reference
 
     issues: list[IvaVerificationIssue] = []
@@ -139,7 +145,7 @@ def _citation_issues(
         )
         return issues
     try:
-        verify_legal_reference(reference, source_root=bundled_path())
+        verify_legal_reference(reference, source_root=source_root)
     except Exception as exc:
         issues.append(
             IvaVerificationIssue(
@@ -159,7 +165,7 @@ def _citation_issues(
         quoted = legal_reference_quotes_corpus(
             reference,
             citation.quoted_text,
-            source_root=bundled_path(),
+            source_root=source_root,
         )
     except Exception as exc:
         issues.append(

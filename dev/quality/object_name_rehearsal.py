@@ -14,11 +14,11 @@ import shutil
 import subprocess
 import sys
 import tempfile
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path, PurePosixPath
-from typing import Final, cast
+from typing import Final, Literal, cast
 
 from cadrumo.core.hashing import canonical_json_bytes, prefixed_digest, sha256_file
 from cadrumo.core.link_safety import is_link_like
@@ -44,6 +44,10 @@ from .object_name_graph import (
     operation_locators,
 )
 from .object_name_manifest import (
+    MANDATORY_OBJECT_NAME_GATES,
+    REQUIRED_OBJECT_NAME_GATE_FAMILIES,
+    ObjectNameGateCommand,
+    ObjectNameGateFamily,
     ObjectNameManifestError,
     ObjectNameRenameManifest,
     object_name_manifest_digest,
@@ -75,7 +79,7 @@ class ObjectNameRehearsalError(RuntimeError):
 
 
 @contextmanager
-def _isolated_first_party_import_state() -> Iterator[None]:
+def _isolated_first_party_import_state() -> Generator[None]:
     """Keep live-tree imports from contaminating graph inspection in the copy."""
     owned = {
         name: module
@@ -97,6 +101,7 @@ def _isolated_first_party_import_state() -> Iterator[None]:
 class ObjectNameGateOutcome:
     """Deterministic evidence for one argv command executed in the copy."""
 
+    family: ObjectNameGateFamily | Literal["generator"]
     argv: tuple[str, ...]
     return_code: int
     stdout_sha256: str
@@ -308,7 +313,13 @@ def _materialise(target_root: Path, result: ObjectNameTransformResult) -> None:
         os.replace(temporary, target)
 
 
-def _run_command(argv: tuple[str, ...], *, cwd: Path, environment: Mapping[str, str]) -> ObjectNameGateOutcome:
+def _run_command(
+    command: ObjectNameGateCommand,
+    *,
+    cwd: Path,
+    environment: Mapping[str, str],
+) -> ObjectNameGateOutcome:
+    argv = command.argv
     try:
         completed = subprocess.run(  # noqa: S603
             argv,
@@ -321,6 +332,7 @@ def _run_command(argv: tuple[str, ...], *, cwd: Path, environment: Mapping[str, 
     except (OSError, subprocess.TimeoutExpired) as exc:
         raise ObjectNameRehearsalError(f"cannot execute declared command {argv!r}") from exc
     return ObjectNameGateOutcome(
+        family=command.family,
         argv=argv,
         return_code=completed.returncode,
         stdout_sha256=_digest_bytes(completed.stdout),
@@ -611,17 +623,29 @@ def rehearse_object_name_component(
         generator_results: list[ObjectNameGateOutcome] = []
         gate_results: list[ObjectNameGateOutcome] = []
         for argv in generator_argv:
-            outcome = _run_command(argv, cwd=temporary_root, environment=command_environment)
+            outcome = _run_command(
+                ObjectNameGateCommand(family="focused", argv=argv),
+                cwd=temporary_root,
+                environment=command_environment,
+            )
+            outcome = replace(outcome, family="generator")
             generator_results.append(outcome)
             if outcome.return_code != 0:
                 raise ObjectNameRehearsalError(_failed_command_message(outcome))
-        for argv in gate_argv:
-            outcome = _run_command(argv, cwd=temporary_root, environment=command_environment)
+        gate_commands = (
+            *MANDATORY_OBJECT_NAME_GATES,
+            *(ObjectNameGateCommand(family="focused", argv=argv) for argv in gate_argv),
+        )
+        for command in gate_commands:
+            outcome = _run_command(command, cwd=temporary_root, environment=command_environment)
             gate_results.append(outcome)
             if outcome.return_code != 0:
                 raise ObjectNameRehearsalError(_failed_command_message(outcome))
         generator_outcomes = tuple(generator_results)
         gate_outcomes = tuple(gate_results)
+        observed_families = {cast("ObjectNameGateFamily", outcome.family) for outcome in gate_outcomes}
+        if observed_families != REQUIRED_OBJECT_NAME_GATE_FAMILIES:
+            raise ObjectNameRehearsalError("rehearsal gate evidence does not cover every required family")
 
         after_inventory = _inventory_after_allowed_changes(
             copied_inventory,

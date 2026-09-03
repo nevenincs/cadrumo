@@ -23,6 +23,7 @@ from ...audit.object_names import (
     to_json,
 )
 from ..object_name_manifest import (
+    MANDATORY_OBJECT_NAME_GATES,
     ObjectNameManifestError,
     ObjectNameRenameManifest,
     load_object_name_manifest,
@@ -31,6 +32,26 @@ from ..object_name_manifest import (
     select_object_name_execution,
     validate_object_name_manifest,
 )
+
+
+def test_production_gate_families_are_closed_complete_and_non_omissible() -> None:
+    assert tuple(gate.family for gate in MANDATORY_OBJECT_NAME_GATES) == (
+        "parsing-import",
+        "architecture",
+        "semantic-overlap",
+        "clone",
+        "type-lint",
+        "type-lint",
+    )
+    assert tuple(gate.argv for gate in MANDATORY_OBJECT_NAME_GATES) == (
+        ("just", "check-imports"),
+        ("just", "check-architecture"),
+        ("just", "check-semantic"),
+        ("just", "audit-duplication"),
+        ("just", "check-types"),
+        ("just", "check-style"),
+    )
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

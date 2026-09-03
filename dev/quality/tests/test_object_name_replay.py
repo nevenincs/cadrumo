@@ -13,6 +13,7 @@ from cadrumo.core.hashing import canonical_json_bytes
 
 from ...audit.object_names import scan, to_json
 from .. import object_name_graph as graph_module
+from .. import object_name_rehearsal as rehearsal_module
 from .. import object_name_replay as replay_module
 from ..object_name_graph import (
     HardEdge,
@@ -24,7 +25,7 @@ from ..object_name_graph import (
 from ..object_name_manifest import ObjectNameRenameManifest
 from ..object_name_rehearsal import ObjectNameRehearsalReceipt, rehearse_object_name_component
 from ..object_name_replay import ObjectNameReplayError, replay_object_name_component
-from .test_object_name_rehearsal import _digest, _fixture, _git, _live_bytes, _write
+from .test_object_name_rehearsal import _TEST_MANDATORY_GATES, _digest, _fixture, _git, _live_bytes, _write
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -34,6 +35,7 @@ def _bind_disposable_package(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delitem(sys.modules, "cadrumo", raising=False)
     monkeypatch.delitem(sys.modules, "dev", raising=False)
     monkeypatch.setattr(graph_module, "_FIRST_PARTY_ROOTS", ("example",))
+    monkeypatch.setattr(rehearsal_module, "MANDATORY_OBJECT_NAME_GATES", _TEST_MANDATORY_GATES)
 
 
 def _case(tmp_path: Path) -> tuple[Path, Any, Any, Any, ObjectNameRehearsalReceipt]:
@@ -199,8 +201,19 @@ def test_successful_symbol_replay_tolerates_unrelated_post_receipt_bytes(tmp_pat
     assert (repo / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"
 
 
-def test_successful_generator_backed_replay_applies_and_reports_exact_owner_output(tmp_path: Path) -> None:
+def test_successful_generator_backed_replay_applies_and_reports_exact_owner_output(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     repo, inventory, manifest, component, receipt = _generated_case(tmp_path)
+    original_run = replay_module._run_command
+    live_generator_calls: list[Path] = []
+
+    def record_live_generator(*args: Any, cwd: Path, **kwargs: Any) -> Any:
+        if cwd == repo:
+            live_generator_calls.append(cwd)
+        return original_run(*args, cwd=cwd, **kwargs)
+
+    monkeypatch.setattr(replay_module, "_run_command", record_live_generator)
 
     result = replay_object_name_component(
         manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
@@ -208,6 +221,7 @@ def test_successful_generator_backed_replay_applies_and_reports_exact_owner_outp
 
     assert result.generator_outcomes == receipt.generator_outcomes
     assert len(result.generator_outcomes) == 1
+    assert live_generator_calls == [repo]
     assert result.generator_outcomes[0].argv == manifest.operations[0].generator_commands[0]
     assert result.generator_outcomes[0].return_code == 0
     assert (repo / "dev/generated.txt").read_bytes() == b"generated Widget\n"
@@ -787,21 +801,35 @@ def test_linked_root_and_unsafe_receipt_paths_refuse_without_writes(tmp_path: Pa
 
 def test_cleanup_failure_does_not_mask_primary_apply_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     repo, inventory, manifest, component, receipt = _case(tmp_path)
-    monkeypatch.setattr(
-        replay_module,
-        "_run_gates_in_verified_copy",
-        lambda **_kwargs: (_ for _ in ()).throw(ObjectNameReplayError("primary apply failure")),
-    )
+    transaction = repo.parent / f".{repo.name}.object-name-transaction-{receipt.receipt_id.removeprefix('sha256:')}"
+    original_replace = replay_module._replace_staged
+
+    def refuse_after_stage(*_args: Any, **_kwargs: Any) -> None:
+        raise ObjectNameReplayError("primary apply failure")
+
+    monkeypatch.setattr(replay_module, "_replace_staged", refuse_after_stage)
+    cleanup_paths: tuple[Path, ...] = ()
+
+    def refuse_cleanup(paths: tuple[Path, ...]) -> None:
+        nonlocal cleanup_paths
+        cleanup_paths = paths
+        raise OSError("cleanup failure")
+
     monkeypatch.setattr(
         replay_module,
         "_cleanup",
-        lambda *_args: (_ for _ in ()).throw(OSError("cleanup failure")),
+        refuse_cleanup,
     )
 
-    with pytest.raises(ObjectNameReplayError, match="primary apply failure"):
+    with pytest.raises(ObjectNameReplayError, match="primary apply failure") as raised:
         replay_object_name_component(
             manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
         )
+
+    monkeypatch.setattr(replay_module, "_replace_staged", original_replace)
+    assert cleanup_paths and all(path.is_file() for path in cleanup_paths)
+    assert transaction.is_dir()
+    assert any("cleanup also failed" in note for note in getattr(raised.value, "__notes__", ()))
 
 
 def test_cleanup_failure_after_successful_apply_is_reported_and_keeps_transaction_evidence(

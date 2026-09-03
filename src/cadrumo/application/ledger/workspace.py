@@ -20,6 +20,7 @@ from typing import Final, Protocol
 from pydantic import BaseModel, NonNegativeInt, model_validator
 
 from ...core.filing_year import FilingYear
+from ...core.identifier_grammar import NamespacedId
 from ...core.identity import CalculationRevisionId, InvoiceId, TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
@@ -74,6 +75,10 @@ class LedgerWorkspaceAvailability(StrEnum):
     """Whether the already-admitted local area can currently be opened."""
 
     AVAILABLE = "available"
+    LOCKED = "locked"
+    STALE = "stale"
+    NEVER_CAPTURED = "never_captured"
+    UNAVAILABLE = "unavailable"
 
 
 class LedgerWorkspaceStatus(StrEnum):
@@ -93,6 +98,7 @@ class LedgerWorkspaceAreaStateV1(BaseModel):
     area: LedgerWorkspaceArea
     sources: tuple[LedgerWorkspaceSource, ...]
     availability: LedgerWorkspaceAvailability = LedgerWorkspaceAvailability.AVAILABLE
+    reason_code: NamespacedId | None = None
     status: LedgerWorkspaceStatus
     item_count: NonNegativeInt
 
@@ -102,6 +108,10 @@ class LedgerWorkspaceAreaStateV1(BaseModel):
             raise ValueError("a Ledger workspace area requires at least one local source")
         if len(set(self.sources)) != len(self.sources):
             raise ValueError("a Ledger workspace area cannot repeat a source")
+        if self.availability is LedgerWorkspaceAvailability.AVAILABLE and self.reason_code is not None:
+            raise ValueError("an available Ledger workspace area cannot carry an availability reason")
+        if self.availability is not LedgerWorkspaceAvailability.AVAILABLE and self.reason_code is None:
+            raise ValueError("a non-available Ledger workspace area requires an availability reason")
         if self.status is LedgerWorkspaceStatus.EMPTY and self.item_count != 0:
             raise ValueError("an empty Ledger workspace area cannot report items")
         return self

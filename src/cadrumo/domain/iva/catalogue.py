@@ -69,7 +69,28 @@ def _load_iva_catalogue_cached(path: str, byte_count: int, modified_ns: int) -> 
     missing = sorted(category.value for category in set(IvaCategory) - set(regulations))
     if missing:
         raise IvaCatalogueError(f"{target}: IVA catalogue missing categories: {missing}")
-    return IvaCatalogue(regulations=regulations)
+    catalogue = IvaCatalogue(regulations=regulations)
+    _require_verified_catalogue(catalogue, target=target)
+    return catalogue
+
+
+def _require_verified_catalogue(catalogue: IvaCatalogue, *, target: Path) -> None:
+    """Refuse a parsed catalogue whose legal evidence fails cross-record review."""
+    # Keep the verifier import local.  Its legal-catalogue access is deliberately
+    # cycle-safe: IVA registry loaders are themselves consumers of the registry
+    # catalogue and must not construct the full validated registry authority.
+    from .verify import verify_catalogue
+
+    try:
+        report = verify_catalogue(catalogue)
+    except Exception as exc:
+        raise IvaCatalogueError(f"{target}: IVA catalogue verification could not complete: {exc}") from exc
+    if report.ok:
+        return
+    failures = "\n".join(
+        f" - [{issue.category_id}] {issue.code}: {issue.message}" for issue in report.errors
+    )
+    raise IvaCatalogueError(f"{target}: IVA catalogue verification failed:\n{failures}")
 
 
 def bundled_iva_catalogue(path: Path | None = None) -> IvaCatalogue:
