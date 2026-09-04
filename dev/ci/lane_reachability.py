@@ -75,6 +75,24 @@ and named by no workflow at all. :func:`ci_invoked_lanes` narrows the lane set
 to what CI actually reaches, so the two questions can be asked separately and
 neither can quietly answer for the other.
 
+A FOURTH QUESTION IS ABOUT DIRECTORIES, and it is the one the three above are
+structurally unable to ask. Every question so far starts from a file that
+exists, so each can only report a hole once somebody has already fallen into
+it. ``dev/harness/tests`` held one module named individually by one recipe: the
+file was covered, so the per-file and per-test models were both satisfied, while
+the DIRECTORY sat inside no lane's path scope at all -- and a second module
+added beside the first would have been collected by nothing, with no gate
+saying so until someone wrote it. An empty ``tests`` package is the same hole
+with the fall not yet taken: it offers no file to analyse however orphaned it
+is. :func:`analyse_directory_coverage` therefore asks whether a lane's scope
+SWEEPS a directory rather than whether some lane happens to name a file in it,
+which is what turns a defect discovered after the fact into one refused before.
+
+The remedy this makes possible is also the reason the question is worth asking
+separately: a lane path list is an enumeration, and an enumeration nobody
+extends is precisely how every hole above was dug. The gate does not stop the
+list from being enumerated; it stops the list from being silently incomplete.
+
 See Also:
     :func:`declared_lanes`
         Every lane the repository declares, from config, recipes, and workflows.
@@ -84,6 +102,9 @@ See Also:
     :func:`analyse_reachability`
         The gate's finding: individual tests no declared lane can select, plus
         the files no lane names at all.
+    :func:`analyse_directory_coverage`
+        The directory finding: test directories no lane's path scope sweeps, so
+        the next module written into one would be collected by nothing.
 """
 
 from __future__ import annotations
@@ -93,9 +114,10 @@ import re
 import shlex
 import shutil
 import subprocess
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from types import MappingProxyType
 from typing import Final
 
 import yaml
@@ -121,6 +143,19 @@ _PRUNED: Final[frozenset[str]] = frozenset(
 #: `"/" in token` check catches -- so this only closes the gap for whenever
 #: one does.
 _TOP_LEVEL_TEST_DIRS: Final[frozenset[str]] = frozenset({"src", "dev", "packaging"})
+
+#: The ONE place a test directory may be declared deliberately outside every
+#: lane's path scope, mapped to the reason it is. Empty is the correct state and
+#: the honest one: no directory in this tree is currently held out on purpose.
+#:
+#: This is a declaration channel, not an allowlist, and the difference is
+#: enforced rather than asked for. An entry does not merely silence the gate --
+#: :func:`analyse_directory_coverage` reports it back as STALE the moment the
+#: directory becomes swept or stops existing, so a parked problem surfaces
+#: instead of ageing quietly. Nothing belongs here that a lane path could fix;
+#: the remedy for an uncovered directory is a lane, and the remedy for a
+#: directory that should not exist is deleting it.
+UNSWEPT_TEST_DIRECTORIES: Final[Mapping[str, str]] = MappingProxyType({})
 
 #: Where lane declarations live. Anything else is not a lane.
 _WORKFLOW_DIR: Final[str] = ".github/workflows"
@@ -190,6 +225,38 @@ class ReachabilityReport:
 
 
 @dataclass(frozen=True, slots=True)
+class DirectoryCoverageReport:
+    """Which test directories a lane's path scope sweeps, and which none does.
+
+    ``analysed`` exists for the same reason :class:`ReachabilityReport` carries
+    it: an empty ``uncovered`` means nothing if the walker discovered nothing,
+    and a walker that silently stopped matching is indistinguishable from a
+    clean tree unless the corpus size is pinned alongside the finding.
+
+    ``stale`` is what keeps :data:`UNSWEPT_TEST_DIRECTORIES` from decaying into
+    an allowlist. A declaration whose directory has since been swept by a lane,
+    or which no longer names a real directory, is reported rather than honoured:
+    the entry has stopped describing the tree and now only suppresses.
+    """
+
+    uncovered: tuple[str, ...]
+    analysed: int
+    declared: tuple[str, ...]
+    stale: tuple[str, ...]
+
+
+def _within(candidate: str, scope: str) -> bool:
+    """Return whether ``candidate`` is ``scope`` itself or sits beneath it.
+
+    One predicate for both path scopes and ``--ignore`` scopes, because two
+    spellings of containment drift and only one of them gets the trailing-slash
+    case right.
+    """
+    normalised = scope.replace("\\", "/").rstrip("/")
+    return candidate == normalised or candidate.startswith(f"{normalised}/")
+
+
+@dataclass(frozen=True, slots=True)
 class Lane:
     """One declared pytest invocation: what it reaches and what it accepts.
 
@@ -220,9 +287,32 @@ class Lane:
             # gate silently reports full coverage.
             return False
         posix = relative_path.replace("\\", "/")
-        if any(posix == excluded or posix.startswith(f"{excluded.rstrip('/')}/") for excluded in self.exclusions):
+        if any(_within(posix, excluded) for excluded in self.exclusions):
             return False
-        return any(posix == scope or posix.startswith(f"{scope.rstrip('/')}/") for scope in self.paths)
+        return any(_within(posix, scope) for scope in self.paths)
+
+    def covers_directory(self, relative_directory: str) -> bool:
+        """Return whether this lane's path scope SWEEPS ``relative_directory``.
+
+        Deliberately not :meth:`covers` applied to a directory string, and the
+        difference is the whole question. A lane naming one FILE inside a
+        directory covers that file and sweeps nothing around it, so the next
+        module written beside it is collected by nobody -- which is the state
+        ``dev/harness/tests`` sat in while every file-level check passed. Only a
+        scope that IS the directory or an ancestor of it sweeps the directory.
+
+        A file-level ``--ignore`` inside the directory does not remove the
+        sweep: the excluded file is held out, while a new sibling is still
+        collected. Only an exclusion of the directory itself or an ancestor
+        does, which is what makes the harness package honestly uncovered by the
+        corpus lanes that ``--ignore`` it and covered by the one that runs it.
+        """
+        posix = relative_directory.replace("\\", "/").rstrip("/")
+        if not self.paths or not posix:
+            return False
+        if any(_within(posix, excluded) for excluded in self.exclusions):
+            return False
+        return any(_within(posix, scope) for scope in self.paths)
 
 
 def _marker_expression_of(tokens: list[str]) -> str | None:
@@ -661,8 +751,8 @@ def marker_sets_in(path: Path) -> tuple[TestMarkers, ...] | None:
     return tuple(found)
 
 
-def tracked_test_files(root: Path) -> tuple[Path, ...]:
-    """Return every git-TRACKED test module, repository-relative.
+def _tracked_python_files(root: Path) -> tuple[Path, ...]:
+    """Return every git-TRACKED ``.py`` path, repository-relative.
 
     Tracked rather than on-disk: an untracked file is a peer's uncommitted work
     that no lane could name and CI will never see, so counting it would red a
@@ -680,11 +770,35 @@ def tracked_test_files(root: Path) -> tuple[Path, ...]:
         capture_output=True,
         check=True,
     )
-    return tuple(
-        Path(entry)
-        for entry in completed.stdout.decode(_UTF_8).split("\n")
-        if entry.endswith(".py") and Path(entry).name.startswith("test_")
-    )
+    return tuple(Path(entry) for entry in completed.stdout.decode(_UTF_8).split("\n") if entry.endswith(".py"))
+
+
+def tracked_test_files(root: Path) -> tuple[Path, ...]:
+    """Return every git-TRACKED test module, repository-relative."""
+    return tuple(path for path in _tracked_python_files(root) if path.name.startswith("test_"))
+
+
+def _test_directories_of(paths: Iterable[Path]) -> tuple[str, ...]:
+    """Return every directory in ``paths`` a test module could be collected from.
+
+    Two sources unioned, because either alone leaves open the hole the other
+    closes:
+
+    * the parent of every ``test_*.py`` -- where tests live now;
+    * every ``tests`` package holding any ``.py`` -- where a test lands
+      tomorrow. A ``tests`` package carrying only ``__init__.py`` offers the
+      file-level models nothing to report however orphaned it is, and it is the
+      emptiest form of the defect: the first module written into it is
+      collected by nobody, and the author learns that from a silent absence.
+    """
+    directories = {path.parent.as_posix() for path in paths if path.name.startswith("test_")}
+    directories |= {path.parent.as_posix() for path in paths if path.parent.name == "tests"}
+    return tuple(sorted(directories))
+
+
+def tracked_test_directories(root: Path) -> tuple[str, ...]:
+    """Return every git-tracked directory a test module could be collected from."""
+    return _test_directories_of(_tracked_python_files(root))
 
 
 def expression_selects(expression: str | None, markers: frozenset[str]) -> bool:
@@ -724,6 +838,19 @@ def expression_selects(expression: str | None, markers: frozenset[str]) -> bool:
 def discover_test_files(root: Path) -> tuple[Path, ...]:
     """Return every runnable test module under ``root``."""
     return scan_directory(root, pattern="test_*.py", recursive=True, prune_directories=_PRUNED)
+
+
+def discover_test_directories(root: Path) -> tuple[str, ...]:
+    """Return every on-disk directory under ``root`` a test module could come from.
+
+    The on-disk counterpart of :func:`tracked_test_directories`, and injectable
+    for the same reason :func:`discover_test_files` is: the detector proofs
+    drive a synthetic tree that is not a git repository, and a gate whose
+    teeth can only be shown against the real tree has no teeth to show.
+    """
+    files = scan_directory(root, pattern="*.py", recursive=True, prune_directories=_PRUNED)
+    relative = tuple(path.relative_to(root) if path.is_absolute() else path for path in files)
+    return _test_directories_of(relative)
 
 
 def analyse_reachability(
@@ -778,4 +905,57 @@ def analyse_reachability(
         unnamed=tuple(unnamed),
         analysed=analysed,
         skipped=tuple(skipped),
+    )
+
+
+def analyse_directory_coverage(
+    root: Path,
+    *,
+    lanes: Iterable[Lane] | None = None,
+    directories: Iterable[str] | None = None,
+    unswept: Mapping[str, str] | None = None,
+) -> DirectoryCoverageReport:
+    """Return every test directory no declared lane's path scope sweeps.
+
+    Both sides are derived, neither is restated. The lane scopes come from
+    :func:`declared_lanes`, which resolves the justfile through ``just`` itself
+    and reads the workflows, so a lane added or narrowed anywhere moves this
+    without a second edit. The directory set comes from the tracked tree. A
+    hand-maintained list on either side would reproduce the defect the gate
+    exists to catch, one level up.
+
+    Args:
+        root: The repository root the lanes and directories are relative to.
+        lanes: Declared lanes; read from ``root`` when omitted.
+        directories: Repository-relative test directories; git-tracked
+            discovery when omitted. Injectable so the detector proofs can drive
+            a synthetic tree that is not a git repository.
+        unswept: The deliberate-holdout declarations;
+            :data:`UNSWEPT_TEST_DIRECTORIES` when omitted.
+
+    Returns:
+        The unswept directories, the corpus size they were measured against,
+        the declared holdouts, and the declarations that have gone stale.
+    """
+    resolved_lanes = tuple(lanes) if lanes is not None else declared_lanes(root)
+    candidates = tuple(directories) if directories is not None else tracked_test_directories(root)
+    declared = UNSWEPT_TEST_DIRECTORIES if unswept is None else unswept
+
+    def swept(directory: str) -> bool:
+        return any(lane.covers_directory(directory) for lane in resolved_lanes)
+
+    uncovered = tuple(sorted(name for name in candidates if not swept(name) and name not in declared))
+
+    # A declaration earns its keep only while it still describes the tree. Once
+    # a lane sweeps the directory, or the directory is gone, the entry has
+    # stopped explaining anything and is only suppressing -- which is the state
+    # every allowlist reaches if nothing watches it.
+    known = frozenset(candidates)
+    stale = tuple(sorted(name for name in declared if name not in known or swept(name)))
+
+    return DirectoryCoverageReport(
+        uncovered=uncovered,
+        analysed=len(candidates),
+        declared=tuple(sorted(declared)),
+        stale=stale,
     )

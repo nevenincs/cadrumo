@@ -306,12 +306,23 @@ def _harness_members(root: Path) -> tuple[str, ...]:
 def _member_markers(root: Path, members: tuple[str, ...]) -> dict[str, frozenset[str]]:
     """Return each member's effective test markers, keyed by its path.
 
-    Both members are single-purpose, uniformly module-marked files, so one
-    test's effective markers stand in for the whole file's reachability.
+    A member is a file or a directory scope, and both must resolve: the worker
+    hook can only be named as a file because it sits among hundreds of ordinary
+    unit modules, while the harness package is named as a directory so that a
+    proof added to it is enrolled by where it lives rather than by an edit
+    nobody remembers to make. A directory member resolves through the modules
+    inside it, in name order so the representative is deterministic.
+
+    Every member is single-purpose and uniformly module-marked, so one test's
+    effective markers stand in for the member's reachability. The assertion is
+    the non-vacuity control: a scope holding no test resolves no markers, and
+    the exclusion checks downstream would otherwise quantify over nothing.
     """
     markers: dict[str, frozenset[str]] = {}
     for member in members:
-        entries = marker_sets_in(root / member)
+        target = root / member
+        modules = sorted(target.glob("test_*.py")) if target.is_dir() else [target]
+        entries = tuple(entry for module in modules for entry in (marker_sets_in(module) or ()))
         assert entries, f"{member} holds no test to resolve markers from"
         markers[member] = entries[0].markers
     return markers
