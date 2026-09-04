@@ -8,8 +8,8 @@ when its role and subject snapshot are current.
 
 from __future__ import annotations
 
-import hashlib
 import ast
+import hashlib
 import json
 import re
 from collections.abc import Iterable, Mapping
@@ -47,9 +47,7 @@ LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_ROOT: Final[Literal["cadrumo.ledger_tui_supp
     "cadrumo.ledger_tui_supported_surface_census"
 )
 _LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_FRAME: Final[bytes] = b"cadrumo:ledger-tui-supported-surface-census:v1\x00"
-_LEDGER_TUI_SUPPORTED_SURFACE_SOURCE_SET_FRAME: Final[bytes] = (
-    b"cadrumo:ledger-tui-supported-surface-source-set:v1\x00"
-)
+_LEDGER_TUI_SUPPORTED_SURFACE_SOURCE_SET_FRAME: Final[bytes] = b"cadrumo:ledger-tui-supported-surface-source-set:v1\x00"
 _LEDGER_MESSAGE_TYPES: Final[tuple[str, ...]] = (
     "LedgerBackRequested",
     "LedgerEvidenceReviewRequested",
@@ -380,8 +378,11 @@ def ledger_tui_supported_surface_source_set_digest(
         if source_records is not None
         else _source_records(ledger_tui_supported_surface_source_files(root), repo_root=root)
     )
+    ordered = tuple(sorted(records))
+    if len({relative for relative, _body in ordered}) != len(ordered):
+        raise ValueError("Ledger TUI census source paths must be unique")
     payload = bytearray(_LEDGER_TUI_SUPPORTED_SURFACE_SOURCE_SET_FRAME)
-    for relative, body in sorted(records):
+    for relative, body in ordered:
         payload.extend(_length_frame(relative.encode("utf-8")))
         payload.extend(_length_frame(body))
     return f"sha256:{hashlib.sha256(payload).hexdigest()}"
@@ -436,8 +437,10 @@ def build_ledger_tui_supported_surface_census(
 ) -> LedgerTuiSupportedSurfaceCensusV1:
     """Derive the supported-surface census without importing the product TUI."""
     root = _repository_root() if repo_root is None else repo_root.resolve()
-    records = tuple(source_records) if source_records is not None else _source_records(
-        ledger_tui_supported_surface_source_files(root), repo_root=root
+    records = (
+        tuple(source_records)
+        if source_records is not None
+        else _source_records(ledger_tui_supported_surface_source_files(root), repo_root=root)
     )
     trees = _parsed_sources(records)
     routes_path = "src/cadrumo/entrypoints/tui/ledger/routes.py"
@@ -465,9 +468,23 @@ def build_ledger_tui_supported_surface_census(
     if initial_destination is None:
         raise ValueError("Ledger root factory initial area is absent from the route table")
 
+    production_trees = {
+        relative: tree
+        for relative, tree in trees.items()
+        if relative.startswith("src/cadrumo/entrypoints/tui/") and "/tests/" not in relative
+    }
+    defined_classes = {
+        node.name for tree in production_trees.values() for node in ast.walk(tree) if isinstance(node, ast.ClassDef)
+    }
+    required_classes = {screen for _destination, _area, screen in route_facts} | {"LedgerWorkspaceController"}
+    if not required_classes <= defined_classes:
+        raise ValueError("Ledger TUI census route/controller class is unavailable")
+    required_functions = {"ledger_screen_factory", "resolve_ledger_screen"}
+    if not required_functions <= _function_names(trees[routes_path]):
+        raise ValueError("Ledger TUI census factory or resolver is unavailable")
     handler_names = {
         name
-        for relative, tree in trees.items()
+        for relative, tree in production_trees.items()
         if relative != "src/cadrumo/entrypoints/tui/ledger/controller.py"
         for name in _function_names(tree)
     }
@@ -481,9 +498,7 @@ def build_ledger_tui_supported_surface_census(
     installed_keywords = {
         keyword.arg
         for node in ast.walk(trees[launcher_path])
-        if isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Name)
-        and node.func.id == "ledger_screen_factory"
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "ledger_screen_factory"
         for keyword in node.keywords
         if keyword.arg is not None
     }
@@ -493,9 +508,7 @@ def build_ledger_tui_supported_surface_census(
     if cli_tui_capabilities is None:
         from cadrumo.entrypoints.cli._app_ledger_command_specs import LEDGER_CLI_COMMAND_CENSUS
 
-        cli_tui_capabilities = (
-            (entry.command_key, entry.tui_capability.value) for entry in LEDGER_CLI_COMMAND_CENSUS
-        )
+        cli_tui_capabilities = ((entry.command_key, entry.tui_capability.value) for entry in LEDGER_CLI_COMMAND_CENSUS)
     cli_statuses = tuple(sorted(cli_tui_capabilities))
     test_records = tuple((relative, tree) for relative, tree in trees.items() if "/tests/test_" in relative)
     harness_files = tuple(sorted(relative for relative, _tree in test_records))
@@ -1915,6 +1928,8 @@ __all__ = [
     "ACCEPTED_LEDGER_PARITY_PLAN_OWNER",
     "LEDGER_REGISTRY_ROUTE_CENSUS_ROOT",
     "LEDGER_REGISTRY_ROUTE_CENSUS_SCHEMA_VERSION",
+    "LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_ROOT",
+    "LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_SCHEMA_VERSION",
     "SCHEMA_VERSION",
     "ApplicabilityState",
     "AuthorityDispositionEntryV1",
@@ -1947,15 +1962,22 @@ __all__ = [
     "LedgerRegistryRouteCensusV1",
     "LedgerRegistryRouteRowV1",
     "LedgerRegistryRouteTargetV1",
+    "LedgerTuiRouteRowV1",
+    "LedgerTuiSupportedSurfaceCensusV1",
     "ReviewRuling",
     "SurfaceCapabilityState",
     "build_ledger_registry_route_census",
+    "build_ledger_tui_supported_surface_census",
     "evaluate_ledger_capability_gate",
     "evaluate_ledger_capability_gates",
     "ledger_registry_route_census_bytes",
     "ledger_registry_route_census_digest",
     "ledger_registry_source_files",
     "ledger_registry_source_set_digest",
+    "ledger_tui_supported_surface_census_bytes",
+    "ledger_tui_supported_surface_census_digest",
+    "ledger_tui_supported_surface_source_files",
+    "ledger_tui_supported_surface_source_set_digest",
     "reopened_gates_for_denominator_drift",
     "validate_ledger_matrix_currentness",
 ]

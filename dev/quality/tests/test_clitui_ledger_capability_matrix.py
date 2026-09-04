@@ -11,10 +11,12 @@ cannot masquerade as the live campaign census.
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from copy import copy
 from datetime import UTC, datetime
 from decimal import Decimal
 from functools import cache
+from pathlib import Path
 from typing import Final, cast
 
 import pytest
@@ -26,6 +28,7 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from ..clitui_ledger_capability_matrix import (
     ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
     LEDGER_REGISTRY_ROUTE_CENSUS_ROOT,
+    LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_ROOT,
     ApplicabilityState,
     AuthorityDispositionEntryV1,
     AuthorityDispositionSnapshotV1,
@@ -53,14 +56,19 @@ from ..clitui_ledger_capability_matrix import (
     LedgerLiveCensusReportV1,
     LedgerMatrixAcceptanceAttestationV1,
     LedgerRegistryRouteCensusV1,
+    LedgerTuiSupportedSurfaceCensusV1,
     ReviewRuling,
     SurfaceCapabilityState,
     build_ledger_registry_route_census,
+    build_ledger_tui_supported_surface_census,
     evaluate_ledger_capability_gate,
     evaluate_ledger_capability_gates,
     ledger_registry_route_census_bytes,
     ledger_registry_source_files,
     ledger_registry_source_set_digest,
+    ledger_tui_supported_surface_census_bytes,
+    ledger_tui_supported_surface_source_files,
+    ledger_tui_supported_surface_source_set_digest,
     reopened_gates_for_denominator_drift,
     validate_ledger_matrix_currentness,
 )
@@ -75,11 +83,168 @@ _ROW_ID: Final[str] = "ledger.entries.list"
 _SUBJECT_DIGEST: Final[str] = "sha256:" + "a" * 64
 _REGISTRY_ROUTE_DIGEST: Final[str] = "sha256:20b2d2df5558b2a3fdbd1eab6e9f781a973e93c6211e211f8e679cf7b4782aca"
 _REGISTRY_SOURCE_DIGEST: Final[str] = "sha256:194a9f26ddfbae6c5d7f265ffe58f50964fbe2fcd02a5670fa19845dead5cf6d"
+_TUI_CENSUS_DIGEST: Final[str] = "sha256:c136cfe1ae3f82a239476c00e805f8c9a29e010d502e74397963cea7e6f42371"
+_TUI_SOURCE_DIGEST: Final[str] = "sha256:e7337508a02ef2260e0b28205c31bb872b69f59aa51a18391ae209c21b8f9d57"
 
 
 @cache
 def _registry_census() -> LedgerRegistryRouteCensusV1:
     return build_ledger_registry_route_census()
+
+
+@cache
+def _tui_census() -> LedgerTuiSupportedSurfaceCensusV1:
+    return build_ledger_tui_supported_surface_census()
+
+
+def _tui_source_records() -> tuple[tuple[str, bytes], ...]:
+    root = Path(__file__).resolve().parents[3]
+    return tuple(
+        (path.resolve().relative_to(root).as_posix(), path.read_bytes())
+        for path in ledger_tui_supported_surface_source_files(root)
+    )
+
+
+def _mutate_tui_source(relative: str, mutation: Callable[[bytes], bytes]) -> tuple[tuple[str, bytes], ...]:
+    return tuple((path, mutation(body) if path == relative else body) for path, body in _tui_source_records())
+
+
+def test_tui_supported_surface_census_recomputes_the_published_live_digest() -> None:
+    census = _tui_census()
+
+    assert census.root == LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_ROOT
+    assert census.schema_version == 1
+    assert census.source_set_digest == _TUI_SOURCE_DIGEST
+    assert census.calculated_digest == _TUI_CENSUS_DIGEST
+    assert len(census.routes) == 7
+    assert [(row.destination, row.reachability) for row in census.routes] == [
+        ("ledger.classification", "component_only"),
+        ("ledger.entries", "component_only"),
+        ("ledger.evidence", "component_only"),
+        ("ledger.import", "component_only"),
+        ("ledger.overview", "installed"),
+        ("ledger.reconciliation", "component_only"),
+        ("ledger.review", "component_only"),
+    ]
+    assert census.installed_outer_destination == "workbench.ledger"
+    assert census.initial_internal_destination == "ledger.overview"
+    assert census.message_consumers == ()
+    assert census.injected_read_action_ids == (
+        "operator.ledger.evidence.review.list",
+        "operator.ledger.review",
+    )
+    assert census.installed_mutation_doors == ()
+    assert len(census.cli_tui_capabilities) == 78
+    assert {status for _command, status in census.cli_tui_capabilities} == {"not-implemented"}
+    assert len(census.harness_files) == 6
+    assert census.harness_test_functions == 65
+
+
+def test_tui_supported_surface_framing_is_domain_separated_unsigned_u64_big_endian() -> None:
+    encoded = ledger_tui_supported_surface_census_bytes(_tui_census())
+    frame = b"cadrumo:ledger-tui-supported-surface-census:v1\x00"
+
+    assert encoded.startswith(frame)
+    payload = encoded[len(frame) + 8 :]
+    assert int.from_bytes(encoded[len(frame) : len(frame) + 8], byteorder="big", signed=False) == len(payload)
+
+
+def test_tui_source_set_normalizes_irrelevant_record_order() -> None:
+    records = _tui_source_records()
+
+    assert ledger_tui_supported_surface_source_set_digest(source_records=reversed(records)) == _TUI_SOURCE_DIGEST
+
+
+@pytest.mark.parametrize(
+    ("relative", "mutation", "expected"),
+    [
+        pytest.param(
+            "src/cadrumo/entrypoints/tui/app.py",
+            lambda body: body + b"\ndef on_ledger_route_requested(event):\n    return event\n",
+            "message",
+            id="new-message-consumer",
+        ),
+        pytest.param(
+            "src/cadrumo/entrypoints/tui/launcher.py",
+            lambda body: body.replace(
+                b"review_action=dependencies.ledger_review_action,",
+                b"review_action=dependencies.ledger_review_action,\n"
+                b"            classification_submitter=dependencies.ledger_review_action,",
+                1,
+            ),
+            "door",
+            id="new-installed-mutation-door",
+        ),
+        pytest.param(
+            "src/cadrumo/entrypoints/tui/ledger/routes.py",
+            lambda body: body.replace(
+                b'    LedgerRouteV1("ledger.entries", LedgerWorkspaceArea.ENTRIES, LedgerEntriesScreen),',
+                b"",
+                1,
+            ),
+            "missing-route",
+            id="missing-route",
+        ),
+        pytest.param(
+            "src/cadrumo/entrypoints/tui/ledger/entries.py",
+            lambda body: body.replace(b"class LedgerEntriesScreen", b"class RemovedLedgerEntriesScreen", 1),
+            "missing-screen",
+            id="missing-screen",
+        ),
+    ],
+)
+def test_tui_projection_detects_semantic_source_mutations(
+    relative: str,
+    mutation: Callable[[bytes], bytes],
+    expected: str,
+) -> None:
+    records = _mutate_tui_source(relative, mutation)
+
+    if expected == "missing-screen":
+        with pytest.raises(ValueError, match="route/controller class is unavailable"):
+            build_ledger_tui_supported_surface_census(source_records=records)
+        return
+    candidate = build_ledger_tui_supported_surface_census(source_records=records)
+    assert candidate.calculated_digest != _TUI_CENSUS_DIGEST
+    if expected == "message":
+        assert candidate.message_consumers == ("LedgerRouteRequested",)
+    elif expected == "door":
+        assert candidate.installed_mutation_doors == ("classification_submitter",)
+    else:
+        assert len(candidate.routes) == 6
+
+
+def test_tui_projection_detects_new_scanned_source_file() -> None:
+    records = (
+        *_tui_source_records(),
+        ("src/cadrumo/entrypoints/tui/new_ledger_surface.py", b'"""Synthetic source."""\n'),
+    )
+
+    candidate = build_ledger_tui_supported_surface_census(source_records=records)
+
+    assert candidate.source_set_digest != _TUI_SOURCE_DIGEST
+    assert candidate.calculated_digest != _TUI_CENSUS_DIGEST
+
+
+def test_tui_projection_detects_cli_tui_status_change() -> None:
+    statuses = list(_tui_census().cli_tui_capabilities)
+    statuses[0] = (statuses[0][0], "implemented")
+
+    candidate = build_ledger_tui_supported_surface_census(cli_tui_capabilities=statuses)
+
+    assert candidate.calculated_digest != _TUI_CENSUS_DIGEST
+    assert {status for _command, status in candidate.cli_tui_capabilities} == {"implemented", "not-implemented"}
+
+
+def test_tui_projection_refuses_reachability_classification_drift() -> None:
+    census = _tui_census()
+    drifted = tuple(
+        row.model_copy(update={"reachability": "installed"}) if row.destination == "ledger.entries" else row
+        for row in census.routes
+    )
+
+    with pytest.raises(ValidationError, match="initial internal destination must be the sole installed route"):
+        LedgerTuiSupportedSurfaceCensusV1.model_validate({**census.model_dump(), "routes": drifted})
 
 
 def _authority_with_first_defaulted_iva_selector(
