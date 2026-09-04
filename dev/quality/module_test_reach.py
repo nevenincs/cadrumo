@@ -54,9 +54,14 @@ CAPABILITIES: Final[tuple[str, ...]] = ("writes", "applies", "operator")
 #: Calls that change the tree. Matched on the attribute name, which is what a
 #: reader greps for, and deliberately not on the full call chain - ``path.write_text``
 #: and ``atomic_write_text`` are the same risk under different spellings.
-_WRITE_CALLS: Final[frozenset[str]] = frozenset(
-    {"write_text", "write_bytes", "rename", "unlink", "mkdir", "rmdir", "replace"}
-)
+#:
+#: ``replace`` was here and is not, because ``str.replace`` is far commoner than
+#: ``Path.replace`` and no attribute-name test can tell them apart. It attributed
+#: ``writes`` to two modules whose only offence was normalising a path separator,
+#: putting them in the same rank as a codemod - which is the failure that costs
+#: most in a report whose whole purpose is ranking. The lost ``Path.replace``
+#: detections are the price, and they are rare where the other five are not.
+_WRITE_CALLS: Final[frozenset[str]] = frozenset({"write_text", "write_bytes", "rename", "unlink", "mkdir", "rmdir"})
 
 _DEV_ROOT: Final[pathlib.Path] = pathlib.Path("dev")
 
