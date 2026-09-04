@@ -601,3 +601,43 @@ symbols = [
   "_validate_intracom_export_counterparty",
 ]
 evidence = "Seven private aliases to public imports, carrying the comment 'Kept as local test-facing names'. No test referenced any of them, none appeared in __all__, and each public original appeared exactly twice in the module -- its import and the alias -- so nothing in production used them either. A sibling alias under the same comment, _iva_rate_kind_for, IS referenced by tests six times and was kept, which is what shows the comment was true of one line and inherited by seven."
+
+# ---------------------------------------------------------------------------
+# Exported-but-unconsumed published surface
+#
+# Measured 2026-09-04 across the shipped package: of 8524 names declared in a
+# module `__all__`, 367 are reported unused by the audit AND are from-imported
+# by no other module. That is 4.3 per cent of the published surface promising
+# something nothing collects.
+#
+# This is a distinct class from ordinary dead code and it dominates what remains
+# of the symbol backlog. A name in `__all__` cannot be deleted as an internal
+# cleanup: removal changes what the package publishes, and `no-legacy-compatibility`
+# makes that a decision about a released surface rather than a tidy-up. Equally
+# it cannot be left unremarked, because an exported name reads as supported.
+#
+# Concentrations: domain/calculations 53, entrypoints/cli 43, application/modelo
+# 38, adapters/persistence 27, entrypoints/tui 20 (deferred), application/
+# user_profile 18, domain/iva 16, application/filing 15.
+#
+# The remedy for the class is an owner decision per area: publish it deliberately
+# (and cover it), or unpublish it. Nothing here is actioned without that.
+# ---------------------------------------------------------------------------
+
+[exported_unused]
+declared_exports = 8524
+exported_and_unconsumed = 367
+method = "a name counts as consumed only when another module from-imports it FROM the declaring module; bare-name matching would count same-named symbols in unrelated packages"
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "modelo operation definitions exported projections"
+class = "should-be-live"
+area = "application/modelo"
+resolved = false
+remedy_requires_decision = true
+symbols = [
+  "MODELO_WORK_VERIFY_PROGRESS_UNIT", "project_modelo_work_verify_result",
+  "project_modelo_export_result", "project_modelo_edit_apply_result",
+]
+evidence = "Each is declared in operation_definitions' __all__ and imported by no module anywhere. They are exported public API with no consumer rather than internal dead code, so removing them changes the published surface. A fifth sibling, wire_detail_row, is NOT exported and is consumed only by application.modelo.edit_session, which this ledger already classifies deferred-by-ownership, so it is transitively dead through that cluster and resolves with it."
