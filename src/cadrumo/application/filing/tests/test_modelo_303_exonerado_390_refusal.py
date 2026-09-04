@@ -246,6 +246,7 @@ def test_exonerado_complete_revision_evidence_reaches_withdrawn_layout_without_o
                 prorrata_definitiva_by_identifier={},
                 parameters=_PARAMS,
             ),
+            bienes_parameters=_PARAMS,
         ),
     )
     output = tmp_path / "modelo-303-exonerado.txt"

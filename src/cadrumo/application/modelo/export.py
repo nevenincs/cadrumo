@@ -75,6 +75,7 @@ from ...domain.bienes_inversion.register import (
     compute_registro_regularizacion,
 )
 from ...domain.bienes_inversion.regularizacion_parameters import (
+    BienesInversionRegularizacionParameters,
     resolve_bienes_inversion_regularizacion_parameters,
 )
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
@@ -664,6 +665,7 @@ def _resolve_m303_export_arrivals(
     tuple[IvaDifferentiatedDeductionContribution, ...],
     BienesInversionIvaRegister,
     RegistroRegularizacionResult,
+    BienesInversionRegularizacionParameters,
 ]:
     """Assemble current canonical register arrivals from the work-unit-bound register."""
     snapshot = bundled_authority().snapshot(
@@ -707,7 +709,10 @@ def _resolve_m303_export_arrivals(
         raise FilingProducerSnapshotError(
             "modelo 303 Bienes de inversión regularisation requires definitive prorrata evidence",
         )
-    return contributions, bienes_register, regularisation_result
+    # The bundle travels out beside the result it produced, so the facts the
+    # oracle later checks cannot be handed a bundle other than the one the
+    # projection actually used.
+    return contributions, bienes_register, regularisation_result, bienes_parameters
 
 
 def _require_m303_regimen_simplificado_scope_matches_profile(
@@ -855,7 +860,12 @@ def _resolve_m303_filing_facts_for_export(
         period=work_unit.period,
         prorrata_register_repository=prorrata_register_repository,
     )
-    differentiated_contributions, bienes_register, regularisation_result = _resolve_m303_export_arrivals(
+    (
+        differentiated_contributions,
+        bienes_register,
+        regularisation_result,
+        bienes_parameters,
+    ) = _resolve_m303_export_arrivals(
         period=filing_instance_evidence.m303.period,
         prorrata_register=prorrata_register,
         iva_aggregation=iva_aggregation,
@@ -875,6 +885,7 @@ def _resolve_m303_filing_facts_for_export(
         differentiated_contributions=differentiated_contributions,
         bienes_register=bienes_register,
         regularisation_result=regularisation_result,
+        bienes_parameters=bienes_parameters,
     )
     _require_m303_regimen_simplificado_scope_matches_profile(
         filing_facts=filing_facts,

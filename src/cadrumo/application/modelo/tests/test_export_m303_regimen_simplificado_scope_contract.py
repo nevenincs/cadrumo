@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ....domain.calculations.registry.schema_base import ThresholdComparison
 from datetime import date as _prov_date
 from decimal import Decimal
 
@@ -9,7 +10,10 @@ import pytest
 
 from ....core.period import Period
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister, RegistroRegularizacionResult
-from ....domain.bienes_inversion.regularizacion_parameters import BienesInversionParameterProvenance
+from ....domain.bienes_inversion.regularizacion_parameters import (
+    BienesInversionParameterProvenance,
+    BienesInversionRegularizacionParameters,
+)
 from ....domain.deadlines.models import M303RegimeComposition
 from ....domain.prorrata_register.register import ProrrataRegister
 from ...aggregation import (
@@ -32,6 +36,20 @@ _PROVENANCE = BienesInversionParameterProvenance(
     revision_id="2025",
     parameter_ids=("m303-bien-inversion-ventana-anos-mueble",),
     resolved_on=_prov_date(2025, 6, 1),
+)
+
+
+#: The resolved bundle the regularisation result above was produced under. The
+#: oracle compares the result's carried provenance against this, so the two must
+#: name the same declaration.
+_PARAMS = BienesInversionRegularizacionParameters(
+    ventana_anos_mueble=4,
+    ventana_anos_inmueble=9,
+    divisor_mueble=Decimal("5"),
+    divisor_inmueble=Decimal("10"),
+    umbral_puntos=Decimal("10"),
+    umbral_comparison=ThresholdComparison.EXCLUSIVE,
+    provenance=_PROVENANCE,
 )
 
 
@@ -60,6 +78,7 @@ def _general_m303_filing_facts():
             sector_contributions=(),
             parameters_provenance=_PROVENANCE,
         ),
+        bienes_parameters=_PARAMS,
     )
 
 

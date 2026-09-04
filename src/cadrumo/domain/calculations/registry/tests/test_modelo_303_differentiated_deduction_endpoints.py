@@ -36,7 +36,7 @@ from .....domain.iva.prorrata import InputClassification
 from .....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from .....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
 from .....tests.registry_snapshot import build_snapshot
-from ....bienes_inversion.bienes_inversion.regularizacion_parameters import BienesInversionParameterProvenance
+from ....bienes_inversion.regularizacion_parameters import BienesInversionParameterProvenance
 from ..corpus_catalogue import resolve_record_design_binary
 from ..errors import RegistryValidationError
 from ..ledger_iva_bindings import IvaLedgerObservation

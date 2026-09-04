@@ -116,6 +116,7 @@ def _validate_m303_regularisation(period: Period, filing_facts: M303FilingFacts)
         assert_m303_regularisation_result_matches_bienes_register(
             bienes_register=filing_facts.bienes_register,
             regularisation_result=filing_facts.regularisation_result,
+            parameters=filing_facts.bienes_parameters,
         )
     except ValueError as exc:
         raise FilingExportError(

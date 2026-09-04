@@ -55,7 +55,7 @@ def test_m303_export_arrivals_use_the_work_unit_bound_bienes_register(tmp_path: 
             secondary_repository.add(_record("secondary-bien", initial_percentage=Decimal("80")))
             secondary_register = secondary_repository.load()
 
-        contributions, resolved_register, regularisation = _resolve_m303_export_arrivals(
+        contributions, resolved_register, regularisation, _bienes_parameters = _resolve_m303_export_arrivals(
             period=period,
             prorrata_register=prorrata_register,
             iva_aggregation=IvaLedgerAggregation(period=period),

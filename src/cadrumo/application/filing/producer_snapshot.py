@@ -860,6 +860,12 @@ class M303FilingFacts(BaseModel):
     differentiated_contributions: tuple[IvaDifferentiatedDeductionContribution, ...]
     bienes_register: BienesInversionIvaRegister
     regularisation_result: RegistroRegularizacionResult
+    #: The registry-resolved figures the regularisation result was produced
+    #: under. Carried on the facts rather than resolved here because this
+    #: model holds no revision, and because the oracle's independence depends
+    #: on comparing the result's own provenance against a bundle supplied
+    #: from outside it.
+    bienes_parameters: BienesInversionRegularizacionParameters
 
     @model_validator(mode="after")
     def _arrivals_share_one_filing_period(self) -> M303FilingFacts:
@@ -888,6 +894,7 @@ def _validate_m303_register_evidence(facts: M303FilingFacts) -> None:
     assert_m303_regularisation_result_matches_bienes_register(
         bienes_register=facts.bienes_register,
         regularisation_result=facts.regularisation_result,
+        parameters=facts.bienes_parameters,
     )
     if facts.prorrata_transition.is_applicable and not facts.prorrata_register.has_complete_current_entry_coverage(
         facts.period.filing_year
@@ -907,6 +914,7 @@ def resolve_m303_filing_facts(
     differentiated_contributions: tuple[IvaDifferentiatedDeductionContribution, ...],
     bienes_register: BienesInversionIvaRegister,
     regularisation_result: RegistroRegularizacionResult,
+    bienes_parameters: BienesInversionRegularizacionParameters,
 ) -> M303FilingFacts:
     """Project persisted M303 evidence together with canonical arrival facts."""
     m303 = evidence.m303
@@ -925,6 +933,7 @@ def resolve_m303_filing_facts(
         differentiated_contributions=differentiated_contributions,
         bienes_register=bienes_register,
         regularisation_result=regularisation_result,
+        bienes_parameters=bienes_parameters,
     )
 
 

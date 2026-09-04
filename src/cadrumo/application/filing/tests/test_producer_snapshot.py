@@ -289,6 +289,7 @@ def _m303_filing_facts(
         differentiated_contributions=(),
         bienes_register=bienes_register,
         regularisation_result=regularisation,
+        bienes_parameters=_PARAMS,
     )
 
 
@@ -417,6 +418,7 @@ def _m303_foral_snapshot(
         differentiated_contributions=(),
         bienes_register=bienes_register,
         regularisation_result=regularisation,
+        bienes_parameters=_PARAMS,
     )
     profile = _m303_profile().model_copy(
         update={
@@ -819,6 +821,7 @@ def test_m303_filing_facts_refuse_annual_and_non_official_filing_periods(period_
             differentiated_contributions=(),
             bienes_register=bienes_register,
             regularisation_result=regularisation,
+            bienes_parameters=_PARAMS,
         )
 
 
@@ -843,6 +846,7 @@ def test_m303_filing_facts_resolver_refuses_non_official_period_before_producer_
             differentiated_contributions=(),
             bienes_register=bienes_register,
             regularisation_result=regularisation,
+            bienes_parameters=_PARAMS,
         )
 
 
