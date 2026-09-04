@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:f6c26bf0b57e69c31ce646beb613a2e40dfc243b8b1cc3dfd519893af93c8e51'
+body_hash: 'sha256:ce43e70ff6d3e99a2b067b06475d3252bdb3f44a051578c5373d308171fb345f'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -862,6 +862,8 @@ Apply the accepted contract across the registry so restatement becomes unconstru
 - [x] `W06.P14.S385` - Measure the divergence the duplication count hides: report the casillas whose Spanish label is byte-identical across revisions while a translation of it differs, since every translation diverges on more casillas than the source text does and the excess is divergence the translations introduced; `dev/locales`.
 - [x] `W06.P14.S386` - Prove the label collapse safe before any key shape changes: derive per-casilla labels with per-revision overrides, expand them back over each casillas revision set, and show the reconstruction reproduces all four shipped catalogues byte-for-byte while removing 30,049 of 87,298 strings - with the round trip shown failing on a dropped override rather than only passing; `dev/locales`.
 - [x] `W06.P14.S496` - Separate label disagreements that track a Spanish change from those that do not: 897 Catalan, 1057 English and 1203 Hungarian casillas carry two renderings of one unchanged source string, and 29, 9 and 22 carry one rendering of a source string that changed; `dev/locales/translation_drift.py,dev/locales/tests/test_translation_drift.py`.
+- [x] `W06.P14.S497` - Split the 3157 drifting casillas by what repairing each costs: 467 identical after folding and 16 the same text differently divided need no judgement, 1475 share their wording and 1199 need a translator against the source; `dev/locales/translation_drift.py,dev/locales/tests/test_translation_drift.py`.
+- [ ] `W06.P14.S498` - Collapse the 483 mechanically resolvable label disagreements, which differ only in case, accent, punctuation or where a word boundary falls, then re-measure; the catalogues are under src/cadrumo/locales so the collapse lands there rather than in dev; `src/cadrumo/locales,dev/locales`.
 
 ## Parallelization
 

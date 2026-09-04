@@ -13422,3 +13422,48 @@ Hungarian labels to a redirected stdout fails on the ambient Windows encoding:
 the first full run truncated mid-stream and exited 1, while the same output
 piped through `tail` had looked fine. That is the second time this session that
 a pipe hid a non-zero status.
+
+
+## Three thousand drifting labels are not one worklist
+
+Knowing that 3,157 casillas carry two renderings of one unchanged Spanish string
+says nothing about what fixing them costs. A capitalisation and a rewritten
+sentence are the same row, and pricing them alike is how a number becomes a
+reason not to start.
+
+Measured by `python -m dev.locales.translation_drift` on 2026-09-04, the 3,157
+split four ways:
+
+- **467 are identical after folding** away case, accent and punctuation -
+  `Contribuent titular` against `contribuent titular`. Mechanically resolvable.
+- **16 are the same text differently divided.** Catalan writes the elision
+  `de l'1 de gener` where another revision writes `del 1 de gener`, and an
+  ordinal appears as `25.ª` in one and `25a` in the other. Also mechanical.
+- **1,475 share most of their wording** - `Clau de situació` against
+  `Situació (clau)`, `Accrual tax year` against `Accrual year`. A reviewer can
+  settle these quickly without opening the official text.
+- **1,199 use different words** and need a translator against the source.
+
+So **483 of 3,157 need no judgement at all**, and the genuine translation
+worklist is 1,199 rather than 3,157 - under two-fifths of the figure the
+previous section produced.
+
+The threshold that separates the last two is a judgement, so it is a declared
+constant with its consequence written beside it: at 0.6 the corpus splits 1,475
+against 1,199, and a reader who disagrees can move it and re-run rather than
+re-derive the measurement.
+
+**A failing test corrected the second category and its name.** I had called it
+`whitespace_only` and explained it as two renderings differing by a doubled
+space - which cannot occur, because folding already collapses runs of separators
+to one. The kind had sixteen live instances and my explanation could not produce
+one. Reading them showed what they are: elisions and ordinals, identical once
+spaces are removed, differing in where word boundaries fall. The kind is now
+`word_boundary_only` and its docstring is written from the instances rather than
+from what I assumed they would be.
+
+That is the same failure the campaign keeps finding, arriving in a docstring
+rather than a gate: a description written from the shape the author expected,
+passing because nothing compared it against the members it claimed to describe.
+The test that caught it was written to assert the explanation, and the
+explanation was the thing that was wrong.
