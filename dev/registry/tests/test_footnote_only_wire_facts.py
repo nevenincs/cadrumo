@@ -80,9 +80,7 @@ def test_every_reported_field_is_one_the_predicate_would_newly_admit(
         # design's own statement. Both halves matter: a field already eligible
         # needs no pointer argument at all.
         assert not project_render_profile_eligibility([parser_field]).all_fields
-        assert project_render_profile_eligibility(
-            [parser_field.model_copy(update={"content": None})]
-        ).all_fields
+        assert project_render_profile_eligibility([parser_field.model_copy(update={"content": None})]).all_fields
 
 
 def test_a_vocabulary_miss_does_not_mean_the_note_states_no_wire_fact(
@@ -121,3 +119,64 @@ def test_a_vocabulary_miss_does_not_mean_the_note_states_no_wire_fact(
     # The wording states a representation rule while carrying none of the words
     # the reading aid looks for. That gap is the whole point.
     assert not any(word in text.casefold() for word in ("decimal", "signo", "coma", "alinead", "ceros"))
+
+
+def test_every_pointer_condition_is_reachable_from_constructed_evidence() -> None:
+    """All three conditions, including the one the corpus never produces.
+
+    ``pointer_resolves_vocabulary_hit`` has no instance anywhere in the bundled
+    registry. While the decision lived inline in the walk it had neither a live
+    member nor a proof, which is precisely the state this package calls a
+    condition that has stopped reporting without anyone noticing - and it was in
+    a screen written during this campaign.
+    """
+    from ..analysis.footnote_only_wire_facts import KINDS, classify_pointer
+    from ..analysis.footnote_pointer_notes import FootnotePointerNote, PointerEvidence
+
+    def evidence(*notes: FootnotePointerNote) -> PointerEvidence:
+        return PointerEvidence(cell="(1)", pointer="(1)", notes=notes)
+
+    hit = evidence(FootnotePointerNote(pointer="(1)", note="1", text="Se consigna con dos decimales."))
+    miss = evidence(FootnotePointerNote(pointer="(1)", note="1", text="Solo para residentes."))
+    unresolved = evidence(FootnotePointerNote(pointer="(1)", note="1", text=""))
+
+    assert classify_pointer(hit, resolved=1)[0] == "pointer_resolves_vocabulary_hit"
+    assert classify_pointer(miss, resolved=1)[0] == "pointer_resolves_vocabulary_miss"
+    assert classify_pointer(unresolved, resolved=0)[0] == "pointer_unresolved"
+
+    reached = {classify_pointer(item, resolved=1)[0] for item in (hit, miss, unresolved)}
+    assert reached == set(KINDS), "a declared condition is unreachable from any input"
+
+
+def test_an_unresolved_pointer_outranks_the_vocabulary_reading() -> None:
+    """A design that never defines the note is a different problem.
+
+    The precedence is asserted rather than left to the branch order: an
+    unresolved pointer accompanied by a resolved note using wire vocabulary must
+    still report as unresolved, because the missing definition is the finding.
+    """
+    from ..analysis.footnote_only_wire_facts import classify_pointer
+    from ..analysis.footnote_pointer_notes import FootnotePointerNote, PointerEvidence
+
+    mixed = PointerEvidence(
+        cell="(1)(2)",
+        pointer="(1)(2)",
+        notes=(
+            FootnotePointerNote(pointer="(1)", note="1", text="Se consigna con dos decimales."),
+            FootnotePointerNote(pointer="(2)", note="2", text=""),
+        ),
+    )
+    kind, detail = classify_pointer(mixed, resolved=1)
+    assert kind == "pointer_unresolved"
+    assert "2" in detail
+
+
+def test_the_detail_line_carries_the_resolved_count_it_was_given() -> None:
+    """The count orders a reading queue, so it must be the caller's own figure."""
+    from ..analysis.footnote_only_wire_facts import classify_pointer
+    from ..analysis.footnote_pointer_notes import FootnotePointerNote, PointerEvidence
+
+    miss = PointerEvidence(
+        cell="(1)", pointer="(1)", notes=(FootnotePointerNote(pointer="(1)", note="1", text="Solo residentes."),)
+    )
+    assert "3 note(s)" in classify_pointer(miss, resolved=3)[1]
