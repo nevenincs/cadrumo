@@ -33,7 +33,9 @@ from typing import TYPE_CHECKING, ClassVar
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
+from ...adapters.persistence.storage.errors import (
+    STORAGE_DEGRADATION_ERRORS as _STORAGE_DEGRADATION_ERRORS,
+)
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.filing_year import FilingYear
 from ...core.hashing import sha256_hex
@@ -62,7 +64,7 @@ from .preconditions import build_modelo_precondition_failure
 if TYPE_CHECKING:
     from ..live.borrador_100 import Borrador100Snapshot, Borrador100SnapshotRepository
 
-STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
+STORAGE_DEGRADATION_ERRORS = _STORAGE_DEGRADATION_ERRORS
 
 
 class Modelo100BorradorBindingError(ModeloPreconditionErrorMixin, ModeloError):
