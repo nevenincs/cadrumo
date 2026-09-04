@@ -304,8 +304,15 @@ _DECIMAL_LITERAL_IDS = ("amortization-rate", "rebeca-fraction")
 # ---------------------------------------------------------------------------
 
 
-def test_decimal_external_constant_values_and_types() -> None:
-    """Decimal external constants equal their legal scalar values and remain ``Decimal`` instances."""
+def test_decimal_external_constant_literals_and_types() -> None:
+    """Decimal external constants keep their declared literal and remain ``Decimal`` instances.
+
+    This is a TYPE-and-literal check, NOT a registry drift gate: the expected
+    values below are copies of the constants themselves, so an edit to a
+    constant is caught while divergence from the registry is not. The real
+    drift gates are the ``*_matches_registry`` tests; every constant that has a
+    registry parameter must have one of those as well as this.
+    """
 
     from .. import external_constants
 
@@ -330,6 +337,32 @@ def test_default_iva_general_rate_pct_matches_registry() -> None:
 
     registry_rate = lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, date(2026, 1, 1))
     assert registry_rate.pct == DEFAULT_IVA_GENERAL_RATE_PCT
+
+
+def test_amortizacion_inmueble_rate_matches_registry() -> None:
+    """``AMORTIZACION_INMUEBLE_RATE`` equals the dated Modelo 100 rental amortización parameter.
+
+    Binds the constant to the registry parameter that already declares the RIRPF
+    art. 14.2.a rate across every supported revision, so the two cannot silently
+    diverge. Without this the constant sat behind a literal restatement of
+    itself, which detects an edit to the constant but never a divergence from
+    the registry it duplicates.
+    """
+
+    from datetime import date
+
+    from ...core.modelo import Modelo
+    from ...domain.calculations.registry.formula_runtime_ops import read_parameter
+    from ..external_constants import AMORTIZACION_INMUEBLE_RATE
+
+    for period_year in (2024, 2025):
+        registry_rate = read_parameter(
+            Modelo.M100.value,
+            str(period_year),
+            f"renta-{period_year}-rental-amortizacion-rate",
+            date_context={"filing_period": date(period_year, 12, 31)},
+        )
+        assert registry_rate == AMORTIZACION_INMUEBLE_RATE, period_year
 
 
 def test_default_iva_general_rate_pct_has_core_as_its_only_public_home() -> None:

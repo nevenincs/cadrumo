@@ -694,6 +694,8 @@ def compose_installed_workbench_root(
         if factory is not None
     }
 
+    refresh_destinations = inputs.refresh_destinations
+
     def rebuild() -> TuiDestinationCatalogueV1:
         """Rebuild the catalogue from the generation the factories now read.
 
@@ -701,6 +703,7 @@ def compose_installed_workbench_root(
         so navigation, search and the mounted projections all describe one
         capture rather than three instants.
         """
+        assert refresh_destinations is not None  # noqa: S101 - guarded by the door below
         refreshed_admissions, refreshed_factories = refresh_destinations()
         return build_destination_catalogue(
             admissions={"workbench.home": _available_admission("workbench.home"), **refreshed_admissions},
@@ -718,7 +721,7 @@ def compose_installed_workbench_root(
         refresh_home=inputs.refresh_home,
         search_inputs=inputs.search_inputs,
         refresh_search_inputs=inputs.refresh_search_inputs,
-        refresh_destination_catalogue=None if (refresh_destinations := inputs.refresh_destinations) is None else rebuild,
+        refresh_destination_catalogue=rebuild if refresh_destinations is not None else None,
         account_factories=inputs.account_factories,
     )
 
@@ -769,9 +772,18 @@ async def _run_root_session(
             refreshed_inputs = root.refresh_search_inputs()
             if refreshed_inputs is None:
                 raise RuntimeError("installed workbench search is unavailable in the refreshed generation")
+            # Parity is checked against the admissions of the SAME capture the
+            # inputs came from, not against the session's first ones: a refresh
+            # that legitimately changes availability is coherent, and comparing
+            # it to a stale snapshot is what made a supported profile edit kill
+            # search for the rest of the session.
             _require_search_admission_parity(
                 refreshed_inputs,
-                root.admissions,
+                {
+                    "workbench.ledger": refreshed_inputs.ledger_admission,
+                    "workbench.declarations": refreshed_inputs.declarations_admission,
+                    "workbench.aeat_sync": refreshed_inputs.aeat_sync_admission,
+                },
             )
             return compose_installed_workbench_search(refreshed_inputs)
 
@@ -781,6 +793,7 @@ async def _run_root_session(
             refresh_home=root.refresh_home,
             workbench_search_service=service,
             refresh_workbench_search=refresh_search,
+            refresh_destination_catalogue=root.refresh_destination_catalogue,
             account_factories=root.account_factories,
         ).run_async(headless=headless, auto_pilot=auto_pilot)
 

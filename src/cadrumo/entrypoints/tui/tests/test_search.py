@@ -346,7 +346,8 @@ async def test_a_refused_search_reports_why_instead_of_raising() -> None:
         app.exit(None)
 
     assert len(hits) == 1
-    assert "unavailable" in hits[0].text.lower() or "disponible" in hits[0].text.lower()
+    rendered = str(hits[0].text)
+    assert "unavailable" in rendered.lower() or "disponible" in rendered.lower()
     assert hits[0].command() is None
 
 
@@ -364,4 +365,4 @@ async def test_an_unrecognised_refusal_code_is_never_shown_raw() -> None:
         app.exit(None)
 
     assert len(hits) == 1
-    assert "workbench.search.some_future_code" not in (hits[0].text + str(hits[0].help))
+    assert "workbench.search.some_future_code" not in (str(hits[0].text) + str(hits[0].help))

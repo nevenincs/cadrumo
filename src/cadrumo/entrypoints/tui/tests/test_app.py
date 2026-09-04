@@ -12,7 +12,7 @@ from textual.screen import Screen
 from textual.widgets import Button, Static
 
 from ....application.operations.composition import OperationComposedServices
-from ....application.overview.home import HomeSessionPosture
+from ....application.overview.home import HomeProjectionV1, HomeSessionPosture
 from ....application.search.workbench import WorkbenchDestinationAdmissionState, WorkbenchSearchService
 from ....application.user_profile.login_session import ProfileLoginOutcome
 from ....application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
@@ -198,7 +198,7 @@ async def test_a_refused_home_refresh_keeps_the_session_and_reports_a_code() -> 
     """
     projections = [build_home_projection_fixture(HomeFixtureScenario.READY)]
 
-    def refresh() -> object:
+    def refresh() -> HomeProjectionV1:
         if projections:
             return projections.pop(0)
         raise RuntimeError("secure workbench generation changed during capture")
