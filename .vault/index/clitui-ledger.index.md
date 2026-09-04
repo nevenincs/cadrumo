@@ -6,7 +6,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:8c2894198460011208be707fed3a7cb4e0b09776e07952478f8abd9d0c4b5378'
+body_hash: 'sha256:2e3ec653a25bf560a96718c5a5a79b32072bca51b82554915c88319a3deeab46'
 related:
   - '[[2026-09-04-clitui-ledger-W01-P01-S01]]'
   - '[[2026-09-04-clitui-ledger-W01-P01-S02]]'
@@ -23,6 +23,7 @@ related:
   - '[[2026-09-04-clitui-ledger-s02-test-contract-review-audit]]'
   - '[[2026-09-04-clitui-ledger-s03-matrix-publication-review-audit]]'
   - '[[2026-09-04-clitui-ledger-s04-cli-census-review-audit]]'
+  - '[[2026-09-04-clitui-ledger-s05-backend-census-review-audit]]'
 ---
 
 # `clitui-ledger` feature index
@@ -42,6 +43,7 @@ Auto-generated index of all documents tagged with `#clitui-ledger`.
 - `2026-09-04-clitui-ledger-s02-test-contract-review-audit` - `clitui-ledger` audit: `S02 test contract review`
 - `2026-09-04-clitui-ledger-s03-matrix-publication-review-audit` - `clitui-ledger` audit: `S03 matrix publication review`
 - `2026-09-04-clitui-ledger-s04-cli-census-review-audit` - `clitui-ledger` audit: `S04 CLI denominator census review`
+- `2026-09-04-clitui-ledger-s05-backend-census-review-audit` - `clitui-ledger` audit: `S05 backend census review`
 
 ### exec
 
