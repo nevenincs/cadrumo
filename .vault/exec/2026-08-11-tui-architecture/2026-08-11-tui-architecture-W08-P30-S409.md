@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:6b6c42e66e047b9a82f4c94b73a6628e268c20a4c881df8706b9a3237202581f'
+body_hash: 'sha256:b5d0424c298bf8fa6a2235629c2faf6cce29ce3815bcd41cc2aecea90738cbd1'
 step_id: 'S409'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -51,7 +51,38 @@ Remaining and NOT done: actions, resumable declarations and messages. All
 three were measured rather than re-labelled, and they are blocked for three
 DIFFERENT reasons, which one word was hiding.
 
-ACTIONS -- blocked on a taxonomy decision. `HomeNextAction` is built only by
+ACTIONS -- PARTLY WIRED, and the taxonomy label was wrong in the same way the
+declarations one was. Original note follows.
+
+Home declares six reason codes and they are not arbitrary: three of them name
+work the door already measures. `ledger_classification_pending` and
+`evidence_missing` are now offered from the Ledger workspace's CLASSIFICATION
+and EVIDENCE areas, each paired with a catalogue action that takes no
+arguments, so nothing was invented to make the zone fill. Ordering is declared
+rather than incidental: classification first, because an unclassified entry has
+no settled tax treatment, while a missing justificante is a gap in evidence for
+a treatment already chosen.
+
+The refusal rule is the same one the readiness block uses. An UNMEASURED area
+yields NO action rather than an action for zero items, because `item_count` is
+a plain integer and an unmeasured area reports the same zero a finished one
+does -- offering "classify 0 entries" sends the operator to an empty screen and
+calls it a task.
+
+Gated by `test_home_offers_ledger_work_only_when_there_is_some_and_never_for_an_unmeasured_area`,
+which also asserts every offered reason code resolves in the catalogue: a code
+without copy renders Home's degraded generic line, so an invented action would
+arrive unreadable. Teeth proven by offering work for unmeasured and empty
+areas. Restored by copy; 26 passed.
+
+STILL NOT WIRED: the three `blocked_*` codes, and the declaration-addressed
+action. The blocked family needs a source for blocked work units; the
+declaration action needs a catalogue id that takes modelo, year and period
+arguments, which is a different shape from the two argument-free ones landed
+here.
+
+ORIGINAL NOTE, kept because the caution was wrong: blocked on a taxonomy
+decision. `HomeNextAction` is built only by
 the fixture; the authority the plan names, `build_overview_status_next_steps`,
 emits `OverviewStatusNextStepId` values (CREATE_PROFILE, IMPORT_TRANSACTIONS,
 REPAIR_STORAGE) which are `overview status` CLI guidance, not Home's task
