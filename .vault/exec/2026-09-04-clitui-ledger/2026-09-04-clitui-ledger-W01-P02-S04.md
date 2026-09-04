@@ -25,7 +25,7 @@ related:
 - `A` `.vault/exec/2026-09-04-clitui-ledger/2026-09-04-clitui-ledger-W01-P02-S04.md`
 - `M` `.vault/plan/2026-09-04-clitui-ledger-plan.md`
 - `M` `.vault/index/clitui-ledger.index.md`
-- `verify:` `uv run --no-sync pytest -q -n 0 src/cadrumo/entrypoints/cli/tests/test_command_spec_deferred_targets.py src/cadrumo/entrypoints/cli/tests/test_command_spec_kernel.py src/cadrumo/entrypoints/cli/tests/test_command_specs.py src/cadrumo/entrypoints/cli/tests/test_command_graph_consumers.py` -> `37 passed`
+- `verify:` `uv run --no-sync pytest -q -n 0 src/cadrumo/entrypoints/cli/tests/test_command_spec_deferred_targets.py src/cadrumo/entrypoints/cli/tests/test_command_spec_kernel.py src/cadrumo/entrypoints/cli/tests/test_command_specs.py src/cadrumo/entrypoints/cli/tests/test_command_graph_consumers.py` -> `42 passed`
 - `verify:` `uv run --no-sync ruff format --check src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py src/cadrumo/entrypoints/cli/tests/test_command_specs.py` -> `pass`
 - `verify:` `uv run --no-sync ruff check src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py src/cadrumo/entrypoints/cli/tests/test_command_specs.py` -> `pass`
 - `verify:` `uv run --no-sync ty check src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py src/cadrumo/entrypoints/cli/tests/test_command_specs.py` -> `pass`
