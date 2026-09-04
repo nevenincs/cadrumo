@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:5d44f1c327127a5025b4dba4054559e0108381883d2a8885dfd3902555b8a948'
+body_hash: 'sha256:d275494c229597117a742208cd6314ef10eb74c706cff41a15089449e9f91d91'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -424,6 +424,10 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S541` - Assert the one fact the conformance manager computes for itself, its locale coverage axis, whose required-per-locale and translated-across-locales fields read as a fraction exceeding one and were reconciled only by two untested derived properties; `dev/registry/conformance/tests/test_manager_locale_coverage.py`.
 - [x] `W02.P02.S542` - Name the conformance suites one failure exactly: an AttributeError where a caller invokes assess_for on the single-channel proof authority that implements proof_for, which is the transitional object S109 schedules for deletion rather than inherited debt; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W02.P02.S543` - Repair the import codemod that could not be imported at all, because it put its own directory on sys.path and imported a package sibling by bare name so that siblings relative import had no parent; `dev/quality/import_centralization_codemod.py`.
+- [x] `W02.P02.S545` - Restore the two fixtures a test relocation left behind, taking dev/ci/tests from twelve setup errors to zero by importing the CLI backend fixture and the session-autouse runtime composition rather than reimplementing them; `dev/ci/tests/conftest.py`.
+- [ ] `W02.P02.S546` - Resolve the M130 calculate performance budget, now measurable again at 3.031 CPU-s against a 3.0 CPU-s ceiling at 30000-row ledger scale, which the guarding tests could not report while they errored at setup; `src/cadrumo`.
+- [x] `W02.P02.S547` - Attach the agent_eval tests to the session-autouse runtime composition the relocation left behind, clearing thirteen setup errors so three tests pass and ten report their own passphrase-channel precondition instead of a harness defect; `dev/agent_eval/tests/conftest.py`.
+- [ ] `W02.P02.S548` - Declare the precondition for the ten agent_eval tests that refuse without a passphrase channel, which need a marker of the os_keychain class rather than a composition, now that the setup errors no longer hide the reason; `dev/agent_eval/tests`.
 
 ### Phase `W02.P03` - release predicate relocation
 

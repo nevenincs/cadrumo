@@ -14704,3 +14704,73 @@ That number is the reason this was worth doing rather than recording. A key the
 scanner cannot see is not a scanner problem in the abstract; it is a translated
 string that a cleanup sweep would delete with a clear conscience, in four
 locales, with nothing to notice it had gone.
+
+
+## A relocation that left two fixtures behind, and twelve errors
+
+`dev/ci/tests` reported twelve errors at setup. Errors rather than failures,
+which is usually a broken import and was here a broken move.
+
+`test_overview_verbs.py` was relocated from `src/cadrumo/entrypoints/cli/tests`
+to its dev family home by `c0a7feef24`. The fixture it requests through
+`usefixtures` stayed in the CLI package's own `conftest.py`, which pytest cannot
+reach across that boundary, so seven tests failed at setup with
+`fixture 'overview_cli_backend' not found`.
+
+Supplying it exposed the second half. `compose_runtime_ports` is session-scoped
+and AUTOUSE, and an autouse fixture only reaches tests inside its own directory
+tree - so the same move silently took these tests out of the composition that
+binds the real persistence and authentication adapters. The first fixture then
+got as far as opening a profile session and failed on `profile custody
+infrastructure has not been composed`, which is the same message seen earlier in
+`dev/agent_eval` and traced there to nothing.
+
+Both are IMPORTED into a new `dev/ci/tests/conftest.py` rather than
+reimplemented. A second copy of the storage-root, session and profile
+composition would be four shipped helpers restated where nothing notices when
+they change, which is the defect this campaign removes rather than one to
+introduce while fixing an error.
+
+The result is **twelve errors to zero**, and five of them were not in the file
+that motivated the fix: `test_ledger_scale_benchmark.py` was erroring at setup
+for the same reason and now runs. What it says having run is the point -
+**M130 calculate takes 3.031 CPU-s against a 3.0 CPU-s budget at 30,000-row
+ledger scale**. A performance budget has been over for as long as the tests
+guarding it could not start, in a directory no CI lane runs.
+
+That is the difference between an error and a failure, and why errors are worth
+opening first: a failing test tells you something is wrong, and an erroring test
+tells you nothing at all while looking equally red.
+
+
+## The same gap in agent_eval, and a result worth stating carefully
+
+`dev/agent_eval/tests` had the same absence: no conftest, and thirteen tests
+erroring at setup with `profile custody infrastructure has not been composed`.
+The cause is identical - `compose_runtime_ports` is session-scoped and autouse
+in `src/cadrumo/conftest.py`, so it reaches no test outside that tree - and the
+fix is the same import.
+
+The result is not the same, and saying so plainly matters more than the fix.
+
+**Errors thirteen to zero, passing 108 to 111, failing 8 to 18.** The thirteen
+tests now execute: three pass, ten fail. So the count of red lines went UP, and
+the change is still right.
+
+What the ten now say is why. Every one refuses with `No passphrase channel is
+available. Run this verb at a terminal, or pass --secrets-stdin or
+--secrets-fd` - an environmental precondition a headless runner cannot supply,
+of exactly the class this repository already declares through markers like
+`os_keychain` and `external_tool`. Before the fix they said `custody
+infrastructure has not been composed`, which is true of the harness and says
+nothing about the test.
+
+That is the whole trade: thirteen tests that reported a harness defect now
+report their own precondition, and three that were never broken at all now run
+and pass. A directory with ten honest refusals is in better condition than one
+with thirteen setup errors, even though it looks worse.
+
+The residue is a marker decision belonging to that campaign - these ten need a
+declared precondition, not a composition - and it is recorded rather than
+guessed at from here. What is not in doubt is that the relocation left the
+composition behind in two directories, and both are now attached to it.

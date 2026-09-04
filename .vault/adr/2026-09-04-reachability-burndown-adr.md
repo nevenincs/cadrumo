@@ -56,9 +56,15 @@ instrument that found it.
 ## Constraints
 
 - Every finding resolves into exactly one class of the closed taxonomy recorded in the
-  reference: test support, harness code, superseded capability, deliberately staged
-  capability, orphaned capability, capability that should be live, or deferred by
-  ownership.
+  reference: test support, harness code, design-time authority, superseded capability,
+  deliberately staged capability, orphaned capability, capability that should be live, or
+  deferred by ownership.
+- Harness code and design-time authority are separated by what the code IS, not by who
+  reads it. Harness code is written to serve the harness and relocates beside its dev
+  consumer. A design-time authority is a product declaration that constrains other
+  declarations; its only reader being a conformance gate is how a locked design is
+  enforced, and relocating one into `dev/` would move the product's own design out of the
+  product.
 - Classification is evidenced, not asserted. Supersession requires a named live module
   that discharges the responsibility, found by semantic search rather than by name
   similarity. Deliberate staging requires an accepted decision that records the
@@ -103,6 +109,21 @@ Requiring evidence for the two dangerous classes — supersession and deliberate
 is what keeps classification from becoming relabelling. Both are claims about intent that
 a name cannot establish, which is why semantic search over code and over the decision
 corpus is a constraint here rather than a convenience.
+
+### Amendment - design-time authority separated from harness code
+
+The original taxonomy had one class for "reached only by `dev/`", and execution proved it
+conflates two different things. Attempting the relocation remedy on the four modules first
+classified as harness code showed every one to be a product declaration: the locked CRUD
+design for the operator CLI, the contract types it instantiates, the supported calculation
+workflows, and the single authoritative home for registry record-specification constants.
+Relocating any of them would have moved the product's own design into `dev/`, and in the
+registry case would have moved filing-grade constants out of the registry authority.
+
+The class already existed in the tree without a name: `cadrumo.core.address_components`
+carries `design_time_authority` in the module ratchet for exactly this shape. The taxonomy
+now names it, and the remedy for the class is an `[[intentional]]` classification rather
+than a relocation.
 
 ## Consequences
 
