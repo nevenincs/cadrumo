@@ -5,13 +5,19 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:841f5fa458e5f6890c379b2bcaff28ab27f688e72f5e3f408c40f2f2ae27cc83'
+body_hash: 'sha256:3a1b512601481d28029bf42680e060b8adb63258cb7bc17fe125869da5619737'
 related:
   - "[[2026-09-04-clitui-ledger-research]]"
   - "[[2026-09-04-clitui-ledger-reference]]"
   - "[[2026-06-10-ledger-interface-contract-adr]]"
   - "[[2026-08-11-tui-architecture-adr]]"
   - "[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]"
+  - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
+  - '[[2026-06-30-ledger-add-idempotency-adr]]'
+  - '[[2026-06-10-llm-evidence-classification-adr]]'
+  - '[[2026-07-14-google-optional-adapter-boundary-adr]]'
+  - '[[2026-06-03-modelo-export-evidence-parity-adr]]'
+  - '[[2026-07-24-evidence-revision-identity-adr]]'
 ---
 
 # `clitui-ledger` adr: `backend authority and interface parity gates` | (**status:** `proposed`)
@@ -50,47 +56,51 @@ The evidence and current denominator are owned by `2026-09-04-clitui-ledger-rese
 
 ### Capability ledger
 
-Every denominator row records an owner, operation, and independent status axes for backend, CLI, TUI, composition, artifact validity, provenance, registry routing, and proof. Backend uses `ABSENT`, `CLI_OWNED`, `PARTIAL`, or `COMPLETE`; CLI uses `ABSENT`, `CLI_OWNED`, `DELEGATING`, or `COMPLETE`; TUI uses `ABSENT`, `COMPONENT_ONLY`, or `INSTALLED`; remaining axes use `NOT_APPLICABLE`, `UNPROVEN`, `PARTIAL`, or `PROVEN`. Evidence links point to the reference rather than duplicating findings.
+The generated campaign matrix in the feature reference is the authoritative ledger. Every denominator row has a stable capability and sub-operation identity, semantic owner, typed command/result contract, applicable surfaces, composition obligations, artifact/provenance/registry obligations, gap classes, proof state, and links to real-behavior tests or independently opened artifacts. Applicability is explicit on every axis. Backend, CLI, and TUI each use `NOT_APPLICABLE`, `ABSENT`, `PARTIAL`, or `PROVEN`, with annotations `CLI_OWNED`, `DELEGATING`, `COMPONENT_ONLY`, and `INSTALLED` where they describe the current ownership or reachability state; remaining axes use `NOT_APPLICABLE`, `UNPROVEN`, `PARTIAL`, or `PROVEN`. Evidence links point to the reference rather than duplicating findings.
 
 Gaps are classified as `AUTHORITY`, `PRODUCT`, `COMPOSITION`, `PROOF`, `REACHABILITY`, `ARTIFACT`, `PROVENANCE`, or `REGISTRY`. A row may carry several classes. Closing one class never implies the others.
 
 ### Ordered gates
 
-1. **G0 — denominator and ownership freeze.** Enumerate the union denominator, assign semantic homes, record current proof, and identify CLI-owned policy.
+1. **G0 — denominator and ownership freeze.** Enumerate the union denominator, assign semantic homes, applicability, typed contracts and obligations, record current proof, identify CLI-owned policy, reconcile overlapping plans, and impose the Ledger TUI implementation hold.
 2. **G1 — backend authority recovery.** Move every CLI-only business decision into canonical typed backend use cases and refactor affected CLI handlers to delegate.
 3. **G2 — backend product completeness.** Complete missing backend operations, compositions, provider boundaries, artifacts, registry routes, and direct behavioral proof.
 4. **G3 — CLI clean break and completeness.** Remove residual Ledger policy from the CLI and prove every applicable backend capability through stable CLI contracts and valid outputs.
 5. **G4 — TUI admission and parity.** Re-census reusable components, then install complete Ledger workflows over the same backend use cases and prove interactive reachability.
 
-A later gate does not begin for a convenient subset while an earlier gate remains open. Documentation and tests needed to close the active gate are part of that gate.
+A gate closes only when every frozen row within its scope has all applicable axes `PROVEN` and no blocking gap. A later gate does not begin for a convenient subset while an earlier gate remains open. Documentation and tests needed to close the active gate are part of that gate. Newly discovered capability reopens G0, receives a row and applicability decision, and reopens every later gate whose closure predicate it affects.
 
 ### Backend and adapter boundary
 
-Canonical typed backend use cases own validation, defaults, normalization, classification and review state transitions, split and merge semantics, batch behavior, attachment lifecycle, manual overrides, calculation inputs, registry routing, and export/import plans. CLI and TUI adapters may own transport grammar, confirmation, locale-aware presentation, redaction, and error-to-interface mapping only.
+Domain aggregates and value objects own intrinsic invariants. Canonical typed application use cases own orchestration, authorization, cross-aggregate policy, defaults, normalization, classification and review transitions, split and merge semantics, batch behavior, attachment lifecycle, manual overrides, calculation inputs, registry routing, and export/import plans. Eligible frontend-triggered mutations enter through the canonical operation registry and supervisor; CLI and TUI cannot invoke around it. Adapters may own transport grammar, confirmation, locale-aware presentation, redaction, and error-to-interface mapping only.
 
 Backend proof exercises real repositories and observable effects. Applicable operations cover success, refusal, idempotency, concurrency, batch and provider faults. Detector tests must fail when policy is moved back into adapters. Composition tests cover nonzero calculate-to-verify-to-evidence-to-export journeys.
 
 ### Ledger semantics and provenance
 
-Evidence supports attach, metadata/view, download, detach, and atomic replace. Notes are append-only. Typed field edits persist encrypted change sets with redacted projections. Manual overrides retain basis, actor, time, prior value, and review state. Imports record source-column mapping and normalization outcomes. Currency normalization records original amount and currency, normalized amount and currency, rate, rate source, effective date, and operation identity. Batch mutations declare `ATOMIC` or `BEST_EFFORT` semantics and expose per-item outcomes.
+Evidence supports attach, metadata/view, download, detach, and atomic replace with immutable revision lineage. Replacement is refused for finalized filing evidence unless the filing is reopened through its governing workflow; the old revision remains encrypted and addressable by authorized history, references move only at commit, and failed persistence leaves the old revision authoritative while cleaning uncommitted encrypted bytes. Notes are append-only events: a committed note is never deleted or compensated, although a failed atomic transaction emits none.
 
-Classification, evidence reading, and model-assisted suggestions are reviewable proposals rather than silent mutation. The backend integrates with the model registry and records model, prompt/template revision, output schema, evidence inputs, suggestion, reviewer disposition, and applied change set.
+Typed field edits bind to an aggregate version, stable actor/source identity, and exact changed-field set. Sensitive before/after values exist only in encrypted custody; ordinary projections are redacted. Stale baselines and same-idempotency-key/different-payload calls are refused. Manual overrides retain basis, actor, time, prior value, review state, and version. Imports record source-column mapping and normalization outcomes. Currency normalization records original amount and currency, normalized amount and currency, rate, rate source, effective date, and operation identity.
 
-Each applicable route through the seven Ledger registry binding families is classified as proven, incomplete, or not applicable. Unrouted applicable values block verification and export in OSS and non-OSS flows. Filing snapshots retain registry and formula provenance plus complete foreign-exchange source and date lineage.
+Single-record mutations, split/merge, evidence replacement, and a submitted multi-row edit change set are `ATOMIC`. Batch note append is atomic and emits all immutable note events or none. Bulk import and classification/evidence-reading proposal generation are `BEST_EFFORT`: they process stable input order, stage no failed item, and return a stable per-item identity and outcome; applying selected review proposals is one atomic change set. Every mutating request carries an idempotency key and baseline version. Same key and same payload replays the recorded result; same key with a different payload, duplicate item identity, or stale baseline fails closed. Atomic failure rolls back records, events, references, and staged bytes; best-effort failure cannot partially mutate an individual item.
+
+Classification, evidence reading, and model-assisted suggestions are reviewable proposals rather than silent mutation and conform to the accepted evidence-classification posture. Processing is local-first; decrypted evidence is memory-only; off-host processing requires an eligible deployment plus explicit consent; paths and subprocess details never enter prompts or provider payloads; refusal and cleanup are fail-closed. Models may propose categories, splits, and extracted evidence, but never author regulated rates, bases, tax amounts, formulas, legal authority, or filing truth. The canonical model registry selects by stable capability/schema identity and records provider/model revision, prompt/template revision, output schema, evidence revision inputs, suggestion, reviewer disposition, and applied change set. An unavailable, unsupported, or schema-incompatible model produces a typed refusal, never fallback mutation.
+
+The route unit is one declared source semantic, binding-family member, applicability predicate, period/revision, calculation consumer, and filing/export consumer. Every unit across the seven Ledger binding families is classified as proven, incomplete, or not applicable against the validated registry authority. Closure requires positive nonzero production calculation, exclusions, explicit missing/deferred-versus-zero behavior, pull/calculation parity, and verify/export/file refusal for every unrouted observation in OSS and non-OSS paths. Filing evidence contains declaration and legal authority, registry revision, formula provenance, source observations, and complete foreign-exchange source/effective-date lineage.
 
 ### Import, export, and recovery products
 
 Three products are distinct contracts:
 
-- **Flat interchange:** deterministic CSV, JSONL, and XLSX data exports that reopen in independent readers and round-trip where the format permits.
-- **Review exchange:** an offline workbook plus machine-readable sidecar; a Google-oriented adapter consumes the same review schema and import plan.
-- **Secure recovery archive:** versioned, integrity-checked, encrypted backup restored into a fresh store with equality checks for Ledger records, evidence, notes, changes, provenance, and registry-linked state.
+- **Flat interchange:** deterministic CSV, JSONL, and XLSX data exports that reopen in independent readers. JSONL round-trips the complete typed interchange record. CSV and XLSX round-trip the documented scalar projection; evidence bytes, immutable history, and nested provenance are intentionally excluded and represented by stable identifiers. Import/export tests compare canonical values, ordering keys, null semantics, decimal/date/currency precision, and declared-loss manifests.
+- **Review exchange:** an offline workbook and checksummed machine-readable sidecar share an exchange identity, schema revision, baseline versions, stable row identities, editable-column declaration, and artifact digest. Spreadsheet edits outside declared cells or without the matching sidecar are refused. Review return reports accepted, rejected, unchanged, conflicted, and invalid rows; selected accepted changes apply as one atomic change set, with stale baselines refusing the set. A Google-oriented adapter is optional and non-authoritative: it uses canonical writers/readers and the same review plan rather than owning Ledger semantics.
+- **Secure recovery archive:** a versioned, authenticated, encrypted backup contains Ledger aggregates, evidence revisions, notes, change sets, provenance, registry-linked snapshots, and a manifest. Unsupported schema versions, failed authentication/integrity, or incomplete contents fail before mutation. Restore targets a fresh empty store by default; a nonempty-store collision is refused rather than merged. Successful restore proves canonical equality of all included identities, bytes, versions, links, and provenance.
 
-Directory import, provider ingestion, and review-return import use backend plans with dry-run summaries, explicit conflict behavior, and auditable results.
+Directory import, provider ingestion, and review-return import use backend plans with dry-run summaries, the batch rules above, and auditable results. Plaintext exists only for the minimum reader/writer lifetime in protected temporary custody or memory; success, refusal, cancellation, and provider faults verify cleanup.
 
 ### TUI admission and plan ownership
 
-No Ledger TUI production code is changed before G3 closes. At G4 the implementation reuses the accepted TUI architecture, reconciles any active overlapping Ledger TUI plan, and makes `clitui-ledger` the sole campaign plan for Ledger parity. A component counts only when reachable from the installed application and backed by the canonical use case.
+At G0, active overlapping Ledger TUI plans are reconciled and `clitui-ledger` becomes the sole campaign plan for Ledger parity; an explicit Ledger TUI implementation hold is recorded. No Ledger TUI production code is changed before G3 closes. G4 lifts the hold, re-censuses reusable components, and implements against the accepted TUI architecture. A component counts only when reachable from the installed application and backed by the canonical use case.
 
 ### Approval protocol
 
