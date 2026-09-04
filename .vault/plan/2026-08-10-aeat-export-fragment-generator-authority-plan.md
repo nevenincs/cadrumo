@@ -9,8 +9,8 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-source-authority-research]]'
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
   - '[[2026-08-31-aeat-export-fragment-generator-authority-source-defect-adjudication-adr]]'
-modified: '2026-08-31'
-body_hash: 'sha256:a6f9b3be14b0079329e933ab1c9f0439b4e32e08ce5726330557ddc83110f753'
+modified: '2026-09-04'
+body_hash: 'sha256:ff36e670de4a85ef1f697d06c1873a1b8627a93aac86b6e89d1e2b797dd4555f'
 ---
 
 <!-- RETIRED: S19, S26, S65, S93 -->
@@ -193,6 +193,34 @@ Re-run relayout, binding, calculation, and export proofs before exact-scope deli
 - [ ] `W04.P08.S29` - Commit and push only the reviewed generator, relayout, and legacy-deletion payload with clean conflict and ancestry proof; `.`.
 - [x] `W04.P08.S94` - Author the core projection types for Modelo 200's design-numbered detail rows, then their revision projection_endpoints. AEAT prints BOTH axes, so nothing is invented: the slot number appears in the description (DP200021 'NIF de las entidades del grupo [1]', DP200023 'Operaciones fusion - 1. Entidad transmitente. NIF', DP200024B 'Relacion de participes 1. NIF', DP200025 'Reg.transparencia fiscal internacional - 1. Nombre o razon social') and the field label follows it. Five of the seven shipped projection kinds carry NO casilla_id (m303_regimen_simplificado_activity, _fact, _module, m303_exonerado_390_activity, _operaciones_terceros), so these rows need no casilla identity and none may be minted for them. Bound each slot range by counting the design; `src/cadrumo/core/_filing_projection_ref.py`.
 - [x] `W04.P08.S95` - DONE. All 204 casillas the 2025 Modelo 200 design declares and the registry omitted are authored, and all 1624 of their locale leaves are applied. 117 acontecimientos de excepcional interes publico as sibling transfers from the shipped 2025_barcelona_mobile_world_capital_mw trio, 28 named LIS deduction families from an explicit per-family role table led by ley-27-2014:art-36, and 58 structural AIE/UTE, RIC and participaciones rows. Registry casillas 3250 to 3453, missing design tokens 204 to 0, modelo 200 locale drift to 0, and the validating authority back to its baseline 8 failures with zero non-grade refusals. Two genuine block totals declare intentional_singleton cardinality with a reason after the registry's own gate refused 48 slot-disambiguated roles as likely typos. No translation in en, ca or hu is identical to its Spanish source, so the honesty ratchet is satisfied without an allowlist entry; `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/casillas/`.
+
+## Wave `W05` - filing export proof enrollment and state fidelity
+
+The conformance channel proves layout, offsets, extent, and provenance from non-sensitive declared inputs and needs no taxpayer custody, yet its canonical vector tuple is empty, so every filing revision reports conformance evidence as missing without any input ever having been assessed. This wave enrolls real conformance vectors so provable correctness is actually proved, and separates a proven-conformance-awaiting-custody state from an unproven one so the closure report stops collapsing two materially different facts into one refusal.
+
+### Phase `W05.P09` - conformance vector enrollment
+
+Enroll real conformance vectors so the non-sensitive channel actually assesses the revisions it currently reports as missing evidence. Vectors carry only classified non-sensitive boundary inputs and are never taxpayer truth, source-owned calculations, filing payloads, or accepted payload-hash authority. Modelo 200 revision 2025-y-siguientes is the first target because it holds filing grade and a fixed-width export layout.
+
+- [ ] `W05.P09.S119` - Establish the first canonical conformance vector and its builder for Modelo 200 revision 2025-y-siguientes, carrying only classified non-sensitive boundary inputs, and enroll it in CANONICAL_FILING_EXPORT_CONFORMANCE_VECTORS so the conformance channel assesses a real revision instead of reporting evidence_missing over an empty tuple; `dev/registry/filing_export_proof.py, dev/registry/tests/test_filing_export_two_channel_proof.py`.
+- [ ] `W05.P09.S120` - Prove the enrolled vector drives the canonical writer end to end: law-selected layout identity, official source bytes, generated provenance, map and profile identity, extent, and distinct official literal offsets, with no parallel writer and no taxpayer value in the vector; `dev/registry/tests/test_filing_export_two_channel_proof.py, src/cadrumo/application/filing/export_proof.py`.
+- [ ] `W05.P09.S121` - Extend enrollment to every remaining filing-grade revision the enrollment report classifies as materializable, and record each non-materializable revision as typed residue with its owner rather than as silent absence; `dev/registry/filing_export_proof.py, dev/registry/tests/test_filing_export_two_channel_proof.py`.
+
+### Phase `W05.P10` - two-channel assessment state fidelity
+
+The assessment model admits proof exclusive-or refusals and the closure limb enum admits only satisfied, not_applicable, refused, and unmeasured, so a revision with proven conformance awaiting operator custody is indistinguishable from one with nothing proven. Carry the per-channel outcome into the closure limb so the two states stay distinct, as no-silent-under-declaration requires, without weakening the filing-grade predicate that still demands both channels.
+
+- [ ] `W05.P10.S122` - Carry per-channel conformance and secure-replay outcomes into the filing_export closure limb so a proven-conformance-awaiting-custody revision is reported distinctly from an unproven one, preserving the filing-grade predicate that requires both channels; `src/cadrumo/application/registry/filing_export_coverage.py, src/cadrumo/application/registry/closure.py, src/cadrumo/application/filing/export_proof.py`.
+- [ ] `W05.P10.S123` - Render the distinguished state in the closure report and its release predicate so the operator can read which revisions await only custody, and prove a custody-pending revision never counts toward release eligibility; `dev/registry/conformance/closure.py, dev/registry/conformance/tests/test_closure.py`.
+- [ ] `W05.P10.S124` - Retire the withdrawn single-channel filing proof surface and its stale caller, removing LiveFilingExportProofAuthority and the test asserting a satisfied outcome no revision can reach, with no compatibility shim; `dev/registry/filing_export_proof.py, dev/registry/conformance/tests/test_real_closure_outcomes.py`.
+
+### Phase `W05.P11` - independent review and canonicality
+
+Approvals are operator-waived for this wave, so correctness rests on independent review rather than on prior sign-off. Fresh-context subagents review the enrollment and the state split, and their findings are implemented before the wave closes. Semantic redeclaration is checked through vaultspec-rag so no second vector registry, assessment shape, or refusal vocabulary is introduced beside the canonical ones.
+
+- [ ] `W05.P11.S125` - Dispatch a fresh-context reviewer over the conformance vector enrollment to verify no vector carries taxpayer truth, source-owned calculation, filing payload, or accepted payload-hash authority, and implement every finding; `dev/registry/filing_export_proof.py, .vault/audit/`.
+- [ ] `W05.P11.S126` - Dispatch a fresh-context reviewer over the assessment state split to verify the filing-grade predicate was not weakened and that missing, deferred, advisory, unsupported, and proven-zero remain distinct, and implement every finding; `src/cadrumo/application/registry/filing_export_coverage.py, .vault/audit/`.
+- [ ] `W05.P11.S127` - Sweep the changed surfaces with vaultspec-rag for semantic redeclaration, confirming no second vector registry, assessment shape, refusal vocabulary, or closure limb outcome family was introduced beside the canonical definitions, and collapse any duplicate found; `dev/registry/, src/cadrumo/application/registry/, src/cadrumo/application/filing/`.
 
 ## Parallelization
 
