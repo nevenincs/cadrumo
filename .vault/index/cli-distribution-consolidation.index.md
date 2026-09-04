@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#cli-distribution-consolidation'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:2fb149126f1a7a82306c4418ed585187b72738ace5496a498ea904ea64658cbe'
+body_hash: 'sha256:0b522a02dc39d893f06516e474ae2703bb752478f4861925f4e45f5a216795d2'
 related:
   - '[[2026-09-02-cli-distribution-consolidation-P01-S01]]'
   - '[[2026-09-02-cli-distribution-consolidation-P01-S02]]'
@@ -45,6 +45,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-P09-S35]]'
   - '[[2026-09-02-cli-distribution-consolidation-P09-S36]]'
   - '[[2026-09-02-cli-distribution-consolidation-P10-S38]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P10-S40]]'
   - '[[2026-09-02-cli-distribution-consolidation-P10-S41]]'
   - '[[2026-09-02-cli-distribution-consolidation-P11-S42]]'
   - '[[2026-09-02-cli-distribution-consolidation-P11-S43]]'
@@ -52,6 +53,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-adr]]'
   - '[[2026-09-02-cli-distribution-consolidation-plan]]'
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
+  - '[[2026-09-04-cli-distribution-consolidation-cohort-build-cost-audit]]'
 ---
 
 # `cli-distribution-consolidation` feature index
@@ -63,6 +65,10 @@ Auto-generated index of all documents tagged with `#cli-distribution-consolidati
 ### adr
 
 - `2026-09-02-cli-distribution-consolidation-adr` - `cli-distribution-consolidation` adr: `cadrumo ships as one PyPI-first CLI distribution` | (**status:** `accepted`)
+
+### audit
+
+- `2026-09-04-cli-distribution-consolidation-cohort-build-cost-audit` - `cli-distribution-consolidation` audit: `cohort build cost`
 
 ### exec
 
@@ -107,6 +113,7 @@ Auto-generated index of all documents tagged with `#cli-distribution-consolidati
 - `2026-09-02-cli-distribution-consolidation-P11-S42` - Rewrite the release runbook against the adopted workflow pair
 - `2026-09-02-cli-distribution-consolidation-P11-S43` - Reduce the recipe surface to the commands the adopted path uses
 - `2026-09-02-cli-distribution-consolidation-P11-S44` - Reconcile the packaging workflow family against the sibling shape
+- `2026-09-02-cli-distribution-consolidation-P10-S40` - Remove the evidence leak sweep left without a caller
 
 ### plan
 
