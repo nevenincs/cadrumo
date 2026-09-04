@@ -76,11 +76,13 @@ from .overview.home import (
     HomeDeclarationResume,
     HomeDeclarationState,
     HomeLedgerReadiness,
+    HomeNextAction,
     HomeProjectionInput,
     HomeProjectionV1,
     HomeZoneState,
     compose_home_projection,
 )
+from .overview.next_actions import declare_next_action
 from .search.installed_workbench import (
     InstalledWorkbenchSearchSnapshotV1,
     assemble_installed_workbench_search_snapshot,
@@ -661,6 +663,12 @@ def _secure_profile_home_input(
         if declarations is not None
         else unavailable("workbench.home.declarations_resume_projector_unavailable")
     )
+    actions = _home_ledger_actions(ledger)
+    actions_state = (
+        HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=observed_at)
+        if actions is not None
+        else unavailable("workbench.home.actions_projector_unavailable")
+    )
     readiness = _home_ledger_readiness(ledger)
     ledger_state = (
         HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=observed_at)
@@ -671,7 +679,8 @@ def _secure_profile_home_input(
     return HomeProjectionInput(
         generated_at=observed_at,
         account=account_session,
-        actions_state=unavailable("workbench.home.actions_projector_unavailable"),
+        actions_state=actions_state,
+        actions=actions or (),
         declarations_state=declarations_state,
         declarations=declarations or (),
         ledger_state=ledger_state,
@@ -785,6 +794,49 @@ def _home_declarations(
             )
         )
     return tuple(resumes)
+
+
+_HOME_LEDGER_ACTIONS: Final = (
+    (LedgerWorkspaceArea.CLASSIFICATION, "operator.ledger.classify", "ledger_classification_pending"),
+    (LedgerWorkspaceArea.EVIDENCE, "operator.ledger.evidence.review.list", "evidence_missing"),
+)
+"""Cross-cutting Ledger work Home can offer, in the order it is offered.
+
+Both reason codes are Home's OWN declared vocabulary -- they already exist in
+`tui.home.reason.*` in every locale -- and both actions are catalogue entries
+that take no arguments, so nothing here is invented to make the zone fill.
+Classification comes first because an unclassified entry has no settled tax
+treatment yet, while a missing justificante is a gap in evidence for a
+treatment already chosen.
+"""
+
+
+def _home_ledger_actions(ledger: LedgerWorkspaceProjectionV1 | None) -> tuple[HomeNextAction, ...] | None:
+    """Offer the Ledger work that is outstanding, or nothing when unmeasured.
+
+    An UNMEASURED area yields no action rather than an action for zero items:
+    `item_count` is a plain integer, so an unmeasured area reports the same
+    zero a finished one does, and offering "classify 0 entries" is worse than
+    offering nothing. The zone refuses as a whole under the same rule the
+    readiness block uses.
+    """
+    if ledger is None:
+        return None
+    by_area = {state.area: state for state in ledger.areas}
+    actions: list[HomeNextAction] = []
+    for area, action_id, reason_code in _HOME_LEDGER_ACTIONS:
+        state = by_area.get(area)
+        if state is None or state.status is LedgerWorkspaceStatus.UNMEASURED:
+            return None
+        if state.item_count:
+            actions.append(
+                HomeNextAction(
+                    rank=len(actions),
+                    action=declare_next_action(action_id),
+                    reason_code=reason_code,
+                )
+            )
+    return tuple(actions)
 
 
 def _generation_admission(

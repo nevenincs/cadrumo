@@ -83,6 +83,7 @@ from ...domain.iva.prorrata import (
     especial_mandatory_rule,
     is_especial_mandatory,
 )
+from ...domain.iva.prorrata_especial_parameters import ProrrataEspecialMandatoryParameters
 from ...domain.iva.schema import IvaCategory
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.prorrata_register.register import (
@@ -1136,6 +1137,7 @@ def build_prorrata_especial_mandatory_advisory(
     deduction_under_general: Decimal,
     deduction_under_especial: Decimal,
     ejercicio: int,
+    parameters: ProrrataEspecialMandatoryParameters,
 ) -> Notice | None:
     """Build the LIVA art. 103.Dos.2.º mandatory-especial settlement advisory.
 
@@ -1160,10 +1162,17 @@ def build_prorrata_especial_mandatory_advisory(
         deduction_under_especial: The ejercicio's total deducible IVA under the
             prorrata especial regime (per-input art. 106 routing).
         ejercicio: The filing year being settled (for the message and context).
+        parameters: The registry-resolved LIVA art-103.Dos.2 margin and its
+            comparison direction for that ejercicio.
     """
-    if not is_especial_mandatory(deduction_under_general, deduction_under_especial, year=ejercicio):
+    if not is_especial_mandatory(
+        deduction_under_general,
+        deduction_under_especial,
+        year=ejercicio,
+        parameters=parameters,
+    ):
         return None
-    rule = especial_mandatory_rule(ejercicio)
+    rule = especial_mandatory_rule(ejercicio, parameters=parameters)
     exceso = f"en un {rule.margin_percentage}% o más" if rule.inclusive else f"en más de un {rule.margin_percentage}%"
     message = (
         f"Prorrata especial obligatoria para {ejercicio} (LIVA art. 103.Dos.2.º): la deducción por "

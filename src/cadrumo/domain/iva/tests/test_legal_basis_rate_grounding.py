@@ -28,6 +28,7 @@ from __future__ import annotations
 import re
 import tomllib
 from datetime import date
+from datetime import date as _esp_date
 from decimal import Decimal
 from typing import cast
 
@@ -35,13 +36,27 @@ import pytest
 
 from ....core.resources.bundled_data import bundled_path
 from ...calculations.registry.authority import bundled_authority
+from ...calculations.registry.schema_base import ThresholdComparison
 from ...invoices.enums import IvaRate, iva_rate_kind, iva_rate_percentage
 from ..errors import IvaCatalogueError
 from ..lookup import lookup_rate
+from ..prorrata_especial_parameters import ProrrataEspecialMandatoryParameters
 from ..recargo_equivalencia import load_recargo_rates
 from ..schema import EUMemberState, IvaRateKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+#: An explicit resolved margin. These tests exercise the PREDICATE and the
+#: advisory wording, not the law; whether 10 inclusive is what art. 103.Dos.2
+#: states is answered against the registry by the modelo 303 parameter gate.
+_ESPECIAL_PARAMS = ProrrataEspecialMandatoryParameters(
+    margin_percentage=Decimal("10"),
+    comparison=ThresholdComparison.INCLUSIVE,
+    modelo_id="303",
+    revision_id="2025",
+    resolved_on=_esp_date(2025, 12, 31),
+)
 
 
 # Canonical date for rate lookups during these legal-binding checks.
@@ -234,33 +249,53 @@ def test_liva_art_103_corpus_records_the_ley_28_2014_amendment_of_apartado_dos()
     assert any("apartado 2.2º" in t for t in required_text)
 
 
-def test_liva_art_103_substrate_margins_match_the_two_boe_redactions() -> None:
-    """Both margins and the cutover year must match the BOE figures, not a single blended constant.
+def test_liva_art_103_margin_is_registry_data_not_a_python_constant() -> None:
+    """The predicate must REPORT the margin it was handed, never decide one.
 
-    The current figure (10) is the one the bundled corpus quotes; the original
-    figure (20) is the one the Ley 37/1992 publication as enacted carried before
-    Ley 28/2014 lowered it, and 2015 is that law's stated entry into force.
+    This test replaces one that asserted the two BOE figures against Python
+    constants. That question -- is 10-inclusive what art. 103.Dos.2 states? --
+    now belongs to the registry declaration and is answered there. The repealed
+    20-per-cent redaction is not declared at all: no modelo 303 revision covers
+    a pre-2015 filing year and the bundled consolidated corpus carries only the
+    text in force, so the resolver refuses such an ejercicio by name rather than
+    resolving it from a figure nothing in this tree can ground.
+
+    What remains this file's business is that the predicate is a pure reporter,
+    which is checked by handing it a margin and comparison of the test's own
+    choosing -- deliberately NOT the shipped ones -- and requiring it back.
     """
-    from ....core.external_constants import (
-        PRORRATA_ESPECIAL_MANDATORY_LEY_28_2014_FIRST_YEAR,
-        PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_FROM_2015,
-        PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_UNTIL_2014,
-    )
     from ..prorrata import especial_mandatory_rule
+    from ..prorrata_especial_parameters import ProrrataEspecialMandatoryParameters
 
-    declared = (
-        PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_FROM_2015,
-        PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_UNTIL_2014,
-        PRORRATA_ESPECIAL_MANDATORY_LEY_28_2014_FIRST_YEAR,
+    arbitrary = ProrrataEspecialMandatoryParameters(
+        margin_percentage=Decimal("37"),
+        comparison=ThresholdComparison.EXCLUSIVE,
+        modelo_id="303",
+        revision_id="2025",
+        resolved_on=_esp_date(2025, 12, 31),
     )
-    assert declared == (Decimal("1.10"), Decimal("1.20"), 2015)
+    rule = especial_mandatory_rule(2025, parameters=arbitrary)
+    assert rule.margin_percentage == Decimal("37")
+    assert rule.multiple == Decimal("1.37")
+    assert rule.inclusive is False
 
-    # The margin the predicate reports is the percentage the provision names.
-    assert especial_mandatory_rule(2014).margin_percentage == Decimal("20")
-    assert especial_mandatory_rule(2015).margin_percentage == Decimal("10")
-    # Only the post-amendment text carries "o más", so only it is inclusive.
-    assert especial_mandatory_rule(2015).inclusive is True
-    assert especial_mandatory_rule(2014).inclusive is False
+
+def test_liva_art_103_pre_2015_ejercicio_is_refused_rather_than_guessed() -> None:
+    """TEETH: the repealed redaction has no citable authority, so it is refused."""
+    import pytest
+
+    from ....application.registry.tree import _bundled_path
+    from ...calculations.registry.authority import ValidatedRegistryAuthority
+    from ..prorrata_especial_parameters import (
+        ProrrataEspecialMandatoryParameterError,
+        resolve_prorrata_especial_mandatory_parameters,
+    )
+
+    authority = ValidatedRegistryAuthority.load(_bundled_path() / "registry" / "aeat", source_root=_bundled_path())
+    revision = authority.modelo("303").revisions["2025"]
+    with pytest.raises(ProrrataEspecialMandatoryParameterError) as excinfo:
+        resolve_prorrata_especial_mandatory_parameters(revision, modelo_id="303", ejercicio=2014)
+    assert "predates the only redaction" in str(excinfo.value)
 
 
 # ---------------------------------------------------------------------------

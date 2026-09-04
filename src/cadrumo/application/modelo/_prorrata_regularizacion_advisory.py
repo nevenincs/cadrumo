@@ -66,6 +66,9 @@ from ...core.prorrata_register import ProrrataRegisterRegime
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.iva.m303_settlement import is_m303_annual_settlement_period, m303_annual_settlement_order_key
 from ...domain.iva.prorrata import especial_mandatory_rule
+from ...domain.iva.prorrata_especial_parameters import (
+    resolve_prorrata_especial_mandatory_parameters,
+)
 from ...domain.prorrata_register.register import ProrrataRegisterError
 from ..aggregation import CalculationSourceDiagnostic, compute_annual_deducible_totals_by_regime
 from ..calculations.observations_repository import CalculationObservationRepository
@@ -324,10 +327,21 @@ def _especial_mandatory_diagnostics(
         totals.regime is ProrrataRegisterRegime.ESPECIAL or totals.unclassified_deducible_count == 0
     )
     if especial_total_is_honest:
+        # A refusal here is a genuine grounding defect: this path is gated to a
+        # modelo 303 annual settlement period, and every modelo 303 revision
+        # declares the art-103.Dos.2 margin. It carries a registered error code
+        # and an operator-facing message, so it is allowed to surface rather
+        # than being swallowed into an empty diagnostic tuple.
+        especial_parameters = resolve_prorrata_especial_mandatory_parameters(
+            revision,
+            modelo_id=modelo,
+            ejercicio=filing_year,
+        )
         notice = build_prorrata_especial_mandatory_advisory(
             deduction_under_general=totals.deduction_under_general,
             deduction_under_especial=totals.deduction_under_especial,
             ejercicio=filing_year,
+            parameters=especial_parameters,
         )
         if notice is None:
             return ()
@@ -345,7 +359,7 @@ def _especial_mandatory_diagnostics(
             ),
         )
 
-    rule = especial_mandatory_rule(filing_year)
+    rule = especial_mandatory_rule(filing_year, parameters=especial_parameters)
     exceso = (
         f"en un {rule.margin_percentage} por ciento o más"
         if rule.inclusive
