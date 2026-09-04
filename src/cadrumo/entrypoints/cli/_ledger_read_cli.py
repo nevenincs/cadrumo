@@ -80,7 +80,6 @@ if TYPE_CHECKING:
     from ._ledger_rule_payloads import LedgerLlmDiagnosticsResult
 
 
-
 def resolve_ledger_transaction_id(
     transaction_repository: TransactionCatalogueRepository,
     prefix: str,

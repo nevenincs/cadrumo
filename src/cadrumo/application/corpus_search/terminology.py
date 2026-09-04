@@ -67,8 +67,6 @@ _FALLBACK_LOCALE = "es"
 _DEFAULT_LIFECYCLES = (ConceptLifecycle.APPROVED,)
 _DEFAULT_LIMIT = 8
 
-_WHITESPACE_RE = re.compile(r"\s+")
-
 
 class TerminologyConcept(BaseModel):
     """One Handbook concept projected for a single locale."""
