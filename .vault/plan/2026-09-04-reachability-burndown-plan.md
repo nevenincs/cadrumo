@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:74d3c7e1d46b88c0a52a9e18e8af5bb7a38f9424b16e31856e1e83a6e693cebe'
+body_hash: 'sha256:7f3a33e69c6f3e53b38a0518ec6391c465be7465a9b483333124a2dd9c63d8e4'
 ---
 
 # `reachability-burndown` plan
@@ -73,7 +73,7 @@ Clear the largest exact-confidence concentration at its owning boundary.
 Clear the entrypoints and application concentrations without disturbing command contracts.
 
 - [ ] `W03.P06.S09` - Resolve the entrypoints/cli symbol concentration without altering command contracts; `src/cadrumo/entrypoints/cli`.
-- [ ] `W03.P06.S10` - Resolve the application/modelo and adapters/persistence symbol concentrations; `src/cadrumo/application`.
+- [x] `W03.P06.S10` - Resolve the application/modelo and adapters/persistence symbol concentrations; `src/cadrumo/application`.
 
 ## Wave `W04` - extend the gate and close
 
