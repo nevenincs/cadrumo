@@ -93,14 +93,22 @@ def is_fleet_label_set(target: object) -> bool:
     return bool(labels) and labels[0] == "self-hosted"
 
 
-def _mapping(value: object) -> Mapping[str, Any]:
-    """Return ``value`` as a mapping, or an empty one when it is not."""
+def _mapping(value: Any) -> Mapping[str, Any]:
+    """Return ``value`` as a mapping, or an empty one when it is not.
+
+    A workflow document is arbitrary YAML: every level of it may be absent, or
+    a string where a mapping was expected. Narrowing at each read is what lets
+    the resolver answer for a malformed document instead of raising on it.
+
+    The cast carries the key type the checker cannot read off an `isinstance`
+    narrowing: YAML mapping keys are strings here, guaranteed by the parser.
+    """
     return cast("Mapping[str, Any]", value) if isinstance(value, Mapping) else {}
 
 
-def _sequence(value: object) -> Sequence[object]:
-    """Return ``value`` as a label list, or an empty one when it is not."""
-    return cast("Sequence[object]", value) if isinstance(value, list) else ()
+def _sequence(value: Any) -> Sequence[Any]:
+    """Return ``value`` as a list, or an empty one when it is not."""
+    return cast("Sequence[Any]", value) if isinstance(value, list) else ()
 
 
 def runner_targets(job: Mapping[str, Any], workflow: Mapping[str, Any]) -> list[object]:
