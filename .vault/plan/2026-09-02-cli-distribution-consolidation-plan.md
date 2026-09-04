@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:850b6f6d134313ca08ff92c0d5e4303e77d38314aac9086c6d08fa37fa03a397'
+body_hash: 'sha256:615b042b613e96ad065cdb4ce48cc215aa9a11e1119ae3b436db084935423f37'
 ---
 
 # `cli-distribution-consolidation` plan
@@ -121,7 +121,7 @@ Delete the development and release modules the adopted path no longer invokes, e
 - [ ] `P10.S39` - Remove the container base-image declaration the install proof no longer reads; `dev/packaging/_base_image.py`.
 - [x] `P10.S40` - Remove the evidence leak sweep left without a caller; `dev/packaging/evidence_leak_sweep.py`.
 - [x] `P10.S41` - Reduce the release module family to what the adopted path invokes; `dev/release/environment_inventory.py`.
-- [ ] `P10.S47` - Close the evidence assertions naming cohort artifacts the adopted path no longer builds; `dev/packaging/tests/test_distribution_evidence_emit.py`.
+- [x] `P10.S47` - Close the evidence assertions naming cohort artifacts the adopted path no longer builds; `dev/packaging/tests/test_distribution_evidence_emit.py`.
 
 ### Phase `P11` - Restate the operator surface against the adopted path
 

@@ -5,16 +5,11 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:3b10b5054c92e1da9b36feb7178f2152c8f0466081d25c04f18ed358b9c09aed'
+body_hash: 'sha256:2c34c4f346fb6d61d0cd9a2d759f069e38a992a7df302318edd5b6be11251436'
 step_id: 'S412'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Stop a review run from serving frames it did not produce. MEASURED 2026-09-04: runs/current holds 210 PNGs while the run's own manifest names 174, so 36 frames from earlier renders at other viewports sit beside the current ones with nothing marking them. A reviewer opening the directory cannot tell which frames this run produced, which is how a surface gets signed off as it looked two code changes ago. This is the inverse of the silent-absence gate S407 added: that one hid frames a run should have produced, this one shows frames it did not. The manifest is right in both cases and the directory is what misleads. Either purge the run directory before writing it, or have the index name every file the manifest does not claim.
 
