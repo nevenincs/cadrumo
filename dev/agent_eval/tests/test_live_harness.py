@@ -19,11 +19,10 @@ from pydantic import ValidationError
 
 from cadrumo_harness.mcp import faithfulness_check
 
-from .._live_harness import ScriptedPersonaDriver, run_live_session
+from .._live_harness import LiveCallTool, ScriptedPersonaDriver, run_live_session
 from .._live_scoring import LiveScenarioScore, score_live_trajectory
 from .._models import GoldenScenario, LiveInvariantVerdict, LiveNarrationRecord, LiveToolCallRecord, LiveTrajectory
 from .._runner import load_scenario
-from .._live_harness import LiveCallTool
 from ._real_cli_support import valid_cli_commands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

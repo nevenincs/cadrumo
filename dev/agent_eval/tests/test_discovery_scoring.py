@@ -27,14 +27,14 @@ import pytest
 
 from cadrumo_harness.mcp import build_tool_descriptors
 
-from .._models import LiveToolCallRecord, LiveTrajectory
-from .._runner import load_scenario, run_golden_scenario
 from .._live_scoring import (
     DiscoveryScore,
     SurfaceDiscoveryComparison,
     compare_surface_discovery,
     score_discovery_trajectory,
 )
+from .._models import LiveToolCallRecord, LiveTrajectory
+from .._runner import load_scenario, run_golden_scenario
 from ._real_cli_support import valid_cli_commands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
