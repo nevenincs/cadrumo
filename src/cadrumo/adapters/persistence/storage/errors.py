@@ -14,9 +14,8 @@ The class tree:
 
 from __future__ import annotations
 
-from typing import Final
-
 from collections.abc import Mapping
+from typing import Final
 
 from ....core.errors.hierarchy import CadrumoError
 

@@ -7,13 +7,25 @@ aliasing, terminology search, corpus-text normalisation). This module gives
 the shared inner step one canonical home; each caller keeps composing its own
 trailing transform (whitespace collapse, non-alphanumeric squeeze, HTML-tag
 strip, casing) on top of it.
+
+Where two callers compose the SAME trailing transform, that composition earns a
+name here rather than being written twice: :func:`fold_for_matching` is the
+fold-collapse-casefold pipeline the terminology search and the AEAT marker
+matcher had each written out.
 """
 
 from __future__ import annotations
 
+import re
 import unicodedata
 
-__all__ = ["fold_diacritics", "fold_printed_phrase", "unicode_compose"]
+__all__ = ["fold_diacritics", "fold_for_matching", "fold_printed_phrase", "unicode_compose"]
+
+#: A run of one or more whitespace characters, collapsed to a single space by
+#: :func:`fold_for_matching`. Distinct from a single-whitespace pattern used to
+#: DELETE whitespace, which is a different operation and is why the deleting
+#: caller in the PDF label reader names its pattern for what it does.
+_WHITESPACE_RUN_RE = re.compile(r"\s+")
 
 #: Every codepoint in Unicode category ``Mn`` (Mark, nonspacing), mapped to
 #: ``None`` for :meth:`str.translate`. Built once at import so folding a
@@ -100,3 +112,24 @@ def unicode_compose(text: str) -> str:
         *text* in NFKC normal form.
     """
     return unicodedata.normalize("NFKC", text)
+
+
+def fold_for_matching(text: str) -> str:
+    """Fold *text* to the form two matchers compare against.
+
+    Drops diacritics, collapses every run of whitespace to one space, trims the
+    ends, and casefolds. This is the exact pipeline the terminology search and
+    the AEAT response-marker matcher had each spelled out.
+
+    The casefold runs last, which is equivalent to casefolding first: neither
+    ``str.casefold`` nor the whitespace collapse affects what the other does.
+    That equivalence is what let the two callers, which ordered the steps
+    differently, converge on one function.
+
+    Args:
+        text: Raw text to fold.
+
+    Returns:
+        The folded, whitespace-collapsed, casefolded form.
+    """
+    return _WHITESPACE_RUN_RE.sub(" ", fold_diacritics(text)).strip().casefold()
