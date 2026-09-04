@@ -305,13 +305,12 @@ jobs:
         # per-push budget cannot absorb. Routed through the recipe so the
         # path/marker selection keeps one declaration site.
         #
-        # NON-BLOCKING while `dev/packaging/tests/test_distribution_evidence_emit.py`
-        # carries 21 failures against contracts that no longer exist: the cohort
-        # has no `cadrumo-harness-wheel` and no `mcpb` artifact, and the readiness
-        # authority has no `claude-*` rows. Those are the module's own drift, not
-        # this lane's. FLIP `continue-on-error` OFF once they close.
+        # Blocking. The distribution-evidence cases now drive the cohort binding
+        # end to end against a real install of the cohort's own wheel rather than
+        # aborting in their fixtures, so this step is minutes of genuine work
+        # rather than seconds of fast failure. A red verdict here is a real
+        # binding or oracle regression.
         run: just packaging-smoke-serial
-        continue-on-error: true
 
       - name: Documentation conformance
         # The docs-marked tests (nitpicky warnings-as-errors Sphinx build,
