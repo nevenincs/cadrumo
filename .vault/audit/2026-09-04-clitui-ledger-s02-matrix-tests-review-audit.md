@@ -89,6 +89,52 @@ that substitution explicitly; its default fixture currently includes the
 generic role and can leave future maintainers believing G0 consumes it. This is
 an informational design adjudication and not an open LOW defect.
 
+### copied-graph-detectors-retest | high | OPEN: authority validation is still absent from ordered and currentness boundaries
+
+Corrective test commit
+`1a11acff9084d8918823bdf999b0e184ee4a8812`, SHA-256
+`599393a2c3ab889d046993547d25be03397a8e31af3c0dbf46da21837e7f1277`,
+adds a currentness test for a malformed copied subject, a single-gate test that
+combines malformed subject and authority graphs, and an ordered-gate test for
+the malformed subject. It does not send a malformed matrix/authority graph
+through `validate_ledger_matrix_currentness` or
+`evaluate_ledger_capability_gates`. Consequently, removing canonical matrix
+validation from either of those public boundaries while retaining subject
+validation would still pass the repaired suite. Independent probes confirmed
+the current implementation returns a redacted matrix-validation blocker from
+currentness and leaves all five ordered gates open for that authority mutation.
+The implementation remains correct, but the previously HIGH cross-boundary
+regression-protection finding is only partially resolved.
+
+### exact-gate-predicate-coverage-retest | high | OPEN: G2 through G4 are complete, but distinct G0 predicates remain untested
+
+The repair adds paired controls and negative cases for exact G0 baseline
+evidence; every G2 axis and blocking gap class; every G3 surface, proof,
+delegation, behavior-evidence, and scoped-gap obligation; and every G4 hold,
+TUI state, installation, campaign-role, and all-row/all-axis finding obligation.
+Those parts of the original finding are resolved. G0 still has no negative
+detector for an unrecorded-but-active TUI hold, removal of an accepted
+capability, same-identity source-classification drift, census-identity drift,
+unreadable or ambiguous live streams, authority snapshot membership/generation
+drift, or stale denominator/review-subject attestation bindings. The test named
+`test_a_new_live_capability_and_source_classification_are_drift` adds a new
+identity but does not mutate the source classification of an existing identity.
+Independent mutations confirmed the current implementation blocks the
+unrecorded hold, census-identity and source-classification changes, and
+unreadable/ambiguous streams. These are separate foundational G0 predicates;
+removing them can still leave all 92 tests green.
+
+### fixture-and-attestation-retest | low | RESOLVED: empty inputs and typed review authority now have explicit detectors
+
+All optional fixture selection now distinguishes `None` from an explicit empty
+collection. The suite proves empty stream and empty campaign-evidence inputs are
+preserved and refused by the appropriate gate. It also proves both directions
+of the review-authority decision: a valid digest-bound `ACCEPT` attestation
+closes G0 without the generic review coordinate, while a generic coordinate
+cannot compensate for a missing, stale, or non-accepting attestation. This
+resolves the prior MEDIUM fixture finding and completes the informational LOW
+adjudication; this entry is not an open LOW finding.
+
 ## Recommendations
 
 1. For `copied-graph-detectors`, add durable mutations for invalid copied live
@@ -110,3 +156,14 @@ an informational design adjudication and not an open LOW defect.
 5. Disposition: **NOT ACCEPTED**. Open severity counts are CRITICAL 0, HIGH 2,
    MEDIUM 1, LOW 0. The LOW adjudication records that typed attestation is the
    stronger canonical review authority and is not itself an open finding.
+6. To close `copied-graph-detectors-retest`, add a malformed copied authority
+   snapshot to both direct currentness evaluation and ordered gate evaluation;
+   assert deterministic redacted matrix-validation blockers at each boundary.
+7. To close `exact-gate-predicate-coverage-retest`, add parameterized G0
+   detectors for every independent denominator, live-stream, authority,
+   attestation, and hold branch. Ensure source-classification coverage mutates
+   the source set of the same stable identity rather than only adding a row.
+8. Corrective disposition: **NOT ACCEPTED**. Open severity counts are CRITICAL
+   0, HIGH 2, MEDIUM 0, LOW 0. The focused 92-test suite and static checks pass;
+   the remaining findings concern mutations that still survive the durable test
+   contract, not failures in the current S01 implementation.
