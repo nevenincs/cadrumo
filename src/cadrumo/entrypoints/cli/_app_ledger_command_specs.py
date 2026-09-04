@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from types import MappingProxyType
@@ -25,6 +27,8 @@ from ._app_ledger_prorrata_command_specs import LEDGER_PRORRATA_COMMAND_SPECS
 from ._app_ledger_ratios_command_specs import LEDGER_RATIOS_COMMAND_SPECS
 from ._app_ledger_rule_command_specs import LEDGER_RULE_COMMAND_SPECS
 from .command_spec import BindingState, CommandNodeKind, CommandSpec, SchemaState, TuiCapability
+
+_LEDGER_SUBOPERATION_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"ledger(?:\.[a-z][a-z0-9_]*)+")
 
 LEDGER_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     *LEDGER_FOUNDATION_COMMAND_SPECS,
@@ -75,9 +79,7 @@ class LedgerCliCensusAnnotation:
         if len(set(self.suboperation_ids)) != len(self.suboperation_ids):
             raise ValueError(f"Ledger command census annotation has duplicate sub-operations: {self.command_key}")
         for identity in self.suboperation_ids:
-            if not identity.startswith("ledger.") or any(
-                not part or not part.replace("_", "").isalnum() or not part[0].islower() for part in identity.split(".")
-            ):
+            if _LEDGER_SUBOPERATION_ID_PATTERN.fullmatch(identity) is None:
                 raise ValueError(f"Ledger command census sub-operation is not a stable identity: {identity}")
 
 
@@ -128,7 +130,12 @@ _LEDGER_CLI_CENSUS_ANNOTATIONS: Final[tuple[LedgerCliCensusAnnotation, ...]] = (
         "ledger.classify.llm_saturate_apply",
         "ledger.classify.llm_saturate_reject",
         "ledger.classify.evidence_read",
-        "ledger.classify.auto_split",
+        "ledger.classify.auto_split.reject",
+        "ledger.classify.auto_split.split_preview",
+        "ledger.classify.auto_split.split_apply",
+        "ledger.classify.auto_split.single_preview",
+        "ledger.classify.auto_split.single_apply",
+        "ledger.classify.bulk_csv",
     ),
     _annotation("app_ledger_counterparty_confirm", LedgerCliAdapterOwnership.POLICY_BEARING),
     _annotation("app_ledger_counterparty_view", LedgerCliAdapterOwnership.POLICY_BEARING),
@@ -263,16 +270,18 @@ _LEDGER_CLI_CENSUS_ANNOTATIONS: Final[tuple[LedgerCliCensusAnnotation, ...]] = (
 )
 
 
-def _ledger_invocable_specs() -> tuple[CommandSpec, ...]:
+def _ledger_invocable_specs(
+    specs: tuple[CommandSpec, ...] = LEDGER_COMMAND_SPECS,
+) -> tuple[CommandSpec, ...]:
     """Return leaves and explicitly executable groups from the sole Ledger spec tree."""
     return tuple(
         spec
-        for spec in LEDGER_COMMAND_SPECS
+        for spec in specs
         if spec.kind is CommandNodeKind.LEAF or spec.invocation.invoke_without_command
     )
 
 
-def _ledger_path_for(spec: CommandSpec, by_key: MappingProxyType[str, CommandSpec]) -> tuple[str, ...]:
+def _ledger_path_for(spec: CommandSpec, by_key: Mapping[str, CommandSpec]) -> tuple[str, ...]:
     """Derive one full operator path without importing the global graph cycle."""
     tokens = [spec.token]
     current = spec
@@ -288,9 +297,10 @@ def _ledger_path_for(spec: CommandSpec, by_key: MappingProxyType[str, CommandSpe
 
 def _validated_annotations(
     invocables: tuple[CommandSpec, ...],
+    annotations: tuple[LedgerCliCensusAnnotation, ...] = _LEDGER_CLI_CENSUS_ANNOTATIONS,
 ) -> MappingProxyType[str, LedgerCliCensusAnnotation]:
     """Reject duplicate, unknown, or missing adjudications before publishing a census."""
-    annotation_keys = tuple(annotation.command_key for annotation in _LEDGER_CLI_CENSUS_ANNOTATIONS)
+    annotation_keys = tuple(annotation.command_key for annotation in annotations)
     if len(set(annotation_keys)) != len(annotation_keys):
         raise ValueError("Ledger command census has duplicate ownership annotations")
     invocable_key_sequence = tuple(spec.key for spec in invocables)
@@ -301,26 +311,27 @@ def _validated_annotations(
     missing = sorted(invocable_keys - set(annotation_keys))
     if unknown or missing:
         raise ValueError(f"Ledger command census annotations mismatch invocables: unknown={unknown}; missing={missing}")
-    suboperations = tuple(
-        suboperation for annotation in _LEDGER_CLI_CENSUS_ANNOTATIONS for suboperation in annotation.suboperation_ids
-    )
+    suboperations = tuple(suboperation for annotation in annotations for suboperation in annotation.suboperation_ids)
     if len(set(suboperations)) != len(suboperations):
         raise ValueError("Ledger command census has duplicate semantic sub-operation identities")
-    return MappingProxyType({annotation.command_key: annotation for annotation in _LEDGER_CLI_CENSUS_ANNOTATIONS})
+    return MappingProxyType({annotation.command_key: annotation for annotation in annotations})
 
 
-def _build_ledger_cli_command_census() -> tuple[LedgerCliCommandCensusEntry, ...]:
+def _build_ledger_cli_command_census(
+    specs: tuple[CommandSpec, ...] = LEDGER_COMMAND_SPECS,
+    annotations: tuple[LedgerCliCensusAnnotation, ...] = _LEDGER_CLI_CENSUS_ANNOTATIONS,
+) -> tuple[LedgerCliCommandCensusEntry, ...]:
     """Project executable Ledger command facts and their explicit census annotations."""
-    by_key = MappingProxyType({spec.key: spec for spec in LEDGER_COMMAND_SPECS})
-    invocables = _ledger_invocable_specs()
-    annotations = _validated_annotations(invocables)
+    by_key = MappingProxyType({spec.key: spec for spec in specs})
+    invocables = _ledger_invocable_specs(specs)
+    annotations_by_key = _validated_annotations(invocables, annotations)
     entries: list[LedgerCliCommandCensusEntry] = []
     for spec in invocables:
         if spec.handler is None or spec.handler.state is not BindingState.TARGET or spec.handler.target is None:
             raise ValueError(f"Ledger invocable {spec.key} lacks an available deferred handler")
         if spec.result_schema.state is not SchemaState.TARGET or spec.result_schema.identity is None:
             raise ValueError(f"Ledger invocable {spec.key} lacks an available result schema")
-        annotation = annotations[spec.key]
+        annotation = annotations_by_key[spec.key]
         entries.append(
             LedgerCliCommandCensusEntry(
                 command_key=spec.key,
