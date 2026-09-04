@@ -161,6 +161,20 @@ evidence = "cadrumo.application.preflight.probe_portal_registry_health accepts d
 remedy_requires_decision = true
 
 # ---------------------------------------------------------------------------
+# staged-capability -- new domain packages landing from concurrent work
+# ---------------------------------------------------------------------------
+
+[[module]]
+name = "cadrumo.domain.contabilidad"
+class = "staged-capability"
+evidence = "Added by commit b0305f2c3a, feat(domain): add the contabilidad cuenta and direccion with their tests. Company accounting facts a Modelo 200 filing is built from; its only non-test consumer so far is the error registry at core/errors/registry/_application_part2.py, which registers its error codes. Capability under construction, not an orphan."
+
+[[module]]
+name = "cadrumo.domain.is_compensation"
+class = "staged-capability"
+evidence = "Landed alongside the contabilidad package from the same concurrent work. Impuesto sobre Sociedades compensacion, the stock of losses a company carries forward; its only non-test consumer is the error registry at core/errors/registry/_application_part2.py."
+
+# ---------------------------------------------------------------------------
 # Orphaned test modules
 #
 # A test is reported orphaned when every shipped subject it exercises is itself
@@ -480,3 +494,15 @@ retires_with_test = 341
 transitively_dead = 9
 live_seams = 0
 rule = "a production module reaches a symbol only when it from-imports the name, the import source is the defining module, and the name appears in its body"
+
+[[test_module]]
+name = "cadrumo.domain.contabilidad.tests.test_direccion"
+follows = "module"
+anchor = "cadrumo.domain.contabilidad"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.domain.is_compensation.tests.test_bin_carry_forward"
+follows = "module"
+anchor = "cadrumo.domain.is_compensation"
+subjects = 1
