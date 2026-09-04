@@ -18,7 +18,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
-from typing import Literal, Protocol, Self
+from typing import Final, Literal, Protocol, Self
 from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, model_validator
@@ -41,7 +41,11 @@ from ..domain.transactions.models import TransactionCatalogue
 from ..domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..domain.user_profile.values import UserProfileRecord
 from .aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
-from .ledger.workspace import LedgerWorkspaceProjectionV1
+from .ledger.workspace import (
+    LedgerWorkspaceArea,
+    LedgerWorkspaceProjectionV1,
+    LedgerWorkspaceStatus,
+)
 from .modelo.declarations_calendar import (
     DeclarationsCalendarProjectionV1,
     DeclarationsCalendarSource,
@@ -69,6 +73,7 @@ from .overview.evidence import (
 from .overview.home import (
     HomeAccountSession,
     HomeAvailability,
+    HomeLedgerReadiness,
     HomeProjectionInput,
     HomeProjectionV1,
     HomeZoneState,
@@ -418,6 +423,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                     account_session=account_session,
                     agenda=agenda,
                     agenda_evidence_state=evidence.aeat_state,
+                    ledger=ledger,
                 ),
                 observed_at=observed_at,
             ),
@@ -622,6 +628,7 @@ def _secure_profile_home_input(
     account_session: HomeAccountSession,
     agenda: OverviewAgenda | None,
     agenda_evidence_state: HomeZoneState,
+    ledger: LedgerWorkspaceProjectionV1 | None,
 ) -> HomeProjectionInput:
     """Assemble Home from the authorities this session actually read.
 
@@ -634,17 +641,25 @@ def _secure_profile_home_input(
     def unavailable(reason_code: str) -> HomeZoneState:
         return HomeZoneState(availability=HomeAvailability.UNAVAILABLE, reason_code=reason_code)
 
+    readiness = _home_ledger_readiness(ledger)
+    ledger_state = (
+        HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=observed_at)
+        if readiness is not None
+        else unavailable("workbench.ledger.snapshot_projector_unavailable")
+    )
+
     return HomeProjectionInput(
         generated_at=observed_at,
         account=account_session,
         actions_state=unavailable("workbench.home.actions_projector_unavailable"),
         declarations_state=unavailable("workbench.home.declarations_resume_projector_unavailable"),
-        ledger_state=unavailable("workbench.ledger.snapshot_projector_unavailable"),
+        ledger_state=ledger_state,
         agenda_state=(
             HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=observed_at)
             if agenda is not None
             else unavailable("workbench.home.agenda_projector_unavailable")
         ),
+        ledger_readiness=readiness,
         overview_agenda=agenda,
         # The AEAT side of the agenda is whatever the evidence read concluded,
         # not a separate refusal: before any pull it is NEVER CAPTURED, and
@@ -652,6 +667,36 @@ def _secure_profile_home_input(
         agenda_evidence_state=agenda_evidence_state,
         messages_state=unavailable("workbench.home.messages_reader_unavailable"),
     )
+
+
+_HOME_LEDGER_AREAS: Final = (
+    (LedgerWorkspaceArea.ENTRIES, "entries"),
+    (LedgerWorkspaceArea.REVIEW, "requiring_review"),
+    (LedgerWorkspaceArea.CLASSIFICATION, "unclassified"),
+    (LedgerWorkspaceArea.EVIDENCE, "missing_evidence"),
+)
+
+
+def _home_ledger_readiness(ledger: LedgerWorkspaceProjectionV1 | None) -> HomeLedgerReadiness | None:
+    """Home's four Ledger counts, or nothing when any of them was not measured.
+
+    `item_count` is always an integer, so a zero alone cannot be trusted: an
+    area whose status is UNMEASURED reports zero for "nobody looked", the same
+    value a genuinely empty area reports for "I looked and there was nothing".
+    Home renders these as bare numbers with no room to qualify them, so an
+    unmeasured area makes the whole readiness block refuse and name itself
+    rather than publish a zero the operator would read as a finding.
+    """
+    if ledger is None:
+        return None
+    by_area = {state.area: state for state in ledger.areas}
+    counts: dict[str, int] = {}
+    for area, field in _HOME_LEDGER_AREAS:
+        state = by_area.get(area)
+        if state is None or state.status is LedgerWorkspaceStatus.UNMEASURED:
+            return None
+        counts[field] = state.item_count
+    return HomeLedgerReadiness(**counts)
 
 
 def _generation_admission(
