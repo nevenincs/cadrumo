@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-registry-dated-validity-regulatory-constant-placement-sweep-audit]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:926cc8300e8a86a9906982dd110614cbeabc19144c8dc5c35e208160e335d1c3'
+body_hash: 'sha256:88c357acce95e324d2d5739d20faa69fe13a064a677eb4ab880a8cc940f40e3d'
 ---
 
 <!-- RETIRED: S01 -->
@@ -31,7 +31,7 @@ Adjudication rejected adding a superseded-reach field to the legal reference: a 
 
 The prorrata pair differs by comparison operator as well as value, so without an operator field it cannot be two dated values and the Python year branch survives. Add the operator defaulting to current exclusive semantics, and refuse mixed-axis parameters at load because resolution needs every value's axis in the caller's date context and the overlap validator cannot see a cross-axis double match.
 
-- [ ] `P02.S04` - Add an explicit comparison-operator field to the dated value, defaulting to the current exclusive semantics so no existing value changes meaning, and prove the default leaves all 359 shipped values resolving identically; `src/cadrumo/domain/calculations/registry/schema_formula.py, src/cadrumo/domain/calculations/registry/tests/`.
+- [x] `P02.S04` - Add an explicit comparison-operator field to the dated value, defaulting to the current exclusive semantics so no existing value changes meaning, and prove the default leaves all 359 shipped values resolving identically; `src/cadrumo/domain/calculations/registry/schema_formula.py, src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `P02.S05` - Refuse a mixed-axis parameter at load time, because resolution requires every value's axis in the caller's date context and the overlap validator groups by axis so a cross-axis double match would otherwise surface only at runtime; `src/cadrumo/domain/calculations/registry/_validate_parameter_temporal.py, src/cadrumo/domain/calculations/registry/tests/`.
 
 ### Phase `P03` - consumer prerequisites and authoring

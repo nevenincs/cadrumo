@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:01d5b5ef6dbd46f4a2cd02b004cc18f468ba198959d5333414d8be79c75e4c47'
+body_hash: 'sha256:f5b6ef8a1ea70c6cfed6195186053de93ab9d7bcdf383a68e4707fb624cf34de'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -460,6 +460,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S578` - Require the completion marker every packaging-smoke child prints, since five lanes ended their child programs with a print naming what they proved and nothing asserted any of them, so a child exiting zero having skipped its tail was indistinguishable from one that ran every assertion in it; `dev/packaging/_smoke_common.py,dev/packaging/all_extra_smoke.py,dev/packaging/smoke_absent_llm.py,dev/packaging/smoke_browser.py,dev/packaging/smoke_dev.py,dev/packaging/tests/test_smoke_dev.py`.
 - [x] `W02.P02.S579` - Stop the vacuity screen counting a module it could not parse as one it screened clean, since scanned is the denominator of the vacuity proportion and an unreadable file was inflating it exactly as the header warns an untracked tree would, and report those modules as their own category rather than folding them into the findings; `dev/audit/vacuity_screen.py,dev/audit/tests/test_vacuity_screen.py`.
 - [x] `W02.P02.S580` - Make the write-site census refuse a module it cannot parse instead of skipping it, since a swallowed SyntaxError shrank the corpus by exactly the file nobody could analyse in the census that finds code writing to the tree, where a missing module is a missing writer; `dev/audit/write_site_census.py,dev/tests/test_write_site_census.py`.
+- [x] `W02.P02.S581` - Record and report the files the unreachable-code reference walk could not read, since a skipped file contributes no references and every symbol only it uses is then reported as dead, so a deletion list was being derived from a silently incomplete corpus; `dev/audit/unreachable_code.py,dev/audit/tests/test_unreachable_code.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
