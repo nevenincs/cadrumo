@@ -5,16 +5,11 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:4d70351e2c37355145de4edd22d156cc413016886addb2db3713d64d081b4b96'
+body_hash: 'sha256:c05150fa2461548e7103a3ca8f1ad5cc23613fe08f32eae11920ece2772d0e98'
 step_id: 'S18'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Adjudicate the 76 names defined with DIFFERENT values across modules, where merging would be wrong and one side needs renaming
 

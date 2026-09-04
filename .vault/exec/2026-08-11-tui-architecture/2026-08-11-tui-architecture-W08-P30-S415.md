@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:f6a474d55fc072a179744eee52fe519546b35f20e3d8af5dc70cc2214b02c38a'
+body_hash: 'sha256:18946b1ac6af237b879b54d678277bc85723a0b74bb11764613b9d0d66057193'
 step_id: 'S415'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -25,6 +25,7 @@ related:
 - `M` `src/cadrumo/entrypoints/tui/ledger/overview.py`
 - `M` `src/cadrumo/entrypoints/tui/ledger/reconciliation.py`
 - `M` `src/cadrumo/entrypoints/tui/declarations/overview.py`
+- `M` `src/cadrumo/entrypoints/tui/components/widgets.py`
 - `M` `src/cadrumo/entrypoints/tui/tests/test_workbench_responsive.py`
 - `M` `src/cadrumo/locales/ca/common.yml`
 - `M` `src/cadrumo/locales/en/common.yml`
@@ -71,5 +72,27 @@ search measured the rhythm of a data row. Headings are now located by their own
 widget region. Teeth proven by flattening the gaps to symmetric: all 20
 parametrisations fail, all 20 pass restored.
 
-Remaining, and NOT blocking this step: Profile and Modelo compose no heading
-widgets at all; row density is untouched.
+Profile and Modelo were examined and deliberately keep their own grouping
+mechanisms rather than gaining headings: Profile groups with `cadrumo-panel`
+border titles, Modelo with those and with `DisclosureGroup` titles. Both
+already name and separate their sections, so a heading there would name the
+same group twice.
+
+What DID need fixing at that level is the distance. Three mechanisms mark a
+logical group in this product and only two shared a measure: panels carry
+`$cadrumo-section` and headings now do, while `DisclosureGroup` had no CSS at
+all and inherited Textual's default, so two titled groups sat flush against
+each other. Measured with two mounted groups: gap 0 before, 2 after. The
+grouping affordances may legitimately differ -- a panel is static, a disclosure
+collapses -- but the distance that says "new group" has to be one distance.
+
+Profile's source cards did need the heading rhythm and now take it: their
+titles ran straight into the previous card's action button. Measured on two
+mounted cards: both titles now `Spacing(top=2, bottom=1)`, second title clear
+of the first card's button.
+
+NOT gated, stated plainly: the `DisclosureGroup` gap and the source-card rhythm
+were each verified by mounting the widgets and reading their regions, not by a
+committed test. The swept rhythm gate covers `.cadrumo-heading` on five
+screens; no fixture in it composes a disclosure group, so that spacing can
+regress unseen. Row density remains untouched.

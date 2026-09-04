@@ -6,8 +6,9 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:1a5bc3304624fa36f9761a794cefd66acc018f1fba7f1ad6bb748bc2dacf2f6f'
+body_hash: 'sha256:6855b63c49e8290f9e283e4f1260f2913d7a2e1d9a8c4189d8429c546555275e'
 related:
+  - '[[2026-09-04-clitui-ledger-adr]]'
   - '[[2026-09-04-clitui-ledger-reference]]'
   - '[[2026-09-04-clitui-ledger-research]]'
 ---
@@ -17,6 +18,10 @@ related:
 Auto-generated index of all documents tagged with `#clitui-ledger`.
 
 ## Documents
+
+### adr
+
+- `2026-09-04-clitui-ledger-adr` - `clitui-ledger` adr: `backend authority and interface parity gates` | (**status:** `proposed`)
 
 ### reference
 
