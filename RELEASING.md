@@ -162,18 +162,22 @@ gh pr list --repo nevenincs/cadrumo --label "autorelease: pending" --json headRe
 gh workflow run packaging-smoke.yml --repo nevenincs/cadrumo --ref <RELEASE_BRANCH>
 ```
 
-The branch is not a preference. A cohort is sealed only at a version no package index,
-tag or release namespace already owns, and the readiness gate additionally requires the
-cohort's source commit to equal the checked-out commit and its tag to equal `v<VERSION>`.
-Both conditions hold on the release branch, where the bump has landed and nothing has
-been published yet. On `main` between releases the declared version is the one that was
-last published, so the seal is refused and every downstream lane skips. The refusal reads
-like a release collision and is easy to mistake for a publishing fault:
+The branch is not a preference. The readiness gate binds every distribution-evidence row
+to the cohort that produced it, and refuses unless that cohort's source commit equals the
+checked-out commit and its tag equals `v<VERSION>`. Both hold on the release branch, where
+the bump has landed and nothing has been published yet. A campaign dispatched against
+`main` mints evidence bound to a `main` commit, which is not the commit the release is cut
+from, so the gate reports the evidence set incomplete when it is run before the merge:
 
 ```text
-REFUSED: version <VERSION> is not available to publish:
-  - package index already carries cadrumo <VERSION>
+[BLOCK] distribution-evidence-complete: cohort commit <COMMIT> does not match checked-out commit <COMMIT>
 ```
+
+The cohort seal itself does not refuse a version some destination already owns. Building a
+cohort uploads nothing, and between releases the commit legitimately declares the version
+that is already published, so the seal refuses only a version recorded in the burned
+ledger. The collision rules are asked once, by `publish.yml`, immediately before the
+upload.
 
 The matrix needs all three self-hosted runner shapes online — Linux x64, Windows x64 and
 macOS ARM64. Confirm before dispatching, or the jobs queue until they are cancelled:

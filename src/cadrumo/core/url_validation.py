@@ -7,11 +7,12 @@ identical wherever it is built, so each copy was a duplicate definition.
 
 The four names mattered more than the six copies. ``_URL_ADAPTER`` is also the
 name :mod:`cadrumo.domain.portals._entries.common` gives to a
-``TypeAdapter(HttpUrl)``, which is a DIFFERENT type: ``HttpUrl`` constrains the
-scheme to http or https, while ``AnyHttpUrl`` does not. One name meaning two
-validators is how a caller ends up applying the weaker check believing it
-applied the stronger one, so this module is named for the type it validates and
-the portals adapter is deliberately left where it is.
+``TypeAdapter(HttpUrl)``, which is a DIFFERENT validator. Both reject a
+non-http scheme, but ``HttpUrl`` additionally enforces a maximum URL length
+that ``AnyHttpUrl`` does not, so a long URL passes one and fails the other. One
+name meaning two validators is how a caller ends up applying the weaker check
+believing it applied the stronger one, so this module is named for the type it
+validates and the portals adapter is deliberately left where it is.
 """
 
 from __future__ import annotations

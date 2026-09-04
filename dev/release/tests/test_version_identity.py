@@ -35,6 +35,7 @@ from ..version_identity import (
     assert_gate_permits,
     forge_arguments,
     gate_conflicts,
+    index_convergence_notice,
     main,
     manifest_floor,
     refs_owning,
@@ -62,12 +63,62 @@ def test_a_clean_version_conflicts_with_nothing() -> None:
     assert version_conflicts(_CLEAN, floor="0.0.0") == ()
 
 
-def test_every_pypi_project_is_covered() -> None:
-    """A conflict on any one of the three refuses the whole cohort."""
+def test_a_complete_index_set_refuses_and_names_every_project() -> None:
+    """Every project carrying the version leaves nothing but an overwrite."""
+    (refusal,) = version_conflicts(_CLEAN, owning_projects=list(PYPI_PROJECTS), floor="0.0.0")
     for project in PYPI_PROJECTS:
-        (refusal,) = version_conflicts(_CLEAN, owning_projects=[project], floor="0.0.0")
         assert project in refusal
-        assert "cannot be undone" in refusal
+    assert "cannot be undone" in refusal
+
+
+@pytest.mark.parametrize("carried", [1, 2])
+def test_a_partial_index_set_is_permitted_so_the_same_tag_can_converge(carried: int) -> None:
+    """The recovery path for a six-file upload that is not atomic.
+
+    Part of a cohort reaching the index and the rest being refused is a state
+    this project has actually been in: two distributions uploaded, the third
+    refused on a publisher-binding problem that was never a version problem.
+    The remedy is fixing the registration and re-running the same tag, and a
+    partial set read as a collision refuses that remedy and spends the version.
+    """
+    owning = list(PYPI_PROJECTS[:carried])
+    assert version_conflicts(_CLEAN, owning_projects=owning, floor="0.0.0") == ()
+
+
+@pytest.mark.parametrize("carried", [1, 2])
+def test_a_permitted_partial_says_what_the_index_already_carries(carried: int) -> None:
+    """A silent permit would report a clean index while some projects hold it.
+
+    The permit is only safe because it is audible: the operator reading the
+    pass sees which projects hold the version, which are still missing, and
+    that the run completes rather than replaces.
+    """
+    owning = list(PYPI_PROJECTS[:carried])
+    notice = index_convergence_notice(_CLEAN, owning_projects=owning)
+    assert notice is not None
+    for project in owning:
+        assert project in notice
+    for missing in PYPI_PROJECTS[carried:]:
+        assert missing in notice
+    assert "completes that partial upload" in notice
+
+
+def test_the_notice_is_silent_when_there_is_nothing_to_converge() -> None:
+    """Nothing carried is an ordinary release; everything carried is refused."""
+    assert index_convergence_notice(_CLEAN) is None
+    assert index_convergence_notice(_CLEAN, owning_projects=list(PYPI_PROJECTS)) is None
+
+
+def test_the_cohort_the_index_is_asked_about_is_passed_in_not_assumed() -> None:
+    """Completeness is a question about a cohort, so the cohort is an input.
+
+    The same observation is a partial set against three projects and a complete
+    one against the single project that carries it, and the decision core is
+    told which it is being asked rather than deciding at the call site.
+    """
+    owning = ["cadrumo"]
+    assert version_conflicts(_CLEAN, owning_projects=owning, target_projects=PYPI_PROJECTS) == ()
+    assert version_conflicts(_CLEAN, owning_projects=owning, target_projects=["cadrumo"])
 
 
 def test_the_tag_namespace_is_a_destination() -> None:
@@ -103,6 +154,18 @@ def test_a_burned_version_is_refused_with_its_recorded_reason() -> None:
     burned = [line for line in refusals if "burned" in line]
     assert burned, f"{_BURNED} was publicly downloadable and must be refused"
     assert "deleted" in burned[0], "the refusal must quote the ledger's recorded reason"
+
+
+@pytest.mark.parametrize("spelling", ["0.2.1", "0.02.1", "v0.2.1", " 0.2.1 "])
+def test_a_burned_version_is_refused_in_every_spelling_of_it(spelling: str) -> None:
+    """The ledger records one spelling; an index treats them as one release.
+
+    A raw string comparison lets `0.02.1` walk past the entry for `0.2.1` and
+    publish under a number the world already holds different bytes for, so the
+    ledger is asked about the canonical form of the candidate.
+    """
+    refusals = version_conflicts(spelling, floor="0.0.0")
+    assert any("burned" in line for line in refusals), f"{spelling} names a burned release"
 
 
 def test_the_floor_refuses_below_itself_and_permits_equality() -> None:
@@ -141,9 +204,9 @@ def test_every_conflict_is_reported_not_just_the_first() -> None:
         existing_releases=[f"v{_BURNED}"],
         floor="0.3.0",
     )
-    # one per index (3) + tags + releases + burned + floor
-    assert len(refusals) == 7
-    assert sum("cannot be undone" in line for line in refusals) == 3
+    # index + tags + releases + burned + floor
+    assert len(refusals) == 5
+    assert sum("cannot be undone" in line for line in refusals) == 1
     # Every conflict class is represented, so none can be dropped unnoticed.
     for fragment in ("package index", "tag namespace", "release namespace", "burned", "floor"):
         assert any(fragment in line for line in refusals), f"no refusal covers {fragment}"
@@ -193,11 +256,11 @@ def test_assert_names_every_owner_in_one_message() -> None:
         assert_gate_permits(
             PUBLISH,
             _BURNED,
-            owning_projects=["cadrumo"],
+            owning_projects=list(PYPI_PROJECTS),
             existing_tags=[f"v{_BURNED}"],
         )
     message = str(excinfo.value)
-    assert "cadrumo" in message
+    assert "package index" in message
     assert "tag namespace" in message
     assert "burned" in message
     assert "publish" in message
@@ -208,8 +271,9 @@ def test_assert_passes_a_genuinely_available_version() -> None:
     assert_gate_permits(PUBLISH, _CLEAN)
 
 
-_OURS: str = "aaaaaaaaaaaaaaaa"
-_THEIRS: str = "bbbbbbbbbbbbbbbb"
+#: Object names, because that is the only identity the exemption accepts.
+_OURS: str = "a" * 40
+_THEIRS: str = "b" * 40
 
 
 def test_our_own_ref_is_exempted_so_the_run_it_belongs_to_can_proceed() -> None:
@@ -240,6 +304,43 @@ def test_the_exemption_is_per_row_not_per_version() -> None:
 def test_unrelated_versions_are_ignored_entirely() -> None:
     """A different version's ref is not this version's collision."""
     assert refs_owning([f"v0.4.0 {_THEIRS}"], _CLEAN, own_source_commit=_OURS) == ()
+
+
+def test_a_branch_name_can_never_reach_the_comparison() -> None:
+    """A release cut in the web interface targets a BRANCH, not a commit.
+
+    The exemption compares that field, so `main` arriving there would exempt
+    every release targeting `main` -- an unbounded exemption with the shape of
+    an identity check. It is refused as an argument instead of quietly matching
+    a row.
+    """
+    entries = [f"v{_CLEAN} main"]
+    with pytest.raises(VersionIdentityError, match="40-character object name"):
+        refs_owning(entries, _CLEAN, own_source_commit="main")
+    with pytest.raises(VersionIdentityError, match="40-character object name"):
+        forge_arguments("owner/name", "main")
+    # And the row itself is an owner, since no commit can equal a branch name.
+    assert refs_owning(entries, _CLEAN, own_source_commit=_OURS) == (f"v{_CLEAN}",)
+
+
+@pytest.mark.parametrize("malformed", ["", "  ", "abc123", "z" * 40, f"{_OURS}extra", "HEAD"])
+def test_an_own_commit_that_is_not_an_object_name_is_refused(malformed: str) -> None:
+    """Anything short of an object name would exempt more than one run's refs."""
+    with pytest.raises(VersionIdentityError, match="40-character object name"):
+        refs_owning([f"v{_CLEAN} {_OURS}"], _CLEAN, own_source_commit=malformed)
+
+
+def test_the_same_commit_in_a_different_spelling_is_still_ours() -> None:
+    """Object-name identity, not string identity.
+
+    The forge answers in lower case and a caller may pass what a person copied,
+    so both sides are normalised before comparison -- otherwise this run's own
+    tag reads as a stranger's and the release is refused for colliding with
+    itself.
+    """
+    entries = [f"v{_CLEAN} {_OURS.upper()}  "]
+    assert refs_owning(entries, _CLEAN, own_source_commit=f"  {_OURS.upper()}  ") == ()
+    assert forge_arguments("owner/name", f" {_OURS.upper()} ") == ("owner/name", _OURS)
 
 
 def test_one_identity_rule_serves_both_forge_namespaces() -> None:
@@ -301,17 +402,29 @@ def test_publishing_that_same_version_is_still_refused_by_every_destination() ->
         existing_tags=[f"v{_SHIPPED}"],
         existing_releases=[f"v{_SHIPPED}"],
     )
-    # one per index (3) + tags + releases
-    assert len(refusals) == 5
+    # index + tags + releases
+    assert len(refusals) == 3
     for fragment in ("package index", "tag namespace", "release namespace"):
         assert any(fragment in line for line in refusals), f"no refusal covers {fragment}"
 
 
-def test_publishing_is_refused_by_the_index_alone() -> None:
+def test_publishing_is_refused_by_a_complete_index_alone() -> None:
     """The index is the collision with no remedy, and it refuses on its own."""
-    refusals = gate_conflicts(PUBLISH, _SHIPPED, owning_projects=["cadrumo"])
+    refusals = gate_conflicts(PUBLISH, _SHIPPED, owning_projects=list(PYPI_PROJECTS))
     assert len(refusals) == 1
     assert "cannot be undone" in refusals[0]
+
+
+def test_publication_permits_the_partial_the_seal_never_sees() -> None:
+    """The convergence permit has to survive the gate filter, not just the core.
+
+    A rule the core permits and the gate drops is indistinguishable from one
+    that was never relaxed, which is the whole reason both are asserted from
+    one observation.
+    """
+    partial = list(PYPI_PROJECTS[:2])
+    assert gate_conflicts(PUBLISH, _SHIPPED, owning_projects=partial) == ()
+    assert gate_conflicts(SEAL, _SHIPPED, owning_projects=partial) == ()
 
 
 @pytest.mark.parametrize("gate", list(GATES.values()), ids=list(GATES))
@@ -332,16 +445,18 @@ def test_a_clean_version_passes_every_gate(gate: Gate) -> None:
 
 
 @pytest.mark.parametrize("gate", list(GATES.values()), ids=list(GATES))
-def test_no_gate_enforces_the_manifest_floor(gate: Gate) -> None:
+def test_the_declared_version_passes_every_gate_at_its_own_floor(gate: Gate) -> None:
     """The floor equals the declared version at every commit a gate can observe.
 
     Release-please writes the manifest to the released version as part of the
     release change, so on the branch between releases, on the release pull
     request and at the tagged commit the upload runs from, the recorded floor
-    and the declared version are the same number. Enforcing "above the floor"
-    there refuses every build and every release.
+    and the declared version are the same number. Both gates must pass there,
+    and the floor is handed to them explicitly: a case that omits it asserts
+    nothing about the floor and would pass with the rule deleted.
     """
-    assert gate_conflicts(gate, manifest_floor()) == ()
+    shipped = manifest_floor()
+    assert gate_conflicts(gate, shipped, floor=shipped) == ()
 
 
 def test_the_gate_names_are_the_scope_vocabulary() -> None:
@@ -352,8 +467,8 @@ def test_the_gate_names_are_the_scope_vocabulary() -> None:
 
 def test_the_seal_asks_no_destination_and_publication_asks_every_one() -> None:
     """The table is the single expression of what separates the two gates."""
-    assert (SEAL.checks_index, SEAL.checks_forge) == (False, False)
-    assert (PUBLISH.checks_index, PUBLISH.checks_forge) == (True, True)
+    assert (SEAL.checks_index, SEAL.checks_forge, SEAL.checks_floor) == (False, False, False)
+    assert (PUBLISH.checks_index, PUBLISH.checks_forge, PUBLISH.checks_floor) == (True, True, True)
 
 
 def test_each_gate_reports_what_it_checked() -> None:
