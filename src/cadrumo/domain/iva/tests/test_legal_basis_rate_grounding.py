@@ -282,16 +282,13 @@ def test_liva_art_103_margin_is_registry_data_not_a_python_constant() -> None:
 
 def test_liva_art_103_pre_2015_ejercicio_is_refused_rather_than_guessed() -> None:
     """TEETH: the repealed redaction has no citable authority, so it is refused."""
-    import pytest
-
-    from ....application.registry.tree import _bundled_path
-    from ...calculations.registry.authority import ValidatedRegistryAuthority
+    from ...calculations.registry.authority import bundled_authority
     from ..prorrata_especial_parameters import (
         ProrrataEspecialMandatoryParameterError,
         resolve_prorrata_especial_mandatory_parameters,
     )
 
-    authority = ValidatedRegistryAuthority.load(_bundled_path() / "registry" / "aeat", source_root=_bundled_path())
+    authority = bundled_authority()
     revision = authority.modelo("303").revisions["2025"]
     with pytest.raises(ProrrataEspecialMandatoryParameterError) as excinfo:
         resolve_prorrata_especial_mandatory_parameters(revision, modelo_id="303", ejercicio=2014)

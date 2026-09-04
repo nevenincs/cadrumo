@@ -531,6 +531,17 @@ def especial_mandatory_rule(
         ProrrataInputError: when the year is outside the supported range.
     """
     _validate_year(year)
+    # The year and the bundle are two independent legal inputs, and nothing
+    # upstream forces them to agree. Without this check
+    # `especial_mandatory_rule(2013, parameters=<resolved for 2025>)` would
+    # return the post-2015 redaction labelled 2013 -- the resolver's own refusal
+    # of a pre-2015 ejercicio is keyed on a DIFFERENT argument at a different
+    # call site, so it cannot defend this one.
+    if parameters.resolved_on.year != year:
+        raise ProrrataInputError(
+            f"art. 103.Dos.2 margin was resolved for {parameters.resolved_on.year} but is being "
+            f"applied to filing year {year}; resolve the margin for the ejercicio being settled",
+        )
     margin = parameters.margin_percentage
     return EspecialMandatoryRule(
         year=year,

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from datetime import date as _date
 from decimal import Decimal
 
 import pydantic
@@ -53,6 +54,17 @@ _PARAMS = BienesInversionRegularizacionParameters(
         resolved_on=date(2025, 6, 1),
     ),
 )
+
+
+def _params_for(year: int) -> BienesInversionRegularizacionParameters:
+    """The bundle, resolved for ``year``.
+
+    The projection now refuses a bundle resolved for a different filing year, so
+    a fixture cannot carry one fixed year and be applied to another.
+    """
+    return _PARAMS.model_copy(
+        update={"provenance": _PARAMS.provenance.model_copy(update={"resolved_on": _date(year, 12, 31)})}
+    )
 
 
 def _record(identifier: str = "bi-2022-furgoneta", **overrides: object) -> BienInversionIvaRecord:
@@ -181,7 +193,7 @@ def test_registro_projection_folds_computed_importes_and_reports_pending() -> No
         register,
         regularizacion_year=2024,
         prorrata_definitiva_by_identifier={"bi-computed": Decimal("60")},
-        parameters=_PARAMS,
+        parameters=_params_for(2024),
     )
     assert projection.computed_count == 1
     assert projection.pending_percentage_count == 1
@@ -277,7 +289,7 @@ def test_registro_transmisiones_folds_disposed_goods_into_casilla_43() -> None:
         disposal=BienInversionDisposal(year=2024, regime=BienInversionDisposalRegime.EXENTA_O_NO_SUJETA),
     )
     register = BienesInversionIvaRegister(records=(regla_primera, regla_segunda))
-    projection = compute_registro_transmisiones(register, disposal_year=2024, parameters=_PARAMS)
+    projection = compute_registro_transmisiones(register, disposal_year=2024, parameters=_params_for(2024))
     assert projection.computed_count == 2
     assert projection.proposed_casilla_43 == Decimal("11932.50")
     assert projection.sector_contributions == (
@@ -315,7 +327,7 @@ def test_registro_transmisiones_applies_the_supplied_cap_per_identifier() -> Non
         register,
         disposal_year=2024,
         cuota_devengada_entrega_by_identifier={"bi-capped": Decimal("1500.00")},
-        parameters=_PARAMS,
+        parameters=_params_for(2024),
     )
     assert projection.proposed_casilla_43 == Decimal("-1500.00")
     row = projection.rows[0]
@@ -331,7 +343,7 @@ def test_registro_transmisiones_excludes_a_disposal_with_no_window_time_remainin
         disposal=BienInversionDisposal(year=2027, regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA),
     )
     register = BienesInversionIvaRegister(records=(out_of_window_disposal,))
-    projection = compute_registro_transmisiones(register, disposal_year=2027, parameters=_PARAMS)
+    projection = compute_registro_transmisiones(register, disposal_year=2027, parameters=_params_for(2027))
     assert projection.computed_count == 0
     assert projection.rows == ()
     assert projection.proposed_casilla_43 == Decimal("0.00")

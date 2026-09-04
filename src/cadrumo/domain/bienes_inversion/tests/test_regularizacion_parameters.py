@@ -188,5 +188,13 @@ def test_the_de_minimis_gate_follows_the_declared_comparison(
     umbral = bundle.umbral_puntos
     assert not bundle.regularizacion_applies(umbral - Decimal("1"))
     assert bundle.regularizacion_applies(umbral + Decimal("1"))
-    at_threshold = bundle.regularizacion_applies(umbral)
-    assert at_threshold is (bundle.umbral_comparison is ThresholdComparison.INCLUSIVE)
+
+    # Comparing the boundary against the bundle's own declared direction would be
+    # tautological: an implementation that ignored the direction and always used
+    # ``>`` agrees with the shipped EXCLUSIVE data on every input. The direction
+    # is only proved load-bearing by building BOTH and requiring them to disagree
+    # at exactly the threshold.
+    exclusive = bundle.model_copy(update={"umbral_comparison": ThresholdComparison.EXCLUSIVE})
+    inclusive = bundle.model_copy(update={"umbral_comparison": ThresholdComparison.INCLUSIVE})
+    assert exclusive.regularizacion_applies(umbral) is False
+    assert inclusive.regularizacion_applies(umbral) is True

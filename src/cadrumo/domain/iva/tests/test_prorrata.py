@@ -284,14 +284,18 @@ def test_classify_input_deduction_cases() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _params(comparison: str) -> ProrrataEspecialMandatoryParameters:
-    """A resolved bundle carrying a ten-point margin with the named comparison."""
+def _params(comparison: str, year: int = 2025) -> ProrrataEspecialMandatoryParameters:
+    """A bundle carrying a ten-point margin with the named comparison, for ``year``.
+
+    The rule now refuses a bundle resolved for a different filing year, so the
+    year is a parameter rather than a fixed 2025.
+    """
     return ProrrataEspecialMandatoryParameters(
         margin_percentage=Decimal("10"),
         comparison=ThresholdComparison(comparison),
         modelo_id="303",
         revision_id="2025",
-        resolved_on=_esp_date(2025, 12, 31),
+        resolved_on=_esp_date(year, 12, 31),
     )
 
 
@@ -318,8 +322,8 @@ def test_especial_mandatory_ten_percent_margin_is_inclusive_from_2015() -> None:
     (109.99, a 9.99 percent excess) must stay outside it, so the assertion
     cannot be satisfied by a predicate that simply answers ``True``.
     """
-    assert is_especial_mandatory(Decimal("110.00"), Decimal("100.00"), year=2026, parameters=_ESPECIAL_PARAMS) is True
-    assert is_especial_mandatory(Decimal("109.99"), Decimal("100.00"), year=2026, parameters=_ESPECIAL_PARAMS) is False
+    assert is_especial_mandatory(Decimal("110.00"), Decimal("100.00"), year=2026, parameters=_params("inclusive", 2026)) is True
+    assert is_especial_mandatory(Decimal("109.99"), Decimal("100.00"), year=2026, parameters=_params("inclusive", 2026)) is False
 
 
 def test_an_exclusive_margin_must_be_passed_not_merely_reached() -> None:

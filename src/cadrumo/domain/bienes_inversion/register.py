@@ -720,6 +720,17 @@ def compute_registro_regularizacion(
     Returns:
         A :class:`RegistroRegularizacionResult`.
     """
+    if parameters.provenance.resolved_on.year != regularizacion_year:
+        # Same class of gap as the art-103 margin: the year and the bundle are
+        # independent arguments. A bundle resolved for another filing year would
+        # regularise this one on figures selected for a different context, and
+        # the provenance carried into the result would then name a year the
+        # projection did not cover -- defeating the oracle that reads it.
+        raise BienInversionValidationError(
+            f"capital-goods parameters were resolved for "
+            f"{parameters.provenance.resolved_on.year} but are being applied to regularisation "
+            f"year {regularizacion_year}",
+        )
     rows: list[RegistroRegularizacionRow] = []
     contributions: list[BienesInversionSectorContribution] = []
     proposed = Decimal("0.00")
