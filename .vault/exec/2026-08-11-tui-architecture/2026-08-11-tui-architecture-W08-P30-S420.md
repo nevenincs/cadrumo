@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:1383a6eb937095f982216faf0afa9db94d987d9e0cabd32b381c3f4bd9dec5c6'
+body_hash: 'sha256:053481328f942586f6ba746cd0abbd4d6df6ccfc2bd332cba8a48b6d038450d8'
 step_id: 'S420'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -20,7 +20,8 @@ related:
 ## Changes
 
 - `M` `src/cadrumo/entrypoints/tui/tests/test_installed_entrypoint.py`
-- `verify:` `pytest -n0 -m '' src/cadrumo/entrypoints/tui/tests/test_installed_entrypoint.py` -> `pass` (5)
+- `M` `src/cadrumo/entrypoints/tui/tests/test_no_generated_secret_display.py`
+- `verify:` `pytest -n0 -m '' tui/tests/test_installed_entrypoint.py test_no_generated_secret_display.py test_home.py` -> `pass` (5 + 12)
 
 ## Notes
 
@@ -36,14 +37,26 @@ proving nothing.
 Teeth, and evidence the change was not busywork: one CLI import added to
 `destination_session.py` pulled in 90+ `cadrumo.entrypoints.cli` modules. The
 NEW gate names them and fails. The OLD probe, against the same defect, reports
-zero. Restored by copy; 5 passed.
+zero. Restored by copy.
 
 One correction to the finding as filed: the assertion is not order-dependent.
 It runs in a fresh subprocess and always could fail for its stated reason -- it
 was simply blind to two of the three modules that reason covers.
 
-The generation half of this step (proving the return cycle, not only generation
-1) is already carried by the readmit and withdraw gates added with S416:
-`test_a_generation_that_gains_a_source_readmits_its_destination` and
-`test_a_generation_that_loses_a_source_stops_offering_its_destination`, in
-`test_installed_generation_composition.py`, 10 passed.
+The generation half of this step is carried by the readmit and withdraw gates
+added with S416, in `test_installed_generation_composition.py`, 10 passed.
+
+Separately, the recovery-minting prohibition was red and its anchor was the
+reason. `_MINTING_CALLABLES` named `generate_recovery_key` on the storage
+PACKAGE; the import-centralisation work removed that re-export, so the anchor
+could no longer resolve it. That is the anchor working exactly as designed --
+it exists so a rename or a move reds the test instead of silently emptying the
+prohibition -- and the fix is to name the canonical defining module,
+`...storage.recovery_key`, which is also what the architecture rule requires of
+every consumer. The prohibition scans for the symbol NAME, so it never depended
+on where the definition lived.
+
+Both halves re-proven. Importing the primitive into `home.py` fails the
+prohibition with `Offenders: home.py:generate_recovery_key`; renaming the
+anchored symbol fails the anchor with `module ... has no attribute`. Each file
+restored by copy and the restore verified.

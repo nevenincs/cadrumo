@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:b7a371a406ce195c598da6c998f57b5212a9fa57257435bde28261e09fbe489e'
+body_hash: 'sha256:d740f2ade6d37f2e3e4772f4a736a46477df4eb44ca51a1342803d9943678b99'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -462,6 +462,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S580` - Make the write-site census refuse a module it cannot parse instead of skipping it, since a swallowed SyntaxError shrank the corpus by exactly the file nobody could analyse in the census that finds code writing to the tree, where a missing module is a missing writer; `dev/audit/write_site_census.py,dev/tests/test_write_site_census.py`.
 - [x] `W02.P02.S581` - Record and report the files the unreachable-code reference walk could not read, since a skipped file contributes no references and every symbol only it uses is then reported as dead, so a deletion list was being derived from a silently incomplete corpus; `dev/audit/unreachable_code.py,dev/audit/tests/test_unreachable_code.py`.
 - [x] `W02.P02.S582` - Make the duplication corpus refuse a module it cannot parse and an empty load, since that list is what every detector in the module reads so a silently skipped module hid its duplicates from all of them at once, and nothing downstream reports a corpus size; `dev/audit/semantic_duplication.py,dev/audit/tests/test_duplication.py`.
+- [x] `W02.P02.S583` - Split the unreachable-code test walk's swallow by cause, refusing a tracked module that does not parse because that walk reports tests of dead code so a skip shrinks the findings, while a file that vanished mid-scan stays a reported race; `dev/audit/unreachable_code.py,dev/audit/tests/test_unreachable_code.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
