@@ -509,3 +509,42 @@ def test_no_adapter_entrypoint_io_imports_and_initializer_is_inert() -> None:
     assert calls.isdisjoint({"open", "print", "input"})
     initializer = ast.parse((module.parent / "__init__.py").read_text(encoding="utf-8"))
     assert not any(isinstance(node, (ast.Import, ast.ImportFrom)) for node in ast.walk(initializer))
+
+def test_a_comparison_zone_reports_no_count_until_both_sides_are_observed() -> None:
+    """A comparison whose AEAT half was never pulled has no count, not zero.
+
+    The local half being readable is not enough: the rows of these zones are
+    discrepancies BETWEEN sources, so reporting the local side's zero as the
+    zone count tells the operator "no discrepancies found" when the truth is
+    "no comparison has been made". `no-silent-under-declaration` keeps those
+    two states apart, and this is where they were being collapsed.
+
+    A LIST zone is contrasted deliberately: its count is of what one source
+    holds, so one readable source is enough and a zero there is a real zero.
+    """
+    from datetime import UTC, datetime
+
+    from ..workspace_reader import read_local_aeat_sync_workspace_projection
+
+    projection = read_local_aeat_sync_workspace_projection(
+        bucket_id="bucket",
+        subject_key="subject",
+        observed_at=datetime(2026, 9, 4, tzinfo=UTC),
+        filings=(),
+        operation_contracts=OperationPublicContractSetV1.build(
+            (build_censal_operation_registration(CENSAL_OPERATION_DEFINITION).contract,)
+        ),
+    )
+    by_zone = {state.zone: state for state in projection.zones}
+
+    for zone in (AeatSyncWorkspaceZone.EVIDENCE_COMPARISON, AeatSyncWorkspaceZone.RECONCILIATION):
+        assert by_zone[zone].item_count is None, (
+            f"{zone.value} reports {by_zone[zone].item_count!r} comparisons while its AEAT "
+            f"side was never pulled; a never-made comparison must not read as a proven zero"
+        )
+
+    census = by_zone[AeatSyncWorkspaceZone.CENSUS]
+    assert census.item_count == 0, (
+        "the census zone reads one local authority that is present and empty, so its zero is "
+        f"an observed zero and must survive; got {census.item_count!r}"
+    )
