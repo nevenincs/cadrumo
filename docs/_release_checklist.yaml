@@ -3,33 +3,33 @@
 # Read and validated by `dev/release/readiness.py` (schema:
 # `ReleaseChecklist` in that module) at bump time and again by the
 # publication authority's Gate 2. This file is data, not automation: nothing
-# here triggers an outward action. `dev.release.release_candidate` reads the
-# `soak` window below to compute a sealed candidate's deadline, and
-# `dev.release.soak_promoter` reads the `hotfix` cycle times when a
-# candidate carries the authorised hotfix carve-out.
+# here triggers an outward action. The `soak` and `hotfix` sections below are
+# followed by an operator per RELEASING.md and echoed by the
+# `just release-rollback` recipe; neither is computed or enforced by a
+# workflow.
 #
 # See RELEASING.md for the full per-release sequence and rollback procedure.
 
 schema_version: 1
 
-# Non-hotfix releases soak against an immutable, already-built cohort before
-# the machine-held soak promoter dispatches publication. There is no
-# separate PyPI "beta" project yet (Cadrumo is pre-1.0 and has not shipped
-# its first PyPI release) — the soak vehicle is the sealed release-candidate
-# record `dev.release.release_candidate` seals at the end of a
-# `release-orchestrator.yml` run, carrying the exact cohort
-# `release-soak-promoter.yml` re-verifies and, once the window closes,
-# promotes. Promote this to a real `cadrumo-beta` PyPI project once the
-# first stable release has shipped and a channel is worth maintaining.
+# Non-hotfix releases hold the release pull request open, green, and
+# re-checked before merging. There is no separate PyPI "beta" project yet
+# (Cadrumo is pre-1.0 and has not shipped its first PyPI release) — the soak
+# vehicle is the release PR itself, kept green by `packaging-smoke.yml`
+# (dispatched by hand against the release PR's branch, per RELEASING.md's
+# "Release-candidate evidence" section) and re-verified by the readiness
+# gate immediately before merge. Promote this to a real `cadrumo-beta` PyPI
+# project once the first stable release has shipped and a channel is worth
+# maintaining.
 soak:
   applies_to: "non-hotfix"
   minimum_hours: 48
   maximum_hours: 72
-  vehicle: "sealed release-candidate record over the immutable release-orchestrator cohort, re-verified by the soak promoter at promotion"
+  vehicle: "the open release pull request, kept green by a by-hand packaging-smoke.yml run against its branch and re-verified by the readiness gate before merge"
   exit_gates:
-    - "full packaging campaign green at seal time (release-orchestrator.yml's campaign stage)"
-    - "no priority:P0-blocker issue opened against the candidate during the soak window"
-    - "the readiness gate re-verified clean against the sealed cohort immediately before promotion"
+    - "packaging-smoke.yml green against the release PR's branch at merge time"
+    - "no priority:P0-blocker issue opened against the release PR during the soak window"
+    - "the readiness gate re-verified clean against the release PR immediately before merge"
 
 versioning:
   scheme: "SemVer"
