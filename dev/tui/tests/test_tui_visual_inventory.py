@@ -24,6 +24,7 @@ from .._artifacts import (
     now,
     purge_stale_artifacts,
     read_manifest,
+    source_fingerprint,
     stale_artifacts,
     unaccounted_frames,
     write_index,
@@ -38,6 +39,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _PACKAGE = Path(__file__).resolve().parents[1]
 
+
+_REVISION = "a" * 64
+"""A settled source fingerprint: both ends of a coherent run report it."""
 
 def _tui_importers(root: Path) -> list[str]:
     """Every module under ``root`` that imports the TUI entrypoint package."""
@@ -263,6 +267,8 @@ def test_coverage_check_refuses_a_surface_the_harness_does_not_offer() -> None:
 
 def _manifest(frames=(), failures=(), skipped=()) -> Manifest:
     return Manifest(
+        source_revision=_REVISION,
+        source_revision_at_end=_REVISION,
         generated_at=now(),
         cell_height=22,
         frames=tuple(frames),
@@ -428,7 +434,16 @@ def _run(tmp_path: Path, name: str, frames: tuple[RenderedFrame, ...], body: str
         target = directory / frame.text
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(body, encoding=UTF_8)
-    write_manifest(directory, Manifest(generated_at="2026-01-01T00:00:00+00:00", cell_height=22, frames=frames))
+    write_manifest(
+        directory,
+        Manifest(
+            source_revision=_REVISION,
+            source_revision_at_end=_REVISION,
+            generated_at="2026-01-01T00:00:00+00:00",
+            cell_height=22,
+            frames=frames,
+        ),
+    )
     return directory
 
 
@@ -526,6 +541,8 @@ def test_a_manifest_roundtrips_through_disk_with_every_field_populated(tmp_path:
     )
     manifest = Manifest(
         schema_version=2,
+        source_revision=_REVISION,
+        source_revision_at_end=_REVISION,
         generated_at="2026-01-01T00:00:00+00:00",
         cell_height=26,
         frames=(frame,),
@@ -567,7 +584,10 @@ def test_a_manifest_missing_a_field_refuses_at_load(tmp_path: Path) -> None:
 
     from pydantic import ValidationError
 
-    manifest = Manifest(generated_at="2026-01-01T00:00:00+00:00", cell_height=22)
+    manifest = Manifest(
+        source_revision=_REVISION,
+        source_revision_at_end=_REVISION,
+        generated_at="2026-01-01T00:00:00+00:00", cell_height=22)
     path = write_manifest(tmp_path, manifest)
     payload = json.loads(path.read_text(encoding=UTF_8))
     del payload["cell_height"]
@@ -580,6 +600,8 @@ def test_a_manifest_missing_a_field_refuses_at_load(tmp_path: Path) -> None:
 def test_the_index_reports_uncovered_interfaces_rather_than_omitting_them(tmp_path: Path) -> None:
     """A report that lists only what rendered reads as full coverage."""
     manifest = Manifest(
+        source_revision=_REVISION,
+        source_revision_at_end=_REVISION,
         generated_at="2026-01-01T00:00:00+00:00",
         cell_height=22,
         interfaces=(
@@ -725,6 +747,8 @@ def test_a_blocked_surface_is_named_from_failures_and_skips_together() -> None:
     counting only skips would miss the first frame that actually tried.
     """
     manifest = Manifest(
+        source_revision=_REVISION,
+        source_revision_at_end=_REVISION,
         generated_at="2026-01-01T00:00:00+00:00",
         cell_height=22,
         frames=(
@@ -767,6 +791,8 @@ def test_a_blocked_surface_is_named_from_failures_and_skips_together() -> None:
 def test_the_index_reports_blocked_surfaces_and_unattempted_frames(tmp_path: Path) -> None:
     """A run that stops mentioning what it gave up on reads as full coverage."""
     manifest = Manifest(
+        source_revision=_REVISION,
+        source_revision_at_end=_REVISION,
         generated_at="2026-01-01T00:00:00+00:00",
         cell_height=22,
         failures=(
@@ -860,7 +886,10 @@ def test_repainting_a_run_rewrites_only_the_raster_derived_fields(tmp_path: Path
         elapsed_ms=987.0,
         geometry_findings=("something the harness measured",),
     )
-    write_manifest(run, Manifest(generated_at="2026-01-01T00:00:00+00:00", cell_height=22, frames=(original,)))
+    write_manifest(run, Manifest(
+        source_revision=_REVISION,
+        source_revision_at_end=_REVISION,
+        generated_at="2026-01-01T00:00:00+00:00", cell_height=22, frames=(original,)))
 
     result = _raster.rasterise(run / original.svg, run / original.png, cell_height=18)
     repainted = original.model_copy(
@@ -1021,3 +1050,62 @@ def test_purging_removes_only_the_unclaimed_frames(tmp_path: Path) -> None:
     assert (tmp_path / "manifest.json").is_file()
     assert stale_artifacts(tmp_path, manifest) == ()
 
+def test_a_manifest_whose_run_spanned_a_source_change_says_so() -> None:
+    """A run that straddles an edit must announce it, not average it.
+
+    The full matrix takes about twenty-five minutes and renders each surface in
+    its own subprocess, so code landing mid-run splits the output: early frames
+    show the old behaviour, late frames the new. A manifest carrying only
+    `generated_at` claims all of them equally, which is worse than serving
+    stale frames from an earlier run -- those announce themselves as another
+    run, while these are all reported as current. It happened: a matrix spanned
+    the table-width work and produced 174 frames in which some tables were
+    clipped and some were not.
+    """
+    coherent = Manifest(
+        source_revision=_REVISION,
+        source_revision_at_end=_REVISION,
+        generated_at="2026-01-01T00:00:00+00:00",
+        cell_height=22,
+    )
+    assert not coherent.spans_a_source_change
+
+    split = Manifest(
+        source_revision=_REVISION,
+        source_revision_at_end="b" * 64,
+        generated_at="2026-01-01T00:00:00+00:00",
+        cell_height=22,
+    )
+    assert split.spans_a_source_change, (
+        "a run whose source changed between its first and last frame reports as coherent"
+    )
+
+
+def test_the_source_fingerprint_follows_the_code_that_renders_the_frames(tmp_path: Path) -> None:
+    """The fingerprint must move when the rendered source moves, and only then.
+
+    Content-based rather than a git revision on purpose: a render is normally
+    started from a DIRTY worktree, where `git rev-parse HEAD` is identical
+    before and after an edit and therefore blind to exactly the change this
+    guards against.
+
+    Exercised against a temporary tree rather than the real package. An earlier
+    draft edited `home.py` and restored it in a `finally`, which works right up
+    until the worktree this repository is edited in -- shared, and swept by a
+    concurrent writer -- is committed during the second the file is modified.
+    """
+    (tmp_path / "nested").mkdir()
+    (tmp_path / "a.py").write_text("x = 1\n", encoding="utf-8")
+    (tmp_path / "nested" / "b.py").write_text("y = 2\n", encoding="utf-8")
+    before = source_fingerprint(tmp_path)
+
+    assert source_fingerprint(tmp_path) == before, "the fingerprint is not stable across calls"
+
+    (tmp_path / "nested" / "b.py").write_text("y = 3\n", encoding="utf-8")
+    assert source_fingerprint(tmp_path) != before, "editing a nested module did not move the fingerprint"
+
+    (tmp_path / "nested" / "b.py").write_text("y = 2\n", encoding="utf-8")
+    assert source_fingerprint(tmp_path) == before, "the fingerprint did not return when the edit was reverted"
+
+    (tmp_path / "c.txt").write_text("not python\n", encoding="utf-8")
+    assert source_fingerprint(tmp_path) == before, "a non-source file moved the fingerprint"
