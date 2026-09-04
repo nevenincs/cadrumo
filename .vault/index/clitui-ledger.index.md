@@ -6,11 +6,12 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:c189a4190779b4ac3ce5c19d19e52daa917b60e75c44577f654c7eaa331301ad'
+body_hash: 'sha256:944fada18e5096239f59ef7d2ae640d4660b1c216e347bdf706089c91fc9443a'
 related:
   - '[[2026-09-04-clitui-ledger-W01-P01-S01]]'
   - '[[2026-09-04-clitui-ledger-W01-P01-S02]]'
   - '[[2026-09-04-clitui-ledger-W01-P01-S03]]'
+  - '[[2026-09-04-clitui-ledger-W01-P01-summary]]'
   - '[[2026-09-04-clitui-ledger-adr]]'
   - '[[2026-09-04-clitui-ledger-plan]]'
   - '[[2026-09-04-clitui-ledger-reference]]'
@@ -43,6 +44,7 @@ Auto-generated index of all documents tagged with `#clitui-ledger`.
 - `2026-09-04-clitui-ledger-W01-P01-S01` - Define stable capability identities, axes, gap classes, applicability, evidence coordinates, and gate predicates
 - `2026-09-04-clitui-ledger-W01-P01-S02` - Test identifier stability, denominator completeness, legal state transitions, evidence validation, and closed-gate reopening
 - `2026-09-04-clitui-ledger-W01-P01-S03` - Generate the continuously updated matrix and gate summary as the authoritative campaign reference
+- `2026-09-04-clitui-ledger-W01-P01-summary` - `clitui-ledger` `W01.P01` summary
 
 ### plan
 
