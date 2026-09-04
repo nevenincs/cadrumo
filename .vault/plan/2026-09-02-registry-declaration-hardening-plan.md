@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:cad1ab797f65dab9e18fca8e7ab1e0f9f94985983f658a1cf432edc3c3d014d1'
+body_hash: 'sha256:0ffba30a8e1a303aca3736af1bba25d1e1e4682163e163150e30936bf6629055'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -476,6 +476,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S594` - Announce the registry modules the load census cannot read, since an empty importer set is its evidence that every import of a module is deferred and a skipped file makes that conclusion easier to reach and wrong, a module-level importer inside it having refuted it; `dev/registry/analysis/load_census.py,dev/registry/tests/test_load_census_classification.py`.
 - [x] `W02.P02.S595` - Announce the modules the modelo-branch and regulatory-prose screens cannot read, since each derives findings by walking source and a skipped module hides its own branch sites or its prose pattern, leaving a place where legal text is interpreted by regex that nobody reviews; `dev/registry/analysis/modelo_branch_classification.py,dev/registry/analysis/regulatory_prose_parser_channel.py,dev/registry/tests/test_regulatory_prose_parser_channel.py`.
 - [x] `W02.P02.S596` - Make the namespace retirement codemod name the files it left unmigrated, since each applying pass reported how many it fixed while the files it could not read were invisible, so an incomplete migration looked complete; `dev/quality/namespace_retirement_sweep.py,dev/quality/tests/test_namespace_retirement_sweep.py`.
+- [x] `W02.P02.S597` - Count only the diseno files actually read, since the scanned count exists so a zero can be told apart from a directory that was not there and counting before reading inflated that very denominator, and read strictly because a replaced byte can break the field anchor that carries the evidence; `dev/registry/derive_result_dispositions.py,dev/registry/tests/test_result_disposition_derivation.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
