@@ -16,7 +16,13 @@ from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from .. import workbench_generation as generation_module
 from ..aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
-from ..ledger.workspace import LedgerWorkspaceProjectionV1
+from ..ledger.workspace import (
+    LedgerWorkspaceArea,
+    LedgerWorkspaceAreaStateV1,
+    LedgerWorkspaceProjectionV1,
+    LedgerWorkspaceSource,
+    LedgerWorkspaceStatus,
+)
 from ..modelo.declarations_calendar import DeclarationsCalendarProjectionV1
 from ..modelo.declarations_workspace import DeclarationsWorkspaceProjectionV1
 from ..modelo.workspace_models import ModeloWorkspaceProjectionV1
@@ -505,3 +511,65 @@ def test_structural_read_door_is_accepted() -> None:
     """Composition accepts a typed protocol implementation without a frontend."""
     generation = assemble_workbench_generation_from(_Door(_inputs()))
     assert generation.home.projection is not None
+
+def _ledger_projection_with_statuses(
+    status: LedgerWorkspaceStatus,
+    *,
+    unmeasured: LedgerWorkspaceArea | None = None,
+) -> LedgerWorkspaceProjectionV1:
+    """A Ledger projection whose areas carry a chosen status, one optionally unmeasured."""
+    return LedgerWorkspaceProjectionV1(
+        bucket_id="bucket",
+        areas=tuple(
+            LedgerWorkspaceAreaStateV1(
+                area=area,
+                sources=(LedgerWorkspaceSource.LOCAL_LEDGER,),
+                status=LedgerWorkspaceStatus.UNMEASURED if area is unmeasured else status,
+                item_count=2,
+            )
+            for area in LedgerWorkspaceArea
+        ),
+        entries=(),
+        review_transaction_ids=(),
+        invoice_reconciliations=(),
+        link_inconsistencies=(),
+        affected_declarations=(),
+    )
+
+
+def test_home_refuses_its_ledger_zone_rather_than_publishing_an_unmeasured_zero() -> None:
+    """An unmeasured Ledger area must not reach Home as the number nought.
+
+    `LedgerWorkspaceAreaStateV1.item_count` is a plain integer, so an area that
+    nobody measured reports 0 -- the same value a genuinely empty area reports.
+    The Ledger workspace keeps them apart through `status`, rendering
+    UNMEASURED as "Sin medir" rather than a digit. Home has no such room: its
+    readiness block is four bare numbers, and a zero there reads as a finding.
+
+    So the whole block refuses when ANY of its four areas is unmeasured, rather
+    than publishing three real counts beside one fabricated one. Partial truth
+    in a summary is indistinguishable from whole truth once rendered.
+    """
+    from ..overview.home import HomeLedgerReadiness
+    from ..workbench_generation import _home_ledger_readiness
+
+    measured = _ledger_projection_with_statuses(LedgerWorkspaceStatus.READY)
+    readiness = _home_ledger_readiness(measured)
+    assert isinstance(readiness, HomeLedgerReadiness)
+    assert (readiness.entries, readiness.requiring_review) == (2, 2)
+
+    for area in (
+        LedgerWorkspaceArea.ENTRIES,
+        LedgerWorkspaceArea.REVIEW,
+        LedgerWorkspaceArea.CLASSIFICATION,
+        LedgerWorkspaceArea.EVIDENCE,
+    ):
+        partial = _ledger_projection_with_statuses(
+            LedgerWorkspaceStatus.READY, unmeasured=area
+        )
+        assert _home_ledger_readiness(partial) is None, (
+            f"an unmeasured {area.value} area still produced a readiness block, so Home "
+            f"renders a zero nobody measured"
+        )
+
+    assert _home_ledger_readiness(None) is None
