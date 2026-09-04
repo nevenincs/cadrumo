@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:a2b1c0389b09305b9b3da2bf32b6314c241aacb662901099009dd4ea5cab2b29'
+body_hash: 'sha256:e5f89b3b67376db7b58e07f794bea1ef726858f1a3ed20350dd0ce54cf2bcef7'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -396,6 +396,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S513` - Remove the dead self-skip from the wall-advisory threshold scan, which excluded the gates own file although its pinned names appear there only as dictionary keys the line-anchored pattern cannot match, with a planted drift in a file of that name as the proof; `dev/ci/tests/test_wall_advisory.py`.
 - [x] `W02.P02.S514` - Measure the directory exclusion the production audits share, 59 per cent of src lines and 49 per cent of dev, and establish it is a declared scope rather than a blind spot, unlike the two file-name exemptions whose comments described something other than what they did; `dev/audit`.
 - [ ] `W02.P02.S515` - Reconcile the complexity audits two-scope docstring with the tree: it describes production and tests baselines that were retired, and no lane passes --tests, so the tests scope has a runner nowhere and a baseline nowhere; `dev/audit/complexity.py`.
+- [x] `W02.P02.S516` - Report the collected population on every run-integrity row, since under xdist a marker-filtered run prints no deselection count at all and the item count is the only trace, while keeping the lost-worker banners own figure where it exists; `dev/quality/run_integrity.py,dev/quality/tests/test_run_integrity.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

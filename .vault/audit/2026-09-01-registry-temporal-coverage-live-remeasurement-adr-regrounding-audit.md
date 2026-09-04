@@ -13895,3 +13895,40 @@ the two-scope docstring describes are gone from the tree - retired in
 since a baseline ratchet is not evidence. So the docstring now describes a file
 that does not exist. That is a consequence of work in progress rather than a
 defect to fix underneath its owner, and it is recorded here rather than acted on.
+
+
+## The one failure mode the integrity tool cannot verdict on
+
+The run-integrity module names four ways a saved run misleads, and acted on
+three. The fourth - a marker deselecting most of what was collected - it left
+alone, and testing why produced the more useful finding.
+
+**Under xdist a marker-filtered run prints no deselection count anywhere.** Run
+`dev/quality/tests` unfiltered and the output says `6 workers [371 items]`; run
+it with a marker expression and it says `6 workers [356 items]` and
+`356 passed`. There is no `deselected` line, no `selected` line, nothing that
+distinguishes the filtered run from a complete one except a number that means
+nothing on its own. Serially pytest does say
+`collected 24 items / 21 deselected / 3 selected`, so the signal exists and the
+parallel runner drops it.
+
+So this cannot be given a verdict from a saved artefact, and claiming otherwise
+would be the kind of over-reach this campaign keeps declining. What the tool can
+do is surface the only evidence there is: the collected population is now read
+from either shape pytest writes it in - the worker line or the serial collection
+line - and printed on every row, so two runs being compared can be checked for
+the same population by a reader who knows what it should be.
+
+The banner's own figure wins where it exists, because a lost-worker run states
+its population as part of the same event - `2 of 317 collected test(s) never
+reported` is a stronger statement than the worker line, and overwriting it with
+the weaker one would lose the ratio the verdict rests on.
+
+And absence stays absent: a run with no collection line reports no population
+rather than zero, and its headline omits the field rather than printing a number
+it does not have.
+
+That is the third time in this campaign that examining what an instrument cannot
+do produced more than extending what it can. The measurement is that the
+parallel runner is silent about deselection, which is a fact about every figure
+this plan quotes from a filtered run, and it was not known before this.
