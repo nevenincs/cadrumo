@@ -1,0 +1,63 @@
+# Modelo 2023 Art. 81.1 LIRPF deduccion por maternidad figures.
+#
+# Authored because these existed ONLY as Python literals in
+# core.external_constants, while the Art. 81.2 guarderia cap of the SAME article
+# already had a resolvable parameter. One article was carried two ways in one
+# product: the money in the registry for apartado 2, and in code for apartado 1.
+#
+# The post-birth alta increment is declared ONLY from the filing year the route
+# reaches; earlier revisions grant no increment and take the ordinary cap alone.
+# The raised cap (ordinary cap plus increment) is deliberately NOT authored: it
+# is a DERIVED total, and storing it independently is how it drifts from the two
+# inputs that compose it.
+
+[[revisions."2023".parameters]]
+id = "renta-2023-maternidad-mensual"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-81"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["a la deducción por maternidad por este hijo asciende a 550 euros (100 euros por cada mes a partir de mayo,"]
+
+[[revisions."2023".parameters.values]]
+value = "100"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters]]
+id = "renta-2023-maternidad-cap-anual"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-81"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["podrá superar 1.200 euros anuales, salvo en el supuesto en que resulte de aplicación"]
+
+[[revisions."2023".parameters.values]]
+value = "1200"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters]]
+id = "renta-2023-maternidad-alta-posterior-incremento"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-81"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["el incremento de 150 euros, en cuyo caso, dicho límite se eleva en dicho ejercicio"]
+
+[[revisions."2023".parameters.values]]
+value = "150"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
