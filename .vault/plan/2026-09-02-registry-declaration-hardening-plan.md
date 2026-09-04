@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:e1a1408e11e6470033f33001858c0b1372d130fe1d1bc85da622d6394c0bbc35'
+body_hash: 'sha256:58b0f8586ce8d515e5f7c389db0dac181ae7aeab24772f0a09823662e87d22b5'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -432,6 +432,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S550` - Give the vacuity screen's synthetic trees the git repository the screen requires, clearing sixteen failures that all raised exit 128 from git ls-files before a single assertion ran, so the instrument that hunts unproven gates is itself proven; `dev/audit/tests/test_vacuity_screen.py`.
 - [x] `W02.P02.S551` - Make the miss-rate report writer return the evaluation it wrote so the command stops measuring a second time to print numbers it did not read from the file, and test the writer the reach report ranked, pinning the byte-comparable regeneration its docstring claims; `dev/docs/terminology/miss_rate.py,dev/docs/terminology/tests/test_miss_rate_report_cli.py`.
 - [x] `W02.P02.S552` - Prove the release alerting transport the reach report ranked, driving the forge boundary through a real recording executable so the per-run deduplication, the unlabelled fallback query, the body-file handoff and the delivery-outranks-filing retry are exercised as the forge would see them; `dev/release/tests/test_alerting.py`.
+- [x] `W02.P02.S553` - Make a mistyped --uv on the cohort oracle-emit leg render the module's fail-closed refusal instead of escaping as a pathlib FileNotFoundError traceback, and cover the executable resolution and argument contract that decide whether every OS leg proves the same cohort; `dev/packaging/oracle_emit_cohort.py,dev/packaging/tests/test_oracle_emit_cohort.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
