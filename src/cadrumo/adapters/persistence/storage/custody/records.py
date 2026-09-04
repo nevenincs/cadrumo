@@ -5,7 +5,6 @@ from __future__ import annotations
 import base64
 import binascii
 import json
-import re
 from typing import Annotated, ClassVar, Final, Literal, cast
 from uuid import UUID
 
@@ -41,7 +40,6 @@ PROFILE_CUSTODY_KDF_ITERATIONS: Final[frozenset[int]] = frozenset({2, 3, 4, 6, 8
 PROFILE_CUSTODY_KDF_PARALLELISM: Final[frozenset[int]] = frozenset({1, 2, 4})
 
 _DEK_EPOCH_BYTES: Final = 16
-_SHA256_DIGEST_RE: Final = re.compile(r"sha256:[0-9a-f]{64}\Z")
 _KEY_SCHEDULE: Final = "profile-password-dek-wrap/v1"
 
 
