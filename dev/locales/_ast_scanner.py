@@ -184,6 +184,8 @@ _COMMAND_SPEC_KEY_FACTORIES: frozenset[str] = frozenset(
         # above rejects, because a module path would then become a phantom key.
         "_boolean_flag_option",
         "_repeatable_text_option",
+        "_optional_text_option",
+        "state_free_group_spec",
     },
 )
 

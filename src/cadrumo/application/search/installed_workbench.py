@@ -314,6 +314,7 @@ def _modelo_documents(
                 period=projection.target.period,
             ),
             admission=admission,
+            identity_basis=SecretStr("Workbench subject"),
         )
         for projection in projections
     )
