@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:12733feacdd5940dd1f8c0bfc019edf9a98996dbd8b2ea37fde9b6ca3227e9a9'
+body_hash: 'sha256:80c51f0fef0a2dcbc927745bd7f1571873abb5a8749c5c033f272f989b36ca1f'
 related:
   - "[[2026-09-04-clitui-ledger-research]]"
   - "[[2026-06-10-ledger-interface-contract-adr]]"
@@ -26,7 +26,7 @@ This document is the authoritative human-readable publication surface for the `L
 | Contract / schema | `LedgerCapabilityMatrixV1` / `3` |
 | Publication revision | `s06-registry-census-1` |
 | Observation timestamp | `2026-09-04T23:42:00+02:00` |
-| Source revision | `bc77754a4c` |
+| Source revision | `bc77754a4cda81fe2a36cd8cce59388a2b52d97d` |
 | Contract source digest | `sha256:c2998c8ff958ae820b59fa7055a36d83117bb35282fe2679761032fab7a15a10` |
 | Accepted plan owner | `clitui-ledger` |
 | Denominator revision / digest | Not issued: the mandatory S07-S08 live census and adjudication are open |
