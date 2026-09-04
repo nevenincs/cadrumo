@@ -1,0 +1,41 @@
+# Modelo 2023 LIRPF art. 23.1.a) carry-forward window and RIRPF art. 72 grado de
+# discapacidad threshold.
+#
+# Both existed only as Python literals. Both key on the FILING PERIOD and modelo
+# 100 declares a revision for every supported year, so both are authorable here
+# without the acquisition-year trap that blocks the LIVA bienes-de-inversion
+# figures.
+
+[[revisions."2023".parameters]]
+id = "renta-2023-gastos-carry-forward-anos"
+data_type = "integer"
+unit = "years"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["reparación y conservación podrán ser deducidos en los cuatro años siguientes, respetando cada año el límite"]
+
+[[revisions."2023".parameters.values]]
+value = "4"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters]]
+id = "renta-2023-discapacidad-grado-minimo"
+data_type = "integer"
+unit = "percent"
+legal_refs = ["rd-439-2007:art-72"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["contribuyentes con un grado de discapacidad igual o superior al 33 por ciento."]
+
+[[revisions."2023".parameters.values]]
+value = "33"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
