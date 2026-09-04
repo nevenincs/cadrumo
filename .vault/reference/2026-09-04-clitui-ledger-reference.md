@@ -252,21 +252,98 @@ Backend status is therefore not green. Direct tests establish reusable foundatio
 
 ### Registry, calculation, and filing denominator
 
-The canonical `BindingSourceKind` taxonomy and `LEDGER_BINDING_SOURCE_KINDS` define seven ledger families at `src/cadrumo/core/aggregation.py:233,512`. All seven enroll through selector registration and validator dispatch at `src/cadrumo/domain/calculations/registry/bindings.py:926,1023`, and the application calculation route validates unique total production ownership at `src/cadrumo/application/modelo/calculation_route.py:112,154`. Exact registry census found 546 declarations across the seven families.
+The canonical `BindingSourceKind` taxonomy and derived `LEDGER_BINDING_SOURCE_KINDS` set define exactly seven Ledger families at `src/cadrumo/core/aggregation.py:233,512`. Each family has one strict selector registration and one validator-dispatch registration at `src/cadrumo/domain/calculations/registry/bindings.py:926,1023`. Each also has exactly one `mesh`-stage production resolver owner in `CALCULATION_ROUTE_RESOLVER_OWNERSHIP`; the ownership validator rejects duplicate or missing source ownership. These are structural facts only. They do not prove that a declaration reaches a casilla, that a nonzero ledger fact survives calculation, or that verification/export refuses unresolved facts.
 
-| Binding family | Declared consumers | Production proof | Open proof or authority gap |
+The exact validated-authority projection contains 546 declarations at 35 family/revision sites. Canonical `casillas_by_binding` joins 510 declarations to a registry casilla. Three more declarations reach a casilla through explicit application-sidecar mappings: M130 retenciones to casilla `06`, and each M210 revision to `rendimientos_integros`. The remaining 33 declarations have neither a registry binding edge nor a located application output mapping. They are not counted as working routes merely because their selectors validate or their resolver returns a binding value.
+
+#### Seven-family registration and ownership register
+
+| Source family | Selector / validator | Production resolver | Declarations / sites | Current destination state |
+| --- | --- | --- | --- | --- |
+| `ledger_iva_aggregation` | `IvaLedgerSelector` / `validate_ledger_iva_aggregation_binding` | `LedgerIvaAggregationSourceResolver` | 498 / 18 | 467 registry-bound; 31 destinationless |
+| `ledger_oss_aggregation` | `OssIossLedgerSelector` / `validate_ledger_oss_aggregation_binding` | `OssIossLedgerSourceResolver` | 5 / 3 | All five registry-bound |
+| `ledger_renta_gastos_estimacion_directa_aggregation` | `RentaLedgerGastosEstimacionDirectaSelector` / `validate_ledger_renta_gastos_estimacion_directa_aggregation_binding` | `LedgerRentaGastosEstimacionDirectaAggregationSourceResolver` | 28 / 2 | All 28 registry-bound |
+| `ledger_renta_income_aggregation` | `RentaLedgerIncomeSelector` / `validate_ledger_renta_income_aggregation_binding` | `LedgerRentaIncomeAggregationSourceResolver` | 10 / 7 | Seven registry-bound; one application-sidecar; two destinationless |
+| `ledger_renta_gastos_pago_fraccionado_aggregation` | `RentaLedgerGastosPagoFraccionadoSelector` / `validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding` | `LedgerRentaGastosPagoFraccionadoAggregationSourceResolver` | 1 / 1 | Registry-bound to M130 casilla `02` |
+| `ledger_impatriado_income_aggregation` | `ImpatriadoLedgerIncomeSelector` / `validate_ledger_impatriado_income_aggregation_binding` | `LedgerImpatriadoIncomeAggregationSourceResolver` | 2 / 2 | Both registry-bound |
+| `ledger_irnr_income_aggregation` | `IrnrLedgerIncomeSelector` / `validate_ledger_irnr_income_aggregation_binding` | `LedgerIrnrIncomeAggregationSourceResolver` | 2 / 2 | Both application-sidecar routes; neither has a registry binding edge |
+
+#### Complete family/revision route-site register
+
+`Bindings / direct / sidecar / unresolved` is an exact partition for every site. `Direct` means a canonical `casillas_by_binding` edge. `Sidecar` means an explicit application mapping outside the registry target graph. Sections are taken from the target `CasillaDefinition`; `none` is a real absence, not an omitted observation. The route-census digest above additionally binds every declaration id, full typed selector, applicability interval and periods, target casilla ids, and target section paths.
+
+| Family | Modelo / revision | Applicability and periods | Bindings / direct / sidecar / unresolved | Destination casillas and sections |
+| --- | --- | --- | --- | --- |
+| Renta expense | M100 / `2024` | 2024; `0A` | 14 / 14 / 0 / 0 | `0183, 0186, 0191, 0192, 0193, 0194, 0195, 0199, 0200, 0202, 0203, 0206, 0208, 0217`; `toma_datos_ampliada/reg_estima_directa/actividad_est_directa` |
+| Renta income | M100 / `2024` | 2024; `0A` | 1 / 1 / 0 / 0 | `0171`; same section |
+| Renta expense | M100 / `2025` | 2025; `0A` | 14 / 14 / 0 / 0 | same 14 ids; `rendimientos_actividades_economicas/estimacion_directa` |
+| Renta income | M100 / `2025` | 2025; `0A` | 1 / 1 / 0 / 0 | `0171`; same section |
+| M130 expense | M130 / `2019-y-siguientes` | 2019..open; `1T-4T` | 1 / 1 / 0 / 0 | `02`; `actividades_economicas_estimacion_directa` |
+| Renta income | M130 / `2019-y-siguientes` | 2019..open; `1T-4T` | 4 / 1 / 1 / 2 | direct `01`; sidecar `06`; same section; two declarations have no destination |
+| Renta income | M131 / `2019-2023` | 2019..2023; `1T-4T` | 1 / 1 / 0 / 0 | `05`; `actividades_agricolas_ganaderas_forestales` |
+| Renta income | M131 / `2024` | 2024; `1T-4T` | 1 / 1 / 0 / 0 | `05`; same section |
+| Renta income | M131 / `2025` | 2025; `1T-4T` | 1 / 1 / 0 / 0 | `05`; same section |
+| Renta income | M131 / `2026` | 2026..open; `1T-4T` | 1 / 1 / 0 / 0 | `05`; same section |
+| Impatriado income | M151 / `2015-2022` | 2015..2022; `0A` | 1 / 1 / 0 / 0 | `impatriado.base-liquidable-general`; `liquidacion/base` |
+| Impatriado income | M151 / `2025-y-siguientes` | 2023..open; `0A` | 1 / 1 / 0 / 0 | same id and section |
+| IRNR income | M210 / `2025` | 2025; `EVENT-N`, `0A` | 1 / 0 / 1 / 0 | sidecar `rendimientos_integros`; registry section absent from the binding edge |
+| IRNR income | M210 / `2026-y-siguientes` | 2026..open; `EVENT-N`, `0A` | 1 / 0 / 1 / 0 | same sidecar |
+| IVA | M303 / `2022` | 2022; `1T-4T` | 23 / 22 / 0 / 1 | 22 casillas across `iva/regimen_general/{deducible,devengado,inversion_sujeto_pasivo}` and `iva/resultado` |
+| IVA | M303 / `2023` | 2023; quarterly and monthly | 28 / 28 / 0 / 0 | 28 casillas across the same four section branches |
+| IVA | M303 / `2024-hasta-08-y-2t` | 2024-01-01..08-31; `1T`, `2T`, `01-08` | 30 / 29 / 0 / 1 | 29 casillas across the same four section branches |
+| IVA | M303 / `2024-desde-09-y-3t` | 2024-09-01..12-31; `3T`, `4T`, `09-12` | 30 / 30 / 0 / 0 | 30 casillas, adding `iva/recargo_equivalencia/devengado` |
+| IVA | M303 / `2025` | 2025; quarterly and monthly | 30 / 30 / 0 / 0 | same 30-casilla section set |
+| IVA | M303 / `2026-y-siguientes` | 2026..open; quarterly and monthly | 30 / 30 / 0 / 0 | same 30-casilla section set |
+| IVA | M309 / `2016-2017` | 2016..2017; `AD-HOC` | 2 / 2 / 0 / 0 | `iva.autorepercutido.intracomunitaria`, `iva.soportado.recargo-equivalencia`; `iva/no_periodica/{inversion_sujeto_pasivo,soportado}` |
+| IVA | M309 / `2018-2022` | 2018..2022; `AD-HOC` | 2 / 2 / 0 / 0 | same destinations |
+| IVA | M309 / `2023-y-siguientes` | 2023..open; `AD-HOC` | 2 / 2 / 0 / 0 | same destinations |
+| IVA | M322 / `2008-2022` | effective 2022; monthly | 5 / 5 / 0 / 0 | `iva.autorepercutido.intracomunitaria`, `iva.repercutido.{general,reducido,super-reducido}`, `iva.soportado.interiores`; three `iva/regimen_general/*` branches |
+| IVA | M322 / `2023` | 2023; monthly | 5 / 5 / 0 / 0 | same destinations |
+| IVA | M322 / `2024-2025` | 2024..2025; monthly | 5 / 5 / 0 / 0 | same destinations |
+| IVA | M322 / `2026-y-siguientes` | 2026..open; monthly | 5 / 5 / 0 / 0 | same destinations |
+| IVA | M353 / `2021-2025` | 2021..2025; monthly | 5 / 5 / 0 / 0 | same five destinations and three section branches as M322 |
+| OSS | M369 / `esquema-exterior` | 2021-07-01..open; `EXT-1T-EXT-4T` | 1 / 1 / 0 / 0 | `iva.exterior.de.services-cuota`; `iva/exterior/destino_de` |
+| OSS | M369 / `esquema-importacion` | 2021-07-01..open; monthly | 1 / 1 / 0 / 0 | `iva.importacion.de.low-value-cuota`; `iva/importacion/destino_de` |
+| OSS | M369 / `esquema-union` | 2021-07-01..open; `1T-4T` | 3 / 3 / 0 / 0 | `iva.union.de.goods-distance-cuota`, `iva.union.de.services-cuota`, `iva.union.fr.services-cuota`; `iva/union/{destino_de,destino_fr}` |
+| IVA | M390 / `2022` | 2022; `0A` | 74 / 59 / 0 / 15 | 59 casillas across `iva/anual/{deducible,devengado,inversion_sujeto_pasivo,volumen_operaciones}` |
+| IVA | M390 / `2023` | 2023; `0A` | 74 / 60 / 0 / 14 | 60 casillas across the same four branches |
+| IVA | M390 / `2024` | 2024; `0A` | 74 / 74 / 0 / 0 | 74 casillas across the same four branches |
+| IVA | M390 / `2025` | 2025; `0A` | 74 / 74 / 0 / 0 | 74 casillas across the same four branches |
+
+#### Declarations without a registry destination
+
+Three of the 36 declarations with no `casillas_by_binding` edge have an observed application-sidecar consumer. `LedgerRentaIncomeAggregationSourceResolver` maps `modelo-130-actividad-economica-retenciones-cumulative` to M130 casilla `06` through `_m130_retenciones_backend_inputs`; `LedgerIrnrIncomeAggregationSourceResolver` maps the single M210 binding in each revision to `rendimientos_integros` through `bound_inputs_by_casilla_id`. These routes work in live tests, but their output identity is not represented by the registry relationship and remains a `REGISTRY` gap for S100.
+
+The other 33 declarations have no located calculation destination:
+
+- M130 / `2019-y-siguientes`: `modelo-130-actividad-economica-ingresos-taxable-base-cumulative` and `modelo-130-actividad-economica-rendimiento-neto-cumulative`.
+- M303 / `2022`: `modelo-303-recargo-equivalencia-super-reducido-cuota`.
+- M303 / `2024-hasta-08-y-2t`: `modelo-303-iva-repercutido-super-reducido-transitorio-base`.
+- M390 / `2022` (15): `modelo-390-iva-repercutido-tipo-7-5-{base,cuota}`, `modelo-390-iva-repercutido-tipo-2-{base,cuota}`, `modelo-390-iva-recargo-equivalencia-tipo-{1,0-62,0-26}-cuota`, and `modelo-390-iva-aic-{bienes,servicios}-tipo-{2,7-5}-{base,cuota}`.
+- M390 / `2023` (14): the same set except `modelo-390-iva-recargo-equivalencia-tipo-0-62-cuota`.
+
+These 33 selectors still participate in family matching. Until S100 either gives them a typed destination or proves an explicit excluded/not-applicable disposition that cannot suppress an unrouted fact, they remain unresolved rather than being called dormant, zero, or supported.
+
+#### Calculation, verification, evidence, filing, and export consumers
+
+| Route family / modelos | Production calculation evidence | Verification / filing-evidence / export evidence | Unresolved direct obligation |
 | --- | --- | --- | --- |
-| Ledger IVA | M303/M309/M322/M353/M390 | Strong M303→M390 and deductible-evidence paths | No located live nonzero Ledger calculate proof for M309/M322/M353 |
-| Ledger OSS | M369 | Strong calculate→verify/export tests | Uses issued-invoice catalogue rather than transaction catalogue; distinction must remain explicit |
-| Renta direct-estimation expenses | M100 | Strong M100 and M130→M100 annual chain | Preserve invoice evidence and deduction-ratio requirements |
-| Renta income | M100/M130/M131 | Strong M130/M100 and currency proof | M131 lacks located production work-calculate proof; M130 c06 uses hardcoded application projection outside honest registry targeting |
-| M130 fractional-payment expenses | M130 c02 | Strong aggregate/binding and currency tests | No located explicit nonzero production-route c02 assertion |
-| Impatriado income | M151 | Repository, registry-binding and currency tests | No located calculate→verify/export proof; savings base remains manual |
-| IRNR income | M210 | Strong live calculate, mutation, exclusion and evidence-bundle tests | Preserve explicit M210 classification and mutual-exclusion authority |
+| IVA / M303 | Nonzero persisted-ledger calculation in `test_e2e_ledger_m303_quarters_to_m390_annual.py`; deductible-evidence and drift tests exercise real stores | M303 verifies, captures snapshot/evidence, locally files, and correctly refuses export because its registry has no complete layout | Prove general non-OSS unrouted-observation refusal and resolve two destinationless historical declarations |
+| IVA / M390 | Registry resolver tests exercise nonzero IVA selectors; production annual calculation and verification consume the M303 relation chain | M390 verifies and correctly refuses unavailable export layout; this proves the relation route, not every one of its 74 direct Ledger selectors | Add nonzero production-route coverage for representative direct M390 Ledger destinations; resolve 29 destinationless historical declarations |
+| IVA / M309, M322, M353 | Selector, validator, and resolver tests exist | No live nonzero work-calculate→verify→evidence→export/file chain was located | Add per-Modelo positive, exclusion, zero-versus-missing, unrouted refusal, and finish-line proof |
+| OSS / M369 | Nonzero issued-invoice-catalogue projection and production calculation are direct-tested | Successful calculate→verify→export exists; missing source and unrouted observation both refuse verify/export; genuine zero remains distinguishable | Preserve that this is invoice-catalogue-backed, not transaction-catalogue-backed; filing proof is still absent |
+| Renta expense / M100 | Nonzero persisted-ledger M100 calculations cover direct-expense destinations and ratio/evidence rules | M100 verification succeeds; observed export refuses an undeclared mandatory Aux field | Complete successful export/file finish line after the layout product is complete |
+| Renta income / M100 and M130 | Nonzero M130 c01/c06 and annual M100 calculations are direct-tested, including currency handling | M100 verification and ledger evidence are exercised; M100 export currently refuses its incomplete layout | Resolve the two destinationless M130 declarations and move c06 output identity into an honest typed registry route |
+| Renta income / M131 | Registry declaration and resolver-level coverage exist | No live nonzero production work-calculate chain from Ledger through M131 was located | Add calculate→verify→evidence→export/file proof plus missing/deferred/zero and exclusion cases |
+| M130 expense / c02 | Resolver/binding, currency, zero, and verification-shape tests exist | M130 workflow tests prove c02 is bound, but no explicit nonzero production-route c02 assertion was located | Add a nonzero persisted-ledger c02 calculation and finish-line proof |
+| Impatriado income / M151 | Repository aggregation and real registry-binding resolution cover nonzero ES inclusion, foreign exclusion, ambiguity, and currency | No live M151 work-calculate→verify→evidence→export/file chain was located | Add the full production chain; keep the separate savings base manual until grounded |
+| IRNR income / M210 | Nonzero secure-store calculation, selected-code separation, mutation, foreign exclusion, and manual/ledger authority exclusivity are direct-tested | Verification captures filing evidence without reclassifying gross income as manual | Move the sidecar output into an honest registry route and add export/file proof |
 
-Unmatched nonzero observations become persisted `CalculationSourceIssue` values through `src/cadrumo/domain/calculations/registry/ledger_binding_resolution.py:96` and `src/cadrumo/application/modelo/calculation_actions.py:1513`. Verification explicitly blocks the OSS `unrouted_observation`, but no general non-OSS verification gate was found at `src/cadrumo/application/modelo/verification_actions.py:1386`; this is a high-confidence filing-path gap. Ledger drift checking is otherwise strong at `src/cadrumo/application/modelo/ledger_drift_gate.py:70`, but immutable filing evidence carries currency, FX rate, and EUR value without FX source/date at `src/cadrumo/domain/modelos/ledger_filing_snapshot.py:155`.
+Unmatched nonzero observations become persisted `CalculationSourceIssue` values through `src/cadrumo/domain/calculations/registry/_ledger_binding_resolution.py:96` and `src/cadrumo/application/modelo/calculation_actions.py:1513`. Verification explicitly blocks OSS `unrouted_observation` at `src/cadrumo/application/modelo/verification_actions.py:1364`, but no general non-OSS source-issue gate was found. Export and filing require a sealed/verified revision and other evidence/precondition gates, but do not independently inspect those non-OSS source issues. This is a high-confidence filing-path gap: a non-OSS unmatched fact can remain only an advisory while the revision advances.
 
-Focused registry/calculation verification for this census passed 133 tests. Registration/dispatch tests prove enrollment, while the missing per-Modelo live paths above remain unproven rather than being inferred from generic resolver coverage.
+Ledger drift checking is otherwise strong at `src/cadrumo/application/modelo/_ledger_drift_gate.py:70`. Immutable filing evidence carries currency, FX rate, and EUR value without FX source/effective-date lineage at `src/cadrumo/domain/modelos/ledger_filing_snapshot.py:155`; S100 must close that provenance gap rather than treating the existing snapshot as complete.
+
+Focused validation for this census exercises real selector/validator enrollment, production resolver ownership, source diagnostics, representative live calculation routes, evidence capture, and observed export/refusal paths. Those gates establish only the behavior they run; missing per-Modelo paths above remain `UNPROVEN`.
 
 ### Existing backend behavior must not be rebuilt
 
