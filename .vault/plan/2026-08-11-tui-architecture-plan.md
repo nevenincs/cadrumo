@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-04'
-body_hash: 'sha256:7357b92bafd39bb340a7f197aef4148eddb3ae65594bb79565c22475fc8d32f1'
+body_hash: 'sha256:0b1b823b7d63302d908a6291576c839dac569ad51cf42982c65ce4781caf0029'
 ---
 
 <!-- RETIRED: S370 -->
@@ -624,6 +624,7 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [ ] `W08.P30.S408` - Give AEAT Sync its local row readers, or state per zone why the local authority cannot be read. The installed workspace projects overview rows only: census, filed-declaration, notification, evidence-comparison and reconciliation rows have no installed reader, so LOCAL_PROFILE and LOCAL_FILINGS report observable counts beside zones that carry no rows, while LOCAL_NOTIFICATION_CUSTODY and LOCAL_RECONCILIATION are UNAVAILABLE outright. The refusals are honest today; a workspace whose local side is permanently empty is not the target state.; `src/cadrumo/application/aeat_sync/workspace_reader.py`.
 - [ ] `W08.P30.S409` - Give Home's actions, resumable declarations, agenda, evidence and messages zones their installed readers. All five are hard-coded UNAVAILABLE in the secure generation input, so the production Home an operator meets is five refusals and a Ledger summary. The application authorities the accepted due-driven decision names -- next actions, backlog, agenda, calendar evidence, notification snapshots -- exist and nothing yet calls them.; `src/cadrumo/application/workbench_generation.py`.
 - [ ] `W08.P30.S410` - Extend the capture-coherence guard to everything the generation door now reads. It re-reads and compares the profile record, work units, calculation revisions and filing records, which was the whole read set when it was written; the door now also reads transactions, invoices and bucket events for Ledger and projects every work unit for Modelo. A write landing mid-capture yields a generation whose Ledger snapshot is from a different instant than its Declarations, and nothing detects it.; `src/cadrumo/application/workbench_generation.py`.
+- [ ] `W08.P30.S411` - Compose the Ledger action doors the installed workspace never binds, or refuse those areas for a stated reason. MEASURED 2026-09-04 from a rendered fixture: the installed factory passes review_action and nothing else, so import, classification, evidence and reconciliation -- four of the seven canonical areas -- resolve to refusals in the real product while the navigation table still lists them. The screens exist and render correctly when their doors are supplied; what is missing is the composition. Either bind the classification submitter, prepared imports and import submitter, evidence items and link submitter at the installed seam, or state per area why the door cannot exist yet so the navigation stops offering an area the session can never open.; `src/cadrumo/entrypoints/tui/launcher.py`.
 
 ## Parallelization
 
