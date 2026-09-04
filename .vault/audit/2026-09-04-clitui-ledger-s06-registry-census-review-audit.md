@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:a36112852b2955af4e8b7095847264ea90a44f55d3d84b74fc46c9f17a86bb99'
+body_hash: 'sha256:12fc412aa1807c1dd5238949e2b737c1b9f86e49a1eabd049e45db024caabf2a'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-reference]]"
@@ -159,3 +159,51 @@ Focused evidence: `dev/quality/tests/test_clitui_ledger_capability_matrix.py`
 passes 131 tests, including the committed positive and route/source mutation
 cases. The independently rerun nine-file S06 behavior suite passes all 87
 tests. Feature-scoped Vault checks are recorded in the final review handoff.
+
+## Second remediation review
+
+Ruling: **ACCEPT**. No HIGH or CRITICAL findings remain. The prior selector
+projection HIGH and scoped typing MEDIUM are closed.
+
+The route projection now consumes the live validated selector `BaseModel`
+directly and explicitly retains defaults, default-equal values, nulls, and
+unset fields while excluding only loader-injected `source`. All 546 live Ledger
+selectors are typed models. An independent comparison between every projected
+selector object's keys and its model's declared fields, less `source`, found no
+omissions. An independent raw-mapping challenge raises the intended `TypeError`.
+Canonical JSON sorts object keys, so irrelevant validated input-key order does
+not change the census, while row and target semantic order remains explicitly
+canonical or rejected.
+
+The live-boundary detector tests are substantive. Their positive case requires
+the complete declared selector field set and pins the model's current `fact`
+default plus nullable values. The two mutation cases rebuild a validated
+selector before the projection boundary and prove materialized default and null
+changes move the digest. The order case rebuilds the same validated selector
+from reversed input-key order and proves the digest remains stable. Together,
+these checks fail if an unset/default/null field is dropped, if the pinned model
+default drifts, or if a meaningful validated value changes; they do not merely
+edit the already-serialized census row.
+
+Independent standard-library reconstruction of the v1 framed bytes reproduces
+546 declarations, 35 family/modelo/revision sites, seven families, 510 direct
+routes, 36 declarations without a direct edge, and 130 source frames. The route
+digest is
+`sha256:20b2d2df5558b2a3fdbd1eab6e9f781a973e93c6211e211f8e679cf7b4782aca`;
+the unchanged source digest is
+`sha256:194a9f26ddfbae6c5d7f265ffe58f50964fbe2fcd02a5670fa19845dead5cf6d`.
+The substantive partition remains 510 canonical routes, three application
+sidecars, and 33 unresolved destinations. The previously documented production
+proof gaps remain honestly unproven, G0 remains OPEN, and the Step Record, plan,
+reference, and feature index agree. The S06 remediation changes only development
+quality/test and Vault metadata surfaces; it does not change product or TUI code.
+
+The full matrix suite passes 135 tests and the four selector-projection tests
+pass independently. Scoped `ty`, Ruff format/check, and basedpyright are clean,
+including the formerly failing root/schema Literal construction. The recorded
+nine-file behavior run's one `KDF_RESOURCE_LIMIT` is adequately isolated as an
+environmental setup refusal: 86 other cases passed, the failure occurred before
+the behavior under test, S06 did not change that production path, the prior
+independent serial suite passed all 87, and the complete affected four-case M369
+lane passes again serially in this review. It therefore does not block S06
+acceptance and is not represented as an uninterrupted product-suite pass.

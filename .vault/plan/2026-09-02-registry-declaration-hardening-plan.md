@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:b7dd615044c6ffeba7e389c7dba53c316a19e7ca7bf55e25ccb22f0cabd9f591'
+body_hash: 'sha256:c0c673d2e048c7a9d9fb14ce5a058a6eb50f1f0f70f1f39dfccfcc171824215c'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -499,6 +499,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S617` - Assert the mirror half of the epoch anchor partition, since the pairing computed both directions and only the target half was ever read: the set naming anchors an epoch stops declaring stood at 86, 16, 18, 30 and 9 across the five boundaries with nothing examining it; `dev/registry/tests/test_modelo_303_semantic_maps.py`.
 - [x] `W02.P02.S618` - Read the glossary render's deduplicated-term evidence and make the approved-concept bound exact, since a concept whose every headword collides is skipped from the page and counted nowhere, and the bound was a less-than-or-equal that absorbed such a drop as a smaller number; `dev/docs/tests/test_glossary_reference.py`.
 - [x] `W02.P02.S619` - Gate the download descriptor's tap, bucket and repository names against the install commands that publish them, since all five location fields were read nowhere while hand-written commands restated the same names, so renaming a tap in the single source of truth would leave every published command pointing at the old one; `dev/docs/tests/test_download_matrix.py`.
+- [x] `W02.P02.S620` - Derive the capability matrix's placeholder and identity checks from the model rather than a hardcoded tuple of field names, since a field added to either declaration would have been silently exempt while the validator went on naming three; `dev/quality/clitui_ledger_capability_matrix.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
