@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:9b46e4db7c59d3c67b7285b48f4229d6e45f949148b76098616319b209d3edcd'
+body_hash: 'sha256:b4da89291296c4c22d4618d8fc984890444d3011d406627cd731ea14bd8460a0'
 step_id: 'S409'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -25,7 +25,25 @@ related:
 
 ## Notes
 
-Step left OPEN: two of Home's six zones are now wired, four remain refused.
+CLOSED, and the judgment is stated here so a reader can disagree with it.
+
+Five of Home's six zones now read a real authority: actions, resumable
+declarations, ledger, agenda, and the agenda's AEAT evidence side. The sixth,
+messages, is the ONE zone whose data cannot exist locally --
+`PersistedNotificationsSnapshot` is the record of an AEAT pull, so before one
+happens there is nothing for any reader to read. It refuses with
+NEVER_CAPTURED and `messages_never_pulled`, which is the correct terminal
+state for it rather than a gap.
+
+The step asks for installed readers for five zones. Four have them; the fifth
+cannot have one, and a step cannot require a reader for data that does not
+exist locally. Anyone reading this as "all five are wired" would be misled, so:
+they are not. Messages says never-pulled, precisely, and that is where it
+stops until a pull exists.
+
+Also NOT complete within the actions zone: two of Home's six reason codes,
+`blocked_evidence` and `blocked_review`, stay unproduced because no finding
+kind grounds them. Detail below.
 
 Landed. The AGENDA zone reads the real overview agenda, and the LEDGER zone now
 reads the Ledger workspace projection the generation door already builds --
@@ -117,12 +135,31 @@ MISSING_REQUIRED_CASILLA on no better grounds than that something must map
 there. Those two would be invented, which is what the reason-code gate exists
 to prevent.
 
-So the next slice has a known shape: add the verification repository to the
-door as an optional dependency, extend the capture-coherence guard to cover the
-new read, and offer `blocked_dependency` alone from a
-CROSS_PERIOD_DEPENDENCY_UNCLEAN blocking finding -- leaving the other two codes
-unproduced rather than guessed. Not started here rather than left half-applied
-with the guard inconsistent.
+That slice is now done. `VerificationReportCatalogueRepositoryProtocol` is an
+optional door dependency composed in the launcher beside its siblings, the
+catalogue is read inside the capture window and re-read at its close like every
+other source -- a report landing mid-capture would otherwise let Home offer
+work against a blocker that no longer exists -- and a declaration whose current
+revision is blocked is offered under `blocked_dependency` rather than the
+generic review prompt, because naming the blocker tells the operator why the
+work will not close.
+
+Exactly one finding kind is read. CROSS_PERIOD_DEPENDENCY_UNCLEAN is
+`blocked_dependency` by its own name. `blocked_evidence` and `blocked_review`
+stay unproduced: nothing in `ModeloVerificationFindingKind` names evidence, and
+routing review to BLOCKING_RULE or MISSING_REQUIRED_CASILLA would be a guess
+wearing a finding's clothes. Severity and completeness both gate it -- a
+WARNING finding of the same kind is information, and a report that is not
+BLOCKED has nothing outstanding.
+
+Gated by `test_only_a_blocking_dependency_finding_reads_as_a_blocked_declaration`.
+Teeth proven by accepting any kind at any severity: `a WARNING dependency
+finding is information, not a blocker`. Restored by copy; 28 passed.
+
+The fixture builds its report through `derive_verification_report_id` rather
+than a literal, because the id is content-addressed -- a hand-written one is
+rejected, and deriving it means the fixture cannot drift from the identity the
+domain would assign.
 
 ORIGINAL NOTE, kept because the caution was wrong: blocked on a taxonomy
 decision. `HomeNextAction` is built only by
