@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:13fcb3bd29afea1b848804796bb83a77306e3c90869ace294ffdc1549fb03835'
+body_hash: 'sha256:ccef4eaafceeae12b43d44b4445692d29ab240c5529a675a26d07006793c1378'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-reference]]"
@@ -51,14 +51,13 @@ authoritative publication feeds S08 row adjudication, the unsupported dual-mode
 wording can fork a financially material rollback contract even while the row is
 provisional.
 
+### batch-patch-atomicity-resolution | low | Corrected row now preserves all-or-none financial mutation
+
+The corrected candidate contract names a version-bound atomic multi-row result, and the proof obligation requires all-or-none rollback, idempotency, stable target identity, and baseline-concurrency refusal. A fresh independent review found no remaining best-effort or partial-success wording for financial batch mutation; remaining best-effort references are confined to ADR-authorized import, proposal generation, and provider ingestion behavior.
 ## Recommendations
 
 No open recommendation remains. Preserve the provisional/fail-closed state until S04-S14 replace baseline families with a complete, reviewed, digest-bound denominator and an exact acceptance attestation.
 
-For `batch-patch-atomicity-fork`, make the candidate S78 result unambiguously
-atomic and keep best-effort semantics scoped to the ADR-authorized import and
-proposal-generation operations. This final review supersedes the earlier
-no-open-recommendation disposition above.
+The `batch-patch-atomicity-fork` recommendation is resolved by the corrected S78 candidate contract and the passing atomicity re-review.
 
-Final disposition: **NOT ACCEPTED**. Open severity counts are CRITICAL 0, HIGH
-1, MEDIUM 0, LOW 0.
+Final disposition: **ACCEPTED**. Open severity counts are CRITICAL 0, HIGH 0, MEDIUM 0, LOW 0.

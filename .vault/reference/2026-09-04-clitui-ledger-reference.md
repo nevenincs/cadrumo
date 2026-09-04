@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:313df4e28b7b64e4a712456d846ba2bba78db7370d67d11137938e69ac57c33a'
+body_hash: 'sha256:e92e52cab8bd76091c189fa32b5b4f8324d1b01d1672c5baad2e7944e6c0c38e'
 related:
   - "[[2026-09-04-clitui-ledger-research]]"
   - "[[2026-06-10-ledger-interface-contract-adr]]"
@@ -98,7 +98,7 @@ These 41 family rows are the S03 baseline keys. They are not yet admitted `Ledge
 | `ledger.manual_override.provenance` | `PRODUCT` | `src/cadrumo/domain/transactions/change_provenance.py`; override basis and authority history in S84/S86 | `product`, `provenance`, `proof` |
 | `ledger.import.normalization_provenance` | `PRODUCT` | `src/cadrumo/domain/transactions/change_provenance.py`; source-column mapping and normalized-value history in S84/S86 | `product`, `provenance`, `proof`; CLI projection in S113 |
 | `ledger.fx.provenance` | `PRODUCT` | `src/cadrumo/domain/transactions/models.py`; original/normalized currency, rate source/date, and operation identity in S85/S86 | `product`, `provenance`, `proof`; filing evidence in S100 and CLI projection in S113 |
-| `ledger.transaction.batch_patch` | `PRODUCT` | `src/cadrumo/application/ledger/change_sets.py`; version-bound atomic/best-effort result in S78/S86 | `product`, `composition`, `provenance`, `proof` |
+| `ledger.transaction.batch_patch` | `PRODUCT` | `src/cadrumo/application/ledger/change_sets.py`; version-bound atomic multi-row result in S78/S86 | `product`, `composition`, `provenance`, `proof` |
 | `ledger.registry.iva` | `REGISTRY` | registry binding/resolution and calculation route; exact route contract in S06/S100 | `registry`, `proof`; nonzero M309/M322/M353 route proof open |
 | `ledger.registry.oss` | `REGISTRY` | registry binding/resolution and M369 route; exact route contract in S06/S100 | Preserve issued-invoice-catalogue distinction; proof bounded below |
 | `ledger.registry.renta_expense` | `REGISTRY` | registry binding/resolution and M100 route; exact route contract in S06/S100 | Preserve evidence and deduction-ratio requirements |
@@ -180,7 +180,7 @@ Focused command-graph/spec tests passed 27 tests, the root Ledger help and all 1
 | Atomic evidence replace | Content-addressed store and ledger events | Atomic transition, finalized-use guard, retention policy |
 | Append-only notes | Bucket event history | Immutable identity, actor/time/source, read order |
 | Changed-field provenance | Invoice field provenance and bucket events | Sensitive-value policy and exact change-set round trip |
-| Generic batch patch | Batch result/precondition machinery | Atomicity/partial result, idempotency, ID remap, concurrency |
+| Generic batch patch | Batch result/precondition machinery | All-or-none rollback, idempotency, stable target identity, baseline concurrency refusal |
 | Application paging | Query DTOs and indexed repository reads | Stable snapshot/order and page contract |
 
 ### Direct backend behavior gate

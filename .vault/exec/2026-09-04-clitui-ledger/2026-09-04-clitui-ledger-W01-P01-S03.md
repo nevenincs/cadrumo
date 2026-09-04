@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:a47cdf8f1d1f791b49e834a48bec827541a06420201c5e148bfe6ff826b0dc0c'
+body_hash: 'sha256:cfb55db9319b96848121a3939e1ebcbc77c26ec52940eb12b898ca315e557d12'
 step_id: 'S03'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
@@ -22,4 +22,4 @@ related:
 - `A` `.vault/audit/2026-09-04-clitui-ledger-s03-matrix-publication-review-audit.md`
 - `M` `.vault/plan/2026-09-04-clitui-ledger-plan.md`
 - `M` `.vault/index/clitui-ledger.index.md`
-- `verify:` `uv run --no-sync vaultspec-core vault check all --feature clitui-ledger --no-hints`; independent S03 publication review and re-review -> `pass`
+- `verify:` `uv run --no-sync vaultspec-core vault check all --feature clitui-ledger --no-hints`; independent S03 publication, plan-coordinate, and batch-atomicity re-reviews -> `pass`
