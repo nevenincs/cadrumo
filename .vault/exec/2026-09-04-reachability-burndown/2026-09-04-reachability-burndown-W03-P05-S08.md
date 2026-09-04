@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:e027694f2b1aa70e15a339d09c5fff6f10b1290b3bb4ca73d5508a346602bb64'
+body_hash: 'sha256:39f2b272a52886d8dd2f1326cf2daabd4e4e046f0e92ec6f7755ab61ed9c0d59'
 step_id: 'S08'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
@@ -59,11 +59,36 @@ Three failures in the registry schema suite are pre-existing, proven by A/B agai
 of both unmodified modules and the five unmodified tests: 3 failed and 364 passed
 identically with and without this change.
 
-## Notes on remaining scope
+## Notes on the second pass
 
-This Step's area is not exhausted. 96 exact findings remain in `domain/calculations`, and
-sampling showed two further classes rather than one: `live_parity` and
-`record_design_coverage` are parity and coverage harnesses whose consumers are `dev` and
-tests, which is the design-time-authority shape already adjudicated for the operator
-surface, and `authority.py` mixes a dev-only inspection entry point with a test-only cache
-reset. Those need their own passes.
+`domain/calculations` fell from 106 exact findings to 90 across two passes. The remainder
+is classified rather than deleted, and the classification is the deliverable: this area's
+findings are not one population.
+
+`live_parity` and `record_design_coverage` are production-reachable modules, not dead ones
+-- `entrypoints/cli/registry.py` imports live_parity's types and `_validate_completeness`
+imports record_design_coverage. What the audit flags in them is their AUDIT SURFACE, the
+functions `dev/registry/parity/maintenance.py`, the analysis census, the dev conftest and
+the packaging cohort script consume. Relocating individual functions out of a
+production-reachable module into `dev/` would split a cohesive module and force `dev/` to
+restate registry knowledge, so that surface is recorded as design-time authority and stays
+where it is. The same applies to `authority.py`'s `bundled_revision_inspection`,
+`stamp_bundled_registry_release` and `reset_registry_caches`.
+
+One symbol was genuinely dead and removed: `_RegistryFingerprints`, a type alias appearing
+exactly once tree-wide -- its own definition -- among three siblings declared beside it
+that are used two to three times each in the same module.
+
+Three are recorded `should-be-live` with their remedy needing a decision:
+`pre_flight_oracle_operations`, `evaluate_planned_operations` and
+`resolve_cross_reference_oracle`. Two are exported in `live_parity`'s `__all__`, none is
+called anywhere in production or `dev/`, and each carries a substantial test suite of nine,
+five and thirteen references. They are the oracle pre-flight surface for the sede
+renta-web-open cluster, which this campaign already carries as unreachable staged
+capability, so they are most likely transitively dead through it. Deleting exported API
+from filing-grade registry code on the audit's say-so is exactly what the governing
+decision reserves for its owner.
+
+Eight failures in the wider registry selection are pre-existing, proven by A/B against a
+copy of the unmodified `authority.py`: 8 failed, 506 passed and 1 skipped identically with
+and without this change.
