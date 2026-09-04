@@ -550,3 +550,34 @@ symbols = [
   "validate_nif_string", "validate_period_code",
 ]
 evidence = "A two-layer alias chain. schema_scalars defined each validator privately, used it in its own Annotated type, and bound a PUBLIC alias to it; schema.py then imported that public alias under an _impl name and bound a second private alias, so tests could import the validator from schema. Neither alias layer had a production consumer: each _impl appeared exactly twice in schema.py, its import and its alias. Tests now import the private implementation from schema_scalars directly, and both alias layers are gone."
+
+[[symbol_cluster]]
+name = "registry authority dead type alias"
+class = "orphaned"
+area = "domain/calculations/registry"
+resolved = true
+symbols = ["_RegistryFingerprints"]
+evidence = "A type alias appearing exactly once tree-wide, its own definition, among three siblings declared beside it that are used two to three times each in the same module."
+
+[[symbol_cluster]]
+name = "registry parity and coverage audit surface"
+class = "design-time-authority"
+area = "domain/calculations/registry"
+resolved = false
+symbols = [
+  "collect_applicability_declarations", "collect_orphan_oracle_ids", "audit_registry_oracle_bindings",
+  "bundled_revision_inspection", "stamp_bundled_registry_release", "reset_registry_caches",
+  "calculation_closure_record_design_metadata", "calculation_closure_legal_refs",
+  "derive_calculation_completeness_casillas", "derive_diseno_coverage_casillas",
+  "build_diseno_coverage_report",
+]
+evidence = "These live in modules that ARE production-reachable -- entrypoints/cli/registry.py imports live_parity types and _validate_completeness imports record_design_coverage -- so the modules are dual-purpose rather than dead. The flagged symbols are the audit surface the design-time tooling consumes: dev/registry/parity/maintenance.py, dev/registry/analysis/load_census_classification.py, the dev conftest, and the packaging cohort script. Relocating individual functions out of a production module into dev/ would split a cohesive module and force dev/ to restate registry knowledge, so the surface stays where it is."
+
+[[symbol_cluster]]
+name = "oracle parity entry points with no current caller"
+class = "should-be-live"
+area = "domain/calculations/registry"
+resolved = false
+remedy_requires_decision = true
+symbols = ["pre_flight_oracle_operations", "evaluate_planned_operations", "resolve_cross_reference_oracle"]
+evidence = "Two are declared in live_parity's __all__ and one is not; none is called anywhere in production or in dev/, and each carries a substantial test suite (9, 5 and 13 references). They are the oracle pre-flight surface for the sede renta-web-open cluster, which is itself carried as unreachable staged capability, so they are most likely transitively dead through it. Deleting exported API from filing-grade registry code on the audit's say-so needs its owner's decision."
