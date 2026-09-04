@@ -14131,3 +14131,69 @@ of it you are on.
 
 The three files outside every lane's path scope are unchanged: the two
 conformance closure modules and one TUI visual-inventory module.
+
+
+## A docstring describing a mechanism its own function says was retired
+
+The complexity audit's module docstring opened with "auditor with a debt
+ratchet" and spent thirty lines on grandfathering, baseline scopes, `--strict`,
+and "resolved" notices. Twenty lines below it, `load_baseline` says: "Return an
+empty baseline: this audit grandfathers nothing. The committed baseline and the
+reviewed allowlist were both retired." The run's own closing line says the same
+thing to the operator: there is no baseline, allowlist, or accept flag.
+
+So the function-level documentation and the user-facing output were current and
+the module-level documentation was not, in the same file. A reader arriving at
+the top learned a mechanism that had been removed, and would have to read to
+line 257 to find out.
+
+The retirement is complete and committed - the baseline JSON is gone from `HEAD`
+and the module carries no pending diff - so reconciling the prose was safe to do
+rather than only to record. The docstring now describes what the code does: fixed
+thresholds, every hit reported as it stands, a run that fails while any hotspot
+exists, and the two scopes as separate populations rather than a two-scope
+ratchet.
+
+Measured while reconciling, and stated in the docstring so the next reader knows
+what the figures were when the words were written: **667 production hotspots and
+534 in test files**. `--tests` works; nothing passes it.
+
+The general shape has now appeared in a docstring, a gate comment, a plan Step, a
+frozen count and my own reporting, which is enough to state it without the
+instance: documentation and code drift apart at whatever granularity nobody
+compares them at. Here the drift was twenty lines wide inside one file, between a
+module docstring and a function docstring that contradicted each other, and both
+were written by people who knew what they meant at the time.
+
+
+## The classifiers that decide the audit's verdict had no tests
+
+Reconciling the complexity audit's docstring exposed the next question: what
+tests it. Nothing did. Its three test modules were retired along with the
+baseline and allowlist they covered, and the sibling that imports its
+classifiers - `dev/audit/report.py` - is tested only through a stubbed
+dimension that never reaches them.
+
+So `_classify_cc`, `_classify_mi` and `_classify_cog`, which partition every hit
+into new, regressed, allowed and resolved and decide whether the audit fails,
+had no coverage at all. They are pure functions over constructed hits, so the
+gap cost nothing to close: nine tests now pin them.
+
+The property worth having is the asymmetry. Cyclomatic and cognitive scores are
+CEILINGS where higher is worse; the maintainability index is a FLOOR where lower
+is worse. A classifier copied from its siblings would call every genuine
+maintainability regression allowed while failing the files that improved, and
+nothing in the shape of the three functions says which is which - they differ by
+one comparison operator each.
+
+Also pinned: the boundary is inclusive, so a score equal to its baseline is
+allowed rather than regressed; a baseline entry with no current hit is resolved
+and does not fail; a key mismatch reclassifies every hit as NEW rather than
+raising, which with a populated baseline would fail a clean tree; and
+`build_baseline` round-trips - a baseline captured from a set of hits must let
+those same hits pass, or the capture is not a capture.
+
+I wrote the round-trip test against guessed field names and it failed on
+`Baseline.cc` where the dataclass says `cyclomatic`. That is the same
+guess-instead-of-read this campaign has recorded before, and it cost one run
+because the names are three lines from the function under test.

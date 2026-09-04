@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:46d55dfd38d627816599edab2bc17c33b5b803f81562cb23a3894f89bfc60681'
+body_hash: 'sha256:cd75b378629777c7b0509658abde2e8cb8d04dde11f574cb4c8af4e812b49b5f'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -395,7 +395,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S512` - Narrow the citation gates self-exemption from a whole-file skip to two regions located by parsing the module, shrinking the blind spot from 1365 lines to 33, with a test asserting the exemption stays under a twentieth of the file; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W02.P02.S513` - Remove the dead self-skip from the wall-advisory threshold scan, which excluded the gates own file although its pinned names appear there only as dictionary keys the line-anchored pattern cannot match, with a planted drift in a file of that name as the proof; `dev/ci/tests/test_wall_advisory.py`.
 - [x] `W02.P02.S514` - Measure the directory exclusion the production audits share, 59 per cent of src lines and 49 per cent of dev, and establish it is a declared scope rather than a blind spot, unlike the two file-name exemptions whose comments described something other than what they did; `dev/audit`.
-- [ ] `W02.P02.S515` - Reconcile the complexity audits two-scope docstring with the tree: it describes production and tests baselines that were retired, and no lane passes --tests, so the tests scope has a runner nowhere and a baseline nowhere; `dev/audit/complexity.py`.
+- [x] `W02.P02.S515` - Reconcile the complexity audits two-scope docstring with the tree: it describes production and tests baselines that were retired, and no lane passes --tests, so the tests scope has a runner nowhere and a baseline nowhere; `dev/audit/complexity.py`.
 - [x] `W02.P02.S516` - Report the collected population on every run-integrity row, since under xdist a marker-filtered run prints no deselection count at all and the item count is the only trace, while keeping the lost-worker banners own figure where it exists; `dev/quality/run_integrity.py,dev/quality/tests/test_run_integrity.py`.
 - [x] `W02.P02.S517` - Establish that every default pytest run here is filtered by addopts and silent about it under xdist, hiding 34 registry, 22 locale and 22 audit tests, then verify each figure this session quoted was taken at the population it claims; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W02.P02.S518` - Count the tests no automation runs: 24 external_tool, 41 os_keychain and 13 resident_service have an enrolling recipe and no workflow, each excluded for a declared environmental reason, with a gate protecting the exclusion and none protecting the inclusion; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
@@ -404,6 +404,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [ ] `W02.P02.S521` - Bring dev/registry/conformance/tests into a lane path scope: its nineteen tests carry unit and hex_core markers and are unreachable by any declared recipe because no lanes paths reach the directory, which is why the ordinary lane never selected them; `justfile`.
 - [x] `W02.P02.S522` - Locate the conformance closure suites absence exactly: nineteen tests unreachable by any declared lane and two files outside every lane path scope, against 66 declared-unreachable and 181 CI-unreachable tests overall; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W02.P02.S523` - Audit this sessions own closures and reachability: all eight Steps scoped outside dev and .vault are open, and no test module this session added is unreachable by a CI-invoked lane; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W02.P02.S524` - Cover the complexity audits three classifiers, which had no tests after its own test modules were retired with the baseline, pinning the ceiling-versus-floor asymmetry that one copied comparison operator would invert; `dev/audit/tests/test_complexity_classification.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

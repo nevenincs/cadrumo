@@ -10,7 +10,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
   - '[[2026-08-31-aeat-export-fragment-generator-authority-source-defect-adjudication-adr]]'
 modified: '2026-09-04'
-body_hash: 'sha256:ff36e670de4a85ef1f697d06c1873a1b8627a93aac86b6e89d1e2b797dd4555f'
+body_hash: 'sha256:01a204889846f51219c909c4ce412798b3c076ec3b171a86d470854dfde2f3a8'
 ---
 
 <!-- RETIRED: S19, S26, S65, S93 -->
@@ -88,6 +88,7 @@ Cover every authority boundary with positive and negative real-behavior tests.
 ### Phase `W03.P06` - repository and byte gates
 
 Verify generated layouts as loadable complete structures and as real emitted filing bytes.
+
 
 ## Wave `W04` - regenerate and release relayout waves
 
@@ -210,8 +211,8 @@ Enroll real conformance vectors so the non-sensitive channel actually assesses t
 
 The assessment model admits proof exclusive-or refusals and the closure limb enum admits only satisfied, not_applicable, refused, and unmeasured, so a revision with proven conformance awaiting operator custody is indistinguishable from one with nothing proven. Carry the per-channel outcome into the closure limb so the two states stay distinct, as no-silent-under-declaration requires, without weakening the filing-grade predicate that still demands both channels.
 
-- [ ] `W05.P10.S122` - Carry per-channel conformance and secure-replay outcomes into the filing_export closure limb so a proven-conformance-awaiting-custody revision is reported distinctly from an unproven one, preserving the filing-grade predicate that requires both channels; `src/cadrumo/application/registry/filing_export_coverage.py, src/cadrumo/application/registry/closure.py, src/cadrumo/application/filing/export_proof.py`.
-- [ ] `W05.P10.S123` - Render the distinguished state in the closure report and its release predicate so the operator can read which revisions await only custody, and prove a custody-pending revision never counts toward release eligibility; `dev/registry/conformance/closure.py, dev/registry/conformance/tests/test_closure.py`.
+- [x] `W05.P10.S122` - Carry per-channel conformance and secure-replay outcomes into the filing_export closure limb so a proven-conformance-awaiting-custody revision is reported distinctly from an unproven one, preserving the filing-grade predicate that requires both channels; `src/cadrumo/application/registry/filing_export_coverage.py, src/cadrumo/application/registry/closure.py, src/cadrumo/application/filing/export_proof.py`.
+- [x] `W05.P10.S123` - Render the distinguished state in the closure report and its release predicate so the operator can read which revisions await only custody, and prove a custody-pending revision never counts toward release eligibility; `dev/registry/conformance/closure.py, dev/registry/conformance/tests/test_closure.py`.
 - [ ] `W05.P10.S124` - Retire the withdrawn single-channel filing proof surface and its stale caller, removing LiveFilingExportProofAuthority and the test asserting a satisfied outcome no revision can reach, with no compatibility shim; `dev/registry/filing_export_proof.py, dev/registry/conformance/tests/test_real_closure_outcomes.py`.
 
 ### Phase `W05.P11` - independent review and canonicality
