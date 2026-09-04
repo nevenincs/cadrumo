@@ -33,7 +33,7 @@ from cadrumo.entrypoints.cli import (
 )
 from cadrumo.entrypoints.cli import ledger_lifecycle_cli as _ledger_lifecycle_cli
 
-from .. import LocaleManager, LocaleNode
+from ..manager import LocaleManager, LocaleNode
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -20,13 +20,9 @@ from pathlib import Path
 import pytest
 import yaml
 
-from .. import (
-    LocaleManager,
-    LocaleMoveConflict,
-    LocaleNode,
-)
+from .._subtree_move import LocaleMoveConflict
 from ..errors import LocaleError
-from ..manager import _flatten_leaf_values
+from ..manager import LocaleManager, LocaleNode, _flatten_leaf_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

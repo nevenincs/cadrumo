@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-from .. import classify_revision_moves
+from .._revision_drift import classify_revision_moves
 from ..cli import _echo_file_audit
 from ..manager import _audit_locale_file
 
