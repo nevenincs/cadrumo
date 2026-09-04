@@ -140,24 +140,20 @@ def test_import_aliases_and_same_named_bases_cannot_escape_the_inventory(
     root = source_root / "cadrumo" / "entrypoints" / "tui"
     root.mkdir(parents=True)
     (root / "aliased.py").write_text(
-        "from textual.screen import Screen as TuiScreen\n"
-        "class AliasedScreen(TuiScreen):\n    pass\n",
+        "from textual.screen import Screen as TuiScreen\nclass AliasedScreen(TuiScreen):\n    pass\n",
         encoding=UTF_8,
     )
     (root / "qualified.py").write_text(
-        "import textual.app as textual_app\n"
-        "class AliasedApp(textual_app.App):\n    pass\n",
+        "import textual.app as textual_app\nclass AliasedApp(textual_app.App):\n    pass\n",
         encoding=UTF_8,
     )
     (root / "first.py").write_text(
-        "from textual.screen import Screen as RootScreen\n"
-        "class Shared(RootScreen):\n    pass\n",
+        "from textual.screen import Screen as RootScreen\nclass Shared(RootScreen):\n    pass\n",
         encoding=UTF_8,
     )
     (root / "second.py").write_text("class Shared(object):\n    pass\n", encoding=UTF_8)
     (root / "child.py").write_text(
-        "from .first import Shared as ImportedShared\n"
-        "class ImportedChild(ImportedShared):\n    pass\n",
+        "from .first import Shared as ImportedShared\nclass ImportedChild(ImportedShared):\n    pass\n",
         encoding=UTF_8,
     )
     monkeypatch.setattr(_inventory, "REPO_ROOT", tmp_path)

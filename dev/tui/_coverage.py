@@ -205,9 +205,7 @@ def notes(rendered_table: Mapping[str, tuple[str, ...]] = RENDERED_BY) -> dict[s
     for qualname, classification in CLASSIFICATIONS.items():
         disposition = classification.disposition
         if disposition in {InventoryDisposition.COVERED, InventoryDisposition.FIXTURE_NEEDED}:
-            disposition = (
-                InventoryDisposition.COVERED if qualname in painted else InventoryDisposition.FIXTURE_NEEDED
-            )
+            disposition = InventoryDisposition.COVERED if qualname in painted else InventoryDisposition.FIXTURE_NEEDED
         resolved[qualname] = "; ".join(part for part in (disposition.value, classification.note) if part)
     return resolved
 

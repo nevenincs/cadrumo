@@ -123,6 +123,7 @@ async def test_home_renders_under_both_appearances(tmp_path: Path) -> None:
 
         assert len(set(painted.values())) == 1, f"appearance changed the mounted content: {painted}"
 
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize("size", [s for s in SUPPORTED_TERMINAL_SIZES if s[0] >= 120])
 @pytest.mark.parametrize("scenario", ["ready", "blocked"])
@@ -152,9 +153,7 @@ async def test_home_keeps_a_gutter_between_its_two_columns(scenario: str, size: 
         assert sidebar, f"Home is not in its two-column layout at {size}"
         boundary = sidebar.first().region.x
         rows = screen_text(app, width, height).splitlines()
-        collisions = [
-            row for row in rows if len(row) > boundary and row[boundary - 1] != " " and row[boundary] != " "
-        ]
+        collisions = [row for row in rows if len(row) > boundary and row[boundary - 1] != " " and row[boundary] != " "]
         app.exit(None)
 
     assert not collisions, "Home paints left-column text against the sidebar:\n" + "\n".join(collisions[:3])

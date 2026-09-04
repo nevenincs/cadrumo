@@ -131,6 +131,7 @@ def test_an_empty_profile_store_ends_the_headless_session_without_creating_one(t
         assert main(headless=True) == SESSION_COMPLETED
         assert not list(Path(storage_root).glob("**/*.capsule"))
 
+
 @pytest.mark.asyncio
 async def test_a_profile_without_a_declared_identity_leaves_aeat_sync_unavailable(tmp_path: Path) -> None:
     """AEAT evidence is scoped to the filer, so an undeclared filer has none.
