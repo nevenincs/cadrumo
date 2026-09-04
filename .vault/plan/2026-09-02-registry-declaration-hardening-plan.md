@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:7be1a4c28e8ef67027b8931e6526f33398140a4f2d1c97e09039b2416ca13af3'
+body_hash: 'sha256:1b3b4e78ef410c7beb308b7190042ef8f418ffea90b145d29beba94f5011cf37'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -435,6 +435,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S553` - Make a mistyped --uv on the cohort oracle-emit leg render the module's fail-closed refusal instead of escaping as a pathlib FileNotFoundError traceback, and cover the executable resolution and argument contract that decide whether every OS leg proves the same cohort; `dev/packaging/oracle_emit_cohort.py,dev/packaging/tests/test_oracle_emit_cohort.py`.
 - [x] `W02.P02.S554` - Declare the five explicit IVA facts the golden-eval profiles never carried, so seven agent_eval tests stop failing on a profile the product refuses rather than on the behaviour they were written to prove; the two M200 cases that remain fail on the registry validation event, not on the fixture; `dev/agent_eval/tests/test_faithfulness_golden.py,dev/agent_eval/tests/test_response_provenance_golden.py,dev/agent_eval/tests/test_under_declaration_golden.py`.
 - [x] `W02.P02.S555` - Drive the real profile-creation verb headlessly through the bounded secrets channel and a recovery descriptor pair relayed by a thread, then log in, complete setup, and request the law-determined M347 revision, so the two golden-eval modules reach the behaviour they exist to prove instead of refusing at the lifecycle gates; `dev/agent_eval/tests/_scripted_registration_channels.py,dev/agent_eval/tests/test_active_profile_confirmation_golden.py,dev/agent_eval/tests/test_lifecycle_contradiction_golden.py`.
+- [x] `W02.P02.S556` - Derive the determinism-replay gate's zero-argument golden call from the live MCP descriptors instead of naming a retired tool, so the gate reports replay divergence rather than failing in its own resolver on a tool that no longer exists; `dev/agent_eval/tests/test_tool_call_replay.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
