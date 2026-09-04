@@ -20,22 +20,22 @@ from pathlib import Path
 import pytest
 
 from ...._paths import REPO_ROOT
-from .._schema import (
-    ExtractionStatus,
-    PreprocessOutput,
-    SourceDocumentKind,
-)
-from .._sidecar import (
-    EXTRACTED_TEXT_SUFFIX,
-    PreprocessSidecarError,
-    load_sidecar,
-    sidecar_paths_for,
-)
 from .._text import (
     SUPPORTED_TEXT_EXTENSIONS,
     TEXT_EXTRACTOR_ID,
     build_outputs,
     extract_text_file,
+)
+from ..schema import (
+    ExtractionStatus,
+    PreprocessOutput,
+    SourceDocumentKind,
+)
+from ..sidecar import (
+    EXTRACTED_TEXT_SUFFIX,
+    PreprocessSidecarError,
+    load_sidecar,
+    sidecar_paths_for,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.docs, pytest.mark.hex_core]

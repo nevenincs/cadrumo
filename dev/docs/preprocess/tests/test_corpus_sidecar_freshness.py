@@ -70,10 +70,10 @@ from pydantic import ValidationError
 from cadrumo.core.directory_scan import scan_directory
 
 from ...._paths import REPO_ROOT, UTF_8
-from .._html import build_outputs
 from .._parts import part_stand_in_path
-from .._schema import PreprocessOutput
-from .._sidecar import (
+from ..normatives_html import build_outputs
+from ..schema import PreprocessOutput
+from ..sidecar import (
     EXTRACTED_JSON_SUFFIX,
     PreprocessSidecarError,
     load_sidecar,

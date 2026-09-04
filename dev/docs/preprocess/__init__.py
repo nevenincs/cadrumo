@@ -35,15 +35,15 @@ Major declarations:
 
 from __future__ import annotations
 
-from ._html import render_normative_prose
-from ._schema import (
+from .normatives_html import render_normative_prose
+from .schema import (
     PREPROCESS_SCHEMA_VERSION,
     ExtractionStatus,
     PreprocessOutput,
     PreprocessUnit,
     SourceDocumentKind,
 )
-from ._sidecar import (
+from .sidecar import (
     EXTRACTED_JSON_SUFFIX,
     EXTRACTED_TEXT_SUFFIX,
     PreprocessSidecarError,

@@ -20,8 +20,8 @@ from pathlib import Path
 from typing import Final
 
 from ..._paths import UTF_8
-from ._schema import PreprocessOutput, PreprocessUnit
-from ._sidecar import write_sidecar
+from .schema import PreprocessOutput, PreprocessUnit
+from .sidecar import write_sidecar
 
 _UTF_8: Final[str] = UTF_8
 

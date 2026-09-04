@@ -86,10 +86,10 @@ def test_every_rule_owns_the_code_index_and_versions_its_extractor() -> None:
     family that owns its suffix, so an extractor bump invalidates the
     upstream preprocess cache instead of serving stale extractions.
     """
-    from .._html import HTML_EXTRACTOR_VERSION
     from .._pdf import PDF_EXTRACTOR_VERSION
     from .._terminology import TERMINOLOGY_EXTRACTOR_VERSION
     from .._workbook import WORKBOOK_EXTRACTOR_VERSION
+    from ..normatives_html import HTML_EXTRACTOR_VERSION
 
     owning_version = {
         ".html": HTML_EXTRACTOR_VERSION,

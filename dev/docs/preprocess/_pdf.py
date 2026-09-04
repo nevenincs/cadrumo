@@ -40,13 +40,13 @@ from ._parts import (
 )
 
 _UTF_8: Final[str] = UTF_8
-from ._schema import (
+from .schema import (
     ExtractionStatus,
     PreprocessOutput,
     PreprocessUnit,
     SourceDocumentKind,
 )
-from ._sidecar import PreprocessSidecarError, sha256_of
+from .sidecar import PreprocessSidecarError, sha256_of
 
 #: Stable id of this extractor, recorded in every sidecar's provenance.
 PDF_EXTRACTOR_ID = "corpus-pdf"

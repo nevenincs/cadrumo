@@ -38,13 +38,13 @@ from ._parts import (
     stamp_part_anchors,
     write_part_sidecars,
 )
-from ._schema import (
+from .schema import (
     ExtractionStatus,
     PreprocessOutput,
     PreprocessUnit,
     SourceDocumentKind,
 )
-from ._sidecar import (
+from .sidecar import (
     PreprocessSidecarError,
     sha256_of,
 )
