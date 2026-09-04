@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:0ffba30a8e1a303aca3736af1bba25d1e1e4682163e163150e30936bf6629055'
+body_hash: 'sha256:86772a05b6ed375506a3bda4acb3cddd341dec10e213166f5e2fb4ef7e77f13b'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -477,6 +477,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S595` - Announce the modules the modelo-branch and regulatory-prose screens cannot read, since each derives findings by walking source and a skipped module hides its own branch sites or its prose pattern, leaving a place where legal text is interpreted by regex that nobody reviews; `dev/registry/analysis/modelo_branch_classification.py,dev/registry/analysis/regulatory_prose_parser_channel.py,dev/registry/tests/test_regulatory_prose_parser_channel.py`.
 - [x] `W02.P02.S596` - Make the namespace retirement codemod name the files it left unmigrated, since each applying pass reported how many it fixed while the files it could not read were invisible, so an incomplete migration looked complete; `dev/quality/namespace_retirement_sweep.py,dev/quality/tests/test_namespace_retirement_sweep.py`.
 - [x] `W02.P02.S597` - Count only the diseno files actually read, since the scanned count exists so a zero can be told apart from a directory that was not there and counting before reading inflated that very denominator, and read strictly because a replaced byte can break the field anchor that carries the evidence; `dev/registry/derive_result_dispositions.py,dev/registry/tests/test_result_disposition_derivation.py`.
+- [x] `W02.P02.S598` - Guard the likelier half of the race the importer index already documents: it caught a peer's vanished scratch module but parsed outside that guard, so a peer caught mid-write left a file that exists and does not parse and killed the whole index instead of costing one file's imports; `dev/registry/analysis/modelo_embed_classification.py,dev/registry/tests/test_modelo_specific_embed_classification.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
