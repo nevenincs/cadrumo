@@ -116,3 +116,76 @@ def test_the_live_screen_finds_every_condition_and_names_the_source_locale() -> 
     assert {item.kind for item in findings} == set(KINDS)
     drifting = [item for item in findings if item.kind == "translation_drifts_where_source_is_constant"]
     assert len(drifting) > 100, f"only {len(drifting)} drifting casillas; the screen is near-vacuous"
+
+
+def test_a_difference_surviving_only_a_capital_is_mechanical() -> None:
+    """Case, accent and punctuation are folded away before wording is compared."""
+    from ..translation_drift import difference_kind
+
+    assert difference_kind(("Contribuent titular", "contribuent titular")) == "identical_after_folding"
+    assert difference_kind(("Situacio", "Situació")) == "identical_after_folding"
+    assert difference_kind(("Ownership (%)", "Ownership %")) == "identical_after_folding"
+
+
+def test_whitespace_is_checked_before_wording() -> None:
+    """Two renderings differing by a doubled space are not a wording difference.
+
+    They fold to different strings only by that space, so a wording comparison
+    reached first would send a translator to look at nothing.
+    """
+    from ..translation_drift import difference_kind
+
+    assert difference_kind(("per obres de conservacio", "per obres  de conservacio")) == "whitespace_only"
+
+
+def test_reordered_words_are_shared_wording_and_new_words_are_not() -> None:
+    """The split that decides whether a human has to read the source."""
+    from ..translation_drift import difference_kind
+
+    assert difference_kind(("Clau de situacio", "Situacio clau")) == "shared_wording"
+    assert difference_kind(("Accrual tax year", "Accrual year")) == "shared_wording"
+    assert difference_kind(("CNAE code of the main activity", "NACE identifier for principal trade")) == (
+        "distinct_wording"
+    )
+
+
+def test_a_single_rendering_has_no_difference_to_describe() -> None:
+    """Reporting one under any other kind counts a row that has no repair."""
+    from ..translation_drift import difference_kind
+
+    assert difference_kind(("Only one",)) == "not_applicable"
+    assert difference_kind(()) == "not_applicable"
+
+
+def test_the_threshold_is_a_declared_judgement_not_a_buried_one() -> None:
+    """A reader who disagrees can move it and re-run rather than re-derive it."""
+    from ..translation_drift import SHARED_WORDING_RATIO
+
+    assert 0.0 < SHARED_WORDING_RATIO < 1.0
+
+
+def test_every_difference_kind_is_reachable_and_the_live_corpus_carries_four() -> None:
+    """A kind with no proof stops being assigned without anyone noticing.
+
+    ``not_applicable`` is proven from constructed input alone: a drifting row
+    always has at least two renderings, so the live corpus cannot produce it,
+    which is exactly why it needs one.
+    """
+    from ..translation_drift import DIFFERENCE_KINDS, difference_kind, screen_corpus
+
+    constructed = {
+        difference_kind(pair)
+        for pair in (
+            ("a", "A"),
+            ("a b", "a  b"),
+            ("one two three", "three two one four"),
+            ("wholly different", "nothing alike here"),
+            ("single",),
+        )
+    }
+    assert constructed == set(DIFFERENCE_KINDS)
+
+    drifting = [item for item in screen_corpus() if item.kind == "translation_drifts_where_source_is_constant"]
+    assert drifting, "no drifting casilla, so this proves nothing"
+    assert "not_applicable" not in {item.difference for item in drifting}
+    assert {item.difference for item in drifting} <= set(DIFFERENCE_KINDS)
