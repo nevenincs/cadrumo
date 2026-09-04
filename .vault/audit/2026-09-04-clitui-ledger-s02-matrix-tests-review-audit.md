@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:98a3ff9f09ac3c314a9922286349080bb07c389c96f75599f37d07353cb84067'
+body_hash: 'sha256:f91c6694783a5a84fe72b0804f9d6379f7f0c97d56868d424b8fab6be75046b8'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-adr]]"
@@ -135,6 +135,28 @@ cannot compensate for a missing, stale, or non-accepting attestation. This
 resolves the prior MEDIUM fixture finding and completes the informational LOW
 adjudication; this entry is not an open LOW finding.
 
+### final-candidate-retest | low | RESOLVED: all S02 detector gaps are closed
+
+Final-candidate test commit
+`e12cc078012f0e0e81475c9338abf19747194a07`, SHA-256
+`a4454bfb623ad8321ce34839bbc9366422e36cfb16d5a05a65e806c5f637fbd3`,
+adds distinct durable G0 detectors for unrecorded and inactive holds, removed
+observed identities, same-identity source drift, census identity, digest,
+revision, observation-time, readability, completeness, ambiguity, and scan
+status drift, authority membership and generation drift, and every typed
+acceptance-attestation binding. It also exercises malformed copied nested
+authority/matrix graphs through single-gate, direct-currentness, and ordered
+evaluation boundaries, with deterministic fail-closed and redacted blockers.
+
+The focused suite now passes all 118 cases. Independent mutations reconfirmed a
+valid G0 control, the three malformed-authority boundaries, unrecorded hold and
+same-identity source-drift refusal, and representative denominator and review
+attestation binding failures. Ruff, BasedPyright, byte-compilation, and
+diff-whitespace checks are clean. Previously resolved G2--G4, explicit-empty,
+and typed-attestation coverage remains present. Both previously open HIGH
+findings are resolved, and no new CRITICAL, HIGH, MEDIUM, or LOW defect was
+found.
+
 ## Recommendations
 
 1. For `copied-graph-detectors`, add durable mutations for invalid copied live
@@ -167,3 +189,6 @@ adjudication; this entry is not an open LOW finding.
    0, HIGH 2, MEDIUM 0, LOW 0. The focused 92-test suite and static checks pass;
    the remaining findings concern mutations that still survive the durable test
    contract, not failures in the current S01 implementation.
+9. Final disposition: **ACCEPT**. Open severity counts are CRITICAL 0, HIGH 0,
+   MEDIUM 0, LOW 0. The 118-test detector suite now durably covers the accepted
+   S01 gate contract and all previously demonstrated trust-boundary exploits.
