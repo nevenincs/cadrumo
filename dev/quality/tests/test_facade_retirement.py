@@ -224,3 +224,93 @@ def test_the_live_report_never_names_a_submodule_or_an_unforwarded_name() -> Non
         forwarded = [name for name, _ in site.names if name not in package.submodules]
         assert forwarded, "a site was reported that asks the facade for nothing"
         assert all(name in package.exports for name in forwarded)
+
+
+def test_a_private_target_reached_from_another_package_is_refused() -> None:
+    """Retiring the facade must not create the worse violation in its place.
+
+    A facade forwarding out of ``_residual_identity`` is the only public home
+    that symbol has. Repointing an outside consumer straight at the private
+    module satisfies the inert-initialiser rule and breaks module privacy in the
+    same edit, and 33 of the corpus's 75 sites are in exactly that position.
+    """
+    from ..facade_retirement import refusal_reason, rewrite_statement
+
+    private = FacadePackage(dotted="widget", exports={"Motor": "widget._engine"}, submodules=frozenset({"_engine"}))
+    outsider = _site((("Motor", None),), package="other.package")
+    assert refusal_reason(outsider, private) == "cross_package_private_target"
+    assert rewrite_statement(outsider, private) == ()
+
+
+def test_a_private_target_inside_the_owning_package_is_allowed() -> None:
+    """A private module is private to its own package, so its tests may reach it.
+
+    Refusing these too would leave every one of the 42 safe sites unrewritable
+    and the retirement blocked everywhere rather than in the 33 places it is
+    genuinely blocked.
+    """
+    from ..facade_retirement import refusal_reason, rewrite_statement
+
+    private = FacadePackage(dotted="widget", exports={"Motor": "widget._engine"}, submodules=frozenset({"_engine"}))
+    for package in ("widget", "widget.tests"):
+        inside = _site((("Motor", None),), package=package)
+        assert refusal_reason(inside, private) is None
+        assert rewrite_statement(inside, private) == ("from widget._engine import Motor",)
+
+
+def test_a_public_target_is_never_refused_for_privacy() -> None:
+    """The refusal is about the underscore, not about crossing a package."""
+    from ..facade_retirement import refusal_reason
+
+    assert refusal_reason(_site((("Motor", None),), package="other.package"), _FACADE) is None
+
+
+def test_documentation_references_move_with_the_same_map() -> None:
+    """A docstring path that only the facade makes true goes dangling without this."""
+    from ..facade_retirement import reference_rewrites
+
+    package = FacadePackage(
+        dotted="dev.harness",
+        exports={"Scored": "dev.harness._scoring", "score": "dev.harness._scoring"},
+        submodules=frozenset({"_scoring"}),
+    )
+    text = "See :class:`~dev.harness.Scored` and :func:`~dev.harness.score`.\n"
+    rewritten, count = reference_rewrites(text, package)
+    assert count == 2
+    assert "dev.harness._scoring.Scored" in rewritten
+    assert "dev.harness._scoring.score" in rewritten
+
+
+def test_a_reference_to_a_submodule_is_not_rewritten_into_itself() -> None:
+    """``dev.harness._scoring`` is a module path, not a forwarded name."""
+    from ..facade_retirement import reference_rewrites
+
+    package = FacadePackage(
+        dotted="dev.harness",
+        exports={"Scored": "dev.harness._scoring"},
+        submodules=frozenset({"_scoring"}),
+    )
+    text = "Defined in :mod:`~dev.harness._scoring`.\n"
+    assert reference_rewrites(text, package) == (text, 0)
+
+
+def test_a_reference_does_not_claim_a_longer_name_that_starts_with_it() -> None:
+    """``Scored`` must not eat the text of ``ScoredField``.
+
+    Longest-first ordering alone does not prevent it: the shorter name is still
+    tried, and without a delimiter check it matches the prefix of the longer one
+    and produces a path that names nothing.
+    """
+    from ..facade_retirement import reference_rewrites
+
+    package = FacadePackage(
+        dotted="dev.harness",
+        exports={"Scored": "dev.harness._scoring", "ScoredField": "dev.harness._fields"},
+        submodules=frozenset({"_scoring", "_fields"}),
+    )
+    text = "Both :class:`~dev.harness.ScoredField` and :class:`~dev.harness.Scored` exist.\n"
+    rewritten, count = reference_rewrites(text, package)
+    assert count == 2
+    assert "dev.harness._fields.ScoredField" in rewritten
+    assert "dev.harness._scoring.Scored" in rewritten
+    assert "_scoring.ScoredField" not in rewritten
