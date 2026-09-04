@@ -24,6 +24,7 @@ now separate functions, and this case is what keeps them separate.
 from __future__ import annotations
 
 import subprocess
+import pathlib
 from pathlib import Path
 from textwrap import dedent
 
@@ -69,7 +70,7 @@ def _track_in_a_scratch_repository(root: Path) -> None:
 
 
 def _flagged_names(root: Path) -> set[str]:
-    scanned, flagged = screen(root)
+    scanned, flagged, _ = screen(root)
     assert scanned > 0, "the screen walked no modules, so its verdict would be meaningless"
     return {name for _, name, _ in flagged}
 
@@ -319,3 +320,42 @@ def test_a_guard_in_an_uncalled_helper_does_not_clear_the_hit(tmp_path: Path) ->
     )
 
     assert _flagged_names(tmp_path) == {"test_no_offenders"}
+
+
+def test_a_module_that_cannot_be_parsed_is_not_counted_as_screened(
+    repository: pathlib.Path,
+) -> None:
+    """The defect: an unreadable module inflated the clean denominator.
+
+    ``scanned`` is the denominator of the vacuity proportion, so a file the
+    screen could not read at all was being counted as evidence of health -
+    the same inflation the module's header warns about for an untracked tree,
+    arriving through a different door.
+    """
+    package = repository / "src" / "cadrumo" / "tests"
+    (package / "test_broken.py").write_bytes(b"def (:" + b"\n")
+    _run(repository, "add", "-A")
+
+    scanned, flagged, unreadable = screen(repository)
+
+    assert unreadable == ["src/cadrumo/tests/test_broken.py"]
+    assert "src/cadrumo/tests/test_broken.py" not in {path for path, _, _ in flagged}
+    assert scanned == 1, "the unreadable module was counted among the screened ones"
+
+
+def test_a_readable_module_is_still_screened_alongside_an_unreadable_one(
+    repository: pathlib.Path,
+) -> None:
+    """Excluding the unreadable file must not stop the run.
+
+    A screen that abandoned the walk at the first unparsable module would
+    report the modules after it as clean by never reaching them.
+    """
+    package = repository / "src" / "cadrumo" / "tests"
+    (package / "test_aaa_broken.py").write_bytes(b"def (:" + b"\n")
+    _run(repository, "add", "-A")
+
+    scanned, _, unreadable = screen(repository)
+
+    assert unreadable
+    assert scanned >= 1

@@ -249,9 +249,21 @@ def _tracked_test_paths(root: Path) -> frozenset[str]:
     return frozenset(entry for entry in listed.split(chr(0)) if entry)
 
 
-def screen(root: Path) -> tuple[int, list[tuple[str, str, int]]]:
-    """Return the module count screened and the flagged ``(path, function, line)``."""
+def screen(root: Path) -> tuple[int, list[tuple[str, str, int]], list[str]]:
+    """Return the modules screened, the flagged functions, and what could not be read.
+
+    A module that fails to parse used to increment ``scanned`` and then be
+    skipped, so it landed in the denominator as though it had been screened
+    clean - a file the screen could not read at all, counted as evidence of
+    health. That is the same inflation this module's header warns about for an
+    untracked tree, arriving through a different door.
+
+    It is reported separately rather than folded into the findings: failing to
+    parse is a different condition from asserting nothing, and one number
+    answering two questions is what this screen exists to stop.
+    """
     flagged: list[tuple[str, str, int]] = []
+    unreadable: list[str] = []
     tracked = _tracked_test_paths(root)
     scanned = 0
     for tree in SCREENED_TREES:
@@ -261,11 +273,12 @@ def screen(root: Path) -> tuple[int, list[tuple[str, str, int]]]:
         for path in scan_directory(base, pattern="test_*.py", recursive=True, prune_directories=("__pycache__",)):
             if path.relative_to(root).as_posix() not in tracked:
                 continue
-            scanned += 1
             try:
                 parsed = ast.parse(path.read_text(encoding=_UTF_8))
             except (SyntaxError, UnicodeDecodeError):
+                unreadable.append(path.relative_to(root).as_posix())
                 continue
+            scanned += 1
             proofs = module_proofs_by_corpus(parsed)
             helpers = {
                 node.name: list(ast.walk(node))
@@ -286,19 +299,24 @@ def screen(root: Path) -> tuple[int, list[tuple[str, str, int]]]:
                 if any(asserts_a_non_empty_result(n) for n in body):
                     continue
                 flagged.append((path.relative_to(root).as_posix(), func.name, func.lineno))
-    return scanned, flagged
+    return scanned, flagged, unreadable
 
 
 def main() -> int:
     """Print the worklist. Always exits 0 -- this reports, it does not gate."""
     root = REPO_ROOT
-    scanned, flagged = screen(root)
+    scanned, flagged, unreadable = screen(root)
 
     if scanned == 0:
         raise SystemExit("screened zero modules; the result would be meaningless")
 
     print(f"screened {scanned} test modules under {', '.join(SCREENED_TREES)}")
     print(f"flagged {len(flagged)} empty-assert functions with no proof they scanned anything\n")
+    if unreadable:
+        print(f"{len(unreadable)} module(s) could not be parsed and were NOT screened:")
+        for name in sorted(unreadable):
+            print(f"  {name}")
+        print("")
     for path, func, line in sorted(flagged):
         print(f"{path}:{line}  {func}")
     return 0
