@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:880027483b57f5421e2f8afa6b955ab7cf3133b450d21c2430d2c083eec1570e'
+body_hash: 'sha256:221962736806ca7fdf7abdd2b48361e745e0e174c4165b520587ff851a5ba7c1'
 step_id: 'S424'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -119,3 +119,28 @@ No further vacuous absence checks were found in the ledger, AEAT Sync, search
 or workbench-generation surfaces. The remaining `not in` assertions in the tree
 belong to the aggregation and auth areas, which are outside this campaign and
 were not audited.
+
+SHAPE OF THE REMAINING RESULT WORK, measured so the next attempt starts from
+facts rather than from my earlier wrong summary.
+
+Reading a declaration's settled result needs three things the generation door
+does not have. The declarations projection holds no registry access at all --
+it touches `period.registry_token`, a period spelling, and nothing else. The
+`modelo_projection_reader` the door already carries does not help: its schema
+records expose reference, data type, label and classification, but neither
+`semantic_role` nor any computed value. And the calculation revision holds
+`casilla_values` keyed by casilla id, which cannot be turned into "the result"
+without the registry to say which id settles.
+
+So the door would have to acquire registry authority -- a dependency it has
+never held -- with the capture-coherence guard extended over that read, and the
+declarations projection would need a value field to carry the answer.
+
+The payoff today is narrow: `SETTLEMENT_SEMANTIC_ROLES` covers two IRPF roles,
+so only modelo 100 rows could show a result, while the surfaces an operator
+actually meets here are 303, 130 and 390. Every other modelo needs its
+settlement casilla established from the official record design first.
+
+That makes this an architecture question rather than a wiring one -- should the
+workbench generation door read the registry at all -- and it is recorded as
+such rather than started.
