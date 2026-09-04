@@ -14,13 +14,13 @@ from pathlib import Path
 
 import pytest
 
-from ..__main__ import (
+from ..__main__ import main
+from ..checks import (
     COHERENCE_TIER_PREFIX,
     _timeout_progress_diagnostic,
     check_page_coherence,
     check_sequences,
     discover_sequences,
-    main,
     refresh_sequences,
 )
 

@@ -21,17 +21,6 @@ justification stated and cross-checkable.
 
 from __future__ import annotations
 
-from .__main__ import (
-    COHERENCE_TIER_PREFIX,
-    DiscoveredSequence,
-    check_page_coherence,
-    check_page_coherence_in_subprocess,
-    check_sequences,
-    check_sequences_in_subprocess,
-    default_docs_root,
-    discover_sequences,
-    refresh_sequences,
-)
 from ._compare import (
     assert_transcript_matches_golden,
     check_transcript,
@@ -83,6 +72,17 @@ from ._schema import (
 )
 from ._seeds import SEED_SUFFIX, default_seeds_root, load_seed_frames
 from ._tokeniser import CommandToken, TokenKind, command_path_key, tokenise_command
+from .checks import (
+    COHERENCE_TIER_PREFIX,
+    DiscoveredSequence,
+    check_page_coherence,
+    check_page_coherence_in_subprocess,
+    check_sequences,
+    check_sequences_in_subprocess,
+    default_docs_root,
+    discover_sequences,
+    refresh_sequences,
+)
 
 __all__ = [
     "COHERENCE_TIER_PREFIX",
