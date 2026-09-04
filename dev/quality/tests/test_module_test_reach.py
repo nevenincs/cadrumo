@@ -10,6 +10,7 @@ the capability ranking that decides which unreached module matters.
 from __future__ import annotations
 
 import ast
+import collections
 import os
 import pathlib
 
@@ -161,28 +162,50 @@ def test_the_unambiguous_write_calls_still_rank() -> None:
         assert module_capabilities(tree) == ("writes",), f"{call} stopped counting as a write"
 
 
-def test_every_live_writes_attribution_has_a_real_call_site() -> None:
-    """Each ranked module is checked against the call that ranked it.
+def _evidence_for(capability: str, tree: ast.Module) -> list[ast.AST]:
+    """Return the syntax the report must be able to point at for ``capability``.
 
-    Two false positives were found by noticing an implausible module name, which
-    is not a method. This asks the question of every attribution instead: a
-    module ranked as writing must contain a call whose attribute is one of the
-    write names, or the attribution came from somewhere the report cannot show.
-
-    It is deliberately not a re-implementation of the detector. The detector
-    decides from the syntax tree and this reads the same trees back, so a
-    disagreement means the report attributed a capability it cannot point at.
+    Deliberately not a second implementation of the detector: it reads the same
+    trees back and asks whether the evidence exists, so a disagreement means a
+    capability was attributed from somewhere invisible rather than that two
+    detectors happen to differ.
     """
-    from ..module_test_reach import _WRITE_CALLS, unreached_modules
+    from ..module_test_reach import _WRITE_CALLS
 
-    ranked = [item for item in unreached_modules() if "writes" in item.capabilities]
-    assert ranked, "no module is ranked as writing, so this proves nothing"
-
-    for item in ranked:
-        tree = ast.parse(pathlib.Path(item.path).read_text(encoding="utf-8"))
-        sites = [
+    if capability == "writes":
+        return [
             node
             for node in ast.walk(tree)
             if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr in _WRITE_CALLS
         ]
-        assert sites, f"{item.path} is ranked as writing with no write call to show for it"
+    if capability == "applies":
+        return [node for node in ast.walk(tree) if isinstance(node, ast.Constant) and node.value == "--apply"]
+    return [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name == "main"]
+
+
+def test_every_live_attribution_has_evidence_the_report_can_point_at() -> None:
+    """Each ranked module is checked against the syntax that ranked it.
+
+    Two false positives were found by noticing an implausible module name, which
+    is not a method: it does not scale past the modules a reader happens to
+    know. This asks the question of every attribution of every capability
+    instead.
+
+    Asked of all three deliberately. Checking only ``writes`` would leave the
+    asymmetry this campaign keeps finding - one category with a proof and two
+    without - inside the module that exists to rank them.
+    """
+    from ..module_test_reach import CAPABILITIES, unreached_modules
+
+    unreached = unreached_modules()
+    assert unreached, "nothing was reported, so this proves nothing"
+
+    checked: collections.Counter[str] = collections.Counter()
+    for item in unreached:
+        tree = ast.parse(pathlib.Path(item.path).read_text(encoding="utf-8"))
+        for capability in item.capabilities:
+            assert _evidence_for(capability, tree), f"{item.path} is ranked {capability} with nothing to show"
+            checked[capability] += 1
+
+    for capability in CAPABILITIES:
+        assert checked[capability], f"no live module carries {capability}, so it proves nothing"
