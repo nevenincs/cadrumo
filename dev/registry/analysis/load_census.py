@@ -73,6 +73,7 @@ import grimp
 from cadrumo.core.directory_scan import scan_directory
 
 from ..._paths import REPO_ROOT
+from ...quality.unread_inputs import report_unread
 
 SOURCE_ROOT: Final[Path] = REPO_ROOT / "src"
 ROOT_PACKAGE: Final[str] = "cadrumo"
@@ -182,12 +183,18 @@ def module_level_importers(module: str) -> frozenset[str]:
         The importing modules, empty when every import of ``module`` is deferred.
     """
     importers: set[str] = set()
+    unread: list[str] = []
     for path in sorted(REGISTRY_DIR.rglob("*.py")):
         if "__pycache__" in path.parts or "tests" in path.parts:
             continue
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"))
-        except (SyntaxError, UnicodeDecodeError):
+        except (SyntaxError, UnicodeDecodeError) as error:
+            # An empty result here MEANS every import of the module is deferred,
+            # so a file that could not be read makes that conclusion easier to
+            # reach and wrong: a module-level importer in the skipped file would
+            # have refuted it.
+            unread.append(f"{path}: {type(error).__name__}: {error}")
             continue
         owner = _module_name_for(path)
         if owner == module:
@@ -195,6 +202,11 @@ def module_level_importers(module: str) -> frozenset[str]:
         for node in _module_level_statements(tree):
             if _import_targets(node, owner=owner) & {module}:
                 importers.add(owner)
+    report_unread(
+        "registry load census",
+        "a module-level importer in one of them would refute the deferred-import conclusion",
+        unread,
+    )
     return frozenset(importers)
 
 

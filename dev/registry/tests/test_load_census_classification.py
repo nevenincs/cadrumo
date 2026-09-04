@@ -21,6 +21,8 @@ this file becomes decorative.
 
 from __future__ import annotations
 
+import pathlib
+
 import pytest
 
 from ..analysis.load_census import (
@@ -215,3 +217,44 @@ def test_the_evaluator_returns_none_rather_than_guessing() -> None:
         )
         is None
     ), "a callable is not a sequence of module names"
+
+
+def test_an_unreadable_registry_module_is_announced_as_weakening_the_conclusion(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: pathlib.Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """An empty importer set MEANS every import of the module is deferred.
+
+    A file that could not be read makes that conclusion easier to reach and
+    wrong: a module-level importer sitting in the skipped file would have
+    refuted it. The walk still continues, because one half-written file must
+    not cost the census.
+    """
+    from ..analysis import load_census
+
+    (tmp_path / "sound.py").write_text("from cadrumo.target import thing" + chr(10), encoding="utf-8")
+    (tmp_path / "broken.py").write_text("def (:" + chr(10), encoding="utf-8")
+    monkeypatch.setattr(load_census, "REGISTRY_DIR", tmp_path)
+
+    load_census.module_level_importers("cadrumo.target")
+
+    error = capsys.readouterr().err
+    assert "would refute the deferred-import conclusion" in error
+    assert "broken.py" in error
+
+
+def test_a_readable_registry_tree_announces_nothing(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: pathlib.Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A notice on every run would tell a reader nothing."""
+    from ..analysis import load_census
+
+    (tmp_path / "sound.py").write_text("VALUE = 1" + chr(10), encoding="utf-8")
+    monkeypatch.setattr(load_census, "REGISTRY_DIR", tmp_path)
+
+    load_census.module_level_importers("cadrumo.target")
+
+    assert capsys.readouterr().err == ""
