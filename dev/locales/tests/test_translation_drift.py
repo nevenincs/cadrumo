@@ -127,15 +127,21 @@ def test_a_difference_surviving_only_a_capital_is_mechanical() -> None:
     assert difference_kind(("Ownership (%)", "Ownership %")) == "identical_after_folding"
 
 
-def test_whitespace_is_checked_before_wording() -> None:
-    """Two renderings differing by a doubled space are not a wording difference.
+def test_the_same_text_differently_divided_is_not_a_wording_difference() -> None:
+    """Word boundaries are checked before wording, from the live instances.
 
-    They fold to different strings only by that space, so a wording comparison
-    reached first would send a translator to look at nothing.
+    Catalan writes the elision ``de l'1`` where another revision writes
+    ``del 1``, and an ordinal appears as ``25.ª`` in one and ``25a`` in the
+    other. Both fold to different strings and both are the same text; a wording
+    comparison reached first would send a translator to look at nothing. All
+    sixteen live instances are of this kind.
     """
     from ..translation_drift import difference_kind
 
-    assert difference_kind(("per obres de conservacio", "per obres  de conservacio")) == "whitespace_only"
+    assert difference_kind(("realitzades des de l'1 de gener", "realitzades des del 1 de gener")) == (
+        "word_boundary_only"
+    )
+    assert difference_kind(("article 26.2 i DT 25.ª", "article 26.2 i DT 25a")) == "word_boundary_only"
 
 
 def test_reordered_words_are_shared_wording_and_new_words_are_not() -> None:
@@ -177,7 +183,7 @@ def test_every_difference_kind_is_reachable_and_the_live_corpus_carries_four() -
         difference_kind(pair)
         for pair in (
             ("a", "A"),
-            ("a b", "a  b"),
+            ("de l 1 gener", "del 1 gener"),
             ("one two three", "three two one four"),
             ("wholly different", "nothing alike here"),
             ("single",),

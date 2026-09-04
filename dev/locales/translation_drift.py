@@ -84,7 +84,7 @@ KINDS: Final[tuple[str, ...]] = (
 #: rather than whether there is one.
 DIFFERENCE_KINDS: Final[tuple[str, ...]] = (
     "identical_after_folding",
-    "whitespace_only",
+    "word_boundary_only",
     "shared_wording",
     "distinct_wording",
     "not_applicable",
@@ -135,10 +135,13 @@ def difference_kind(renderings: tuple[str, ...]) -> str:
     """Return how a casilla's renderings differ from each other.
 
     The order is deliberate: a difference that survives folding is checked
-    against whitespace before wording, because two renderings identical apart
-    from a doubled space fold to different strings only by that space, and
-    calling them a wording difference would send a translator to look at
-    nothing.
+    against word boundaries before wording. Two renderings can fold to different
+    strings and still be the same text differently divided - Catalan writes the
+    elision `de l'1` where another revision writes `del 1`, and an ordinal
+    appears as `25.ª` in one and `25a` in the other. Both are identical once
+    spaces are removed, and calling either a wording difference would send a
+    translator to look at nothing. Sixteen live instances are of this kind and
+    every one is an elision or an ordinal.
 
     ``not_applicable`` when there is one rendering or none. A single rendering
     has no difference to describe, and reporting it under any of the others
@@ -150,7 +153,7 @@ def difference_kind(renderings: tuple[str, ...]) -> str:
     if len(folded) == 1:
         return "identical_after_folding"
     if len({text.replace(" ", "") for text in folded}) == 1:
-        return "whitespace_only"
+        return "word_boundary_only"
     words = [set(text.split()) for text in folded]
     shared = set.intersection(*words)
     union = set.union(*words)
@@ -257,7 +260,7 @@ def main() -> int:
     by_difference: collections.Counter[str] = collections.Counter(item.difference for item in drifting)
     census = " ".join(f"{kind}={by_difference[kind]}" for kind in DIFFERENCE_KINDS)
     sys.stdout.write(f"summary drifting={len(drifting)} {census}\n")
-    mechanical = by_difference["identical_after_folding"] + by_difference["whitespace_only"]
+    mechanical = by_difference["identical_after_folding"] + by_difference["word_boundary_only"]
     sys.stdout.write(
         f"summary locales={len(per_locale)} varying={len(findings)} drifting={len(drifting)} "
         f"mechanically_resolvable={mechanical} needs_a_translator={by_difference['distinct_wording']}\n"
