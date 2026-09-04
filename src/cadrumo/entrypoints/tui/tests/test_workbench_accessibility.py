@@ -129,6 +129,7 @@ async def test_a_home_zone_that_is_refused_says_so_rather_than_reading_as_empty(
     assert "0" not in ledger.split()[:1], "a refused zone must not open with a count"
 
 
+@pytest.mark.asyncio
 async def test_every_home_zone_states_its_availability_in_words(tmp_path: Path) -> None:
     """Colour is never the only carrier of a zone's state.
 

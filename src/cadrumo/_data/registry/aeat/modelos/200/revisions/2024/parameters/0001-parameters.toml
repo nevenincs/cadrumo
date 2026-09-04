@@ -396,7 +396,10 @@ valid_from = 2024-01-01
 id = "is.modelo-200.incn-umbral-microempresa"
 data_type = "money"
 unit = "EUR"
-legal_refs = ["ley-27-2014:dt-44", "ley-27-2014:art-29"]
+# DT 44a is NOT cited here: it enters with Ley 7/2024 and is outside this
+# revision's 2024 effective window, which the registry refuses. The sibling
+# tipo-gravamen parameters of this revision cite the same pair.
+legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-101"]
 source_refs = ["aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".parameters.source_citations]]

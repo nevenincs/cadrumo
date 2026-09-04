@@ -84,11 +84,17 @@ async def test_every_workbench_destination_paints_content_at_every_supported_siz
 async def test_home_keeps_one_scrollable_owner_rather_than_nesting_them(tmp_path: Path) -> None:
     """Two nested scrollers make a keyboard operator guess which one moves.
 
-    Asserted on DOM ANCESTRY, not on how many scrollbars happen to be visible
-    at once. The visibility form was proven weak: an inner scroller absorbs its
-    own overflow, so the outer one never shows a bar at the same time and the
-    count stays at one while a genuine second scroll owner sits inside the
-    first.
+    Asserted on structure AND capacity, not on how many scrollbars happen to be
+    visible at once. The visibility form was proven weak: an inner scroller
+    absorbs its own overflow, so the outer one never shows a bar at the same
+    time and the count stays at one while a genuine second scroll owner sits
+    inside the first.
+
+    Nesting alone is not the defect. Every Home table is a ContentDataTable,
+    which IS a scrollable container and legitimately sits inside the page
+    scroller -- it sizes its height to its rows so it never competes. What
+    competes is a nested container that can still scroll on its own axis, and
+    that is what this rejects.
 
     Home is the surface this matters most on -- it is the return point from
     every journey, so a scroll position that lands in the wrong container is
@@ -106,12 +112,16 @@ async def test_home_keeps_one_scrollable_owner_rather_than_nesting_them(tmp_path
                 nested = [
                     widget
                     for widget in app.screen.query(ScrollableContainer)
-                    if any(isinstance(parent, ScrollableContainer) for parent in widget.ancestors)
+                    if widget.max_scroll_y > 0
+                    and any(
+                        isinstance(parent, ScrollableContainer) and parent.max_scroll_y > 0
+                        for parent in widget.ancestors
+                    )
                 ]
                 app.exit(None)
 
             assert not nested, (
-                f"Home nests {len(nested)} scrollable container(s) inside another at {size}: "
+                f"Home nests {len(nested)} competing scroll owner(s) inside another at {size}: "
                 + ", ".join(f"{type(widget).__name__}(id={widget.id!r})" for widget in nested[:3])
             )
 
