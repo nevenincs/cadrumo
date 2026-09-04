@@ -209,3 +209,20 @@ def test_every_live_attribution_has_evidence_the_report_can_point_at() -> None:
 
     for capability in CAPABILITIES:
         assert checked[capability], f"no live module carries {capability}, so it proves nothing"
+
+
+def test_the_evidence_check_can_report_an_absence() -> None:
+    """A checker that always finds evidence proves nothing about the report.
+
+    Each capability is asked of a tree that carries none of it, so the assertion
+    above is known to be capable of failing rather than merely observed to pass.
+    """
+    barren = ast.parse("value = other.read_text()\n")
+
+    assert _evidence_for("writes", barren) == []
+    assert _evidence_for("applies", barren) == []
+    assert _evidence_for("operator", barren) == []
+
+    assert _evidence_for("writes", ast.parse("target.write_text('x')\n"))
+    assert _evidence_for("applies", ast.parse("parser.add_argument('--apply')\n"))
+    assert _evidence_for("operator", ast.parse("def main() -> int:\n    return 0\n"))
