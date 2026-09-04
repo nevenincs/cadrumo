@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:58b9a8fc63953344b8916f04fcad80f2503956ae57b6527347849da9611cb788'
+body_hash: 'sha256:5b7836796e278d99b77e83ac30e518ab5d5051fc36bbff6dbb6a0f799c70fa25'
 related:
   - "[[2026-09-04-clitui-ledger-research]]"
   - "[[2026-06-10-ledger-interface-contract-adr]]"
@@ -24,9 +24,9 @@ This document is the authoritative human-readable publication surface for the `L
 | Publication field | Current value |
 | --- | --- |
 | Contract / schema | `LedgerCapabilityMatrixV1` / `3` |
-| Publication revision | `s07-tui-census-3` |
-| Observation timestamp | `2026-09-05T01:26:06+02:00` |
-| Source revision | `e79054bd56607451c83db158b9ae1b202acb5849` |
+| Publication revision | `s07-tui-census-4` |
+| Observation timestamp | `2026-09-05T01:43:28+02:00` |
+| Source revision | `c2f46cfe47442e8c32c8a756cbe1ce922e087f10` |
 | Contract source digest | `sha256:c2998c8ff958ae820b59fa7055a36d83117bb35282fe2679761032fab7a15a10` |
 | Accepted plan owner | `clitui-ledger` |
 | Denominator revision / digest | Not issued: mandatory S08 union adjudication remains open |
@@ -167,7 +167,7 @@ The outer root catalogue does install `workbench.ledger` when the application ge
 
 `LedgerTuiSupportedSurfaceCensusV1` is the committed projection owner. Its source selector currently yields 126 repository-relative files: every production Python module below `src/cadrumo/entrypoints/tui/` except tests and devtools; the three dedicated Ledger harness files; the three installed generation/workbench/launcher harness files; four application workspace/search-generation sources; and every `_app_ledger*_command_specs.py` module. Sorted paths and raw bodies are each framed with an unsigned eight-byte big-endian length after the `cadrumo:ledger-tui-supported-surface-source-set:v1` NUL-terminated domain; the current source-set digest is `sha256:e7337508a02ef2260e0b28205c31bb872b69f59aa51a18391ae209c21b8f9d57`. The canonical ASCII JSON projection is independently length-framed after `cadrumo:ledger-tui-supported-surface-census:v1` and retains digest `sha256:c136cfe1ae3f82a239476c00e805f8c9a29e010d502e74397963cea7e6f42371`.
 
-Semantic extraction follows only owning production constructs. Routes are direct entries of the one module-level `LEDGER_ROUTES` sequence and each factory must resolve to a real screen class. The installed outer destination is the factory enrollment returned by `compose_installed_workbench_generation_provider`; optional doors come only from the unique `ledger_screen_factory` invocation inside `_ledger_generation_factory`; and the initial internal destination comes only from `resolve_ledger_screen` inside the invoked `ledger_screen_factory`. Read actions are the constants referenced by the two Ledger arguments of the production `InstalledWorkbenchFactoryDependenciesV1` constructor. Message consumers are conventional Textual handler methods or `@on(MessageType)`-decorated methods on `CadrumoTuiApp`, the installed initial screen, or their reachable base classes. Tests pin both live digests, normalize irrelevant record order, detect positive semantic changes, and prove that a module-level convention-shaped function, unused `_LEDGER_*` constant, dead `LedgerRouteV1` constructor, and dead same-name factory call do not alter the semantic facts.
+Semantic extraction follows only owning production constructs. Routes are direct entries of the one module-level `LEDGER_ROUTES` sequence and each factory must resolve to a real screen class. The installed outer destination is the factory enrollment returned by `compose_installed_workbench_generation_provider`; optional doors come only from the exact returned nested `create` dataflow of `_ledger_generation_factory` to `ledger_screen_factory`; and the initial internal destination comes only from the exact returned nested `create` dataflow of that invoked factory to `resolve_ledger_screen` and its route target. The return resolver admits only explicit simple-name assignments/aliases and fails closed on cycles, multiple effective returns, alternate branches, dead calls, unrelated screen returns, or unresolved shapes. Read actions are the constants referenced by the two Ledger arguments of the production `InstalledWorkbenchFactoryDependenciesV1` constructor. Message consumers are conventional Textual handler methods or `@on(MessageType)`-decorated methods on `CadrumoTuiApp`, the installed initial screen, or their reachable base classes. Tests pin both live digests, normalize irrelevant record order, detect positive semantic changes, and prove that a module-level convention-shaped function, unused `_LEDGER_*` constant, dead `LedgerRouteV1` constructor, dead same-name factory call, dead resolver, and dead installed factory call do not alter the semantic facts.
 
 Production composition injects exactly two Ledger action references, `operator.ledger.review` and `operator.ledger.evidence.review.list`, and reads the evidence review queue at screen-factory invocation. It injects zero executable mutation doors: no classification submitter, import submitter, or link submitter. The component harness separately supplies synthetic doors for classification, one-file import, and invoice/transaction linking; those tests prove frontend behavior behind an injected contract, not production enrollment. None of the 78 CLI invocables changes this verdict: all 78 command specs independently declare `TuiCapability.NOT_IMPLEMENTED`, which is CLI global-`--tui` metadata rather than evidence that a similarly named TUI component is installed.
 
