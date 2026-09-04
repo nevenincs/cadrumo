@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:218c9b48874656f0a381b7cd199fc6e5145b7b60e8d0878074dc1f792ecf8930'
+body_hash: 'sha256:3df2803843328c3ae86b5db0bb89000084d386d7acf814c38dbbaaa68f4350e6'
 step_id: 'S415'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -172,3 +172,32 @@ re-proven afterwards: removing the responsive column budget from the Ledger
 entries screen makes a VISIBLE table overflow and the narrowed gate fails at
 all three widths, naming the fixture. Restored by copy, and the restore
 verified by grep before continuing rather than assumed.
+
+CORRECTION. `test_completing_one_overview_operation_keeps_the_other_action_reachable`
+was filed twice in this campaign as pre-existing and not mine. It was mine.
+Removing the two AEAT Sync headings makes it pass; restoring them makes it
+fail, which is the experiment that settles it and the one I did not run. The
+earlier check reverted `application/aeat_sync/workspace.py` to HEAD and
+concluded "fails at HEAD too" -- but HEAD already carried the heading change,
+so that check could never have isolated it.
+
+The cause is not the rhythm being wrong. `pilot.click` targets SCREEN
+COORDINATES, and the two section headings cost six rows, which pushes the
+operation buttons below the fold at the 80x24 floor. The click then lands on
+whatever is painted at those coordinates, the handler never runs, and the
+failure reads as a broken in-flight guard. Measured: the button sits at y=16 of
+24 once scrolled into view, and off-screen before that.
+
+The test now scrolls each button into view before clicking, which is what an
+operator does to reach a control below the fold, not a workaround for the
+assertion. Its subject -- that completing one operation leaves the other
+reachable -- is unchanged, and it still detects a real defect: removing the
+one-shot `event.button.disabled = True` fails it. Deterministic across three
+isolated runs where it previously failed in isolation and passed inside larger
+suites; 88 passed across both AEAT suites.
+
+Worth stating plainly: the rhythm does cost six rows at the floor terminal, and
+these operation buttons now start below the fold there. The page scrolls and
+the controls remain reachable, so this is the accepted cost of the separation
+rather than a defect -- but it is a cost, and it was invisible until a
+coordinate-based click tripped over it.
