@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:6d4faead94163b56d727d531b488001d7ea71d6edbc012223d966d8d9dcde3ef'
+body_hash: 'sha256:f978c4c7842abf7976ad43940a7975780653842bc5297df0872a981eb53bdcb1'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-adr]]"
@@ -115,6 +115,81 @@ axis is invisible to this exact predicate. Ordered evaluation may catch some
 gap classes in earlier gates, but that is not equivalent to G4's complete
 blocking-gap rule and leaves classes scoped differently by G1--G3 unguarded.
 
+### denominator-completeness-retest | critical | OPEN: persisted claims still substitute for a live complete census
+
+Corrective source commit `2bf572bcb89b2aaaa46ccd5c04cdc8d6028c98ca`
+adds accepted/current denominator snapshots, source categories, canonical entry
+digests, subject snapshots, and drift comparison. Those types improve the
+representation but do not close the original gate bypass. A self-consistent
+one-row census containing only `BACKEND_ONLY` still closes G0; no validator
+requires observation of every mandatory denominator source stream or connects
+the snapshot to a live census authority. More importantly,
+`evaluate_ledger_capability_gate` makes both live observations optional and
+replaces absence with `matrix.current_denominator` and
+`matrix.current_subjects`. An explicitly supplied empty subject observation is
+also replaced because the fallback uses truthiness. The retest therefore closed
+G0 for all three cases: one-row/single-source census, omitted observations, and
+explicitly empty observed subjects. Denominator comparison also ignores
+`revision` and `observed_at` when entries are unchanged. G0 remains capable of
+attesting its own freshness instead of failing closed on unavailable, partial,
+or stale live observation.
+
+### mandatory-row-closure-retest | high | OPEN: CLI-owned authority may remain unclassified at G0
+
+Per-axis applicability rationale and review evidence are now mandatory, an
+all-`NOT_APPLICABLE` row is rejected, and every incomplete implementation/proof
+assessment requires an affected-axis finding. These parts of the original
+finding are resolved. The unresolved-work rule does not include ownership
+state, however: an initially `CLI_OWNED`, migration-incomplete row whose axes
+are otherwise `PROVEN` needs no `AUTHORITY` finding or next closure action and
+can close G0. That leaves identified CLI policy without the mandatory classified
+closure work the matrix is intended to drive.
+
+### evidence-coordinate-integrity-retest | low | Informational: shape is resolved; currentness remains tracked by the critical finding
+
+Role-to-kind-to-axis contracts, single-axis baseline/review coordinates, global
+evidence-ID uniqueness, and explicit subject revision/digest/time matching now
+reject the original wrong-role, wrong-axis, and duplicate-ID probes. Supplying a
+different observed digest correctly opens G0. The freshness conclusion remains
+part of `denominator-completeness-retest`, because omitted or empty observations
+silently select the persisted subjects and close G0; the new metadata is not a
+live check unless a caller voluntarily supplies a non-empty external tuple.
+
+### authority-proof-history-retest | high | OPEN: initial ownership is not monotonic across matrix revisions
+
+Within one row, annotations, delegation, and migration-completed state are now
+consistent, and a row declared initially CLI-owned retains direct-backend and
+adapter-detector requirements after cutover. The matrix has no accepted prior
+ownership snapshot or comparison, though. A later generated row can change
+`initial_cli_ownership` from `CLI_OWNED` to `NOT_CLI_OWNED`; G1 then closes
+without migration completion, direct backend evidence, or an adapter detector.
+`frozen=True` prevents mutating one Python instance but does not make the fact
+monotonic across persisted matrix revisions.
+
+### g0-review-attestation-retest | high | OPEN: review presence is not bound to the reviewed matrix revision
+
+G0 now requires the exact `INDEPENDENT_ENGINEERING_REVIEW` role and rejects its
+absence. The coordinate does not carry a ruling or the reviewed denominator and
+matrix digest, so any current review-kind subject with all axes and an unrelated
+bounded claim satisfies the predicate. The same review coordinate can be reused
+after rows, semantic homes, applicability, findings, or denominator acceptance
+change. The scalar plan-owner field likewise accepts `arbitrary-other-plan`; it
+is not constrained to the accepted `clitui-ledger` owner or bound to plan
+evidence. Review and sole-owner presence therefore do not prove acceptance of
+the exact frozen campaign state.
+
+### resolved-gate-retests | low | Informational: the remaining original predicate exploits are closed
+
+Adversarial retest confirms the corrected source rejects an unresolved
+proof/implementation axis without a finding, an all-non-applicable row,
+`CLI_REFUSAL` evidence on the backend axis, and globally duplicated evidence
+identities. Explicit subject-digest drift opens G0. G2 opens for a backend with
+`surface_state=PARTIAL` even when direct test evidence is present, missing
+independent-review evidence opens G0, and G4 now scans and blocks a finding on a
+row whose TUI axis is non-applicable. Import, byte-compilation, Ruff, and diff
+whitespace checks pass. This subsection records resolutions and is not an open
+LOW finding.
+
 ## Recommendations
 
 1. For `denominator-completeness`, add a typed denominator census contract that
@@ -149,3 +224,19 @@ blocking-gap rule and leaves classes scoped differently by G1--G3 unguarded.
    state, erased migration history, absent engineering review, and non-TUI-row
    G4 findings. S01 can be accepted only after the critical and high findings
    are corrected and those detector tests fail on representative defects.
+9. Following corrective retest, make observed denominator and subject inputs
+   mandatory for G0 and reject empty, duplicate, unavailable, partial, or
+   revision-stale observations. The live census producer must prove every
+   mandatory source stream, including an explicit reviewed zero when a stream
+   has no entries; self-consistent caller-authored snapshots are not live proof.
+10. Bind the accepted row census to immutable initial-ownership dispositions and
+    compare them on every regeneration. Require a current `AUTHORITY` finding
+    for every incomplete CLI-owned migration.
+11. Bind independent review to an explicit `ACCEPT` ruling and the exact matrix,
+    denominator, and plan-owner digests. Reject a review for any earlier matrix
+    revision and constrain the singular owner to the accepted `clitui-ledger`
+    plan identity.
+12. Re-review disposition: **NOT ACCEPTED**. Open severity is one CRITICAL
+    currentness/denominator defect and three HIGH authority/classification/
+    attestation defects. The informational LOW retest entry records corrected
+    behavior and is not an open finding.
