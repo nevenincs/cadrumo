@@ -5,16 +5,11 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:765b378dd9587dfb1996c0637d77f7d83c35b0ba556a97116d2e493b9115a6c7'
+body_hash: 'sha256:e771fa4419ea04f1b8e245c06a4108e05fae9f7d4141b29704f38deb362c23c1'
 step_id: 'S12'
 related:
   - "[[2026-09-03-duplication-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Resolve the Modelo export and review package clone without coupling distinct workflows
 
