@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:f3cfed3a14a6fdbbe93e74f229f82e05a072e93de262dad5a27e463becde876b'
+body_hash: 'sha256:8006b301671b9da80e9878205262614951bb22cda35cc2a2ba57f94a998c03f7'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -445,6 +445,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S563` - Make the registry maintenance verbs refuse on their own failure signal, where workbooks-verify ignored failed_count and parity-replay ignored a mismatch status so a replay that detected the product diverging from its archived tape exited successfully, and give the parity tests directory the package marker it never had; `dev/registry/parity/maintenance_cli.py,dev/registry/parity/tests/__init__.py,dev/registry/parity/tests/test_maintenance_cli.py`.
 - [x] `W02.P02.S564` - Separate same-revision casilla collisions from ordinary cross-revision reassignment in the AEIP inventory, which pooled every revision under a bare casilla id and so reported thirty collisions of which none were real while a genuine ambiguity would have been indistinguishable inside that number; `dev/registry/aeip/cli.py,dev/registry/aeip/tests/__init__.py,dev/registry/aeip/tests/test_cli_casilla_claims.py`.
 - [x] `W02.P02.S565` - Cover the apidocs CLI wiring that turns a drift result into an exit code, asserting the check and audit verbs agree with their own reports and with each other, without ever invoking the writing path that rebuilds the real stub tree; `dev/docs/apidocs/tests/test_cli.py`.
+- [x] `W02.P02.S566` - Make the changed-path preflight see untracked files, since a change consisting entirely of new files gave it an empty path set and it exited 0 having checked nothing, and give it an injectable root so the union is provable against scratch repositories; `dev/quality/changed_paths.py,dev/quality/tests/test_changed_paths.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
