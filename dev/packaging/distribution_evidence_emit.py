@@ -34,15 +34,14 @@ import json
 import re
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Final, Literal
+from typing import TYPE_CHECKING, Any, Final
 
-from pydantic import BaseModel, ConfigDict, Field, JsonValue, ValidationError
+from pydantic import JsonValue
 
 from .._paths import UTF_8
 from ._command import CommandResult
 from ._hashing import sha256_path
 from ._installed_wheel_binding import (
-    assert_archive_members_match_extraction,
     assert_installed_console_entry_point,
     installed_distribution_payload_sha256,
     installed_wheel_payload_sha256,
@@ -75,36 +74,6 @@ _UTF_8: Final[str] = UTF_8
 _MCP_ATTESTED_COMMAND_KEYS: Final[frozenset[str]] = frozenset(
     {"modelo.work.create", "modelo.work.calculate", "modelo.work.observations"}
 )
-
-# The client identity an acquire lane declares when it drives the published
-# artifact through the MCP SDK over ``uv``/``uvx`` rather than a real Claude
-# client. Shared with the acquire lanes so the honesty guard below and the lanes
-# agree on one spelling.
-SDK_CLIENT_NAME: Final[str] = "cadrumo-mcp-sdk-client"
-
-# The REQUIRED real-client rows: these are real-Claude-client claims (the plan
-# step language is "install in Claude Desktop and execute the real tax-work tool
-# call"), satisfiable only by real-client lane evidence, never an SDK-driven run.
-# Kept in lock-step with the claude-* subset of
-# ``dev.release.readiness.REQUIRED_DISTRIBUTION_ROWS`` by a parity test.
-_REQUIRED_REAL_CLIENT_ROW_IDS: Final[frozenset[str]] = frozenset(
-    {
-        "claude-code-plugin",
-        "claude-cowork-plugin",
-        "claude-desktop-plugin",
-        "claude-desktop-mcpb",
-    },
-)
-
-
-class RealClientSession(BaseModel):
-    """The minimum successful client-session proof permitted in passing release evidence."""
-
-    model_config = ConfigDict(extra="allow", frozen=True, strict=True)
-
-    connected: Literal[True]
-    status: Literal["passed"]
-    tool_called: str = Field(min_length=1)
 
 
 def _command_transcript(command: CommandResult) -> CommandTranscript:
@@ -226,10 +195,15 @@ def _assert_oracle_bound_to_cohort(
         )
 
 
-def _assert_mcp_oracle_bound_to_cohort(
-    *, cohort: LoadedReleaseCohort, mcp_evidence: InstalledMcpEvidence, require_mcpb: bool = False
-) -> None:
-    """Bind the observed MCP runtime and its invoked CLI to exact cohort wheels."""
+def _assert_mcp_oracle_bound_to_cohort(*, cohort: LoadedReleaseCohort, mcp_evidence: InstalledMcpEvidence) -> None:
+    """Bind the observed MCP runtime and its invoked CLI to the exact cohort wheel.
+
+    The server and the CLI it invokes ship in one distribution, so both the
+    harness and root bindings resolve to the same sealed ``cadrumo-wheel``. They
+    are compared separately because they are attested through different
+    launchers: a server whose payload matches while its sibling CLI's does not
+    (or the reverse) is a mixed environment, not a cohort install.
+    """
     records = {record.name: record for record in cohort.manifest.artifacts}
     expected = {
         "cohort_source_commit": cohort.manifest.source.commit,
@@ -248,20 +222,6 @@ def _assert_mcp_oracle_bound_to_cohort(
             f"installed MCP cohort provenance mismatch: expected {expected!r}, got {observed!r}",
         )
     runtime_server = Path(mcp_evidence.runtime_server_executable).resolve(strict=True)
-    if require_mcpb:
-        if mcp_evidence.runtime_project_root is None:
-            raise EvidenceCohortBindingError("client MCP evidence does not identify its extracted MCPB root")
-        project_root = Path(mcp_evidence.runtime_project_root).resolve(strict=True)
-        if not runtime_server.is_relative_to(project_root):
-            raise EvidenceCohortBindingError("client MCP runtime server escapes the extracted MCPB root")
-        try:
-            assert_archive_members_match_extraction(
-                cohort.artifact("mcpb"),
-                project_root,
-                allowed_generated_roots=frozenset({".venv"}),
-            )
-        except RuntimeError as exc:
-            raise EvidenceCohortBindingError(str(exc)) from exc
     sibling_cli = runtime_server.with_name("aeat.exe" if runtime_server.suffix.lower() == ".exe" else "aeat")
     try:
         assert_installed_console_entry_point(
@@ -280,17 +240,16 @@ def _assert_mcp_oracle_bound_to_cohort(
         raise EvidenceCohortBindingError(str(exc)) from exc
     if sha256_path(runtime_server) != mcp_evidence.server_executable_sha256:
         raise EvidenceCohortBindingError("installed MCP runtime executable digest drifted after capture")
-    expected_cli = sealed_wheel_payload_sha256(cohort.artifact("cadrumo-wheel"))
-    expected_harness = sealed_wheel_payload_sha256(cohort.artifact("cadrumo-wheel"))
+    expected_payload = sealed_wheel_payload_sha256(cohort.artifact("cadrumo-wheel"))
     live_cli = installed_distribution_payload_sha256(sibling_cli, "cadrumo")
     live_harness = installed_distribution_payload_sha256(runtime_server, "cadrumo")
-    if (mcp_evidence.installed_cli_payload_sha256, live_cli) != (expected_cli, expected_cli):
+    if (mcp_evidence.installed_cli_payload_sha256, live_cli) != (expected_payload, expected_payload):
         raise EvidenceCohortBindingError("MCP-invoked CLI payload is not the exact sealed root wheel")
     if (mcp_evidence.installed_harness_payload_sha256, live_harness) != (
-        expected_harness,
-        expected_harness,
+        expected_payload,
+        expected_payload,
     ):
-        raise EvidenceCohortBindingError("installed MCP server payload is not the exact sealed harness wheel")
+        raise EvidenceCohortBindingError("installed MCP server payload is not the exact sealed root wheel")
     path_digest = hashlib.sha256(str(sibling_cli).encode(UTF_8)).hexdigest()
     if frozenset(mcp_evidence.invoked_cli_sha256_by_command) != _MCP_ATTESTED_COMMAND_KEYS or set(
         mcp_evidence.invoked_cli_sha256_by_command.values()
@@ -417,138 +376,6 @@ def build_installed_oracle_evidence(
     # Rows are published (draft transport, then the final release), so runner
     # metadata is scrubbed at birth: one identity, no unscrubbed copy exists.
     return scrub_distribution_evidence(evidence)
-
-
-def build_client_evidence(
-    *,
-    row_id: str,
-    cohort: LoadedReleaseCohort,
-    mcp_evidence: InstalledMcpEvidence,
-    launch_transcript: CommandTranscript,
-    client: ClientIdentity,
-    acquisition: AcquisitionIdentity,
-    destination: DestinationIdentity,
-    real_client_session: dict[str, Any] | None = None,
-    observed_at: datetime | None = None,
-) -> DistributionEvidence:
-    """Assemble one cohort-bound record for a pure-client (MCP-only) row.
-
-    Client rows (``claude-*``) have no installed-CLI oracle, so option A applies:
-    the single command transcript is a genuinely-owned bounded launch of the
-    installed ``cadrumo-mcp`` server subprocess (real argv, cwd, timestamps, exit
-    status, and stream digests), and the full MCP protocol proof rides in
-    ``result.observations``. Nothing is synthesised.
-
-    For a REAL Claude client row the client itself launches the server internally
-    (a subprocess we do not own), so the owned launch here proves the exact
-    installed server starts, and the operator's real Claude client session -
-    passed as ``real_client_session`` - is retained in ``result.observations`` as
-    the real-client dimension, with ``client`` naming the real Claude client.
-
-    Args:
-        row_id: The client row this record proves (e.g. ``claude-desktop-mcpb``).
-        cohort: The loaded release cohort the served bytes belong to.
-        mcp_evidence: The installed-MCP oracle result (protocol proof + target).
-        launch_transcript: The real owned server-launch subprocess captured;
-            becomes this record's sole command transcript.
-        client: The real client identity (required for a client row).
-        acquisition: How and from where the served bytes were acquired.
-        destination: The install/serve destination; its version must equal the
-            cohort version for a passing record.
-        real_client_session: The operator's real Claude client session summary
-            (connected, tool_called, status, ...) retained as the real-client
-            proof; ``None`` for an SDK acquire artifact-serves record.
-        observed_at: The capture instant; defaults to now.
-
-    Returns:
-        A validated, tamper-evident :class:`~dev.packaging.evidence.DistributionEvidence`.
-
-    Raises:
-        ValueError: If an SDK-client record is asked to satisfy a REQUIRED
-            real-client row, or a REQUIRED real-client row is minted without a
-            real client session. Those rows are real-Claude-client claims.
-    """
-    is_required_real_client_row = row_id in _REQUIRED_REAL_CLIENT_ROW_IDS
-    if client.name == SDK_CLIENT_NAME and is_required_real_client_row:
-        raise ValueError(
-            f"an SDK-client record cannot satisfy the real-client row {row_id!r}: those rows are minted "
-            "only by real-client lanes (authenticated Claude Code / operator in-app captures). "
-            "Emit this SDK acquire proof under a distinct artifact-serves id instead.",
-        )
-    if is_required_real_client_row and real_client_session is None:
-        raise ValueError(
-            f"the real-client row {row_id!r} requires a real Claude client session as its real-client "
-            "proof; an owned launch alone cannot satisfy a real-client claim.",
-        )
-    validated_real_client_session: RealClientSession | None = None
-    if real_client_session is not None:
-        try:
-            validated_real_client_session = RealClientSession.model_validate(real_client_session)
-        except ValidationError as exc:
-            raise ValueError(
-                "real-client evidence requires a connected, passed session with a recorded tool_called value",
-            ) from exc
-    isolation = ExecutionIsolation(
-        # Derived from the MCP oracle's recorded isolation (see build_installed_oracle_evidence).
-        checkout_imports_removed=mcp_evidence.checkout_imports_removed,
-        ambient_product_executables_removed=mcp_evidence.ambient_product_executables_removed,
-        installed_executables=(_installed_executable(_MCP_EXECUTABLE_NAME, mcp_evidence.resolved_executable),),
-    )
-    _assert_mcp_oracle_bound_to_cohort(cohort=cohort, mcp_evidence=mcp_evidence, require_mcpb=True)
-    observations: dict[str, JsonValue] = {"mcp_oracle": _mcp_observations(mcp_evidence)}
-    if validated_real_client_session is not None:
-        observations["real_client_session"] = validated_real_client_session.model_dump(mode="json")
-    result = ResultIdentity(
-        status=EvidenceStatus.PASSED,
-        assertions=(
-            f"client MCP computed {mcp_evidence.target_casilla}={mcp_evidence.target_value} "
-            f"via {mcp_evidence.formula_id}",
-            "the installed client launched the cohort-pinned server and completed the protocol",
-        ),
-        observations=observations,
-    )
-    evidence = create_distribution_evidence(
-        row_id=row_id,
-        cohort=cohort,
-        runtime=current_runtime_identity(),
-        client=client,
-        isolation=isolation,
-        acquisition=acquisition,
-        commands=(launch_transcript,),
-        result=result,
-        observed_at=observed_at or datetime.now(UTC),
-        destination=destination,
-    )
-    # Client rows publish identically; scrub at birth (see build_installed_oracle_evidence).
-    return scrub_distribution_evidence(evidence)
-
-
-def emit_client_evidence(
-    *,
-    directory: Path,
-    row_id: str,
-    cohort: LoadedReleaseCohort,
-    mcp_evidence: InstalledMcpEvidence,
-    launch_transcript: CommandTranscript,
-    client: ClientIdentity,
-    acquisition: AcquisitionIdentity,
-    destination: DestinationIdentity,
-    real_client_session: dict[str, Any] | None = None,
-    observed_at: datetime | None = None,
-) -> Path:
-    """Build and persist one flat client-row distribution-evidence record."""
-    evidence = build_client_evidence(
-        row_id=row_id,
-        cohort=cohort,
-        mcp_evidence=mcp_evidence,
-        launch_transcript=launch_transcript,
-        client=client,
-        acquisition=acquisition,
-        destination=destination,
-        real_client_session=real_client_session,
-        observed_at=observed_at,
-    )
-    return write_distribution_evidence(directory, evidence)
 
 
 def emit_installed_oracle_evidence(
@@ -756,11 +583,8 @@ def main(argv: list[str] | None = None) -> int:
 
 
 __all__ = [
-    "SDK_CLIENT_NAME",
     "EvidenceCohortBindingError",
-    "build_client_evidence",
     "build_installed_oracle_evidence",
-    "emit_client_evidence",
     "emit_installed_oracle_evidence",
     "main",
 ]

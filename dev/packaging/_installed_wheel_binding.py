@@ -30,42 +30,6 @@ def sealed_wheel_payload_sha256(wheel: Path) -> str:
     return _projection_digest(rows)
 
 
-def assert_archive_members_match_extraction(
-    archive_path: Path,
-    extracted_root: Path,
-    *,
-    allowed_generated_roots: frozenset[str] = frozenset(),
-) -> str:
-    """Verify every immutable archive member exists byte-for-byte in its extraction root."""
-    rows: list[tuple[str, str]] = []
-    root = extracted_root.resolve(strict=True)
-    archive_files: set[str] = set()
-    with zipfile.ZipFile(archive_path) as archive:
-        for info in archive.infolist():
-            if info.is_dir():
-                continue
-            member = PurePosixPath(info.filename)
-            archive_files.add(member.as_posix())
-            target = (root / Path(*member.parts)).resolve(strict=True)
-            if not target.is_relative_to(root) or not target.is_file():
-                raise RuntimeError(f"archive member escapes or is absent from extraction: {member}")
-            expected = hashlib.sha256(archive.read(info)).hexdigest()
-            if hashlib.sha256(target.read_bytes()).hexdigest() != expected:
-                raise RuntimeError(f"extracted archive member digest drifted: {member}")
-            rows.append((member.as_posix(), expected))
-    if not rows:
-        raise RuntimeError("sealed archive has no immutable members to bind")
-    extracted_files = {
-        path.relative_to(root).as_posix()
-        for path in root.rglob("*")
-        if path.is_file() and path.relative_to(root).parts[0] not in allowed_generated_roots
-    }
-    extras = extracted_files - archive_files
-    if extras:
-        raise RuntimeError(f"extraction carries unsealed extra members: {sorted(extras)[:10]!r}")
-    return _projection_digest(rows)
-
-
 def installed_python_for_cli(cli: Path) -> Path:
     """Resolve the interpreter that owns an installed console entry point."""
     resolved = cli.resolve(strict=True)
