@@ -341,16 +341,49 @@ def _lanes_reaching_members_with_exclusions_dropped(
     )
 
 
+def _unreached_members(
+    lanes: tuple[Lane, ...],
+    members: tuple[str, ...],
+    member_markers: dict[str, frozenset[str]],
+) -> dict[str, tuple[str, ...]]:
+    """Return each member no lane selects, mapped to the lanes covering its path.
+
+    The mapping is the diagnosis, not a detail. A member no lane reaches is
+    unremarkable when no lane's path scope contains it -- only the enrolling
+    recipe can run it, so excluding it elsewhere is belt and braces. It is a
+    finding when a lane's paths DO contain it and every one of them declines it
+    on markers alone: the exclusions naming that member are then decoration,
+    and the equality check pins a name nothing depends on.
+    """
+    unreached: dict[str, tuple[str, ...]] = {}
+    for member in members:
+        if any(_reaches(lane, member, member_markers[member], ignore_exclusions=True) for lane in lanes):
+            continue
+        unreached[member] = tuple(
+            f"{lane.source}/{lane.recipe}" for lane in lanes if replace(lane, exclusions=()).covers(member)
+        )
+    return unreached
+
+
 def test_a_lane_reaching_the_harness_members_is_measurable_at_all() -> None:
-    """Anti-vacuity: at least one lane must reach the members with exclusions dropped.
+    """Anti-vacuity: the exclusion checks must quantify over something real.
 
     Every assertion below quantifies over the reaching set. If that set were
     empty -- because the members were renamed, deleted, or the lane authority
     stopped resolving the justfile the way `just` itself does -- the other
     checks would pass over nothing.
+
+    Per member rather than per lane. The members no longer share one path
+    scope: the corpus-collectability proof sits outside every corpus lane's
+    paths, so no single lane can reach both, and demanding one only measured
+    where the files happen to live. What each member owes is that its exclusion
+    is either load-bearing (some lane would collect it) or unnecessary (no
+    lane's paths contain it) -- never the third state, where a lane's paths
+    reach it and only a marker keeps it out.
     """
     members = _harness_members(_REPOSITORY_ROOT)
     member_markers = _member_markers(_REPOSITORY_ROOT, members)
+    lanes = _corpus_lanes(_REPOSITORY_ROOT)
     reaching = _lanes_reaching_members_with_exclusions_dropped(_REPOSITORY_ROOT, members, member_markers)
 
     assert members, "the enrolling recipe declares no harness member"
@@ -358,10 +391,35 @@ def test_a_lane_reaching_the_harness_members_is_measurable_at_all() -> None:
         "no lane reaches a harness member even with its exclusions dropped; the declared-lane "
         "authority is no longer resolving real lane scopes, so the exclusion checks would be vacuous"
     )
-    assert any(
-        all(_reaches(lane, member, member_markers[member], ignore_exclusions=True) for member in members)
-        for lane in reaching
-    ), f"no lane reaches the full member set {list(members)}"
+    unreached = _unreached_members(lanes, members, member_markers)
+    marker_only = {member: covering for member, covering in unreached.items() if covering}
+    assert not marker_only, (
+        "these harness members sit inside a lane's path scope yet no lane would collect them even with "
+        f"exclusions dropped, so their `--ignore` entries prove nothing: {marker_only}"
+    )
+
+
+def test_the_gate_refuses_a_member_held_out_by_marker_alone() -> None:
+    """Proof the classification above can fail, on a lane built to fail it.
+
+    A lane whose paths contain a member but whose marker expression declines it
+    is the state the check refuses. Driving it with a synthetic lane keeps the
+    proof independent of where the real members happen to sit today.
+    """
+    members = _harness_members(_REPOSITORY_ROOT)
+    member_markers = _member_markers(_REPOSITORY_ROOT, members)
+    member = members[0]
+    covering = Lane(
+        source="synthetic",
+        paths=(_MEMBER_PARENT,),
+        marker_expression="unit",
+        recipe="synthetic-unit",
+    )
+    selecting = replace(covering, marker_expression="integration", recipe="synthetic-integration")
+
+    assert "integration" in member_markers[member], f"{member} is no longer an integration proof"
+    assert _unreached_members((covering,), (member,), member_markers) == {member: ("synthetic/synthetic-unit",)}
+    assert _unreached_members((selecting,), (member,), member_markers) == {}
 
 
 def test_every_lane_reaching_the_members_excludes_exactly_the_declared_set() -> None:

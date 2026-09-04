@@ -32,8 +32,8 @@ reference fails whichever direction the caller is gating.
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
-from typing import Any, Final
+from collections.abc import Mapping, Sequence
+from typing import Any, Final, cast
 
 #: The dimension a `runs-on:` expression selects, e.g. `os` in `${{ matrix.os }}`.
 _MATRIX_DIMENSION: Final = re.compile(r"matrix\.([A-Za-z_][\w-]*)")
@@ -89,7 +89,18 @@ def is_hosted_image(target: object) -> bool:
 
 def is_fleet_label_set(target: object) -> bool:
     """Return whether ``target`` is a self-hosted label set."""
-    return isinstance(target, list) and bool(target) and target[0] == "self-hosted"
+    labels = _sequence(target)
+    return bool(labels) and labels[0] == "self-hosted"
+
+
+def _mapping(value: object) -> Mapping[str, Any]:
+    """Return ``value`` as a mapping, or an empty one when it is not."""
+    return cast("Mapping[str, Any]", value) if isinstance(value, Mapping) else {}
+
+
+def _sequence(value: object) -> Sequence[object]:
+    """Return ``value`` as a label list, or an empty one when it is not."""
+    return cast("Sequence[object]", value) if isinstance(value, list) else ()
 
 
 def runner_targets(job: Mapping[str, Any], workflow: Mapping[str, Any]) -> list[object]:
@@ -104,21 +115,20 @@ def runner_targets(job: Mapping[str, Any], workflow: Mapping[str, Any]) -> list[
         One entry per resolved target, or a single sentinel string when the
         reference resolves to nothing.
     """
-    runs_on = job.get("runs-on")
+    runs_on: object = job.get("runs-on")
     if not (isinstance(runs_on, str) and "matrix" in runs_on):
         return [runs_on]
-    matrix = (job.get("strategy") or {}).get("matrix")
+    matrix: object = _mapping(job.get("strategy")).get("matrix")
     if isinstance(matrix, str):
         return _runtime_matrix_targets(matrix, workflow)
     dimension_match = _MATRIX_DIMENSION.search(runs_on)
-    dimension = dimension_match.group(1) if dimension_match else None
-    mapping: Mapping[str, Any] = matrix if isinstance(matrix, Mapping) else {}
-    targets: list[object] = [
-        row[dimension] for row in mapping.get("include") or [] if isinstance(row, Mapping) and dimension in row
-    ]
-    top_level = mapping.get(dimension)
-    if isinstance(top_level, list):
-        targets.extend(top_level)
+    if dimension_match is None:
+        return [UNRESOLVED_ZERO_TARGETS]
+    dimension = dimension_match.group(1)
+    mapping = _mapping(matrix)
+    rows = [_mapping(row) for row in _sequence(mapping.get("include"))]
+    targets: list[object] = [row[dimension] for row in rows if dimension in row]
+    targets.extend(_sequence(mapping.get(dimension)))
     return targets or [UNRESOLVED_ZERO_TARGETS]
 
 
@@ -135,10 +145,11 @@ def _runtime_matrix_targets(expression: str, workflow: Mapping[str, Any]) -> lis
     if match is None:
         return [unresolvable(f"{expression.strip()!r} is not a fromJSON(needs.<job>.outputs.<output>) reference")]
     producer_name, output_name = match.group("job"), match.group("output")
-    producer = (workflow.get("jobs") or {}).get(producer_name)
-    if not isinstance(producer, Mapping):
+    jobs = _mapping(workflow.get("jobs"))
+    if producer_name not in jobs:
         return [unresolvable(f"matrix producer job {producer_name!r} is not declared in this workflow")]
-    output = (producer.get("outputs") or {}).get(output_name)
+    producer = _mapping(jobs[producer_name])
+    output: object = _mapping(producer.get("outputs")).get(output_name)
     step_match = _STEP_OUTPUT.fullmatch(output.strip()) if isinstance(output, str) else None
     if step_match is None:
         return [
@@ -149,12 +160,12 @@ def _runtime_matrix_targets(expression: str, workflow: Mapping[str, Any]) -> lis
         ]
     step_id = step_match.group("step")
     step = next(
-        (candidate for candidate in producer.get("steps") or [] if isinstance(candidate, Mapping) and candidate.get("id") == step_id),
+        (candidate for candidate in _sequence(producer.get("steps")) if _mapping(candidate).get("id") == step_id),
         None,
     )
     if step is None:
         return [unresolvable(f"job {producer_name!r} has no step {step_id!r} to emit the matrix")]
-    labels = _runner_label_literals(str(step.get("run", "")))
+    labels = _runner_label_literals(str(_mapping(step).get("run", "")))
     return labels or [unresolvable(f"step {step_id!r} of {producer_name!r} names no runner label literal")]
 
 
