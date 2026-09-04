@@ -13674,7 +13674,8 @@ regulatory-prose pattern without being declared in the channel ledger, and one o
 them is `dev/registry/analysis/m200_2024_full_reconciliation.py`.
 
 It is a false positive, and the reason is exact. The module matches on the word
-`casillas` inside `[[revisions."2024".casillas]]` - a table header in THIS
+`casillas` inside a TOML table header of the form
+`revisions."2024".casillas` in double square brackets - a header in THIS
 repository's authoring files - and its three sibling patterns read `id`,
 `source_refs` and a TOML array from the same tree. There is no outside prose
 anywhere in it.
@@ -13704,3 +13705,55 @@ recording: four undeclared parsers of which one was ours and three are not, is
 now three, all of them outside this session's reach and every one a real grammar
 over the outside world's prose. The dev share of a cross-tree inventory is
 complete.
+
+
+## A wrong attribution I repeated for a dozen iterations
+
+Every health check this session closed with the same sentence: two errors, both
+belonging to a peer's ADR, unchanged. One of those two was neither a peer's nor
+an ADR's.
+
+`vault check all` reported `Unsupported directory found in .vault/: 'tmp'`. It was
+an empty, untracked directory created on 2026-09-03 - inside `.vault/`, which is
+squarely this session's scope, and removable with `rmdir`, which refuses any
+directory that is not empty. It has been fixable the whole time.
+
+The remaining error is real and is a peer's: the ADR
+`2026-08-28-test-reconciliation-sweep-adr.md` carries no grounding references,
+which is theirs to supply.
+
+What made the first one invisible is worth more than the fix. I formed the
+attribution once, early, from a check output I read in summary rather than in
+detail, and then carried it forward as a fact through every subsequent report -
+each repetition making it read as better established than it ever was. The tally
+never moved, which felt like confirmation and was actually just the same two
+lines being counted again.
+
+That is precisely the failure this campaign has been documenting in gates, in
+docstrings and in frozen counts, arriving in my own prose: a description written
+once from an expectation, then relied on rather than re-derived. The corrective
+is the same one applied everywhere else - name the population, and read the
+members rather than the total.
+
+
+## What the vault total was actually saying
+
+Applying the same corrective to the other half of that health line: 437 warnings
+was reported for a dozen iterations without once being decomposed.
+
+By check, it is `body-sections` 353, `features` 44, `exec-mapping` 27, `orphans`
+4, `modified-stamp` 3, `annotations` 2, `markdown` 1. By feature it is simpler
+still: **both features this session writes to - `registry-declaration-hardening`
+and `registry-temporal-coverage-live-remeasurement-adr-regrounding` - report
+`All checks passed`, with no warnings and no errors at all.**
+
+So the figure carried through every report was entirely other people's work, and
+the useful statement was never the total but the scoped one. A number that
+cannot move in response to anything this session does is not a health signal for
+this session; it is background, and reporting it beside real results gave it a
+standing it never earned.
+
+The stamp fixes run under `--feature` throughout, for a reason recorded earlier
+in this campaign: a vault-wide `--fix` once modified a peer's execution records.
+The same flag answers the reporting question, and it was available the whole
+time.

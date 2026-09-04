@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:7331ecd46ad8eb4f8d3861a0cf5ff952ff58036aa4cc2b6a67d59136392934c0'
+body_hash: 'sha256:b0a63c4d9786a56170c03b922d54cc419d93a03ad5925281d53b86ce7be73adc'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -389,6 +389,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S506` - Decline a frozen-count detector after measuring two signals: the first misses the modelo 200 assertion it was built for and the second flags 111 sites including this sessions own correct fixture assertion, since the discriminator is where a value comes from rather than its syntax; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W02.P02.S507` - Declare the dev-side prose-parser false positive rather than narrowing the detector, which its own docstring rules against: the module matches casillas inside a TOML table header in this repositorys authoring files and reads no outside prose, leaving three genuine src parsers undeclared; `dev/registry/analysis/regulatory_prose_parser_channel.toml`.
 - [ ] `W02.P02.S508` - Enrol the three genuine src prose parsers in the channel: the borrador modelo 100 summary extractor reading NIF and Ejercicio, the record-design PDF row repairs, and the workbook reader matching entidades desarrolladoras; `src/cadrumo`.
+- [x] `W02.P02.S509` - Remove the stray empty .vault/tmp directory, one of the two standing vault errors this session repeatedly attributed to a peers ADR without reading the detail; the remaining error is the test-reconciliation-sweep ADR carrying no grounding references; `.vault`.
+- [x] `W02.P02.S510` - Decompose the vault health total this session reported opaquely: 353 body-sections, 44 features, 27 exec-mapping and the rest belong to other features, while both features this session writes to report all checks passed; `.vault`.
 
 ### Phase `W02.P03` - release predicate relocation
 
