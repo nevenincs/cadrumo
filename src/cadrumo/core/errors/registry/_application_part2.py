@@ -725,6 +725,26 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.contabilidad.errors.SaldoCuentaBalanceError",
+        ErrorCode(
+            code="REFUSED_CONTABILIDAD_SALDO_CUENTA_BALANCE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_filing_calculate",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.contabilidad.errors.SumasYSaldosPreCloseError",
+        ErrorCode(
+            code="REFUSED_CONTABILIDAD_SUMAS_Y_SALDOS_PRE_CLOSE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_filing_calculate",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.is_compensation.errors.BinCarryForwardPolicyError",
         ErrorCode(
             code="REFUSED_IS_BIN_CARRY_FORWARD_POLICY",

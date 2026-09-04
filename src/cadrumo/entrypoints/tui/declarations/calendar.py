@@ -45,9 +45,11 @@ class DeclarationsCalendarScreen(Screen[None]):
         """
         .declarations-calendar-page { width: 100%; height: 1fr; }
         #declarations-calendar-search, #declarations-calendar-scope { width: 100%; }
-        #declarations-calendar-agenda { width: 100%; max-width: 78; }
+        #declarations-calendar-agenda { width: 100%; }
         #declarations-calendar-detail, #declarations-calendar-notice {
-            width: 100%; height: auto; padding: 0 1;
+            width: 100%;
+            height: auto;
+            padding: $cadrumo-space-0 $cadrumo-space-1;
         }
         #declarations-calendar-notice { color: $warning; text-style: bold; }
         """

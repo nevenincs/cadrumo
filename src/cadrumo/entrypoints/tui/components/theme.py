@@ -171,6 +171,7 @@ CADRUMO_CSS_TOKENS: Final[Mapping[str, str]] = MappingProxyType(
         # than the library intends, while the complaint was that they were
         # small.
         "cadrumo-control-min-width": "16",
+        "cadrumo-control-max-width": "28",
         # The gap between sibling action buttons. Nine stylesheets each
         # repeated this as a literal; two bordered boxes one cell apart
         # read as one smeared control, so the role gets a name and a
