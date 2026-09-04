@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:58b0f8586ce8d515e5f7c389db0dac181ae7aeab24772f0a09823662e87d22b5'
+body_hash: 'sha256:455b21e2494e98fe0a42876daad8bef19b24b0e5f97f44fdb54f772bfb817df2'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -433,6 +433,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S551` - Make the miss-rate report writer return the evaluation it wrote so the command stops measuring a second time to print numbers it did not read from the file, and test the writer the reach report ranked, pinning the byte-comparable regeneration its docstring claims; `dev/docs/terminology/miss_rate.py,dev/docs/terminology/tests/test_miss_rate_report_cli.py`.
 - [x] `W02.P02.S552` - Prove the release alerting transport the reach report ranked, driving the forge boundary through a real recording executable so the per-run deduplication, the unlabelled fallback query, the body-file handoff and the delivery-outranks-filing retry are exercised as the forge would see them; `dev/release/tests/test_alerting.py`.
 - [x] `W02.P02.S553` - Make a mistyped --uv on the cohort oracle-emit leg render the module's fail-closed refusal instead of escaping as a pathlib FileNotFoundError traceback, and cover the executable resolution and argument contract that decide whether every OS leg proves the same cohort; `dev/packaging/oracle_emit_cohort.py,dev/packaging/tests/test_oracle_emit_cohort.py`.
+- [x] `W02.P02.S554` - Declare the five explicit IVA facts the golden-eval profiles never carried, so seven agent_eval tests stop failing on a profile the product refuses rather than on the behaviour they were written to prove; the two M200 cases that remain fail on the registry validation event, not on the fixture; `dev/agent_eval/tests/test_faithfulness_golden.py,dev/agent_eval/tests/test_response_provenance_golden.py,dev/agent_eval/tests/test_under_declaration_golden.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
