@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:d740f2ade6d37f2e3e4772f4a736a46477df4eb44ca51a1342803d9943678b99'
+body_hash: 'sha256:49f1e9add36844d4069a95376f8112311f599c61bef90efac3829dede0e7c170'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -463,6 +463,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S581` - Record and report the files the unreachable-code reference walk could not read, since a skipped file contributes no references and every symbol only it uses is then reported as dead, so a deletion list was being derived from a silently incomplete corpus; `dev/audit/unreachable_code.py,dev/audit/tests/test_unreachable_code.py`.
 - [x] `W02.P02.S582` - Make the duplication corpus refuse a module it cannot parse and an empty load, since that list is what every detector in the module reads so a silently skipped module hid its duplicates from all of them at once, and nothing downstream reports a corpus size; `dev/audit/semantic_duplication.py,dev/audit/tests/test_duplication.py`.
 - [x] `W02.P02.S583` - Split the unreachable-code test walk's swallow by cause, refusing a tracked module that does not parse because that walk reports tests of dead code so a skip shrinks the findings, while a file that vanished mid-scan stays a reported race; `dev/audit/unreachable_code.py,dev/audit/tests/test_unreachable_code.py`.
+- [x] `W02.P02.S584` - Break the glossary's silence about missing legal grounding: an absent catalogue returned an empty map so every concept rendered with no BOE permalink and read like a corpus that cites nothing, and a malformed fragment silently dropped every citation it declared; the first now warns because synthetic docs roots legitimately have none, the second refuses; `dev/docs/glossary_reference.py,dev/docs/tests/test_glossary_reference.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

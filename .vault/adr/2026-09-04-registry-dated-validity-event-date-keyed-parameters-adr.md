@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:82b5f09ed6d6db3daa70fa6c8525793d7df94f5b0c9631abd182f9d3e8ea1bad'
+body_hash: 'sha256:dcbdc6ef209d30014ff0b3b336e105089c91a0faa9a512d42a609f669bb5d4a8'
 related:
   - "[[2026-09-04-registry-dated-validity-regulatory-constant-placement-sweep-audit]]"
   - "[[2026-08-19-registry-evidence-window-axes-adr]]"
@@ -187,13 +187,37 @@ the existing modelo, never by adding a non-filing value to a parameter that toda
 carries filing-period values, and a load-time refusal of mixed-axis parameters
 lands with them.
 
-In scope where the event date is already a typed field on the consumer's own
-record. Two consumer-side changes are PREREQUISITES rather than consequences: the
-bienes de inversion values are reached through zero-argument enum properties that
-must take the date, and the prorrata predicate is a pure domain function taking a
-year with no registry dependency at all, so routing it to a parameter is a
-dependency-direction change decided at the application boundary, not inside the
-domain module.
+A typed event date on the consumer's record is NECESSARY but NOT SUFFICIENT, and
+an earlier draft of this record said otherwise. Resolution also needs the FILING
+CONTEXT — modelo, filing year and period token — because a parameter is hosted on
+a revision and only that triple names one; modelo 303's 2024 mid-year split makes
+the period token load-bearing, and no domain module in the tree holds it.
+
+Verified at HEAD, the bienes de inversion record does not even carry the date:
+`acquisition_year` is an INTEGER YEAR, and the typed transaction date lives on the
+IVA ledger observation, a different aggregate. The claim that the consumer record
+already exposes a transaction date is CORRECTED here and withdrawn.
+
+The consequence is that the acquisition axis is DEFERRED, not adopted. Exercising
+it would require either synthesising a day from a year — fabricated precision this
+record's honesty constraint forbids — or widening the persisted record to an
+acquisition DATE, which is a stored-schema migration and its own decision. The
+bienes de inversion figures are therefore authored on the FILING-PERIOD axis,
+which this record's own constraint already mandates for any value so expressible.
+They are so expressible today because LIVA arts. 107 and 109 have never amended
+the four/nine-year windows, the five/ten divisors or the ten-point threshold since
+1993, so exactly one value exists and no axis distinguishes anything.
+
+That expressibility is CONDITIONAL and must be defended: a gate refuses a SECOND
+dated value on these parameters, because the moment the figure moves, art. 107
+attaches it at acquisition and the filing-period declaration becomes a false
+statement of law — routing the work to the deferred acquisition axis rather than
+silently applying new law to an old good.
+
+Resolution happens at the APPLICATION boundary that holds the filing context, and
+the resolved values reach the domain calculators as a required, provenance-carrying
+typed bundle. That placement rule governs every future domain calculator rather
+than this feature alone, so it is decided in its own sibling record.
 
 Out of scope: the SAL figures and the maritime exemption fraction, whose
 consumers carry no date field at all. Separately, the IVA rate table should be
@@ -233,6 +257,18 @@ decision exists to remove.
 Mixed-axis parameters become a load-time refusal, closing a gap where a
 cross-axis double match would otherwise surface only at runtime.
 
-Until the carrier gate lands, the blocked clusters remain leaf constants and must
-not be forced into parameters; the placement audit records why each is blocked so
-the attempt is not repeated.
+Measured after the carrier gate landed: it admits NOTHING in this feature. LIVA
+arts. 107, 108, 109 and 110 are in force from 1993 with no repeal, so their
+governed spans are never disjoint from a modelo 303 revision window and no
+exemption is needed; they are additionally cited by bindings, casillas, constructs
+and the completeness manifest in every 303 revision, so carrier exclusivity would
+deny the exemption even if it were sought. LIVA art. 103 is catalogued as a single
+entry in force from 1993 with no repealed-redaction sibling, and no 303 revision
+covers a pre-2015 filing year, so the twenty-per-cent margin is unreachable
+through any sanctioned filing path and is expressed as an explicit REFUSAL rather
+than authored as data.
+
+The gate is retained as the correct general mechanism and as the standing answer
+to the next revision that legitimately carries a historical value. It is not
+load-bearing for either cluster this record names, and saying so plainly is
+preferable to claiming a consumer it does not have.
