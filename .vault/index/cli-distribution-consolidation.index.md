@@ -6,7 +6,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:8b47c8c484cd98824fc6513a680b7f699647866bdfbd13e6eb125609a0150936'
+body_hash: 'sha256:78bc9105f9b7b25846d3f370422026af6d20f23186e1aaf9715cb6aa39c0ab7b'
 related:
   - '[[2026-09-02-cli-distribution-consolidation-P01-S01]]'
   - '[[2026-09-02-cli-distribution-consolidation-P01-S02]]'
@@ -44,10 +44,14 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-P09-S34]]'
   - '[[2026-09-02-cli-distribution-consolidation-P09-S35]]'
   - '[[2026-09-02-cli-distribution-consolidation-P09-S36]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P09-S48]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P09-S49]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P09-S52]]'
   - '[[2026-09-02-cli-distribution-consolidation-P10-S38]]'
   - '[[2026-09-02-cli-distribution-consolidation-P10-S40]]'
   - '[[2026-09-02-cli-distribution-consolidation-P10-S41]]'
   - '[[2026-09-02-cli-distribution-consolidation-P10-S47]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P10-S50]]'
   - '[[2026-09-02-cli-distribution-consolidation-P11-S42]]'
   - '[[2026-09-02-cli-distribution-consolidation-P11-S43]]'
   - '[[2026-09-02-cli-distribution-consolidation-P11-S44]]'
@@ -121,8 +125,12 @@ Auto-generated index of all documents tagged with `#cli-distribution-consolidati
 - `2026-09-02-cli-distribution-consolidation-P11-S42` - Rewrite the release runbook against the adopted workflow pair
 - `2026-09-02-cli-distribution-consolidation-P11-S43` - Reduce the recipe surface to the commands the adopted path uses
 - `2026-09-02-cli-distribution-consolidation-P11-S44` - Reconcile the packaging workflow family against the sibling shape
+- `2026-09-02-cli-distribution-consolidation-P09-S48` - Separate the seal check from the publication check and guard the upload with the authority that names it
+- `2026-09-02-cli-distribution-consolidation-P09-S49` - Remove the repeated passes the cohort build makes over artifacts it has already produced
+- `2026-09-02-cli-distribution-consolidation-P09-S52` - Close the review findings on the publication gate, starting with the partial-upload deadlock
 - `2026-09-02-cli-distribution-consolidation-P10-S40` - Remove the evidence leak sweep left without a caller
 - `2026-09-02-cli-distribution-consolidation-P10-S47` - Close the evidence assertions naming cohort artifacts the adopted path no longer builds
+- `2026-09-02-cli-distribution-consolidation-P10-S50` - Reclaim the build scratch a killed run leaves in the working tree
 - `2026-09-02-cli-distribution-consolidation-P11-S45` - Document the release-candidate evidence campaign the runbook omits
 - `2026-09-02-cli-distribution-consolidation-P11-S46` - Restate the workflow names three surfaces still cite from the retired release path
 - `2026-09-02-cli-distribution-consolidation-P11-S51` - Restate the surfaces naming workflows the repository does not contain

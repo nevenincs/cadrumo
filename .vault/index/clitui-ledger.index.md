@@ -6,8 +6,9 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:8d72d77bfe634ab79dd4214283b53bd9d74bbc238a1cc8234d9833ffaf8a5379'
+body_hash: 'sha256:53189ee15a9058680dbba454457f783b9f1098f2c2fb43127153b445eab36d8d'
 related:
+  - '[[2026-09-04-clitui-ledger-W01-P01-S01]]'
   - '[[2026-09-04-clitui-ledger-adr]]'
   - '[[2026-09-04-clitui-ledger-plan]]'
   - '[[2026-09-04-clitui-ledger-reference]]'
@@ -23,6 +24,10 @@ Auto-generated index of all documents tagged with `#clitui-ledger`.
 ### adr
 
 - `2026-09-04-clitui-ledger-adr` - `clitui-ledger` adr: `backend authority and interface parity gates` | (**status:** `accepted`)
+
+### exec
+
+- `2026-09-04-clitui-ledger-W01-P01-S01` - Define stable capability identities, axes, gap classes, applicability, evidence coordinates, and gate predicates
 
 ### plan
 
