@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:8cbd594a68ef092d8d004c8697144af17edc99abf6376b860fccb33aed9a42c5'
+body_hash: 'sha256:338c044724b2a54b05bc5fb6e2adc74f73327e6ba3f9c6ae59be0462f5363ccb'
 step_id: 'S409'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -71,9 +71,19 @@ NEEDS_REVIEW needs a grounded rule over `CalculationRevisionState`. Telling an
 operator a declaration is READY when it needs review is a filing-grade harm, so
 this refuses rather than guesses.
 
-MESSAGES -- blocked on a pull, like S408. `PersistedNotificationsSnapshot` is
-the record of an AEAT notifications capture; before any pull there is no
-snapshot to read. The honest improvement available without a pull is a more
-precise refusal: the current reason code says the reader is unavailable, which
-is false -- the reader exists and the data does not. That is the next
-actionable slice here.
+MESSAGES -- still awaiting a pull, but its refusal now names the real
+condition. `PersistedNotificationsSnapshot` is the record of an AEAT
+notifications capture, so before any pull the reader is perfectly able to
+answer and the DATA is what is absent. The zone reported UNAVAILABLE with the
+reason `messages_reader_unavailable`, which named the wrong thing twice: an
+operator reading that looks for a broken reader, when the action that resolves
+the zone is a pull. It now reports NEVER_CAPTURED with
+`messages_never_pulled`, a state Home already has copy for.
+
+Gated by `test_a_zone_awaiting_a_pull_is_never_captured_not_unavailable`, which
+asserts the reason CODE as well as the availability: a zone carrying the right
+state under a code that still blames the reader tells the wrong story wherever
+that code is rendered or logged. Teeth proven by restoring the old refusal --
+`Home reports never-pulled AEAT notifications as an unavailable reader, which
+points the operator at a fault instead of at the pull`. Restored by copy and
+verified; 24 passed.
