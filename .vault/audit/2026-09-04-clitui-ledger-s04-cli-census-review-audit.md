@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:227f8fa0c3d021bf6711b848e3872420f66282720dfd7608868b39812bd5701b'
+body_hash: 'sha256:80268e5cbc5fad3d157f2331edb8fe18add3e684a643af4aa7a4cd67edfb1942'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-reference]]"
@@ -94,6 +94,43 @@ apply, and split. The total of 45 and the source SHA-256 are accurate, but the
 endpoint-family count and therefore the evidence narrative do not align with
 the production projection.
 
+### remediation-resolution | low | ACCEPT: all prior blocking and medium findings are closed
+
+Re-review against source commit `c5991c4196`, documentation commit
+`c2e44ddd6a`, and source digest
+`sha256:2cd8e21e2b8602e5e18338c22350301f2bc76f580873af51b1154d5364e6769b`
+accepted the remediated S04 stream. The existing `test_command_specs.py` owner
+now imports the live census and durably covers its positive projection plus
+missing, unknown, duplicate, newly introduced, unavailable, and invalid
+declaration mutations. Independent probes reproduced the same refusals without
+changing the worktree.
+
+The live evidence is 91 Ledger nodes, 77 leaves, 14 groups, the one executable
+`participation` group, 78 invocables, 50 unique supplemental sub-operations
+across ten overloaded endpoints, ownership counts of 44 `policy-bearing`, 27
+`mixed`, and 7 `transport-only`, and 78
+`TuiCapability.NOT_IMPLEMENTED` declarations. Paths, handler identities,
+result-schema identities, and TUI declarations equal the production graph.
+The classification census now includes `ledger.classify.bulk_csv` plus the
+five behavior-distinct auto-split refusal, split/single preview, and
+split/single apply outcomes. The shared ASCII lowercase dotted grammar rejects
+uppercase, Unicode, empty, underscore-leading, and punctuation-bearing
+segments.
+
+The census test owner passed 16 tests and the other three named graph/spec
+suites passed 26 tests, for 42 passing tests across the exact four-file scope.
+Ruff format, Ruff lint, and `ty` passed both changed Python files. The
+feature-scoped Vaultspec check passed every check. No `HIGH` or `CRITICAL`
+finding remains; the independent ruling is **ACCEPT**.
+
+### step-record-test-count | medium | The Step Record understates the current focused suite by five tests
+
+The S04 Step Record says the four named command graph/spec files produced 37
+passing tests. Current collection reports 42 tests, and split execution passed
+all 16 tests in `test_command_specs.py` plus all 26 tests in the other three
+files. This does not weaken the accepted detector evidence, but the execution
+record is not exact and should report the current 42-test result.
+
 ## Recommendations
 
 1. Add census-owned positive and mutation tests to the existing
@@ -113,3 +150,5 @@ the production projection.
 5. Correct the reference's overloaded-endpoint count and any totals changed by
    the renewed sub-operation census before requesting another independent
    S04 review.
+6. Correct the S04 Step Record's focused-suite count from 37 to 42 while
+   preserving the exact four-file command.
