@@ -16,8 +16,8 @@ from pydantic import ValidationError
 
 from ....core.calendar_shift import shift_by_calendar_years
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict
-from ....domain.deadlines.models import IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ....domain.contribuyente.entity_type import EntityType
+from ....domain.deadlines.models import IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ....domain.deadlines.recargo import twelve_month_anniversary
 from ....domain.retention.floor import TAX_RECORD_RETENTION_FLOOR_YEARS
 from ..errors import OverviewExplainError

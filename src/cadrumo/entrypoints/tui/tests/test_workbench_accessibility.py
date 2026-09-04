@@ -20,7 +20,7 @@ import pytest
 from textual.widget import Widget
 
 from ....core.external_constants import OutputLanguage
-from ....core.i18n.render import tr
+from ....core.i18n.render import I18N_STRICT_MISSING_KEYS, MissingTranslationError, tr
 from ....tests.terminal_sizes import TERMINAL_ORDINARY
 from ..components.host import ScreenHostApp
 from ..home import HomeScreen, HomeTarget
@@ -115,13 +115,39 @@ async def test_every_home_zone_states_its_availability_in_words(tmp_path: Path) 
 
 
 def test_the_destination_catalogue_names_every_destination_in_every_shipped_locale() -> None:
-    """A destination the palette cannot name in a language is unreachable in it."""
-    for descriptor in TUI_DESTINATION_CATALOGUE:
-        for language in OutputLanguage:
-            rendered = tr(descriptor.label_key, locale=language.value)
-            assert rendered and rendered != descriptor.label_key, (
-                f"{descriptor.destination} has no {language.value} name: {descriptor.label_key}"
-            )
+    """A destination the palette cannot name in a language is unreachable in it.
+
+    Asserted under STRICT resolution. Without it this proves nothing: `tr()`
+    humanises a missing key into a plausible English string rather than
+    returning the key, so a catalogue with no entries at all reports a full
+    pass. Measured 2026-09-04, every one of these keys was absent from all four
+    catalogues while this test was green.
+    """
+    strict_token = I18N_STRICT_MISSING_KEYS.set(True)
+    try:
+        for descriptor in TUI_DESTINATION_CATALOGUE:
+            for language in OutputLanguage:
+                rendered = tr(descriptor.label_key, locale=language.value)
+                assert rendered and rendered != descriptor.label_key, (
+                    f"{descriptor.destination} has no {language.value} name: {descriptor.label_key}"
+                )
+    finally:
+        I18N_STRICT_MISSING_KEYS.reset(strict_token)
+
+
+def test_a_missing_destination_name_is_not_humanised_into_a_false_pass() -> None:
+    """The fallback that made the gate above vacuous, asserted directly.
+
+    If this ever stops raising, `tr()` has regained a silent fallback under
+    strict resolution and every locale-coverage gate in the tree is worth less
+    than it looks.
+    """
+    strict_token = I18N_STRICT_MISSING_KEYS.set(True)
+    try:
+        with pytest.raises(MissingTranslationError):
+            tr("tui.destination.a_key_that_does_not_exist", locale="es")
+    finally:
+        I18N_STRICT_MISSING_KEYS.reset(strict_token)
 
 
 @pytest.mark.asyncio

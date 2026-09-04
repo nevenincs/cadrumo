@@ -1259,6 +1259,12 @@ tui:
     work_state:
       borrador: Draft
       descartado: Discarded
+  destination:
+    aeat_sync: AEAT Sync
+    declarations: Declarations
+    home: Home
+    ledger: Ledger
+    profile: Profile
   home:
     account_fallback: Account
     action:

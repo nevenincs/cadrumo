@@ -253,8 +253,8 @@ def test_setup_answers_minimal_valid() -> None:
 
 def test_setup_answers_string_enum_coercion() -> None:
     """SetupAnswers coerces known string tokens to their enum members."""
-    from ...domain.deadlines.models import IVARegime
     from ...domain.contribuyente.entity_type import EntityType
+    from ...domain.deadlines.models import IVARegime
     from ..setup_answers import SetupAnswers
 
     # Test iva_regime coercion

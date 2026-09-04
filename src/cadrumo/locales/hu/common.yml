@@ -1283,6 +1283,12 @@ tui:
     work_state:
       borrador: Piszkozat
       descartado: Elvetve
+  destination:
+    aeat_sync: AEAT-szinkron
+    declarations: Bevallások
+    home: Kezdőlap
+    ledger: Főkönyv
+    profile: Profil
   home:
     account_fallback: Fiók
     action:

@@ -8,8 +8,8 @@ import pytest
 
 from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ....core.period import Period
-from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ....domain.contribuyente.entity_type import EntityType
+from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ...live.expedientes import PersistedExpedientesSnapshot
 from ..calendar import build_overview_calendar, calendar_events_from_expedientes_snapshots
 from ..calendar_models import OverviewCalendar, OverviewCalendarRange

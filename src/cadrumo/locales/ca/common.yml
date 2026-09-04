@@ -1289,6 +1289,12 @@ tui:
     work_state:
       borrador: Esborrany
       descartado: Descartat
+  destination:
+    aeat_sync: Sincronització AEAT
+    declarations: Declaracions
+    home: Inici
+    ledger: Llibre registre
+    profile: Perfil
   home:
     account_fallback: Compte
     action:

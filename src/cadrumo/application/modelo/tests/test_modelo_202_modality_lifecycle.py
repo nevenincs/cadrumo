@@ -25,6 +25,7 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core.period import Period
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.models import (
     IVARegime,
     M303RegimeComposition,
@@ -32,7 +33,6 @@ from ....domain.deadlines.models import (
     ModeloIVAProfile,
     TaxpayerProfile,
 )
-from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,

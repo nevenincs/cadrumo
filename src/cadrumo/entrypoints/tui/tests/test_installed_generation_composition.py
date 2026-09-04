@@ -162,22 +162,47 @@ def _admission(destination: str, state: WorkbenchDestinationAdmissionState) -> W
     )
 
 
-def _inputs(at: datetime) -> WorkbenchGenerationInputsV1:
+def _aeat_sync_projection(at: datetime) -> AeatSyncWorkspaceProjectionV1:
+    """A real pre-pull AEAT Sync reading, built by its own production reader."""
+    from ....application.aeat_sync.workspace_reader import read_local_aeat_sync_workspace_projection
+
+    return read_local_aeat_sync_workspace_projection(
+        bucket_id=_BUCKET,
+        subject_key="00000001R",
+        observed_at=at,
+        filings=(),
+        operation_contracts=_operation_runtime().public_contracts,
+    )
+
+
+def _inputs(at: datetime, *, aeat_sync_available: bool = False) -> WorkbenchGenerationInputsV1:
+    """One generation. ``aeat_sync_available`` models a declared NIF."""
     return WorkbenchGenerationInputsV1(
         assembled_at=at,
         home=WorkbenchGenerationSourceResultV1.available(_home(at), observed_at=at),
         ledger=WorkbenchGenerationSourceResultV1.available(_ledger(), observed_at=at),
         declarations=WorkbenchGenerationSourceResultV1.available(_declarations(at), observed_at=at),
         declarations_calendar=WorkbenchGenerationSourceResultV1.available(_calendar(at), observed_at=at),
-        aeat_sync=WorkbenchGenerationSourceResultV1[AeatSyncWorkspaceProjectionV1].never_captured(
-            refusal="source.aeat_sync.not_captured"
+        aeat_sync=(
+            WorkbenchGenerationSourceResultV1[AeatSyncWorkspaceProjectionV1].available(
+                _aeat_sync_projection(at), observed_at=at
+            )
+            if aeat_sync_available
+            else WorkbenchGenerationSourceResultV1[AeatSyncWorkspaceProjectionV1].never_captured(
+                refusal="source.aeat_sync.not_captured"
+            )
         ),
         modelo=WorkbenchGenerationSourceResultV1[tuple[ModeloWorkspaceProjectionV1, ...]].never_captured(
             refusal="source.modelo.bulk_projection_unavailable"
         ),
         ledger_admission=_admission("workbench.ledger", WorkbenchDestinationAdmissionState.AVAILABLE),
         declarations_admission=_admission("workbench.declarations", WorkbenchDestinationAdmissionState.AVAILABLE),
-        aeat_sync_admission=_admission("workbench.aeat_sync", WorkbenchDestinationAdmissionState.NEVER_CAPTURED),
+        aeat_sync_admission=_admission(
+            "workbench.aeat_sync",
+            WorkbenchDestinationAdmissionState.AVAILABLE
+            if aeat_sync_available
+            else WorkbenchDestinationAdmissionState.NEVER_CAPTURED,
+        ),
     )
 
 
@@ -357,3 +382,60 @@ def test_refresh_reuses_one_generation_for_search_then_home_and_keeps_missing_so
     refreshed_home = root_inputs.refresh_home()
     assert calls == 2
     assert refreshed_home.generated_at == _NOW + timedelta(minutes=1)
+
+def test_a_generation_that_gains_a_source_readmits_its_destination() -> None:
+    """Availability belongs to the CURRENT capture, not to the session's first.
+
+    An operator who declares their NIF part-way through a session makes AEAT
+    Sync readable. Before this, admissions were frozen at composition while the
+    factories resolved from the latest generation, so the refreshed capture and
+    the catalogue disagreed: search was refused for the rest of the session and
+    navigation kept advertising a reader-unavailable reason that had stopped
+    being true.
+    """
+    generations = [_inputs(_NOW), _inputs(_NOW, aeat_sync_available=True)]
+
+    def read() -> object:
+        return generations.pop(0) if len(generations) > 1 else generations[0]
+
+    provider = InstalledWorkbenchGenerationProviderV1(CallableWorkbenchGenerationReadDoorV1(read))
+    root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())(_operation_runtime())
+    root = compose_installed_workbench_root(root_inputs)
+
+    assert root.destination_catalogue.resolve("workbench.aeat_sync").factory is None
+    assert root.refresh_destination_catalogue is not None
+
+    root.refresh_search_inputs()
+    refreshed = root.refresh_destination_catalogue()
+
+    route = refreshed.resolve("workbench.aeat_sync")
+    assert route.admission.state is WorkbenchDestinationAdmissionState.AVAILABLE
+    assert route.factory is not None
+
+
+def test_a_generation_that_loses_a_source_stops_offering_its_destination() -> None:
+    """The other direction, which used to crash rather than refuse.
+
+    Clearing a declared NIF is a supported profile edit. The catalogue kept
+    listing AEAT Sync with a live factory that then raised out of a Textual
+    handler when the operator selected it from the palette.
+    """
+    generations = [_inputs(_NOW, aeat_sync_available=True), _inputs(_NOW)]
+
+    def read() -> object:
+        return generations.pop(0) if len(generations) > 1 else generations[0]
+
+    provider = InstalledWorkbenchGenerationProviderV1(CallableWorkbenchGenerationReadDoorV1(read))
+    root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())(_operation_runtime())
+    root = compose_installed_workbench_root(root_inputs)
+
+    assert root.destination_catalogue.resolve("workbench.aeat_sync").factory is not None
+    assert root.refresh_destination_catalogue is not None
+
+    root.refresh_search_inputs()
+    refreshed = root.refresh_destination_catalogue()
+
+    route = refreshed.resolve("workbench.aeat_sync")
+    assert route.admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE
+    assert route.factory is None
+

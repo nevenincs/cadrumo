@@ -19,6 +19,7 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import (
     CrossPeriodGroupMemberRoster,
     IrpfIncomeCategory,
@@ -28,7 +29,6 @@ from ....domain.deadlines.models import (
     ModeloIVAProfile,
     TaxpayerProfile,
 )
-from ....domain.contribuyente.entity_type import EntityType
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,

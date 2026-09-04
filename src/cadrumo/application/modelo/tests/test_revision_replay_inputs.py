@@ -10,8 +10,8 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.temporal import select_revision
-from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ....domain.contribuyente.entity_type import EntityType
+from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,

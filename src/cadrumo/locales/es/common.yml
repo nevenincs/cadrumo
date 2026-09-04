@@ -1301,6 +1301,12 @@ tui:
     work_state:
       borrador: Borrador
       descartado: Descartado
+  destination:
+    aeat_sync: Sincronización AEAT
+    declarations: Declaraciones
+    home: Inicio
+    ledger: Libro registro
+    profile: Perfil
   home:
     account_fallback: Cuenta
     action:

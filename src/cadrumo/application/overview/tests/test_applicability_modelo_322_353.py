@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
+from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.models import (
     IVARegime,
     M303RegimeComposition,
@@ -12,7 +13,6 @@ from ....domain.deadlines.models import (
     ModeloIVAProfile,
     TaxpayerProfile,
 )
-from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

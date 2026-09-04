@@ -8,6 +8,7 @@ from typing import TypedDict
 import pytest
 from pydantic import ValidationError
 
+from ....contribuyente.entity_type import EntityType, LegalEntityForm
 from ....deadlines.models import (
     FiscalResidency,
     IrpfEstimationRegime,
@@ -16,7 +17,6 @@ from ....deadlines.models import (
     IVARegime,
     TaxpayerProfile,
 )
-from ....contribuyente.entity_type import EntityType, LegalEntityForm
 from ..applicability import (
     MODELO_APPLICABILITY_RULES,
     ApplicabilityVerdict,
