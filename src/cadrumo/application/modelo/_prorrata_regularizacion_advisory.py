@@ -326,17 +326,22 @@ def _especial_mandatory_diagnostics(
     especial_total_is_honest = (
         totals.regime is ProrrataRegisterRegime.ESPECIAL or totals.unclassified_deducible_count == 0
     )
+    # Resolved BEFORE the branch because both arms need it: the advisory arm
+    # passes it to the predicate, and the prompt arm below quotes the margin in
+    # its operator-facing wording. Binding it inside the branch left the prompt
+    # arm reading an unbound name.
+    #
+    # A refusal here is a genuine grounding defect: this path is gated to a
+    # modelo 303 annual settlement period, and every modelo 303 revision
+    # declares the art-103.Dos.2 margin. It carries a registered error code and
+    # an operator-facing message, so it is allowed to surface rather than being
+    # swallowed into an empty diagnostic tuple.
+    especial_parameters = resolve_prorrata_especial_mandatory_parameters(
+        revision,
+        modelo_id=modelo,
+        ejercicio=filing_year,
+    )
     if especial_total_is_honest:
-        # A refusal here is a genuine grounding defect: this path is gated to a
-        # modelo 303 annual settlement period, and every modelo 303 revision
-        # declares the art-103.Dos.2 margin. It carries a registered error code
-        # and an operator-facing message, so it is allowed to surface rather
-        # than being swallowed into an empty diagnostic tuple.
-        especial_parameters = resolve_prorrata_especial_mandatory_parameters(
-            revision,
-            modelo_id=modelo,
-            ejercicio=filing_year,
-        )
         notice = build_prorrata_especial_mandatory_advisory(
             deduction_under_general=totals.deduction_under_general,
             deduction_under_especial=totals.deduction_under_especial,
