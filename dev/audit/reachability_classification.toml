@@ -385,3 +385,25 @@ symbols = [
 ]
 evidence = "Each family's source kind is registered in application/aggregation/_source_mesh.py DEFERRED_SOURCE_KINDS -- RELATED_PARTY_OPERATION, REFUND_OPERATION, DONATIVO_DONOR, GASTO193_CONTRIBUTOR, WITHHOLDING296 -- so a calculate-path binding of the source raises a standing advisory instead of a silent blank. The resolver is built and validated but no live mesh resolver is enrolled yet, which is why nothing reaches it."
 mechanism = "DEFERRED_SOURCE_KINDS, with the sibling RESERVED_SOURCE_KINDS and the source-kind enrollment parity gate accounting for every member of the closed taxonomy"
+
+[[symbol_cluster]]
+name = "applicability public alias facade"
+class = "orphaned"
+area = "domain/calculations/registry"
+resolved = true
+symbols = [
+  "INCOMPLETE_LEGAL_REFS",
+  "ATTRIBUTION_PASS_THROUGH_LEGAL_REFS",
+  "INCOMPLETE_UNDECLARED_REASON",
+  "INCOMPLETE_UNRULED_REASON",
+  "INCOMPLETE_UNDETERMINED_REASON",
+]
+evidence = "Five public aliases to private constants, carrying a comment stating consumers import these aliases rather than reaching into private symbols. No consumer existed anywhere in src/cadrumo or dev/, the names were absent from __all__, and each private original remained in use in its own module. An alias layer is forbidden outright by the architecture boundaries, so the aliases were removed and the originals left untouched."
+
+[[symbol_cluster]]
+name = "applicability dead entity-type constants"
+class = "orphaned"
+area = "domain/calculations/registry"
+resolved = true
+symbols = ["_NATURAL_PERSON", "_LEGAL_ENTITY", "_ATTRIBUTION_ENTITY", "_PAYER_FACT_ENTITY_TYPES"]
+evidence = "Each appeared only at its own definition line, with no use anywhere in the module or the tree. _PAYER_FACT_ENTITY_TYPES additionally duplicated _IVA_OBLIGED_ENTITY_TYPES member for member, which is a duplicate definition the architecture boundaries forbid."
