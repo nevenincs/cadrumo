@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:12fc412aa1807c1dd5238949e2b737c1b9f86e49a1eabd049e45db024caabf2a'
+body_hash: 'sha256:88c0e4e5b52caaa0e8ade7886df40e07fdc16bb3f413db2252e97c87a6a98b75'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-reference]]"
@@ -207,3 +207,9 @@ the behavior under test, S06 did not change that production path, the prior
 independent serial suite passed all 87, and the complete affected four-case M369
 lane passes again serially in this review. It therefore does not block S06
 acceptance and is not represented as an uninterrupted product-suite pass.
+
+An additional independent detector review initially challenged the non-null
+default and key-order cases, then converged on ACCEPT after confirming that the
+explicit model-default assertion fails on default drift, the unset nullable
+field covers lossy dump flags, and typed-model field ordering preserves the
+observable normalization contract. It reported no remaining actionable finding.
