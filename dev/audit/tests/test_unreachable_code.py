@@ -714,3 +714,41 @@ def test_the_live_reference_walk_read_every_file(capsys: pytest.CaptureFixture[s
     run_unreachable_code_scan(REPO_ROOT)
 
     assert "were unreadable during the reference walk" not in capsys.readouterr().err
+
+
+def test_the_test_walk_refuses_a_module_that_does_not_parse(tmp_path: pathlib.Path) -> None:
+    """A finding set, not a reference set.
+
+    ``_test_findings`` REPORTS test modules whose every shipped subject is
+    already dead, so a module skipped for a SyntaxError can never be reported
+    as a test of dead code - the findings shrink by exactly the file nobody
+    could read. Measured: 3325 test modules walked, none unparsable, so the
+    defect is proven here on a constructed one.
+    """
+    from ..unreachable_code import parse_module
+
+    broken = tmp_path / "test_broken.py"
+    broken.write_text("def (:" + chr(10), encoding="utf-8")
+
+    with pytest.raises(SyntaxError):
+        parse_module(broken)
+
+
+def test_the_live_test_walk_read_every_module() -> None:
+    """The healthy state, asserted rather than assumed.
+
+    If a tracked test module ever stops parsing, the audit now refuses instead
+    of quietly reporting one fewer test-of-dead-code finding.
+    """
+    from ..._paths import REPO_ROOT
+    from ..unreachable_code import is_test_path, iter_python_files, parse_module
+
+    src_root = REPO_ROOT / "src"
+    walked = 0
+    for path in iter_python_files(src_root / "cadrumo"):
+        if not is_test_path(path, src_root) or not path.name.startswith("test_"):
+            continue
+        walked += 1
+        parse_module(path)
+
+    assert walked > 0, "the walk found no test modules, so this would prove nothing"

@@ -1290,7 +1290,18 @@ def _test_findings(
             continue
         try:
             tree = parse_module(path)
-        except (OSError, SyntaxError, UnicodeDecodeError):
+        except (SyntaxError, UnicodeDecodeError) as error:
+            # A finding set, not a reference set: this walk REPORTS test modules
+            # whose every subject is already dead, so a skipped module can never
+            # be reported as a test of dead code. A broken tracked file is not a
+            # race, so it refuses rather than shrinking the findings silently.
+            raise SystemExit(
+                f"{path} does not parse, so it could not be checked for testing only dead code: {error}"
+            ) from error
+        except OSError:
+            # This one IS a race - the tree is edited while the audit runs - so a
+            # file that vanished mid-walk is reported rather than fatal.
+            sys.stderr.write(f"unreachable-code: {path} vanished during the test walk and was not checked" + chr(10))
             continue
         test = ShippedModule(module_name_for(path, src_root=spec.src_root), path, False, tree)
         modules, symbols = _test_subjects(test, known)
