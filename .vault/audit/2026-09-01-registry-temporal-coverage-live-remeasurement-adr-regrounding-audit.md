@@ -14542,3 +14542,33 @@ verify a change and the easiest way to miss what it did to its neighbours, and
 this campaign has now recorded that twice from opposite directions: once when a
 suite run hid a regression among 36 pre-existing failures, and once here, when a
 targeted run hid a regression by not running it.
+
+
+## Sweeping for the neighbours a targeted run cannot see
+
+Having broken a gate 960 lines from the one I was editing, the question is
+whether that happened elsewhere: every targeted `-k` run this session verified a
+change without running what sat beside it.
+
+Swept by running the full file or directory for everything touched.
+
+The registry suite, re-measured on 2026-09-04 with the run judged usable before
+any figure was taken: **1,286 collected, 1,249 passing, 37 failing**. Against the
+earlier full measurement of 1,264 / 1,227 / 37, the population grew by the 22
+tests this session added, all 22 pass, and **the failure set is identical line by
+line** - not merely the same size, which is the comparison this campaign has
+twice found insufficient.
+
+`dev/ci/tests` reports 5 failures and 12 errors across six modules. None is in
+`test_wall_advisory.py`, the only file there this session touched, and that file
+carries no reference to any threshold name the failures involve. Its own nine
+tests pass.
+
+So one neighbour was broken this session and it was caught. The sweep is what
+turns that from a claim into a measurement, and it cost two runs.
+
+The `-k` flag remains the fastest way to verify a change and the least
+trustworthy way to finish one. The rule this session ends with is narrower than
+"always run everything": run the whole file you edited, because that is where a
+textual replacement can land on the wrong occurrence, and the failure it causes
+is invisible to the test you were writing.
