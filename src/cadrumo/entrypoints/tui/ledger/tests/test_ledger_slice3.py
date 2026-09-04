@@ -77,6 +77,10 @@ def _reconciled_projection():
                     amount_match=True,
                     counterparty_match=True,
                     score="1.0",
+                    invoice_total="1250.00",
+                    transaction_amount="1250.00",
+                    invoice_counterparty="Suministros Delta SL",
+                    transaction_counterparty="Suministros Delta SL",
                 ),
             ),
             "link_inconsistencies": (
@@ -104,6 +108,10 @@ def _two_suggestion_projection():
         amount_match=True,
         counterparty_match=False,
         score="0.5",
+        invoice_total="480.50",
+        transaction_amount="480.50",
+        invoice_counterparty="Cliente Omega SA",
+        transaction_counterparty="Omega SA",
     )
     return projection.model_copy(update={"invoice_reconciliations": (*projection.invoice_reconciliations, second)})
 

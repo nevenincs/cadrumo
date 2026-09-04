@@ -149,7 +149,18 @@ class LedgerWorkspaceEntryRefV1(BaseModel):
 
 
 class LedgerInvoiceReconciliationRefV1(BaseModel):
-    """Safe coordinate for one suggested local invoice/entry link."""
+    """One suggested invoice/entry link, with the values it was suggested on.
+
+    The booleans alone are unreviewable. `amount_match=True` asks the operator
+    to confirm a link while withholding the two amounts that supposedly match,
+    and `amount_match=False` is worse: it reports a disagreement without
+    saying between what and what. A suggestion is a claim the operator is meant
+    to ADJUDICATE, and adjudicating it means seeing both sides.
+
+    Both values are local records the session is already authenticated for, and
+    both are in scope where the suggestion is built -- they were being
+    discarded, not protected.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -158,6 +169,10 @@ class LedgerInvoiceReconciliationRefV1(BaseModel):
     amount_match: bool
     counterparty_match: bool
     score: str
+    invoice_total: str
+    transaction_amount: str
+    invoice_counterparty: str
+    transaction_counterparty: str
 
 
 class LedgerLinkInconsistencyRefV1(BaseModel):
@@ -348,6 +363,10 @@ def project_ledger_workspace(
             amount_match=row.amount_match,
             counterparty_match=row.counterparty_match,
             score=str(row.score),
+            invoice_total=str(invoices.invoices[row.invoice_id].grand_total),
+            transaction_amount=str(transactions.transactions[row.transaction_id].raw.amount),
+            invoice_counterparty=invoices.invoices[row.invoice_id].counterparty_name or "",
+            transaction_counterparty=transactions.transactions[row.transaction_id].raw.counterparty or "",
         )
         for row in invoice_reconciliation_reader(invoices, transactions)
     )
