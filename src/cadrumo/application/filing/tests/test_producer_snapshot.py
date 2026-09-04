@@ -1096,7 +1096,7 @@ def test_m303_filing_facts_are_refused_for_every_non_m303_modelo(
     model_profile: Modelo111ProfileFacts | Modelo202ProducerProfile | GeneralFilingProfileFacts,
 ) -> None:
     """Modelo-specific filing facts never cross into M111, M202, or generic producers."""
-    with pytest.raises(FilingProducerSnapshotError, match="M303FilingFactSet are valid only for modelo 303"):
+    with pytest.raises(FilingProducerSnapshotError, match="M303FilingFacts are valid only for modelo 303"):
         build_filing_producer_snapshot(
             modelo=modelo,
             taxpayer_tax_id=_TAXPAYER_TAX_ID,

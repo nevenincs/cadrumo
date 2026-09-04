@@ -144,7 +144,7 @@ class TaxpayerIdentityFacts(BaseModel):
 class DeclarationContactFacts(BaseModel):
     """The "persona con quien relacionarse" AEAT asks for on an informativa.
 
-    Distinct from both :class:`TaxpayerIdentityFactSet` and
+    Distinct from both :class:`TaxpayerIdentityFacts` and
     :class:`PresenterIdentity`: AEAT reserves this pair for whoever it should
     contact ABOUT the declaration, which under a gestor is routinely neither
     the taxpayer nor the transmitting presenter. Filling it from either would
@@ -774,7 +774,7 @@ class Modelo202ProducerProfile(BaseModel):
     filed pago fraccionado.
 
     ``principal_cnae`` is DECLARED, never inferred from ``activities``:
-    :class:`Modelo202ActivityFactSet` is documented as "one repeatable M202 activity fact,
+    :class:`Modelo202ActivityFacts` is documented as "one repeatable M202 activity fact,
     without claiming primacy", so picking the first or the largest would invent a primacy
     the substrate deliberately does not carry. AEAT asks which activity is principal, so
     the operator answers it.
@@ -1007,7 +1007,7 @@ class FilingProducerSnapshot(BaseModel):
 
 def _validate_snapshot_model_profile(snapshot: FilingProducerSnapshot) -> None:
     if snapshot.modelo is not Modelo.M303 and snapshot.m303_filing_facts is not None:
-        raise ValueError("M303FilingFactSet are valid only for modelo 303")
+        raise ValueError("M303FilingFacts are valid only for modelo 303")
     if snapshot.modelo is not Modelo.M390 and snapshot.m390_filing_facts is not None:
         raise ValueError("M390FilingFacts are valid only for modelo 390")
     if (
@@ -1040,24 +1040,24 @@ def _validate_snapshot_model_profile(snapshot: FilingProducerSnapshot) -> None:
 def _validate_modelo_296_snapshot(snapshot: FilingProducerSnapshot) -> None:
     """Modelo 296 identifies a declarante and an ejercicio; it cannot be filed without them."""
     if not isinstance(snapshot.model_profile, Modelo296ProfileFacts):
-        raise ValueError("modelo 296 requires Modelo296ProfileFactSet")
+        raise ValueError("modelo 296 requires Modelo296ProfileFacts")
 
 
 def _validate_modelo_353_snapshot(snapshot: FilingProducerSnapshot) -> None:
     """Modelo 353 is the grupo de entidades aggregate; it cannot be filed without it."""
     if not isinstance(snapshot.model_profile, Modelo353ProfileFacts):
-        raise ValueError("modelo 353 requires Modelo353ProfileFactSet")
+        raise ValueError("modelo 353 requires Modelo353ProfileFacts")
 
 
 def _validate_modelo_222_snapshot(snapshot: FilingProducerSnapshot) -> None:
     """Modelo 222 is a grupo fiscal return; it cannot be filed without the group."""
     if not isinstance(snapshot.model_profile, Modelo222ProfileFacts):
-        raise ValueError("modelo 222 requires Modelo222ProfileFactSet")
+        raise ValueError("modelo 222 requires Modelo222ProfileFacts")
 
 
 def _validate_modelo_111_snapshot(snapshot: FilingProducerSnapshot) -> None:
     if not isinstance(snapshot.model_profile, Modelo111ProfileFacts):
-        raise ValueError("modelo 111 requires Modelo111ProfileFactSet")
+        raise ValueError("modelo 111 requires Modelo111ProfileFacts")
     if snapshot.model_profile.colegio_concertado is None:
         raise ValueError("Modelo 111 colegio_concertado must be explicitly declared")
 
@@ -1073,7 +1073,7 @@ def _validate_modelo_303_snapshot(snapshot: FilingProducerSnapshot) -> None:
     if not isinstance(snapshot.model_profile, ModeloIVAProfile):
         raise ValueError("modelo 303 requires the canonical ModeloIVAProfile")
     if snapshot.m303_filing_facts is None:
-        raise ValueError("modelo 303 requires complete M303FilingFactSet")
+        raise ValueError("modelo 303 requires complete M303FilingFacts")
     amendment = snapshot.amendment_evidence
     motive_applicable = m303_rectificativa_motive_is_applicable(
         registry_revision_id=snapshot.m303_filing_facts.regimen_simplificado.regimen_snapshot.orden.registry_revision_id,
@@ -1089,7 +1089,7 @@ def _validate_modelo_303_snapshot(snapshot: FilingProducerSnapshot) -> None:
 
 def _validate_general_modelo_snapshot(snapshot: FilingProducerSnapshot) -> None:
     if not isinstance(snapshot.model_profile, GeneralFilingProfileFacts):
-        raise ValueError(f"modelo {snapshot.modelo.value} requires GeneralFilingProfileFactSet")
+        raise ValueError(f"modelo {snapshot.modelo.value} requires GeneralFilingProfileFacts")
 
 
 def _validate_snapshot_account_selection(snapshot: FilingProducerSnapshot) -> None:
@@ -1190,22 +1190,22 @@ __all__ = [
     "M202_UNSUPPORTED_PRODUCER_IDS",
     "AmendmentEvidence",
     "ChargeAccountSelection",
-    "FilingElectionFactSet",
+    "FilingElectionFacts",
     "FilingModelProfileFacts",
     "FilingProducerSnapshot",
     "FilingProducerSnapshotError",
-    "GeneralFilingProfileFactSet",
+    "GeneralFilingProfileFacts",
     "M202UnsupportedProducerId",
-    "M303FilingFactSet",
+    "M303FilingFacts",
     "M303InsolvencyFilingFact",
     "M303InsolvencyFilingSubtype",
-    "Modelo111ProfileFactSet",
-    "Modelo202ActivityFactSet",
+    "Modelo111ProfileFacts",
+    "Modelo202ActivityFacts",
     "Modelo202ProducerProfile",
     "PresenterIdentity",
     "RefundAccountSelection",
     "SelectedFilingAccount",
-    "TaxpayerIdentityFactSet",
+    "TaxpayerIdentityFacts",
     "assert_m303_regularisation_result_matches_bienes_register",
     "build_filing_producer_snapshot",
     "resolve_m303_filing_facts",

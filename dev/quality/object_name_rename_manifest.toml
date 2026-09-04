@@ -1,279 +1,5 @@
 schema_version = 1
-inventory_digest = "sha256:242c37601877cfd579a851961e4ae83c5a6529682a08c4105e54080023adebb4"
-
-[[operations]]
-operation_id = "rename-declaration-contact-facts"
-finding_id = "sha256:00115ad6e363abcf21aaf6a36d2c9d2852da5427a9b9dc0abdac4d283478413a"
-operation_kind = "symbol-rename"
-disposition = "lexical-singular"
-lifecycle = "reviewed"
-old_locator = "class:cadrumo.application.filing.producer_snapshot.DeclarationContactFacts#binding=1"
-old_path = "src/cadrumo/application/filing/producer_snapshot.py"
-new_locator = "class:cadrumo.application.filing.producer_snapshot.DeclarationContactFactSet#binding=1"
-new_path = "src/cadrumo/application/filing/producer_snapshot.py"
-owner = "application-filing"
-rationale = "The model bundles one block's filing facts; a singular name would imply a single fact, so the set is named explicitly."
-expected_reference_classes = ["definition", "shared-consumer", "static-import"]
-changed_paths = ["src/cadrumo/application/filing/producer_snapshot.py", "src/cadrumo/application/modelo/_profile_export_binding.py"]
-generator_commands = []
-focused_gates = [
-  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/application/filing/tests/test_producer_snapshot.py", "-q"],
-  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/application/filing/producer_snapshot.py"],
-]
-moves = []
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/modelo/_profile_export_binding.py"
-sha256 = "sha256:95522123c91c938da1cc79824e00a6d8e71ef1e243cc4590acb2af90c8b4ba9a"
-
-[[operations]]
-operation_id = "rename-filing-election-facts"
-finding_id = "sha256:53b1ee464bbcc2980300acbed39c7132c9285e9671ba099faaf23a70ad58a316"
-operation_kind = "symbol-rename"
-disposition = "lexical-singular"
-lifecycle = "reviewed"
-old_locator = "class:cadrumo.application.filing.producer_snapshot.FilingElectionFacts#binding=1"
-old_path = "src/cadrumo/application/filing/producer_snapshot.py"
-new_locator = "class:cadrumo.application.filing.producer_snapshot.FilingElectionFactSet#binding=1"
-new_path = "src/cadrumo/application/filing/producer_snapshot.py"
-owner = "application-filing"
-rationale = "The model bundles one block's filing facts; a singular name would imply a single fact, so the set is named explicitly."
-expected_reference_classes = ["definition", "shared-consumer", "static-import"]
-changed_paths = ["dev/registry/conformance/tests/test_real_closure_outcomes.py", "dev/registry/filing_export_proof.py", "src/cadrumo/application/filing/producer_snapshot.py", "src/cadrumo/application/filing/tests/_export_support.py", "src/cadrumo/application/filing/tests/test_m296_detail_records_repeat.py", "src/cadrumo/application/filing/tests/test_m303_did_account_wire_isolated_authority.py", "src/cadrumo/application/filing/tests/test_modelo_303_exonerado_390_refusal.py", "src/cadrumo/application/filing/tests/test_producer_snapshot.py", "src/cadrumo/application/filing/tests/test_unbuilt_layout_export_refusal.py", "src/cadrumo/application/modelo/export.py", "src/cadrumo/application/modelo/tests/test_m303_rectificativa_motive_lifecycle.py"]
-generator_commands = []
-focused_gates = [
-  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/application/filing/tests/test_producer_snapshot.py", "-q"],
-  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/application/filing/producer_snapshot.py"],
-]
-moves = []
-
-[[operations.preconditions]]
-path = "dev/registry/conformance/tests/test_real_closure_outcomes.py"
-sha256 = "sha256:a614c201bc0066e3abbddf9cc57d42639ab28ba43e7d7df7c03e116804957589"
-
-[[operations.preconditions]]
-path = "dev/registry/filing_export_proof.py"
-sha256 = "sha256:ca9f284f3a92fd672e902b4433467a05372cb23af6757bcc8d1d0c7d7b53ce97"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/tests/_export_support.py"
-sha256 = "sha256:a562973d65c4bf298e0156294887be98581802a0067fe1cebebe360d31a8c01f"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/tests/test_m296_detail_records_repeat.py"
-sha256 = "sha256:eb850fca519bccf7126546631b3006df606a3846f699032cdcfef1ed5784f808"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/tests/test_m303_did_account_wire_isolated_authority.py"
-sha256 = "sha256:8ace2e9802f5ed2a164be19813b8e10a6ecd090afaea42031f49183a4cff7459"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/tests/test_modelo_303_exonerado_390_refusal.py"
-sha256 = "sha256:f01b28d84cb11564fbca4b96fd58f92dc4faa4bfb40b3ff20e2f5933cf804fc0"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/tests/test_producer_snapshot.py"
-sha256 = "sha256:e8bf959e7197ade8433874f3d67ecfcc9e203f8c83b7cf2adeaf278267895d05"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/tests/test_unbuilt_layout_export_refusal.py"
-sha256 = "sha256:a529a707c44946bb4e4c8db0e6905a38037e4831ff757e5b688eeb5483890bb7"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/modelo/export.py"
-sha256 = "sha256:cce76f824c7b373b0481091d5f9f5cafdb0528738e242256c5d689797485cafa"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/modelo/tests/test_m303_rectificativa_motive_lifecycle.py"
-sha256 = "sha256:bbd09a5d5b36b902e40bce076e28073724ff154182a209dcc2db5e8d4d3354f4"
-
-[[operations]]
-operation_id = "rename-general-filing-profile-facts"
-finding_id = "sha256:76526d3dbf1593b55a0156f7150e929f23af6a1ee5693cda2e41bd64449d705a"
-operation_kind = "symbol-rename"
-disposition = "lexical-singular"
-lifecycle = "reviewed"
-old_locator = "class:cadrumo.application.filing.producer_snapshot.GeneralFilingProfileFacts#binding=1"
-old_path = "src/cadrumo/application/filing/producer_snapshot.py"
-new_locator = "class:cadrumo.application.filing.producer_snapshot.GeneralFilingProfileFactSet#binding=1"
-new_path = "src/cadrumo/application/filing/producer_snapshot.py"
-owner = "application-filing"
-rationale = "The model bundles one block's filing facts; a singular name would imply a single fact, so the set is named explicitly."
-expected_reference_classes = ["definition", "shared-consumer", "static-import"]
-changed_paths = ["dev/registry/conformance/tests/test_real_closure_outcomes.py", "dev/registry/filing_export_proof.py", "src/cadrumo/application/filing/producer_snapshot.py", "src/cadrumo/application/filing/tests/_export_support.py", "src/cadrumo/application/filing/tests/test_export_post_write_verification.py", "src/cadrumo/application/filing/tests/test_producer_snapshot.py", "src/cadrumo/application/modelo/export.py"]
-generator_commands = []
-focused_gates = [
-  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/application/filing/tests/test_producer_snapshot.py", "-q"],
-  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/application/filing/producer_snapshot.py"],
-]
-moves = []
-
-[[operations.preconditions]]
-path = "dev/registry/conformance/tests/test_real_closure_outcomes.py"
-sha256 = "sha256:a614c201bc0066e3abbddf9cc57d42639ab28ba43e7d7df7c03e116804957589"
-
-[[operations.preconditions]]
-path = "dev/registry/filing_export_proof.py"
-sha256 = "sha256:ca9f284f3a92fd672e902b4433467a05372cb23af6757bcc8d1d0c7d7b53ce97"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/tests/_export_support.py"
-sha256 = "sha256:a562973d65c4bf298e0156294887be98581802a0067fe1cebebe360d31a8c01f"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/tests/test_export_post_write_verification.py"
-sha256 = "sha256:a0be0a5c709cb15745df71171e229415a3805f018d51e222e62551f301dea051"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/tests/test_producer_snapshot.py"
-sha256 = "sha256:e8bf959e7197ade8433874f3d67ecfcc9e203f8c83b7cf2adeaf278267895d05"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/modelo/export.py"
-sha256 = "sha256:cce76f824c7b373b0481091d5f9f5cafdb0528738e242256c5d689797485cafa"
-
-[[operations]]
-operation_id = "rename-m-3-0-3-filing-facts"
-finding_id = "sha256:769bef5f9efd0e3348efcf58fba09cdf0ff33fa0f8f087fb87267f31223c3b6a"
-operation_kind = "symbol-rename"
-disposition = "lexical-singular"
-lifecycle = "reviewed"
-old_locator = "class:cadrumo.application.filing.producer_snapshot.M303FilingFacts#binding=1"
-old_path = "src/cadrumo/application/filing/producer_snapshot.py"
-new_locator = "class:cadrumo.application.filing.producer_snapshot.M303FilingFactSet#binding=1"
-new_path = "src/cadrumo/application/filing/producer_snapshot.py"
-owner = "application-filing"
-rationale = "The model bundles one block's filing facts; a singular name would imply a single fact, so the set is named explicitly."
-expected_reference_classes = ["definition", "shared-consumer", "static-import"]
-changed_paths = ["src/cadrumo/application/filing/_m303_export_applicability.py", "src/cadrumo/application/filing/export_producer.py", "src/cadrumo/application/filing/producer_snapshot.py", "src/cadrumo/application/filing/projection.py", "src/cadrumo/application/filing/tests/test_m303_did_account_wire_isolated_authority.py", "src/cadrumo/application/filing/tests/test_modelo_303_exonerado_390_refusal.py", "src/cadrumo/application/filing/tests/test_producer_snapshot.py", "src/cadrumo/application/modelo/export.py"]
-generator_commands = []
-focused_gates = [
-  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/application/filing/tests/test_producer_snapshot.py", "-q"],
-  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/application/filing/producer_snapshot.py"],
-]
-moves = []
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/_m303_export_applicability.py"
-sha256 = "sha256:d3dcefeb2a66d3b1a24c2ebacf0c781e85cb341e370b69c2dcd2394664e8e33a"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/export_producer.py"
-sha256 = "sha256:a000b47379b6b5519a7b180975227752c7eff524f62176b651364ea4b8f0c98e"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/projection.py"
-sha256 = "sha256:3c253453e849949e4f6b41d76c2cbb5877eda83fff2ef3913b39be178ebb4c30"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/tests/test_m303_did_account_wire_isolated_authority.py"
-sha256 = "sha256:8ace2e9802f5ed2a164be19813b8e10a6ecd090afaea42031f49183a4cff7459"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/tests/test_modelo_303_exonerado_390_refusal.py"
-sha256 = "sha256:f01b28d84cb11564fbca4b96fd58f92dc4faa4bfb40b3ff20e2f5933cf804fc0"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/tests/test_producer_snapshot.py"
-sha256 = "sha256:e8bf959e7197ade8433874f3d67ecfcc9e203f8c83b7cf2adeaf278267895d05"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/modelo/export.py"
-sha256 = "sha256:cce76f824c7b373b0481091d5f9f5cafdb0528738e242256c5d689797485cafa"
-
-[[operations]]
-operation_id = "rename-modelo-1-1-1-profile-facts"
-finding_id = "sha256:d7e29fdf3a93549785f186969ffa063fe9fdf81b051f53af135d02b70d266d83"
-operation_kind = "symbol-rename"
-disposition = "lexical-singular"
-lifecycle = "reviewed"
-old_locator = "class:cadrumo.application.filing.producer_snapshot.Modelo111ProfileFacts#binding=1"
-old_path = "src/cadrumo/application/filing/producer_snapshot.py"
-new_locator = "class:cadrumo.application.filing.producer_snapshot.Modelo111ProfileFactSet#binding=1"
-new_path = "src/cadrumo/application/filing/producer_snapshot.py"
-owner = "application-filing"
-rationale = "The model bundles one block's filing facts; a singular name would imply a single fact, so the set is named explicitly."
-expected_reference_classes = ["definition", "shared-consumer", "static-import"]
-changed_paths = ["src/cadrumo/application/filing/export_producer.py", "src/cadrumo/application/filing/producer_snapshot.py", "src/cadrumo/application/filing/tests/_export_support.py", "src/cadrumo/application/filing/tests/test_producer_snapshot.py", "src/cadrumo/application/filing/tests/test_unbuilt_layout_export_refusal.py", "src/cadrumo/application/modelo/export.py", "src/cadrumo/application/modelo/tests/test_m303_rectificativa_motive_lifecycle.py"]
-generator_commands = []
-focused_gates = [
-  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/application/filing/tests/test_producer_snapshot.py", "-q"],
-  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/application/filing/producer_snapshot.py"],
-]
-moves = []
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/export_producer.py"
-sha256 = "sha256:a000b47379b6b5519a7b180975227752c7eff524f62176b651364ea4b8f0c98e"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/tests/_export_support.py"
-sha256 = "sha256:a562973d65c4bf298e0156294887be98581802a0067fe1cebebe360d31a8c01f"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/tests/test_producer_snapshot.py"
-sha256 = "sha256:e8bf959e7197ade8433874f3d67ecfcc9e203f8c83b7cf2adeaf278267895d05"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/tests/test_unbuilt_layout_export_refusal.py"
-sha256 = "sha256:a529a707c44946bb4e4c8db0e6905a38037e4831ff757e5b688eeb5483890bb7"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/modelo/export.py"
-sha256 = "sha256:cce76f824c7b373b0481091d5f9f5cafdb0528738e242256c5d689797485cafa"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/modelo/tests/test_m303_rectificativa_motive_lifecycle.py"
-sha256 = "sha256:bbd09a5d5b36b902e40bce076e28073724ff154182a209dcc2db5e8d4d3354f4"
-
-[[operations]]
-operation_id = "rename-modelo-2-0-2-activity-facts"
-finding_id = "sha256:f44bbeb4af2f380483d8e8e9e77e371f9dd370943d5042e6dd403d4b6457116f"
-operation_kind = "symbol-rename"
-disposition = "lexical-singular"
-lifecycle = "reviewed"
-old_locator = "class:cadrumo.application.filing.producer_snapshot.Modelo202ActivityFacts#binding=1"
-old_path = "src/cadrumo/application/filing/producer_snapshot.py"
-new_locator = "class:cadrumo.application.filing.producer_snapshot.Modelo202ActivityFactSet#binding=1"
-new_path = "src/cadrumo/application/filing/producer_snapshot.py"
-owner = "application-filing"
-rationale = "The model bundles one block's filing facts; a singular name would imply a single fact, so the set is named explicitly."
-expected_reference_classes = ["definition", "shared-consumer", "static-import"]
-changed_paths = ["src/cadrumo/application/filing/producer_snapshot.py", "src/cadrumo/application/filing/tests/test_producer_snapshot.py"]
-generator_commands = []
-focused_gates = [
-  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/application/filing/tests/test_producer_snapshot.py", "-q"],
-  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/application/filing/producer_snapshot.py"],
-]
-moves = []
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/tests/test_producer_snapshot.py"
-sha256 = "sha256:e8bf959e7197ade8433874f3d67ecfcc9e203f8c83b7cf2adeaf278267895d05"
+inventory_digest = "sha256:3763540adf56e736e0543d16e87d0904ac46dcfff33e20d92868eb949d43fd2c"
 
 [[operations]]
 operation_id = "rename-modelo-2-1-0-contribuyente-facts"
@@ -298,7 +24,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
+sha256 = "sha256:25c93c7b6269888d5f56aa68c7e2abecf62fcc8e12ac93d96319032fdc451260"
 
 [[operations]]
 operation_id = "rename-modelo-2-1-0-declaracion-facts"
@@ -323,7 +49,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
+sha256 = "sha256:25c93c7b6269888d5f56aa68c7e2abecf62fcc8e12ac93d96319032fdc451260"
 
 [[operations]]
 operation_id = "rename-modelo-2-1-0-declarante-facts"
@@ -348,7 +74,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
+sha256 = "sha256:25c93c7b6269888d5f56aa68c7e2abecf62fcc8e12ac93d96319032fdc451260"
 
 [[operations]]
 operation_id = "rename-modelo-2-1-0-devengo-facts"
@@ -373,7 +99,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
+sha256 = "sha256:25c93c7b6269888d5f56aa68c7e2abecf62fcc8e12ac93d96319032fdc451260"
 
 [[operations]]
 operation_id = "rename-modelo-2-1-0-devolucion-facts"
@@ -398,7 +124,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
+sha256 = "sha256:25c93c7b6269888d5f56aa68c7e2abecf62fcc8e12ac93d96319032fdc451260"
 
 [[operations]]
 operation_id = "rename-modelo-2-1-0-ganancia-inmobiliaria-facts"
@@ -423,7 +149,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
+sha256 = "sha256:25c93c7b6269888d5f56aa68c7e2abecf62fcc8e12ac93d96319032fdc451260"
 
 [[operations]]
 operation_id = "rename-modelo-2-1-0-ingreso-facts"
@@ -448,7 +174,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
+sha256 = "sha256:25c93c7b6269888d5f56aa68c7e2abecf62fcc8e12ac93d96319032fdc451260"
 
 [[operations]]
 operation_id = "rename-modelo-2-1-0-inmueble-facts"
@@ -473,7 +199,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
+sha256 = "sha256:25c93c7b6269888d5f56aa68c7e2abecf62fcc8e12ac93d96319032fdc451260"
 
 [[operations]]
 operation_id = "rename-modelo-2-1-0-pagador-facts"
@@ -498,36 +224,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
-
-[[operations]]
-operation_id = "rename-modelo-2-1-0-profile-facts"
-finding_id = "sha256:2cb06532b84c74f27fe5ae11a52cd78ad488d3bbdb8277afdeeb9bfe583acc66"
-operation_kind = "symbol-rename"
-disposition = "lexical-singular"
-lifecycle = "reviewed"
-old_locator = "class:cadrumo.application.filing.producer_snapshot.Modelo210ProfileFacts#binding=1"
-old_path = "src/cadrumo/application/filing/producer_snapshot.py"
-new_locator = "class:cadrumo.application.filing.producer_snapshot.Modelo210ProfileFactSet#binding=1"
-new_path = "src/cadrumo/application/filing/producer_snapshot.py"
-owner = "application-filing"
-rationale = "The model bundles one block's filing facts; a singular name would imply a single fact, so the set is named explicitly."
-expected_reference_classes = ["definition", "shared-consumer", "static-import"]
-changed_paths = ["src/cadrumo/application/filing/export_producer.py", "src/cadrumo/application/filing/producer_snapshot.py"]
-generator_commands = []
-focused_gates = [
-  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/application/filing/tests/test_producer_snapshot.py", "-q"],
-  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/application/filing/producer_snapshot.py"],
-]
-moves = []
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/export_producer.py"
-sha256 = "sha256:a000b47379b6b5519a7b180975227752c7eff524f62176b651364ea4b8f0c98e"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
+sha256 = "sha256:25c93c7b6269888d5f56aa68c7e2abecf62fcc8e12ac93d96319032fdc451260"
 
 [[operations]]
 operation_id = "rename-modelo-2-1-0-renta-facts"
@@ -552,7 +249,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
+sha256 = "sha256:25c93c7b6269888d5f56aa68c7e2abecf62fcc8e12ac93d96319032fdc451260"
 
 [[operations]]
 operation_id = "rename-modelo-2-1-0-representante-facts"
@@ -577,7 +274,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
+sha256 = "sha256:25c93c7b6269888d5f56aa68c7e2abecf62fcc8e12ac93d96319032fdc451260"
 
 [[operations]]
 operation_id = "rename-modelo-2-1-0-sin-ingreso-ni-devolucion-facts"
@@ -602,168 +299,4 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
-
-[[operations]]
-operation_id = "rename-modelo-2-2-2-profile-facts"
-finding_id = "sha256:33e1aec745b70a006fecbb15abf6762cfaa0d910b681266f3e626c48c6ce9c2d"
-operation_kind = "symbol-rename"
-disposition = "lexical-singular"
-lifecycle = "reviewed"
-old_locator = "class:cadrumo.application.filing.producer_snapshot.Modelo222ProfileFacts#binding=1"
-old_path = "src/cadrumo/application/filing/producer_snapshot.py"
-new_locator = "class:cadrumo.application.filing.producer_snapshot.Modelo222ProfileFactSet#binding=1"
-new_path = "src/cadrumo/application/filing/producer_snapshot.py"
-owner = "application-filing"
-rationale = "The model bundles one block's filing facts; a singular name would imply a single fact, so the set is named explicitly."
-expected_reference_classes = ["definition", "shared-consumer", "static-import"]
-changed_paths = ["src/cadrumo/application/filing/export_producer.py", "src/cadrumo/application/filing/producer_snapshot.py"]
-generator_commands = []
-focused_gates = [
-  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/application/filing/tests/test_producer_snapshot.py", "-q"],
-  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/application/filing/producer_snapshot.py"],
-]
-moves = []
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/export_producer.py"
-sha256 = "sha256:a000b47379b6b5519a7b180975227752c7eff524f62176b651364ea4b8f0c98e"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
-
-[[operations]]
-operation_id = "rename-modelo-2-9-6-profile-facts"
-finding_id = "sha256:ecd34929e21f72e321cc12575c8d0c7bc7ec715627a6364a7f2da62d198a0ef0"
-operation_kind = "symbol-rename"
-disposition = "lexical-singular"
-lifecycle = "reviewed"
-old_locator = "class:cadrumo.application.filing.producer_snapshot.Modelo296ProfileFacts#binding=1"
-old_path = "src/cadrumo/application/filing/producer_snapshot.py"
-new_locator = "class:cadrumo.application.filing.producer_snapshot.Modelo296ProfileFactSet#binding=1"
-new_path = "src/cadrumo/application/filing/producer_snapshot.py"
-owner = "application-filing"
-rationale = "The model bundles one block's filing facts; a singular name would imply a single fact, so the set is named explicitly."
-expected_reference_classes = ["definition", "shared-consumer", "static-import"]
-changed_paths = ["src/cadrumo/application/filing/_m296_projection.py", "src/cadrumo/application/filing/export_producer.py", "src/cadrumo/application/filing/producer_snapshot.py", "src/cadrumo/application/filing/tests/test_m296_detail_records_repeat.py"]
-generator_commands = []
-focused_gates = [
-  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/application/filing/tests/test_producer_snapshot.py", "-q"],
-  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/application/filing/producer_snapshot.py"],
-]
-moves = []
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/_m296_projection.py"
-sha256 = "sha256:2599a593ca379524b9cd881ffe9e42e812c39eb93bbcec3c30bae68023982cea"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/export_producer.py"
-sha256 = "sha256:a000b47379b6b5519a7b180975227752c7eff524f62176b651364ea4b8f0c98e"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/tests/test_m296_detail_records_repeat.py"
-sha256 = "sha256:eb850fca519bccf7126546631b3006df606a3846f699032cdcfef1ed5784f808"
-
-[[operations]]
-operation_id = "rename-modelo-3-5-3-profile-facts"
-finding_id = "sha256:2e6363a4468fa9df69a54b18369a7d45366b68f1f8706de48e237627a6a8a0b6"
-operation_kind = "symbol-rename"
-disposition = "lexical-singular"
-lifecycle = "reviewed"
-old_locator = "class:cadrumo.application.filing.producer_snapshot.Modelo353ProfileFacts#binding=1"
-old_path = "src/cadrumo/application/filing/producer_snapshot.py"
-new_locator = "class:cadrumo.application.filing.producer_snapshot.Modelo353ProfileFactSet#binding=1"
-new_path = "src/cadrumo/application/filing/producer_snapshot.py"
-owner = "application-filing"
-rationale = "The model bundles one block's filing facts; a singular name would imply a single fact, so the set is named explicitly."
-expected_reference_classes = ["definition", "shared-consumer", "static-import"]
-changed_paths = ["src/cadrumo/application/filing/export_producer.py", "src/cadrumo/application/filing/producer_snapshot.py"]
-generator_commands = []
-focused_gates = [
-  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/application/filing/tests/test_producer_snapshot.py", "-q"],
-  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/application/filing/producer_snapshot.py"],
-]
-moves = []
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/export_producer.py"
-sha256 = "sha256:a000b47379b6b5519a7b180975227752c7eff524f62176b651364ea4b8f0c98e"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
-
-[[operations]]
-operation_id = "rename-taxpayer-identity-facts"
-finding_id = "sha256:261f5e7813a3c91c1ee712206b84e101b235ec6885ea95f022ec6de265ffb616"
-operation_kind = "symbol-rename"
-disposition = "lexical-singular"
-lifecycle = "reviewed"
-old_locator = "class:cadrumo.application.filing.producer_snapshot.TaxpayerIdentityFacts#binding=1"
-old_path = "src/cadrumo/application/filing/producer_snapshot.py"
-new_locator = "class:cadrumo.application.filing.producer_snapshot.TaxpayerIdentityFactSet#binding=1"
-new_path = "src/cadrumo/application/filing/producer_snapshot.py"
-owner = "application-filing"
-rationale = "The model bundles one block's filing facts; a singular name would imply a single fact, so the set is named explicitly."
-expected_reference_classes = ["definition", "shared-consumer", "static-import"]
-changed_paths = ["dev/registry/conformance/tests/test_real_closure_outcomes.py", "dev/registry/filing_export_proof.py", "src/cadrumo/application/filing/producer_snapshot.py", "src/cadrumo/application/filing/tests/_export_support.py", "src/cadrumo/application/filing/tests/test_m296_detail_records_repeat.py", "src/cadrumo/application/filing/tests/test_m303_did_account_wire_isolated_authority.py", "src/cadrumo/application/filing/tests/test_modelo_303_exonerado_390_refusal.py", "src/cadrumo/application/filing/tests/test_producer_snapshot.py", "src/cadrumo/application/filing/tests/test_unbuilt_layout_export_refusal.py", "src/cadrumo/application/modelo/_profile_export_binding.py", "src/cadrumo/application/modelo/export.py", "src/cadrumo/application/modelo/tests/test_m303_rectificativa_motive_lifecycle.py"]
-generator_commands = []
-focused_gates = [
-  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/application/filing/tests/test_producer_snapshot.py", "-q"],
-  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/application/filing/producer_snapshot.py"],
-]
-moves = []
-
-[[operations.preconditions]]
-path = "dev/registry/conformance/tests/test_real_closure_outcomes.py"
-sha256 = "sha256:a614c201bc0066e3abbddf9cc57d42639ab28ba43e7d7df7c03e116804957589"
-
-[[operations.preconditions]]
-path = "dev/registry/filing_export_proof.py"
-sha256 = "sha256:ca9f284f3a92fd672e902b4433467a05372cb23af6757bcc8d1d0c7d7b53ce97"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/tests/_export_support.py"
-sha256 = "sha256:a562973d65c4bf298e0156294887be98581802a0067fe1cebebe360d31a8c01f"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/tests/test_m296_detail_records_repeat.py"
-sha256 = "sha256:eb850fca519bccf7126546631b3006df606a3846f699032cdcfef1ed5784f808"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/tests/test_m303_did_account_wire_isolated_authority.py"
-sha256 = "sha256:8ace2e9802f5ed2a164be19813b8e10a6ecd090afaea42031f49183a4cff7459"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/tests/test_modelo_303_exonerado_390_refusal.py"
-sha256 = "sha256:f01b28d84cb11564fbca4b96fd58f92dc4faa4bfb40b3ff20e2f5933cf804fc0"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/tests/test_producer_snapshot.py"
-sha256 = "sha256:e8bf959e7197ade8433874f3d67ecfcc9e203f8c83b7cf2adeaf278267895d05"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/filing/tests/test_unbuilt_layout_export_refusal.py"
-sha256 = "sha256:a529a707c44946bb4e4c8db0e6905a38037e4831ff757e5b688eeb5483890bb7"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/modelo/_profile_export_binding.py"
-sha256 = "sha256:95522123c91c938da1cc79824e00a6d8e71ef1e243cc4590acb2af90c8b4ba9a"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/modelo/export.py"
-sha256 = "sha256:cce76f824c7b373b0481091d5f9f5cafdb0528738e242256c5d689797485cafa"
-
-[[operations.preconditions]]
-path = "src/cadrumo/application/modelo/tests/test_m303_rectificativa_motive_lifecycle.py"
-sha256 = "sha256:bbd09a5d5b36b902e40bce076e28073724ff154182a209dcc2db5e8d4d3354f4"
+sha256 = "sha256:25c93c7b6269888d5f56aa68c7e2abecf62fcc8e12ac93d96319032fdc451260"
