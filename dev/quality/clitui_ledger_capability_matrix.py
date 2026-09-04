@@ -967,18 +967,45 @@ class LedgerCapabilityMatrixV1(BaseModel):
     @property
     def calculated_matrix_digest(self) -> str:
         """Return the digest of all mutable semantic and proof-bearing campaign facts."""
+        return self.calculate_digest(
+            schema_version=self.schema_version,
+            controls=self.controls,
+            accepted_denominator=self.accepted_denominator,
+            current_denominator=self.current_denominator,
+            accepted_authority_dispositions=self.accepted_authority_dispositions,
+            current_authority_dispositions=self.current_authority_dispositions,
+            current_subjects=self.current_subjects,
+            rows=self.rows,
+            campaign_evidence=self.campaign_evidence,
+        )
+
+    @classmethod
+    def calculate_digest(
+        cls,
+        *,
+        schema_version: int,
+        controls: LedgerCampaignControlsV1,
+        accepted_denominator: LedgerDenominatorSnapshotV1,
+        current_denominator: LedgerDenominatorSnapshotV1,
+        accepted_authority_dispositions: AuthorityDispositionSnapshotV1,
+        current_authority_dispositions: AuthorityDispositionSnapshotV1,
+        current_subjects: tuple[EvidenceSubjectSnapshotV1, ...],
+        rows: tuple[LedgerCapabilityRowV1, ...],
+        campaign_evidence: tuple[EvidenceCoordinateV1, ...],
+    ) -> str:
+        """Calculate the pre-attestation digest without constructing an invalid matrix."""
         return _canonical_digest(
             {
-                "schema_version": self.schema_version,
-                "controls": self.controls,
-                "accepted_denominator": self.accepted_denominator,
-                "current_denominator": self.current_denominator,
-                "accepted_authority_dispositions": self.accepted_authority_dispositions,
-                "current_authority_dispositions": self.current_authority_dispositions,
-                "current_subjects": tuple(sorted(self.current_subjects, key=lambda subject: subject.subject_id)),
-                "rows": tuple(sorted(self.rows, key=lambda row: row.identity.row_id)),
+                "schema_version": schema_version,
+                "controls": controls,
+                "accepted_denominator": accepted_denominator,
+                "current_denominator": current_denominator,
+                "accepted_authority_dispositions": accepted_authority_dispositions,
+                "current_authority_dispositions": current_authority_dispositions,
+                "current_subjects": tuple(sorted(current_subjects, key=lambda subject: subject.subject_id)),
+                "rows": tuple(sorted(rows, key=lambda row: row.identity.row_id)),
                 "campaign_evidence": tuple(
-                    sorted(self.campaign_evidence, key=lambda coordinate: coordinate.evidence_id)
+                    sorted(campaign_evidence, key=lambda coordinate: coordinate.evidence_id)
                 ),
             }
         )
@@ -1055,6 +1082,57 @@ def _authority_disposition_drift(
     return tuple(drift)
 
 
+def _live_census_report_errors(report: LedgerLiveCensusReportV1) -> list[str]:
+    """Recheck a supplied report so model-copy construction cannot bypass G0."""
+    errors: list[str] = []
+    sources = tuple(stream.source for stream in report.streams)
+    if len(set(sources)) != len(sources) or frozenset(sources) != frozenset(DenominatorSourceKind):
+        errors.append("live census report does not account for every mandatory source stream exactly once")
+    if report.digest != report.calculated_digest:
+        errors.append("live census report digest is stale or does not match its stream observations")
+    for stream in report.streams:
+        if stream.digest != stream.calculated_digest:
+            errors.append(f"{stream.source.value} census stream digest is stale or does not match its observation")
+        if len(set(stream.capability_ids)) != len(stream.capability_ids):
+            errors.append(f"{stream.source.value} census stream has duplicate capability identities")
+        if stream.capability_ids and stream.reviewed_zero:
+            errors.append(f"{stream.source.value} census stream has entries but is declared reviewed zero")
+        if not stream.capability_ids and not stream.reviewed_zero:
+            errors.append(f"{stream.source.value} census stream is empty without an explicit reviewed zero")
+        errors.extend(stream.readiness_errors)
+    if not report.capability_ids:
+        errors.append("the complete live census report is empty")
+    return errors
+
+
+def _matrix_acceptance_errors(matrix: LedgerCapabilityMatrixV1) -> list[str]:
+    """Recheck digest-bound G0 acceptance before trusting a supplied matrix."""
+    errors: list[str] = []
+    if matrix.controls.sole_ledger_parity_plan_owner != ACCEPTED_LEDGER_PARITY_PLAN_OWNER:
+        errors.append("campaign controls do not name the accepted clitui-ledger plan identity")
+    if matrix.matrix_digest != matrix.calculated_matrix_digest:
+        errors.append("matrix digest is stale or does not bind the current campaign state")
+    attestation = matrix.acceptance_attestation
+    if attestation.plan_owner != matrix.controls.sole_ledger_parity_plan_owner:
+        errors.append("acceptance attestation plan owner differs from campaign controls")
+    if attestation.matrix_digest != matrix.matrix_digest:
+        errors.append("acceptance attestation is not bound to this exact matrix digest")
+    if (
+        attestation.denominator_digest != matrix.current_denominator.digest
+        or attestation.denominator_revision != matrix.current_denominator.revision
+    ):
+        errors.append("acceptance attestation is not bound to this exact denominator revision")
+    subjects = {subject.subject_id: subject for subject in matrix.current_subjects}
+    review_subject = subjects.get(attestation.review_subject_id)
+    if review_subject is None or (
+        attestation.review_subject_revision != review_subject.revision
+        or attestation.review_subject_digest != review_subject.digest
+        or attestation.review_subject_observed_at != review_subject.observed_at
+    ):
+        errors.append("acceptance attestation review subject is stale or absent")
+    return errors
+
+
 def validate_ledger_matrix_currentness(
     matrix: LedgerCapabilityMatrixV1,
     *,
@@ -1062,7 +1140,7 @@ def validate_ledger_matrix_currentness(
     observed_subjects: tuple[EvidenceSubjectSnapshotV1, ...],
 ) -> list[str]:
     """Compare persisted state to mandatory live census and evidence observations."""
-    errors = list(observed_census.readiness_errors)
+    errors = _live_census_report_errors(observed_census)
     observed_denominator = LedgerDenominatorSnapshotV1.from_live_report(observed_census)
     errors.extend(_denominator_drift(matrix.current_denominator, observed_denominator))
     if not observed_subjects:
@@ -1104,6 +1182,7 @@ def evaluate_ledger_capability_gate(
                 matrix, observed_census=observed_census, observed_subjects=observed_subjects
             )
         )
+        blockers.extend(_matrix_acceptance_errors(matrix))
         if not matrix.controls.tui_implementation_hold_recorded or not matrix.controls.tui_implementation_hold_active:
             blockers.append("the Ledger TUI implementation hold is not recorded and active")
         if matrix.acceptance_attestation.ruling is not ReviewRuling.ACCEPT:
