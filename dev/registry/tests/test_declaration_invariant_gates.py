@@ -759,6 +759,41 @@ def _vault_citations(text: str) -> list[str]:
     ]
 
 
+def _without_self_reference_regions(source: str) -> str:
+    """Blank this module's two necessary self-references, located by parsing it.
+
+    The regions are found through the syntax tree - the ``_VAULT_CITATION_PATTERNS``
+    assignment and the paired detector function - rather than by line number,
+    so an edit above them cannot silently move the exemption onto innocent code.
+    A region this cannot find is left in place and will be reported, which is the
+    safe direction: an unexpected citation in this module should fail the gate.
+    """
+    import ast
+
+    tree = ast.parse(source)
+    exempt: list[tuple[int, int]] = []
+    for node in tree.body:
+        if isinstance(node, ast.Assign):
+            names = [target.id for target in node.targets if isinstance(target, ast.Name)]
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            # The pattern table carries a type annotation, so it is an AnnAssign
+            # and not an Assign. Missing that left its region unexempted and the
+            # gate reported its own pattern definition.
+            names = [node.target.id]
+        else:
+            names = []
+        if "_VAULT_CITATION_PATTERNS" in names or (
+            isinstance(node, ast.FunctionDef)
+            and node.name == "test_the_vault_citation_gate_catches_each_kind_it_claims_to"
+        ):
+            exempt.append((node.lineno, node.end_lineno or node.lineno))
+    lines = source.splitlines()
+    for start, end in exempt:
+        for index in range(start - 1, min(end, len(lines))):
+            lines[index] = ""
+    return chr(10).join(lines)
+
+
 def test_no_registry_source_or_declaration_cites_a_vault_record() -> None:
     """Registry code and shipped declarations never name the project's own development records.
 
@@ -790,14 +825,19 @@ def test_no_registry_source_or_declaration_cites_a_vault_record() -> None:
                 continue
             if "__pycache__" in path.parts:
                 continue
-            if path.name == pathlib.Path(__file__).name:
-                # This module necessarily contains example citations: the paired
-                # detector below constructs one of each kind to prove the
-                # patterns match. Scanning it would make the gate report itself,
-                # and removing the examples would leave the patterns unproven.
-                continue
             scanned += 1
-            citations = _vault_citations(path.read_text(encoding=_UTF_8, errors="ignore"))
+            body = path.read_text(encoding=_UTF_8, errors="ignore")
+            if path.name == pathlib.Path(__file__).name:
+                # This module necessarily contains example citations in two
+                # places: the pattern table names the vault path prefix as one
+                # of its patterns, and the paired detector constructs one of each
+                # kind to prove they match. Both are exempted BY LOCATION rather
+                # than by skipping the file, which previously left all 1,365
+                # lines unscanned to protect 33 of them - a blind spot covering
+                # the gate's own module, in a gate about things hiding in
+                # unscanned places.
+                body = _without_self_reference_regions(body)
+            citations = _vault_citations(body)
             if citations:
                 offenders[str(path)] = sorted(set(citations))
 

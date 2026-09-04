@@ -25,7 +25,7 @@ from cadrumo.application.registry.closure import (
     RegistryClosureLimb,
     RegistryClosureLimbName,
     RegistryClosureOwnerDisposition,
-    RegistryClosureRefusal,
+    RegistryClosureFilingChannelRefusal,
     RegistryClosureRefusalReason,
 )
 from cadrumo.application.registry.filing_export_coverage import (
@@ -113,9 +113,17 @@ class RegistryClosurePredicateRefusal(_ClosureReportModel):
     reason: RegistryClosurePredicateRefusalReason
     detail: str = Field(min_length=1, max_length=1_024)
     disposition: RegistryClosureOwnerDisposition
+    # The two filing-proof channels fail for materially different reasons:
+    # public conformance is repeatable in CI, while secure replay needs operator
+    # custody CI cannot hold. Carrying them here keeps "conformance proven,
+    # custody outstanding" distinct from "nothing proven" at the report
+    # boundary, which the collapsed reason token alone cannot express.
+    filing_channels: tuple[RegistryClosureFilingChannelRefusal, ...] = ()
 
     @model_validator(mode="after")
     def _require_matching_disposition_limb(self) -> RegistryClosurePredicateRefusal:
+        if self.filing_channels and self.limb != "filing_export":
+            raise ValueError("only a filing-export refusal may carry per-channel filing states")
         if self.disposition.limb != self.limb:
             raise ValueError("closure predicate refusal disposition must name its refusal limb")
         return self
@@ -446,7 +454,7 @@ def render_registry_closure_report(report: RegistryClosureReport) -> str:
     return "\n".join(lines)
 
 
-def _render_filing_channels(refusal: RegistryClosureRefusal) -> str:
+def _render_filing_channels(refusal: RegistryClosurePredicateRefusal) -> str:
     """Render one refusal's per-channel filing states as a stable token list.
 
     The two filing channels fail for materially different reasons: public
@@ -523,6 +531,7 @@ def _limb_or_join_refusal(
             reason=refusal.reason,
             detail=refusal.detail,
             disposition=refusal.disposition,
+            filing_channels=refusal.filing_channels,
         ),
     )
 
