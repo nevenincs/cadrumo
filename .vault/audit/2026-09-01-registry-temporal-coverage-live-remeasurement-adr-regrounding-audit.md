@@ -13260,3 +13260,34 @@ touched.
 Both of those defects were introduced by an edit that made the tool more correct
 and were caught only because the tool has tests. The first would have quietly
 degraded every future promotion.
+
+
+## Sixty-three inert initialisers, and the same defect still standing in src
+
+With the facades gone, the wider question is worth asking: forwarding is the
+loudest way an initialiser can be non-inert, not the only one. It may also
+define symbols, import at module level, bind names, or run code at import. A
+package defining its own class in `__init__.py` forwards nothing and is still
+not a namespace marker.
+
+Measured across every initialiser under `dev`: **63 of 63 carry nothing at
+all** - no definitions, no imports beyond a `__future__` directive, no
+assignments, no side-effect calls. The stronger gate is landable for the same
+reason the forwarding one was, and each of its four kinds is shown catching a
+constructed instance, because none of them has a live one.
+
+The campaign's original Step asked for two things: the dev initialisers, and
+seven code-boundary violations outside the registry tree. The first half is
+done. The second is entirely `src`-side - three modules reaching a `dev` path,
+one naming it in prose, five orphaned modules - and outside this session's
+scope, so the Step now says so rather than reading as half-finished.
+
+One figure is worth carrying forward. The `src` scanner reports **twelve
+non-inert package namespaces under `src/cadrumo`**, all of them
+`import_binding, symbol_export` and one also carrying its own definition. That
+is the identical defect class the dev tree just cleared, in a tree ten times the
+size and with production consumers. The dev campaign is a worked template for
+it: the order that held here was promote what is reached from outside, repoint
+consumers, empty the initialiser, restate the tests that measured the facade -
+and take the baseline first, because the failures that matter are the ones the
+change did not cause.

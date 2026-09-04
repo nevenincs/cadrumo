@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:124a66abdb9e953a3daefe2b337a2a1ce4c86f1bf128f29a04fe1f8273c64b7d'
+body_hash: 'sha256:55a9ea48e31562b23313064f202b1ea4230c66b86b51d2a0f84ccee151fc295a'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -284,7 +284,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S113` - Reduce the remaining five package initialisers in the registry development tree to inert namespace markers; `dev/registry`.
 - [x] `W02.P02.S114` - Gate that every package initialiser in the registry development tree carries nothing but a docstring, proven against a constructed re-export; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W02.P02.S115` - Clear the vault record citations from the registry source module and the four modelo 390 casilla declarations that carried them; `dev/registry/pipeline/_source_defects.py`.
-- [ ] `W02.P02.S116` - Decide the seven remaining code-boundary violations outside the registry tree, and the eleven package initialisers elsewhere in dev that carry exports; `dev`.
+- [ ] `W02.P02.S116` - Decide the seven code-boundary violations outside the registry tree: three src modules reaching a dev path, one naming it in prose, five orphaned modules; the dev-initialiser half is done and all 63 are now inert; `src/cadrumo`.
 - [x] `W02.P02.S117` - Cut the seventeen hundred isolated snapshots the closure composers take for one hundred and twenty-eight rows, without memoising above the authority; `src/cadrumo/application/registry/temporal_coverage.py`.
 - [x] `W02.P02.S118` - Add an authority accessor returning the admitted revision identifier without the isolating deep copy, and move the temporal coverage composer onto it; `src/cadrumo/domain/calculations/registry/authority.py`.
 - [x] `W02.P02.S119` - Re-point the forty-four stale branch adjudication keys the private-to-public module rename invalidated; `dev/registry/analysis/modelo_branch_classification.toml`.
@@ -332,6 +332,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S488` - Teach the promoter that a module imported by name from its package is a reference too, and that its body usages must move with it, since a rename leaves both naming something nothing binds; `dev/quality/module_promotion.py`.
 - [x] `W02.P02.S489` - Replace the two live facade-population measurements with the invariant they served, that no dev package initialiser forwards a name, now landable at zero packages and given teeth by a constructed forwarding initialiser; `dev/quality/tests/test_facade_retirement.py`.
 - [x] `W02.P02.S490` - Restore the prose scan the traversal patch nested inside the wrong loop, and correct the test that claimed traversal survives a rename when it survives only a facade retirement; `dev/quality/module_promotion.py,dev/quality/tests/test_module_promotion.py`.
+- [x] `W02.P02.S491` - Widen the initialiser gate from forwarding to full inertness, since a package defining its own class in __init__.py forwards nothing and is still not a namespace marker, with each of the four kinds shown catching a constructed instance; `dev/quality/facade_retirement.py,dev/quality/tests/test_facade_retirement.py`.
+- [ ] `W02.P02.S492` - Apply the dev retirement template to the twelve non-inert package namespaces under src/cadrumo, which are the same defect class the dev campaign cleared and which the src-side scanner already enumerates; `src/cadrumo`.
 
 ### Phase `W02.P03` - release predicate relocation
 
