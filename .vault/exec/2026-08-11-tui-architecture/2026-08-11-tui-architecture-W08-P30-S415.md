@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:841e24d755bdc9309a3e41e7aac8a2766892b418834ea54dfb0d201b8252c9d9'
+body_hash: 'sha256:7f7d08f9ae7c8c5614687301c17b32eda46c22bf0a938280159691f057013cd4'
 step_id: 'S415'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -26,7 +26,9 @@ related:
 - `M` `src/cadrumo/entrypoints/tui/ledger/reconciliation.py`
 - `M` `src/cadrumo/entrypoints/tui/declarations/overview.py`
 - `M` `src/cadrumo/entrypoints/tui/components/widgets.py`
+- `M` `src/cadrumo/entrypoints/tui/components/tests/test_component_boundary.py`
 - `M` `src/cadrumo/entrypoints/tui/components/tests/test_widgets.py`
+- `M` `src/cadrumo/entrypoints/tui/ledger/entries.py`
 - `M` `src/cadrumo/entrypoints/tui/tests/test_workbench_responsive.py`
 - `M` `src/cadrumo/locales/ca/common.yml`
 - `M` `src/cadrumo/locales/en/common.yml`
@@ -133,3 +135,18 @@ mistake -- measuring across the full painted line found Home's SIDEBAR text and
 reported a left edge of 81 -- and is measured inside the heading's column span
 for the same reason. Teeth proven by removing the inset: two surfaces fail
 naming both columns. Restored by copy; 94 passed.
+
+Running the ledger suite whole after the density change surfaced a live
+regression that predates it and belongs to another writer: commit `19fd223559`
+replaced `cast("ContentDataTable[str]", self.query_one(sel, ContentDataTable))`
+with `self.query_one(sel, ContentDataTable[str])` at two sites in the Ledger
+entries screen. Textual `isinstance`-checks that argument and Python refuses an
+instance check against a subscripted generic, so the screen raised at MOUNT and
+took eight ledger tests with it. The type checker approves of both forms; only
+running the screen tells them apart. Restored to the cast form with the reason
+in a comment, and gated statically by
+`test_no_query_passes_a_subscripted_generic_as_its_expected_type`, which scans
+the whole TUI package for a subscripted expected-type on `query`, `query_one`
+and `get_child_by_type`. Teeth proven by reintroducing the exact refactor at one
+site: the gate names the file, the line and the call. 113 passed across the
+ledger and responsive suites afterwards.

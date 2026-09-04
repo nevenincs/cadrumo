@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:8b59e021f926a1ede79c65d8db76c7d05f1d359d7dc66024caa14e58f20d4b84'
+body_hash: 'sha256:b95da5cfe49b36416b22d8827f3bef6bd0bc0b012d6f6dcdc3d861a6a333fd3f'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -425,7 +425,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S542` - Name the conformance suites one failure exactly: an AttributeError where a caller invokes assess_for on the single-channel proof authority that implements proof_for, which is the transitional object S109 schedules for deletion rather than inherited debt; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W02.P02.S543` - Repair the import codemod that could not be imported at all, because it put its own directory on sys.path and imported a package sibling by bare name so that siblings relative import had no parent; `dev/quality/import_centralization_codemod.py`.
 - [x] `W02.P02.S545` - Restore the two fixtures a test relocation left behind, taking dev/ci/tests from twelve setup errors to zero by importing the CLI backend fixture and the session-autouse runtime composition rather than reimplementing them; `dev/ci/tests/conftest.py`.
-- [ ] `W02.P02.S546` - Resolve the M130 calculate performance budget, now measurable again at 3.031 CPU-s against a 3.0 CPU-s ceiling at 30000-row ledger scale, which the guarding tests could not report while they errored at setup; `src/cadrumo`.
+- [x] `W02.P02.S546` - Diagnosed: the breach is one quarter, not the operation. Three of four M130 quarters run inside the budget and only 4T exceeds it, by five percent, because previous_filing bindings make it carry the year's three prior filings; the former single number was a percentile taken across four workloads of different depth. Two live runs agree on the shape. The remaining remedy is making that carry cheaper, which is src-side; `dev/ci/tests/test_ledger_scale_benchmark.py`.
 - [x] `W02.P02.S547` - Attach the agent_eval tests to the session-autouse runtime composition the relocation left behind, clearing thirteen setup errors so three tests pass and ten report their own passphrase-channel precondition instead of a harness defect; `dev/agent_eval/tests/conftest.py`.
 - [x] `W02.P02.S548` - Retire the passphrase-channel marker proposal: the six tests it named do not need an interactive session, and were made to run headlessly through the bounded secrets channel and a recovery descriptor relay, so the precondition this Step would have declared no longer exists; `dev/agent_eval/tests`.
 - [x] `W02.P02.S549` - Test the size-budget baseline writer the reach report ranked, whose destination is an argument so the write is provable, pinning the retired readers emptiness and the notes rule that carries surviving prose forward and drops the rest; `dev/audit/tests/test_size_budget_baseline.py`.
