@@ -9,7 +9,7 @@ Two layers, both against real code paths:
   the production extractor's own test suite already trusts) proves the tool
   REPRODUCES grounded legal text: slicing several articles fresh out of the
   whole document and round-tripping them through the production extractor
-  (``dev.docs.preprocess._html.build_outputs``) yields the identical unit
+  (``dev.docs.preprocess.normatives_html.build_outputs``) yields the identical unit
   text already committed for each article's standalone excerpt sidecar.
 """
 
@@ -21,7 +21,7 @@ import pytest
 
 from ..._paths import REPO_ROOT
 from ...docs.preprocess import PreprocessOutput
-from ...docs.preprocess._html import build_outputs
+from ...docs.preprocess.normatives_html import build_outputs
 from ..extract_boe_article import (
     _DIV_OPEN_OR_CLOSE,
     ArticleExtractionError,

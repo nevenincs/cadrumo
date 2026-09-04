@@ -18,7 +18,7 @@ from ...docs.preprocess import (
     EXTRACTED_TEXT_SUFFIX,
     PreprocessOutput,
 )
-from ...docs.preprocess._html import HTML_EXTRACTOR_ID, build_outputs
+from ...docs.preprocess.normatives_html import HTML_EXTRACTOR_ID, build_outputs
 from ..extract_manual_corpus_text import extract_raw_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
