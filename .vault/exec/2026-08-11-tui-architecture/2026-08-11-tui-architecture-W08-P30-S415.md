@@ -26,6 +26,7 @@ related:
 - `M` `src/cadrumo/entrypoints/tui/ledger/reconciliation.py`
 - `M` `src/cadrumo/entrypoints/tui/declarations/overview.py`
 - `M` `src/cadrumo/entrypoints/tui/components/widgets.py`
+- `M` `src/cadrumo/entrypoints/tui/components/tests/test_widgets.py`
 - `M` `src/cadrumo/entrypoints/tui/tests/test_workbench_responsive.py`
 - `M` `src/cadrumo/locales/ca/common.yml`
 - `M` `src/cadrumo/locales/en/common.yml`
@@ -91,8 +92,16 @@ titles ran straight into the previous card's action button. Measured on two
 mounted cards: both titles now `Spacing(top=2, bottom=1)`, second title clear
 of the first card's button.
 
-NOT gated, stated plainly: the `DisclosureGroup` gap and the source-card rhythm
-were each verified by mounting the widgets and reading their regions, not by a
-committed test. The swept rhythm gate covers `.cadrumo-heading` on five
-screens; no fixture in it composes a disclosure group, so that spacing can
-regress unseen. Row density remains untouched.
+That gap is now gated.
+`test_every_grouping_mechanism_separates_its_groups_by_the_same_distance`
+mounts consecutive disclosure groups and consecutive panels and measures the
+painted distance between them against the `cadrumo-section` token, so a drift
+in EITHER mechanism fails and names the offender. Teeth proven twice, once per
+mechanism: flattening `DisclosureGroup` reports
+`{'DisclosureGroup': 0, 'cadrumo-panel': 2}`, and demoting the panel margin to
+the stack token reports `{'DisclosureGroup': 2, 'cadrumo-panel': 1}`. Each file
+restored by copy; 86 passed across the component and theme suites.
+
+Still NOT gated, stated plainly: the Profile source-card rhythm was verified by
+mounting two cards and reading their regions, not by a committed test. Row
+density remains untouched.

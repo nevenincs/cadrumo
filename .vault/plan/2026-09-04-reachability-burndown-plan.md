@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:6f4cf71a5376ec3e0acbbd7acbf9e9d2becb7963be41fdd58ce0431244961f1c'
+body_hash: 'sha256:0fa253d84d7d6b3dbe200cd4db65f55d214ec23ea812aad8e175f863a5708f5c'
 ---
 
 # `reachability-burndown` plan
@@ -82,7 +82,7 @@ Duplicate module-level definitions are a correctness hazard, not untidiness: two
 - [x] `W03.P09.S16` - Merge the duplicated Decimal constants to a canonical home and repoint every call site, since a drifted numeric constant is a calculation defect; `src/cadrumo/core`.
 - [x] `W03.P09.S17` - Merge the duplicated TypeAdapter declarations at their owning registry boundary; `src/cadrumo/domain/calculations/registry`.
 - [x] `W03.P09.S18` - Adjudicate the 76 names defined with DIFFERENT values across modules, where merging would be wrong and one side needs renaming; `dev/audit`.
-- [ ] `W03.P09.S19` - Resolve the _WHITESPACE_RE collision, where one module compiles a single-whitespace matcher and three compile a run matcher under the same name; `src/cadrumo`.
+- [x] `W03.P09.S19` - Resolve the _WHITESPACE_RE collision, where one module compiles a single-whitespace matcher and three compile a run matcher under the same name; `src/cadrumo`.
 
 ## Wave `W04` - extend the gate and close
 
