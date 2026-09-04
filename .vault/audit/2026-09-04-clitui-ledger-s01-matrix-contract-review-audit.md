@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:f5393085e177ccb8edf79556a9bd5b9d9137b32372a81202dcfe64e1904ec7c0'
+body_hash: 'sha256:fc5976b9d3fd01d0bf56eaae3b750183f91b6092f880c9822549916ce709af56'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-adr]]"
@@ -222,6 +222,30 @@ content-free. Thus `model_copy` can bypass mandatory row and attestation
 validators while the gate reports an accepted frozen matrix. This is an exact
 false-closure defect at the campaign's foundational boundary.
 
+### model-copy-validation-final-retest | low | RESOLVED: every public evaluation boundary rejects copied invalid graphs
+
+Final corrective source commit
+`7b0ae292399ae9bca3e67944f174ae7d36018c42`, SHA-256
+`c2998c8ff958ae820b59fa7055a36d83117bb35282fe2679761032fab7a15a10`,
+serializes and strictly revalidates the complete matrix, live census, and
+observed-subject graphs before currentness or gate predicates run. Both exact
+prior bypasses now open G0: the copied empty reviewer produces a deterministic
+`matrix validation failed` blocker, and the attacker-recomputed all-axis
+`NOT_APPLICABLE` matrix produces the same fail-closed class of result. Repeated
+evaluation returns identical blocker tuples.
+
+Independent probes also confirm that copied incomplete live censuses, malformed
+subject snapshots, and malformed nested authority entries cannot reach business
+predicate evaluation. `validate_ledger_matrix_currentness` returns the same
+canonical validation blockers; `evaluate_ledger_capability_gates` leaves all
+five gates open; and an invalid copied denominator snapshot makes
+`reopened_gates_for_denominator_drift` conservatively reopen all five gates.
+Diagnostics expose only scope, location, and validation type, not the rejected
+field value. The valid control still closes G0, all previous semantic-predicate
+retests remain resolved on full-source inspection, and compile, Ruff,
+BasedPyright, and diff-whitespace checks pass. This subsection resolves the
+remaining CRITICAL finding and is not an open LOW finding.
+
 ## Recommendations
 
 1. For `denominator-completeness`, add a typed denominator census contract that
@@ -284,3 +308,7 @@ false-closure defect at the campaign's foundational boundary.
     are resolved in the reviewed source; one new CRITICAL model-copy validation
     bypass remains. The two LOW final-candidate entries are informational
     resolution records and are not open findings.
+15. Final corrective disposition: **ACCEPT**. Open severity counts are
+    CRITICAL 0, HIGH 0, MEDIUM 0, LOW 0. The historical findings and
+    informational retest entries remain in this rolling audit log; none is open
+    against source commit `7b0ae292399ae9bca3e67944f174ae7d36018c42`.
