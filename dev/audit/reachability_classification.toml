@@ -781,3 +781,11 @@ resolved = false
 symbols = ["FincaRendimientoRecordRow", "FincaGastoRow", "FincaAmortizacionLedgerRow"]
 evidence = "Each is defined once in the reachable sql.orm module and used nowhere but adapters.persistence.profile.fincas, which the audit reports unreachable with no importers at all and which the module ledger already classifies. domain.fincas above it is likewise unreachable and spans twelve modules, so this is the symbol-level tail of a module-level adjudication rather than a separate finding: the rows are not dead code, they are the persistence half of a Renta capability that is staged and not yet wired. Deleting them would dismantle what that classification deliberately preserves, and because they are declarative Base subclasses it would also drop three tables from the schema metadata. They are resolved when the fincas capability is wired or retired as a whole, never on their own."
 
+[[symbol_cluster]]
+name = "grounded regulatory constants awaiting their calculation"
+class = "staged-capability"
+area = "core"
+resolved = false
+symbols = ["BOE_ENCODING_CHOICES", "IVA_BIEN_ESCASO_VALOR_UMBRAL_EUR"]
+evidence = "Both carry a cited authority in the comment block above them: the IVA low-value-goods threshold states its binding provision as Art. 108.Dos.5 LIVA (Ley 37/1992) together with the peseta origin of the 3.005,06 EUR figure, and the encoding tuple records which encodings AEAT treats as equivalent for fichero-BOE purposes. A constant like this is captured legal research rather than code: the value is the provenance, and deleting it discards work that would have to be re-derived from the BOE while the calculation-grounding rule requires that provenance be preserved. Measured against the whole unused-constant population they are the exception, not the rule - 2 of 41 cite an authority - so this classification is narrow and the remaining 39 stay ordinary deletion candidates."
+

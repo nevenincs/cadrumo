@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import Final, Literal, cast
+from typing import Final, Literal, cast, override
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
 from pydantic_core import to_jsonable_python
@@ -455,18 +455,23 @@ class _ReturnCollector(ast.NodeVisitor):
     def __init__(self) -> None:
         self.returns: list[ast.Return] = []
 
+    @override
     def visit_Return(self, node: ast.Return) -> None:
         self.returns.append(node)
 
+    @override
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         return
 
+    @override
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
         return
 
+    @override
     def visit_Lambda(self, node: ast.Lambda) -> None:
         return
 
+    @override
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         return
 
