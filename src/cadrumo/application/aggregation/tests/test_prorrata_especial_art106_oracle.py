@@ -71,6 +71,15 @@ _ESPECIAL_PARAMS = ProrrataEspecialMandatoryParameters(
     resolved_on=_esp_date(2025, 12, 31),
 )
 
+
+def _especial_params_for(year: int) -> ProrrataEspecialMandatoryParameters:
+    """The margin bundle, resolved for ``year``.
+
+    The rule refuses a bundle resolved for a different filing year, so a fixture
+    cannot pin one year and be applied to another.
+    """
+    return _ESPECIAL_PARAMS.model_copy(update={"resolved_on": _esp_date(year, 12, 31)})
+
 _BUCKET_ID = "79797979-7979-4979-8979-797979797979"
 _PERIOD = Period.from_year_and_code(2026, "1T")
 _DEDUCIBLE_CUOTA_BINDING: BindingId = "modelo-303-iva-soportado-interiores-cuota"
@@ -252,7 +261,7 @@ def test_plus_ten_percent_advisory_fires_on_production_general_vs_especial_total
         deduction_under_general=general_cuota,
         deduction_under_especial=especial_cuota,
         ejercicio=2026,
-        parameters=_ESPECIAL_PARAMS,
+        parameters=_especial_params_for(2026),
     )
 
     assert notice is not None
@@ -266,7 +275,7 @@ def test_plus_ten_percent_advisory_fires_on_production_general_vs_especial_total
             deduction_under_general=especial_cuota,
             deduction_under_especial=especial_cuota,
             ejercicio=2026,
-            parameters=_ESPECIAL_PARAMS,
+            parameters=_especial_params_for(2026),
         )
         is None
     )
