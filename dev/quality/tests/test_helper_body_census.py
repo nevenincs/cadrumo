@@ -19,7 +19,7 @@ from typing import Final
 import pytest
 
 from ..fixture_census import FixtureCensusError
-from ..helper_body_census import census
+from ..helper_body_census import HelperCensus, census
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -604,9 +604,28 @@ def _module_imports(relative_path: str) -> frozenset[str]:
     )
 
 
-def test_ephemeral_secure_repo_has_one_shared_definition_and_direct_consumers() -> None:
+@pytest.fixture(scope="module")
+def live_census() -> HelperCensus:
+    """The whole-tree census, computed once for the three tests that read it.
+
+    Each of them censused the tracked tree independently, at 82.8s, 79.8s and
+    77.2s, for one deterministic result - the same duplicated measurement the
+    identity canary carried. Two of the three also repeated this refusal guard
+    verbatim and the third had none, so the tree being unreadable was reported
+    three different ways.
+
+    A census that cannot read the tree fails here, once, for all of them: that
+    is a broken tracked file, which refuses rather than announcing.
+    """
+    try:
+        return census()
+    except FixtureCensusError as exc:
+        pytest.fail(f"helper census could not read the tracked source tree: {exc}")
+
+
+def test_ephemeral_secure_repo_has_one_shared_definition_and_direct_consumers(live_census: HelperCensus) -> None:
     """The secure-object helpers have one owner; callers import rather than re-declare them."""
-    result = census()
+    result = live_census
     definitions = {
         (record.path, record.qualname)
         for record in result.helpers
@@ -627,7 +646,7 @@ def _site_key(site: str) -> tuple[str, str]:
     return (path, qualname)
 
 
-def test_canonical_homes_carry_no_unallowlisted_duplicate() -> None:
+def test_canonical_homes_carry_no_unallowlisted_duplicate(live_census: HelperCensus) -> None:
     """A body-identical copy of a canonical home, anywhere else, must be declared.
 
     This is the property `2026-08-14-test-harness-sanity-semantic-test-corpus-
@@ -639,10 +658,7 @@ def test_canonical_homes_carry_no_unallowlisted_duplicate() -> None:
     aliased-behaviour count is not asserted here at all, because a module
     count trains everyone to update the constant and then detects nothing.
     """
-    try:
-        result = census()
-    except FixtureCensusError as exc:
-        pytest.fail(f"helper census could not read the tracked source tree: {exc}")
+    result = live_census
 
     homes = set(_CANONICAL_HOMES)
     violations: list[str] = []
@@ -657,7 +673,7 @@ def test_canonical_homes_carry_no_unallowlisted_duplicate() -> None:
     assert not violations, "unallowlisted duplicate(s) of a canonical helper home:\n" + "\n".join(violations)
 
 
-def test_allowlist_entries_are_not_stale() -> None:
+def test_allowlist_entries_are_not_stale(live_census: HelperCensus) -> None:
     """Every allowlisted site must still exist and still actually alias something.
 
     A resolved duplicate (the local copy deleted, the site renamed) leaves a
@@ -665,10 +681,7 @@ def test_allowlist_entries_are_not_stale() -> None:
     stops being evidence and starts being a stale exemption the moment either
     condition breaks.
     """
-    try:
-        result = census()
-    except FixtureCensusError as exc:
-        pytest.fail(f"helper census could not read the tracked source tree: {exc}")
+    result = live_census
 
     existing_sites = {(record.path, record.qualname) for record in result.helpers}
     aliased_sites = {_site_key(site) for behaviour in result.aliased_behaviours for site in behaviour.sites}
