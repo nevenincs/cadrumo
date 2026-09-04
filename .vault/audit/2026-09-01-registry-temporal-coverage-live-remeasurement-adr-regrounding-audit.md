@@ -14236,3 +14236,35 @@ defects between them, every one found by their own tests.
 Recorded rather than fixed. Writing tests for another campaign's codemods is
 work with an owner, and the useful contribution is the corrected number and the
 two names.
+
+
+## Putting the rule in a function rather than in each walk's author
+
+Three defects in this campaign came from one rule nobody had written down: an
+import statement references more modules than it RESOLVES to. `from ..analysis
+import thing` resolves to the package, and the name may itself be a module.
+
+The three: a facade consumer scan reporting zero consumers where there were
+ninety; a module promoter that renamed a module and left two files importing it
+by name; and a coverage probe that called six tested modules untested while
+their test files sat beside them. Each walk was written by someone who knew the
+rule - the second time by me, one iteration after fixing the first, and the third
+two iterations after writing a test pinning it.
+
+So the rule is now a function. `imported_modules(node, path)` returns every
+module a statement can be said to reference: the resolved target, plus
+``target.name`` for each imported name. The module promoter's own traversal
+branch, which had the only correct implementation, now asks it rather than
+re-deriving it, and the two walks cannot drift apart.
+
+Its contract is honest about what it cannot know. `from x import y` yields both
+`x` and `x.y` because nothing in the syntax says whether `y` is a submodule or a
+symbol, and the caller intersects the candidates with the module set it knows.
+Deciding here would be guessing with extra steps, and the guessing is exactly
+what produced the three defects.
+
+The demonstration is the fourth measurement. Re-running the coverage probe
+through the shared function - rather than through a hand-written walk - returns
+**42 of 352**, the corrected figure, where the hand-written walk returned 60.
+The probe that gets it right is now the shorter one to write, which is the only
+durable way this stops happening.

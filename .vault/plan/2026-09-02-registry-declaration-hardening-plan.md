@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:142eaecfa8230cee7deef02a86516aa8b4a6747fcd55c2b3e012e6bf77773642'
+body_hash: 'sha256:0e7f8ac91b8341465fa0ad50c4ae7536f86888e146ee45dc62a07a270d65e0c8'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -407,6 +407,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S524` - Cover the complexity audits three classifiers, which had no tests after its own test modules were retired with the baseline, pinning the ceiling-versus-floor asymmetry that one copied comparison operator would invert; `dev/audit/tests/test_complexity_classification.py`.
 - [x] `W02.P02.S525` - Measure dev modules no test reaches, correcting the first count from 60 to 42 after the submodule-by-name blind spot inflated it by thirty per cent, and name the two untested codemods that write to source files; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [ ] `W02.P02.S526` - Test the two untested codemods that write to source files, six write sites between them, since the two written in this campaign carried three silent defects each found only by their own tests; `dev/quality/import_centralization_codemod.py,dev/quality/namespace_retirement_sweep.py`.
+- [x] `W02.P02.S527` - Lift the import-reference rule into imported_modules so the three walks that each got it wrong ask one function: a statement references its resolved target plus the module each imported name may be, and the promoter now consumes it rather than re-deriving it; `dev/quality/facade_retirement.py,dev/quality/module_promotion.py,dev/quality/tests/test_facade_retirement.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
