@@ -108,13 +108,14 @@ class Gate:
     destination cannot prevent a collision there, so asking would refuse work
     for a reason that does not apply to it.
 
-    The floor is absent from both gates deliberately; :func:`manifest_floor`
-    records why.
+    The floor is asked as a REGRESSION check rather than a monotonicity one;
+    :func:`manifest_floor` records why the monotonic form is unsatisfiable.
     """
 
     name: str
     checks_index: bool
     checks_forge: bool
+    checks_floor: bool
 
     def summary(self) -> str:
         """Return what this gate checked, for the operator reading a pass."""
@@ -123,6 +124,8 @@ class Gate:
             checked.append("the package indexes")
         if self.checks_forge:
             checked.append("the tag and release namespaces")
+        if self.checks_floor:
+            checked.append("the recorded floor")
         checked.append("the burned ledger")
         return ", ".join(checked)
 
@@ -132,12 +135,12 @@ class Gate:
 #: the world already has is how the lane proves the pipeline on an ordinary
 #: commit. Only the ledger survives, because a burned number must never label
 #: any bytes again.
-SEAL: Final[Gate] = Gate(name="seal", checks_index=False, checks_forge=False)
+SEAL: Final[Gate] = Gate(name="seal", checks_index=False, checks_forge=False, checks_floor=False)
 
 #: The upload itself. Every collision rule means what it says here, and this is
 #: the last thing that runs before bytes reach an index that cannot take them
 #: back.
-PUBLISH: Final[Gate] = Gate(name="publish", checks_index=True, checks_forge=True)
+PUBLISH: Final[Gate] = Gate(name="publish", checks_index=True, checks_forge=True, checks_floor=True)
 
 #: The gates by name, which is also the CLI's ``--scope`` vocabulary.
 GATES: Final[Mapping[str, Gate]] = MappingProxyType({gate.name: gate for gate in (SEAL, PUBLISH)})
@@ -150,7 +153,8 @@ def manifest_floor(manifest_path: Path | None = None) -> str:
     because a destination can be emptied by a deletion while the manifest
     remains the record that the number was once reached.
 
-    No :class:`Gate` enforces the floor, and the reason is structural rather
+    Only the publication gate reads this, and only as a REGRESSION check.
+    The reason the MONOTONIC form is enforced nowhere is structural rather
     than a relaxation. Release-please writes this manifest to the released
     version as part of the release change itself, so the recorded floor equals
     the declared version at every commit either gate can observe: on the branch
@@ -158,8 +162,14 @@ def manifest_floor(manifest_path: Path | None = None) -> str:
     upload runs from. ``candidate > floor`` is therefore unsatisfiable
     everywhere it could be asked, and enforcing it would refuse every build and
     every release. Monotonicity is owned by the tool that writes both numbers
-    together; what remains for this module to refuse is destination ownership,
-    which the other rules state directly.
+    together.
+
+    The regression form is satisfiable at exactly those commits, because the
+    normal state is equality. It catches the one case the tool cannot: a
+    declared version edited BELOW what has already shipped. The index rules do
+    not cover it, since a number skipped on the way up was never uploaded and so
+    collides with nothing, yet publishing it would order the newest bytes behind
+    an older release and every resolver would keep serving the stale ones.
     """
     path = manifest_path or MANIFEST_PATH
     try:
@@ -226,10 +236,11 @@ def version_conflicts(
 
     if floor is not None:
         recorded = _parsed(floor, label="manifest floor")
-        if candidate <= recorded:
+        if candidate < recorded:
             refusals.append(
-                f"version {version} is not above the recorded floor {floor}; the manifest burns a version "
-                "even after a destination that held it is deleted",
+                f"version {version} is below the recorded floor {floor}; the release line only moves "
+                "forward, and a lower version would be ordered behind one already shipped, so every "
+                "resolver would keep serving the older bytes as the newer release: cut a new version",
             )
 
     return tuple(refusals)
@@ -242,6 +253,7 @@ def gate_conflicts(
     owning_projects: Iterable[str] = (),
     existing_tags: Iterable[str] = (),
     existing_releases: Iterable[str] = (),
+    floor: str | None = None,
 ) -> tuple[str, ...]:
     """Return the refusals ``gate`` draws from the observed state.
 
@@ -256,6 +268,7 @@ def gate_conflicts(
         owning_projects=owning_projects if gate.checks_index else (),
         existing_tags=existing_tags if gate.checks_forge else (),
         existing_releases=existing_releases if gate.checks_forge else (),
+        floor=floor if gate.checks_floor else None,
     )
 
 
@@ -365,6 +378,7 @@ def assert_gate_permits(
     owning_projects: Iterable[str] = (),
     existing_tags: Iterable[str] = (),
     existing_releases: Iterable[str] = (),
+    floor: str | None = None,
 ) -> None:
     """Raise unless ``gate`` permits ``version`` against the observed state.
 
@@ -377,24 +391,24 @@ def assert_gate_permits(
         owning_projects=owning_projects,
         existing_tags=existing_tags,
         existing_releases=existing_releases,
+        floor=floor,
     )
     if refusals:
         joined = "\n  - ".join(refusals)
         raise VersionIdentityError(f"version {version} is not available to {gate.name}:\n  - {joined}")
 
 
-def _observe_forge(
-    version: str,
-    *,
-    repository: str | None,
-    own_source_commit: str | None,
-) -> tuple[tuple[str, ...], tuple[str, ...]]:
-    """Return the tags and releases owning ``version``, refusing an under-specified ask.
+def forge_arguments(repository: str | None, own_source_commit: str | None) -> tuple[str, str]:
+    """Return the two arguments a forge check needs, refusing an under-specified ask.
 
-    Both arguments are demanded rather than defaulted. Without the repository
-    there is nothing to ask; without the commit, the tag and release this run
-    was dispatched for look exactly like a stranger's and every release would be
-    refused seconds before its upload, for a collision with itself.
+    Both are demanded rather than defaulted, and demanded BEFORE any probe runs,
+    so an under-specified invocation is an operator error reported in one second
+    rather than a network round trip followed by a misleading collision.
+
+    Without the repository there is nothing to ask. Without the commit, the tag
+    and release this run was dispatched for look exactly like a stranger's, and
+    every release would be refused moments before its upload for colliding with
+    itself.
     """
     if not repository:
         raise VersionIdentityError("--repository is required to ask the forge which refs own this version")
@@ -403,9 +417,7 @@ def _observe_forge(
             "--own-source-commit is required: the tag and release being published already exist, and "
             "without the commit they sit on they cannot be told apart from a foreign ref",
         )
-    tags = forge_tags_owning(version, repository=repository, own_source_commit=own_source_commit)
-    releases = forge_releases_owning(version, repository=repository, own_source_commit=own_source_commit)
-    return tags, releases
+    return repository, own_source_commit
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -439,13 +451,18 @@ def main(argv: list[str] | None = None) -> int:
     tags: tuple[str, ...] = ()
     releases: tuple[str, ...] = ()
     try:
+        # Argument validation precedes every probe: an operator who forgot a
+        # flag learns that immediately, not after two network round trips.
+        forge = forge_arguments(args.repository, args.own_source_commit) if gate.checks_forge else None
         if gate.checks_index:
             owning = pypi_projects_owning(args.version)
-        if gate.checks_forge:
-            tags, releases = _observe_forge(
+        if forge is not None:
+            repository, own_source_commit = forge
+            tags = forge_tags_owning(args.version, repository=repository, own_source_commit=own_source_commit)
+            releases = forge_releases_owning(
                 args.version,
-                repository=args.repository,
-                own_source_commit=args.own_source_commit,
+                repository=repository,
+                own_source_commit=own_source_commit,
             )
 
         assert_gate_permits(
@@ -454,6 +471,7 @@ def main(argv: list[str] | None = None) -> int:
             owning_projects=owning,
             existing_tags=tags,
             existing_releases=releases,
+            floor=manifest_floor() if gate.checks_floor else None,
         )
     except VersionIdentityError as exc:
         # An operator reads this at a refusal, so it must be the message and not

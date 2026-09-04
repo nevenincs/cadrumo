@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from copy import deepcopy
-from typing import Final
+from typing import Any, Final
 
 import pytest
 import yaml
@@ -331,54 +331,72 @@ def test_former_aeat_product_forms_are_rejected(surface: str, expected_family: s
     assert expected_family in _prohibited_aeat_product_forms(surface)
 
 
-def test_the_version_identity_guard_runs_before_the_cohort_is_built() -> None:
-    """Seal time asks the same question publication asks, but earlier.
-
-    Refusing here costs one re-run. Refusing at publication Gate 2 is the last
-    check before an irreversible index upload, and refusing nowhere is how a
-    version that a destination already owned reached that upload. Ordering is
-    the assertion that matters: a guard placed after the build would let a
-    doomed cohort be sealed and published from.
-    """
+def _cohort_build_job() -> dict[str, Any]:
+    """Return the job that seals the cohort."""
     document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
-    build = document["jobs"]["build-release-cohort"]
+    return document["jobs"]["build-release-cohort"]
+
+
+def _executed_lines(job: dict[str, Any]) -> list[str]:
+    """Return the job's run lines with comments stripped.
+
+    Comment lines are excluded deliberately. The first version of this gate
+    matched the whole run surface, and passed against a mutated workflow because
+    the explanatory COMMENT above the invocation contains the very string it
+    asserted. A gate satisfied by its own prose proves nothing.
+    """
+    return [
+        line.strip()
+        for step in job["steps"]
+        if "run" in step
+        for line in str(step["run"]).splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    ]
+
+
+def test_the_version_identity_guard_runs_before_the_cohort_is_built() -> None:
+    """A cohort must not be sealed under a version no release may ever mint.
+
+    Ordering is the assertion that matters: a guard placed after the build would
+    let a cohort carrying a burned number exist, and the artefacts are what get
+    promoted later.
+    """
+    build = _cohort_build_job()
     names = [str(step.get("name", "")) for step in build["steps"]]
     surface = "\n".join(str(step.get("run", "")) for step in build["steps"] if "run" in step)
 
     assert "dev.release.version_identity" in surface, "seal time must ask the identity authority"
-    guard = next(i for i, name in enumerate(names) if "already owns" in name)
+    guard = next(i for i, name in enumerate(names) if "Refuse to seal" in name)
     cohort_build = next(i for i, name in enumerate(names) if "Build the immutable full release cohort" in name)
     assert guard < cohort_build, "the guard must refuse before the cohort exists, not after"
-    # One authority, not a second implementation: the same module the
-    # publication gate invokes, so the two answers cannot disagree.
-    assert "dev.release.version_identity" in surface
-    assert "--repository" in surface
 
 
 def test_the_seal_guard_uses_the_seal_scope_not_the_publication_scope() -> None:
     """Sealing is not shipping, and conflating them stopped every build.
 
-    The publication scope additionally requires the version to exceed the
-    manifest floor. Between releases the declared version EQUALS that floor,
-    because the bump has not happened yet, so applying the publication scope
-    here refused every packaging run in exactly the interval this lane works in.
-    Every collision check still applies at seal scope; only the did-you-bump
-    question is deferred to publication, where it means what it says.
+    The publication scope refuses every destination that already owns the
+    version. A seal uploads nothing, so between releases - when the declared
+    version is legitimately the one already shipped, because the bump has not
+    happened yet - that scope refused every packaging run in exactly the
+    interval this lane works in.
     """
-    document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
-    build = document["jobs"]["build-release-cohort"]
-    # Comment lines are excluded deliberately. The first version of this test
-    # matched the whole run surface, and passed against a mutated workflow
-    # because the explanatory COMMENT above the invocation contains the very
-    # string it asserted. A gate satisfied by its own prose proves nothing.
-    commands = [
-        line.strip()
-        for step in build["steps"]
-        if "run" in step
-        for line in str(step["run"]).splitlines()
-        if line.strip() and not line.strip().startswith("#")
-    ]
-    invocation = "\n".join(commands)
-    assert "dev.release.version_identity" in invocation
-    assert "--scope seal" in commands, "the seal lane must not enforce the publication floor"
+    commands = _executed_lines(_cohort_build_job())
+    assert "dev.release.version_identity" in "\n".join(commands)
+    assert "--scope seal" in commands, "the seal lane must not apply the publication collision set"
     assert "--scope publish" not in commands, "the publication scope refuses every build between releases"
+
+
+def test_the_seal_guard_asks_no_destination_anything() -> None:
+    """The seal reaches no index and no forge, and its arguments must show it.
+
+    A destination argument here is not harmless noise: it is the readable sign
+    that the build is being asked a question about an upload it does not
+    perform. The two forge arguments and the token that reaches the forge all
+    belong to the publication gate.
+    """
+    build = _cohort_build_job()
+    guard = next(step for step in build["steps"] if "Refuse to seal" in str(step.get("name", "")))
+    invocation = "\n".join(line.strip() for line in str(guard["run"]).splitlines() if not line.strip().startswith("#"))
+    for argument in ("--repository", "--own-source-commit"):
+        assert argument not in invocation, f"the seal asks the forge nothing, so {argument} has no meaning here"
+    assert "GH_TOKEN" not in str(guard.get("env", {})), "the seal step needs no forge credential"

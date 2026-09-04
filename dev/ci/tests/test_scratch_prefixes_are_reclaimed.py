@@ -73,6 +73,22 @@ def _python_sources() -> list[Path]:
     )
 
 
+def _reportable(path: Path) -> str:
+    """Name ``path`` for an operator, whether or not it sits in the repository.
+
+    The scan is driven with an isolated tree by the cases below, so a path
+    outside the repository root is a normal input rather than an error. Making
+    the repository-relative form conditional keeps the message readable for the
+    real subjects without the formatting raising on the synthetic ones -- which
+    it did, turning both teeth cases into errors instead of the assertions they
+    were written to make.
+    """
+    try:
+        return path.relative_to(REPO_ROOT).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
 def _unreclaimed(paths: list[Path]) -> tuple[list[str], int]:
     """Return every unreclaimed scratch family, and how many were examined.
 
@@ -95,7 +111,7 @@ def _unreclaimed(paths: list[Path]) -> tuple[list[str], int]:
             examined += 1
             if prefix.startswith(_SWEPT) or finalized:
                 continue
-            offenders.append(f"{path.relative_to(REPO_ROOT).as_posix()}: {prefix!r}")
+            offenders.append(f"{_reportable(path)}: {prefix!r}")
     return offenders, examined
 
 

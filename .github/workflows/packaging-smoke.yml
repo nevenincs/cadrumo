@@ -385,27 +385,24 @@ jobs:
       - name: Sync frozen development environment
         run: uv sync --frozen
 
-      - name: Refuse to seal a version any destination already owns
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Refuse to seal a version the world may already hold bytes under
         run: |
-          # Asked here as well as at publication Gate 2, because refusing at seal
-          # time costs one re-run while refusing at Gate 2 is the last check
-          # before an irreversible index upload. Same single authority, so the
-          # two answers cannot disagree; the version comes from the declaration
-          # the cohort build is about to stamp into the artifacts.
-          # --scope seal, NOT the publication scope. Sealing is not shipping:
-          # this lane builds and proves a cohort on every push, and between
-          # releases the declared version legitimately EQUALS the manifest floor
-          # because the bump has not happened yet. Enforcing the floor here
-          # refused every build in exactly the interval this lane works in.
-          # Everything that makes a collision impossible still applies: a
-          # version some destination already owns, or one that is burned, is
-          # refused when sealing too.
+          # --scope seal, NOT the publication scope, and the difference is the
+          # whole point. A seal uploads nothing: this lane builds and proves a
+          # cohort on every push, labelled with the version the commit declares,
+          # and between releases that version legitimately equals the one
+          # already shipped because the bump has not happened yet. Every
+          # collision rule states an upload as its reason, so applying them to a
+          # build that performs no upload refused every run in exactly the
+          # interval this lane works in.
+          # What does apply is the burned ledger, which is not about a
+          # destination at all: the world may hold different bytes under a
+          # burned number, so no cohort may carry it even as a label. The
+          # destination collisions belong to the upload, and the publication
+          # gate enforces them immediately before it.
           version="$(uv run --no-sync python -c 'import tomllib,pathlib; print(tomllib.loads(pathlib.Path("pyproject.toml").read_text(encoding="utf-8"))["project"]["version"])')"
           uv run --no-sync python -m dev.release.version_identity \
             --version "$version" \
-            --repository "$GITHUB_REPOSITORY" \
             --scope seal
 
       - name: Build the immutable full release cohort

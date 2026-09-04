@@ -10,9 +10,9 @@ What "assumed" means here is measured, not guessed. Parsing the ``run:`` blocks
 of every workflow shows ``uv``, ``just`` and ``node`` are each installed by a
 pinned setup action, while ``gh`` is invoked by four workflows and installed by
 none: ``packaging-campaign-trigger``, ``packaging-homebrew``,
-``packaging-scoop`` and ``release-please``. Its absence surfaces as
-``REFUSED: forge check needs the gh CLI on PATH`` mid-release — a cohort-seal
-failure that never names the missing tool.
+``packaging-scoop`` and ``release-please``. Three of the four run on this
+fleet, and its absence surfaces mid-lane as a command-not-found inside a step
+that never names the missing tool.
 
 The Homebrew acquisition matrix additionally pins an EXACT brew path per leg
 (``/opt/homebrew/bin/brew`` on macOS arm64, ``/home/linuxbrew/.linuxbrew/bin/brew``
@@ -85,8 +85,8 @@ def _check_gh() -> Finding:
             ok=False,
             detail=(
                 "NOT on PATH. Four workflows invoke it and none install it; "
-                "dev.release.version_identity fails its forge check with "
-                "'REFUSED: forge check needs the gh CLI on PATH' mid-release."
+                "three of them run on this fleet, so their gh steps fail with "
+                "a command-not-found that never names the missing tool."
             ),
         )
     return Finding("gh", ok=True, detail=_version_of("gh"))

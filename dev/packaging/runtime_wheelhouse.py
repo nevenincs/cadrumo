@@ -9,15 +9,19 @@ that archive without resolving dependencies again.
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
+import os
 import re
+import shutil
 import tempfile
 import tomllib
 import urllib.parse
 import urllib.request
 import zipfile
 from collections.abc import Sequence
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final
@@ -26,6 +30,8 @@ from packaging.markers import default_environment
 from packaging.requirements import Requirement
 from packaging.tags import Tag
 from packaging.utils import canonicalize_name, parse_wheel_filename
+
+from cadrumo.core.directory_scan import scan_directory
 
 from ._hashing import sha256_path
 from .uv_constraints import export_runtime_constraints
@@ -42,6 +48,17 @@ _DEFAULT_RUNTIME_ROWS: Final[tuple[tuple[str, bool], ...]] = (
 )
 _PYTHON_MINOR_RE: Final[re.Pattern[str]] = re.compile(r"^3\.(?P<minor>[0-9]+)$")
 _DOWNLOAD_TIMEOUT_SECONDS: Final[float] = 180.0
+_DOWNLOAD_WORKERS: Final[int] = 8
+_CACHE_DIR_ENV: Final[str] = "CADRUMO_RUNTIME_WHEEL_CACHE_DIR"
+_CACHE_BYTES_ENV: Final[str] = "CADRUMO_RUNTIME_WHEEL_CACHE_BYTES"
+_DEFAULT_CACHE_BYTES: Final[int] = 8 * 1024**3
+"""Byte ceiling on the runner-local wheel cache.
+
+Sized against what it holds rather than against a round number: one build's
+closure spans four platforms and three runtimes and lands near two gigabytes,
+so eight leaves a few consecutive locks resident and still bounds the store at
+a fraction of a development volume.
+"""
 
 
 @dataclass(frozen=True)
@@ -477,6 +494,156 @@ def _download(wheel: LockedWheel, destination: Path) -> None:
         )
 
 
+def wheel_cache_dir() -> Path | None:
+    """Return the runner-local wheel cache directory, or ``None`` when disabled.
+
+    Follows the proof cache's convention: an explicit
+    ``CADRUMO_RUNTIME_WHEEL_CACHE_DIR`` wins, otherwise ``~/.cadrumo`` holds it.
+    Setting the variable to an empty value disables caching outright, which is
+    what a run that must prove it fetched from the index sets.
+
+    The cache is safe by construction rather than by policy: every entry is
+    named for the SHA-256 the lock records, and is re-hashed against that name
+    before it is served. There is no invalidation question to get wrong -- a
+    lock change asks for a different digest, so it addresses a different entry.
+    """
+    override = os.environ.get(_CACHE_DIR_ENV)
+    if override is not None:
+        return Path(override) if override.strip() else None
+    return Path.home() / ".cadrumo" / "runtime-wheel-cache"
+
+
+def _cache_entry(cache: Path, wheel: LockedWheel) -> Path:
+    return cache / wheel.sha256
+
+
+def _serve_from_cache(cache: Path | None, wheel: LockedWheel, destination: Path) -> bool:
+    """Copy ``wheel`` out of ``cache`` when the cached bytes still prove out."""
+    if cache is None:
+        return False
+    entry = _cache_entry(cache, wheel)
+    try:
+        if entry.stat().st_size != wheel.size or sha256_path(entry) != wheel.sha256:
+            return False
+        shutil.copyfile(entry, destination)
+    except OSError:
+        return False
+    return True
+
+
+def _store_in_cache(cache: Path | None, wheel: LockedWheel, source: Path) -> None:
+    """Publish verified bytes into the cache, tolerating any storage refusal.
+
+    Written to a process-unique neighbour and moved into place, so a reader
+    never observes a partially written entry, and a loser of a race between two
+    builds overwrites an identical file rather than corrupting one.
+    """
+    if cache is None:
+        return
+    entry = _cache_entry(cache, wheel)
+    staging = entry.with_name(f".{entry.name}.{os.getpid()}.partial")
+    try:
+        cache.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, staging)
+        staging.replace(entry)
+    except OSError:
+        with contextlib.suppress(OSError):
+            staging.unlink(missing_ok=True)
+
+
+def _acquire(wheel: LockedWheel, destination: Path, cache: Path | None) -> bool:
+    """Place ``wheel``'s exact lock-recorded bytes at ``destination``.
+
+    Returns:
+        Whether the bytes came from the cache rather than the index.
+    """
+    if _serve_from_cache(cache, wheel, destination):
+        return True
+    _download(wheel, destination)
+    _store_in_cache(cache, wheel, destination)
+    return False
+
+
+def _acquire_all(
+    plans: Sequence[RuntimeWheelhousePlan],
+    wheel_dir: Path,
+    cache: Path | None,
+) -> None:
+    """Fetch every selected wheel for every runtime, in parallel and once each.
+
+    Two distinct repetitions are removed here. Within one build the runtimes
+    overwhelmingly select the SAME universal wheels, so a serial pass over
+    ``plans`` fetched identical bytes up to three times; the cache collapses
+    that to one fetch plus local copies. Across builds an unchanged lock asks
+    for exactly the digests the previous build already stored.
+
+    Concurrency is deliberately modest. The index is a shared service and the
+    work is entirely network-bound, so a small pool removes the round-trip
+    stalls without turning a release build into a load generator.
+    """
+    requests = [(plan.python_version, wheel) for plan in plans for wheel in plan.wheels]
+    failures: list[BaseException] = []
+    with ThreadPoolExecutor(max_workers=_DOWNLOAD_WORKERS) as pool:
+        futures = {
+            pool.submit(_acquire, wheel, wheel_dir / runtime / wheel.filename, cache): wheel
+            for runtime, wheel in requests
+        }
+        for future in as_completed(futures):
+            try:
+                future.result()
+            except BaseException as exc:
+                # Collected rather than raised here so every worker settles
+                # first: a raise inside the pool's context leaves the remaining
+                # futures to be cancelled mid-write. The first failure is
+                # re-raised below with its own traceback intact.
+                failures.append(exc)
+    if failures:
+        raise failures[0]
+
+
+def prune_wheel_cache(cache: Path | None, *, limit_bytes: int | None = None) -> int:
+    """Evict oldest-first until the cache fits its byte ceiling; return bytes removed.
+
+    Every persistent cache in this repository is bounded. Bounded by BYTES
+    rather than by entry count because the entries are wheels spanning four
+    orders of magnitude in size, so a count cap says nothing about the disk a
+    cache occupies. Eviction is by modification time, which a cache hit does not
+    refresh -- an entry's age is therefore its age since it was fetched, and the
+    ceiling bounds the store rather than modelling reuse.
+    """
+    if cache is None:
+        return 0
+    ceiling = _cache_limit_bytes() if limit_bytes is None else limit_bytes
+    try:
+        entries = [(path, path.stat()) for path in scan_directory(cache) if path.is_file()]
+    except OSError:
+        return 0
+    total = sum(stat.st_size for _path, stat in entries)
+    if total <= ceiling:
+        return 0
+    removed = 0
+    for path, stat in sorted(entries, key=lambda item: item[1].st_mtime):
+        if total - removed <= ceiling:
+            break
+        with contextlib.suppress(OSError):
+            path.unlink()
+            removed += stat.st_size
+    return removed
+
+
+def _cache_limit_bytes() -> int:
+    raw = os.environ.get(_CACHE_BYTES_ENV, "").strip()
+    if not raw:
+        return _DEFAULT_CACHE_BYTES
+    try:
+        value = int(raw)
+    except ValueError as exc:
+        raise SystemExit(f"{_CACHE_BYTES_ENV} must be an integer byte count: {raw!r}") from exc
+    if value < 0:
+        raise SystemExit(f"{_CACHE_BYTES_ENV} must not be negative: {value}")
+    return value
+
+
 def build_runtime_wheelhouse(
     repo_root: Path,
     destination: Path,
@@ -490,13 +657,13 @@ def build_runtime_wheelhouse(
         raise FileExistsError(output)
     manifest, plans = _manifest_document(root, python_versions=python_versions)
     output.parent.mkdir(parents=True, exist_ok=True)
+    cache = wheel_cache_dir()
     with tempfile.TemporaryDirectory(prefix="cadrumo-runtime-wheelhouse-") as temporary:
         wheel_dir = Path(temporary)
         for plan in plans:
-            runtime_dir = wheel_dir / plan.python_version
-            runtime_dir.mkdir()
-            for wheel in plan.wheels:
-                _download(wheel, runtime_dir / wheel.filename)
+            (wheel_dir / plan.python_version).mkdir()
+        _acquire_all(plans, wheel_dir, cache)
+        prune_wheel_cache(cache)
         with zipfile.ZipFile(output, mode="x", compression=zipfile.ZIP_STORED) as archive:
             manifest_info = zipfile.ZipInfo(WHEELHOUSE_MANIFEST, date_time=_ZIP_TIMESTAMP)
             manifest_info.external_attr = (0o100644 & 0xFFFF) << 16

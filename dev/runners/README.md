@@ -250,10 +250,10 @@ Baking it into the image removes the failure mode entirely.
 **`gh` is assumed present the way it is on GitHub-hosted runners, and the
 upstream image does not ship it.** The image carries `jq`, `git`, `curl`, `tar`
 and the docker client only. Workflows install `just` and `uv` themselves through
-actions, but nothing installs `gh`; when it is absent
-`dev.release.version_identity` fails its forge check with `REFUSED: forge check
-needs the gh CLI on PATH`, which surfaces mid-release as a cohort-seal failure
-rather than as a missing-tool error. The `runner` stage pins the current
+actions, but nothing installs `gh`; the acquisition and campaign lanes that run
+on this fleet invoke it directly, so when it is absent they fail mid-lane with a
+command-not-found inside a step that never names the missing tool. The `runner`
+stage pins the current
 upstream release (Ubuntu 24.04's own package is several minor versions behind)
 and installs it to `/usr/local/bin`.
 

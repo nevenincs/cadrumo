@@ -23,24 +23,19 @@ subdirectory, so the same repository carries the Scoop side at no extra cost.
 
 The result is that the account's distribution-repository count is **one at one product
 and one at a hundred**: a new product adds one formula file and one manifest file and
-creates nothing. The publish workflow's push steps are safe to share because each
-stages only its own product-scoped path, refuses a backward version bump, and retries a
-lost push race — three properties pinned by 41 conformance assertions in
-`dev/release/tests/test_publish_release_workflow.py`.
+creates nothing.
 
 ## What this file used to say, and why that mattered
 
 This README previously stated that "this directory makes the repository its own Scoop
 bucket" and that "no separate bucket repository exists or needs to be created". Both
-were false. `nevenincs/homebrew-tap` exists, it is where `publish-release.yml` pushes,
-and the workflow refuses to publish at all when `HOMEBREW_TAP_REPO` and
-`HOMEBREW_TAP_TOKEN` are unset.
+were false. `nevenincs/homebrew-tap` is the shared account repository the Homebrew
+formula and Scoop manifest are generated toward; nothing is committed here.
 
-The claim was not harmless. It described the opposite architecture from the one the
-code implements, in the one file a maintainer reads first when asking where the
-manifest goes — and it sat directly above a correct, carefully argued rationale for the
-shared repository in `publish-release.yml`. A reader trusting this file would have gone
-looking for an in-repo manifest that is never written.
+The claim was not harmless. It described the opposite architecture from the one this
+repository targets, in the one file a maintainer reads first when asking where the
+manifest goes. A reader trusting this file would have gone looking for an in-repo
+manifest that is never written.
 
 ## Note for the vaultspec products
 
