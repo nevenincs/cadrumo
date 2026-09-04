@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:47dd2c687e79ac32fe96a7785d2dbf55f9b6b5fe1f16bf18a2e640022a49b409'
+body_hash: 'sha256:0a8c5d3d1cd6aaaa5dbaff7bd5b98ec8dd6efd8ad962c1c9dd8089c59686718b'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -261,6 +261,23 @@ facade, and one package's library was living inside its command-line entry point
 has become the only path to a fact is not a duplicate any more, and removing it is blocked on giving
 the fact a home first.
 
+The catalogues restate the same fact on a third axis, and this one is measurable end to end. A casilla
+label is keyed by revision, so a modelo with four revisions stores four copies of every label whether
+the official wording changed or not - 87,298 strings across four locales where 57,249 carry all the
+information, the other 30,049 being copies that exist because the key shape demands one per revision.
+
+Copies free to disagree do. **5,518 casillas across three locales carry two renderings**, and the
+useful question is which of those the official text justifies. Spanish is the source: where its text is
+byte-identical across two revisions nothing changed, so 3,157 of the disagreements are drift and 2,196
+track a real change. Sixty run the other way - the Spanish changed and the translation did not - which
+is the sharper defect, because a filer reads text that no longer matches the source and nothing in the
+translation says so.
+
+This is the same defect as the registry's, one layer out and with the arithmetic visible: a fact
+restated per revision, copies drifting apart, and a validator nowhere. The difference is that the
+resolution is derivable rather than adjudicated - the Spanish text says whether a change happened -
+which is why this axis produced a worklist rather than a research question.
+
 ## Steps
 
 ## Wave `W01` - measurement integrity
@@ -357,6 +374,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S493` - Write the initialiser retirement into the plans Description, Parallelization and Verification prose: the restatement it removed, the two ordering constraints discovered by breaking them, and the inertness criterion with its four constructed proofs; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W02.P02.S494` - Re-run and sweep this sessions two set comparisons for lost-worker markers, since both were taken in the combination that crashes a worker: preprocess identical at 23 failures and sequences identical, each with zero crash markers; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W02.P02.S495` - Turn the lost-worker sweep from a remembered grep into a command that judges a saved pytest run and exits non-zero when it is unusable, recognising a lost worker, a run that executed nothing, truncated output and a complete run; `dev/quality/run_integrity.py,dev/quality/tests/test_run_integrity.py`.
+- [x] `W02.P02.S501` - Record the run-integrity tools first live catch of a truncated artefact: a backgrounded suite killed at 22 per cent left 819 bytes of progress bar whose visible dots and two failure marks would have been read as a two-failure result over 1264 tests; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W02.P03` - release predicate relocation
 

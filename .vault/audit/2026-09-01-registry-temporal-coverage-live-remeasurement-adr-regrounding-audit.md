@@ -13499,3 +13499,27 @@ nine in 202 and three in 369. Sixty rows across four modelos is a worklist
 somebody can finish, and each one is a filer reading text that no longer matches
 the official wording. That is the piece of this measurement worth acting on
 first, and it is two per cent of the number the drift figure leads with.
+
+
+## The integrity tool catches its second artefact, one iteration after landing
+
+Re-measuring the registry suite meant backgrounding a twelve-minute run. The
+first attempt used `nohup ... &` inside the tool call, which returns as soon as
+the shell does - and the child died with it. The saved output stopped at 22%,
+819 bytes, mid-progress-bar.
+
+`python -m dev.quality.run_integrity` returned `no_summary` and exit 1. That is
+the verdict it exists for: a file with progress characters and no summary line is
+not a run with no failures, and the obvious reading of that artefact - counting
+the dots and the two `F`s visible in it - would have reported a suite of 1,264
+tests as having two failures.
+
+This campaign has made the adjacent error before, counting pytest progress
+characters and getting exactly double the true figure. The difference this time
+is that nothing was counted: the tool refused the artefact before a number could
+be taken from it, one iteration after being written for precisely this.
+
+Worth separating from the instance: the backgrounding mistake was mine and the
+tool did not prevent it. What it prevented was the mistake AFTER it - reading a
+truncated artefact as a result. An instrument that cannot stop a bad run can
+still stop a bad conclusion, and those are different jobs.
