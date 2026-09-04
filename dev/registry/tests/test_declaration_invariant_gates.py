@@ -506,7 +506,7 @@ def test_every_kind_a_screen_emits_is_named_in_its_own_docstring(
     undocumented: list[str] = []
     # Both tables, through the shared traversal. This gate iterated the
     # authority table alone and so never read a corpus screen's kinds.
-    for name, findings in _screen_findings(authority, modelo_ids):
+    for name, findings in screen_findings(authority, modelo_ids):
         module = importlib.import_module(f"dev.registry.analysis.{name}")
         doc = module.__doc__ or ""
         for finding in findings:
@@ -1468,7 +1468,7 @@ def test_every_declared_condition_has_a_live_member_or_a_written_proof(
     from ..analysis.screens import screen_findings as _screen_findings
 
     live: dict[str, set[str]] = {}
-    for name, findings in screen_findings(authority, modelo_ids):
+    for name, findings in _screen_findings(authority, modelo_ids):
         kinds = {finding.kind for finding in findings if isinstance(getattr(finding, "kind", None), str)}
         live[name] = kinds
 

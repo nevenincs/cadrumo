@@ -417,7 +417,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                     observed_at=observed_at,
                     account_session=account_session,
                     agenda=agenda,
-                    agenda_evidence_state=evidence.state,
+                    agenda_evidence_state=evidence.aeat_state,
                 ),
                 observed_at=observed_at,
             ),
