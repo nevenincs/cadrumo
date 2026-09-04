@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:0f4ac64839ba02e1f759e3d1a583ecd000c71c9d8a962f8964adc7178cecf607'
+body_hash: 'sha256:227c6d077b894e2ae8d1731d1094128744781e63c36e92e8492567768b880abd'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -368,7 +368,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S480` - Invert the sanitizer re-export test, which asserted a non-empty __all__ and was hardened against an empty one so that emptying the facade could not pass silently: it could not be satisfied alongside the inert-initialiser boundary and was protecting the defect; `dev/sanitizer/tests/test_pipeline.py,dev/sanitizer/tests/test_errors.py`.
 - [x] `W02.P02.S481` - Search the three remaining dev.docs packages for tests that assert the facade contract itself rather than reading it incidentally, since such a test cannot be satisfied alongside the inert-initialiser boundary and surfaces only when the retirement is attempted; `dev/docs/sequences/tests,dev/docs/terminology_handbook/tests`.
 - [x] `W02.P02.S482` - Promote the three preprocess private modules to schema, sidecar and normatives_html, the last named to avoid shadowing the standard library html module, then retire the facade with the failure set compared line by line and identical at 23 failures over 294 passing; `dev/docs/preprocess,dev/corpus`.
-- [ ] `W02.P02.S483` - Stop test_real_timeout_is_unavailable_not_green crashing its xdist worker, which taints every run containing it as an INCOMPLETE RUN rather than failing an assertion; the serial marker is inert here because the lane running dev/audit/tests carries no serial exclusion, so the recipe must change too; `dev/audit/tests/test_security_scan.py,justfile`.
+- [x] `W02.P02.S483` - Give the real-analyser integration tests a budget covering the tool acquisition, since the first uvx semgrep run overran the 300-second default and pytest-timeout's thread method escalates to killing the process, so a worker died and took four sibling tests with it; the crasher was the small-subtree scan paying for the install, not the timeout case the earlier note named; `dev/audit/tests/test_security_scan.py,dev/audit/tests/test_duplication_scan.py`.
 - [x] `W02.P02.S484` - Build the private-to-public module promoter that resolves every import to its absolute dotted name so relative depth stops mattering, reports files it could not parse beside statements it could not rewrite, and refuses a public name that shadows the live interpreters standard library; `dev/quality/module_promotion.py,dev/quality/tests/test_module_promotion.py`.
 - [x] `W02.P02.S485` - Promote the three terminology private modules and retire the facade: 135 references moved across 62 file-touches with zero unhandled and zero unreadable, the initialiser cut from 208 lines to 12, and the 62-item failure set identical at each stage; `dev/docs/terminology,dev/docs,dev/deploy`.
 - [x] `W02.P02.S486` - Retire the terminology_handbook facade by promoting only the four private modules actually reached from another package rather than all nine, leaving five correctly private, with the failure set identical across all four stages; `dev/docs/terminology_handbook,dev/docs`.
