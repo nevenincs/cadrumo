@@ -54,6 +54,7 @@ __all__ = [
     "ImportSite",
     "facade_exports",
     "facade_import_sites",
+    "relative_spelling",
     "rewrite_statement",
     "submodule_names",
 ]
@@ -91,6 +92,15 @@ class ImportSite:
     #: symbol in the consumer's body and the rewrite would compile and be wrong.
     names: tuple[tuple[str, str | None], ...]
     indent: str
+    #: The dot depth the consumer wrote, zero for an absolute import. Preserved
+    #: because a file importing its own tree relatively has its import block
+    #: grouped that way, and emitting an absolute form puts the new statement in
+    #: the wrong isort group - which lints as an error rather than failing, so
+    #: the rewrite would look applied and leave the tree red.
+    level: int
+    #: The dotted package containing the consumer, needed to spell a relative
+    #: import back out at whatever depth the target now sits.
+    consumer_package: str
 
     @property
     def forwarded(self) -> tuple[tuple[str, str | None], ...]:
@@ -214,9 +224,27 @@ def facade_import_sites(
                     end_lineno=node.end_lineno or node.lineno,
                     names=tuple((alias.name, alias.asname) for alias in node.names),
                     indent=line[: len(line) - len(line.lstrip())],
+                    level=node.level,
+                    consumer_package=".".join(_package_of(path)),
                 )
             )
     return tuple(sites)
+
+
+def relative_spelling(target: str, *, consumer_package: str) -> str | None:
+    """Return ``target`` as a relative import from ``consumer_package``.
+
+    ``None`` when the two share no leading segment, which cannot happen inside
+    one tree but would produce a nonsense depth if it did.
+    """
+    consumer = consumer_package.split(".")
+    parts = target.split(".")
+    shared = 0
+    while shared < min(len(consumer), len(parts)) and consumer[shared] == parts[shared]:
+        shared += 1
+    if shared == 0:
+        return None
+    return "." * (len(consumer) - shared + 1) + ".".join(parts[shared:])
 
 
 def rewrite_statement(site: ImportSite, package: FacadePackage) -> tuple[str, ...]:
@@ -246,11 +274,17 @@ def rewrite_statement(site: ImportSite, package: FacadePackage) -> tuple[str, ..
             return ()
         by_module[module].append(name if asname is None else f"{name} as {asname}")
 
+    def spell(target: str) -> str:
+        if site.level == 0:
+            return target
+        relative = relative_spelling(target, consumer_package=site.consumer_package)
+        return relative if relative is not None else target
+
     lines: list[str] = []
     if kept:
-        lines.append(f"{site.indent}from {package.dotted} import {', '.join(sorted(kept))}")
+        lines.append(f"{site.indent}from {spell(package.dotted)} import {', '.join(sorted(kept))}")
     for module in sorted(by_module):
-        lines.append(f"{site.indent}from {module} import {', '.join(sorted(by_module[module]))}")
+        lines.append(f"{site.indent}from {spell(module)} import {', '.join(sorted(by_module[module]))}")
     return tuple(lines)
 
 
