@@ -821,6 +821,41 @@ def _ledger_controller(scenario: WorkbenchFixtureScenario) -> object:
         TuiScreenContextV1(destination="workbench.ledger"),
         _ledger_projection(scenario),
         review_action=ActionReference(action_id=lookup_action("operator.ledger.review").action_id),
+        classify_action=ActionReference(action_id=lookup_action("operator.ledger.classify").action_id),
+        # Only where the projection actually carries the row: the controller
+        # refuses a target its visible entries do not contain, which is the
+        # right refusal and the reason classification has no empty reading.
+        classification_target=(
+            _LEDGER_TX_A
+            if scenario in {WorkbenchFixtureScenario.READY, WorkbenchFixtureScenario.STALE}
+            else None
+        ),
+        evidence_action=ActionReference(action_id=lookup_action("operator.ledger.evidence.review.list").action_id),
+        # An empty TUPLE, not None: the evidence area distinguishes "reviewed
+        # and nothing outstanding" from "never read", and only the second is
+        # an absent door. A fixture that passed None would render the
+        # unavailable branch in every state.
+        evidence_items=(),
+        link_action=ActionReference(action_id=lookup_action("operator.ledger.link").action_id),
+    )
+
+
+def _ledger_scenarios(surface_id: str) -> tuple[WorkbenchFixtureScenario, ...]:
+    """Which states this Ledger surface has a coherent reading in.
+
+    Classification is entered from a selected row and the controller refuses a
+    target the visible projection does not carry, so an empty ledger has no
+    honest classification reading at all. Inventing one would mean fabricating
+    a selection over rows that do not exist, which is exactly the stand-in a
+    review fixture must not be.
+    """
+    if surface_id == "ledger-classification":
+        return (WorkbenchFixtureScenario.READY, WorkbenchFixtureScenario.STALE)
+    return (
+        WorkbenchFixtureScenario.READY,
+        WorkbenchFixtureScenario.EMPTY,
+        WorkbenchFixtureScenario.STALE,
+        WorkbenchFixtureScenario.UNAVAILABLE,
     )
 
 
@@ -963,12 +998,7 @@ def _build_specs() -> tuple[WorkbenchFixtureSpec, ...]:
             lambda surface_id=surface_id, scenario=scenario: _ledger_app(surface_id, scenario),
         )
         for surface_id, _screen, _area in _LEDGER_ROUTES
-        for scenario in (
-            WorkbenchFixtureScenario.READY,
-            WorkbenchFixtureScenario.EMPTY,
-            WorkbenchFixtureScenario.STALE,
-            WorkbenchFixtureScenario.UNAVAILABLE,
-        )
+        for scenario in _ledger_scenarios(surface_id)
     )
     specs.append(
         _spec(
