@@ -14101,3 +14101,33 @@ three - 66 against 181 - and both are correct answers to different questions.
 "Can anybody run this?" and "does anything run this?" are not the same question,
 and a repository that answers only the first can be entirely green while a fifth
 of its declared coverage has never executed.
+
+
+## Auditing my own closures, and my own reachability
+
+Closing a Step whose work I had not done - and could not do, its scope being the
+justfile - was a reflex from the rhythm of authoring and closing in the same
+breath. Having made it once, the question is whether I made it silently
+elsewhere.
+
+Derived from the plan rather than remembered: of the Steps this session authored,
+**eight name a scope outside `dev/` and `.vault/`, and all eight are open**.
+`S483` and `S521` on the justfile, `S519` on the justfile and workflows, `S492`,
+`S505` and `S508` under `src/cadrumo`, and `S498` and `S500` under
+`src/cadrumo/locales`. The one reflex close was the one I caught.
+
+The complementary question is whether the tests this session added are reachable
+at all, since the campaign has just finished measuring how easily a test can
+exist and never run. Checked against CI-invoked lanes: **none of this session's
+test modules is unreachable**. They sit in `dev/quality/tests`,
+`dev/locales/tests`, `dev/registry/tests` and `dev/ci/tests`, all of which a
+workflow-invoked lane reaches by path and by marker.
+
+That was worth confirming rather than assuming, because every one of them is a
+`unit` test in a directory the ordinary lane already names - which is exactly
+what the nineteen conformance closure tests are, and they have never run. The
+difference is a path in a recipe, and nothing about a test tells you which side
+of it you are on.
+
+The three files outside every lane's path scope are unchanged: the two
+conformance closure modules and one TUI visual-inventory module.

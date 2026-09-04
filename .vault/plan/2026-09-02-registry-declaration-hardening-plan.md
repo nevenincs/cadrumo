@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:5a615eee4e06c3d360798e685205832e0f31b11bfb4c0b8f0a1269b2c69873cf'
+body_hash: 'sha256:46d55dfd38d627816599edab2bc17c33b5b803f81562cb23a3894f89bfc60681'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -403,6 +403,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S520` - Correct the claim that nothing gates the putting-back: dev/ci/lane_reachability models declared against CI-invoked lanes at 32 versus 17, and dev/tests/test_lane_reachability gates that a test CI cannot run must declare why, which is red at 84 tests; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [ ] `W02.P02.S521` - Bring dev/registry/conformance/tests into a lane path scope: its nineteen tests carry unit and hex_core markers and are unreachable by any declared recipe because no lanes paths reach the directory, which is why the ordinary lane never selected them; `justfile`.
 - [x] `W02.P02.S522` - Locate the conformance closure suites absence exactly: nineteen tests unreachable by any declared lane and two files outside every lane path scope, against 66 declared-unreachable and 181 CI-unreachable tests overall; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W02.P02.S523` - Audit this sessions own closures and reachability: all eight Steps scoped outside dev and .vault are open, and no test module this session added is unreachable by a CI-invoked lane; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W02.P03` - release predicate relocation
 
