@@ -969,6 +969,40 @@ def test_one_gate_revalidates_malformed_copied_subject_and_nested_authority_grap
     )
 
 
+def test_currentness_and_ordered_gates_reject_a_malformed_copied_nested_authority_graph() -> None:
+    matrix = _matrix()
+    authority_entry = matrix.current_authority_dispositions.entries[0].model_copy(
+        update={"row_id": "authority-secret"}
+    )
+    malformed_authority = matrix.current_authority_dispositions.model_copy(update={"entries": (authority_entry,)})
+    malformed_matrix = matrix.model_copy(update={"current_authority_dispositions": malformed_authority})
+
+    first = validate_ledger_matrix_currentness(
+        malformed_matrix,
+        observed_census=_report(),
+        observed_subjects=(_SUBJECT,),
+    )
+    second = validate_ledger_matrix_currentness(
+        malformed_matrix,
+        observed_census=_report(),
+        observed_subjects=(_SUBJECT,),
+    )
+    assessments = evaluate_ledger_capability_gates(
+        malformed_matrix,
+        observed_census=_report(),
+        observed_subjects=(_SUBJECT,),
+    )
+
+    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
+    assert first == second
+    assert first
+    assert any("matrix validation failed" in blocker for blocker in first)
+    assert all("authority-secret" not in blocker for blocker in first)
+    assert len(assessments) == len(LedgerGate)
+    assert all(not assessment.closed for assessment in assessments)
+    assert all(assessment.blockers == tuple(first) for assessment in assessments)
+
+
 def test_each_axis_has_a_reviewed_rationale_and_single_axis_applicability_proof() -> None:
     row = _row()
 
@@ -1316,6 +1350,52 @@ def test_erasing_initial_cli_ownership_reopens_g0_even_when_current_rows_look_cl
     assert any("earlier gate remains open" in blocker for blocker in assessments[1].blockers)
 
 
+def test_g0_rejects_authority_snapshot_membership_drift() -> None:
+    first = _row()
+    second = _row("ledger.reconciliation.match", prefix="reconciliation_match")
+    accepted_report = _report((_ROW_ID,))
+    current_report = _report((_ROW_ID, "ledger.reconciliation.match"))
+    accepted_denominator = _snapshot(accepted_report)
+    current_denominator = _snapshot(current_report)
+    matrix = _matrix(
+        rows=(first, second),
+        accepted_denominator=accepted_denominator,
+        current_denominator=current_denominator,
+        accepted_authority_dispositions=_authority_snapshot(accepted_denominator, (first,)),
+        current_authority_dispositions=_authority_snapshot(current_denominator, (first, second)),
+    )
+
+    assert _evaluate(_matrix(), LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
+    assert not _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
+    assert any(
+        "new authority disposition row: ledger.reconciliation.match" in blocker
+        for blocker in _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).blockers
+    )
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "expected"),
+    [
+        pytest.param("revision", "authority-rev-2", "authority disposition revision drifted", id="revision"),
+        pytest.param("observed_at", _LATER_OBSERVED_AT, "authority disposition observation time drifted", id="time"),
+    ],
+)
+def test_g0_rejects_each_authority_snapshot_generation_mutation(
+    field: str,
+    value: object,
+    expected: str,
+) -> None:
+    matrix = _matrix()
+    updates = {field: value}
+    drifted = _authority_snapshot_with(matrix.current_authority_dispositions, **updates)
+    candidate = _matrix_with(matrix, current_authority_dispositions=drifted)
+
+    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
+    blockers = _evaluate(candidate, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).blockers
+
+    assert expected in blockers
+
+
 def test_g0_accepts_only_the_canonical_owner_and_digest_bound_accept_ruling() -> None:
     matrix = _matrix()
 
@@ -1427,6 +1507,37 @@ def test_generic_review_coordinate_cannot_substitute_for_a_missing_or_invalid_at
         assert blockers == ("matrix validation failed at <root>: value_error",)
     else:
         assert any("acceptance_attestation" in blocker for blocker in blockers)
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        pytest.param("denominator_digest", "sha256:" + "d" * 64, id="denominator-digest"),
+        pytest.param("denominator_revision", "denominator-rev-stale", id="denominator-revision"),
+        pytest.param("matrix_digest", "sha256:" + "e" * 64, id="matrix-digest"),
+        pytest.param("plan_owner", "attestation-secret-owner", id="plan-owner"),
+        pytest.param("review_subject_id", "subject.ledger.missing", id="subject-id"),
+        pytest.param("review_subject_revision", "review-rev-stale", id="subject-revision"),
+        pytest.param("review_subject_digest", "sha256:" + "f" * 64, id="subject-digest"),
+        pytest.param("review_subject_observed_at", _LATER_OBSERVED_AT, id="subject-time"),
+    ],
+)
+def test_g0_rejects_each_attestation_binding_mutation(
+    field: str,
+    value: object,
+) -> None:
+    matrix = _matrix()
+    attestation = matrix.acceptance_attestation.model_copy(update={field: value})
+    candidate = matrix.model_copy(update={"acceptance_attestation": attestation})
+
+    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
+    first = _evaluate(candidate, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).blockers
+    second = _evaluate(candidate, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).blockers
+
+    assert first == second
+    assert first
+    assert any("matrix validation failed" in blocker for blocker in first)
+    assert all("attestation-secret-owner" not in blocker for blocker in first)
 
 
 def test_g2_requires_a_proven_backend_surface_and_direct_behavior() -> None:

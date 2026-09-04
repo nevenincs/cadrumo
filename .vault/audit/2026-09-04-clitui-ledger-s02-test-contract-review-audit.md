@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:96af8f998f66d0a93d19f02bce52b3a8727c7118dd08585ba9aa2b588ce2840e'
+body_hash: 'sha256:53e99eab84471502cd9fb517cc19fe33b564f70ad9674ff0d2617c9e4be632ac'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-adr]]"
@@ -23,7 +23,7 @@ blockers.
 
 ## Findings
 
-No blocking findings. The 92 focused cases contain both valid controls and
+No blocking findings. The 118 focused cases contain both valid controls and
 representative mutations; focused pytest, Ruff, BasedPyright, and compile
 checks all pass.
 
@@ -35,6 +35,15 @@ and scoped gap, every G4 hold/proof/role/finding branch, explicit empty inputs,
 and typed ACCEPT attestation substitution. Those positive controls and
 detectors now live in the focused test module; no production contract was
 changed.
+
+### S02 test contract review | low | independent G0 drift and graph detectors resolved
+
+The final review requested direct currentness and ordered-gate coverage for
+malformed nested authority graphs, plus independent G0 mutations for hold
+state, removed identities, source reclassification, census generation and
+readiness, authority snapshots, and every attestation binding. Those controls
+and redacted deterministic blockers now have adjacent positive fixtures; no
+production contract was changed.
 
 ## Recommendations
 
