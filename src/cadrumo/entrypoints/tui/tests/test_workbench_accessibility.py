@@ -18,6 +18,7 @@ from pathlib import Path
 
 import pytest
 from textual.widget import Widget
+from textual.widgets import Static
 
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import I18N_STRICT_MISSING_KEYS, MissingTranslationError, tr
@@ -92,6 +93,42 @@ async def test_home_restores_focus_by_domain_identity_rather_than_row_position()
 
 
 @pytest.mark.asyncio
+async def test_a_home_zone_that_is_refused_says_so_rather_than_reading_as_empty(tmp_path: Path) -> None:
+    """An unavailable zone must be distinguishable from one holding nothing.
+
+    A fresh profile refuses most Home zones for want of an installed reader.
+    That refusal has to reach the operator as words; rendering it as blank
+    would be the under-declaration this product forbids, dressed as layout.
+    """
+    from ....application.overview.home import HomeAvailability
+
+    async with installed_workbench_root(tmp_path) as root:
+        projection = root.refresh_home()
+        refused = [
+            state
+            for state in (
+                projection.actions_state,
+                projection.declarations_state,
+                projection.ledger_state,
+                projection.messages_state,
+            )
+            if state.availability is not HomeAvailability.AVAILABLE
+        ]
+        assert refused, "this profile refuses no Home zone, so the proof would be vacuous"
+
+        screen = HomeScreen(projection)
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
+            await pilot.pause()
+            ledger = str(app.screen.query_one("#home-ledger", Static).render()).strip()
+            messages = str(app.screen.query_one("#home-messages", Static).render()).strip()
+            app.exit(None)
+
+    assert ledger, "the refused Ledger zone renders nothing"
+    assert messages, "the refused Messages zone renders nothing"
+    assert "0" not in ledger.split()[:1], "a refused zone must not open with a count"
+
+
 async def test_every_home_zone_states_its_availability_in_words(tmp_path: Path) -> None:
     """Colour is never the only carrier of a zone's state.
 

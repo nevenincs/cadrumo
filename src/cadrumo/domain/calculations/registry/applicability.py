@@ -101,8 +101,8 @@ if TYPE_CHECKING:
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.time.clock import today_madrid
-from ...contribuyente.entity_type import EntityType
 from ...deadlines.models import (
+    EntityType,
     FiscalResidency,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
@@ -520,6 +520,14 @@ _INCOMPLETE_UNDETERMINED_REASON = (
     "obligación."
 )
 
+# Public read-only facades consumed by the focused applicability module. The
+# implementation names remain underscored to mark configuration ownership;
+# consumers import these aliases rather than reaching into private symbols.
+INCOMPLETE_LEGAL_REFS = _INCOMPLETE_LEGAL_REFS
+ATTRIBUTION_PASS_THROUGH_LEGAL_REFS = _ATTRIBUTION_PASS_THROUGH_LEGAL_REFS
+INCOMPLETE_UNDECLARED_REASON = _INCOMPLETE_UNDECLARED_REASON
+INCOMPLETE_UNRULED_REASON = _INCOMPLETE_UNRULED_REASON
+INCOMPLETE_UNDETERMINED_REASON = _INCOMPLETE_UNDETERMINED_REASON
 _IMPATRIADO_M720_LEGAL_REFS: tuple[LegalRefId, ...] = (
     "ley-35-2006:art-93",  # LIRPF Art. 93 — régimen especial impatriados.
     "ley-7-2012:da-1",  # Ley 7/2012 DA 1ª — obligación Modelo 720.
@@ -696,11 +704,17 @@ def _undetermined_applicability(
 # invented slugs. Full per-entity / per-regime coverage of every
 # registered modelo is a deferred expansion.
 
+_NATURAL_PERSON: frozenset[EntityType] = frozenset({EntityType.NATURAL_PERSON})
+_LEGAL_ENTITY: frozenset[EntityType] = frozenset({EntityType.LEGAL_ENTITY})
+_ATTRIBUTION_ENTITY: frozenset[EntityType] = frozenset({EntityType.ATTRIBUTION_ENTITY})
 _IVA_OBLIGED_ENTITY_TYPES: frozenset[EntityType] = frozenset(
     {EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY, EntityType.ATTRIBUTION_ENTITY},
 )
 _IVA_SELF_ASSESSMENT_REGIMES: frozenset[IVARegime] = frozenset(
     {IVARegime.GENERAL, IVARegime.SIMPLIFICADO},
+)
+_PAYER_FACT_ENTITY_TYPES: frozenset[EntityType] = frozenset(
+    {EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY, EntityType.ATTRIBUTION_ENTITY},
 )
 
 _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {

@@ -407,6 +407,7 @@ required_text = ["tipo de gravamen"]
 value = "1000000"
 date_axis = "filing_period"
 valid_from = 2024-01-01
+valid_to = 2024-12-31
 
 [[revisions."2024".parameters]]
 id = "is.modelo-200.incn-umbral-erd-art101"
@@ -423,3 +424,4 @@ required_text = ["tipo de gravamen"]
 value = "10000000"
 date_axis = "filing_period"
 valid_from = 2024-01-01
+valid_to = 2024-12-31

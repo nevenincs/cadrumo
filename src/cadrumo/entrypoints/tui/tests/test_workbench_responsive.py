@@ -84,7 +84,13 @@ async def test_every_workbench_destination_paints_content_at_every_supported_siz
 async def test_home_keeps_one_scrollable_owner_rather_than_nesting_them(tmp_path: Path) -> None:
     """Two nested scrollers make a keyboard operator guess which one moves.
 
-    Home is the surface this matters most on: it is the return point from
+    Asserted on DOM ANCESTRY, not on how many scrollbars happen to be visible
+    at once. The visibility form was proven weak: an inner scroller absorbs its
+    own overflow, so the outer one never shows a bar at the same time and the
+    count stays at one while a genuine second scroll owner sits inside the
+    first.
+
+    Home is the surface this matters most on -- it is the return point from
     every journey, so a scroll position that lands in the wrong container is
     met again after every child dismissal.
     """
@@ -97,13 +103,17 @@ async def test_home_keeps_one_scrollable_owner_rather_than_nesting_them(tmp_path
             app = ScreenHostApp(home.factory(TuiScreenContextV1(destination="workbench.home")))
             async with app.run_test(size=size) as pilot:
                 await pilot.pause()
-                scrollers = [
+                nested = [
                     widget
                     for widget in app.screen.query(ScrollableContainer)
-                    if widget.display and widget.show_vertical_scrollbar
+                    if any(isinstance(parent, ScrollableContainer) for parent in widget.ancestors)
                 ]
-                assert len(scrollers) <= 1, f"Home offers {len(scrollers)} competing scrollable owners at {size}"
                 app.exit(None)
+
+            assert not nested, (
+                f"Home nests {len(nested)} scrollable container(s) inside another at {size}: "
+                + ", ".join(f"{type(widget).__name__}(id={widget.id!r})" for widget in nested[:3])
+            )
 
 
 @pytest.mark.asyncio
