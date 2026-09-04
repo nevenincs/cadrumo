@@ -30,7 +30,11 @@ from .._smoke_common import (
 from ..python_cohort import load_python_cohort
 from ..smoke_core import _assert_complete_wheel_cohort
 from ..smoke_sdist_core import _assert_sdist_contains_expected_data
-from ._cohort_attestation import add_test_source_archive, make_test_command_spec_attestation
+from ._cohort_attestation import (
+    add_test_runtime_wheelhouse,
+    add_test_source_archive,
+    make_test_command_spec_attestation,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -139,6 +143,7 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
         filenames[name] = retained.name
         digests[name] = hashlib.sha256(retained.read_bytes()).hexdigest()
     add_test_source_archive(cohort_dir, filenames, digests)
+    add_test_runtime_wheelhouse(cohort_dir, filenames, digests)
     (cohort_dir / "python-cohort.json").write_text(
         json.dumps(
             {

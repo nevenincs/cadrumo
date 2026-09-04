@@ -641,3 +641,34 @@ symbols = [
   "project_modelo_export_result", "project_modelo_edit_apply_result",
 ]
 evidence = "Each is declared in operation_definitions' __all__ and imported by no module anywhere. They are exported public API with no consumer rather than internal dead code, so removing them changes the published surface. A fifth sibling, wire_detail_row, is NOT exported and is consumed only by application.modelo.edit_session, which this ledger already classifies deferred-by-ownership, so it is transitively dead through that cluster and resolves with it."
+
+[[symbol_cluster]]
+name = "modelo projection CLI dead type aliases"
+class = "orphaned"
+area = "entrypoints/cli"
+resolved = true
+symbols = ["CasillaParseOverride", "BindingParseOverride", "BadParameterRenderer"]
+evidence = "Three Callable type aliases, each appearing exactly once tree-wide at its own definition, none declared in an __all__. Same shape as the registry authority alias already removed: a named type nothing annotates."
+
+# ---------------------------------------------------------------------------
+# A declared legal threshold with no application
+#
+# `core/external_constants.py` declares IVA_BIEN_ESCASO_VALOR_UMBRAL_EUR as
+# Decimal("3005.06") and nothing reads it. That is not dead code in the ordinary
+# sense: an AEAT threshold present in the constants but applied nowhere means the
+# rule it encodes is not enforced anywhere in the engine.
+#
+# Under no-silent-under-declaration that is the interesting direction. A missing
+# threshold check does not fail loudly; it produces a total that silently omits
+# the rule. Recorded for its owner rather than deleted, because deleting it would
+# remove the evidence that the rule was ever intended.
+# ---------------------------------------------------------------------------
+
+[[symbol_cluster]]
+name = "unapplied IVA bien de escaso valor threshold"
+class = "should-be-live"
+area = "core"
+resolved = false
+remedy_requires_decision = true
+symbols = ["IVA_BIEN_ESCASO_VALOR_UMBRAL_EUR"]
+evidence = "Declared once in core/external_constants.py as Decimal('3005.06') and read by nothing in src/cadrumo or dev/. A legal threshold that no calculation applies is an unenforced rule rather than an unused value, so the remedy is to wire it or to record why the capability is unsupported."
