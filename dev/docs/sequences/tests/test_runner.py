@@ -37,6 +37,7 @@ from .. import (
     parse_sequence,
     sequence_sandbox,
 )
+from .. import runner
 from ..errors import SequenceExecutionError
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
@@ -112,9 +113,7 @@ def test_sandbox_publishes_through_canonical_capsule_runtime(tmp_path: Path) -> 
         publish_test_profile_capsule as canonical_publish,
     )
 
-    from .. import _runner
-
-    assert _runner.publish_test_profile_capsule is canonical_publish
+    assert runner.publish_test_profile_capsule is canonical_publish
     with sequence_sandbox(sequence_id="canonical-capsule-runtime", sandbox_root=tmp_path / "scope") as sandbox:
         assert sandbox.profile_id == SANDBOX_PROFILE_ID
         assert (sandbox.storage_root / "buckets" / SANDBOX_PROFILE_ID).is_dir()

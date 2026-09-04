@@ -34,7 +34,6 @@ from .. import (
     ParsedSequence,
     SequenceGolden,
     SequenceTranscript,
-    _compare,
     assert_transcript_matches_golden,
     build_golden,
     check_transcript,
@@ -48,6 +47,7 @@ from .. import (
     read_golden,
     write_golden,
 )
+from .. import compare
 from ..errors import SequenceGoldenError, SequenceGoldenMismatchError
 from ..golden_store import _repo_root
 
@@ -619,7 +619,7 @@ class TestMaskAuthorityIsCentral:
         argument-free beyond the document — no ``fields=`` keyword, no extra
         positional — so the central ``GOLDEN_MASK_FIELDS`` default is the only
         mask that can ever apply."""
-        module_ast = ast.parse(inspect.getsource(_compare))
+        module_ast = ast.parse(inspect.getsource(compare))
         calls = [
             node
             for node in ast.walk(module_ast)
