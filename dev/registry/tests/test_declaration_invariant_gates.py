@@ -506,7 +506,7 @@ def test_every_kind_a_screen_emits_is_named_in_its_own_docstring(
     undocumented: list[str] = []
     # Both tables, through the shared traversal. This gate iterated the
     # authority table alone and so never read a corpus screen's kinds.
-    for name, findings in screen_findings(authority, modelo_ids):
+    for name, findings in _screen_findings(authority, modelo_ids):
         module = importlib.import_module(f"dev.registry.analysis.{name}")
         doc = module.__doc__ or ""
         for finding in findings:
@@ -1440,3 +1440,56 @@ def test_the_citation_gate_exempts_two_located_regions_and_no_more() -> None:
     assert _vault_citations(blanked + chr(10) + f"# see {planted} for the rollout") == [
         f"wave-phase-step identifier: {planted}"
     ]
+
+
+def test_every_declared_condition_has_a_live_member_or_a_written_proof(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> None:
+    """A condition with neither stops reporting and nothing says so.
+
+    This package's standing rule is that a condition emptied by a correction
+    keeps its proof rather than being deleted: it is the case somebody must not
+    discover halfway through authoring. The rule was followed by hand and
+    therefore unevenly - six declared conditions across four screens produce
+    nothing on the live corpus, five carried constructed proofs, and the sixth
+    carried none while sitting in a screen written under this very plan.
+
+    "Proof" is taken here as the condition's name appearing in a test module,
+    which is the available signal and a weak one: a name mentioned in prose
+    would satisfy it. It is still the difference between a condition somebody
+    considered and one nobody has looked at since it emptied, and the strong
+    version - that the condition is reachable from constructed input - is what
+    the owning screen's own tests assert.
+    """
+    import importlib
+    import pathlib
+
+    from ..analysis.screens import CORPUS_SCREENS, SCREENS
+    from ..analysis.screens import screen_findings as _screen_findings
+
+    live: dict[str, set[str]] = {}
+    for name, findings in screen_findings(authority, modelo_ids):
+        kinds = {finding.kind for finding in findings if isinstance(getattr(finding, "kind", None), str)}
+        live[name] = kinds
+
+    test_sources = " ".join(
+        path.read_text(encoding=_UTF_8, errors="ignore")
+        for path in sorted(pathlib.Path(__file__).parent.glob("test_*.py"))
+    )
+
+    declared_total = 0
+    unproven: list[str] = []
+    for entry in (*SCREENS, *CORPUS_SCREENS):
+        module = importlib.import_module(f"dev.registry.analysis.{entry.name}")
+        for kind in getattr(module, "KINDS", ()) or ():
+            declared_total += 1
+            if kind in live.get(entry.name, set()):
+                continue
+            if f'"{kind}"' in test_sources or f"'{kind}'" in test_sources:
+                continue
+            unproven.append(f"{entry.name}.{kind}")
+
+    assert declared_total > 20, f"only {declared_total} conditions declared; the gate is near-vacuous"
+    assert not unproven, "declared conditions with no live member and no test naming them: " + ", ".join(
+        sorted(unproven)
+    )
