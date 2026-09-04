@@ -13,12 +13,9 @@ import pytest
 from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 
-from ...docs.preprocess import (
-    EXTRACTED_JSON_SUFFIX,
-    EXTRACTED_TEXT_SUFFIX,
-    PreprocessOutput,
-)
 from ...docs.preprocess.normatives_html import HTML_EXTRACTOR_ID, build_outputs
+from ...docs.preprocess.schema import PreprocessOutput
+from ...docs.preprocess.sidecar import EXTRACTED_JSON_SUFFIX, EXTRACTED_TEXT_SUFFIX
 from ..extract_manual_corpus_text import extract_raw_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

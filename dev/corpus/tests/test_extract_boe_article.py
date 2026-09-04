@@ -20,8 +20,8 @@ from pathlib import Path
 import pytest
 
 from ..._paths import REPO_ROOT
-from ...docs.preprocess import PreprocessOutput
 from ...docs.preprocess.normatives_html import build_outputs
+from ...docs.preprocess.schema import PreprocessOutput
 from ..extract_boe_article import (
     _DIV_OPEN_OR_CLOSE,
     ArticleExtractionError,
