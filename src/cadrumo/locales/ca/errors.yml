@@ -1047,6 +1047,7 @@ errors:
       la validació.
     refused_profile_basis_cap_exceeded: L'amortització acumulada superaria la base
       de cost de l'actiu.
+    refused_profile_bienes_inversion_parameters: La revisió activa no declara els imports de regularització de béns d'inversió per a aquest context de declaració.
     refused_profile_bienes_inversion_validation: Un registre de regularització d'IVA
       per béns d'inversió no ha superat la validació.
     refused_profile_binding_resolution: Una dada del perfil necessària per al càlcul

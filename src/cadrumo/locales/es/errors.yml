@@ -1041,6 +1041,7 @@ errors:
       validación.
     refused_profile_basis_cap_exceeded: La amortización acumulada superaría la base
       de coste del activo.
+    refused_profile_bienes_inversion_parameters: La revisión activa no declara los importes de regularización de bienes de inversión para este contexto de declaración.
     refused_profile_bienes_inversion_validation: Un registro de regularización de
       IVA por bienes de inversión no superó la validación.
     refused_profile_binding_resolution: Un dato del perfil necesario para el cálculo

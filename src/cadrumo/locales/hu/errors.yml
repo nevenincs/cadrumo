@@ -983,6 +983,7 @@ errors:
       érvényesítésen.
     refused_profile_basis_cap_exceeded: A halmozott amortizáció meghaladná a vagyonelem
       bekerülési értékét.
+    refused_profile_bienes_inversion_parameters: Az aktív revízió nem határoz meg beruházási javakra vonatkozó áfa-korrekciós értékeket ehhez a bevallási környezethez.
     refused_profile_bienes_inversion_validation: Egy beruházási javak áfa-korrekciós
       nyilvántartása nem ment át az ellenőrzésen.
     refused_profile_binding_resolution: A számításhoz szükséges profiladatot nem sikerült

@@ -963,6 +963,7 @@ errors:
     refused_profile_asset_validation: A profile asset record failed validation.
     refused_profile_basis_cap_exceeded: The cumulative amortization would exceed the
       asset's cost basis.
+    refused_profile_bienes_inversion_parameters: The active revision declares no capital-goods regularisation figures for this filing context.
     refused_profile_bienes_inversion_validation: A capital-goods IVA regularisation
       record failed validation.
     refused_profile_binding_resolution: A profile fact required for the calculation
