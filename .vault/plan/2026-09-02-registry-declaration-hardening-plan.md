@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:227c6d077b894e2ae8d1731d1094128744781e63c36e92e8492567768b880abd'
+body_hash: 'sha256:3a2a795f32b3c61cacc5b725b96e4689620cb998134e10ebd8186e7260b0c7ad'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -486,6 +486,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S604` - Pin what the devcontainer checks say when a precondition fails, since they run inside the built image where the only artefact is a CI log and a refusal that does not name both what it found and what it expected costs a rebuild to diagnose; `dev/containers/tests/test_devcontainer_smoke.py`.
 - [x] `W02.P02.S605` - Extract the all-extras lane's claim list and parser so the coupling the smoke manifest enforces is provable without installing every optional extra, and pin the capability-gated optional-import claim by name since it is the only thing separating this lane from the core one; `dev/packaging/all_extra_smoke.py,dev/packaging/tests/test_all_extra_smoke.py`.
 - [x] `W02.P02.S606` - Read the curation baseline nothing loaded, which recorded counts and a review cadence while being referenced by no module, recipe or declaration, and had already been passed unnoticed at 99 and 100 recorded against 101 and 102 live; reported beside the audit rather than enforced, since the numbers are a frozen corpus count; `dev/docs/terminology_handbook/cli.py,dev/docs/terminology_handbook/tests/test_curation_baseline_is_read.py`.
+- [x] `W02.P02.S607` - Share one real canary scan across the two section tests that read its report, since running it per-test measured the same deterministic report twice at 209s and 182s inside a 300-second budget whose expiry kills the worker and reports every sibling as never having run; `dev/identity/tests/test_identity_canary_report.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
