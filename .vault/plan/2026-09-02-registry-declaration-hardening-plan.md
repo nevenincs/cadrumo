@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:24e9a7c8017f4ec0834589101cc9fabbf0270ba0c3c99a7c9cff08d4ce5c7cfb'
+body_hash: 'sha256:873b452398033696f1a65cc0785e9d7781f243066490b699e791ed81a3d9afa8'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -450,6 +450,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S568` - Stop the hex-64 acceptance probe reporting sixty-four Z characters as upper-hex, which softened a field admitting arbitrary letters where a SHA-256 belongs into what reads as a case-insensitivity nit, and cover its verdicts including the vacuity gate that separates an unmeasured field from a refusing one; `dev/identity/hex64_acceptance_probe.py,dev/identity/tests/test_hex64_acceptance_probe.py`.
 - [x] `W02.P02.S569` - Remove the two stale hex-64 exemptions whose symbols no longer exist at HEAD, making the staleness gate pass, and keep its proof against constructed input now that the emptied allowlist would satisfy it vacuously; `dev/identity/hex64_redeclaration_census.py,dev/identity/tests/test_hex64_allowlist_staleness.py`.
 - [x] `W02.P02.S570` - Make the ty collector refuse an empty checker stream like its two siblings already did, since a ty that failed to start returned an empty diagnostic list and the type gate reported green over a run that never happened, and share the rule so the three cannot drift apart again; `dev/quality/types.py,dev/quality/tests/test_types_gate.py`.
+- [x] `W02.P02.S571` - Make the distribution smoke check refuse an absent companion corpus through its own FAIL path instead of an unhandled PackageNotFoundError, since a corpus that failed to install is the likeliest packaging failure and the one this gate exists to catch; `dev/smoke/smoke_check.py,dev/smoke/__init__.py,dev/smoke/tests/__init__.py,dev/smoke/tests/test_smoke_check.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

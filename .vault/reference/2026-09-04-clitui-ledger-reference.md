@@ -18,6 +18,14 @@ This reference maps the first semantic-search-led census of Ledger behavior owne
 
 ## Summary
 
+### Live command denominator
+
+The production `COMMAND_GRAPH` currently contains 91 nodes below `aeat app ledger`: 77 leaf nodes plus the executable `participation` group, for 78 invocable command endpoints. The graph projection supplies the exact path, command key, deferred handler, and result-schema identity; all 77 leaves reported an available handler and schema target. Handler import/attribute validation, schema-type resolution, registration/schema identity comparison, and generated-tree comparison found no missing, dangling, or extra leaf. The denominator comes from `src/cadrumo/entrypoints/cli/command_api.py:33`, `src/cadrumo/entrypoints/cli/command_specs.py:43`, and the command-spec families assembled at `src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py:24`. It replaces the historical 26-verb count in the 2026-06 interface ADR for this campaign.
+
+The leaf families contain evidence 10, lifecycle 10, prorrata 8, foundation 6, operations 6, management 6, invoice lifecycle 5, ratios 5, evidence follow-up 4, counterparty 3, inventory 3, rules 3, bienes de inversión 2, inventory analysis 2, invoice intake 2, classification 1, and participation rebuild 1. Every Ledger leaf currently declares `TuiCapability.NOT_IMPLEMENTED`; this command metadata is distinct from the separate installed workbench components and is another reason the matrix must not conflate CLI enrollment, TUI component existence, and installed reachability.
+
+Focused command-graph/spec tests passed 27 tests, the root Ledger help and all 13 nested group help invocations exited zero. A broader generated-reference run had 19 passing tests and one unrelated failure caused by a config-profile `archive import` versus `restore` mismatch; it does not contradict the exact Ledger tree comparison, but remains visible as pre-existing global documentation drift.
+
 ### CLI-to-backend disposition matrix
 
 | Capability | Current CLI authority | Backend state or destination | Initial disposition |
@@ -59,6 +67,48 @@ This reference maps the first semantic-search-led census of Ledger behavior owne
 | Changed-field provenance | Invoice field provenance and bucket events | Sensitive-value policy and exact change-set round trip |
 | Generic batch patch | Batch result/precondition machinery | Atomicity/partial result, idempotency, ID remap, concurrency |
 | Application paging | Query DTOs and indexed repository reads | Stable snapshot/order and page contract |
+
+### Direct backend behavior gate
+
+| Backend family | Current proof | Gate verdict |
+| --- | --- | --- |
+| Lifecycle archive/stash/restore/exclude/remove/reset | Direct persistence, event, evidence-detach and finalized-Modelo guard tests | Complete for existing primitives |
+| Typed field edit and attachment/link primitives | Direct encrypted repository, event and back-reference tests | Complete for existing primitives; allocate/classification facades missing |
+| Manual split/merge | Direct catalogue transition, lineage and refusal tests | Complete for manual operations |
+| Per-file import and flat export | Real persistence plus CSV/JSONL/XLSX serialization tests | Complete for those products only; no restore proof |
+| Bulk CSV classification | Direct persistence/event scale tests | Complete primitive |
+| Manual create | Strong writer tests | Partial: operator-intent/Censo/jurisdiction/prorrata facade missing |
+| Review/list query | Direct filter/projection tests | Partial: sort/group/page/rejection policy remains CLI-owned |
+| Composite check/status/history/view/track | Granular backend readers only | Missing canonical composite use cases |
+| Classification rules | Functions exist; behavior is primarily CLI-tested | Partial; dry-run engine and direct backend gate missing |
+| Directory import | Per-source primitive and untested result aggregator | Missing multi-source use case and direct test |
+| Drive evidence ingestion | Secure store/link primitives only | Missing joined backend workflow and behavior test |
+| Evidence extraction/review/consent | CRUD/extract/confirm primitives are strong | Partial: consent and review-query composition missing |
+| LLM classify/saturate/split/apply | Extensive direct primitive/review-decision tests | Partial: frontend-neutral routing/preview outcome missing |
+| Invoice create/import/list | Create/import strongly tested | Partial: list proof and operator orchestration missing |
+| Ratios/counterparty/prorrata | Lower-level services have direct tests | Partial: atomic operator use cases/outcomes missing |
+| Bienes de inversión | Service accepts a finished record | Missing direct service test and operator-intent facade |
+| Review export/Google/restore archive | No Ledger backend symbols | Missing |
+
+Backend status is therefore not green. Direct tests establish reusable foundations, but no CLI refactor step may use primitive presence as proof that the backend gate for the corresponding operator capability is complete.
+
+### Registry, calculation, and filing denominator
+
+The canonical `BindingSourceKind` taxonomy and `LEDGER_BINDING_SOURCE_KINDS` define seven ledger families at `src/cadrumo/core/aggregation.py:233,512`. All seven enroll through selector registration and validator dispatch at `src/cadrumo/domain/calculations/registry/bindings.py:926,1023`, and the application calculation route validates unique total production ownership at `src/cadrumo/application/modelo/calculation_route.py:112,154`. Exact registry census found 546 declarations across the seven families.
+
+| Binding family | Declared consumers | Production proof | Open proof or authority gap |
+| --- | --- | --- | --- |
+| Ledger IVA | M303/M309/M322/M353/M390 | Strong M303→M390 and deductible-evidence paths | No located live nonzero Ledger calculate proof for M309/M322/M353 |
+| Ledger OSS | M369 | Strong calculate→verify/export tests | Uses issued-invoice catalogue rather than transaction catalogue; distinction must remain explicit |
+| Renta direct-estimation expenses | M100 | Strong M100 and M130→M100 annual chain | Preserve invoice evidence and deduction-ratio requirements |
+| Renta income | M100/M130/M131 | Strong M130/M100 and currency proof | M131 lacks located production work-calculate proof; M130 c06 uses hardcoded application projection outside honest registry targeting |
+| M130 fractional-payment expenses | M130 c02 | Strong aggregate/binding and currency tests | No located explicit nonzero production-route c02 assertion |
+| Impatriado income | M151 | Repository, registry-binding and currency tests | No located calculate→verify/export proof; savings base remains manual |
+| IRNR income | M210 | Strong live calculate, mutation, exclusion and evidence-bundle tests | Preserve explicit M210 classification and mutual-exclusion authority |
+
+Unmatched nonzero observations become persisted `CalculationSourceIssue` values through `src/cadrumo/domain/calculations/registry/ledger_binding_resolution.py:96` and `src/cadrumo/application/modelo/calculation_actions.py:1513`. Verification explicitly blocks the OSS `unrouted_observation`, but no general non-OSS verification gate was found at `src/cadrumo/application/modelo/verification_actions.py:1386`; this is a high-confidence filing-path gap. Ledger drift checking is otherwise strong at `src/cadrumo/application/modelo/ledger_drift_gate.py:70`, but immutable filing evidence carries currency, FX rate, and EUR value without FX source/date at `src/cadrumo/domain/modelos/ledger_filing_snapshot.py:155`.
+
+Focused registry/calculation verification for this census passed 133 tests. Registration/dispatch tests prove enrollment, while the missing per-Modelo live paths above remain unproven rather than being inferred from generic resolver coverage.
 
 ### Existing backend behavior must not be rebuilt
 
