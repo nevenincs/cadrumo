@@ -1,0 +1,368 @@
+# Unused-symbol ratchet baseline.
+#
+# Per module, how many `exact`-confidence unused-symbol findings it carries, and
+# the orphaned test modules the tree reports. The gate in
+# dev/quality/unused_symbol_ratchet.py fails in BOTH directions: a module
+# carrying more than it records (or absent from this file) means new unused code
+# entered a reachable module, and a module carrying fewer (or none) means debt
+# was paid and this file must shrink to record it.
+#
+# So the correct response to a failure is never to raise a number. Resolve the
+# symbol -- delete it with its test, wire it to the caller that needs it, or
+# record its class in dev/audit/reachability_classification.toml -- and lower the
+# entry.
+#
+# Only the `exact` tier is here. `name-match` and `name-match-data` findings are
+# members reached by attribute access the scan cannot bind to a type; gating
+# those would ratchet guesses rather than facts.
+#
+# The `cadrumo.entrypoints.tui` prefix is out of scope while its own campaign is
+# in flight, exactly as in the module ratchet.
+#
+# This is a backlog, not an endorsement.
+
+[symbols]
+"cadrumo.adapters.inbound.einvoice.shape" = 1
+"cadrumo.adapters.inbound.financial.providers.detection" = 1
+"cadrumo.adapters.inbound.pdf.label_regex" = 1
+"cadrumo.adapters.outbound.aeat.auth._clave_movil_page_flow" = 1
+"cadrumo.adapters.outbound.aeat.auth.certificate" = 1
+"cadrumo.adapters.outbound.aeat.auth.clave_permanente_support" = 1
+"cadrumo.adapters.outbound.aeat.sede._adapter_utils" = 1
+"cadrumo.adapters.outbound.aeat.sede._browser_constants" = 1
+"cadrumo.adapters.outbound.aeat.sede._declarations_fetch" = 1
+"cadrumo.adapters.outbound.aeat.sede.censal_datos" = 1
+"cadrumo.adapters.outbound.aeat.sede.declarations" = 2
+"cadrumo.adapters.outbound.aeat.sede.declarations_capture" = 1
+"cadrumo.adapters.outbound.aeat.sede.declarations_observations" = 2
+"cadrumo.adapters.outbound.aeat.sede.deudas" = 2
+"cadrumo.adapters.outbound.aeat.sede.iva_compensation_wallet" = 1
+"cadrumo.adapters.outbound.aeat.sede.notifications" = 1
+"cadrumo.adapters.outbound.aeat.verify.contract" = 1
+"cadrumo.adapters.outbound.google.impersonation" = 1
+"cadrumo.adapters.persistence.profile.assets" = 2
+"cadrumo.adapters.persistence.profile.inventory" = 3
+"cadrumo.adapters.persistence.profile.invoices" = 4
+"cadrumo.adapters.persistence.profile.prorrata_register" = 4
+"cadrumo.adapters.persistence.storage.bucket.directory_layout" = 1
+"cadrumo.adapters.persistence.storage.bucket.output_language_hint" = 2
+"cadrumo.adapters.persistence.storage.crypto.encrypted_columns" = 2
+"cadrumo.adapters.persistence.storage.custody.acceleration_receipt" = 1
+"cadrumo.adapters.persistence.storage.custody.capsule" = 3
+"cadrumo.adapters.persistence.storage.custody.capsule_discovery" = 1
+"cadrumo.adapters.persistence.storage.custody.kdf_supervision" = 2
+"cadrumo.adapters.persistence.storage.custody.records" = 1
+"cadrumo.adapters.persistence.storage.custody.recovery" = 2
+"cadrumo.adapters.persistence.storage.envelope.contract" = 2
+"cadrumo.adapters.persistence.storage.master_key._live_sessions" = 1
+"cadrumo.adapters.persistence.storage.master_key.master_key" = 1
+"cadrumo.adapters.persistence.storage.master_key.master_key_derivation" = 2
+"cadrumo.adapters.persistence.storage.recovery_key" = 1
+"cadrumo.adapters.persistence.storage.schema_lineage" = 3
+"cadrumo.adapters.persistence.storage.secure_object_namespaces" = 2
+"cadrumo.adapters.persistence.storage.sql.orm" = 3
+"cadrumo.adapters.persistence.storage.storage_path_definitions" = 3
+"cadrumo.application.aggregation._counterpart" = 1
+"cadrumo.application.aggregation._evidence_advisory" = 2
+"cadrumo.application.aggregation._retenciones" = 1
+"cadrumo.application.aggregation._source_mesh" = 1
+"cadrumo.application.aggregation.iva_ledger" = 8
+"cadrumo.application.aggregation.ledger_filing_snapshot" = 1
+"cadrumo.application.auth.apoderado_flow" = 1
+"cadrumo.application.auth.catalogue" = 1
+"cadrumo.application.auth.certificate_secret_backend" = 1
+"cadrumo.application.auth.certificate_source_operations" = 1
+"cadrumo.application.auth.certificate_sources" = 1
+"cadrumo.application.auth.operator" = 1
+"cadrumo.application.auth.sessions" = 1
+"cadrumo.application.calculations.prorrata_regularizacion" = 1
+"cadrumo.application.corpus_search.terminology" = 2
+"cadrumo.application.filing._export_parity" = 1
+"cadrumo.application.filing.draft_review" = 5
+"cadrumo.application.filing.export_proof" = 2
+"cadrumo.application.filing.record_renderer" = 10
+"cadrumo.application.filing.runtime" = 2
+"cadrumo.application.flows.checkpoint" = 1
+"cadrumo.application.flows.engine" = 1
+"cadrumo.application.flows.review" = 1
+"cadrumo.application.invoices.bulk_import" = 1
+"cadrumo.application.invoices.catalogue_reads" = 3
+"cadrumo.application.ledger.confirmation_record" = 1
+"cadrumo.application.ledger.counterparty_establishment" = 1
+"cadrumo.application.ledger.extracted_document_cache" = 1
+"cadrumo.application.ledger.extraction_draft_store" = 1
+"cadrumo.application.ledger.grounding_anchor" = 2
+"cadrumo.application.ledger.llm_review_workflow" = 1
+"cadrumo.application.live.borrador_100" = 1
+"cadrumo.application.live.filed_data_capture" = 2
+"cadrumo.application.live.filed_observation_persistence" = 1
+"cadrumo.application.live.iva_remote_state" = 2
+"cadrumo.application.live.notification_documents" = 2
+"cadrumo.application.modelo._calculation_modelo_adjustments" = 1
+"cadrumo.application.modelo._registry_helpers" = 1
+"cadrumo.application.modelo._review_package_review_only_workspace" = 2
+"cadrumo.application.modelo._row_source_identity_replay" = 1
+"cadrumo.application.modelo.calculation_actions" = 2
+"cadrumo.application.modelo.calculation_route" = 1
+"cadrumo.application.modelo.edit_models" = 5
+"cadrumo.application.modelo.edit_services" = 3
+"cadrumo.application.modelo.export" = 1
+"cadrumo.application.modelo.iva_wallet_gate" = 1
+"cadrumo.application.modelo.local_observation_spreadsheet" = 1
+"cadrumo.application.modelo.m145_communication_records" = 1
+"cadrumo.application.modelo.m303_regimen_simplificado_scope" = 1
+"cadrumo.application.modelo.operation_definitions" = 5
+"cadrumo.application.modelo.result_disposition_resolution" = 1
+"cadrumo.application.modelo.review_package_collab_audit" = 6
+"cadrumo.application.modelo.review_package_recipient_encryption" = 2
+"cadrumo.application.modelo.review_package_signing" = 1
+"cadrumo.application.modelo.verification_actions" = 6
+"cadrumo.application.modelo.work_addressing" = 2
+"cadrumo.application.modelo.work_create_policy" = 1
+"cadrumo.application.modelo.workspace" = 2
+"cadrumo.application.modelo.workspace_manifest" = 2
+"cadrumo.application.modelo.workspace_models" = 3
+"cadrumo.application.modelo.workspace_producers" = 2
+"cadrumo.application.operations.financial_operand" = 2
+"cadrumo.application.operations.registry" = 1
+"cadrumo.application.operations.secret_submission" = 1
+"cadrumo.application.operator_surface.contract" = 2
+"cadrumo.application.operator_surface.help" = 1
+"cadrumo.application.operator_surface.manifest" = 1
+"cadrumo.application.operator_surface.models" = 1
+"cadrumo.application.overview.calendar" = 1
+"cadrumo.application.overview.calendar_warnings" = 1
+"cadrumo.application.prorrata_register.seed" = 1
+"cadrumo.application.provisioning" = 2
+"cadrumo.application.registry.source_connectivity" = 6
+"cadrumo.application.registry.source_connectivity_coverage" = 1
+"cadrumo.application.repair_integrity" = 4
+"cadrumo.application.review.enums" = 1
+"cadrumo.application.state_projection" = 2
+"cadrumo.application.storage.calc_sheets.workbook_export" = 1
+"cadrumo.application.storage_management.service" = 1
+"cadrumo.application.user_profile.acquisition_sources" = 1
+"cadrumo.application.user_profile.bundle" = 1
+"cadrumo.application.user_profile.bundle_encryption" = 1
+"cadrumo.application.user_profile.capsule_record" = 1
+"cadrumo.application.user_profile.capsule_restore" = 5
+"cadrumo.application.user_profile.commands" = 3
+"cadrumo.application.user_profile.cotejo_apply" = 1
+"cadrumo.application.user_profile.custody_carry" = 1
+"cadrumo.application.user_profile.custody_ports" = 2
+"cadrumo.application.user_profile.login_session_port" = 3
+"cadrumo.application.user_profile.presentation" = 1
+"cadrumo.application.user_profile.repository" = 1
+"cadrumo.application.wizard._format_hints" = 2
+"cadrumo.application.wizard.commands" = 1
+"cadrumo.application.wizard.descendant_door" = 1
+"cadrumo.application.wizard.descendant_group" = 1
+"cadrumo.application.wizard.persistence" = 2
+"cadrumo.application.workbench_generation" = 1
+"cadrumo.application.workflow.adapters" = 4
+"cadrumo.application.workflow.engine_helpers" = 1
+"cadrumo.application.workflow.persistence" = 1
+"cadrumo.application.workflow.resume" = 2
+"cadrumo.application.workflow.run_models" = 1
+"cadrumo.application.workflow.state_models" = 1
+"cadrumo.core.access_gate.authorization" = 1
+"cadrumo.core.aggregation" = 1
+"cadrumo.core.amendment_kind_regime" = 1
+"cadrumo.core.atomic_write" = 1
+"cadrumo.core.classification.policies" = 1
+"cadrumo.core.config" = 2
+"cadrumo.core.corpus_manifest.manifest" = 3
+"cadrumo.core.decimal.formatting" = 1
+"cadrumo.core.document_shape" = 1
+"cadrumo.core.errors.error_codes" = 3
+"cadrumo.core.external_constants" = 9
+"cadrumo.core.file_permissions" = 1
+"cadrumo.core.filing_projection_ref" = 1
+"cadrumo.core.flows" = 1
+"cadrumo.core.i18n._catalogue_cache" = 2
+"cadrumo.core.i18n.render" = 1
+"cadrumo.core.irnr" = 1
+"cadrumo.core.logging" = 1
+"cadrumo.core.manual_corpus_sidecar" = 1
+"cadrumo.core.observability.capture" = 1
+"cadrumo.core.observability.context" = 1
+"cadrumo.core.observability.store" = 1
+"cadrumo.core.optional_extras" = 1
+"cadrumo.core.paths" = 1
+"cadrumo.core.period" = 3
+"cadrumo.core.presentation" = 1
+"cadrumo.core.product_identity" = 2
+"cadrumo.core.prorrata_exclusions" = 1
+"cadrumo.core.redaction.rules" = 1
+"cadrumo.core.result_disposition" = 1
+"cadrumo.core.setup_answers" = 1
+"cadrumo.core.source_locator" = 1
+"cadrumo.core.spanish_postcode" = 1
+"cadrumo.core.storage_taxonomy" = 1
+"cadrumo.core.time.clock" = 1
+"cadrumo.core.tipos_actividad" = 2
+"cadrumo.core.toml" = 1
+"cadrumo.core.wizard_catalogue" = 2
+"cadrumo.domain.attachments.models" = 1
+"cadrumo.domain.attachments.service" = 2
+"cadrumo.domain.buckets.event" = 1
+"cadrumo.domain.calculations.registry._citation_blocklist" = 1
+"cadrumo.domain.calculations.registry._invoice_row_materialization" = 1
+"cadrumo.domain.calculations.registry._m303_orden_source" = 3
+"cadrumo.domain.calculations.registry._snapshot_internals" = 2
+"cadrumo.domain.calculations.registry._source_evidence_fingerprint" = 1
+"cadrumo.domain.calculations.registry._validate_cross_revision" = 1
+"cadrumo.domain.calculations.registry._validate_evidence" = 2
+"cadrumo.domain.calculations.registry._validate_relation_periods" = 2
+"cadrumo.domain.calculations.registry._validate_semantic_role_required" = 1
+"cadrumo.domain.calculations.registry.applicability" = 3
+"cadrumo.domain.calculations.registry.authority" = 3
+"cadrumo.domain.calculations.registry.bindings" = 1
+"cadrumo.domain.calculations.registry.censo_modelos" = 3
+"cadrumo.domain.calculations.registry.checker_oracle_flow" = 2
+"cadrumo.domain.calculations.registry.corpus_catalogue" = 1
+"cadrumo.domain.calculations.registry.counterpart_bindings" = 3
+"cadrumo.domain.calculations.registry.design_constant_bindings" = 1
+"cadrumo.domain.calculations.registry.detail_record_bindings" = 4
+"cadrumo.domain.calculations.registry.donativo_bindings" = 1
+"cadrumo.domain.calculations.registry.export" = 2
+"cadrumo.domain.calculations.registry.external_grounding" = 1
+"cadrumo.domain.calculations.registry.fixed_width_codec" = 1
+"cadrumo.domain.calculations.registry.gasto193_bindings" = 2
+"cadrumo.domain.calculations.registry.handoffs" = 3
+"cadrumo.domain.calculations.registry.ids" = 1
+"cadrumo.domain.calculations.registry.invoice_bindings" = 3
+"cadrumo.domain.calculations.registry.legal" = 1
+"cadrumo.domain.calculations.registry.live_parity" = 6
+"cadrumo.domain.calculations.registry.loader" = 2
+"cadrumo.domain.calculations.registry.loader_cache" = 1
+"cadrumo.domain.calculations.registry.m303_orden_manifest" = 3
+"cadrumo.domain.calculations.registry.modelo_localization" = 1
+"cadrumo.domain.calculations.registry.quantity_screen_enrolment" = 1
+"cadrumo.domain.calculations.registry.rate_box_partition" = 1
+"cadrumo.domain.calculations.registry.record_design" = 3
+"cadrumo.domain.calculations.registry.record_design_coverage" = 5
+"cadrumo.domain.calculations.registry.record_design_pdf_state" = 1
+"cadrumo.domain.calculations.registry.record_design_schema" = 1
+"cadrumo.domain.calculations.registry.remote_state_guard" = 1
+"cadrumo.domain.calculations.registry.renta_web_open_oracle" = 3
+"cadrumo.domain.calculations.registry.runtime_graph" = 1
+"cadrumo.domain.calculations.registry.schema" = 1
+"cadrumo.domain.calculations.registry.schema_base" = 1
+"cadrumo.domain.calculations.registry.snapshot_coordinate" = 1
+"cadrumo.domain.calculations.registry.static_inspection" = 1
+"cadrumo.domain.calculations.registry.validate_references" = 1
+"cadrumo.domain.calculations.registry.withholding296_bindings" = 2
+"cadrumo.domain.calculations.registry.withholding_bindings" = 3
+"cadrumo.domain.contribuyente.constants" = 1
+"cadrumo.domain.contribuyente.keys" = 3
+"cadrumo.domain.contribuyente.marriage_facts" = 4
+"cadrumo.domain.contribuyente.tax_residence" = 1
+"cadrumo.domain.filing.protocols" = 1
+"cadrumo.domain.invoices.decomposition" = 2
+"cadrumo.domain.invoices.enums" = 2
+"cadrumo.domain.invoices.validators" = 2
+"cadrumo.domain.iva.classification" = 1
+"cadrumo.domain.iva.establishment" = 1
+"cadrumo.domain.iva.flow" = 2
+"cadrumo.domain.iva.lookup" = 1
+"cadrumo.domain.iva.oss" = 3
+"cadrumo.domain.iva.place_of_supply" = 1
+"cadrumo.domain.iva.prorrata" = 4
+"cadrumo.domain.iva.recargo_equivalencia" = 1
+"cadrumo.domain.iva.refund_eligibility" = 1
+"cadrumo.domain.iva.supply_nature" = 1
+"cadrumo.domain.iva.verify" = 1
+"cadrumo.domain.iva_compensation.carry_forward" = 1
+"cadrumo.domain.manuals.fetch" = 2
+"cadrumo.domain.manuals.verify" = 1
+"cadrumo.domain.modelos.calculation_repository" = 1
+"cadrumo.domain.modelos.calculation_revision_amendment" = 1
+"cadrumo.domain.modelos.filing_repository" = 1
+"cadrumo.domain.modelos.protocols" = 1
+"cadrumo.domain.modelos.repository" = 1
+"cadrumo.domain.modelos.verification_repository" = 1
+"cadrumo.domain.prorrata_register.register" = 2
+"cadrumo.domain.renta._first_slice_routing" = 2
+"cadrumo.domain.submission.models" = 2
+"cadrumo.domain.submission.protocols" = 1
+"cadrumo.domain.transactions.classification_rule" = 2
+"cadrumo.domain.transactions.irpf_categories" = 2
+"cadrumo.domain.transactions.llm" = 3
+"cadrumo.domain.transactions.model_tier" = 1
+"cadrumo.domain.transactions.retencion_parameters" = 1
+"cadrumo.domain.transactions.service" = 1
+"cadrumo.domain.transactions.tipo_actividad_partitions" = 1
+"cadrumo.domain.usage_ratios.service" = 1
+"cadrumo.domain.user_profile.labels" = 1
+"cadrumo.domain.user_profile.values" = 2
+"cadrumo.entrypoints.cli" = 2
+"cadrumo.entrypoints.cli._app_live" = 1
+"cadrumo.entrypoints.cli._app_live_auth_preflight" = 1
+"cadrumo.entrypoints.cli._bootstrap_exempt" = 1
+"cadrumo.entrypoints.cli._command_runtime" = 1
+"cadrumo.entrypoints.cli._command_schema" = 1
+"cadrumo.entrypoints.cli._common" = 5
+"cadrumo.entrypoints.cli._ledger" = 2
+"cadrumo.entrypoints.cli._ledger_evidence_consent_cli" = 1
+"cadrumo.entrypoints.cli._ledger_payloads" = 3
+"cadrumo.entrypoints.cli._ledger_ratios_cli" = 1
+"cadrumo.entrypoints.cli._ledger_read_cli" = 2
+"cadrumo.entrypoints.cli._modelo" = 3
+"cadrumo.entrypoints.cli._modelo_aggregate_cli" = 1
+"cadrumo.entrypoints.cli._modelo_behavior_support" = 1
+"cadrumo.entrypoints.cli._modelo_cli_support" = 1
+"cadrumo.entrypoints.cli._modelo_projection_cli" = 3
+"cadrumo.entrypoints.cli._modelo_work_calculate_cli" = 1
+"cadrumo.entrypoints.cli._modelo_work_lifecycle_cli" = 6
+"cadrumo.entrypoints.cli._modelo_work_revision_cli" = 3
+"cadrumo.entrypoints.cli._modelo_work_runs_cli" = 4
+"cadrumo.entrypoints.cli._modelo_work_select_cli" = 1
+"cadrumo.entrypoints.cli._modelo_work_verification_cli" = 4
+"cadrumo.entrypoints.cli._modelo_work_wizard_cli" = 1
+"cadrumo.entrypoints.cli._overview" = 2
+"cadrumo.entrypoints.cli._profile_session_gate" = 2
+"cadrumo.entrypoints.cli._tty" = 3
+"cadrumo.entrypoints.cli._windows_profile_secret_bootstrap" = 1
+"cadrumo.entrypoints.cli.command_api" = 2
+"cadrumo.entrypoints.cli.command_suggestions" = 3
+"cadrumo.entrypoints.cli.config._censo_transport" = 1
+"cadrumo.entrypoints.cli.config._profile_support" = 1
+"cadrumo.entrypoints.cli.config._spec_policies" = 6
+"cadrumo.entrypoints.cli.config.google" = 1
+"cadrumo.entrypoints.cli.config_payloads" = 1
+"cadrumo.entrypoints.cli.period_parsing" = 1
+"cadrumo.llm.client" = 3
+"cadrumo.llm.invoice_extraction_prompt" = 3
+"cadrumo.llm.invoice_field_contract" = 1
+"cadrumo.llm.models" = 1
+"cadrumo.llm.suggestions" = 1
+
+[orphan_tests]
+#: Every entry is derivative: each follows a module or symbol finding
+#: classified in dev/audit/reachability_classification.toml.
+modules = [
+  "cadrumo.adapters.persistence.storage.sql.tests.test_secure_objects_schema_lineage",
+  "cadrumo.application.aggregation.tests.test_iva_rate_tier_concurrency_guard",
+  "cadrumo.application.operator_surface.tests.test_crud_contract",
+  "cadrumo.application.operator_surface.tests.test_crud_registry",
+  "cadrumo.application.user_profile.tests.test_custody_retryable_codes_are_declared",
+  "cadrumo.core.tests.test_compatibility_lifecycle",
+  "cadrumo.core.tests.test_compatibility_lifecycle_gate",
+  "cadrumo.core.tests.test_persisted_format_enrolment_binding",
+  "cadrumo.core.tests.test_regenerable_persisted_format_floors",
+  "cadrumo.domain.contabilidad.tests.test_ajuste",
+  "cadrumo.domain.contabilidad.tests.test_direccion",
+  "cadrumo.domain.contabilidad.tests.test_saldo",
+  "cadrumo.domain.contribuyente.tests.test_constants",
+  "cadrumo.domain.fincas.tests.test_amortization_ledger",
+  "cadrumo.domain.fincas.tests.test_expense_rollup",
+  "cadrumo.domain.fincas.tests.test_imputacion_regime",
+  "cadrumo.domain.fincas.tests.test_tier_resolver",
+  "cadrumo.domain.is_compensation.tests.test_bin_carry_forward",
+  "cadrumo.entrypoints.cli.tests.test_cli_resolution_cost_budget",
+  "cadrumo.entrypoints.cli.tests.test_machine_secret_channels_subprocess",
+  "cadrumo.entrypoints.cli.tests.test_overview_explain_verb",
+  "cadrumo.entrypoints.cli.tests.test_resolution_defers_capabilities",
+  "cadrumo.entrypoints.cli.tests.test_state_free_capability_isolation",
+]
