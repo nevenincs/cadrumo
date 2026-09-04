@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:0ae3b9e69d857a0e04e25675ccf053eed56df3beded9a4f798ceba04ef0172b8'
+body_hash: 'sha256:7ac92f242ab62db9b97e400e60cdcef10899fee8f5ac479815e0c182f94cb166'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -467,6 +467,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S585` - Make three enrolled registry screens declare their coverage, since each silently skipped 97 of 128 revisions that declare no export layout or cite no record design and then reported a finding count that read as corpus-wide when it covered under a quarter of the corpus; `dev/registry/analysis/footnote_only_wire_facts.py,dev/registry/analysis/rule_grounding_coverage.py,dev/registry/analysis/type_convention_notes.py`.
 - [x] `W02.P02.S586` - Announce the modules the tautological-assertion sweep skips, since an unparsable file returned an empty result that read exactly like a clean one in the gate whose subject is assertions proving nothing; the skip itself stays because a sweep that aborts on one incomplete file reports nothing about the thousands that parsed; `dev/quality/tautological_assertion_scan.py,dev/tests/test_tautological_assertion_gate.py`.
 - [x] `W02.P02.S587` - Announce both skips in the reach report that chose this campaign's work, where one handler hid two opposite failures: an unreadable test drops its imports so what it covers is listed unreached in error, and an unreadable module is dropped from the report so a real finding disappears; `dev/quality/module_test_reach.py,dev/quality/tests/test_module_test_reach.py`.
+- [x] `W02.P02.S588` - Announce the modules the name-collision census cannot read, since a collision is detected only between names both present in its corpus so a silently skipped module could never collide with anything and the census reported fewer collisions than exist; `dev/quality/name_collision_census.py,dev/quality/tests/test_name_collision_census.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
