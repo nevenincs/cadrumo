@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:54927b34f895adfb01498a9c4bea054ff637be61ab7efa7c7ac84cca74b744f0'
+body_hash: 'sha256:880027483b57f5421e2f8afa6b955ab7cf3133b450d21c2430d2c083eec1570e'
 step_id: 'S424'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -41,10 +41,27 @@ between what and what. The ref now carries invoice total, transaction amount
 and both counterparties, and the screen prints them beside the verdict. Teeth
 proven by removing the values from the rendered line.
 
-BLOCKED, unchanged. Census values have no producer outside fixtures. Declaration
-result amounts need a registry-declared result casilla, which does not exist --
-only ad-hoc constants for two modelos -- and guessing on a filing-facing list is
-worse than showing none.
+BLOCKED, but the declaration-result half was OVERSTATED and is corrected here.
+
+I recorded that no registry-declared result casilla exists. That is wrong. Every
+casilla carries a `semantic_role` in its registry declaration, and
+`SETTLEMENT_SEMANTIC_ROLES` reads exactly that field to find the terminal
+liquidación -- so the MECHANISM exists and is already used.
+
+What is true is narrower and more useful. That allowlist holds two roles,
+`irpf_cuota_resultante_autoliquidacion` and `irpf_resultado_declaracion`, both
+IRPF. And the roles are only meaning-bearing where the registry authors made
+them so: modelo 303's casillas carry roles like `dr303_23`, positional codes
+that name no meaning. So a declarations list spanning 303, 130 and 390 cannot
+read a result for most of its rows by role today.
+
+The work is therefore grounded registry work per modelo -- establishing from
+the official record design which casilla settles each one, and giving it a
+meaning-bearing role or an equivalent declaration -- rather than the "no
+mechanism exists" I first wrote. Guessing remains worse than showing none, so
+the refusal stands; but the next person now knows where to start.
+
+Census values are unchanged: no producer outside fixtures.
 
 GATES SWEPT, and two were passing without proving their subject.
 
