@@ -385,7 +385,8 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             as_of=as_of,
             schedule_observation=_schedule_observation(calendar, observed_at),
         )
-        ledger = self._read_ledger(revisions.revisions, work_units)
+        ledger_sources = self._load_ledger_sources()
+        ledger = self._read_ledger(revisions.revisions, work_units, sources=ledger_sources)
         modelo = self._read_modelo(work_units)
         aeat_sync = self._read_aeat_sync(
             _declared_tax_id(raw_values),
@@ -402,6 +403,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             or final_work_units_revision != work_units_revision
             or final_calculations_revision != calculations_revision
             or final_filings_revision != filings_revision
+            or self._load_ledger_sources() != ledger_sources
         ):
             raise RuntimeError("secure workbench generation changed during capture")
         return WorkbenchGenerationInputsV1(
@@ -470,13 +472,28 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             ),
         )
 
+    def _load_ledger_sources(self) -> tuple[object, object] | None:
+        """Read the ledger stores once, as the value the guard compares.
+
+        Neither store exposes a revision handle the way the work-unit,
+        calculation and filing catalogues do, so the snapshot itself is the
+        identity: an equal pair means nothing was written between the two
+        reads. Bucket events are deliberately outside it -- they only supply
+        review context and have no whole-catalogue read to compare.
+        """
+        if self.transaction_repository is None or self.invoice_repository is None:
+            return None
+        return (self.transaction_repository.load(), self.invoice_repository.load())
+
     def _read_ledger(
         self,
         calculation_revisions: Mapping[str, CalculationRevision],
         work_units: WorkUnitCatalogue,
+        *,
+        sources: tuple[object, object] | None,
     ) -> LedgerWorkspaceProjectionV1 | None:
         """Project the Ledger workspace only when its stores were bound."""
-        if self.transaction_repository is None or self.invoice_repository is None:
+        if self.transaction_repository is None or self.invoice_repository is None or sources is None:
             return None
         from .ledger.workspace_reader import read_ledger_workspace_projection
 
@@ -487,6 +504,8 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             bucket_event_repository=self.bucket_event_repository,
             calculation_revisions=calculation_revisions,
             work_units=work_units,
+            transactions=sources[0],
+            invoices=sources[1],
         )
 
     def _read_modelo(self, work_units: WorkUnitCatalogue) -> tuple[ModeloWorkspaceProjectionV1, ...] | None:
