@@ -17,7 +17,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Final, cast
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
 
 SCHEMA_VERSION: Final[int] = 3
 _DIGEST_PATTERN: Final[re.Pattern[str]] = re.compile(r"^sha256:[0-9a-f]{64}$")
@@ -1140,6 +1140,16 @@ def validate_ledger_matrix_currentness(
     observed_subjects: tuple[EvidenceSubjectSnapshotV1, ...],
 ) -> list[str]:
     """Compare persisted state to mandatory live census and evidence observations."""
+    canonical_matrix, canonical_census, canonical_subjects, validation_blockers = _canonical_gate_inputs(
+        matrix, observed_census, observed_subjects
+    )
+    if validation_blockers:
+        return validation_blockers
+    if canonical_matrix is None or canonical_census is None or canonical_subjects is None:
+        return ["gate input validation failed at <root>: incomplete_canonical_result"]
+    matrix = canonical_matrix
+    observed_census = canonical_census
+    observed_subjects = canonical_subjects
     errors = _live_census_report_errors(observed_census)
     observed_denominator = LedgerDenominatorSnapshotV1.from_live_report(observed_census)
     errors.extend(_denominator_drift(matrix.current_denominator, observed_denominator))
@@ -1163,6 +1173,57 @@ def _gate_assessment(gate: LedgerGate, blockers: list[str]) -> GateAssessmentV1:
     return GateAssessmentV1(gate=gate, closed=not blockers, blockers=tuple(blockers))
 
 
+def _serialized_python_data(value: object) -> object:
+    """Detach a supplied model from model-copy state before revalidation."""
+    return value.model_dump(mode="python") if isinstance(value, BaseModel) else value
+
+
+def _validation_blockers(scope: str, error: ValidationError) -> list[str]:
+    """Render canonical, stable fail-closed blockers without exposing values."""
+    return [
+        f"{scope} validation failed at {'.'.join(str(part) for part in item['loc']) or '<root>'}: {item['type']}"
+        for item in sorted(error.errors(include_url=False), key=lambda item: (item["loc"], item["type"]))
+    ]
+
+
+def _canonical_gate_inputs(
+    matrix: LedgerCapabilityMatrixV1,
+    observed_census: LedgerLiveCensusReportV1,
+    observed_subjects: tuple[EvidenceSubjectSnapshotV1, ...],
+) -> tuple[
+    LedgerCapabilityMatrixV1 | None,
+    LedgerLiveCensusReportV1 | None,
+    tuple[EvidenceSubjectSnapshotV1, ...] | None,
+    list[str],
+]:
+    """Exhaustively revalidate every supplied gate object from serialized data."""
+    blockers: list[str] = []
+    canonical_matrix: LedgerCapabilityMatrixV1 | None = None
+    canonical_census: LedgerLiveCensusReportV1 | None = None
+    canonical_subjects: tuple[EvidenceSubjectSnapshotV1, ...] | None = None
+    try:
+        canonical_matrix = LedgerCapabilityMatrixV1.model_validate(_serialized_python_data(matrix))
+    except ValidationError as error:
+        blockers.extend(_validation_blockers("matrix", error))
+    except (TypeError, ValueError):
+        blockers.append("matrix validation failed at <root>: invalid_serialized_data")
+    try:
+        canonical_census = LedgerLiveCensusReportV1.model_validate(_serialized_python_data(observed_census))
+    except ValidationError as error:
+        blockers.extend(_validation_blockers("live census", error))
+    except (TypeError, ValueError):
+        blockers.append("live census validation failed at <root>: invalid_serialized_data")
+    try:
+        canonical_subjects = TypeAdapter(tuple[EvidenceSubjectSnapshotV1, ...]).validate_python(
+            _serialized_python_data(observed_subjects)
+        )
+    except ValidationError as error:
+        blockers.extend(_validation_blockers("observed subjects", error))
+    except (TypeError, ValueError):
+        blockers.append("observed subjects validation failed at <root>: invalid_serialized_data")
+    return canonical_matrix, canonical_census, canonical_subjects, blockers
+
+
 def evaluate_ledger_capability_gate(
     matrix: LedgerCapabilityMatrixV1,
     gate: LedgerGate,
@@ -1171,6 +1232,16 @@ def evaluate_ledger_capability_gate(
     observed_subjects: tuple[EvidenceSubjectSnapshotV1, ...],
 ) -> GateAssessmentV1:
     """Evaluate the exact G0--G4 predicate against typed current evidence."""
+    canonical_matrix, canonical_census, canonical_subjects, validation_blockers = _canonical_gate_inputs(
+        matrix, observed_census, observed_subjects
+    )
+    if validation_blockers:
+        return _gate_assessment(gate, validation_blockers)
+    if canonical_matrix is None or canonical_census is None or canonical_subjects is None:
+        return _gate_assessment(gate, ["gate input validation failed at <root>: incomplete_canonical_result"])
+    matrix = canonical_matrix
+    observed_census = canonical_census
+    observed_subjects = canonical_subjects
     blockers: list[str] = []
     if gate is LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE:
         blockers.extend(_denominator_drift(matrix.accepted_denominator, matrix.current_denominator))
@@ -1310,7 +1381,14 @@ def reopened_gates_for_denominator_drift(
     accepted: LedgerDenominatorSnapshotV1, current: LedgerDenominatorSnapshotV1
 ) -> frozenset[LedgerGate]:
     """A changed live census reopens G0 and all potentially affected later gates."""
-    return frozenset(_GATE_ORDER) if _denominator_drift(accepted, current) else frozenset()
+    try:
+        canonical_accepted = LedgerDenominatorSnapshotV1.model_validate(_serialized_python_data(accepted))
+        canonical_current = LedgerDenominatorSnapshotV1.model_validate(_serialized_python_data(current))
+    except (TypeError, ValueError, ValidationError):
+        # This legacy return shape has no blocker channel; reopening every gate
+        # is the deterministic fail-closed refusal for invalid serialized data.
+        return frozenset(_GATE_ORDER)
+    return frozenset(_GATE_ORDER) if _denominator_drift(canonical_accepted, canonical_current) else frozenset()
 
 
 __all__ = [
