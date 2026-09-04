@@ -9,13 +9,11 @@ values, and the produced record is validated by the tamper-evident
 
 from __future__ import annotations
 
-import functools
 import hashlib
 import os
 import shutil
 import subprocess
 import sys
-import tempfile
 import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
@@ -24,7 +22,7 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 
-from .._acquire_common import venv_bin_dir
+from .._acquire_common import venv_bin_dir, venv_executable
 from .._command import CommandResult, run_command
 from .._hashing import sha256_path
 from .._installed_wheel_binding import (
@@ -51,9 +49,13 @@ from ..evidence import (
 )
 from ..installed_mcp_oracle import InstalledMcpEvidence, McpCallEvidence
 from ..installed_tax_oracle import InstalledTaxEvidence
-from ._release_cohort_support import release_cohort
+from ._release_cohort_support import client_venv_template, release_cohort
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+# Serial and integration, matching the Homebrew and Scoop packaging suites: these
+# cases build a real wheel, install it into a real venv, and hard-link that venv
+# per case, which is filesystem work measured in gigabytes and minutes rather
+# than quick-feedback unit work.
+pytestmark = [pytest.mark.integration, pytest.mark.serial, pytest.mark.hex_core]
 
 _TARGET_CASILLA = "DP200014:00562"
 _TARGET_VALUE = "23000.00"
@@ -125,9 +127,8 @@ def _mcp_evidence(cohort: LoadedReleaseCohort, *, client: bool = False) -> Insta
         project_root.mkdir()
         with zipfile.ZipFile(cohort.artifact("mcpb")) as archive:
             archive.extractall(project_root)
-        shutil.copytree(_client_venv_template(server.parents[1]), project_root / ".venv", copy_function=os.link)
-        scripts = venv_bin_dir(project_root / ".venv")
-        server = (scripts / ("cadrumo-mcp.exe" if os.name == "nt" else "cadrumo-mcp")).resolve(strict=True)
+        shutil.copytree(client_venv_template(), project_root / ".venv", copy_function=os.link)
+        server = venv_executable(project_root / ".venv", "cadrumo-mcp").resolve(strict=True)
     cli = server.with_name("aeat.exe" if server.suffix.lower() == ".exe" else "aeat")
     invoked_cli_sha256 = hashlib.sha256(str(cli).encode("utf-8")).hexdigest()
     records = {record.name: record for record in cohort.manifest.artifacts}
@@ -173,14 +174,6 @@ def _mcp_evidence(cohort: LoadedReleaseCohort, *, client: bool = False) -> Insta
         checkout_imports_removed=True,
         ambient_product_executables_removed=True,
     )
-
-
-@functools.lru_cache(maxsize=1)
-def _client_venv_template(source: Path) -> Path:
-    """Copy the current real venv once; per-test client roots use hard links."""
-    template = Path(tempfile.mkdtemp(prefix="cadrumo-client-venv-")) / ".venv"
-    shutil.copytree(source, template)
-    return template
 
 
 def _acquisition() -> AcquisitionIdentity:
@@ -241,9 +234,10 @@ def test_foreign_launcher_cannot_borrow_an_exact_installed_payload(tmp_path: Pat
 
 def test_exact_path_foreign_launcher_is_refused(tmp_path: Path) -> None:
     """Replacing the canonical launcher cannot borrow its adjacent sealed payload."""
-    server = Path(shutil.which("cadrumo-mcp") or "").resolve(strict=True)
+    template = client_venv_template()
+    server = venv_executable(template, "cadrumo-mcp").resolve(strict=True)
     copied_venv = tmp_path / ".venv"
-    shutil.copytree(_client_venv_template(server.parents[1]), copied_venv, copy_function=os.link)
+    shutil.copytree(template, copied_venv, copy_function=os.link)
     scripts = venv_bin_dir(copied_venv)
     copied_server = scripts / server.name
     copied_server.unlink()
