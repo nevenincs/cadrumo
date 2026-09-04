@@ -81,8 +81,8 @@ def test_the_blob_name_matches_the_one_git_computes(repository: pathlib.Path) ->
     data = b"first\nsecond\n"
 
     observed = (
-        subprocess.run(  # noqa: S603, S607
-            ("git", "hash-object", "--stdin"),
+        subprocess.run(
+            ("git", "hash-object", "--stdin"),  # noqa: S607  # repository tool is fixed
             cwd=repository,
             input=data,
             capture_output=True,
