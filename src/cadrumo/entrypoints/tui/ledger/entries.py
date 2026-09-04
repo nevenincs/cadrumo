@@ -59,7 +59,11 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
     def on_mount(self) -> None:
         """Populate the safe entry index using semantic row identities."""
         self.populate_navigation()
-        table = self.query_one("#ledger-entries", ContentDataTable[str])
+        # Unsubscripted on purpose: Textual `isinstance`-checks this argument,
+        # and a subscripted generic raises `TypeError: Subscripted generics
+        # cannot be used with class and instance checks` at mount. The cast
+        # carries the element type for the reader and the type checker.
+        table = cast("ContentDataTable[str]", self.query_one("#ledger-entries", ContentDataTable))
         self._fill_table(table, self.app.size.width)
         if not table.row_count:
             self.query_one("#ledger-refusal", Static).update(ledger_copy("tui.ledger.entries.empty"))
@@ -135,7 +139,11 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
 
     def on_resize(self) -> None:
         """Re-take the column set for the new width."""
-        table = self.query_one("#ledger-entries", ContentDataTable[str])
+        # Unsubscripted on purpose: Textual `isinstance`-checks this argument,
+        # and a subscripted generic raises `TypeError: Subscripted generics
+        # cannot be used with class and instance checks` at mount. The cast
+        # carries the element type for the reader and the type checker.
+        table = cast("ContentDataTable[str]", self.query_one("#ledger-entries", ContentDataTable))
         self._fill_table(table, self.app.size.width)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
