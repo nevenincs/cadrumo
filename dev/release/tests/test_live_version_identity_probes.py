@@ -65,9 +65,7 @@ def test_the_real_index_reports_a_published_version_as_carried() -> None:
 
 def test_the_forge_returns_the_released_tag_and_exempts_only_its_own_commit() -> None:
     """The rows the exemption rule reads, from the namespace that holds them."""
-    assert forge_tags_owning(_RELEASED, repository=_REPOSITORY, own_source_commit=_OTHER_COMMIT) == (
-        f"v{_RELEASED}",
-    )
+    assert forge_tags_owning(_RELEASED, repository=_REPOSITORY, own_source_commit=_OTHER_COMMIT) == (f"v{_RELEASED}",)
     assert forge_tags_owning(_RELEASED, repository=_REPOSITORY, own_source_commit=_RELEASED_COMMIT) == ()
 
 
@@ -92,7 +90,9 @@ def test_a_forge_that_cannot_answer_refuses_rather_than_reporting_no_refs() -> N
     namespace would clear both forge rules at once.
     """
     with pytest.raises(VersionIdentityError, match="forge check failed"):
-        forge_tags_owning(_RELEASED, repository="nevenincs/no-such-repository-exists-here", own_source_commit=_OTHER_COMMIT)
+        forge_tags_owning(
+            _RELEASED, repository="nevenincs/no-such-repository-exists-here", own_source_commit=_OTHER_COMMIT
+        )
 
 
 def test_draft_visibility_follows_push_access() -> None:

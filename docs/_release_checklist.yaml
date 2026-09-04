@@ -58,7 +58,7 @@ rollback:
   mechanism: "revert the release commit + tag on main, publish a corrected patch release; PyPI yank marks the bad version so pip/uv skip it by default"
 
 audit_state_gate:
-  description: "Deterministic pre-release invariants checked by `dev/release/readiness.py`, run automatically by the bump stage and again by publication Gate 2."
+  description: "Deterministic pre-release invariants checked by `dev/release/readiness.py`, run by hand through `just release-readiness` before the release pull request is merged; no workflow runs it."
   checks:
     - "pyproject.toml, src/cadrumo/__init__.py, and .release-please-manifest.json report one identical version"
     - "CHANGELOG.md is non-empty and carries no unresolved release-please merge markers"

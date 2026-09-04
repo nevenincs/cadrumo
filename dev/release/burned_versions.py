@@ -4,12 +4,12 @@ A version is *burned* once the world may hold bytes under it. That is a
 different fact from "some destination currently owns it", and the difference is
 what this module exists to carry.
 
-The monotonic floor recorded in the release-please manifest already refuses a
-candidate at or below the highest version reached, and that is the right guard
-for the ordinary case. It cannot express this one. After a disposition that
-deletes published releases and resets the declarations, the floor drops with
-them -- the destination-side evidence of exposure is exactly what the deletion
-erased -- and every number below the new floor becomes minttable again. The
+The floor recorded in the release-please manifest already refuses a candidate
+below the highest version reached, and that is the right guard for the ordinary
+case. It cannot express this one. After a disposition that deletes published
+releases and resets the declarations, the floor drops with them -- the
+destination-side evidence of exposure is exactly what the deletion erased --
+and every number below the new floor becomes minttable again. The
 protected fact is set membership, not ordering, and no ordering invariant
 encodes set membership.
 

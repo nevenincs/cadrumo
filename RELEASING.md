@@ -250,7 +250,16 @@ gh run view <RUN_ID> --repo nevenincs/cadrumo --log-failed
 **The publish step is refused on some distributions and succeeds on others.** An upload
 is per-file and each distribution carries its own publisher binding. Register the
 missing ones from the one-time setup above and re-run the workflow against the same tag;
-`uv publish` reconciles a partial upload rather than failing on what already landed.
+`uv publish` reconciles a partial upload rather than failing on what already landed. The
+identity check ahead of the upload permits that re-run and names which projects already
+carry the version:
+
+```text
+NOTE: the package index already carries <VERSION> for cadrumo, cadrumo-data-manuals and not yet for cadrumo-data-official; ...
+```
+
+It refuses only once every project carries the version, because at that point nothing is
+left to converge and the run could only attempt bytes the index will not take back.
 
 **A distribution is at or over the index file cap.** The build stops before anything is
 uploaded. The corpus split exists to keep every file under that limit, so a refusal here

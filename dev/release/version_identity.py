@@ -82,6 +82,7 @@ import re
 import subprocess
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
@@ -103,12 +104,17 @@ _PROBE_TIMEOUT_S: Final[int] = 20
 #: stand-in for :mod:`urllib`.
 _PYPI_JSON_INDEX: Final[str] = "https://pypi.org/pypi"
 
+#: The schemes an index endpoint may use. Anything else would answer from
+#: somewhere other than an index, and an answer that is not an index's is
+#: not evidence about a version.
+_INDEX_SCHEMES: Final[frozenset[str]] = frozenset({"http", "https"})
+
 #: A Git object name: forty hex digits and nothing else.
 _OBJECT_NAME: Final[re.Pattern[str]] = re.compile(r"[0-9a-f]{40}")
 
-#: The three projects one cohort publishes together. A conflict on any one of
-#: them refuses the whole cohort: they ship as a set and a partial set is not a
-#: release.
+#: The three projects one cohort publishes together, and so the set the index
+#: question is asked about: a version is owned there when every one of them
+#: carries it, and part-way is a release still being delivered.
 PYPI_PROJECTS: Final[tuple[str, ...]] = (
     "cadrumo",
     "cadrumo-data-manuals",
@@ -379,10 +385,18 @@ def pypi_projects_owning(
     rather than being read as absence: an unreachable index cannot prove a
     version is available, and treating a network error as a clean result is how
     a guard silently permits the collision it exists to catch.
+
+    ``index_url`` is where the question is asked. It must address an HTTP
+    endpoint: a ``file:`` or custom scheme would answer from the local disk,
+    and a local file that opens is exactly the shape of "this version is
+    already carried" with nothing having been asked of any index.
     """
+    scheme = urllib.parse.urlsplit(index_url).scheme
+    if scheme not in _INDEX_SCHEMES:
+        raise VersionIdentityError(f"index endpoint {index_url!r} is not an HTTP endpoint")
     owning: list[str] = []
     for project in projects:
-        request = urllib.request.Request(  # HTTPS index endpoint, defaulted above.
+        request = urllib.request.Request(  # noqa: S310 - scheme checked above.
             f"{index_url}/{project}/{version}/json",
             headers={"Accept": "application/json"},
         )

@@ -52,12 +52,12 @@ def _index_answering(status: int) -> Iterator[str]:
     """Serve ``status`` from loopback and yield the index base URL for it."""
 
     class _FixedStatus(http.server.BaseHTTPRequestHandler):
-        def do_GET(self) -> None:  # noqa: N802 - the stdlib's own hook name.
+        def do_GET(self) -> None:
             self.send_response(status)
             self.send_header("Content-Length", "0")
             self.end_headers()
 
-        def log_message(self, format: str, *args: object) -> None:  # noqa: A002 - the stdlib's own parameter name.
+        def log_message(self, format: str, *args: object) -> None:
             """Stay silent: the subject of these cases is the client."""
 
     server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), _FixedStatus)

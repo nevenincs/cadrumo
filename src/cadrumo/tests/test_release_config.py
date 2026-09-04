@@ -363,8 +363,9 @@ def test_releasing_doc_matches_the_executable_release_entry_and_recovery() -> No
     assert "publish.yml" in text
 
     # Evidence is minted by a dispatched campaign, and only ever off the release
-    # branch — on the default branch the declared version is already published,
-    # so the cohort seal is refused and every downstream lane skips.
+    # branch — the readiness gate binds each evidence row to the checked-out
+    # commit and to `v<VERSION>`, which a campaign run on the default branch
+    # cannot satisfy.
     assert "packaging-smoke.yml" in text
 
     # Live local surfaces the guide must still route the operator to.
