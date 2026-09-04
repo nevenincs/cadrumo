@@ -30,8 +30,13 @@ class LedgerOverviewScreen(LedgerWorkspaceScreen):
     def compose(self) -> ComposeResult:
         yield Static(ledger_copy("tui.ledger.overview.title"), classes="cadrumo-banner")
         with ContentScroll(id="ledger-page", classes="cadrumo-scroll ledger-page"):
+            yield Static(
+                ledger_copy("tui.ledger.overview.areas"),
+                classes="cadrumo-heading cadrumo-heading-lead",
+                markup=False,
+            )
             yield ContentDataTable[str](id="ledger-navigation", cursor_type="row", zebra_stripes=True)
-            yield Static(ledger_copy("tui.ledger.overview.quality"))
+            yield Static(ledger_copy("tui.ledger.overview.quality"), classes="cadrumo-heading", markup=False)
             yield ContentDataTable[str](id="ledger-quality", cursor_type="row", zebra_stripes=True)
             yield Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
 

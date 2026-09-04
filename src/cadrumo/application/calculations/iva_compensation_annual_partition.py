@@ -14,9 +14,7 @@ from collections.abc import Mapping
 from decimal import Decimal
 from typing import ClassVar, Final
 
-from ...adapters.persistence.storage.errors import (
-    STORAGE_DEGRADATION_ERRORS as _STORAGE_DEGRADATION_ERRORS,
-)
+from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
 from ...core.decimal.constants import ZERO
@@ -61,7 +59,7 @@ from .revision_carry_gate import revision_carry_outcome
 
 _log = get_logger(__name__)
 
-STORAGE_DEGRADATION_ERRORS = _STORAGE_DEGRADATION_ERRORS
+STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 _SOURCE_KIND: Final = BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION
 _303_GENERADA_ID: Final[CasillaId] = M303_GENERADA_CASILLA
 _303_APLICADA_ID: Final[CasillaId] = M303_COMPENSACION_APLICADA_CASILLA

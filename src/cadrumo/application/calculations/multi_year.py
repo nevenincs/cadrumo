@@ -25,9 +25,6 @@ from typing import TYPE_CHECKING, ClassVar, override
 
 from pydantic import BaseModel, Field
 
-from ...adapters.persistence.storage.errors import (
-    STORAGE_DEGRADATION_ERRORS as _STORAGE_DEGRADATION_ERRORS,
-)
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.filing_year import FilingYear
@@ -37,6 +34,7 @@ from ...domain.calculations.registry.authority import bundled_authority
 if TYPE_CHECKING:
     from pathlib import Path
 
+from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ..aggregation import (
@@ -48,7 +46,7 @@ from ..aggregation import (
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
 from .observations_repository import CalculationObservationRepository
 
-STORAGE_DEGRADATION_ERRORS = _STORAGE_DEGRADATION_ERRORS
+STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 
 
 # ---------------------------------------------------------------------------

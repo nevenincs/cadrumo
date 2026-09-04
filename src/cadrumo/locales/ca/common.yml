@@ -1267,6 +1267,8 @@ tui:
       superseded: Presentació substituïda localment
       verified: Verificació completada
     overview:
+      areas: Àrees de declaracions
+      declarations: Declaracions
       title: Resum de declaracions
     refusal:
       handoff: L'amfitrió no ha proporcionat aquesta destinació.
@@ -1439,6 +1441,7 @@ tui:
       title: Importar assentaments comptables
     overview:
       affected_declarations: Declaracions afectades
+      areas: Àrees del llibre
       quality: Qualitat de les dades i feina pendent
       title: Resum del llibre comptable
     reconciliation:
@@ -1465,6 +1468,7 @@ tui:
       progress: S'està enllaçant…
       score: Puntuació canònica
       success: Enllaç desat.
+      suggestions: Enllaços suggerits
       title: Conciliació local del llibre
       'yes': Sí
     refusal:

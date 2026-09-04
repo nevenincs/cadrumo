@@ -60,9 +60,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, ClassVar, Final, NamedTuple, TypedDict
 
-from ...adapters.persistence.storage.errors import (
-    STORAGE_DEGRADATION_ERRORS as _STORAGE_DEGRADATION_ERRORS,
-)
+from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
 from ...core.decimal.grammar import try_parse_canonical_decimal
@@ -118,7 +116,7 @@ from .revision_carry_gate import revision_carry_outcome
 if TYPE_CHECKING:
     from ...domain.contribuyente.entity_type import EntityType
 
-STORAGE_DEGRADATION_ERRORS = _STORAGE_DEGRADATION_ERRORS
+STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 _ECONOMIC_ACTIVITY_CATEGORY: Final = "actividad_economica"
 _DIRECT_ESTIMATION_REGIMES: Final = frozenset({"directa_normal", "directa_simplificada"})
 _log = get_logger(__name__)

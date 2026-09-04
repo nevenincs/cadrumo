@@ -1261,6 +1261,8 @@ tui:
       superseded: Benyújtás helyben felváltva
       verified: Ellenőrzés elkészült
     overview:
+      areas: Bevallási területek
+      declarations: Bevallások
       title: Bevallások áttekintése
     refusal:
       handoff: A gazda nem biztosította ezt a célt.
@@ -1433,6 +1435,7 @@ tui:
       title: Főkönyvi tételek importálása
     overview:
       affected_declarations: Érintett bevallások
+      areas: Főkönyvi területek
       quality: Adatminőség és megoldatlan feladatok
       title: Főkönyvi áttekintés
     reconciliation:
@@ -1459,6 +1462,7 @@ tui:
       progress: Kapcsolás…
       score: Kanonikus pontszám
       success: Kapcsolat mentve.
+      suggestions: Javasolt kapcsolatok
       title: Helyi főkönyvi egyeztetés
       'yes': Igen
     refusal:

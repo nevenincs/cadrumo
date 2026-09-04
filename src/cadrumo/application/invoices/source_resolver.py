@@ -26,9 +26,7 @@ from decimal import Decimal
 from typing import ClassVar
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ...adapters.persistence.storage.errors import (
-    STORAGE_DEGRADATION_ERRORS as _STORAGE_DEGRADATION_ERRORS,
-)
+from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core.aggregation import (
     BindingSourceKind,
     CalculationSourceLineageRole,
@@ -81,7 +79,7 @@ _OWNED_SOURCES: tuple[BindingSourceKind, ...] = (
     BindingSourceKind.PAYABLE_INVOICE,
     BindingSourceKind.M347_THIRD_PARTY_OPERATION,
 )
-STORAGE_DEGRADATION_ERRORS = _STORAGE_DEGRADATION_ERRORS
+STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 _M349_PAYABLE_SUMMARY_BINDING_MIRRORS: dict[str, str] = {
     "iva-349-declarante-numero-operadores-adquisicion": "iva-349-declarante-numero-operadores",
     "iva-349-declarante-importe-operaciones-adquisicion": "iva-349-declarante-importe-operaciones",

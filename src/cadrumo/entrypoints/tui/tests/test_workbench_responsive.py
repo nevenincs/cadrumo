@@ -220,7 +220,16 @@ async def test_no_table_header_is_clipped_while_the_row_has_width_to_spare(surfa
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("size", SUPPORTED_TERMINAL_SIZES, ids=SUPPORTED_TERMINAL_SIZE_IDS)
-@pytest.mark.parametrize("surface", ["home--ready", "aeat-sync-overview--ready"])
+@pytest.mark.parametrize(
+    "surface",
+    [
+        "home--ready",
+        "aeat-sync-overview--ready",
+        "ledger-overview--ready",
+        "declarations-overview--ready",
+        "ledger-reconciliation--ready",
+    ],
+)
 async def test_every_section_heading_is_separated_from_the_content_it_owns(surface: str, size: tuple[int, int]) -> None:
     """A heading fused to its rows makes the operator parse structure line by line.
 
@@ -287,7 +296,12 @@ async def test_every_section_heading_is_separated_from_the_content_it_owns(surfa
                 count += 1
             return count
 
-        rows = [i for i, line in enumerate(column) if heading in line]
+        # Located by the widget's own row, never by searching the frame for its
+        # text: a heading's words legitimately appear as DATA too -- the
+        # Declarations overview lists a "Declaraciones" area in the table above
+        # its "Declaraciones" heading -- and a text search finds the row, then
+        # measures the rhythm of something that is not a heading at all.
+        rows = [region.y] if 0 <= region.y < len(column) and heading in column[region.y] else []
         if not rows:
             # A heading that OPENS its region is different in kind: it sits at
             # the top of the page, so the only way it can be missing is that

@@ -44,9 +44,7 @@ from typing import ClassVar, Final
 
 from pydantic import BaseModel
 
-from ...adapters.persistence.storage.errors import (
-    STORAGE_DEGRADATION_ERRORS as _STORAGE_DEGRADATION_ERRORS,
-)
+from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.constants import MONEY_ZERO
@@ -111,7 +109,7 @@ CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA: CasillaId = validated_casilla_id(
 )
 
 _SOURCE_KIND: Final = BindingSourceKind.PRORRATA_REGULARIZACION
-STORAGE_DEGRADATION_ERRORS = (*_STORAGE_DEGRADATION_ERRORS, ProrrataRegisterError)
+STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError, ProrrataRegisterError)
 _LEDGER_VOLUME_DIVERGENCE_SOURCE_KIND = "prorrata_regularizacion_ledger_volume_divergence"
 _OUTPUT_MODELO_303_CASILLA_44: Final = "modelo_303_casilla_44"
 _OUTPUT_MODELO_390_REGULARIZACION_ANUAL: Final = "modelo_390_regularizacion_anual"

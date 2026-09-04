@@ -32,9 +32,7 @@ from typing import Annotated, ClassVar
 from pydantic import BaseModel, Field, StringConstraints
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ...adapters.persistence.storage.errors import (
-    STORAGE_DEGRADATION_ERRORS as _STORAGE_DEGRADATION_ERRORS,
-)
+from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import CENT, round_to_cents
@@ -118,7 +116,7 @@ class OssIossLedgerCandidate(BaseModel):
 #: Tolerance applied when comparing a persisted IVA amount against the
 #: amount derived from ``base_amount * lookup_rate(...) / 100``.
 #:
-STORAGE_DEGRADATION_ERRORS = _STORAGE_DEGRADATION_ERRORS
+STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 
 
 def _expected_iva_amount(candidate: OssIossLedgerCandidate) -> Decimal:

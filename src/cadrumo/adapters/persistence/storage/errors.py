@@ -15,7 +15,6 @@ The class tree:
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Final
 
 from ....core.errors.hierarchy import CadrumoError
 
@@ -293,18 +292,3 @@ class NamespaceRegistryError(StorageError, ValueError):
     :class:`~adapters.persistence.storage.StorageHierarchyRegistry`
     model validators receive the raw :class:`NamespaceRegistryError`.
     """
-
-
-#: The storage failures a calculation treats as DEGRADATION rather than a defect:
-#: encrypted facts that cannot be read back, so the caller reports an incomplete
-#: source instead of a wrong total.
-#:
-#: Nine modules each spelled this tuple out. Seven carried exactly these three,
-#: and two extended it with their own persistence errors -- which is legitimate,
-#: and is why extenders compose this tuple rather than restating it. Restating it
-#: is how one caller ends up not degrading on an error the others do.
-STORAGE_DEGRADATION_ERRORS: Final[tuple[type[Exception], ...]] = (
-    ClassificationError,
-    DecryptionError,
-    EnvelopeVersionError,
-)

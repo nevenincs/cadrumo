@@ -23,9 +23,7 @@ from __future__ import annotations
 
 from typing import ClassVar
 
-from ...adapters.persistence.storage.errors import (
-    STORAGE_DEGRADATION_ERRORS as _STORAGE_DEGRADATION_ERRORS,
-)
+from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.withholding_bindings import (
@@ -41,7 +39,7 @@ from ._source_mesh import (
 )
 from .source_resolution_operations import storage_degradation_resolution
 
-STORAGE_DEGRADATION_ERRORS = _STORAGE_DEGRADATION_ERRORS
+STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 
 _WITHHOLDING_SOURCE = BindingSourceKind.WITHHOLDING
 

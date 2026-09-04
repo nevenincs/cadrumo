@@ -1279,6 +1279,8 @@ tui:
       superseded: Presentación sustituida localmente
       verified: Verificación completada
     overview:
+      areas: Áreas de declaraciones
+      declarations: Declaraciones
       title: Resumen de declaraciones
     refusal:
       handoff: El anfitrión no ha proporcionado este destino.
@@ -1452,6 +1454,7 @@ tui:
       title: Importar apuntes contables
     overview:
       affected_declarations: Declaraciones afectadas
+      areas: Áreas del libro
       quality: Calidad de los datos y trabajo pendiente
       title: Resumen del libro contable
     reconciliation:
@@ -1479,6 +1482,7 @@ tui:
       progress: Enlazando…
       score: Puntuación canónica
       success: Enlace guardado.
+      suggestions: Enlaces sugeridos
       title: Conciliación local del libro
       'yes': Sí
     refusal:

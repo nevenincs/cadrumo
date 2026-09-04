@@ -30,10 +30,23 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
         with ledger_workspace_page() as navigation:
             yield navigation
             yield Static(ledger_copy("tui.ledger.reconciliation.local_only"), markup=False)
+            yield Static(
+                ledger_copy("tui.ledger.reconciliation.suggestions"),
+                classes="cadrumo-heading cadrumo-heading-lead",
+                markup=False,
+            )
             yield ContentDataTable[str](id="ledger-suggestions", cursor_type="row", zebra_stripes=True)
-            yield Static(ledger_copy("tui.ledger.reconciliation.inconsistencies"), markup=False)
+            yield Static(
+                ledger_copy("tui.ledger.reconciliation.inconsistencies"),
+                classes="cadrumo-heading",
+                markup=False,
+            )
             yield ContentDataTable[str](id="ledger-inconsistencies", cursor_type="row", zebra_stripes=True)
-            yield Static(ledger_copy("tui.ledger.reconciliation.affected"), markup=False)
+            yield Static(
+                ledger_copy("tui.ledger.reconciliation.affected"),
+                classes="cadrumo-heading",
+                markup=False,
+            )
             yield ContentDataTable[str](id="ledger-affected", cursor_type="row", zebra_stripes=True)
             yield Static("", id="ledger-flow-status", markup=False)
             yield Button(

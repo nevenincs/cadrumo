@@ -1237,6 +1237,8 @@ tui:
       superseded: Filing superseded locally
       verified: Verification completed
     overview:
+      areas: Declaration areas
+      declarations: Declarations
       title: Declarations overview
     refusal:
       handoff: This destination has not been supplied by the host.
@@ -1409,6 +1411,7 @@ tui:
       title: Import ledger entries
     overview:
       affected_declarations: Affected declarations
+      areas: Ledger areas
       quality: Data quality and unresolved work
       title: Ledger overview
     reconciliation:
@@ -1435,6 +1438,7 @@ tui:
       progress: Linking…
       score: Canonical score
       success: Link saved.
+      suggestions: Suggested links
       title: Local Ledger reconciliation
       'yes': 'Yes'
     refusal:
