@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from ....domain.calculations.registry.schema_base import ThresholdComparison
 from datetime import UTC, datetime
 from datetime import date as _prov_date
 from decimal import Decimal
@@ -36,7 +35,7 @@ from ....domain.calculations.registry.loader import load_modelo_directory
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.record_design import extract_record_design
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.calculations.registry.schema_base import CasillaDataType
+from ....domain.calculations.registry.schema_base import CasillaDataType, ThresholdComparison
 from ....domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,

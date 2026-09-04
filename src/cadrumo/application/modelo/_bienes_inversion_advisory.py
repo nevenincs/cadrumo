@@ -52,14 +52,15 @@ See Also:
 from __future__ import annotations
 
 from datetime import date
-from ...domain.bienes_inversion.regularizacion_parameters import (
-    BienesInversionParameterResolutionError,
-    resolve_bienes_inversion_regularizacion_parameters,
-)
+
 from ...adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.bienes_inversion.register import BienInversionRecordError
+from ...domain.bienes_inversion.regularizacion_parameters import (
+    BienesInversionParameterResolutionError,
+    resolve_bienes_inversion_regularizacion_parameters,
+)
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.iva.m303_settlement import is_m303_annual_settlement_period
 from ..aggregation import CalculationSourceDiagnostic

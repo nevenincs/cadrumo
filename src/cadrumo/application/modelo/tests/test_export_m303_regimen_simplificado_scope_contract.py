@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from ....domain.calculations.registry.schema_base import ThresholdComparison
 from datetime import date as _prov_date
 from decimal import Decimal
 
@@ -14,6 +13,7 @@ from ....domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionParameterProvenance,
     BienesInversionRegularizacionParameters,
 )
+from ....domain.calculations.registry.schema_base import ThresholdComparison
 from ....domain.deadlines.models import M303RegimeComposition
 from ....domain.prorrata_register.register import ProrrataRegister
 from ...aggregation import (
