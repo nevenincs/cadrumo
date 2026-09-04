@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:8260a0b750fdca10c9e7e4f9e397d21256f90a9e8cda757888ebec6b076e6bb4'
+body_hash: 'sha256:a05cc9d6109a5a30c49a6500221e6b25beba32138673b20f75f1df5882ba2946'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -322,7 +322,9 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [ ] `W02.P02.S478` - Give a public defining module to the 48 symbols the four remaining facades forward out of 18 leading-underscore modules, largest first: sequences _golden_store and _schema, terminology _unified_record, terminology_handbook _loader; `dev`.
 - [x] `W02.P02.S479` - Promote dev.sanitizer._residual_identity to residual_identity, since two of its symbols are consumed by dev.identity and a module reached from another package is not an implementation detail, then retire the facade: four sites repointed and the initialiser reduced from 84 lines; `dev/sanitizer,dev/identity`.
 - [x] `W02.P02.S480` - Invert the sanitizer re-export test, which asserted a non-empty __all__ and was hardened against an empty one so that emptying the facade could not pass silently: it could not be satisfied alongside the inert-initialiser boundary and was protecting the defect; `dev/sanitizer/tests/test_pipeline.py,dev/sanitizer/tests/test_errors.py`.
-- [ ] `W02.P02.S481` - Search the three remaining dev.docs packages for tests that assert the facade contract itself rather than reading it incidentally, since such a test cannot be satisfied alongside the inert-initialiser boundary and surfaces only when the retirement is attempted; `dev/docs/sequences/tests,dev/docs/terminology_handbook/tests`.
+- [x] `W02.P02.S481` - Search the three remaining dev.docs packages for tests that assert the facade contract itself rather than reading it incidentally, since such a test cannot be satisfied alongside the inert-initialiser boundary and surfaces only when the retirement is attempted; `dev/docs/sequences/tests,dev/docs/terminology_handbook/tests`.
+- [x] `W02.P02.S482` - Promote the three preprocess private modules to schema, sidecar and normatives_html, the last named to avoid shadowing the standard library html module, then retire the facade with the failure set compared line by line and identical at 23 failures over 294 passing; `dev/docs/preprocess,dev/corpus`.
+- [ ] `W02.P02.S483` - Resolve test_real_timeout_is_unavailable_not_green, which spawns a real uvx semgrep with a one millisecond timeout and passes in isolation while failing intermittently under parallel load; `dev/audit/tests/test_security_scan.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

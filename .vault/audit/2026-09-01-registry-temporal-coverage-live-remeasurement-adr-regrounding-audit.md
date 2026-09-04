@@ -12993,3 +12993,63 @@ of them actively enforce the thing being removed, and they are indistinguishable
 from correct tests until the change is attempted. Nothing detects them in
 advance; they surface as a failure at the moment the work lands, which is why
 the baseline-first discipline matters as much as it does.
+
+
+## Looking for the defect-protecting tests before touching the packages
+
+The sanitizer retirement found a test that could not be satisfied alongside the
+boundary only by breaking it. The obvious next move was to look for the same
+shape in the packages not yet touched, before touching them.
+
+Across the four remaining facades there are **six sites** that read a package's
+exports reflectively, and all six are the two error-ownership tests already
+known - `sequences` and `terminology_handbook`, each reading `__all__` once and
+calling `hasattr` twice. No second `TestPublicReexports` exists. A separate sweep
+for `dir()` and `getattr()` against a package object found nothing.
+
+That is a cheap answer to a question that cost real time to answer the hard way,
+and it de-risks the three remaining retirements rather than discovering the risk
+during them.
+
+## The sixth facade, and a bug in my own promoter
+
+`dev.docs.preprocess` is retired, and it needed three private modules promoted
+first: `_schema` to `schema`, `_sidecar` to `sidecar`, and `_html` to
+`normatives_html`.
+
+The last name is deliberate. `_html` would have become `html`, which shadows a
+standard-library module - legal inside a package under absolute-import
+semantics, and a trap for the next reader. The module is the BOE normatives
+HTML article-split extractor, so `normatives_html` says what it is and collides
+with nothing.
+
+The promoter I wrote for this had a bug of exactly the kind this campaign keeps
+producing. It rewrote relative imports for files INSIDE the package and dotted
+absolute references anywhere - and a relative import from OUTSIDE the package
+fell between the two branches. `dev/corpus/tests` reaches the module as
+`from ...docs.preprocess._html import build_outputs`, three levels up and back
+down, which neither branch caught. Two files broke at import.
+
+The failure was loud, which is the only reason it cost minutes. The same bug in
+the earlier consumer scan was silent and reported zero consumers where there
+were ninety. A resolver that mishandles relative depth fails in both directions,
+and only one of them announces itself.
+
+The rewrite now resolves every import through the same function regardless of
+where the file sits, and reports any statement it cannot rewrite rather than
+skipping it.
+
+Verified by set rather than by count: the failure set before and after the three
+renames is **identical**, 23 failures across 294 passing tests, compared line by
+line rather than by totals.
+
+One test moved in and out of that set across three runs:
+`test_real_timeout_is_unavailable_not_green` spawns a real `uvx semgrep` with a
+1ms timeout and asserts it times out. It failed in two full runs, passed in a
+third, and passes in isolation - a race under parallel load, not a consequence of
+an import repoint. Recorded rather than absorbed into the baseline, because a
+test that is green in isolation and red under load is a real defect in the test,
+just not this change's.
+
+Six of nine facades are retired. Three remain, all under `dev.docs`, holding 195
+bound names and 40 consumer sites.
