@@ -454,25 +454,6 @@ def _selector_year_intervals(selector: PeriodSelector) -> tuple[tuple[int, int |
     return ((selector.year_from, selector.year_to),)
 
 
-def _interval_is_covered(
-    start: int,
-    end: int | None,
-    intervals: Iterable[tuple[int, int | None]],
-) -> bool:
-    remaining_start = start
-    for covered_start, covered_end in sorted(intervals, key=lambda item: item[0]):
-        if covered_start > remaining_start:
-            continue
-        if covered_end is None:
-            return True
-        if covered_end < remaining_start:
-            continue
-        remaining_start = covered_end + 1
-        if end is not None and remaining_start > end:
-            return True
-    return False if end is None else remaining_start > end
-
-
 def _revision_intersects_year_range(
     revision: ModeloRevision,
     *,
