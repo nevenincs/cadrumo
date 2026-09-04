@@ -878,6 +878,7 @@ errors:
       not be parsed as a decimal.'
     refused_iva_compensation_year_range: 'Refused: IVA compensation year is outside
       the accepted range.'
+    refused_iva_prorrata_especial_margin_ungrounded: The mandatory prorrata especial margin cannot be grounded for that ejercicio.
     refused_iva_wallet_reconciliation_invariant: The IVA wallet reconciliation inputs
       violate a required invariant. Check the wallet age configuration and retry.
     refused_ledger_confirmation_blocked: This document has findings a human must answer

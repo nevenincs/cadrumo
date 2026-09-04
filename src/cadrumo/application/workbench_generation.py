@@ -29,13 +29,13 @@ from ..core.time.utc import UtcInstant
 from ..domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ..domain.invoices.models import InvoiceCatalogue
 from ..domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
-from ..domain.modelos.calculation_revision import CalculationRevision
+from ..domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ..domain.modelos.filing_record import ModeloRecord
 from ..domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
 )
-from ..domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
+from ..domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState
 from ..domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..domain.transactions.models import TransactionCatalogue
 from ..domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
@@ -73,6 +73,8 @@ from .overview.evidence import (
 from .overview.home import (
     HomeAccountSession,
     HomeAvailability,
+    HomeDeclarationResume,
+    HomeDeclarationState,
     HomeLedgerReadiness,
     HomeProjectionInput,
     HomeProjectionV1,
@@ -424,6 +426,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                     agenda=agenda,
                     agenda_evidence_state=evidence.aeat_state,
                     ledger=ledger,
+                    declarations=_home_declarations(declarations, work_units),
                 ),
                 observed_at=observed_at,
             ),
@@ -629,6 +632,7 @@ def _secure_profile_home_input(
     agenda: OverviewAgenda | None,
     agenda_evidence_state: HomeZoneState,
     ledger: LedgerWorkspaceProjectionV1 | None,
+    declarations: tuple[HomeDeclarationResume, ...] | None,
 ) -> HomeProjectionInput:
     """Assemble Home from the authorities this session actually read.
 
@@ -652,6 +656,11 @@ def _secure_profile_home_input(
         """
         return HomeZoneState(availability=HomeAvailability.NEVER_CAPTURED, reason_code=reason_code)
 
+    declarations_state = (
+        HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=observed_at)
+        if declarations is not None
+        else unavailable("workbench.home.declarations_resume_projector_unavailable")
+    )
     readiness = _home_ledger_readiness(ledger)
     ledger_state = (
         HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=observed_at)
@@ -663,7 +672,8 @@ def _secure_profile_home_input(
         generated_at=observed_at,
         account=account_session,
         actions_state=unavailable("workbench.home.actions_projector_unavailable"),
-        declarations_state=unavailable("workbench.home.declarations_resume_projector_unavailable"),
+        declarations_state=declarations_state,
+        declarations=declarations or (),
         ledger_state=ledger_state,
         agenda_state=(
             HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=observed_at)
@@ -712,6 +722,69 @@ def _home_ledger_readiness(ledger: LedgerWorkspaceProjectionV1 | None) -> HomeLe
             return None
         counts[field] = state.item_count
     return HomeLedgerReadiness(**counts)
+
+
+_HOME_DECLARATION_STATES: Final[dict[CalculationRevisionState, HomeDeclarationState]] = {
+    # Read from the domain's own vocabulary, not invented for Home.
+    # `VERIFICADO_COMPLETO` says verified and complete, which is the only thing
+    # READY can honestly mean; `BORRADOR` is a calculation that exists and has
+    # not been verified, which is exactly NEEDS_REVIEW; both PRESENTADO forms
+    # are filed, superseded or not.
+    CalculationRevisionState.BORRADOR: HomeDeclarationState.NEEDS_REVIEW,
+    CalculationRevisionState.VERIFICADO_COMPLETO: HomeDeclarationState.READY,
+    CalculationRevisionState.PRESENTADO: HomeDeclarationState.FILED,
+    CalculationRevisionState.PRESENTADO_SUPERSEDIDO: HomeDeclarationState.FILED,
+    CalculationRevisionState.DESCARTADO: HomeDeclarationState.DISCARDED,
+}
+"""How a calculation's state reads on Home.
+
+The mapping ERRS SAFE in the one direction that matters: nothing becomes READY
+except the state that literally says verified and complete. Telling an operator
+a declaration is ready to file when nobody verified it is a filing-grade harm,
+so every other state resolves to something that keeps work in front of them.
+"""
+
+
+def _home_declarations(
+    declarations: DeclarationsWorkspaceProjectionV1 | None,
+    work_units: WorkUnitCatalogue,
+) -> tuple[HomeDeclarationResume, ...] | None:
+    """Home's resumable declarations, or nothing when the workspace is refused."""
+    if declarations is None:
+        return None
+    current_by_unit = {
+        revision.work_unit_id: revision for revision in declarations.calculation_revisions if revision.is_current
+    }
+    resumes: list[HomeDeclarationResume] = []
+    for ref in declarations.declarations:
+        unit = work_units.work_units.get(ref.work_unit_id)
+        if unit is None:
+            # The declaration names a work unit this session did not load. Its
+            # display name lives on the unit, so the row cannot be rendered
+            # honestly and the zone refuses rather than inventing a label.
+            return None
+        revision = current_by_unit.get(ref.work_unit_id)
+        if ref.state is WorkUnitState.DESCARTADO:
+            state = HomeDeclarationState.DISCARDED
+        elif ref.has_current_filing:
+            state = HomeDeclarationState.FILED
+        elif revision is None:
+            # No calculation exists yet, so there is nothing to review or file.
+            state = HomeDeclarationState.DRAFT
+        else:
+            state = _HOME_DECLARATION_STATES[revision.state]
+        resumes.append(
+            HomeDeclarationResume(
+                work_unit_id=ref.work_unit_id,
+                modelo=ref.modelo,
+                filing_year=ref.filing_year,
+                period=ref.period,
+                name=unit.name,
+                state=state,
+                revision_id=revision.calculation_revision_id if revision is not None else None,
+            )
+        )
+    return tuple(resumes)
 
 
 def _generation_admission(

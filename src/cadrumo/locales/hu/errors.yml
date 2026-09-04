@@ -898,6 +898,7 @@ errors:
       nem elemezhető decimálisként.'
     refused_iva_compensation_year_range: 'Elutasítva: az IVA-kompenzáció éve az elfogadott
       tartományon kívül van.'
+    refused_iva_prorrata_especial_margin_ungrounded: A kötelező különleges arányosítási küszöb nem alapozható meg erre az adóévre.
     refused_iva_wallet_reconciliation_invariant: Az IVA tárca egyeztetési bemenetek
       egy szükséges feltételt sértenek. Ellenőrizze a tárca-kor beállítást, és próbálja
       újra.

@@ -951,6 +951,7 @@ errors:
       de IVA no se pudo interpretar como decimal.'
     refused_iva_compensation_year_range: 'Rechazado: el ejercicio de compensación
       de IVA esta fuera del rango aceptado.'
+    refused_iva_prorrata_especial_margin_ungrounded: El margen de prorrata especial obligatoria no puede fundamentarse para ese ejercicio.
     refused_iva_wallet_reconciliation_invariant: Las entradas de conciliación de la
       cartera IVA incumplen un invariante obligatorio. Compruebe la configuración
       de antigüedad de la cartera y vuelva a intentarlo.

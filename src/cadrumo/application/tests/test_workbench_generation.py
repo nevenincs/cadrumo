@@ -10,7 +10,7 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
-from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
+from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue, CalculationRevisionState
 from ...domain.modelos.filing_record import ModeloRecordCatalogue
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord
@@ -30,6 +30,7 @@ from ..overview.calendar_models import OverviewCalendar, OverviewCalendarRange
 from ..overview.home import (
     HomeAccountSession,
     HomeAvailability,
+    HomeDeclarationState,
     HomeProjectionInput,
     HomeSessionPosture,
     HomeZoneState,
@@ -605,6 +606,7 @@ def test_a_zone_awaiting_a_pull_is_never_captured_not_unavailable() -> None:
             reason_code="workbench.home.agenda_evidence_never_pulled",
         ),
         ledger=None,
+        declarations=None,
     )
 
     assert home.messages_state.availability is HomeAvailability.NEVER_CAPTURED, (
@@ -615,3 +617,34 @@ def test_a_zone_awaiting_a_pull_is_never_captured_not_unavailable() -> None:
     assert "reader_unavailable" not in home.messages_state.reason_code, (
         f"the reason code {home.messages_state.reason_code!r} still blames the reader"
     )
+
+def test_only_a_verified_calculation_reads_as_ready_on_home() -> None:
+    """READY is the one Home state that must never be reached by inference.
+
+    Telling an operator a declaration is ready to file when nobody verified it
+    is a filing-grade harm, so the mapping errs in exactly one direction: the
+    only calculation state that becomes READY is the one whose name says
+    verified and complete. Every other state resolves to something that keeps
+    work in front of them.
+
+    The mapping is read from the domain's own vocabulary rather than invented
+    for Home, and this asserts the whole table so a new calculation state
+    cannot be added and silently default to anything.
+    """
+    from ..workbench_generation import _HOME_DECLARATION_STATES
+
+    assert set(_HOME_DECLARATION_STATES) == set(CalculationRevisionState), (
+        "a calculation state has no declared Home reading, so it would raise or "
+        "default rather than being mapped deliberately"
+    )
+
+    ready = {
+        state for state, home in _HOME_DECLARATION_STATES.items() if home is HomeDeclarationState.READY
+    }
+    assert ready == {CalculationRevisionState.VERIFICADO_COMPLETO}, (
+        f"only a verified-complete calculation may read as READY on Home; found {sorted(ready)}"
+    )
+
+    assert _HOME_DECLARATION_STATES[CalculationRevisionState.BORRADOR] is (
+        HomeDeclarationState.NEEDS_REVIEW
+    ), "an unverified calculation must keep review in front of the operator"
