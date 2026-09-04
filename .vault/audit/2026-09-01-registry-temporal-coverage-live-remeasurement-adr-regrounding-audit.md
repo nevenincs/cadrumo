@@ -14304,3 +14304,42 @@ exactly that - the module must not appear in its own output.
 Reach comes from `imported_modules` rather than a walk written here, which is
 the only reason this module can be trusted about its own subject: the last
 hand-written version of this exact measurement was wrong by eighteen modules.
+
+
+## Testing the first module the reach report ranked
+
+`dev/registry/result_disposition_fragment_generator.py` was one of three modules
+the reach report put first: it writes registry declarations, takes `--apply`, and
+had no tests. It is also the only one of the three inside this plan's own
+subject, so it is the one to do rather than to name.
+
+Eight tests now hold it, and the first is the point of the exercise:
+**`write_fragments(root, apply=False)` plans a full run over the live registry
+and leaves the directory empty.** A flag is only a safeguard if the unflagged
+path is proven inert, and nothing proved it.
+
+The renderer's two branches carry the module's actual judgement about the
+registry, and they differ by one `None`. A modelo whose diseño never declares a
+"Tipo de declaracion" field is declared not applicable with the number of files
+scanned written into the reason - the absence is the declaration's entire
+justification, so the count belongs in the text rather than the author's memory.
+A modelo that does declare one gets the letters the diseño states, verbatim,
+because the letters ARE the disposition.
+
+Three properties of the rendered TOML are pinned because its inputs come from
+documents this project does not control: a note carrying a double quote cannot
+end the string early, a long note is truncated at 180 characters rather than
+transcribed, and every fragment's body carries the marker matching its own
+`applicable` flag.
+
+Two exclusions are asserted against the live registry rather than read from the
+source: only filing-grade revisions are planned, and two modelos owned by another
+campaign are skipped. Neither is visible in an output row, so a regression in
+either would widen what this generator writes without changing how its report
+looks.
+
+The reach report now says **41 unreached, 15 writing, 2 applying**, and the two
+that remain at the top are the import codemods belonging to another campaign.
+The instrument built one iteration ago picked the target, the target is done, and
+the number moved because of it - which is the whole case for ranking a list
+rather than counting it.

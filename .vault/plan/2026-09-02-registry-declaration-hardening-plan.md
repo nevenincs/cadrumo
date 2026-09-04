@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:ce760907f59f11a43ffc5fae150a9089946dc2269cd542a44880c21b5aa7d716'
+body_hash: 'sha256:0a81ca7933ebef5e7e237c5085f7eff8a60e769c1213057c867436819758d5fd'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -406,9 +406,10 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S523` - Audit this sessions own closures and reachability: all eight Steps scoped outside dev and .vault are open, and no test module this session added is unreachable by a CI-invoked lane; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W02.P02.S524` - Cover the complexity audits three classifiers, which had no tests after its own test modules were retired with the baseline, pinning the ceiling-versus-floor asymmetry that one copied comparison operator would invert; `dev/audit/tests/test_complexity_classification.py`.
 - [x] `W02.P02.S525` - Measure dev modules no test reaches, correcting the first count from 60 to 42 after the submodule-by-name blind spot inflated it by thirty per cent, and name the two untested codemods that write to source files; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
-- [ ] `W02.P02.S526` - Test the three untested modules that write to source files behind an apply flag: the two import codemods and the result-disposition fragment generator, which module_test_reach ranks first for that reason; `dev/quality/import_centralization_codemod.py,dev/quality/namespace_retirement_sweep.py,dev/registry/result_disposition_fragment_generator.py`.
+- [ ] `W02.P02.S526` - Test the two remaining untested import codemods that write to source files behind an apply flag, which module_test_reach now ranks first after the result-disposition generator was covered; `dev/quality/import_centralization_codemod.py,dev/quality/namespace_retirement_sweep.py`.
 - [x] `W02.P02.S527` - Lift the import-reference rule into imported_modules so the three walks that each got it wrong ask one function: a statement references its resolved target plus the module each imported name may be, and the promoter now consumes it rather than re-deriving it; `dev/quality/facade_retirement.py,dev/quality/module_promotion.py,dev/quality/tests/test_facade_retirement.py`.
 - [x] `W02.P02.S528` - Turn the untested-module count into a report ranked by what each module can do, since 16 of the 42 write to the tree and three of those also declare an apply flag, and give it tests so it stops counting itself; `dev/quality/module_test_reach.py,dev/quality/tests/test_module_test_reach.py`.
+- [x] `W02.P02.S529` - Test the result-disposition fragment generator the reach report ranked first, proving above all that a run without apply leaves the tree untouched, and pinning both render branches and the filing-grade and campaign-owned exclusions; `dev/registry/tests/test_result_disposition_fragment_generator.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
