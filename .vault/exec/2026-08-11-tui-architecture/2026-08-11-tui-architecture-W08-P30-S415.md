@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:3df2803843328c3ae86b5db0bb89000084d386d7acf814c38dbbaaa68f4350e6'
+body_hash: 'sha256:9763d1fada7665d539af7926f334499ab489a8ef170cc5b5d5aa04c0f4b41d77'
 step_id: 'S415'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -201,3 +201,32 @@ these operation buttons now start below the fold there. The page scrolls and
 the controls remain reachable, so this is the accepted cost of the separation
 rather than a defect -- but it is a cost, and it was invisible until a
 coordinate-based click tripped over it.
+
+The cost that correction exposed is now gated.
+`test_every_control_can_be_brought_into_view` asserts REACHABILITY rather than
+visibility: after asking each control to scroll itself into view, it must
+actually be inside the viewport. Below the fold is fine -- the page scrolls --
+but a control in a container that cannot reach it looks identical in a rendered
+frame to one that is merely further down, and only this tells them apart.
+
+Two corrections were needed before it was worth keeping. The first version
+swept the four supported terminals and proved nothing: every control in these
+fixtures already fits at those heights, so `scroll_visible` was a no-op and the
+assertion held however broken the scrolling was -- confirmed by disabling the
+page's vertical overflow and watching all twelve parametrisations pass. It now
+runs at a deliberately short 80x10 so the fold falls above the controls, and
+carries a vacuity guard that fails when no control was below it. That guard
+immediately earned itself, reporting that two of the three chosen surfaces
+compose no reachable control at any height, so the gate is parametrised over
+the one surface that can exercise it.
+
+Teeth proven on the version that survived: disabling the page's vertical
+overflow fails with `aeat-sync-operation-0 at Region(x=0, y=19 ...)` cannot be
+scrolled into view. Restored by copy; 39 passed across the responsive suite.
+
+A related sweep found no other exposure. Of 123 `pilot.click` sites in the TUI
+tests, three pass a widget object -- two were the ones corrected above and the
+third is a selector string held in a variable. The remaining 118 pass selector
+strings, which resolve to coordinates the same way; they are not audited here,
+and a layout change that moves one of their targets below the fold would fail
+the same misleading way.

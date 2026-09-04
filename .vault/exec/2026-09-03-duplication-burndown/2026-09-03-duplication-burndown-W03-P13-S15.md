@@ -5,16 +5,11 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:512db383fe773d0e3603f22b2301f58d00e2a9aae81fe464116b3f7aabba0dc1'
+body_hash: 'sha256:075d66189f6e73a372a88d7d4fc43acf9208f6eea77aa7a7ce6f2f694d776d7a'
 step_id: 'S15'
 related:
   - "[[2026-09-03-duplication-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Resolve the Ledger controller and route factory clone while preserving dependency injection and refresh ownership
 
