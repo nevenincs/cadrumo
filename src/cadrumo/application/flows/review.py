@@ -21,10 +21,6 @@ from .engine import FlowState, page_status, visible_sequence
 from .errors import FlowSubmitError
 from .validators import ValidationVerdict, resolve_cross_field_validator
 
-_PAGE_BADGE_LOCALE_KEYS: tuple[str, ...] = (
-    "flows.progress.required",
-    "flows.progress.optional",
-)
 """Static declaration of the required/optional badge catalogue keys.
 
 Frontends select between the pair at render time through a variable

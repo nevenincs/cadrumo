@@ -88,9 +88,6 @@ __all__ = [
     "resolve_confirmed_counterparty_facts",
 ]
 
-_COUNTERPARTY_KEY_LENGTH: int = 64
-
-
 def _canonical_identity_token(value: str, *, country_code: str | None) -> str | None:
     """Return the canonical identifier, deferring the import to call time.
 
