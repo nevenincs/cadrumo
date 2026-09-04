@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:06313b18f3bb913209887092448542a7be34208871ad9daafcf3fd80c9452f45'
+body_hash: 'sha256:8b59e021f926a1ede79c65d8db76c7d05f1d359d7dc66024caa14e58f20d4b84'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -456,6 +456,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S574` - Stop the lazy re-export gate counting an emptied surface as verified, where eight of its nine declared modules had an empty __all__ after the package-inertness work and each contributed no assertion while the run still reported nine verified, and refuse a retired declaration by name instead of raising out of the gate; `dev/quality/shims.py,dev/quality/tests/test_shims.py`.
 - [x] `W02.P02.S575` - Stop the developer smoke lane recording its command-surface proof after a loop that may not have run, and give the wheel data expectation the emptiness refusal its sealed-source sibling already had, so neither can satisfy the manifest proof contract having asserted nothing; `dev/packaging/smoke_dev.py,dev/packaging/_smoke_common.py,dev/packaging/tests/test_smoke_dev.py`.
 - [x] `W02.P02.S576` - Name the M130 budget statistic for what it measures: the loop takes four samples, one year over four quarters, and at that count the nearest-rank P95 is the maximum, so a single contended run was being reported as a tail statistic; gate on the worst sample with a guard that fires if the sample count ever grows past that point; `dev/ci/tests/test_ledger_scale_benchmark.py`.
+- [x] `W02.P02.S577` - Gate each M130 quarter on its own budget instead of taking a percentile across them, since the previous_filing bindings make Q4 carry three prior filings where Q1 carries none, so the four measurements are four workloads of increasing dependency depth and the deepest was being reported as a distribution tail; `dev/ci/tests/test_ledger_scale_benchmark.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
