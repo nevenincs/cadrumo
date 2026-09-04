@@ -59,7 +59,10 @@ from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents as _quantize
 from ...core.percentage import Percentage
-from .regularizacion_parameters import BienesInversionRegularizacionParameters
+from .regularizacion_parameters import (
+    BienesInversionParameterProvenance,
+    BienesInversionRegularizacionParameters,
+)
 
 
 class BienInversionRecordError(_CadrumoError):
@@ -665,6 +668,11 @@ class RegistroRegularizacionResult(BaseModel):
             (a percentage was supplied and the gate fired).
         pending_percentage_count: Number of in-window goods for which no
             current-year definitive percentage was supplied.
+        parameters_provenance: The registry declaration whose figures produced
+            this projection. Carried on the result so an oracle or replay can
+            refuse a result computed under figures other than the ones it was
+            handed; without it, giving a producer and its oracle the same wrong
+            bundle would be self-consistent and prove nothing.
     """
 
     model_config = _STRICT_FROZEN_CONFIG
@@ -675,6 +683,7 @@ class RegistroRegularizacionResult(BaseModel):
     computed_count: int
     pending_percentage_count: int
     sector_contributions: tuple[BienesInversionSectorContribution, ...]
+    parameters_provenance: BienesInversionParameterProvenance
 
     @model_validator(mode="after")
     def _contributions_equal_casilla_43(self) -> RegistroRegularizacionResult:
@@ -763,6 +772,7 @@ def compute_registro_regularizacion(
         computed_count=computed_count,
         pending_percentage_count=pending,
         sector_contributions=tuple(contributions),
+        parameters_provenance=parameters.provenance,
     )
 
 
@@ -798,6 +808,8 @@ class RegistroTransmisionesResult(BaseModel):
             field for the disposals in this year. Positive = net ingreso, negative
             = net deducción complementaria.
         computed_count: Number of disposed goods included in the projection.
+        parameters_provenance: The registry declaration whose figures produced
+            this projection; see :class:`RegistroRegularizacionResult`.
     """
 
     model_config = _STRICT_FROZEN_CONFIG
@@ -807,6 +819,7 @@ class RegistroTransmisionesResult(BaseModel):
     proposed_casilla_43: Decimal
     computed_count: int
     sector_contributions: tuple[BienesInversionSectorContribution, ...]
+    parameters_provenance: BienesInversionParameterProvenance
 
     @model_validator(mode="after")
     def _contributions_equal_casilla_43(self) -> RegistroTransmisionesResult:
@@ -892,6 +905,7 @@ def compute_registro_transmisiones(
         proposed_casilla_43=proposed,
         computed_count=len(rows),
         sector_contributions=tuple(contributions),
+        parameters_provenance=parameters.provenance,
     )
 
 

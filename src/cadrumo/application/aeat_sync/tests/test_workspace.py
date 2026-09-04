@@ -64,19 +64,24 @@ SECRET_VALUES = (
     "certificate-private",
     "notification-private",
 )
-"""Values this test actually FEEDS the projection, so their absence means something.
+"""Sentinels for the byte scan below, which is belt-and-braces, NOT the guard.
 
-Four sentinels were removed rather than kept. `Protected Name`,
+Stated plainly because the shape of this test invites the opposite reading:
+`AeatSyncWorkspaceProjectionV1` declares only `contract_version`, `zones` and
+six tuples of typed rows. It has no `bucket_id`, no `subject_key` and no
+identity field of any kind -- those live on `AeatSyncWorkspaceFactV1`, which is
+an INPUT the projector consumes and never emits. So no value in this tuple can
+reach the output while the types stay as they are, and the scan cannot fail.
+
+Four sentinels were removed for a sharper reason: `Protected Name`,
 `https://private.invalid/evidence` and `document prose` appeared nowhere in
-this file except the tuple itself: nothing introduced them, so asserting they
-did not come out the other end proved nothing at all. They are also
-unrepresentable -- the row models carry typed enums, modelo addresses and
-observation states, and no field on a row or on `AeatSyncWorkspaceFactV1` can
-hold free prose, a name or a URL -- so their exclusion is enforced by
-construction and is asserted as such below rather than mimed with a sentinel.
+this file except the tuple itself. Nothing introduced them at all, so their
+absence was doubly meaningless. Supplying one of them was tried and reverted --
+feeding a fact changes nothing, because facts are not part of the output.
 
-`certificate-private` was in the same position and is now genuinely supplied,
-through the second private identity the census fact carries.
+The protection is the TYPE, and the structural assertion below is the honest
+expression of it: it fails the moment a row gains a free-text field, which is
+the only way any of this could start leaking.
 """
 
 
@@ -218,7 +223,7 @@ def _projection(**updates):
             (build_censal_operation_registration(CENSAL_OPERATION_DEFINITION).contract,)
         ),
         overview=(_fact(_overview()),),
-        census=(_fact(_census(), private_identity="certificate-private"),),
+        census=(_fact(_census()),),
         filed_declarations=(_fact(_filed()),),
         notifications=(_fact(_notification(), private_identity="notification-private"),),
         evidence_comparison=(_fact(_comparison()),),

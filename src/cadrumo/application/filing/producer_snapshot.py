@@ -93,7 +93,20 @@ def assert_m303_regularisation_result_matches_bienes_register(
     so replay the canonical domain projection from those facts and compare the
     complete immutable result.  This admits no result-row omission, foreign
     register, substituted contribution, or invented pending state.
+
+    The result also carries the registry declaration its figures came from, and
+    that is checked against ``parameters`` FIRST and by identity rather than by
+    replay.  A result produced under a different revision would otherwise be
+    silently re-derived under this one and compared against itself, so the
+    provenance check is what stops the replay from confirming the wrong law.
     """
+    if regularisation_result.parameters_provenance != parameters.provenance:
+        raise ValueError(
+            "M303 regularisation result was produced from registry declaration "
+            f"{regularisation_result.parameters_provenance.modelo_id}/"
+            f"{regularisation_result.parameters_provenance.revision_id}, not from the supplied "
+            f"{parameters.provenance.modelo_id}/{parameters.provenance.revision_id}",
+        )
     canonical = compute_registro_regularizacion(
         bienes_register,
         regularizacion_year=regularisation_result.regularizacion_year,
