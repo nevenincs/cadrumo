@@ -16,7 +16,8 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from ..errors import RegistryValidationError
-from ..schema import PeriodCode, _validate_period_code
+from ..schema import PeriodCode
+from ..schema_scalars import _validate_period_code
 from ..schema_surfaces import CasillaDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

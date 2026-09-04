@@ -537,3 +537,16 @@ area = "entrypoints/cli"
 resolved = true
 symbols = ["_PATH"]
 evidence = "Eight CLI modules each declared their own ValueContract(DeferredTarget('pathlib', 'Path')). Merged into command_spec as PATH_VALUE alongside the three builtin contracts, every call site repointed, and all 133 exported command-spec tuples hash identically before and after."
+
+[[symbol_cluster]]
+name = "registry schema validator re-export chain"
+class = "orphaned"
+area = "domain/calculations/registry"
+resolved = true
+symbols = [
+  "_coerce_modelo_year", "_validate_country_code", "_validate_iban_string",
+  "_validate_nif_string", "_validate_period_code",
+  "coerce_modelo_year", "validate_country_code", "validate_iban_string",
+  "validate_nif_string", "validate_period_code",
+]
+evidence = "A two-layer alias chain. schema_scalars defined each validator privately, used it in its own Annotated type, and bound a PUBLIC alias to it; schema.py then imported that public alias under an _impl name and bound a second private alias, so tests could import the validator from schema. Neither alias layer had a production consumer: each _impl appeared exactly twice in schema.py, its import and its alias. Tests now import the private implementation from schema_scalars directly, and both alias layers are gone."

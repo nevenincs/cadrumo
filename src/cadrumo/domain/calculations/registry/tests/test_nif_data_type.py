@@ -19,7 +19,8 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from ..errors import RegistryValidationError
-from ..schema import NifString, _validate_nif_string
+from ..schema import NifString
+from ..schema_scalars import _validate_nif_string
 from ..schema_surfaces import CasillaDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
