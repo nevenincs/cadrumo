@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:b33ca69527186392dfb8d8a90cb4de1d97eefbacc99b50729917bbb238dbcbdf'
+body_hash: 'sha256:217c305831f04336891ee7f01bc5f661ce9769ed5b18f1a15381515a316cb241'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -465,6 +465,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S583` - Split the unreachable-code test walk's swallow by cause, refusing a tracked module that does not parse because that walk reports tests of dead code so a skip shrinks the findings, while a file that vanished mid-scan stays a reported race; `dev/audit/unreachable_code.py,dev/audit/tests/test_unreachable_code.py`.
 - [x] `W02.P02.S584` - Break the glossary's silence about missing legal grounding: an absent catalogue returned an empty map so every concept rendered with no BOE permalink and read like a corpus that cites nothing, and a malformed fragment silently dropped every citation it declared; the first now warns because synthetic docs roots legitimately have none, the second refuses; `dev/docs/glossary_reference.py,dev/docs/tests/test_glossary_reference.py`.
 - [x] `W02.P02.S585` - Make three enrolled registry screens declare their coverage, since each silently skipped 97 of 128 revisions that declare no export layout or cite no record design and then reported a finding count that read as corpus-wide when it covered under a quarter of the corpus; `dev/registry/analysis/footnote_only_wire_facts.py,dev/registry/analysis/rule_grounding_coverage.py,dev/registry/analysis/type_convention_notes.py`.
+- [x] `W02.P02.S586` - Announce the modules the tautological-assertion sweep skips, since an unparsable file returned an empty result that read exactly like a clean one in the gate whose subject is assertions proving nothing; the skip itself stays because a sweep that aborts on one incomplete file reports nothing about the thousands that parsed; `dev/quality/tautological_assertion_scan.py,dev/tests/test_tautological_assertion_gate.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

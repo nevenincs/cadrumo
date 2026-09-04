@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:f3726241f972849729bcbd109d1a5686b809ee586f467bb95effa1fee36b40da'
+body_hash: 'sha256:8cbd594a68ef092d8d004c8697144af17edc99abf6376b860fccb33aed9a42c5'
 step_id: 'S409'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -47,6 +47,33 @@ Teeth proven by accepting unmeasured areas: `an unmeasured entries area still
 produced a readiness block, so Home renders a zero nobody measured`. Restored
 by copy and verified.
 
-Remaining and NOT done: actions, resumable declarations and messages. Each
-needs its authority identified and its refusal semantics settled the same way
-this one did, which is a step apiece rather than a sweep.
+Remaining and NOT done: actions, resumable declarations and messages. All
+three were measured rather than re-labelled, and they are blocked for three
+DIFFERENT reasons, which one word was hiding.
+
+ACTIONS -- blocked on a taxonomy decision. `HomeNextAction` is built only by
+the fixture; the authority the plan names, `build_overview_status_next_steps`,
+emits `OverviewStatusNextStepId` values (CREATE_PROFILE, IMPORT_TRANSACTIONS,
+REPAIR_STORAGE) which are `overview status` CLI guidance, not Home's task
+vocabulary. Home resolves `tui.home.reason.<code>` and declares six codes, all
+about declaration review, ledger classification and evidence. Bridging the two
+means deciding what Home's actions zone MEANS and minting reason codes plus
+copy for it; guessing renders the degraded generic line the fixture gate now
+catches.
+
+DECLARATIONS -- blocked on a state mapping. The join itself is available: the
+ref lacks a display name but `WorkUnit.name` has one and the door already holds
+the catalogue, so the earlier note calling this blocked on a missing name was
+half wrong. What is genuinely missing is the mapping. `WorkUnitState` has two
+values (BORRADOR, DESCARTADO) and `HomeDeclarationState` has five; FILED and
+DISCARDED fall out of facts the projection carries, but READY versus
+NEEDS_REVIEW needs a grounded rule over `CalculationRevisionState`. Telling an
+operator a declaration is READY when it needs review is a filing-grade harm, so
+this refuses rather than guesses.
+
+MESSAGES -- blocked on a pull, like S408. `PersistedNotificationsSnapshot` is
+the record of an AEAT notifications capture; before any pull there is no
+snapshot to read. The honest improvement available without a pull is a more
+precise refusal: the current reason code says the reader is unavailable, which
+is false -- the reader exists and the data does not. That is the next
+actionable slice here.
