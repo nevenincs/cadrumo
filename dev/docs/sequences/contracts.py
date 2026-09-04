@@ -8,8 +8,9 @@ under ``docs/_sequences/contracts/<page>/<sequence-id>.seq``.
 
 from __future__ import annotations
 
+import ntpath
 import re
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from ..._paths import UTF_8
 from .errors import SequenceEngineError
@@ -29,14 +30,31 @@ def sequence_contract_path(
     docs_root: Path,
     contracts_root: Path | None = None,
 ) -> Path:
-    """Return the private contract path for one page-keyed sequence."""
+    """Return the private contract path for one page-keyed sequence.
+
+    The docname is POSIX-shaped and comes from a page, so it is validated
+    segment by segment and the result is confirmed to land inside the
+    contracts root. Splitting on ``/`` alone was not enough on Windows: a
+    backslash kept the whole docname in ONE segment, so ``..`` inside it
+    never met the check, and a UNC or drive-qualified segment made
+    ``joinpath`` discard the root before it entirely.
+    """
+    if chr(92) in page:
+        raise SequenceEngineError(f"a docname is POSIX-shaped and cannot contain a backslash: {page!r}")
     page_parts = tuple(page.split("/"))
     if not page_parts or any(part in {"", ".", ".."} for part in page_parts):
         raise SequenceEngineError(f"invalid docname for a private sequence contract: {page!r}")
+    if any(PurePosixPath(part).is_absolute() or ntpath.splitdrive(part)[0] for part in page_parts):
+        raise SequenceEngineError(f"a docname segment cannot be absolute or drive-qualified: {page!r}")
     if _SEQUENCE_ID_RE.fullmatch(sequence_id) is None:
         raise SequenceEngineError(f"invalid sequence id for a private sequence contract: {sequence_id!r}")
     root = contracts_root if contracts_root is not None else docs_root / "_sequences" / "contracts"
-    return root.joinpath(*page_parts, f"{sequence_id}.seq")
+    resolved = root.joinpath(*page_parts, f"{sequence_id}.seq")
+    # Backstop rather than a second guard: whatever the segments looked like,
+    # a contract that resolves outside its own root is not this page's.
+    if not resolved.resolve().is_relative_to(root.resolve()):
+        raise SequenceEngineError(f"private sequence contract escapes its contracts root: {page!r}")
+    return resolved
 
 
 def read_sequence_contract(
