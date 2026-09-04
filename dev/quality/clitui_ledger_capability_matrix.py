@@ -9,6 +9,7 @@ when its role and subject snapshot are current.
 from __future__ import annotations
 
 import hashlib
+import ast
 import json
 import re
 from collections.abc import Iterable, Mapping
@@ -41,6 +42,25 @@ LEDGER_REGISTRY_ROUTE_CENSUS_ROOT: Final[Literal["cadrumo.ledger_registry_route_
 )
 _LEDGER_REGISTRY_ROUTE_CENSUS_FRAME: Final[bytes] = b"cadrumo:ledger-registry-route-census:v1\x00"
 _LEDGER_REGISTRY_SOURCE_SET_FRAME: Final[bytes] = b"cadrumo:ledger-registry-source-set:v1\x00"
+LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_SCHEMA_VERSION: Final[Literal[1]] = 1
+LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_ROOT: Final[Literal["cadrumo.ledger_tui_supported_surface_census"]] = (
+    "cadrumo.ledger_tui_supported_surface_census"
+)
+_LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_FRAME: Final[bytes] = b"cadrumo:ledger-tui-supported-surface-census:v1\x00"
+_LEDGER_TUI_SUPPORTED_SURFACE_SOURCE_SET_FRAME: Final[bytes] = (
+    b"cadrumo:ledger-tui-supported-surface-source-set:v1\x00"
+)
+_LEDGER_MESSAGE_TYPES: Final[tuple[str, ...]] = (
+    "LedgerBackRequested",
+    "LedgerEvidenceReviewRequested",
+    "LedgerReviewRequested",
+    "LedgerRouteRequested",
+)
+_LEDGER_MUTATION_DOORS: Final[tuple[str, ...]] = (
+    "classification_submitter",
+    "import_submitter",
+    "link_submitter",
+)
 
 
 def _length_frame(value: bytes) -> bytes:
@@ -237,6 +257,291 @@ def ledger_registry_route_census_bytes(census: LedgerRegistryRouteCensusV1) -> b
 def ledger_registry_route_census_digest(census: LedgerRegistryRouteCensusV1) -> str:
     """Return the canonical route-census SHA-256 digest."""
     return f"sha256:{hashlib.sha256(ledger_registry_route_census_bytes(census)).hexdigest()}"
+
+
+class LedgerTuiRouteRowV1(BaseModel):
+    """One declared internal Ledger route and its production reachability."""
+
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+    destination: str = Field(pattern=r"^ledger\.[a-z][a-z0-9_]*$")
+    area: str = Field(pattern=r"^[A-Z][A-Z0-9_]*$")
+    screen: str = Field(pattern=r"^Ledger[A-Za-z0-9]+Screen$")
+    reachability: Literal["component_only", "installed"]
+
+
+class LedgerTuiSupportedSurfaceCensusV1(BaseModel):
+    """Canonical projection of live Ledger TUI declarations and composition."""
+
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+    root: Literal["cadrumo.ledger_tui_supported_surface_census"]
+    schema_version: Literal[1]
+    source_set_digest: str
+    routes: tuple[LedgerTuiRouteRowV1, ...]
+    controller: str
+    root_factory: str
+    resolver: str
+    installed_outer_destination: str
+    initial_internal_destination: str
+    message_consumers: tuple[str, ...]
+    injected_read_action_ids: tuple[str, ...]
+    installed_mutation_doors: tuple[str, ...]
+    cli_tui_capabilities: tuple[tuple[str, str], ...]
+    harness_files: tuple[str, ...]
+    harness_test_functions: int = Field(ge=0)
+
+    @model_validator(mode="after")
+    def _canonical_projection(self) -> LedgerTuiSupportedSurfaceCensusV1:
+        _require_digest(self.source_set_digest, field_name="source_set_digest")
+        destinations = tuple(row.destination for row in self.routes)
+        if destinations != tuple(sorted(destinations)) or len(set(destinations)) != len(destinations):
+            raise ValueError("routes must have unique destinations in canonical order")
+        for field_name in (
+            "message_consumers",
+            "injected_read_action_ids",
+            "installed_mutation_doors",
+            "harness_files",
+        ):
+            values = getattr(self, field_name)
+            if values != tuple(sorted(set(values))):
+                raise ValueError(f"{field_name} must be unique and canonically ordered")
+        if self.cli_tui_capabilities != tuple(sorted(set(self.cli_tui_capabilities))):
+            raise ValueError("cli_tui_capabilities must be unique and canonically ordered")
+        installed = tuple(row.destination for row in self.routes if row.reachability == "installed")
+        if installed != (self.initial_internal_destination,):
+            raise ValueError("the initial internal destination must be the sole installed route")
+        return self
+
+    @property
+    def calculated_digest(self) -> str:
+        """Hash the domain-separated, length-framed canonical projection."""
+        return ledger_tui_supported_surface_census_digest(self)
+
+
+def _repository_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def ledger_tui_supported_surface_source_files(repo_root: Path | None = None) -> tuple[Path, ...]:
+    """Return the complete production and focused-harness scope for this census."""
+    root = _repository_root() if repo_root is None else repo_root.resolve()
+    tui_root = root / "src/cadrumo/entrypoints/tui"
+    production = tuple(
+        path
+        for path in tui_root.rglob("*.py")
+        if "tests" not in path.relative_to(tui_root).parts
+        and "devtools" not in path.relative_to(tui_root).parts
+        and "__pycache__" not in path.parts
+    )
+    ledger_tests = tuple((tui_root / "ledger/tests").glob("test_*.py"))
+    composition_tests = tuple(
+        tui_root / "tests" / name
+        for name in (
+            "test_installed_generation_composition.py",
+            "test_installed_workbench.py",
+            "test_launcher_entry_point.py",
+        )
+    )
+    application_sources = tuple(
+        root / relative
+        for relative in (
+            "src/cadrumo/application/ledger/workspace.py",
+            "src/cadrumo/application/ledger/workspace_reader.py",
+            "src/cadrumo/application/search/installed_workbench.py",
+            "src/cadrumo/application/workbench_generation.py",
+        )
+    )
+    cli_sources = tuple((root / "src/cadrumo/entrypoints/cli").glob("_app_ledger*_command_specs.py"))
+    files = tuple(sorted({*production, *ledger_tests, *composition_tests, *application_sources, *cli_sources}))
+    missing = tuple(path for path in files if not path.is_file())
+    if missing:
+        raise FileNotFoundError(f"Ledger TUI census source is unavailable: {missing[0]}")
+    return files
+
+
+def _source_records(
+    files: Iterable[Path],
+    *,
+    repo_root: Path,
+) -> tuple[tuple[str, bytes], ...]:
+    return tuple(
+        sorted((path.resolve().relative_to(repo_root.resolve()).as_posix(), path.read_bytes()) for path in files)
+    )
+
+
+def ledger_tui_supported_surface_source_set_digest(
+    *,
+    repo_root: Path | None = None,
+    source_records: Iterable[tuple[str, bytes]] | None = None,
+) -> str:
+    """Hash sorted repository-relative paths and bodies with unsigned u64 frames."""
+    root = _repository_root() if repo_root is None else repo_root.resolve()
+    records = (
+        tuple(source_records)
+        if source_records is not None
+        else _source_records(ledger_tui_supported_surface_source_files(root), repo_root=root)
+    )
+    payload = bytearray(_LEDGER_TUI_SUPPORTED_SURFACE_SOURCE_SET_FRAME)
+    for relative, body in sorted(records):
+        payload.extend(_length_frame(relative.encode("utf-8")))
+        payload.extend(_length_frame(body))
+    return f"sha256:{hashlib.sha256(payload).hexdigest()}"
+
+
+def _parsed_sources(records: Iterable[tuple[str, bytes]]) -> dict[str, ast.Module]:
+    return {relative: ast.parse(body.decode("utf-8"), filename=relative) for relative, body in records}
+
+
+def _ledger_route_rows(tree: ast.Module) -> tuple[tuple[str, str, str], ...]:
+    rows: list[tuple[str, str, str]] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Name) or node.func.id != "LedgerRouteV1":
+            continue
+        if len(node.args) != 3:
+            raise ValueError("LedgerRouteV1 declarations must have three positional arguments")
+        destination, area, screen = node.args
+        if (
+            not isinstance(destination, ast.Constant)
+            or not isinstance(destination.value, str)
+            or not isinstance(area, ast.Attribute)
+            or not isinstance(screen, ast.Name)
+        ):
+            raise ValueError("Ledger route declaration is not statically census-readable")
+        rows.append((destination.value, area.attr, screen.id))
+    return tuple(sorted(rows))
+
+
+def _string_assignments(tree: ast.Module, prefix: str) -> tuple[str, ...]:
+    values: list[str] = []
+    for node in tree.body:
+        if not isinstance(node, (ast.Assign, ast.AnnAssign)):
+            continue
+        targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+        value = node.value
+        if not any(isinstance(target, ast.Name) and target.id.startswith(prefix) for target in targets):
+            continue
+        if isinstance(value, ast.Constant) and isinstance(value.value, str):
+            values.append(value.value)
+    return tuple(sorted(values))
+
+
+def _function_names(tree: ast.Module) -> frozenset[str]:
+    return frozenset(node.name for node in ast.walk(tree) if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)))
+
+
+def build_ledger_tui_supported_surface_census(
+    *,
+    repo_root: Path | None = None,
+    source_records: Iterable[tuple[str, bytes]] | None = None,
+    cli_tui_capabilities: Iterable[tuple[str, str]] | None = None,
+) -> LedgerTuiSupportedSurfaceCensusV1:
+    """Derive the supported-surface census without importing the product TUI."""
+    root = _repository_root() if repo_root is None else repo_root.resolve()
+    records = tuple(source_records) if source_records is not None else _source_records(
+        ledger_tui_supported_surface_source_files(root), repo_root=root
+    )
+    trees = _parsed_sources(records)
+    routes_path = "src/cadrumo/entrypoints/tui/ledger/routes.py"
+    launcher_path = "src/cadrumo/entrypoints/tui/launcher.py"
+    installed_path = "src/cadrumo/entrypoints/tui/installed_session.py"
+    for required in (routes_path, launcher_path, installed_path):
+        if required not in trees:
+            raise ValueError(f"Ledger TUI census source set is missing {required}")
+    route_facts = _ledger_route_rows(trees[routes_path])
+    if not route_facts:
+        raise ValueError("Ledger TUI census found no internal routes")
+
+    routes_body = dict(records)[routes_path].decode("utf-8")
+    launcher_body = dict(records)[launcher_path].decode("utf-8")
+    if 'factories["workbench.ledger"] = ledger_factory' not in launcher_body:
+        raise ValueError("installed workbench does not enroll the Ledger outer factory")
+    initial_match = re.search(r"route_target\(LedgerWorkspaceArea\.([A-Z][A-Z0-9_]*)\)", routes_body)
+    if initial_match is None:
+        raise ValueError("Ledger root factory initial route is not statically census-readable")
+    initial_area = initial_match.group(1)
+    initial_destination = next(
+        (destination for destination, area, _screen in route_facts if area == initial_area),
+        None,
+    )
+    if initial_destination is None:
+        raise ValueError("Ledger root factory initial area is absent from the route table")
+
+    handler_names = {
+        name
+        for relative, tree in trees.items()
+        if relative != "src/cadrumo/entrypoints/tui/ledger/controller.py"
+        for name in _function_names(tree)
+    }
+    consumers = tuple(
+        sorted(
+            message
+            for message in _LEDGER_MESSAGE_TYPES
+            if f"on_{re.sub(r'(?<!^)(?=[A-Z])', '_', message).lower()}" in handler_names
+        )
+    )
+    installed_keywords = {
+        keyword.arg
+        for node in ast.walk(trees[launcher_path])
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "ledger_screen_factory"
+        for keyword in node.keywords
+        if keyword.arg is not None
+    }
+    installed_doors = tuple(sorted(installed_keywords & set(_LEDGER_MUTATION_DOORS)))
+    read_actions = _string_assignments(trees[installed_path], "_LEDGER_")
+
+    if cli_tui_capabilities is None:
+        from cadrumo.entrypoints.cli._app_ledger_command_specs import LEDGER_CLI_COMMAND_CENSUS
+
+        cli_tui_capabilities = (
+            (entry.command_key, entry.tui_capability.value) for entry in LEDGER_CLI_COMMAND_CENSUS
+        )
+    cli_statuses = tuple(sorted(cli_tui_capabilities))
+    test_records = tuple((relative, tree) for relative, tree in trees.items() if "/tests/test_" in relative)
+    harness_files = tuple(sorted(relative for relative, _tree in test_records))
+    harness_test_functions = sum(
+        1
+        for _relative, tree in test_records
+        for node in tree.body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith("test_")
+    )
+    return LedgerTuiSupportedSurfaceCensusV1(
+        root=LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_ROOT,
+        schema_version=LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_SCHEMA_VERSION,
+        source_set_digest=ledger_tui_supported_surface_source_set_digest(source_records=records),
+        routes=tuple(
+            LedgerTuiRouteRowV1(
+                destination=destination,
+                area=area,
+                screen=screen,
+                reachability="installed" if destination == initial_destination else "component_only",
+            )
+            for destination, area, screen in route_facts
+        ),
+        controller="LedgerWorkspaceController",
+        root_factory="ledger_screen_factory",
+        resolver="resolve_ledger_screen",
+        installed_outer_destination="workbench.ledger",
+        initial_internal_destination=initial_destination,
+        message_consumers=consumers,
+        injected_read_action_ids=read_actions,
+        installed_mutation_doors=installed_doors,
+        cli_tui_capabilities=cli_statuses,
+        harness_files=harness_files,
+        harness_test_functions=harness_test_functions,
+    )
+
+
+def ledger_tui_supported_surface_census_bytes(census: LedgerTuiSupportedSurfaceCensusV1) -> bytes:
+    """Serialize a validated census with explicit domain and payload framing."""
+    canonical = LedgerTuiSupportedSurfaceCensusV1.model_validate(census.model_dump(mode="python"))
+    encoded = _canonical_json_text(canonical).encode("utf-8")
+    return _LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_FRAME + _length_frame(encoded)
+
+
+def ledger_tui_supported_surface_census_digest(census: LedgerTuiSupportedSurfaceCensusV1) -> str:
+    """Return the canonical supported-surface SHA-256 digest."""
+    return f"sha256:{hashlib.sha256(ledger_tui_supported_surface_census_bytes(census)).hexdigest()}"
 
 
 class LedgerCapabilityAxis(StrEnum):
