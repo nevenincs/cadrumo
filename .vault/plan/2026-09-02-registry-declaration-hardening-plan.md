@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:00b866796a3fe084b5bdfbee9942b87facbff2f3ee7166d863d969262da52815'
+body_hash: 'sha256:fb51e97ed982ad88d81433eeb51c857d56ad26388999e625b680a2c8d8cd52c5'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -491,6 +491,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S609` - Gate every committed justificante fixture on the leak markers rather than only those carrying a sanitiser sidecar, since the pair was appended only when the sidecar existed and three of sixty-three committed fixtures never met the assertions that need no sidecar at all, and declare the sidecar-less set so a new one must be classified instead of vanishing; `dev/sanitizer/tests/test_adversarial_absence.py`.
 - [x] `W02.P02.S610` - Guard the unratified-synonym exclusion against a queue whose entries are all ratified, since its loop skipped every ratified entry and asserted nothing at all when none remained; `dev/docs/terminology/tests/test_synonym_mining.py`.
 - [x] `W02.P02.S611` - Refuse a committed extraction sidecar that carries no units list and a hook run that produced no unit, since the parity defaulted a missing key to empty and would report agreement whenever both sides were empty; `dev/docs/preprocess/tests/test_hook.py`.
+- [x] `W02.P02.S612` - Give the concept-card projection's legal-link counter a reader that compares it against the cards it was computed alongside, since the stat had no reader anywhere in the tree and every caller unpacked the projection stats into a discard; `dev/docs/terminology/tests/test_concept_cards.py`.
+- [x] `W02.P02.S613` - Give the CLI projection's three statistics a reader, since the missing-translation count among them was computed on every run and had zero attribute reads anywhere: both callers unpack the stats into a discard and the frozen dataclass is never serialised; `dev/docs/terminology/tests/test_cli_projection.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

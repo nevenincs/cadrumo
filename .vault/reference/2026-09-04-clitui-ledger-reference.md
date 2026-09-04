@@ -19,17 +19,17 @@ This reference maps the first semantic-search-led census of Ledger behavior owne
 
 ### Campaign matrix publication
 
-This document is the authoritative human-readable publication surface for the `LedgerCapabilityMatrixV1` campaign contract in `dev/quality/clitui_ledger_capability_matrix.py`. The S04 CLI stream and S05 backend-operation stream are now exact current observations, but the publication remains a **provisional baseline** rather than a serialized accepted matrix: S06-S08 have not produced and adjudicated the remaining live union census, S09 has not recorded the cross-plan hold control, and S12-S14 have not reviewed and accepted the frozen denominator. The contract therefore requires the publication to fail closed instead of inventing a denominator digest, matrix digest, evidence attestation, or G0 closure.
+This document is the authoritative human-readable publication surface for the `LedgerCapabilityMatrixV1` campaign contract in `dev/quality/clitui_ledger_capability_matrix.py`. The S04 CLI, S05 backend-operation, and S06 registry-route streams are now exact current observations, but the publication remains a **provisional baseline** rather than a serialized accepted matrix: S07-S08 have not produced and adjudicated the remaining live union census, S09 has not recorded the cross-plan hold control, and S12-S14 have not reviewed and accepted the frozen denominator. The contract therefore requires the publication to fail closed instead of inventing a denominator digest, matrix digest, evidence attestation, or G0 closure.
 
 | Publication field | Current value |
 | --- | --- |
 | Contract / schema | `LedgerCapabilityMatrixV1` / `3` |
-| Publication revision | `s05-backend-census-1` |
-| Observation timestamp | `2026-09-04T22:11:49.6380159+02:00` |
-| Source revision | `5db9dbc10c2de8e4efd5ca3d73abbb65acb19696` |
+| Publication revision | `s06-registry-census-1` |
+| Observation timestamp | `2026-09-04T23:42:00+02:00` |
+| Source revision | `bc77754a4c` |
 | Contract source digest | `sha256:c2998c8ff958ae820b59fa7055a36d83117bb35282fe2679761032fab7a15a10` |
 | Accepted plan owner | `clitui-ledger` |
-| Denominator revision / digest | Not issued: the mandatory S04-S08 live census and adjudication are open |
+| Denominator revision / digest | Not issued: the mandatory S07-S08 live census and adjudication are open |
 | Matrix digest | Not issued: a digest-bound `LedgerCapabilityMatrixV1` cannot exist before the complete denominator and current evidence subjects exist |
 | Acceptance attestation | Absent by design: only S14 may record an independent `ACCEPT` ruling bound to the frozen digest |
 | TUI hold | Campaign sequencing bars Ledger TUI implementation; the cross-plan recorded control remains open until S09 and row-level applicability/hold classification remains open until S07, S08, and S11 |
@@ -44,8 +44,8 @@ Every stream below must become one complete, readable, unambiguous, digest-bound
 | `cli_suboperation` | 50 explicit behavior-distinct sub-operations across ten overloaded endpoints | Complete current CLI stream; not a union-denominator attestation | S04 complete |
 | `backend_only` | 63 public frontend-neutral operations are catalogued below; the installed workspace read/projection is the one backend-only product capability absent from the CLI census | Complete current backend-operation stream; product-row admission remains open | S05 complete; S08 adjudication |
 | `missing_product` | Ten baseline product/provenance families are confirmed absent or incomplete below | Complete current S05 product-gap observation; union review and canonical row admission remain open | S05 complete; S08 adjudication |
-| `registry_route` | Seven Ledger binding families and 546 declarations are established below | Partial: every route, calculation consumer, filing consumer, and proof obligation remains open | S06 |
-| `artifact_product` | Flat CSV/JSONL/XLSX exists; review package, Google transport, and recovery archive remain distinct missing products | Complete current S05 application-product observation; registry-linked artifacts and row admission remain open | S06 and S08 |
+| `registry_route` | Seven families, 546 declarations, 35 family/revision sites, 510 registry-bound destinations, three application-sidecar destinations, and 33 destinationless declarations are enumerated below | Complete current registry stream; not a union-denominator attestation | S06 complete; S08 adjudication |
+| `artifact_product` | Flat CSV/JSONL/XLSX exists; M369 has a successful Modelo export path, while observed M100/M303/M390 routes refuse unavailable layouts; review package, Google transport, and recovery archive remain distinct missing products | Complete current S05/S06 application-product observation; row admission remains open | S08 adjudication |
 | `supported_surface` | CLI enrollment and TUI component existence/installed reachability are known to be distinct | Partial: exhaustive component and navigation reachability census remains open | S07 |
 
 #### Axis contract and publication notation
@@ -99,13 +99,13 @@ These 41 family rows are the S03 baseline keys. They are not yet admitted `Ledge
 | `ledger.import.normalization_provenance` | `PRODUCT` | `src/cadrumo/domain/transactions/change_provenance.py`; source-column mapping and normalized-value history in S84/S86 | `product`, `provenance`, `proof`; CLI projection in S113 |
 | `ledger.fx.provenance` | `PRODUCT` | `src/cadrumo/domain/transactions/models.py`; original/normalized currency, rate source/date, and operation identity in S85/S86 | `product`, `provenance`, `proof`; filing evidence in S100 and CLI projection in S113 |
 | `ledger.transaction.batch_patch` | `PRODUCT` | `src/cadrumo/application/ledger/change_sets.py`; version-bound atomic multi-row result in S78/S86 | `product`, `composition`, `provenance`, `proof` |
-| `ledger.registry.iva` | `REGISTRY` | registry binding/resolution and calculation route; exact route contract in S06/S100 | `registry`, `proof`; nonzero M309/M322/M353 route proof open |
+| `ledger.registry.iva` | `REGISTRY` | registry binding/resolution and calculation route; exact route contract in S06/S100 | `registry`, `proof`; 31 destinationless declarations, nonzero M309/M322/M353 production proof, and general unrouted-observation filing refusal remain open |
 | `ledger.registry.oss` | `REGISTRY` | registry binding/resolution and M369 route; exact route contract in S06/S100 | Preserve issued-invoice-catalogue distinction; proof bounded below |
 | `ledger.registry.renta_expense` | `REGISTRY` | registry binding/resolution and M100 route; exact route contract in S06/S100 | Preserve evidence and deduction-ratio requirements |
-| `ledger.registry.renta_income` | `REGISTRY` | registry binding/resolution and M100/M130/M131 routes; exact route contract in S06/S100 | `registry`, `proof`; M131 live path and M130 c06 hardcoded projection open |
+| `ledger.registry.renta_income` | `REGISTRY` | registry binding/resolution and M100/M130/M131 routes; exact route contract in S06/S100 | `registry`, `proof`; M131 live path, one M130 c06 application sidecar, and two destinationless M130 declarations remain open |
 | `ledger.registry.m130_expense` | `REGISTRY` | registry binding/resolution and M130 c02 route; exact route contract in S06/S100 | `registry`, `proof`; explicit nonzero c02 route assertion open |
 | `ledger.registry.impatriado_income` | `REGISTRY` | registry binding/resolution and M151 route; exact route contract in S06/S100 | `registry`, `proof`; calculate-to-export proof and manual savings base open |
-| `ledger.registry.irnr_income` | `REGISTRY` | registry binding/resolution and M210 route; exact route contract in S06/S100 | Preserve explicit classification and mutual exclusion; proof bounded below |
+| `ledger.registry.irnr_income` | `REGISTRY` | registry binding/resolution and M210 route; exact route contract in S06/S100 | Preserve explicit classification and mutual exclusion; both revisions use an application sidecar rather than a registry destination, and export/file proof remains open |
 
 #### Evidence-coordinate register
 
@@ -119,14 +119,16 @@ These coordinates bind the S03 claims to the current observation revision. They 
 | `evidence.baseline.cli_authority` | `2026-09-04-clitui-ledger-reference`, CLI-to-backend disposition matrix | Bound by this document's CLI-maintained `body_hash` after publication | Initial authority families and candidate application homes |
 | `evidence.baseline.backend_behavior` | `2026-09-04-clitui-ledger-reference`, Direct backend behavior gate | Bound by this document's CLI-maintained `body_hash` after publication | Existing direct-proof boundaries and missing facades |
 | `evidence.baseline.missing_products` | `2026-09-04-clitui-ledger-reference`, Missing capability and reuse map | Bound by this document's CLI-maintained `body_hash` after publication | Explicit product/artifact/provenance gaps |
-| `evidence.baseline.registry_routes` | `src/cadrumo/domain/calculations/registry/bindings.py:926` | `sha256:957fca756cca97d606a42d34ec0b4d9fc074454a1b3d4bff08953e9408333252` | Seven family enrollment baseline; route-level S06 proof census is open |
+| `evidence.s06.registry_declaration_sources` | 130 registry TOML files whose binding rows declare a member of `LEDGER_BINDING_SOURCE_KINDS` | `sha256:7c6c163788cda0c70313367e43f4626a3926363f97d5d98a889fbc335e76804c` | Path-and-byte-length-delimited digest over the exact declaration source set |
+| `evidence.s06.registry_route_census` | `ValidatedRegistryAuthority` projection through `casillas_by_binding`, including selector, applicability, target casilla, and section | `sha256:4e47a06ba217ea66152a756453c70a9a47ea542d6dac46e7742210684f69f705` | Sorted canonical JSON projection of all 546 declarations; 510 registry-bound and 36 without a registry binding/casilla edge |
+| `evidence.s06.production_consumers` | `src/cadrumo/application/modelo/calculation_route.py:112`; `src/cadrumo/application/modelo/calculation_actions.py:767`; `src/cadrumo/application/aggregation/_modelo_bindings.py:171`; `src/cadrumo/application/aggregation/modelo_bindings_renta_expenses.py:48`; `src/cadrumo/application/aggregation/_oss_ioss.py:504` | Bound by this document's CLI-maintained `body_hash` after publication | Unique production ownership for all seven families; three explicit application-sidecar destinations; exact proof and refusal limits below |
 | `evidence.baseline.cli_boundary` | `2026-09-04-clitui-ledger-reference`, Valid CLI boundary | Bound by this document's CLI-maintained `body_hash` after publication | Allowed adapter concerns and forbidden business ownership |
 
 #### Gate summary
 
 | Gate | State at S03 | Blocking facts |
 | --- | --- | --- |
-| G0 denominator and ownership freeze | **OPEN** | S04-S05 are complete, but S06-S08 union census/adjudication, S09/S11 hold records, S12 row review, S13 reopening detector, and S14 digest-bound independent `ACCEPT` remain outstanding |
+| G0 denominator and ownership freeze | **OPEN** | S04-S06 are complete, but S07-S08 union census/adjudication, S09/S11 hold records, S12 row review, S13 reopening detector, and S14 digest-bound independent `ACCEPT` remain outstanding |
 | G1 semantic authority recovery | **LOCKED by G0** | `AUTHORITY` rows retain CLI-owned or missing application authority; no cohort may claim closure before its backend behavior and adapter detector evidence exists |
 | G2 backend product completeness | **LOCKED by G0/G1** | Missing products, composition, artifacts, provenance, registry routes, and direct proof remain open |
 | G3 CLI clean break and completeness | **LOCKED by G0-G2** | CLI delegation, success/refusal behavior, and artifact proof are not complete across the admitted denominator |
