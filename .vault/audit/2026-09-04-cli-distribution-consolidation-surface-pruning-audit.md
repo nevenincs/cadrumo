@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:e9e245bc411631028622133d341be04272f52025a9c42045b313ed0ea7692fdb'
+body_hash: 'sha256:f8a0189528c0c59309fda3f7f433da0a8d21f9355416418f9676eb66170bfb32'
 related:
   - "[[2026-09-02-cli-distribution-consolidation-plan]]"
 ---
@@ -53,4 +53,14 @@ the gate it serves, not to remove it. That is a rename, and should be tracked as
 one, so that what is being changed is the module's home rather than the
 protection it provides.
 
-Left open pending an operator decision; no other Step depends on it.
+Decided on the robustness criterion and the Step withdrawn: the resolver and
+its gate both stay, unchanged. The rename option was rejected as the weaker
+choice — it buys naming clarity and no protection, and spends edits in a file a
+concurrent session could be holding.
+
+The decision is reinforced by what the release path turned out to look like.
+The version authority that the publish workflow's own documentation calls the
+last check before an irreversible upload is not invoked there at all. Removing
+a control that demonstrably works, in a repository that has just been shown to
+be missing one where it matters more, is the wrong direction. The scarce
+resource is enforcement, not module count.

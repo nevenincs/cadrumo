@@ -5,16 +5,11 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:eb5ff1b41580cbd6489196d0ecb3a842e3ae5118493d4a60a7d28d50e2b2de89'
+body_hash: 'sha256:b28f436505d4fbb9e9b0a1cab4e33bae466ec83247963a2959bc089be3f706c7'
 step_id: 'S13'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Resolve the superseded-constant population detected by literal-value supersession, naming the live holder for each before removal
 

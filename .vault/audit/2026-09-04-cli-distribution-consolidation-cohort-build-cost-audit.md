@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:c2a11db64f729e3eefa319e46a589286353994b73e02c807aee24be320ee314c'
+body_hash: 'sha256:5d23fb224ad89f2e4dcb0b587c7878a731cf5fc7179718d31ce2d00e52a6f15a'
 related:
   - "[[2026-09-02-cli-distribution-consolidation-plan]]"
 ---
@@ -76,32 +76,41 @@ measurement, to the outer clone, the copy-and-revalidate pass, and per-file
 scanning overhead on the roughly 84,000 file touches a build performs. Whether
 real-time antivirus scanning is active on the measuring host was not checked.
 
-### cohort-build-cost | critical | The evidence campaign cannot be dispatched on the default branch
+### cohort-build-cost | critical | The version authority is wired to the wrong end of the release path
 
 A dispatch of the packaging campaign against `main` failed in three minutes:
-`main` declares 0.4.0, and 0.4.0 is now carried by all three index projects, by
-the tag namespace and by the release namespace, so `version_identity` refused to
-seal the cohort and every downstream lane skipped.
+the cohort seal refused because 0.4.0 is carried by all three index projects,
+by the tag namespace and by the release namespace, and every downstream lane
+skipped.
 
-The refusal is correct and the gate is coherent. The readiness check that
-consumes this evidence requires the cohort's source commit to equal the
-checked-out commit and the cohort's tag to equal `v{version}`, so a row is bound
-to one exact release commit at one exact version. The workflow's own header says
-it is a release-candidate campaign, dispatched by hand and never on push.
-Evidence therefore has exactly one place it can legitimately be minted: the
-release commit, at the bumped and not-yet-published version — which in this
-project is the release pull request's branch, in the window between the bump
-landing and the tag being cut. Dispatching against a default branch that still
-declares the previously published version can never succeed, and the interval in
-which it cannot succeed is open-ended, because every commit since the tag is
-`chore`, `refactor` or `docs` and none of those is releasable.
+An earlier entry recorded this as correct behaviour and concluded the gate was
+coherent, with the campaign simply needing to run against a release branch.
+That conclusion was wrong, and it is corrected here because it turns a defect
+into a procedure.
 
-What is missing is not a gate change but the procedure. The release runbook
-describes the pull-request merge, the tag, and publication, and never mentions
-the evidence campaign at all — so nothing tells an operator that the campaign
-must be dispatched against the candidate branch, nor that dispatching it against
-the default branch is guaranteed to fail for a reason that reads like a release
-collision.
+The version authority documents itself as one authority invoked from two
+places: cohort seal time, and publication, "where it is the last check before
+an irreversible upload." The second invocation does not exist. The publish
+workflow performs the irreversible upload with a file-cap check, a byte seal
+and smoke tests, and never calls the version authority at all. Its `publish`
+scope has no caller anywhere in the repository. The only live invocation is the
+packaging campaign's seal.
+
+So the rules are inverted. The seal — which uploads nothing, and whose stated
+purpose is that the lane "builds and proves a cohort on every push" — applies
+the full publication collision set, and therefore refuses every build from the
+moment a release ships until the version is bumped again. That is the same
+interval-blindness the seal scope was created to remove from the floor check,
+reintroduced through the collision checks. Meanwhile the upload that those
+collision reasons actually describe runs unguarded by this authority.
+
+The `publish` scope could not simply be connected as written. It requires the
+candidate to exceed the recorded manifest floor, but the release tool writes
+the manifest to the released version as part of the release change, so at the
+tagged commit the floor equals the version and the check would refuse every
+release. The floor rule only means what it says on a pre-bump commit; the
+collision rules only matter at the upload. They are two different gates sharing
+one scope switch.
 
 ## Recommendations
 

@@ -9,8 +9,10 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:615b042b613e96ad065cdb4ce48cc215aa9a11e1119ae3b436db084935423f37'
+body_hash: 'sha256:a87ac7231d416192a638ce554694cf03ce458474fc7b2eee1a4a6b2e0d23389b'
 ---
+
+<!-- RETIRED: S39 -->
 
 # `cli-distribution-consolidation` plan
 
@@ -112,13 +114,13 @@ Build every declared distribution and channel artifact from one command and prov
 - [x] `P09.S35` - Prove both console scripts from the built wheel in an isolated interpreter; `dev/smoke/smoke_check.py`.
 - [x] `P09.S36` - Render the Homebrew formula and the Scoop manifest from the built cohort; `dev/packaging/cohort_manifest.py`.
 - [ ] `P09.S37` - Produce the distribution evidence rows the three channels declare; `dev/release/readiness.py`.
+- [ ] `P09.S48` - Separate the seal check from the publication check and guard the upload with the authority that names it; `dev/release/version_identity.py`.
 
 ### Phase `P10` - Prune the release and packaging surfaces without consumers
 
 Delete the development and release modules the adopted path no longer invokes, each verified to have no consumer outside its own test.
 
 - [x] `P10.S38` - Remove the publication-input dispatcher left without a consumer; `dev/packaging/publication_inputs.py`.
-- [ ] `P10.S39` - Remove the container base-image declaration the install proof no longer reads; `dev/packaging/_base_image.py`.
 - [x] `P10.S40` - Remove the evidence leak sweep left without a caller; `dev/packaging/evidence_leak_sweep.py`.
 - [x] `P10.S41` - Reduce the release module family to what the adopted path invokes; `dev/release/environment_inventory.py`.
 - [x] `P10.S47` - Close the evidence assertions naming cohort artifacts the adopted path no longer builds; `dev/packaging/tests/test_distribution_evidence_emit.py`.

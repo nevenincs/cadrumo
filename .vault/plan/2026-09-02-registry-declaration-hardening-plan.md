@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:12611ba88c643d03409d052867abf55347c6f36d6a33630d3705a96c82c147a4'
+body_hash: 'sha256:987637864700a5360c3f5359f18ca6a54be8c6b0a39912146bda02cb15a6bd2e'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -441,6 +441,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S559` - Pin the census source universe against the tracked tree at one resolved revision, so an export-ignore attribute cannot silently shrink the denominator three identity censuses and the identifier namespace gate all share and none of them can check; `dev/quality/tests/test_repository_sources.py`.
 - [x] `W02.P02.S560` - Enforce the vulture whitelist's own staleness rule by resolving every exempted parameter against the signature it cites, so a suppression cannot outlive its reason and go on hiding a dead parameter in a report that stays clean; `dev/audit/tests/test_vulture_whitelist_is_not_stale.py`.
 - [x] `W02.P02.S561` - Remove the dead requirement-name helpers and the orphaned citation left in the runtime constraint exporter by a retired harness-coverage check, and prove the closure the Scoop manifest and MCPB bundle pin is non-empty, version-exact, product-row-free and covers the agent transport stack; `dev/packaging/uv_constraints.py,dev/packaging/tests/test_uv_constraints.py`.
+- [x] `W02.P02.S562` - Close the sequence-contract docname guard, which split on forward slash alone so a backslash hid its own traversal in one segment and a UNC segment made the join discard the contracts root entirely, and add a resolved-containment backstop with the cases proving both escapes refused; `dev/docs/sequences/contracts.py,dev/docs/sequences/tests/test_contracts.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
