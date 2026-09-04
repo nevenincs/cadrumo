@@ -19,14 +19,14 @@ This reference maps the first semantic-search-led census of Ledger behavior owne
 
 ### Campaign matrix publication
 
-This document is the authoritative human-readable publication surface for the `LedgerCapabilityMatrixV1` campaign contract in `dev/quality/clitui_ledger_capability_matrix.py`. The S04 CLI stream is now an exact, fail-closed projection, but the publication remains a **provisional baseline** rather than a serialized accepted matrix: S05-S08 have not produced and adjudicated the complete live union census, S09 has not recorded the cross-plan hold control, and S12-S14 have not reviewed and accepted the frozen denominator. The contract therefore requires the publication to fail closed instead of inventing a denominator digest, matrix digest, evidence attestation, or G0 closure.
+This document is the authoritative human-readable publication surface for the `LedgerCapabilityMatrixV1` campaign contract in `dev/quality/clitui_ledger_capability_matrix.py`. The S04 CLI stream and S05 backend-operation stream are now exact current observations, but the publication remains a **provisional baseline** rather than a serialized accepted matrix: S06-S08 have not produced and adjudicated the remaining live union census, S09 has not recorded the cross-plan hold control, and S12-S14 have not reviewed and accepted the frozen denominator. The contract therefore requires the publication to fail closed instead of inventing a denominator digest, matrix digest, evidence attestation, or G0 closure.
 
 | Publication field | Current value |
 | --- | --- |
 | Contract / schema | `LedgerCapabilityMatrixV1` / `3` |
-| Publication revision | `s04-cli-census-2` |
-| Observation timestamp | `2026-09-04T19:55:53.8412508Z` |
-| Source revision | `c2fd4b4c5e040d2c5e9814e3319ff0c911b741c8` |
+| Publication revision | `s05-backend-census-1` |
+| Observation timestamp | `2026-09-04T22:11:49.6380159+02:00` |
+| Source revision | `5db9dbc10c2de8e4efd5ca3d73abbb65acb19696` |
 | Contract source digest | `sha256:c2998c8ff958ae820b59fa7055a36d83117bb35282fe2679761032fab7a15a10` |
 | Accepted plan owner | `clitui-ledger` |
 | Denominator revision / digest | Not issued: the mandatory S04-S08 live census and adjudication are open |
@@ -42,10 +42,10 @@ Every stream below must become one complete, readable, unambiguous, digest-bound
 | --- | --- | --- | --- |
 | `cli_endpoint` | 78 invocable endpoints: 77 leaves and executable `participation`; each has an exact path, handler, schema, TUI declaration, and ownership annotation | Complete current CLI stream; not a union-denominator attestation | S04 complete |
 | `cli_suboperation` | 50 explicit behavior-distinct sub-operations across ten overloaded endpoints | Complete current CLI stream; not a union-denominator attestation | S04 complete |
-| `backend_only` | Existing backend primitives and composite gaps are catalogued below | Partial: exhaustive backend-only operation and direct-proof census remains open | S05 |
-| `missing_product` | The baseline missing product and provenance families are published below | Partial: union review and canonical row admission remain open | S05 and S08 |
+| `backend_only` | 63 public frontend-neutral operations are catalogued below; the installed workspace read/projection is the one backend-only product capability absent from the CLI census | Complete current backend-operation stream; product-row admission remains open | S05 complete; S08 adjudication |
+| `missing_product` | Ten baseline product/provenance families are confirmed absent or incomplete below | Complete current S05 product-gap observation; union review and canonical row admission remain open | S05 complete; S08 adjudication |
 | `registry_route` | Seven Ledger binding families and 546 declarations are established below | Partial: every route, calculation consumer, filing consumer, and proof obligation remains open | S06 |
-| `artifact_product` | Flat CSV/JSONL/XLSX exists; review package, Google transport, and restore archive remain distinct missing products | Partial: product identities and artifact proof remain open | S05, S06, and S08 |
+| `artifact_product` | Flat CSV/JSONL/XLSX exists; review package, Google transport, and recovery archive remain distinct missing products | Complete current S05 application-product observation; registry-linked artifacts and row admission remain open | S06 and S08 |
 | `supported_surface` | CLI enrollment and TUI component existence/installed reachability are known to be distinct | Partial: exhaustive component and navigation reachability census remains open | S07 |
 
 #### Axis contract and publication notation
@@ -115,6 +115,7 @@ These coordinates bind the S03 claims to the current observation revision. They 
 | --- | --- | --- | --- |
 | `evidence.baseline.matrix_contract` | `dev/quality/clitui_ledger_capability_matrix.py:22` | `sha256:c2998c8ff958ae820b59fa7055a36d83117bb35282fe2679761032fab7a15a10` | Schema 3, eight axes, source kinds, gaps, controls, evidence currentness, and G0-G4 predicates |
 | `evidence.s04.cli_command_census` | `src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py:51` | `sha256:2cd8e21e2b8602e5e18338c22350301f2bc76f580873af51b1154d5364e6769b` | Exact current CLI stream: 78 invocables, 50 supplemental behavior-distinct sub-operations across ten overloaded endpoints, derived path/handler/schema/TUI facts, and fail-closed ownership annotations |
+| `evidence.s05.backend_operation_census` | `src/cadrumo/application/ledger/` operational modules listed in the backend census | `sha256:4b0d917dd20d155f348958559037695cb5bab356867a1c88305bb42080f3b2f0` | Exact current backend observation: 63 operations, actual request/result contracts, direct-test locators, production compositions, and the one backend-only product capability |
 | `evidence.baseline.cli_authority` | `2026-09-04-clitui-ledger-reference`, CLI-to-backend disposition matrix | Bound by this document's CLI-maintained `body_hash` after publication | Initial authority families and candidate application homes |
 | `evidence.baseline.backend_behavior` | `2026-09-04-clitui-ledger-reference`, Direct backend behavior gate | Bound by this document's CLI-maintained `body_hash` after publication | Existing direct-proof boundaries and missing facades |
 | `evidence.baseline.missing_products` | `2026-09-04-clitui-ledger-reference`, Missing capability and reuse map | Bound by this document's CLI-maintained `body_hash` after publication | Explicit product/artifact/provenance gaps |
@@ -125,7 +126,7 @@ These coordinates bind the S03 claims to the current observation revision. They 
 
 | Gate | State at S03 | Blocking facts |
 | --- | --- | --- |
-| G0 denominator and ownership freeze | **OPEN** | S04 is complete, but S05-S08 union census/adjudication, S09/S11 hold records, S12 row review, S13 reopening detector, and S14 digest-bound independent `ACCEPT` remain outstanding |
+| G0 denominator and ownership freeze | **OPEN** | S04-S05 are complete, but S06-S08 union census/adjudication, S09/S11 hold records, S12 row review, S13 reopening detector, and S14 digest-bound independent `ACCEPT` remain outstanding |
 | G1 semantic authority recovery | **LOCKED by G0** | `AUTHORITY` rows retain CLI-owned or missing application authority; no cohort may claim closure before its backend behavior and adapter detector evidence exists |
 | G2 backend product completeness | **LOCKED by G0/G1** | Missing products, composition, artifacts, provenance, registry routes, and direct proof remain open |
 | G3 CLI clean break and completeness | **LOCKED by G0-G2** | CLI delegation, success/refusal behavior, and artifact proof are not complete across the admitted denominator |
