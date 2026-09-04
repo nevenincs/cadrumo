@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:8e64ebeef170363809708804e56c31bfd07ac67fe64f74a317da3e96161d306e'
+body_hash: 'sha256:9de998de96ea50533b7e19a9e03b5d2557d67971a05727cb4b8abfedc41e2bc6'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -313,6 +313,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S468` - Repoint dotted documentation cross-references off the facade path by the same forwarding map, skipping only this modules own docstring which quotes a stale path as its example; `dev/quality/facade_retirement.py`.
 - [x] `W02.P02.S469` - Retire the dev.ingest_harness facade end to end: its own test repointed onto three defining modules, fifteen docstring references moved, and the initialiser reduced from 190 lines to inert prose; `dev/ingest_harness`.
 - [ ] `W02.P02.S470` - Give a public defining module to every symbol the seven remaining dev facades forward out of a leading-underscore module, which is the precondition for the 33 refused cross-package sites and the only reason those facades cannot be retired now; `dev`.
+- [x] `W02.P02.S471` - Prove the refusal and reference passes with constructed defects: a private target refused across a package boundary and allowed inside it, a public target never refused for privacy, a submodule reference not rewritten into itself, and a short name not claiming a longer names text; `dev/quality/tests/test_facade_retirement.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
