@@ -57,6 +57,7 @@ from .modelo.declarations_workspace import (
 )
 from .modelo.workspace_models import ModeloWorkspaceProjectionV1
 from .operations.registry import OperationPublicContractSetV1
+from .overview.agenda import OverviewAgenda, build_overview_agenda
 from .overview.calendar import build_overview_calendar
 from .overview.calendar_models import OverviewCalendar, OverviewCalendarRange
 from .overview.evidence import (
@@ -387,6 +388,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             as_of=as_of,
             schedule_observation=_schedule_observation(calendar, observed_at),
         )
+        agenda = build_overview_agenda(taxpayer, as_of=as_of, raw_values=raw_values)
         ledger_sources = self._load_ledger_sources()
         ledger = self._read_ledger(revisions.revisions, work_units, sources=ledger_sources)
         modelo = self._read_modelo(work_units)
@@ -414,6 +416,8 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                 _secure_profile_home_input(
                     observed_at=observed_at,
                     account_session=account_session,
+                    agenda=agenda,
+                    agenda_evidence_state=evidence.state,
                 ),
                 observed_at=observed_at,
             ),
@@ -612,7 +616,21 @@ def _schedule_observation(
     )
 
 
-def _secure_profile_home_input(*, observed_at: UtcInstant, account_session: HomeAccountSession) -> HomeProjectionInput:
+def _secure_profile_home_input(
+    *,
+    observed_at: UtcInstant,
+    account_session: HomeAccountSession,
+    agenda: OverviewAgenda | None,
+    agenda_evidence_state: HomeZoneState,
+) -> HomeProjectionInput:
+    """Assemble Home from the authorities this session actually read.
+
+    Each zone carries its own state. A zone with no installed reader stays
+    UNAVAILABLE and names what is missing, because a Home that renders an
+    unread authority as an empty list is indistinguishable from one whose
+    operator genuinely has nothing outstanding.
+    """
+
     def unavailable(reason_code: str) -> HomeZoneState:
         return HomeZoneState(availability=HomeAvailability.UNAVAILABLE, reason_code=reason_code)
 
@@ -622,8 +640,16 @@ def _secure_profile_home_input(*, observed_at: UtcInstant, account_session: Home
         actions_state=unavailable("workbench.home.actions_projector_unavailable"),
         declarations_state=unavailable("workbench.home.declarations_resume_projector_unavailable"),
         ledger_state=unavailable("workbench.ledger.snapshot_projector_unavailable"),
-        agenda_state=unavailable("workbench.home.agenda_projector_unavailable"),
-        agenda_evidence_state=unavailable("workbench.calendar.aeat_reader_unavailable"),
+        agenda_state=(
+            HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=observed_at)
+            if agenda is not None
+            else unavailable("workbench.home.agenda_projector_unavailable")
+        ),
+        overview_agenda=agenda,
+        # The AEAT side of the agenda is whatever the evidence read concluded,
+        # not a separate refusal: before any pull it is NEVER CAPTURED, and
+        # Home must say that rather than call the whole zone unavailable.
+        agenda_evidence_state=agenda_evidence_state,
         messages_state=unavailable("workbench.home.messages_reader_unavailable"),
     )
 
