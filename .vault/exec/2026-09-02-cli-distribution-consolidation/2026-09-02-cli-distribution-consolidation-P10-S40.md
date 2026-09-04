@@ -5,16 +5,11 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:075fc6dde4c620a4671c898c3bf42d98fda47e73cb4158afb2ec5bb05bb84586'
+body_hash: 'sha256:f165226abb8113dfaa9b942c7a3ecd9a66ea8efa8e18785b545880d3278fca54'
 step_id: 'S40'
 related:
   - "[[2026-09-02-cli-distribution-consolidation-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Remove the evidence leak sweep left without a caller
 

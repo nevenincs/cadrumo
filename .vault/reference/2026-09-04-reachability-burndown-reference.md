@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:ed1e194e2753922cc8558cee6eb379c6b45c48e258a90db51add4b85b71b69e0'
+body_hash: 'sha256:415b9278cf09c3c8ba1b2b4aa4dd5f69bf7d3511b54ac1b4a55621fe5ddfd0bc'
 related: []
 ---
 
@@ -104,6 +104,27 @@ Every finding resolves into exactly one of these, and the class determines the r
   missing. Wire it, and the missing wiring is itself the defect.
 - **Deferred by ownership.** Inside a frozen prefix owned by another in-flight campaign.
   Out of scope until that campaign lands.
+
+## Orphaned test modules are derivative, not a class of their own
+
+Measured against the live audit, the entire non-TUI orphaned-test population is
+downstream of another finding: ten follow a module finding this campaign already
+classifies, nine follow an unused symbol in a module that is otherwise reachable, and
+none has mixed subjects. There is no test in the population whose fate is decided on its
+own terms.
+
+That changes the remedy. These entries record what they `follows` and the `anchor` they
+depend on, rather than a class from the taxonomy, because the taxonomy's classes each
+name an action and none of these carries one. A test whose subject is a
+`staged-capability` module is not dead code -- it is the proof that capability still
+works, and deleting it would leave a staged module unguarded until its dependency lands.
+A test following a symbol finding resolves when that symbol does, which is the symbol
+wave's work.
+
+The practical consequence is that the orphaned-test count cannot be burned down directly
+and should not be treated as independent debt. It falls as its anchors resolve, and a
+test still reported after its anchor is resolved is a real defect -- a test that outlived
+its subject.
 
 ## Constraints carried from the duplication campaign
 
