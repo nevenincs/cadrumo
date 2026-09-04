@@ -86,7 +86,6 @@
 "cadrumo.application.flows.engine" = 1
 "cadrumo.application.flows.review" = 1
 "cadrumo.application.invoices.bulk_import" = 1
-"cadrumo.application.invoices.catalogue_reads" = 3
 "cadrumo.application.ledger.confirmation_record" = 1
 "cadrumo.application.ledger.counterparty_establishment" = 1
 "cadrumo.application.ledger.extracted_document_cache" = 1
