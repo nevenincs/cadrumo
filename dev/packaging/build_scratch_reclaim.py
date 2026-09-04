@@ -318,6 +318,27 @@ def remove_tree(directory: Path) -> bool:
     return True
 
 
+def remove_scratch(candidate: Path) -> bool:
+    """Remove one judged scratch entry, whichever kind it is.
+
+    Most registered families name directories, but the cohort build's Git
+    archive is a single several-hundred-megabyte FILE at a working name until
+    the moment it is moved into the cohort. Leaving files to the next sweep
+    would mean the sweep never reclaimed one.
+
+    Returns:
+        Whether the entry is gone afterwards.
+    """
+    if candidate.is_dir():
+        return remove_tree(candidate)
+    try:
+        os.chmod(candidate, stat.S_IWRITE)
+        candidate.unlink(missing_ok=True)
+    except OSError:
+        return not candidate.exists()
+    return True
+
+
 def reclaimable_scratch(
     var_root: Path,
     *,
@@ -332,9 +353,9 @@ def reclaimable_scratch(
     being at risk while they do.
 
     Returns:
-        ``(reclaimable, spared)`` -- the scratch directories that may be
-        removed, and the ones a rule refused. Entries belonging to no
-        registered family appear in neither: they were never candidates.
+        ``(reclaimable, spared)`` -- the scratch entries that may be removed,
+        and the ones a rule refused. Entries belonging to no registered family
+        appear in neither: they were never candidates.
     """
     reference = time.time() if now is None else now
     spared_name = None if exclude is None else exclude.name
@@ -348,7 +369,11 @@ def reclaimable_scratch(
             spared.append(candidate)
             continue
         try:
-            if is_link_like(candidate) or not candidate.is_dir():
+            # A link is not the tree it names, and the families here are
+            # anchored on a name rather than on an inode: removing a link
+            # because its name matched would remove whatever an operator
+            # pointed it at.
+            if is_link_like(candidate):
                 continue
             verdict = _is_reclaimable(candidate, family, reference, reclaim_by_age=reclaim_by_age)
         except OSError:
