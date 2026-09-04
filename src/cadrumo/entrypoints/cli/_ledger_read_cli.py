@@ -12,10 +12,10 @@ and :class:`~cadrumo.entrypoints.cli._ledger_payloads.LedgerTrackResult`.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from datetime import date
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import typer
 
@@ -79,7 +79,6 @@ if TYPE_CHECKING:
     from ._ledger_payloads import LedgerLinkInconsistencyPayload
     from ._ledger_rule_payloads import LedgerLlmDiagnosticsResult
 
-ResolveTransactionId = Callable[[Any, str], str]
 
 
 def resolve_ledger_transaction_id(
@@ -125,19 +124,6 @@ _LEDGER_EVIDENCE_HISTORY_EVENT_TYPES: tuple[BucketEventType, ...] = (
     BucketEventType.ATTACHMENT_LINKED,
     BucketEventType.ATTACHMENT_REMOVED,
 )
-
-
-def ledger_list_pairing_error_year(filters: list[str], option_year: int | None) -> int | None:
-    """Return a safe year to include in period/year pairing guidance."""
-    if option_year is not None:
-        return option_year
-    for raw_filter in filters:
-        key, separator, value = raw_filter.partition("=")
-        if separator and key.strip().lower() == "year":
-            stripped = value.strip()
-            if stripped.isdecimal():
-                return int(stripped)
-    return None
 
 
 def ledger_llm_diagnostics(

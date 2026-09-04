@@ -12,14 +12,13 @@ Lookup ids are resolved against a :class:`TransactionCatalogueRepository`.
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 import typer
 
-from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.ledger.participation_read import get_transaction_participation
 from ._common import (
+    ResolveTransactionId,
     active_bucket_id_or_bad,
     current_workflow_state,
     emit_envelope,
@@ -30,8 +29,6 @@ from ._ledger_read_cli import resolve_ledger_transaction_id
 
 if TYPE_CHECKING:
     from ._ledger_payloads import LedgerTransactionParticipationEntryPayload
-
-ResolveTransactionId = Callable[[TransactionCatalogueRepository, str], str]
 
 
 def participation_lookup(ctx: typer.Context, transaction_id: str | None = None) -> None:
