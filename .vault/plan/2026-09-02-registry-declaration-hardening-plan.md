@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:ab2579d2282850aad1ff522d0ffef369aa48b3543f5f9a2e0f6d4c182d1e1267'
+body_hash: 'sha256:b779ffc3c05fb9e7c881e4d8051e7f42abed7fe85e2b2e2f6ff6939bd9a02505'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -344,7 +344,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S480` - Invert the sanitizer re-export test, which asserted a non-empty __all__ and was hardened against an empty one so that emptying the facade could not pass silently: it could not be satisfied alongside the inert-initialiser boundary and was protecting the defect; `dev/sanitizer/tests/test_pipeline.py,dev/sanitizer/tests/test_errors.py`.
 - [x] `W02.P02.S481` - Search the three remaining dev.docs packages for tests that assert the facade contract itself rather than reading it incidentally, since such a test cannot be satisfied alongside the inert-initialiser boundary and surfaces only when the retirement is attempted; `dev/docs/sequences/tests,dev/docs/terminology_handbook/tests`.
 - [x] `W02.P02.S482` - Promote the three preprocess private modules to schema, sidecar and normatives_html, the last named to avoid shadowing the standard library html module, then retire the facade with the failure set compared line by line and identical at 23 failures over 294 passing; `dev/docs/preprocess,dev/corpus`.
-- [ ] `W02.P02.S483` - Resolve test_real_timeout_is_unavailable_not_green, which spawns a real uvx semgrep with a one millisecond timeout and passes in isolation while failing intermittently under parallel load; `dev/audit/tests/test_security_scan.py`.
+- [ ] `W02.P02.S483` - Stop test_real_timeout_is_unavailable_not_green crashing its xdist worker, which taints every run containing it as an INCOMPLETE RUN rather than failing an assertion; the serial marker is inert here because the lane running dev/audit/tests carries no serial exclusion, so the recipe must change too; `dev/audit/tests/test_security_scan.py,justfile`.
 - [x] `W02.P02.S484` - Build the private-to-public module promoter that resolves every import to its absolute dotted name so relative depth stops mattering, reports files it could not parse beside statements it could not rewrite, and refuses a public name that shadows the live interpreters standard library; `dev/quality/module_promotion.py,dev/quality/tests/test_module_promotion.py`.
 - [x] `W02.P02.S485` - Promote the three terminology private modules and retire the facade: 135 references moved across 62 file-touches with zero unhandled and zero unreadable, the initialiser cut from 208 lines to 12, and the 62-item failure set identical at each stage; `dev/docs/terminology,dev/docs,dev/deploy`.
 - [x] `W02.P02.S486` - Retire the terminology_handbook facade by promoting only the four private modules actually reached from another package rather than all nine, leaving five correctly private, with the failure set identical across all four stages; `dev/docs/terminology_handbook,dev/docs`.
@@ -355,6 +355,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S491` - Widen the initialiser gate from forwarding to full inertness, since a package defining its own class in __init__.py forwards nothing and is still not a namespace marker, with each of the four kinds shown catching a constructed instance; `dev/quality/facade_retirement.py,dev/quality/tests/test_facade_retirement.py`.
 - [ ] `W02.P02.S492` - Apply the dev retirement template to the twelve non-inert package namespaces under src/cadrumo, which are the same defect class the dev campaign cleared and which the src-side scanner already enumerates; `src/cadrumo`.
 - [x] `W02.P02.S493` - Write the initialiser retirement into the plans Description, Parallelization and Verification prose: the restatement it removed, the two ordering constraints discovered by breaking them, and the inertness criterion with its four constructed proofs; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W02.P02.S494` - Re-run and sweep this sessions two set comparisons for lost-worker markers, since both were taken in the combination that crashes a worker: preprocess identical at 23 failures and sequences identical, each with zero crash markers; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W02.P03` - release predicate relocation
 

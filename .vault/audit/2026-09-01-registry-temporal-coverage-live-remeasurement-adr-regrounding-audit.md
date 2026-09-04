@@ -13291,3 +13291,41 @@ it: the order that held here was promote what is reached from outside, repoint
 consumers, empty the initialiser, restate the tests that measured the facade -
 and take the baseline first, because the failures that matter are the ones the
 change did not cause.
+
+
+## The intermittent failure is not a failure
+
+`test_real_timeout_is_unavailable_not_green` was recorded as failing
+intermittently under parallel load and passing in isolation. Both halves are
+true and the description was wrong about what happens.
+
+It does not fail an assertion. **The worker crashes**, and the run prints its own
+warning: `INCOMPLETE RUN - a worker that dies takes its remaining tests with it,
+and they are not redistributed. Do NOT read this run's failure list as the set
+of things wrong: it is a subset of unknown size.` Run serially the scan is
+stable across three attempts, each reporting `unavailable` with the reason
+`semgrep exceeded its 0.001s timeout`. Reproduced once in three runs of the
+three-directory combination, never in the audit directory alone.
+
+That reclassification matters more than the test. A crashed worker taints the
+whole run, and **this session compared failure SETS across that exact
+combination** to prove the preprocess retirement changed nothing. Those
+comparisons have now been re-run and swept: the preprocess set is identical to
+its baseline at 23 failures with **zero crash markers**, and the sequences set
+likewise. The conclusions stand, and they stand on evidence rather than on the
+absence of a thought.
+
+This is the fourth measurement failure of the class the plan's verification
+section already names, and the only one found by looking for it rather than by
+being bitten. The plan claims every run whose figures it quotes carries no
+lost-worker marker; that claim is now true of this session's runs by
+verification rather than by assumption.
+
+The fix is not available from here. The sanctioned mechanism for a test that
+flakes under `-n auto` is the `serial` marker, but the lane running
+`dev/audit/tests` selects
+`(unit or integration) and not resident_service and not external_tool` with no
+`serial` exclusion and no serial companion pass - so marking the test would be
+decorative and the crash would continue. Adding the exclusion means editing the
+recipe file, which is outside this session's scope. `S483` now says that, so the
+next attempt does not begin by rediscovering that the obvious fix is inert.
