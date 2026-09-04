@@ -572,12 +572,25 @@ def is_test_path(path: Path, root: Path) -> bool:
 
 
 def iter_python_files(root: Path) -> Iterator[Path]:
-    """Yield every ``*.py`` file under ``root``, or ``root`` itself when it is one."""
+    """Yield every ``*.py`` file under ``root``, or ``root`` itself when it is one.
+
+    A root that exists and holds no Python files yields nothing, which is a
+    true answer. A root that does not exist yielded the same nothing, and
+    every caller then analysed an empty corpus: the reference walk sees no
+    references and reports live code dead, the test walk sees no tests and
+    reports none. Absence and emptiness were the same event here, so the
+    absent case now says so.
+    """
     if root.is_file():
         if root.suffix == ".py":
             yield root
         return
     if not root.is_dir():
+        report_unread(
+            "unreachable-code enumeration",
+            "it does not exist, so every walk over it analysed an empty corpus",
+            [str(root)],
+        )
         return
     for path in sorted(root.rglob("*.py")):
         if _SKIPPED_DIRS.isdisjoint(path.parts):

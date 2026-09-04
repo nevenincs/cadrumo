@@ -786,3 +786,40 @@ def test_an_unreadable_data_file_is_announced_as_a_deletion_risk(
     error = capsys.readouterr().err
     assert "deletion candidate" in error
     assert "undecodable.json" in error
+
+
+def test_an_absent_root_is_announced_while_an_empty_one_is_not(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Absence and emptiness were the same event, and they are not the same fact.
+
+    A root that exists and holds no Python files yields nothing truthfully. A
+    root that does not exist yielded the same nothing, and every caller then
+    analysed an empty corpus - the reference walk seeing no references reports
+    live code dead, the test walk seeing no tests reports none.
+    """
+    from ..unreachable_code import iter_python_files
+
+    empty = tmp_path / "empty"
+    empty.mkdir()
+
+    assert list(iter_python_files(empty)) == []
+    assert capsys.readouterr().err == "", "an empty directory is a true answer, not a defect"
+
+    assert list(iter_python_files(tmp_path / "never-created")) == []
+    assert "does not exist" in capsys.readouterr().err
+
+
+def test_a_single_file_root_is_still_enumerated(tmp_path: Path) -> None:
+    """One configured corpus in this repository IS a single file, not a directory.
+
+    The absent-root branch must not swallow that case, which the live spec
+    exercises today.
+    """
+    from ..unreachable_code import iter_python_files
+
+    module = tmp_path / "solo.py"
+    module.write_text("VALUE = 1" + chr(10), encoding="utf-8")
+
+    assert list(iter_python_files(module)) == [module]
