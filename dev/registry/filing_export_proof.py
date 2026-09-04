@@ -10,6 +10,7 @@ proof to the application closure composer.
 
 from __future__ import annotations
 
+import tomllib
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -37,8 +38,10 @@ from cadrumo.application.filing.export_proof import (
     prove_secure_export_replay,
 )
 from cadrumo.application.filing.export_proof import FilingExportProof as TwoChannelFilingExportProof
+from cadrumo.application.filing.draft_construction import build_draft
 from cadrumo.application.filing.producer_snapshot import FilingProducerSnapshot
-from cadrumo.application.filing.runtime import build_runtime_schema_provider
+from cadrumo.application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
+from cadrumo.core.modelo import Modelo
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.period import Period
@@ -84,6 +87,9 @@ from .pipeline._semantic_map_loader import load_semantic_map
 
 __all__ = [
     "CANONICAL_FILING_EXPORT_CONFORMANCE_VECTORS",
+    "ModeloSociedadesConformanceVectorBuilder",
+    "load_pinned_conformance_evidence",
+    "canonical_filing_export_conformance_vectors",
     "CANONICAL_LIVE_FILING_EXPORT_PROOF_ENTRIES",
     "CanonicalTwoChannelFilingExportProofAuthority",
     "FilingExportConformanceEnrollmentReport",
@@ -238,8 +244,165 @@ class FilingExportConformanceVectorBuilder(Protocol):
         """Return source-derived inputs without storing taxpayer values in the vector."""
 
 
-# Empty inputs are deliberate and yield typed per-channel refusals; they are
-# never treated as a waiver or proof.
+_PINNED_CONFORMANCE_VECTOR_DIR = Path(__file__).parent / "conformance_vectors"
+
+# The public conformance vector for the one revision whose generated provenance
+# currently reaches candidate status. The evidence is PINNED as committed data
+# rather than re-derived beside the enrollment: re-deriving it here would make
+# the enrollment's equality check tautological, whereas a pinned file makes a
+# regenerated export tree fail closed as `canonical_builder_conflict` until the
+# pin is refreshed under review.
+_MODELO_200_2025_PINNED_EVIDENCE = _PINNED_CONFORMANCE_VECTOR_DIR / "modelo_200_2025_y_siguientes.toml"
+
+
+def load_pinned_conformance_evidence(path: Path) -> FilingExportConformanceVectorEvidence:
+    """Load one pinned public conformance-vector evidence document.
+
+    Returns:
+        The :class:`FilingExportConformanceVectorEvidence` the document pins.
+    """
+    raw = tomllib.loads(path.read_text(encoding="utf-8"))
+    provenance = raw["provenance"]
+    coordinate = raw["coordinate"]
+    return FilingExportConformanceVectorEvidence(
+        authority_id=raw["authority_id"],
+        coordinate=FilingExportProofCoordinate(
+            modelo=coordinate["modelo"],
+            revision=coordinate["revision"],
+            layout_ids=tuple(coordinate["layout_ids"]),
+        ),
+        filing_year=raw["filing_year"],
+        period=Period.from_year_and_code(raw["filing_year"], raw["period_code"]),
+        mechanism_source_ref=raw["mechanism_source_ref"],
+        mechanism_source_sha256=raw["mechanism_source_sha256"],
+        provenance=FilingExportPublicProvenance(
+            official_source_ref=provenance["official_source_ref"],
+            official_source_sha256=provenance["official_source_sha256"],
+            design_epoch=provenance["design_epoch"],
+            generation_manifest_sha256=provenance["generation_manifest_sha256"],
+            semantic_map_sha256=provenance["semantic_map_sha256"],
+            render_profile_sha256=provenance["render_profile_sha256"],
+            loader_semantic_sha256=provenance["loader_semantic_sha256"],
+            generated_outputs=tuple(
+                FilingExportGeneratedOutput(relative_path=item["relative_path"], sha256=item["sha256"])
+                for item in provenance["generated_outputs"]
+            ),
+            probes=tuple(
+                FilingExportOfficialProbe(
+                    record_id=item["record_id"],
+                    field_id=item["field_id"],
+                    emitted_offset=item["emitted_offset"],
+                    length=item["length"],
+                )
+                for item in provenance["probes"]
+            ),
+        ),
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class ModeloSociedadesConformanceVectorBuilder:
+    """Materialise value-independent Modelo 200 conformance inputs.
+
+    The draft is built from NO inputs against the law-selected snapshot, and the
+    producer snapshot carries only synthetic non-sensitive identity. Neither
+    carries taxpayer truth, a source-owned calculation, a filing payload, or an
+    accepted payload hash: this vector proves writer and layout MECHANICS, and
+    real value arrival is the secure-replay channel's separate burden.
+    """
+
+    registry_root: Path
+    source_root: Path
+
+    def build(
+        self,
+        evidence: FilingExportConformanceVectorEvidence,
+    ) -> FilingExportConformanceRenderInputs:
+        """Return canonical writer inputs for the pinned Modelo 200 coordinate.
+
+        Returns:
+            The :class:`FilingExportConformanceRenderInputs` for ``evidence``.
+        """
+        modelo_id = str(evidence.coordinate.modelo)
+        schema_provider = build_runtime_schema_provider(
+            self.registry_root,
+            source_root=self.source_root,
+            filing_year=evidence.filing_year,
+            period=evidence.period,
+            modelos=(modelo_id,),
+        )
+        draft = build_draft(
+            modelo=modelo_id,
+            period=evidence.period,
+            profile=ModeloOperatorProfile(tax_id=_CONFORMANCE_SUBJECT_TAX_ID, display_name=_CONFORMANCE_SUBJECT_NAME),
+            inputs={},
+            schema_provider=schema_provider,
+        )
+        return FilingExportConformanceRenderInputs(
+            coordinate=evidence.coordinate,
+            filing_year=evidence.filing_year,
+            period=evidence.period,
+            draft=draft,
+            producer_snapshot=_conformance_producer_snapshot(),
+        )
+
+
+# Synthetic, non-sensitive identity. A CIF-shaped test value and a plainly
+# fictional name: no real taxpayer is identifiable from a conformance vector.
+_CONFORMANCE_SUBJECT_TAX_ID = "A58818501"
+_CONFORMANCE_SUBJECT_NAME = "Sociedad Conformance Prueba"
+
+
+def _conformance_producer_snapshot() -> FilingProducerSnapshot:
+    """Build the synthetic non-sensitive producer snapshot for the vector."""
+    return build_filing_producer_snapshot(
+        modelo=Modelo.M200,
+        taxpayer_tax_id=_CONFORMANCE_SUBJECT_TAX_ID,
+        taxpayer_identity=TaxpayerIdentityFacts(
+            legal_name=_CONFORMANCE_SUBJECT_NAME,
+            given_name=None,
+            surnames=None,
+            full_name=_CONFORMANCE_SUBJECT_NAME,
+        ),
+        presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoria Prueba"),
+        model_profile=GeneralFilingProfileFacts(),
+        elections=FilingElectionFacts(
+            result_disposition=ResultDisposition.INGRESO,
+            payment=PaymentElection.INGRESO,
+            refund=RefundElection.COMPENSAR,
+            prior_domiciliation=PriorDomiciliationElection.KEEP,
+        ),
+        amendment_evidence=None,
+        m303_filing_facts=None,
+        refund_account=None,
+        charge_account=None,
+    )
+
+
+def canonical_filing_export_conformance_vectors(
+    *,
+    registry_root: Path,
+    source_root: Path,
+) -> tuple[FilingExportConformanceVector, ...]:
+    """Bind every pinned public evidence document to its canonical builder.
+
+    Returns:
+        The enrolled :class:`FilingExportConformanceVector` tuple.
+    """
+    return (
+        FilingExportConformanceVector(
+            evidence=load_pinned_conformance_evidence(_MODELO_200_2025_PINNED_EVIDENCE),
+            builder=ModeloSociedadesConformanceVectorBuilder(
+                registry_root=registry_root,
+                source_root=source_root,
+            ),
+        ),
+    )
+
+
+# Retained as the zero-argument default for callers that enroll no roots; a real
+# enrollment passes canonical roots through
+# :func:`canonical_filing_export_conformance_vectors`.
 CANONICAL_FILING_EXPORT_CONFORMANCE_VECTORS: tuple[FilingExportConformanceVector, ...] = ()
 
 
