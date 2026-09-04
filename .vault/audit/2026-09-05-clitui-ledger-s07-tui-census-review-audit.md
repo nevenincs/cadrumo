@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:a56e2f4bc894629a5dd7bec173e820c7852afb6f2f5dc4aba0adea7d5e377281'
+body_hash: 'sha256:92e23867ad68ea25640adae70f65d64023506afd084aaadf005c375422db4d82'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-reference]]"
@@ -167,8 +167,8 @@ unused factory calls, and unrelated route constructors, plus a positive
 decorated-handler mutation. Then refresh S07 evidence and obtain another
 independent review.
 
-The ten focused census tests pass and Ruff, scoped `ty`, and basedpyright are
-clean. The full matrix-suite result and final Vault check are recorded in the
-review handoff. G0 remains OPEN, the TUI hold remains effective, the record and
-plan/index state otherwise agree, and the remediation contains no production
-TUI change.
+The ten focused census tests pass, the full matrix suite passes all 145 tests,
+and Ruff, scoped `ty`, and basedpyright are clean. The final Vault check is
+recorded in the review handoff. G0 remains OPEN, the TUI hold remains effective,
+the record and plan/index state otherwise agree, and the remediation contains
+no production TUI change.
