@@ -202,6 +202,28 @@ def write_manifest(directory: Path, manifest: Manifest) -> Path:
     return path
 
 
+def unaccounted_frames(
+    manifest: Manifest,
+    *,
+    surfaces: tuple[str, ...],
+    viewports: tuple[str, ...],
+    themes: tuple[str, ...],
+) -> tuple[str, ...]:
+    """Return every requested frame the manifest neither rendered nor explained.
+
+    A run accounts for a frame in exactly one of three ways: it rendered it, it
+    recorded the refusal or crash, or it recorded that it did not attempt it
+    behind an earlier refusal. Anything outside those three is a SILENT
+    absence, and a reviewer reading the index has no way to tell it apart from
+    a surface that was never asked for.
+    """
+    accounted = {frame.key for frame in manifest.frames}
+    accounted |= {frame.key for frame in manifest.failures}
+    accounted |= {frame.key for frame in manifest.skipped}
+    requested = {f"{surface}/{viewport}/{theme}" for surface in surfaces for viewport in viewports for theme in themes}
+    return tuple(sorted(requested - accounted))
+
+
 class ManifestVersionError(RuntimeError):
     """The manifest on disk was written by a different version of this tool."""
 
@@ -311,6 +333,7 @@ __all__ = [
     "now",
     "read_manifest",
     "run_directory",
+    "unaccounted_frames",
     "write_index",
     "write_manifest",
 ]

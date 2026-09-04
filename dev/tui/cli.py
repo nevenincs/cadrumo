@@ -35,6 +35,7 @@ from ._artifacts import (
     now,
     read_manifest,
     run_directory,
+    unaccounted_frames,
     write_index,
     write_manifest,
 )
@@ -403,6 +404,17 @@ def render_command(
         failures=tuple(failures),
         skipped=tuple(skipped),
     )
+    unaccounted = unaccounted_frames(
+        manifest,
+        surfaces=chosen_surfaces,
+        viewports=tuple(view.name for view in chosen_viewports),
+        themes=tuple(chosen_themes),
+    )
+    if unaccounted:
+        raise typer.BadParameter(
+            "the run left frames unaccounted for, which would read as coverage it does not have: "
+            + ", ".join(unaccounted[:5])
+        )
     write_manifest(directory, manifest)
     write_index(directory, manifest)
 

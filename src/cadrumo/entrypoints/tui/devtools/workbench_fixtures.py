@@ -19,6 +19,11 @@ from typing import Any, Final, cast
 from textual.app import App
 from textual.screen import Screen
 
+from ....application.ledger.workspace import (
+    LedgerWorkspaceArea,
+    LedgerWorkspaceAreaStateV1,
+    LedgerWorkspaceProjectionV1,
+)
 from ....application.aeat_sync.workspace import (
     AeatSyncAeatObservationState,
     AeatSyncCensusCategory,
@@ -725,7 +730,6 @@ _AEAT_INTERFACE_BY_SURFACE = {
 }
 
 
-
 _LEDGER_TX_A: Final[str] = "a" * 64
 _LEDGER_TX_B: Final[str] = "b" * 64
 
@@ -742,12 +746,11 @@ _LEDGER_AREA_COUNTS: Final[dict[str, int]] = {
 
 
 def _ledger_area_state(
-    area: object,
+    area: LedgerWorkspaceArea,
     scenario: WorkbenchFixtureScenario,
-) -> object:
+) -> LedgerWorkspaceAreaStateV1:
     """Describe one Ledger area under the shared scenario vocabulary."""
     from ....application.ledger.workspace import (
-        LedgerWorkspaceAreaStateV1,
         LedgerWorkspaceAvailability,
         LedgerWorkspaceSource,
         LedgerWorkspaceStatus,
@@ -771,26 +774,20 @@ def _ledger_area_state(
         availability=availability,
         reason_code=reason,
         status=(
-            LedgerWorkspaceStatus.UNMEASURED
-            if deferred or not populated
-            else LedgerWorkspaceStatus.NEEDS_ATTENTION
+            LedgerWorkspaceStatus.UNMEASURED if deferred or not populated else LedgerWorkspaceStatus.NEEDS_ATTENTION
         ),
         item_count=_LEDGER_AREA_COUNTS[area.value] if populated else 0,
     )
 
 
-def _ledger_projection(scenario: WorkbenchFixtureScenario) -> object:
+def _ledger_projection(scenario: WorkbenchFixtureScenario) -> LedgerWorkspaceProjectionV1:
     """Build one immutable, non-sensitive Ledger workspace reading.
 
     The refs carry synthetic transaction identities and no monetary value,
     counterparty, or evidence payload: a review surface must be legible
     without ever holding a real operator's ledger.
     """
-    from ....application.ledger.workspace import (
-        LedgerWorkspaceArea,
-        LedgerWorkspaceEntryRefV1,
-        LedgerWorkspaceProjectionV1,
-    )
+    from ....application.ledger.workspace import LedgerWorkspaceEntryRefV1
 
     populated = scenario in {WorkbenchFixtureScenario.READY, WorkbenchFixtureScenario.STALE}
     entries = (
@@ -812,7 +809,7 @@ def _ledger_projection(scenario: WorkbenchFixtureScenario) -> object:
     )
 
 
-def _ledger_controller(scenario: WorkbenchFixtureScenario) -> object:
+def _ledger_controller(scenario: WorkbenchFixtureScenario) -> LedgerWorkspaceController:
     from ....application.operator_actions.catalogue import lookup_action
     from ....application.operator_actions.models import ActionReference
     from ..ledger.controller import LedgerWorkspaceController
@@ -826,9 +823,7 @@ def _ledger_controller(scenario: WorkbenchFixtureScenario) -> object:
         # refuses a target its visible entries do not contain, which is the
         # right refusal and the reason classification has no empty reading.
         classification_target=(
-            _LEDGER_TX_A
-            if scenario in {WorkbenchFixtureScenario.READY, WorkbenchFixtureScenario.STALE}
-            else None
+            _LEDGER_TX_A if scenario in {WorkbenchFixtureScenario.READY, WorkbenchFixtureScenario.STALE} else None
         ),
         evidence_action=ActionReference(action_id=lookup_action("operator.ledger.evidence.review.list").action_id),
         # An empty TUPLE, not None: the evidence area distinguishes "reviewed
@@ -881,8 +876,7 @@ def _ledger_app(surface_id: str, scenario: WorkbenchFixtureScenario) -> App[Any]
     return _host(resolve_ledger_screen(controller, controller.route_target(area)))
 
 
-def _ledger_routes() -> tuple[tuple[str, Any, Any], ...]:
-    from ....application.ledger.workspace import LedgerWorkspaceArea
+def _ledger_routes() -> tuple[tuple[str, Any, LedgerWorkspaceArea], ...]:
     from ..ledger.classification import LedgerClassificationScreen
     from ..ledger.entries import LedgerEntriesScreen
     from ..ledger.evidence import LedgerEvidenceScreen
@@ -902,7 +896,7 @@ def _ledger_routes() -> tuple[tuple[str, Any, Any], ...]:
     )
 
 
-_LEDGER_ROUTES: Final[tuple[tuple[str, Any, Any], ...]] = _ledger_routes()
+_LEDGER_ROUTES: Final[tuple[tuple[str, Any, LedgerWorkspaceArea], ...]] = _ledger_routes()
 
 _LEDGER_INTERFACE_BY_SURFACE: Final[dict[str, tuple[str, ...]]] = {
     "ledger-overview": ("cadrumo.entrypoints.tui.ledger.overview.LedgerOverviewScreen",),
@@ -1009,7 +1003,6 @@ def _build_specs() -> tuple[WorkbenchFixtureSpec, ...]:
         )
     )
     return tuple(sorted(specs, key=lambda spec: spec.fixture_id))
-
 
 
 WORKBENCH_FIXTURES: Final[tuple[WorkbenchFixtureSpec, ...]] = _build_specs()
