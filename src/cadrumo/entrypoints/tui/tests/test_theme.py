@@ -281,13 +281,27 @@ def test_no_surface_pins_or_caps_its_content_width() -> None:
     Scans the shipped stylesheets rather than sampling one app. ``width: 96``
     and ``width: 60%`` both waste or clip available terminal space; only a
     full ``100%`` declaration is admitted for percentage widths.
+
+    RECURSIVE, which it was not. `scan_directory` defaults `recursive` to
+    False, so this had only ever read the eight top-level modules and never
+    looked inside `ledger`, `declarations`, `aeat_sync`, `modelo`, `profile`,
+    `secret`, `components` or `operations` -- the two `max-width: 78` caps that
+    caused the table truncation sat outside its reach entirely, and the single
+    offender it did report was the one that was not real.
+
+    Turned on only after enumerating what it surfaces, because a population
+    discovered as a wall of failures is a population nobody measures. Measured
+    across the whole tree at the time: ZERO offenders. The caps are gone (S413
+    removed them rather than tokenising them) and the literal measures are on
+    the token table (S414), so recursion costs nothing today and holds every
+    subdirectory from here.
     """
     import re
     from pathlib import Path
 
     tui_dir = Path(__file__).resolve().parent.parent
     offenders: list[str] = []
-    for module in scan_directory(tui_dir, pattern="*.py"):
+    for module in scan_directory(tui_dir, pattern="*.py", recursive=True):
         source = module.read_text(encoding="utf-8")
         # The lookbehind matters: without it `min-width: 0` matches as
         # `width: 0` and is reported as a pinned width, which is the opposite
