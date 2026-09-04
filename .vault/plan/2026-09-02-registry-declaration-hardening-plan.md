@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:a7b7d39ea6f7ddfa50b41b7ec6fc739db2845c3c983a1fd2e29f12a834dbe56c'
+body_hash: 'sha256:0f4ac64839ba02e1f759e3d1a583ecd000c71c9d8a962f8964adc7178cecf607'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -485,7 +485,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S603` - Separate an absent compatibility root from an empty one, since a root that does not exist enumerated the same nothing and the union across roots hid which contributed zero, so shipped code could be reported compatible for a Python version without a file under it being read; `dev/quality/python_compatibility_scan.py,dev/quality/tests/test_python_compatibility_scan.py`.
 - [x] `W02.P02.S604` - Pin what the devcontainer checks say when a precondition fails, since they run inside the built image where the only artefact is a CI log and a refusal that does not name both what it found and what it expected costs a rebuild to diagnose; `dev/containers/tests/test_devcontainer_smoke.py`.
 - [x] `W02.P02.S605` - Extract the all-extras lane's claim list and parser so the coupling the smoke manifest enforces is provable without installing every optional extra, and pin the capability-gated optional-import claim by name since it is the only thing separating this lane from the core one; `dev/packaging/all_extra_smoke.py,dev/packaging/tests/test_all_extra_smoke.py`.
-- [ ] `W02.P02.S606` - Read the curation baseline nothing loaded, which recorded counts and a review cadence while being referenced by no module, recipe or declaration, and had already been passed unnoticed at 99 and 100 recorded against 101 and 102 live; reported beside the audit rather than enforced, since the numbers are a frozen corpus count; `dev/docs/terminology_handbook/cli.py,dev/docs/terminology_handbook/tests/test_curation_baseline_is_read.py`.
+- [x] `W02.P02.S606` - Read the curation baseline nothing loaded, which recorded counts and a review cadence while being referenced by no module, recipe or declaration, and had already been passed unnoticed at 99 and 100 recorded against 101 and 102 live; reported beside the audit rather than enforced, since the numbers are a frozen corpus count; `dev/docs/terminology_handbook/cli.py,dev/docs/terminology_handbook/tests/test_curation_baseline_is_read.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
