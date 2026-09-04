@@ -12907,3 +12907,39 @@ of its own submodules.
 Three sibling tests (`sequences`, `terminology_handbook`, `sanitizer`) are
 written the same way and will need the same correction when their facades come
 down, which is after `S470`.
+
+
+## The blocker is two blockers, and one of them is a library inside an entry point
+
+`S470` was written as one precondition: give a public home to every symbol the
+remaining facades forward out of a private module. Enumerating what that
+actually means found 19 modules and 48 symbols - and that the largest single
+entry is not a private module at all.
+
+**`dev.docs.sequences.__main__` forwards six symbols**, and the package's own
+initialiser imports nine names from it. A module run as `python -m package` is an
+entry point; a facade forwarding library symbols out of one means the library
+lives inside the entry point, and importing the package imports its command-line
+surface.
+
+Measured rather than characterised: the file is 890 lines, 728 of them
+definitions. **106 are the CLI `main`. The other 622 are library** - nine public
+symbols including `discover_sequences`, `check_sequences` and
+`refresh_sequences`, plus fourteen private helpers supporting them.
+
+A repository-wide sweep found this is the only instance. The one other import
+from a `__main__` is a `src`-side test importing `main` from a TUI entry point,
+which is importing an entry point AS an entry point and is correct.
+
+The rewriter was reporting those sites under the wrong reason. `__main__` starts
+with an underscore, so the privacy rule claimed them and they were counted among
+the 33 `cross_package_private_target` refusals - which names a fix nobody should
+carry out. Nobody should make `__main__` public. The two are now separate
+reasons and the live split is **31 private-target sites and 2 entry-point
+sites**, which is different work with a different owner.
+
+The entry-point refusal also does not soften inside the owning package, and the
+privacy one does. A private module may legitimately be reached by its own tests;
+an entry point holding library code is wrong for its own package too. Folding
+the two together would have inherited the wrong exemption along with the wrong
+name.

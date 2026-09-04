@@ -11,10 +11,10 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:f6ef73abf88c80c12deafb46939790e1c4e2a0c14b1c09d7624b1155fdb9fcc8'
+body_hash: 'sha256:1572bb5357d1d5acff0f721d47d34466ecbf73d7189d2b65ff0a388ae63893ce'
 ---
 
-<!-- RETIRED: S73, S188 -->
+<!-- RETIRED: S73, S188, S470 -->
 
 # `registry-declaration-hardening` plan
 
@@ -312,12 +312,14 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S467` - Refuse a rewrite whose defining module is private and whose consumer sits outside the owning package, which would trade a facade for a cross-package private import: 33 of 75 sites refused for that reason and none for any other; `dev/quality/facade_retirement.py`.
 - [x] `W02.P02.S468` - Repoint dotted documentation cross-references off the facade path by the same forwarding map, skipping only this modules own docstring which quotes a stale path as its example; `dev/quality/facade_retirement.py`.
 - [x] `W02.P02.S469` - Retire the dev.ingest_harness facade end to end: its own test repointed onto three defining modules, fifteen docstring references moved, and the initialiser reduced from 190 lines to inert prose; `dev/ingest_harness`.
-- [ ] `W02.P02.S470` - Give a public defining module to every symbol the seven remaining dev facades forward out of a leading-underscore module, which is the precondition for the 33 refused cross-package sites and the only reason those facades cannot be retired now; `dev`.
 - [x] `W02.P02.S471` - Prove the refusal and reference passes with constructed defects: a private target refused across a package boundary and allowed inside it, a public target never refused for privacy, a submodule reference not rewritten into itself, and a short name not claiming a longer names text; `dev/quality/tests/test_facade_retirement.py`.
 - [x] `W02.P02.S472` - Retire the dev.agent_eval facade: twelve consumer statements repointed onto five defining modules and the initialiser reduced from 130 lines to inert prose, with the suites 8 failed and 13 errors proven pre-existing by an import side-effect probe and two HEAD comparisons and unchanged after; `dev/agent_eval`.
 - [x] `W02.P02.S473` - Retire the dev.locales facade against a baseline taken first: fifteen statements repointed across twelve files, the initialiser reduced from 116 lines, and the suite returned to its recorded 10 failed and 627 passed; `dev/locales`.
 - [x] `W02.P02.S474` - Restate the locale error-ownership test so it no longer depends on the facade it checks for: assert the initialiser declares no exports and carries only its own submodules, rather than asserting two names are absent from an __all__ that an inert initialiser does not have; `dev/locales/tests/test_errors.py`.
 - [ ] `W02.P02.S475` - Restate the three sibling error-ownership tests the same way when their facades come down, since each reads an __all__ that an inert initialiser will not have; `dev/docs/sequences/tests/test_errors.py,dev/docs/terminology_handbook/tests/test_errors.py,dev/sanitizer/tests/test_errors.py`.
+- [x] `W02.P02.S476` - Separate the entry-point refusal from the privacy one: a symbol forwarded out of __main__ is refused everywhere including inside its own package and reported under its own reason, since making __main__ public is not a fix anyone should carry out; `dev/quality/facade_retirement.py,dev/quality/tests/test_facade_retirement.py`.
+- [ ] `W02.P02.S477` - Move the 622 library lines out of dev.docs.sequences.__main__ into public defining modules, leaving only the 106-line CLI main behind, so the packages nine public symbols stop being reachable only through an entry point; `dev/docs/sequences`.
+- [ ] `W02.P02.S478` - Give a public defining module to the 48 symbols the four remaining facades forward out of 18 leading-underscore modules, largest first: sequences _golden_store and _schema, terminology _unified_record, terminology_handbook _loader; `dev`.
 
 ### Phase `W02.P03` - release predicate relocation
 
