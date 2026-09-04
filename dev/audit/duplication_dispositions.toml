@@ -87,8 +87,8 @@ reason = "The three recovered PEP 562 lazy-facade locator pairs are absent from 
 # `observed_groups` is jscpd's own inventory size for this scan and equals the
 # sum of `cluster_owned` + `intentional` + `advisory_residue` below.
 [summary]
-cluster_owned = 10
-intentional = 0
+cluster_owned = 9
+intentional = 1
 advisory_residue = 0
 actionable = 0
 
@@ -192,8 +192,8 @@ where = [
 # -------------------------------------------------------------------------
 
 [[group]]
-classification = "cluster-owned"
-owner = "modelo-export-review-package"
+classification = "intentional"
+rationale = "The matched span is the handler SIGNATURE, not shared behaviour. The command runtime dispatches through invoke(**arguments) built from the declared CommandSpec parameters, so each handler must spell every declared parameter itself; neither side can accept a bundle the way the TUI controller could, because both are dispatcher-facing. Removing it would require changing the dispatch contract, and reordering the parameters to defeat token matching is the detector-oriented shortcut the governing decision rejects. The two workflows stay distinct authorities, which this Step required."
 where = [
   "- entrypoints/cli/_modelo_export_cli.py [149:23 - 164:2]",
   "  entrypoints/cli/_modelo_review_package_cli.py [144:25 - 159:10]",
