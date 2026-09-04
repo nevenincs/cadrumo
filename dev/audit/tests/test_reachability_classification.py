@@ -30,6 +30,7 @@ _LEDGER_PATH: Final[Path] = REPO_ROOT / "dev" / "audit" / "reachability_classifi
 _CLASSES: Final[frozenset[str]] = frozenset(
     {
         "harness-code",
+        "design-time-authority",
         "test-support",
         "superseded",
         "staged-capability",

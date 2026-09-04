@@ -14,8 +14,15 @@
 #
 # `class` is one of the closed taxonomy:
 #
-#   harness-code          reached only by `dev/`; belongs beside the dev
+#   harness-code          code WRITTEN TO SERVE the harness -- a fixture
+#                         builder, a scratch driver. Belongs beside the dev
 #                         consumer that drives it.
+#   design-time-authority a product DECLARATION that constrains other
+#                         declarations and deliberately has no runtime caller.
+#                         Its only reader being a conformance gate is the
+#                         point, not a defect: that is how a locked design is
+#                         enforced. Never relocate into `dev/` -- the product's
+#                         own design would leave the product.
 #   test-support          reached only by tests and written to serve them;
 #                         belongs under the wheel-excluded test tree.
 #   superseded            a reachable module already discharges the
@@ -44,28 +51,35 @@ test_modules_tui_deferred = 2
 test_modules_classified_here = 19
 
 # ---------------------------------------------------------------------------
-# harness-code -- reached only by dev/ tooling
+# design-time-authority -- declarations whose only reader is a conformance gate
+#
+# Corrected from `harness-code` after attempting the relocation remedy. The
+# distinction is what the code IS, not who reads it: harness code is written to
+# serve the harness, while each of these is a product declaration that
+# constrains other declarations. `cadrumo.core.address_components` already
+# carried exactly this shape in the module ratchet as an [[intentional]]
+# `design_time_authority`, so the class existed before this campaign named it.
 # ---------------------------------------------------------------------------
 
 [[module]]
 name = "cadrumo.application.operator_surface.calculation_workflows"
-class = "harness-code"
-evidence = "dev/source_connectivity/source_connectivity_authority.py and dev/source_connectivity/live_proof.py are its only non-test consumers."
+class = "design-time-authority"
+evidence = "A pydantic contract over OperatorSurfaceReconciliation declaring the supported calculation workflows; dev/source_connectivity reads it to check the live surface against the declaration."
 
 [[module]]
 name = "cadrumo.application.operator_surface.crud_registry"
-class = "harness-code"
-evidence = "dev/quality/crud_contract_drift.py consumes the catalogue; the module's own docstring states it is the source of truth consumed by cross-cutting conformance tests."
+class = "design-time-authority"
+evidence = "The locked CRUD design for the operator CLI. dev/quality/crud_contract_drift.py reads the catalogue to detect drift between shipped Typer subgroups and the declared design; no entrypoints module uses CrudVerb, CANONICAL_CRUD_VERBS or get_builtin_catalogue, which is the contract working as intended."
 
 [[module]]
 name = "cadrumo.application.operator_surface.crud_contract"
-class = "harness-code"
-evidence = "dev/quality/crud_contract_drift.py; the contract types exist to be checked against the shipped Typer subgroups, not to be called at runtime."
+class = "design-time-authority"
+evidence = "Defines the verb vocabulary the registry above instantiates; the types exist to BE the locked design a conformance gate checks, governed by the accepted cli-operator-surface decision."
 
 [[module]]
 name = "cadrumo.domain.calculations.registry.record_spec"
-class = "harness-code"
-evidence = "dev/registry/analysis/load_census_classification.py and dev/registry/pipeline/_export_tree.py are its only non-test consumers."
+class = "design-time-authority"
+evidence = "Its docstring names it the single authoritative home for constants governing how registry record declarations are validated and normalised, placed there to avoid a circular import; relocating filing-grade registry constants into dev/ would move them out of the registry authority."
 
 # ---------------------------------------------------------------------------
 # staged-capability -- an accepted decision records what each waits on
