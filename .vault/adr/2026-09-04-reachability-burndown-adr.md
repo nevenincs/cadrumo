@@ -5,41 +5,10 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:6e631874def50fbf2a532fb6ddbd3e95a6aadcc0e2b73854e422196d9e4ab49d'
+body_hash: 'sha256:3e54b42e0146238a84d7659326ddd9febb0c0dee124e86e9a2a61c85cf3b4918'
 related:
   - "[[2026-09-04-reachability-burndown-reference]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #adr) and one feature tag.
-     Replace reachability-burndown with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     Status convention: the H1 status value is one of proposed, accepted,
-     rejected, superseded, or deprecated. A new ADR starts as proposed; it
-     moves to accepted or rejected when the decision is made; it becomes
-     superseded when a later ADR replaces it (set by vault adr supersede,
-     which also records superseded_by); and deprecated when it is retired
-     without a direct successor.
-
-     Amend vs supersede: refinements and concretization rewrite the accepted
-     record's body in place (modified: carries the revision); a new ADR with
-     supersession is only for a major pivot. One accepted record per
-     decision.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `reachability-burndown` adr: `Reachability closure through classified resolution` | (**status:** `proposed`)
 

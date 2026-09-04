@@ -5,16 +5,11 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:b5b208c37a9c02c45079aa5db5e0b37a6f0067790c9d75a946a57cdf1762b264'
+body_hash: 'sha256:ec52592ef115e78e06ad908f879ff2ad4f59385ea1874fd489536daec19c1e00'
 step_id: 'S410'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Extend the capture-coherence guard to everything the generation door now reads. It re-reads and compares the profile record, work units, calculation revisions and filing records, which was the whole read set when it was written; the door now also reads transactions, invoices and bucket events for Ledger and projects every work unit for Modelo. A write landing mid-capture yields a generation whose Ledger snapshot is from a different instant than its Declarations, and nothing detects it.
 

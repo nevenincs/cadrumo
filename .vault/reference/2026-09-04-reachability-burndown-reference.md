@@ -5,28 +5,9 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:5a95f569ce521504ec3727623512196a0a03ff639bfded9295b02ed5aee0d015'
+body_hash: 'sha256:ed1e194e2753922cc8558cee6eb379c6b45c48e258a90db51add4b85b71b69e0'
 related: []
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #reference) and one feature tag.
-     Replace reachability-burndown with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `reachability-burndown` reference: entrypoint reachability and semantic uniqueness
 

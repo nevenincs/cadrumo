@@ -7,9 +7,9 @@ tier: L2
 related:
   - '[[2026-09-02-cli-distribution-consolidation-adr]]'
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
-modified: '2026-09-02'
+modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:6791a09a4844dc9184789047aa4f0443e3e3946fcd97989d6e83621510a89cc9'
+body_hash: 'sha256:1908616e5ed68b34256207a6e5091fa4695db8e602fe4fcf30862351a6888fdb'
 ---
 
 # `cli-distribution-consolidation` plan
@@ -119,7 +119,7 @@ Delete the development and release modules the adopted path no longer invokes, e
 
 - [x] `P10.S38` - Remove the publication-input dispatcher left without a consumer; `dev/packaging/publication_inputs.py`.
 - [ ] `P10.S39` - Remove the container base-image declaration the install proof no longer reads; `dev/packaging/_base_image.py`.
-- [ ] `P10.S40` - Remove the evidence leak sweep left without a caller; `dev/packaging/evidence_leak_sweep.py`.
+- [x] `P10.S40` - Remove the evidence leak sweep left without a caller; `dev/packaging/evidence_leak_sweep.py`.
 - [x] `P10.S41` - Reduce the release module family to what the adopted path invokes; `dev/release/environment_inventory.py`.
 
 ### Phase `P11` - Restate the operator surface against the adopted path

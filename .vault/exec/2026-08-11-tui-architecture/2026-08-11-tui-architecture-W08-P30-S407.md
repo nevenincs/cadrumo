@@ -5,16 +5,11 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:202680e97ae068729fd12759705d56d779a0ea6c9c3096640adf7bc1289b2ad9'
+body_hash: 'sha256:31226e244f4ad4c94ef301992acbd90a7aa5ff70f4d0bef1034db55f35b25b6b'
 step_id: 'S407'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Render the whole registered matrix and prove no surface, state, viewport, theme or locale is silently absent. Every fixture must produce a deterministic raster and text artifact, and a fixture that CRASHES or REFUSES must be reported as such rather than skipped -- a review inventory whose own gaps are invisible proves nothing about the surfaces it claims to cover.
 
