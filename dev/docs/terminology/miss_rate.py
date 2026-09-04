@@ -23,7 +23,7 @@ from typing import Annotated, Final
 import typer
 
 from ..._paths import UTF_8
-from ._miss_rate import evaluate_held_out_miss_rate
+from ._miss_rate import MissRateEvaluation, evaluate_held_out_miss_rate
 
 _UTF_8: Final[str] = UTF_8
 
@@ -39,8 +39,15 @@ def write_miss_rate_report(
     output: Path,
     *,
     note: str,
-) -> None:
-    """Evaluate the held-out miss rate and write the canonical report JSON."""
+) -> MissRateEvaluation:
+    """Evaluate the held-out miss rate, write the canonical report JSON, return it.
+
+    The evaluation is RETURNED rather than discarded so a caller can report the
+    numbers it just wrote. Re-measuring to print them reads the committed mapping
+    and held-out corpus a second time, which pays for the walk twice and lets the
+    console disagree with the file whenever either is regenerated between the two
+    reads.
+    """
     evaluation = evaluate_held_out_miss_rate()
     payload = {
         "note": note,
@@ -51,6 +58,7 @@ def write_miss_rate_report(
         encoding=_UTF_8,
         newline="\n",
     )
+    return evaluation
 
 
 @app.command()
@@ -59,8 +67,7 @@ def report(
     note: Annotated[str, typer.Option("--note", help="One-line report provenance note.")],
 ) -> None:
     """Write the miss-rate report and print the measured result."""
-    write_miss_rate_report(output, note=note)
-    evaluation = evaluate_held_out_miss_rate()
+    evaluation = write_miss_rate_report(output, note=note)
     typer.echo(f"cases {evaluation.case_count}  hits {evaluation.hit_count}  miss-rate {evaluation.miss_rate:.4f}")
     typer.echo(f"wrote miss-rate report -> {output}")
 
