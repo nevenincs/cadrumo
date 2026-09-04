@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:5c5db49b4bad272ed4a8ee15cc4b838c5157711fa58e34080c11bd4d0fe8c181'
+body_hash: 'sha256:be07589381682cd2b2d592d5a12af59be5a6a0e70a68f82a2363674a54ca1ca5'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -473,6 +473,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S591` - Read strictly and announce in the locale manager's key scan, the outer half of the pair fixed for the AST scanner, since a lenient decode could cut a key literal in half so the pattern never matched it and a read failure was logged at debug level, in the set that decides which keys the codebase uses; `dev/locales/manager.py,dev/locales/tests/test_ast_scanner_reports_unread_modules.py`.
 - [x] `W02.P02.S592` - Share one unread-input notice instead of writing a thirteenth copy, keeping each caller's consequence as a parameter because that sentence is the only part a reader acts on, and route the two locale key scans through it; the helper reports and never refuses, since a walk over a concurrently edited tree must survive a half-written file; `dev/quality/unread_inputs.py,dev/quality/tests/test_unread_inputs.py,dev/locales/_ast_scanner.py,dev/locales/manager.py`.
 - [x] `W02.P02.S593` - Read the shipped data payloads strictly and announce what could not be read, since a token found only in a mangled or skipped file leaves the field or enum value it addresses reported unreachable, and unreachable members in that audit are deletion candidates; routed through the shared notice rather than a thirteenth copy; `dev/audit/unreachable_code.py,dev/audit/tests/test_unreachable_code.py`.
+- [x] `W02.P02.S594` - Announce the registry modules the load census cannot read, since an empty importer set is its evidence that every import of a module is deferred and a skipped file makes that conclusion easier to reach and wrong, a module-level importer inside it having refuted it; `dev/registry/analysis/load_census.py,dev/registry/tests/test_load_census_classification.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
