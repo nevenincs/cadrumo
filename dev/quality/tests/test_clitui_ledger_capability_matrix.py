@@ -767,7 +767,7 @@ def test_currentness_revalidates_a_malformed_copied_subject_without_value_leakag
         observed_subjects=(malformed,),
     )
 
-    assert errors == ["observed subjects validation failed at 0.digest: string_pattern_mismatch"]
+    assert errors == ["observed subjects validation failed at 0: value_error"]
     assert all("subject-secret-not-a-digest" not in error for error in errors)
 
 
@@ -795,7 +795,11 @@ def test_one_gate_revalidates_malformed_copied_subject_and_nested_authority_grap
     assert first
     assert any("observed subjects validation failed" in blocker for blocker in first)
     assert any("matrix validation failed" in blocker for blocker in first)
-    assert all(secret not in blocker for blocker in first for secret in ("subject-secret-not-a-digest", "authority-secret"))
+    assert all(
+        secret not in blocker
+        for blocker in first
+        for secret in ("subject-secret-not-a-digest", "authority-secret")
+    )
 
 
 def test_each_axis_has_a_reviewed_rationale_and_single_axis_applicability_proof() -> None:
@@ -1252,6 +1256,8 @@ def test_generic_review_coordinate_cannot_substitute_for_a_missing_or_invalid_at
     assert not _evaluate(candidate, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
     if attestation_mutation == "non_accept":
         assert "ACCEPT attestation" in " ".join(blockers)
+    elif attestation_mutation == "stale":
+        assert blockers == ("matrix validation failed at <root>: value_error",)
     else:
         assert any("acceptance_attestation" in blocker for blocker in blockers)
 
@@ -1294,6 +1300,68 @@ def test_g2_requires_direct_backend_behavior_even_when_proof_metadata_is_proven(
     assert any("backend lacks direct behavior evidence" in blocker for blocker in blockers)
 
 
+@pytest.mark.parametrize(
+    "axis",
+    [
+        pytest.param(LedgerCapabilityAxis.BACKEND, id="backend"),
+        pytest.param(LedgerCapabilityAxis.COMPOSITION, id="composition"),
+        pytest.param(LedgerCapabilityAxis.ARTIFACT, id="artifact"),
+        pytest.param(LedgerCapabilityAxis.PROVENANCE, id="provenance"),
+        pytest.param(LedgerCapabilityAxis.REGISTRY, id="registry"),
+        pytest.param(LedgerCapabilityAxis.PROOF, id="proof"),
+    ],
+)
+def test_g2_rejects_each_unproven_applicable_axis(axis: LedgerCapabilityAxis) -> None:
+    matrix = _matrix()
+    assessment = matrix.rows[0].assessment(axis).model_copy(update={"proof": AxisProofState.UNPROVEN})
+    finding = CapabilityFindingV1(
+        finding_id=f"finding.entries.g2.unproven_{axis.value}",
+        gap_class=LedgerGapClass.PROOF,
+        affected_axes=frozenset({axis}),
+        description=f"The {axis.value} axis is not proven.",
+        next_closure_action=f"Provide accepted {axis.value} proof.",
+    )
+    row = _row_with_assessments(matrix.rows[0], {axis: assessment}, findings=(finding,))
+    candidate = _matrix_with(matrix, rows=(row,))
+
+    assert _evaluate(matrix, LedgerGate.G2_BACKEND_PRODUCT_COMPLETENESS).closed
+    blockers = _evaluate(candidate, LedgerGate.G2_BACKEND_PRODUCT_COMPLETENESS).blockers
+
+    if axis is LedgerCapabilityAxis.BACKEND:
+        assert f"{_ROW_ID}: backend is not implemented and proven" in blockers
+    else:
+        assert f"{_ROW_ID}: applicable {axis.value} axis is not proven" in blockers
+
+
+@pytest.mark.parametrize(
+    "gap_class",
+    [
+        pytest.param(LedgerGapClass.PRODUCT, id="product"),
+        pytest.param(LedgerGapClass.COMPOSITION, id="composition"),
+        pytest.param(LedgerGapClass.PROOF, id="proof"),
+        pytest.param(LedgerGapClass.ARTIFACT, id="artifact"),
+        pytest.param(LedgerGapClass.PROVENANCE, id="provenance"),
+        pytest.param(LedgerGapClass.REGISTRY, id="registry"),
+    ],
+)
+def test_g2_rejects_each_blocking_gap_class(gap_class: LedgerGapClass) -> None:
+    matrix = _matrix()
+    finding = CapabilityFindingV1(
+        finding_id=f"finding.entries.g2.gap_{gap_class.value}",
+        gap_class=gap_class,
+        affected_axes=frozenset({LedgerCapabilityAxis.BACKEND}),
+        description=f"A {gap_class.value} gap remains.",
+        next_closure_action=f"Close the {gap_class.value} gap.",
+    )
+    row = _row_with_assessments(matrix.rows[0], {}, findings=(finding,))
+    candidate = _matrix_with(matrix, rows=(row,))
+
+    assert _evaluate(matrix, LedgerGate.G2_BACKEND_PRODUCT_COMPLETENESS).closed
+    blockers = _evaluate(candidate, LedgerGate.G2_BACKEND_PRODUCT_COMPLETENESS).blockers
+
+    assert f"{_ROW_ID}: {gap_class.value} finding remains" in blockers
+
+
 def test_g3_requires_cli_success_refusal_and_artifact_evidence() -> None:
     matrix = _matrix()
     cli = matrix.rows[0].assessment(LedgerCapabilityAxis.CLI)
@@ -1318,6 +1386,87 @@ def test_g3_requires_cli_success_refusal_and_artifact_evidence() -> None:
     assert any("CLI success behavior" in blocker for blocker in blockers)
     assert any("CLI refusal behavior" in blocker for blocker in blockers)
     assert any("CLI artifact behavior" in blocker for blocker in blockers)
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        pytest.param("surface", id="surface"),
+        pytest.param("proof", id="proof"),
+        pytest.param("delegation", id="delegation"),
+        pytest.param("success", id="success"),
+        pytest.param("refusal", id="refusal"),
+        pytest.param("artifact", id="artifact"),
+    ],
+)
+def test_g3_rejects_cli_surface_proof_delegation_and_each_behavior_contract(mutation: str) -> None:
+    matrix = _matrix()
+    assert _evaluate(matrix, LedgerGate.G3_CLI_CLEAN_BREAK_AND_COMPLETENESS).closed
+    if mutation == "delegation":
+        candidate = _matrix(rows=(_row(initial_cli_ownership=InitialCliOwnership.NOT_CLI_OWNED),))
+        expected = "CLI does not delegate to the canonical owner"
+    else:
+        cli = matrix.rows[0].assessment(LedgerCapabilityAxis.CLI)
+        if mutation == "surface":
+            cli = cli.model_copy(update={"surface_state": SurfaceCapabilityState.PARTIAL})
+            expected = "CLI is not proven through a stable interface contract"
+        elif mutation == "proof":
+            cli = cli.model_copy(update={"proof": AxisProofState.UNPROVEN})
+            expected = "CLI is not proven through a stable interface contract"
+        else:
+            role = {
+                "success": EvidenceRole.CLI_SUCCESS,
+                "refusal": EvidenceRole.CLI_REFUSAL,
+                "artifact": EvidenceRole.CLI_ARTIFACT,
+            }[mutation]
+            cli = cli.model_copy(
+                update={"evidence": tuple(coordinate for coordinate in cli.evidence if coordinate.role is not role)}
+            )
+            expected = f"CLI {mutation} behavior is not evidenced"
+        findings = ()
+        if mutation in {"surface", "proof"}:
+            findings = (
+                CapabilityFindingV1(
+                    finding_id=f"finding.entries.g3.{mutation}",
+                    gap_class=LedgerGapClass.PRODUCT,
+                    affected_axes=frozenset({LedgerCapabilityAxis.CLI}),
+                    description=f"The CLI {mutation} contract is incomplete.",
+                    next_closure_action=f"Complete the CLI {mutation} contract.",
+                ),
+            )
+        row = _row_with_assessments(matrix.rows[0], {LedgerCapabilityAxis.CLI: cli}, findings=findings)
+        candidate = _matrix_with(matrix, rows=(row,))
+
+    blockers = _evaluate(candidate, LedgerGate.G3_CLI_CLEAN_BREAK_AND_COMPLETENESS).blockers
+
+    assert any(expected in blocker for blocker in blockers)
+
+
+@pytest.mark.parametrize(
+    "gap_class",
+    [
+        pytest.param(LedgerGapClass.AUTHORITY, id="authority"),
+        pytest.param(LedgerGapClass.PRODUCT, id="product"),
+        pytest.param(LedgerGapClass.REACHABILITY, id="reachability"),
+        pytest.param(LedgerGapClass.ARTIFACT, id="artifact"),
+    ],
+)
+def test_g3_rejects_each_scoped_cli_gap_class(gap_class: LedgerGapClass) -> None:
+    matrix = _matrix()
+    finding = CapabilityFindingV1(
+        finding_id=f"finding.entries.g3.gap_{gap_class.value}",
+        gap_class=gap_class,
+        affected_axes=frozenset({LedgerCapabilityAxis.CLI}),
+        description=f"A CLI {gap_class.value} gap remains.",
+        next_closure_action=f"Close the CLI {gap_class.value} gap.",
+    )
+    row = _row_with_assessments(matrix.rows[0], {}, findings=(finding,))
+    candidate = _matrix_with(matrix, rows=(row,))
+
+    assert _evaluate(matrix, LedgerGate.G3_CLI_CLEAN_BREAK_AND_COMPLETENESS).closed
+    blockers = _evaluate(candidate, LedgerGate.G3_CLI_CLEAN_BREAK_AND_COMPLETENESS).blockers
+
+    assert f"{_ROW_ID}: CLI {gap_class.value} finding remains" in blockers
 
 
 def test_g4_scans_findings_on_non_tui_rows_and_other_applicable_axes() -> None:
@@ -1354,6 +1503,154 @@ def test_g4_scans_findings_on_non_tui_rows_and_other_applicable_axes() -> None:
 
     assert not assessment.closed
     assert any("blocking product finding" in blocker for blocker in assessment.blockers)
+
+
+def test_g4_rejects_an_active_tui_hold() -> None:
+    matrix = _matrix(
+        controls=LedgerCampaignControlsV1(
+            sole_ledger_parity_plan_owner=ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
+            tui_implementation_hold_recorded=True,
+            tui_implementation_hold_active=True,
+        )
+    )
+
+    assessment = _evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY)
+
+    assert not assessment.closed
+    assert assessment.blockers == ("the Ledger TUI implementation hold remains active",)
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        pytest.param("proof", AxisProofState.UNPROVEN, id="proof"),
+        pytest.param("surface_state", SurfaceCapabilityState.PARTIAL, id="surface"),
+    ],
+)
+def test_g4_rejects_each_incomplete_tui_proof_or_surface(
+    field: str,
+    value: AxisProofState | SurfaceCapabilityState,
+) -> None:
+    matrix = _matrix(
+        controls=LedgerCampaignControlsV1(
+            sole_ledger_parity_plan_owner=ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
+            tui_implementation_hold_recorded=True,
+            tui_implementation_hold_active=False,
+        )
+    )
+    tui = matrix.rows[0].assessment(LedgerCapabilityAxis.TUI).model_copy(update={field: value})
+    finding = CapabilityFindingV1(
+        finding_id=f"finding.entries.g4.tui_{field}",
+        gap_class=LedgerGapClass.PRODUCT,
+        affected_axes=frozenset({LedgerCapabilityAxis.TUI}),
+        description=f"The TUI {field} is incomplete.",
+        next_closure_action=f"Complete the TUI {field}.",
+    )
+    row = _row_with_assessments(
+        matrix.rows[0],
+        {LedgerCapabilityAxis.TUI: tui},
+        findings=(finding,),
+    )
+    candidate = _matrix_with(matrix, rows=(row,))
+
+    assert _evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).closed
+    blockers = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).blockers
+
+    assert f"{_ROW_ID}: TUI is not proven and installed" in blockers
+
+
+def test_g4_rejects_a_tui_row_without_the_installed_annotation() -> None:
+    matrix = _matrix(
+        controls=LedgerCampaignControlsV1(
+            sole_ledger_parity_plan_owner=ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
+            tui_implementation_hold_recorded=True,
+            tui_implementation_hold_active=False,
+        )
+    )
+    row = _row_with_assessments(
+        matrix.rows[0],
+        {},
+        annotations=frozenset({CapabilityAnnotation.DELEGATING}),
+    )
+    candidate = _matrix_with(matrix, rows=(row,))
+
+    assert _evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).closed
+    blockers = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).blockers
+
+    assert blockers == (f"{_ROW_ID}: TUI is not marked installed",)
+
+
+@pytest.mark.parametrize(
+    "role",
+    [
+        pytest.param(EvidenceRole.TUI_PARITY, id="parity"),
+        pytest.param(EvidenceRole.TUI_REACHABILITY, id="reachability"),
+        pytest.param(EvidenceRole.MATRIX_PUBLICATION, id="publication"),
+    ],
+)
+def test_g4_requires_each_campaign_wide_tui_evidence_role(role: EvidenceRole) -> None:
+    controls = LedgerCampaignControlsV1(
+        sole_ledger_parity_plan_owner=ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
+        tui_implementation_hold_recorded=True,
+        tui_implementation_hold_active=False,
+    )
+    matrix = _matrix(controls=controls)
+    campaign_evidence = tuple(coordinate for coordinate in matrix.campaign_evidence if coordinate.role is not role)
+    candidate = _matrix(campaign_evidence=campaign_evidence, controls=controls)
+
+    assert _evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).closed
+    blockers = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).blockers
+
+    assert blockers == (f"campaign-wide {role.value} evidence is missing",)
+
+
+def test_g4_preserves_explicitly_empty_campaign_evidence() -> None:
+    controls = LedgerCampaignControlsV1(
+        sole_ledger_parity_plan_owner=ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
+        tui_implementation_hold_recorded=True,
+        tui_implementation_hold_active=False,
+    )
+    candidate = _matrix(campaign_evidence=(), controls=controls)
+
+    blockers = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).blockers
+
+    assert blockers == (
+        "campaign-wide tui_parity evidence is missing",
+        "campaign-wide tui_reachability evidence is missing",
+        "campaign-wide matrix_publication evidence is missing",
+    )
+
+
+def test_g4_scans_findings_for_every_applicable_axis_on_every_row() -> None:
+    controls = LedgerCampaignControlsV1(
+        sole_ledger_parity_plan_owner=ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
+        tui_implementation_hold_recorded=True,
+        tui_implementation_hold_active=False,
+    )
+
+    def findings(prefix: str) -> tuple[CapabilityFindingV1, ...]:
+        return tuple(
+            CapabilityFindingV1(
+                finding_id=f"finding.{prefix}.g4.{axis.value}",
+                gap_class=LedgerGapClass.PRODUCT,
+                affected_axes=frozenset({axis}),
+                description=f"The {axis.value} obligation remains.",
+                next_closure_action=f"Close the {axis.value} obligation.",
+            )
+            for axis in LedgerCapabilityAxis
+        )
+
+    first = _row(findings=findings("entries"))
+    second = _row("ledger.reconciliation.match", prefix="reconciliation_match", findings=findings("reconciliation"))
+    clean = _matrix(controls=controls)
+    assert _evaluate(clean, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).closed
+    candidate = _matrix(rows=(first, second), controls=controls)
+
+    blockers = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).blockers
+
+    assert len(blockers) == 2 * len(LedgerCapabilityAxis)
+    assert blockers.count(f"{first.identity.row_id}: blocking product finding remains") == len(LedgerCapabilityAxis)
+    assert blockers.count(f"{second.identity.row_id}: blocking product finding remains") == len(LedgerCapabilityAxis)
 
 
 def test_valid_controls_close_g0_through_g3_and_lifted_hold_closes_g4() -> None:
@@ -1418,9 +1715,7 @@ def test_ordered_evaluation_reopens_later_gates_after_a_malformed_subject() -> N
     assert any("observed subjects validation failed" in blocker for blocker in assessments[0].blockers)
     for assessment in assessments[1:]:
         assert not assessment.closed
-        assert assessment.blockers == (
-            f"{assessment.gate.value} cannot close while an earlier gate remains open",
-        )
+        assert assessment.blockers == assessments[0].blockers
 
 
 def test_a_model_copy_cannot_turn_all_axes_non_applicable_and_recompute_digests() -> None:

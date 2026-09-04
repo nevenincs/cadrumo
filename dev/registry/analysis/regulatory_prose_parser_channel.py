@@ -34,6 +34,8 @@ from pathlib import Path
 
 from cadrumo.core.toml import read_toml
 
+from ...quality.unread_inputs import report_unread
+
 REPO_ROOT = Path(__file__).resolve().parents[3]
 SCANNED_ROOTS = ("src/cadrumo", "dev")
 LEDGER_PATH = Path(__file__).with_name("regulatory_prose_parser_channel.toml")
@@ -104,16 +106,23 @@ def _prose_pattern_count(tree: ast.Module) -> int:
 def derive_prose_parsers() -> tuple[ProseParserModule, ...]:
     """Derive every module that compiles a regulatory-prose pattern."""
     found: list[ProseParserModule] = []
+    unread: list[str] = []
     for path in _iter_scanned_modules():
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"))
-        except (SyntaxError, UnicodeDecodeError):
+        except (SyntaxError, UnicodeDecodeError) as error:
+            unread.append(f"{path}: {type(error).__name__}: {error}")
             continue
         count = _prose_pattern_count(tree)
         if count:
             found.append(
                 ProseParserModule(module=path.relative_to(REPO_ROOT).as_posix(), pattern_count=count),
             )
+    report_unread(
+        "regulatory prose parser channel",
+        "a module compiling a regulatory-prose pattern in one of them is absent from this list",
+        unread,
+    )
     return tuple(sorted(found))
 
 
