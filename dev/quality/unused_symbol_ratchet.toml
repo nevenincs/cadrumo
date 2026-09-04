@@ -145,7 +145,6 @@
 "cadrumo.application.user_profile.bundle" = 1
 "cadrumo.application.user_profile.bundle_encryption" = 1
 "cadrumo.application.user_profile.capsule_record" = 1
-"cadrumo.application.user_profile.capsule_restore" = 5
 "cadrumo.application.user_profile.commands" = 3
 "cadrumo.application.user_profile.cotejo_apply" = 1
 "cadrumo.application.user_profile.custody_carry" = 1
@@ -307,7 +306,6 @@
 "cadrumo.entrypoints.cli._ledger_evidence_consent_cli" = 1
 "cadrumo.entrypoints.cli._ledger_ratios_cli" = 1
 "cadrumo.entrypoints.cli._ledger_read_cli" = 2
-"cadrumo.entrypoints.cli._modelo" = 3
 "cadrumo.entrypoints.cli._modelo_aggregate_cli" = 1
 "cadrumo.entrypoints.cli._modelo_behavior_support" = 1
 "cadrumo.entrypoints.cli._modelo_cli_support" = 1

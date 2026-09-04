@@ -11,13 +11,16 @@ reason, and the advisory population the blocking scope leaves out - because, in
 its own words, the narrowing should stay "visible and arguable rather than
 silent".
 
-The live section test drives the real scan over this working tree, which takes
-about a hundred seconds; that is the subject, and a stand-in corpus would prove
-something about the stand-in. The bucketing rule is exercised directly, since
-it decides how the advisory summary reads.
+The live section tests drive the real scan over this working tree; that is the
+subject, and a stand-in corpus would prove something about the stand-in. They
+share ONE run, for the reason given on the fixture below. The bucketing rule is
+exercised directly, since it decides how the advisory summary reads.
 """
 
 from __future__ import annotations
+
+import contextlib
+import io
 
 import pytest
 
@@ -58,8 +61,31 @@ def test_an_unmanaged_tree_is_summarised_at_its_root(path: str) -> None:
     assert _bucket(path) == path.split("/")[0]
 
 
+@pytest.fixture(scope="module")
+def canary_run() -> tuple[int, str]:
+    """The real scan, run once and shared by the tests that read its report.
+
+    Both section tests below call the live scan over this working tree. Run
+    per-test that cost 209s and 182s - two measurements of one deterministic
+    report - and each sat inside the repository's 300-second per-test budget.
+    Overrunning that budget does not fail the test: pytest-timeout's thread
+    method kills the process, so the worker dies and every sibling on it is
+    reported as never having run, which is the INCOMPLETE RUN this campaign
+    keeps meeting. One run is the same evidence at half the cost and with real
+    margin under the ceiling.
+
+    ``redirect_stdout`` rather than ``capsys`` because the capture fixtures are
+    function-scoped; the report writes with plain ``print``, so this sees
+    exactly what ``capsys`` saw.
+    """
+    stream = io.StringIO()
+    with contextlib.redirect_stdout(stream):
+        exit_code = main()
+    return exit_code, stream.getvalue()
+
+
 def test_the_report_carries_every_section_and_its_exit_code_tracks_the_blocking_scope(
-    capsys: pytest.CaptureFixture[str],
+    canary_run: tuple[int, str],
 ) -> None:
     """Each section exists so a narrowing stays arguable; a missing one hides it.
 
@@ -67,9 +93,8 @@ def test_the_report_carries_every_section_and_its_exit_code_tracks_the_blocking_
     pinned verdict, so this holds whether or not the tree currently carries a
     blocking finding.
     """
-    exit_code = main()
+    exit_code, out = canary_run
 
-    out = capsys.readouterr().out
     assert "blocking scope:" in out
     assert "operator tier, untracked and ignored content:" in out
     assert "suppressed by path exclusion" in out
@@ -80,18 +105,15 @@ def test_the_report_carries_every_section_and_its_exit_code_tracks_the_blocking_
     assert (exit_code == 0) == (blocking_findings == 0)
 
 
-def test_every_path_exclusion_is_printed_with_a_reason(
-    capsys: pytest.CaptureFixture[str],
-) -> None:
+def test_every_path_exclusion_is_printed_with_a_reason(canary_run: tuple[int, str]) -> None:
     """A suppression without a stated reason is an exemption nobody can review.
 
     The count alone would say how much was hidden but not why any of it was.
     """
     from .._tree_scan import EXCLUDED_PATH_FRAGMENTS
 
-    main()
+    _, out = canary_run
 
-    out = capsys.readouterr().out
     assert EXCLUDED_PATH_FRAGMENTS, "no exclusions declared, so this would prove nothing"
     for fragment, reason in EXCLUDED_PATH_FRAGMENTS.items():
         assert fragment in out

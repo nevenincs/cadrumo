@@ -713,3 +713,14 @@ symbols = [
   "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR",
 ]
 evidence = "Each records an AEAT legal figure that the engine deliberately does NOT read: compute_deduccion_maternidad_0611 resolves every figure through _resolve_maternidad_figure against the dated Modelo 100 registry parameter, and its docstring states that falling back to the module constant is forbidden. AMORTIZACION_INMUEBLE_RATE is additionally imported by domain/fincas/amortization_ledger, inside the staged fincas cluster. Removing any of them would delete the documented legal reference while changing no arithmetic."
+
+[[symbol_cluster]]
+name = "unreferenced CLI and capsule constants"
+class = "orphaned"
+area = "mixed"
+resolved = true
+symbols = [
+  "_HEX_DIGITS", "_M200_M202_PAGOS_RELATION_IDS",
+  "_ENVELOPE_RELATIVE", "_SENTINEL_RELATIVE", "_DATABASE_RELATIVE",
+]
+evidence = "Each appeared exactly once tree-wide, at its own definition, and none was exported. The _modelo copy of _HEX_DIGITS was the dead one of four identical definitions: the three siblings in outbound storage integrity, persistence attachment and the attachments domain each carry a real use, so only this copy was removed. The three capsule path tuples named custody artefact locations whose literals appear nowhere else in that module, which resolves capsule paths through its ports instead."
