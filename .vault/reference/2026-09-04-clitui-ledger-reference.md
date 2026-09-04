@@ -19,20 +19,20 @@ This reference maps the first semantic-search-led census of Ledger behavior owne
 
 ### Campaign matrix publication
 
-This document is the authoritative human-readable publication surface for the `LedgerCapabilityMatrixV1` campaign contract in `dev/quality/clitui_ledger_capability_matrix.py`. The S04 CLI, S05 backend-operation, and S06 registry-route streams are now exact current observations, but the publication remains a **provisional baseline** rather than a serialized accepted matrix: S07-S08 have not produced and adjudicated the remaining live union census, S09 has not recorded the cross-plan hold control, and S12-S14 have not reviewed and accepted the frozen denominator. The contract therefore requires the publication to fail closed instead of inventing a denominator digest, matrix digest, evidence attestation, or G0 closure.
+This document is the authoritative human-readable publication surface for the `LedgerCapabilityMatrixV1` campaign contract in `dev/quality/clitui_ledger_capability_matrix.py`. The S04 CLI, S05 backend-operation, S06 registry-route, and S07 supported-surface streams are now exact current observations, but the publication remains a **provisional baseline** rather than a serialized accepted matrix: S08 has not adjudicated the live union census, S09 has not recorded the cross-plan hold control, and S12-S14 have not reviewed and accepted the frozen denominator. The contract therefore requires the publication to fail closed instead of inventing a denominator digest, matrix digest, evidence attestation, or G0 closure.
 
 | Publication field | Current value |
 | --- | --- |
 | Contract / schema | `LedgerCapabilityMatrixV1` / `3` |
-| Publication revision | `s06-registry-census-1` |
-| Observation timestamp | `2026-09-04T23:42:00+02:00` |
-| Source revision | `bc77754a4cda81fe2a36cd8cce59388a2b52d97d` |
+| Publication revision | `s07-tui-census-1` |
+| Observation timestamp | `2026-09-05T00:41:46+02:00` |
+| Source revision | `363d04b090605ab60d01c15be369eced4355ad64` |
 | Contract source digest | `sha256:c2998c8ff958ae820b59fa7055a36d83117bb35282fe2679761032fab7a15a10` |
 | Accepted plan owner | `clitui-ledger` |
-| Denominator revision / digest | Not issued: the mandatory S07-S08 live census and adjudication are open |
+| Denominator revision / digest | Not issued: mandatory S08 union adjudication remains open |
 | Matrix digest | Not issued: a digest-bound `LedgerCapabilityMatrixV1` cannot exist before the complete denominator and current evidence subjects exist |
 | Acceptance attestation | Absent by design: only S14 may record an independent `ACCEPT` ruling bound to the frozen digest |
-| TUI hold | Campaign sequencing bars Ledger TUI implementation; the cross-plan recorded control remains open until S09 and row-level applicability/hold classification remains open until S07, S08, and S11 |
+| TUI hold | Campaign sequencing bars Ledger TUI implementation; the cross-plan recorded control remains open until S09 and row-level applicability/hold classification remains open until S08 and S11 |
 
 #### Mandatory source-stream landscape
 
@@ -46,7 +46,7 @@ Every stream below must become one complete, readable, unambiguous, digest-bound
 | `missing_product` | Ten baseline product/provenance families are confirmed absent or incomplete below | Complete current S05 product-gap observation; union review and canonical row admission remain open | S05 complete; S08 adjudication |
 | `registry_route` | Seven families, 546 declarations, 35 family/revision sites, 510 registry-bound destinations, three application-sidecar destinations, and 33 destinationless declarations are enumerated below | Complete current registry stream; not a union-denominator attestation | S06 complete; S08 adjudication |
 | `artifact_product` | Flat CSV/JSONL/XLSX exists; M369 has a successful Modelo export path, while observed M100/M303/M390 routes refuse unavailable layouts; review package, Google transport, and recovery archive remain distinct missing products | Complete current S05/S06 application-product observation; row admission remains open | S08 adjudication |
-| `supported_surface` | CLI enrollment and TUI component existence/installed reachability are known to be distinct | Partial: exhaustive component and navigation reachability census remains open | S07 |
+| `supported_surface` | Seven internal routes and seven concrete route screens exist; the installed session reaches the outer Ledger destination and initially composes Overview, but no installed consumer handles internal Ledger route/action messages and no mutation door is installed | Complete current supported-surface stream; capability-row applicability remains open | S07 complete; S08 adjudication |
 
 #### Axis contract and publication notation
 
@@ -122,13 +122,14 @@ These coordinates bind the S03 claims to the current observation revision. They 
 | `evidence.s06.registry_declaration_sources` | `ledger_registry_source_set_digest` over the 130 registry TOML files whose binding rows declare a member of `LEDGER_BINDING_SOURCE_KINDS` | `sha256:194a9f26ddfbae6c5d7f265ffe58f50964fbe2fcd02a5670fa19845dead5cf6d` | Domain-separated source-set v1 bytes; each sorted source-root-relative POSIX path and file body is independently unsigned-8-byte-big-endian length framed |
 | `evidence.s06.registry_route_census` | `build_ledger_registry_route_census` in `dev/quality/clitui_ledger_capability_matrix.py`, derived from `ValidatedRegistryAuthority` through `casillas_by_binding` | `sha256:20b2d2df5558b2a3fdbd1eab6e9f781a973e93c6211e211f8e679cf7b4782aca` | Strict route-census v1 root and rows; domain-separated, length-framed canonical JSON; all 546 declarations, 510 registry-bound and 36 without a registry binding/casilla edge |
 | `evidence.s06.production_consumers` | `src/cadrumo/application/modelo/calculation_route.py:112`; `src/cadrumo/application/modelo/calculation_actions.py:767`; `src/cadrumo/application/aggregation/_modelo_bindings.py:171`; `src/cadrumo/application/aggregation/modelo_bindings_renta_expenses.py:48`; `src/cadrumo/application/aggregation/_oss_ioss.py:504` | Bound by this document's CLI-maintained `body_hash` after publication | Unique production ownership for all seven families; three explicit application-sidecar destinations; exact proof and refusal limits below |
+| `evidence.s07.tui_supported_surface` | `src/cadrumo/entrypoints/tui/ledger/routes.py:84`; `src/cadrumo/entrypoints/tui/launcher.py:410`; `src/cadrumo/entrypoints/tui/installed_session.py:71`; `src/cadrumo/entrypoints/tui/app.py` | `sha256:c7402f5b7abf3ce30ce5b9e1452db1e894fe581d3e133e9f0c9f65af7476a0d1` | Length-framed source observation over route, controller, injection, installed composition, app dispatch, workspace read, and generation files; seven component routes, one installed outer destination, Overview as the only initially composed internal screen, two injected read-action references, zero installed mutation doors, and zero installed consumers of Ledger route/action messages |
 | `evidence.baseline.cli_boundary` | `2026-09-04-clitui-ledger-reference`, Valid CLI boundary | Bound by this document's CLI-maintained `body_hash` after publication | Allowed adapter concerns and forbidden business ownership |
 
 #### Gate summary
 
 | Gate | State at S03 | Blocking facts |
 | --- | --- | --- |
-| G0 denominator and ownership freeze | **OPEN** | S04-S06 are complete, but S07-S08 union census/adjudication, S09/S11 hold records, S12 row review, S13 reopening detector, and S14 digest-bound independent `ACCEPT` remain outstanding |
+| G0 denominator and ownership freeze | **OPEN** | S04-S07 current source observations are complete, but S08 union adjudication, S09/S11 hold records, S12 row review, S13 reopening detector, and S14 digest-bound independent `ACCEPT` remain outstanding |
 | G1 semantic authority recovery | **LOCKED by G0** | `AUTHORITY` rows retain CLI-owned or missing application authority; no cohort may claim closure before its backend behavior and adapter detector evidence exists |
 | G2 backend product completeness | **LOCKED by G0/G1** | Missing products, composition, artifacts, provenance, registry routes, and direct proof remain open |
 | G3 CLI clean break and completeness | **LOCKED by G0-G2** | CLI delegation, success/refusal behavior, and artifact proof are not complete across the admitted denominator |
@@ -147,6 +148,30 @@ The 50 behavior-distinct supplemental sub-operation identities are `ledger.class
 The leaf families contain evidence 10, lifecycle 10, prorrata 8, foundation 6, operations 6, management 6, invoice lifecycle 5, ratios 5, evidence follow-up 4, counterparty 3, inventory 3, rules 3, bienes de inversión 2, inventory analysis 2, invoice intake 2, classification 1, and participation rebuild 1. All 78 invocables, including the executable group, currently declare `TuiCapability.NOT_IMPLEMENTED`; this command metadata is distinct from the separate installed workbench components and is another reason the matrix must not conflate CLI enrollment, TUI component existence, and installed reachability. S04 establishes only the complete CLI stream and current observations: G0 remains open until every other mandatory stream is collected, row applicability and semantic homes are adjudicated, the TUI hold is recorded, and independent review accepts a digest-bound union denominator.
 
 Focused command-graph/spec tests passed 27 tests, the root Ledger help and all 13 nested group help invocations exited zero. A broader generated-reference run had 19 passing tests and one unrelated failure caused by a config-profile `archive import` versus `restore` mismatch; it does not contradict the exact Ledger tree comparison, but remains visible as pre-existing global documentation drift.
+
+### Live TUI supported-surface denominator
+
+The Ledger TUI package contains seven concrete route screens and seven one-to-one internal route declarations: Overview, Entries, Review, Import, Classification, Evidence, and Reconciliation. `LedgerUnavailableScreen` is a typed refusal body, while `LedgerWorkspaceScreen` and `LedgerConfirmationFlowScreen` are shared bases rather than additional destinations. One `LedgerWorkspaceController`, one `ledger_screen_factory`, and one `resolve_ledger_screen` router join those components. This is a component census, not an installed-capability verdict.
+
+| Internal destination | Component / factory | Component behavior | Production-installed state |
+| --- | --- | --- | --- |
+| `ledger.overview` | `LedgerOverviewScreen` | Read-only area summary, quality, and affected-declaration projection | `component_only`: it is the sole internal screen initially returned by the installed Ledger factory, but no installed Ledger route-message consumer was located to make the internal destination graph navigable |
+| `ledger.entries` | `LedgerEntriesScreen` | Read-only responsive transaction catalogue and semantic row selection | `component_only`: declared and projection-backed; not independently enrolled in installed navigation |
+| `ledger.review` | `LedgerReviewScreen` | Read-only review rows; selecting a row emits `LedgerReviewRequested` | `component_only`: production injects the `operator.ledger.review` reference, but no installed consumer of `LedgerReviewRequested` was located, so selection does not execute the command |
+| `ledger.import` | `LedgerImportScreen` | Confirm/cancel flow over an opaque prepared import command | `component_only`: production supplies neither prepared imports nor an import submitter, so the controller returns a typed refusal |
+| `ledger.classification` | `LedgerClassificationScreen` | Explicit business/personal/excluded patch confirmation through an injected submitter | `component_only`: production supplies no classify action, target, or submitter, so the controller returns a typed refusal |
+| `ledger.evidence` | `LedgerEvidenceScreen` | Read-only safe attachment-review metadata; selection emits `LedgerEvidenceReviewRequested` | `component_only`: production injects the evidence-review action and per-visit queue, but no installed consumer of `LedgerEvidenceReviewRequested` was located, so selection does not execute the command |
+| `ledger.reconciliation` | `LedgerReconciliationScreen` | Read-only local link suggestions/inconsistencies; optional confirmed link submission | `component_only`: the read body renders, but production supplies no link action or submitter, so mutation controls remain hidden |
+
+The outer root catalogue does install `workbench.ledger` when the application generation contains a Ledger projection and its admission is available. That outer installation must not be projected onto all seven internal destinations. Its factory always returns Overview first. Internal selections post `LedgerRouteRequested`; review and evidence selections post their corresponding request messages; Back posts `LedgerBackRequested`. Exact search across the installed TUI finds declarations and emitters but no handler or other consumer for any of those four Ledger message types. Therefore the current installed operator-reachable Ledger body is Overview only, and even that body cannot navigate to the other declared components through the production root. This observation is stricter than saying the screens merely lack CLI parity: the route bridge itself is disconnected.
+
+Production composition injects exactly two Ledger action references, `operator.ledger.review` and `operator.ledger.evidence.review.list`, and reads the evidence review queue at screen-factory invocation. It injects zero executable mutation doors: no classification submitter, import submitter, or link submitter. The component harness separately supplies synthetic doors for classification, one-file import, and invoice/transaction linking; those tests prove frontend behavior behind an injected contract, not production enrollment. None of the 78 CLI invocables changes this verdict: all 78 command specs independently declare `TuiCapability.NOT_IMPLEMENTED`, which is CLI global-`--tui` metadata rather than evidence that a similarly named TUI component is installed.
+
+The installed projection path is real and backend-owned. `SecureProfileWorkbenchGenerationReadDoorV1` reads transaction, invoice, event, calculation-revision, and work-unit stores; `read_ledger_workspace_projection` builds the immutable Ledger workspace; `assemble_workbench_generation` carries it; the installed launcher binds it to the outer factory. The same projection is also consumed by installed workbench search to create Ledger-entry search documents. These are backend-only workspace projection consumers, not evidence that CRUD, batch, attachment lifecycle, export, currency-normalization disclosure, or registry/calculation operations are available in the TUI.
+
+The dedicated component harness has 38 test functions and 78 collected integration cases across three files. It covers all seven screens with synthetic fully populated injection, flow refusal and submission, semantic focus, four locales, safe evidence metadata, responsive geometry, and import-boundary checks. The installed-composition tests prove the outer `workbench.ledger` catalogue enrollment and projection/factory parity, but no test drives a production root from Overview through an internal Ledger route or executes a Ledger request message. Harness coverage is therefore `partial` for installed reachability and executable-operation enrollment even though component coverage is broad.
+
+S07 assigns no final TUI applicability or row state. Every candidate TUI-applicable capability remains under the campaign hold and requires S08 semantic adjudication followed by S11 row-level hold marking. G0 remains open.
 
 ### Live backend operation denominator
 
