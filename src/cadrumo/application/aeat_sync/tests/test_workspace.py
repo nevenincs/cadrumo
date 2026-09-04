@@ -579,6 +579,7 @@ def test_a_comparison_zone_reports_no_count_until_both_sides_are_observed() -> N
         f"an observed zero and must survive; got {census.item_count!r}"
     )
 
+
 def test_a_refused_local_source_names_whether_the_reader_is_missing_or_uncomposed() -> None:
     """Two refusals that look alike point at opposite work.
 

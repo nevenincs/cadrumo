@@ -693,10 +693,7 @@ def _secure_profile_home_input(
         if cross_cutting is None
         else (
             *addressed,
-            *(
-                item.model_copy(update={"rank": len(addressed) + offset})
-                for offset, item in enumerate(cross_cutting)
-            ),
+            *(item.model_copy(update={"rank": len(addressed) + offset}) for offset, item in enumerate(cross_cutting)),
         )
     )
     actions_state = (
@@ -909,9 +906,7 @@ def _home_declaration_actions(
                 # the operator why the work will not close, where "needs
                 # review" invites them to try and find out.
                 reason_code="blocked_dependency" if blocked else "declaration_needs_review",
-                action=declare_next_action(
-                    "operator.modelo.work.revisions", work_unit_id=resume.work_unit_id
-                ),
+                action=declare_next_action("operator.modelo.work.revisions", work_unit_id=resume.work_unit_id),
                 modelo=resume.modelo,
                 filing_year=resume.filing_year,
                 period=resume.period,

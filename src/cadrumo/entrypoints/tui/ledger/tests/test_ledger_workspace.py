@@ -382,6 +382,7 @@ def test_ledger_tui_has_no_io_adapter_cli_calculation_or_mutation_imports() -> N
         if path.name in {"entries.py", "review.py"}
     )
 
+
 def test_a_classification_target_outside_the_visible_projection_is_refused() -> None:
     """A target the snapshot does not contain would open on an invisible row."""
     controller = _controller(_projection())

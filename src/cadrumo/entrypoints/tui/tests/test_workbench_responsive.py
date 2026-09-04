@@ -443,6 +443,7 @@ async def test_a_heading_shares_its_left_edge_with_the_rows_it_owns(surface: str
 
     assert checked, f"{surface}: no heading had content beneath it to compare against"
 
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize("surface", ["aeat-sync-overview--ready"])
 async def test_every_control_can_be_brought_into_view(surface: str) -> None:
@@ -496,6 +497,5 @@ async def test_every_control_can_be_brought_into_view(surface: str) -> None:
         f"never exercised scrolling and proves nothing"
     )
     assert not unreachable, (
-        f"{surface} at {width}x{height} has controls that cannot be scrolled into view: "
-        + ", ".join(unreachable)
+        f"{surface} at {width}x{height} has controls that cannot be scrolled into view: " + ", ".join(unreachable)
     )

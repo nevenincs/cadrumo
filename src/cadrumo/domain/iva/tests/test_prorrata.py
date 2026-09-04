@@ -322,8 +322,14 @@ def test_especial_mandatory_ten_percent_margin_is_inclusive_from_2015() -> None:
     (109.99, a 9.99 percent excess) must stay outside it, so the assertion
     cannot be satisfied by a predicate that simply answers ``True``.
     """
-    assert is_especial_mandatory(Decimal("110.00"), Decimal("100.00"), year=2026, parameters=_params("inclusive", 2026)) is True
-    assert is_especial_mandatory(Decimal("109.99"), Decimal("100.00"), year=2026, parameters=_params("inclusive", 2026)) is False
+    assert (
+        is_especial_mandatory(Decimal("110.00"), Decimal("100.00"), year=2026, parameters=_params("inclusive", 2026))
+        is True
+    )
+    assert (
+        is_especial_mandatory(Decimal("109.99"), Decimal("100.00"), year=2026, parameters=_params("inclusive", 2026))
+        is False
+    )
 
 
 def test_an_exclusive_margin_must_be_passed_not_merely_reached() -> None:

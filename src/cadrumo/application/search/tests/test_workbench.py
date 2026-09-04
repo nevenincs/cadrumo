@@ -196,8 +196,7 @@ def test_provider_authored_labels_hashes_and_stable_ids_are_not_fields() -> None
 
     matchable = {name for name in fields if "term" in name}
     assert matchable == {"content_terms"}, (
-        f"matchable text on a search document must arrive through the one declared channel; "
-        f"found {sorted(matchable)}"
+        f"matchable text on a search document must arrive through the one declared channel; found {sorted(matchable)}"
     )
 
 

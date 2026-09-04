@@ -250,6 +250,7 @@ async def test_a_source_card_title_is_separated_from_the_card_above_it() -> None
             f"{(section_gap, stack_gap)} rhythm, so it does not own its own description"
         )
 
+
 @pytest.mark.asyncio
 async def test_no_declared_action_label_wraps_its_control() -> None:
     """Every action button is the same height, in every locale.
@@ -280,9 +281,7 @@ async def test_no_declared_action_label_wraps_its_control() -> None:
     assert labels, "no action labels were read, so this proves nothing"
 
     class _Probe(App[None]):
-        CSS = BASE_CSS + tokenised(
-            ".aeat-sync-operation { width: 100%; max-width: $cadrumo-control-max-width; }"
-        )
+        CSS = BASE_CSS + tokenised(".aeat-sync-operation { width: 100%; max-width: $cadrumo-control-max-width; }")
 
         @override
         def compose(self) -> ComposeResult:
@@ -301,6 +300,5 @@ async def test_no_declared_action_label_wraps_its_control() -> None:
         if heights[f"probe-{index}"] != 3
     ]
     assert not ragged, (
-        "these action labels wrap their control, making that button taller than its "
-        "siblings: " + ", ".join(ragged)
+        "these action labels wrap their control, making that button taller than its siblings: " + ", ".join(ragged)
     )

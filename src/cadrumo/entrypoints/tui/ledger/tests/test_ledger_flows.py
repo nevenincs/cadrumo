@@ -492,6 +492,7 @@ def test_flow_modules_cannot_read_files_detect_providers_or_import_mutators() ->
     assert not any("actions_import" in name or "adapters" in name or "entrypoints.cli" in name for name in imports)
     assert not {"Path", "open", "read", "read_text", "import_ledger_source"} & calls
 
+
 @pytest.mark.asyncio
 async def test_selecting_an_entry_makes_the_classification_area_reachable() -> None:
     """A destination the session can never open should not be offered at all.
@@ -532,8 +533,7 @@ async def test_selecting_an_entry_makes_the_classification_area_reachable() -> N
 
         assert controller.classification_target == chosen
         assert controller.refusal_for(LedgerWorkspaceArea.CLASSIFICATION) is None, (
-            "the operator chose an entry and classification is still refused, so the selection "
-            "carried nowhere"
+            "the operator chose an entry and classification is still refused, so the selection carried nowhere"
         )
         app.exit(None)
 

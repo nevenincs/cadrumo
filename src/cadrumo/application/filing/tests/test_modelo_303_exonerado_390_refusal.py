@@ -70,7 +70,13 @@ _PARAMS = BienesInversionRegularizacionParameters(
     provenance=BienesInversionParameterProvenance(
         modelo_id="303",
         revision_id="2025",
-        parameter_ids=("m303-bien-inversion-ventana-anos-mueble",),
+        parameter_ids=(
+            "m303-bien-inversion-ventana-anos-mueble",
+            "m303-bien-inversion-ventana-anos-inmueble",
+            "m303-bien-inversion-divisor-mueble",
+            "m303-bien-inversion-divisor-inmueble",
+            "m303-bien-inversion-regularizacion-umbral-puntos",
+        ),
         resolved_on=_date(2025, 6, 1),
     ),
 )

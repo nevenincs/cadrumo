@@ -76,8 +76,7 @@ class LedgerCliCensusAnnotation:
             raise ValueError(f"Ledger command census annotation has duplicate sub-operations: {self.command_key}")
         for identity in self.suboperation_ids:
             if not identity.startswith("ledger.") or any(
-                not part or not part.replace("_", "").isalnum() or not part[0].islower()
-                for part in identity.split(".")
+                not part or not part.replace("_", "").isalnum() or not part[0].islower() for part in identity.split(".")
             ):
                 raise ValueError(f"Ledger command census sub-operation is not a stable identity: {identity}")
 
@@ -294,15 +293,16 @@ def _validated_annotations(
     annotation_keys = tuple(annotation.command_key for annotation in _LEDGER_CLI_CENSUS_ANNOTATIONS)
     if len(set(annotation_keys)) != len(annotation_keys):
         raise ValueError("Ledger command census has duplicate ownership annotations")
+    invocable_key_sequence = tuple(spec.key for spec in invocables)
+    if len(set(invocable_key_sequence)) != len(invocable_key_sequence):
+        raise ValueError("Ledger command census has duplicate invocable command keys")
     invocable_keys = {spec.key for spec in invocables}
     unknown = sorted(set(annotation_keys) - invocable_keys)
     missing = sorted(invocable_keys - set(annotation_keys))
     if unknown or missing:
         raise ValueError(f"Ledger command census annotations mismatch invocables: unknown={unknown}; missing={missing}")
     suboperations = tuple(
-        suboperation
-        for annotation in _LEDGER_CLI_CENSUS_ANNOTATIONS
-        for suboperation in annotation.suboperation_ids
+        suboperation for annotation in _LEDGER_CLI_CENSUS_ANNOTATIONS for suboperation in annotation.suboperation_ids
     )
     if len(set(suboperations)) != len(suboperations):
         raise ValueError("Ledger command census has duplicate semantic sub-operation identities")

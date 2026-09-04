@@ -514,6 +514,7 @@ def test_structural_read_door_is_accepted() -> None:
     generation = assemble_workbench_generation_from(_Door(_inputs()))
     assert generation.home.projection is not None
 
+
 def _ledger_projection_with_statuses(
     status: LedgerWorkspaceStatus,
     *,
@@ -566,15 +567,13 @@ def test_home_refuses_its_ledger_zone_rather_than_publishing_an_unmeasured_zero(
         LedgerWorkspaceArea.CLASSIFICATION,
         LedgerWorkspaceArea.EVIDENCE,
     ):
-        partial = _ledger_projection_with_statuses(
-            LedgerWorkspaceStatus.READY, unmeasured=area
-        )
+        partial = _ledger_projection_with_statuses(LedgerWorkspaceStatus.READY, unmeasured=area)
         assert _home_ledger_readiness(partial) is None, (
-            f"an unmeasured {area.value} area still produced a readiness block, so Home "
-            f"renders a zero nobody measured"
+            f"an unmeasured {area.value} area still produced a readiness block, so Home renders a zero nobody measured"
         )
 
     assert _home_ledger_readiness(None) is None
+
 
 def test_a_zone_awaiting_a_pull_is_never_captured_not_unavailable() -> None:
     """Home must not report absent remote data as a broken reader.
@@ -619,6 +618,7 @@ def test_a_zone_awaiting_a_pull_is_never_captured_not_unavailable() -> None:
         f"the reason code {home.messages_state.reason_code!r} still blames the reader"
     )
 
+
 def test_only_a_verified_calculation_reads_as_ready_on_home() -> None:
     """READY is the one Home state that must never be reached by inference.
 
@@ -639,16 +639,15 @@ def test_only_a_verified_calculation_reads_as_ready_on_home() -> None:
         "default rather than being mapped deliberately"
     )
 
-    ready = {
-        state for state, home in _HOME_DECLARATION_STATES.items() if home is HomeDeclarationState.READY
-    }
+    ready = {state for state, home in _HOME_DECLARATION_STATES.items() if home is HomeDeclarationState.READY}
     assert ready == {CalculationRevisionState.VERIFICADO_COMPLETO}, (
         f"only a verified-complete calculation may read as READY on Home; found {sorted(ready)}"
     )
 
-    assert _HOME_DECLARATION_STATES[CalculationRevisionState.BORRADOR] is (
-        HomeDeclarationState.NEEDS_REVIEW
-    ), "an unverified calculation must keep review in front of the operator"
+    assert _HOME_DECLARATION_STATES[CalculationRevisionState.BORRADOR] is (HomeDeclarationState.NEEDS_REVIEW), (
+        "an unverified calculation must keep review in front of the operator"
+    )
+
 
 def test_home_offers_ledger_work_only_when_there_is_some_and_never_for_an_unmeasured_area() -> None:
     """An offered action must correspond to work that exists and can be named.
@@ -677,14 +676,11 @@ def test_home_offers_ledger_work_only_when_there_is_some_and_never_for_an_unmeas
     catalogue = _home_reason_keys_for_test()
     for item in offered:
         assert f"tui.home.reason.{item.reason_code}" in catalogue, (
-            f"offered action reason {item.reason_code!r} has no copy, so Home degrades to its "
-            f"generic line"
+            f"offered action reason {item.reason_code!r} has no copy, so Home degrades to its generic line"
         )
 
     for area in (LedgerWorkspaceArea.CLASSIFICATION, LedgerWorkspaceArea.EVIDENCE):
-        unmeasured = _ledger_projection_with_statuses(
-            LedgerWorkspaceStatus.NEEDS_ATTENTION, unmeasured=area
-        )
+        unmeasured = _ledger_projection_with_statuses(LedgerWorkspaceStatus.NEEDS_ATTENTION, unmeasured=area)
         assert _home_ledger_actions(unmeasured) is None, (
             f"an unmeasured {area.value} area still produced an offer, so Home invites the "
             f"operator to work nobody measured"
@@ -701,6 +697,7 @@ def _home_reason_keys_for_test() -> frozenset[str]:
     raw = yaml.safe_load(root.read_text(encoding="utf-8"))
     reasons = raw["tui"]["home"]["reason"]
     return frozenset(f"tui.home.reason.{name}" for name in reasons)
+
 
 def test_a_declaration_needing_review_is_offered_with_its_own_address() -> None:
     """A declaration-addressed action carries the declaration it is about.
@@ -742,8 +739,7 @@ def test_a_declaration_needing_review_is_offered_with_its_own_address() -> None:
     offered = _home_declaration_actions(resumes)
 
     assert len(offered) == 1, (
-        f"only a declaration needing review is outstanding work; got "
-        f"{[item.reason_code for item in offered]}"
+        f"only a declaration needing review is outstanding work; got {[item.reason_code for item in offered]}"
     )
     only = offered[0]
     assert only.reason_code == "declaration_needs_review"
@@ -752,6 +748,7 @@ def test_a_declaration_needing_review_is_offered_with_its_own_address() -> None:
     assert only.action.action.action_id == "operator.modelo.work.revisions"
 
     assert _home_declaration_actions(None) == ()
+
 
 def test_only_a_blocking_dependency_finding_reads_as_a_blocked_declaration() -> None:
     """`blocked_dependency` is produced from the domain's own word, or not at all.
