@@ -24,8 +24,14 @@ asserts:
 3. The fixture's raw bytes do not contain any leak-marker string
    from the synthetic mapping (e.g. ``REPLACE_WITH_REAL``).
 
-When no fixtures are committed yet, the loop has no fixture work
-to perform but the module still contributes one passing test.
+A committed PDF carrying no sidecar was formerly dropped from this
+gate entirely: the pair was only appended when the sidecar existed,
+so three of the sixty-three committed fixtures never met the
+leak-marker assertions - which need no sidecar at all. The two
+obligations are now separate. Leak markers are checked on every
+committed fixture; synthetic presence is checked on those that
+carry the sanitiser's audit log. The sidecar-less set is declared
+below, so a new one forces a decision instead of vanishing.
 """
 
 from __future__ import annotations
@@ -43,24 +49,39 @@ from cadrumo.tests import FIXTURES_DIR
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def _committed_fixture_pairs() -> list[tuple[Path, Path]]:
-    """Return ``(pdf_path, sidecar_json_path)`` for every committed fixture.
+_SYNTHETIC_BY_CONSTRUCTION: dict[str, str] = {
+    "modelo_100_2025A.pdf": "built synthetic for the justificante parser tests; never a sanitised capture",
+    "modelo_130_2026Q1.pdf": "built synthetic for the parser, reconciliation and live-capture tests",
+    "modelo_303_2026Q1.pdf": "built synthetic for the justificante parser tests; never a sanitised capture",
+}
+"""Committed fixtures that carry no sanitiser audit log, and why.
 
-    Returns an empty list when no fixtures have landed yet, so a
-    fresh checkout collects zero parametrised cases.
+These were authored synthetic rather than sanitised from a real
+justificante, so there is no ``replacements_applied`` list to prove
+present. They are still subject to the leak-marker assertions. The
+set is declared here so that a fixture arriving without a sidecar
+fails until someone states which of the two it is.
+"""
+
+
+def _committed_fixtures() -> list[tuple[Path, Path | None]]:
+    """Return ``(pdf_path, sidecar_json_path_or_None)`` for every committed fixture.
+
+    The sidecar is optional in the RESULT, not in the gate: a fixture
+    without one still owes the leak-marker check, and previously
+    escaped it by never entering this list.
     """
     fixture_root = FIXTURES_DIR / "justificantes"
     if not fixture_root.is_dir():
         return []
-    pairs: list[tuple[Path, Path]] = []
+    fixtures: list[tuple[Path, Path | None]] = []
     for pdf_path in scan_directory(fixture_root, pattern="*.pdf", recursive=True):
         sidecar = pdf_path.with_suffix(".json")
-        if sidecar.is_file():
-            pairs.append((pdf_path, sidecar))
-    return pairs
+        fixtures.append((pdf_path, sidecar if sidecar.is_file() else None))
+    return fixtures
 
 
-_FIXTURE_PAIRS = _committed_fixture_pairs()
+_FIXTURES = _committed_fixtures()
 
 
 def _decompressed_streams(pdf_bytes: bytes) -> bytes:
@@ -81,27 +102,59 @@ def _decompressed_streams(pdf_bytes: bytes) -> bytes:
 
 def test_committed_fixtures_have_synthetics_and_no_leak_markers() -> None:
     """Every committed fixture exposes synthetics and carries no scaffold markers."""
+    assert _FIXTURES, (
+        "no committed fixture was discovered under justificantes/; this gate proves "
+        "nothing over an empty corpus, and sixty-three fixtures are committed, so an "
+        "empty result means the corpus root moved rather than that none exist yet"
+    )
+
     leak_markers = (b"REPLACE_WITH_REAL_CLEARTEXT", b"REPLACE_WITH_SYNTHETIC")
-    for pdf_path, sidecar_path in _FIXTURE_PAIRS:
+    sidecar_less: list[str] = []
+    synthetics_asserted = 0
+
+    for pdf_path, sidecar_path in _FIXTURES:
         raw_bytes = pdf_path.read_bytes()
-        sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
         decompressed = _decompressed_streams(raw_bytes)
 
-        # Every replacement's synthetic must be present somewhere in
-        # the fixture (either in the decompressed streams or in the
-        # raw byte image — DocInfo strings appear unencoded outside of
-        # streams).
-        for replacement in sidecar.get("replacements_applied", ()):
-            synthetic = replacement.get("synthetic")
-            if synthetic is None:
-                continue
-            synthetic_bytes = synthetic.encode("utf-8")
-            assert synthetic_bytes in raw_bytes or synthetic_bytes in decompressed, (
-                f"Synthetic {synthetic!r} from {sidecar_path} not found in {pdf_path}"
+        if sidecar_path is None:
+            sidecar_less.append(pdf_path.name)
+        else:
+            sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+            assert "replacements_applied" in sidecar, (
+                f"{sidecar_path} carries no replacements_applied list; a sanitiser audit "
+                "log without one records no work and cannot be proven against the fixture"
             )
+
+            # Every replacement's synthetic must be present somewhere in
+            # the fixture (either in the decompressed streams or in the
+            # raw byte image - DocInfo strings appear unencoded outside of
+            # streams).
+            for replacement in sidecar["replacements_applied"]:
+                synthetic = replacement.get("synthetic")
+                assert synthetic is not None, (
+                    f"a replacement in {sidecar_path} records no synthetic; skipping it "
+                    "would drop the one value this gate can prove landed"
+                )
+                synthetic_bytes = synthetic.encode("utf-8")
+                assert synthetic_bytes in raw_bytes or synthetic_bytes in decompressed, (
+                    f"Synthetic {synthetic!r} from {sidecar_path} not found in {pdf_path}"
+                )
+                synthetics_asserted += 1
 
         for marker in leak_markers:
             assert marker not in raw_bytes, (
                 f"Leak marker {marker!r} found in {pdf_path}; partially-filled mapping committed"
             )
             assert marker not in decompressed, f"Leak marker {marker!r} found in decompressed streams of {pdf_path}"
+
+    assert synthetics_asserted, (
+        "not one synthetic was proven present across the whole corpus; the leak-marker "
+        "half can pass on its own, so this gate would report clean having checked nothing"
+    )
+
+    assert set(sidecar_less) == set(_SYNTHETIC_BY_CONSTRUCTION), (
+        "the set of committed fixtures carrying no sanitiser audit log has changed: "
+        f"{sorted(set(sidecar_less) ^ set(_SYNTHETIC_BY_CONSTRUCTION))}. A fixture without "
+        "a sidecar cannot be proven sanitised, so each one must be declared in "
+        "_SYNTHETIC_BY_CONSTRUCTION with the reason it needs none."
+    )

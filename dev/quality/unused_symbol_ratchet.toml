@@ -22,6 +22,8 @@
 # This is a backlog, not an endorsement.
 
 [symbols]
+"cadrumo.application.user_profile.capsule_restore" = 2
+"cadrumo.entrypoints.cli._modelo" = 1
 "cadrumo.adapters.inbound.einvoice.shape" = 1
 "cadrumo.adapters.inbound.financial.providers.detection" = 1
 "cadrumo.adapters.inbound.pdf.label_regex" = 1
@@ -51,12 +53,10 @@
 "cadrumo.adapters.persistence.storage.custody.capsule" = 3
 "cadrumo.adapters.persistence.storage.custody.capsule_discovery" = 1
 "cadrumo.adapters.persistence.storage.custody.kdf_supervision" = 2
-"cadrumo.adapters.persistence.storage.custody.records" = 1
 "cadrumo.adapters.persistence.storage.custody.recovery" = 2
 "cadrumo.adapters.persistence.storage.envelope.contract" = 2
 "cadrumo.adapters.persistence.storage.master_key._live_sessions" = 1
 "cadrumo.adapters.persistence.storage.master_key.master_key" = 1
-"cadrumo.adapters.persistence.storage.master_key.master_key_derivation" = 2
 "cadrumo.adapters.persistence.storage.recovery_key" = 1
 "cadrumo.adapters.persistence.storage.schema_lineage" = 3
 "cadrumo.adapters.persistence.storage.secure_object_namespaces" = 2
@@ -84,9 +84,9 @@
 "cadrumo.application.filing.runtime" = 2
 "cadrumo.application.flows.checkpoint" = 1
 "cadrumo.application.flows.engine" = 1
+"cadrumo.application.invoices.catalogue_reads" = 2
 "cadrumo.application.flows.review" = 1
 "cadrumo.application.invoices.bulk_import" = 1
-"cadrumo.application.invoices.catalogue_reads" = 3
 "cadrumo.application.ledger.confirmation_record" = 1
 "cadrumo.application.ledger.counterparty_establishment" = 1
 "cadrumo.application.ledger.extracted_document_cache" = 1
@@ -212,7 +212,6 @@
 "cadrumo.domain.calculations.registry._source_evidence_fingerprint" = 1
 "cadrumo.domain.calculations.registry._validate_cross_revision" = 1
 "cadrumo.domain.calculations.registry._validate_evidence" = 2
-"cadrumo.domain.calculations.registry._validate_relation_periods" = 2
 "cadrumo.domain.calculations.registry._validate_semantic_role_required" = 1
 "cadrumo.domain.calculations.registry.applicability" = 3
 "cadrumo.domain.calculations.registry.authority" = 3
@@ -281,7 +280,6 @@
 "cadrumo.domain.modelos.protocols" = 1
 "cadrumo.domain.modelos.repository" = 1
 "cadrumo.domain.modelos.verification_repository" = 1
-"cadrumo.domain.prorrata_register.register" = 2
 "cadrumo.domain.renta._first_slice_routing" = 2
 "cadrumo.domain.submission.models" = 2
 "cadrumo.domain.submission.protocols" = 1

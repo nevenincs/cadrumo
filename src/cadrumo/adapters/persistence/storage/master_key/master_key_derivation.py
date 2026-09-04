@@ -9,26 +9,12 @@ rather than re-derived from a module constant that may since have moved.
 
 from __future__ import annotations
 
-from typing import Final
-
 from argon2.exceptions import Argon2Error
 from argon2.low_level import Type as _Argon2Type
 from argon2.low_level import hash_secret_raw as _argon2_hash_secret_raw
 
-from .._kdf_salt import KDF_SALT_BYTES
 from ..crypto.aead import KEY_SIZE
 from ..errors import StorageValidationError
-
-SALT_SIZE: Final[int] = KDF_SALT_BYTES
-"""Per-store salt size in bytes.
-
-Read from the shared storage KDF salt contract rather than restated, so the
-length a store is MINTED with cannot drift from the length its record is
-VALIDATED against.
-"""
-
-KDF_PARAMS_VERSION: Final[int] = 2
-"""On-disk KDF parameter shape accepted by the file-backed provider."""
 
 
 def derive_kek_with_params(

@@ -965,7 +965,6 @@ class FacadeInfo:
     path: Path
     all_names: list[str] = field(default_factory=list)
     has_real_all: bool = False
-    is_pure_reexport_shape: bool = False
 
 
 def dunder_all_assignment_value(node: ast.stmt) -> ast.expr | None:

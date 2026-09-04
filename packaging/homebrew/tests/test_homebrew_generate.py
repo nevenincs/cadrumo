@@ -11,6 +11,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 
 import pytest
+from dev.packaging._distribution_names import normalise_distribution_name
 from dev.packaging._hashing import sha256_path
 from dev.packaging._smoke_common import (
     build_companion_wheels,
@@ -32,6 +33,20 @@ _RESOURCE = re.compile(
     r'\s+url "([^"]+)"\n'
     r'\s+sha256 "([0-9a-f]{64})"\n'
     r"\s+end",
+)
+#: The backends the two isolation-disabled builds load. They are installed to
+#: run a build, never as part of the product's runtime closure, so the lock walk
+#: the formula derives its resources from does not reach them and they are
+#: pinned explicitly instead. A lock row that happens to share one of these
+#: names belongs to an unrelated development dependency and says nothing about
+#: which backend the formula should build against.
+_EXPLICIT_BUILD_BACKENDS = frozenset({"setuptools", "setuptools-scm", "maturin"})
+#: The index's immutable per-file path: the digest-derived directories under
+#: which an uploaded artifact is served forever. The ``/packages/source/`` form
+#: the cohort artifacts use is a redirect to whichever file the project serves
+#: now, so it is expressly not this.
+_IMMUTABLE_INDEX_FILE = re.compile(
+    r"https://files\.pythonhosted\.org/packages/[0-9a-f]{2}/[0-9a-f]{2}/[0-9a-f]{60}/(?P<filename>[^/]+)",
 )
 
 
@@ -203,8 +218,12 @@ def test_formula_is_deterministic_and_binds_the_real_cohort(
         f"{_INDEX_SOURCE}/cadrumo-data-official/{built_cohort.official.name}",
         sha256_path(built_cohort.official),
     )
-    # No unrelated workspace dependency may leak into the formula closure.
-    assert "mcp" not in resources
+    # The MCP SDK is a mandatory runtime requirement of the distribution this
+    # formula installs, and Homebrew installs every resource with --no-deps, so
+    # nothing pulls it in transitively: absent from the closure, the installed
+    # virtualenv is missing an import the product makes.
+    assert "mcp" in resources
+    # No workspace-only dependency may leak into the formula closure.
     assert "tzdata" not in resources
     # The three isolation-disabled build backends: setuptools -- the venv from
     # `python -m venv` ships none and Homebrew installs resources --no-deps;
@@ -238,7 +257,7 @@ def test_formula_resources_match_the_locked_pypi_sdists(
     tmp_path: Path,
     built_cohort: BuiltCohort,
 ) -> None:
-    """Every non-cohort resource is one exact sdist from ``uv.lock``."""
+    """Every runtime resource is one exact sdist from ``uv.lock``."""
     formula = _generate(built_cohort, tmp_path / "tap").read_text(encoding="utf-8")
     resources = {name: (url, digest) for name, url, digest in _RESOURCE.findall(formula)}
     lock = tomllib.loads((_REPO_ROOT / "uv.lock").read_text(encoding="utf-8"))
@@ -250,28 +269,29 @@ def test_formula_resources_match_the_locked_pypi_sdists(
         for package in lock["package"]
         if package.get("source", {}).get("registry") == "https://pypi.org/simple" and "sdist" in package
     }
+    backends: set[str] = set()
     for name, material in resources.items():
         if name.startswith("cadrumo-data-"):
             continue
-        if name == "setuptools-scm":
-            # Added as the argon2 build backend for the isolation-disabled build;
-            # it is not a runtime dependency so it is absent from the lock. Pin it
-            # to its declared PyPI sdist instead.
-            assert material == (
-                "https://files.pythonhosted.org/packages/4f/a4/00a9ac1b555294710d4a68d2ce8dfdf39d72aa4d769a7395d05218d88a42/setuptools_scm-8.1.0.tar.gz",
-                "42dea1b65771cba93b7a515d65a65d8246e560768a66b9106a592c8e7f26c8a7",
-            )
-            continue
-        if name == "maturin":
-            # Added as the cryptography build backend for the isolation-disabled
-            # build; not a runtime dependency, so absent from the lock. Pin it to
-            # its declared PyPI sdist instead.
-            assert material == (
-                "https://files.pythonhosted.org/packages/e7/b3/addd877f871fb1860d46d3a4f206ecb10b946c85846805e6367631926fd3/maturin-1.14.1.tar.gz",
-                "9d6577a62cd08e0ceba7a0db06fb098e0c9b1b3429bad747a4f3a18215a1b3df",
-            )
+        if name in _EXPLICIT_BUILD_BACKENDS:
+            # A build backend is outside the runtime closure by construction, so
+            # the lock cannot say which artifact it should be. What the formula
+            # must still guarantee is that the pin addresses immutable index
+            # material for that exact distribution, so the bytes a user builds
+            # against are the reviewed ones and cannot be swapped underneath.
+            backends.add(name)
+            url, _digest = material
+            served = _IMMUTABLE_INDEX_FILE.fullmatch(url)
+            assert served is not None, url
+            filename = served.group("filename")
+            assert filename.endswith(".tar.gz")
+            distribution = filename.removesuffix(".tar.gz").rsplit("-", 1)[0]
+            assert normalise_distribution_name(distribution) == name
             continue
         assert material == locked_sdists[name]
+    # Every declared backend reached the formula, and no other resource escaped
+    # the lock: an unlisted name falls through to the lock comparison above.
+    assert backends == set(_EXPLICIT_BUILD_BACKENDS)
 
 
 def test_generator_rejects_renamed_foreign_companion(

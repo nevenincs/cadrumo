@@ -16,7 +16,13 @@ from __future__ import annotations
 
 import pytest
 
-from ..manager import RevisionLocaleCoverage
+from cadrumo.core.external_constants import OutputLanguage
+
+from ..manager import (
+    RevisionLocaleCoverage,
+    _locale_axis_summary,  # pyright: ignore[reportPrivateUsage]
+    _SharedModeloLocaleCoverageRecord,  # pyright: ignore[reportPrivateUsage]
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -111,3 +117,47 @@ def test_stale_keys_are_carried_apart_from_the_translation_totals() -> None:
 
     assert coverage.stale_keys == 7
     assert coverage.labels_untranslated == 0
+
+
+def _record(*, help_translated: int) -> _SharedModeloLocaleCoverageRecord:
+    """One English coverage record whose labels are complete."""
+    return _SharedModeloLocaleCoverageRecord(
+        locale=OutputLanguage.EN,
+        modelo_id="303",
+        revision_id="2024",
+        label_required=10,
+        label_translated=10,
+        help_required=10,
+        help_translated=help_translated,
+    )
+
+
+def test_the_axis_summary_carries_help_coverage_and_not_only_labels() -> None:
+    """Help translation was measured per record and then dropped before the report.
+
+    The record counted authored help values for every casilla - a walk per
+    locale per revision - and both help fields had zero readers anywhere: the
+    fold carried labels only, and ``complete`` is label-only by design. Over the
+    live registry that hid 253 of 384 records reporting label-complete while
+    their help was incomplete, against help coverage of 17,311 of 89,034
+    required leaves.
+
+    Constructed rather than live: the point is that the fold CARRIES the
+    dimension, which a corpus count would not pin.
+    """
+    summary = _locale_axis_summary({("303", "2024"): (_record(help_translated=3), _record(help_translated=2))})
+
+    assert len(summary) == 1
+    axis = summary[0]
+
+    assert axis.help_required == 20, "the fold no longer accumulates the help denominator"
+    assert axis.help_translated == 5, "the fold no longer accumulates authored help values"
+    assert axis.complete_revisions == 2, (
+        "both records are label-complete, which is exactly the state that used to be "
+        "reported as complete while their help coverage was half missing"
+    )
+    assert axis.help_translated < axis.help_required, (
+        "this fixture is built incomplete on purpose; if the two are equal the case no "
+        "longer distinguishes a carried help axis from a dropped one"
+    )
+

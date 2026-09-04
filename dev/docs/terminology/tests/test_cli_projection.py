@@ -190,3 +190,35 @@ def test_records_are_frozen(
         commands[0].family = "mutated"  # type: ignore[attr-defined,misc]
     with pytest.raises(ValidationError):
         options[0].required = True  # type: ignore[attr-defined,misc]
+
+
+def test_the_projection_stats_are_read_and_agree_with_the_records(
+    projection: tuple[tuple[CliSurfaceRecord, ...], tuple[CliOptionRecord, ...], CliProjectionStats],
+) -> None:
+    """A missing-translation signal nobody reads is not a signal.
+
+    All three ``CliProjectionStats`` fields had zero attribute reads anywhere in
+    the tree. Both callers unpack the stats into a discard, and the dataclass is
+    a plain frozen one that is never serialised, so attribute access was the only
+    way to reach these numbers and nothing did.
+
+    ``commands_untranslated`` counts commands whose help text is byte-identical
+    across all four supported languages - the projection's own comment calls it
+    a missing-translation signal rather than an error. It is asserted at zero
+    because zero is a PROPERTY here and not a tally: every live command is
+    genuinely translated today, so a rise is a regression, not corpus drift.
+    """
+    commands, options, stats = projection
+
+    assert stats.commands_untranslated == 0, (
+        f"{stats.commands_untranslated} command(s) carry help text identical across every "
+        "supported language, which the projection records as missing translation; the "
+        "count existed before this assertion but nothing was reading it"
+    )
+    assert stats.command_records == len(commands), (
+        "the command counter and the records it was computed alongside disagree"
+    )
+    assert stats.option_records == len(options), (
+        "the option counter and the records it was computed alongside disagree"
+    )
+

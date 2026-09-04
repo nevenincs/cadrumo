@@ -17,13 +17,19 @@ from ..._paths import REPO_ROOT
 from .._distribution_limits import PYPI_FILE_CAP_BYTES
 from .._smoke_common import (
     _CORPUS_SOURCE_PREFIX,
+    _RENTA_PDF_ALLOW_LIST,
     _configured_corpus_binary_suffixes,
     _is_corpus_source_binary,
+    assert_wheel_contains_tracked_data,
     build_companion_wheels,
     build_sdist,
+    build_source_data_paths,
     build_wheel,
     commit_defined_build_root,
     expected_wheel_data_paths,
+    head_extract,
+    recorded_proofs,
+    reset_proof_ledger,
     run_checked,
     tracked_source_data_paths,
 )
@@ -203,3 +209,112 @@ def test_commit_defined_build_root_excludes_uncommitted_working_tree_state(tmp_p
     assert extracted == {"committed.txt", "packaging/kept.txt"}, sorted(extracted)
     assert (build_root / "committed.txt").read_text(encoding="utf-8") == "committed content\n"
     assert not (build_root / ".git").exists()
+
+
+def _seed_shipped_data_repository(origin: Path) -> set[str]:
+    """Create a throwaway repository carrying a minimal tracked shipped-data tree."""
+    run_checked(["git", "init", "--quiet"], cwd=origin)
+    run_checked(["git", "config", "user.email", "probe@example.invalid"], cwd=origin)
+    run_checked(["git", "config", "user.name", "probe"], cwd=origin)
+    (origin / ".gitignore").write_text(
+        "__pycache__/\n/src/cadrumo/_data/registry/aeat/.*.lock\n",
+        encoding="utf-8",
+    )
+    tracked = {"src/cadrumo/_data/registry/aeat/modelos/036/manifest.toml", *_RENTA_PDF_ALLOW_LIST}
+    for relative in sorted(tracked):
+        path = origin / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(relative.encode("utf-8"))
+    run_checked(["git", "add", "--all"], cwd=origin)
+    run_checked(["git", "commit", "--quiet", "-m", "shipped data"], cwd=origin)
+    return tracked
+
+
+def test_shipped_data_inventory_is_identical_across_every_build_root_branch(tmp_path: Path) -> None:
+    """VCS-ignored artefacts beside the sources cannot move the shipped-data inventory.
+
+    Porcelain does not report ignored paths, so a working tree carrying registry
+    transaction mutexes and bytecode caches still reads clean and is used as the
+    build root directly. A filesystem-derived inventory counted those artefacts
+    as payload the wheel must contain, while the ignore-aware build shed them,
+    so the very same source produced a passing or failing result according to
+    whether a peer's transient file happened to exist. The inventory therefore
+    reads Git, and the live working tree and its own HEAD extract must agree.
+    """
+    origin = tmp_path / "origin"
+    origin.mkdir()
+    tracked = _seed_shipped_data_repository(origin)
+
+    assert build_source_data_paths(origin) == tracked
+    assert build_source_data_paths(head_extract(origin, tmp_path / "extract-before")) == tracked
+
+    ignored_artefacts = (
+        origin / "src/cadrumo/_data/registry/aeat/.publication-transaction.lock",
+        origin / "src/cadrumo/_data/__pycache__/__init__.cpython-313.pyc",
+    )
+    for artefact in ignored_artefacts:
+        artefact.parent.mkdir(parents=True, exist_ok=True)
+        artefact.write_bytes(b"transient\n")
+    assert all(artefact.is_file() for artefact in ignored_artefacts)
+
+    # The blind spot itself: these files exist, and Git still calls the tree clean.
+    porcelain = run_checked(["git", "status", "--porcelain"], cwd=origin).stdout.strip()
+    assert porcelain == "", porcelain
+    assert commit_defined_build_root(origin, tmp_path / "fast-path") == origin
+
+    assert build_source_data_paths(origin) == tracked
+    assert build_source_data_paths(head_extract(origin, tmp_path / "extract-after")) == tracked
+
+
+def test_shipped_data_inventory_refuses_a_source_tree_missing_tracked_data(tmp_path: Path) -> None:
+    """A tracked shipped-data file absent from the build tree fails the derivation."""
+    origin = tmp_path / "origin"
+    origin.mkdir()
+    _seed_shipped_data_repository(origin)
+    manifest = origin / "src/cadrumo/_data/registry/aeat/modelos/036/manifest.toml"
+    manifest.unlink()
+
+    with pytest.raises(SystemExit, match="are absent from"):
+        build_source_data_paths(origin)
+
+
+def _write_data_wheel(path: Path, members: set[str]) -> Path:
+    """Write a minimal archive carrying exactly the named wheel data members."""
+    with zipfile.ZipFile(path, "w") as archive:
+        archive.writestr("cadrumo/__init__.py", "")
+        for member in sorted(members):
+            archive.writestr(member, member)
+    return path
+
+
+def test_wheel_data_gate_detects_both_absent_and_surplus_payload(tmp_path: Path) -> None:
+    """The payload gate still fails closed on a genuinely incomplete or padded wheel.
+
+    Deriving the expectation from Git rather than from a filesystem walk must
+    not blunt the gate it feeds, so both directions are proven here against
+    synthetic archives: a wheel that omits expected data, and a wheel that
+    carries an ignored artefact the source tree never tracked. The complete
+    archive is asserted to pass in the same test, so a gate that stopped
+    comparing could not read as green.
+    """
+    expected = {
+        "cadrumo/_data/registry/aeat/modelos/036/manifest.toml",
+        "cadrumo/_data/registry/cadrumo/user_profile/schema.toml",
+    }
+    reset_proof_ledger()
+
+    complete = _write_data_wheel(tmp_path / "complete.whl", expected)
+    assert_wheel_contains_tracked_data(_REPO_ROOT, complete, expected)
+    assert "wheel tracked shipped-data payload" in recorded_proofs()
+
+    absent = _write_data_wheel(tmp_path / "absent.whl", {next(iter(sorted(expected)))})
+    with pytest.raises(SystemExit, match="missing="):
+        assert_wheel_contains_tracked_data(_REPO_ROOT, absent, expected)
+
+    surplus = _write_data_wheel(
+        tmp_path / "surplus.whl",
+        expected | {"cadrumo/_data/registry/aeat/.m200-2024-source-rebind.lock.lock"},
+    )
+    with pytest.raises(SystemExit, match="unexpected="):
+        assert_wheel_contains_tracked_data(_REPO_ROOT, surplus, expected)
+    reset_proof_ledger()

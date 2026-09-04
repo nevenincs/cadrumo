@@ -64,6 +64,7 @@ __all__ = [
     "assert_wheel_metadata_matches_pyproject",
     "build_companion_wheels",
     "build_sdist",
+    "build_source_data_paths",
     "build_wheel",
     "clean_product_env",
     "commit_defined_build_root",
@@ -244,14 +245,22 @@ def head_extract(repo_root: Path, work_dir: Path) -> Path:
 
 
 def commit_defined_build_root(repo_root: Path, work_dir: Path) -> Path:
-    """Return a build root guaranteed to correspond to HEAD, extracting only if needed.
+    """Return a build root whose tracked content corresponds to HEAD, extracting only if needed.
 
-    On a clean checkout the working tree IS HEAD, so extracting it would copy
-    roughly forty thousand files (measured at three minutes on the Windows
-    build host) to produce a byte-identical tree. CI checks out clean, so the
-    common case pays nothing. In the shared factory worktree a peer sweep makes
-    the tree diverge from every commit, and that is exactly when a tree build
-    can snapshot a torn edit, so there the extraction is worth its cost.
+    Porcelain reports every tracked modification and every untracked file, so an
+    empty porcelain proves the tree's TRACKED content is HEAD's; extracting it
+    would copy roughly forty thousand files (measured at three minutes on the
+    Windows build host) to reproduce content already present. In the shared
+    factory worktree a peer sweep makes the tree diverge from every commit, and
+    that is exactly when a tree build can snapshot a torn edit, so there the
+    extraction is worth its cost.
+
+    What porcelain does NOT report is VCS-ignored state: bytecode caches and
+    registry transaction mutexes sit beside the sources of an otherwise clean
+    tree. They are not build inputs -- the wheel and sdist builds select files
+    through the same ignore rules -- so their presence cannot move an artifact,
+    and every inventory derived from a build root must read Git rather than the
+    filesystem for the same reason (see :func:`build_source_data_paths`).
     """
     dirty = run_checked(["git", "status", "--porcelain"], cwd=repo_root, env=_git_env(repo_root)).stdout.strip()
     if not dirty:
@@ -563,26 +572,71 @@ def _format_path_sample(paths: list[str], *, limit: int = 20) -> str:
     return f"{sample!r}; plus {len(paths) - limit} more"
 
 
+def _validated_source_data_inventory(source_root: Path, inventory: set[str], *, origin: str) -> set[str]:
+    """Validate one shipped-data inventory against the source tree that must carry it."""
+    if not inventory:
+        raise SystemExit(f"{origin} reported no shipped data under {_SOURCE_DATA_PREFIX} in {source_root}")
+    outside = sorted(path for path in inventory if not path.startswith(_SOURCE_DATA_PREFIX))
+    if outside:
+        raise SystemExit(f"{origin} returned paths outside {_SOURCE_DATA_PREFIX}: {outside[:10]!r}")
+    absent = sorted(path for path in inventory if not (source_root / path).is_file())
+    if absent:
+        raise SystemExit(
+            f"{len(absent)} shipped-data files named by {origin} are absent from {source_root}: "
+            f"{_format_path_sample(absent)}. Reconcile these paths before packaging: restore the tracked files, "
+            "or remove them from git tracking if they were intentionally retired."
+        )
+    return inventory
+
+
 def tracked_source_data_paths(repo_root: Path) -> set[str]:
     """Return tracked shipped-data source paths relative to the repository root."""
     result = run_checked(["git", "ls-files", *TRACKED_DATA_ROOTS], cwd=repo_root, env=_git_env(repo_root))
     tracked = {line.strip().replace("\\", "/") for line in result.stdout.splitlines() if line.strip()}
-    if not tracked:
-        raise SystemExit("git ls-files reported no tracked shipped data under src/cadrumo/_data")
-    outside = sorted(path for path in tracked if not path.startswith(_SOURCE_DATA_PREFIX))
-    if outside:
-        raise SystemExit(f"git ls-files returned paths outside {_SOURCE_DATA_PREFIX}: {outside[:10]!r}")
-    absent = sorted(path for path in tracked if not (repo_root / path).is_file())
-    if absent:
-        raise SystemExit(
-            f"{len(absent)} tracked shipped-data files are absent from the worktree: "
-            f"{_format_path_sample(absent)}. Reconcile these paths before packaging: restore the tracked files, "
-            "or remove them from git tracking if they were intentionally retired."
-        )
+    tracked = _validated_source_data_inventory(repo_root, tracked, origin="git ls-files")
     missing_allow_list = sorted(_RENTA_PDF_ALLOW_LIST - tracked)
     if missing_allow_list:
         raise SystemExit(f"tracked shipped data is missing Renta PDF allow-list files: {missing_allow_list!r}")
     return tracked
+
+
+def _is_own_git_root(source_root: Path) -> bool:
+    """Return whether Git governs this tree with the tree itself as the working-tree root.
+
+    A sealed extract landing INSIDE the repository (``var/packaging-smoke/...``)
+    still answers a Git query, but it answers it for the enclosing repository,
+    which tracks nothing at the extract's paths. Comparing the reported
+    top level against the tree itself is what separates the two cases.
+    """
+    result = run_command(["git", "rev-parse", "--show-toplevel"], cwd=source_root, environment=_git_env(source_root))
+    if result.returncode != 0:
+        return False
+    top_level = result.stdout.strip()
+    return bool(top_level) and Path(top_level).resolve() == source_root.resolve()
+
+
+def build_source_data_paths(source_root: Path) -> set[str]:
+    """Return the shipped-data inventory a build from this source tree will carry.
+
+    The inventory is what Git tracks, never what the filesystem happens to hold.
+    A working tree also carries VCS-ignored artifacts beside the sources --
+    bytecode caches, registry transaction mutexes -- which the wheel build's
+    ignore-aware file selection sheds; counting them would demand payload the
+    wheel can never contain, so the expectation would pass or fail on whether a
+    peer's transient file existed when the walk ran. A ``git archive`` extract
+    has no repository to ask and needs none: it holds exactly one commit's
+    tracked content, so its own files ARE that inventory.
+
+    Both readings answer the same question, which is why an ignored artifact
+    appearing or disappearing beside the sources cannot move the answer.
+    """
+    if _is_own_git_root(source_root):
+        return tracked_source_data_paths(source_root)
+    data_root = source_root / _SOURCE_DATA_PREFIX.removesuffix("/")
+    extracted = {
+        path.relative_to(source_root).as_posix() for path in scan_directory(data_root, recursive=True) if path.is_file()
+    }
+    return _validated_source_data_inventory(source_root, extracted, origin="the sealed source extract")
 
 
 def _configured_corpus_binary_suffixes(repo_root: Path) -> tuple[str, ...]:
@@ -666,14 +720,15 @@ def expected_wheel_data_paths(repo_root: Path) -> set[str]:
 
 
 def expected_wheel_data_paths_from_source_tree(source_root: Path) -> set[str]:
-    """Derive wheel data expectations solely from one sealed extracted source tree."""
-    data_root = source_root / _SOURCE_DATA_PREFIX.removesuffix("/")
-    tracked = {
-        path.relative_to(source_root).as_posix() for path in scan_directory(data_root, recursive=True) if path.is_file()
-    }
-    if not tracked:
-        raise SystemExit(f"sealed source tree has no shipped data under {data_root}")
-    return _expected_wheel_data_paths(source_root, tracked)
+    """Derive wheel data expectations solely from the source tree a build reads.
+
+    Both the inventory and the split-ownership configuration come from
+    ``source_root``, so the expectation describes the tree the wheel is actually
+    built from rather than an unrelated checkout. The inventory is Git-derived
+    (:func:`build_source_data_paths`), which is what keeps the result identical
+    whether that tree is a live working tree or a sealed HEAD extract.
+    """
+    return _expected_wheel_data_paths(source_root, build_source_data_paths(source_root))
 
 
 def _expected_wheel_data_paths(repo_root: Path, tracked: set[str]) -> set[str]:
@@ -853,9 +908,11 @@ def build_wheel(repo_root: Path, work_dir: Path, uv: str, *, build_root: Path) -
     """Build the Cadrumo wheel into the smoke work directory.
 
     ``build_root`` is both the tree the wheel is built from and the authority
-    for its expected shipped-data inventory. It must be a sealed source extract;
-    consulting ``repo_root`` for that inventory would reintroduce dirty shared
-    worktree bytes into an otherwise isolated artifact proof.
+    for its expected shipped-data inventory: consulting ``repo_root`` for that
+    inventory would let an unrelated checkout describe the payload of an
+    otherwise isolated artifact proof. A live working tree and a sealed HEAD
+    extract are both accepted, because the inventory is read from Git rather
+    than from the filesystem and so does not vary between them.
     """
     expected_data_paths = expected_wheel_data_paths_from_source_tree(build_root)
     wheel_dir = work_dir / "wheel"

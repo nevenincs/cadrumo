@@ -59,6 +59,17 @@ _PARAMS = BienesInversionRegularizacionParameters(
 )
 
 
+def _params_for(year: int) -> BienesInversionRegularizacionParameters:
+    """The bundle, resolved for ``year``.
+
+    The projection refuses a bundle resolved for a different filing year, so the
+    fixture must follow the period rather than pin a year of its own.
+    """
+    return _PARAMS.model_copy(
+        update={"provenance": _PARAMS.provenance.model_copy(update={"resolved_on": _prov_date(year, 12, 31)})}
+    )
+
+
 def _general_m303_filing_facts():
     period = Period.from_year_and_code(2026, "1T")
     prorrata_register = ProrrataRegister()
@@ -82,9 +93,9 @@ def _general_m303_filing_facts():
             computed_count=0,
             pending_percentage_count=0,
             sector_contributions=(),
-            parameters_provenance=_PROVENANCE,
+            parameters_provenance=_params_for(period.filing_year).provenance,
         ),
-        bienes_parameters=_PARAMS,
+        bienes_parameters=_params_for(period.filing_year),
     )
 
 

@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import sys
 import tomllib
 import zipfile
 from dataclasses import dataclass
+from email.parser import Parser
 from pathlib import Path
 
 import pytest
@@ -27,6 +29,10 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.s
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _GENERATOR = _REPO_ROOT / "packaging" / "scoop" / "generate.py"
+#: The data distributions the command distribution cannot do grounded work without.
+_COMPANIONS = ("cadrumo-data-manuals", "cadrumo-data-official")
+#: Every quoted requirement naming the command distribution in an install hook.
+_CADRUMO_REQUIREMENT = re.compile(r"'cadrumo[^']*'")
 
 
 @dataclass(frozen=True)
@@ -62,6 +68,15 @@ def _copy_cohort(
         shutil.copy2(artifact, target)
         copied.append(target)
     return copied[0], copied[1], copied[2]
+
+
+def _wheel_requirements(wheel: Path) -> tuple[str, ...]:
+    """Return the ``Requires-Dist`` values a built wheel declares."""
+    with zipfile.ZipFile(wheel) as archive:
+        metadata_names = tuple(name for name in archive.namelist() if name.endswith(".dist-info/METADATA"))
+        assert len(metadata_names) == 1
+        metadata = Parser().parsestr(archive.read(metadata_names[0]).decode("utf-8"))
+    return tuple(metadata.get_all("Requires-Dist", []))
 
 
 def _conditional_companion_pin_wheel(
@@ -206,13 +221,24 @@ def test_generated_manifest_binds_exact_cohort_and_the_cli_command(
     assert "Set-Content" in hooks[2]
     assert "constraints.txt" in hooks[2]
     assert "==" in hooks[2]
-    assert built_cohort.root.name in hooks[3]
-    # The retired cadrumo[agent] extra is gone: the cohort wheels install
-    # without any extra, and the launcher pin no longer rides the root wheel.
+    # Nothing is downloaded, so no cohort filename or digest can appear in the
+    # install hook. What the hook still binds is the exact version, and it must
+    # bind exactly once: a second requirement, a version range, or an extra
+    # would each widen what the install resolves to.
+    assert _CADRUMO_REQUIREMENT.findall(hooks[3]) == [f"'cadrumo=={built_cohort.version}'"]
+    # The retired cadrumo[agent] extra is gone: the command distribution
+    # installs without any extra, and the launcher pin no longer rides it.
     assert "[agent]" not in hooks[3]
+    # A wheel cached from an earlier resolution must not satisfy the pin.
+    assert "--no-cache" in hooks[3]
     assert "--constraint (Join-Path $dir 'constraints.txt')" in hooks[3]
-    assert built_cohort.manuals.name in hooks[3]
-    assert built_cohort.official.name in hooks[3]
+    # That single exact pin is what closes over the rest of the cohort. The
+    # constraints file deliberately omits the product rows, so the companions
+    # are bound only through the command distribution's own metadata, which
+    # pins both at the same exact version unconditionally and without extras.
+    requirements = _wheel_requirements(built_cohort.root)
+    for companion in _COMPANIONS:
+        assert f"{companion}=={built_cohort.version}" in requirements
     assert "uv pip check" in hooks[4]
     assert sum("$LASTEXITCODE -ne 0" in hook for hook in hooks) == 3
     hook = hooks[5]

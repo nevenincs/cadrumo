@@ -67,10 +67,12 @@ class ProrrataRegisterValidationError(ProrrataRegisterError, ValueError):
 PRORRATA_REGISTER_SCHEMA_VERSION = "2"
 """Forward-compatible schema version stamped onto every record in this module."""
 
-#: Lowest ejercicio the register accepts. IVA prorrata (LIVA arts. 102-106)
-#: predates it, but a pre-2000 ejercicio can never be a modelled filing year.
-_MIN_EJERCICIO = 2000
-_MAX_EJERCICIO = 2099
+# The ejercicio range is enforced by the FilingYear annotation on every entry,
+# whose bounds live in core.filing_year. Two local constants restated those
+# bounds here and nothing read them, so the range they described was never the
+# one applied. The domain note they carried is worth keeping: IVA prorrata
+# (LIVA arts. 102-106) predates the lower bound, but a pre-2000 ejercicio can
+# never be a modelled filing year.
 
 #: Provenances that record an externally-referenced percentage (art. 105.Dos /
 #: 105.Tres); these MUST carry an ``authorisation_reference`` and no other

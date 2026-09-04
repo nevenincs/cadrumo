@@ -39,13 +39,22 @@ _ESPECIAL_PARAMS = ProrrataEspecialMandatoryParameters(
 )
 
 
+def _especial_params_for(year: int) -> ProrrataEspecialMandatoryParameters:
+    """The margin bundle, resolved for ``year``.
+
+    The rule refuses a bundle resolved for a different filing year, so a fixture
+    cannot pin one year and be applied to another.
+    """
+    return _ESPECIAL_PARAMS.model_copy(update={"resolved_on": _esp_date(year, 12, 31)})
+
+
 def test_advisory_fires_when_general_exceeds_especial_by_more_than_ten_percent() -> None:
     """A >10% general-over-especial spread makes especial obligatory (art. 103.Dos.2)."""
     notice = build_prorrata_especial_mandatory_advisory(
         deduction_under_general=Decimal("111.00"),
         deduction_under_especial=Decimal("100.00"),
         ejercicio=2026,
-        parameters=_ESPECIAL_PARAMS,
+        parameters=_especial_params_for(2026),
     )
 
     assert notice is not None
@@ -72,7 +81,7 @@ def test_advisory_fires_at_exactly_ten_percent_boundary_from_2015() -> None:
         deduction_under_general=Decimal("110.00"),
         deduction_under_especial=Decimal("100.00"),
         ejercicio=2026,
-        parameters=_ESPECIAL_PARAMS,
+        parameters=_especial_params_for(2026),
     )
 
     assert notice is not None
@@ -87,7 +96,7 @@ def test_advisory_fires_at_exactly_ten_percent_boundary_from_2015() -> None:
             deduction_under_general=Decimal("109.99"),
             deduction_under_especial=Decimal("100.00"),
             ejercicio=2026,
-            parameters=_ESPECIAL_PARAMS,
+            parameters=_especial_params_for(2026),
         )
         is None
     )
@@ -157,7 +166,7 @@ def test_advisory_silent_when_general_does_not_exceed_especial() -> None:
         deduction_under_general=Decimal("95.00"),
         deduction_under_especial=Decimal("100.00"),
         ejercicio=2026,
-        parameters=_ESPECIAL_PARAMS,
+        parameters=_especial_params_for(2026),
     )
 
     assert notice is None
@@ -169,7 +178,7 @@ def test_advisory_fires_when_especial_is_zero_and_general_is_positive() -> None:
         deduction_under_general=Decimal("0.01"),
         deduction_under_especial=Decimal("0.00"),
         ejercicio=2026,
-        parameters=_ESPECIAL_PARAMS,
+        parameters=_especial_params_for(2026),
     )
 
     assert notice is not None

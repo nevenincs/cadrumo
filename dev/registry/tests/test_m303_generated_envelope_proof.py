@@ -201,7 +201,7 @@ def _m303_2026_prorrata_and_differentiated_producer(*, snapshot, catalogues):
     )
     regimen_evidence = _m303_2026_6919_regimen_evidence(snapshot, catalogues=catalogues)
     period = Period.from_year_and_code(filing_year, "1T")
-    facts = m303_did.M303FilingFactSet(
+    facts = m303_did.M303FilingFacts(
         joint_return_elected=False,
         annual_volume_nonzero=False,
         insolvency=None,
@@ -237,7 +237,7 @@ def _m303_2026_prorrata_and_differentiated_producer(*, snapshot, catalogues):
     producer = m303_did.build_filing_producer_snapshot(
         modelo=m303_did.Modelo.M303,
         taxpayer_tax_id=taxpayer.tax_id,
-        taxpayer_identity=m303_did.TaxpayerIdentityFactSet(
+        taxpayer_identity=m303_did.TaxpayerIdentityFacts(
             legal_name=None,
             given_name="María",
             surnames="García López",

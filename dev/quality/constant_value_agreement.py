@@ -13,6 +13,12 @@ Two conditions are reported and the distinction between them is the whole point:
 - ``value_agreement`` - one name, one value, several modules. Repetition rather
   than ambiguity. Sometimes worth collapsing and sometimes deliberate, so it is
   reported without judgement.
+- ``stem_restatement`` - one value under two DIFFERENT names whose stems are
+  related, one being a tail of the other once leading underscores are stripped.
+  Keying on the name alone cannot see this, and it is the quieter half of the
+  same defect: a canonical constant restated as a local literal under a
+  decorated name drifts the moment the canonical value moves, and no grep for
+  either name returns the other.
 
 Visibility is carried on every row because it decides how far the damage
 reaches. A module-private constant is scoped by the underscore that names it:
@@ -43,6 +49,7 @@ __all__ = [
     "ConstantFinding",
     "collect_constants",
     "constant_census",
+    "stem_restatements",
 ]
 
 _PACKAGE_ROOT = Path(__file__).resolve().parent.parent.parent / "src" / "cadrumo"
@@ -116,6 +123,60 @@ def constant_census(constants: dict[str, dict[str, str]]) -> tuple[ConstantFindi
     return tuple(findings)
 
 
+def _stem(name: str) -> str:
+    """Return a constant name without the underscores that only scope it."""
+    return name.lstrip("_")
+
+
+def _is_restatement_of(longer: str, shorter: str) -> bool:
+    """Report whether ``longer`` reads as a decorated spelling of ``shorter``.
+
+    The shorter stem must carry at least two segments. A single segment such as
+    ``BYTES`` or ``SIZE`` is a unit, not a concept, and pairing on one would
+    report every length in the tree against every other.
+    """
+    if shorter.count("_") < 1:
+        return False
+    if shorter.endswith("_VERSION"):
+        # A version is a sequence number each schema owns independently, so two
+        # of them agreeing at 1 is where they both started, not one restating
+        # the other. Pairing on it reported fifteen rows and none was a defect.
+        return False
+    return longer.endswith(f"_{shorter}")
+
+
+def stem_restatements(constants: dict[str, dict[str, str]]) -> tuple[ConstantFinding, ...]:
+    """Group constants that share a value and whose names share a stem.
+
+    Candidates are grouped by VALUE first, so the name comparison only ever runs
+    within a set already known to agree. Comparing every name against every
+    other would be quadratic in the whole census for no added detection.
+    """
+    by_value: dict[str, list[tuple[str, str]]] = collections.defaultdict(list)
+    for name, sites in constants.items():
+        for module, value in sites.items():
+            by_value[value].append((name, module))
+
+    findings: list[ConstantFinding] = []
+    for value, entries in sorted(by_value.items()):
+        for index, (name, module) in enumerate(sorted(entries)):
+            for other_name, other_module in sorted(entries)[index + 1 :]:
+                if name == other_name or module == other_module:
+                    continue
+                left, right = _stem(name), _stem(other_name)
+                if not (_is_restatement_of(left, right) or _is_restatement_of(right, left)):
+                    continue
+                findings.append(
+                    ConstantFinding(
+                        name=f"{name}~{other_name}",
+                        kind="stem_restatement",
+                        public=not (name.startswith("_") or other_name.startswith("_")),
+                        sites=((module, value), (other_module, value)),
+                    )
+                )
+    return tuple(findings)
+
+
 def main(argv: list[str] | None = None) -> int:
     """Print one greppable row per finding and a closing census; always exit 0."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
@@ -123,7 +184,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--public-only", action="store_true", help="report only public names")
     args = parser.parse_args(argv)
 
-    findings = constant_census(collect_constants(_PACKAGE_ROOT))
+    constants = collect_constants(_PACKAGE_ROOT)
+    findings = constant_census(constants) + stem_restatements(constants)
     wanted = set(args.kind) if args.kind else None
     tally: collections.Counter[str] = collections.Counter(item.kind for item in findings)
     public_conflicts = sum(1 for item in findings if item.kind == "value_conflict" and item.public)

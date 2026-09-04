@@ -241,3 +241,24 @@ def test_card_records_are_frozen(
     cards, _stats = projection
     with pytest.raises(ValidationError):
         cards[0].lifecycle = ConceptLifecycle.RETIRED  # type: ignore[misc]
+
+
+def test_the_legal_link_count_is_read_and_agrees_with_the_cards(
+    projection: tuple[tuple[ConceptCardRecord, ...], ConceptCardProjectionStats],
+) -> None:
+    """The counter and the cards must describe one run.
+
+    ``cards_with_legal_links`` had no reader anywhere in the tree. It is
+    incremented from the resolved links before the card is built, so it can
+    drift from what the cards actually carry; comparing the two halves of the
+    same return value is the check that cannot drift with them.
+    """
+    cards, stats = projection
+
+    assert stats.cards_with_legal_links == sum(1 for card in cards if card.legal_links), (
+        "the stats counter disagrees with the cards it was computed alongside"
+    )
+    assert stats.cards_with_legal_links > 0, (
+        "not one card carries a legal link; the grounding this projection ships would be empty"
+    )
+

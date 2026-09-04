@@ -1,9 +1,11 @@
 """Application query projections for invoice CLI surfaces.
 
-Query functions accept an :class:`InvoiceCatalogue` or load one from the
-:class:`InvoiceCatalogueRepository`; :func:`verify_invoice_repository_links`
-additionally loads the :class:`TransactionCatalogueRepository` to detect
-one-sided links.
+Query functions take an :class:`InvoiceCatalogue` the caller has already
+loaded, so the bucket a read is scoped to stays the caller's decision.
+:func:`verify_invoice_repository_links` is the exception: it loads both the
+:class:`InvoiceCatalogueRepository` and the
+:class:`TransactionCatalogueRepository` for an explicit bucket, because a
+one-sided link is only meaningful across the pair.
 """
 
 from __future__ import annotations
@@ -19,7 +21,7 @@ from ...core.identity import InvoiceId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing import IsoCurrencyCode
 from ...domain.invoices.models import Invoice, InvoiceCatalogue
-from ...domain.invoices.service import LinkInconsistency, find_invoice, find_unmatched, verify_link_consistency
+from ...domain.invoices.service import LinkInconsistency, find_unmatched, verify_link_consistency
 from ...domain.iva.classification import InvoiceKind
 
 
@@ -43,20 +45,6 @@ def list_invoice_rows(catalogue: InvoiceCatalogue, *, kind: InvoiceKind | None =
     return tuple(sorted(rows, key=lambda item: (item.issued_at, item.invoice_id)))
 
 
-def list_invoice_repository_rows(*, kind: InvoiceKind | None = None) -> tuple[InvoiceListRow, ...]:
-    """Load the invoice catalogue and return sorted :class:`InvoiceListRow` summaries."""
-    return list_invoice_rows(InvoiceCatalogueRepository().load(), kind=kind)
-
-
-def get_invoice_from_repository(invoice_id: str) -> Invoice | None:
-    """Load and return one invoice from the secure catalogue.
-
-    Returns an :class:`Invoice` when found, or ``None`` when the id
-    is not present in the catalogue.
-    """
-    return find_invoice(InvoiceCatalogueRepository().load(), invoice_id)
-
-
 def list_unmatched_invoice_rows(
     catalogue: InvoiceCatalogue,
     *,
@@ -70,18 +58,6 @@ def list_unmatched_invoice_rows(
     """
     rows = tuple(_row_from_invoice(invoice) for invoice in find_unmatched(catalogue, kind=kind))
     return tuple(sorted(rows, key=lambda item: (item.issued_at, item.invoice_id)))
-
-
-def list_unmatched_invoice_repository_rows(
-    *,
-    kind: InvoiceKind | None = None,
-) -> tuple[InvoiceListRow, ...]:
-    """Load the invoice catalogue and return unmatched summary rows.
-
-    Each element is an :class:`InvoiceListRow` sorted by issue date and
-    invoice id.
-    """
-    return list_unmatched_invoice_rows(InvoiceCatalogueRepository().load(), kind=kind)
 
 
 def verify_invoice_repository_links(*, bucket_id: str) -> tuple[LinkInconsistency, ...]:

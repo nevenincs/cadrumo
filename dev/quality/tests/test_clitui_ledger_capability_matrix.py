@@ -10,14 +10,22 @@ cannot masquerade as the live campaign census.
 
 from __future__ import annotations
 
+import json
+from copy import copy
 from datetime import UTC, datetime
-from typing import Final
+from decimal import Decimal
+from functools import cache
+from typing import Final, cast
 
 import pytest
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
+
+from cadrumo.core.aggregation import BindingSourceKind
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 
 from ..clitui_ledger_capability_matrix import (
     ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
+    LEDGER_REGISTRY_ROUTE_CENSUS_ROOT,
     ApplicabilityState,
     AuthorityDispositionEntryV1,
     AuthorityDispositionSnapshotV1,
@@ -44,10 +52,15 @@ from ..clitui_ledger_capability_matrix import (
     LedgerGate,
     LedgerLiveCensusReportV1,
     LedgerMatrixAcceptanceAttestationV1,
+    LedgerRegistryRouteCensusV1,
     ReviewRuling,
     SurfaceCapabilityState,
+    build_ledger_registry_route_census,
     evaluate_ledger_capability_gate,
     evaluate_ledger_capability_gates,
+    ledger_registry_route_census_bytes,
+    ledger_registry_source_files,
+    ledger_registry_source_set_digest,
     reopened_gates_for_denominator_drift,
     validate_ledger_matrix_currentness,
 )
@@ -60,6 +73,189 @@ _SUBJECT_ID: Final[str] = "subject.ledger.matrix"
 _CENSUS_ID: Final[str] = "census.ledger.baseline"
 _ROW_ID: Final[str] = "ledger.entries.list"
 _SUBJECT_DIGEST: Final[str] = "sha256:" + "a" * 64
+_REGISTRY_ROUTE_DIGEST: Final[str] = "sha256:20b2d2df5558b2a3fdbd1eab6e9f781a973e93c6211e211f8e679cf7b4782aca"
+_REGISTRY_SOURCE_DIGEST: Final[str] = "sha256:194a9f26ddfbae6c5d7f265ffe58f50964fbe2fcd02a5670fa19845dead5cf6d"
+
+
+@cache
+def _registry_census() -> LedgerRegistryRouteCensusV1:
+    return build_ledger_registry_route_census()
+
+
+def _authority_with_first_defaulted_iva_selector(
+    *, selector_update: dict[str, object] | None = None, reverse_input_order: bool = False
+) -> tuple[ValidatedRegistryAuthority, tuple[str, str, str], BaseModel]:
+    authority = bundled_authority()
+    authority.validate_registry()
+    mutated = copy(authority)
+    modelos = list(authority.modelos)
+    for modelo_index, modelo in enumerate(modelos):
+        revisions = dict(modelo.revisions)
+        for revision_id, revision in revisions.items():
+            bindings = list(revision.bindings)
+            for binding_index, binding in enumerate(bindings):
+                if binding.source is not BindingSourceKind.LEDGER_IVA_AGGREGATION:
+                    continue
+                selector = binding.selector
+                if not isinstance(selector, BaseModel) or not {"fact", "applied_rates"}.isdisjoint(
+                    selector.model_fields_set
+                ):
+                    continue
+                payload = selector.model_dump(mode="python", exclude_unset=True)
+                if reverse_input_order:
+                    payload = dict(reversed(tuple(payload.items())))
+                if selector_update:
+                    payload.update(selector_update)
+                rebuilt = type(selector).model_validate(payload)
+                bindings[binding_index] = binding.model_copy(update={"selector": rebuilt})
+                revisions[revision_id] = revision.model_copy(update={"bindings": tuple(bindings)})
+                modelos[modelo_index] = modelo.model_copy(update={"revisions": revisions})
+                mutated.modelos = tuple(modelos)
+                mutated._modelos_by_id = {item.id: item for item in mutated.modelos}
+                return mutated, (modelo.id, revision.id, binding.id), selector
+    raise AssertionError("no IVA selector with omitted fact and applied_rates defaults")
+
+
+def test_registry_route_census_recomputes_the_published_live_authority_digest() -> None:
+    census = _registry_census()
+
+    assert census.root == LEDGER_REGISTRY_ROUTE_CENSUS_ROOT
+    assert census.schema_version == 1
+    assert len(census.rows) == 546
+    assert len({(row.source, row.modelo_id, row.revision_id) for row in census.rows}) == 35
+    assert len({row.source for row in census.rows}) == 7
+    assert sum(bool(row.targets) for row in census.rows) == 510
+    assert len(ledger_registry_source_files(bundled_authority())) == 130
+    assert census.source_set_digest == _REGISTRY_SOURCE_DIGEST
+    assert census.calculated_digest == _REGISTRY_ROUTE_DIGEST
+
+
+def test_registry_projection_retains_every_typed_selector_default_and_null() -> None:
+    _authority, coordinate, selector = _authority_with_first_defaulted_iva_selector()
+    modelo_id, revision_id, binding_id = coordinate
+    row = next(
+        row
+        for row in _registry_census().rows
+        if (row.modelo_id, row.revision_id, row.binding_id) == (modelo_id, revision_id, binding_id)
+    )
+    projected = cast(dict[str, object], json.loads(row.selector_json))
+
+    assert "fact" not in selector.model_fields_set
+    assert "applied_rates" not in selector.model_fields_set
+    assert set(projected) == set(selector.__class__.model_fields) - {"source"}
+    assert projected["fact"] == "iva_amount_sum"
+    assert projected["applied_rates"] is None
+    assert projected["exemption_articles"] is None
+
+
+@pytest.mark.parametrize(
+    "selector_update",
+    [
+        pytest.param({"fact": "base_amount_sum"}, id="materialized-model-default"),
+        pytest.param({"applied_rates": (Decimal("0.21"),)}, id="materialized-null"),
+    ],
+)
+def test_registry_projection_detects_live_validated_selector_default_and_null_changes(
+    selector_update: dict[str, object],
+) -> None:
+    authority, _coordinate, _selector = _authority_with_first_defaulted_iva_selector(selector_update=selector_update)
+
+    assert build_ledger_registry_route_census(authority).calculated_digest != _registry_census().calculated_digest
+
+
+def test_registry_projection_normalizes_irrelevant_selector_input_order() -> None:
+    authority, _coordinate, _selector = _authority_with_first_defaulted_iva_selector(reverse_input_order=True)
+
+    assert build_ledger_registry_route_census(authority).calculated_digest == _registry_census().calculated_digest
+
+
+@pytest.mark.parametrize("mutation", ["selector", "applicability", "target", "section"])
+def test_registry_route_digest_moves_for_each_route_fact(mutation: str) -> None:
+    census = _registry_census()
+    index = next(index for index, row in enumerate(census.rows) if row.targets)
+    row = census.rows[index]
+    if mutation == "selector":
+        selector = json.loads(row.selector_json)
+        selector["census_test_mutation"] = True
+        changed = row.model_copy(update={"selector_json": json.dumps(selector, separators=(",", ":"), sort_keys=True)})
+    elif mutation == "applicability":
+        changed = row.model_copy(update={"valid_to": row.valid_from})
+    else:
+        target = row.targets[0]
+        if mutation == "target":
+            target = target.model_copy(update={"casilla_id": f"{target.casilla_id}-mutated"})
+        else:
+            target = target.model_copy(update={"section": (*target.section, "mutated")})
+        changed = row.model_copy(update={"targets": (target, *row.targets[1:])})
+    rows = (*census.rows[:index], changed, *census.rows[index + 1 :])
+    candidate = LedgerRegistryRouteCensusV1.model_validate({**census.model_dump(mode="python"), "rows": rows})
+
+    assert candidate.calculated_digest != census.calculated_digest
+
+
+def test_registry_route_digest_moves_when_a_declaration_is_missing() -> None:
+    census = _registry_census()
+    candidate = LedgerRegistryRouteCensusV1.model_validate(
+        {**census.model_dump(mode="python"), "rows": census.rows[:-1]}
+    )
+
+    assert candidate.calculated_digest != census.calculated_digest
+
+
+@pytest.mark.parametrize("mutation", ["duplicate", "reordered"])
+def test_registry_route_serializer_rejects_noncanonical_row_identity_order(mutation: str) -> None:
+    census = _registry_census()
+    rows = (
+        (*census.rows, census.rows[-1])
+        if mutation == "duplicate"
+        else (census.rows[1], census.rows[0], *census.rows[2:])
+    )
+    invalid = census.model_copy(update={"rows": rows})
+
+    with pytest.raises(ValidationError):
+        ledger_registry_route_census_bytes(invalid)
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        {"schema_version": 2},
+        {"root": "ledger.routes"},
+        {"unexpected": True},
+    ],
+)
+def test_registry_route_census_rejects_malformed_root_schema(mutation: dict[str, object]) -> None:
+    payload = {**_registry_census().model_dump(mode="python"), **mutation}
+
+    with pytest.raises(ValidationError):
+        LedgerRegistryRouteCensusV1.model_validate(payload)
+
+
+def test_registry_route_census_rejects_malformed_or_noncanonical_rows() -> None:
+    census = _registry_census()
+    row = census.rows[0].model_dump(mode="python")
+    row["selector_json"] = "{ not-json"
+    payload = {**census.model_dump(mode="python"), "rows": (row, *census.rows[1:])}
+
+    with pytest.raises(ValidationError):
+        LedgerRegistryRouteCensusV1.model_validate(payload)
+
+
+def test_registry_source_and_route_digests_move_for_relevant_source_drift() -> None:
+    census = _registry_census()
+    authority = bundled_authority()
+    files = ledger_registry_source_files(authority)
+    records = [
+        (path.resolve().relative_to(authority.source_root.resolve()).as_posix(), path.read_bytes()) for path in files
+    ]
+    records[0] = (records[0][0], records[0][1] + b"\n# census drift")
+    drifted_source_digest = ledger_registry_source_set_digest(authority, source_records=records)
+    candidate = LedgerRegistryRouteCensusV1.model_validate(
+        {**census.model_dump(mode="python"), "source_set_digest": drifted_source_digest}
+    )
+
+    assert drifted_source_digest != census.source_set_digest
+    assert candidate.calculated_digest != census.calculated_digest
 
 
 def _subject(
@@ -169,14 +365,18 @@ def _report(
     streams: tuple[CensusStreamObservationV1, ...] | None = None,
 ) -> LedgerLiveCensusReportV1:
     """Build all seven mandatory streams, using reviewed zeros where empty."""
-    selected_streams = streams if streams is not None else tuple(
-        _stream(
-            source,
-            capability_ids if source is DenominatorSourceKind.CLI_ENDPOINT else (),
-            revision=revision,
-            observed_at=observed_at,
+    selected_streams = (
+        streams
+        if streams is not None
+        else tuple(
+            _stream(
+                source,
+                capability_ids if source is DenominatorSourceKind.CLI_ENDPOINT else (),
+                revision=revision,
+                observed_at=observed_at,
+            )
+            for source in DenominatorSourceKind
         )
-        for source in DenominatorSourceKind
     )
     draft = LedgerLiveCensusReportV1.model_construct(
         census_id=census_id,
@@ -296,7 +496,9 @@ def _assessment(
             applicability_review_evidence=review,
             proof=AxisProofState.NOT_APPLICABLE,
             surface_state=(
-                SurfaceCapabilityState.NOT_APPLICABLE if axis in {
+                SurfaceCapabilityState.NOT_APPLICABLE
+                if axis
+                in {
                     LedgerCapabilityAxis.BACKEND,
                     LedgerCapabilityAxis.CLI,
                     LedgerCapabilityAxis.TUI,
@@ -782,10 +984,7 @@ def test_g0_rejects_a_removed_observed_capability() -> None:
 
 def test_g0_rejects_same_id_denominator_source_classification_drift() -> None:
     def streams_with_owner(owner: DenominatorSourceKind) -> tuple[CensusStreamObservationV1, ...]:
-        return tuple(
-            _stream(source, (_ROW_ID,) if source is owner else ())
-            for source in DenominatorSourceKind
-        )
+        return tuple(_stream(source, (_ROW_ID,) if source is owner else ()) for source in DenominatorSourceKind)
 
     accepted_report = _report(streams=streams_with_owner(DenominatorSourceKind.CLI_ENDPOINT))
     drifted_report = _report(streams=streams_with_owner(DenominatorSourceKind.BACKEND_ONLY))
@@ -941,9 +1140,7 @@ def test_currentness_revalidates_a_malformed_copied_subject_without_value_leakag
 def test_one_gate_revalidates_malformed_copied_subject_and_nested_authority_graph_deterministically() -> None:
     matrix = _matrix()
     malformed_subject = _SUBJECT.model_copy(update={"digest": "subject-secret-not-a-digest"})
-    authority_entry = matrix.current_authority_dispositions.entries[0].model_copy(
-        update={"row_id": "authority-secret"}
-    )
+    authority_entry = matrix.current_authority_dispositions.entries[0].model_copy(update={"row_id": "authority-secret"})
     malformed_authority = matrix.current_authority_dispositions.model_copy(update={"entries": (authority_entry,)})
     candidate = _matrix_with(matrix, current_authority_dispositions=malformed_authority)
 
@@ -963,17 +1160,13 @@ def test_one_gate_revalidates_malformed_copied_subject_and_nested_authority_grap
     assert any("observed subjects validation failed" in blocker for blocker in first)
     assert any("matrix validation failed" in blocker for blocker in first)
     assert all(
-        secret not in blocker
-        for blocker in first
-        for secret in ("subject-secret-not-a-digest", "authority-secret")
+        secret not in blocker for blocker in first for secret in ("subject-secret-not-a-digest", "authority-secret")
     )
 
 
 def test_currentness_and_ordered_gates_reject_a_malformed_copied_nested_authority_graph() -> None:
     matrix = _matrix()
-    authority_entry = matrix.current_authority_dispositions.entries[0].model_copy(
-        update={"row_id": "authority-secret"}
-    )
+    authority_entry = matrix.current_authority_dispositions.entries[0].model_copy(update={"row_id": "authority-secret"})
     malformed_authority = matrix.current_authority_dispositions.model_copy(update={"entries": (authority_entry,)})
     malformed_matrix = matrix.model_copy(update={"current_authority_dispositions": malformed_authority})
 
@@ -1078,9 +1271,7 @@ def test_an_incomplete_applicable_axis_requires_an_affected_finding(
 
 def test_a_bounded_finding_makes_an_incomplete_axis_classified_work() -> None:
     row = _row()
-    backend = row.assessment(LedgerCapabilityAxis.BACKEND).model_copy(
-        update={"proof": AxisProofState.UNPROVEN}
-    )
+    backend = row.assessment(LedgerCapabilityAxis.BACKEND).model_copy(update={"proof": AxisProofState.UNPROVEN})
     finding = CapabilityFindingV1(
         finding_id="finding.entries.backend_proof",
         gap_class=LedgerGapClass.PROOF,
@@ -1104,7 +1295,8 @@ def test_an_all_non_applicable_row_is_not_a_denominator_placeholder() -> None:
                 "proof": AxisProofState.NOT_APPLICABLE,
                 "surface_state": (
                     SurfaceCapabilityState.NOT_APPLICABLE
-                    if assessment.axis in {
+                    if assessment.axis
+                    in {
                         LedgerCapabilityAxis.BACKEND,
                         LedgerCapabilityAxis.CLI,
                         LedgerCapabilityAxis.TUI,
@@ -1303,13 +1495,17 @@ def test_an_incomplete_cli_owned_migration_retains_an_authority_finding() -> Non
     "updates",
     [
         pytest.param(
-            {"annotations": frozenset({CapabilityAnnotation.DELEGATING, CapabilityAnnotation.INSTALLED}),
-             "cli_delegates_to_canonical": False},
+            {
+                "annotations": frozenset({CapabilityAnnotation.DELEGATING, CapabilityAnnotation.INSTALLED}),
+                "cli_delegates_to_canonical": False,
+            },
             id="delegating-without-boolean",
         ),
         pytest.param(
-            {"annotations": frozenset({CapabilityAnnotation.CLI_OWNED, CapabilityAnnotation.INSTALLED}),
-             "cli_delegates_to_canonical": True},
+            {
+                "annotations": frozenset({CapabilityAnnotation.CLI_OWNED, CapabilityAnnotation.INSTALLED}),
+                "cli_delegates_to_canonical": True,
+            },
             id="owned-and-delegating",
         ),
     ],
@@ -1434,9 +1630,7 @@ def test_g0_rejects_an_attestation_bound_to_an_older_matrix_digest() -> None:
     changed_home = matrix.rows[0].semantic_home.model_copy(update={"result_type": "ChangedResult"})
     changed_row = matrix.rows[0].model_copy(update={"semantic_home": changed_home})
     stale_attestation = matrix.acceptance_attestation.model_copy(update={"matrix_digest": "sha256:" + "b" * 64})
-    candidate = matrix.model_copy(
-        update={"rows": (changed_row,), "acceptance_attestation": stale_attestation}
-    )
+    candidate = matrix.model_copy(update={"rows": (changed_row,), "acceptance_attestation": stale_attestation})
 
     blockers = _evaluate(candidate, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).blockers
 
@@ -1542,8 +1736,10 @@ def test_g0_rejects_each_attestation_binding_mutation(
 
 def test_g2_requires_a_proven_backend_surface_and_direct_behavior() -> None:
     matrix = _matrix()
-    backend = matrix.rows[0].assessment(LedgerCapabilityAxis.BACKEND).model_copy(
-        update={"surface_state": SurfaceCapabilityState.PARTIAL}
+    backend = (
+        matrix.rows[0]
+        .assessment(LedgerCapabilityAxis.BACKEND)
+        .model_copy(update={"surface_state": SurfaceCapabilityState.PARTIAL})
     )
     finding = CapabilityFindingV1(
         finding_id="finding.entries.backend_product",
@@ -1648,7 +1844,8 @@ def test_g3_requires_cli_success_refusal_and_artifact_evidence() -> None:
             "evidence": tuple(
                 item
                 for item in cli.evidence
-                if item.role not in {
+                if item.role
+                not in {
                     EvidenceRole.CLI_SUCCESS,
                     EvidenceRole.CLI_REFUSAL,
                     EvidenceRole.CLI_ARTIFACT,
@@ -1974,9 +2171,7 @@ def test_ordered_evaluation_never_allows_a_later_gate_to_close() -> None:
     assert not assessments[0].closed
     for assessment in assessments[1:]:
         assert not assessment.closed
-        assert assessment.blockers == (
-            f"{assessment.gate.value} cannot close while an earlier gate remains open",
-        )
+        assert assessment.blockers == (f"{assessment.gate.value} cannot close while an earlier gate remains open",)
 
 
 def test_ordered_evaluation_reopens_later_gates_after_a_malformed_subject() -> None:
@@ -2006,7 +2201,8 @@ def test_a_model_copy_cannot_turn_all_axes_non_applicable_and_recompute_digests(
                 "proof": AxisProofState.NOT_APPLICABLE,
                 "surface_state": (
                     SurfaceCapabilityState.NOT_APPLICABLE
-                    if assessment.axis in {
+                    if assessment.axis
+                    in {
                         LedgerCapabilityAxis.BACKEND,
                         LedgerCapabilityAxis.CLI,
                         LedgerCapabilityAxis.TUI,

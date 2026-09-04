@@ -175,7 +175,17 @@ def test_hook_units_are_parity_with_committed_sidecars(pattern: str) -> None:
     sidecar_texts: list[str] = []
     for candidate in sidecar_files:
         record = json.loads(candidate.read_text(encoding="utf-8"))
-        sidecar_texts.extend(unit["text"] for unit in record.get("units", []))
+        assert "units" in record, (
+            f"{candidate} carries no units list; defaulting it to empty would let this "
+            "parity hold by both sides being empty, which is the one way it must not pass"
+        )
+        sidecar_texts.extend(unit["text"] for unit in record["units"])
+
+    assert hook_texts, (
+        f"the hook produced no unit at all for {source}; an empty parity against an "
+        "empty sidecar reports agreement having compared nothing"
+    )
+
     assert hook_texts == sidecar_texts, (
         f"hook/sidecar unit-text divergence for {source.name}: "
         f"{len(hook_texts)} hook units vs {len(sidecar_texts)} sidecar units"
