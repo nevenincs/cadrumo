@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:c0760789a071c44d8a56998a87a03a0de4315766dccc12e39a8ac22d89ec6fb0'
+body_hash: 'sha256:29faf4485c94a54ae69d2a12c839d068d1cdbce4d3eb11ec18beec8f162cdc3e'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-reference]]"
@@ -68,6 +68,37 @@ an unproved operation is collapsed into the proved total. No detector presently
 fails when this proof attribution drifts; the green focused suite therefore
 does not validate the census assertion.
 
+### remediation-retest | low | RESOLVED: exact direct-proof tally and gap set are corrected
+
+Commit `6a33383783` corrects the authoritative reference to 55 directly proved
+operations and eight unproved operations, explicitly including
+`ledger.llm.diagnostics` and `build_llm_diagnostics_report`. It also corrects
+the S05 execution receipt to eight direct-proof gaps and restores the S05 plan
+checkbox only after those facts agree. Independent AST retest reproduced 50
+directly called public functions plus all five service methods and the exact
+eight-name absence set. The original HIGH is resolved. The later S13 reopening
+detector remains correctly open and is not silently claimed by S05.
+
+The unchanged denominator also re-reproduces as 63 operations in 17 families,
+58 functions plus five service methods, with source digest
+`sha256:4b0d917dd20d155f348958559037695cb5bab356867a1c88305bb42080f3b2f0`.
+The ten missing product/provenance families, sole backend-only disposition of
+`ledger.workspace.read`, explicit OPEN G0 state, and absence of S05 product or
+TUI edits remain accurate. The focused suite passed 50 tests in 60.30 seconds.
+
+### diagnostics-proof-provenance | medium | CLI diagnostics coverage is described too narrowly
+
+The corrected count is right, but its explanatory sentence says the existing
+diagnostics test merely exercises a CLI-owned projection helper over a prebuilt
+report and "does not invoke" `build_llm_diagnostics_report`. The real CLI
+integration tests in `test_ledger_llm_diagnostics.py` seed production stores
+and transitively execute that report builder through `ledger_llm_diagnostics`;
+other tests in the file separately validate the CLI projection models over
+prebuilt payloads. Neither is a direct application-symbol test, so
+`ledger.llm.diagnostics` correctly remains unproved under the declared census
+criterion, but the current provenance sentence conflates the two coverage
+shapes and understates the existing end-to-end evidence.
+
 ## Recommendations
 
 - Reopen `W01.P02.S05`, correct the direct-proof tally to 55/8 and add
@@ -81,3 +112,7 @@ does not validate the census assertion.
   proof, or a proof attributed only through an adapter fails closed. Then
   refresh the reference, execution record, plan state, digest/index metadata,
   and obtain a new independent review before treating S05 as complete.
+- Correct the diagnostics explanation to say that CLI end-to-end tests
+  transitively execute the real builder, while no application test directly
+  calls its public symbol. This preserves the valid 55/8 disposition without
+  erasing real integration coverage.
