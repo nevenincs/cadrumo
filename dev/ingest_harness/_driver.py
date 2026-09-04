@@ -27,9 +27,9 @@ from the file extension, say -- would let this module quietly satisfy a check
 written to catch exactly that.
 
 See Also:
-    :class:`~dev.ingest_harness.HarnessReport`
+    :class:`~dev.ingest_harness._runner.HarnessReport`
         What the rows this builds are collected into.
-    :func:`~dev.ingest_harness.score_emission`
+    :func:`~dev.ingest_harness._scoring.score_emission`
         The verdict logic, which stays where it was.
 """
 

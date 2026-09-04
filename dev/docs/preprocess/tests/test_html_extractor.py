@@ -22,17 +22,17 @@ from pathlib import Path
 import pytest
 
 from ...._paths import REPO_ROOT
-from .._html import (
+from ..normatives_html import (
     HTML_EXTRACTOR_ID,
     build_outputs,
     extract_html,
 )
-from .._schema import (
+from ..schema import (
     ExtractionStatus,
     PreprocessOutput,
     SourceDocumentKind,
 )
-from .._sidecar import (
+from ..sidecar import (
     EXTRACTED_TEXT_SUFFIX,
     PreprocessSidecarError,
     load_sidecar,

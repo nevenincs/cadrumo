@@ -24,14 +24,8 @@ import pytest
 from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
 
-from .. import (
-    ConceptDomain,
-    EnrolmentCandidate,
-    ScaffoldAction,
-    TermStatus,
-    load_terminology_handbook,
-    scaffold_handbook,
-)
+from .._enrolment import EnrolmentCandidate
+from .._scaffold import ScaffoldAction, scaffold_handbook
 from .._seed_import import (
     SeedEntry,
     SeedImportError,
@@ -44,6 +38,8 @@ from .._seed_import import (
     parse_ubterm_csv,
     source_attribution,
 )
+from ..enums import ConceptDomain, TermStatus
+from ..loader import load_terminology_handbook
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -345,7 +341,7 @@ def test_bundled_handbook_stays_loader_valid_after_step() -> None:
     This step ships importers + fixtures, not seeded production fragments, so
     the bundled Handbook is unchanged and its full validator inventory passes.
     """
-    from .. import default_handbook_validators
+    from ..validators import default_handbook_validators
 
     handbook = load_terminology_handbook(validators=default_handbook_validators())
     assert len(handbook.concepts) >= 95

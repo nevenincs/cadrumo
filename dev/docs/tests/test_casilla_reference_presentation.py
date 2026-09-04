@@ -47,7 +47,7 @@ from ..casilla_reference import (
 )
 from ..legal_reference import legal_reference_target, load_legal_provisions
 from ..terminology._casilla_anchor import casilla_page_anchor
-from ..terminology._search_record import CasillaSearchRecord
+from ..terminology.search_record import CasillaSearchRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 

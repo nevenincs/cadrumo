@@ -94,8 +94,8 @@ class PreprocessOutput(BaseModel):
     Serialised as the ``*.extracted.json`` provenance sidecar; the rendered
     plain text is written alongside as ``*.extracted.md`` (the surface the
     walker indexes). The two are written and loaded together by
-    :func:`~dev.docs.preprocess.write_sidecar` /
-    :func:`~dev.docs.preprocess.load_sidecar`.
+    :func:`~dev.docs.preprocess.sidecar.write_sidecar` /
+    :func:`~dev.docs.preprocess.sidecar.load_sidecar`.
 
     Field-to-upstream mapping (precursor of the generic preprocess-output
     schema requested from the ``vaultspec-rag`` team):

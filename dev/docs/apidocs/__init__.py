@@ -7,15 +7,6 @@ orphans whose module is gone), ``scaffold --check`` (the drift gate), and
 ``audit`` (a stub-health report). The stubs are generated, never
 hand-authored; regenerate them instead of editing.
 
-Major declarations:
-
-* :class:`ApiStubManager` — discovers modules and writes, checks, and
-  audits the stub tree.
-* :class:`ApiDocsError` — raised when the stub directory cannot be managed.
+``ApiStubManager`` and ``ApiDocsError`` are defined in and imported from
+:mod:`dev.docs.apidocs.manager`; this initialiser forwards nothing.
 """
-
-from __future__ import annotations
-
-from .manager import ApiDocsError, ApiStubManager
-
-__all__ = ["ApiDocsError", "ApiStubManager"]

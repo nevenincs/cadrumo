@@ -50,7 +50,8 @@ from cadrumo.tests.modelo_cli import create_modelo_work_unit_via_cli
 from cadrumo.tests.profile_capsule import seed_test_profile_record
 from cadrumo.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 
-from .. import UnderDeclarationScenario, check_under_declaration_scenario
+from .._models import UnderDeclarationScenario
+from .._runner import check_under_declaration_scenario
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -174,8 +174,12 @@ def _threshold_drift(root: Path) -> tuple[list[str], int]:
     drifted: list[str] = []
     checked = 0
     for source in sorted(root.rglob("*.py")):
-        if source.name == Path(__file__).name:
-            continue
+        # This module is scanned like any other. It once skipped itself, and the
+        # skip was dead: the pinned names appear here only as dictionary keys,
+        # which the line-anchored pattern above cannot match, so removing it
+        # changes nothing that is read today - twelve declarations either way -
+        # and removes a blind spot over the one file most likely to acquire a
+        # stale copy of a threshold it defines.
         for name, declared in declaration.findall(source.read_text(encoding="utf-8")):
             checked += 1
             expected = str(_PINNED_THRESHOLDS[name])
@@ -218,3 +222,25 @@ def test_a_relaxed_consumer_threshold_is_caught(tmp_path: Path) -> None:
     assert checked == 1
     assert len(drifted) == 1
     assert "_P95_WALL_ADVISORY_SECONDS" in drifted[0]
+
+
+def test_a_drifted_copy_is_reported_even_in_a_file_named_like_this_module(tmp_path: Path) -> None:
+    """No file is exempt by name, including one sharing this module's name.
+
+    The scan once skipped its own filename. The skip was dead - the pinned names
+    appear here only as dictionary keys, which the line-anchored pattern cannot
+    match - so it protected nothing and hid the one file most likely to acquire
+    a stale copy of a threshold it defines. This pins the removal: a drifted
+    declaration is reported wherever it sits, and a name-based exemption
+    reintroduced above would fail here rather than silently shrinking the scan.
+    """
+    (tmp_path / Path(__file__).name).write_text(
+        f"_COLD_START_WALL_ADVISORY_S = {_COLD_START_WALL_S + 5.0}\n",
+        encoding="utf-8",
+    )
+
+    drifted, checked = _threshold_drift(tmp_path)
+
+    assert checked == 1, "the file was skipped by name, so the exemption is back"
+    assert len(drifted) == 1
+    assert "_COLD_START_WALL_ADVISORY_S" in drifted[0]

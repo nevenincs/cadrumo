@@ -57,11 +57,7 @@ async def installed_workbench_root(
         register_profile_with_credentials(
             label=WORKBENCH_PROFILE_LABEL,
             passphrase=_WORKBENCH_PASSWORD,
-            facts=(
-                ()
-                if tax_id is None
-                else (UserProfileFact(path="identity.tax_id", value=tax_id),)
-            ),
+            facts=(() if tax_id is None else (UserProfileFact(path="identity.tax_id", value=tax_id),)),
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         )
         # Registration closes its own session and leaves the capsule sealed, so

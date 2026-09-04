@@ -80,10 +80,7 @@ def test_every_shipped_locale_carries_its_own_restatement() -> None:
     from .._paths import LOCALES_DIR
     from ..manager import discover_locale_codes
 
-    measured = {
-        locale: label_restatement_census(locale)
-        for locale in sorted(discover_locale_codes(LOCALES_DIR))
-    }
+    measured = {locale: label_restatement_census(locale) for locale in sorted(discover_locale_codes(LOCALES_DIR))}
     assert len(measured) > 1, "only one catalogue was discovered"
     assert all(census.restated > 0 for census in measured.values() if census.labels)
 

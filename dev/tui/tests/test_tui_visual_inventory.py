@@ -21,7 +21,9 @@ from .._artifacts import (
     Manifest,
     RenderedFrame,
     SkippedFrame,
+    now,
     read_manifest,
+    unaccounted_frames,
     write_index,
     write_manifest,
 )
@@ -140,24 +142,20 @@ def test_import_aliases_and_same_named_bases_cannot_escape_the_inventory(
     root = source_root / "cadrumo" / "entrypoints" / "tui"
     root.mkdir(parents=True)
     (root / "aliased.py").write_text(
-        "from textual.screen import Screen as TuiScreen\n"
-        "class AliasedScreen(TuiScreen):\n    pass\n",
+        "from textual.screen import Screen as TuiScreen\nclass AliasedScreen(TuiScreen):\n    pass\n",
         encoding=UTF_8,
     )
     (root / "qualified.py").write_text(
-        "import textual.app as textual_app\n"
-        "class AliasedApp(textual_app.App):\n    pass\n",
+        "import textual.app as textual_app\nclass AliasedApp(textual_app.App):\n    pass\n",
         encoding=UTF_8,
     )
     (root / "first.py").write_text(
-        "from textual.screen import Screen as RootScreen\n"
-        "class Shared(RootScreen):\n    pass\n",
+        "from textual.screen import Screen as RootScreen\nclass Shared(RootScreen):\n    pass\n",
         encoding=UTF_8,
     )
     (root / "second.py").write_text("class Shared(object):\n    pass\n", encoding=UTF_8)
     (root / "child.py").write_text(
-        "from .first import Shared as ImportedShared\n"
-        "class ImportedChild(ImportedShared):\n    pass\n",
+        "from .first import Shared as ImportedShared\nclass ImportedChild(ImportedShared):\n    pass\n",
         encoding=UTF_8,
     )
     monkeypatch.setattr(_inventory, "REPO_ROOT", tmp_path)
@@ -259,6 +257,98 @@ def test_coverage_check_refuses_a_surface_the_harness_does_not_offer() -> None:
     with pytest.raises(_coverage.CoverageError) as refusal:
         _coverage.check(interfaces, surfaces=("registration",))
     assert "unknown surface" in str(refusal.value)
+
+
+def _manifest(frames=(), failures=(), skipped=()) -> Manifest:
+    return Manifest(
+        generated_at=now(),
+        cell_height=22,
+        frames=tuple(frames),
+        failures=tuple(failures),
+        skipped=tuple(skipped),
+    )
+
+
+def _rendered(surface: str, viewport: str, theme: str) -> RenderedFrame:
+    return RenderedFrame(
+        surface=surface,
+        viewport=viewport,
+        columns=120,
+        rows=40,
+        orientation="landscape",
+        theme=theme,
+        png="a.png",
+        svg="a.svg",
+        text="a.txt",
+        png_sha256="0" * 64,
+        text_sha256="0" * 64,
+    )
+
+
+def test_a_run_that_rendered_everything_it_was_asked_for_reports_no_silent_absence() -> None:
+    manifest = _manifest(frames=(_rendered("home--ready", "medium", "dark"),))
+
+    assert (
+        unaccounted_frames(
+            manifest,
+            surfaces=("home--ready",),
+            viewports=("medium",),
+            themes=("dark",),
+        )
+        == ()
+    )
+
+
+def test_a_refused_or_skipped_frame_still_counts_as_accounted_for() -> None:
+    """Refusing loudly is coverage of a kind; vanishing is not."""
+    manifest = _manifest(
+        failures=(
+            FailedFrame(
+                surface="home--ready",
+                viewport="medium",
+                theme="dark",
+                kind="REFUSED",
+                detail="refused: synthetic",
+            ),
+        ),
+        skipped=(
+            SkippedFrame(
+                surface="home--ready",
+                viewport="medium",
+                theme="light",
+                reason="surface already refused",
+            ),
+        ),
+    )
+
+    assert (
+        unaccounted_frames(
+            manifest,
+            surfaces=("home--ready",),
+            viewports=("medium",),
+            themes=("dark", "light"),
+        )
+        == ()
+    )
+
+
+def test_the_absence_detector_bites_on_a_frame_that_simply_vanished() -> None:
+    """The defect this exists for: a requested frame in none of the three lists.
+
+    A manifest that neither rendered a frame nor explained why reads to a
+    reviewer exactly like a run that was never asked for it, which is how a
+    surface can sit unrendered while the index looks complete.
+    """
+    manifest = _manifest(frames=(_rendered("home--ready", "medium", "dark"),))
+
+    missing = unaccounted_frames(
+        manifest,
+        surfaces=("home--ready", "ledger-overview--ready"),
+        viewports=("medium",),
+        themes=("dark",),
+    )
+
+    assert missing == ("ledger-overview--ready/medium/dark",)
 
 
 def _sample_svg() -> Path:

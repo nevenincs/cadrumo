@@ -109,3 +109,22 @@ reason = "Sweeps documentation for enrolled terms; same disposition as its resol
 module = "dev/registry/analysis/footnote_pointer_notes.py"
 corpus = "AEAT record-design transcriptions"
 reason = "Resolves a Contenido footnote pointer to the note text the design states beneath the table, so a reviewer authoring a representation rule can read what the pointer defers to. Enrolment authorises reading that prose and no value: the screen reports the note and derives nothing, and any scale or sign a note establishes still lands in the authoring tree with its provision. The design is located from the source reference's own corpus path rather than by globbing its directory, because one modelo bundles fifteen designs and a note resolved against the wrong year is worse evidence than none."
+
+[[parser]]
+module = "dev/registry/analysis/m200_2024_full_reconciliation.py"
+corpus = "none: this project's own registry authoring TOML"
+reason = """\
+A declared false positive, which is the disposition this channel's detector \
+documents as its own cost. The module compiles no grammar over outside prose: \
+it matches on the word `casillas` inside `[[revisions."2024".casillas]]`, a \
+table header in THIS repository's authoring files, and its three sibling \
+patterns read `id`, `source_refs` and a TOML array from the same tree. The \
+detector asks whether a compiled pattern carries AEAT or legal vocabulary and \
+cannot ask where the text it matches comes from, so a pattern reading the \
+project's own format trips it. Sharpening the vocabulary test to exclude this \
+case was considered and rejected: the detector is deliberately broad by a \
+ruling recorded in its own docstring, because a false positive costs one row \
+like this while a narrow detector silently misses the module the gate exists \
+to surface. Enrolment here authorises nothing, since there is no prose to \
+read.\
+"""

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from .. import GoldenToolCall, divergent_replays, record_tool_call, replay_tool_call
+from .._replay import GoldenToolCall, divergent_replays, record_tool_call, replay_tool_call
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

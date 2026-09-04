@@ -26,13 +26,13 @@ from .._pdf import (
     build_outputs,
     extract_pdf,
 )
-from .._schema import (
+from ..schema import (
     ExtractionStatus,
     PreprocessOutput,
     PreprocessUnit,
     SourceDocumentKind,
 )
-from .._sidecar import (
+from ..sidecar import (
     EXTRACTED_TEXT_SUFFIX,
     PreprocessSidecarError,
     load_sidecar,

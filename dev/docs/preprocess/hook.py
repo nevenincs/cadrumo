@@ -4,7 +4,7 @@ This is the ``command``-form preprocessor the repo-root
 ``.vaultragpreprocess.toml`` rules invoke (one subprocess per matched source
 file, ``{path}`` substituted token-wise by the upstream runner). It routes the
 source file to the existing extractor family by suffix, adapts the extractor's
-:class:`~dev.docs.preprocess.PreprocessOutput` parts onto the upstream
+:class:`~dev.docs.preprocess.schema.PreprocessOutput` parts onto the upstream
 ``PreprocOutput`` contract (schema major pinned by
 :data:`UPSTREAM_SCHEMA_VERSION`), and prints exactly one JSON document on
 stdout — the contract ``vaultspec-rag preprocess run-one`` validates.
@@ -35,7 +35,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
 from ..._paths import REPO_ROOT, UTF_8
-from ._schema import ExtractionStatus, PreprocessOutput
+from .schema import ExtractionStatus, PreprocessOutput
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
@@ -64,10 +64,10 @@ def _builders() -> dict[str, Callable[..., list[PreprocessOutput]]]:
     and the unsupported-suffix refusal never pay for pdfplumber/openpyxl
     imports.
     """
-    from ._html import build_outputs as build_html
     from ._pdf import build_outputs as build_pdf
     from ._terminology import build_outputs as build_terminology
     from ._workbook import build_outputs as build_workbook
+    from .normatives_html import build_outputs as build_html
 
     return {
         ".html": build_html,

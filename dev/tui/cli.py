@@ -35,6 +35,7 @@ from ._artifacts import (
     now,
     read_manifest,
     run_directory,
+    unaccounted_frames,
     write_index,
     write_manifest,
 )
@@ -115,7 +116,9 @@ def inventory_command(
     """
     interfaces = _inventory.scan()
     surfaces = tuple(surface.name for surface in _harness.surfaces())
-    _coverage.check(interfaces, surfaces)
+    table = _coverage.merge_rendered_by(_harness.coverage())
+    _coverage.check(interfaces, surfaces, rendered_table=table)
+    resolved_notes = _coverage.notes(table)
 
     directory = run_directory(run)
     rendered: dict[str, tuple[str, ...]] = {}
@@ -124,7 +127,10 @@ def inventory_command(
         rendered = {record.qualname: record.rendered_by for record in manifest.interfaces}
         _echo(f"coverage from run {run!r} ({manifest.generated_at})")
     else:
-        rendered = {interface.qualname: _coverage.rendered_by(interface.qualname, surfaces) for interface in interfaces}
+        rendered = {
+            interface.qualname: _coverage.rendered_by(interface.qualname, surfaces, rendered_table=table)
+            for interface in interfaces
+        }
         _echo(f"no run named {run!r}; showing what the coverage table claims")
     _echo("")
 
@@ -136,7 +142,7 @@ def inventory_command(
         else:
             mark = "NOT RENDERED"
             uncovered += 1
-        note = _coverage.NOTES.get(interface.qualname, "")
+        note = resolved_notes.get(interface.qualname, "")
         suffix = f"  [{note}]" if note else ""
         locator = f"{interface.path.as_posix()}:{interface.line}"
         _echo(f"{interface.kind:<6} {interface.qualname}")
@@ -292,7 +298,9 @@ def render_command(
     run = DEFAULT_RUN_NAME
     available = _harness.surfaces()
     interfaces = _inventory.scan()
-    _coverage.check(interfaces, tuple(item.name for item in available))
+    coverage_table = _coverage.merge_rendered_by(_harness.coverage())
+    coverage_notes = _coverage.notes(coverage_table)
+    _coverage.check(interfaces, tuple(item.name for item in available), rendered_table=coverage_table)
 
     chosen_surfaces = _resolve_surfaces(surface, available)
     chosen_viewports = _resolve_viewports(viewport)
@@ -388,14 +396,25 @@ def render_command(
                 qualname=item.qualname,
                 kind=item.kind,
                 locator=f"{item.path.as_posix()}:{item.line}",
-                rendered_by=_coverage.rendered_by(item.qualname, rendered_surfaces),
-                note=_coverage.NOTES.get(item.qualname, ""),
+                rendered_by=_coverage.rendered_by(item.qualname, rendered_surfaces, rendered_table=coverage_table),
+                note=coverage_notes.get(item.qualname, ""),
             )
             for item in interfaces
         ),
         failures=tuple(failures),
         skipped=tuple(skipped),
     )
+    unaccounted = unaccounted_frames(
+        manifest,
+        surfaces=chosen_surfaces,
+        viewports=tuple(view.name for view in chosen_viewports),
+        themes=tuple(chosen_themes),
+    )
+    if unaccounted:
+        raise typer.BadParameter(
+            "the run left frames unaccounted for, which would read as coverage it does not have: "
+            + ", ".join(unaccounted[:5])
+        )
     write_manifest(directory, manifest)
     write_index(directory, manifest)
 

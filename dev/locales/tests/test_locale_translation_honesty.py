@@ -232,7 +232,7 @@ def _reserved_token_offenders(flat_leaves: dict[str, str | None]) -> list[str]:
     """
     from cadrumo.core.i18n import extract_placeholders
 
-    from .. import RESERVED_INTERPOLATION_TOKENS
+    from .._status import RESERVED_INTERPOLATION_TOKENS
 
     return sorted(
         key

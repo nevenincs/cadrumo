@@ -17,7 +17,7 @@ import pytest
 
 from cadrumo.tests.golden_comparison import MASK_SENTINEL
 
-from .._golden_store import mask_host_conditional_details
+from ..golden_store import mask_host_conditional_details
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 

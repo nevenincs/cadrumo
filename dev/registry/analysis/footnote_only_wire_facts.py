@@ -67,6 +67,7 @@ from .footnote_pointer_notes import (
 __all__ = [
     "KINDS",
     "PointerWireFactFinding",
+    "classify_pointer",
     "revision_findings",
     "screen_authority",
 ]
@@ -118,6 +119,27 @@ def would_become_eligible(field: RecordDesignIntermediateField) -> bool:
     return bool(project_render_profile_eligibility([cleared]).all_fields)
 
 
+def classify_pointer(evidence: PointerEvidence, *, resolved: int) -> tuple[str, str]:
+    """Return the condition a resolved pointer falls under, and its detail line.
+
+    Separated from the walk so all three conditions are reachable from a test
+    with input written in it. One of them - ``pointer_resolves_vocabulary_hit`` -
+    has no instance anywhere in the corpus, so while this decision lived inline
+    it had neither a live member nor a proof, which is the state this package
+    treats as a condition that has stopped reporting without anyone noticing.
+
+    The order is the precedence. An unresolved pointer is unresolved whatever
+    vocabulary the notes it did resolve happen to use, because a design that
+    never defines the note is a different problem from one whose note reads
+    unhelpfully.
+    """
+    if evidence.unresolved:
+        return "pointer_unresolved", f"design defines no {', '.join(evidence.unresolved)}"
+    if evidence.mentions_wire_vocabulary:
+        return "pointer_resolves_vocabulary_hit", f"{resolved} note(s) resolved, read these first"
+    return "pointer_resolves_vocabulary_miss", f"{resolved} note(s) resolved, still to be read"
+
+
 def revision_findings(
     authority: ValidatedRegistryAuthority, *, modelo: str, revision: str
 ) -> tuple[PointerWireFactFinding, ...]:
@@ -126,9 +148,7 @@ def revision_findings(
     source_ref = inputs.joined.source.source_ref
     corpus_path = bundled_path() / authority.catalogues.sources[source_ref].corpus_path
     transcription = design_transcription_path(corpus_path)
-    by_sheet = (
-        sheet_note_definitions(transcription.read_text(encoding=_UTF_8)) if transcription.is_file() else {}
-    )
+    by_sheet = sheet_note_definitions(transcription.read_text(encoding=_UTF_8)) if transcription.is_file() else {}
 
     findings: list[PointerWireFactFinding] = []
     for joined_field in inputs.joined.fields:
@@ -144,15 +164,7 @@ def revision_findings(
         # Asked through the module that owns the reading aid rather than by
         # keeping a second copy of its vocabulary here.
         evidence = PointerEvidence(cell=content, pointer=content.strip(), notes=resolved)
-        if evidence.unresolved:
-            kind = "pointer_unresolved"
-            detail = f"design defines no {', '.join(evidence.unresolved)}"
-        elif evidence.mentions_wire_vocabulary:
-            kind = "pointer_resolves_vocabulary_hit"
-            detail = f"{len(resolved)} note(s) resolved, read these first"
-        else:
-            kind = "pointer_resolves_vocabulary_miss"
-            detail = f"{len(resolved)} note(s) resolved, still to be read"
+        kind, detail = classify_pointer(evidence, resolved=len(resolved))
         findings.append(
             PointerWireFactFinding(
                 modelo=modelo,

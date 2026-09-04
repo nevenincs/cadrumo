@@ -1,0 +1,74 @@
+# Pinned public conformance-vector declaration for Modelo 200 revision
+# 2025-y-siguientes.
+#
+# Only the generation MANIFEST digest is pinned, not the 135 output digests it
+# already contains. The manifest enumerates every generated output with its own
+# sha256, so any change to any output changes the manifest and therefore this
+# digest: one pin carries the identical fail-closed property. The pin stays
+# committed data rather than being re-derived beside the enrollment, which is
+# what keeps the canonical_builder_conflict check from being tautological.
+# A regenerated export tree must refresh this digest under review.
+
+authority_id = "dev.registry.filing-export-conformance"
+mechanism_source_ref = "generated-provenance/200/2025-y-siguientes"
+generation_manifest_sha256 = "3d6e85cfdfdb24b67798ff025f9aea35d9ff55579d4254aa5e912da45852593c"
+filing_year = 2025
+period_code = "0A"
+
+[coordinate]
+modelo = "200"
+revision = "2025-y-siguientes"
+layout_ids = ["generated-modelo-200-2025-y-siguientes-fichero"]
+
+[inputs.decimal]
+# Casilla 00501 is the resultado de la cuenta de perdidas y ganancias: a
+# required manual input and the base-determination starting point. It carries
+# a synthetic NON-ZERO magnitude deliberately, so the cuota chain is actually
+# exercised; a zero here would render a degenerate base and prove far less.
+"00501" = "100000"
+"modelo-200-2024-profile-new-entity-flag" = "0"
+# INCN of the preceding 12 months. NOT a neutral zero: this value selects the
+# tipo de gravamen branch outright. Below one million euros LIS DT 44a gives
+# the transitional microempresa scale (21%/22% for 2025); below ten million it
+# gives the ERD art. 101 rate that DT 44a phases down (24% for 2025, parameter
+# is.modelo-200.tipo-gravamen-erd-art101). Only above the art. 101 ceiling does
+# the GENERAL art. 29 rate of 25% apply. This value clears that ceiling, so the
+# general branch is the one exercised, and it is coherent with the declared
+# 00501 result.
+"modelo-200-2024-profile-incn-prior-12-months" = "12000000"
+"modelo-200-2024-profile-tributacion-estado-porcentaje" = "100"
+"modelo-200-2024-bin-pendiente-ejercicios-anteriores" = "0"
+"modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores" = "0"
+"modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores" = "0"
+"modelo-200-2024-rel-202-pagos-fraccionados" = "0"
+"modelo-200-2024-rel-202-pagos-fraccionados-40-2" = "0"
+"modelo-200-2024-rel-self-bin-pendiente-anterior" = "0"
+"modelo-200-2024-rel-self-dotaciones-deterioro-cumplido-anterior" = "0"
+"modelo-200-2024-rel-self-dotaciones-deterioro-no-cumplido-anterior" = "0"
+
+[inputs.enum]
+"modelo-200-2024-profile-legal-entity-form" = "sl"
+
+[[probes]]
+record_id = "m200-page-001"
+field_id = "m200-2025.dp200001.f0001"
+emitted_offset = 328
+length = 2
+
+[[probes]]
+record_id = "m200-page-001"
+field_id = "m200-2025.dp200001.f0002"
+emitted_offset = 330
+length = 3
+
+[[probes]]
+record_id = "m200-page-001"
+field_id = "m200-2025.dp200001.f0003"
+emitted_offset = 333
+length = 5
+
+[[probes]]
+record_id = "m200-page-001"
+field_id = "m200-2025.dp200001.f0004"
+emitted_offset = 338
+length = 1

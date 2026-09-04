@@ -27,6 +27,7 @@ from ..core.identifier_grammar import NamespacedId
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.time.utc import UtcInstant
 from ..domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ..domain.invoices.models import InvoiceCatalogue
 from ..domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ..domain.modelos.calculation_revision import CalculationRevision
 from ..domain.modelos.filing_record import ModeloRecord
@@ -36,6 +37,7 @@ from ..domain.modelos.protocols import (
 )
 from ..domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ..domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ..domain.transactions.models import TransactionCatalogue
 from ..domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..domain.user_profile.values import UserProfileRecord
 from .aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
@@ -55,6 +57,7 @@ from .modelo.declarations_workspace import (
 )
 from .modelo.workspace_models import ModeloWorkspaceProjectionV1
 from .operations.registry import OperationPublicContractSetV1
+from .overview.agenda import OverviewAgenda, build_overview_agenda
 from .overview.calendar import build_overview_calendar
 from .overview.calendar_models import OverviewCalendar, OverviewCalendarRange
 from .overview.evidence import (
@@ -385,12 +388,14 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             as_of=as_of,
             schedule_observation=_schedule_observation(calendar, observed_at),
         )
-        ledger = self._read_ledger(revisions.revisions, work_units)
+        agenda = build_overview_agenda(taxpayer, as_of=as_of, raw_values=raw_values)
+        ledger_sources = self._load_ledger_sources()
+        ledger = self._read_ledger(revisions.revisions, work_units, sources=ledger_sources)
         modelo = self._read_modelo(work_units)
         aeat_sync = self._read_aeat_sync(
             _declared_tax_id(raw_values),
             observed_at=observed_at,
-            filing_count=len(filings.records),
+            filings=tuple(filings.records.values()),
         )
         account_session = self.account_session_reader()
         final_record = self.profile_repository.load(self.profile_id)
@@ -402,6 +407,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             or final_work_units_revision != work_units_revision
             or final_calculations_revision != calculations_revision
             or final_filings_revision != filings_revision
+            or self._load_ledger_sources() != ledger_sources
         ):
             raise RuntimeError("secure workbench generation changed during capture")
         return WorkbenchGenerationInputsV1(
@@ -410,6 +416,8 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                 _secure_profile_home_input(
                     observed_at=observed_at,
                     account_session=account_session,
+                    agenda=agenda,
+                    agenda_evidence_state=evidence.aeat_state,
                 ),
                 observed_at=observed_at,
             ),
@@ -470,13 +478,28 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             ),
         )
 
+    def _load_ledger_sources(self) -> tuple[TransactionCatalogue, InvoiceCatalogue] | None:
+        """Read the ledger stores once, as the value the guard compares.
+
+        Neither store exposes a revision handle the way the work-unit,
+        calculation and filing catalogues do, so the snapshot itself is the
+        identity: an equal pair means nothing was written between the two
+        reads. Bucket events are deliberately outside it -- they only supply
+        review context and have no whole-catalogue read to compare.
+        """
+        if self.transaction_repository is None or self.invoice_repository is None:
+            return None
+        return (self.transaction_repository.load(), self.invoice_repository.load())
+
     def _read_ledger(
         self,
         calculation_revisions: Mapping[str, CalculationRevision],
         work_units: WorkUnitCatalogue,
+        *,
+        sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None,
     ) -> LedgerWorkspaceProjectionV1 | None:
         """Project the Ledger workspace only when its stores were bound."""
-        if self.transaction_repository is None or self.invoice_repository is None:
+        if self.transaction_repository is None or self.invoice_repository is None or sources is None:
             return None
         from .ledger.workspace_reader import read_ledger_workspace_projection
 
@@ -487,6 +510,8 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             bucket_event_repository=self.bucket_event_repository,
             calculation_revisions=calculation_revisions,
             work_units=work_units,
+            transactions=sources[0],
+            invoices=sources[1],
         )
 
     def _read_modelo(self, work_units: WorkUnitCatalogue) -> tuple[ModeloWorkspaceProjectionV1, ...] | None:
@@ -513,7 +538,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         subject_key: str | None,
         *,
         observed_at: UtcInstant,
-        filing_count: int,
+        filings: tuple[ModeloRecord, ...],
     ) -> AeatSyncWorkspaceProjectionV1 | None:
         """Project the pre-pull AEAT Sync workspace against composed contracts.
 
@@ -530,7 +555,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             bucket_id=self.profile_id,
             subject_key=subject_key,
             observed_at=observed_at,
-            filing_count=filing_count,
+            filings=filings,
             operation_contracts=self.operation_contracts,
         )
 
@@ -591,7 +616,21 @@ def _schedule_observation(
     )
 
 
-def _secure_profile_home_input(*, observed_at: UtcInstant, account_session: HomeAccountSession) -> HomeProjectionInput:
+def _secure_profile_home_input(
+    *,
+    observed_at: UtcInstant,
+    account_session: HomeAccountSession,
+    agenda: OverviewAgenda | None,
+    agenda_evidence_state: HomeZoneState,
+) -> HomeProjectionInput:
+    """Assemble Home from the authorities this session actually read.
+
+    Each zone carries its own state. A zone with no installed reader stays
+    UNAVAILABLE and names what is missing, because a Home that renders an
+    unread authority as an empty list is indistinguishable from one whose
+    operator genuinely has nothing outstanding.
+    """
+
     def unavailable(reason_code: str) -> HomeZoneState:
         return HomeZoneState(availability=HomeAvailability.UNAVAILABLE, reason_code=reason_code)
 
@@ -601,8 +640,16 @@ def _secure_profile_home_input(*, observed_at: UtcInstant, account_session: Home
         actions_state=unavailable("workbench.home.actions_projector_unavailable"),
         declarations_state=unavailable("workbench.home.declarations_resume_projector_unavailable"),
         ledger_state=unavailable("workbench.ledger.snapshot_projector_unavailable"),
-        agenda_state=unavailable("workbench.home.agenda_projector_unavailable"),
-        agenda_evidence_state=unavailable("workbench.calendar.aeat_reader_unavailable"),
+        agenda_state=(
+            HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=observed_at)
+            if agenda is not None
+            else unavailable("workbench.home.agenda_projector_unavailable")
+        ),
+        overview_agenda=agenda,
+        # The AEAT side of the agenda is whatever the evidence read concluded,
+        # not a separate refusal: before any pull it is NEVER CAPTURED, and
+        # Home must say that rather than call the whole zone unavailable.
+        agenda_evidence_state=agenda_evidence_state,
         messages_state=unavailable("workbench.home.messages_reader_unavailable"),
     )
 

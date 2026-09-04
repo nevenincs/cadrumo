@@ -14,7 +14,7 @@ against -- the approved Handbook concept cards, the registry casilla
 projections (through the validated authority, never raw TOML), the live CLI
 projection, and the legal catalogue's provision vocabulary -- assigns each its
 canonical search-record id (the exact id a sweep would emit, via the shared
-:func:`~dev.docs.terminology._unified_record.to_search_record` funnel and the
+:func:`~dev.docs.terminology.unified_record.to_search_record` funnel and the
 canonical :func:`~dev.docs.terminology._legal_projection.legal_target_record_id`
 helper), and
 joins that derivable surface against the record ids the committed mapping
@@ -52,14 +52,14 @@ from cadrumo.domain.calculations.registry.authority import (
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 
 from ..._paths import UTF_8
-from ._casilla_projection import project_casilla_search_records
 from ._cli_projection import CliOptionRecord, CliSurfaceRecord, project_cli_search_records
 from ._concept_cards import ConceptCardRecord, project_concept_cards
 from ._legal_projection import legal_target_record_id
 from ._miss_rate import load_committed_relevance
-from ._search_record import CasillaSearchRecord
 from ._sweep import SweepResult
-from ._unified_record import SearchRecord, to_search_record
+from .casilla_projection import project_casilla_search_records
+from .search_record import CasillaSearchRecord
+from .unified_record import SearchRecord, to_search_record
 
 __all__ = [
     "CasillaCoverageCensus",

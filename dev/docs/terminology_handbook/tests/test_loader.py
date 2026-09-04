@@ -3,7 +3,7 @@
 There is no external numeric oracle for terminology, so these tests
 prove STRUCTURE: a populated multi-language multi-term concept fragment
 round-trips through the loader into a strict frozen
-:class:`~dev.docs.terminology_handbook.ConceptRecord` with every field preserved
+:class:`~dev.docs.terminology_handbook.schema.ConceptRecord` with every field preserved
 (every defaultable field set non-default); ``narrower`` is derived from
 authored ``broader`` inverses; malformed and partial fragments raise; and
 the validation-hook seam runs supplied validators over the assembled
@@ -22,16 +22,10 @@ from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.modelo import Modelo
 
-from .. import (
-    ConceptDomain,
-    GrammaticalGender,
-    PartOfSpeech,
-    TerminologyHandbook,
-    TermStatus,
-    load_bundled_terminology_handbook,
-    load_terminology_handbook,
-)
+from ..enums import ConceptDomain, TermStatus
 from ..errors import TerminologyLoadError, TerminologyValidationError
+from ..loader import TerminologyHandbook, load_bundled_terminology_handbook, load_terminology_handbook
+from ..schema import GrammaticalGender, PartOfSpeech
 from ._support import write_concept_fragment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

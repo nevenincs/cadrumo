@@ -1,9 +1,9 @@
 """Validation gates for the compiled Terminology Handbook.
 
-These gates are :data:`~dev.docs.terminology_handbook._loader.HandbookValidator`
+These gates are :data:`~dev.docs.terminology_handbook.loader.HandbookValidator`
 callables bolted onto the loader's validation seam -- the loader body is
 untouched. Each gate is a factory returning a closure over the assembled,
-narrower-derived :class:`~dev.docs.terminology_handbook._loader.TerminologyHandbook`;
+narrower-derived :class:`~dev.docs.terminology_handbook.loader.TerminologyHandbook`;
 :func:`default_handbook_validators` assembles the full inventory in the
 order the loader runs them.
 
@@ -22,8 +22,8 @@ from collections.abc import Container
 
 from cadrumo.core.concept_lifecycle import ConceptLifecycle
 
-from ._loader import HandbookValidator, TerminologyHandbook
 from .errors import TerminologyValidationError
+from .loader import HandbookValidator, TerminologyHandbook
 
 __all__ = [
     "approved_completeness_validator",

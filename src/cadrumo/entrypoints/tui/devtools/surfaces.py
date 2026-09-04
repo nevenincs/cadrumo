@@ -40,6 +40,14 @@ class Surface:
 
     A profile that merely exists is not enough for these: they resolve the
     active bucket, so the harness must unlock one first."""
+    interfaces: tuple[str, ...] = ()
+    """The interface classes this surface paints at its OPENING frame.
+
+    Declared here so the review tooling reads coverage from the surface
+    registry rather than keeping a second, hand-maintained opinion of which
+    classes a surface covers. Empty means the surface has not declared it and
+    the reviewer's static table remains the only claim.
+    """
     provision: Callable[[], AbstractContextManager[str]] | None = None
     """Dedicated fixture provisioning, for a surface ``needs_profile`` alone
     can't express -- a distinct storage root, extra profile facts, or a
@@ -154,9 +162,37 @@ def _form() -> App[Any]:
     )
 
 
+def _workbench_surfaces() -> tuple[Surface, ...]:
+    """Expose every declared workbench fixture as a drivable review surface.
+
+    The fixture registry is the authority on which workbench states exist and
+    what each one builds; this only gives each of them the harness shape the
+    renderer drives. A fixture added there appears here with no edit on this
+    side, which is what keeps the review inventory from disagreeing with the
+    fixtures it claims to cover.
+
+    None of them needs a profile: a workbench fixture is an immutable,
+    non-sensitive projection built in memory, which is the property that lets
+    the whole matrix render without provisioning encrypted storage per state.
+    """
+    from .workbench_fixtures import WORKBENCH_FIXTURES
+
+    return tuple(
+        Surface(
+            spec.fixture_id,
+            f"{spec.surface_id} in its {spec.scenario.value} state",
+            spec.build,
+            needs_profile=False,
+            interfaces=spec.interfaces,
+        )
+        for spec in WORKBENCH_FIXTURES
+    )
+
+
 SURFACES: dict[str, Surface] = {
     s.name: s
     for s in (
+        *_workbench_surfaces(),
         Surface(
             "registration",
             "THE REAL setup wizard, step 1: credential-first profile creation",

@@ -12,7 +12,7 @@ half-mapped.
 The five resolution rules (by source path):
 
 * ``src/cadrumo/_data/registry/.../casillas/*.toml`` -> the individual
-  :class:`~dev.docs.terminology._search_record.CasillaSearchRecord` named by
+  :class:`~dev.docs.terminology.search_record.CasillaSearchRecord` named by
   the hit's source section (the CASILLA grounding surface). A line range that
   is ambiguous or cannot be read is dropped rather than mapped to a namespace
   representative.
@@ -55,11 +55,11 @@ from cadrumo.domain.calculations.registry.authority import (
 )
 
 from ..._paths import REPO_ROOT, UTF_8
-from ._casilla_projection import project_casilla_search_records
 from ._concept_cards import ConceptCardRecord
 from ._legal_projection import project_legal_search_records
-from ._search_record import SearchRecordKind
-from ._unified_record import SearchRecord, to_search_record
+from .casilla_projection import project_casilla_search_records
+from .search_record import SearchRecordKind
+from .unified_record import SearchRecord, to_search_record
 
 if TYPE_CHECKING:
     from ..pagefind_inject import SearchRecordProjection
@@ -562,7 +562,7 @@ class TargetResolver:
                 reason=DropReason.NO_TARGET_ENTITY,
                 detail=f"cannot derive a module name from {hit.path!r}",
             )
-        from ._unified_record import RankingTier, SearchRecordMetadata
+        from .unified_record import RankingTier, SearchRecordMetadata
 
         title = dotted
         target = f"api/{dotted}.html"
@@ -692,7 +692,7 @@ class TargetResolver:
         return ResolvedTarget(surface=GroundingSurface.CLI, record=record, source_hit=hit)
 
     def _resolve_docs(self, hit: ChunkHit, rel: str) -> ResolvedTarget:
-        from ._unified_record import RankingTier, SearchRecordMetadata
+        from .unified_record import RankingTier, SearchRecordMetadata
 
         # docs/how-to/foo.md -> how-to/foo.html (the built page).
         target = f"{rel}.html"
@@ -748,7 +748,7 @@ def resolve_chunk_hits(
 
 
 def _reweight(kind: SearchRecordKind, score: float) -> float:
-    from ._unified_record import normalise_ranking_weight
+    from .unified_record import normalise_ranking_weight
 
     return normalise_ranking_weight(kind, score)
 

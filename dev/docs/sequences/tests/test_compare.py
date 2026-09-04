@@ -25,31 +25,30 @@ from pydantic import JsonValue
 
 from cadrumo.tests.golden_comparison import MASK_SENTINEL
 
-from .. import (
-    REPO_ROOT_TOKEN,
-    SANDBOX_STORAGE_ROOT_TOKEN,
-    SANDBOX_WORKDIR_TOKEN,
-    FrameExecution,
-    FrameKind,
-    ParsedSequence,
-    SequenceGolden,
-    SequenceTranscript,
-    _compare,
+from .. import compare
+from ..compare import (
     assert_transcript_matches_golden,
-    build_golden,
     check_transcript,
     compare_transcript_to_golden,
     evaluate_expectations,
-    execute_sequence,
+)
+from ..errors import SequenceGoldenError, SequenceGoldenMismatchError
+from ..golden_store import (
+    REPO_ROOT_TOKEN,
+    SANDBOX_STORAGE_ROOT_TOKEN,
+    SANDBOX_WORKDIR_TOKEN,
+    SequenceGolden,
+    _repo_root,
+    build_golden,
     golden_path,
     normalise_document_paths,
     normalise_text_output,
-    parse_sequence,
     read_golden,
     write_golden,
 )
-from .._golden_store import _repo_root
-from ..errors import SequenceGoldenError, SequenceGoldenMismatchError
+from ..parser import parse_sequence
+from ..runner import FrameExecution, SequenceTranscript, execute_sequence
+from ..schema import FrameKind, ParsedSequence
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -619,7 +618,7 @@ class TestMaskAuthorityIsCentral:
         argument-free beyond the document — no ``fields=`` keyword, no extra
         positional — so the central ``GOLDEN_MASK_FIELDS`` default is the only
         mask that can ever apply."""
-        module_ast = ast.parse(inspect.getsource(_compare))
+        module_ast = ast.parse(inspect.getsource(compare))
         calls = [
             node
             for node in ast.walk(module_ast)

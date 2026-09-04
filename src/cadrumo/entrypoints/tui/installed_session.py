@@ -69,6 +69,7 @@ SESSION_INVENTORY_UNAVAILABLE = 1
 """The profile inventory could not be read truthfully, so nothing was served."""
 
 _LEDGER_REVIEW_ACTION = "operator.ledger.review"
+_LEDGER_EVIDENCE_ACTION = "operator.ledger.evidence.review.list"
 _DECLARATIONS_WORK_ACTION = "operator.modelo.work.list"
 _DECLARATIONS_REVISIONS_ACTION = "operator.modelo.work.revisions"
 _DECLARATIONS_FILING_ACTION = "operator.modelo.filing_record.list"
@@ -149,6 +150,7 @@ def compose_authenticated_root_inputs_provider(
             state=WorkbenchDestinationAdmissionState.AVAILABLE,
         ),
         ledger_review_action=action(_LEDGER_REVIEW_ACTION),
+        ledger_evidence_action=action(_LEDGER_EVIDENCE_ACTION),
         declarations_work_action=action(_DECLARATIONS_WORK_ACTION),
         declarations_revisions_action=action(_DECLARATIONS_REVISIONS_ACTION),
         declarations_filing_action=action(_DECLARATIONS_FILING_ACTION),

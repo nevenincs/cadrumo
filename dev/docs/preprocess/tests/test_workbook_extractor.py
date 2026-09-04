@@ -23,23 +23,23 @@ import pytest
 
 from ...._paths import REPO_ROOT
 from .._parts import split_units_by_budget
-from .._schema import (
-    ExtractionStatus,
-    PreprocessOutput,
-    PreprocessUnit,
-    SourceDocumentKind,
-)
-from .._sidecar import (
-    EXTRACTED_TEXT_SUFFIX,
-    PreprocessSidecarError,
-    load_sidecar,
-    sidecar_paths_for,
-)
 from .._workbook import (
     WORKBOOK_EXTRACTOR_ID,
     _render_sheet,
     build_outputs,
     extract_workbook,
+)
+from ..schema import (
+    ExtractionStatus,
+    PreprocessOutput,
+    PreprocessUnit,
+    SourceDocumentKind,
+)
+from ..sidecar import (
+    EXTRACTED_TEXT_SUFFIX,
+    PreprocessSidecarError,
+    load_sidecar,
+    sidecar_paths_for,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.docs, pytest.mark.hex_core]

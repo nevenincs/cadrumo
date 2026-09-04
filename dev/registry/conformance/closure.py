@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field, computed_field, model_validator
 
 from cadrumo.application.filing.export_proof import FilingExportProofAuthority
 from cadrumo.application.registry.closure import (
+    RegistryClosureFilingChannelRefusal,
     RegistryClosureLimb,
     RegistryClosureLimbName,
     RegistryClosureOwnerDisposition,
@@ -112,9 +113,20 @@ class RegistryClosurePredicateRefusal(_ClosureReportModel):
     reason: RegistryClosurePredicateRefusalReason
     detail: str = Field(min_length=1, max_length=1_024)
     disposition: RegistryClosureOwnerDisposition
+    # The two filing-proof channels fail for materially different reasons:
+    # public conformance is repeatable in CI, while secure replay needs operator
+    # custody CI cannot hold. Carrying them here keeps "conformance proven,
+    # custody outstanding" distinct from "nothing proven" at the report
+    # boundary, which the collapsed reason token alone cannot express.
+    filing_channels: tuple[RegistryClosureFilingChannelRefusal, ...] = ()
 
     @model_validator(mode="after")
     def _require_matching_disposition_limb(self) -> RegistryClosurePredicateRefusal:
+        if self.filing_channels and self.limb != "filing_export":
+            raise ValueError("only a filing-export refusal may carry per-channel filing states")
+        channels = tuple(item.channel for item in self.filing_channels)
+        if len(channels) != len(set(channels)):
+            raise ValueError("closure predicate refusal permits at most one refusal per filing-proof channel")
         if self.disposition.limb != self.limb:
             raise ValueError("closure predicate refusal disposition must name its refusal limb")
         return self
@@ -417,6 +429,7 @@ def render_registry_closure_report(report: RegistryClosureReport) -> str:
             owner=refusal.disposition.owner,
             work_item=refusal.disposition.work_item,
             reconsideration_condition=refusal.disposition.reconsideration_condition,
+            filing_channels=_render_filing_channels(refusal),
             detail=refusal.detail,
         )
         for row in report.rows
@@ -442,6 +455,24 @@ def render_registry_closure_report(report: RegistryClosureReport) -> str:
         "filing export participates only at filing grade",
     )
     return "\n".join(lines)
+
+
+def _render_filing_channels(refusal: RegistryClosurePredicateRefusal) -> str:
+    """Render one refusal's per-channel filing states as a stable token list.
+
+    The two filing channels fail for materially different reasons: public
+    conformance is repeatable in CI, while secure replay needs operator custody
+    CI cannot hold. Emitting them structurally keeps "conformance proven,
+    custody outstanding" distinguishable from "nothing proven", which reading
+    the free-text detail alone does not give a consumer.
+
+    Returns:
+        ``channel:reason`` tokens joined by ``,``, or ``n/a`` when the refusal
+        declares no per-channel state.
+    """
+    if not refusal.filing_channels:
+        return "n/a"
+    return ",".join(f"{item.channel}:{item.reason}" for item in refusal.filing_channels)
 
 
 def _temporal_refusal(coverage: TemporalRevisionCoverageSummary) -> RegistryClosurePredicateRefusal:
@@ -503,6 +534,7 @@ def _limb_or_join_refusal(
             reason=refusal.reason,
             detail=refusal.detail,
             disposition=refusal.disposition,
+            filing_channels=refusal.filing_channels,
         ),
     )
 

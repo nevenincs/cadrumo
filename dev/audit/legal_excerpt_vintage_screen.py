@@ -192,7 +192,7 @@ from ..corpus.fetch_boe_normative import (
     article_redaction_markup,
     assert_serves_the_article_in_force,
 )
-from ..docs.preprocess import render_normative_prose
+from ..docs.preprocess.normatives_html import render_normative_prose
 from .legal_catalogue import load_legal_entries
 
 #: Declared locally rather than imported from ``cadrumo.core``: ``dev/`` is

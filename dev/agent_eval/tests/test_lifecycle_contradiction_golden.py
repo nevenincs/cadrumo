@@ -45,7 +45,8 @@ from cadrumo.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from cadrumo_harness.mcp import build_tool_descriptors
 
-from .. import ContradictionScenario, check_contradiction_scenario
+from .._models import ContradictionScenario
+from .._runner import check_contradiction_scenario
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -93,6 +93,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("undo", help="drop the last gesture and reprint")
     sub.add_parser("journal", help="print the walk so far")
     sub.add_parser("surfaces", help="list the drivable surfaces")
+    sub.add_parser("coverage", help="list each surface and the interfaces it paints at its opening frame")
 
     p_shot = sub.add_parser("shot", help="write the current frame as SVG")
     p_shot.add_argument("--out", default=str(workspace() / "frame.svg"))
@@ -117,6 +118,13 @@ def main(argv: list[str] | None = None) -> int:
             surface = SURFACES[name]
             mark = " (needs profile)" if surface.needs_profile else ""
             _emit(f"{name:<14} {surface.summary}{mark}")
+        return 0
+
+    if args.command == "coverage":
+        for name in sorted(SURFACES):
+            declared = SURFACES[name].interfaces
+            if declared:
+                _emit(f"{name} {','.join(declared)}")
         return 0
 
     if args.command == "open":

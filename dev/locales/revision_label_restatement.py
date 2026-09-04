@@ -103,9 +103,7 @@ def casilla_labels(locale: str) -> dict[str, dict[str, dict[str, str]]]:
     return found
 
 
-def restatement_split(
-    labels: dict[str, dict[str, dict[str, str]]], *, locale: str
-) -> LabelRestatementCensus:
+def restatement_split(labels: dict[str, dict[str, dict[str, str]]], *, locale: str) -> LabelRestatementCensus:
     """Classify an already-read label corpus, separately from reading it.
 
     Kept apart from :func:`label_restatement_census` because the classification

@@ -56,7 +56,7 @@ _DIV_OPEN_OR_CLOSE = re.compile(r"<div\b|</div\s*>", re.IGNORECASE)
 
 #: The per-block version-selector widget (radio buttons choosing a historical
 #: redaction). Extraction-irrelevant BOE UI chrome: the production extractor
-#: (``dev.docs.preprocess._html``) strips it with the identical pattern before
+#: (``dev.docs.preprocess.normatives_html``) strips it with the identical pattern before
 #: splitting articles, so dropping it here changes nothing about what a
 #: reader or a grounding citation ever sees -- it only keeps the raw excerpt
 #: file itself clean and free of the exact boilerplate that caused the

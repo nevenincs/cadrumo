@@ -14,14 +14,14 @@ Every model is strict, frozen, and forbids extra fields
 (:data:`~cadrumo.core.STRICT_FROZEN_CONFIG`). The four-language
 axis reuses the canonical
 :class:`~cadrumo.core.external_constants.OutputLanguage`; the
-Handbook-local closed axes (:class:`~dev.docs.terminology_handbook._enums.ConceptDomain`,
+Handbook-local closed axes (:class:`~dev.docs.terminology_handbook.enums.ConceptDomain`,
 :class:`~cadrumo.core.ConceptLifecycle`,
-:class:`~dev.docs.terminology_handbook._enums.TermStatus`) live beside this schema.
+:class:`~dev.docs.terminology_handbook.enums.TermStatus`) live beside this schema.
 
 The ``narrower`` field is intentionally NOT settable from a fragment:
 authoring it raises. The loader computes it as the inverse of every
 fragment's ``broader`` after the full concept set is parsed
-(see :func:`~dev.docs.terminology_handbook._loader.load_terminology_handbook`), which
+(see :func:`~dev.docs.terminology_handbook.loader.load_terminology_handbook`), which
 is why :class:`ConceptRecord` keeps it as a plain field defaulting to
 the empty tuple rather than rejecting it outright at the single-record
 boundary.
@@ -44,7 +44,7 @@ from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
-from ._enums import ConceptDomain, TermStatus
+from .enums import ConceptDomain, TermStatus
 from .errors import TerminologyValidationError
 
 __all__ = [

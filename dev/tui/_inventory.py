@@ -25,9 +25,7 @@ from .._paths import REPO_ROOT, UTF_8
 TUI_ROOT: Final[Path] = REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "tui"
 
 _TEXTUAL_APP_ROOT: Final[str] = "textual.app.App"
-_TEXTUAL_SCREEN_ROOTS: Final[frozenset[str]] = frozenset(
-    {"textual.screen.Screen", "textual.screen.ModalScreen"}
-)
+_TEXTUAL_SCREEN_ROOTS: Final[frozenset[str]] = frozenset({"textual.screen.Screen", "textual.screen.ModalScreen"})
 """The qualified Textual bases that make a subclass an operator-facing surface."""
 
 

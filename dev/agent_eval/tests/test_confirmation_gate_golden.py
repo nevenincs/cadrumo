@@ -58,7 +58,8 @@ from cadrumo_harness.mcp import (
 )
 from cadrumo_harness.mcp.tests._session import connected_server_and_client_session as connect
 
-from .. import ConfirmationGateCheck, ConfirmationTier, load_scenario, run_golden_scenario
+from .._models import ConfirmationGateCheck, ConfirmationTier
+from .._runner import load_scenario, run_golden_scenario
 from ._real_cli_support import valid_cli_commands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

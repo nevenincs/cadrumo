@@ -45,13 +45,13 @@ from typing import Final, cast
 
 from ..._paths import UTF_8
 from ._parts import split_units_by_budget, write_part_sidecars
-from ._schema import (
+from .schema import (
     ExtractionStatus,
     PreprocessOutput,
     PreprocessUnit,
     SourceDocumentKind,
 )
-from ._sidecar import sha256_of
+from .sidecar import sha256_of
 
 _UTF_8: Final[str] = UTF_8
 

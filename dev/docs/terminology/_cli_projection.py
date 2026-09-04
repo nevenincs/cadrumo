@@ -11,7 +11,7 @@ output languages (es / en / ca / hu) and a target anchor into the
 generated CLI reference page.
 
 The records extend the shared
-:class:`~dev.docs.terminology._search_record.SearchRecordBase` authored by
+:class:`~dev.docs.terminology.search_record.SearchRecordBase` authored by
 the sibling casilla-projection compiler, reusing the ``kind`` discriminator
 (``SearchRecordKind.CLI``) and the four-language localised-description map
 so all record kinds serialise to one homogeneous index payload.
@@ -38,7 +38,7 @@ from pydantic import Field
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, UTF_8_ENCODING, OutputLanguage
 
 from ..cli_reference import cli_reference_page_for_command
-from ._search_record import SearchRecordBase, SearchRecordKind
+from .search_record import SearchRecordBase, SearchRecordKind
 
 __all__ = [
     "CliOptionRecord",

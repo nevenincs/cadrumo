@@ -24,7 +24,8 @@ from pydantic import SecretStr
 
 from cadrumo.tests import FIXTURES_DIR
 
-from .. import fixtures, sanitize_pdf
+from .. import fixtures
+from .._pipeline import sanitize_pdf
 from .._records import NameReplacement, NifReplacement, TokenMap
 from ..errors import AlreadySanitizedError, SanitizerSourceParseError, SignaturePresentError
 
@@ -273,17 +274,45 @@ class TestRefuseIfAlreadySanitized:
         assert result.source_sha256 == sha
 
 
-class TestPublicReexports:
-    """Every public symbol is importable from :mod:`dev.sanitizer`."""
+class TestInertInitialiser:
+    """The package initialiser forwards nothing.
 
-    def test_all_public_names_are_importable(self) -> None:
+    This class replaces one that asserted the opposite. It required
+    ``dev.sanitizer`` to declare a NON-EMPTY ``__all__`` and to answer every name
+    in it, and it was hardened against an empty list precisely so that emptying
+    the facade could not pass silently. That made it a gate protecting the
+    defect: it could not be satisfied at the same time as the accepted boundary,
+    which makes a package initialiser an inert namespace marker.
+
+    The property worth holding is the inverse, and it is held here rather than
+    deleted, because "the initialiser exports nothing" is a real contract that
+    can regress the moment somebody adds a convenience import back.
+    """
+
+    def test_the_initialiser_declares_no_exports(self) -> None:
         sanitizer = import_module("dev.sanitizer")
 
-        assert sanitizer.__all__, "package must declare a non-empty __all__"
-        for name in sanitizer.__all__:
-            attr = getattr(sanitizer, name, None)
-            assert attr is not None, f"missing public re-export: {name}"
-            # Hardening: empty __all__ would silently make the loop a no-op
-            # and the test would still pass; pinning len > 0 above + the
-            # per-symbol assert below makes both regressions detectable.
-        assert len(sanitizer.__all__) >= 1
+        assert not hasattr(sanitizer, "__all__"), "an inert initialiser declares no exports"
+
+    def test_the_initialiser_carries_nothing_but_its_own_submodules(self) -> None:
+        sanitizer = import_module("dev.sanitizer")
+
+        public = [name for name in vars(sanitizer) if not name.startswith("_")]
+        assert all(getattr(sanitizer, name).__name__.startswith("dev.sanitizer.") for name in public), (
+            f"the initialiser forwards non-module names: {public}"
+        )
+
+    def test_the_public_symbols_are_importable_from_the_modules_that_define_them(self) -> None:
+        """What the retired test was actually protecting, asked of the real homes."""
+        from dev.sanitizer._pipeline import sanitize_pdf
+        from dev.sanitizer.errors import AlreadySanitizedError, SanitizationError
+        from dev.sanitizer.residual_identity import ResidualKind, scan_for_residual_identities
+
+        for symbol in (
+            sanitize_pdf,
+            SanitizationError,
+            AlreadySanitizedError,
+            ResidualKind,
+            scan_for_residual_identities,
+        ):
+            assert symbol is not None

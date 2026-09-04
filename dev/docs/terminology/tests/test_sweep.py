@@ -40,7 +40,6 @@ from .._resolution import (
     TargetResolver,
     resolve_chunk_hits,
 )
-from .._search_record import SearchRecordKind
 from .._sweep import (
     RagSearchClient,
     SweepQuery,
@@ -51,8 +50,9 @@ from .._sweep import (
     enumerate_query_vocabulary,
     run_sweep,
 )
-from .._unified_record import SearchRecord
 from .._wrangle import wrangle
+from ..search_record import SearchRecordKind
+from ..unified_record import SearchRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 

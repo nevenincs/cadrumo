@@ -195,7 +195,7 @@ class HomeScreen(Screen[None]):
         #home-layout, #home-main, #home-sidebar { width: 100%; height: auto; }
         #home-layout { layout: vertical; }
         HomeScreen.wide #home-layout { layout: horizontal; }
-        HomeScreen.wide #home-main { width: 2fr; }
+        HomeScreen.wide #home-main { width: 2fr; padding-right: $cadrumo-control-gap; }
         HomeScreen.wide #home-sidebar { width: 1fr; }
         .home-heading { text-style: bold; margin-top: $cadrumo-stack; }
         .home-state { color: $text-muted; height: auto; }

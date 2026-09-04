@@ -15,8 +15,10 @@ cleartext-free audit output from :class:`SanitizationResult`.
 Callers outside :mod:`dev.sanitizer` must import
 exclusively from this module — the private modules
 (``_records``, ``errors``, ``_pipeline``, ``_streams``,
-``_metadata``, ``_dynamic``, ``_structtree``, ``_determinism``,
-``_residual_identity``) are implementation details.
+``_metadata``, ``_dynamic``, ``_structtree``, ``_determinism``)
+are implementation details. ``residual_identity`` is public: two of
+its symbols are consumed by :mod:`dev.identity`, and a module reached
+from another package cannot be an implementation detail.
 
 Examples:
     >>> from dev.sanitizer import sanitize_pdf, TokenMap, NifReplacement  # doctest: +SKIP
@@ -24,59 +26,7 @@ Examples:
     ...     nif=(NifReplacement(real="Y1234567X", synthetic="Y0000001S", surface_label="taxpayer NIE"),),
     ... )
     >>> result = sanitize_pdf(source_bytes, mapping)  # doctest: +SKIP
+
+Every symbol this package defines is imported from the module that defines it;
+this initialiser is an inert namespace marker and forwards nothing.
 """
-
-from __future__ import annotations
-
-from ._pipeline import SANITIZER_VERSION, sanitize_pdf
-from ._records import (
-    AddressReplacement,
-    ArbitraryReplacement,
-    CsvReplacement,
-    DeterminismFlags,
-    ExpedienteReplacement,
-    IbanReplacement,
-    ImporteReplacement,
-    NameReplacement,
-    NifReplacement,
-    NrcReplacement,
-    Replacement,
-    SanitizationResult,
-    SanitizationWarning,
-    ScrubbedSurface,
-    TokenMap,
-)
-from ._residual_identity import (
-    CHECKSUM_VERIFIED_KINDS,
-    ResidualFinding,
-    ResidualKind,
-    accounted_for_values,
-    checksum_valid_spans,
-    scan_for_residual_identities,
-)
-
-__all__ = [
-    "CHECKSUM_VERIFIED_KINDS",
-    "SANITIZER_VERSION",
-    "AddressReplacement",
-    "ArbitraryReplacement",
-    "CsvReplacement",
-    "DeterminismFlags",
-    "ExpedienteReplacement",
-    "IbanReplacement",
-    "ImporteReplacement",
-    "NameReplacement",
-    "NifReplacement",
-    "NrcReplacement",
-    "Replacement",
-    "ResidualFinding",
-    "ResidualKind",
-    "SanitizationResult",
-    "SanitizationWarning",
-    "ScrubbedSurface",
-    "TokenMap",
-    "accounted_for_values",
-    "checksum_valid_spans",
-    "sanitize_pdf",
-    "scan_for_residual_identities",
-]

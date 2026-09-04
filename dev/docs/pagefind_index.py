@@ -80,7 +80,7 @@ _BODY_TAG_RE: Final[re.Pattern[str]] = re.compile(r"<body\b(?![^>]*\bdata-pagefi
 #: The injected record kinds a shipped index must carry.
 #:
 #: Spelled as literals because this module imports
-#: :class:`~dev.docs.terminology.SearchRecordKind` lazily (the terminology
+#: :class:`~dev.docs.terminology.search_record.SearchRecordKind` lazily (the terminology
 #: package is heavy and only needed per page). The literals are therefore held
 #: to the enum by ``test_decided_kinds_match_the_canonical_enum``, which fails
 #: if a member is renamed or removed -- the drift this constant would otherwise
@@ -225,12 +225,8 @@ def _page_display_class(rel_path: str) -> str:
     """
     from cadrumo.core.external_constants import OutputLanguage
 
-    from .terminology import (
-        RankingTier,
-        SearchRecord,
-        SearchRecordKind,
-        derive_display_class,
-    )
+    from .terminology.search_record import SearchRecordKind
+    from .terminology.unified_record import RankingTier, SearchRecord, derive_display_class
 
     probe = SearchRecord(
         id="page-display-class-probe",

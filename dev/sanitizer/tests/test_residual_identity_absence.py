@@ -5,7 +5,7 @@ never asserts that no real identity SURVIVED, and its docstring justifies the
 omission by saying the test does not have the cleartext. This module is the
 other half, and it disproves that justification: detection needs no cleartext,
 only a pattern, a checksum, and the sidecar's own record of what the sanitiser
-wrote. See :mod:`dev.sanitizer._residual_identity` for the argument in full.
+wrote. See :mod:`dev.sanitizer.residual_identity` for the argument in full.
 
 SCOPE, AND WHY IT IS PROVENANCE-DRIVEN RATHER THAN A LIST. Only fixtures whose
 sidecar declares ``provenance = "real_corpus"`` are scanned. That is not an
@@ -85,13 +85,9 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.tests import SRC_CADRUMO
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
-from .. import (
-    CHECKSUM_VERIFIED_KINDS,
-    ResidualKind,
-    sanitize_pdf,
-    scan_for_residual_identities,
-)
+from .._pipeline import sanitize_pdf
 from .._records import IbanReplacement, NameReplacement, NifReplacement, TokenMap
+from ..residual_identity import CHECKSUM_VERIFIED_KINDS, ResidualKind, scan_for_residual_identities
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

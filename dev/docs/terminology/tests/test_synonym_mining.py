@@ -9,7 +9,7 @@ from typer.testing import CliRunner
 
 from cadrumo.core.external_constants import OutputLanguage
 
-from ...terminology_handbook import load_terminology_handbook
+from ...terminology_handbook.loader import load_terminology_handbook
 from .._sweep import enumerate_query_vocabulary
 from .._synonym_cli import app
 from .._synonym_mining import (

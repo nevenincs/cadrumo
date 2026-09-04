@@ -53,8 +53,8 @@ def _strongest_committed_boosts() -> dict[tuple[str, str], float]:
 
 
 def _display_class_for_kind(kind: str):
-    from .._search_record import SearchRecordKind
-    from .._unified_record import _KIND_TO_DISPLAY_CLASS
+    from ..search_record import SearchRecordKind
+    from ..unified_record import _KIND_TO_DISPLAY_CLASS
 
     return _KIND_TO_DISPLAY_CLASS[SearchRecordKind(kind)]
 
@@ -65,7 +65,7 @@ def test_the_committed_corpus_actually_contains_boosts_that_would_escape() -> No
     Without this anchor a corpus whose every boost happened to sit inside its
     band would make the containment gate pass while proving nothing.
     """
-    from .._unified_record import display_class_band_ceiling
+    from ..unified_record import display_class_band_ceiling
 
     escaping = [
         (record_id, weight)
@@ -77,7 +77,7 @@ def test_the_committed_corpus_actually_contains_boosts_that_would_escape() -> No
 
 def test_no_contained_boost_reaches_its_band_ceiling() -> None:
     """Every committed boost, once contained, stays strictly inside its band."""
-    from .._unified_record import (
+    from ..unified_record import (
         contain_boost_in_band,
         display_class_band_ceiling,
         display_class_base_weight,
@@ -103,8 +103,8 @@ def test_no_contained_boost_reaches_the_floor_of_any_higher_class() -> None:
     every modelo card for all queries. This asserts against every higher class
     at once, so a future band whose ceiling is mis-derived is still caught.
     """
-    from .._search_record import ResultDisplayClass
-    from .._unified_record import contain_boost_in_band, display_class_base_weight
+    from ..search_record import ResultDisplayClass
+    from ..unified_record import contain_boost_in_band, display_class_base_weight
 
     violations: list[str] = []
     for (record_id, kind), weight in _strongest_committed_boosts().items():
@@ -120,8 +120,8 @@ def test_no_contained_boost_reaches_the_floor_of_any_higher_class() -> None:
 
 def test_an_unboosted_record_sits_exactly_on_its_floor() -> None:
     """A zero boost yields the declared weight, so the ladder is preserved."""
-    from .._search_record import ResultDisplayClass
-    from .._unified_record import contain_boost_in_band, display_class_base_weight
+    from ..search_record import ResultDisplayClass
+    from ..unified_record import contain_boost_in_band, display_class_base_weight
 
     for display_class in ResultDisplayClass:
         assert contain_boost_in_band(display_class, 0.0) == display_class_base_weight(display_class)
@@ -139,8 +139,8 @@ def test_a_stronger_boost_ranks_higher_within_the_band() -> None:
     Checked on a class with headroom; the top class is bounded by its own floor
     and is excluded because it has none to order within.
     """
-    from .._search_record import ResultDisplayClass
-    from .._unified_record import (
+    from ..search_record import ResultDisplayClass
+    from ..unified_record import (
         contain_boost_in_band,
         display_class_band_ceiling,
         display_class_base_weight,
@@ -161,8 +161,8 @@ def test_a_stronger_boost_ranks_higher_within_the_band() -> None:
 
 def test_a_boost_outside_the_unit_interval_clamps_rather_than_escapes() -> None:
     """A malformed weight cannot become a cross-band promotion."""
-    from .._search_record import ResultDisplayClass
-    from .._unified_record import (
+    from ..search_record import ResultDisplayClass
+    from ..unified_record import (
         contain_boost_in_band,
         display_class_band_ceiling,
         display_class_base_weight,

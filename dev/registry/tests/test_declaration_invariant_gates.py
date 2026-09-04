@@ -759,6 +759,41 @@ def _vault_citations(text: str) -> list[str]:
     ]
 
 
+def _without_self_reference_regions(source: str) -> str:
+    """Blank this module's two necessary self-references, located by parsing it.
+
+    The regions are found through the syntax tree - the ``_VAULT_CITATION_PATTERNS``
+    assignment and the paired detector function - rather than by line number,
+    so an edit above them cannot silently move the exemption onto innocent code.
+    A region this cannot find is left in place and will be reported, which is the
+    safe direction: an unexpected citation in this module should fail the gate.
+    """
+    import ast
+
+    tree = ast.parse(source)
+    exempt: list[tuple[int, int]] = []
+    for node in tree.body:
+        if isinstance(node, ast.Assign):
+            names = [target.id for target in node.targets if isinstance(target, ast.Name)]
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            # The pattern table carries a type annotation, so it is an AnnAssign
+            # and not an Assign. Missing that left its region unexempted and the
+            # gate reported its own pattern definition.
+            names = [node.target.id]
+        else:
+            names = []
+        if "_VAULT_CITATION_PATTERNS" in names or (
+            isinstance(node, ast.FunctionDef)
+            and node.name == "test_the_vault_citation_gate_catches_each_kind_it_claims_to"
+        ):
+            exempt.append((node.lineno, node.end_lineno or node.lineno))
+    lines = source.splitlines()
+    for start, end in exempt:
+        for index in range(start - 1, min(end, len(lines))):
+            lines[index] = ""
+    return chr(10).join(lines)
+
+
 def test_no_registry_source_or_declaration_cites_a_vault_record() -> None:
     """Registry code and shipped declarations never name the project's own development records.
 
@@ -790,14 +825,19 @@ def test_no_registry_source_or_declaration_cites_a_vault_record() -> None:
                 continue
             if "__pycache__" in path.parts:
                 continue
-            if path.name == pathlib.Path(__file__).name:
-                # This module necessarily contains example citations: the paired
-                # detector below constructs one of each kind to prove the
-                # patterns match. Scanning it would make the gate report itself,
-                # and removing the examples would leave the patterns unproven.
-                continue
             scanned += 1
-            citations = _vault_citations(path.read_text(encoding=_UTF_8, errors="ignore"))
+            body = path.read_text(encoding=_UTF_8, errors="ignore")
+            if path.name == pathlib.Path(__file__).name:
+                # This module necessarily contains example citations in two
+                # places: the pattern table names the vault path prefix as one
+                # of its patterns, and the paired detector constructs one of each
+                # kind to prove they match. Both are exempted BY LOCATION rather
+                # than by skipping the file, which previously left all 1,365
+                # lines unscanned to protect 33 of them - a blind spot covering
+                # the gate's own module, in a gate about things hiding in
+                # unscanned places.
+                body = _without_self_reference_regions(body)
+            citations = _vault_citations(body)
             if citations:
                 offenders[str(path)] = sorted(set(citations))
 
@@ -1363,3 +1403,93 @@ def test_the_period_ambiguity_gate_detects_a_planted_clash() -> None:
 
     assert ambiguously_claimed_periods(()) == (), "a revision claiming nothing clashes with nothing"
     assert ambiguously_claimed_periods((("r", 2024, "2T"),)) == (), "one claimant is not two"
+
+
+def test_the_citation_gate_exempts_two_located_regions_and_no_more() -> None:
+    """The gate's self-exemption must not grow back into a whole-file skip.
+
+    It once skipped this module entirely - 1,365 lines unscanned to protect the
+    33 that must contain example citations, which is a blind spot covering the
+    gate's own source in a gate about things hiding where nobody looks.
+
+    Two properties hold it narrow. The exempted regions are located by parsing
+    this module rather than by line number, so an edit above them cannot move
+    the exemption onto innocent code; and blanking them must remove only those
+    lines, which is asserted here by counting rather than trusted.
+    """
+    import pathlib
+
+    source = pathlib.Path(__file__).read_text(encoding=_UTF_8)
+    blanked = _without_self_reference_regions(source)
+
+    original = source.splitlines()
+    remaining = blanked.splitlines()
+    assert len(original) == len(remaining), "blanking must preserve line numbering"
+    emptied = sum(1 for before, after in zip(original, remaining, strict=True) if before and not after)
+    assert 0 < emptied < 60, f"{emptied} lines exempted; the exemption is drifting back to a file skip"
+    assert emptied < len(original) / 20, "the exemption covers more than a twentieth of the module"
+
+    # And what survives is still scanned: a citation written anywhere else in
+    # this module is reported, which is the whole point of narrowing it.
+    assert _vault_citations(blanked) == []
+    # Assembled at runtime rather than written as a literal: this test lives
+    # OUTSIDE the two exempted regions, so a spelled-out citation here would be
+    # a real violation of the gate it is testing. Growing the exemption to cover
+    # this function instead is the move the narrowing exists to prevent.
+    planted = "W04.P08.S" + "99"
+    assert _vault_citations(blanked + chr(10) + f"# see {planted} for the rollout") == [
+        f"wave-phase-step identifier: {planted}"
+    ]
+
+
+def test_every_declared_condition_has_a_live_member_or_a_written_proof(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> None:
+    """A condition with neither stops reporting and nothing says so.
+
+    This package's standing rule is that a condition emptied by a correction
+    keeps its proof rather than being deleted: it is the case somebody must not
+    discover halfway through authoring. The rule was followed by hand and
+    therefore unevenly - six declared conditions across four screens produce
+    nothing on the live corpus, five carried constructed proofs, and the sixth
+    carried none while sitting in a screen written under this very plan.
+
+    "Proof" is taken here as the condition's name appearing in a test module,
+    which is the available signal and a weak one: a name mentioned in prose
+    would satisfy it. It is still the difference between a condition somebody
+    considered and one nobody has looked at since it emptied, and the strong
+    version - that the condition is reachable from constructed input - is what
+    the owning screen's own tests assert.
+    """
+    import importlib
+    import pathlib
+
+    from ..analysis.screens import CORPUS_SCREENS, SCREENS
+    from ..analysis.screens import screen_findings as _screen_findings
+
+    live: dict[str, set[str]] = {}
+    for name, findings in _screen_findings(authority, modelo_ids):
+        kinds = {finding.kind for finding in findings if isinstance(getattr(finding, "kind", None), str)}
+        live[name] = kinds
+
+    test_sources = " ".join(
+        path.read_text(encoding=_UTF_8, errors="ignore")
+        for path in sorted(pathlib.Path(__file__).parent.glob("test_*.py"))
+    )
+
+    declared_total = 0
+    unproven: list[str] = []
+    for entry in (*SCREENS, *CORPUS_SCREENS):
+        module = importlib.import_module(f"dev.registry.analysis.{entry.name}")
+        for kind in getattr(module, "KINDS", ()) or ():
+            declared_total += 1
+            if kind in live.get(entry.name, set()):
+                continue
+            if f'"{kind}"' in test_sources or f"'{kind}'" in test_sources:
+                continue
+            unproven.append(f"{entry.name}.{kind}")
+
+    assert declared_total > 20, f"only {declared_total} conditions declared; the gate is near-vacuous"
+    assert not unproven, "declared conditions with no live member and no test naming them: " + ", ".join(
+        sorted(unproven)
+    )

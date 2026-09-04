@@ -21,14 +21,14 @@ from pathlib import Path
 import pytest
 
 from ...._paths import REPO_ROOT
-from .._html import build_outputs
-from .._schema import (
+from ..normatives_html import build_outputs
+from ..schema import (
     PREPROCESS_SCHEMA_VERSION,
     ExtractionStatus,
     PreprocessOutput,
     SourceDocumentKind,
 )
-from .._sidecar import (
+from ..sidecar import (
     EXTRACTED_TEXT_SUFFIX,
     PreprocessSidecarError,
     load_sidecar,

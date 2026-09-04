@@ -90,7 +90,7 @@ def test_normatives_source_resolves_to_the_generated_legal_anchor(resolver: Targ
     """
     from ...legal_reference import legal_reference_target
     from .._resolution import GroundingSurface, ResolvedTarget
-    from .._search_record import SearchRecordKind
+    from ..search_record import SearchRecordKind
 
     # ley-37-1992:art-104 has corpus_ref corpus/normatives/html/ley-37-1992-art-104.html#a104
     catalogue = bundled_authority().catalogues.legal
@@ -170,7 +170,7 @@ def test_precise_legal_toml_range_resolves_named_provision_and_preserves_boe_pro
     """A precise legal-table range resolves its generated provision target."""
     from ...legal_reference import legal_reference_target
     from .._resolution import GroundingSurface, ResolvedTarget
-    from .._search_record import SearchRecordKind
+    from ..search_record import SearchRecordKind
 
     path = "src/cadrumo/_data/registry/aeat/legal/atribucion-rentas.toml"
     legal_id = "orden-hap-2250-2015:art-1"
@@ -285,7 +285,7 @@ def test_emitted_cli_option_resolves_to_its_exact_page_anchor(
     from ...cli_reference import cli_reference_page_for_command
     from ...pagefind_inject import materialise_search_records
     from .._resolution import GroundingSurface, ResolvedTarget
-    from .._search_record import SearchRecordKind
+    from ..search_record import SearchRecordKind
 
     projection = materialise_search_records()
     assert projection.cli_skipped_reason is None
@@ -345,7 +345,7 @@ def test_emitted_nested_cli_command_resolves_to_its_exact_page_anchor(
     from ...cli_reference import cli_reference_page_for_command
     from ...pagefind_inject import materialise_search_records
     from .._resolution import GroundingSurface, ResolvedTarget
-    from .._search_record import SearchRecordKind
+    from ..search_record import SearchRecordKind
 
     projection = materialise_search_records()
     assert projection.cli_skipped_reason is None

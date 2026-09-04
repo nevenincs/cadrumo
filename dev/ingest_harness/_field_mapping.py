@@ -52,7 +52,7 @@ loses a measurement each time:
     :func:`unmapped_slot_census` reports them separately.
 
 See Also:
-    :func:`~dev.ingest_harness.score_emission`
+    :func:`~dev.ingest_harness._scoring.score_emission`
         Consumes the projection this module produces; the verdict logic is there.
 """
 

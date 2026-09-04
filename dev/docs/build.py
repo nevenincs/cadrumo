@@ -26,7 +26,7 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 
 from .._paths import REPO_ROOT
-from .apidocs import ApiStubManager
+from .apidocs.manager import ApiStubManager
 from .cli_reference import generate_cli_reference
 from .download_matrix import descriptor_path as _download_descriptor_path
 from .download_matrix import inject_download_matrix

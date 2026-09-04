@@ -15,8 +15,8 @@ from typing import Final
 
 from ..._paths import UTF_8
 from ._parts import split_units_by_budget
-from ._schema import ExtractionStatus, PreprocessOutput, PreprocessUnit, SourceDocumentKind
-from ._sidecar import sha256_of
+from .schema import ExtractionStatus, PreprocessOutput, PreprocessUnit, SourceDocumentKind
+from .sidecar import sha256_of
 
 _UTF_8: Final[str] = UTF_8
 

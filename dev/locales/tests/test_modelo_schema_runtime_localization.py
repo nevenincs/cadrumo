@@ -27,7 +27,7 @@ from cadrumo.domain.calculations.registry.loader import load_registry_tree
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 from ..._paths import REPO_ROOT
-from .. import scan_modelo_schema_keys
+from .._registry_scanner import scan_modelo_schema_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

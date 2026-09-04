@@ -1,6 +1,6 @@
 """Concept-card projection compiler for the docs search index.
 
-Projects every curated :class:`~dev.docs.terminology_handbook.ConceptRecord` from the
+Projects every curated :class:`~dev.docs.terminology_handbook.schema.ConceptRecord` from the
 Terminology Handbook into a strict
 :class:`~dev.docs.terminology._concept_cards.ConceptCardRecord` -- the
 first-class "term card" the Ctrl-K command palette surfaces ahead of nav
@@ -10,7 +10,7 @@ four-language alias set, and resolvable links to the legal grounding the
 code itself is grounded against.
 
 The card record extends the shared
-:class:`~dev.docs.terminology._search_record.SearchRecordBase` authored by
+:class:`~dev.docs.terminology.search_record.SearchRecordBase` authored by
 the sibling casilla-projection compiler, reusing the ``kind`` discriminator
 (``SearchRecordKind.CONCEPT``) and the four-language localised-description
 map (here the per-language ``short_description``).
@@ -41,15 +41,11 @@ from pydantic import BaseModel, ConfigDict, Field
 from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
 
-from ..terminology_handbook import (
-    ConceptDomain,
-    ConceptRecord,
-    TerminologyHandbook,
-    TermStatus,
-    default_handbook_validators,
-    load_terminology_handbook,
-)
-from ._search_record import SearchRecordBase, SearchRecordKind
+from ..terminology_handbook.enums import ConceptDomain, TermStatus
+from ..terminology_handbook.loader import TerminologyHandbook, load_terminology_handbook
+from ..terminology_handbook.schema import ConceptRecord
+from ..terminology_handbook.validators import default_handbook_validators
+from .search_record import SearchRecordBase, SearchRecordKind
 
 __all__ = [
     "ConceptCardProjectionStats",

@@ -22,7 +22,6 @@ import pytest
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 
-from .._casilla_projection import project_casilla_search_records
 from .._concept_cards import ConceptCardRecord, project_concept_cards
 from .._coverage import (
     CoverageKind,
@@ -34,9 +33,10 @@ from .._coverage import (
     legal_target_record_id,
 )
 from .._miss_rate import load_committed_relevance
-from .._search_record import CasillaSearchRecord, SearchRecordKind
 from .._sweep import SweepResult, TermRelevanceMapping, TermTargetRef
-from .._unified_record import to_search_record
+from ..casilla_projection import project_casilla_search_records
+from ..search_record import CasillaSearchRecord, SearchRecordKind
+from ..unified_record import to_search_record
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
