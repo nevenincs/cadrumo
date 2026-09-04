@@ -212,6 +212,15 @@ def extract_orden_anual_iva_authority(markup: bytes, *, source_label: str) -> Or
     )
 
 
+def extract_orden_anual_iva_tables(
+    markup: bytes,
+    *,
+    source_label: str,
+) -> tuple[OrdenAnualIvaActivityTable, ...]:
+    """Return the non-agricultural activity projection of the aggregate authority."""
+    return extract_orden_anual_iva_authority(markup, source_label=source_label).non_agricultural_activities
+
+
 def orden_anual_iva_authority_units(authority: OrdenAnualIvaAuthority) -> tuple[OrdenAnualIvaAuthorityUnit, ...]:
     """Render stable corpus units from all annual-Orden IVA authority axes."""
     activity_anchors = orden_anual_iva_activity_anchors(authority.non_agricultural_activities)
@@ -597,6 +606,7 @@ __all__ = [
     "OrdenAnualIvaModule",
     "OrdenAnualIvaSeasonalIndex",
     "extract_orden_anual_iva_authority",
+    "extract_orden_anual_iva_tables",
     "orden_anual_iva_activity_anchors",
     "orden_anual_iva_authority_units",
     "orden_anual_iva_table_text",
