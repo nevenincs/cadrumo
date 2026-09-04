@@ -29,6 +29,8 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+from ..quality.unread_inputs import report_unread
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DISENOS_ROOT = REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus" / "aeat_official" / "disenos_registro"
 
@@ -93,15 +95,22 @@ def read_diseno_evidence(modelo_id: str, root: Path | None = None) -> DisenoDisp
     if not base.is_dir():
         return DisenoDispositionEvidence(modelo=modelo_id, codes=frozenset(), note="", corpus_files_scanned=0)
     scanned = 0
+    unread: list[str] = []
     best = ""
     for path in sorted(base.rglob("*")):
         if not path.is_file() or path.suffix.casefold() not in _TEXT_SUFFIXES:
             continue
-        scanned += 1
         try:
-            text = path.read_text(encoding="utf-8", errors="replace")
-        except OSError:
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as error:
+            # ``corpus_files_scanned`` exists so a zero can be told apart from a
+            # directory that was not there, and counting a file before reading it
+            # inflated exactly that denominator with files never examined. The
+            # lenient decode was the other half: a replaced byte can break the
+            # field anchor or the code pattern, losing evidence with no sign.
+            unread.append(f"{path}: {type(error).__name__}: {error}")
             continue
+        scanned += 1
         cursor = 0
         while True:
             cursor = text.find(_FIELD_ANCHOR, cursor)
@@ -111,6 +120,11 @@ def read_diseno_evidence(modelo_id: str, root: Path | None = None) -> DisenoDisp
             cursor += len(_FIELD_ANCHOR)
             if _CODE_IN_NOTE.search(candidate) and len(candidate) > len(best):
                 best = candidate
+    report_unread(
+        "diseno disposition evidence",
+        "evidence in one of them is absent and the scanned count would have over-stated the corpus",
+        unread,
+    )
     return DisenoDispositionEvidence(
         modelo=modelo_id,
         codes=frozenset(_CODE_IN_NOTE.findall(best)),

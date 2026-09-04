@@ -246,6 +246,33 @@ def _authority_snapshot(
     )
 
 
+def _authority_snapshot_with(
+    snapshot: AuthorityDispositionSnapshotV1,
+    *,
+    revision: str | None = None,
+    observed_at: datetime | None = None,
+    entries: tuple[AuthorityDispositionEntryV1, ...] | None = None,
+) -> AuthorityDispositionSnapshotV1:
+    """Recalculate a valid authority snapshot after one independent mutation."""
+    selected_revision = snapshot.revision if revision is None else revision
+    selected_observed_at = snapshot.observed_at if observed_at is None else observed_at
+    selected_entries = snapshot.entries if entries is None else entries
+    draft = AuthorityDispositionSnapshotV1.model_construct(
+        census_id=snapshot.census_id,
+        revision=selected_revision,
+        observed_at=selected_observed_at,
+        entries=selected_entries,
+        digest="",
+    )
+    return AuthorityDispositionSnapshotV1(
+        census_id=snapshot.census_id,
+        revision=selected_revision,
+        observed_at=selected_observed_at,
+        entries=selected_entries,
+        digest=draft.calculated_digest,
+    )
+
+
 def _assessment(
     axis: LedgerCapabilityAxis,
     *,
@@ -717,6 +744,146 @@ def test_denominator_generation_revision_and_time_are_currentness_inputs(
     blockers = _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=current_report).blockers
 
     assert expected in blockers
+
+
+@pytest.mark.parametrize(
+    ("recorded", "active"),
+    [
+        pytest.param(False, True, id="not-recorded"),
+        pytest.param(True, False, id="inactive"),
+    ],
+)
+def test_g0_rejects_each_invalid_tui_hold_state(recorded: bool, active: bool) -> None:
+    controls = LedgerCampaignControlsV1(
+        sole_ledger_parity_plan_owner=ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
+        tui_implementation_hold_recorded=recorded,
+        tui_implementation_hold_active=active,
+    )
+    matrix = _matrix(controls=controls)
+
+    assert _evaluate(_matrix(), LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
+    blockers = _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).blockers
+
+    assert blockers == ("the Ledger TUI implementation hold is not recorded and active",)
+
+
+def test_g0_rejects_a_removed_observed_capability() -> None:
+    first = _row()
+    second = _row("ledger.reconciliation.match", prefix="reconciliation_match")
+    accepted_report = _report((_ROW_ID, "ledger.reconciliation.match"))
+    matrix = _matrix(rows=(first, second), report=accepted_report)
+    removed_report = _report((_ROW_ID,))
+
+    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=accepted_report).closed
+    blockers = _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=removed_report).blockers
+
+    assert "accepted denominator capability missing from current census: ledger.reconciliation.match" in blockers
+
+
+def test_g0_rejects_same_id_denominator_source_classification_drift() -> None:
+    def streams_with_owner(owner: DenominatorSourceKind) -> tuple[CensusStreamObservationV1, ...]:
+        return tuple(
+            _stream(source, (_ROW_ID,) if source is owner else ())
+            for source in DenominatorSourceKind
+        )
+
+    accepted_report = _report(streams=streams_with_owner(DenominatorSourceKind.CLI_ENDPOINT))
+    drifted_report = _report(streams=streams_with_owner(DenominatorSourceKind.BACKEND_ONLY))
+    matrix = _matrix(report=accepted_report)
+
+    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=accepted_report).closed
+    blockers = _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=drifted_report).blockers
+
+    assert f"denominator source classification drifted: {_ROW_ID}" in blockers
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        pytest.param("identity", id="identity"),
+        pytest.param("digest", id="digest"),
+        pytest.param("revision", id="revision"),
+        pytest.param("time", id="time"),
+    ],
+)
+def test_g0_rejects_each_independent_census_generation_mutation(mutation: str) -> None:
+    matrix = _matrix()
+    baseline = _report()
+    if mutation == "identity":
+        drifted = _report(census_id="census.ledger.drifted")
+        expected = "accepted and current denominator census identities differ"
+    elif mutation == "digest":
+        drifted = baseline.model_copy(update={"digest": "sha256:" + "c" * 64})
+        expected = "live census validation failed"
+    elif mutation == "revision":
+        drifted = _report(revision="census-rev-2")
+        expected = "denominator revision drifted"
+    else:
+        drifted = _report(observed_at=_LATER_OBSERVED_AT)
+        expected = "denominator observation time drifted"
+
+    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=baseline).closed
+    blockers = _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=drifted).blockers
+
+    assert any(expected in blocker for blocker in blockers)
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "expected"),
+    [
+        pytest.param("readable", False, "is unreadable", id="unreadable"),
+        pytest.param("ambiguous", True, "is ambiguous", id="ambiguous"),
+        pytest.param("scan_succeeded", False, "did not scan successfully", id="failed"),
+        pytest.param("complete", False, "is partial", id="incomplete"),
+    ],
+)
+def test_g0_rejects_each_unready_census_stream(
+    field: str,
+    value: bool,
+    expected: str,
+) -> None:
+    baseline = _report()
+    stream = baseline.streams[0]
+    flags = {
+        "scan_succeeded": stream.scan_succeeded,
+        "readable": stream.readable,
+        "complete": stream.complete,
+        "ambiguous": stream.ambiguous,
+    }
+    flags[field] = value
+    mutated_stream = _stream(
+        stream.source,
+        stream.capability_ids,
+        revision=stream.revision,
+        observed_at=stream.observed_at,
+        **flags,
+    )
+    drifted = _report(streams=(mutated_stream, *baseline.streams[1:]))
+    matrix = _matrix(report=baseline)
+
+    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=baseline).closed
+    blockers = _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=drifted).blockers
+
+    assert any(expected in blocker for blocker in blockers)
+
+
+def test_g0_rejects_a_missing_census_stream_at_the_gate_boundary() -> None:
+    baseline = _report()
+    invalid = baseline.model_copy(update={"streams": baseline.streams[:-1]})
+    matrix = _matrix(report=baseline)
+
+    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=baseline).closed
+    blockers = _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=invalid).blockers
+
+    assert blockers == ("live census validation failed at <root>: value_error",)
+
+
+def test_g0_accepts_explicit_reviewed_zero_census_streams() -> None:
+    report = _report()
+    matrix = _matrix(report=report)
+
+    assert all(not stream.capability_ids and stream.reviewed_zero for stream in report.streams[1:])
+    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=report).closed
 
 
 def test_currentness_requires_nonempty_observed_subjects() -> None:
