@@ -13665,3 +13665,42 @@ The rule against frozen corpus counts stays a rule an author must follow, which
 is a weaker outcome than a gate and the honest one. Writing a detector that
 flagged the correct tests beside the incorrect ones would have made the rule
 harder to follow rather than easier.
+
+
+## The detector was right to be broad, and I was about to narrow it
+
+One of the five residual failures had a dev-side share: four modules compile a
+regulatory-prose pattern without being declared in the channel ledger, and one of
+them is `dev/registry/analysis/m200_2024_full_reconciliation.py`.
+
+It is a false positive, and the reason is exact. The module matches on the word
+`casillas` inside `[[revisions."2024".casillas]]` - a table header in THIS
+repository's authoring files - and its three sibling patterns read `id`,
+`source_refs` and a TOML array from the same tree. There is no outside prose
+anywhere in it.
+
+My first move was to sharpen the detector so a pattern reading the project's own
+format would not trip a vocabulary test aimed at AEAT and BOE text. The module's
+own docstring had already ruled on that, in terms that answer the objection
+directly: the detector is *deliberately* broad, because a false positive costs
+one enrolment row saying "matches on the word X, reads no prose", which is cheap
+and visible, whereas a narrow detector silently misses the module the gate exists
+to surface.
+
+That is a better trade than the one I was about to make, and reading the file I
+was about to edit is what stopped me making it. The remedy the design specifies
+is a declared row, so the row is written - naming the corpus as none, stating
+which word trips the test and why the pattern carries it, and recording that
+narrowing was considered and rejected so the next reader does not re-open it.
+
+The other three are genuine: `modelo_100_summary_v2025.py` parses `NIF` and
+`Ejercicio` out of borrador text, `record_design_pdf_repairs.py` repairs reversed
+rows in published designs, and `record_design_workbook.py` matches
+`entidades desarrolladoras`. All three are under `src/` and belong to whoever
+owns that tree.
+
+So the failure survives, and its composition has changed in a way worth
+recording: four undeclared parsers of which one was ours and three are not, is
+now three, all of them outside this session's reach and every one a real grammar
+over the outside world's prose. The dev share of a cross-tree inventory is
+complete.
