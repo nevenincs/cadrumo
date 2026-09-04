@@ -26,7 +26,10 @@ from ....core.orden_anual_html import (
     OrdenAnualIvaModule,
     OrdenAnualIvaSeasonalIndex,
     extract_orden_anual_iva_authority,
+    extract_orden_anual_iva_tables,
+    orden_anual_iva_activity_anchors,
     orden_anual_iva_authority_units,
+    orden_anual_iva_table_text,
 )
 from ._m303_orden_constants import (
     EXPECTED_ACTIVITY_COUNT,
@@ -146,6 +149,18 @@ def extract_m303_annual_orden_source(
         raise RegistryLoadError(f"annual Orden source {source.id!r} is incomplete or malformed: {exc}") from exc
 
 
+def extract_m303_annual_orden_tables(
+    markup: bytes,
+    *,
+    source_label: str,
+) -> tuple[M303AnnualOrdenRawActivity, ...]:
+    """Project the shared pure DOM parser into the registry's strict raw IR."""
+    return tuple(
+        _registry_raw_activity(activity)
+        for activity in extract_orden_anual_iva_tables(markup, source_label=source_label)
+    )
+
+
 def validate_m303_annual_orden_table_shape(activities: tuple[M303AnnualOrdenRawActivity, ...]) -> None:
     """Reject an incomplete or ambiguous annual IVA quota table collection."""
     if len(activities) != EXPECTED_ACTIVITY_COUNT:
@@ -161,6 +176,16 @@ def validate_m303_annual_orden_table_shape(activities: tuple[M303AnnualOrdenRawA
     identities = tuple(annual_orden_raw_activity_identity(activity) for activity in activities)
     if len(set(identities)) != len(identities):
         raise RegistryValidationError("annual Orden source contains ambiguous repeated official activity identities")
+
+
+def m303_annual_orden_activity_anchor(activity: M303AnnualOrdenRawActivity) -> str:
+    """Return the stable semantic sidecar anchor for one annual IVA table."""
+    return orden_anual_iva_activity_anchors((shared_annual_orden_activity_table(activity),))[0]
+
+
+def m303_annual_orden_table_text(activity: M303AnnualOrdenRawActivity) -> str:
+    """Render the full lexical evidence of one source-stated annual IVA table."""
+    return orden_anual_iva_table_text(shared_annual_orden_activity_table(activity))
 
 
 def _registry_raw_activity(activity: OrdenAnualIvaActivityTable) -> M303AnnualOrdenRawActivity:
