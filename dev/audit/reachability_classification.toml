@@ -740,3 +740,19 @@ area = "domain/prorrata_register"
 resolved = true
 symbols = ["_MIN_EJERCICIO", "_MAX_EJERCICIO"]
 evidence = "Both restated the canonical filing-year bounds that core/filing_year.py already declares as FILING_YEAR_MIN and FILING_YEAR_MAX, and which the FilingYear annotation on every register entry actually enforces. The local pair was read by nothing, so the range it described was never the range applied. Values agreed with canonical at removal, which is why this was a latent rather than an active defect: a change to the canonical bound would have left the local comment describing a range no longer in force. The domain note the constants carried, that IVA prorrata predates the lower bound while a pre-2000 ejercicio can never be a modelled filing year, was kept as prose."
+
+[[symbol_cluster]]
+name = "invoice catalogue repository-loading read wrappers"
+class = "superseded"
+area = "application/invoices"
+resolved = true
+symbols = ["list_invoice_repository_rows", "get_invoice_from_repository", "list_unmatched_invoice_repository_rows"]
+evidence = "Three one-line wrappers that loaded the catalogue and delegated to the catalogue-taking function beside them. No production or test caller reached any of the three. They also construct InvoiceCatalogueRepository() with no bucket_id, while the module's one live repository-loading function, verify_invoice_repository_links, takes an explicit bucket: the wrappers predate the bucket-scoped repository contract and would have read a default bucket the current design does not assume. Removing them orphaned the find_invoice import, which was dropped with them."
+
+[[symbol_cluster]]
+name = "invoice domain lookup left without a production consumer"
+class = "orphaned"
+area = "domain/invoices"
+resolved = false
+symbols = ["find_invoice"]
+evidence = "Its only production caller was get_invoice_from_repository, itself unreferenced dead code removed in the same step, so the capability was already dead one level down and the deletion only made that visible. It is NOT resolved here, and deletion is not the executor's call: the module publishes no __all__, but application/invoices/__init__.py names domain.invoices the sole canonical source for find_invoice alongside find_unmatched, link_transaction, suggest_reconciliations and verify_link_consistency, and those siblings are live. Its remaining test usage is also incidental rather than subject: test_link_transaction_returns_a_fresh_catalogue reads through find_invoice to assert what link_transaction did, so removing it would force an edit to a test about other behaviour. Resolution is a capability decision by the domain owner: retire the family member, or wire the caller its canonical designation implies."

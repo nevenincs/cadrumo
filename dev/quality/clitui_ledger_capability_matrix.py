@@ -23,7 +23,6 @@ from pydantic_core import to_jsonable_python
 
 from cadrumo.core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingSourceKind
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
-from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.binding_targets import casillas_by_binding
 
 SCHEMA_VERSION: Final[int] = 3
@@ -36,8 +35,10 @@ _CENSUS_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^census\.ledger(?:\.[a
 _ATTESTATION_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^attestation\.ledger(?:\.[a-z][a-z0-9_]*)*$")
 _PLACEHOLDER_TEXT: Final[frozenset[str]] = frozenset({"", "n/a", "na", "none", "tbd", "todo", "unknown", "unmeasured"})
 ACCEPTED_LEDGER_PARITY_PLAN_OWNER: Final[str] = "clitui-ledger"
-LEDGER_REGISTRY_ROUTE_CENSUS_SCHEMA_VERSION: Final[int] = 1
-LEDGER_REGISTRY_ROUTE_CENSUS_ROOT: Final[str] = "cadrumo.ledger_registry_route_census"
+LEDGER_REGISTRY_ROUTE_CENSUS_SCHEMA_VERSION: Final[Literal[1]] = 1
+LEDGER_REGISTRY_ROUTE_CENSUS_ROOT: Final[Literal["cadrumo.ledger_registry_route_census"]] = (
+    "cadrumo.ledger_registry_route_census"
+)
 _LEDGER_REGISTRY_ROUTE_CENSUS_FRAME: Final[bytes] = b"cadrumo:ledger-registry-route-census:v1\x00"
 _LEDGER_REGISTRY_SOURCE_SET_FRAME: Final[bytes] = b"cadrumo:ledger-registry-source-set:v1\x00"
 
@@ -52,6 +53,27 @@ def _canonical_json_text(value: object) -> str:
     if isinstance(value, BaseModel):
         value = value.model_dump(mode="json", exclude_none=False)
     return json.dumps(to_jsonable_python(value), ensure_ascii=True, separators=(",", ":"), sort_keys=True)
+
+
+def _validated_selector_json(selector: BaseModel | Mapping[str, object]) -> str:
+    """Serialize every typed selector field, retaining defaults and explicit nulls.
+
+    Registry construction hydrates Ledger selectors to strict Pydantic models.
+    ``source`` is loader-injected discriminator metadata rather than a selector
+    axis, so it is the sole excluded field. A raw mapping is rejected to keep
+    this evidence projection bound to the validated-model boundary.
+    """
+    if not isinstance(selector, BaseModel):
+        raise TypeError("ledger registry census requires a validated selector model")
+    return _canonical_json_text(
+        selector.model_dump(
+            mode="json",
+            exclude={"source"},
+            exclude_defaults=False,
+            exclude_none=False,
+            exclude_unset=False,
+        )
+    )
 
 
 class LedgerRegistryRouteTargetV1(BaseModel):
@@ -193,7 +215,7 @@ def build_ledger_registry_route_census(
                         valid_to=revision.valid_to,
                         period_selector_json=_canonical_json_text(revision.period_selector),
                         binding_id=binding.id,
-                        selector_json=_canonical_json_text(selector_as_dict(binding)),
+                        selector_json=_validated_selector_json(binding.selector),
                         targets=targets,
                     )
                 )
@@ -1572,7 +1594,9 @@ def reopened_gates_for_denominator_drift(
         # This legacy return shape has no blocker channel; reopening every gate
         # is the deterministic fail-closed refusal for invalid serialized data.
         return frozenset(_GATE_ORDER)
-    return frozenset(_GATE_ORDER) if _denominator_drift(canonical_accepted, canonical_current) else frozenset()
+    return (
+        frozenset(_GATE_ORDER) if _denominator_drift(canonical_accepted, canonical_current) else frozenset[LedgerGate]()
+    )
 
 
 __all__ = [

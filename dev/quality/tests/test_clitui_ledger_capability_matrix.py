@@ -11,14 +11,17 @@ cannot masquerade as the live campaign census.
 from __future__ import annotations
 
 import json
+from copy import copy
 from datetime import UTC, datetime
+from decimal import Decimal
 from functools import cache
-from typing import Final
+from typing import Final, cast
 
 import pytest
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.core.aggregation import BindingSourceKind
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 
 from ..clitui_ledger_capability_matrix import (
     ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
@@ -79,6 +82,40 @@ def _registry_census() -> LedgerRegistryRouteCensusV1:
     return build_ledger_registry_route_census()
 
 
+def _authority_with_first_defaulted_iva_selector(
+    *, selector_update: dict[str, object] | None = None, reverse_input_order: bool = False
+) -> tuple[ValidatedRegistryAuthority, tuple[str, str, str], BaseModel]:
+    authority = bundled_authority()
+    authority.validate_registry()
+    mutated = copy(authority)
+    modelos = list(authority.modelos)
+    for modelo_index, modelo in enumerate(modelos):
+        revisions = dict(modelo.revisions)
+        for revision_id, revision in revisions.items():
+            bindings = list(revision.bindings)
+            for binding_index, binding in enumerate(bindings):
+                if binding.source is not BindingSourceKind.LEDGER_IVA_AGGREGATION:
+                    continue
+                selector = binding.selector
+                if not isinstance(selector, BaseModel) or not {"fact", "applied_rates"}.isdisjoint(
+                    selector.model_fields_set
+                ):
+                    continue
+                payload = selector.model_dump(mode="python", exclude_unset=True)
+                if reverse_input_order:
+                    payload = dict(reversed(tuple(payload.items())))
+                if selector_update:
+                    payload.update(selector_update)
+                rebuilt = type(selector).model_validate(payload)
+                bindings[binding_index] = binding.model_copy(update={"selector": rebuilt})
+                revisions[revision_id] = revision.model_copy(update={"bindings": tuple(bindings)})
+                modelos[modelo_index] = modelo.model_copy(update={"revisions": revisions})
+                mutated.modelos = tuple(modelos)
+                mutated._modelos_by_id = {item.id: item for item in mutated.modelos}
+                return mutated, (modelo.id, revision.id, binding.id), selector
+    raise AssertionError("no IVA selector with omitted fact and applied_rates defaults")
+
+
 def test_registry_route_census_recomputes_the_published_live_authority_digest() -> None:
     census = _registry_census()
 
@@ -91,6 +128,45 @@ def test_registry_route_census_recomputes_the_published_live_authority_digest() 
     assert len(ledger_registry_source_files(bundled_authority())) == 130
     assert census.source_set_digest == _REGISTRY_SOURCE_DIGEST
     assert census.calculated_digest == _REGISTRY_ROUTE_DIGEST
+
+
+def test_registry_projection_retains_every_typed_selector_default_and_null() -> None:
+    _authority, coordinate, selector = _authority_with_first_defaulted_iva_selector()
+    modelo_id, revision_id, binding_id = coordinate
+    row = next(
+        row
+        for row in _registry_census().rows
+        if (row.modelo_id, row.revision_id, row.binding_id) == (modelo_id, revision_id, binding_id)
+    )
+    projected = cast(dict[str, object], json.loads(row.selector_json))
+
+    assert "fact" not in selector.model_fields_set
+    assert "applied_rates" not in selector.model_fields_set
+    assert set(projected) == set(selector.__class__.model_fields) - {"source"}
+    assert projected["fact"] == "iva_amount_sum"
+    assert projected["applied_rates"] is None
+    assert projected["exemption_articles"] is None
+
+
+@pytest.mark.parametrize(
+    "selector_update",
+    [
+        pytest.param({"fact": "base_amount_sum"}, id="materialized-model-default"),
+        pytest.param({"applied_rates": (Decimal("0.21"),)}, id="materialized-null"),
+    ],
+)
+def test_registry_projection_detects_live_validated_selector_default_and_null_changes(
+    selector_update: dict[str, object],
+) -> None:
+    authority, _coordinate, _selector = _authority_with_first_defaulted_iva_selector(selector_update=selector_update)
+
+    assert build_ledger_registry_route_census(authority).calculated_digest != _registry_census().calculated_digest
+
+
+def test_registry_projection_normalizes_irrelevant_selector_input_order() -> None:
+    authority, _coordinate, _selector = _authority_with_first_defaulted_iva_selector(reverse_input_order=True)
+
+    assert build_ledger_registry_route_census(authority).calculated_digest == _registry_census().calculated_digest
 
 
 @pytest.mark.parametrize("mutation", ["selector", "applicability", "target", "section"])
