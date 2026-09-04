@@ -21,7 +21,7 @@ from typing import Final, Literal, cast
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
 from pydantic_core import to_jsonable_python
 
-from cadrumo.core.aggregation import BindingSourceKind, LEDGER_BINDING_SOURCE_KINDS
+from cadrumo.core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingSourceKind
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.binding_targets import casillas_by_binding
@@ -145,6 +145,7 @@ def ledger_registry_source_set_digest(
     """Hash sorted source-root-relative paths and bytes with explicit framing."""
     if source_files is not None and source_records is not None:
         raise ValueError("provide source_files or source_records, not both")
+    records: list[tuple[str, bytes]]
     if source_records is not None:
         records = list(source_records)
     else:
@@ -1576,6 +1577,8 @@ def reopened_gates_for_denominator_drift(
 
 __all__ = [
     "ACCEPTED_LEDGER_PARITY_PLAN_OWNER",
+    "LEDGER_REGISTRY_ROUTE_CENSUS_ROOT",
+    "LEDGER_REGISTRY_ROUTE_CENSUS_SCHEMA_VERSION",
     "SCHEMA_VERSION",
     "ApplicabilityState",
     "AuthorityDispositionEntryV1",
@@ -1608,8 +1611,6 @@ __all__ = [
     "LedgerRegistryRouteCensusV1",
     "LedgerRegistryRouteRowV1",
     "LedgerRegistryRouteTargetV1",
-    "LEDGER_REGISTRY_ROUTE_CENSUS_ROOT",
-    "LEDGER_REGISTRY_ROUTE_CENSUS_SCHEMA_VERSION",
     "ReviewRuling",
     "SurfaceCapabilityState",
     "build_ledger_registry_route_census",

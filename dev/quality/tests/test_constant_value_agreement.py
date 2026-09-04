@@ -12,10 +12,10 @@ from pathlib import Path
 import pytest
 
 from ..constant_value_agreement import (
-    stem_restatements,
     _PACKAGE_ROOT,
     collect_constants,
     constant_census,
+    stem_restatements,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
