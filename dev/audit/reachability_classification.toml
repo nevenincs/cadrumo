@@ -773,3 +773,11 @@ resolved = true
 symbols = ["extract_orden_anual_iva_tables"]
 evidence = "Exposed by resolving the registry projections above: this was their only consumer, so removing them left it with no caller, no test and no reference of any kind. Published in __all__, which normally makes removal a surface decision, but its body is a single attribute access -- extract_orden_anual_iva_authority(markup, source_label=source_label).non_agricultural_activities -- so it is a projection of the live sibling rather than a distinct capability, and the live registry path already performs that same access inline. Removed with its __all__ entry. The wider pattern this makes concrete: a chain of one-line wrappers dies in layers, and each deletion must be re-measured because it exposes the next."
 
+[[symbol_cluster]]
+name = "finca ORM rows serving the staged fincas capability"
+class = "staged-capability"
+area = "adapters/persistence/storage/sql"
+resolved = false
+symbols = ["FincaRendimientoRecordRow", "FincaGastoRow", "FincaAmortizacionLedgerRow"]
+evidence = "Each is defined once in the reachable sql.orm module and used nowhere but adapters.persistence.profile.fincas, which the audit reports unreachable with no importers at all and which the module ledger already classifies. domain.fincas above it is likewise unreachable and spans twelve modules, so this is the symbol-level tail of a module-level adjudication rather than a separate finding: the rows are not dead code, they are the persistence half of a Renta capability that is staged and not yet wired. Deleting them would dismantle what that classification deliberately preserves, and because they are declarative Base subclasses it would also drop three tables from the schema metadata. They are resolved when the fincas capability is wired or retired as a whole, never on their own."
+
