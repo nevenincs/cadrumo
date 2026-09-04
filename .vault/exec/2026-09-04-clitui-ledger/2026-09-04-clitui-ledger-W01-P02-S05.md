@@ -5,16 +5,11 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:01db657f3ef859316d07f99cb174c71669aeba0c782da66d832ca604ec386a08'
+body_hash: 'sha256:f67c73d0510fcf4ec0519dcf6b81dfe06cfa3f2f8009bf21ea97f85614bc382a'
 step_id: 'S05'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Enumerate existing application operations, direct behavioral proof, and backend-only Ledger capabilities
 
@@ -24,19 +19,10 @@ related:
 
 ## Changes
 
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
-
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
-
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->
+- `M` `.vault/reference/2026-09-04-clitui-ledger-reference.md`
+- `A` `.vault/exec/2026-09-04-clitui-ledger/2026-09-04-clitui-ledger-W01-P02-S05.md`
+- `M` `.vault/plan/2026-09-04-clitui-ledger-plan.md`
+- `M` `.vault/index/clitui-ledger.index.md`
+- `verify:` `semantic census assertion (63 operations; seven direct-proof gaps)` -> `pass`
+- `verify:` `uv run --no-sync pytest -q src/cadrumo/application/ledger/tests/test_actions_review.py src/cadrumo/application/ledger/tests/test_actions_export_serialization.py src/cadrumo/application/ledger/tests/test_actions_import_export.py src/cadrumo/application/ledger/tests/test_actions_lifecycle.py src/cadrumo/application/ledger/tests/test_evidence.py src/cadrumo/application/ledger/tests/test_llm_review_workflow.py src/cadrumo/application/ledger/tests/test_ratios.py src/cadrumo/application/ledger/tests/test_workspace.py` -> `pass`
+- `verify:` `uv run --no-sync vaultspec-core vault check all --feature clitui-ledger --fix` -> `pass`

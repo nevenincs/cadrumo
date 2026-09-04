@@ -6,13 +6,14 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:a5fe175fea13b189ed0f1a13119689d60162cfd26e5144573410b0c9760c114d'
+body_hash: 'sha256:8c2894198460011208be707fed3a7cb4e0b09776e07952478f8abd9d0c4b5378'
 related:
   - '[[2026-09-04-clitui-ledger-W01-P01-S01]]'
   - '[[2026-09-04-clitui-ledger-W01-P01-S02]]'
   - '[[2026-09-04-clitui-ledger-W01-P01-S03]]'
   - '[[2026-09-04-clitui-ledger-W01-P01-summary]]'
   - '[[2026-09-04-clitui-ledger-W01-P02-S04]]'
+  - '[[2026-09-04-clitui-ledger-W01-P02-S05]]'
   - '[[2026-09-04-clitui-ledger-adr]]'
   - '[[2026-09-04-clitui-ledger-plan]]'
   - '[[2026-09-04-clitui-ledger-reference]]'
@@ -49,6 +50,7 @@ Auto-generated index of all documents tagged with `#clitui-ledger`.
 - `2026-09-04-clitui-ledger-W01-P01-S03` - Generate the continuously updated matrix and gate summary as the authoritative campaign reference
 - `2026-09-04-clitui-ledger-W01-P01-summary` - `clitui-ledger` `W01.P01` summary
 - `2026-09-04-clitui-ledger-W01-P02-S04` - Enumerate every invocable Ledger command endpoint, sub-operation, handler, schema, and adapter ownership annotation
+- `2026-09-04-clitui-ledger-W01-P02-S05` - Enumerate existing application operations, direct behavioral proof, and backend-only Ledger capabilities
 
 ### plan
 
