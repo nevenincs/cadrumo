@@ -1,5 +1,5 @@
 schema_version = 1
-inventory_digest = "sha256:83378a3ba79b444902821cc9009d885643c3273b6590d3b20b38ebe4d8f84ac2"
+inventory_digest = "sha256:63347ddc8e7f554c5cd5571c0ff3e71816ac2bb2cc36440891700c8cb100b601"
 
 [[operations]]
 operation_id = "rename-declaration-contact-facts"
@@ -571,7 +571,7 @@ new_locator = "class:cadrumo.application.filing.producer_snapshot.Modelo210Contr
 new_path = "src/cadrumo/application/filing/producer_snapshot.py"
 owner = "application-filing"
 rationale = "The model bundles one block's filing facts; a singular name would imply a single fact, so the set is named explicitly."
-expected_reference_classes = ["definition", "static-import"]
+expected_reference_classes = ["definition"]
 changed_paths = ["dev/registry/conformance/tests/test_real_closure_outcomes.py", "dev/registry/filing_export_proof.py", "dev/registry/tests/test_m303_generated_envelope_proof.py", "src/cadrumo/application/filing/_m296_projection.py", "src/cadrumo/application/filing/_m303_export_applicability.py", "src/cadrumo/application/filing/export_producer.py", "src/cadrumo/application/filing/producer_snapshot.py", "src/cadrumo/application/filing/projection.py", "src/cadrumo/application/filing/tests/_export_support.py", "src/cadrumo/application/filing/tests/test_export_post_write_verification.py", "src/cadrumo/application/filing/tests/test_m296_detail_records_repeat.py", "src/cadrumo/application/filing/tests/test_m303_did_account_wire_isolated_authority.py", "src/cadrumo/application/filing/tests/test_modelo_303_exonerado_390_refusal.py", "src/cadrumo/application/filing/tests/test_producer_snapshot.py", "src/cadrumo/application/filing/tests/test_unbuilt_layout_export_refusal.py", "src/cadrumo/application/modelo/_profile_export_binding.py", "src/cadrumo/application/modelo/export.py", "src/cadrumo/application/modelo/tests/test_m303_rectificativa_motive_lifecycle.py"]
 generator_commands = []
 focused_gates = [
@@ -664,7 +664,7 @@ new_locator = "class:cadrumo.application.filing.producer_snapshot.Modelo210Decla
 new_path = "src/cadrumo/application/filing/producer_snapshot.py"
 owner = "application-filing"
 rationale = "The model bundles one block's filing facts; a singular name would imply a single fact, so the set is named explicitly."
-expected_reference_classes = ["definition", "static-import"]
+expected_reference_classes = ["definition"]
 changed_paths = ["dev/registry/conformance/tests/test_real_closure_outcomes.py", "dev/registry/filing_export_proof.py", "dev/registry/tests/test_m303_generated_envelope_proof.py", "src/cadrumo/application/filing/_m296_projection.py", "src/cadrumo/application/filing/_m303_export_applicability.py", "src/cadrumo/application/filing/export_producer.py", "src/cadrumo/application/filing/producer_snapshot.py", "src/cadrumo/application/filing/projection.py", "src/cadrumo/application/filing/tests/_export_support.py", "src/cadrumo/application/filing/tests/test_export_post_write_verification.py", "src/cadrumo/application/filing/tests/test_m296_detail_records_repeat.py", "src/cadrumo/application/filing/tests/test_m303_did_account_wire_isolated_authority.py", "src/cadrumo/application/filing/tests/test_modelo_303_exonerado_390_refusal.py", "src/cadrumo/application/filing/tests/test_producer_snapshot.py", "src/cadrumo/application/filing/tests/test_unbuilt_layout_export_refusal.py", "src/cadrumo/application/modelo/_profile_export_binding.py", "src/cadrumo/application/modelo/export.py", "src/cadrumo/application/modelo/tests/test_m303_rectificativa_motive_lifecycle.py"]
 generator_commands = []
 focused_gates = [

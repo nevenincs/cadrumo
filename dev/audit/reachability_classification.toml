@@ -521,3 +521,11 @@ area = "mixed"
 resolved = true
 symbols = ["_DESCENDIENTE_DOOR_COMMAND", "_LIST_HELP_LOCALE_KEY", "_REDERIVE_HELP_LOCALE_KEY", "_GROUP_HELP_LOCALE_KEY", "ISO_8859_1_ENCODING"]
 evidence = "Each carried exactly one tree-wide reference, its own assignment, while its literal value now lives at a declaration site: the CLI help keys as TranslationKey entries in the evidence command specs, the descendiente door command in the CLI payload module, and the encoding literal in core/tabular.py. The value moved to the declaration and the module-level name was left behind."
+
+[[symbol_cluster]]
+name = "duplicated builtin value contracts"
+class = "orphaned"
+area = "entrypoints/cli"
+resolved = true
+symbols = ["_STR", "_INT", "_BOOL", "_TEXT_VALUE", "_WHOLE_NUMBER_VALUE", "_FLAG_VALUE", "_STRING", "_STRING_VALUE", "_OPTIONAL_STRING", "_MODELO_OPEN", "_INTEGER_VALUE"]
+evidence = "Twenty-five CLI modules each declared their own ValueContract(DeferredTarget('builtins', ...)) for str, int or bool under eleven different local names. The value is immutable and carries no per-module state, so every copy was a duplicate definition. The canonical TEXT_VALUE, WHOLE_NUMBER_VALUE and FLAG_VALUE now live in command_spec beside ValueContract itself, every use site was repointed, and all 133 exported command-spec tuples hash identically before and after."
