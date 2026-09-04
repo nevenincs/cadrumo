@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:fadf93bf030a21d7e1b7d88a6e3d81ec7cb6aeb64bc2f4daf37a827be36e9c1b'
+body_hash: 'sha256:48ce9dbbf71e04c04d7869710764a6d88625b5c91ca0d98cbaafb57f9693bfa4'
 ---
 
 # `reachability-burndown` plan
@@ -98,7 +98,7 @@ Bring symbols and orphaned test modules under the gate, shrink-only.
 
 Re-measure every signal from one stable revision and prove no false green remains.
 
-- [ ] `W04.P08.S12` - Re-measure every signal from one stable revision and prove no false green remains; `dev/audit`.
+- [x] `W04.P08.S12` - Re-measure every signal from one stable revision and prove no false green remains; `dev/audit`.
 
 ## Parallelization
 

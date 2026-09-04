@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-registry-dated-validity-regulatory-constant-placement-sweep-audit]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:23111506119e947405bf907407cb00651a2305df57c65069f9a863b650df0661'
+body_hash: 'sha256:d8461475c00fa475dde1000ce90ffc051cffa9ad1bec6ffebcd7046abc3c743e'
 ---
 
 <!-- RETIRED: S01 -->
@@ -39,7 +39,7 @@ The prorrata pair differs by comparison operator as well as value, so without an
 Thread the event date into the consumers that cannot resolve without it, then author the blocked clusters as new single-axis parameters. The bienes de inversion values are reached through zero-argument enum properties; the prorrata predicate is a pure domain function with no registry dependency, so its routing is an application-boundary decision.
 
 - [x] `P03.S06` - Thread the acquisition date into the bienes de inversion window and divisor lookups, which are today zero-argument enum properties, keeping the enum as the classifier and moving the value resolution to a function that takes the date; `src/cadrumo/domain/bienes_inversion/register.py, src/cadrumo/domain/bienes_inversion/tests/`.
-- [ ] `P03.S13` - Resolve the live scaffold S06 left behind: the kind enum's window and divisor methods take an acquisition_year they immediately discard, which is a parameter with no consumer standing in production code. It is consumed by the bundle rewiring or reverted, and must not be left as-is either way; `src/cadrumo/domain/bienes_inversion/register.py, src/cadrumo/domain/bienes_inversion/tests/`.
+- [x] `P03.S13` - Resolve the live scaffold S06 left behind: the kind enum's window and divisor methods take an acquisition_year they immediately discard, which is a parameter with no consumer standing in production code. It is consumed by the bundle rewiring or reverted, and must not be left as-is either way; `src/cadrumo/domain/bienes_inversion/register.py, src/cadrumo/domain/bienes_inversion/tests/`.
 - [ ] `P03.S10` - Add the domain parameter bundle and its resolver, rewire the bienes de inversion and prorrata calculators to take it, revert the kind enum to a pure classifier, and harden the producer-snapshot oracle to refuse a result whose carried provenance disagrees with the bundle it was handed; `src/cadrumo/domain/bienes_inversion/regularizacion_parameters.py, src/cadrumo/domain/bienes_inversion/register.py, src/cadrumo/application/calculations/bienes_inversion_regularizacion.py, src/cadrumo/application/filing/producer_snapshot.py`.
 - [ ] `P03.S11` - Gate the modelo 100 revision-id coincidence: assert every filing year that modelo supports is a declared revision id, so the three existing domain parameter reads fail loudly at test time if it ever splits mid-year rather than surfacing a resolution error to an operator; `src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `P03.S07` - Author the bienes de inversion windows, threshold and divisors as FILING-PERIOD parameters across all six modelo 303 and five modelo 390 revisions, grounded in the per-article corpus files that already ship, and add the tripwire gate refusing a SECOND dated value on them so the day a figure moves the work routes to the deferred acquisition axis instead of silently applying new law to an old good; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/, src/cadrumo/_data/registry/aeat/modelos/390/revisions/, src/cadrumo/domain/calculations/registry/_validate_parameter_temporal.py`.

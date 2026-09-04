@@ -19,11 +19,11 @@ related:
 
 ## Changes
 
-- `A` `dev/quality/clitui_ledger_capability_matrix.py`
+- `M` `dev/quality/clitui_ledger_capability_matrix.py`
 - `M` `.vault/plan/2026-09-04-clitui-ledger-plan.md`
 - `M` `.vault/index/clitui-ledger.index.md`
-- `verify:` `uv run ruff check dev/quality/clitui_ledger_capability_matrix.py` -> `pass`
+- `verify:` `uv run ruff check dev/quality/clitui_ledger_capability_matrix.py`; `uv run basedpyright dev/quality/clitui_ledger_capability_matrix.py`; `uv run python -m compileall -q dev/quality/clitui_ledger_capability_matrix.py`; in-memory adversarial matrix probes -> `pass`
 
 ## Notes
 
-Concurrent commit `676fd04f59` captured the exact S01 source with unrelated work; this scoped commit records only S01 execution metadata.
+Concurrent commit `676fd04f59` captured the initial S01 source with unrelated work, and `95302abb04` restored the corrective contract after a concurrent retire/restore pair. This scoped corrective commit records the repaired S01 source and execution metadata only.
