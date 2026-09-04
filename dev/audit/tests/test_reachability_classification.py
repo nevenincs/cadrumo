@@ -125,3 +125,63 @@ def test_the_deferred_prefix_is_not_smuggled_into_the_ledger() -> None:
         f"entries classify module(s) under the deferred prefix: {smuggled}. "
         "That population belongs to its owning campaign."
     )
+
+
+def _test_entries() -> list[dict[str, object]]:
+    """Return the ledger's orphaned-test entries."""
+    modules = _ledger()["test_module"]
+    assert isinstance(modules, list)
+    return [dict(entry) for entry in modules]
+
+
+def _reported_test_modules() -> set[str]:
+    """Return the in-scope orphaned-test module names the live audit reports."""
+    result = run_unreachable_code_scan(REPO_ROOT)
+    return {finding.module for finding in result.tests if not finding.module.startswith(_DEFERRED_PREFIX)}
+
+
+def test_every_orphaned_test_module_carries_an_entry() -> None:
+    """An orphaned test with no entry is a test nobody decided the fate of."""
+    reported = _reported_test_modules()
+
+    assert reported, "the audit reported no in-scope orphaned tests; coverage would pass vacuously"
+    unclassified = sorted(reported - {str(entry["name"]) for entry in _test_entries()})
+
+    assert unclassified == [], f"orphaned test module(s) with no ledger entry: {unclassified}"
+
+
+def test_every_orphaned_test_entry_anchors_to_the_finding_it_follows() -> None:
+    """A derivative entry without its anchor cannot be resolved with its subject.
+
+    The whole non-TUI orphaned-test population is derivative: each follows a
+    module finding or an unused symbol, and none carries an independent remedy.
+    An entry that does not name what it follows breaks that chain, and the test
+    would then look reviewed while nothing connects it to the work that retires
+    it.
+    """
+    entries = _test_entries()
+
+    assert entries, "the ledger parsed no orphaned-test entries; the anchor check has no subject"
+    broken = sorted(
+        str(entry["name"])
+        for entry in entries
+        if entry.get("follows") not in {"module", "symbol"} or not str(entry.get("anchor", "")).strip()
+    )
+
+    assert broken == [], f"orphaned-test entries missing a valid follows/anchor pair: {broken}"
+
+
+def test_a_test_following_a_module_anchors_to_a_classified_module() -> None:
+    """A module-following test must point at a module this ledger actually classifies.
+
+    Otherwise the chain dead-ends: the test claims to retire with its subject
+    while no entry states what that subject's remedy is.
+    """
+    classified = {str(entry["name"]) for entry in _entries()}
+    dangling = sorted(
+        str(entry["name"])
+        for entry in _test_entries()
+        if entry.get("follows") == "module" and not any(str(entry["anchor"]).startswith(name) for name in classified)
+    )
+
+    assert dangling == [], f"module-following test entries whose anchor is not classified: {dangling}"

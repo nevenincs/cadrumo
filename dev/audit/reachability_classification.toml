@@ -39,6 +39,9 @@ measured = "2026-09-04"
 modules_reported = 43
 tui_deferred = 26
 classified_here = 17
+test_modules_reported = 21
+test_modules_tui_deferred = 2
+test_modules_classified_here = 19
 
 # ---------------------------------------------------------------------------
 # harness-code -- reached only by dev/ tooling
@@ -141,3 +144,135 @@ remedy_requires_decision = true
 name = "cadrumo.domain.portals.drift"
 class = "staged-capability"
 evidence = "Reported type-only: an `if TYPE_CHECKING` import is its sole reference, so the typed portal-drift record exists for annotation rather than execution."
+
+# ---------------------------------------------------------------------------
+# Orphaned test modules
+#
+# A test is reported orphaned when every shipped subject it exercises is itself
+# a finding. Measured against the live audit, the whole non-TUI population is
+# DERIVATIVE: each of the nineteen follows either a module finding already
+# classified above, or an unused symbol in a module that is otherwise reachable.
+# None is an independent problem, and none carries its own remedy.
+#
+# That is why these entries record `follows` rather than a class. A test whose
+# subject is a `staged-capability` module is not dead -- it is the proof that
+# capability still works, and deleting it would leave the staged module
+# unguarded. A test following a symbol finding resolves when that symbol does,
+# which is the symbol wave's work rather than this one's.
+#
+# `follows` is `module` or `symbol`; `anchor` names the finding it depends on.
+# ---------------------------------------------------------------------------
+
+[[test_module]]
+name = "cadrumo.adapters.persistence.storage.sql.tests.test_secure_objects_schema_lineage"
+follows = "symbol"
+anchor = "cadrumo.adapters.persistence.storage.schema_lineage:deregister_secure_object_schema_upgrader"
+subjects = 2
+
+[[test_module]]
+name = "cadrumo.application.aggregation.tests.test_iva_rate_tier_concurrency_guard"
+follows = "symbol"
+anchor = "cadrumo.application.aggregation.iva_ledger:_iva_rate_kind_for"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.application.operator_surface.tests.test_crud_contract"
+follows = "module"
+anchor = "cadrumo.application.operator_surface.crud_contract"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.application.operator_surface.tests.test_crud_registry"
+follows = "module"
+anchor = "cadrumo.application.operator_surface.crud_contract"
+subjects = 2
+
+[[test_module]]
+name = "cadrumo.application.user_profile.tests.test_custody_retryable_codes_are_declared"
+follows = "symbol"
+anchor = "cadrumo.core.errors.error_codes:declared_error_codes"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.core.tests.test_compatibility_lifecycle"
+follows = "module"
+anchor = "cadrumo.core.compatibility_lifecycle"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.core.tests.test_compatibility_lifecycle_gate"
+follows = "module"
+anchor = "cadrumo.core.compatibility_lifecycle"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.core.tests.test_persisted_format_enrolment_binding"
+follows = "module"
+anchor = "cadrumo.core.compatibility_lifecycle"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.core.tests.test_regenerable_persisted_format_floors"
+follows = "module"
+anchor = "cadrumo.core.compatibility_lifecycle"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.domain.contribuyente.tests.test_constants"
+follows = "symbol"
+anchor = "cadrumo.domain.contribuyente.constants:ProfileName"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.domain.fincas.tests.test_amortization_ledger"
+follows = "module"
+anchor = "cadrumo.domain.fincas.amortization_ledger"
+subjects = 5
+
+[[test_module]]
+name = "cadrumo.domain.fincas.tests.test_expense_rollup"
+follows = "module"
+anchor = "cadrumo.domain.fincas.enums"
+subjects = 3
+
+[[test_module]]
+name = "cadrumo.domain.fincas.tests.test_imputacion_regime"
+follows = "module"
+anchor = "cadrumo.domain.fincas.enums"
+subjects = 3
+
+[[test_module]]
+name = "cadrumo.domain.fincas.tests.test_tier_resolver"
+follows = "module"
+anchor = "cadrumo.domain.fincas.enums"
+subjects = 5
+
+[[test_module]]
+name = "cadrumo.entrypoints.cli.tests.test_cli_resolution_cost_budget"
+follows = "symbol"
+anchor = "cadrumo.entrypoints.cli:command_graph"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.entrypoints.cli.tests.test_machine_secret_channels_subprocess"
+follows = "symbol"
+anchor = "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap:bootstrap_interpreter"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.entrypoints.cli.tests.test_overview_explain_verb"
+follows = "symbol"
+anchor = "cadrumo.entrypoints.cli.command_api:command_spec_nodes"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.entrypoints.cli.tests.test_resolution_defers_capabilities"
+follows = "symbol"
+anchor = "cadrumo.entrypoints.cli:command_graph"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.entrypoints.cli.tests.test_state_free_capability_isolation"
+follows = "symbol"
+anchor = "cadrumo.entrypoints.cli:command_graph"
+subjects = 1

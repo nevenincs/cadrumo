@@ -168,7 +168,23 @@ _KEY_WRAPPER_CALLS: frozenset[str] = frozenset({"TranslationKey", "_key"})
 #: Collection is additionally guarded by :func:`_is_dynamic_translation_prefix`, so
 #: only literals rooted in a real catalogue namespace are taken.
 _COMMAND_SPEC_KEY_FACTORIES: frozenset[str] = frozenset(
-    {"_option", "_leaf", "_required", "_group", "ArgumentSpec"},
+    {
+        "_option",
+        "_leaf",
+        "_required",
+        "_group",
+        "ArgumentSpec",
+        # Two more option factories, added because the keys they carry were
+        # invisible: thirteen catalogue entries the source writes and this
+        # scanner did not see, which the coverage and parity scanners would
+        # therefore report as unused and which are one strip away from
+        # deletion. Both were derived from the keys the owning gate reported
+        # rather than guessed, and both are named here rather than reached by
+        # widening the rule to any positional dotted literal - which the note
+        # above rejects, because a module path would then become a phantom key.
+        "_boolean_flag_option",
+        "_repeatable_text_option",
+    },
 )
 
 
