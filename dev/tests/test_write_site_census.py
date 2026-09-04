@@ -12,6 +12,7 @@ count, and the lookalike that must not.
 from __future__ import annotations
 
 import ast
+import subprocess
 
 import pytest
 
@@ -618,3 +619,28 @@ def test_vocabulary_site_bucket_separates_in_taxonomy_out_of_tree_and_unresolved
     assert VocabularySite("m.py", 1, ("manifest.toml",), "x", "pass_through").bucket == "out_of_tree"
     assert VocabularySite("m.py", 1, ("manifest.toml",), "<unknown>", "local").bucket == "unresolved"
     assert VocabularySite("m.py", 1, ("manifest.toml",), "<unknown>", "unresolved").bucket == "unresolved"
+
+
+def test_an_unparsable_module_refuses_rather_than_shrinking_the_census() -> None:
+    """A module the census cannot read contributes no sites.
+
+    Both censuses swallowed a SyntaxError and continued, so the corpus shrank
+    by exactly the file nobody could analyse - in the census that finds code
+    writing to the tree, where a missing module is a missing writer.
+
+    Driven through the real git read against a tracked file that is not Python,
+    because every tracked module DOES parse at HEAD (2117 production, 3722
+    test, none unparsable) - so a constructed defect is the only way to reach
+    the branch.
+    """
+    from ..audit.write_site_census import _parse_module
+
+    revision = subprocess.run(
+        ("git", "rev-parse", "HEAD"),  # noqa: S607 - repository tool is fixed
+        capture_output=True,
+        check=True,
+        text=True,
+    ).stdout.strip()
+
+    with pytest.raises(SystemExit, match="does not parse"):
+        _parse_module(revision, "pyproject.toml")

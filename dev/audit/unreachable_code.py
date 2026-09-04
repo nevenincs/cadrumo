@@ -938,6 +938,15 @@ def _collection_uses(tree: ast.Module) -> set[str]:
 class _OutsideUse:
     names: dict[str, set[str]] = field(default_factory=dict)
     modules: dict[str, set[str]] = field(default_factory=dict)
+    unreadable: list[str] = field(default_factory=list)
+    """Files skipped during the reference walk, and therefore never consulted.
+
+    A skipped file's references are not seen, so every symbol only IT used
+    looks unreferenced and is reported as dead. The skip is deliberate - this
+    tree is edited while the audit runs and a file can vanish mid-scan - but a
+    silent skip means the findings were computed over an incomplete corpus with
+    nothing saying so.
+    """
 
     def labels_for_name(self, name: str) -> tuple[str, ...]:
         return tuple(sorted(self.names.get(name, ())))
@@ -1053,7 +1062,9 @@ def _outside_use(spec: ShippedTreeSpec, known: frozenset[str]) -> _OutsideUse:
                 tree = parse_module(path)
             except (OSError, SyntaxError, UnicodeDecodeError):
                 # The tree can move under a long scan; a file that is gone or
-                # unreadable is skipped rather than crashing the audit.
+                # unreadable is skipped rather than crashing the audit, but it
+                # is recorded so the report can say the corpus was incomplete.
+                use.unreadable.append(str(path))
                 continue
             for name in _references(tree):
                 use.names.setdefault(name, set()).add(corpus.label)
@@ -1066,6 +1077,16 @@ def _outside_use(spec: ShippedTreeSpec, known: frozenset[str]) -> _OutsideUse:
             runtime, type_only = module_edges(probe, known)
             for target in runtime | type_only:
                 use.modules.setdefault(target, set()).add(corpus.label)
+    if use.unreadable:
+        # Reported at the point of loss rather than folded into the findings.
+        # These files' references were never read, so any symbol only THEY use
+        # is about to be reported as dead. A reviewer needs to know the corpus
+        # was incomplete before acting on a deletion list.
+        sys.stderr.write(
+            f"unreachable-code: {len(use.unreadable)} file(s) were unreadable during the "
+            "reference walk and did not contribute references; findings over symbols they "
+            f"use may be false: {sorted(use.unreadable)}" + chr(10)
+        )
     return use
 
 
