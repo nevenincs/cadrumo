@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:9bc7329cbd02b78d314b9ea60884124ceb14b77e5755ae89300b38dcd2cc7f03'
+body_hash: 'sha256:8e64ebeef170363809708804e56c31bfd07ac67fe64f74a317da3e96161d306e'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -309,6 +309,10 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S163` - Gate that every deliberately collapsed concept keeps exactly one definition, so a whole-tree sweep cannot silently restore the duplicates; `dev/tests/test_canonical_definitions_stay_singular.py`.
 - [x] `W02.P02.S465` - Build the facade-retirement rewriter that reads each dev initialisers forwarding map from its own import statements and repoints consumers onto the defining modules, preserving alias, indentation and relative depth and refusing submodule traversal and unforwarded names; `dev/quality/facade_retirement.py,dev/quality/tests/test_facade_retirement.py`.
 - [x] `W02.P02.S466` - Retire the dev.docs.apidocs facade end to end as the rewriters proof: two consumers repointed at the defining module and the initialiser reduced to an inert namespace marker; `dev/docs/apidocs/__init__.py,dev/docs/build.py,dev/docs/tests/test_api_stubs.py`.
+- [x] `W02.P02.S467` - Refuse a rewrite whose defining module is private and whose consumer sits outside the owning package, which would trade a facade for a cross-package private import: 33 of 75 sites refused for that reason and none for any other; `dev/quality/facade_retirement.py`.
+- [x] `W02.P02.S468` - Repoint dotted documentation cross-references off the facade path by the same forwarding map, skipping only this modules own docstring which quotes a stale path as its example; `dev/quality/facade_retirement.py`.
+- [x] `W02.P02.S469` - Retire the dev.ingest_harness facade end to end: its own test repointed onto three defining modules, fifteen docstring references moved, and the initialiser reduced from 190 lines to inert prose; `dev/ingest_harness`.
+- [ ] `W02.P02.S470` - Give a public defining module to every symbol the seven remaining dev facades forward out of a leading-underscore module, which is the precondition for the 33 refused cross-package sites and the only reason those facades cannot be retired now; `dev`.
 
 ### Phase `W02.P03` - release predicate relocation
 

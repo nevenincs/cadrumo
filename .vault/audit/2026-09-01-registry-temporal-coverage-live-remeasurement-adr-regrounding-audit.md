@@ -12809,3 +12809,49 @@ The rewriter now preserves the depth the consumer wrote.
 One pre-existing failure is visible and is not this change:
 `test_every_source_module_has_a_stub` reports 31 `src/cadrumo` modules without a
 `docs/api` stub. It compares two trees that carry no working-tree change.
+
+
+## What the facades were concealing
+
+Retiring the second facade found the reason the other seven cannot simply be
+retired next, and it is a better finding than the retirement.
+
+Most of these initialisers forward out of leading-underscore modules.
+`dev.sanitizer` exports `ResidualKind` from `_residual_identity`;
+`dev.ingest_harness` exports `score_emission` from `_scoring`. The same boundary
+that makes an initialiser inert makes a private module private to its own
+package - so repointing `dev/identity/_tree_scan.py` at
+`dev.sanitizer._residual_identity` would satisfy one rule and break the other in
+the same edit, trading a facade for a cross-package private import.
+
+Measured across the eight remaining facades: **33 of 75 sites are refused for
+exactly that reason, and 0 for any other**. Nine in `dev.docs.sequences`,
+fourteen in `dev.docs.terminology_handbook`, five in `dev.docs.terminology`,
+three in `dev.docs.preprocess`, two in `dev.sanitizer`. The facade was not
+merely a redundant surface - it was the only public home those symbols had, and
+emptying it without first giving them one would leave 33 consumers with nowhere
+legitimate to import from.
+
+That is the work the facade was concealing, and it is now a named Step rather
+than a discovery waiting to be made again at the eighth package.
+
+The remaining 42 sites are intra-package and safe today, because a private
+module is private to its own package and its own tests may reach it.
+
+`dev.ingest_harness` is retired end to end on that basis: its single consumer is
+its own test, repointed onto three defining modules, the 190-line initialiser
+reduced to 35 lines of prose, 125 package tests passing and every module
+importing cleanly. The initialiser now exposes only the names of its submodules,
+which is what an inert namespace marker looks like from the outside.
+
+One more restatement surfaced while emptying it. Fifteen docstrings across five
+modules carry Sphinx cross-references of the form
+`:class:`~dev.ingest_harness.HarnessReport`` - a path that only the facade makes
+true. Emptying the initialiser turns each into a dangling reference. They are
+the same restatement as the import and are corrected from the same map, so the
+rewriter now moves them too; fifteen moved across five files.
+
+The rewriter skips its own file when doing that, and the exception is worth
+stating because it is the only one: this module's docstring QUOTES a stale path
+as the example of what goes wrong, and rewriting the quotation into the
+corrected form deletes the explanation while leaving the sentence grammatical.
