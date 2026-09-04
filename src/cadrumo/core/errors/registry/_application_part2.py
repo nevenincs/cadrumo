@@ -725,6 +725,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.contabilidad.errors.AjusteExtracontableShapeError",
+        ErrorCode(
+            code="REFUSED_CONTABILIDAD_AJUSTE_EXTRACONTABLE_SHAPE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_filing_calculate",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.contabilidad.errors.SaldoCuentaBalanceError",
         ErrorCode(
             code="REFUSED_CONTABILIDAD_SALDO_CUENTA_BALANCE",
