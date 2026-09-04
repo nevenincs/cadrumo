@@ -41,6 +41,7 @@ permalink in the legal catalogue.
 from __future__ import annotations
 
 import os
+import sys
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
@@ -105,11 +106,28 @@ def _legal_permalinks(repo_root: Path) -> dict[str, LegalGrounding]:
     catalogue = repo_root / LEGAL_CATALOGUE_RELPATH
     grounding: dict[str, LegalGrounding] = {}
     if not catalogue.is_dir():
+        # Returned an EMPTY map in silence, so the glossary rendered every concept
+        # with no BOE permalink and read exactly like a corpus that cites nothing.
+        # Not fatal: the generator is legitimately driven against synthetic docs
+        # roots that carry no catalogue, and refusing would break those. Saying so
+        # is what distinguishes an ungrounded render from a grounded one.
+        sys.stderr.write(
+            f"glossary: no legal catalogue at {catalogue}; every entry will render without its BOE permalink" + chr(10)
+        )
         return grounding
     for fragment in scan_directory(catalogue, pattern="*.toml"):
         try:
             data = cast(dict[str, object], tomllib.loads(fragment.read_text(encoding=_UTF_8)))
-        except (OSError, tomllib.TOMLDecodeError):
+        except tomllib.TOMLDecodeError as error:
+            # A malformed fragment silently dropped every citation it declared.
+            raise SystemExit(
+                f"{fragment} is not valid TOML, so the citations it declares would be "
+                f"silently absent from the glossary: {error}"
+            ) from error
+        except OSError as error:
+            # Distinct from the above: a read failure can be a vanished file rather
+            # than a broken one, so it is reported and the walk continues.
+            sys.stderr.write(f"glossary: {fragment} could not be read: {error}" + chr(10))
             continue
         legal = data.get("legal")
         if not isinstance(legal, dict):

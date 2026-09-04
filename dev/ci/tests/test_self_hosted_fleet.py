@@ -193,6 +193,43 @@ def test_gate_fails_closed_on_an_unresolvable_matrix_reference(tmp_path: Path) -
     assert violations == [("opaque.yml", "build", UNRESOLVED_ZERO_TARGETS)]
 
 
+def _rewrite_emitted_images(document: dict[str, Any], replacement: str) -> int:
+    """Point every emitted hosted image at ``replacement``, in memory.
+
+    Returns the number of run scripts rewritten, so a caller can tell an edit
+    that changed nothing from one that changed the document.
+    """
+    rewritten = 0
+    for job in (document.get("jobs") or {}).values():
+        for step in job.get("steps") or []:
+            script = str(step.get("run", ""))
+            if '"ubuntu-latest"' in script:
+                step["run"] = script.replace('"ubuntu-latest"', f'"{replacement}"')
+                rewritten += 1
+    return rewritten
+
+
+def test_the_gate_notices_the_real_release_path_moving_onto_the_fleet() -> None:
+    """Detector teeth on the shipped document, not on a look-alike.
+
+    The fixtures below prove the resolver's rules; this proves those rules bind
+    the file the exemption is actually granted to. The workflow is parsed, the
+    script that emits its smoke targets is rewritten in the parsed copy, and
+    the copy re-read -- nothing on disk is touched, and the clean reading taken
+    first is what makes the second reading mean something.
+    """
+    document = yaml.safe_load((_WORKFLOWS_DIR / "publish.yml").read_text(encoding="utf-8"))
+    assert _hosted_violations("publish.yml", document) == []
+
+    assert _rewrite_emitted_images(document, "self-hosted") > 0, (
+        "no step in the release path emits a hosted image literal, so this proves nothing"
+    )
+    violations = _hosted_violations("publish.yml", document)
+
+    assert violations, "a release job emitting a fleet label was not reported"
+    assert {target for *_, target in violations} == {"self-hosted"}
+
+
 def _runtime_matrix_workflow(*, emitted_labels: str, matrix: str = _RUNTIME_MATRIX_REFERENCE) -> dict[str, Any]:
     """Return a release-shaped document whose matrix is computed at runtime.
 

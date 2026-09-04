@@ -390,3 +390,45 @@ def test_generator_writes_to_gitignored_generated_path(tmp_path: Path) -> None:
     written = docs / "_generated" / "glossary.rst"
     assert written.is_file()
     assert ".. glossary::" in written.read_text(encoding="utf-8")
+
+
+def test_an_absent_legal_catalogue_says_so_instead_of_grounding_nothing(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """An empty grounding map renders a glossary with no legal citations at all.
+
+    The lookup returned one in silence, so every concept rendered ungrounded and
+    read exactly like a corpus that genuinely cites nothing. It stays non-fatal
+    because the generator is legitimately driven against synthetic docs roots,
+    but it now says which render is ungrounded. Measured live: 64 fragments,
+    704 grounding entries, so empty is never the true answer for the real tree.
+    """
+    from ..glossary_reference import _legal_permalinks
+
+    assert _legal_permalinks(tmp_path) == {}
+    assert "no legal catalogue" in capsys.readouterr().err
+
+
+def test_a_malformed_catalogue_fragment_refuses(tmp_path: Path) -> None:
+    """A fragment that does not parse silently dropped every citation it declared.
+
+    Distinguished from a read failure on purpose: broken TOML is a defect, while
+    a vanished file is a race, and one handler was treating them alike.
+    """
+    from ..glossary_reference import _legal_permalinks
+    from ..legal_reference import LEGAL_CATALOGUE_RELPATH
+
+    catalogue = tmp_path / LEGAL_CATALOGUE_RELPATH
+    catalogue.mkdir(parents=True)
+    (catalogue / "broken.toml").write_text("[legal" + chr(10), encoding="utf-8")
+
+    with pytest.raises(SystemExit, match="not valid TOML"):
+        _legal_permalinks(tmp_path)
+
+
+def test_the_live_catalogue_still_grounds_every_reference() -> None:
+    """The success path, so the refusals are not satisfied by refusing everything."""
+    from ..glossary_reference import _legal_permalinks
+
+    assert len(_legal_permalinks(_REPO_ROOT)) > 0
