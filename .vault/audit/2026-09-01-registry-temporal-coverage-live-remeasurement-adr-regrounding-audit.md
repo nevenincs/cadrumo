@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:96fed456109817916b66517086919b7504e07316763ac39718b5d7ba281d7f04'
+body_hash: 'sha256:084cb5b9d1d371d18157321672f33ce7c1938c1e37a7a582a599243b9ac30de7'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -14673,3 +14673,34 @@ thing between this codemod and a mistyped path.
 
 `module_test_reach` now reports **37 unreached, 7 writing, and zero declaring an
 apply flag**. The category that ranked first when the report was built is empty.
+
+## Seventy-seven catalogue keys taken off the deletion path
+
+`test_every_wrapped_key_is_discovered_by_the_scanner` reported thirteen locale
+keys the source writes and the AST scanner cannot see, with the consequence
+stated in its own message: the coverage and parity scanners report them as
+unused catalogue entries, one strip away from deletion.
+
+The cause is a declared table. `_COMMAND_SPEC_KEY_FACTORIES` names the CLI
+helpers that take a translation key POSITIONALLY, and it named five. Four more
+exist - `_boolean_flag_option`, `_repeatable_text_option`,
+`_optional_text_option` and `state_free_group_spec` - and every key they carry
+was invisible.
+
+Each was derived from the keys the gate itself reported rather than guessed,
+and added by name rather than by widening the rule to any positional dotted
+literal. The table's own note rejects that generalisation for a good reason: a
+module path or a dotted identifier would become a phantom catalogue key. Four
+names is the fix the table was designed to take.
+
+The gate is green, and the effect on its neighbour is the measurement worth
+keeping. Parity was A/B'd against `HEAD`'s scanner by restoring it from the git
+object store and running the same test: **520 extra keys before, 443 after**,
+with the missing figure unchanged at 339. So **seventy-seven catalogue entries
+stopped being reported as unused**, which is exactly the population the gate
+said was at risk.
+
+That number is the reason this was worth doing rather than recording. A key the
+scanner cannot see is not a scanner problem in the abstract; it is a translated
+string that a cleanup sweep would delete with a clear conscience, in four
+locales, with nothing to notice it had gone.

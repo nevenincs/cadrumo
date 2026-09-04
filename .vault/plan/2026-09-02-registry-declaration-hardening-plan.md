@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:4b15b9ca261cd74493351063c413e04bab3bea56acb2ba7b6291b81c60bedeca'
+body_hash: 'sha256:5d44f1c327127a5025b4dba4054559e0108381883d2a8885dfd3902555b8a948'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -933,6 +933,7 @@ Apply the accepted contract across the registry so restatement becomes unconstru
 - [ ] `W06.P14.S498` - Collapse the 483 mechanically resolvable label disagreements, which differ only in case, accent, punctuation or where a word boundary falls, then re-measure; the catalogues are under src/cadrumo/locales so the collapse lands there rather than in dev; `src/cadrumo/locales,dev/locales`.
 - [x] `W06.P14.S499` - Control the drift exposure figure against the population that could drift at all: 100 per cent against 91.7 per cent rather than 68.9, so the claim is that no drifting label is unfileable rather than that drift prefers fileable revisions; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [ ] `W06.P14.S500` - Refresh the sixty stale translations where the official Spanish changed and the translation did not, all sixty in filing-grade revisions and concentrated in modelos 100 and 322 with 24 each, 202 with nine and 369 with three; `src/cadrumo/locales`.
+- [x] `W06.P14.S544` - Declare the four positional key factories the scanner did not know, making thirteen invisible locale keys visible and taking seventy-seven catalogue entries off the unused list that a cleanup sweep would have deleted; `dev/locales/_ast_scanner.py`.
 
 ## Parallelization
 

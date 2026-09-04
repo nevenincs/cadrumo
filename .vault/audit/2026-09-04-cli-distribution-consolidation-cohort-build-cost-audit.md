@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:434247b3de5ba40b84fd028385702edf36f513e2ab30190a64425e12402c0299'
+body_hash: 'sha256:4e06b4cb6b253acf387efa6ad1b9b6543a53d12efbdc911da6fd06361d34b49a'
 related:
   - "[[2026-09-02-cli-distribution-consolidation-plan]]"
 ---
@@ -75,6 +75,32 @@ gap to the reported figure is attributed, by code reading rather than
 measurement, to the outer clone, the copy-and-revalidate pass, and per-file
 scanning overhead on the roughly 84,000 file touches a build performs. Whether
 real-time antivirus scanning is active on the measuring host was not checked.
+
+### cohort-build-cost | critical | After a release, the seal lane refuses every build until the next bump
+
+The packaging campaign now fails before it starts. `main` declares 0.4.0, and
+0.4.0 is carried by all three index projects, by the tag namespace and by the
+release namespace, so `version_identity` refuses to seal a cohort at it. The
+refusal is correct against the contract as written, which states that a version
+any destination already owns is refused when sealing.
+
+But the same module's rationale for having a seal scope at all is that the lane
+"builds and proves a cohort on every push, and between releases the declared
+version legitimately EQUALS the manifest floor because the bump has not happened
+yet", and that enforcing the floor at seal time "refuses every build in exactly
+the interval where the lane does its work". The collision checks reintroduce
+that interval through a different door: from the moment a release ships until a
+releasable commit bumps the version, no cohort can be built. No release pull
+request is open, because every commit since the tag is `chore`, `refactor` or
+`docs`, none of which is releasable — so the interval is open-ended, not brief.
+
+Every refusal reason names publication: an upload that cannot be undone, a
+release creation that would fail. None of those can occur during a build. The
+countervailing risk is real though — evidence minted under a version the index
+already carries could later be promoted against bytes that differ — so which
+scope should own that check is a decision, not a cleanup. The burned ledger
+already expresses the property that actually matters at seal time, which is
+whether the world may hold bytes under this version.
 
 ## Recommendations
 
