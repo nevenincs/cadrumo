@@ -10,7 +10,7 @@ related:
   - '[[2026-09-04-clitui-ledger-reference]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:2cff6c7f41475117546e31ce3dbc94d9d4c2e2aed254f043ca6480db69e89ec3'
+body_hash: 'sha256:60a2f7f1e3b7da6c5fbd1c6f0b23fdfb1fa00ea914ad057264640b8ecff53342'
 ---
 
 <!-- RETIRED: S27, S29, S31, S33, S35, S37, S39, S41, S43, S45, S47, S49, S51, S59, S62, S64, S67, S69, S71, S73, S75, S77, S79, S81, S83 -->
@@ -18,6 +18,10 @@ body_hash: 'sha256:2cff6c7f41475117546e31ce3dbc94d9d4c2e2aed254f043ca6480db69e89
 # `clitui-ledger` plan
 
 ## Description
+
+Execute the accepted backend-authority and interface-parity decision as one gated campaign. `2026-09-04-clitui-ledger-adr` governs the G0 through G4 closure rules, `2026-09-04-clitui-ledger-research` grounds the ownership and product risks, and `2026-09-04-clitui-ledger-reference` is the continuously regenerated capability ledger. Every implementation Step updates the affected matrix rows with code and behavioral evidence before it closes. A newly discovered capability reopens G0 and every later gate whose predicate it affects.
+
+Wave W01 freezes the union denominator, semantic homes, singular plan ownership, and the Ledger TUI implementation hold. Wave W02 recovers every CLI-owned business decision into domain or application authority and cannot start until G0 closes. Wave W03 completes and directly proves the backend product, including artifacts, provenance, model routing, registry routes, and filing compositions, and cannot start until G1 closes. Wave W04 makes the CLI a complete transport adapter only after G2 is accepted. Wave W05 lifts the hold and installs TUI parity only after G3 is accepted. No later Wave may begin for a subset while an earlier gate remains open.
 
 ## Steps
 
@@ -257,4 +261,20 @@ Run installed TUI, backend, CLI, registry, artifact, and accessibility gates and
 
 ## Parallelization
 
+Waves are strictly sequential in W01, W02, W03, W04, W05 order. The final Step of each Wave is a hard reviewed gate; downstream work remains blocked until its matrix predicate is satisfied.
+
+Within W01, denominator discovery in P02 may partition across CLI, backend, registry, and TUI readers after P01 defines the schema, but P03 and P04 consume one converged census. Within W02, P05 through P08 may use separate worktrees after their command and result contracts are assigned, while P09 integrates outcomes and runs authority detectors. Within W03, mutation/provenance, artifact, model-assisted, and registry-route Phases may run in parallel only where they do not share models or persistence schemas; P14 is the integration barrier. Within W04, handler files may be refactored in parallel after G2, but command-spec, payload, locale, and artifact changes must be reconciled before P18. Within W05, screen modules may be built in parallel after P19 lifts the hold; routing, installed composition, localization, and final parity tests converge in P21 and P22.
+
+The capability matrix is a shared coordination surface, not a deferred documentation task. Each execution owner claims explicit row identities, refreshes only those rows with current proof, and resolves overlapping ownership before merging.
+
 ## Verification
+
+- `vaultspec-core vault plan check` reports no structural errors or warnings, and feature-scoped Vaultspec checks pass after every plan update.
+- G0 is accepted only when every union-denominator row has a stable identity, applicability on every axis, semantic owner, typed contract, gap classes, current evidence or explicit UNPROVEN state, and singular plan ownership with the TUI hold recorded.
+- G1 is accepted only when no AUTHORITY gap or CLI_OWNED annotation remains, migrated policy has direct domain or application proof, and adapter detector tests fail when business policy is reintroduced.
+- G2 is accepted only when every applicable backend, composition, artifact, provenance, registry, and proof axis is PROVEN; real-store tests cover success, refusal, replay, concurrency, batch and provider faults, artifact readers, fresh-store restoration, and a nonzero calculate-to-verify-to-evidence-to-export journey.
+- G3 is accepted only when all 78 live command endpoints plus newly admitted commands have resolvable handlers and schemas, every CLI-applicable matrix row delegates to its canonical owner, and success, refusal, locale, redaction, exit-code, and independent artifact checks pass.
+- G4 is accepted only when every TUI-applicable row is both PROVEN and INSTALLED, every workflow is keyboard-reachable in the installed application, cross-surface fixtures produce equivalent canonical outcomes, sensitive data remains protected, and accessibility checks pass.
+- Flat CSV, JSONL, and XLSX outputs reopen in independent readers and round-trip their declared schemas; review workbook and sidecar identity, digest, editable-cell, conflict, and offline-Google parity checks pass; recovery archives authenticate, reject tampering and collisions, and restore canonical equality into a fresh store.
+- All seven Ledger binding families have explicit proven, incomplete, or not-applicable route dispositions; every unrouted nonzero OSS and non-OSS observation blocks verify, export, and filing; filing evidence carries registry, formula, legal-authority, observation, and complete FX lineage.
+- The final independent code review accepts architecture boundaries, financial and storage safety, production behavior, command and TUI reachability, and the regenerated matrix with no blocking finding.

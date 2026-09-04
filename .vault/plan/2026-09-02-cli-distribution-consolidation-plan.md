@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:4b346975ea35fd5cc07bf3586c67dc499022fac977a0e85e04789a5b06fdc08f'
+body_hash: 'sha256:a234def17ed1807351e298f24a1f5806a63e16ccd6605eec3c323cc74b494f97'
 ---
 
 <!-- RETIRED: S39 -->
@@ -138,6 +138,7 @@ Bring the runbook, the recipe surface and the workflow family back into agreemen
 - [x] `P11.S45` - Document the release-candidate evidence campaign the runbook omits; `RELEASING.md`.
 - [x] `P11.S46` - Restate the workflow names three surfaces still cite from the retired release path; `docs/_release_checklist.yaml`.
 - [x] `P11.S51` - Restate the surfaces naming workflows the repository does not contain; `bucket/README.md`.
+- [ ] `P11.S53` - Close the workflow-reading gates that crash or drift against the live workflow set; `dev/ci/tests/test_self_hosted_fleet.py`.
 
 ## Parallelization
 
