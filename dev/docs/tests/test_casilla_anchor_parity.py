@@ -29,8 +29,8 @@ import pytest
 
 from ..._paths import REPO_ROOT
 from ..casilla_reference import CasillaReferenceError, CasillaReferenceResult, render_casilla_reference
-from ..terminology import project_casilla_search_records
 from ..terminology._casilla_anchor import casilla_page_anchor
+from ..terminology.casilla_projection import project_casilla_search_records
 from ..terminology.search_record import CasillaSearchRecord, SearchRecordKind
 from ..terminology.unified_record import to_search_record
 

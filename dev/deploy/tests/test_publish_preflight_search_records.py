@@ -217,7 +217,7 @@ def test_decided_kinds_match_the_canonical_enum() -> None:
     imports the terminology package lazily. This is what keeps that spelling
     honest: rename or remove a member and this fails.
     """
-    from ...docs.terminology import SearchRecordKind
+    from ...docs.terminology.search_record import SearchRecordKind
 
     assert {kind.value for kind in SearchRecordKind} >= DECIDED_INJECTED_RECORD_KINDS
     assert SearchRecordKind.PAGE.value not in DECIDED_INJECTED_RECORD_KINDS, (

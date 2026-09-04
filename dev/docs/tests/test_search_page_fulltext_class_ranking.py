@@ -41,14 +41,8 @@ from cadrumo.core.external_constants import OutputLanguage
 from ..._paths import REPO_ROOT
 from ..pagefind_index import build_search_index
 from ..pagefind_inject import _inject_records, _Materialised
-from ..terminology import (
-    RankingTier,
-    ResultDisplayClass,
-    SearchRecord,
-    SearchRecordKind,
-    SearchRecordMetadata,
-    normalise_display_class_weight,
-)
+from ..terminology.search_record import ResultDisplayClass, SearchRecordKind
+from ..terminology.unified_record import RankingTier, SearchRecord, SearchRecordMetadata, normalise_display_class_weight
 from ._http_serve_support import serve_directory
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
