@@ -6,7 +6,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:2e3ec653a25bf560a96718c5a5a79b32072bca51b82554915c88319a3deeab46'
+body_hash: 'sha256:d781ba425e60e78f2ece18412a15ebd307ab706cd9380da155592dd26ea85ce3'
 related:
   - '[[2026-09-04-clitui-ledger-W01-P01-S01]]'
   - '[[2026-09-04-clitui-ledger-W01-P01-S02]]'
@@ -14,6 +14,7 @@ related:
   - '[[2026-09-04-clitui-ledger-W01-P01-summary]]'
   - '[[2026-09-04-clitui-ledger-W01-P02-S04]]'
   - '[[2026-09-04-clitui-ledger-W01-P02-S05]]'
+  - '[[2026-09-04-clitui-ledger-W01-P02-S06]]'
   - '[[2026-09-04-clitui-ledger-adr]]'
   - '[[2026-09-04-clitui-ledger-plan]]'
   - '[[2026-09-04-clitui-ledger-reference]]'
@@ -53,6 +54,7 @@ Auto-generated index of all documents tagged with `#clitui-ledger`.
 - `2026-09-04-clitui-ledger-W01-P01-summary` - `clitui-ledger` `W01.P01` summary
 - `2026-09-04-clitui-ledger-W01-P02-S04` - Enumerate every invocable Ledger command endpoint, sub-operation, handler, schema, and adapter ownership annotation
 - `2026-09-04-clitui-ledger-W01-P02-S05` - Enumerate existing application operations, direct behavioral proof, and backend-only Ledger capabilities
+- `2026-09-04-clitui-ledger-W01-P02-S06` - Enumerate the seven binding families, every declared route, calculation consumer, filing consumer, and unresolved proof obligation
 
 ### plan
 
