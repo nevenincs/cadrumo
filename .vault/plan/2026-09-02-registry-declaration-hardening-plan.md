@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:fb9ad80e284d5b7ee9826dc679b606514c35dbf8303f082e7ce9440884617aff'
+body_hash: 'sha256:a47a9a57e580b63f0ac105147237af12e0dcd055cf8dfe85782e58a1025e5615'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -481,6 +481,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S599` - Extract the pip-core lane's claim list and argument parser so the coupling the smoke manifest enforces is provable without building a wheel, since skipping the export checks must drop their claim or the run dies naming a claim with no assertion behind it; `dev/packaging/smoke_pip_core.py,dev/packaging/tests/test_smoke_pip_core.py`.
 - [x] `W02.P02.S600` - Make the unused-symbol ratchet state what its deferral prefix excluded, since the module says deferral sets scope rather than granting permission yet the verdict never mentioned it, so a tree-matches-baseline result was silent about twenty-two symbol findings and two orphaned test modules never compared; `dev/quality/unused_symbol_ratchet.py,dev/quality/tests/test_unused_symbol_ratchet.py`.
 - [x] `W02.P02.S601` - Cover the identity canary's report shape, which is the clearest example in the tree of the discipline this campaign restores elsewhere, pinning that every section survives and that each path exclusion prints its reason and not merely its count; `dev/identity/tests/test_identity_canary_report.py`.
+- [x] `W02.P02.S602` - Separate an absent enumeration root from an empty one, since a root that does not exist yielded the same nothing as a directory holding no Python files and every walk over it then analysed an empty corpus, the reference walk reporting live code dead and the test walk reporting no tests; `dev/audit/unreachable_code.py,dev/audit/tests/test_unreachable_code.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

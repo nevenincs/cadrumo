@@ -10,7 +10,7 @@ related:
   - '[[2026-09-04-clitui-ledger-reference]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:589f0460483aac7c837ef20f4576e697c627ded80250889f8fd3552c788493ed'
+body_hash: 'sha256:893957c3972d01773d8cd25add6a7a22915d4d8f1b7301c41170fe5e8c32a6bd'
 ---
 
 <!-- RETIRED: S27, S29, S31, S33, S35, S37, S39, S41, S43, S45, S47, S49, S51, S59, S62, S64, S67, S69, S71, S73, S75, S77, S79, S81, S83 -->
@@ -146,7 +146,7 @@ Add batch change sets, immutable notes, atomic evidence replacement and download
 - [ ] `W03.P10.S82` - Implement evidence-byte download and atomic evidence replacement with immutable revision lineage and finalized-filing guards; `src/cadrumo/application/ledger/evidence_lifecycle.py`.
 - [ ] `W03.P10.S84` - Persist exact changed-field, manual-override, source-column normalization, actor, source, time, and baseline provenance; `src/cadrumo/domain/transactions/change_provenance.py`.
 - [ ] `W03.P10.S85` - Carry original and normalized currencies, rate, rate source, effective date, and operation identity through Ledger records; `src/cadrumo/domain/transactions/models.py`.
-- [ ] `W03.P10.S86` - Prove atomic rollback, replay ordering, stale baselines, sensitive custody, immutable notes, evidence cleanup, and best-effort item isolation; `src/cadrumo/application/ledger/tests/test_change_sets_notes_and_evidence_lifecycle.py`.
+- [ ] `W03.P10.S86` - Prove atomic rollback, replay ordering, stale baselines, sensitive custody, immutable notes, and evidence cleanup; `src/cadrumo/application/ledger/tests/test_change_sets_notes_and_evidence_lifecycle.py`.
 
 ### Phase `W03.P11` - deliver interchange review and recovery products
 
@@ -208,7 +208,7 @@ Expose model, registry, provider, and calculation outcomes created by G2 and rem
 - [ ] `W04.P16.S111` - Expose model registry, prompt, schema, evidence-revision, suggestion, and reviewer-disposition provenance; `src/cadrumo/entrypoints/cli/_ledger_llm_payloads.py`.
 - [ ] `W04.P16.S112` - Expose registry route, calculation consumer, filing consumer, staleness, and unresolved-observation outcomes; `src/cadrumo/entrypoints/cli/_participation_cli.py`.
 - [ ] `W04.P16.S113` - Expose source-column mapping, normalization results, FX source, and FX effective-date outcomes for imports; `src/cadrumo/entrypoints/cli/_ledger_import_cli.py`.
-- [ ] `W04.P16.S114` - Normalize residual provider refusal, cancellation, cleanup, and best-effort item outcomes at the CLI boundary; `src/cadrumo/entrypoints/cli/ledger_lifecycle_cli.py`.
+- [ ] `W04.P16.S114` - Normalize provider refusal, cancellation, cleanup, and ADR-authorized bulk-ingestion per-item reporting at the CLI boundary; `src/cadrumo/entrypoints/cli/ledger_lifecycle_cli.py`.
 
 ### Phase `W04.P17` - complete CLI import export and recovery contracts
 
