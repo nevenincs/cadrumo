@@ -172,3 +172,45 @@ def test_emit_latest_refuses_malformed_or_noncanonical_release_base_url(tmp_path
 
     with pytest.raises(ValueError, match="release_base_url"):
         build_download_latest(cohort_manifest_path=manifest_path, release_base_url=release_base_url)
+
+
+def test_the_structured_channel_names_agree_with_the_install_commands() -> None:
+    """The descriptor's tap, bucket and repository names must reach the page.
+
+    ``bucket``, ``bucket_repo``, ``tap``, ``marketplace`` and
+    ``marketplace_source`` are the descriptor's single source of truth for where
+    a channel lives, and not one of them was read anywhere in the tree. The
+    generated page is driven instead by hand-written ``install_commands`` that
+    restate the same names, so the declaration and the rendered instruction
+    could diverge with nothing to notice: renaming the tap in the descriptor
+    would leave every published command pointing at the old one.
+
+    Asserted as containment rather than by pinning the names, so moving the tap
+    stays a one-line descriptor edit that this gate then forces through to the
+    commands.
+    """
+    descriptor = load_descriptor()
+
+    checked = 0
+    for channel in descriptor.channel:
+        commands = chr(10).join(channel.install_commands)
+        for label, value in (
+            ("tap", channel.tap),
+            ("bucket", channel.bucket),
+            ("bucket_repo", channel.bucket_repo),
+            ("marketplace", channel.marketplace),
+            ("marketplace_source", channel.marketplace_source),
+        ):
+            if value is None:
+                continue
+            checked += 1
+            assert value in commands, (
+                f"channel {channel.id!r} declares {label}={value!r} but no install command "
+                "mentions it; the descriptor and the published instructions disagree"
+            )
+
+    assert checked, (
+        "no channel declared any of the location fields, so this gate proved nothing. "
+        "Either the descriptor lost them or the fields are genuinely unused and should go"
+    )
+
