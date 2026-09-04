@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:92d431bcdd8b76c74ed7b7884bd4c0ef58ae706c194ce62269457b8c32d791d9'
+body_hash: 'sha256:83e37d869a202ebed7e38587710e76369f4e22747a182e840450a0a9b1cd61a1'
 ---
 
 <!-- RETIRED: S39 -->
@@ -118,7 +118,7 @@ Build every declared distribution and channel artifact from one command and prov
 - [x] `P09.S49` - Remove the repeated passes the cohort build makes over artifacts it has already produced; `dev/packaging/python_cohort.py`.
 - [x] `P09.S52` - Close the review findings on the publication gate, starting with the partial-upload deadlock; `dev/release/version_identity.py`.
 - [x] `P09.S55` - Give the hand-assembled cohort fixtures the wheelhouse the manifest requires; `packaging/homebrew/tests/test_homebrew_generate.py`.
-- [ ] `P09.S56` - Close the generator assertions the wheelhouse refusal was hiding; `packaging/scoop/tests/test_scoop_generate.py`.
+- [x] `P09.S56` - Close the generator assertions the wheelhouse refusal was hiding; `packaging/scoop/tests/test_scoop_generate.py`.
 - [x] `P09.S57` - Stop the clean-tree build root from carrying files git ignores and the wheel cannot; `dev/packaging/_smoke_common.py`.
 - [ ] `P09.S58` - Keep a corpus annotation in the same distribution as the file it annotates; `pyproject.toml`.
 
