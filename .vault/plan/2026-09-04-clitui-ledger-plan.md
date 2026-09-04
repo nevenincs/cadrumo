@@ -10,7 +10,7 @@ related:
   - '[[2026-09-04-clitui-ledger-reference]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:0016b8fb22cc48f6403dc374ca3eaec0e3c0400b6bc28ea07d4b6af375503610'
+body_hash: 'sha256:400f4ca8adac5416bb45b681a1dcc0527e7314694451469f0692e7f03b81c9f6'
 ---
 
 <!-- RETIRED: S27, S29, S31, S33, S35, S37, S39, S41, S43, S45, S47, S49, S51, S59, S62, S64, S67, S69, S71, S73, S75, S77, S79, S81, S83 -->
@@ -34,7 +34,7 @@ Close G0 by freezing the executable capability ledger, assigning semantic homes,
 Create the stable generated matrix contract, validation, and reference publication used throughout every gate.
 
 - [x] `W01.P01.S01` - Define stable capability identities, axes, gap classes, applicability, evidence coordinates, and gate predicates; `dev/quality/clitui_ledger_capability_matrix.py`.
-- [x] `W01.P01.S02` - Test identifier stability, denominator completeness, legal state transitions, evidence validation, and closed-gate reopening; `dev/quality/tests/test_clitui_ledger_capability_matrix.py`.
+- [ ] `W01.P01.S02` - Test identifier stability, denominator completeness, legal state transitions, evidence validation, and closed-gate reopening; `dev/quality/tests/test_clitui_ledger_capability_matrix.py`.
 - [ ] `W01.P01.S03` - Generate the continuously updated matrix and gate summary as the authoritative campaign reference; `.vault/reference/2026-09-04-clitui-ledger-reference.md`.
 
 ### Phase `W01.P02` - freeze the union denominator and ownership
