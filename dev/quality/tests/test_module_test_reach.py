@@ -134,3 +134,28 @@ def test_this_report_is_itself_reached_by_a_test() -> None:
     reports, and the honest way to leave that list is to be tested.
     """
     assert "dev.quality.module_test_reach" not in {item.dotted for item in unreached_modules()}
+
+
+def test_a_string_replace_is_not_a_write() -> None:
+    """``str.replace`` is far commoner than ``Path.replace`` and must not rank.
+
+    The write-call set matched ``replace`` on the attribute name, and no
+    attribute-name test can tell the two apart. It attributed ``writes`` to two
+    modules whose only offence was normalising a path separator - putting a
+    string method in the same rank as a codemod, which is the costliest failure
+    a ranking report can make. The live figure fell from fourteen writing
+    modules to nine when it was removed.
+    """
+    normalising = ast.parse("forward = path.replace(chr(92), '/')\n")
+    assert module_capabilities(normalising) == ()
+
+
+def test_the_unambiguous_write_calls_still_rank() -> None:
+    """Removing one ambiguous name must not quietly empty the category.
+
+    Each survivor is a call no common string or collection method shares, so an
+    attribute-name match is sound for them in a way it was not for ``replace``.
+    """
+    for call in ("write_text", "write_bytes", "rename", "unlink", "mkdir", "rmdir"):
+        tree = ast.parse(f"target.{call}()\n")
+        assert module_capabilities(tree) == ("writes",), f"{call} stopped counting as a write"
