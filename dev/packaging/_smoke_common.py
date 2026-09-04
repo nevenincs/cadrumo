@@ -632,7 +632,13 @@ def expected_wheel_data_paths(repo_root: Path) -> set[str]:
     data-budget wheel boundary (tests serve no installed consumer) and are
     likewise legitimately absent.
     """
-    return _expected_wheel_data_paths(repo_root, tracked_source_data_paths(repo_root))
+    tracked = tracked_source_data_paths(repo_root)
+    if not tracked:
+        # The sealed-source sibling below already refuses this. A derivation
+        # that found no shipped data cannot describe a payload, and comparing
+        # an empty expectation against an empty archive would pass.
+        raise SystemExit(f"no tracked shipped data found under {repo_root}; the expectation would be empty")
+    return _expected_wheel_data_paths(repo_root, tracked)
 
 
 def expected_wheel_data_paths_from_source_tree(source_root: Path) -> set[str]:

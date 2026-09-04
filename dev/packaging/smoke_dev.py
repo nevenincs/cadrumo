@@ -88,7 +88,15 @@ def _sync_dev_environment(repo_root: Path, work_dir: Path, uv: str, python: str)
 
 
 def _assert_dev_commands(work_dir: Path, venv: Path) -> None:
-    """Verify the declared developer command surface starts in the clean venv."""
+    """Verify the declared developer command surface starts in the clean venv.
+
+    The proof is recorded only once a command has actually run. Recorded
+    unconditionally after the loop, an emptied command list would have
+    satisfied the manifest proof contract having started nothing - and that
+    contract exists precisely to stop a claim appearing without its assertion.
+    """
+    if not _DEV_COMMANDS:
+        raise SystemExit("the developer command surface is empty; this lane would prove nothing")
     for command in _DEV_COMMANDS:
         executable, *args = command
         run_checked([_venv_script(venv, executable), *args], cwd=work_dir)
