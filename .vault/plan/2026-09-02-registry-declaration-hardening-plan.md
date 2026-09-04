@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:17bea4a78f949b5acd5ca43251787fefa0f1afc4f3e80f0e1831f5474c337136'
+body_hash: 'sha256:d6800020b5f0645c58d0ca2311696e1b2e3ce3f505926d12029597e8bd4a3571'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -418,6 +418,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S535` - Gate that every declared screen condition has a live member or a test naming it, which the six emptied conditions now satisfy, with the gate stating that a prose mention would satisfy its weak proof standard; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W02.P02.S536` - Sweep the full files and directories behind this sessions targeted runs: the registry suite is 1286 collected with 1249 passing and a failure set identical line by line to the earlier full measurement, and the twenty-two tests added all pass; `dev`.
 - [x] `W02.P02.S537` - Connect three separately recorded failures to one landing: the modelo 200 2024 casillas arrived without map owners or translations, so 154 orphaned declarations, a broken frozen count and 624 locale resolution failures are the same event; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W02.P02.S538` - Decline a failure correlator after measuring: one line in a 37-failure registry run carries a modelo coordinate, since a count assertion names no member and the repository takes every run with a short traceback, so the signal lives in typed findings rather than failure text; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W02.P03` - release predicate relocation
 

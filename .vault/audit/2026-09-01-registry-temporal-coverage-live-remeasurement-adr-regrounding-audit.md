@@ -14608,3 +14608,35 @@ Nothing here is a defect in the gates. Each reported exactly what it watches, on
 the day it happened. What no instrument does is notice that three of them started
 failing together - and the connection took a set intersection to see, not a
 better gate.
+
+
+## A failure correlator, declined because the signal is not in the failures
+
+Having found three gates failing on one landing, the obvious instrument is one
+that groups current failures by the registry coordinate they name rather than by
+the module that reports them. It would have found that connection without a set
+intersection, and it is squarely this campaign's method.
+
+It was measured before it was built, and the measurement kills it. Across the
+registry suite's 37 failures, **one line anywhere in the run carries a `modelo=`
+coordinate**. The m200 worklist failure - one of the three the connection is
+made of - names its modelo only in the test module's filename, never in its
+assertion, which reads `assert Counter({<M20...roposal'>: 1}) == {...}`.
+
+Two reasons compound. A count assertion has nothing to say about which member
+moved, which is the same objection this campaign already raised against frozen
+counts, arriving now as a second cost. And the repository's `addopts` carry
+`--tb=short`, so failure bodies are compact by configuration - a correlator would
+need every run taken with `--tb=long` to have anything to read.
+
+So a correlator over failure text would have connected nothing. That is the
+seventh guard declined after measuring, and the reason is the sharpest of the
+seven: the signal it needs is absent from the artefact it would read.
+
+The corollary is where the signal does live. The connection was made by calling
+the two instruments' own APIs and intersecting their typed findings - orphaned
+declarations carry a `casilla_id`, locale resolution failures carry
+modelo/revision/casilla - and this package already correlates at that level:
+`condition_overlap` compares screen populations by revision, `filing_exposure`
+by grade. Cross-instrument correlation belongs there, at the finding, and not in
+the failure text, which is a rendering of a finding with most of it removed.
