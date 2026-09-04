@@ -331,3 +331,27 @@ def test_records_are_frozen(
     records, _stats = full_projection
     with pytest.raises(ValidationError):
         records[0].number = "mutated"  # type: ignore[attr-defined,misc]
+
+
+def test_the_localized_record_count_is_read_and_bounded(
+    full_projection: tuple[tuple[CasillaSearchRecord, ...], CasillaProjectionStats],
+) -> None:
+    """A coverage number nobody reads can fall to zero without a sound.
+
+    ``records_with_localized`` had no reader anywhere in the tree: the
+    projection recomputed it on every run and every caller unpacked the stats
+    into ``_``. Bounded rather than pinned, because a frozen count trains
+    everyone to update the constant and then detects nothing; zero is the value
+    that matters, and it means the authored locales stopped being seen at all.
+    """
+    records, stats = full_projection
+
+    assert stats.records_with_localized > 0, (
+        "no projected casilla record carries an authored locale; the localisation "
+        "corpus is either gone or no longer being read"
+    )
+    assert stats.records_with_localized <= len(records), (
+        "more records were counted as localised than were projected, so the counter "
+        "and the record set no longer describe the same run"
+    )
+
