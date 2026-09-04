@@ -505,3 +505,19 @@ name = "cadrumo.domain.is_compensation.tests.test_bin_carry_forward"
 follows = "module"
 anchor = "cadrumo.domain.is_compensation"
 subjects = 1
+
+[[symbol_cluster]]
+name = "duplicate persistence message keys"
+class = "orphaned"
+area = "domain/modelos"
+resolved = true
+symbols = ["_CALCULATION_PERSISTENCE_MESSAGE", "_FILING_PERSISTENCE_MESSAGE", "_VERIFICATION_PERSISTENCE_MESSAGE"]
+evidence = "Each name is defined TWICE with the same literal: once in adapters/persistence/profile (modelos_calculation, modelos_filing, modelos_verification_reports) where it is passed as translated_message four times, and once in the domain/modelos repository module where it is used zero times. The domain copies are dead duplicates, which the architecture boundaries forbid, so they were removed and the live adapter copies left untouched."
+
+[[symbol_cluster]]
+name = "migrated declaration constants"
+class = "orphaned"
+area = "mixed"
+resolved = true
+symbols = ["_DESCENDIENTE_DOOR_COMMAND", "_LIST_HELP_LOCALE_KEY", "_REDERIVE_HELP_LOCALE_KEY", "_GROUP_HELP_LOCALE_KEY", "ISO_8859_1_ENCODING"]
+evidence = "Each carried exactly one tree-wide reference, its own assignment, while its literal value now lives at a declaration site: the CLI help keys as TranslationKey entries in the evidence command specs, the descendiente door command in the CLI payload module, and the encoding literal in core/tabular.py. The value moved to the declaration and the module-level name was left behind."

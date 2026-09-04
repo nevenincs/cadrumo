@@ -20,7 +20,6 @@ pinned.
 
 from __future__ import annotations
 
-import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -35,31 +34,10 @@ _UTF_8 = UTF_8
 _LOCAL_PRODUCT_PACKAGES = ("cadrumo", "cadrumo-data-manuals", "cadrumo-data-official")
 #: The distribution whose resolution is exported.
 _EXPORTED_PACKAGE = "cadrumo"
-#: Path (relative to the repository root) of the sibling harness distribution
-#: whose runtime requirements must be covered by the exported closure.
-#: The harness depends on ``cadrumo`` itself; that row is a product row, not a
-#: third-party requirement the constraints file pins.
 _CONSTRAINTS_HEADER = (
     "# Runtime dependency closure pinned from the tested uv.lock.\n"
     "# Generated at packaging time; do not edit by hand.\n"
 )
-
-
-def _normalize(name: str) -> str:
-    """Return the PEP 503 normalized form of a distribution name."""
-    return re.sub(r"[-_.]+", "-", name.strip()).lower()
-
-
-def _requirement_name(requirement: str) -> str:
-    """Return the normalized distribution name of one PEP 508 requirement."""
-    head = requirement.strip()
-    for separator in (";", "["):
-        head = head.split(separator, 1)[0]
-    for index, character in enumerate(head):
-        if character in "<>=!~ \t(":
-            head = head[:index]
-            break
-    return _normalize(head)
 
 
 def export_runtime_constraints(*, repo_root: Path) -> tuple[str, ...]:
