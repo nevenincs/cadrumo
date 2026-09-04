@@ -13932,3 +13932,40 @@ That is the third time in this campaign that examining what an instrument cannot
 do produced more than extending what it can. The measurement is that the
 parallel runner is silent about deselection, which is a fact about every figure
 this plan quotes from a filtered run, and it was not known before this.
+
+
+## Every default pytest run in this repository is a filtered one
+
+The deselection finding has an immediate consequence, because the default
+`addopts` in `pyproject.toml` carries
+`-m 'unit and not external_tool and not os_keychain'`. Every invocation that does
+not override it is filtered, and under xdist that filtering leaves no trace in
+the output at all.
+
+Measured by collection, the default filter hides **34 tests in
+`dev/registry/tests`, 22 in `dev/locales/tests` and 22 in `dev/audit/tests`** -
+1,187 against 1,221, 629 against 651, 171 against 193. Across the three
+directories the hidden population is 54 `integration` tests and 24
+`external_tool` ones.
+
+So a figure taken from a default invocation and a figure taken with `-m ""` are
+not comparable, and neither says which it is. This is the fourth failure mode in
+the run-integrity module's own list, arriving as a property of the repository's
+configuration rather than of any one command.
+
+This session's quoted figures were then checked rather than assumed, which is
+the point of finding it:
+
+- The registry suite measurement used `-m ""` and reported 1,264 collected. It
+  is the complete population.
+- The `dev/locales` and `dev/docs` baselines used `-m ""` throughout, so every
+  before-and-after comparison in the facade retirement compared like with like.
+- The `dev/quality` figures used the default. That one needed checking and it
+  holds: run filtered and unfiltered, `dev/quality/tests` collects **375 either
+  way**, because the package carries no integration tests at all. The number was
+  right by accident of composition rather than by care, and now it is right by
+  measurement.
+
+The one figure that would have been wrong is the one nobody took: comparing this
+session's 1,227 passing registry tests against a default-filtered count from
+another session would have shown 34 tests vanishing and no reason for it.

@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:e5f89b3b67376db7b58e07f794bea1ef726858f1a3ed20350dd0ce54cf2bcef7'
+body_hash: 'sha256:f2410294c940ffa320c2dc10f10df987484116188c94f3d61f1d69301ca51a77'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -397,6 +397,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S514` - Measure the directory exclusion the production audits share, 59 per cent of src lines and 49 per cent of dev, and establish it is a declared scope rather than a blind spot, unlike the two file-name exemptions whose comments described something other than what they did; `dev/audit`.
 - [ ] `W02.P02.S515` - Reconcile the complexity audits two-scope docstring with the tree: it describes production and tests baselines that were retired, and no lane passes --tests, so the tests scope has a runner nowhere and a baseline nowhere; `dev/audit/complexity.py`.
 - [x] `W02.P02.S516` - Report the collected population on every run-integrity row, since under xdist a marker-filtered run prints no deselection count at all and the item count is the only trace, while keeping the lost-worker banners own figure where it exists; `dev/quality/run_integrity.py,dev/quality/tests/test_run_integrity.py`.
+- [x] `W02.P02.S517` - Establish that every default pytest run here is filtered by addopts and silent about it under xdist, hiding 34 registry, 22 locale and 22 audit tests, then verify each figure this session quoted was taken at the population it claims; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W02.P03` - release predicate relocation
 
@@ -1546,3 +1547,24 @@ caught in the newly-scanned region within seconds of it being scanned, and all t
 helper matching `ast.Assign` where the pattern table is an `AnnAssign`, a comment naming the literal it
 exempts, and a detector-teeth fixture written outside the exempted regions. The version that skipped
 the file would have accepted all three in silence.
+
+Every suite figure this plan quotes names the population it was taken at, because in this repository
+the default is not the whole suite and does not say so. `addopts` carries
+`-m 'unit and not external_tool and not os_keychain'`, and under xdist a filtered run prints no
+deselection count anywhere - `6 workers [356 items]` against `[371 items]` is the entire difference in
+the output. Serially pytest reports `collected 24 items / 21 deselected / 3 selected`; the parallel
+runner drops that line.
+
+Measured by collection, the default hides 34 tests in `dev/registry/tests`, 22 in `dev/locales/tests`
+and 22 in `dev/audit/tests` - 54 `integration` and 24 `external_tool` across the three.
+
+The criterion is met by checking rather than by intending. The registry re-measurement and every
+facade-retirement baseline used `-m ""`, so their comparisons are like with like; the `dev/quality`
+figures used the default and were verified afterwards to be unaffected, since that package collects
+375 either way and carries no integration tests at all. Where a figure was right by composition rather
+than by care, that is said here rather than left to look like care.
+
+`python -m dev.quality.run_integrity` now prints the collected population on every row for this
+reason. It cannot verdict on deselection - the evidence is not in the artefact - so it reports the one
+number that carries it and leaves the expectation to the reader, which is the honest division between
+what an instrument knows and what only a person does.
