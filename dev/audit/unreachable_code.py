@@ -81,6 +81,7 @@ from ..quality.import_hygiene_scan import (
     type_checking_guarded_nodes,
     wheel_exclude_globs,
 )
+from ..quality.unread_inputs import report_unread
 
 _UTF_8: Final[str] = UTF_8
 _FINDING_CAP: Final[int] = 40
@@ -1028,14 +1029,28 @@ def _data_tokens(spec: ShippedTreeSpec) -> frozenset[str]:
     """
     package_root = spec.src_root / spec.package
     tokens: set[str] = set()
+    unread: list[str] = []
     for glob in spec.data_globs:
         for path in package_root.glob(glob):
             if not path.is_file():
                 continue
             try:
-                tokens.update(_DATA_TOKEN.findall(path.read_text(encoding=_UTF_8, errors="ignore")))
-            except OSError:
+                text = path.read_text(encoding=_UTF_8)
+            except (OSError, UnicodeDecodeError) as error:
+                # A REFERENCE set: a token here is the evidence that a field or
+                # enum value is addressed by data rather than by a Python
+                # statement. Losing one makes a live member look dead, and dead
+                # members here are deletion candidates. The lenient decode was
+                # worse than the skip - a replaced byte can split a token so it
+                # never matches, with nothing said either way.
+                unread.append(f"{path}: {type(error).__name__}: {error}")
                 continue
+            tokens.update(_DATA_TOKEN.findall(text))
+    report_unread(
+        "unreachable-code data tokens",
+        "a field or enum value addressed only by one of them will look dead and is a deletion candidate",
+        unread,
+    )
     return frozenset(tokens)
 
 

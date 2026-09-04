@@ -98,7 +98,10 @@ RELEASE_STAGING_FAMILY: Final[ScratchFamily] = ScratchFamily(
 
 ``build_release_cohort`` builds into a hidden sibling of its output and moves
 it into place at the end, removing it explicitly when the build raises. A kill
-lands between those two, leaving a full cohort's worth of bytes behind.
+lands between those two, leaving a full cohort's worth of bytes behind -- both
+sdists, the wheelhouse and the several-hundred-megabyte source archive. The
+name carries its owner, so the next build's sweep reclaims it on an observed
+liveness answer rather than leaving it for an operator.
 """
 
 COHORT_BUILD_TREE_FAMILY: Final[ScratchFamily] = ScratchFamily(
