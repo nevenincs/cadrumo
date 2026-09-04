@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:b63e46547756fc77fda775c9e1e7e7be2a799efb5dad5238f028c3789b9c5640'
+body_hash: 'sha256:85c7011f7a2ee66032f2e0d6754142c66ef59855449c30c09d62f6b896a8794d'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -479,6 +479,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S597` - Count only the diseno files actually read, since the scanned count exists so a zero can be told apart from a directory that was not there and counting before reading inflated that very denominator, and read strictly because a replaced byte can break the field anchor that carries the evidence; `dev/registry/derive_result_dispositions.py,dev/registry/tests/test_result_disposition_derivation.py`.
 - [x] `W02.P02.S598` - Guard the likelier half of the race the importer index already documents: it caught a peer's vanished scratch module but parsed outside that guard, so a peer caught mid-write left a file that exists and does not parse and killed the whole index instead of costing one file's imports; `dev/registry/analysis/modelo_embed_classification.py,dev/registry/tests/test_modelo_specific_embed_classification.py`.
 - [x] `W02.P02.S599` - Extract the pip-core lane's claim list and argument parser so the coupling the smoke manifest enforces is provable without building a wheel, since skipping the export checks must drop their claim or the run dies naming a claim with no assertion behind it; `dev/packaging/smoke_pip_core.py,dev/packaging/tests/test_smoke_pip_core.py`.
+- [x] `W02.P02.S600` - Make the unused-symbol ratchet state what its deferral prefix excluded, since the module says deferral sets scope rather than granting permission yet the verdict never mentioned it, so a tree-matches-baseline result was silent about twenty-two symbol findings and two orphaned test modules never compared; `dev/quality/unused_symbol_ratchet.py,dev/quality/tests/test_unused_symbol_ratchet.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

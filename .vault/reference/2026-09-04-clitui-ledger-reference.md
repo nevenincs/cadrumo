@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:f19ba1f54326296c9fb79d3df2c6f44589d80b3046c9c724f7eee82c3050ea58'
+body_hash: 'sha256:313df4e28b7b64e4a712456d846ba2bba78db7370d67d11137938e69ac57c33a'
 related:
   - "[[2026-09-04-clitui-ledger-research]]"
   - "[[2026-06-10-ledger-interface-contract-adr]]"
@@ -43,7 +43,7 @@ Every stream below must become one complete, readable, unambiguous, digest-bound
 | `cli_endpoint` | 78 invocable endpoints are established by the command-graph baseline below | Partial: endpoint-to-row ownership annotations remain uncensused | S04 |
 | `cli_suboperation` | CLI-owned sub-operation families are listed in the disposition baseline below | Partial: exhaustive sub-operation identities remain uncensused | S04 |
 | `backend_only` | Existing backend primitives and composite gaps are catalogued below | Partial: exhaustive backend-only operation and direct-proof census remains open | S05 |
-| `missing_product` | Nine explicit missing product/provenance families are published below | Partial: union review and canonical row admission remain open | S05 and S08 |
+| `missing_product` | The baseline missing product and provenance families are published below | Partial: union review and canonical row admission remain open | S05 and S08 |
 | `registry_route` | Seven Ledger binding families and 546 declarations are established below | Partial: every route, calculation consumer, filing consumer, and proof obligation remains open | S06 |
 | `artifact_product` | Flat CSV/JSONL/XLSX exists; review package, Google transport, and restore archive remain distinct missing products | Partial: product identities and artifact proof remain open | S05, S06, and S08 |
 | `supported_surface` | CLI enrollment and TUI component existence/installed reachability are known to be distinct | Partial: exhaustive component and navigation reachability census remains open | S07 |
@@ -61,7 +61,7 @@ The eight independent axes are `backend`, `cli`, `tui`, `composition`, `artifact
 
 #### Provisional capability rows
 
-These 38 family rows are the S03 baseline keys. They are not yet admitted `LedgerCapabilityRowV1` instances: S04-S07 may split them into endpoint/sub-operation rows or add rows from another stream, and S08 must adjudicate their canonical identity, applicability, exact command type, and exact result type. The table names the candidate semantic owner and the planned step that must turn that candidate into an exact typed contract.
+These 41 family rows are the S03 baseline keys. They are not yet admitted `LedgerCapabilityRowV1` instances: S04-S07 may split them into endpoint/sub-operation rows or add rows from another stream, and S08 must adjudicate their canonical identity, applicability, exact command type, and exact result type. The table names the candidate semantic owner and the planned step that must turn that candidate into an exact typed contract.
 
 | Baseline row key | Profile | Candidate semantic owner and typed-contract closure | Open gap / next evidence |
 | --- | --- | --- | --- |
@@ -87,15 +87,18 @@ These 38 family rows are the S03 baseline keys. They are not yet admitted `Ledge
 | `ledger.investment_goods.workflow` | `AUTHORITY` | `application/ledger/investment_goods_workflows.py`; acquisition/disposal result in S58/S70 | `authority`, `composition`, `proof`; S58/S66/S68 |
 | `ledger.inventory.workflow` | `DELEGATE` | `application/ledger/InventoryService`; exact command/result in S08/S70 | Backend primitive exists; surface delegation and direct-proof scope need S04/S05/S08 |
 | `ledger.payload.projection` | `AUTHORITY` | `application/ledger/models.py`; immutable result models in S70 | `authority`, `product`; CLI-local fact redeclaration census in S04 |
-| `ledger.export.flat` | `DELEGATE` | `application/ledger/actions_export.py`; current flat export result, exact row contract in S08 | `artifact`, `proof`; flat product only, not restore |
-| `ledger.export.review_package` | `PRODUCT` | `application/ledger/review_package_export.py`; plan/result in S89/S93 | `product`, `artifact`, `provenance`, `proof` |
-| `ledger.export.google_transport` | `PRODUCT` | transport-neutral review plan plus Google adapter; exact owner/result in S90/S93 | `product`, `composition`, `artifact`, `proof` |
-| `ledger.export.restore_archive` | `PRODUCT` | `application/ledger/archive_service.py`; versioned export/restore results in S94/S97 | `product`, `artifact`, `provenance`, `proof` |
-| `ledger.evidence.download` | `PRODUCT` | `application/ledger/evidence_commands.py`; download result in S78/S87 | `product`, `artifact`, `proof` |
-| `ledger.evidence.replace` | `PRODUCT` | `application/ledger/evidence_commands.py`; atomic replacement result in S79/S87 | `product`, `composition`, `provenance`, `proof` |
-| `ledger.note.append` | `PRODUCT` | `application/ledger/note_commands.py`; append-only note result in S80/S87 | `product`, `provenance`, `proof` |
-| `ledger.field_change.provenance` | `PRODUCT` | `application/ledger/provenance.py`; encrypted change-set result in S81/S87 | `product`, `provenance`, `proof` |
-| `ledger.transaction.batch_patch` | `PRODUCT` | `application/ledger/batch_commands.py`; atomic/best-effort result in S82/S87 | `product`, `composition`, `provenance`, `proof` |
+| `ledger.export.flat` | `DELEGATE` | `src/cadrumo/application/ledger/actions_export.py`; current flat export, completed manifest/result in S87/S91 | `artifact`, `proof`; flat product only, not restore |
+| `ledger.export.review_package` | `PRODUCT` | `src/cadrumo/application/ledger/review_exchange.py`; plan/result in S88/S91 | `product`, `artifact`, `provenance`, `proof` |
+| `ledger.export.google_transport` | `PRODUCT` | `src/cadrumo/adapters/outbound/google/ledger_review_exchange.py` over the transport-neutral review plan; result in S89/S91 | `product`, `composition`, `artifact`, `proof` |
+| `ledger.export.restore_archive` | `PRODUCT` | `src/cadrumo/application/ledger/recovery_archive.py`; versioned export/restore results in S90/S91 | `product`, `artifact`, `provenance`, `proof` |
+| `ledger.evidence.download` | `PRODUCT` | `src/cadrumo/application/ledger/evidence_lifecycle.py`; download result in S82/S86 | `product`, `artifact`, `proof` |
+| `ledger.evidence.replace` | `PRODUCT` | `src/cadrumo/application/ledger/evidence_lifecycle.py`; atomic replacement result in S82/S86 | `product`, `composition`, `provenance`, `proof` |
+| `ledger.note.append` | `PRODUCT` | `src/cadrumo/application/ledger/notes.py`; append-only and batch result in S80/S86 | `product`, `provenance`, `proof` |
+| `ledger.field_change.provenance` | `PRODUCT` | `src/cadrumo/domain/transactions/change_provenance.py`; exact field history in S84/S86 | `product`, `provenance`, `proof` |
+| `ledger.manual_override.provenance` | `PRODUCT` | `src/cadrumo/domain/transactions/change_provenance.py`; override basis and authority history in S84/S86 | `product`, `provenance`, `proof` |
+| `ledger.import.normalization_provenance` | `PRODUCT` | `src/cadrumo/domain/transactions/change_provenance.py`; source-column mapping and normalized-value history in S84/S86 | `product`, `provenance`, `proof`; CLI projection in S113 |
+| `ledger.fx.provenance` | `PRODUCT` | `src/cadrumo/domain/transactions/models.py`; original/normalized currency, rate source/date, and operation identity in S85/S86 | `product`, `provenance`, `proof`; filing evidence in S100 and CLI projection in S113 |
+| `ledger.transaction.batch_patch` | `PRODUCT` | `src/cadrumo/application/ledger/change_sets.py`; version-bound atomic/best-effort result in S78/S86 | `product`, `composition`, `provenance`, `proof` |
 | `ledger.registry.iva` | `REGISTRY` | registry binding/resolution and calculation route; exact route contract in S06/S100 | `registry`, `proof`; nonzero M309/M322/M353 route proof open |
 | `ledger.registry.oss` | `REGISTRY` | registry binding/resolution and M369 route; exact route contract in S06/S100 | Preserve issued-invoice-catalogue distinction; proof bounded below |
 | `ledger.registry.renta_expense` | `REGISTRY` | registry binding/resolution and M100 route; exact route contract in S06/S100 | Preserve evidence and deduction-ratio requirements |
