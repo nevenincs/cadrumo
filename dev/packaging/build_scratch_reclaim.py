@@ -197,6 +197,16 @@ def _is_reclaimable(
 
     ``reclaim_by_age`` adds the inferred ground, and belongs to an operator who
     has asked for it.
+
+    Where both grounds are in play the ceiling is checked FIRST, so an operator
+    reclaiming by age takes a day-old directory whose named owner still appears
+    to be running. That ordering is deliberate, and it is the backstop for
+    process-identifier reuse: a recycled identifier makes an abandoned
+    directory look owned, and with the liveness answer on top it would be
+    retained forever rather than for one more day. Nothing live reaches the
+    ceiling -- a release build runs in minutes, and the integration proof that
+    mints the largest family is capped at an hour by its own timeout -- and the
+    automatic callers never apply the ceiling at all.
     """
     age = reference - candidate.stat().st_mtime
     if reclaim_by_age and age > _STALE_AFTER_SECONDS:

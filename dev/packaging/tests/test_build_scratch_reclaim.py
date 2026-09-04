@@ -259,18 +259,36 @@ def test_an_ownerless_snapshot_is_reclaimed_when_an_operator_asks_by_age(tmp_pat
     assert not (var / name).exists()
 
 
-def test_a_live_owner_outranks_the_day_ceiling_even_under_reclaim_by_age(tmp_path: Path) -> None:
-    """An owner that is running is spared however the caller set the ceiling.
+def test_a_live_owner_is_spared_by_the_automatic_sweep_however_old(tmp_path: Path) -> None:
+    """Age alone never reclaims on the sweep's own initiative, at any age.
 
-    The ceiling is the weaker, inferred ground; it must not overrule a direct
-    liveness answer, or a long-running build's own scratch is deleted beneath
-    it by the next sweep to come along.
+    The safety property the automatic callers rest on. A build writes deep
+    inside its scratch without touching the top-level directory, so that
+    directory's timestamp stops moving early in a run and says nothing about
+    whether the run is still going -- which is why nothing the sweep does by
+    itself is allowed to turn on that timestamp.
     """
     var = _var(tmp_path)
     mine = _aged(_scratch_tree(var, integration_snapshot_name("d" * 32)), 30 * _DAY)
 
-    assert sweep_var_scratch(var, now=time.time(), reclaim_by_age=True) == (0, 1)
+    assert sweep_var_scratch(var, now=time.time()) == (0, 1)
     assert mine.is_dir()
+
+
+def test_the_day_ceiling_is_the_backstop_for_a_recycled_identifier(tmp_path: Path) -> None:
+    """Under an operator's age reclaim the ceiling outranks the liveness answer.
+
+    Deliberate, and the reason is identifier reuse: a recycled process id makes
+    an abandoned directory look owned, and with liveness on top of the ceiling
+    that directory would be retained forever instead of for one more day.
+    Nothing live reaches a day -- the integration proof that mints this family
+    caps itself at an hour.
+    """
+    var = _var(tmp_path)
+    looks_owned = _aged(_scratch_tree(var, integration_snapshot_name("e" * 32)), 2 * _DAY)
+
+    assert sweep_var_scratch(var, now=time.time(), reclaim_by_age=True) == (1, 0)
+    assert not looks_owned.exists()
 
 
 def test_sweep_honours_an_explicit_exclusion(tmp_path: Path) -> None:
