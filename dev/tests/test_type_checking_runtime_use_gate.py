@@ -127,3 +127,48 @@ def test_a_name_bound_at_runtime_as_well_as_under_the_guard_is_not_reported() ->
     )
 
     assert not scan_type_only_runtime_uses(Path("probe.py"), source=source)
+
+
+def test_an_unparsable_module_is_announced_rather_than_read_as_clean(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """An empty result reads exactly like a module with no guard-only misuse.
+
+    What goes unreported is a name imported only under ``if TYPE_CHECKING:``
+    and evaluated at runtime - a NameError waiting in shipped code. The skip
+    stays, because one half-written file must not cost the sweep, but it is no
+    longer silent.
+    """
+    broken = tmp_path / "broken.py"
+    broken.write_text("def (:" + chr(10), encoding="utf-8")
+
+    assert scan_type_only_runtime_uses(broken) == []
+    assert "does not parse and was not scanned" in capsys.readouterr().err
+
+
+def test_an_undecodable_module_is_not_silently_mangled(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The read was lenient, so a bad byte was dropped and the scan analysed
+    text that is not what the file contains - a finding could be invented or
+    lost with nothing said either way.
+    """
+    undecodable = tmp_path / "undecodable.py"
+    undecodable.write_bytes(bytes([0xFF, 0xFE, 0x00]) + b"VALUE = 1" + bytes([10]))
+
+    assert scan_type_only_runtime_uses(undecodable) == []
+    assert "not valid UTF-8" in capsys.readouterr().err
+
+
+def test_a_clean_module_announces_nothing(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A notice that fires on every run would carry no information."""
+    sound = tmp_path / "sound.py"
+    sound.write_text("VALUE = 1" + chr(10), encoding="utf-8")
+
+    assert scan_type_only_runtime_uses(sound) == []
+    assert capsys.readouterr().err == ""

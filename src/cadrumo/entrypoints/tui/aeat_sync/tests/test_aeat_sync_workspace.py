@@ -1014,6 +1014,15 @@ async def test_completing_one_overview_operation_keeps_the_other_action_reachabl
         await pilot.pause()
         first = screen.query_one("#aeat-sync-operation-0", Button)
         second = screen.query_one("#aeat-sync-operation-1", Button)
+        # Scrolled into view before clicking, because `pilot.click` targets
+        # SCREEN COORDINATES: a control below the fold is clicked at whatever
+        # happens to be painted there instead, the handler never runs, and the
+        # failure reads as a broken in-flight guard rather than a missed click.
+        # At the 80x24 floor these operation buttons start below the fold --
+        # measured at y=16 of 24 once scrolled, and off-screen before that --
+        # so this is what an operator does to reach them, not a workaround.
+        first.scroll_visible(animate=False)
+        await pilot.pause()
         await pilot.click(first)
         # A click POSTS a message; the handler that disables the button runs on
         # the next pump. Asserting straight after the click races that handler,
@@ -1027,6 +1036,8 @@ async def test_completing_one_overview_operation_keeps_the_other_action_reachabl
             assert status == tr("tui.aeat_sync.operation.failed")
             assert "protected" not in status
             assert "12345678Z" not in status
+        second.scroll_visible(animate=False)
+        await pilot.pause()
         await pilot.click(second)
         await pilot.pause()
     assert tuple(call.action.action_id for call in calls) == (
