@@ -14415,3 +14415,35 @@ edit that quietly empties a category.
 Found by reading the report's own output rather than by trusting it, which is
 the second time this session an instrument I wrote was corrected by looking at
 what it said about a module I happened to know.
+
+
+## Checking every attribution rather than the ones I happen to recognise
+
+Both false positives in the reach report were found the same way: a module name
+looked implausible for the category it was in. That is luck wearing the clothes
+of method, and it does not scale past the modules a reader happens to know.
+
+So every surviving attribution was checked against the call that produced it.
+All nine are genuine - eight `write_text` and one `mkdir`, each at a named line:
+
+- `dev/audit/checkout_drift.py`, `dev/audit/size_budget.py`,
+  `dev/docs/terminology/_sweep_cli.py`, `coverage.py` and `miss_rate.py`,
+  `dev/quality/import_centralization_codemod.py`, and
+  `dev/release/alerting.py` all call `write_text`.
+- `dev/quality/namespace_retirement_sweep.py` calls it five times.
+- `dev/packaging/oracle_emit_cohort.py` is ranked on `work.mkdir` alone.
+
+The exhaustive check is now a test rather than an afternoon's grep: a module
+ranked as writing must contain a call the report can point at, asked of every
+ranked module on every run. It is deliberately not a second implementation of
+the detector - it reads the same trees back and asserts the report can show its
+evidence, so a disagreement means a capability was attributed from somewhere
+invisible.
+
+One refinement was considered and declined. The last entry is ranked on `mkdir`
+alone, which creates a directory rather than rewriting content, and `unlink` and
+`rename` are destructive in a way `write_text` is not - so a three-way split
+between creating, writing and destroying would be more accurate than one
+`writes` category. The population that would distinguish them is one module out
+of nine. That is the sixth guard this campaign has declined after measuring, and
+the reason is the same each time: a distinction with one member ranks nothing.

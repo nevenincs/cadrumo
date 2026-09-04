@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:05f6387547d671a6abd3083f9e93bd38a7fb3de95834c1ba89e17983fc3d894e'
+body_hash: 'sha256:cd9c5227484ddd60cbe710c4b9cd56899f50dd0877d15cf9d246719d55dd93db'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -412,6 +412,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S529` - Test the result-disposition fragment generator the reach report ranked first, proving above all that a run without apply leaves the tree untouched, and pinning both render branches and the filing-grade and campaign-owned exclusions; `dev/registry/tests/test_result_disposition_fragment_generator.py`.
 - [x] `W02.P02.S530` - Test the registry parity maintenance wiring without mocking the domain, since a real run over an empty root returns in a hundredth of a second: no output path means no write, and output and resume_from are proven as a pair by writing one report and resuming from it; `dev/registry/tests/test_parity_maintenance.py`.
 - [x] `W02.P02.S531` - Correct the reach reports write detection, which counted str.replace as a tree write and over-attributed its worst category from nine modules to fourteen, and pin both the removal and the six unambiguous calls that must still rank; `dev/quality/module_test_reach.py,dev/quality/tests/test_module_test_reach.py`.
+- [x] `W02.P02.S532` - Check every writes attribution against its call site rather than the modules a reader recognises, confirming all nine are genuine, and make the exhaustive check a test that asks the report to show its evidence for each ranked module; `dev/quality/tests/test_module_test_reach.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

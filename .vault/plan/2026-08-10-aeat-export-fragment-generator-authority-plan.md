@@ -10,7 +10,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
   - '[[2026-08-31-aeat-export-fragment-generator-authority-source-defect-adjudication-adr]]'
 modified: '2026-09-04'
-body_hash: 'sha256:01a204889846f51219c909c4ce412798b3c076ec3b171a86d470854dfde2f3a8'
+body_hash: 'sha256:b6034026176d57806bb177ef7f3170226f9288ce2f33a18581c1caa27f2f9200'
 ---
 
 <!-- RETIRED: S19, S26, S65, S93 -->
@@ -219,8 +219,8 @@ The assessment model admits proof exclusive-or refusals and the closure limb enu
 
 Approvals are operator-waived for this wave, so correctness rests on independent review rather than on prior sign-off. Fresh-context subagents review the enrollment and the state split, and their findings are implemented before the wave closes. Semantic redeclaration is checked through vaultspec-rag so no second vector registry, assessment shape, or refusal vocabulary is introduced beside the canonical ones.
 
-- [ ] `W05.P11.S125` - Dispatch a fresh-context reviewer over the conformance vector enrollment to verify no vector carries taxpayer truth, source-owned calculation, filing payload, or accepted payload-hash authority, and implement every finding; `dev/registry/filing_export_proof.py, .vault/audit/`.
-- [ ] `W05.P11.S126` - Dispatch a fresh-context reviewer over the assessment state split to verify the filing-grade predicate was not weakened and that missing, deferred, advisory, unsupported, and proven-zero remain distinct, and implement every finding; `src/cadrumo/application/registry/filing_export_coverage.py, .vault/audit/`.
+- [x] `W05.P11.S125` - Dispatch a fresh-context reviewer over the conformance vector enrollment to verify no vector carries taxpayer truth, source-owned calculation, filing payload, or accepted payload-hash authority, and implement every finding; `dev/registry/filing_export_proof.py, .vault/audit/`.
+- [x] `W05.P11.S126` - Dispatch a fresh-context reviewer over the assessment state split to verify the filing-grade predicate was not weakened and that missing, deferred, advisory, unsupported, and proven-zero remain distinct, and implement every finding; `src/cadrumo/application/registry/filing_export_coverage.py, .vault/audit/`.
 - [ ] `W05.P11.S127` - Sweep the changed surfaces with vaultspec-rag for semantic redeclaration, confirming no second vector registry, assessment shape, refusal vocabulary, or closure limb outcome family was introduced beside the canonical definitions, and collapse any duplicate found; `dev/registry/, src/cadrumo/application/registry/, src/cadrumo/application/filing/`.
 
 ## Parallelization
