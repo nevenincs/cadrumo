@@ -39,7 +39,7 @@ from __future__ import annotations
 
 import atexit
 import importlib
-from collections.abc import Generator, Iterable
+from collections.abc import Generator
 from contextlib import ExitStack, contextmanager
 from functools import cache
 from importlib.resources import as_file, files  # nosemgrep
@@ -206,17 +206,13 @@ def _companion_data_roots() -> tuple[Path, ...]:
         module = importlib.import_module(_COMPANION_PACKAGE)
     except (ImportError, TypeError):
         return ()
-    portions: object = getattr(module, "__path__", ())
-    if not isinstance(portions, Iterable):
+    spec = module.__spec__
+    if spec is None or spec.submodule_search_locations is None:
         return ()
-    roots: list[Path] = []
-    for portion in portions:
-        if not isinstance(portion, str):
-            continue
-        root = Path(portion) / "_data"
-        if root.is_dir():
-            roots.append(root)
-    return tuple(roots)
+    # The search locations of a namespace package recompute from ``sys.path``,
+    # so an installation that gains or loses a portion is seen without a restart.
+    roots = [Path(portion) / "_data" for portion in spec.submodule_search_locations]
+    return tuple(root for root in roots if root.is_dir())
 
 
 @cache

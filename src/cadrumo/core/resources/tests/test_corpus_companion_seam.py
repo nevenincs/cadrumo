@@ -11,6 +11,14 @@ must resolve a corpus binary identically whether it lives under the ``cadrumo`` 
 ``MultiplexedPath`` spanning every installed portion. These tests exercise the
 real ``importlib.resources`` behaviour: each companion portion is simulated with
 a real temporary namespace package placed on ``sys.path``, never a mock.
+
+Because the split is by file SUFFIX rather than by directory, one corpus
+directory materialises across several roots at once: a design binary under a
+companion, the hand-authored declarations annotating it under ``cadrumo``.
+:func:`bundled_data_roots` and :func:`resolve_data_root_copies` are the seam that
+locates a file by its position in that one logical tree rather than by which
+root its neighbour happened to come from, and they are exercised here alongside
+the binary resolvers they generalise.
 """
 
 from __future__ import annotations
@@ -26,7 +34,13 @@ from pathlib import Path
 import pytest
 
 from ....core.directory_scan import DirectoryEntryKind, scan_directory
-from ....core.resources.bundled_data import bundled_path, resolve_companion_binary, resolve_corpus_binary
+from ....core.resources.bundled_data import (
+    bundled_data_roots,
+    bundled_path,
+    resolve_companion_binary,
+    resolve_corpus_binary,
+    resolve_data_root_copies,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -276,3 +290,103 @@ def test_built_companion_wheels_share_one_readable_namespace(
         resolved = resolve_companion_binary(*parts)
         assert resolved is not None
         assert resolved.read_bytes() == expected_bytes
+
+
+# One more probe path, used to publish the SAME logical file under both portions
+# so the multi-root answer can be observed rather than inferred.
+_MIRRORED_PARTS = (
+    "corpus",
+    "aeat_official",
+    "disenos_registro",
+    "modelo_seam_probe",
+    "mirrored-seam-probe.json",
+)
+
+
+def test_bundled_data_roots_leads_with_the_cadrumo_tree_then_every_portion(
+    two_companion_portions: tuple[Path, Path],
+) -> None:
+    """The ``cadrumo`` tree is first and each installed portion contributes a root.
+
+    Order matters only at the head: the ``cadrumo`` tree is the command-bearing
+    distribution and is the copy a caller should prefer. Beyond it the portions
+    are asserted as a SUBSET, for two reasons that are both real rather than
+    defensive -- their order follows ``sys.path``, and a development environment
+    legitimately has the published companions installed alongside these
+    temporary ones. Pinning the exact set would make this test assert the
+    contributor's virtualenv.
+    """
+    manuals_root, official_root = two_companion_portions
+
+    roots = bundled_data_roots()
+
+    assert roots[0] == bundled_path()
+    assert len(set(roots)) == len(roots), f"a root is contributed twice: {roots}"
+    assert {
+        manuals_root / "cadrumo_data" / "_data",
+        official_root / "cadrumo_data" / "_data",
+    } <= set(roots[1:])
+
+
+def test_a_neighbour_published_under_another_root_still_resolves(
+    two_companion_portions: tuple[Path, Path],
+) -> None:
+    """The defect this seam exists for, at the seam's own boundary.
+
+    The path is expressed in the OFFICIAL portion's coordinates -- the way a
+    reader navigates from a file it just resolved there -- while the file itself
+    is published only by the MANUALS portion. A sibling read answers "absent",
+    which is the silence that made a design's annotation vanish after an install.
+    """
+    _manuals_root, official_root = two_companion_portions
+    asked_for = official_root / "cadrumo_data" / "_data" / Path(*_MANUALS_PORTION_PARTS)
+    assert not asked_for.exists()
+
+    copies = resolve_data_root_copies(asked_for)
+
+    assert len(copies) == 1
+    assert copies[0].read_bytes() == _MANUALS_PORTION_BYTES
+
+
+def test_every_root_publishing_the_file_is_reported_rather_than_the_first(
+    two_companion_portions: tuple[Path, Path],
+) -> None:
+    """A file published twice yields two answers, so a caller can adjudicate.
+
+    Returning only the first hit would let installation order silently decide
+    which copy wins. The seam reports what it found and leaves the judgement to
+    the boundary that owns the file's meaning.
+    """
+    manuals_root, official_root = two_companion_portions
+    for root, payload in ((manuals_root, b'{"from": "manuals"}'), (official_root, b'{"from": "official"}')):
+        target = root / "cadrumo_data" / "_data" / Path(*_MIRRORED_PARTS)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(payload)
+
+    copies = resolve_data_root_copies(official_root / "cadrumo_data" / "_data" / Path(*_MIRRORED_PARTS))
+
+    assert len(copies) == 2
+    assert {item.read_bytes() for item in copies} == {b'{"from": "manuals"}', b'{"from": "official"}'}
+
+
+def test_a_path_under_no_bundled_root_is_answered_from_the_filesystem(tmp_path: Path) -> None:
+    """A file with no position in the logical tree is not re-homed onto it.
+
+    Re-homing would attach a shipped modelo's grounding to an unrelated fixture,
+    which is a louder wrong answer than the one this seam removes.
+    """
+    present = tmp_path / "present.json"
+    present.write_bytes(b"{}")
+
+    assert resolve_data_root_copies(present) == (present,)
+    assert resolve_data_root_copies(tmp_path / "absent.json") == ()
+
+
+def test_a_bundled_path_no_root_carries_resolves_to_nothing() -> None:
+    """Absence under every root stays absence, distinct from an unrooted file.
+
+    The probe sits at a real ``_data``-relative position that nothing publishes,
+    so the empty answer is the seam reporting a genuine gap rather than failing
+    to situate the path.
+    """
+    assert resolve_data_root_copies(bundled_path() / Path(*_PROBE_PARTS)) == ()
