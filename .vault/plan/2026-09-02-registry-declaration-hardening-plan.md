@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:f6ca5bd577e597a095f1e3e4b156a29d6d57848c1e5ec2b7e508982fe9cb6328'
+body_hash: 'sha256:b7dd615044c6ffeba7e389c7dba53c316a19e7ca7bf55e25ccb22f0cabd9f591'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -498,6 +498,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S616` - Give the registry closure suite a budget covering its live-mode walk, measured at 297.85s against the 300-second default, whose expiry kills the worker rather than failing the test and reported this directory as a truncated run with a node down under xdist; `dev/registry/conformance/tests/test_closure.py`.
 - [x] `W02.P02.S617` - Assert the mirror half of the epoch anchor partition, since the pairing computed both directions and only the target half was ever read: the set naming anchors an epoch stops declaring stood at 86, 16, 18, 30 and 9 across the five boundaries with nothing examining it; `dev/registry/tests/test_modelo_303_semantic_maps.py`.
 - [x] `W02.P02.S618` - Read the glossary render's deduplicated-term evidence and make the approved-concept bound exact, since a concept whose every headword collides is skipped from the page and counted nowhere, and the bound was a less-than-or-equal that absorbed such a drop as a smaller number; `dev/docs/tests/test_glossary_reference.py`.
+- [x] `W02.P02.S619` - Gate the download descriptor's tap, bucket and repository names against the install commands that publish them, since all five location fields were read nowhere while hand-written commands restated the same names, so renaming a tap in the single source of truth would leave every published command pointing at the old one; `dev/docs/tests/test_download_matrix.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
