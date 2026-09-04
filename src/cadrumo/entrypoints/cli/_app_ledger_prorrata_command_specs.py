@@ -11,6 +11,8 @@ from ._app_ledger_command_spec_policies import (
     _POLICY_5,
 )
 from .command_spec import (
+    TEXT_VALUE,
+    WHOLE_NUMBER_VALUE,
     CommandNodeKind,
     CommandSpec,
     DeferredTarget,
@@ -29,8 +31,6 @@ _PRORRATA_REGISTER_MODULE: Final[str] = "cadrumo.core.prorrata_register"
 _PRORRATA_CLI_MODULE: Final[str] = "cadrumo.entrypoints.cli._prorrata_register_cli"
 _PRORRATA_PAYLOAD_MODULE: Final[str] = "cadrumo.entrypoints.cli._prorrata_register_payloads"
 
-_STRING_VALUE: Final[ValueContract] = ValueContract(DeferredTarget("builtins", "str"))
-_INTEGER_VALUE: Final[ValueContract] = ValueContract(DeferredTarget("builtins", "int"))
 _PROVENANCE_VALUE: Final[ValueContract] = ValueContract(
     DeferredTarget(_PRORRATA_REGISTER_MODULE, "ProrrataProvisionalProvenance")
 )
@@ -96,28 +96,28 @@ def _result_schema(model: str, identity: str) -> ResultSchemaSpec:
 _EJERCICIO_OPTION: Final[OptionSpec] = _option(
     name="ejercicio",
     declaration="--ejercicio",
-    value=_INTEGER_VALUE,
+    value=WHOLE_NUMBER_VALUE,
     default=_REQUIRED,
     help_key="cli.app.ledger.prorrata.ejercicio_help",
 )
 _SEED_EJERCICIO_OPTION: Final[OptionSpec] = _option(
     name="ejercicio",
     declaration="--ejercicio",
-    value=_INTEGER_VALUE,
+    value=WHOLE_NUMBER_VALUE,
     default=_REQUIRED,
     help_key="cli.app.ledger.prorrata.seed_ejercicio_help",
 )
 _SECTOR_ID_OPTION: Final[OptionSpec] = _option(
     name="sector_id",
     declaration="--sector-id",
-    value=_STRING_VALUE,
+    value=TEXT_VALUE,
     default=_REQUIRED,
     help_key="cli.app.ledger.prorrata.sector_id_help",
 )
 _SECTOR_OPTION: Final[OptionSpec] = _option(
     name="sector",
     declaration="--sector",
-    value=_STRING_VALUE,
+    value=TEXT_VALUE,
     default=_OPTIONAL,
     help_key="cli.app.ledger.prorrata.sector_help",
 )
@@ -131,7 +131,7 @@ _PROVENANCE_OPTION: Final[OptionSpec] = _option(
 _REFERENCE_OPTION: Final[OptionSpec] = _option(
     name="reference",
     declaration="--reference",
-    value=_STRING_VALUE,
+    value=TEXT_VALUE,
     default=_OPTIONAL,
     help_key="cli.app.ledger.prorrata.reference_help",
 )
@@ -158,7 +158,7 @@ LEDGER_PRORRATA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option(
                 name="activity_code",
                 declaration="--activity-code",
-                value=_STRING_VALUE,
+                value=TEXT_VALUE,
                 default=_EMPTY_TUPLE,
                 help_key="cli.app.ledger.prorrata.activity_code_help",
                 multiple=True,
@@ -181,14 +181,14 @@ LEDGER_PRORRATA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option(
                 name="percentage",
                 declaration="--percentage",
-                value=_STRING_VALUE,
+                value=TEXT_VALUE,
                 default=_REQUIRED,
                 help_key="cli.app.ledger.prorrata.percentage_help",
             ),
             _option(
                 name="evidence_reference",
                 declaration="--evidence-reference",
-                value=_STRING_VALUE,
+                value=TEXT_VALUE,
                 default=_OPTIONAL,
                 help_key="cli.app.ledger.prorrata.optional_evidence_reference_help",
             ),
@@ -213,7 +213,7 @@ LEDGER_PRORRATA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option(
                 name="percentage",
                 declaration="--percentage",
-                value=_STRING_VALUE,
+                value=TEXT_VALUE,
                 default=_REQUIRED,
                 help_key="cli.app.ledger.prorrata.general_percentage_help",
             ),
@@ -251,14 +251,14 @@ LEDGER_PRORRATA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option(
                 name="evidence_reference",
                 declaration="--evidence-reference",
-                value=_STRING_VALUE,
+                value=TEXT_VALUE,
                 default=_REQUIRED,
                 help_key="cli.app.ledger.prorrata.evidence_reference_help",
             ),
             _option(
                 name="percentage",
                 declaration="--percentage",
-                value=_STRING_VALUE,
+                value=TEXT_VALUE,
                 default=_REQUIRED,
                 help_key="cli.app.ledger.prorrata.general_percentage_help",
             ),
@@ -310,14 +310,14 @@ LEDGER_PRORRATA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option(
                 name="con_derecho_volume",
                 declaration="--con-derecho-volume",
-                value=_STRING_VALUE,
+                value=TEXT_VALUE,
                 default=_REQUIRED,
                 help_key="cli.app.ledger.prorrata.con_derecho_volume_help",
             ),
             _option(
                 name="sin_derecho_volume",
                 declaration="--sin-derecho-volume",
-                value=_STRING_VALUE,
+                value=TEXT_VALUE,
                 default=_REQUIRED,
                 help_key="cli.app.ledger.prorrata.sin_derecho_volume_help",
             ),

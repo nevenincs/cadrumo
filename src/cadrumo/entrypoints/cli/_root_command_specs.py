@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from .command_spec import (
     FLAG_VALUE,
+    TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
     CommandNodeKind,
     CommandSpec,
@@ -24,7 +25,6 @@ from .command_spec import (
     ValueContract,
 )
 
-_STRING = ValueContract(DeferredTarget("builtins", "str"))
 _OUTPUT_LANGUAGE = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
 _OUTPUT_FORMAT = ValueContract(DeferredTarget("cadrumo.core.output_rendering", "OutputFormat"))
 _STATE_FREE = ExecutionPolicySpec(
@@ -69,7 +69,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="profile",
                 declarations=("--profile",),
-                value=_STRING,
+                value=TEXT_VALUE,
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.root.profile_help"),
             ),

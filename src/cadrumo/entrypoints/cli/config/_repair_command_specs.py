@@ -6,6 +6,7 @@ from typing import Final
 
 from ..command_spec import (
     FLAG_VALUE,
+    TEXT_VALUE,
     CommandNodeKind,
     CommandSpec,
     DeferredTarget,
@@ -30,9 +31,6 @@ from ._spec_policies import (
     REGISTRY_READ,
     STATE_FREE,
 )
-
-_STRING = ValueContract(DeferredTarget("builtins", "str"))
-
 
 # Every dynamically resolved handler module is named here as a WHOLE dotted path.
 # The path used to be built with an f-string, which meant no static reader -- grep,
@@ -165,7 +163,7 @@ CONFIG_REPAIR_COMMAND_SPECS = (
             OptionSpec(
                 name="namespace",
                 declarations=("--namespace",),
-                value=_STRING,
+                value=TEXT_VALUE,
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.config.repair.integrity.objects_namespace_help"),
             ),
@@ -212,7 +210,7 @@ CONFIG_REPAIR_COMMAND_SPECS = (
             OptionSpec(
                 name="profile",
                 declarations=("--profile",),
-                value=_STRING,
+                value=TEXT_VALUE,
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.config.repair.profile_name_help"),
             ),

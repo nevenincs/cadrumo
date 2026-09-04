@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ..command_spec import (
     FLAG_VALUE,
+    TEXT_VALUE,
     CommandNodeKind,
     CommandSpec,
     DeferredTarget,
@@ -14,12 +15,10 @@ from ..command_spec import (
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
-    ValueContract,
 )
 from ._command_spec_schema import config_payload_schema as _schema
 from ._spec_policies import BOOTSTRAP_DESTRUCTIVE, PROFILE_READ, STATE_FREE
 
-_OPTIONAL_STRING = ValueContract(DeferredTarget("builtins", "str"))
 _YES = OptionSpec(
     name="yes",
     declarations=("--yes",),
@@ -41,14 +40,14 @@ _OVERRIDE_RETENTION = OptionSpec(
 _REASON = OptionSpec(
     name="reason",
     declarations=("--reason",),
-    value=_OPTIONAL_STRING,
+    value=TEXT_VALUE,
     default=ParameterDefault.value(None),
     help_key=TranslationKey("cli.config.reset.reason_help"),
 )
 _OPERATION_ID = OptionSpec(
     name="operation_id",
     declarations=("--operation-id",),
-    value=_OPTIONAL_STRING,
+    value=TEXT_VALUE,
     default=ParameterDefault.value(None),
     help_key=TranslationKey("cli.config.reset.operation_id_help"),
 )

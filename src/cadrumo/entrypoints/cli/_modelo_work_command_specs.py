@@ -37,7 +37,6 @@ _MODELO = ValueContract(
     DeferredTarget("builtins", "str"),
     click_type=DeferredTarget("cadrumo.entrypoints.cli._common", "MODELO_CODE_CHOICE"),
 )
-_MODELO_OPEN = ValueContract(DeferredTarget("builtins", "str"))
 _M210_SOURCE = ValueContract(DeferredTarget("cadrumo.core.irnr", "M210GrossIncomeSourceMode"))
 _RESCATE_TYPE = ValueContract(DeferredTarget("cadrumo.core.rescate_type", "RescateType"))
 _VERIFY_SELECTOR = ValueContract(DeferredTarget("cadrumo.application.modelo.verify_selector", "ModeloVerifySelector"))
@@ -240,7 +239,7 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "create",
         "cadrumo.entrypoints.cli._modelo_work_lifecycle_cli",
         (
-            _o("modelo", "--modelo", _MODELO_OPEN, required=True),
+            _o("modelo", "--modelo", TEXT_VALUE, required=True),
             _o("year", "--year", WHOLE_NUMBER_VALUE, required=True),
             _o("period", "--period", required=True),
             *_ADDRESS[3:],
