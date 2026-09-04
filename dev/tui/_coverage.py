@@ -179,10 +179,40 @@ CLASSIFICATIONS: Final[dict[str, InterfaceClassification]] = {
 """Exhaustive, stable classification joined against the derived source census."""
 
 
-NOTES: Final[dict[str, str]] = {
-    qualname: "; ".join(part for part in (classification.disposition.value, classification.note) if part)
-    for qualname, classification in CLASSIFICATIONS.items()
-}
+def merge_rendered_by(reported: Mapping[str, tuple[str, ...]]) -> dict[str, tuple[str, ...]]:
+    """Join the reviewer's static table with what the harness itself declares.
+
+    The static entries predate surfaces that declare their own interfaces and
+    stay authoritative for those; anything the registry reports is added as it
+    is. Reading both is what keeps the inventory from claiming a surface is
+    unrendered after its fixture has landed.
+    """
+    merged = dict(RENDERED_BY)
+    merged.update(reported)
+    return merged
+
+
+def notes(rendered_table: Mapping[str, tuple[str, ...]] = RENDERED_BY) -> dict[str, str]:
+    """Describe each interface's disposition against the live coverage.
+
+    The disposition is DERIVED, not declared: an interface some surface paints
+    is covered whatever the static table last said, so a landed fixture cannot
+    keep reading as a gap. Only the non-renderable kinds keep their authored
+    note, because no fixture can change what they are.
+    """
+    painted = {qualname for qualnames in rendered_table.values() for qualname in qualnames}
+    resolved: dict[str, str] = {}
+    for qualname, classification in CLASSIFICATIONS.items():
+        disposition = classification.disposition
+        if disposition in {InventoryDisposition.COVERED, InventoryDisposition.FIXTURE_NEEDED}:
+            disposition = (
+                InventoryDisposition.COVERED if qualname in painted else InventoryDisposition.FIXTURE_NEEDED
+            )
+        resolved[qualname] = "; ".join(part for part in (disposition.value, classification.note) if part)
+    return resolved
+
+
+NOTES: Final[dict[str, str]] = notes()
 
 
 class CoverageError(RuntimeError):
@@ -257,5 +287,7 @@ __all__ = [
     "InventoryDisposition",
     "check",
     "fixture_needed",
+    "merge_rendered_by",
+    "notes",
     "rendered_by",
 ]
