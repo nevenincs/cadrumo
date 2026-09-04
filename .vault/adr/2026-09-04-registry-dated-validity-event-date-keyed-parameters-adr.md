@@ -5,140 +5,163 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:27dcbca602492c2ba70e283d3e9100a5452273a04257019ac775686844ec4ae4'
+body_hash: 'sha256:e66d2dff2cc469c83293545cc22d2b7c21be27e623c8c3eb567e54d503dfc860'
 related:
   - "[[2026-09-04-registry-dated-validity-regulatory-constant-placement-sweep-audit]]"
+  - "[[2026-08-19-registry-evidence-window-axes-adr]]"
+  - "[[2026-08-31-period-revision-resolution-ad-hoc-operation-date-axis-adr]]"
+  - "[[2026-08-28-registry-narrow-mechanism-widening-adr]]"
 ---
 
 # `registry-dated-validity` adr: `event-date keyed regulatory parameters` | (**status:** `proposed`)
 
 ## Problem Statement
 
-A registry parameter is addressed by modelo, revision and filing period. Some
-regulated values are not governed by the filing period at all: they are fixed by
-the law in force when an EVENT occurred, and that event can predate every
-revision the owning modelo declares.
+Some regulated values are fixed by the law in force when an EVENT occurred rather
+than by the filing period, and that event can predate every revision the owning
+modelo declares. The bienes de inversion regularisation windows, threshold and
+divisors are fixed at ACQUISITION, and a good acquired in 2016 stays in its
+nine-year window until 2025 while modelo 303 declares revisions only from 2022.
+The prorrata especial margins are sharper: one provision carries two values with
+two validity windows AND two different comparison operators, and the earlier
+value governs years no revision covers.
 
-The placement sweep measured three clusters that cannot be authored as registry
-data for this reason alone. The bienes de inversion regularisation window and
-divisors are fixed by the law in force at ACQUISITION, and a good acquired in
-2016 stays inside its nine-year window until 2025, while modelo 303 declares
-revisions only from 2022. The prorrata especial margins are sharper still: one
-provision carries two values with two validity windows and two different
-comparison operators, and the earlier value governs years no revision covers.
-Each remains a Python literal not because nobody moved it, but because the
-registry has no address for it.
+An earlier draft of this record claimed these were unreachable because a
+parameter is addressed by modelo revision. **That was wrong and is corrected
+here.** The address is not the obstacle. The parameter resolver is already
+axis-generic: each value declares its own axis, the caller supplies a
+`date_context`, and the value whose window covers that axis's date is selected,
+raising when matches are not exactly one. Nothing clamps a value's window to the
+revision's span — `DatedValue` validates only that `valid_to` is on or after
+`valid_from`, and the revision-clamping logic applies solely to bracket tables on
+the filing-period axis. A 2016 acquisition can be read from a 2022 revision today
+by declaring a value on a transaction-date axis.
+
+Two things genuinely block it. First, no caller supplies a non-filing axis:
+every `date_context` in the tree is built as filing period only. Second, and
+decisively, a substantive-law citation whose `effective_to` precedes the hosting
+revision's `valid_from` is refused outright, so the pre-2015 prorrata wording
+cannot ground a value hosted on a 2022 revision.
 
 ## Considerations
 
-The value-level date axis ALREADY EXISTS and is almost entirely unused. The
-registry declares five axes — filing period, devengo date, transaction date,
-invoice date and submission date — yet all 359 parameter values in the registry
-use the filing period. Four declared axes have never been exercised.
+The axis vocabulary already exists and is entirely unexercised. Five axes are
+declared — filing period, devengo date, transaction date, invoice date,
+submission date — and measurement across the whole registry finds all 359 dated
+parameter values AND all 133 bracket-table axis declarations on the filing
+period. Four axes have never been used.
 
-So the missing capability is NOT the axis on the value. It is the ADDRESS of the
-parameter: resolution requires naming a modelo revision, and revisions are
-law-selected per filing period. Even a value correctly keyed to a transaction
-date cannot be reached if no revision of that modelo exists for the year the
-transaction falls in.
+The second blocker is not new ground. It is the defect class an ACCEPTED ADR
+already diagnosed, whose remedy it authorised and whose own Implementation
+section records that the retroactive-reach axis is NOT implemented, requiring an
+opt-in declared governed-period span on the legal reference that the check reads
+in preference to the in-force span. A separate accepted decision one layer up
+faced the same shape and chose to thread the event date into the existing call
+rather than build a new route.
 
-A working precedent already ships. The IVA rate table is a modelo-independent,
-event-date-keyed value store: records carry an effective window with legal
-references, and the lookup takes a member state, a rate kind and a date, with no
-modelo or revision in the address at all. Its own header comment records a defect
-this design already caught and corrected, where a refresh boundary had been read
-as a legal effect and silently made two open years unvaluable.
-
-Backfilling revisions was considered and rejected during remediation:
-manufacturing twenty-two modelo 303 revisions to host four numbers would invent
-grounding for revisions the product does not otherwise support.
+The IVA rate table was cited in the earlier draft as a precedent to generalise.
+That was a second error. Verification shows it reads its TOML through a
+standalone cached loader and never touches the validated authority during a
+lookup. It is the one mechanism in the tree that BYPASSES the authority, so it is
+an outlier to be brought inside rather than a template to replicate, and
+replicating it would build the second parameter authority the boundary rules
+forbid.
 
 ## Considered options
 
-- **Extend revision coverage backwards to span every reachable event year.
-  Rejected.** It fabricates revisions to host values, and the fabricated
-  grounding would be indistinguishable from real grounding to every consumer.
+- **A modelo-independent, event-date-keyed parameter space. REJECTED, and this
+  was the earlier draft's choice.** It solves an addressing problem that does not
+  exist, and its cited precedent bypasses the validated authority.
 
-- **Key the value to the filing period anyway and accept the approximation.
-  Rejected as legally wrong.** It applies current law retroactively to an event
-  governed by earlier law, which inverts the purpose of the provisions in
-  question.
+- **Declare the figure on the legal-catalogue entry.** Genuinely attractive: the
+  catalogue is already modelo-independent, already carries effective windows and
+  verbatim grounding, and matches the principle that consolidation follows the
+  PROVISION. Rejected because it collapses the evidence surface into a value
+  surface, and one provision id cannot carry the two values and two operators the
+  prorrata pair needs without inventing per-window catalogue entries.
 
-- **Author for covered years and fall back to a code constant for the rest.
-  Rejected.** It is the silent consumer-side fallback the authority-flow rule
-  forbids, and it makes "no parameter" and "old event" indistinguishable.
+- **Backfill revisions, or key to the filing period anyway.** Rejected: the first
+  fabricates grounding, the second applies current law retroactively.
 
-- **A modelo-independent, event-date-keyed parameter space, on the shipped IVA
-  rate-table pattern. CHOSEN.** Values are addressed by provision and event date
-  rather than by modelo revision, carry an explicit effective window and legal
-  references, and are resolved through the validated authority.
+- **Author for covered years and fall back to a constant.** Rejected as the
+  silent consumer-side fallback the authority-flow rule forbids.
 
-- **Leave them as leaf constants with corpus drift gates. Chosen as the interim,
-  not the destination.** It is honest and cheap, and it is what stands today.
+- **Implement the accepted governed-span axis, then supply the event axis at the
+  call site. CHOSEN.** No new address model, no new authority, no new value
+  space. It uses the resolver that already ships and unblocks the one check that
+  actually refuses.
 
 ## Constraints
 
-Resolution must fail closed. A value whose event date falls in no declared window
-is a grounding defect and must raise, never fall back to a literal.
+Resolution stays fail-closed. A value whose event date falls in no declared
+window raises; it never falls back to a literal.
 
-An effective window states a LEGAL effect and never a data-refresh boundary. The
-IVA table's own recorded defect is the precedent: treating a refresh date as a
-legal start silently made two open years unvaluable.
+An effective window states a LEGAL effect, never a data-refresh boundary. The
+rate table's own header records the defect this prevents, where a refresh date
+read as a legal start made two open years unvaluable.
 
-Every record carries its legal references and is validated against the catalogue,
-so an uncatalogued or out-of-window citation is refused as it is today.
+A value expressible as a filing-period parameter MUST be authored as one.
+Admission to a non-filing axis requires a declared reason naming the provision
+and the axis, enumerable and gated in both directions, per the accepted standard
+that a narrow registry mechanism widens only by explicit evidence-carrying
+declaration.
 
-The existing filing-period parameters are unaffected. This adds an address for
-values the current model cannot express; it does not migrate values the current
-model holds correctly.
-
-Consolidation stays by PROVISION, never by VALUE. Three sites in the codebase
-deliberately refuse to merge values that agree today, and merging them would
-introduce defects.
+Consolidation stays by PROVISION, never by VALUE. Several sites deliberately
+refuse to merge numerically agreeing values across provisions, and merging them
+would introduce defects.
 
 ## Implementation
 
-Establish a modelo-independent value space addressed by provision identity plus an
-event date, modelled on the IVA rate table: an effective window per record, legal
-references per record, resolution through the validated registry authority, and a
-typed resolver that names its date axis explicitly at the call site.
+Implement the governed-span axis the evidence-window ADR authorised: an opt-in
+declared governed-period span on the legal reference, read in preference to the
+in-force span by the substantive-law check that today refuses a citation whose
+`effective_to` precedes the revision's `valid_from`. Amend that ADR if its scope
+must widen from retroactive reach to superseded-provision reach.
 
-Migrate the measured blocked clusters first, because each already has a known
-provision and a known consumer: the bienes de inversion windows, threshold and
-divisors, then the prorrata especial margin pair with its two operators.
+Then author the blocked clusters as dated values on the EXISTING modelo
+parameters with a non-filing axis, and extend `date_context` construction at the
+consuming sites to supply the acquisition or operation date.
 
-The SAL figures and the maritime exemption fraction are NOT in scope here. They
-are blocked by a missing period in their consumer signatures, not by the address
-model, and threading a date through those functions is separate work.
+Two questions are explicitly NOT decided here and must be settled before or
+alongside that work. Whether the comparison operator is registry data: the
+prorrata pair differs by operator, exclusive before 2015 and inclusive from 2015,
+and no dated-value field carries an operator. And whether a new axis member is
+added or the transaction-date member is reused for acquisition, which is a schema
+change with a parity gate behind it.
 
-Where a value stays a leaf constant pending migration, bind it with a drift gate
-that reads the corpus text rather than restating the literal.
+Out of scope: the SAL figures and the maritime exemption fraction, whose
+consumers carry no date field at all. In scope where the event date is already a
+typed field on the consumer's own record — noting that the bienes de inversion
+values are reached through zero-argument enum properties, so that cluster still
+needs the date threaded into two properties before it can resolve.
+
+Separately, the IVA rate table should be brought inside the validated authority.
+That is its own decision, not a consequence of this one.
 
 ## Rationale
 
-The sweep showed the codebase already contains its own answer twice over: values
-resolved from the registry at runtime and failing closed, and a modelo-independent
-dated table for exactly the case where a modelo revision is the wrong address.
-This decision generalises the second pattern rather than inventing a mechanism.
+The correction matters more than the conclusion. The earlier draft would have
+authorised a parallel parameter authority to route around a mechanism that
+already works, on the strength of a precedent that does the opposite of what was
+claimed. Two independent reviews, one checking facts by execution and one
+checking the decision, converged on the same error.
 
-It also keeps the campaign's central honesty property intact. The reason these
-figures stayed in Python was never neglect — the sweep found their documentation
-excellent, each citing its binding provision. They stayed because the registry
-could not express them. Giving them an address removes the excuse without
-weakening any refusal.
+What survives is the audit's finding, narrowed to what is measurable: the axis,
+the schema and the fail-closed resolver all ship; one grounding check refuses;
+no caller supplies a non-filing axis. That is a much smaller problem than a
+missing address model, and it is already half-authorised by an accepted decision.
 
 ## Consequences
 
-Filing-grade values governed by an event date become resolvable registry data with
-dated windows and legal references, so they can be corrected without a code change
-and cannot silently drift.
+Event-date-governed values become resolvable through the existing parameter
+address with dated windows and legal references, without a new value space and
+without a second authority.
 
 Four declared date axes stop being dead capability.
 
-Until the space exists, the blocked clusters remain leaf constants and must not be
-forced into modelo-revision parameters; the placement audit records why each is
-blocked so the attempt is not repeated.
+The prorrata especial operator question surfaces as a distinct decision rather
+than being smuggled into a value model that cannot express it.
 
-This decision does not settle where age bands and comparison margins that already
-key on the filing period should live. Those are authorable today and several were
-authored during remediation.
+Until the governed-span axis lands, the blocked clusters remain leaf constants
+and must not be forced into parameters; the placement audit records why each is
+blocked so the attempt is not repeated.

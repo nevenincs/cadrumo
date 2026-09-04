@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#registry-dated-validity'
 date: '2026-08-30'
-modified: '2026-08-30'
+modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:cf5b7ed25eee66fdb3a73f6941c48a72f984b1946b93b7c383b6bf633ca2a061'
+body_hash: 'sha256:ef14827abf3a0625babbeb824ed1d8a95d09827ce64f25e2059b96acc7e51be9'
 related:
   - '[[2026-08-27-registry-dated-validity-P01-S02]]'
   - '[[2026-08-27-registry-dated-validity-P01-S03]]'
@@ -36,6 +36,8 @@ related:
   - '[[2026-08-27-registry-dated-validity-frozen-constant-hunt-audit]]'
   - '[[2026-08-27-registry-dated-validity-plan]]'
   - '[[2026-08-27-registry-dated-validity-research]]'
+  - '[[2026-09-04-registry-dated-validity-event-date-keyed-parameters-adr]]'
+  - '[[2026-09-04-registry-dated-validity-regulatory-constant-placement-sweep-audit]]'
 ---
 
 # `registry-dated-validity` feature index
@@ -47,11 +49,13 @@ Auto-generated index of all documents tagged with `#registry-dated-validity`.
 ### adr
 
 - `2026-08-27-registry-dated-validity-adr` - `registry-dated-validity` adr: `dated citation windows replace whole-file-per-year copies, and a window is a grounding claim` | (**status:** `accepted`)
+- `2026-09-04-registry-dated-validity-event-date-keyed-parameters-adr` - `registry-dated-validity` adr: `event-date keyed regulatory parameters` | (**status:** `proposed`)
 
 ### audit
 
 - `2026-08-27-registry-dated-validity-audit` - `registry-dated-validity` audit: `what the collapse deliberately did not fix`
 - `2026-08-27-registry-dated-validity-frozen-constant-hunt-audit` - `registry-dated-validity` audit: `regulatory values that do not match the provision that governs them`
+- `2026-09-04-registry-dated-validity-regulatory-constant-placement-sweep-audit` - `registry-dated-validity` audit: `regulatory constant placement across code and registry`
 
 ### exec
 
