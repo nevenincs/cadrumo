@@ -266,7 +266,11 @@ def relative_spelling(target: str, *, consumer_package: str) -> str | None:
 
 #: Every reason a site can be refused, declared once so a caller can group by
 #: it without reading the strings out of this module's source.
-REFUSALS: Final[tuple[str, ...]] = ("unforwarded_name", "cross_package_private_target")
+REFUSALS: Final[tuple[str, ...]] = (
+    "unforwarded_name",
+    "cross_package_private_target",
+    "entry_point_target",
+)
 
 
 def refusal_reason(site: ImportSite, package: FacadePackage) -> str | None:
@@ -281,6 +285,14 @@ def refusal_reason(site: ImportSite, package: FacadePackage) -> str | None:
 
     Intra-package consumers are not refused: a private module is private to its
     own package, and its own tests may import it directly.
+
+    ``__main__`` is refused separately and from everywhere, including inside the
+    owning package. It matches the underscore test, but reporting it as a
+    privacy problem names the wrong fix: nobody should make ``__main__`` public.
+    A module run as ``python -m package`` is an entry point, and importing a
+    library symbol out of it means the library lives inside the entry point.
+    One package in the repository does this, and it is the single largest
+    blocker in the facade work.
     """
     for name, _ in site.names:
         if name in package.submodules:
@@ -289,6 +301,8 @@ def refusal_reason(site: ImportSite, package: FacadePackage) -> str | None:
         if module is None:
             return "unforwarded_name"
         leaf = module.rsplit(".", 1)[-1]
+        if leaf == "__main__":
+            return "entry_point_target"
         inside = site.consumer_package == package.dotted or site.consumer_package.startswith(f"{package.dotted}.")
         if leaf.startswith("_") and not inside:
             return "cross_package_private_target"
