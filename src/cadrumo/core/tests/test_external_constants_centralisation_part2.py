@@ -197,48 +197,15 @@ _IRPF_INT_CONSTANT_IDS = (
     "maternidad-alta-posterior-first-filing-year",
 )
 
-_IRPF_INT_ALIAS_CASES: tuple[tuple[str, str, str, str], ...] = (
-    (
-        "cadrumo.domain.contribuyente.deduccion_maternidad",
-        "DEDUCCION_MATERNIDAD_MENSUAL_EUR",
-        "DEDUCCION_MATERNIDAD_MENSUAL_EUR",
-        "_deduccion_maternidad must import DEDUCCION_MATERNIDAD_MENSUAL_EUR from cadrumo.core.external_constants",
-    ),
-    (
-        "cadrumo.domain.contribuyente.deduccion_maternidad",
-        "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
-        "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
-        "_deduccion_maternidad must import DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR from cadrumo.core.external_constants",
-    ),
-    (
-        "cadrumo.domain.contribuyente.deduccion_maternidad",
-        "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR",
-        "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR",
-        "_deduccion_maternidad must import DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR from "
-        "cadrumo.core.external_constants",
-    ),
-    (
-        "cadrumo.domain.contribuyente.deduccion_maternidad",
-        "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR",
-        "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR",
-        "_deduccion_maternidad must import DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR from "
-        "cadrumo.core.external_constants",
-    ),
-    (
-        "cadrumo.domain.contribuyente.deduccion_maternidad",
-        "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR",
-        "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR",
-        "_deduccion_maternidad must import DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR from "
-        "cadrumo.core.external_constants",
-    ),
-)
-_IRPF_INT_ALIAS_IDS = (
-    "deduccion-maternidad-mensual",
-    "deduccion-maternidad-anual-cap",
-    "deduccion-maternidad-alta-posterior-incremento",
-    "deduccion-maternidad-alta-posterior-anual-cap",
-    "deduccion-maternidad-alta-posterior-first-filing-year",
-)
+# The maternidad consumer no longer ALIASES these constants: it resolves each
+# figure from its dated Modelo 100 registry parameter at runtime and fails closed
+# on absence, which is strictly stronger than importing a centralised literal.
+# The alias contract is therefore retired for it, and the replacement invariant
+# below asserts the resolution instead. Keep this tuple for any future consumer
+# that legitimately still aliases an IRPF integer constant.
+_IRPF_INT_ALIAS_CASES: tuple[tuple[str, str, str, str], ...] = ()
+_IRPF_INT_ALIAS_IDS: tuple[str, ...] = ()
+
 
 _MIN_LITERAL_CASES: tuple[tuple[str, str, int, str, str], ...] = (
     (
@@ -532,27 +499,28 @@ def test_irpf_int_constant_values_types_and_maternidad_cap_relation() -> None:
     )
 
 
-def test_irpf_int_constant_consumers_alias_core_constants() -> None:
-    """Known consumers alias IRPF integer constants from core."""
+def test_maternidad_consumer_resolves_from_registry_rather_than_importing_constants() -> None:
+    """The maternidad computation reads its figures from the registry, not from core constants.
 
-    from .. import external_constants
+    Replaces the retired alias contract. Importing a centralised literal was the
+    old best practice; resolving the dated parameter and failing closed is better,
+    so the invariant now asserts the module does NOT bind the constants and DOES
+    expose its resolver.
+    """
 
-    for _case_id, (module_name, module_attr, constant_name, message) in zip(
-        _IRPF_INT_ALIAS_IDS,
-        _IRPF_INT_ALIAS_CASES,
-        strict=True,
+    from ...domain.contribuyente import deduccion_maternidad
+
+    for constant_name in (
+        "DEDUCCION_MATERNIDAD_MENSUAL_EUR",
+        "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
+        "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR",
+        "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR",
+        "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR",
     ):
-        _assert_module_constant_identity(
-            module_name=module_name,
-            attr_name=module_attr,
-            expected=getattr(external_constants, constant_name),
-            import_message=message,
+        assert not hasattr(deduccion_maternidad, constant_name), (
+            f"_deduccion_maternidad must resolve {constant_name} from the registry, not bind the constant"
         )
-
-
-# ---------------------------------------------------------------------------
-# contract — IRPF cap-literal centralisation tests
-# ---------------------------------------------------------------------------
+    assert hasattr(deduccion_maternidad, "_resolve_maternidad_figure")
 
 
 def test_no_bare_irpf_cap_literals_in_min_calls(source_tree_ast: Mapping[Path, ast.AST]) -> None:
