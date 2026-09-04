@@ -209,8 +209,6 @@ jobs:
             --cohort-dir "$CADRUMO_HOMEBREW_ROOT/cohort" \
             --lock uv.lock \
             --version "$version" \
-            --release-base-url \
-              "https://github.com/nevenincs/cadrumo/releases/download/v${version}" \
             --output-dir "$CADRUMO_HOMEBREW_ROOT/tap-snapshot"
 
       # --retain-install defers the smoke's uninstall/untap: the emit step
