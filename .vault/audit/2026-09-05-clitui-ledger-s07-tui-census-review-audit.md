@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:92e23867ad68ea25640adae70f65d64023506afd084aaadf005c375422db4d82'
+body_hash: 'sha256:e4bbe3a0d250ca0d83d2168e3f56756b3ea6ed246c321a98b47a0638934217b0'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-reference]]"
@@ -172,3 +172,65 @@ and Ruff, scoped `ty`, and basedpyright are clean. The final Vault check is
 recorded in the review handoff. G0 remains OPEN, the TUI hold remains effective,
 the record and plan/index state otherwise agree, and the remediation contains
 no production TUI change.
+
+## Semantic detector remediation review
+
+Ruling: **NOT ACCEPTED**. The earlier syntax-classification defects are closed,
+but one HIGH detector-teeth defect remains in the installed-screen dataflow.
+
+Independent reconstruction again produced 126 selected sources, seven routes
+with `ledger.overview` as the sole installed route, zero consumers, the two
+published read-action ids, zero mutation doors, 78 CLI declarations all
+`not-implemented`, and six governed harness files with 65 test functions. An
+independent standard-library framing implementation reproduced source digest
+`sha256:e7337508a02ef2260e0b28205c31bb872b69f59aa51a18391ae209c21b8f9d57`
+and census digest
+`sha256:c136cfe1ae3f82a239476c00e805f8c9a29e010d502e74397963cea7e6f42371`.
+
+The remediated extractor correctly ignores a free convention-shaped handler,
+an unused Ledger action constant, a dead `LedgerRouteV1` constructor, and a
+dead same-name `ledger_screen_factory` call. It detects an `@on`-decorated
+method on `CadrumoTuiApp`, a real `LEDGER_ROUTES` change, a changed factory
+initial area, and an installed mutation keyword. Route facts are now confined
+to the real `LEDGER_ROUTES` assignment; action facts are confined to the exact
+`InstalledWorkbenchFactoryDependenciesV1` constructor; and recipient scanning
+is confined to `CadrumoTuiApp`, the initial route screen, and their reachable
+bases.
+
+### installed-screen-return-dataflow | high | Unique matching calls are not proved to supply the returned installed screen
+
+`_initial_route_area` applies `ast.walk` to all of `ledger_screen_factory` and
+accepts the sole call named `resolve_ledger_screen`, but it does not prove that
+the call is the value returned by the nested `create` closure. An independent
+mutation changed the real return to `LedgerEntriesScreen(controller)` while
+retaining the Overview resolver call in an unused assignment. The census still
+reported `ledger.overview` as the sole installed route. This is a silent false
+installed-reachability statement, not merely source drift.
+
+The same defect exists one composition level above. `_installed_ledger_factory_call`
+accepts the sole `ledger_screen_factory` call anywhere below
+`_ledger_generation_factory`, without proving that its invocation supplies the
+screen returned by the nested `create`. A mutation retained that call in an
+unused `unused_factory` assignment and returned `Screen()` instead; the census
+still reported the Ledger outer destination and Overview as installed. The
+existing dead-call negative only appends a second call outside the owning
+function and therefore does not exercise this boundary.
+
+The owner must follow the exact returned value of `_ledger_generation_factory`
+to its nested `create`, require that `create` returns the result of invoking the
+one `ledger_screen_factory` value (directly or through explicitly modelled local
+aliases), and then follow `ledger_screen_factory` to its returned `create` and
+require that closure's returned expression to be the `resolve_ledger_screen`
+call whose target determines the initial route. Unsupported, multiple, dead,
+or alternate return shapes must fail closed. Durable mutations in
+`dev/quality/tests/test_clitui_ledger_capability_matrix.py` must retain a dead
+matching call while changing each real return and prove rejection or the
+correct changed semantic result.
+
+The focused S07 detector selection passes 16 tests with 135 deselected; the
+full capability-matrix module passes all 151 tests. The installed/component TUI
+lane passes 88 tests with 18 deselected. Ruff format/check, scoped `ty`, and
+basedpyright are clean, and the feature Vault check passes. No production TUI
+file changed in this remediation. G0 remains OPEN and the TUI hold remains in
+force; the checked S07 record/plan state describes the delivered census but
+cannot close this remaining quality-gate defect.
