@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:0c62b3ecd407a60ff933df663890a71e018b1f7012151500d04b927c5d89c0eb'
+body_hash: 'sha256:cad1ab797f65dab9e18fca8e7ab1e0f9f94985983f658a1cf432edc3c3d014d1'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -475,6 +475,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S593` - Read the shipped data payloads strictly and announce what could not be read, since a token found only in a mangled or skipped file leaves the field or enum value it addresses reported unreachable, and unreachable members in that audit are deletion candidates; routed through the shared notice rather than a thirteenth copy; `dev/audit/unreachable_code.py,dev/audit/tests/test_unreachable_code.py`.
 - [x] `W02.P02.S594` - Announce the registry modules the load census cannot read, since an empty importer set is its evidence that every import of a module is deferred and a skipped file makes that conclusion easier to reach and wrong, a module-level importer inside it having refuted it; `dev/registry/analysis/load_census.py,dev/registry/tests/test_load_census_classification.py`.
 - [x] `W02.P02.S595` - Announce the modules the modelo-branch and regulatory-prose screens cannot read, since each derives findings by walking source and a skipped module hides its own branch sites or its prose pattern, leaving a place where legal text is interpreted by regex that nobody reviews; `dev/registry/analysis/modelo_branch_classification.py,dev/registry/analysis/regulatory_prose_parser_channel.py,dev/registry/tests/test_regulatory_prose_parser_channel.py`.
+- [x] `W02.P02.S596` - Make the namespace retirement codemod name the files it left unmigrated, since each applying pass reported how many it fixed while the files it could not read were invisible, so an incomplete migration looked complete; `dev/quality/namespace_retirement_sweep.py,dev/quality/tests/test_namespace_retirement_sweep.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

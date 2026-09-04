@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:b5d0424c298bf8fa6a2235629c2faf6cce29ce3815bcd41cc2aecea90738cbd1'
+body_hash: 'sha256:9b46e4db7c59d3c67b7285b48f4229d6e45f949148b76098616319b209d3edcd'
 step_id: 'S409'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -75,11 +75,54 @@ without copy renders Home's degraded generic line, so an invented action would
 arrive unreadable. Teeth proven by offering work for unmeasured and empty
 areas. Restored by copy; 26 passed.
 
-STILL NOT WIRED: the three `blocked_*` codes, and the declaration-addressed
-action. The blocked family needs a source for blocked work units; the
-declaration action needs a catalogue id that takes modelo, year and period
-arguments, which is a different shape from the two argument-free ones landed
-here.
+The declaration-addressed action is wired too, and the shape objection was
+another thing that dissolved on inspection: `operator.modelo.work.revisions`
+takes a `work_unit_id`, which the resume already carries, so no id taking
+modelo/year/period was needed at all. Listing a work unit's calculation
+revisions is precisely what `declaration_needs_review` asks the operator to do.
+The address rides on the action row rather than in the arguments, which is what
+Home renders beside it.
+
+Only NEEDS_REVIEW declarations are offered. A verified, filed, draft or
+discarded one is not outstanding work, and offering it would make the zone a
+list of everything rather than a list of what is left. Addressed actions rank
+ahead of the cross-cutting Ledger offers, because each names a single
+declaration the operator can finish while "classify the ledger" is spread
+across every record.
+
+Gated by `test_a_declaration_needing_review_is_offered_with_its_own_address`,
+which asserts the address is present -- a reason without one is advice rather
+than a task -- and that exactly one of five declaration states is offered.
+Teeth proven by offering every declaration: the gate reports all five.
+Restored by copy; 27 passed.
+
+STILL NOT WIRED: the three `blocked_*` reason codes. Measured rather than
+asserted this time, and the earlier phrasing was wrong in the usual direction.
+
+There IS a source. `VerificationCompletenessStatus.BLOCKED` is a real domain
+state, forced by findings of BLOCKING severity, and
+`VerificationReportCatalogueRepository` is a concrete adapter taking a
+`bucket_id` -- the same shape as every repository the door already composes,
+not buried in an entrypoint the way the notification custody factory is. So
+"no source" was false.
+
+What is genuinely missing is the mapping, and only for two of the three.
+`ModeloVerificationFindingKind` declares MISSING_REQUIRED_CASILLA,
+RECONCILIATION_MISMATCH, CROSS_PERIOD_DEPENDENCY_UNCLEAN, BLOCKING_RULE and
+ADVISORY. Exactly one reads across cleanly:
+CROSS_PERIOD_DEPENDENCY_UNCLEAN is `blocked_dependency` by its own name.
+Nothing in that enum names evidence, so `blocked_evidence` has no source at
+all; and `blocked_review` would have to claim either BLOCKING_RULE or
+MISSING_REQUIRED_CASILLA on no better grounds than that something must map
+there. Those two would be invented, which is what the reason-code gate exists
+to prevent.
+
+So the next slice has a known shape: add the verification repository to the
+door as an optional dependency, extend the capture-coherence guard to cover the
+new read, and offer `blocked_dependency` alone from a
+CROSS_PERIOD_DEPENDENCY_UNCLEAN blocking finding -- leaving the other two codes
+unproduced rather than guessed. Not started here rather than left half-applied
+with the guard inconsistent.
 
 ORIGINAL NOTE, kept because the caution was wrong: blocked on a taxonomy
 decision. `HomeNextAction` is built only by
