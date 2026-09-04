@@ -98,8 +98,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.bienes_inversion.regularizacion_parameters."
-        "BienesInversionParameterResolutionError",
+        "cadrumo.domain.bienes_inversion.regularizacion_parameters.BienesInversionParameterResolutionError",
         ErrorCode(
             code="REFUSED_PROFILE_BIENES_INVERSION_PARAMETERS",
             category=ErrorCategory.REFUSED,
