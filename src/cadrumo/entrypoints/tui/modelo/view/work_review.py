@@ -51,6 +51,7 @@ from ...components.keyboard import localize_key_descriptions
 from ...components.theme import (
     BASE_CSS,
     toggle_appearance,
+    tokenised,
 )
 from ...components.widgets import ContentDataTable, ContentScroll
 
@@ -658,11 +659,11 @@ addressing. Copying belongs there rather than on a summary.
 class ModeloWorkReviewApp(ScreenHostApp[None]):
     """Standalone host for a canonical modelo work review screen."""
 
-    CSS = (
+    CSS = tokenised(
         BASE_CSS
         + """
     #modelo-review-body { width: 100%; height: 1fr; }
-#modelo-review-summary { height: auto; overflow-y: auto; }
+    #modelo-review-summary { height: auto; overflow-y: auto; }
     #modelo-review-summary-lines { height: auto; }
     #modelo-review-filters {
         height: auto;
@@ -670,7 +671,7 @@ class ModeloWorkReviewApp(ScreenHostApp[None]):
         grid-size: 2;
         grid-columns: 2fr 3fr;
         grid-rows: auto;
-        grid-gutter: 0 1;
+        grid-gutter: $cadrumo-space-0 $cadrumo-control-gap;
     }
     .modelo-review-filter-label,
     .modelo-review-filter-empty { height: auto; }

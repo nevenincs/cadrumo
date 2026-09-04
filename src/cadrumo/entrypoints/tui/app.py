@@ -55,14 +55,14 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         BASE_CSS
         + """
     #root-account-bar { width: 100%; height: auto; }
-    #root-account { width: 1fr; height: auto; padding: 1 2; text-style: bold; }
+    #root-account { width: 1fr; height: auto; padding: $cadrumo-gutter-y $cadrumo-gutter; text-style: bold; }
     #root-account-actions {
         width: 4fr;
         height: auto;
-        grid-gutter: 0 1;
+        grid-gutter: $cadrumo-space-0 $cadrumo-control-gap;
     }
     #root-account-actions Button { width: 1fr; min-width: 0; margin: 0; }
-    #root-account-refusal { height: auto; color: $warning; padding: 0 2; }
+    #root-account-refusal { height: auto; color: $warning; padding: $cadrumo-space-0 $cadrumo-gutter; }
     """
     )
 

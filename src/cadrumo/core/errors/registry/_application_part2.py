@@ -725,6 +725,26 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.is_compensation.errors.BinCarryForwardPolicyError",
+        ErrorCode(
+            code="REFUSED_IS_BIN_CARRY_FORWARD_POLICY",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_filing_calculate",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.is_compensation.errors.BinCohortShapeError",
+        ErrorCode(
+            code="REFUSED_IS_BIN_COHORT_SHAPE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_filing_calculate",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.iva_compensation.errors.IvaCompensationCarryForwardPolicyError",
         ErrorCode(
             code="REFUSED_IVA_COMPENSATION_CARRY_FORWARD_POLICY",

@@ -119,6 +119,9 @@ def _create_profile() -> None:
     )
     assert session.exit_code == 0, session.output
 
+    completed = invoke_cached_cli(["config", "profile", "complete-setup"])
+    assert completed.exit_code == 0, completed.output
+
 
 def _prepare_calculated_m347_draft() -> None:
     """Create -> calculate a real M347 2024 annual draft; no casillas supplied.

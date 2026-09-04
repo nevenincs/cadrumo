@@ -104,6 +104,9 @@ def _create_profile() -> None:
     )
     assert session.exit_code == 0, session.output
 
+    completed = invoke_cached_cli(["config", "profile", "complete-setup"])
+    assert completed.exit_code == 0, completed.output
+
 
 def _dispatch_confirmation() -> str | None:
     """Dispatch the real ``config profile status`` and return the reported active profile."""
