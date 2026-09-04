@@ -112,6 +112,21 @@ from .schema_scalars import (
 from .schema_scalars import (
     WorkbookCellRefStr as _WorkbookCellRefStr,
 )
+from .schema_scalars import (
+    coerce_modelo_year as _coerce_modelo_year_impl,
+)
+from .schema_scalars import (
+    validate_country_code as _validate_country_code_impl,
+)
+from .schema_scalars import (
+    validate_iban_string as _validate_iban_string_impl,
+)
+from .schema_scalars import (
+    validate_nif_string as _validate_nif_string_impl,
+)
+from .schema_scalars import (
+    validate_period_code as _validate_period_code_impl,
+)
 from .schema_verification import (
     LiveCrossReferenceDecision,
     RegistryVerificationPolicy,
@@ -211,6 +226,11 @@ WorkbookCellRefStr = _WorkbookCellRefStr
 BindingSelectorValue = _BindingSelectorValue
 BindingSelectorMap = _BindingSelectorMap
 BindingSelector = _BindingSelector
+_coerce_modelo_year = _coerce_modelo_year_impl
+_validate_country_code = _validate_country_code_impl
+_validate_iban_string = _validate_iban_string_impl
+_validate_nif_string = _validate_nif_string_impl
+_validate_period_code = _validate_period_code_impl
 
 
 class ContinuidadValidationMode(StrEnum):

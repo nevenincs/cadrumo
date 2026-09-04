@@ -12,8 +12,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from ..errors import RegistryValidationError
-from ..schema import CountryCode
-from ..schema_scalars import _validate_country_code
+from ..schema import CountryCode, _validate_country_code
 from ..schema_surfaces import CasillaDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

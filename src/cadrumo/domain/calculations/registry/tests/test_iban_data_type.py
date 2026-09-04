@@ -11,8 +11,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from ..errors import RegistryValidationError
-from ..schema import IbanString
-from ..schema_scalars import _validate_iban_string
+from ..schema import IbanString, _validate_iban_string
 from ..schema_surfaces import CasillaDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

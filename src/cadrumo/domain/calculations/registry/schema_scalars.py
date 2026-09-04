@@ -42,7 +42,12 @@ __all__ = [
     "_validate_iban_string",
     "_validate_nif_string",
     "_validate_period_code",
+    "coerce_modelo_year",
     "registry_scalar_value_type",
+    "validate_country_code",
+    "validate_iban_string",
+    "validate_nif_string",
+    "validate_period_code",
     "validate_registry_text_scalar",
 ]
 
@@ -519,3 +524,11 @@ registered by ``selector_model_for_source``. ``SerializeAsAny`` preserves the
 concrete model's fields during ``model_dump``/``model_dump_json`` instead of
 serialising through the empty ``BaseModel`` surface.
 """
+
+# Public-internal names let the schema facade preserve its historical private
+# aliases without coupling its implementation to this module's private helpers.
+coerce_modelo_year = _coerce_modelo_year
+validate_country_code = _validate_country_code
+validate_iban_string = _validate_iban_string
+validate_nif_string = _validate_nif_string
+validate_period_code = _validate_period_code
