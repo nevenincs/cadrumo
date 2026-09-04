@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:8fff638250fed37da6d2f176590a3faa1a3c8f7e3f3b39d62c3b54fec9e4a22d'
+body_hash: 'sha256:192fc5f496214df9610ef3462b6f08e9afac03d83cde67f3fb838b3ee36a4600'
 related:
   - "[[2026-08-27-registry-dated-validity-frozen-constant-hunt-audit]]"
 ---
@@ -224,48 +224,83 @@ wrong.
 
 ## Recommendations
 
-Remediate tier four first, despite it being smallest. REMEDIATED: the
-annual-Orden validators now assert shape rather than the legal figures, so a
-future Orden changing a coefficient is accepted while a garbled extraction is
-still refused. Both directions were proved by execution.
+### What was remediated during this audit
 
-Extend the real drift-gate pattern rather than claiming one exists. Every
-constant that has a corresponding registry parameter should be bound by a test
-that RESOLVES the parameter, on the model of the IVA rate assertion. Retire or
-rename the literal-restating cases so they cannot be mistaken for protection.
-REMEDIATED: the amortizacion rate now has such a gate, and the literal-restating
-test is renamed and documented as not being a drift gate.
+Tier four is CLOSED. The annual-Orden validators assert shape rather than the
+legal figures, so a future Orden that changes a coefficient is accepted while a
+garbled extraction is still refused. Both directions were proved by execution.
+The five duplicated Lorca comparisons are gone.
 
-The promotion recommendation below has a smaller scope than it first appears.
-Only two constants have a registry parameter at all, and both already sit at
-tier one or tier two. The bottleneck is not promotion but ABSENCE: the remaining
-values have no parameter to resolve, so authoring one is the prerequisite for
-every other fix. Rank that authoring by consumer count and filing impact.
+The drift-gate pattern was extended and made honest. The amortizacion rate is now
+bound to its dated parameter by a test that RESOLVES the registry, and the
+literal-restating test was renamed and documented as explicitly not a drift gate
+so no future reader mistakes it for protection.
 
-Prefer promotion to tier one over tier two wherever a consumer already runs
-inside a period context. Reading the parameter at runtime and failing closed on
-absence is strictly stronger than testing agreement, and it is already
-implemented in the rental tier resolver.
+The Modelo 200 rate-band thresholds are typed money parameters in both revisions,
+with all ten inline occurrences replaced by parameter references. All three bands
+were re-measured and still select the same tipo.
 
-Give inline formula literals a home. This is the largest population and the
-least discoverable. Adjudicating all 160 individually is a campaign in itself.
-REMEDIATED for the Modelo 200 rate-band thresholds, which had the demonstrated
-cost: both turnover ceilings are now typed money parameters carrying their own
-legal references and dated validity, and all ten inline occurrences across both
-revisions were replaced by parameter references. All three rate bands were
-re-measured and still select the same tipo.
+The article eighty-one split is CLOSED. The maternidad figures are registry
+parameters across all six Modelo 100 revisions, each grounded in that year's own
+manual, and the consumer resolves them at runtime and fails closed. The raised cap
+is now DERIVED from its two inputs rather than stored, and the reform year is
+expressed as PARAMETER PRESENCE rather than an integer. The manual's own worked
+example reproduces exactly.
 
-Apply a selective test, never blanket relocation. For each value ask whether the
-provision fixes a number or a reference to a number somebody else re-fixes.
-Preserve deliberate non-sharing between provisions. Leave provably closed
-windows as leaf constants.
+The article fifty-eight and sixty-one qualifying conditions, and the article
+twenty-three carry-forward window, are authored across all six revisions. The
+conditions are bound by a drift gate rather than a runtime read, deliberately:
+they are consumed at roughly twenty call sites inside per-descendant predicates,
+and the ladder's second rung is the proportionate answer there.
 
-An architecturally significant decision remains open and belongs in a follow-on
-ADR: whether registry parameters should gain a typed applicability facet, so an
-age band, a turnover threshold or a comparison margin can be declared as data
-beside the amount it selects. Every finding in the identifiers and
-inline-literals groups reduces to the absence of that facet. This audit does not
-make that decision.
+### What is BLOCKED, and why it must not be forced
+
+Three clusters cannot be authored without either misstating the law or breaking
+calculations that work today, and each was measured rather than assumed.
+
+The bienes de inversion figures key on the ACQUISITION year. Modelo 303 declares
+revisions only from 2022 while acquisitions run from 2000 and the window lasts
+nine years, so a runtime read would refuse for most of the register. Keying on the
+regularisation year instead would apply current law retroactively, which inverts
+the provision's purpose.
+
+The prorrata especial margins are the same trap and sharper: one provision, two
+values, two validity windows and two DIFFERENT comparison operators, with the
+earlier value governing years no revision covers.
+
+The SAL figures and the maritime exemption fraction have no period in their
+consumer signatures at all, so promotion would require a signature change before
+any registry work is meaningful.
+
+### The decision this audit does not make
+
+Every blocked item reduces to one missing capability: a registry parameter is
+addressed by modelo, revision and filing period, and cannot express a value whose
+validity keys on an EVENT DATE such as an acquisition. A follow-on ADR must decide
+whether parameters gain that axis. Until it does, the blocked figures are
+defensible leaf constants and should be given corpus drift gates rather than being
+relocated.
+
+### The standing rules for anyone continuing this work
+
+Apply the selective test, never blanket relocation: does the provision fix a
+number, or a reference to a number somebody else re-fixes? Preserve deliberate
+non-sharing between provisions, because three sites correctly refuse to merge
+values that agree today and consolidating by value rather than by provision would
+introduce defects. Leave provably closed windows as leaf constants.
+
+Never substitute a catalogued-but-wrong legal reference to make validation pass.
+During this remediation an invented citation to an uncatalogued RIRPF article was
+refused, and the parameter was WITHDRAWN rather than repointed: a false legal
+claim inside filing-grade data is worse than an honestly labelled Python constant.
+
+### A finding about the registry itself, which is positive
+
+The grounding validation caught two authoring errors immediately and by exact
+message: a legal reference cited outside its effective window, and a reference to
+an uncatalogued article. Registry authoring is safe to attempt precisely because
+these refusals are strong and specific. That strength is the argument for moving
+more values in, not fewer.
 
 ## Measured versus assumed
 
