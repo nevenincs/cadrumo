@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:6659813e9ca3fabc79f5a64474d0a68d6697aedadaedb0c69b4c4d83f69dea61'
+body_hash: 'sha256:ebc77a253257c0bd7929648bcb4d284a6a55ce53797bcafa6edbc6f09c7c8d8d'
 ---
 
 # `reachability-burndown` plan
@@ -30,7 +30,7 @@ Produce an evidenced classification for every module and orphaned-test finding, 
 
 - [x] `W01.P01.S01` - Classify every unreachable and module-exec-only module by outside-use label and semantic uniqueness probe, recording the evidence behind each supersession or staging claim; `dev/audit`.
 - [x] `W01.P01.S02` - Classify the 21 orphaned test modules against whether their shipped subjects are themselves findings; `src/cadrumo`.
-- [ ] `W01.P01.S03` - Partition the exact-confidence symbol population by owning package and record the dominant kinds per area; `dev/audit`.
+- [x] `W01.P01.S03` - Partition the exact-confidence symbol population by owning package and record the dominant kinds per area; `dev/audit`.
 
 ## Wave `W02` - resolve by owning home
 

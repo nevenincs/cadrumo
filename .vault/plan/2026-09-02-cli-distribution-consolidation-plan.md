@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:c73de3087cb81856afce096b163e5043a646113143dd9b8fa1d7bd84e7e6a669'
+body_hash: 'sha256:ebf8f4b3cf97585970957ea6fd4ad7af0e5585fb880f75605a4bda61d2665b08'
 ---
 
 # `cli-distribution-consolidation` plan
@@ -130,6 +130,7 @@ Bring the runbook, the recipe surface and the workflow family back into agreemen
 - [x] `P11.S43` - Reduce the recipe surface to the commands the adopted path uses; `justfile`.
 - [x] `P11.S44` - Reconcile the packaging workflow family against the sibling shape; `.github/workflows/packaging-quick.yml`.
 - [x] `P11.S45` - Document the release-candidate evidence campaign the runbook omits; `RELEASING.md`.
+- [ ] `P11.S46` - Restate the workflow names three surfaces still cite from the retired release path; `docs/_release_checklist.yaml`.
 
 ## Parallelization
 
