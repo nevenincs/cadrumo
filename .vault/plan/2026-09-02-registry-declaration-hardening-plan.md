@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:e8972770ca1f7f039228d1e75e556259c7199d2ecad82e4f3413930696ac4ae7'
+body_hash: 'sha256:124a66abdb9e953a3daefe2b337a2a1ce4c86f1bf128f29a04fe1f8273c64b7d'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -330,6 +330,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S486` - Retire the terminology_handbook facade by promoting only the four private modules actually reached from another package rather than all nine, leaving five correctly private, with the failure set identical across all four stages; `dev/docs/terminology_handbook,dev/docs`.
 - [x] `W02.P02.S487` - Split the sequences library out of __main__ into checks.py, leaving a 161-line entry point, then promote seven private modules and retire the last facade so facade_retirement reports zero packages; `dev/docs/sequences`.
 - [x] `W02.P02.S488` - Teach the promoter that a module imported by name from its package is a reference too, and that its body usages must move with it, since a rename leaves both naming something nothing binds; `dev/quality/module_promotion.py`.
+- [x] `W02.P02.S489` - Replace the two live facade-population measurements with the invariant they served, that no dev package initialiser forwards a name, now landable at zero packages and given teeth by a constructed forwarding initialiser; `dev/quality/tests/test_facade_retirement.py`.
+- [x] `W02.P02.S490` - Restore the prose scan the traversal patch nested inside the wrong loop, and correct the test that claimed traversal survives a rename when it survives only a facade retirement; `dev/quality/module_promotion.py,dev/quality/tests/test_module_promotion.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

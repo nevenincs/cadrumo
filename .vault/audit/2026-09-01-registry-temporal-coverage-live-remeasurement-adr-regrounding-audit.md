@@ -13218,3 +13218,45 @@ failure set is identical after the split, after the seven promotions, after the
 consumers were repointed, and after the initialiser was emptied. The one new
 failure that appeared was the one predicted at `S475`, the last of the three
 sibling error-ownership tests, now restated like the other two.
+
+
+## The measurements end, and the invariant replaces them
+
+Retiring the last facade broke four of my own tests, and all four were correct
+to break.
+
+Two measured the live facade population - how many consumer sites existed, and
+that both underscore refusal reasons still occurred. Each carried a "so this
+proves nothing" guard, and each fired the moment the population went to zero.
+That is how a measurement should end: it stops having a subject.
+
+They are replaced by the invariant they were in service of - **no package
+initialiser under `dev` forwards a name** - which could not have been written
+before now, because it would have failed on nine packages. It has teeth: a
+constructed package whose initialiser forwards a name is detected, and the same
+package with an inert initialiser is not, so the gate is not simply always
+green.
+
+The other two were failures in the promoter, from my own patch, and one of them
+was a silent data loss that the tests caught and I had not.
+
+**The prose scan stopped running.** Inserting the traversal pass left the prose
+loop nested inside the traversal loop instead of the per-file loop, so dotted
+documentation references were only examined in files that also imported a module
+by name. Every one of the seven `sequences` promotions ran under that bug. A
+sweep afterwards found no stale `dev.docs.sequences._*` reference anywhere, so
+nothing was actually lost - but that was luck, and it is recorded as luck rather
+than as a clean result.
+
+**A test of mine asserted the wrong thing and was defending it.** It said
+traversal survives a rename, in a comment explaining why the plan correctly
+ignored it. It does not. Traversal survives a FACADE RETIREMENT - emptying an
+initialiser leaves `from pkg import submodule` working, because the submodule is
+still called that - and I carried the claim across to a rename, where the name
+being imported is precisely what changes. The test now asserts the opposite, and
+two more cover the body-usage rewrite and the same-named local that must not be
+touched.
+
+Both of those defects were introduced by an edit that made the tool more correct
+and were caught only because the tool has tests. The first would have quietly
+degraded every future promotion.
