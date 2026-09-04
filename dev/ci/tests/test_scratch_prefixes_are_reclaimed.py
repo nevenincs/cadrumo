@@ -34,7 +34,7 @@ from typing import Final
 
 import pytest
 
-from cadrumo.tests.collection_storage_root import SWEPT_SCRATCH_STEMS, SETTINGS_STEM
+from cadrumo.tests.collection_storage_root import SETTINGS_STEM, SWEPT_SCRATCH_STEMS
 
 from ..._paths import REPO_ROOT
 
