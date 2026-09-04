@@ -4,7 +4,7 @@ This is the ``command``-form preprocessor the repo-root
 ``.vaultragpreprocess.toml`` rules invoke (one subprocess per matched source
 file, ``{path}`` substituted token-wise by the upstream runner). It routes the
 source file to the existing extractor family by suffix, adapts the extractor's
-:class:`~dev.docs.preprocess.PreprocessOutput` parts onto the upstream
+:class:`~dev.docs.preprocess.schema.PreprocessOutput` parts onto the upstream
 ``PreprocOutput`` contract (schema major pinned by
 :data:`UPSTREAM_SCHEMA_VERSION`), and prints exactly one JSON document on
 stdout — the contract ``vaultspec-rag preprocess run-one`` validates.

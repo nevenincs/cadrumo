@@ -31,38 +31,7 @@ Major declarations:
 * :func:`render_normative_prose` -- the one BOE-markup-to-prose rendering,
   shared with any consumer that must compare an extracted sidecar's text
   against markup the sidecars do not cover.
+
+Every symbol this package defines is imported from the module that defines it;
+this initialiser is an inert namespace marker and forwards nothing.
 """
-
-from __future__ import annotations
-
-from .normatives_html import render_normative_prose
-from .schema import (
-    PREPROCESS_SCHEMA_VERSION,
-    ExtractionStatus,
-    PreprocessOutput,
-    PreprocessUnit,
-    SourceDocumentKind,
-)
-from .sidecar import (
-    EXTRACTED_JSON_SUFFIX,
-    EXTRACTED_TEXT_SUFFIX,
-    PreprocessSidecarError,
-    load_sidecar,
-    sidecar_paths_for,
-    write_sidecar,
-)
-
-__all__ = [
-    "EXTRACTED_JSON_SUFFIX",
-    "EXTRACTED_TEXT_SUFFIX",
-    "PREPROCESS_SCHEMA_VERSION",
-    "ExtractionStatus",
-    "PreprocessOutput",
-    "PreprocessSidecarError",
-    "PreprocessUnit",
-    "SourceDocumentKind",
-    "load_sidecar",
-    "render_normative_prose",
-    "sidecar_paths_for",
-    "write_sidecar",
-]
