@@ -14746,3 +14746,43 @@ to a class due to be removed would satisfy the protocol and defeat the Step.
 
 The suite that holds it remains unreachable by any lane, which is why a live
 `AttributeError` has sat there without a signal.
+
+
+## The codemod that could not be imported
+
+`S526` asked for tests on the two untested modules that rewrite source files
+behind `--apply`. Writing them found that one of them does not run.
+
+`dev/quality/import_centralization_codemod.py` inserted its own directory on
+`sys.path` and imported its sibling by bare name. That loads
+`import_hygiene_scan` as a TOP-LEVEL module, so its own
+`from .._paths import ...` has no parent package and raises. The codemod was
+unimportable by every route including `python -m`, and had been for as long as
+nothing imported it - which is precisely as long as it had no tests.
+
+One line fixes it: `from . import import_hygiene_scan as scan`. It now imports
+and runs, reporting zero rewritable statements in dry run.
+
+Both codemods turn out to be untestable in apply mode, from opposite ends. The
+sweep walks a module-level constant pointing at the real `src` tree with no
+injectable root at all. The codemod takes an explicit path and then rejects
+every path but that tree's, because it derives module names through the hygiene
+scanner. So neither can be exercised destructively without rewriting the
+repository, and no test here does.
+
+What the tests hold instead is what each can prove. For the sweep: that
+importing it does not arm it, since the `--apply` flag is a module-level global
+read from `sys.argv` and five functions write when it is set; that an
+unreadable path yields `None` rather than killing a run partway; and that a pin
+inside embedded Python source is found and anchored to the parent line, which is
+the defect its docstring records a real gate having hidden. For the codemod: the
+relative-prefix arithmetic including the initialiser case that is one level
+different, the style choice that must follow the file, the line-limit wrap, and
+that a path outside the source root is refused BEFORE any write.
+
+That last is asserted because the refusal is incidental rather than designed - it
+falls out of a module-name lookup, not an explicit guard - and it is the only
+thing between this codemod and a mistyped path.
+
+`module_test_reach` now reports **37 unreached, 7 writing, and zero declaring an
+apply flag**. The category that ranked first when the report was built is empty.
