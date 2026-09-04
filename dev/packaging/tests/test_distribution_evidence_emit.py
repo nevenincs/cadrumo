@@ -252,6 +252,8 @@ def test_exact_path_foreign_launcher_is_refused(tmp_path: Path) -> None:
             entry_point="cadrumo-mcp",
             expected_value="cadrumo_harness.mcp:main",
         )
+
+
 def test_build_binds_cohort_and_retains_both_transports(tmp_path: Path) -> None:
     """The record binds the exact cohort and carries CLI transcripts + MCP proof."""
     cohort = _release_cohort(tmp_path / "cohort")
