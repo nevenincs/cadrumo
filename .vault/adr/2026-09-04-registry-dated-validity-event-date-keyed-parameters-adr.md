@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:bd3d5d7bb2e78796fc8552a077f53bc058ea98a9d1f4f63f2af4c4abef083f49'
+body_hash: 'sha256:82b5f09ed6d6db3daa70fa6c8525793d7df94f5b0c9631abd182f9d3e8ea1bad'
 related:
   - "[[2026-09-04-registry-dated-validity-regulatory-constant-placement-sweep-audit]]"
   - "[[2026-08-19-registry-evidence-window-axes-adr]]"
@@ -104,11 +104,16 @@ forbid.
 - **Author for covered years and fall back to a constant.** Rejected as the
   silent consumer-side fallback the authority-flow rule forbids.
 
-- **Widen the governed-span check to superseded-provision reach, then supply the
-  event axis at the call site. CHOSEN.** No new address model, no new authority,
-  no new value space. The retroactive half already ships; this adds the forward
-  half as a second explicit declaration and unblocks the one check that actually
-  refuses.
+- **Widen the governed-span check to superseded-provision reach on the legal
+  reference. REJECTED after adjudication.** It declares a property of the
+  PROVISION in order to satisfy a constraint about the REVISION, and the
+  assertion is unverifiable against the provision's own text.
+
+- **Check the citation against the span the parameter value defends. CHOSEN.** No
+  new address model, no new authority, no new value space, and no new field: it
+  applies the accepted principle that an evidence window is checked against the
+  span its citation defends, through the carrier mechanism that principle already
+  ships for deadline windows.
 
 ## Constraints
 
@@ -125,8 +130,13 @@ and the axis, enumerable and gated in both directions, per the accepted standard
 that a narrow registry mechanism widens only by explicit evidence-carrying
 declaration.
 
-The retroactive-only guard on the existing governed span is NOT relaxed. Forward
-reach is a separate declaration, so neither can silently widen the other.
+The retroactive-only guard on the governed span is NOT relaxed, and no forward
+direction is added: the forward case is answered on the carrier, never on the
+reference. The carrier exemption is doubly narrowed exactly as the
+deadline-window axis is — only a reference cited EXCLUSIVELY by parameters earns
+it, and only against a value window that is closed and wholly inside the
+provision's governed span. A submission-date-keyed value never earns it, that
+axis fixing no applicable law.
 
 Consolidation stays by PROVISION, never by VALUE. Several sites deliberately
 refuse to merge numerically agreeing values across provisions, and merging them
@@ -134,13 +144,29 @@ would introduce defects.
 
 ## Implementation
 
-The governed-span axis ships in its retroactive direction. The work here is the
-FORWARD direction: a declared superseded-reach span on the legal reference,
-distinct from the existing retroactive span so neither declaration can relax the
-other, read by the substantive-law check at the point it today refuses a citation
-whose end date precedes the revision's start. The authorising evidence-window ADR
-is amended in place to record that its retroactive axis has landed; its
-retroactive-only constraint is widened HERE, not there.
+The governed-span axis ships in its retroactive direction and is NOT extended. No
+forward declaration is added. A repealed provision cannot state, in its own text,
+which later revisions may cite it, so a forward-reach field would be an assertion
+no corpus clause could check — the one property the authorising evidence-window
+ADR requires of a declared reach — and its correct value would be dictated by
+registry topology rather than by law, changing whenever a modelo gains a
+revision.
+
+What is mis-stated is the CHECK, not the provision. The substantive-law branch
+assumes a revision may cite only provisions covering its own window; a revision
+carrying historical values legitimately cites historical provisions, because the
+citation defends the VALUE's window, which lies inside the provision's force, and
+not the revision's, which does not. The work is therefore the second axis the
+evidence-window ADR already adopted for deadline windows, applied to the
+parameter carrier: a substantive-law citation whose governed span is disjoint
+from the revision window is admitted only when the revision-scoped parameter
+carrying it declares a dated value whose own CLOSED window is CONTAINED in that
+governed span. Containment rather than overlap, a closed value window, and
+exclusivity of carrier are what keep the gate biting; all three are computed from
+records the check already holds, so no context is threaded and no schema field is
+added. The authorising evidence-window ADR is amended in place to record that its
+retroactive axis has landed; its retroactive-only constraint STANDS, here as
+there.
 
 The comparison operator IS registry data. A provision whose redactions differ on
 the operator as well as the value cannot be expressed as two dated values
@@ -187,8 +213,9 @@ What survives is the audit's finding, narrowed to what is measurable: the axis,
 the schema and the fail-closed resolver all ship; the governed span ships in one
 direction; one grounding check refuses the other; no caller supplies a non-filing
 axis. That is a much smaller problem than a missing address model. Half the
-mechanism already exists; what this decides is the forward direction the shipped
-half deliberately refuses, and why refusing it was right until now.
+mechanism already exists; what this decides is that the remaining half belongs on
+the CARRIER and not on the reference, and why the shipped refusal of a forward
+declaration was right and stays.
 
 ## Consequences
 
@@ -206,6 +233,6 @@ decision exists to remove.
 Mixed-axis parameters become a load-time refusal, closing a gap where a
 cross-axis double match would otherwise surface only at runtime.
 
-Until the forward span lands, the blocked clusters remain leaf constants and must
+Until the carrier gate lands, the blocked clusters remain leaf constants and must
 not be forced into parameters; the placement audit records why each is blocked so
 the attempt is not repeated.

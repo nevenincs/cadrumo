@@ -111,5 +111,25 @@ refuses to open standalone (it needs an active profile pointer), so this is the
 only place the rhythm can be observed. Teeth proven by removing the heading
 class: `(0, 0) rather than the (2, 1) rhythm`. Restored by copy; 51 passed.
 
-Row density remains untouched, and is the one part of this step's scope not
-addressed.
+Row density, the last part of this step's scope, is now one decision.
+`cadrumo-cell-padding` joins the token table and `ContentDataTable` applies it
+so no call site names a number. Home's three lists had set `cell_padding=0`
+with no reason recorded while every other table in the product took Textual's
+default of 1, so two surfaces disagreed about where a row begins; those
+overrides are removed.
+
+Density turned out to be an ALIGNMENT question rather than a spacing one. A
+table insets its first column by the cell padding, so a heading flush at the
+container edge starts one cell to the left of its own data and the group reads
+as ragged. `.cadrumo-heading` and Home's `.home-state` lines now take the same
+inset, and Home, AEAT Sync, Ledger overview and Declarations overview each show
+one left edge from heading through rows.
+
+Gated by `test_a_heading_shares_its_left_edge_with_the_rows_it_owns`, the
+horizontal counterpart to the rhythm gate: neither can see the other's defect,
+because correct gaps above and below a heading say nothing about whether it
+lines up with the rows it introduces. It repeated the rhythm gate's own early
+mistake -- measuring across the full painted line found Home's SIDEBAR text and
+reported a left edge of 81 -- and is measured inside the heading's column span
+for the same reason. Teeth proven by removing the inset: two surfaces fail
+naming both columns. Restored by copy; 94 passed.
