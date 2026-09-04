@@ -314,3 +314,52 @@ def test_a_reference_does_not_claim_a_longer_name_that_starts_with_it() -> None:
     assert "dev.harness._fields.ScoredField" in rewritten
     assert "dev.harness._scoring.Scored" in rewritten
     assert "_scoring.ScoredField" not in rewritten
+
+
+def test_an_entry_point_target_is_refused_under_its_own_reason() -> None:
+    """``__main__`` is not a privacy problem and must not be reported as one.
+
+    It matches the underscore test, so the privacy rule would claim it and send
+    a reader to make ``__main__`` public - which is not the fix and is not a
+    thing anyone should do. A module run as ``python -m package`` is an entry
+    point; a facade forwarding a library symbol out of one means the library
+    lives inside the entry point.
+    """
+    from ..facade_retirement import refusal_reason, rewrite_statement
+
+    entry = FacadePackage(dotted="widget", exports={"run": "widget.__main__"}, submodules=frozenset({"__main__"}))
+    outsider = _site((("run", None),), package="other.package")
+    assert refusal_reason(outsider, entry) == "entry_point_target"
+    assert rewrite_statement(outsider, entry) == ()
+
+
+def test_an_entry_point_target_is_refused_inside_the_owning_package_too() -> None:
+    """Unlike privacy, this refusal does not soften within the package.
+
+    A private module may legitimately be reached by its own tests. An entry
+    point holding library code is wrong for everyone, including its own package,
+    so the exemption that applies to the first must not apply to the second.
+    """
+    from ..facade_retirement import refusal_reason
+
+    entry = FacadePackage(dotted="widget", exports={"run": "widget.__main__"}, submodules=frozenset({"__main__"}))
+    assert refusal_reason(_site((("run", None),), package="widget"), entry) == "entry_point_target"
+    assert refusal_reason(_site((("run", None),), package="widget.tests"), entry) == "entry_point_target"
+
+
+def test_the_two_underscore_refusals_are_reported_separately_on_the_live_tree() -> None:
+    """Both reasons occur live, and neither is folded into the other.
+
+    Collapsing them would report the repository as having 33 sites needing a
+    public module, when 31 need one and 2 need a library moved out of an entry
+    point - different work with a different owner.
+    """
+    from ..facade_retirement import REFUSALS, facade_import_sites, facade_packages, refusal_reason
+
+    packages = facade_packages()
+    by_dotted = {package.dotted: package for package in packages}
+    reasons = [refusal_reason(site, by_dotted[site.package]) for site in facade_import_sites(packages)]
+    seen = {reason for reason in reasons if reason is not None}
+    assert seen <= set(REFUSALS)
+    assert "cross_package_private_target" in seen, "no private target found, so this proves nothing"
+    assert "entry_point_target" in seen, "no entry-point target found, so this proves nothing"

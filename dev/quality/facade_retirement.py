@@ -36,6 +36,13 @@ Three things are deliberately left alone:
   private import, which is the worse of the two violations. Those sites are
   refused with a reason, and the fix is to make the defining module public
   first - work the facade was concealing.
+- **A symbol defined in ``__main__``.** Refused everywhere, including inside
+  the owning package, and reported under its own reason rather than as a
+  privacy problem - because the fix is not to make ``__main__`` public. A module
+  run as ``python -m package`` is an entry point, and a facade forwarding a
+  library symbol out of one means the library lives inside the entry point.
+  ``dev.docs.sequences`` is the repository's only instance and its ``__main__``
+  is 890 lines.
 - **The initialiser itself.** Emptying it is a separate act with a separate
   blast radius, and doing it in the same pass would leave the tree unimportable
   between two writes if the rewrite were interrupted.
