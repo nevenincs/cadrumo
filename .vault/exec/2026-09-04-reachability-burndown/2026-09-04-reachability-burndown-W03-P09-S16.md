@@ -5,16 +5,11 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:c7021465a1530c56ec864cef7b3f5011a6c58b53334b34b878fc8e513190f70a'
+body_hash: 'sha256:36ce0b60103c3793a7ff546e2f1a347825355443cf225ab3036bb96f36f6f86e'
 step_id: 'S16'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Merge the duplicated Decimal constants to a canonical home and repoint every call site, since a drifted numeric constant is a calculation defect
 
