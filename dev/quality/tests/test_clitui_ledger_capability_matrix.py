@@ -1,0 +1,1314 @@
+"""Adversarial contract tests for the Ledger capability campaign matrix.
+
+The matrix is a gate, not a status report.  These tests keep both halves of
+each contract visible: a complete fixture must close the gate it claims to
+close, while a representative mutation must reopen it or be refused at the
+model boundary.  The fixture is deliberately small, but it exercises every
+axis and every mandatory denominator source stream so that a one-row shortcut
+cannot masquerade as the live campaign census.
+"""
+
+from __future__ import annotations
+
+from datetime import UTC, datetime
+from typing import Final
+
+import pytest
+from pydantic import ValidationError
+
+from ..clitui_ledger_capability_matrix import (
+    ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
+    ApplicabilityState,
+    AuthorityDispositionEntryV1,
+    AuthorityDispositionSnapshotV1,
+    AuthorityMigrationHistoryV1,
+    AxisAssessmentV1,
+    AxisProofState,
+    CanonicalSemanticHomeV1,
+    CapabilityAnnotation,
+    CapabilityFindingV1,
+    CensusStreamObservationV1,
+    DenominatorSourceKind,
+    EvidenceCoordinateV1,
+    EvidenceKind,
+    EvidenceRole,
+    EvidenceSubjectSnapshotV1,
+    InitialCliOwnership,
+    LedgerCampaignControlsV1,
+    LedgerCapabilityAxis,
+    LedgerCapabilityIdentityV1,
+    LedgerCapabilityMatrixV1,
+    LedgerCapabilityRowV1,
+    LedgerDenominatorSnapshotV1,
+    LedgerGapClass,
+    LedgerGate,
+    LedgerLiveCensusReportV1,
+    LedgerMatrixAcceptanceAttestationV1,
+    ReviewRuling,
+    SurfaceCapabilityState,
+    evaluate_ledger_capability_gate,
+    evaluate_ledger_capability_gates,
+    reopened_gates_for_denominator_drift,
+    validate_ledger_matrix_currentness,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+_OBSERVED_AT: Final[datetime] = datetime(2026, 9, 4, 12, 0, tzinfo=UTC)
+_LATER_OBSERVED_AT: Final[datetime] = datetime(2026, 9, 4, 12, 1, tzinfo=UTC)
+_SUBJECT_ID: Final[str] = "subject.ledger.matrix"
+_CENSUS_ID: Final[str] = "census.ledger.baseline"
+_ROW_ID: Final[str] = "ledger.entries.list"
+_SUBJECT_DIGEST: Final[str] = "sha256:" + "a" * 64
+
+
+def _subject(
+    *,
+    subject_id: str = _SUBJECT_ID,
+    revision: str = "matrix-rev-1",
+    digest: str = _SUBJECT_DIGEST,
+    observed_at: datetime = _OBSERVED_AT,
+    locator: str = "reference://clitui-ledger/matrix",
+) -> EvidenceSubjectSnapshotV1:
+    """Build one current, bounded subject for all fixture evidence."""
+    return EvidenceSubjectSnapshotV1(
+        subject_id=subject_id,
+        locator=locator,
+        revision=revision,
+        digest=digest,
+        observed_at=observed_at,
+    )
+
+
+_SUBJECT: Final[EvidenceSubjectSnapshotV1] = _subject()
+
+
+def _evidence(
+    evidence_id: str,
+    role: EvidenceRole,
+    axes: frozenset[LedgerCapabilityAxis],
+    *,
+    kind: EvidenceKind | None = None,
+    subject: EvidenceSubjectSnapshotV1 = _SUBJECT,
+    claim: str = "The reviewed fixture proves this bounded claim.",
+) -> EvidenceCoordinateV1:
+    """Build a role-correct coordinate unless a test explicitly mutates it."""
+    default_kinds = {
+        EvidenceRole.APPLICABILITY_REVIEW: EvidenceKind.REVIEW,
+        EvidenceRole.BASELINE: EvidenceKind.TEST,
+        EvidenceRole.DIRECT_BACKEND_BEHAVIOR: EvidenceKind.TEST,
+        EvidenceRole.ADAPTER_DETECTOR: EvidenceKind.TEST,
+        EvidenceRole.CLI_SUCCESS: EvidenceKind.TEST,
+        EvidenceRole.CLI_REFUSAL: EvidenceKind.TEST,
+        EvidenceRole.CLI_ARTIFACT: EvidenceKind.TEST,
+        EvidenceRole.TUI_PARITY: EvidenceKind.TEST,
+        EvidenceRole.TUI_REACHABILITY: EvidenceKind.TEST,
+        EvidenceRole.MATRIX_PUBLICATION: EvidenceKind.REFERENCE,
+        EvidenceRole.INDEPENDENT_ENGINEERING_REVIEW: EvidenceKind.REVIEW,
+    }
+    return EvidenceCoordinateV1(
+        evidence_id=evidence_id,
+        kind=kind or default_kinds[role],
+        role=role,
+        axes=axes,
+        subject_id=subject.subject_id,
+        subject_revision=subject.revision,
+        subject_digest=subject.digest,
+        observed_at=subject.observed_at,
+        locator=subject.locator,
+        claim=claim,
+    )
+
+
+def _stream(
+    source: DenominatorSourceKind,
+    capability_ids: tuple[str, ...] = (),
+    *,
+    revision: str = "census-rev-1",
+    observed_at: datetime = _OBSERVED_AT,
+    scan_succeeded: bool = True,
+    readable: bool = True,
+    complete: bool = True,
+    ambiguous: bool = False,
+    reviewed_zero: bool | None = None,
+) -> CensusStreamObservationV1:
+    """Build a stream with its digest calculated over the observed scan."""
+    zero = not capability_ids if reviewed_zero is None else reviewed_zero
+    draft = CensusStreamObservationV1.model_construct(
+        source=source,
+        revision=revision,
+        observed_at=observed_at,
+        scan_succeeded=scan_succeeded,
+        readable=readable,
+        complete=complete,
+        ambiguous=ambiguous,
+        reviewed_zero=zero,
+        capability_ids=capability_ids,
+        digest="",
+    )
+    return CensusStreamObservationV1(
+        source=source,
+        revision=revision,
+        observed_at=observed_at,
+        scan_succeeded=scan_succeeded,
+        readable=readable,
+        complete=complete,
+        ambiguous=ambiguous,
+        reviewed_zero=zero,
+        capability_ids=capability_ids,
+        digest=draft.calculated_digest,
+    )
+
+
+def _report(
+    capability_ids: tuple[str, ...] = (_ROW_ID,),
+    *,
+    census_id: str = _CENSUS_ID,
+    revision: str = "census-rev-1",
+    observed_at: datetime = _OBSERVED_AT,
+    streams: tuple[CensusStreamObservationV1, ...] | None = None,
+) -> LedgerLiveCensusReportV1:
+    """Build all seven mandatory streams, using reviewed zeros where empty."""
+    selected_streams = streams or tuple(
+        _stream(
+            source,
+            capability_ids if source is DenominatorSourceKind.CLI_ENDPOINT else (),
+            revision=revision,
+            observed_at=observed_at,
+        )
+        for source in DenominatorSourceKind
+    )
+    draft = LedgerLiveCensusReportV1.model_construct(
+        census_id=census_id,
+        revision=revision,
+        observed_at=observed_at,
+        streams=selected_streams,
+        digest="",
+    )
+    return LedgerLiveCensusReportV1(
+        census_id=census_id,
+        revision=revision,
+        observed_at=observed_at,
+        streams=selected_streams,
+        digest=draft.calculated_digest,
+    )
+
+
+def _snapshot(report: LedgerLiveCensusReportV1) -> LedgerDenominatorSnapshotV1:
+    """Freeze a live report into the accepted/current denominator shape."""
+    return LedgerDenominatorSnapshotV1.from_live_report(report)
+
+
+def _authority_snapshot(
+    denominator: LedgerDenominatorSnapshotV1,
+    rows: tuple[LedgerCapabilityRowV1, ...],
+) -> AuthorityDispositionSnapshotV1:
+    """Build the immutable initial-ownership census for a set of rows."""
+    entries = tuple(
+        AuthorityDispositionEntryV1(
+            row_id=row.identity.row_id,
+            initial_cli_ownership=row.authority_migration.initial_cli_ownership,
+        )
+        for row in sorted(rows, key=lambda candidate: candidate.identity.row_id)
+    )
+    draft = AuthorityDispositionSnapshotV1.model_construct(
+        census_id=denominator.census_id,
+        revision=denominator.revision,
+        observed_at=denominator.observed_at,
+        entries=entries,
+        digest="",
+    )
+    return AuthorityDispositionSnapshotV1(
+        census_id=denominator.census_id,
+        revision=denominator.revision,
+        observed_at=denominator.observed_at,
+        entries=entries,
+        digest=draft.calculated_digest,
+    )
+
+
+def _assessment(
+    axis: LedgerCapabilityAxis,
+    *,
+    prefix: str,
+    applicable: bool = True,
+    proof: AxisProofState = AxisProofState.PROVEN,
+    surface_state: SurfaceCapabilityState | None = None,
+    extra_evidence: tuple[EvidenceCoordinateV1, ...] = (),
+) -> AxisAssessmentV1:
+    """Build one reviewed axis with exact applicability and baseline evidence."""
+    review = _evidence(
+        f"evidence.{prefix}.applicability.{axis.value}",
+        EvidenceRole.APPLICABILITY_REVIEW,
+        frozenset({axis}),
+    )
+    if not applicable:
+        return AxisAssessmentV1(
+            axis=axis,
+            applicability=ApplicabilityState.NOT_APPLICABLE,
+            applicability_rationale="The reviewed capability has no obligation on this axis.",
+            applicability_review_evidence=review,
+            proof=AxisProofState.NOT_APPLICABLE,
+            surface_state=(
+                SurfaceCapabilityState.NOT_APPLICABLE if axis in {
+                    LedgerCapabilityAxis.BACKEND,
+                    LedgerCapabilityAxis.CLI,
+                    LedgerCapabilityAxis.TUI,
+                }
+                else None
+            ),
+            evidence=(),
+        )
+    if axis in {LedgerCapabilityAxis.BACKEND, LedgerCapabilityAxis.CLI, LedgerCapabilityAxis.TUI}:
+        effective_surface = surface_state or SurfaceCapabilityState.PROVEN
+    else:
+        effective_surface = None
+    baseline = _evidence(
+        f"evidence.{prefix}.baseline.{axis.value}",
+        EvidenceRole.BASELINE,
+        frozenset({axis}),
+    )
+    return AxisAssessmentV1(
+        axis=axis,
+        applicability=ApplicabilityState.APPLICABLE,
+        applicability_rationale="The reviewed capability has an obligation on this axis.",
+        applicability_review_evidence=review,
+        proof=proof,
+        surface_state=effective_surface,
+        evidence=(baseline, *extra_evidence),
+    )
+
+
+def _row(
+    row_id: str = _ROW_ID,
+    *,
+    initial_cli_ownership: InitialCliOwnership = InitialCliOwnership.CLI_OWNED,
+    migration_completed: bool = True,
+    tui_applicable: bool = True,
+    prefix: str = "entries_list",
+    findings: tuple[CapabilityFindingV1, ...] = (),
+) -> LedgerCapabilityRowV1:
+    """Build a complete row whose operational evidence can close every gate."""
+    identity = LedgerCapabilityIdentityV1(
+        capability_id=row_id.rsplit(".", maxsplit=1)[0],
+        operation_id=row_id,
+        suboperation_id=row_id,
+    )
+    backend_evidence = (
+        _evidence(
+            f"evidence.{prefix}.direct_backend",
+            EvidenceRole.DIRECT_BACKEND_BEHAVIOR,
+            frozenset({LedgerCapabilityAxis.BACKEND}),
+        ),
+    )
+    cli_evidence = (
+        _evidence(
+            f"evidence.{prefix}.adapter_detector",
+            EvidenceRole.ADAPTER_DETECTOR,
+            frozenset({LedgerCapabilityAxis.CLI}),
+        ),
+        _evidence(
+            f"evidence.{prefix}.cli_success",
+            EvidenceRole.CLI_SUCCESS,
+            frozenset({LedgerCapabilityAxis.CLI}),
+        ),
+        _evidence(
+            f"evidence.{prefix}.cli_refusal",
+            EvidenceRole.CLI_REFUSAL,
+            frozenset({LedgerCapabilityAxis.CLI}),
+        ),
+        _evidence(
+            f"evidence.{prefix}.cli_artifact",
+            EvidenceRole.CLI_ARTIFACT,
+            frozenset({LedgerCapabilityAxis.CLI, LedgerCapabilityAxis.ARTIFACT}),
+        ),
+    )
+    assessments = (
+        _assessment(LedgerCapabilityAxis.BACKEND, prefix=prefix, extra_evidence=backend_evidence),
+        _assessment(LedgerCapabilityAxis.CLI, prefix=prefix, extra_evidence=cli_evidence),
+        _assessment(
+            LedgerCapabilityAxis.TUI,
+            prefix=prefix,
+            applicable=tui_applicable,
+        ),
+        _assessment(LedgerCapabilityAxis.COMPOSITION, prefix=prefix),
+        _assessment(LedgerCapabilityAxis.ARTIFACT, prefix=prefix),
+        _assessment(LedgerCapabilityAxis.PROVENANCE, prefix=prefix),
+        _assessment(LedgerCapabilityAxis.REGISTRY, prefix=prefix),
+        _assessment(LedgerCapabilityAxis.PROOF, prefix=prefix),
+    )
+    annotations = {CapabilityAnnotation.INSTALLED} if tui_applicable else set()
+    if initial_cli_ownership is InitialCliOwnership.CLI_OWNED and migration_completed:
+        annotations.add(CapabilityAnnotation.DELEGATING)
+        delegates = True
+    else:
+        delegates = False
+        if initial_cli_ownership is InitialCliOwnership.CLI_OWNED:
+            annotations.add(CapabilityAnnotation.CLI_OWNED)
+    return LedgerCapabilityRowV1(
+        identity=identity,
+        semantic_home=CanonicalSemanticHomeV1(
+            owner="application.ledger",
+            command_type="LedgerEntriesListCommand",
+            result_type="LedgerEntriesListResult",
+        ),
+        assessments=assessments,
+        annotations=frozenset(annotations),
+        findings=findings,
+        authority_migration=AuthorityMigrationHistoryV1(
+            initial_cli_ownership=initial_cli_ownership,
+            migration_completed=migration_completed,
+        ),
+        cli_delegates_to_canonical=delegates,
+    )
+
+
+def _campaign_evidence() -> tuple[EvidenceCoordinateV1, ...]:
+    """Return the campaign-wide coordinates used by G4 and review records."""
+    return (
+        _evidence(
+            "evidence.campaign.tui_parity",
+            EvidenceRole.TUI_PARITY,
+            frozenset(
+                {
+                    LedgerCapabilityAxis.BACKEND,
+                    LedgerCapabilityAxis.CLI,
+                    LedgerCapabilityAxis.TUI,
+                }
+            ),
+        ),
+        _evidence(
+            "evidence.campaign.tui_reachability",
+            EvidenceRole.TUI_REACHABILITY,
+            frozenset({LedgerCapabilityAxis.TUI}),
+        ),
+        _evidence(
+            "evidence.campaign.matrix_publication",
+            EvidenceRole.MATRIX_PUBLICATION,
+            frozenset(LedgerCapabilityAxis),
+        ),
+        _evidence(
+            "evidence.campaign.independent_review",
+            EvidenceRole.INDEPENDENT_ENGINEERING_REVIEW,
+            frozenset(LedgerCapabilityAxis),
+        ),
+    )
+
+
+def _matrix(
+    rows: tuple[LedgerCapabilityRowV1, ...] = (_row(),),
+    *,
+    report: LedgerLiveCensusReportV1 | None = None,
+    controls: LedgerCampaignControlsV1 | None = None,
+    campaign_evidence: tuple[EvidenceCoordinateV1, ...] | None = None,
+    accepted_denominator: LedgerDenominatorSnapshotV1 | None = None,
+    current_denominator: LedgerDenominatorSnapshotV1 | None = None,
+    accepted_authority_dispositions: AuthorityDispositionSnapshotV1 | None = None,
+    current_authority_dispositions: AuthorityDispositionSnapshotV1 | None = None,
+    current_subjects: tuple[EvidenceSubjectSnapshotV1, ...] = (_SUBJECT,),
+    ruling: ReviewRuling = ReviewRuling.ACCEPT,
+) -> LedgerCapabilityMatrixV1:
+    """Build a digest-bound matrix and attestation around the supplied rows."""
+    live_report = report or _report(tuple(row.identity.row_id for row in rows))
+    accepted = accepted_denominator or _snapshot(live_report)
+    current = current_denominator or _snapshot(live_report)
+    accepted_authority = accepted_authority_dispositions or _authority_snapshot(accepted, rows)
+    current_authority = current_authority_dispositions or _authority_snapshot(current, rows)
+    controls_value = controls or LedgerCampaignControlsV1(
+        sole_ledger_parity_plan_owner=ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
+        tui_implementation_hold_recorded=True,
+        tui_implementation_hold_active=True,
+    )
+    evidence = campaign_evidence or _campaign_evidence()
+    matrix_digest = LedgerCapabilityMatrixV1.calculate_digest(
+        schema_version=3,
+        controls=controls_value,
+        accepted_denominator=accepted,
+        current_denominator=current,
+        accepted_authority_dispositions=accepted_authority,
+        current_authority_dispositions=current_authority,
+        current_subjects=current_subjects,
+        rows=rows,
+        campaign_evidence=evidence,
+    )
+    attestation = LedgerMatrixAcceptanceAttestationV1(
+        attestation_id="attestation.ledger.s02",
+        reviewer="independent-engineering-reviewer",
+        ruling=ruling,
+        plan_owner=ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
+        matrix_digest=matrix_digest,
+        denominator_digest=current.digest,
+        denominator_revision=current.revision,
+        review_subject_id=_SUBJECT.subject_id,
+        review_subject_revision=_SUBJECT.revision,
+        review_subject_digest=_SUBJECT.digest,
+        review_subject_observed_at=_SUBJECT.observed_at,
+        attested_at=_OBSERVED_AT,
+    )
+    return LedgerCapabilityMatrixV1(
+        schema_version=3,
+        controls=controls_value,
+        accepted_denominator=accepted,
+        current_denominator=current,
+        accepted_authority_dispositions=accepted_authority,
+        current_authority_dispositions=current_authority,
+        current_subjects=current_subjects,
+        rows=rows,
+        campaign_evidence=evidence,
+        matrix_digest=matrix_digest,
+        acceptance_attestation=attestation,
+    )
+
+
+def _matrix_with(
+    matrix: LedgerCapabilityMatrixV1,
+    *,
+    recompute_digest: bool = True,
+    bind_attestation: bool = True,
+    **updates: object,
+) -> LedgerCapabilityMatrixV1:
+    """Apply a deliberate model-copy mutation and optionally rebind its digest."""
+    candidate = matrix.model_copy(update=updates)
+    if recompute_digest:
+        candidate = candidate.model_copy(update={"matrix_digest": candidate.calculated_matrix_digest})
+    if bind_attestation:
+        attestation = candidate.acceptance_attestation.model_copy(
+            update={
+                "matrix_digest": candidate.matrix_digest,
+                "denominator_digest": candidate.current_denominator.digest,
+                "denominator_revision": candidate.current_denominator.revision,
+            }
+        )
+        candidate = candidate.model_copy(update={"acceptance_attestation": attestation})
+    return candidate
+
+
+def _row_with_assessments(
+    row: LedgerCapabilityRowV1,
+    replacements: dict[LedgerCapabilityAxis, AxisAssessmentV1],
+    *,
+    findings: tuple[CapabilityFindingV1, ...] | None = None,
+    annotations: frozenset[CapabilityAnnotation] | None = None,
+    authority_migration: AuthorityMigrationHistoryV1 | None = None,
+    delegates: bool | None = None,
+) -> LedgerCapabilityRowV1:
+    """Mutate nested axis models while keeping the model-copy attack explicit."""
+    assessments = tuple(replacements.get(assessment.axis, assessment) for assessment in row.assessments)
+    updates: dict[str, object] = {"assessments": assessments}
+    if findings is not None:
+        updates["findings"] = findings
+    if annotations is not None:
+        updates["annotations"] = annotations
+    if authority_migration is not None:
+        updates["authority_migration"] = authority_migration
+    if delegates is not None:
+        updates["cli_delegates_to_canonical"] = delegates
+    return row.model_copy(update=updates)
+
+
+def _evaluate(
+    matrix: LedgerCapabilityMatrixV1,
+    gate: LedgerGate,
+    *,
+    report: LedgerLiveCensusReportV1 | None = None,
+    subjects: tuple[EvidenceSubjectSnapshotV1, ...] = (_SUBJECT,),
+):
+    """Evaluate a matrix against a fresh report unless a test supplies one."""
+    observed = report or _report(tuple(row.identity.row_id for row in matrix.rows))
+    return evaluate_ledger_capability_gate(
+        matrix,
+        gate,
+        observed_census=observed,
+        observed_subjects=subjects,
+    )
+
+
+def test_a_stable_identity_keeps_the_suboperation_as_the_row_key() -> None:
+    identity = LedgerCapabilityIdentityV1(
+        capability_id="ledger.entries",
+        operation_id="ledger.entries.list",
+        suboperation_id="ledger.entries.list.page",
+    )
+
+    assert identity.row_id == "ledger.entries.list.page"
+    assert identity.capability_id == "ledger.entries"
+
+
+@pytest.mark.parametrize(
+    ("operation_id", "suboperation_id"),
+    [
+        pytest.param("ledger.other.list", "ledger.other.list", id="operation-leaves-family"),
+        pytest.param("ledger.entries.list", "ledger.other.list", id="suboperation-leaves-operation"),
+        pytest.param("ledger.entries", "ledger.entries", id="operation-equals-family"),
+    ],
+)
+def test_an_identity_cannot_change_family_or_operation(
+    operation_id: str,
+    suboperation_id: str,
+) -> None:
+    with pytest.raises(ValidationError, match="child"):
+        LedgerCapabilityIdentityV1(
+            capability_id="ledger.entries",
+            operation_id=operation_id,
+            suboperation_id=suboperation_id,
+        )
+
+
+def test_matrix_digest_is_independent_of_row_order() -> None:
+    first = _row()
+    second = _row("ledger.reconciliation.match", prefix="reconciliation_match")
+    report = _report((_ROW_ID, "ledger.reconciliation.match"))
+    matrix = _matrix(rows=(first, second), report=report)
+
+    reordered = _matrix_with(matrix, rows=(second, first))
+
+    assert reordered.matrix_digest == matrix.matrix_digest
+    assert _evaluate(reordered, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=report).closed
+
+
+def test_a_matrix_rejects_duplicate_stable_rows_before_a_gate_can_close() -> None:
+    row = _row()
+    report = _report((_ROW_ID,))
+    denominator = _snapshot(report)
+    authority = _authority_snapshot(denominator, (row,))
+    with pytest.raises(ValidationError, match="duplicate row identities"):
+        _matrix(
+            rows=(row, row),
+            report=report,
+            accepted_authority_dispositions=authority,
+            current_authority_dispositions=authority,
+        )
+
+
+def test_a_complete_census_contains_each_stream_and_explicit_zeroes() -> None:
+    report = _report()
+
+    assert {stream.source for stream in report.streams} == set(DenominatorSourceKind)
+    assert len(report.streams) == 7
+    assert report.capability_ids == frozenset({_ROW_ID})
+    assert report.denominator_entries[0].sources == frozenset({DenominatorSourceKind.CLI_ENDPOINT})
+    assert sum(not stream.capability_ids and stream.reviewed_zero for stream in report.streams) == 6
+    assert report.readiness_errors == ()
+
+
+def test_a_census_rejects_missing_or_duplicate_mandatory_streams() -> None:
+    report = _report()
+    missing = report.model_copy(update={"streams": report.streams[:-1]})
+    duplicate = report.model_copy(update={"streams": (*report.streams[:-1], report.streams[0])})
+
+    for candidate in (missing, duplicate):
+        with pytest.raises(ValidationError, match="every mandatory source stream"):
+            LedgerLiveCensusReportV1.model_validate(candidate.model_dump(mode="python"))
+
+
+def test_an_empty_stream_requires_an_explicit_reviewed_zero() -> None:
+    with pytest.raises(ValidationError, match="explicit reviewed zero"):
+        _stream(DenominatorSourceKind.BACKEND_ONLY, reviewed_zero=False)
+
+
+def test_a_nonempty_stream_cannot_claim_reviewed_zero() -> None:
+    with pytest.raises(ValidationError, match="nonempty census stream"):
+        _stream(DenominatorSourceKind.BACKEND_ONLY, (_ROW_ID,), reviewed_zero=True)
+
+
+def test_an_unreadable_or_partial_stream_reopens_the_denominator_gate() -> None:
+    report = _report()
+    broken_streams = tuple(
+        _stream(
+            stream.source,
+            stream.capability_ids,
+            scan_succeeded=False if stream.source is DenominatorSourceKind.CLI_ENDPOINT else stream.scan_succeeded,
+            complete=False if stream.source is DenominatorSourceKind.BACKEND_ONLY else stream.complete,
+        )
+        for stream in report.streams
+    )
+    broken = _report(streams=broken_streams)
+    matrix = _matrix(report=report)
+
+    blockers = _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=broken).blockers
+
+    assert any("did not scan successfully" in blocker for blocker in blockers)
+    assert any("is partial" in blocker for blocker in blockers)
+
+
+def test_a_new_live_capability_and_source_classification_are_drift() -> None:
+    accepted_report = _report()
+    accepted = _snapshot(accepted_report)
+    added_report = _report((_ROW_ID, "ledger.entries.export"))
+    added = _snapshot(added_report)
+
+    reopened = reopened_gates_for_denominator_drift(accepted, added)
+
+    assert reopened == frozenset(LedgerGate)
+    assert any(
+        "new live denominator capability" in line
+        for line in _evaluate(
+            _matrix(report=accepted_report),
+            LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE,
+            report=added_report,
+        ).blockers
+    )
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "expected"),
+    [
+        pytest.param("revision", "census-rev-2", "denominator revision drifted", id="revision"),
+        pytest.param("observed_at", _LATER_OBSERVED_AT, "denominator observation time drifted", id="time"),
+    ],
+)
+def test_denominator_generation_revision_and_time_are_currentness_inputs(
+    field: str,
+    value: object,
+    expected: str,
+) -> None:
+    accepted_report = _report()
+    updates = {field: value}
+    current_report = _report(**updates)
+    matrix = _matrix(report=accepted_report)
+
+    blockers = _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=current_report).blockers
+
+    assert expected in blockers
+
+
+def test_currentness_requires_nonempty_observed_subjects() -> None:
+    matrix = _matrix()
+
+    currentness = validate_ledger_matrix_currentness(
+        matrix,
+        observed_census=_report(),
+        observed_subjects=(),
+    )
+
+    assert currentness == [
+        "live evidence-subject observation is empty",
+        "matrix evidence subject no longer observed: subject.ledger.matrix",
+    ]
+    assert not _evaluate(
+        matrix,
+        LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE,
+        subjects=(),
+    ).closed
+
+
+def test_currentness_rejects_duplicate_or_changed_subject_observations() -> None:
+    matrix = _matrix()
+    changed = _subject(revision="matrix-rev-2", digest="sha256:" + "b" * 64)
+
+    duplicate_errors = validate_ledger_matrix_currentness(
+        matrix,
+        observed_census=_report(),
+        observed_subjects=(_SUBJECT, _SUBJECT),
+    )
+    changed_errors = validate_ledger_matrix_currentness(
+        matrix,
+        observed_census=_report(),
+        observed_subjects=(changed,),
+    )
+
+    assert duplicate_errors == ["live evidence-subject observation contains duplicate identities"]
+    assert changed_errors == ["evidence subject freshness drifted: subject.ledger.matrix"]
+
+
+def test_each_axis_has_a_reviewed_rationale_and_single_axis_applicability_proof() -> None:
+    row = _row()
+
+    assert {assessment.axis for assessment in row.assessments} == set(LedgerCapabilityAxis)
+    for assessment in row.assessments:
+        assert assessment.applicability_rationale
+        assert assessment.applicability_review_evidence.role is EvidenceRole.APPLICABILITY_REVIEW
+        assert assessment.applicability_review_evidence.axes == frozenset({assessment.axis})
+
+
+def test_an_axis_cannot_hide_a_blank_rationale_or_wrong_review_axis() -> None:
+    assessment = _row().assessment(LedgerCapabilityAxis.BACKEND)
+    blank = assessment.model_copy(update={"applicability_rationale": "unknown"})
+    wrong_axis = assessment.model_copy(
+        update={
+            "applicability_review_evidence": assessment.applicability_review_evidence.model_copy(
+                update={"axes": frozenset({LedgerCapabilityAxis.CLI})}
+            )
+        }
+    )
+
+    with pytest.raises(ValidationError, match="bounded"):
+        AxisAssessmentV1.model_validate(blank.model_dump(mode="python"))
+    with pytest.raises(ValidationError, match="applicability-review"):
+        AxisAssessmentV1.model_validate(wrong_axis.model_dump(mode="python"))
+
+
+def test_non_applicable_axes_have_no_operational_proof_or_evidence() -> None:
+    review = _evidence(
+        "evidence.invalid.applicability.backend",
+        EvidenceRole.APPLICABILITY_REVIEW,
+        frozenset({LedgerCapabilityAxis.BACKEND}),
+    )
+    operational = _evidence(
+        "evidence.invalid.operational.backend",
+        EvidenceRole.BASELINE,
+        frozenset({LedgerCapabilityAxis.BACKEND}),
+    )
+
+    with pytest.raises(ValidationError, match="no operational proof or evidence"):
+        AxisAssessmentV1(
+            axis=LedgerCapabilityAxis.BACKEND,
+            applicability=ApplicabilityState.NOT_APPLICABLE,
+            applicability_rationale="The backend is outside this test.",
+            applicability_review_evidence=review,
+            proof=AxisProofState.NOT_APPLICABLE,
+            surface_state=SurfaceCapabilityState.NOT_APPLICABLE,
+            evidence=(operational,),
+        )
+
+
+@pytest.mark.parametrize(
+    ("proof", "surface_state"),
+    [
+        pytest.param(AxisProofState.UNPROVEN, SurfaceCapabilityState.PROVEN, id="unproven-proof"),
+        pytest.param(AxisProofState.PROVEN, SurfaceCapabilityState.PARTIAL, id="partial-surface"),
+        pytest.param(AxisProofState.PROVEN, SurfaceCapabilityState.ABSENT, id="absent-surface"),
+    ],
+)
+def test_an_incomplete_applicable_axis_requires_an_affected_finding(
+    proof: AxisProofState,
+    surface_state: SurfaceCapabilityState,
+) -> None:
+    row = _row()
+    backend = row.assessment(LedgerCapabilityAxis.BACKEND).model_copy(
+        update={"proof": proof, "surface_state": surface_state}
+    )
+    incomplete = _row_with_assessments(row, {LedgerCapabilityAxis.BACKEND: backend})
+
+    with pytest.raises(ValidationError, match="no affected-axis finding"):
+        LedgerCapabilityRowV1.model_validate(incomplete.model_dump(mode="python"))
+
+
+def test_a_bounded_finding_makes_an_incomplete_axis_classified_work() -> None:
+    row = _row()
+    backend = row.assessment(LedgerCapabilityAxis.BACKEND).model_copy(
+        update={"proof": AxisProofState.UNPROVEN}
+    )
+    finding = CapabilityFindingV1(
+        finding_id="finding.entries.backend_proof",
+        gap_class=LedgerGapClass.PROOF,
+        affected_axes=frozenset({LedgerCapabilityAxis.BACKEND}),
+        description="Direct backend behavior has not been accepted yet.",
+        next_closure_action="Add a real-store backend behavior test and link its result.",
+    )
+
+    classified = _row_with_assessments(row, {LedgerCapabilityAxis.BACKEND: backend}, findings=(finding,))
+
+    assert classified.assessment(LedgerCapabilityAxis.BACKEND).needs_finding
+    assert classified.has_gap(LedgerGapClass.PROOF, axis=LedgerCapabilityAxis.BACKEND)
+
+
+def test_an_all_non_applicable_row_is_not_a_denominator_placeholder() -> None:
+    row = _row()
+    assessments = tuple(
+        assessment.model_copy(
+            update={
+                "applicability": ApplicabilityState.NOT_APPLICABLE,
+                "proof": AxisProofState.NOT_APPLICABLE,
+                "surface_state": (
+                    SurfaceCapabilityState.NOT_APPLICABLE
+                    if assessment.axis in {
+                        LedgerCapabilityAxis.BACKEND,
+                        LedgerCapabilityAxis.CLI,
+                        LedgerCapabilityAxis.TUI,
+                    }
+                    else None
+                ),
+                "evidence": (),
+            }
+        )
+        for assessment in row.assessments
+    )
+    placeholder = row.model_copy(
+        update={"assessments": assessments, "annotations": frozenset(), "cli_delegates_to_canonical": False}
+    )
+
+    with pytest.raises(ValidationError, match="content-free"):
+        LedgerCapabilityRowV1.model_validate(placeholder.model_dump(mode="python"))
+
+
+@pytest.mark.parametrize(
+    ("role", "kind", "axes", "message"),
+    [
+        pytest.param(
+            EvidenceRole.BASELINE,
+            EvidenceKind.REVIEW,
+            frozenset({LedgerCapabilityAxis.BACKEND}),
+            "invalid kind",
+            id="baseline-kind",
+        ),
+        pytest.param(
+            EvidenceRole.DIRECT_BACKEND_BEHAVIOR,
+            EvidenceKind.TEST,
+            frozenset({LedgerCapabilityAxis.CLI}),
+            "exactly",
+            id="backend-axis",
+        ),
+        pytest.param(
+            EvidenceRole.ADAPTER_DETECTOR,
+            EvidenceKind.TEST,
+            frozenset({LedgerCapabilityAxis.BACKEND}),
+            "exactly",
+            id="adapter-axis",
+        ),
+        pytest.param(
+            EvidenceRole.TUI_PARITY,
+            EvidenceKind.TEST,
+            frozenset({LedgerCapabilityAxis.BACKEND}),
+            "exactly",
+            id="tui-parity-axes",
+        ),
+        pytest.param(
+            EvidenceRole.INDEPENDENT_ENGINEERING_REVIEW,
+            EvidenceKind.REFERENCE,
+            frozenset(LedgerCapabilityAxis),
+            "invalid kind",
+            id="review-kind",
+        ),
+    ],
+)
+def test_evidence_enforces_role_kind_and_axis_contract(
+    role: EvidenceRole,
+    kind: EvidenceKind,
+    axes: frozenset[LedgerCapabilityAxis],
+    message: str,
+) -> None:
+    with pytest.raises(ValidationError, match=message):
+        _evidence("evidence.invalid.role_contract", role, axes, kind=kind)
+
+
+def test_evidence_currentness_binds_id_revision_digest_time_and_locator() -> None:
+    coordinate = _evidence(
+        "evidence.currentness.backend",
+        EvidenceRole.BASELINE,
+        frozenset({LedgerCapabilityAxis.BACKEND}),
+    )
+    drifted = _subject(locator="reference://clitui-ledger/other")
+
+    assert coordinate.is_current_against(_SUBJECT)
+    assert not coordinate.is_current_against(drifted)
+
+
+def test_evidence_ids_are_unique_across_rows_and_campaign_scope() -> None:
+    matrix = _matrix()
+    duplicate_campaign = matrix.campaign_evidence[0].model_copy(
+        update={"evidence_id": matrix.rows[0].assessments[0].applicability_review_evidence.evidence_id}
+    )
+    candidate = _matrix_with(matrix, campaign_evidence=(duplicate_campaign, *matrix.campaign_evidence[1:]))
+
+    assessment = _evaluate(candidate, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE)
+
+    assert not assessment.closed
+    assert any("validation failed" in blocker for blocker in assessment.blockers)
+    with pytest.raises(ValidationError, match="globally unique"):
+        LedgerCapabilityMatrixV1.model_validate(candidate.model_dump(mode="python"))
+
+
+def test_evidence_ids_are_unique_across_two_denominator_rows() -> None:
+    first = _row()
+    second = _row("ledger.reconciliation.match", prefix="reconciliation_match")
+    matrix = _matrix(rows=(first, second))
+    duplicate_review = second.assessments[0].applicability_review_evidence.model_copy(
+        update={"evidence_id": first.assessments[0].applicability_review_evidence.evidence_id}
+    )
+    second_with_duplicate = _row_with_assessments(
+        second,
+        {
+            LedgerCapabilityAxis.BACKEND: second.assessment(LedgerCapabilityAxis.BACKEND),
+        },
+    ).model_copy(
+        update={
+            "assessments": (
+                second.assessments[0].model_copy(update={"applicability_review_evidence": duplicate_review}),
+                *second.assessments[1:],
+            )
+        }
+    )
+    candidate = _matrix_with(matrix, rows=(first, second_with_duplicate))
+
+    assessment = _evaluate(candidate, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE)
+
+    assert not assessment.closed
+    assert any("validation failed" in blocker for blocker in assessment.blockers)
+    with pytest.raises(ValidationError, match="globally unique"):
+        LedgerCapabilityMatrixV1.model_validate(candidate.model_dump(mode="python"))
+
+
+def test_stale_nested_evidence_is_refused_at_the_matrix_boundary() -> None:
+    matrix = _matrix()
+    backend = matrix.rows[0].assessment(LedgerCapabilityAxis.BACKEND)
+    stale_coordinate = backend.evidence[0].model_copy(update={"subject_digest": "sha256:" + "b" * 64})
+    stale_backend = backend.model_copy(update={"evidence": (stale_coordinate, *backend.evidence[1:])})
+    stale_row = _row_with_assessments(matrix.rows[0], {LedgerCapabilityAxis.BACKEND: stale_backend})
+    candidate = _matrix_with(matrix, rows=(stale_row,))
+
+    assessment = _evaluate(candidate, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE)
+
+    assert not assessment.closed
+    assert any("validation failed" in blocker for blocker in assessment.blockers)
+
+
+def test_a_migrated_cli_owned_row_needs_direct_backend_and_adapter_detector_proof() -> None:
+    row = _row()
+    backend = row.assessment(LedgerCapabilityAxis.BACKEND)
+    cli = row.assessment(LedgerCapabilityAxis.CLI)
+    missing_backend = backend.model_copy(
+        update={
+            "evidence": tuple(
+                item for item in backend.evidence if item.role is not EvidenceRole.DIRECT_BACKEND_BEHAVIOR
+            )
+        }
+    )
+    missing_detector = cli.model_copy(
+        update={"evidence": tuple(item for item in cli.evidence if item.role is not EvidenceRole.ADAPTER_DETECTOR)}
+    )
+    mutated = _row_with_assessments(
+        row,
+        {
+            LedgerCapabilityAxis.BACKEND: missing_backend,
+            LedgerCapabilityAxis.CLI: missing_detector,
+        },
+    )
+    matrix = _matrix(rows=(mutated,))
+
+    blockers = _evaluate(matrix, LedgerGate.G1_SEMANTIC_AUTHORITY_RECOVERY).blockers
+
+    assert any("direct backend behavior" in blocker for blocker in blockers)
+    assert any("adapter detector" in blocker for blocker in blockers)
+
+
+def test_an_incomplete_cli_owned_migration_retains_an_authority_finding() -> None:
+    finding = CapabilityFindingV1(
+        finding_id="finding.entries.cli_authority",
+        gap_class=LedgerGapClass.AUTHORITY,
+        affected_axes=frozenset({LedgerCapabilityAxis.CLI}),
+        description="The CLI still owns query policy.",
+        next_closure_action="Move the policy to the canonical application query.",
+    )
+    row = _row(migration_completed=False, findings=(finding,))
+    row = row.model_copy(
+        update={
+            "annotations": frozenset({CapabilityAnnotation.CLI_OWNED, CapabilityAnnotation.INSTALLED}),
+            "cli_delegates_to_canonical": False,
+        }
+    )
+    matrix = _matrix(rows=(row,))
+
+    assessment = _evaluate(matrix, LedgerGate.G1_SEMANTIC_AUTHORITY_RECOVERY)
+
+    assert not assessment.closed
+    assert any("migration is incomplete" in blocker for blocker in assessment.blockers)
+    assert any("cli_owned annotation remains" in blocker for blocker in assessment.blockers)
+    assert any("authority finding remains" in blocker for blocker in assessment.blockers)
+
+
+@pytest.mark.parametrize(
+    "updates",
+    [
+        pytest.param(
+            {"annotations": frozenset({CapabilityAnnotation.DELEGATING, CapabilityAnnotation.INSTALLED}),
+             "cli_delegates_to_canonical": False},
+            id="delegating-without-boolean",
+        ),
+        pytest.param(
+            {"annotations": frozenset({CapabilityAnnotation.CLI_OWNED, CapabilityAnnotation.INSTALLED}),
+             "cli_delegates_to_canonical": True},
+            id="owned-and-delegating",
+        ),
+    ],
+)
+def test_authority_annotations_and_delegation_are_consistent(
+    updates: dict[str, object],
+) -> None:
+    row = _row().model_copy(update=updates)
+
+    with pytest.raises(ValidationError, match=r"delegat|cli_owned"):
+        LedgerCapabilityRowV1.model_validate(row.model_dump(mode="python"))
+
+
+def test_erasing_initial_cli_ownership_reopens_g0_even_when_current_rows_look_clean() -> None:
+    matrix = _matrix()
+    row = matrix.rows[0].model_copy(
+        update={
+            "authority_migration": AuthorityMigrationHistoryV1(
+                initial_cli_ownership=InitialCliOwnership.NOT_CLI_OWNED,
+                migration_completed=False,
+            ),
+            "annotations": frozenset({CapabilityAnnotation.INSTALLED}),
+            "cli_delegates_to_canonical": False,
+        }
+    )
+    current_authority = _authority_snapshot(matrix.current_denominator, (row,))
+    candidate = _matrix_with(matrix, rows=(row,), current_authority_dispositions=current_authority)
+
+    assessments = evaluate_ledger_capability_gates(
+        candidate,
+        observed_census=_report(),
+        observed_subjects=(_SUBJECT,),
+    )
+
+    assert not assessments[0].closed
+    assert any("immutable initial CLI ownership drifted" in blocker for blocker in assessments[0].blockers)
+    assert not assessments[1].closed
+    assert any("earlier gate remains open" in blocker for blocker in assessments[1].blockers)
+
+
+def test_g0_accepts_only_the_canonical_owner_and_digest_bound_accept_ruling() -> None:
+    matrix = _matrix()
+
+    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
+
+    wrong_ruling = matrix.acceptance_attestation.model_copy(
+        update={"ruling": ReviewRuling.ACCEPT_WITH_REQUIRED_CHANGES}
+    )
+    non_accepting = matrix.model_copy(update={"acceptance_attestation": wrong_ruling})
+    assert "ACCEPT attestation" in " ".join(
+        _evaluate(non_accepting, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).blockers
+    )
+
+
+def test_g0_rejects_an_attestation_bound_to_an_older_matrix_digest() -> None:
+    matrix = _matrix()
+    changed_home = matrix.rows[0].semantic_home.model_copy(update={"result_type": "ChangedResult"})
+    changed_row = matrix.rows[0].model_copy(update={"semantic_home": changed_home})
+    stale_attestation = matrix.acceptance_attestation.model_copy(update={"matrix_digest": "sha256:" + "b" * 64})
+    candidate = matrix.model_copy(
+        update={"rows": (changed_row,), "acceptance_attestation": stale_attestation}
+    )
+
+    blockers = _evaluate(candidate, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).blockers
+
+    assert any("validation failed" in blocker for blocker in blockers)
+    assert all("ChangedResult" not in blocker for blocker in blockers)
+
+
+def test_g0_rejects_a_wrong_owner_and_redacts_the_supplied_owner() -> None:
+    matrix = _matrix()
+    controls = matrix.controls.model_copy(update={"sole_ledger_parity_plan_owner": "top_secret_owner"})
+    candidate = _matrix_with(matrix, controls=controls)
+
+    first = _evaluate(candidate, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).blockers
+    second = _evaluate(candidate, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).blockers
+
+    assert first == second
+    assert first
+    assert all("top_secret_owner" not in blocker for blocker in first)
+    assert all("validation failed" in blocker for blocker in first)
+
+
+def test_g0_rejects_a_model_copy_with_an_empty_reviewer_deterministically() -> None:
+    matrix = _matrix()
+    invalid_attestation = matrix.acceptance_attestation.model_copy(update={"reviewer": ""})
+    candidate = matrix.model_copy(update={"acceptance_attestation": invalid_attestation})
+
+    first = _evaluate(candidate, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).blockers
+    second = _evaluate(candidate, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).blockers
+
+    assert first == second
+    assert first == ("matrix validation failed at acceptance_attestation.reviewer: string_too_short",)
+
+
+def test_g2_requires_a_proven_backend_surface_and_direct_behavior() -> None:
+    matrix = _matrix()
+    backend = matrix.rows[0].assessment(LedgerCapabilityAxis.BACKEND).model_copy(
+        update={"surface_state": SurfaceCapabilityState.PARTIAL}
+    )
+    finding = CapabilityFindingV1(
+        finding_id="finding.entries.backend_product",
+        gap_class=LedgerGapClass.PRODUCT,
+        affected_axes=frozenset({LedgerCapabilityAxis.BACKEND}),
+        description="The backend surface is only partial.",
+        next_closure_action="Complete and rerun the direct backend product test.",
+    )
+    row = _row_with_assessments(matrix.rows[0], {LedgerCapabilityAxis.BACKEND: backend}, findings=(finding,))
+    candidate = _matrix_with(matrix, rows=(row,))
+
+    blockers = _evaluate(candidate, LedgerGate.G2_BACKEND_PRODUCT_COMPLETENESS).blockers
+
+    assert any("backend is not implemented and proven" in blocker for blocker in blockers)
+
+
+def test_g2_requires_direct_backend_behavior_even_when_proof_metadata_is_proven() -> None:
+    matrix = _matrix()
+    backend = matrix.rows[0].assessment(LedgerCapabilityAxis.BACKEND)
+    stripped = backend.model_copy(
+        update={
+            "evidence": tuple(
+                item for item in backend.evidence if item.role is not EvidenceRole.DIRECT_BACKEND_BEHAVIOR
+            )
+        }
+    )
+    row = _row_with_assessments(matrix.rows[0], {LedgerCapabilityAxis.BACKEND: stripped})
+    candidate = _matrix_with(matrix, rows=(row,))
+
+    blockers = _evaluate(candidate, LedgerGate.G2_BACKEND_PRODUCT_COMPLETENESS).blockers
+
+    assert any("backend lacks direct behavior evidence" in blocker for blocker in blockers)
+
+
+def test_g3_requires_cli_success_refusal_and_artifact_evidence() -> None:
+    matrix = _matrix()
+    cli = matrix.rows[0].assessment(LedgerCapabilityAxis.CLI)
+    stripped = cli.model_copy(
+        update={
+            "evidence": tuple(
+                item
+                for item in cli.evidence
+                if item.role not in {
+                    EvidenceRole.CLI_SUCCESS,
+                    EvidenceRole.CLI_REFUSAL,
+                    EvidenceRole.CLI_ARTIFACT,
+                }
+            )
+        }
+    )
+    row = _row_with_assessments(matrix.rows[0], {LedgerCapabilityAxis.CLI: stripped})
+    candidate = _matrix_with(matrix, rows=(row,))
+
+    blockers = _evaluate(candidate, LedgerGate.G3_CLI_CLEAN_BREAK_AND_COMPLETENESS).blockers
+
+    assert any("CLI success behavior" in blocker for blocker in blockers)
+    assert any("CLI refusal behavior" in blocker for blocker in blockers)
+    assert any("CLI artifact behavior" in blocker for blocker in blockers)
+
+
+def test_g4_scans_findings_on_non_tui_rows_and_other_applicable_axes() -> None:
+    matrix = _matrix()
+    row = matrix.rows[0]
+    tui = row.assessment(LedgerCapabilityAxis.TUI).model_copy(
+        update={
+            "applicability": ApplicabilityState.NOT_APPLICABLE,
+            "proof": AxisProofState.NOT_APPLICABLE,
+            "surface_state": SurfaceCapabilityState.NOT_APPLICABLE,
+            "evidence": (),
+        }
+    )
+    finding = CapabilityFindingV1(
+        finding_id="finding.entries.backend_unresolved",
+        gap_class=LedgerGapClass.PRODUCT,
+        affected_axes=frozenset({LedgerCapabilityAxis.BACKEND}),
+        description="A backend obligation remains unresolved.",
+        next_closure_action="Complete the backend operation.",
+    )
+    mutated = _row_with_assessments(
+        row,
+        {LedgerCapabilityAxis.TUI: tui},
+        findings=(finding,),
+        annotations=frozenset({CapabilityAnnotation.DELEGATING}),
+    )
+    candidate = _matrix_with(
+        matrix,
+        rows=(mutated,),
+        controls=matrix.controls.model_copy(update={"tui_implementation_hold_active": False}),
+    )
+
+    assessment = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY)
+
+    assert not assessment.closed
+    assert any("blocking product finding" in blocker for blocker in assessment.blockers)
+
+
+def test_valid_controls_close_g0_through_g3_and_lifted_hold_closes_g4() -> None:
+    matrix = _matrix(
+        controls=LedgerCampaignControlsV1(
+            sole_ledger_parity_plan_owner=ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
+            tui_implementation_hold_recorded=True,
+            tui_implementation_hold_active=False,
+        )
+    )
+
+    g0 = _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE)
+    g1 = _evaluate(matrix, LedgerGate.G1_SEMANTIC_AUTHORITY_RECOVERY)
+    g2 = _evaluate(matrix, LedgerGate.G2_BACKEND_PRODUCT_COMPLETENESS)
+    g3 = _evaluate(matrix, LedgerGate.G3_CLI_CLEAN_BREAK_AND_COMPLETENESS)
+    g4 = _evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY)
+
+    assert not g0.closed
+    assert "hold is not recorded and active" in " ".join(g0.blockers)
+    assert g1.closed
+    assert g2.closed
+    assert g3.closed
+    assert g4.closed
+
+
+def test_ordered_evaluation_never_allows_a_later_gate_to_close() -> None:
+    matrix = _matrix(
+        controls=LedgerCampaignControlsV1(
+            sole_ledger_parity_plan_owner=ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
+            tui_implementation_hold_recorded=True,
+            tui_implementation_hold_active=False,
+        )
+    )
+    drifted_report = _report((_ROW_ID, "ledger.entries.export"))
+
+    assessments = evaluate_ledger_capability_gates(
+        matrix,
+        observed_census=drifted_report,
+        observed_subjects=(_SUBJECT,),
+    )
+
+    assert len(assessments) == 5
+    assert not assessments[0].closed
+    for assessment in assessments[1:]:
+        assert not assessment.closed
+        assert assessment.blockers == (
+            f"{assessment.gate.value} cannot close while an earlier gate remains open",
+        )
+
+
+def test_a_model_copy_cannot_turn_all_axes_non_applicable_and_recompute_digests() -> None:
+    matrix = _matrix()
+    row = matrix.rows[0]
+    assessments = tuple(
+        assessment.model_copy(
+            update={
+                "applicability": ApplicabilityState.NOT_APPLICABLE,
+                "proof": AxisProofState.NOT_APPLICABLE,
+                "surface_state": (
+                    SurfaceCapabilityState.NOT_APPLICABLE
+                    if assessment.axis in {
+                        LedgerCapabilityAxis.BACKEND,
+                        LedgerCapabilityAxis.CLI,
+                        LedgerCapabilityAxis.TUI,
+                    }
+                    else None
+                ),
+                "evidence": (),
+            }
+        )
+        for assessment in row.assessments
+    )
+    invalid_row = row.model_copy(update={"assessments": assessments, "annotations": frozenset()})
+    candidate = _matrix_with(matrix, rows=(invalid_row,))
+
+    first = _evaluate(candidate, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).blockers
+    second = _evaluate(candidate, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).blockers
+
+    assert first == second
+    assert first == ("matrix validation failed at rows.0: value_error",)
+
+
+def test_a_model_copy_cannot_remove_a_census_stream_at_the_gate_boundary() -> None:
+    matrix = _matrix()
+    report = _report()
+    invalid_report = report.model_copy(update={"streams": report.streams[:-1]})
+
+    assessment = _evaluate(
+        matrix,
+        LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE,
+        report=invalid_report,
+    )
+
+    assert assessment.blockers == ("live census validation failed at <root>: value_error",)
+
+
+def test_invalid_gate_inputs_reopen_every_gate_when_denominator_reopening_has_no_blocker_channel() -> None:
+    snapshot = _snapshot(_report())
+    invalid = snapshot.model_copy(update={"entries": ()})
+
+    assert reopened_gates_for_denominator_drift(snapshot, invalid) == frozenset(LedgerGate)
