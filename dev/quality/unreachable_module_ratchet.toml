@@ -72,13 +72,9 @@ allowed = [
   "cadrumo.adapters.persistence.profile.filing_export_replay",  # unreachable
   "cadrumo.adapters.persistence.profile.fincas",  # unreachable
   "cadrumo.application.modelo._edit_facade",  # unreachable
-  "cadrumo.application.operator_surface.calculation_workflows",  # unreachable
-  "cadrumo.application.operator_surface.crud_contract",  # unreachable
-  "cadrumo.application.operator_surface.crud_registry",  # unreachable
   "cadrumo.application.wizard._registered_values",  # unreachable
   "cadrumo.application.wizard.legal_zone",  # unreachable
   "cadrumo.core.compatibility_lifecycle",  # unreachable
-  "cadrumo.domain.calculations.registry.record_spec",  # unreachable
   "cadrumo.domain.fincas",  # unreachable
   "cadrumo.domain.portals.drift",  # type-only
 ]
@@ -87,3 +83,23 @@ allowed = [
 module = "cadrumo.core.address_components"
 kind = "design_time_authority"
 rationale = "Canonical AEAT address-component vocabulary constraining producer-key declarations; it deliberately has no runtime transport caller."
+
+[[intentional]]
+module = "cadrumo.application.operator_surface.calculation_workflows"
+kind = "design_time_authority"
+rationale = "Pydantic contract over OperatorSurfaceReconciliation declaring the supported calculation workflows; read by dev/source_connectivity/source_connectivity_authority.py to check the live surface against the declaration, and by design has no runtime caller."
+
+[[intentional]]
+module = "cadrumo.application.operator_surface.crud_contract"
+kind = "design_time_authority"
+rationale = "Defines the CRUD verb vocabulary the operator-surface catalogue instantiates; the types exist to BE the locked design that dev/quality/crud_contract_drift.py checks the shipped Typer subgroups against."
+
+[[intentional]]
+module = "cadrumo.application.operator_surface.crud_registry"
+kind = "design_time_authority"
+rationale = "The locked CRUD design for the operator CLI, read by dev/quality/crud_contract_drift.py to detect drift between shipped Typer subgroups and the declaration; no entrypoints module uses CrudVerb, CANONICAL_CRUD_VERBS or get_builtin_catalogue, which is the contract holding rather than a gap."
+
+[[intentional]]
+module = "cadrumo.domain.calculations.registry.record_spec"
+kind = "design_time_authority"
+rationale = "   "

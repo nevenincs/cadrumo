@@ -41,16 +41,53 @@ constant instead of spelling it again. Importing this module is safe from
 anywhere: it is pure stdlib and resolves no Settings.
 """
 
-_SWEPT_STEMS = (_STEM, SETTINGS_STEM)
+SWEPT_SCRATCH_STEMS = (
+    "cadrumo-object-name-",
+    "cadrumo-client-venv-",
+    "cadrumo-real-cohort-wheels-",
+    "cadrumo-docs-serve-",
+)
+"""Scratch families minted by ``mkdtemp`` that outlive the call that made them.
+
+Unlike the two roots above, these carry no owner PID in their names, so the
+mtime ceiling is the only rule that can reclaim them -- which is precisely the
+case :func:`_is_reclaimable` documents as the family "whose names carry no
+owner". They are listed here because each was measured leaking on the shared
+development box rather than because a rule predicted it:
+
+* ``cadrumo-object-name-`` snapshots the whole tracked tree per rehearsal and
+  retains it deliberately, for operator inspection. The retention is the
+  design; the absence of any ceiling on it was not. **7,403** of them had
+  accumulated, which defeats the inspection it exists for as surely as
+  deleting them would. The day-long ceiling keeps the copy an operator would
+  actually look at and reclaims the rest. Its ``-generator-`` and
+  ``-post-apply-`` siblings are covered by the same stem, since the sweep
+  globs on prefix.
+* ``cadrumo-client-venv-`` and ``cadrumo-real-cohort-wheels-`` are packaging
+  fixtures that now register their own ``atexit`` finalizer. That handles the
+  clean path; this sweep is the complement for the killed one, and listing
+  them here costs a directory listing.
+* ``cadrumo-docs-serve-`` backs a long-running local server, so it is
+  routinely alive well past any single test session -- the ceiling, not a
+  liveness probe, is what keeps that safe.
+
+A prefix added to a ``mkdtemp`` call and not to this tuple leaks without
+bound. That is not left to reviewer memory: a gate discovers every
+``cadrumo-`` scratch prefix in the tree and requires each to be swept here or
+finalized at its own call site.
+"""
+
+_SWEPT_STEMS = (_STEM, SETTINGS_STEM, *SWEPT_SCRATCH_STEMS)
 """Every prefix the staleness sweep reclaims.
 
-Both families leak by the same mechanism -- a process that is killed rather
-than torn down runs neither its ``atexit`` hooks nor pytest's teardown -- and
-on a shared box under load that is routine rather than exceptional. The
+The first two families leak by the same mechanism -- a process that is killed
+rather than torn down runs neither its ``atexit`` hooks nor pytest's teardown
+-- and on a shared box under load that is routine rather than exceptional. The
 per-call roots additionally carry a session-scoped finalizer
 (``env_scope.release_settings_storage_directories``), which is what handles the
 normal path; this sweep is the complement that catches what a finalizer
-structurally cannot.
+structurally cannot. :data:`SWEPT_SCRATCH_STEMS` extends the same reclaim to
+the scratch families that carry no owner in their names.
 """
 
 _STALE_AFTER_SECONDS = 24 * 60 * 60

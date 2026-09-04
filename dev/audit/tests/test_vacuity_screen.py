@@ -23,6 +23,7 @@ now separate functions, and this case is what keeps them separate.
 
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 from textwrap import dedent
 
@@ -38,11 +39,33 @@ def _write_screened_tree(root: Path, module_name: str, source: str) -> None:
 
     Both screened trees are created because the screen refuses a missing one,
     which is itself a property worth not tripping over accidentally here.
+
+    The tree is also made a git repository and the module staged, because the
+    screen derives its denominator from ``git ls-files`` and RAISES when git is
+    absent - deliberately, since an untracked tree would silently inflate the
+    denominator and report a healthier ratio over files no reviewer can act on.
+    Every case here drove the screen over a bare temporary directory and every
+    one failed with exit 128 from git; sixteen tests were asserting nothing.
+
+    The repository is created inside the pytest temporary root and never
+    touches the one this file lives in.
     """
     package = root / "src" / "cadrumo" / "tests"
     package.mkdir(parents=True, exist_ok=True)
     (root / "dev").mkdir(parents=True, exist_ok=True)
     (package / module_name).write_text(dedent(source), encoding="utf-8")
+    _track_in_a_scratch_repository(root)
+
+
+def _track_in_a_scratch_repository(root: Path) -> None:
+    """Initialise a repository at ``root`` if needed and stage what is there.
+
+    Staging is enough: ``git ls-files`` reports the index, so no commit and no
+    identity configuration are required.
+    """
+    if not (root / ".git").is_dir():
+        subprocess.run(("git", "init", "-q"), cwd=root, check=True, capture_output=True)  # noqa: S603, S607
+    subprocess.run(("git", "add", "-A"), cwd=root, check=True, capture_output=True)  # noqa: S603, S607
 
 
 def _flagged_names(root: Path) -> set[str]:
