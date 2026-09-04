@@ -14640,3 +14640,36 @@ modelo/revision/casilla - and this package already correlates at that level:
 `condition_overlap` compares screen populations by revision, `filing_exposure`
 by grade. Cross-instrument correlation belongs there, at the finding, and not in
 the failure text, which is a rendering of a finding with most of it removed.
+
+
+## Cross-package correlation, measured and found empty
+
+The declination above pointed at where the signal does live: typed findings
+rather than failure text. The next question is whether correlating them ACROSS
+packages would find anything, and it was measured rather than assumed.
+
+Only **four** registry conditions carry a casilla at all - the four monetary ones
+- once the wire-type census is excluded for the reason it is always excluded:
+its 7,231 rows are transitions examined, so intersecting anything with it
+measures corpus size and not agreement. Against the locale drift screen's four
+conditions, the intersection is **zero pairs**.
+
+Including the census, two pairs appear: 75 of 747 drifting casillas and 3 of 37
+uncomparable ones also sit somewhere in those 7,231 rows. Both are what a large
+population produces by existing, which is exactly the control this campaign
+applied to the filing-exposure figure and reached the same answer.
+
+So the correlator has nothing to correlate today, and the reason is more useful
+than the number. **Neither instrument that produced the m200 connection is an
+enrolled screen.** The orphaned-declaration worklist is an analysis module the
+runner does not carry, and the locale resolution check is a test rather than a
+screen, so its findings exist only inside an assertion. The correlation
+infrastructure is real - `condition_overlap` compares populations at the finest
+shared unit and already understands casillas - and the two participants that
+mattered are outside it.
+
+That is the eighth guard declined after measuring, and it declines the same way
+as the seventh: not because the idea is wrong but because the population it
+needs is not in the place it would look. The actionable residue is enrolment
+rather than instrumentation, and enrolment of another campaign's modules is not
+this plan's to do.

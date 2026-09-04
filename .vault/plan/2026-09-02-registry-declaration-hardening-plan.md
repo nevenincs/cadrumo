@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:d6800020b5f0645c58d0ca2311696e1b2e3ce3f505926d12029597e8bd4a3571'
+body_hash: 'sha256:b4cf4086d6881d2cfde90859c233dd43fde2f1a43504a94330a4bf3b3e0d287a'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -419,6 +419,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S536` - Sweep the full files and directories behind this sessions targeted runs: the registry suite is 1286 collected with 1249 passing and a failure set identical line by line to the earlier full measurement, and the twenty-two tests added all pass; `dev`.
 - [x] `W02.P02.S537` - Connect three separately recorded failures to one landing: the modelo 200 2024 casillas arrived without map owners or translations, so 154 orphaned declarations, a broken frozen count and 624 locale resolution failures are the same event; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W02.P02.S538` - Decline a failure correlator after measuring: one line in a 37-failure registry run carries a modelo coordinate, since a count assertion names no member and the repository takes every run with a short traceback, so the signal lives in typed findings rather than failure text; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W02.P02.S539` - Measure cross-package finding correlation and find it empty: four registry conditions carry a casilla once the census is excluded and they share none with the locale drift screen, because neither instrument behind the m200 connection is an enrolled screen; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [ ] `W02.P02.S540` - Decide whether the orphaned-declaration worklist and the locale resolution check should be enrolled as screens, since both produce typed findings that no correlator can reach while one is an unenrolled analysis module and the other lives inside a test assertion; `dev/registry/analysis/screens.py,dev/locales`.
 
 ### Phase `W02.P03` - release predicate relocation
 
