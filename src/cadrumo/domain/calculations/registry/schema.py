@@ -112,16 +112,6 @@ from .schema_scalars import (
 from .schema_scalars import (
     WorkbookCellRefStr as _WorkbookCellRefStr,
 )
-from .schema_scalars import (
-)
-from .schema_scalars import (
-)
-from .schema_scalars import (
-)
-from .schema_scalars import (
-)
-from .schema_scalars import (
-)
 from .schema_verification import (
     LiveCrossReferenceDecision,
     RegistryVerificationPolicy,
