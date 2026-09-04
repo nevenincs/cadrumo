@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:07a983deb929cc7dea24b68ddb567ebac56a9f4a7364cab008109c8bcb1d422c'
+body_hash: 'sha256:cfb7b73ad9e27c1a65e305238b1286cf1120388708e2865fd89821ed43272fa8'
 step_id: 'S415'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -27,27 +27,40 @@ related:
 - `M` `src/cadrumo/locales/en/common.yml`
 - `M` `src/cadrumo/locales/es/common.yml`
 - `M` `src/cadrumo/locales/hu/common.yml`
-- `verify:` `pytest -n0 -m '' test_workbench_responsive.py::test_every_section_heading_is_separated_from_the_content_it_owns` -> `pass`
+- `verify:` `pytest -n0 -m '' test_theme.py test_workbench_responsive.py test_home.py` -> `pass` (62)
 
 ## Notes
 
-Step left OPEN; this is a partial. The step asks for three things and one of
-them is unmet.
+Rhythm: `.cadrumo-heading` on the token table, asymmetric by construction --
+section gap above to separate a group from the previous one, stack gap below to
+bind the heading to its own rows. Home replaced its private `.home-heading`
+(top margin only); AEAT Sync gained the two headings it never had, so its
+stacked navigation and detail tables are no longer one run of rows.
+`.cadrumo-heading-lead` marks a heading that opens a scroll region: no previous
+group, so equal gaps, and both edges are restated because a Textual rule that
+sets one margin edge replaces the whole box.
 
-Landed: the shared `.cadrumo-heading` rhythm on the token table, asymmetric by
-construction (section gap above, stack gap below). Home now uses it in place of
-its private `.home-heading`, which carried a `margin-top` only. AEAT Sync
-gained the two headings it never had, so its stacked navigation and detail
-tables are no longer one continuous run of rows.
+A REAL DEFECT was found by rendering rather than by the suite, and it predates
+this step. Home mounted with the page already scrolled two rows down: focusing
+the first table scrolls it into view, and in the single-column layout that
+scrolled the top of the page away. Its opening heading was therefore absent at
+the floor, above-wrap and 100x40 while 120x40 looked perfect. Fixed by
+returning the page to the top on a fresh arrival, deferred to
+`call_after_refresh` because the focus scroll is applied after layout settles
+and overwrites anything issued during mount. The restored-selection branch
+keeps its own position deliberately.
 
-Gate: the rhythm is read from the PAINTED frame, inside each heading's own
-column span. A full-width blankness test reports a false gap on Home, whose
-second column paints on the rows a left-column heading needs blank; that
-mismeasurement was caught by the gate failing on correct code. Teeth proven by
-flattening the gaps to symmetric -- both parametrisations failed -- and
-restoring the file by copy.
+The gate reads painted cells inside each heading's own column span, and it
+earned its keep three times over. It failed on correct code first, because a
+full-width blankness test reports a false gap on Home's second column. It then
+had to be swept across all four supported terminals, because the scroll defect
+was invisible at the ordinary size the gate originally ran at. Finally, the
+below-the-fold exemption added for the sweep made it blind to that same defect
+-- injecting the bug passed 8/8 -- so a heading that opens a region is now
+never excused, and only that version detects it (2 failed at floor and
+above-wrap). Teeth proven by removing the scroll fix and restoring by copy.
 
-Unmet: the rhythm reaches Home and AEAT Sync only. The Ledger, Declarations,
-Profile and Modelo surfaces compose no heading widgets at all, so applying the
-rhythm there is composition work rather than styling, and the gate only covers
-the two surfaces that have headings to check. Row density is untouched.
+Remaining, not blocking this step: Ledger, Declarations, Profile and Modelo
+compose no heading widgets at all, so the rhythm reaches them only as
+composition work; row density is untouched; the sweep covers the two surfaces
+that have headings.
