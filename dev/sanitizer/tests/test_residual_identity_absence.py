@@ -5,7 +5,7 @@ never asserts that no real identity SURVIVED, and its docstring justifies the
 omission by saying the test does not have the cleartext. This module is the
 other half, and it disproves that justification: detection needs no cleartext,
 only a pattern, a checksum, and the sidecar's own record of what the sanitiser
-wrote. See :mod:`dev.sanitizer._residual_identity` for the argument in full.
+wrote. See :mod:`dev.sanitizer.residual_identity` for the argument in full.
 
 SCOPE, AND WHY IT IS PROVENANCE-DRIVEN RATHER THAN A LIST. Only fixtures whose
 sidecar declares ``provenance = "real_corpus"`` are scanned. That is not an

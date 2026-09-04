@@ -15,8 +15,10 @@ cleartext-free audit output from :class:`SanitizationResult`.
 Callers outside :mod:`dev.sanitizer` must import
 exclusively from this module — the private modules
 (``_records``, ``errors``, ``_pipeline``, ``_streams``,
-``_metadata``, ``_dynamic``, ``_structtree``, ``_determinism``,
-``_residual_identity``) are implementation details.
+``_metadata``, ``_dynamic``, ``_structtree``, ``_determinism``)
+are implementation details. ``residual_identity`` is public: two of
+its symbols are consumed by :mod:`dev.identity`, and a module reached
+from another package cannot be an implementation detail.
 
 Examples:
     >>> from dev.sanitizer import sanitize_pdf, TokenMap, NifReplacement  # doctest: +SKIP
@@ -46,7 +48,7 @@ from ._records import (
     ScrubbedSurface,
     TokenMap,
 )
-from ._residual_identity import (
+from .residual_identity import (
     CHECKSUM_VERIFIED_KINDS,
     ResidualFinding,
     ResidualKind,
