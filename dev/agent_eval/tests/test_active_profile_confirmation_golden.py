@@ -34,6 +34,7 @@ from cadrumo_harness.mcp import ConfirmationPolicy, build_tool_descriptors, conf
 from .._models import ProfileConfirmationScenario
 from .._runner import check_profile_confirmation_scenario
 from ._real_cli_support import valid_cli_commands
+from ._scripted_registration_channels import creation_secrets_payload, scripted_registration_descriptors
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -59,18 +60,23 @@ _MUTATING_COMMANDS = (
 
 
 def _create_profile() -> None:
-    result = invoke_cached_cli(
-        [
-            "config", "profile", "create", _PROFILE_ID,
-            "--quiet", "--accept-defaults",
-            "--entity-type", "natural_person",
-            "--irpf-income-categories", "actividad_economica",
-            "--tax-id", "12345678Z",
-            "--name", "Operator",
-            "--surnames", "Confirmation",
-            "--activity", "design",
-        ],
-    )  # fmt: skip
+    with scripted_registration_descriptors() as (handoff, verification):
+        result = invoke_cached_cli(
+            [
+                "config", "profile", "create", _PROFILE_ID,
+                "--quiet", "--accept-defaults",
+                "--entity-type", "natural_person",
+                "--irpf-income-categories", "actividad_economica",
+                "--tax-id", "12345678Z",
+                "--name", "Operator",
+                "--surnames", "Confirmation",
+                "--activity", "design",
+                "--secrets-stdin",
+                "--recovery-handoff-fd", str(handoff),
+                "--recovery-verification-fd", str(verification),
+            ],
+            input=creation_secrets_payload(),
+        )  # fmt: skip
     assert result.exit_code == 0, result.output
 
 
