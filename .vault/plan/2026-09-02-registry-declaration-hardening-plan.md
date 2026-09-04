@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:5fae027e66f449331e2a856d883241957693e2f9e4b4784f857b9b5b63630f8d'
+body_hash: 'sha256:42d63e94161108686852c187775819de39f9b5c12ed6315afb6c0bc3e9b14653'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -439,6 +439,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S557` - Stop the checkout-drift screen reporting every populated tree as exceeding a ceiling of zero when no ceiling is recorded, which had --check exiting 1 over 2403 files and the advisory dimension permanently RED against its own AMBER contract; remove the dead baseline writer the retired ratchet left behind and prove the blob naming against git hash-object; `dev/audit/checkout_drift.py,dev/audit/tests/test_checkout_drift_screen.py`.
 - [x] `W02.P02.S558` - Stop the docstring-only-change prover passing on nothing, where an empty path list and a bare invocation both exited 0 exactly as a clean edit does, and report a tracked file that vanished instead of ending the run in a traceback that leaves the rest of the change unexamined; `dev/quality/docstring_only_diff.py,dev/quality/tests/test_docstring_only_diff.py`.
 - [x] `W02.P02.S559` - Pin the census source universe against the tracked tree at one resolved revision, so an export-ignore attribute cannot silently shrink the denominator three identity censuses and the identifier namespace gate all share and none of them can check; `dev/quality/tests/test_repository_sources.py`.
+- [x] `W02.P02.S560` - Enforce the vulture whitelist's own staleness rule by resolving every exempted parameter against the signature it cites, so a suppression cannot outlive its reason and go on hiding a dead parameter in a report that stays clean; `dev/audit/tests/test_vulture_whitelist_is_not_stale.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

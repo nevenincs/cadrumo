@@ -5,16 +5,11 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:f248ce3e00f5bd591a498c59ee62032015e90654aac5fa24f2558cfcd4dfab95'
+body_hash: 'sha256:6603a840eaa7eb07e5664572436f816f68cf2c1151fbfe23c6566884d4828425'
 step_id: 'S14'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Triage the test-only symbol population into behaviour that retires with its test and seams whose missing production call is the defect
 
