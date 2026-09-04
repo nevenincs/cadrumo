@@ -2,9 +2,12 @@
 
 The accepted boundary makes a package initialiser an inert namespace marker: no
 exports, no forwarding, no lazy map. Nine initialisers under ``dev`` are the
-opposite - pure forwarding surfaces that define nothing and re-export 388 names
-between them - and 271 import sites across 70 files reach their symbols through
-one.
+opposite - pure forwarding surfaces that define nothing and bind 388 names
+between them - and 77 import statements across 70 files pull 271 names through
+one. The three figures count different things and are reported separately for
+that reason: a name bound by the initialiser, a name asked for by a consumer,
+and a statement that has to be rewritten are not the same unit, and an earlier
+count of this work conflated the first two.
 
 Retiring a facade by hand means opening seventy files and knowing, for each
 name, which module actually defines it. That knowledge is already written down:
@@ -137,6 +140,12 @@ def facade_exports(directory: pathlib.Path) -> FacadePackage:
         if not isinstance(node, ast.ImportFrom):
             continue
         module = resolve_relative(node, initialiser)
+        if module == "__future__":
+            # A compiler directive, not a re-export. Counting it made every
+            # facade look like it forwarded one name more than it does, and the
+            # inflation was invisible because it was exactly one per package -
+            # a constant offset reads as a definition disagreement, not a bug.
+            continue
         for alias in node.names:
             # An aliased re-export renames the symbol, so the facade's name and
             # the defining module's name differ and a consumer cannot simply be
