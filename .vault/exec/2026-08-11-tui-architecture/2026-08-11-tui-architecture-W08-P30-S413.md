@@ -5,16 +5,11 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:9f14a5d9a2df0825d50b0c831a20a5514d0bf9468f998f501d3e8aa3f1546807'
+body_hash: 'sha256:3ad4bab5a526f5c82d3f41ebe648c0e6639d28cc66fbe16ce410f5d46bdc8743'
 step_id: 'S413'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Let every workspace table use the width it is given instead of truncating inside it. OPERATOR REVIEW OF THE RENDERED FRAMES, 2026-09-04, generalising what was first measured on one surface: column and row tables across the workbench do not stretch and do not use the screen efficiently. Measured on aeat-sync-filed-declarations at 120x40: the navigation table clips its own header to 'Disponibilid', cuts area names mid-word to 'Declaraciones pr' and 'Comparacion de e', and severs every Fuentes cell at 37 characters, while the painted rows stop near column 78 of 120 and the remaining third of the terminal is blank. NO EXISTING GATE CAN SEE THIS: the responsive suite asserts that nothing crosses the right edge, and nothing does -- truncation inside a table with room to spare paints exactly like a table that fits. Whatever fix lands needs a proof that reads the painted cells for a clipped value beside unused width, in the same shape as the Home column-gutter gate.
 

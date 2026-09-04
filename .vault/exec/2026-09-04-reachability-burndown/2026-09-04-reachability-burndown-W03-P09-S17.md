@@ -5,16 +5,11 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:61e1e5897909a1675340bb3bd6e14de3e319396fa5637d34dc450e0bde0cbec0'
+body_hash: 'sha256:8a8c6c0b37a2625d65c65d6eb44541844a36318689ea1c613def4dd11d419550'
 step_id: 'S17'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Merge the duplicated TypeAdapter declarations at their owning registry boundary
 

@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:a69c82979de6e97985b721d2404f939f3b847d22a4f0077673bddb573ad86a1c'
+body_hash: 'sha256:24e9a7c8017f4ec0834589101cc9fabbf0270ba0c3c99a7c9cff08d4ce5c7cfb'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -449,6 +449,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S567` - Match the semantic audit's sum token as a word rather than a substring, which had classified resume, consume, assume and summary as tax-base calculations so an adapter merely resuming a session was reported as a hexagonal leak, and pin both directions of the classification; `dev/audit/semantic.py,dev/audit/tests/test_semantic_classification.py`.
 - [x] `W02.P02.S568` - Stop the hex-64 acceptance probe reporting sixty-four Z characters as upper-hex, which softened a field admitting arbitrary letters where a SHA-256 belongs into what reads as a case-insensitivity nit, and cover its verdicts including the vacuity gate that separates an unmeasured field from a refusing one; `dev/identity/hex64_acceptance_probe.py,dev/identity/tests/test_hex64_acceptance_probe.py`.
 - [x] `W02.P02.S569` - Remove the two stale hex-64 exemptions whose symbols no longer exist at HEAD, making the staleness gate pass, and keep its proof against constructed input now that the emptied allowlist would satisfy it vacuously; `dev/identity/hex64_redeclaration_census.py,dev/identity/tests/test_hex64_allowlist_staleness.py`.
+- [x] `W02.P02.S570` - Make the ty collector refuse an empty checker stream like its two siblings already did, since a ty that failed to start returned an empty diagnostic list and the type gate reported green over a run that never happened, and share the rule so the three cannot drift apart again; `dev/quality/types.py,dev/quality/tests/test_types_gate.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
