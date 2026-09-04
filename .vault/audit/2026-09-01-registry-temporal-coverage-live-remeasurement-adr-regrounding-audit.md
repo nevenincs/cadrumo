@@ -13053,3 +13053,58 @@ just not this change's.
 
 Six of nine facades are retired. Three remain, all under `dev.docs`, holding 195
 bound names and 40 consumer sites.
+
+
+## The promoter earns its place by failing its own tests
+
+Three packages and fifteen private modules remained, so the throwaway rename
+script became `dev/quality/module_promotion.py` with tests. Writing those tests
+found two defects in it, and one of them was the defect it was written to
+prevent.
+
+A module is referenced four ways that do not look alike: an absolute import, a
+relative import from inside the package, a relative import from OUTSIDE it, and
+dotted prose. The third is the one that gets missed and did. Every import is now
+resolved to its absolute dotted name through one function, so where the file
+sits stops mattering, and the constructed tree exercises all four.
+
+**The first defect was in my fixture, and it exposed the second.** The
+absolute-import fixture spelled the module's dotted name by joining an absolute
+`tmp_path`, which on Windows produces `C:.Users....` - not a dotted name, and
+not parsable. The file failed to parse, and the sweep **skipped it in silence**.
+The plan came back clean, and the reference it contained had simply never been
+looked at.
+
+That is the module's own stated failure mode arriving from an unexpected
+direction: not a reference shape it did not recognise, but a file it never read.
+A plan now carries `unreadable` beside `unhandled`, and both are printed. A file
+that does not parse is a file whose references were not examined, and reporting
+the plan without saying so makes an unexamined tree look like a clean one.
+
+The fixture is now built from relative paths, which is also how the tool is
+really invoked - a package's dotted name is derived from its path parts, so an
+absolute path exercises a code path that cannot occur in use.
+
+The stdlib guard is mechanical now rather than remembered. `_html` had to become
+`normatives_html` rather than `html` by hand last round; `public_name_is_safe`
+refuses any name in the live interpreter's `sys.stdlib_module_names`, taken from
+the interpreter rather than written down, so it cannot go stale with the Python
+version.
+
+## The seventh facade
+
+`dev.docs.terminology` is retired. `_unified_record`, `_search_record` and
+`_casilla_projection` became public, moving **135 references across 62
+file-touches with zero unhandled and zero unreadable**, and the initialiser went
+from 208 lines to 12.
+
+Verified by set, not count, at each stage: the owning package's 62 failing and
+erroring tests are identical before the promotions, after them, and after the
+initialiser was emptied. Every cross-package consumer imports cleanly, and the
+initialiser now carries exactly three public names, all of them its own
+submodules.
+
+Seven of nine facades are retired. Two remain - `dev.docs.sequences` and
+`dev.docs.terminology_handbook` - holding 109 bound names and 35 consumer sites,
+and `sequences` is blocked behind the 622 library lines still living in its
+`__main__`.
