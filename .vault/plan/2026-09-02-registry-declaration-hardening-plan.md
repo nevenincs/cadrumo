@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:beac55b8cf2941caad00dde04297097fada16cc40d439bb477b2c77cc7ece689'
+body_hash: 'sha256:dbb71d00c363bd278423c1dd810f27f92acf95130d4140b669c48e533f4aa0cd'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -484,6 +484,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S602` - Separate an absent enumeration root from an empty one, since a root that does not exist yielded the same nothing as a directory holding no Python files and every walk over it then analysed an empty corpus, the reference walk reporting live code dead and the test walk reporting no tests; `dev/audit/unreachable_code.py,dev/audit/tests/test_unreachable_code.py`.
 - [x] `W02.P02.S603` - Separate an absent compatibility root from an empty one, since a root that does not exist enumerated the same nothing and the union across roots hid which contributed zero, so shipped code could be reported compatible for a Python version without a file under it being read; `dev/quality/python_compatibility_scan.py,dev/quality/tests/test_python_compatibility_scan.py`.
 - [x] `W02.P02.S604` - Pin what the devcontainer checks say when a precondition fails, since they run inside the built image where the only artefact is a CI log and a refusal that does not name both what it found and what it expected costs a rebuild to diagnose; `dev/containers/tests/test_devcontainer_smoke.py`.
+- [x] `W02.P02.S605` - Extract the all-extras lane's claim list and parser so the coupling the smoke manifest enforces is provable without installing every optional extra, and pin the capability-gated optional-import claim by name since it is the only thing separating this lane from the core one; `dev/packaging/all_extra_smoke.py,dev/packaging/tests/test_all_extra_smoke.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
