@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:8708986e80f64206786ac370bf5aacfac121ba42ed6306742c389a72d6f06583'
+body_hash: 'sha256:18bf63292a9afbcf9fe798cc69b5e5dfa8a0228484b12a8a152cf4d6f2cb3e40'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -321,7 +321,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S97` - Sweep the registry suites for gates that cannot pass and record each as owned, dispositioned or retired; `dev/registry/tests`.
 - [x] `W02.P02.S107` - Retire the developer registry package re-export facade and its enforcing inventory assertion, repointing the one symbol consumer at the defining module; `dev/registry/__init__.py`.
 - [ ] `W02.P02.S108` - Promote the eleven src-side private modules that non-test dev consumers reach across the package boundary, leaving the eleven test imports alone; `src/cadrumo,src/cadrumo_harness`.
-- [ ] `W02.P02.S109` - Rewrite the modelo 151 live-filing closure test onto the two-channel authority and delete the single-channel proof authority, once an enrolled conformance vector lets that authority produce a satisfied outcome; blocked behind the official emitted-byte reference and the vector enrolment it feeds; `dev/registry/conformance/tests/test_real_closure_outcomes.py`.
+- [ ] `W02.P02.S109` - Rewrite the modelo 151 live-filing closure test onto the two-channel authority and delete the single-channel proof authority, which today fails with an AttributeError because it implements proof_for where the shipped FilingExportProofAuthority protocol declares assess_for; blocked behind the official emitted-byte reference and the vector enrolment it feeds; `dev/registry/filing_export_proof.py,dev/registry/conformance/tests/test_real_closure_outcomes.py`.
 - [ ] `W02.P02.S110` - Resolve the twenty-four filing tests demanding filing grade from modelos 200, 038 and 036, which now declare calculation or applicability grade; `src/cadrumo/application/filing/tests`.
 - [x] `W02.P02.S111` - Retire the generation pipeline package re-export facade so the initialiser is an inert namespace marker; `dev/registry/pipeline/__init__.py`.
 - [x] `W02.P02.S112` - Bring the conformance test directory into the lane measurement, since every full-lane run so far covered only dev/registry/tests; `dev/registry/conformance/tests`.
@@ -422,6 +422,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S539` - Measure cross-package finding correlation and find it empty: four registry conditions carry a casilla once the census is excluded and they share none with the locale drift screen, because neither instrument behind the m200 connection is an enrolled screen; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [ ] `W02.P02.S540` - Decide whether the orphaned-declaration worklist and the locale resolution check should be enrolled as screens, since both produce typed findings that no correlator can reach while one is an unenrolled analysis module and the other lives inside a test assertion; `dev/registry/analysis/screens.py,dev/locales`.
 - [x] `W02.P02.S541` - Assert the one fact the conformance manager computes for itself, its locale coverage axis, whose required-per-locale and translated-across-locales fields read as a fraction exceeding one and were reconciled only by two untested derived properties; `dev/registry/conformance/tests/test_manager_locale_coverage.py`.
+- [x] `W02.P02.S542` - Name the conformance suites one failure exactly: an AttributeError where a caller invokes assess_for on the single-channel proof authority that implements proof_for, which is the transitional object S109 schedules for deletion rather than inherited debt; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W02.P03` - release predicate relocation
 

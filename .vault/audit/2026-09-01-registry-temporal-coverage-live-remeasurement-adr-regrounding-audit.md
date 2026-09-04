@@ -14710,3 +14710,39 @@ correlator and a cross-package finding correlator, both measured empty - and the
 third thing tried was work rather than tooling. Three consecutive declinations
 would have been a signal about the campaign's remaining tooling headroom rather
 than about the ideas.
+
+
+## The conformance suite's one failure, named exactly
+
+This plan records that one test in the conformance closure suite "has been
+failing throughout this campaign's measurements under the description of
+inherited baseline". Opening it turns that description into a fact.
+
+The failure is
+`test_real_live_filing_success_cannot_invent_a_complete_source_limb`, and it is
+not an assertion at all: `AttributeError: 'LiveFilingExportProofAuthority'
+object has no attribute 'assess_for'`. The shipped code calls a method the
+object does not have.
+
+The contract is unambiguous and lives in `src`:
+`FilingExportProofAuthority` is a Protocol declaring `assess_for`, and
+`filing_export_coverage.py` calls it. In the same dev module, one class
+implements that method and `LiveFilingExportProofAuthority` implements
+`proof_for` instead - so the file holds one class that satisfies the protocol
+and one that does not, thirty lines apart.
+
+That is exactly the state `S109` describes: the single-channel proof authority
+is slated for deletion once an enrolled conformance vector lets the two-channel
+one produce a satisfied outcome, and the modelo 151 test is to be rewritten onto
+it. So the failure is neither inherited debt nor a stale rename to repair; it is
+a transitional object whose replacement is blocked behind the official
+emitted-byte reference.
+
+Recording it this precisely is the contribution. "Inherited baseline" invites
+the next reader to leave it alone; "a caller invoking a method the object does
+not implement, on an object already scheduled for deletion" tells them what they
+are looking at and why fixing the symptom would be wrong - adding `assess_for`
+to a class due to be removed would satisfy the protocol and defeat the Step.
+
+The suite that holds it remains unreachable by any lane, which is why a live
+`AttributeError` has sat there without a signal.
