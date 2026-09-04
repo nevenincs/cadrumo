@@ -24,7 +24,7 @@ import pathlib
 
 import pytest
 
-from ..runner_capabilities import Finding, _machine, version_probe
+from ..runner_capabilities import _BREW_PATHS, Finding, _machine, version_probe
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -108,10 +108,21 @@ def test_a_finding_carries_its_verdict_and_its_reason() -> None:
     assert finding.detail
 
 
-def test_the_architecture_token_matches_what_the_matrix_compares() -> None:
-    """The brew path table is keyed on this, so a wrong token skips the check silently.
+def test_the_architecture_token_is_normalised_away_from_the_windows_spelling() -> None:
+    """The brew path table is keyed on this token, so a wrong one skips the check.
 
-    Windows reports ``AMD64`` where the matrix legs say ``x86_64``; a mismatch
-    would return no brew finding at all rather than a failing one.
+    Windows reports ``AMD64`` where the matrix legs say ``x86_64``. Leaving it
+    unnormalised would miss every key in the table and return NO brew finding
+    rather than a failing one - a capability gap reported as nothing at all.
     """
-    assert _machine() in {"x86_64", "arm64", "aarch64", os.uname().machine if hasattr(os, "uname") else _machine()}
+    token = _machine()
+
+    assert token != "AMD64"
+    assert token
+
+
+def test_the_brew_table_is_keyed_on_normalised_tokens() -> None:
+    """A key the normaliser can never produce is a leg that is never checked."""
+    for system, machine in _BREW_PATHS:
+        assert system in {"Darwin", "Linux"}
+        assert machine in {"x86_64", "arm64", "aarch64"}
