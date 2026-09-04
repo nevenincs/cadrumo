@@ -214,7 +214,6 @@
 "cadrumo.domain.calculations.registry._source_evidence_fingerprint" = 1
 "cadrumo.domain.calculations.registry._validate_cross_revision" = 1
 "cadrumo.domain.calculations.registry._validate_evidence" = 2
-"cadrumo.domain.calculations.registry._validate_relation_periods" = 2
 "cadrumo.domain.calculations.registry._validate_semantic_role_required" = 1
 "cadrumo.domain.calculations.registry.applicability" = 3
 "cadrumo.domain.calculations.registry.authority" = 3
