@@ -394,7 +394,9 @@ def main() -> int:
         sys.stdout.write(f"applied files={changed} sites={rewritten}\n")
     sys.stdout.write(
         f"summary packages={len(packages)} exports={sum(len(p.exports) for p in packages)} "
-        f"sites={len(sites)} files={files} refused={refused}\n"
+        f"sites={len(sites)} files={files} refused={refused} "
+        + " ".join(f"{reason}={refusals[reason]}" for reason in REFUSALS)
+        + chr(10)
     )
     return 0
 
