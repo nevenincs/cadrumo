@@ -97,9 +97,7 @@ def _authority_with_first_defaulted_iva_selector(
                 if binding.source is not BindingSourceKind.LEDGER_IVA_AGGREGATION:
                     continue
                 selector = binding.selector
-                if not isinstance(selector, BaseModel) or not {"fact", "applied_rates"}.isdisjoint(
-                    selector.model_fields_set
-                ):
+                if not isinstance(selector, BaseModel) or "applied_rates" in selector.model_fields_set:
                     continue
                 payload = selector.model_dump(mode="python", exclude_unset=True)
                 if reverse_input_order:
@@ -113,7 +111,7 @@ def _authority_with_first_defaulted_iva_selector(
                 mutated.modelos = tuple(modelos)
                 mutated._modelos_by_id = {item.id: item for item in mutated.modelos}
                 return mutated, (modelo.id, revision.id, binding.id), selector
-    raise AssertionError("no IVA selector with omitted fact and applied_rates defaults")
+    raise AssertionError("no IVA selector with an omitted applied_rates default")
 
 
 def test_registry_route_census_recomputes_the_published_live_authority_digest() -> None:
@@ -140,9 +138,9 @@ def test_registry_projection_retains_every_typed_selector_default_and_null() -> 
     )
     projected = cast(dict[str, object], json.loads(row.selector_json))
 
-    assert "fact" not in selector.model_fields_set
     assert "applied_rates" not in selector.model_fields_set
     assert set(projected) == set(selector.__class__.model_fields) - {"source"}
+    assert selector.__class__.model_fields["fact"].default == selector.fact
     assert projected["fact"] == "iva_amount_sum"
     assert projected["applied_rates"] is None
     assert projected["exemption_articles"] is None
