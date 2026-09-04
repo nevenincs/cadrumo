@@ -372,6 +372,17 @@ class HomeScreen(Screen[None]):
         if first is not None and not self._restore((actions, declarations, agenda)):
             self.set_focus(first)
             self._highlight(first.ordered_rows[0].key.value)
+            # Focusing scrolls the target into view, and in the single-column
+            # layout the first table is far enough down that doing so scrolls
+            # the top of the page away: the operator arrives on Home already
+            # past its opening heading, with no indication anything is above.
+            # This is a FRESH arrival with nothing to restore, so the top is
+            # where they belong; the restored-selection branch above keeps its
+            # own scroll position deliberately.
+            # After the refresh, not during it: the scroll that focusing causes
+            # is applied once layout settles, so a scroll issued here in mount
+            # order is simply overwritten by it.
+            self.call_after_refresh(self._scroll_to_top)
         if first is None:
             # Every zone is empty or refused, so the three tables are hidden and
             # nothing on the page can take focus. Home is the destination an
@@ -381,6 +392,10 @@ class HomeScreen(Screen[None]):
             page = self.query_one("#home-page", ContentScroll)
             page.can_focus = True
             self.set_focus(page)
+
+    def _scroll_to_top(self) -> None:
+        """Return the page to its opening heading after focus has settled."""
+        self.query_one("#home-page", ContentScroll).scroll_home(animate=False)
 
     def _remember(self, kind: HomeTargetKind, identity: str) -> str:
         self._targets[identity] = HomeTarget(kind=kind, identity=identity)

@@ -20,7 +20,11 @@ from pathlib import Path
 import pytest
 from textual.widget import Widget
 
-from ....tests.terminal_sizes import SUPPORTED_TERMINAL_SIZES, TERMINAL_ORDINARY
+from ....tests.terminal_sizes import (
+    SUPPORTED_TERMINAL_SIZE_IDS,
+    SUPPORTED_TERMINAL_SIZES,
+    TERMINAL_ORDINARY,
+)
 from ..components.host import ScreenHostApp
 from ..components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
 from ..home import HomeScreen
@@ -216,8 +220,11 @@ async def test_no_table_header_is_clipped_while_the_row_has_width_to_spare(surfa
     )
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("size", SUPPORTED_TERMINAL_SIZES, ids=SUPPORTED_TERMINAL_SIZE_IDS)
 @pytest.mark.parametrize("surface", ["home--ready", "aeat-sync-overview--ready"])
-async def test_every_section_heading_is_separated_from_the_content_it_owns(surface: str) -> None:
+async def test_every_section_heading_is_separated_from_the_content_it_owns(
+    surface: str, size: tuple[int, int]
+) -> None:
     """A heading fused to its rows makes the operator parse structure line by line.
 
     Read from the PAINTED frame, not the stylesheet. A margin declaration
@@ -225,6 +232,12 @@ async def test_every_section_heading_is_separated_from_the_content_it_owns(surfa
     can carry the wrong class, or a container can collapse the gap, and every
     one of those paints as the continuous run of data the operator reported
     while the declaration still reads correctly.
+
+    Swept across every supported terminal, because the defect that prompted
+    this gate was invisible at the ordinary size: Home mounted with the page
+    already scrolled two rows down, so its opening heading was absent at 100
+    and 80 columns while 120 looked perfect. A single-size rhythm gate reports
+    green over a heading the operator never sees.
 
     The rhythm is deliberately asymmetric -- a wider gap above binds the
     heading away from the previous group, a narrower one below binds it to its
@@ -241,7 +254,7 @@ async def test_every_section_heading_is_separated_from_the_content_it_owns(surfa
     from ..devtools.frame import screen_text
     from ..devtools.workbench_fixtures import resolve_workbench_fixture
 
-    width, height = TERMINAL_ORDINARY
+    width, height = size
     app = resolve_workbench_fixture(surface).build()
     async with app.run_test(size=(width, height)) as pilot:
         await pilot.pause()
@@ -254,6 +267,8 @@ async def test_every_section_heading_is_separated_from_the_content_it_owns(surfa
         app.exit(None)
 
     assert headings, f"{surface} declares no .cadrumo-heading to check"
+
+    checked = 0
 
     for heading, region, leads in headings:
         left, right = region.x, region.x + region.width
@@ -276,7 +291,24 @@ async def test_every_section_heading_is_separated_from_the_content_it_owns(surfa
             return count
 
         rows = [i for i, line in enumerate(column) if heading in line]
-        assert rows, f"{surface}: heading {heading!r} never reached the painted frame"
+        if not rows:
+            # A heading that OPENS its region is different in kind: it sits at
+            # the top of the page, so the only way it can be missing is that
+            # the operator was landed somewhere below it. That is the defect
+            # this gate was built for -- Home mounted pre-scrolled and hid its
+            # first heading at three of four supported sizes -- so it is never
+            # excused, and treating it as below-the-fold made the gate blind
+            # to exactly the regression it was written to catch.
+            assert not leads, (
+                f"{surface} at {width}x{height}: the region-opening heading "
+                f"{heading!r} is not painted on arrival; the page is scrolled "
+                f"past its own top"
+            )
+            # Any other heading may legitimately be below the fold: vertical
+            # overflow is ordinary and scrollable, and the horizontal gates own
+            # what must never be pushed out of sight.
+            continue
+        checked += 1
         row = rows[0]
         below, above = blanks_after(row), blanks_before(row)
         assert below >= 1, (
@@ -294,3 +326,7 @@ async def test_every_section_heading_is_separated_from_the_content_it_owns(surfa
             f"{surface}: {heading!r} floats between groups "
             f"({above} blank rows above, {below} below); the gap above must be larger"
         )
+
+    # Without this the below-the-fold skip above could quietly consume every
+    # heading and leave the test asserting nothing at all.
+    assert checked, f"{surface} at {width}x{height}: no heading was in view to check"
