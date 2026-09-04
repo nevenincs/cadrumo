@@ -442,3 +442,41 @@ symbols = [
   "validated_predicate_casilla_id",
 ]
 evidence = "AST sweep for module-level public-to-private aliases, cross-referenced against the live audit. Each carries one reference tree-wide (its own assignment), appears in no __all__, and its private original remains used three or more times inside the defining module."
+
+# ---------------------------------------------------------------------------
+# Test-only symbol triage
+#
+# The rule, and the three conditions it needs. The audit says nothing in
+# production USES these 350 symbols; the question is whether production can
+# still REACH one, because a seam whose missing call is the defect looks
+# identical to behaviour that retires with its test.
+#
+# A production module counts as reaching a symbol only when ALL hold:
+#   1. it contains a from-import binding that name, AND
+#   2. that import's source module is the DEFINING module, AND
+#   3. the name appears in its body.
+#
+# Each condition was added because dropping it produced a wrong answer against
+# this tree. Name-matching alone reported 84, inflated by private names that
+# collide across unrelated modules (several define their own `_ZERO` or
+# `_LISTING_URL`). Requiring an import but not its source reported 18, still
+# counting `csv.py` binding `CSV_EXTENSIONS` from a sibling `_constants` module
+# rather than from the flagged one. All three conditions give 9.
+#
+# RESULT: 341 retire with their tests. 9 are reached only from a module that is
+# itself a finding -- `_edit_facade`, `edit_session`, `_registered_values`,
+# `renta_web_open`, and one inside the `domain.fincas` finding package -- so
+# they are transitively dead and resolve when their importer does.
+#
+# NO live-module seam exists in this population. The `portals.drift` shape --
+# a live surface declaring an input nothing produces -- occurs at module level
+# but not among these symbols. That is why the 341 can be worked as ordinary
+# removals rather than each needing a wiring decision.
+# ---------------------------------------------------------------------------
+
+[test_only_triage]
+population = 350
+retires_with_test = 341
+transitively_dead = 9
+live_seams = 0
+rule = "a production module reaches a symbol only when it from-imports the name, the import source is the defining module, and the name appears in its body"
