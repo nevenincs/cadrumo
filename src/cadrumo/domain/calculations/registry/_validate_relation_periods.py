@@ -76,6 +76,10 @@ def relation_filing_year_delta(selector: RelationRevisionSelector) -> int:
     return selector.filing_year_delta or 0
 
 
+def relation_fixed_source_year(selector: RelationRevisionSelector) -> int | None:
+    return selector.year
+
+
 def _source_revisions_matching_periods(
     source_revisions: Iterable[ModeloRevision],
     source_period_set: set[str],
@@ -117,6 +121,43 @@ def _source_year_coverage_failures(
         else:
             failures.append(f"{scope} lacks source revision year coverage for {start}-{end}")
     return failures
+
+
+def validate_source_year_coverage(
+    scope: str,
+    *,
+    target_selector: PeriodSelector,
+    source_revisions: Iterable[ModeloRevision],
+    source_periods: Iterable[str],
+    filing_year_delta: int,
+    fixed_source_year: int | None = None,
+    source_is_observation_history: bool = False,
+) -> list[str]:
+    """Verify source-year coverage, with observation history requiring only shape coverage.
+
+    Candidate :class:`ModeloRevision` entries are filtered by source-period
+    shape before their year intervals are compared with the target selector.
+    """
+    source_period_set = set(source_periods)
+    period_matching_revisions = _source_revisions_matching_periods(source_revisions, source_period_set)
+    if source_is_observation_history:
+        if source_period_set and not period_matching_revisions:
+            return [
+                f"{scope} previous-filing source declares periods {sorted(source_period_set)!r} "
+                f"that no source revision covers",
+            ]
+        return []
+    required_intervals = _required_source_year_intervals(
+        target_selector,
+        filing_year_delta=filing_year_delta,
+        fixed_source_year=fixed_source_year,
+    )
+    covered_intervals = tuple(
+        interval
+        for source_revision in period_matching_revisions
+        for interval in _selector_year_intervals(source_revision.period_selector)
+    )
+    return _source_year_coverage_failures(scope, required_intervals, covered_intervals)
 
 
 def validate_relation_source_coordinate_coverage(

@@ -33,6 +33,20 @@ _RESOURCE = re.compile(
     r'\s+sha256 "([0-9a-f]{64})"\n'
     r"\s+end",
 )
+#: The backends the two isolation-disabled builds load. They are installed to
+#: run a build, never as part of the product's runtime closure, so the lock walk
+#: the formula derives its resources from does not reach them and they are
+#: pinned explicitly instead. A lock row that happens to share one of these
+#: names belongs to an unrelated development dependency and says nothing about
+#: which backend the formula should build against.
+_EXPLICIT_BUILD_BACKENDS = frozenset({"setuptools", "setuptools-scm", "maturin"})
+#: The index's immutable per-file path: the digest-derived directories under
+#: which an uploaded artifact is served forever. The ``/packages/source/`` form
+#: the cohort artifacts use is a redirect to whichever file the project serves
+#: now, so it is expressly not this.
+_IMMUTABLE_INDEX_FILE = re.compile(
+    r"https://files\.pythonhosted\.org/packages/[0-9a-f]{2}/[0-9a-f]{2}/[0-9a-f]{60}/(?P<filename>[^/]+)",
+)
 
 
 @dataclass(frozen=True)
@@ -203,8 +217,12 @@ def test_formula_is_deterministic_and_binds_the_real_cohort(
         f"{_INDEX_SOURCE}/cadrumo-data-official/{built_cohort.official.name}",
         sha256_path(built_cohort.official),
     )
-    # No unrelated workspace dependency may leak into the formula closure.
-    assert "mcp" not in resources
+    # The MCP SDK is a mandatory runtime requirement of the distribution this
+    # formula installs, and Homebrew installs every resource with --no-deps, so
+    # nothing pulls it in transitively: absent from the closure, the installed
+    # virtualenv is missing an import the product makes.
+    assert "mcp" in resources
+    # No workspace-only dependency may leak into the formula closure.
     assert "tzdata" not in resources
     # The three isolation-disabled build backends: setuptools -- the venv from
     # `python -m venv` ships none and Homebrew installs resources --no-deps;
