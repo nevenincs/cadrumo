@@ -13629,3 +13629,39 @@ did - opening the history and timing two commits against each other.
 
 An invariant would have said `154 declarations have no map owner` on the day it
 happened, in the failure message, without the archaeology.
+
+
+## A frozen-count detector, declined on its own evidence
+
+The modelo 200 finding invites an obvious instrument: the project's quality rule
+forbids frozen corpus counts, and nothing detects them. Two signals were tried
+and both fail, in opposite directions.
+
+**The first missed its own motivating instance.** Looking for a comparison
+between an integer literal and a value derived from a no-argument call - the
+shape of a corpus read - found eight sites across `dev`, with literals of 1 and
+4, all structural. It did not find the modelo 200 assertion, because that one
+reads its measured side through `rtoml.loads(capsys.readouterr().out)`, a chain
+of calls that all take arguments. A detector that cannot find the defect it was
+built for is not a detector.
+
+**The second flagged correct tests, including this session's own.** Relaxing to
+any comparison against an integer literal of ten or more found 111 sites, and any
+comparison against a dict of integer literals found twelve - among them
+`dev/quality/tests/test_run_integrity.py:46`, which asserts
+`result.counts == {"failed": 23, "passed": 294}` about a constructed fixture
+string written three lines above it. That assertion is exactly right and a
+frozen-count gate must never flag it.
+
+The discriminator is not syntactic. What makes `185` a frozen corpus count and
+`23` a correct expectation is where the measured value comes from - a corpus that
+moves, or input the test wrote itself - and separating those needs data flow
+rather than a pattern.
+
+So no instrument is built, and this is the fifth guard this campaign has declined
+after measuring: the population-identity sweep, the within-screen overlap gate,
+the import-reach derivation detector, the drift exposure ranking, and now this.
+The rule against frozen corpus counts stays a rule an author must follow, which
+is a weaker outcome than a gate and the honest one. Writing a detector that
+flagged the correct tests beside the incorrect ones would have made the rule
+harder to follow rather than easier.

@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:a00cafdf25957f91f6852e1d218123885dfba693853844f0fc2b1fa9a3056e61'
+body_hash: 'sha256:eb2ec59f3bc3da85bdffc5b31068d65e226f450b91c71415bf3ad2feb3cfe007'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -233,7 +233,14 @@ correct by construction - a protocol matching its implementation, three commands
 schema names are their output contract. A lane-visibility gate was built and then narrowed,
 because the tree already answered the reachability half of its question per test rather than
 per module. A category is worth gating only when a member of it is more likely wrong than
-right, and this plan has now declined that test three times as often as it has passed it.
+right, and this plan has now declined that test five times, each after measuring rather than on
+principle: a population-identity sweep, a within-screen overlap gate, an import-reach derivation
+detector, a drift-exposure ranking whose signal was 100% against a 91.7% control, and a frozen-count
+detector. The last is the clearest, because both signals tried were wrong in opposite directions -
+the narrow one could not find the very assertion that motivated it, and the broad one flagged 111
+sites including a correct fixture assertion written in this campaign's own tests. The discriminator
+there is where a measured value comes from, not what the comparison looks like, and a gate that
+cannot tell those apart makes the rule it enforces harder to follow rather than easier.
 
 What the extension found in passing matters more than the screens. The conformance closure
 suite - sixteen ordinary unit tests that prove real filing outcomes - is named by no CI lane
@@ -379,6 +386,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S503` - Examine the five registry failures that are not the republication: four are src-side and one is a pair of frozen corpus counts whose failure masks a real movement, 154 orphaned declarations against a frozen 2, all citing the modelo 200 2024 manual; `dev/registry/tests/test_m200_semantic_casilla_candidates.py`.
 - [ ] `W02.P02.S504` - Replace the two frozen corpus counts in the modelo 200 semantic casilla tests with the invariant they stand for, that a declaration has a map owner, since a count assertion reports a fall of four and a rise of a hundred and fifty-two as the same failed equality; `dev/registry/tests/test_m200_semantic_casilla_candidates.py`.
 - [ ] `W02.P02.S505` - Resolve the 154 unmapped modelo 200 declarations, 152 of them citing the 2024 record design, which landed at 11:48 on 2026-09-03 against counts frozen at 08:05 the same morning, so the declarations arrived ahead of the map that will own them; `src/cadrumo/_data/registry/aeat/modelos/200`.
+- [x] `W02.P02.S506` - Decline a frozen-count detector after measuring two signals: the first misses the modelo 200 assertion it was built for and the second flags 111 sites including this sessions own correct fixture assertion, since the discriminator is where a value comes from rather than its syntax; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W02.P03` - release predicate relocation
 
