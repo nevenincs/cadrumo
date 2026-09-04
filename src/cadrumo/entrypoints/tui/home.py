@@ -17,8 +17,6 @@ from textual.message import Message
 from textual.screen import Screen
 from textual.widgets import DataTable, Static
 
-from ...adapters.persistence.storage.recovery_key import generate_recovery_key  # defect
-
 from ...application.overview.calendar_models import (
     OverviewAeatSubmissionState,
     OverviewLocalFilingState,
