@@ -70,12 +70,14 @@ from dataclasses import dataclass
 from typing import Final
 
 __all__ = [
+    "NON_INERT_KINDS",
     "REFUSALS",
     "FacadePackage",
     "ImportSite",
     "apply_reference_rewrites",
     "facade_exports",
     "facade_import_sites",
+    "non_inert_contents",
     "reference_rewrites",
     "refusal_reason",
     "relative_spelling",
@@ -191,6 +193,47 @@ def facade_exports(directory: pathlib.Path) -> FacadePackage:
         exports=exports,
         submodules=submodule_names(directory),
     )
+
+
+#: Everything an inert namespace marker may not carry, named once so the gate
+#: and its report cannot disagree about what inertness means.
+NON_INERT_KINDS: Final[tuple[str, ...]] = (
+    "definition",
+    "import",
+    "assignment",
+    "side_effect_call",
+)
+
+
+def non_inert_contents(initialiser: pathlib.Path) -> dict[str, tuple[str, ...]]:
+    """Return what an initialiser carries that an inert marker may not.
+
+    Forwarding is the loudest violation and the one the retirement removed, but
+    the boundary is wider than that: an initialiser may not define symbols, run
+    code at import, or bind module-level names either. A package that defines
+    its own class in ``__init__.py`` forwards nothing and is still not a
+    namespace marker.
+
+    ``from __future__ import ...`` is excluded. It is a compiler directive with
+    no runtime effect, and counting it made every initialiser look non-inert -
+    the same exclusion the export reader needs, for the same reason.
+    """
+    tree = ast.parse(initialiser.read_text(encoding="utf-8"))
+    found: dict[str, list[str]] = {kind: [] for kind in NON_INERT_KINDS}
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+            found["definition"].append(node.name)
+        elif isinstance(node, ast.ImportFrom) and node.module != "__future__":
+            found["import"].append(node.module or ".")
+        elif isinstance(node, ast.Import):
+            found["import"].append(node.names[0].name)
+        elif isinstance(node, ast.Assign):
+            found["assignment"].extend(target.id for target in node.targets if isinstance(target, ast.Name))
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            found["assignment"].append(node.target.id)
+        elif isinstance(node, ast.Expr) and isinstance(node.value, ast.Call):
+            found["side_effect_call"].append(ast.unparse(node.value.func))
+    return {kind: tuple(names) for kind, names in found.items() if names}
 
 
 def facade_packages(root: pathlib.Path = DEV_ROOT) -> tuple[FacadePackage, ...]:

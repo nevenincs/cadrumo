@@ -267,3 +267,56 @@ def test_the_gate_detects_a_forwarding_initialiser(relative_root: pathlib.Path) 
     # And an inert one is not reported, so the gate is not simply always red.
     (package / "__init__.py").write_text('"""Inert namespace marker."""' + chr(10), encoding="utf-8")
     assert not facade_packages(relative_root)
+
+
+def test_every_dev_initialiser_is_fully_inert() -> None:
+    """Wider than forwarding, which is only the loudest violation.
+
+    An initialiser may not define symbols, import at module level, bind names,
+    or run code at import either. A package that defines its own class in
+    ``__init__.py`` forwards nothing and is still not a namespace marker, so a
+    gate that only checked forwarding would pass it.
+
+    All 63 initialisers under ``dev`` satisfy this today. The stronger gate is
+    landable for the same reason the forwarding one is: the retirement made it
+    true.
+    """
+    from ..facade_retirement import DEV_ROOT, non_inert_contents
+
+    initialisers = [path for path in sorted(DEV_ROOT.rglob("__init__.py")) if "__pycache__" not in path.parts]
+    assert len(initialisers) > 50, f"only {len(initialisers)} initialisers found; the gate is near-vacuous"
+
+    offenders = {str(path): contents for path in initialisers if (contents := non_inert_contents(path))}
+    assert not offenders, f"non-inert package initialiser(s): {offenders}"
+
+
+def test_the_inertness_gate_detects_each_kind_it_names(relative_root: pathlib.Path) -> None:
+    """Every kind the gate can report is shown catching a constructed instance.
+
+    A kind with no live instance and no proof is one that stops being detected
+    without anyone noticing - and none of the four has a live instance, because
+    the tree is clean.
+    """
+    from ..facade_retirement import NON_INERT_KINDS, non_inert_contents
+
+    package = relative_root / "widget"
+    package.mkdir()
+    initialiser = package / "__init__.py"
+
+    initialiser.write_text('"""Inert."""' + chr(10), encoding="utf-8")
+    assert non_inert_contents(initialiser) == {}
+
+    # A future import alone is still inert: it is a compiler directive.
+    initialiser.write_text('"""Doc."""' + chr(10) + "from __future__ import annotations" + chr(10), encoding="utf-8")
+    assert non_inert_contents(initialiser) == {}
+
+    planted = {
+        "definition": "class Motor:" + chr(10) + "    pass" + chr(10),
+        "import": "import os" + chr(10),
+        "assignment": "VERSION = 1" + chr(10),
+        "side_effect_call": "print('hello')" + chr(10),
+    }
+    assert set(planted) == set(NON_INERT_KINDS), "a kind is declared but has no proof"
+    for kind, body in planted.items():
+        initialiser.write_text('"""Doc."""' + chr(10) + body, encoding="utf-8")
+        assert kind in non_inert_contents(initialiser), f"{kind} was not detected"
