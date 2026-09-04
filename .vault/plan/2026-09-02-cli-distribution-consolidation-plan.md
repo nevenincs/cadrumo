@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:b7698ca2b2fbdbff807a542e9ae25b56c5077a8d86230d670b4cdc5692845cb1'
+body_hash: 'sha256:7f2ff0ae9dc3bc6c1d963aeb7b74597f481d266f5e3d333e9076a042ba2dffee'
 ---
 
 <!-- RETIRED: S39 -->
@@ -116,6 +116,7 @@ Build every declared distribution and channel artifact from one command and prov
 - [ ] `P09.S37` - Produce the distribution evidence rows the three channels declare; `dev/release/readiness.py`.
 - [x] `P09.S48` - Separate the seal check from the publication check and guard the upload with the authority that names it; `dev/release/version_identity.py`.
 - [ ] `P09.S49` - Remove the repeated passes the cohort build makes over artifacts it has already produced; `dev/packaging/python_cohort.py`.
+- [ ] `P09.S52` - Close the review findings on the publication gate, starting with the partial-upload deadlock; `dev/release/version_identity.py`.
 
 ### Phase `P10` - Prune the release and packaging surfaces without consumers
 

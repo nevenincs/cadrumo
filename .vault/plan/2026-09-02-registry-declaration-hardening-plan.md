@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:1bf2e4b56aebff1bb3c6078d08c80e0ac12f8e3491f167ddeb93c166d56b0f6a'
+body_hash: 'sha256:f3cfed3a14a6fdbbe93e74f229f82e05a072e93de262dad5a27e463becde876b'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -427,7 +427,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S545` - Restore the two fixtures a test relocation left behind, taking dev/ci/tests from twelve setup errors to zero by importing the CLI backend fixture and the session-autouse runtime composition rather than reimplementing them; `dev/ci/tests/conftest.py`.
 - [ ] `W02.P02.S546` - Resolve the M130 calculate performance budget, now measurable again at 3.031 CPU-s against a 3.0 CPU-s ceiling at 30000-row ledger scale, which the guarding tests could not report while they errored at setup; `src/cadrumo`.
 - [x] `W02.P02.S547` - Attach the agent_eval tests to the session-autouse runtime composition the relocation left behind, clearing thirteen setup errors so three tests pass and ten report their own passphrase-channel precondition instead of a harness defect; `dev/agent_eval/tests/conftest.py`.
-- [ ] `W02.P02.S548` - Declare the precondition for the ten agent_eval tests that refuse without a passphrase channel, which need a marker of the os_keychain class rather than a composition, now that the setup errors no longer hide the reason; `dev/agent_eval/tests`.
+- [x] `W02.P02.S548` - Retire the passphrase-channel marker proposal: the six tests it named do not need an interactive session, and were made to run headlessly through the bounded secrets channel and a recovery descriptor relay, so the precondition this Step would have declared no longer exists; `dev/agent_eval/tests`.
 - [x] `W02.P02.S549` - Test the size-budget baseline writer the reach report ranked, whose destination is an argument so the write is provable, pinning the retired readers emptiness and the notes rule that carries surviving prose forward and drops the rest; `dev/audit/tests/test_size_budget_baseline.py`.
 - [x] `W02.P02.S550` - Give the vacuity screen's synthetic trees the git repository the screen requires, clearing sixteen failures that all raised exit 128 from git ls-files before a single assertion ran, so the instrument that hunts unproven gates is itself proven; `dev/audit/tests/test_vacuity_screen.py`.
 - [x] `W02.P02.S551` - Make the miss-rate report writer return the evaluation it wrote so the command stops measuring a second time to print numbers it did not read from the file, and test the writer the reach report ranked, pinning the byte-comparable regeneration its docstring claims; `dev/docs/terminology/miss_rate.py,dev/docs/terminology/tests/test_miss_rate_report_cli.py`.
@@ -443,6 +443,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S561` - Remove the dead requirement-name helpers and the orphaned citation left in the runtime constraint exporter by a retired harness-coverage check, and prove the closure the Scoop manifest and MCPB bundle pin is non-empty, version-exact, product-row-free and covers the agent transport stack; `dev/packaging/uv_constraints.py,dev/packaging/tests/test_uv_constraints.py`.
 - [x] `W02.P02.S562` - Close the sequence-contract docname guard, which split on forward slash alone so a backslash hid its own traversal in one segment and a UNC segment made the join discard the contracts root entirely, and add a resolved-containment backstop with the cases proving both escapes refused; `dev/docs/sequences/contracts.py,dev/docs/sequences/tests/test_contracts.py`.
 - [x] `W02.P02.S563` - Make the registry maintenance verbs refuse on their own failure signal, where workbooks-verify ignored failed_count and parity-replay ignored a mismatch status so a replay that detected the product diverging from its archived tape exited successfully, and give the parity tests directory the package marker it never had; `dev/registry/parity/maintenance_cli.py,dev/registry/parity/tests/__init__.py,dev/registry/parity/tests/test_maintenance_cli.py`.
+- [x] `W02.P02.S564` - Separate same-revision casilla collisions from ordinary cross-revision reassignment in the AEIP inventory, which pooled every revision under a bare casilla id and so reported thirty collisions of which none were real while a genuine ambiguity would have been indistinguishable inside that number; `dev/registry/aeip/cli.py,dev/registry/aeip/tests/__init__.py,dev/registry/aeip/tests/test_cli_casilla_claims.py`.
+- [x] `W02.P02.S565` - Cover the apidocs CLI wiring that turns a drift result into an exit code, asserting the check and audit verbs agree with their own reports and with each other, without ever invoking the writing path that rebuilds the real stub tree; `dev/docs/apidocs/tests/test_cli.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
