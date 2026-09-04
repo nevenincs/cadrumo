@@ -8,6 +8,7 @@ shared by the manager and parity tests.
 
 import json
 import re
+import sys
 from collections.abc import Hashable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum, auto
@@ -356,14 +357,20 @@ class LocaleManager:
             return set(self._codebase_keys)
 
         keys: set[str] = set()
+        unread: list[str] = []
         for root in (self.src_dir, *self.extra_src_dirs):
             for py_file in iter_directory(root, pattern="*.py", recursive=True):
                 if _is_test_module(py_file):
                     continue
                 try:
-                    content = py_file.read_text(encoding=UTF_8_ENCODING, errors="ignore")
-                except OSError as exc:
-                    _log.debug("locale key scan: skipping %s (%s)", py_file, exc)
+                    content = py_file.read_text(encoding=UTF_8_ENCODING)
+                except (OSError, UnicodeDecodeError) as exc:
+                    # Read strictly and say so. The lenient decode dropped bytes,
+                    # so a key literal could be cut in half and never matched, and
+                    # the read failure was logged at debug level - invisible in a
+                    # normal run. This set decides which keys the codebase uses, so
+                    # a key missed here is a live translation on a deletion path.
+                    unread.append(f"{py_file}: {type(exc).__name__}: {exc}")
                     continue
                 for match in self.pattern.finditer(content):
                     keys.add(match.group(1))
@@ -372,6 +379,11 @@ class LocaleManager:
         keys.update(scan_registry_keys())
         keys.update(scan_profile_schema_keys())
         keys.update(scan_modelo_schema_keys())
+        if unread:
+            sys.stderr.write(
+                f"locale key scan: {len(unread)} module(s) could not be read; any key they use is absent "
+                "from this set and would look unused: " + repr(unread) + chr(10)
+            )
         self._codebase_keys = frozenset(keys)
         return keys
 
