@@ -362,3 +362,26 @@ dev_reached = 54
 constants_with_inspectable_literal = 16
 superseded_with_named_holder = 11
 method = "the constant's literal value still appears in production outside its defining module"
+
+# ---------------------------------------------------------------------------
+# Symbol clusters
+#
+# Some symbol findings resolve as a group through a mechanism that already
+# exists, and recording the group is more honest than repeating one rationale
+# per symbol. A cluster entry names the mechanism that dispositions it.
+# ---------------------------------------------------------------------------
+
+[[symbol_cluster]]
+name = "deferred-source-kind resolvers"
+class = "staged-capability"
+area = "domain/calculations/registry"
+symbols = [
+  "build_related_party_rows",
+  "resolve_donativo_binding_row_values",
+  "resolve_gasto193_binding_values",
+  "resolve_gasto193_binding_row_values",
+  "resolve_withholding296_binding_values",
+  "resolve_withholding296_binding_row_values",
+]
+evidence = "Each family's source kind is registered in application/aggregation/_source_mesh.py DEFERRED_SOURCE_KINDS -- RELATED_PARTY_OPERATION, REFUND_OPERATION, DONATIVO_DONOR, GASTO193_CONTRIBUTOR, WITHHOLDING296 -- so a calculate-path binding of the source raises a standing advisory instead of a silent blank. The resolver is built and validated but no live mesh resolver is enrolled yet, which is why nothing reaches it."
+mechanism = "DEFERRED_SOURCE_KINDS, with the sibling RESERVED_SOURCE_KINDS and the source-kind enrollment parity gate accounting for every member of the closed taxonomy"
