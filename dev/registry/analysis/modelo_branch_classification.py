@@ -42,6 +42,8 @@ from pathlib import Path
 
 from cadrumo.core.toml import read_toml
 
+from ...quality.unread_inputs import report_unread
+
 PACKAGE_ROOT = Path(__file__).resolve().parents[3] / "src" / "cadrumo"
 REGISTRY_PACKAGE_ROOT = PACKAGE_ROOT / "domain" / "calculations" / "registry"
 LEDGER_PATH = Path(__file__).with_name("modelo_branch_classification.toml")
@@ -130,10 +132,12 @@ def derive_branch_sites() -> tuple[BranchSite, ...]:
         The derived sites, sorted and deduplicated on their stable key.
     """
     sites: set[BranchSite] = set()
+    unread: list[str] = []
     for path in _iter_candidate_modules():
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"))
-        except (SyntaxError, UnicodeDecodeError):
+        except (SyntaxError, UnicodeDecodeError) as error:
+            unread.append(f"{path}: {type(error).__name__}: {error}")
             continue
         symbols = _enclosing_symbols(tree)
         module = path.relative_to(PACKAGE_ROOT.parent.parent).as_posix()
@@ -154,6 +158,11 @@ def derive_branch_sites() -> tuple[BranchSite, ...]:
                     modelo_codes=tuple(sorted(members)),
                 ),
             )
+    report_unread(
+        "modelo branch classification",
+        "a branch on modelo identity inside one of them is absent from these sites",
+        unread,
+    )
     return tuple(sorted(sites))
 
 

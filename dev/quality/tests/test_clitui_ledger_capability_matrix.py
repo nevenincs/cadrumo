@@ -169,7 +169,7 @@ def _report(
     streams: tuple[CensusStreamObservationV1, ...] | None = None,
 ) -> LedgerLiveCensusReportV1:
     """Build all seven mandatory streams, using reviewed zeros where empty."""
-    selected_streams = streams or tuple(
+    selected_streams = streams if streams is not None else tuple(
         _stream(
             source,
             capability_ids if source is DenominatorSourceKind.CLI_ENDPOINT else (),
@@ -190,6 +190,25 @@ def _report(
         revision=revision,
         observed_at=observed_at,
         streams=selected_streams,
+        digest=draft.calculated_digest,
+    )
+
+
+def _unchecked_empty_report() -> LedgerLiveCensusReportV1:
+    """Build an explicitly empty report to exercise the gate's revalidation path."""
+    streams = tuple(_stream(source) for source in DenominatorSourceKind)
+    draft = LedgerLiveCensusReportV1.model_construct(
+        census_id=_CENSUS_ID,
+        revision="census-rev-empty",
+        observed_at=_OBSERVED_AT,
+        streams=streams,
+        digest="",
+    )
+    return LedgerLiveCensusReportV1.model_construct(
+        census_id=_CENSUS_ID,
+        revision="census-rev-empty",
+        observed_at=_OBSERVED_AT,
+        streams=streams,
         digest=draft.calculated_digest,
     )
 
@@ -409,17 +428,29 @@ def _matrix(
     ruling: ReviewRuling = ReviewRuling.ACCEPT,
 ) -> LedgerCapabilityMatrixV1:
     """Build a digest-bound matrix and attestation around the supplied rows."""
-    live_report = report or _report(tuple(row.identity.row_id for row in rows))
-    accepted = accepted_denominator or _snapshot(live_report)
-    current = current_denominator or _snapshot(live_report)
-    accepted_authority = accepted_authority_dispositions or _authority_snapshot(accepted, rows)
-    current_authority = current_authority_dispositions or _authority_snapshot(current, rows)
-    controls_value = controls or LedgerCampaignControlsV1(
-        sole_ledger_parity_plan_owner=ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
-        tui_implementation_hold_recorded=True,
-        tui_implementation_hold_active=True,
+    live_report = report if report is not None else _report(tuple(row.identity.row_id for row in rows))
+    accepted = accepted_denominator if accepted_denominator is not None else _snapshot(live_report)
+    current = current_denominator if current_denominator is not None else _snapshot(live_report)
+    accepted_authority = (
+        accepted_authority_dispositions
+        if accepted_authority_dispositions is not None
+        else _authority_snapshot(accepted, rows)
     )
-    evidence = campaign_evidence or _campaign_evidence()
+    current_authority = (
+        current_authority_dispositions
+        if current_authority_dispositions is not None
+        else _authority_snapshot(current, rows)
+    )
+    controls_value = (
+        controls
+        if controls is not None
+        else LedgerCampaignControlsV1(
+            sole_ledger_parity_plan_owner=ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
+            tui_implementation_hold_recorded=True,
+            tui_implementation_hold_active=True,
+        )
+    )
+    evidence = campaign_evidence if campaign_evidence is not None else _campaign_evidence()
     matrix_digest = LedgerCapabilityMatrixV1.calculate_digest(
         schema_version=3,
         controls=controls_value,
@@ -514,7 +545,7 @@ def _evaluate(
     subjects: tuple[EvidenceSubjectSnapshotV1, ...] = (_SUBJECT,),
 ):
     """Evaluate a matrix against a fresh report unless a test supplies one."""
-    observed = report or _report(tuple(row.identity.row_id for row in matrix.rows))
+    observed = report if report is not None else _report(tuple(row.identity.row_id for row in matrix.rows))
     return evaluate_ledger_capability_gate(
         matrix,
         gate,
@@ -589,6 +620,22 @@ def test_a_complete_census_contains_each_stream_and_explicit_zeroes() -> None:
     assert report.denominator_entries[0].sources == frozenset({DenominatorSourceKind.CLI_ENDPOINT})
     assert sum(not stream.capability_ids and stream.reviewed_zero for stream in report.streams) == 6
     assert report.readiness_errors == ()
+
+
+def test_census_fixture_preserves_explicit_empty_inputs_instead_of_defaulting() -> None:
+    with pytest.raises(ValidationError, match="every mandatory source stream"):
+        _report(streams=())
+    with pytest.raises(ValidationError, match="cannot be empty"):
+        _report(())
+
+
+def test_explicit_empty_census_streams_reopen_g0_at_the_gate_boundary() -> None:
+    empty_report = _unchecked_empty_report()
+
+    assert all(not stream.capability_ids and stream.reviewed_zero for stream in empty_report.streams)
+    assessment = _evaluate(_matrix(), LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=empty_report)
+
+    assert assessment.blockers == ("live census validation failed at <root>: value_error",)
 
 
 def test_a_census_rejects_missing_or_duplicate_mandatory_streams() -> None:
@@ -709,6 +756,46 @@ def test_currentness_rejects_duplicate_or_changed_subject_observations() -> None
 
     assert duplicate_errors == ["live evidence-subject observation contains duplicate identities"]
     assert changed_errors == ["evidence subject freshness drifted: subject.ledger.matrix"]
+
+
+def test_currentness_revalidates_a_malformed_copied_subject_without_value_leakage() -> None:
+    malformed = _SUBJECT.model_copy(update={"digest": "subject-secret-not-a-digest"})
+
+    errors = validate_ledger_matrix_currentness(
+        _matrix(),
+        observed_census=_report(),
+        observed_subjects=(malformed,),
+    )
+
+    assert errors == ["observed subjects validation failed at 0.digest: string_pattern_mismatch"]
+    assert all("subject-secret-not-a-digest" not in error for error in errors)
+
+
+def test_one_gate_revalidates_malformed_copied_subject_and_nested_authority_graph_deterministically() -> None:
+    matrix = _matrix()
+    malformed_subject = _SUBJECT.model_copy(update={"digest": "subject-secret-not-a-digest"})
+    authority_entry = matrix.current_authority_dispositions.entries[0].model_copy(
+        update={"row_id": "authority-secret"}
+    )
+    malformed_authority = matrix.current_authority_dispositions.model_copy(update={"entries": (authority_entry,)})
+    candidate = _matrix_with(matrix, current_authority_dispositions=malformed_authority)
+
+    first = _evaluate(
+        candidate,
+        LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE,
+        subjects=(malformed_subject,),
+    ).blockers
+    second = _evaluate(
+        candidate,
+        LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE,
+        subjects=(malformed_subject,),
+    ).blockers
+
+    assert first == second
+    assert first
+    assert any("observed subjects validation failed" in blocker for blocker in first)
+    assert any("matrix validation failed" in blocker for blocker in first)
+    assert all(secret not in blocker for blocker in first for secret in ("subject-secret-not-a-digest", "authority-secret"))
 
 
 def test_each_axis_has_a_reviewed_rationale_and_single_axis_applicability_proof() -> None:
@@ -1072,6 +1159,25 @@ def test_g0_accepts_only_the_canonical_owner_and_digest_bound_accept_ruling() ->
     )
 
 
+def test_g0_rejects_a_proven_applicable_axis_without_exact_baseline_evidence() -> None:
+    matrix = _matrix()
+    composition = matrix.rows[0].assessment(LedgerCapabilityAxis.COMPOSITION)
+    without_baseline = composition.model_copy(
+        update={
+            "evidence": tuple(
+                coordinate for coordinate in composition.evidence if coordinate.role is not EvidenceRole.BASELINE
+            )
+        }
+    )
+    row = _row_with_assessments(matrix.rows[0], {LedgerCapabilityAxis.COMPOSITION: without_baseline})
+    candidate = _matrix_with(matrix, rows=(row,))
+
+    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
+    blockers = _evaluate(candidate, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).blockers
+
+    assert blockers == (f"{_ROW_ID}: composition lacks exact baseline evidence",)
+
+
 def test_g0_rejects_an_attestation_bound_to_an_older_matrix_digest() -> None:
     matrix = _matrix()
     changed_home = matrix.rows[0].semantic_home.model_copy(update={"result_type": "ChangedResult"})
@@ -1111,6 +1217,43 @@ def test_g0_rejects_a_model_copy_with_an_empty_reviewer_deterministically() -> N
 
     assert first == second
     assert first == ("matrix validation failed at acceptance_attestation.reviewer: string_too_short",)
+
+
+def test_g0_accepts_a_typed_digest_bound_accept_without_generic_review_coordinate() -> None:
+    campaign_evidence = tuple(
+        coordinate
+        for coordinate in _campaign_evidence()
+        if coordinate.role is not EvidenceRole.INDEPENDENT_ENGINEERING_REVIEW
+    )
+    matrix = _matrix(campaign_evidence=campaign_evidence)
+
+    assert not matrix.has_campaign_evidence(EvidenceRole.INDEPENDENT_ENGINEERING_REVIEW)
+    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
+
+
+@pytest.mark.parametrize("attestation_mutation", ["missing", "stale", "non_accept"])
+def test_generic_review_coordinate_cannot_substitute_for_a_missing_or_invalid_attestation(
+    attestation_mutation: str,
+) -> None:
+    matrix = _matrix()
+    assert matrix.has_campaign_evidence(EvidenceRole.INDEPENDENT_ENGINEERING_REVIEW)
+    if attestation_mutation == "missing":
+        candidate = matrix.model_copy(update={"acceptance_attestation": None})
+    elif attestation_mutation == "stale":
+        stale = matrix.acceptance_attestation.model_copy(update={"matrix_digest": "sha256:" + "b" * 64})
+        candidate = matrix.model_copy(update={"acceptance_attestation": stale})
+    else:
+        non_accept = matrix.acceptance_attestation.model_copy(update={"ruling": ReviewRuling.REJECT})
+        candidate = matrix.model_copy(update={"acceptance_attestation": non_accept})
+
+    blockers = _evaluate(candidate, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).blockers
+
+    assert blockers
+    assert not _evaluate(candidate, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
+    if attestation_mutation == "non_accept":
+        assert "ACCEPT attestation" in " ".join(blockers)
+    else:
+        assert any("acceptance_attestation" in blocker for blocker in blockers)
 
 
 def test_g2_requires_a_proven_backend_surface_and_direct_behavior() -> None:
@@ -1254,6 +1397,25 @@ def test_ordered_evaluation_never_allows_a_later_gate_to_close() -> None:
 
     assert len(assessments) == 5
     assert not assessments[0].closed
+    for assessment in assessments[1:]:
+        assert not assessment.closed
+        assert assessment.blockers == (
+            f"{assessment.gate.value} cannot close while an earlier gate remains open",
+        )
+
+
+def test_ordered_evaluation_reopens_later_gates_after_a_malformed_subject() -> None:
+    malformed_subject = _SUBJECT.model_copy(update={"digest": "subject-secret-not-a-digest"})
+
+    assessments = evaluate_ledger_capability_gates(
+        _matrix(),
+        observed_census=_report(),
+        observed_subjects=(malformed_subject,),
+    )
+
+    assert len(assessments) == len(LedgerGate)
+    assert not assessments[0].closed
+    assert any("observed subjects validation failed" in blocker for blocker in assessments[0].blockers)
     for assessment in assessments[1:]:
         assert not assessment.closed
         assert assessment.blockers == (
