@@ -34,8 +34,8 @@ _SUFFIXES = {".py", ".toml", ".json", ".md"}
 @pytest.fixture(scope="module")
 def revision() -> str:
     """Resolve HEAD once, so every read in this module sees the same tree."""
-    return subprocess.run(  # noqa: S603, S607  # repository tool is fixed
-        ("git", "rev-parse", "HEAD"),
+    return subprocess.run(
+        ("git", "rev-parse", "HEAD"),  # noqa: S607  # repository tool is fixed
         capture_output=True,
         check=True,
         text=True,
@@ -45,8 +45,8 @@ def revision() -> str:
 @pytest.fixture(scope="module")
 def tracked(revision: str) -> frozenset[str]:
     """Return every tracked source path under the source root at that revision."""
-    listed = subprocess.run(  # noqa: S603, S607  # repository tool is fixed
-        ("git", "ls-tree", "-r", "--name-only", revision, SOURCE_ROOT),
+    listed = subprocess.run(  # noqa: S603  # fixed read-only argument list
+        ("git", "ls-tree", "-r", "--name-only", revision, SOURCE_ROOT),  # noqa: S607  # fixed tool
         capture_output=True,
         check=True,
         text=True,
