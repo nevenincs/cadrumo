@@ -51,6 +51,11 @@ class TuiSearchHostV1(Protocol):
         ...
 
     @property
+    def workbench_search_refusal_code(self) -> str | None:
+        """Return why search is unavailable, or ``None`` when it is composed."""
+        ...
+
+    @property
     def destination_catalogue(self) -> TuiDestinationCatalogueV1:
         """Return the already-admitted destination catalogue."""
         ...
@@ -198,6 +203,23 @@ def workbench_action_label(action_id: str, *, locale: str | None = None) -> str:
     return _render_locale(key, locale)
 
 
+_REFUSAL_LOCALE_KEY: Final[str] = "tui.search.refusal.unavailable"
+_REFUSAL_UNKNOWN_LOCALE_KEY: Final[str] = "tui.search.refusal.unknown"
+_REFUSAL_REASON_LOCALE_KEYS: Final[Mapping[str, str]] = {
+    "workbench.search.unavailable": "tui.search.refusal.not_composed",
+    "workbench.search.refresh_unavailable": "tui.search.refusal.refresh_failed",
+}
+"""Sanitized refusal codes the root publishes, and how each is worded.
+
+An unrecognised code degrades to the generic wording rather than being shown
+raw: a reason code is an internal token, not operator copy.
+"""
+
+
+def _no_navigation() -> None:
+    """A refusal hit navigates nowhere; selecting it is a no-op."""
+
+
 class WorkbenchSearchProviderV1(Provider):
     """Expose application-ranked workbench results in the command palette."""
 
@@ -209,6 +231,24 @@ class WorkbenchSearchProviderV1(Provider):
         except ValueError:
             return
         host = _require_host(self.app)
+        if host.workbench_search_refusal_code is not None:
+            # A refused search is a state the root already computed and named.
+            # Dereferencing the service here would raise on the FIRST-RUN case
+            # -- a profile whose sources are not all readable yet -- so the
+            # palette says why instead, and offers nothing it cannot resolve.
+            yield Hit(
+                score=0.0,
+                match_display=_render_locale(_REFUSAL_LOCALE_KEY, None),
+                command=_no_navigation,
+                text=_render_locale(_REFUSAL_LOCALE_KEY, None),
+                help=_render_locale(
+                    _REFUSAL_REASON_LOCALE_KEYS.get(
+                        host.workbench_search_refusal_code, _REFUSAL_UNKNOWN_LOCALE_KEY
+                    ),
+                    None,
+                ),
+            )
+            return
         response = host.workbench_search_service.search(request)
         for result in response.results:
             try:
