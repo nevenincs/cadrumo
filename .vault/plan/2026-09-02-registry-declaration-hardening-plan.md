@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:7ac92f242ab62db9b97e400e60cdcef10899fee8f5ac479815e0c182f94cb166'
+body_hash: 'sha256:695584b152e177c39e8ef59293a49186ca8454af0e800bc967d2172facac8d97'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -468,6 +468,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S586` - Announce the modules the tautological-assertion sweep skips, since an unparsable file returned an empty result that read exactly like a clean one in the gate whose subject is assertions proving nothing; the skip itself stays because a sweep that aborts on one incomplete file reports nothing about the thousands that parsed; `dev/quality/tautological_assertion_scan.py,dev/tests/test_tautological_assertion_gate.py`.
 - [x] `W02.P02.S587` - Announce both skips in the reach report that chose this campaign's work, where one handler hid two opposite failures: an unreadable test drops its imports so what it covers is listed unreached in error, and an unreadable module is dropped from the report so a real finding disappears; `dev/quality/module_test_reach.py,dev/quality/tests/test_module_test_reach.py`.
 - [x] `W02.P02.S588` - Announce the modules the name-collision census cannot read, since a collision is detected only between names both present in its corpus so a silently skipped module could never collide with anything and the census reported fewer collisions than exist; `dev/quality/name_collision_census.py,dev/quality/tests/test_name_collision_census.py`.
+- [x] `W02.P02.S589` - Stop the type-only runtime-use scan reporting clean over what it did not read, where an unparsable module returned an empty result identical to a clean one and a lenient decode dropped bad bytes so the scan analysed text the file does not contain; what goes unreported is a guard-only name evaluated at runtime, a NameError waiting in shipped code; `dev/quality/type_checking_runtime_use_scan.py,dev/tests/test_type_checking_runtime_use_gate.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
