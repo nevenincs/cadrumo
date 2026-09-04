@@ -12943,3 +12943,53 @@ privacy one does. A private module may legitimately be reached by its own tests;
 an entry point holding library code is wrong for its own package too. Folding
 the two together would have inherited the wrong exemption along with the wrong
 name.
+
+
+## A test that could not be satisfied at the same time as the boundary
+
+`dev.sanitizer` is the fifth facade retired, and the first to need a private
+module promoted first. `_residual_identity` became `residual_identity`: two of
+its symbols are consumed by `dev.identity`, and a module reached from another
+package is not an implementation detail whatever its filename says.
+
+The package's own initialiser said it was one. Its docstring listed
+`_residual_identity` among the "implementation details" and instructed callers
+outside the package to "import exclusively from this module" - the pre-inert
+policy, stated in prose, while the same file forwarded two of that module's
+symbols to another package. The rename resolves the contradiction rather than
+restating it.
+
+Four references moved, the rename held the baseline exactly (4 failed, 152
+passed before and after), and only then were the two cross-package sites
+rewritten.
+
+Emptying the initialiser then broke a test, and the test is the finding.
+
+`TestPublicReexports::test_all_public_names_are_importable` asserted that
+`dev.sanitizer` declares a NON-EMPTY `__all__` and answers every name in it. It
+carried a comment explaining that it had been deliberately hardened against an
+empty `__all__` so that emptying the facade could not pass silently. It was
+working exactly as designed: it is a gate that cannot be satisfied at the same
+time as the accepted boundary, and it was protecting the defect.
+
+The three error-ownership tests found earlier were adjacent to this and milder -
+they read `__all__` to assert an absence, so they broke incidentally. This one
+asserted the facade's existence as the contract.
+
+It is inverted rather than deleted, into three tests: the initialiser declares
+no exports, it carries nothing but its own submodules, and the public symbols
+are importable from the modules that actually define them - which is what the
+retired test was reaching for through the wrong surface. The suite returned to
+its baseline of 4 failures with 154 passing, up from 152 because one test became
+three.
+
+Five of nine facades are now retired: `apidocs`, `ingest_harness`, `agent_eval`,
+`locales`, `sanitizer`. Four remain, all under `dev.docs`, holding 207 bound
+names and 43 consumer sites.
+
+The general lesson is worth separating from the instance. When a boundary
+changes, the tests written under the old boundary do not merely go stale - some
+of them actively enforce the thing being removed, and they are indistinguishable
+from correct tests until the change is attempted. Nothing detects them in
+advance; they surface as a failure at the moment the work lands, which is why
+the baseline-first discipline matters as much as it does.
