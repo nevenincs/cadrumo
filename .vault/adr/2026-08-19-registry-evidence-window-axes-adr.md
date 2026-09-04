@@ -79,13 +79,18 @@ Three regressions in
 `src/cadrumo/domain/calculations/registry/tests/test_source_applicability_window.py`
 cover it, each asserting its preconditions so none can pass vacuously.
 
-The retroactive-reach axis is NOT implemented. It requires an opt-in declared
-governed-period span on `LegalReference`, the devengo check reading it in
-preference to the in-force span, a declaration on
-`real-decreto-ley-13-2025:art-2` grounded in the corpus clause that enumerates
-periods 2022 through 2025, and a regression proving an undeclared reference still
-refuses. Opening those rows is the implementing work this ADR authorises; the
-ADR ruling is not self-executing and M190/2024 still refuses at HEAD.
+The retroactive-reach axis HAS SINCE LANDED, and this paragraph is amended in
+place because its previous wording said the opposite and was misleading readers
+at HEAD. `LegalReference` carries the opt-in declared governed-period span, a
+span accessor returns it in preference to the in-force span, the substantive-law
+check reads it, and four catalogue entries declare it today.
+
+The axis remains RETROACTIVE ONLY by deliberate constraint: the validator refuses
+a governed span beginning on or after the provision's entry into force, on the
+ground that a forward value would let a stale citation ground a period its norm
+never governed. That guard is correct and is not relaxed here. A separate record
+decides the forward direction — superseded-provision reach — as its own explicit
+declaration rather than by widening this one.
 
 ## Rationale
 

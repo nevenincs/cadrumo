@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:b8231653696a9797cfdd64d1982e694e064f3172408e139869ad0505cffe0a7c'
+body_hash: 'sha256:bd3d5d7bb2e78796fc8552a077f53bc058ea98a9d1f4f63f2af4c4abef083f49'
 related:
   - "[[2026-09-04-registry-dated-validity-regulatory-constant-placement-sweep-audit]]"
   - "[[2026-08-19-registry-evidence-window-axes-adr]]"
@@ -17,31 +17,35 @@ related:
 
 ## Problem Statement
 
-Some regulated values are fixed by the law in force when an EVENT occurred rather
-than by the filing period, and that event can predate every revision the owning
-modelo declares. The bienes de inversion regularisation windows, threshold and
-divisors are fixed at ACQUISITION, and a good acquired in 2016 stays in its
-nine-year window until 2025 while modelo 303 declares revisions only from 2022.
-The prorrata especial margins are sharper: one provision carries two values with
-two validity windows AND two different comparison operators, and the earlier
-value governs years no revision covers.
+This record decides TWO distinct shapes together, and says so plainly because an
+earlier draft bundled them under one title. The first is an event-date axis for
+bienes de inversion, whose windows and divisors are fixed at ACQUISITION. The
+second is pre-revision coverage for prorrata especial, which is FILING-YEAR keyed
+and whose problem is GROUNDING rather than an axis: its predicate selects on the
+filing year, and its earliest redaction simply predates modelo 303's earliest
+revision. The remedies differ, and the sections below keep them apart.
 
-An earlier draft of this record claimed these were unreachable because a
-parameter is addressed by modelo revision. **That was wrong and is corrected
-here.** The address is not the obstacle. The parameter resolver is already
-axis-generic: each value declares its own axis, the caller supplies a
-`date_context`, and the value whose window covers that axis's date is selected,
-raising when matches are not exactly one. Nothing clamps a value's window to the
-revision's span — `DatedValue` validates only that `valid_to` is on or after
-`valid_from`, and the revision-clamping logic applies solely to bracket tables on
-the filing-period axis. A 2016 acquisition can be read from a 2022 revision today
-by declaring a value on a transaction-date axis.
+A good acquired in 2016 stays in its nine-year window until 2025 while modelo 303
+declares revisions only from 2022. The prorrata especial provision carries two
+values with two validity windows AND two different comparison operators, and the
+earlier value governs years no revision covers.
 
-Two things genuinely block it. First, no caller supplies a non-filing axis:
-every `date_context` in the tree is built as filing period only. Second, and
-decisively, a substantive-law citation whose `effective_to` precedes the hosting
-revision's `valid_from` is refused outright, so the pre-2015 prorrata wording
-cannot ground a value hosted on a 2022 revision.
+An earlier draft claimed these were unreachable because a parameter is addressed
+by modelo revision. **That was wrong and is corrected here.** The address is not
+the obstacle. The parameter resolver is already axis-generic: each value declares
+its own axis, the caller supplies a date context, and the value whose window
+covers that axis's date is selected, raising when matches are not exactly one.
+Nothing clamps a value's window to the revision's span — the dated value
+validates only that its end is on or after its start, and revision clamping
+applies solely to bracket tables on the filing-period axis. A 2016 acquisition
+can be read from a 2022 revision today by declaring a value on a transaction-date
+axis.
+
+Two things genuinely block it. First, no caller supplies a non-filing axis: every
+date context in the tree is built as filing period only. Second, and decisively,
+a substantive-law citation whose end date precedes the hosting revision's start
+is refused outright, so the pre-2015 prorrata wording cannot ground a value
+hosted on a 2022 revision.
 
 ## Considerations
 
@@ -51,15 +55,29 @@ submission date — and measurement across the whole registry finds all 359 date
 parameter values AND all 133 bracket-table axis declarations on the filing
 period. Four axes have never been used.
 
-The second blocker is not new ground. It is the defect class an ACCEPTED ADR
-already diagnosed, whose remedy it authorised and whose own Implementation
-section records that the retroactive-reach axis is NOT implemented, requiring an
-opt-in declared governed-period span on the legal reference that the check reads
-in preference to the in-force span. A separate accepted decision one layer up
-faced the same shape and chose to thread the event date into the existing call
-rather than build a new route.
+The second blocker sits on a mechanism that has ALREADY SHIPPED. The legal
+reference carries a declared governed-period span, an accessor returns it in
+preference to the in-force span, the substantive-law check reads it, and four
+catalogue entries declare it today. An earlier draft said that axis was
+unimplemented; that claim was inherited from the authorising ADR's own
+Implementation section, which is stale at HEAD, and was not verified. It is
+corrected here.
 
-The IVA rate table was cited in the earlier draft as a precedent to generalise.
+What has NOT shipped is the DIRECTION this record needs. The declaration is
+validated retroactive-only — a governed span must begin strictly before the
+provision's entry into force, and the validator refuses a forward value in terms,
+on the ground that it would let a stale citation ground a period its norm never
+governed. That guard is correct and stays. But prorrata needs the forward
+direction: a superseded provision hosted on a later revision. Expressing it
+through the field as shipped would require declaring both that a 1993 provision
+reaches back before its own force AND that a provision repealed in 2014 governs
+2022. Both are false, and this record's own honesty constraint forbids them.
+
+A separate PROPOSED decision one layer up faced the same shape and chose to
+thread the event date into the existing call rather than build a new route. It is
+supporting reasoning, not settled precedent.
+
+The IVA rate table was cited in an earlier draft as a precedent to generalise.
 That was a second error. Verification shows it reads its TOML through a
 standalone cached loader and never touches the validated authority during a
 lookup. It is the one mechanism in the tree that BYPASSES the authority, so it is
@@ -86,10 +104,11 @@ forbid.
 - **Author for covered years and fall back to a constant.** Rejected as the
   silent consumer-side fallback the authority-flow rule forbids.
 
-- **Implement the accepted governed-span axis, then supply the event axis at the
-  call site. CHOSEN.** No new address model, no new authority, no new value
-  space. It uses the resolver that already ships and unblocks the one check that
-  actually refuses.
+- **Widen the governed-span check to superseded-provision reach, then supply the
+  event axis at the call site. CHOSEN.** No new address model, no new authority,
+  no new value space. The retroactive half already ships; this adds the forward
+  half as a second explicit declaration and unblocks the one check that actually
+  refuses.
 
 ## Constraints
 
@@ -106,50 +125,70 @@ and the axis, enumerable and gated in both directions, per the accepted standard
 that a narrow registry mechanism widens only by explicit evidence-carrying
 declaration.
 
+The retroactive-only guard on the existing governed span is NOT relaxed. Forward
+reach is a separate declaration, so neither can silently widen the other.
+
 Consolidation stays by PROVISION, never by VALUE. Several sites deliberately
 refuse to merge numerically agreeing values across provisions, and merging them
 would introduce defects.
 
 ## Implementation
 
-Implement the governed-span axis the evidence-window ADR authorised: an opt-in
-declared governed-period span on the legal reference, read in preference to the
-in-force span by the substantive-law check that today refuses a citation whose
-`effective_to` precedes the revision's `valid_from`. Amend that ADR if its scope
-must widen from retroactive reach to superseded-provision reach.
+The governed-span axis ships in its retroactive direction. The work here is the
+FORWARD direction: a declared superseded-reach span on the legal reference,
+distinct from the existing retroactive span so neither declaration can relax the
+other, read by the substantive-law check at the point it today refuses a citation
+whose end date precedes the revision's start. The authorising evidence-window ADR
+is amended in place to record that its retroactive axis has landed; its
+retroactive-only constraint is widened HERE, not there.
 
-Then author the blocked clusters as dated values on the EXISTING modelo
-parameters with a non-filing axis, and extend `date_context` construction at the
-consuming sites to supply the acquisition or operation date.
+The comparison operator IS registry data. A provision whose redactions differ on
+the operator as well as the value cannot be expressed as two dated values
+otherwise, and leaving the operator in Python preserves the year branch this
+decision exists to remove. The dated value gains an explicit operator field,
+defaulting to the current exclusive semantics so no existing value changes
+meaning. The acquisition axis REUSES the transaction-date member rather than
+adding one: the bienes de inversion consumer record already exposes a transaction
+date as a typed field, and a synonym member would create two spellings of one
+fact.
 
-Two questions are explicitly NOT decided here and must be settled before or
-alongside that work. Whether the comparison operator is registry data: the
-prorrata pair differs by operator, exclusive before 2015 and inclusive from 2015,
-and no dated-value field carries an operator. And whether a new axis member is
-added or the transaction-date member is reused for acquisition, which is a schema
-change with a parity gate behind it.
+A parameter carries values on exactly ONE axis. Resolution requires every value's
+axis to be present in the caller's date context, so a mixed-axis parameter breaks
+every existing caller; and the overlap validator groups by axis and therefore
+cannot see a cross-axis double match, which would surface at runtime rather than
+at load. The blocked clusters are authored as NEW single-axis parameters under
+the existing modelo, never by adding a non-filing value to a parameter that today
+carries filing-period values, and a load-time refusal of mixed-axis parameters
+lands with them.
+
+In scope where the event date is already a typed field on the consumer's own
+record. Two consumer-side changes are PREREQUISITES rather than consequences: the
+bienes de inversion values are reached through zero-argument enum properties that
+must take the date, and the prorrata predicate is a pure domain function taking a
+year with no registry dependency at all, so routing it to a parameter is a
+dependency-direction change decided at the application boundary, not inside the
+domain module.
 
 Out of scope: the SAL figures and the maritime exemption fraction, whose
-consumers carry no date field at all. In scope where the event date is already a
-typed field on the consumer's own record — noting that the bienes de inversion
-values are reached through zero-argument enum properties, so that cluster still
-needs the date threaded into two properties before it can resolve.
-
-Separately, the IVA rate table should be brought inside the validated authority.
-That is its own decision, not a consequence of this one.
+consumers carry no date field at all. Separately, the IVA rate table should be
+brought inside the validated authority — its own decision, not a consequence of
+this one.
 
 ## Rationale
 
-The correction matters more than the conclusion. The earlier draft would have
+The corrections matter more than the conclusion. The first draft would have
 authorised a parallel parameter authority to route around a mechanism that
-already works, on the strength of a precedent that does the opposite of what was
-claimed. Two independent reviews, one checking facts by execution and one
-checking the decision, converged on the same error.
+already works, on a precedent that does the opposite of what was claimed. The
+second draft then asserted the remedy was unimplemented when it had already
+shipped, inheriting a stale claim from another record without checking it. Three
+independent reviews caught these — two on the first draft, one on the second.
 
 What survives is the audit's finding, narrowed to what is measurable: the axis,
-the schema and the fail-closed resolver all ship; one grounding check refuses;
-no caller supplies a non-filing axis. That is a much smaller problem than a
-missing address model, and it is already half-authorised by an accepted decision.
+the schema and the fail-closed resolver all ship; the governed span ships in one
+direction; one grounding check refuses the other; no caller supplies a non-filing
+axis. That is a much smaller problem than a missing address model. Half the
+mechanism already exists; what this decides is the forward direction the shipped
+half deliberately refuses, and why refusing it was right until now.
 
 ## Consequences
 
@@ -157,11 +196,16 @@ Event-date-governed values become resolvable through the existing parameter
 address with dated windows and legal references, without a new value space and
 without a second authority.
 
-Four declared date axes stop being dead capability.
+One declared date axis is exercised for the first time, and the axis vocabulary
+stops being wholly unused.
 
-The prorrata especial operator question surfaces as a distinct decision rather
-than being smuggled into a value model that cannot express it.
+The comparison operator becomes registry data, which is what makes the prorrata
+pair expressible at all rather than leaving in place the year branch this
+decision exists to remove.
 
-Until the governed-span axis lands, the blocked clusters remain leaf constants
-and must not be forced into parameters; the placement audit records why each is
-blocked so the attempt is not repeated.
+Mixed-axis parameters become a load-time refusal, closing a gap where a
+cross-axis double match would otherwise surface only at runtime.
+
+Until the forward span lands, the blocked clusters remain leaf constants and must
+not be forced into parameters; the placement audit records why each is blocked so
+the attempt is not repeated.
