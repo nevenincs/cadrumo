@@ -672,3 +672,44 @@ resolved = false
 remedy_requires_decision = true
 symbols = ["IVA_BIEN_ESCASO_VALOR_UMBRAL_EUR"]
 evidence = "Declared once in core/external_constants.py as Decimal('3005.06') and read by nothing in src/cadrumo or dev/. A legal threshold that no calculation applies is an unenforced rule rather than an unused value, so the remedy is to wire it or to record why the capability is unsupported."
+
+
+# ---------------------------------------------------------------------------
+# Legal figures in external_constants are documented defaults, not dead values
+#
+# Nine constants in core/external_constants.py have no production reader, and
+# the first reading -- that AEAT rules were declared but never enforced -- was
+# WRONG. `domain/contribuyente/deduccion_maternidad.py` states the contract
+# outright: "The registry is the causal authority: a missing revision or
+# parameter is a grounding defect and raises RegistryValidationError rather than
+# falling back to the module constant, which is a documented default the
+# arithmetic must not silently prefer."
+#
+# So the arithmetic reads the dated Modelo 100 registry parameter and the
+# constant records the legal figure for a reader. Being unread is the design
+# holding, exactly as it is for the operator-surface CRUD catalogue: a
+# declaration whose only consumers are a reader and a test is not waiting for a
+# caller.
+#
+# This also explains the shape of the tests that touch them. The
+# `external_constants_centralisation` tests assert WHERE a figure lives, not that
+# a calculation applies it, so a constant can pass its test while no arithmetic
+# reads it -- which is correct here, and would be a defect anywhere the registry
+# was not the causal authority.
+# ---------------------------------------------------------------------------
+
+[[symbol_cluster]]
+name = "external constants documented legal defaults"
+class = "design-time-authority"
+area = "core"
+resolved = false
+symbols = [
+  "MODELO_840_IAE_CIFRA_NEGOCIOS_EXEMPTION_THRESHOLD_EUR",
+  "WORK_INCOME_GENERAL_DECLARATION_LIMIT_EUR",
+  "AMORTIZACION_INMUEBLE_RATE",
+  "DEDUCCION_MATERNIDAD_MENSUAL_EUR",
+  "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
+  "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR",
+  "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR",
+]
+evidence = "Each records an AEAT legal figure that the engine deliberately does NOT read: compute_deduccion_maternidad_0611 resolves every figure through _resolve_maternidad_figure against the dated Modelo 100 registry parameter, and its docstring states that falling back to the module constant is forbidden. AMORTIZACION_INMUEBLE_RATE is additionally imported by domain/fincas/amortization_ledger, inside the staged fincas cluster. Removing any of them would delete the documented legal reference while changing no arithmetic."
