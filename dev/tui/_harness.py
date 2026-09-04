@@ -201,6 +201,23 @@ def surfaces(*, workspace: str = "visual-inventory") -> tuple[Surface, ...]:
     return tuple(found)
 
 
+def coverage(*, workspace: str = "visual-inventory") -> dict[str, tuple[str, ...]]:
+    """Ask the harness which interfaces each surface paints at its opening frame.
+
+    The surface registry is the authority. Reading it here rather than keeping
+    a second hand-written opinion on this side is what stops the review
+    inventory from under-claiming coverage after a fixture lands: a surface
+    that declares its interfaces is covered the moment it exists.
+    """
+    reported: dict[str, tuple[str, ...]] = {}
+    for line in _run(("coverage",), workspace=workspace).splitlines():
+        name, _, remainder = line.strip().partition(" ")
+        if not name or not remainder:
+            continue
+        reported[name] = tuple(part for part in remainder.split(",") if part)
+    return reported
+
+
 def capture(
     surface: str,
     viewport: Viewport,
@@ -239,5 +256,6 @@ __all__ = [
     "Surface",
     "capture",
     "classify",
+    "coverage",
     "surfaces",
 ]

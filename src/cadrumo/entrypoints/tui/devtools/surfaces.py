@@ -40,6 +40,14 @@ class Surface:
 
     A profile that merely exists is not enough for these: they resolve the
     active bucket, so the harness must unlock one first."""
+    interfaces: tuple[str, ...] = ()
+    """The interface classes this surface paints at its OPENING frame.
+
+    Declared here so the review tooling reads coverage from the surface
+    registry rather than keeping a second, hand-maintained opinion of which
+    classes a surface covers. Empty means the surface has not declared it and
+    the reviewer's static table remains the only claim.
+    """
     provision: Callable[[], AbstractContextManager[str]] | None = None
     """Dedicated fixture provisioning, for a surface ``needs_profile`` alone
     can't express -- a distinct storage root, extra profile facts, or a
@@ -175,6 +183,7 @@ def _workbench_surfaces() -> tuple[Surface, ...]:
             f"{spec.surface_id} in its {spec.scenario.value} state",
             spec.build,
             needs_profile=False,
+            interfaces=spec.interfaces,
         )
         for spec in WORKBENCH_FIXTURES
     )
