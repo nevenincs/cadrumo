@@ -1,7 +1,7 @@
 """Deterministic TOML serialisation of a Terminology Handbook concept.
 
 The scaffold writes concept fragments back as TOML. Serialisation is
-canonical and stable: the same :class:`~dev.docs.terminology_handbook._schema.ConceptRecord`
+canonical and stable: the same :class:`~dev.docs.terminology_handbook.schema.ConceptRecord`
 always emits byte-identical TOML, so a no-change scaffold run is a
 no-op diff (idempotence) and a curated field round-trips through
 ``serialise -> load`` unchanged (the PRESERVE guarantee operates at the
@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from ._schema import ConceptRecord, LanguageSection, TermSection
+from .schema import ConceptRecord, LanguageSection, TermSection
 
 __all__ = ["serialise_concept"]
 

@@ -36,14 +36,6 @@ from ._curation import (
     set_term,
 )
 from ._enrolment import EnrolmentCandidate, SeedLabel, collect_enrolment_candidates
-from ._enums import ConceptDomain, TermStatus
-from ._loader import (
-    HandbookValidator,
-    TerminologyHandbook,
-    load_bundled_terminology_handbook,
-    load_terminology_handbook,
-    terminology_concepts_dir,
-)
 from ._scaffold import (
     ScaffoldAction,
     ScaffoldEntry,
@@ -51,15 +43,6 @@ from ._scaffold import (
     apply_scaffold_plan,
     build_scaffold_plan,
     scaffold_handbook,
-)
-from ._schema import (
-    ConceptRecord,
-    GrammaticalGender,
-    LanguageSection,
-    LanguageSource,
-    PartOfSpeech,
-    SeedProvenance,
-    TermSection,
 )
 from ._seed_import import (
     SeedApplyResult,
@@ -75,7 +58,24 @@ from ._seed_import import (
     source_attribution,
 )
 from ._serialize import serialise_concept
-from ._validators import (
+from .enums import ConceptDomain, TermStatus
+from .loader import (
+    HandbookValidator,
+    TerminologyHandbook,
+    load_bundled_terminology_handbook,
+    load_terminology_handbook,
+    terminology_concepts_dir,
+)
+from .schema import (
+    ConceptRecord,
+    GrammaticalGender,
+    LanguageSection,
+    LanguageSource,
+    PartOfSpeech,
+    SeedProvenance,
+    TermSection,
+)
+from .validators import (
     approved_completeness_validator,
     default_handbook_validators,
     id_uniqueness_validator,

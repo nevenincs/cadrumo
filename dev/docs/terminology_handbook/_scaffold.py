@@ -44,10 +44,10 @@ from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 
 from ._enrolment import EnrolmentCandidate
-from ._enums import TermStatus
-from ._loader import load_terminology_handbook, terminology_concepts_dir
-from ._schema import ConceptRecord, LanguageSection, TermSection
 from ._serialize import serialise_concept
+from .enums import TermStatus
+from .loader import load_terminology_handbook, terminology_concepts_dir
+from .schema import ConceptRecord, LanguageSection, TermSection
 
 __all__ = [
     "ScaffoldAction",

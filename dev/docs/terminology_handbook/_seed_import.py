@@ -58,12 +58,12 @@ from pydantic import BaseModel, StringConstraints, model_validator
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
-from ._enums import TermStatus
-from ._loader import TerminologyHandbook, load_terminology_handbook, terminology_concepts_dir
-from ._schema import ConceptRecord, LanguageSection, SeedProvenance, TermSection
 from ._serialize import serialise_concept
-from ._validators import default_handbook_validators
+from .enums import TermStatus
 from .errors import TerminologyError, TerminologyValidationError
+from .loader import TerminologyHandbook, load_terminology_handbook, terminology_concepts_dir
+from .schema import ConceptRecord, LanguageSection, SeedProvenance, TermSection
+from .validators import default_handbook_validators
 
 __all__ = [
     "SeedApplyResult",

@@ -5,7 +5,7 @@ pipeline (``TOML authoring tree -> loader/compiler -> strict schema
 objects``). Each fragment under ``src/cadrumo/_data/terminology/concepts/``
 is one concept; the loader parses every fragment, reshapes the nested
 ``[language.<code>]`` / ``[[language.<code>.term]]`` authoring layout into
-the :class:`~dev.docs.terminology_handbook._schema.ConceptRecord` shape, compiles each
+the :class:`~dev.docs.terminology_handbook.schema.ConceptRecord` shape, compiles each
 into a strict frozen record, then DERIVES every concept's ``narrower`` as
 the inverse of the parsed ``broader`` edges across the whole set.
 
@@ -35,8 +35,8 @@ from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import freeze_toml, read_toml, to_str_keyed_dict
 
-from ._schema import ConceptRecord
 from .errors import TerminologyLoadError, TerminologyValidationError
+from .schema import ConceptRecord
 
 __all__ = [
     "HandbookValidator",

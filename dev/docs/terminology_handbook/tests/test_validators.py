@@ -25,8 +25,8 @@ from .. import (
     load_terminology_handbook,
     relation_integrity_validator,
 )
-from .._validators import _bundled_legal_ref_ids
 from ..errors import TerminologyValidationError
+from ..validators import _bundled_legal_ref_ids
 from ._support import write_concept_fragment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

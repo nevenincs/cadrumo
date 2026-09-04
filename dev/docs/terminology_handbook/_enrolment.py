@@ -28,7 +28,7 @@ from dataclasses import dataclass, field
 
 from cadrumo.core.external_constants import OutputLanguage
 
-from ._enums import ConceptDomain
+from .enums import ConceptDomain
 
 __all__ = [
     "EnrolmentCandidate",
