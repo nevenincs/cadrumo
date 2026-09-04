@@ -11,10 +11,10 @@ from textual.widgets import DataTable, Static
 
 from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.workspace import LedgerWorkspaceArea, LedgerWorkspaceProjectionV1
-from ....application.operator_actions.catalogue import lookup_action
 from ....application.operator_actions.models import ActionReference
 from ....core.identity import TransactionId
 from ..navigation import TuiScreenContextV1, TuiScreenFactoryV1
+from .action_guards import require_canonical_ledger_actions
 from .classification import LedgerClassificationScreen
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen, ledger_copy
 from .entries import LedgerEntriesScreen
@@ -140,21 +140,12 @@ def ledger_screen_factory(
     link_submitter: LedgerLinkSubmitterV1 | None = None,
 ) -> TuiScreenFactoryV1:
     """Bind an injected immutable projection to the outer navigation factory contract."""
-    declaration = lookup_action(review_action.action_id)
-    if declaration.target_command_key != "ledger.review":
-        raise ValueError("injected Ledger review action does not resolve to the canonical review query")
-    if classify_action is not None:
-        classification_declaration = lookup_action(classify_action.action_id)
-        if classification_declaration.target_command_key != "ledger.classify":
-            raise ValueError("injected Ledger classification action does not resolve to the canonical command")
-    if evidence_action is not None:
-        evidence_declaration = lookup_action(evidence_action.action_id)
-        if evidence_declaration.target_command_key != "ledger.evidence.review.list":
-            raise ValueError("injected Ledger evidence action does not resolve to the canonical review query")
-    if link_action is not None:
-        link_declaration = lookup_action(link_action.action_id)
-        if link_declaration.target_command_key != "ledger.link":
-            raise ValueError("injected Ledger link action does not resolve to the canonical command")
+    require_canonical_ledger_actions(
+        review_action=review_action,
+        classify_action=classify_action,
+        evidence_action=evidence_action,
+        link_action=link_action,
+    )
 
     def create(context: TuiScreenContextV1) -> LedgerWorkspaceScreen:
         controller = LedgerWorkspaceController(

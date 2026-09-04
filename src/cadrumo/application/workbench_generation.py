@@ -641,6 +641,17 @@ def _secure_profile_home_input(
     def unavailable(reason_code: str) -> HomeZoneState:
         return HomeZoneState(availability=HomeAvailability.UNAVAILABLE, reason_code=reason_code)
 
+    def never_captured(reason_code: str) -> HomeZoneState:
+        """A zone whose source is readable but has never been captured.
+
+        Distinct from `unavailable`, which says the reader cannot answer. An
+        operator reading "unavailable" looks for something broken; one reading
+        "never captured" knows the data is simply not here yet and that a pull
+        is what produces it. Collapsing the two hides the only action that
+        would resolve the zone.
+        """
+        return HomeZoneState(availability=HomeAvailability.NEVER_CAPTURED, reason_code=reason_code)
+
     readiness = _home_ledger_readiness(ledger)
     ledger_state = (
         HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=observed_at)
@@ -665,7 +676,11 @@ def _secure_profile_home_input(
         # not a separate refusal: before any pull it is NEVER CAPTURED, and
         # Home must say that rather than call the whole zone unavailable.
         agenda_evidence_state=agenda_evidence_state,
-        messages_state=unavailable("workbench.home.messages_reader_unavailable"),
+        # AEAT notifications exist only once a pull has persisted a snapshot, so
+        # before that the reader is fine and the DATA is absent. The previous
+        # code called this reader-unavailable, which named the wrong thing and
+        # pointed the operator at a fault that does not exist.
+        messages_state=never_captured("workbench.home.messages_never_pulled"),
     )
 
 

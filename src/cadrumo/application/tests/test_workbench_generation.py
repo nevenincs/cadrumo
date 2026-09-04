@@ -573,3 +573,45 @@ def test_home_refuses_its_ledger_zone_rather_than_publishing_an_unmeasured_zero(
         )
 
     assert _home_ledger_readiness(None) is None
+
+def test_a_zone_awaiting_a_pull_is_never_captured_not_unavailable() -> None:
+    """Home must not report absent remote data as a broken reader.
+
+    AEAT notifications exist only once a pull has persisted a snapshot. Before
+    that the reader is perfectly able to answer and the DATA is what is
+    missing, which is exactly the distinction `no-silent-under-declaration`
+    keeps: UNAVAILABLE says something is wrong, NEVER_CAPTURED says nothing has
+    been fetched yet. Only the second tells the operator that a pull is the
+    action that resolves the zone; the first sends them looking for a fault
+    that does not exist.
+
+    Asserted on the reason code as well as the availability, because a zone
+    that carries the right state under a reason code naming a "reader
+    unavailable" still tells the operator the wrong story wherever that code is
+    rendered or logged.
+    """
+    from datetime import UTC, datetime
+
+    from ..overview.home import HomeAccountSession, HomeAvailability, HomeSessionPosture, HomeZoneState
+    from ..workbench_generation import _secure_profile_home_input
+
+    observed_at = datetime(2026, 9, 4, tzinfo=UTC)
+    home = _secure_profile_home_input(
+        observed_at=observed_at,
+        account_session=HomeAccountSession(posture=HomeSessionPosture.NO_PROFILE),
+        agenda=None,
+        agenda_evidence_state=HomeZoneState(
+            availability=HomeAvailability.NEVER_CAPTURED,
+            reason_code="workbench.home.agenda_evidence_never_pulled",
+        ),
+        ledger=None,
+    )
+
+    assert home.messages_state.availability is HomeAvailability.NEVER_CAPTURED, (
+        "Home reports never-pulled AEAT notifications as an unavailable reader, "
+        "which points the operator at a fault instead of at the pull"
+    )
+    assert home.messages_state.reason_code is not None
+    assert "reader_unavailable" not in home.messages_state.reason_code, (
+        f"the reason code {home.messages_state.reason_code!r} still blames the reader"
+    )

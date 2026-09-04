@@ -23,12 +23,12 @@ from ....application.ledger.workspace import (
     LedgerWorkspaceProjectionV1,
     LedgerWorkspaceStatus,
 )
-from ....application.operator_actions.catalogue import lookup_action
 from ....application.operator_actions.models import ActionReference
 from ....core.i18n.render import tr
 from ....core.identity import InvoiceId, TransactionId
 from ..components.theme import BASE_CSS, tokenised
 from ..navigation import TuiScreenContextV1
+from .action_guards import require_canonical_ledger_actions
 from .models import (
     LedgerClassificationSubmissionV1,
     LedgerClassificationSubmitterV1,
@@ -248,18 +248,12 @@ class LedgerWorkspaceController:
         visible_ids = {row.transaction_id for row in projection.entries}
         if classification_target is not None and classification_target not in visible_ids:
             raise ValueError("classification target is absent from the visible Ledger projection")
-        if (
-            classify_action is not None
-            and lookup_action(classify_action.action_id).target_command_key != "ledger.classify"
-        ):
-            raise ValueError("injected Ledger classification action does not resolve to the canonical command")
-        if (
-            evidence_action is not None
-            and lookup_action(evidence_action.action_id).target_command_key != "ledger.evidence.review.list"
-        ):
-            raise ValueError("injected Ledger evidence action does not resolve to the canonical review query")
-        if link_action is not None and lookup_action(link_action.action_id).target_command_key != "ledger.link":
-            raise ValueError("injected Ledger link action does not resolve to the canonical command")
+        require_canonical_ledger_actions(
+            review_action=review_action,
+            classify_action=classify_action,
+            evidence_action=evidence_action,
+            link_action=link_action,
+        )
         choice_ids = tuple(choice.choice_id for choice in prepared_imports)
         if len(choice_ids) != len(set(choice_ids)):
             raise ValueError("prepared import choice identities must be unique")
