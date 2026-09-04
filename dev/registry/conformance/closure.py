@@ -25,6 +25,7 @@ from cadrumo.application.registry.closure import (
     RegistryClosureLimb,
     RegistryClosureLimbName,
     RegistryClosureOwnerDisposition,
+    RegistryClosureRefusal,
     RegistryClosureRefusalReason,
 )
 from cadrumo.application.registry.filing_export_coverage import (
@@ -417,6 +418,7 @@ def render_registry_closure_report(report: RegistryClosureReport) -> str:
             owner=refusal.disposition.owner,
             work_item=refusal.disposition.work_item,
             reconsideration_condition=refusal.disposition.reconsideration_condition,
+            filing_channels=_render_filing_channels(refusal),
             detail=refusal.detail,
         )
         for row in report.rows
@@ -442,6 +444,24 @@ def render_registry_closure_report(report: RegistryClosureReport) -> str:
         "filing export participates only at filing grade",
     )
     return "\n".join(lines)
+
+
+def _render_filing_channels(refusal: RegistryClosureRefusal) -> str:
+    """Render one refusal's per-channel filing states as a stable token list.
+
+    The two filing channels fail for materially different reasons: public
+    conformance is repeatable in CI, while secure replay needs operator custody
+    CI cannot hold. Emitting them structurally keeps "conformance proven,
+    custody outstanding" distinguishable from "nothing proven", which reading
+    the free-text detail alone does not give a consumer.
+
+    Returns:
+        ``channel:reason`` tokens joined by ``,``, or ``n/a`` when the refusal
+        declares no per-channel state.
+    """
+    if not refusal.filing_channels:
+        return "n/a"
+    return ",".join(f"{item.channel}:{item.reason}" for item in refusal.filing_channels)
 
 
 def _temporal_refusal(coverage: TemporalRevisionCoverageSummary) -> RegistryClosurePredicateRefusal:
