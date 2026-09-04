@@ -87,7 +87,11 @@ def _sync_dev_environment(repo_root: Path, work_dir: Path, uv: str, python: str)
     record_proof("pip dependency check")
 
 
-def _assert_dev_commands(work_dir: Path, venv: Path) -> None:
+def _assert_dev_commands(
+    work_dir: Path,
+    venv: Path,
+    commands: tuple[tuple[str, ...], ...] = _DEV_COMMANDS,
+) -> None:
     """Verify the declared developer command surface starts in the clean venv.
 
     The proof is recorded only once a command has actually run. Recorded
@@ -95,9 +99,9 @@ def _assert_dev_commands(work_dir: Path, venv: Path) -> None:
     satisfied the manifest proof contract having started nothing - and that
     contract exists precisely to stop a claim appearing without its assertion.
     """
-    if not _DEV_COMMANDS:
+    if not commands:
         raise SystemExit("the developer command surface is empty; this lane would prove nothing")
-    for command in _DEV_COMMANDS:
+    for command in commands:
         executable, *args = command
         run_checked([_venv_script(venv, executable), *args], cwd=work_dir)
     record_proof("developer command surface")
