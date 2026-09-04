@@ -10,7 +10,7 @@ that differs across those same two revisions is not tracking anything. It is two
 renderings of one string, and a filer sees whichever revision they are filing
 under.
 
-Three conditions are reported, and every row names one of them:
+Four conditions are reported, and every row names one of them:
 
 - ``translation_drifts_where_source_is_constant`` - the Spanish is one string
   across the revisions both share, and the translation is not. Nothing in the
@@ -19,6 +19,11 @@ Three conditions are reported, and every row names one of them:
   translation is doing its job. Reported rather than filtered, because the two
   populations are the same size to within a factor and a reader who sees only
   the first would think every varying translation is drift.
+- ``translation_missed_source_change`` - the Spanish differs across the shared
+  revisions and the translation does not. The inverse defect, and the sharper
+  one: a filer reads text that no longer matches the official wording. It is
+  also the one a screen looking only at varying translations cannot see, which
+  is why this iterates from the source side as well.
 - ``source_coverage_insufficient`` - the locale labels the casilla under
   revisions the Spanish catalogue does not, so there is no shared pair to
   compare. Kept as its own condition rather than folded into either answer: a
@@ -57,6 +62,7 @@ __all__ = [
 #: emission site so the set cannot be recovered by reading the source wrong.
 KINDS: Final[tuple[str, ...]] = (
     "translation_drifts_where_source_is_constant",
+    "translation_missed_source_change",
     "translation_tracks_source_change",
     "source_coverage_insufficient",
 )
@@ -98,29 +104,40 @@ def drift_findings(
     row so a reader can see how much the comparison rested on.
     """
     findings: list[TranslationDriftFinding] = []
-    for modelo, casillas in sorted(labels.items()):
-        for casilla, texts in sorted(casillas.items()):
-            renderings = tuple(sorted(set(texts.values())))
-            if len(renderings) < 2:
+    subjects = {(modelo, casilla) for modelo, casillas in labels.items() for casilla in casillas} | {
+        (modelo, casilla) for modelo, casillas in source.items() for casilla in casillas
+    }
+    for modelo, casilla in sorted(subjects):
+        texts = labels.get(modelo, {}).get(casilla, {})
+        spanish = source.get(modelo, {}).get(casilla, {})
+        shared = sorted(set(texts) & set(spanish))
+        if len(shared) < 2:
+            # Only reported when something varies; a casilla labelled under one
+            # revision has nothing to disagree with and is not a finding.
+            if len(set(texts.values())) < 2 and len(set(spanish.values())) < 2:
                 continue
-            spanish = source.get(modelo, {}).get(casilla, {})
-            shared = {revision: spanish[revision] for revision in texts if revision in spanish}
-            if len(shared) < 2:
-                kind = "source_coverage_insufficient"
-            elif len(set(shared.values())) == 1:
+            kind = "source_coverage_insufficient"
+        else:
+            translation_varies = len({texts[revision] for revision in shared}) > 1
+            source_varies = len({spanish[revision] for revision in shared}) > 1
+            if translation_varies and not source_varies:
                 kind = "translation_drifts_where_source_is_constant"
-            else:
+            elif source_varies and not translation_varies:
+                kind = "translation_missed_source_change"
+            elif translation_varies and source_varies:
                 kind = "translation_tracks_source_change"
-            findings.append(
-                TranslationDriftFinding(
-                    locale=locale,
-                    modelo=modelo,
-                    casilla=casilla,
-                    kind=kind,
-                    renderings=renderings,
-                    shared_revisions=len(shared),
-                )
+            else:
+                continue
+        findings.append(
+            TranslationDriftFinding(
+                locale=locale,
+                modelo=modelo,
+                casilla=casilla,
+                kind=kind,
+                renderings=tuple(sorted(set(texts.values()))),
+                shared_revisions=len(shared),
             )
+        )
     return tuple(findings)
 
 
