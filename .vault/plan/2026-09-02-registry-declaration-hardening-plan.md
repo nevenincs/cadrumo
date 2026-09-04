@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:76166076a3c47d6eae9749d0e5798d7c6d4172f8dc8f2727eef5ee88d68f12de'
+body_hash: 'sha256:5a615eee4e06c3d360798e685205832e0f31b11bfb4c0b8f0a1269b2c69873cf'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -401,6 +401,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S518` - Count the tests no automation runs: 24 external_tool, 41 os_keychain and 13 resident_service have an enrolling recipe and no workflow, each excluded for a declared environmental reason, with a gate protecting the exclusion and none protecting the inclusion; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [ ] `W02.P02.S519` - Resolve the 84 tests the lane-reachability gate reports as run by no CI lane and carrying no marker explaining why: 47 in dev/tui/tests, 19 in the conformance closure suite this plan already records, 18 in dev/packaging/tests and one in dev/tests; `justfile,.github/workflows,dev`.
 - [x] `W02.P02.S520` - Correct the claim that nothing gates the putting-back: dev/ci/lane_reachability models declared against CI-invoked lanes at 32 versus 17, and dev/tests/test_lane_reachability gates that a test CI cannot run must declare why, which is red at 84 tests; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [ ] `W02.P02.S521` - Bring dev/registry/conformance/tests into a lane path scope: its nineteen tests carry unit and hex_core markers and are unreachable by any declared recipe because no lanes paths reach the directory, which is why the ordinary lane never selected them; `justfile`.
+- [x] `W02.P02.S522` - Locate the conformance closure suites absence exactly: nineteen tests unreachable by any declared lane and two files outside every lane path scope, against 66 declared-unreachable and 181 CI-unreachable tests overall; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W02.P03` - release predicate relocation
 
@@ -1571,3 +1573,24 @@ than by care, that is said here rather than left to look like care.
 reason. It cannot verdict on deselection - the evidence is not in the artefact - so it reports the one
 number that carries it and leaves the expectation to the reader, which is the honest division between
 what an instrument knows and what only a person does.
+
+The conformance closure suite's absence is located rather than described. This plan recorded it as
+"named by no CI lane and never run"; measured through `dev.ci.lane_reachability`, the nineteen tests in
+`dev/registry/conformance/tests` are unreachable by any DECLARED lane at all, and two of their files sit
+outside every lane's path scope, so no marker expression could reach them however it were written. They
+carry `unit` and `hex_core`, which the ordinary lane selects - nothing about the tests excludes them,
+and the exclusion is entirely a path the recipes do not name. The remedy this plan states, one path in
+one recipe, is therefore literally correct rather than an estimate, and the count is nineteen rather
+than sixteen.
+
+The measurement is quoted with the model it came from, because two models answer differently and both
+are right. Against declared lanes 66 tests are unreachable; against CI-invoked lanes 181 are, of which
+84 carry no marker explaining why. "Can anybody run this?" and "does anything run this?" are different
+questions, and a repository answering only the first can be entirely green while a fifth of its declared
+coverage has never executed.
+
+That gate is itself the strongest instrument this plan has found and it was found by looking for it
+before building one: the class it enforces - a population held out of a lane with a gate on the
+holding-out and none on the putting-back - had been named here as unsolved, and it is solved, in terms
+sharper than the naming. Its failure message is the sentence worth keeping: a justfile recipe is not
+enough, because a recipe no workflow invokes has never run.

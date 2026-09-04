@@ -14061,3 +14061,43 @@ cost one command and saved building a worse copy of a better tool - the third
 time this session that reading first prevented a redundant build. And a red gate
 is not the same as a missing one: the eighty-four were visible to anyone who ran
 that file, in a repository where the default lane does not run it.
+
+
+## The conformance closure suite, located exactly
+
+This plan has recorded since early on that the conformance closure suite - the
+tests that prove real filing outcomes - is named by no CI lane and has never run.
+The reachability model gives that finding its exact shape, and it is worse than
+recorded.
+
+Measured through `dev.ci.lane_reachability` on 2026-09-04:
+
+- Against **declared** lanes - every pytest invocation in the justfile, whether
+  CI calls it or not - **66 tests are unreachable**: 47 in `dev/tui/tests` and
+  **19 in `dev/registry/conformance/tests`**.
+- Against **CI-invoked** lanes, 181 are unreachable, of which 84 carry no marker
+  explaining why and the rest are the declared-incapable ones.
+- **Three files sit outside every lane's PATH scope**, so no marker expression
+  could reach them however it were written:
+  `dev/registry/conformance/tests/test_closure.py`,
+  `dev/registry/conformance/tests/test_real_closure_outcomes.py`, and
+  `dev/tui/tests/test_tui_visual_inventory.py`.
+
+The upgrade in the finding is the first two bullets read together. The suite is
+not merely absent from CI - it is unreachable by any recipe a human could type,
+because no lane's paths reach the directory. The tests carry `unit` and
+`hex_core` markers, so they would be selected by the ordinary lane the moment
+its path scope included them; nothing about the tests themselves excludes them.
+
+That also confirms the remedy this plan already states - "one path in one
+recipe" - as literally correct rather than as an estimate. The count moves from
+"sixteen ordinary unit tests" to nineteen, measured.
+
+The 47 TUI tests belong to a campaign with files in flight in this worktree right
+now, and are named here for completeness rather than as this plan's work.
+
+One methodological note. The two lane models disagree by a factor of nearly
+three - 66 against 181 - and both are correct answers to different questions.
+"Can anybody run this?" and "does anything run this?" are not the same question,
+and a repository that answers only the first can be entirely green while a fifth
+of its declared coverage has never executed.
