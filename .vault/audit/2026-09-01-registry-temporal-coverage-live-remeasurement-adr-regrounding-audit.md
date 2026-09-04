@@ -13108,3 +13108,63 @@ Seven of nine facades are retired. Two remain - `dev.docs.sequences` and
 `dev.docs.terminology_handbook` - holding 109 bound names and 35 consumer sites,
 and `sequences` is blocked behind the 622 library lines still living in its
 `__main__`.
+
+
+## The eighth facade, and promoting only what is reached
+
+`dev.docs.terminology_handbook` forwards 49 names out of **nine** private
+modules, and all nine are private. The obvious reading is that nine need
+promoting. Four do.
+
+A private module is private to its own package, and five of these nine are
+reached only from inside it - `_curation`, `_enrolment`, `_scaffold`,
+`_seed_import`, `_serialize`, carrying 29 of the 49 names between them. Emptying
+the initialiser makes their consumers import them directly, which is exactly
+what a private module is for. Only `_loader`, `_enums`, `_schema` and
+`_validators` are reached from another package, and only those four were
+promoted.
+
+Deriving the minimal set from the refusals rather than from the module list is
+the difference between four renames and nine. The five untouched modules stay
+private and stay correct.
+
+Thirty-six references moved across 30 file-touches, the initialiser went from
+137 lines to 27, and the package's three-item failure set is identical before
+the promotions, after them, after the consumers were repointed, and after the
+initialiser was emptied - compared line by line at each of the four stages.
+
+The `test_errors.py` correction predicted at `S475` came due here and was
+exactly as predicted: it scanned `__all__` for names matching `Terminology*Error`
+and raised once there was no `__all__` to scan. Restated the same way as the
+other two, and more strongly.
+
+**Eight of nine facades are retired.** `apidocs`, `ingest_harness`, `agent_eval`,
+`locales`, `sanitizer`, `preprocess`, `terminology`, `terminology_handbook`. Of
+the 388 names the nine initialisers bound, 60 remain, all in `dev.docs.sequences`
+- which is blocked behind the 622 library lines still living in its `__main__`,
+not behind anything about facades.
+
+
+## What the last facade is waiting on, measured
+
+`dev.docs.sequences` is the only facade left, and nothing about it is a facade
+problem. Its initialiser imports nine names from `__main__`, and the library
+lives inside the entry point.
+
+The shape of the move, measured rather than estimated: the file carries **24
+top-level definitions, 22 imports, nine module-level constants, and one
+`if __name__` block**. Exactly one of the definitions - `main`, 106 lines - is
+the entry point. The other 23, plus the constants, are library.
+
+The file also declares its own `__all__`, which is the tell: a module that is
+run as `python -m` has no callers to declare a public surface for.
+
+The move is mechanical in shape and large in size, so it is left as its own
+piece of work with its own baseline rather than started at the end of a session
+that has already changed eight packages. `S477` now carries the measured
+figures so the next attempt does not begin by re-deriving them.
+
+Two things it must not do. `_runner.py` already exists in that package, so the
+new public module cannot be called `runner`; and the name must clear the
+standard library, which the promoter now checks mechanically rather than by
+recollection.
