@@ -31,13 +31,6 @@ from .._resolution import (
     ResolutionResult,
     ResolvedTarget,
 )
-from .._search_record import SearchRecordKind
-from .._unified_record import (
-    RankingTier,
-    SearchRecord,
-    SearchRecordMetadata,
-    to_search_record,
-)
 from .._wrangle import (
     STRONG_SIGNAL_SCORE_FLOOR,
     CollapseReason,
@@ -45,6 +38,13 @@ from .._wrangle import (
     WrangledResult,
     read_clusters,
     wrangle,
+)
+from ..search_record import SearchRecordKind
+from ..unified_record import (
+    RankingTier,
+    SearchRecord,
+    SearchRecordMetadata,
+    to_search_record,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
@@ -61,7 +61,7 @@ def _hit(path: str, score: float) -> ChunkHit:
 
 def _real_casilla_target(score: float, *, index: int = 0) -> ResolvedTarget:
     """A ResolvedTarget built from a REAL M303 casilla projection record."""
-    from .._casilla_projection import project_modelo_casillas
+    from ..casilla_projection import project_modelo_casillas
 
     records = project_modelo_casillas(Modelo.M303)
     unified = to_search_record(records[index])

@@ -2,7 +2,7 @@
 
 Projects every casilla of every modelo revision -- read through the
 validated registry authority, never raw TOML -- into a strict
-:class:`~dev.docs.terminology._search_record.CasillaSearchRecord`, then
+:class:`~dev.docs.terminology.search_record.CasillaSearchRecord`, then
 deduplicates across revisions by the canonical ``(modelo, casilla.id)``
 identity. The record carries the registry definition contract as well as the
 display metadata; none of those fields participate in the search-record
@@ -38,7 +38,7 @@ from cadrumo.domain.calculations.registry.authority import (
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
-from ._search_record import CasillaSearchRecord, SearchRecordKind
+from .search_record import CasillaSearchRecord, SearchRecordKind
 
 __all__ = [
     "CasillaProjectionStats",

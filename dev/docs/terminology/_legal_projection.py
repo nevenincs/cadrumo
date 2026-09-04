@@ -20,7 +20,7 @@ from ..legal_reference import (
     load_legal_provisions,
     render_legal_reference,
 )
-from ._search_record import LegalSearchRecord
+from .search_record import LegalSearchRecord
 
 __all__ = ["LegalSearchRecord", "legal_target_record_id", "project_legal_search_records"]
 

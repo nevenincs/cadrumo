@@ -33,7 +33,7 @@ _PARSEABLE_CASILLA_RECORD_ID_RE = re.compile(r"^casilla:[^:]+:.+")
 
 def _cli_command_record() -> CliSurfaceRecord:
     from .._cli_projection import CliSurfaceRecord
-    from .._search_record import SearchRecordKind
+    from ..search_record import SearchRecordKind
 
     return CliSurfaceRecord(
         kind=SearchRecordKind.CLI,
@@ -47,7 +47,7 @@ def _cli_command_record() -> CliSurfaceRecord:
 
 def _cli_option_record() -> CliOptionRecord:
     from .._cli_projection import CliOptionRecord
-    from .._search_record import SearchRecordKind
+    from ..search_record import SearchRecordKind
 
     return CliOptionRecord(
         kind=SearchRecordKind.CLI,
@@ -68,8 +68,8 @@ def _cli_option_record() -> CliOptionRecord:
 def test_concept_card_funnels_to_a_search_record() -> None:
     """A concept card funnels into a SearchRecord carrying its grounding refs."""
     from .._concept_cards import project_concept_cards
-    from .._search_record import SearchRecordKind
-    from .._unified_record import SearchRecord, to_search_record
+    from ..search_record import SearchRecordKind
+    from ..unified_record import SearchRecord, to_search_record
 
     cards, _stats = project_concept_cards()
     prorrata = next(c for c in cards if c.concept_id == "prorrata")
@@ -87,9 +87,9 @@ def test_concept_card_funnels_to_a_search_record() -> None:
 
 def test_casilla_funnels_to_a_search_record_with_provenance() -> None:
     """A casilla record funnels in, carrying legal_refs/source_refs provenance."""
-    from .._casilla_projection import project_modelo_casillas
-    from .._search_record import SearchRecordKind
-    from .._unified_record import to_search_record
+    from ..casilla_projection import project_modelo_casillas
+    from ..search_record import SearchRecordKind
+    from ..unified_record import to_search_record
 
     records = project_modelo_casillas(Modelo.M303)
     record = to_search_record(records[0])
@@ -107,8 +107,8 @@ def test_casilla_funnels_to_a_search_record_with_provenance() -> None:
 
 def test_segmented_casilla_funnels_with_opaque_id_and_canonical_metadata() -> None:
     """A segmented M200 casilla keeps ``casilla.id`` only in typed metadata."""
-    from .._casilla_projection import project_modelo_casillas
-    from .._unified_record import to_search_record
+    from ..casilla_projection import project_modelo_casillas
+    from ..unified_record import to_search_record
 
     projected = project_modelo_casillas(Modelo.M200)
     segmented = next(record for record in projected if record.casilla_id == "DP200014:00562")  # type: ignore[attr-defined]
@@ -132,8 +132,8 @@ def test_segmented_casilla_funnels_with_opaque_id_and_canonical_metadata() -> No
 def test_legal_provision_funnels_to_a_search_record_with_provenance() -> None:
     """A real registry-backed legal projection funnels into the LEGAL kind."""
     from .._legal_projection import project_legal_search_records
-    from .._search_record import SearchRecordKind
-    from .._unified_record import SearchRecord, to_search_record
+    from ..search_record import SearchRecordKind
+    from ..unified_record import SearchRecord, to_search_record
 
     legal = project_legal_search_records()[0]
     record = to_search_record(legal)
@@ -150,8 +150,8 @@ def test_legal_provision_funnels_to_a_search_record_with_provenance() -> None:
 
 def test_casilla_search_record_ids_are_opaque_and_unique() -> None:
     """Every projected casilla has a unique non-parseable search record id."""
-    from .._casilla_projection import project_casilla_search_records
-    from .._unified_record import to_search_record
+    from ..casilla_projection import project_casilla_search_records
+    from ..unified_record import to_search_record
 
     records, stats = project_casilla_search_records()
     unified = tuple(to_search_record(record) for record in records)
@@ -165,8 +165,8 @@ def test_casilla_search_record_ids_are_opaque_and_unique() -> None:
 
 def test_cli_command_and_option_funnel_to_search_records() -> None:
     """CLI command and option records funnel into uniform SearchRecords."""
-    from .._search_record import SearchRecordKind
-    from .._unified_record import to_search_record
+    from ..search_record import SearchRecordKind
+    from ..unified_record import to_search_record
 
     command = to_search_record(_cli_command_record())
     assert command.kind is SearchRecordKind.CLI
@@ -182,10 +182,10 @@ def test_cli_command_and_option_funnel_to_search_records() -> None:
 
 def test_all_kinds_serialise_to_the_same_shape() -> None:
     """Every kind serialises to the identical SearchRecord field set (homogeneous)."""
-    from .._casilla_projection import project_modelo_casillas
     from .._concept_cards import project_concept_cards
     from .._legal_projection import project_legal_search_records
-    from .._unified_record import SearchRecord, to_search_record
+    from ..casilla_projection import project_modelo_casillas
+    from ..unified_record import SearchRecord, to_search_record
 
     cards, _ = project_concept_cards()
     casillas = project_modelo_casillas(Modelo.M303)
@@ -210,7 +210,7 @@ def test_all_kinds_serialise_to_the_same_shape() -> None:
 def test_funnelled_records_are_json_serialisable() -> None:
     """The unified record serialises to JSON (the index-injection payload form)."""
     from .._concept_cards import project_concept_cards
-    from .._unified_record import to_search_record
+    from ..unified_record import to_search_record
 
     cards, _ = project_concept_cards()
     record = to_search_record(cards[0])
@@ -237,8 +237,8 @@ def test_base_weights_follow_the_declared_tier_ordering() -> None:
     article above the modelo and casilla cards it merely grounds, so the ordering
     below casilla is the contract, not an incidental value.
     """
-    from .._search_record import SearchRecordKind
-    from .._unified_record import kind_base_weight
+    from ..search_record import SearchRecordKind
+    from ..unified_record import kind_base_weight
 
     concept = kind_base_weight(SearchRecordKind.CONCEPT)
     cli = kind_base_weight(SearchRecordKind.CLI)
@@ -262,7 +262,7 @@ def test_emitted_weight_matches_the_class_the_record_is_displayed_under() -> Non
     for any kind, which a fixture built from an explicit display class cannot.
     """
     from .._legal_projection import project_legal_search_records
-    from .._unified_record import (
+    from ..unified_record import (
         derive_display_class,
         display_class_base_weight,
         to_search_record,
@@ -292,8 +292,8 @@ def test_per_kind_projection_agrees_with_the_derivation_authority() -> None:
     exclusions are declared behaviour, not drift: the projection deliberately
     floors a full-text hit. Every context-free kind must agree.
     """
-    from .._search_record import SearchRecordKind
-    from .._unified_record import (
+    from ..search_record import SearchRecordKind
+    from ..unified_record import (
         _KIND_TO_DISPLAY_CLASS,
         _display_class_for,
     )
@@ -319,8 +319,8 @@ def test_normalisation_preserves_tier_ordering_under_score() -> None:
     ordering survives any sweep score: the worst-scored concept still ranks at
     or above the best-scored page.
     """
-    from .._search_record import SearchRecordKind
-    from .._unified_record import normalise_ranking_weight
+    from ..search_record import SearchRecordKind
+    from ..unified_record import normalise_ranking_weight
 
     worst_concept = normalise_ranking_weight(SearchRecordKind.CONCEPT, 0.0)
     best_page = normalise_ranking_weight(SearchRecordKind.PAGE, 1.0)
@@ -329,8 +329,8 @@ def test_normalisation_preserves_tier_ordering_under_score() -> None:
 
 def test_normalisation_clamps_and_sorts_within_a_kind() -> None:
     """Within a kind, a higher sweep score yields a higher (clamped) weight."""
-    from .._search_record import SearchRecordKind
-    from .._unified_record import normalise_ranking_weight
+    from ..search_record import SearchRecordKind
+    from ..unified_record import normalise_ranking_weight
 
     low = normalise_ranking_weight(SearchRecordKind.CASILLA, 0.1)
     high = normalise_ranking_weight(SearchRecordKind.CASILLA, 0.9)
@@ -347,7 +347,7 @@ def test_search_record_is_frozen() -> None:
     from pydantic import ValidationError
 
     from .._concept_cards import project_concept_cards
-    from .._unified_record import to_search_record
+    from ..unified_record import to_search_record
 
     cards, _ = project_concept_cards()
     record = to_search_record(cards[0])

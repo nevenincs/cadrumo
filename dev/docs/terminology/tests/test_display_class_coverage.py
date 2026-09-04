@@ -27,7 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
 def _cli_command_record():
     from .._cli_projection import CliSurfaceRecord
-    from .._search_record import SearchRecordKind
+    from ..search_record import SearchRecordKind
 
     return CliSurfaceRecord(
         kind=SearchRecordKind.CLI,
@@ -41,7 +41,7 @@ def _cli_command_record():
 
 def _cli_option_record():
     from .._cli_projection import CliOptionRecord
-    from .._search_record import SearchRecordKind
+    from ..search_record import SearchRecordKind
 
     return CliOptionRecord(
         kind=SearchRecordKind.CLI,
@@ -63,10 +63,10 @@ def _injected_unified_records():
     gate is deterministic and independent of the fragile live CLI subprocess
     walk.
     """
-    from .._casilla_projection import project_casilla_search_records
     from .._concept_cards import project_concept_cards
     from .._legal_projection import project_legal_search_records
-    from .._unified_record import to_search_record
+    from ..casilla_projection import project_casilla_search_records
+    from ..unified_record import to_search_record
 
     concept_cards, _ = project_concept_cards()
     approved = [card for card in concept_cards if card.is_approved]
@@ -83,8 +83,8 @@ def _injected_unified_records():
 
 def test_every_injected_record_derives_exactly_one_valid_display_class() -> None:
     """Every shipped record maps to exactly one ``ResultDisplayClass`` member."""
-    from .._search_record import ResultDisplayClass
-    from .._unified_record import derive_display_class
+    from ..search_record import ResultDisplayClass
+    from ..unified_record import derive_display_class
 
     records = _injected_unified_records()
     # Guard against a vacuous pass: the real projections must actually produce a
@@ -110,8 +110,8 @@ def test_every_display_class_is_exercised_by_the_injected_corpus() -> None:
     hit (not an injected custom record), so it is exercised through a constructed
     PAGE record to prove the derivation authority produces it.
     """
-    from .._search_record import ResultDisplayClass, SearchRecordKind
-    from .._unified_record import (
+    from ..search_record import ResultDisplayClass, SearchRecordKind
+    from ..unified_record import (
         RankingTier,
         SearchRecord,
         SearchRecordMetadata,
@@ -143,8 +143,8 @@ def test_every_display_class_is_exercised_by_the_injected_corpus() -> None:
 def test_concept_domain_splits_modelo_from_general_fact() -> None:
     """A modelo-domain concept is ``MODELO``; every other domain is ``DOC``."""
     from ...terminology_handbook import ConceptDomain
-    from .._search_record import ResultDisplayClass, SearchRecordKind
-    from .._unified_record import (
+    from ..search_record import ResultDisplayClass, SearchRecordKind
+    from ..unified_record import (
         RankingTier,
         SearchRecord,
         SearchRecordMetadata,
@@ -177,8 +177,8 @@ def test_concept_domain_splits_modelo_from_general_fact() -> None:
 
 def test_full_text_page_splits_by_path_prefix() -> None:
     """A full-text hit splits ``cli/`` -> CLI, ``api/`` -> TECHNICAL, else DOC."""
-    from .._search_record import ResultDisplayClass, SearchRecordKind
-    from .._unified_record import (
+    from ..search_record import ResultDisplayClass, SearchRecordKind
+    from ..unified_record import (
         RankingTier,
         SearchRecord,
         SearchRecordMetadata,

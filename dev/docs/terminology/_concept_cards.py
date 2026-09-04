@@ -10,7 +10,7 @@ four-language alias set, and resolvable links to the legal grounding the
 code itself is grounded against.
 
 The card record extends the shared
-:class:`~dev.docs.terminology._search_record.SearchRecordBase` authored by
+:class:`~dev.docs.terminology.search_record.SearchRecordBase` authored by
 the sibling casilla-projection compiler, reusing the ``kind`` discriminator
 (``SearchRecordKind.CONCEPT``) and the four-language localised-description
 map (here the per-language ``short_description``).
@@ -49,7 +49,7 @@ from ..terminology_handbook import (
     default_handbook_validators,
     load_terminology_handbook,
 )
-from ._search_record import SearchRecordBase, SearchRecordKind
+from .search_record import SearchRecordBase, SearchRecordKind
 
 __all__ = [
     "ConceptCardProjectionStats",

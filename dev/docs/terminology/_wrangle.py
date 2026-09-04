@@ -42,8 +42,8 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field
 
 from ._resolution import DroppedHit, DropReason, ResolutionResult, ResolvedTarget
-from ._search_record import SearchRecordKind
-from ._unified_record import RankingTier
+from .search_record import SearchRecordKind
+from .unified_record import RankingTier
 
 __all__ = [
     "STRONG_SIGNAL_SCORE_FLOOR",

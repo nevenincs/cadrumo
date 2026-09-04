@@ -10,11 +10,6 @@ distinct from the curated ``dev.docs.terminology_handbook`` concept Handbook.
 
 from __future__ import annotations
 
-from ._casilla_projection import (
-    CasillaProjectionStats,
-    project_casilla_search_records,
-    project_modelo_casillas,
-)
 from ._cli_projection import (
     CliOptionRecord,
     CliProjectionStats,
@@ -64,12 +59,6 @@ from ._resolution import (
     TargetResolver,
     resolve_chunk_hits,
 )
-from ._search_record import (
-    CasillaSearchRecord,
-    ResultDisplayClass,
-    SearchRecordBase,
-    SearchRecordKind,
-)
 from ._sweep import (
     DEFAULT_MAX_RESULTS,
     RagSearchClient,
@@ -97,7 +86,27 @@ from ._synonym_mining import (
     synonym_ratification_queue_path,
     validate_ratification_queue,
 )
-from ._unified_record import (
+from ._wrangle import (
+    STRONG_SIGNAL_SCORE_FLOOR,
+    CollapsedHit,
+    CollapseReason,
+    DirectoryCluster,
+    WrangledResult,
+    read_clusters,
+    wrangle,
+)
+from .casilla_projection import (
+    CasillaProjectionStats,
+    project_casilla_search_records,
+    project_modelo_casillas,
+)
+from .search_record import (
+    CasillaSearchRecord,
+    ResultDisplayClass,
+    SearchRecordBase,
+    SearchRecordKind,
+)
+from .unified_record import (
     RankingTier,
     SearchRecord,
     SearchRecordMetadata,
@@ -107,15 +116,6 @@ from ._unified_record import (
     normalise_display_class_weight,
     normalise_ranking_weight,
     to_search_record,
-)
-from ._wrangle import (
-    STRONG_SIGNAL_SCORE_FLOOR,
-    CollapsedHit,
-    CollapseReason,
-    DirectoryCluster,
-    WrangledResult,
-    read_clusters,
-    wrangle,
 )
 
 __all__ = [

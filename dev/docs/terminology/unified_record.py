@@ -41,11 +41,11 @@ from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
 from ..terminology_handbook import ConceptDomain
 from ._casilla_anchor import casilla_reference_target
-from ._casilla_projection import CasillaSearchRecord
 from ._cli_projection import CliOptionRecord, CliSurfaceRecord
 from ._concept_cards import ConceptCardRecord
 from ._glossary_anchor import glossary_term_anchor
-from ._search_record import LegalSearchRecord, ResultDisplayClass, SearchRecordKind
+from .casilla_projection import CasillaSearchRecord
+from .search_record import LegalSearchRecord, ResultDisplayClass, SearchRecordKind
 
 __all__ = [
     "RankingTier",

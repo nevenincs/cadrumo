@@ -38,8 +38,8 @@ from cadrumo.domain.calculations.registry.authority import bundled_authority
 
 from ...._paths import REPO_ROOT
 from ...terminology_handbook import load_terminology_handbook
-from .._search_record import SearchRecordKind
 from .._sweep import SweepResult, enumerate_query_vocabulary
+from ..search_record import SearchRecordKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -123,11 +123,11 @@ def build_surfaces() -> _BuildSurfaces:
     # the concept id (for example, ``AEAT`` -> ``term-AEAT``).
     # Casilla modelos: every modelo with projected casilla records (read from
     # the same projection the resolver indexes, via the public projection API).
-    from .._casilla_projection import project_casilla_search_records
     from .._cli_projection import project_cli_search_records
     from .._concept_cards import project_concept_cards
     from .._legal_projection import project_legal_search_records
-    from .._unified_record import to_search_record
+    from ..casilla_projection import project_casilla_search_records
+    from ..unified_record import to_search_record
 
     concept_cards, _concept_stats = project_concept_cards(handbook)
     concept_targets = {to_search_record(card).target for card in concept_cards if card.is_approved}

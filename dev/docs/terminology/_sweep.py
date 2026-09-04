@@ -47,9 +47,9 @@ from ..terminology_handbook import TerminologyHandbook, load_terminology_handboo
 from ..terminology_handbook._enums import TermStatus
 from ._query_aliases import QueryAliasAuthority, load_query_alias_authority, validate_query_alias_authority
 from ._resolution import ChunkHit, GroundingSurface, TargetResolver, resolve_chunk_hits
-from ._search_record import SearchRecordKind
-from ._unified_record import SearchRecord
 from ._wrangle import STRONG_SIGNAL_SCORE_FLOOR, WrangledResult, read_clusters, wrangle
+from .search_record import SearchRecordKind
+from .unified_record import SearchRecord
 
 if TYPE_CHECKING:
     from ..pagefind_inject import SearchRecordProjection

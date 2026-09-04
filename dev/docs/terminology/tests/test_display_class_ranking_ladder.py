@@ -30,8 +30,8 @@ def test_every_display_class_carries_exactly_one_weight() -> None:
     failure: the derivation authority must never produce a class the ranking
     table cannot weigh.
     """
-    from .._search_record import ResultDisplayClass
-    from .._unified_record import display_class_base_weight
+    from ..search_record import ResultDisplayClass
+    from ..unified_record import display_class_base_weight
 
     weights = {member: display_class_base_weight(member) for member in ResultDisplayClass}
     assert set(weights) == set(ResultDisplayClass)
@@ -46,8 +46,8 @@ def test_weight_table_orders_the_d8_ladder_verbatim() -> None:
     legal provisions that ground them, then CLI records, then technical
     (api / dev) pages last.
     """
-    from .._search_record import ResultDisplayClass
-    from .._unified_record import display_class_base_weight
+    from ..search_record import ResultDisplayClass
+    from ..unified_record import display_class_base_weight
 
     ladder_high_to_low = (
         ResultDisplayClass.DOC,
@@ -66,7 +66,7 @@ def test_weight_table_orders_the_d8_ladder_verbatim() -> None:
 
 def test_ladder_covers_every_display_class_exactly_once() -> None:
     """The pinned D8 ladder enumerates every display class with no omission."""
-    from .._search_record import ResultDisplayClass
+    from ..search_record import ResultDisplayClass
 
     ladder = (
         ResultDisplayClass.DOC,
@@ -88,8 +88,8 @@ def test_legal_ranks_beneath_the_surfaces_it_grounds() -> None:
     user-documentation class put every provision above the very cards it
     grounds, so this pins the corrected position from both sides.
     """
-    from .._search_record import ResultDisplayClass
-    from .._unified_record import display_class_base_weight
+    from ..search_record import ResultDisplayClass
+    from ..unified_record import display_class_base_weight
 
     legal = display_class_base_weight(ResultDisplayClass.LEGAL)
 
@@ -102,8 +102,8 @@ def test_legal_ranks_beneath_the_surfaces_it_grounds() -> None:
 
 def test_casilla_outranks_cli_and_technical_ranks_last() -> None:
     """The two D8 amendments to the parent ladder: casilla > cli, technical last."""
-    from .._search_record import ResultDisplayClass
-    from .._unified_record import display_class_base_weight
+    from ..search_record import ResultDisplayClass
+    from ..unified_record import display_class_base_weight
 
     casilla = display_class_base_weight(ResultDisplayClass.CASILLA)
     cli = display_class_base_weight(ResultDisplayClass.CLI)
