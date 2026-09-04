@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:f978c4c7842abf7976ad43940a7975780653842bc5297df0872a981eb53bdcb1'
+body_hash: 'sha256:f5393085e177ccb8edf79556a9bd5b9d9137b32372a81202dcfe64e1904ec7c0'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-adr]]"
@@ -190,6 +190,38 @@ row whose TUI axis is non-applicable. Import, byte-compilation, Ruff, and diff
 whitespace checks pass. This subsection records resolutions and is not an open
 LOW finding.
 
+### final-candidate-retest | low | Informational: every previously open semantic predicate now rejects its original exploit
+
+The final candidate at source commit
+`d969e93109015a22aa596d23daf0a9c95eb41c88`, SHA-256
+`b8056bf55fcea17a0fc2e942d92c93b76d00dbd49f613ca03b701be37c9d299c`,
+requires a complete `LedgerLiveCensusReportV1` and non-optional evidence-subject
+observations. A one-stream report opens G0, omitting the census is a call error,
+an empty subject observation opens G0, and changed census revision or observation
+time opens G0. Every mandatory source stream is represented exactly once, with
+an explicit reviewed zero for an empty stream. CLI-owned rows without an
+`AUTHORITY` finding are rejected, accepted/current ownership drift opens G0,
+arbitrary plan owners are rejected, non-`ACCEPT` rulings open G0, and row changes
+without a matching matrix digest and attestation open G0. Inspection and retest
+also confirm the earlier role-kind-axis, global evidence uniqueness, explicit
+subject freshness, partial-backend G2, and all-row G4 corrections remain in the
+live source. This is a resolution record, not an open LOW finding.
+
+### model-copy-validation-boundary | critical | OPEN: G0 accepts nested models that the declared matrix schema rejects
+
+The bespoke `_live_census_report_errors` and `_matrix_acceptance_errors`
+functions recheck selected copied fields but do not revalidate the complete
+`LedgerCapabilityMatrixV1` object graph. Two executable counterexamples remain.
+First, copying the acceptance attestation with `reviewer=""` leaves the matrix
+digest unchanged and G0 closes, although a fresh
+`LedgerCapabilityMatrixV1.model_validate` rejects the same serialized object.
+Second, copying every row assessment to `NOT_APPLICABLE`, removing operational
+evidence, recalculating `matrix_digest`, and copying that digest into the
+attestation also closes G0. Full model validation rejects the row because it is
+content-free. Thus `model_copy` can bypass mandatory row and attestation
+validators while the gate reports an accepted frozen matrix. This is an exact
+false-closure defect at the campaign's foundational boundary.
+
 ## Recommendations
 
 1. For `denominator-completeness`, add a typed denominator census contract that
@@ -240,3 +272,15 @@ LOW finding.
     currentness/denominator defect and three HIGH authority/classification/
     attestation defects. The informational LOW retest entry records corrected
     behavior and is not an open finding.
+13. For `model-copy-validation-boundary`, validate the entire supplied matrix
+    and live census graph at the gate boundary before evaluating any predicate,
+    or replace the partial recheck helpers with one exhaustive invariant checker
+    shared by model construction and gate evaluation. A copied object that would
+    fail canonical `model_validate` must return an open gate or a typed
+    fail-closed refusal; it must never close G0. Add detector tests for nested
+    row, assessment, finding, evidence, control, authority snapshot, and
+    attestation mutations, including mutations whose digests are recomputed.
+14. Final-candidate disposition: **NOT ACCEPTED**. All previously open findings
+    are resolved in the reviewed source; one new CRITICAL model-copy validation
+    bypass remains. The two LOW final-candidate entries are informational
+    resolution records and are not open findings.
