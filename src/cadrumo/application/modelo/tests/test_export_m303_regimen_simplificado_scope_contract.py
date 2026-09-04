@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from datetime import date as _prov_date
 from decimal import Decimal
 
 import pytest
 
 from ....core.period import Period
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister, RegistroRegularizacionResult
+from ....domain.bienes_inversion.regularizacion_parameters import BienesInversionParameterProvenance
 from ....domain.deadlines.models import M303RegimeComposition
 from ....domain.prorrata_register.register import ProrrataRegister
 from ...aggregation import (
@@ -20,6 +22,17 @@ from ..export import _require_m303_regimen_simplificado_scope_matches_profile
 from ._export_test_support import _general_m303_filing_evidence, _profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+#: Provenance stamped onto directly-constructed projections in this module. A
+#: result must name the registry declaration its figures came from; these tests
+#: build results by hand rather than by projection, so they state it explicitly.
+_PROVENANCE = BienesInversionParameterProvenance(
+    modelo_id="303",
+    revision_id="2025",
+    parameter_ids=("m303-bien-inversion-ventana-anos-mueble",),
+    resolved_on=_prov_date(2025, 6, 1),
+)
 
 
 def _general_m303_filing_facts():
@@ -45,6 +58,7 @@ def _general_m303_filing_facts():
             computed_count=0,
             pending_percentage_count=0,
             sector_contributions=(),
+            parameters_provenance=_PROVENANCE,
         ),
     )
 

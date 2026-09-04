@@ -8,6 +8,7 @@ export tree into a positive authority.
 from __future__ import annotations
 
 import shutil
+from datetime import date as _prov_date
 from decimal import Decimal
 from hashlib import sha256
 from pathlib import Path
@@ -40,6 +41,7 @@ from cadrumo.core.prorrata_register import (
 )
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.result_disposition import ResultDisposition
+from cadrumo.domain.bienes_inversion.regularizacion_parameters import BienesInversionParameterProvenance
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry._supplementary_orden import compile_supplementary_ordenes
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
@@ -84,6 +86,17 @@ from .test_generated_export_trees import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+#: Provenance stamped onto directly-constructed projections in this module. A
+#: result must name the registry declaration its figures came from; these tests
+#: build results by hand rather than by projection, so they state it explicitly.
+_PROVENANCE = BienesInversionParameterProvenance(
+    modelo_id="303",
+    revision_id="2025",
+    parameter_ids=("m303-bien-inversion-ventana-anos-mueble",),
+    resolved_on=_prov_date(2025, 6, 1),
+)
 
 
 def _m303_2026_tree():
@@ -216,6 +229,7 @@ def _m303_2026_prorrata_and_differentiated_producer(*, snapshot, catalogues):
             computed_count=0,
             pending_percentage_count=0,
             sector_contributions=(),
+            parameters_provenance=_PROVENANCE,
         ),
     )
     taxpayer = m303_did._taxpayer_profile()

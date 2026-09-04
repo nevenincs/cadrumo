@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from datetime import date as _prov_date
 from decimal import Decimal
 from hashlib import sha256
 from pathlib import Path
@@ -24,6 +25,7 @@ from ....core.refund_election import RefundElection
 from ....core.resources.bundled_data import bundled_path
 from ....core.result_disposition import ResultDisposition
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister, RegistroRegularizacionResult
+from ....domain.bienes_inversion.regularizacion_parameters import BienesInversionParameterProvenance
 from ....domain.calculations.export_field_kind import CasillaFieldKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.loader import load_modelo_directory
@@ -80,6 +82,17 @@ from ..producer_snapshot import (
 from ..runtime import RegistrySchemaAccessor, _subview_from_snapshot, collection_from_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+#: Provenance stamped onto directly-constructed projections in this module. A
+#: result must name the registry declaration its figures came from; these tests
+#: build results by hand rather than by projection, so they state it explicitly.
+_PROVENANCE = BienesInversionParameterProvenance(
+    modelo_id="303",
+    revision_id="2025",
+    parameter_ids=("m303-bien-inversion-ventana-anos-mueble",),
+    resolved_on=_prov_date(2025, 6, 1),
+)
 
 _SOURCE_REF = "aeat-dr-303-2026"
 _SOURCE_SHA256 = "0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6b9b8489b"
@@ -552,6 +565,7 @@ def _m303_filing_facts(
             computed_count=0,
             pending_percentage_count=0,
             sector_contributions=(),
+            parameters_provenance=_PROVENANCE,
         ),
     )
 

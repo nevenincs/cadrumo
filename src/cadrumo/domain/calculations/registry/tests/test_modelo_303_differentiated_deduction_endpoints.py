@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from datetime import date as _prov_date
 from decimal import Decimal
 
 import pytest
@@ -35,6 +36,7 @@ from .....domain.iva.prorrata import InputClassification
 from .....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from .....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
 from .....tests.registry_snapshot import build_snapshot
+from ....bienes_inversion.bienes_inversion.regularizacion_parameters import BienesInversionParameterProvenance
 from ..corpus_catalogue import resolve_record_design_binary
 from ..errors import RegistryValidationError
 from ..ledger_iva_bindings import IvaLedgerObservation
@@ -47,6 +49,17 @@ from ..schema_input_kind import InputKind
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+#: Provenance stamped onto directly-constructed projections in this module. A
+#: result must name the registry declaration its figures came from; these tests
+#: build results by hand rather than by projection, so they state it explicitly.
+_PROVENANCE = BienesInversionParameterProvenance(
+    modelo_id="303",
+    revision_id="2025",
+    parameter_ids=("m303-bien-inversion-ventana-anos-mueble",),
+    resolved_on=_prov_date(2025, 6, 1),
+)
 
 _DESIGNS = (
     ("aeat-dr-303-2023", 2023, "2023", 228),
@@ -207,6 +220,7 @@ def test_apportioned_contributions_and_regularisation_project_once() -> None:
             BienesInversionSectorContribution(asset_id="asset-a", prorrata_sector_id="a", amount=Decimal("5")),
             BienesInversionSectorContribution(asset_id="asset-b", prorrata_sector_id="b", amount=Decimal("7")),
         ),
+        parameters_provenance=_PROVENANCE,
     )
     projection = project_m303_differentiated_deduction_rows(
         projection_refs=_projection_refs(),
@@ -383,6 +397,7 @@ def test_projector_refuses_unlinked_and_duplicate_regularisation_assets() -> Non
         sector_contributions=(
             BienesInversionSectorContribution(asset_id="asset-x", prorrata_sector_id="a", amount=Decimal("1")),
         ),
+        parameters_provenance=_PROVENANCE,
     )
     with pytest.raises(RegistryValidationError, match="no canonical asset row"):
         project_m303_differentiated_deduction_rows(
@@ -402,6 +417,7 @@ def test_projector_refuses_unlinked_and_duplicate_regularisation_assets() -> Non
             BienesInversionSectorContribution(asset_id="asset-a", prorrata_sector_id="a", amount=Decimal("1")),
             BienesInversionSectorContribution(asset_id="asset-a", prorrata_sector_id="a", amount=Decimal("1")),
         ),
+        parameters_provenance=_PROVENANCE,
     )
     with pytest.raises(RegistryValidationError, match="double-consumed"):
         project_m303_differentiated_deduction_rows(
@@ -431,6 +447,7 @@ def test_projector_refuses_regularisation_asset_sector_mismatch() -> None:
         sector_contributions=(
             BienesInversionSectorContribution(asset_id="asset-a", prorrata_sector_id="b", amount=Decimal("1")),
         ),
+        parameters_provenance=_PROVENANCE,
     )
     with pytest.raises(RegistryValidationError, match="asset and contribution sectors differ"):
         project_m303_differentiated_deduction_rows(

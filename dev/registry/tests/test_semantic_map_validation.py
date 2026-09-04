@@ -242,8 +242,12 @@ def test_receipt_bound_qualified_identity_admission_is_exact_and_not_generic_pad
 
 def test_join_qualified_identity_transform_requires_the_closed_reviewed_receipt() -> None:
     """A matching qualified suffix alone is never a join-time admission proof."""
-    authored = _casilla_token_map("588").entries[0].model_copy(
-        update={"export_field_id": "m200-2024.dp200018.f0172"},
+    authored = (
+        _casilla_token_map("588")
+        .entries[0]
+        .model_copy(
+            update={"export_field_id": "m200-2024.dp200018.f0172"},
+        )
     )
     admitted = authored.model_copy(
         update={"casilla_id": validated_casilla_id("DP200018:00588", surface="test")},

@@ -41,7 +41,7 @@ def test_the_check_flag_is_what_refuses_rather_than_the_default() -> None:
     source = inspect.getsource(main)
 
     assert '"--check"' in source
-    assert "action=\"store_true\"" in source
+    assert 'action="store_true"' in source
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true")
     assert parser.parse_args([]).check is False, "an absent flag must not read as a check"

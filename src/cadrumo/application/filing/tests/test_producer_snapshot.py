@@ -3,6 +3,7 @@
 import json
 from datetime import UTC, date, datetime
 from datetime import date as _date
+from datetime import date as _prov_date
 from decimal import Decimal
 from hashlib import sha256
 from pathlib import Path
@@ -101,6 +102,17 @@ from ..producer_snapshot import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+#: Provenance stamped onto directly-constructed projections in this module. A
+#: result must name the registry declaration its figures came from; these tests
+#: build results by hand rather than by projection, so they state it explicitly.
+_PROVENANCE = BienesInversionParameterProvenance(
+    modelo_id="303",
+    revision_id="2025",
+    parameter_ids=("m303-bien-inversion-ventana-anos-mueble",),
+    resolved_on=_prov_date(2025, 6, 1),
+)
 
 
 #: An explicit bundle. These tests exercise the surrounding wiring, not the law;
@@ -1174,6 +1186,7 @@ def test_m303_filing_facts_refuse_an_empty_regularisation_for_a_register_bien() 
         computed_count=0,
         pending_percentage_count=0,
         sector_contributions=(),
+        parameters_provenance=_PROVENANCE,
     )
 
     with pytest.raises(ValidationError, match="canonical projection of the supplied Bienes register"):
@@ -1219,6 +1232,7 @@ def test_m303_filing_facts_refuse_a_regularisation_that_omits_an_in_window_bien(
         computed_count=0,
         pending_percentage_count=1,
         sector_contributions=(),
+        parameters_provenance=_PROVENANCE,
     )
 
     with pytest.raises(ValidationError, match="canonical projection of the supplied Bienes register"):

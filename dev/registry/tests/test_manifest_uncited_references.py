@@ -74,8 +74,7 @@ def test_this_screen_and_its_sibling_report_disjoint_populations() -> None:
         for reference in item.outside
     }
     uncited = {
-        (item.modelo, item.revision, item.ref_kind, item.reference)
-        for item in uncited_screen(authority, modelo_ids)
+        (item.modelo, item.revision, item.ref_kind, item.reference) for item in uncited_screen(authority, modelo_ids)
     }
     assert cited_outside, "the sibling screen reports nothing, so this proves nothing"
     assert uncited, "this screen reports nothing, so this proves nothing"
@@ -97,10 +96,7 @@ def test_a_reference_only_a_deadline_window_cites_is_not_uncited() -> None:
     from ..analysis.manifest_uncited_references import screen_authority as uncited
 
     authority = bundled_authority()
-    reported = {
-        (item.modelo, item.revision, item.reference)
-        for item in uncited(authority, bundled_modelo_ids())
-    }
+    reported = {(item.modelo, item.revision, item.reference) for item in uncited(authority, bundled_modelo_ids())}
     checked = 0
     for modelo in bundled_modelo_ids():
         for revision_id, revision in authority.modelo(modelo).revisions.items():
