@@ -1882,6 +1882,9 @@ required_text = [
     "Uno. Las cuotas deducibles por la adquisición o importación de bienes de inversión deberán regularizarse durante los cua",
     "No obstante, cuando la utilización efectiva o entrada en funcionamiento de los bienes se inicien con posterioridad a su ",
     "Las regularizaciones indicadas en este apartado sólo se practicarán cuando, entre el porcentaje de deducción definitivo ",
+    "deberán regularizarse durante los cuatro años naturales siguientes",
+    "deberán regularizarse durante los nueve años naturales siguientes",
+    "exista una diferencia superior a diez puntos",
 ]
 
 [legal."ley-37-1992:art-108"]
@@ -1921,6 +1924,7 @@ notes = "Articulo 109 LIVA: procedimiento para practicar la regularizacion de de
 required_text = [
     "La regularización de las deducciones a que se refiere el artículo 107 de esta Ley se realizará del siguiente modo:",
     "2.º Dicho importe se restará del de la deducción efectuada en el año en que tuvo lugar la repercusión.",
+    "se dividirá por cinco o, tratándose de terrenos o edificaciones, por diez",
 ]
 
 [legal."ley-37-1992:art-110"]
