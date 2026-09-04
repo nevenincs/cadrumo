@@ -90,6 +90,8 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         self._workbench_search_service = workbench_search_service
         self._refresh_workbench_search = refresh_workbench_search
         self._account_factories = account_factories
+        self._home_refresh_refusal_code: str | None = None
+        """Why the last Home refresh was refused, or ``None`` when it succeeded."""
         self._workbench_search_refusal_code: str | None = (
             None if workbench_search_service is not None else "workbench.search.unavailable"
         )
@@ -114,6 +116,11 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         if self._workbench_search_service is None:
             raise RuntimeError("the root has no composed workbench search service")
         return self._workbench_search_service
+
+    @property
+    def home_refresh_refusal_code(self) -> str | None:
+        """Expose only a sanitized refusal code for host presentation."""
+        return self._home_refresh_refusal_code
 
     @property
     def workbench_search_refusal_code(self) -> str | None:
@@ -261,6 +268,18 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         except AccountSessionExpiredError:
             self._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED))
             return
+        except Exception:
+            # A refused refresh is an ordinary outcome, not a crash. The read
+            # door refuses when a sibling process writes the profile mid-capture,
+            # which is correct and says nothing about this session's validity --
+            # the operator keeps the Home they are already looking at and is told
+            # the refresh did not happen. The sibling search path already handles
+            # its own refusal this way; letting this one escape would end the
+            # session with a traceback over a concurrent write.
+            self._home_refresh_refusal_code = "workbench.home.refresh_unavailable"
+            self._refuse_account_action()
+            return
+        self._home_refresh_refusal_code = None
         self.query_one("#root-account", Static).update(
             projection.account.profile_label or tr("tui.root.account.default_profile")
         )
