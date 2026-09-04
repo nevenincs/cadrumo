@@ -13862,3 +13862,36 @@ inert, and neither was wrong when written - each was a reasonable guard against
 a gate reporting itself. What neither carried was a measurement of what it
 actually excluded, and both turned out to exclude something other than what
 their comments described.
+
+
+## The bigger exclusion, and why it is not the same finding
+
+File-name skips were the small case. The larger one is the directory exclusion
+several audits share - complexity, object names, semantic duplication and
+unreachable code all skip anything under a `tests` directory or named `test_*`.
+
+Measured, that is a great deal: **59% of `src/cadrumo` lines and 49% of `dev`
+lines**, 967,399 across both trees. A clean verdict from those audits describes
+the other 41% and 51%.
+
+The obvious conclusion is that the exclusion is an unstated blind spot, and it
+is wrong. `dev/audit/complexity.py` carries TWO scopes with independent
+baselines, production and tests, selected by `--tests`;
+`dev/audit/semantic_duplication.py` says "excluding test packages" in the
+docstring of the function that does it; and the justfile recipe is titled "Run
+complexity audits for production code". The scope is declared everywhere it is
+taken.
+
+So the finding dissolves on inspection, and that is worth recording as plainly as
+a defect would have been. It also sharpens what was wrong with the other two:
+those exemptions were not undeclared either - both carried a comment explaining
+themselves - but their comments described something other than what they did, one
+by a factor of forty and one entirely. A declared scope and a declared exemption
+are the same thing until somebody measures whether the declaration is true.
+
+One residue is real and small. No lane passes `--tests`, and the baseline files
+the two-scope docstring describes are gone from the tree - retired in
+`23eadb3884`, a peer's in-flight work that this campaign's own direction favours,
+since a baseline ratchet is not evidence. So the docstring now describes a file
+that does not exist. That is a consequence of work in progress rather than a
+defect to fix underneath its owner, and it is recorded here rather than acted on.

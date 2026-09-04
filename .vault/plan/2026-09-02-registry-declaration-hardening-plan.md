@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:e831dfb7f37bd770a3180d33f92abea5ad64c9e5e3447df5885da5a319f89827'
+body_hash: 'sha256:a2b1c0389b09305b9b3da2bf32b6314c241aacb662901099009dd4ea5cab2b29'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -393,7 +393,9 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S510` - Decompose the vault health total this session reported opaquely: 353 body-sections, 44 features, 27 exec-mapping and the rest belong to other features, while both features this session writes to report all checks passed; `.vault`.
 - [x] `W02.P02.S511` - Measure what the vault-citation gate does not match: its four patterns are all dotted, so seventeen bare step-prefixed names across three files pass a gate whose docstring says it exists so step identifiers do not; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W02.P02.S512` - Narrow the citation gates self-exemption from a whole-file skip to two regions located by parsing the module, shrinking the blind spot from 1365 lines to 33, with a test asserting the exemption stays under a twentieth of the file; `dev/registry/tests/test_declaration_invariant_gates.py`.
-- [ ] `W02.P02.S513` - Remove the dead self-skip from the wall-advisory threshold scan, which excluded the gates own file although its pinned names appear there only as dictionary keys the line-anchored pattern cannot match, with a planted drift in a file of that name as the proof; `dev/ci/tests/test_wall_advisory.py`.
+- [x] `W02.P02.S513` - Remove the dead self-skip from the wall-advisory threshold scan, which excluded the gates own file although its pinned names appear there only as dictionary keys the line-anchored pattern cannot match, with a planted drift in a file of that name as the proof; `dev/ci/tests/test_wall_advisory.py`.
+- [x] `W02.P02.S514` - Measure the directory exclusion the production audits share, 59 per cent of src lines and 49 per cent of dev, and establish it is a declared scope rather than a blind spot, unlike the two file-name exemptions whose comments described something other than what they did; `dev/audit`.
+- [ ] `W02.P02.S515` - Reconcile the complexity audits two-scope docstring with the tree: it describes production and tests baselines that were retired, and no lane passes --tests, so the tests scope has a runner nowhere and a baseline nowhere; `dev/audit/complexity.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
@@ -1519,3 +1521,27 @@ No instrument was built for a signal of 100% against 91.7%.
 The 60 stale translations do rank, and are the piece to act on first: all sixty are in filing-grade
 revisions and they sit in four modelos, 24 each in 100 and 322, nine in 202 and three in 369. Sixty
 rows somebody can finish, against a headline of three thousand.
+
+No gate in this tree excludes a region without a measurement of what the exclusion covers. Two did,
+and they were the only two: a sweep for a scan skipping a file by its own name finds the vault-citation
+gate and the wall-advisory threshold scan, and nothing else.
+
+The first skipped its entire 1,365-line module to protect the 33 lines that must contain example
+citations - the pattern table and the paired detector - which is a blind spot over the gate's own
+source in a gate about references hiding where nobody looks. The exemption is now those two regions,
+located by parsing the module rather than by line number, so an edit above them cannot slide it onto
+innocent code, and a region the parse cannot find is reported rather than assumed exempt.
+
+The second was inert. Its pinned threshold names appear in its own file only as dictionary keys,
+indented inside a literal, against a pattern anchored at line start - so the file never matched its own
+scan, and the same twelve declarations are read with the skip and without it. It is removed.
+
+What satisfies the criterion is not that the exemptions are small. It is that each is now proven: the
+narrowed one by a test asserting it stays under a twentieth of its module, the removed one by a planted
+drift in a file bearing the scanner's own name. Both proofs fail if a name-based exemption returns.
+
+The narrowing paid for itself immediately and that is the evidence worth keeping. Three citations were
+caught in the newly-scanned region within seconds of it being scanned, and all three were mine: a
+helper matching `ast.Assign` where the pattern table is an `AnnAssign`, a comment naming the literal it
+exempts, and a detector-teeth fixture written outside the exempted regions. The version that skipped
+the file would have accepted all three in silence.
