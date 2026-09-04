@@ -469,7 +469,7 @@ class ModeloSociedadesConformanceVectorBuilder:
             modelo=modelo_id,
             period=evidence.period,
             profile=ModeloOperatorProfile(tax_id=_CONFORMANCE_SUBJECT_TAX_ID, display_name=_CONFORMANCE_SUBJECT_NAME),
-            inputs=load_pinned_conformance_inputs(self.pinned_path),
+            inputs=load_pinned_conformance_inputs(load_pinned_conformance_document(self.pinned_path)),
             schema_provider=schema_provider,
         )
         # The render contract requires an APPROVED draft, so the vector runs the
