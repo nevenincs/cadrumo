@@ -92,7 +92,7 @@ from pathlib import Path
 from typing import Final
 
 from .._paths import UTF_8
-from ..sanitizer import ResidualKind, checksum_valid_spans
+from ..sanitizer.residual_identity import ResidualKind, checksum_valid_spans
 
 _UTF_8: Final[str] = UTF_8
 
