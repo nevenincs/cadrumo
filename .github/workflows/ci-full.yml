@@ -290,6 +290,29 @@ jobs:
         # site instead of living only in this workflow line.
         run: just test-channel-artifacts
 
+      - name: Packaging serial contracts (distribution evidence, installed oracles)
+        # The `integration and serial` half of `dev/packaging/tests`. Nothing on
+        # CI reached it: the per-push lanes scope to dev/ paths AND exclude
+        # `serial`, the pathless invocations inherit testpaths that cannot reach
+        # packaging/, and `packaging-smoke` runs the campaign driver's smoke
+        # modules rather than pytest. `packaging-smoke-serial` was therefore a
+        # declared lane no workflow invoked, which
+        # `dev/tests/test_lane_reachability.py` reports as CI-unreachable.
+        #
+        # Sized into this lane rather than per-push for the same reason the
+        # channel-artifact step above is: these build a real cohort, install real
+        # wheels into real virtualenvs, and cost minutes of filesystem work the
+        # per-push budget cannot absorb. Routed through the recipe so the
+        # path/marker selection keeps one declaration site.
+        #
+        # NON-BLOCKING while `dev/packaging/tests/test_distribution_evidence_emit.py`
+        # carries 21 failures against contracts that no longer exist: the cohort
+        # has no `cadrumo-harness-wheel` and no `mcpb` artifact, and the readiness
+        # authority has no `claude-*` rows. Those are the module's own drift, not
+        # this lane's. FLIP `continue-on-error` OFF once they close.
+        run: just packaging-smoke-serial
+        continue-on-error: true
+
       - name: Documentation conformance
         # The docs-marked tests (nitpicky warnings-as-errors Sphinx build,
         # module-to-stub correspondence, and CLI reference drift/conformance)
