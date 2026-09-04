@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:ebc77a253257c0bd7929648bcb4d284a6a55ce53797bcafa6edbc6f09c7c8d8d'
+body_hash: 'sha256:18fb5f73ad8b3cb0e3713da83ea42c205061f53fd167215d533739b5a232bab5'
 ---
 
 # `reachability-burndown` plan
@@ -40,7 +40,8 @@ Relocate code whose only callers prove it belongs elsewhere, smallest blast radi
 
 Move modules whose only callers are dev/ beside the consumer that drives them.
 
-- [ ] `W02.P02.S04` - Relocate dev-only harness modules beside their dev consumers and shrink the ratchet by the entries resolved; `dev`.
+- [x] `W02.P02.S04` - Relocate dev-only harness modules beside their dev consumers and shrink the ratchet by the entries resolved; `dev`.
+- [ ] `W02.P02.S15` - Record the design-time-authority modules as intentional in the module ratchet with their conformance-gate reader named, rather than relocating product declarations into dev; `dev/quality`.
 
 ### Phase `W02.P03` - relocate test-only support
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:084cb5b9d1d371d18157321672f33ce7c1938c1e37a7a582a599243b9ac30de7'
+body_hash: 'sha256:dece18057e437bf756dce060526e10ec5b2fea83402deef5fd613f4297a34af1'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -14774,3 +14774,41 @@ The residue is a marker decision belonging to that campaign - these ten need a
 declared precondition, not a composition - and it is recorded rather than
 guessed at from here. What is not in doubt is that the relocation left the
 composition behind in two directories, and both are now attached to it.
+
+
+## The composition gap swept, and a writer that could actually be tested
+
+Two directories had lost the session-autouse runtime composition, and the
+obvious question is how many more. Swept: ten dev test directories use the
+shipped `cadrumo.tests` helpers, and only `dev/agent_eval/tests` and
+`dev/ci/tests` were failing for want of the composition. Both are now attached
+to it, and the class is closed rather than left to be tripped over again.
+
+The four remaining setup errors in that sweep are a different and well-behaved
+thing: `dev/deploy/tests` refuses with `no built documentation HTML at
+docs/_build/html; this preflight reads a real artefact, so it needs a real
+build to read`. A precondition stated in its own message is not a defect, and
+it is exactly what the composition errors were not.
+
+Then a fix from the ranked list. `dev/audit/size_budget.py` writes to the tree
+and no test reached it, and unlike the two codemods in `dev/quality` its writer
+TAKES its destination - so the write is exercised on a constructed file rather
+than reasoned about. That difference is worth naming, because it is the whole
+reason two modules could only be tested for their refusals and this one can be
+tested for its behaviour.
+
+Eight tests hold it. The reader must stay empty whatever path it is handed,
+since the committed limit table was retired and a reader that quietly resumed
+returning ceilings would restore a ratchet this project removed. The written
+document is sorted JSON with a final newline, because a generated file is read
+as a diff. The scanned counts sit beside the entry counts, so a small tree and
+a scan that stopped early stay distinguishable.
+
+And the notes rule, which is the one that could lose something irrecoverable:
+prose keyed to a surviving module or callable is carried forward verbatim, and
+prose whose subject is gone is dropped. Both key shapes are tested, because a
+rule that kept only path-keyed notes would silently discard every note about a
+function - the half of the table with the finer keys and the shorter prose.
+
+`module_test_reach` is now **36 unreached, 6 writing**, from 42 and 16 when the
+report was built.

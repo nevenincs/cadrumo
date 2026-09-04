@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:415b9278cf09c3c8ba1b2b4aa4dd5f69bf7d3511b54ac1b4a55621fe5ddfd0bc'
+body_hash: 'sha256:ae6820cca43fdf7520253529aae8687050c90dd4fa92eac4685e52eb61e92e23'
 related: []
 ---
 
@@ -91,8 +91,13 @@ Every finding resolves into exactly one of these, and the class determines the r
 
 - **Test support shipped in the wheel.** Reached only by tests, and its purpose is to
   serve them. Move it under `src/cadrumo/tests/`, which the wheel excludes.
-- **Harness code.** Reached only by `dev`. Move it beside the `dev/` consumer that drives
-  it.
+- **Harness code.** Written to serve the harness -- a fixture builder, a scratch driver.
+  Move it beside the `dev/` consumer that drives it.
+- **Design-time authority.** A product declaration that constrains other declarations and
+  deliberately has no runtime caller. Its only reader being a conformance gate is the
+  point, not a defect: that is how a locked design is enforced. Classify `[[intentional]]`
+  naming the gate that reads it; never relocate into `dev/`, or the product's own design
+  leaves the product.
 - **Superseded capability.** A reachable module already discharges the responsibility.
   Delete it with its tests; semantic search is what establishes this, not the name.
 - **Deliberately staged capability.** Built ahead of a dependency that has not landed, and
