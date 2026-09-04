@@ -368,7 +368,16 @@ class SourceActionCard(Vertical):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(self._descriptor.title, classes="cadrumo-source-card-title", markup=False)
+        # The card title IS this group's heading, so it takes the shared rhythm
+        # rather than a private one: the section gap above separates each source
+        # from the previous card's action button, which they were running
+        # straight into, and the stack gap below binds the title to its own
+        # description.
+        yield Static(
+            self._descriptor.title,
+            classes="cadrumo-source-card-title cadrumo-heading",
+            markup=False,
+        )
         yield Static(self._descriptor.description, classes="cadrumo-source-card-description", markup=False)
         requirement = self._descriptor.credential_requirement
         if requirement is not None:
