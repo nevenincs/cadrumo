@@ -15,6 +15,11 @@ period_code = "0A"
 # separate burden and is never claimed here. Every id below is a binding or
 # relation the revision itself declares as calculation-consumed.
 [inputs.decimal]
+# Casilla 00501 is the resultado de la cuenta de perdidas y ganancias: a
+# required manual input and the base-determination starting point. It carries
+# a synthetic NON-ZERO magnitude deliberately, so the cuota chain is actually
+# exercised; a zero here would render a degenerate base and prove far less.
+"00501" = "100000"
 "modelo-200-2024-profile-new-entity-flag" = "0"
 "modelo-200-2024-profile-incn-prior-12-months" = "0"
 "modelo-200-2024-profile-tributacion-estado-porcentaje" = "100"
