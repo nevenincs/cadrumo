@@ -609,10 +609,10 @@ def _acquire_all(
 
     Two distinct repetitions are removed here. Within one build the runtimes
     overwhelmingly select the SAME universal wheels, so a serial pass over
-    ``plans`` fetched identical bytes up to three times; :func:`
-    grouped_wheel_requests` collapses that to one fetch plus local copies
-    BEFORE anything is submitted. Deduplicating at submission rather than
-    leaving it to the cache is what makes the collapse real: three workers
+    ``plans`` fetched identical bytes up to three times.
+    :func:`grouped_wheel_requests` collapses that to one fetch plus local
+    copies BEFORE anything is submitted. Deduplicating at submission rather
+    than leaving it to the cache is what makes the collapse real: three workers
     holding one digest all miss the empty cache together, so each of them
     downloads, and their stores then race for one entry.
 
