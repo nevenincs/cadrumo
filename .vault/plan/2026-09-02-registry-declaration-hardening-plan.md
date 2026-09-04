@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:b4cf4086d6881d2cfde90859c233dd43fde2f1a43504a94330a4bf3b3e0d287a'
+body_hash: 'sha256:8708986e80f64206786ac370bf5aacfac121ba42ed6306742c389a72d6f06583'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -421,6 +421,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S538` - Decline a failure correlator after measuring: one line in a 37-failure registry run carries a modelo coordinate, since a count assertion names no member and the repository takes every run with a short traceback, so the signal lives in typed findings rather than failure text; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W02.P02.S539` - Measure cross-package finding correlation and find it empty: four registry conditions carry a casilla once the census is excluded and they share none with the locale drift screen, because neither instrument behind the m200 connection is an enrolled screen; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [ ] `W02.P02.S540` - Decide whether the orphaned-declaration worklist and the locale resolution check should be enrolled as screens, since both produce typed findings that no correlator can reach while one is an unenrolled analysis module and the other lives inside a test assertion; `dev/registry/analysis/screens.py,dev/locales`.
+- [x] `W02.P02.S541` - Assert the one fact the conformance manager computes for itself, its locale coverage axis, whose required-per-locale and translated-across-locales fields read as a fraction exceeding one and were reconciled only by two untested derived properties; `dev/registry/conformance/tests/test_manager_locale_coverage.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

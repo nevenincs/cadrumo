@@ -14673,3 +14673,40 @@ as the seventh: not because the idea is wrong but because the population it
 needs is not in the place it would look. The actionable residue is enrolment
 rather than instrumentation, and enrolment of another campaign's modules is not
 this plan's to do.
+
+
+## The one fact the conformance manager computes for itself, now asserted
+
+`dev/registry/conformance/manager.py` is 1,468 lines and no test reached it. It
+renders governance rows from facts the shipped composer already joined, with one
+exception it states plainly: locale coverage is the axis it adds, because the
+composer does not reach into the locale catalogue.
+
+That axis carries an asymmetry its own docstring warns about, and nothing
+asserted it. `labels_required_per_locale` counts the required leaves for ONE
+locale, since every audited locale shares the key set;
+`labels_translated` is summed ACROSS locales. Read as a fraction they exceed
+one - 400 translated against 100 required is complete coverage of four locales,
+not four hundred per cent of one - and the two derived properties are the only
+place the difference is reconciled.
+
+Eight tests now hold it: the multiplication, the shortfall, the degenerate
+single-locale case where the asymmetry vanishes, and the trap itself, asserted
+as the property rather than described in prose. Two boundaries came with it. An
+empty audit requires nothing rather than reading as full coverage, which is the
+absence-versus-proven-zero distinction this campaign keeps separating, and the
+caller can tell which by the empty locale tuple. And stale keys are carried apart
+from both totals, because a leaf no registry key claims is not a translation
+either missing or present, and folding it either way would make a catalogue look
+better or worse for holding text nothing asks for.
+
+The reach report is now **39 unreached**, and the module chosen was again the
+instrument's pick rather than mine: of the eight untested modules left in this
+plan's own subject, seven are `__main__` entry points or CLIs and this was the
+only library among them.
+
+Two instruments were declined this iteration before this was built - a failure
+correlator and a cross-package finding correlator, both measured empty - and the
+third thing tried was work rather than tooling. Three consecutive declinations
+would have been a signal about the campaign's remaining tooling headroom rather
+than about the ideas.
