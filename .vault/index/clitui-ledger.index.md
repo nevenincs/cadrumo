@@ -6,9 +6,10 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:c903b66e32ccdbd49a5e38058d7cfb82414d963c2e2845c16dc41fdccd2baebc'
+body_hash: 'sha256:ce2b8b14acb2db59a3025f8f35e1891bd2fbef35f5d90c53b4d5f9dbeb66a613'
 related:
   - '[[2026-09-04-clitui-ledger-W01-P01-S01]]'
+  - '[[2026-09-04-clitui-ledger-W01-P01-S02]]'
   - '[[2026-09-04-clitui-ledger-adr]]'
   - '[[2026-09-04-clitui-ledger-plan]]'
   - '[[2026-09-04-clitui-ledger-reference]]'
@@ -33,6 +34,7 @@ Auto-generated index of all documents tagged with `#clitui-ledger`.
 ### exec
 
 - `2026-09-04-clitui-ledger-W01-P01-S01` - Define stable capability identities, axes, gap classes, applicability, evidence coordinates, and gate predicates
+- `2026-09-04-clitui-ledger-W01-P01-S02` - Test identifier stability, denominator completeness, legal state transitions, evidence validation, and closed-gate reopening
 
 ### plan
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:da8980aa1fd0b952ebb0fed26d673a76d0fd7b9176db785109cad7ed91d8a395'
+body_hash: 'sha256:c8155d77d6db2814bf78d8a1f3f18ace2fe48fd50a9303629abc6019b90b1e64'
 step_id: 'S408'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -59,3 +59,31 @@ in both parametrisations. It was confirmed failing against a HEAD copy of the
 module earlier in this campaign, passed once in an intervening run, and is
 failing again; this change touches only local-source refusals and that test
 builds its own all-AVAILABLE observations.
+
+CORRECTION to the next-slice estimate. This record, and the report that
+followed it, called composing `list_documents` into the reader the one
+remaining mechanical item. It is not mechanical, and the shape is worth
+recording so the estimate is not made a third time.
+
+`NotificationDocumentService` cannot be what the door composes: its constructor
+takes six ports including a `document_fetcher`, and a read-only pre-pull
+generation door must not acquire network capability to count local records.
+`list_documents` in fact needs only `repository_factory(bucket_id).list_snapshots()`,
+so the door needs the REPOSITORY, which matches how it takes every other
+dependency.
+
+That repository is not composable from here today. Its construction is roughly
+eighteen lines of adapter configuration -- namespace definition, object key,
+two error factories, domain label -- and it lives inside
+`entrypoints/cli/_app_live_notifications_cli.py`. Duplicating it in the TUI
+launcher would create a second definition of the same thing, which
+`aeat-architecture-boundaries` forbids; the correct move is to promote it to a
+canonical public module and have both entrypoints import it.
+
+So the work is: promote the factory, inject it as a narrow reader callable
+matching `account_session_reader`'s existing shape, thread the count through
+the reader, extend the capture-coherence guard to cover the new read, and gate
+all of it. That is an architecture change touching a CLI entrypoint another
+writer is actively committing in, not a call added to an existing composition.
+Deliberately not started rather than begun and left half-applied, which would
+leave the coherence guard inconsistent.
