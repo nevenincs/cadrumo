@@ -295,7 +295,7 @@ def test_exonerado_numeric_payload_refuses_before_target_while_atomic_unit_is_in
     """An incomplete M303 producer snapshot fails before an artifact can be emitted."""
     output = tmp_path / "modelo-303-exonerado.txt"
 
-    with pytest.raises(FilingProducerSnapshotError, match="modelo 303 requires complete M303FilingFactSet"):
+    with pytest.raises(FilingProducerSnapshotError, match="modelo 303 requires complete M303FilingFacts"):
         build_filing_producer_snapshot(
             modelo=Modelo.M303,
             taxpayer_tax_id="12345678Z",
