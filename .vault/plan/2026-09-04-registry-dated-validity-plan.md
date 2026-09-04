@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-registry-dated-validity-regulatory-constant-placement-sweep-audit]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:56f950e239296a67a14100c42b51dfb0282103f456cef74184cc6652e9029637'
+body_hash: 'sha256:926cc8300e8a86a9906982dd110614cbeabc19144c8dc5c35e208160e335d1c3'
 ---
 
 <!-- RETIRED: S01 -->
@@ -25,7 +25,7 @@ body_hash: 'sha256:56f950e239296a67a14100c42b51dfb0282103f456cef74184cc6652e9029
 Adjudication rejected adding a superseded-reach field to the legal reference: a repealed provision cannot state which later revisions may cite it, so the assertion is unverifiable and its correct value would change whenever a modelo gains a revision. The mis-statement is in the CHECK. Apply the second axis the accepted evidence-window ADR already ships for deadline windows to the parameter carrier, gated on containment, a closed value window, and carrier exclusivity so the gate keeps biting.
 
 - [x] `P01.S02` - Map every parameter-carried legal reference to the dated-value windows that parameter declares, as the legal-side twin of the shipped deadline-window source spans, and lift parameters out of the flat record walk behind an include_parameters keyword so carrier exclusivity can be tested; `src/cadrumo/domain/calculations/registry/_snapshot_internals.py`.
-- [ ] `P01.S03` - Admit a substantive-law citation disjoint from the revision window only when its carrying parameter declares a value whose CLOSED window is CONTAINED in the governed span, the reference is carried exclusively by parameters, and the value's axis is not submission_date; prove by detector test that an open-ended window, a non-contained window, a non-exclusive carrier and a current-era value grounded in repealed wording are each still refused; `src/cadrumo/domain/calculations/registry/_snapshot_internals.py, src/cadrumo/domain/calculations/registry/tests/`.
+- [x] `P01.S03` - Admit a substantive-law citation disjoint from the revision window only when its carrying parameter declares a value whose CLOSED window is CONTAINED in the governed span, the reference is carried exclusively by parameters, and the value's axis is not submission_date; prove by detector test that an open-ended window, a non-contained window, a non-exclusive carrier and a current-era value grounded in repealed wording are each still refused; `src/cadrumo/domain/calculations/registry/_snapshot_internals.py, src/cadrumo/domain/calculations/registry/tests/`.
 
 ### Phase `P02` - operator as registry data and single-axis parameters
 

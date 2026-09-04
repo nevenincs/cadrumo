@@ -27,6 +27,7 @@ related:
 - `M` `src/cadrumo/entrypoints/tui/declarations/overview.py`
 - `M` `src/cadrumo/entrypoints/tui/components/widgets.py`
 - `M` `src/cadrumo/entrypoints/tui/components/tests/test_component_boundary.py`
+- `M` `src/cadrumo/entrypoints/tui/devtools/tests/test_workbench_fixtures.py`
 - `M` `src/cadrumo/entrypoints/tui/components/tests/test_widgets.py`
 - `M` `src/cadrumo/entrypoints/tui/ledger/entries.py`
 - `M` `src/cadrumo/entrypoints/tui/tests/test_workbench_responsive.py`
@@ -150,3 +151,24 @@ the whole TUI package for a subscripted expected-type on `query`, `query_one`
 and `get_child_by_type`. Teeth proven by reintroducing the exact refactor at one
 site: the gate names the file, the line and the call. 113 passed across the
 ledger and responsive suites afterwards.
+
+Sweeping the devtools suite after the density change turned three fixture
+geometry gates red, and the cause was a latent flaw in the gate rather than in
+the change. `_visible_tables` returned EVERY table on screen, hidden ones
+included. A screen hides a table whose zone is empty; the widget is then
+`display: none` at size 0x0, and Textual still derives a scroll extent from its
+cell padding, so it reports horizontal overflow while painting nothing. The
+assertion was testing a widget that is not on screen.
+
+It went unnoticed only because Home's three lists carried `cell_padding=0`,
+and it surfaced the moment density became one shared token -- the accident that
+hid it was exactly the inconsistency this step removed. Measured across every
+fixture at every supported width before touching the helper: 45 HIDDEN tables
+report an overflow and NO DISPLAYED table does, so nothing the operator can see
+regressed. The helper now honours its name.
+
+Narrowing a gate to fix your own red is how gates rot, so this one was
+re-proven afterwards: removing the responsive column budget from the Ledger
+entries screen makes a VISIBLE table overflow and the narrowed gate fails at
+all three widths, naming the fixture. Restored by copy, and the restore
+verified by grep before continuing rather than assumed.
