@@ -5,16 +5,11 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:56dc656950fb782f8f66bd4a5ea0da0903bf5b5c6308b539152e07602b1a47f7'
+body_hash: 'sha256:ac4b27a4657085ac67c19813864bb48804c20b0a4dfe9f39adbdea6a4925340d'
 step_id: 'S418'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Let the command palette refuse instead of raising, and give the refusal code a rendering path. INDEPENDENT REVIEW, REPRODUCED 2026-09-04: the search provider dereferences the workbench search service unconditionally and the root raises when it is None -- but None is the DESIGNED refusal state, set alongside workbench_search_refusal_code, and it is the first-run state for any profile without a declared NIF. Opening the palette in that state raises RuntimeError. The refusal code has NO production consumer anywhere in src: it is written by the root and read only by two tests, so the operator is never told why search is unavailable. Return no hits and surface the code.
 

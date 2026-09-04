@@ -5,16 +5,11 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:614b31a8afa9ac38ed2e5112a3a6cda4fd4ceda05b4e3061e00897ff7cd3cd7c'
+body_hash: 'sha256:6503a424c2bb341a2d7ec325a210129a48e2b78e8db6c2407dd6f93430cbe143'
 step_id: 'S419'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Catch the capture-coherence refusal on the Home refresh path. INDEPENDENT REVIEW 2026-09-04: the guard raises RuntimeError when a concurrent write changes the profile mid-capture, which is correct, but that exception propagates through the Home refresh door and _show_home catches only AccountSessionExpiredError -- so a sibling aeat CLI process writing while the TUI returns to Home terminates the session with a traceback instead of refusing the refresh. The identical failure is handled correctly one method away in _rebuild_workbench_search, so this is an asymmetry rather than a policy.
 

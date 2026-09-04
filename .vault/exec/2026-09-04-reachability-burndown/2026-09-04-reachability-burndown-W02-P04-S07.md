@@ -5,16 +5,11 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:2621324ef8780403571163297eadca5f6dbdba33c7b8d9afdf4bacaf8df00ff6'
+body_hash: 'sha256:1932e114cbd14f8e0747ec80a393321c5530895c05cb46f99890a5a5447db26b'
 step_id: 'S07'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Adjudicate the staged-capability modules against their authorising decisions and classify or wire each
 

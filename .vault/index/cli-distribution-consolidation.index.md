@@ -6,7 +6,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:0b522a02dc39d893f06516e474ae2703bb752478f4861925f4e45f5a216795d2'
+body_hash: 'sha256:cc5aa7715207471d808c2fc2d07445804a552fa2dcd3c1f2b491d86a8b6262e5'
 related:
   - '[[2026-09-02-cli-distribution-consolidation-P01-S01]]'
   - '[[2026-09-02-cli-distribution-consolidation-P01-S02]]'
@@ -50,10 +50,14 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-P11-S42]]'
   - '[[2026-09-02-cli-distribution-consolidation-P11-S43]]'
   - '[[2026-09-02-cli-distribution-consolidation-P11-S44]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P11-S45]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P11-S46]]'
   - '[[2026-09-02-cli-distribution-consolidation-adr]]'
   - '[[2026-09-02-cli-distribution-consolidation-plan]]'
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
   - '[[2026-09-04-cli-distribution-consolidation-cohort-build-cost-audit]]'
+  - '[[2026-09-04-cli-distribution-consolidation-surface-pruning-audit]]'
+  - '[[2026-09-04-cli-distribution-consolidation-test-suite-cost-audit]]'
 ---
 
 # `cli-distribution-consolidation` feature index
@@ -69,6 +73,8 @@ Auto-generated index of all documents tagged with `#cli-distribution-consolidati
 ### audit
 
 - `2026-09-04-cli-distribution-consolidation-cohort-build-cost-audit` - `cli-distribution-consolidation` audit: `cohort build cost`
+- `2026-09-04-cli-distribution-consolidation-surface-pruning-audit` - `cli-distribution-consolidation` audit: `surface pruning`
+- `2026-09-04-cli-distribution-consolidation-test-suite-cost-audit` - `cli-distribution-consolidation` audit: `test suite cost`
 
 ### exec
 
@@ -114,6 +120,8 @@ Auto-generated index of all documents tagged with `#cli-distribution-consolidati
 - `2026-09-02-cli-distribution-consolidation-P11-S43` - Reduce the recipe surface to the commands the adopted path uses
 - `2026-09-02-cli-distribution-consolidation-P11-S44` - Reconcile the packaging workflow family against the sibling shape
 - `2026-09-02-cli-distribution-consolidation-P10-S40` - Remove the evidence leak sweep left without a caller
+- `2026-09-02-cli-distribution-consolidation-P11-S45` - Document the release-candidate evidence campaign the runbook omits
+- `2026-09-02-cli-distribution-consolidation-P11-S46` - Restate the workflow names three surfaces still cite from the retired release path
 
 ### plan
 

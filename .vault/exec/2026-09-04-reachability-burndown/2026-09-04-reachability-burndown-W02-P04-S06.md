@@ -5,16 +5,11 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:692867daa8b0ef9479bc7ad54bb9a3940fdf559dfc433b3113c0cfbff083d204'
+body_hash: 'sha256:e9d1a74e6a47c9559f8b83b7d6503c507d0eaceff22cf830c09f3227f5b25ea0'
 step_id: 'S06'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Resolve the operator_surface CRUD catalogue cluster against its conformance-test consumer
 

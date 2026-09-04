@@ -5,16 +5,11 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:9acb4b7d31736d701127628dced28b237ed937556b88582c7df53ead3cb5fdae'
+body_hash: 'sha256:b84c9464e034679d0283b30884bb3d3817dfcc7e13302962c0dc06d7235d1f42'
 step_id: 'S05'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Relocate test-only support into the wheel-excluded test tree and prove the distributed artifact no longer carries it
 
