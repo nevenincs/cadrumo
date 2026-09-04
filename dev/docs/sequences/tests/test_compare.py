@@ -37,6 +37,7 @@ from .. import (
     assert_transcript_matches_golden,
     build_golden,
     check_transcript,
+    compare,
     compare_transcript_to_golden,
     evaluate_expectations,
     execute_sequence,
@@ -47,7 +48,6 @@ from .. import (
     read_golden,
     write_golden,
 )
-from .. import compare
 from ..errors import SequenceGoldenError, SequenceGoldenMismatchError
 from ..golden_store import _repo_root
 

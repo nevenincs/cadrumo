@@ -35,9 +35,9 @@ from .. import (
     execute_page_sequences,
     execute_sequence,
     parse_sequence,
+    runner,
     sequence_sandbox,
 )
-from .. import runner
 from ..errors import SequenceExecutionError
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
