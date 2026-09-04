@@ -725,6 +725,162 @@ _AEAT_INTERFACE_BY_SURFACE = {
 }
 
 
+
+_LEDGER_TX_A: Final[str] = "a" * 64
+_LEDGER_TX_B: Final[str] = "b" * 64
+
+_LEDGER_AREA_COUNTS: Final[dict[str, int]] = {
+    "overview": 3,
+    "entries": 2,
+    "review": 2,
+    "import": 0,
+    "classification": 2,
+    "evidence": 0,
+    "reconciliation": 0,
+}
+"""Item counts per area for the populated reading, keyed by area value."""
+
+
+def _ledger_area_state(
+    area: object,
+    scenario: WorkbenchFixtureScenario,
+) -> object:
+    """Describe one Ledger area under the shared scenario vocabulary."""
+    from ....application.ledger.workspace import (
+        LedgerWorkspaceAreaStateV1,
+        LedgerWorkspaceAvailability,
+        LedgerWorkspaceSource,
+        LedgerWorkspaceStatus,
+    )
+
+    populated = scenario in {WorkbenchFixtureScenario.READY, WorkbenchFixtureScenario.STALE}
+    availability = {
+        WorkbenchFixtureScenario.READY: LedgerWorkspaceAvailability.AVAILABLE,
+        WorkbenchFixtureScenario.EMPTY: LedgerWorkspaceAvailability.AVAILABLE,
+        WorkbenchFixtureScenario.STALE: LedgerWorkspaceAvailability.STALE,
+        WorkbenchFixtureScenario.UNAVAILABLE: LedgerWorkspaceAvailability.UNAVAILABLE,
+    }[scenario]
+    reason = {
+        WorkbenchFixtureScenario.STALE: "ledger.snapshot_stale",
+        WorkbenchFixtureScenario.UNAVAILABLE: "ledger.source_unavailable",
+    }.get(scenario)
+    deferred = area.value in {"import", "evidence", "reconciliation"}
+    return LedgerWorkspaceAreaStateV1(
+        area=area,
+        sources=(LedgerWorkspaceSource.LOCAL_LEDGER,),
+        availability=availability,
+        reason_code=reason,
+        status=(
+            LedgerWorkspaceStatus.UNMEASURED
+            if deferred or not populated
+            else LedgerWorkspaceStatus.NEEDS_ATTENTION
+        ),
+        item_count=_LEDGER_AREA_COUNTS[area.value] if populated else 0,
+    )
+
+
+def _ledger_projection(scenario: WorkbenchFixtureScenario) -> object:
+    """Build one immutable, non-sensitive Ledger workspace reading.
+
+    The refs carry synthetic transaction identities and no monetary value,
+    counterparty, or evidence payload: a review surface must be legible
+    without ever holding a real operator's ledger.
+    """
+    from ....application.ledger.workspace import (
+        LedgerWorkspaceArea,
+        LedgerWorkspaceEntryRefV1,
+        LedgerWorkspaceProjectionV1,
+    )
+
+    populated = scenario in {WorkbenchFixtureScenario.READY, WorkbenchFixtureScenario.STALE}
+    entries = (
+        (
+            LedgerWorkspaceEntryRefV1(transaction_id=_LEDGER_TX_A, review_status="pending"),
+            LedgerWorkspaceEntryRefV1(transaction_id=_LEDGER_TX_B, review_status="reviewed"),
+        )
+        if populated
+        else ()
+    )
+    return LedgerWorkspaceProjectionV1(
+        bucket_id=_BUCKET,
+        areas=tuple(_ledger_area_state(area, scenario) for area in LedgerWorkspaceArea),
+        entries=entries,
+        review_transaction_ids=tuple(entry.transaction_id for entry in entries),
+        invoice_reconciliations=(),
+        link_inconsistencies=(),
+        affected_declarations=(),
+    )
+
+
+def _ledger_controller(scenario: WorkbenchFixtureScenario) -> object:
+    from ....application.operator_actions.catalogue import lookup_action
+    from ....application.operator_actions.models import ActionReference
+    from ..ledger.controller import LedgerWorkspaceController
+
+    return LedgerWorkspaceController(
+        TuiScreenContextV1(destination="workbench.ledger"),
+        _ledger_projection(scenario),
+        review_action=ActionReference(action_id=lookup_action("operator.ledger.review").action_id),
+    )
+
+
+def _ledger_app(surface_id: str, scenario: WorkbenchFixtureScenario) -> App[Any]:
+    """Open one Ledger area the way its own route resolves it.
+
+    An UNAVAILABLE area resolves to the refusal screen rather than the area
+    body, which is the product's real behaviour; the area screens are still
+    reachable in that state by constructing them directly, so a reviewer can
+    see both what the refusal says and what the body would have shown.
+    """
+    from ..ledger.routes import resolve_ledger_screen
+
+    controller = _ledger_controller(scenario)
+    if surface_id == "ledger-unavailable":
+        refused = _ledger_controller(WorkbenchFixtureScenario.UNAVAILABLE)
+        area = _LEDGER_ROUTES[0][2]
+        return _host(resolve_ledger_screen(refused, refused.route_target(area)))
+    screen_type = next(route[1] for route in _LEDGER_ROUTES if route[0] == surface_id)
+    if scenario is WorkbenchFixtureScenario.UNAVAILABLE:
+        return _host(screen_type(controller))
+    area = next(route[2] for route in _LEDGER_ROUTES if route[0] == surface_id)
+    return _host(resolve_ledger_screen(controller, controller.route_target(area)))
+
+
+def _ledger_routes() -> tuple[tuple[str, Any, Any], ...]:
+    from ....application.ledger.workspace import LedgerWorkspaceArea
+    from ..ledger.classification import LedgerClassificationScreen
+    from ..ledger.entries import LedgerEntriesScreen
+    from ..ledger.evidence import LedgerEvidenceScreen
+    from ..ledger.import_flow import LedgerImportScreen
+    from ..ledger.overview import LedgerOverviewScreen
+    from ..ledger.reconciliation import LedgerReconciliationScreen
+    from ..ledger.review import LedgerReviewScreen
+
+    return (
+        ("ledger-overview", LedgerOverviewScreen, LedgerWorkspaceArea.OVERVIEW),
+        ("ledger-entries", LedgerEntriesScreen, LedgerWorkspaceArea.ENTRIES),
+        ("ledger-review", LedgerReviewScreen, LedgerWorkspaceArea.REVIEW),
+        ("ledger-import", LedgerImportScreen, LedgerWorkspaceArea.IMPORT),
+        ("ledger-classification", LedgerClassificationScreen, LedgerWorkspaceArea.CLASSIFICATION),
+        ("ledger-evidence", LedgerEvidenceScreen, LedgerWorkspaceArea.EVIDENCE),
+        ("ledger-reconciliation", LedgerReconciliationScreen, LedgerWorkspaceArea.RECONCILIATION),
+    )
+
+
+_LEDGER_ROUTES: Final[tuple[tuple[str, Any, Any], ...]] = _ledger_routes()
+
+_LEDGER_INTERFACE_BY_SURFACE: Final[dict[str, tuple[str, ...]]] = {
+    "ledger-overview": ("cadrumo.entrypoints.tui.ledger.overview.LedgerOverviewScreen",),
+    "ledger-entries": ("cadrumo.entrypoints.tui.ledger.entries.LedgerEntriesScreen",),
+    "ledger-review": ("cadrumo.entrypoints.tui.ledger.review.LedgerReviewScreen",),
+    "ledger-import": ("cadrumo.entrypoints.tui.ledger.import_flow.LedgerImportScreen",),
+    "ledger-classification": ("cadrumo.entrypoints.tui.ledger.classification.LedgerClassificationScreen",),
+    "ledger-evidence": ("cadrumo.entrypoints.tui.ledger.evidence.LedgerEvidenceScreen",),
+    "ledger-reconciliation": ("cadrumo.entrypoints.tui.ledger.reconciliation.LedgerReconciliationScreen",),
+    "ledger-unavailable": ("cadrumo.entrypoints.tui.ledger.routes.LedgerUnavailableScreen",),
+}
+
+
 def _build_specs() -> tuple[WorkbenchFixtureSpec, ...]:
     specs: list[WorkbenchFixtureSpec] = []
     for scenario in (
@@ -799,7 +955,31 @@ def _build_specs() -> tuple[WorkbenchFixtureSpec, ...]:
             _operation_modal_app,
         )
     )
+    specs.extend(
+        _spec(
+            surface_id,
+            scenario,
+            _LEDGER_INTERFACE_BY_SURFACE[surface_id],
+            lambda surface_id=surface_id, scenario=scenario: _ledger_app(surface_id, scenario),
+        )
+        for surface_id, _screen, _area in _LEDGER_ROUTES
+        for scenario in (
+            WorkbenchFixtureScenario.READY,
+            WorkbenchFixtureScenario.EMPTY,
+            WorkbenchFixtureScenario.STALE,
+            WorkbenchFixtureScenario.UNAVAILABLE,
+        )
+    )
+    specs.append(
+        _spec(
+            "ledger-unavailable",
+            WorkbenchFixtureScenario.UNAVAILABLE,
+            _LEDGER_INTERFACE_BY_SURFACE["ledger-unavailable"],
+            lambda: _ledger_app("ledger-unavailable", WorkbenchFixtureScenario.UNAVAILABLE),
+        )
+    )
     return tuple(sorted(specs, key=lambda spec: spec.fixture_id))
+
 
 
 WORKBENCH_FIXTURES: Final[tuple[WorkbenchFixtureSpec, ...]] = _build_specs()
