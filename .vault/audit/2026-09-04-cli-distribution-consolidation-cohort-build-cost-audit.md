@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:4e06b4cb6b253acf387efa6ad1b9b6543a53d12efbdc911da6fd06361d34b49a'
+body_hash: 'sha256:c2a11db64f729e3eefa319e46a589286353994b73e02c807aee24be320ee314c'
 related:
   - "[[2026-09-02-cli-distribution-consolidation-plan]]"
 ---
@@ -76,31 +76,32 @@ measurement, to the outer clone, the copy-and-revalidate pass, and per-file
 scanning overhead on the roughly 84,000 file touches a build performs. Whether
 real-time antivirus scanning is active on the measuring host was not checked.
 
-### cohort-build-cost | critical | After a release, the seal lane refuses every build until the next bump
+### cohort-build-cost | critical | The evidence campaign cannot be dispatched on the default branch
 
-The packaging campaign now fails before it starts. `main` declares 0.4.0, and
-0.4.0 is carried by all three index projects, by the tag namespace and by the
-release namespace, so `version_identity` refuses to seal a cohort at it. The
-refusal is correct against the contract as written, which states that a version
-any destination already owns is refused when sealing.
+A dispatch of the packaging campaign against `main` failed in three minutes:
+`main` declares 0.4.0, and 0.4.0 is now carried by all three index projects, by
+the tag namespace and by the release namespace, so `version_identity` refused to
+seal the cohort and every downstream lane skipped.
 
-But the same module's rationale for having a seal scope at all is that the lane
-"builds and proves a cohort on every push, and between releases the declared
-version legitimately EQUALS the manifest floor because the bump has not happened
-yet", and that enforcing the floor at seal time "refuses every build in exactly
-the interval where the lane does its work". The collision checks reintroduce
-that interval through a different door: from the moment a release ships until a
-releasable commit bumps the version, no cohort can be built. No release pull
-request is open, because every commit since the tag is `chore`, `refactor` or
-`docs`, none of which is releasable — so the interval is open-ended, not brief.
+The refusal is correct and the gate is coherent. The readiness check that
+consumes this evidence requires the cohort's source commit to equal the
+checked-out commit and the cohort's tag to equal `v{version}`, so a row is bound
+to one exact release commit at one exact version. The workflow's own header says
+it is a release-candidate campaign, dispatched by hand and never on push.
+Evidence therefore has exactly one place it can legitimately be minted: the
+release commit, at the bumped and not-yet-published version — which in this
+project is the release pull request's branch, in the window between the bump
+landing and the tag being cut. Dispatching against a default branch that still
+declares the previously published version can never succeed, and the interval in
+which it cannot succeed is open-ended, because every commit since the tag is
+`chore`, `refactor` or `docs` and none of those is releasable.
 
-Every refusal reason names publication: an upload that cannot be undone, a
-release creation that would fail. None of those can occur during a build. The
-countervailing risk is real though — evidence minted under a version the index
-already carries could later be promoted against bytes that differ — so which
-scope should own that check is a decision, not a cleanup. The burned ledger
-already expresses the property that actually matters at seal time, which is
-whether the world may hold bytes under this version.
+What is missing is not a gate change but the procedure. The release runbook
+describes the pull-request merge, the tag, and publication, and never mentions
+the evidence campaign at all — so nothing tells an operator that the campaign
+must be dispatched against the candidate branch, nor that dispatching it against
+the default branch is guaranteed to fail for a reason that reads like a release
+collision.
 
 ## Recommendations
 
