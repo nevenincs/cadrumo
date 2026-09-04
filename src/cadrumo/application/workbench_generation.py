@@ -27,6 +27,7 @@ from ..core.identifier_grammar import NamespacedId
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.time.utc import UtcInstant
 from ..domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ..domain.invoices.models import InvoiceCatalogue
 from ..domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ..domain.modelos.calculation_revision import CalculationRevision
 from ..domain.modelos.filing_record import ModeloRecord
@@ -36,6 +37,7 @@ from ..domain.modelos.protocols import (
 )
 from ..domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ..domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ..domain.transactions.models import TransactionCatalogue
 from ..domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..domain.user_profile.values import UserProfileRecord
 from .aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
@@ -472,7 +474,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             ),
         )
 
-    def _load_ledger_sources(self) -> tuple[object, object] | None:
+    def _load_ledger_sources(self) -> tuple[TransactionCatalogue, InvoiceCatalogue] | None:
         """Read the ledger stores once, as the value the guard compares.
 
         Neither store exposes a revision handle the way the work-unit,
@@ -490,7 +492,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         calculation_revisions: Mapping[str, CalculationRevision],
         work_units: WorkUnitCatalogue,
         *,
-        sources: tuple[object, object] | None,
+        sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None,
     ) -> LedgerWorkspaceProjectionV1 | None:
         """Project the Ledger workspace only when its stores were bound."""
         if self.transaction_repository is None or self.invoice_repository is None or sources is None:

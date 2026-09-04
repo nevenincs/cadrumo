@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
+from pathlib import Path
 from typing import Any, cast
 
 import pytest
@@ -226,6 +227,154 @@ def test_secure_profile_provider_refuses_a_generation_changed_during_capture(
 
     with pytest.raises(RuntimeError, match="changed during capture"):
         door.read_workbench_generation_inputs()
+
+
+def _synthetic_transaction() -> object:
+    """One real, wholly invented ledger row.
+
+    Real because the guard compares canonical catalogues and a stand-in would
+    not survive validation; invented because a review of the guard must never
+    depend on an operator's actual ledger.
+    """
+    from decimal import Decimal
+
+    from ...domain.transactions.enums import TransactionDirection
+    from ...domain.transactions.models import Transaction
+    from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+
+    raw = RawTransaction(
+        provider_transaction_id="row-capture-guard",
+        booked_date=date(2026, 3, 1),
+        value_date=date(2026, 3, 1),
+        amount=Decimal("50.00"),
+        currency="EUR",
+        counterparty="Synthetic SL",
+        description="synthetic row",
+        provenance=RawProvenance(
+            source_path=Path(__file__),
+            source_sha256="e" * 64,
+            source_row_index=1,
+            source_format=SourceFormat.MANUAL,
+            ingested_at=_NOW,
+            provider_name="manual",
+        ),
+        raw_fields={"Concepto": "synthetic row"},
+    )
+    return Transaction.model_validate(
+        {
+            "raw": raw,
+            "direction": TransactionDirection.OUTGOING,
+            "source_jurisdiction": "ES",
+            "group_label": None,
+        }
+    )
+
+
+class _ChangingLedgerStore:
+    """A store whose second read differs from its first.
+
+    The ledger repositories expose no revision handle the way the work-unit,
+    calculation and filing catalogues do, so the guard compares the catalogues
+    themselves. Returning a different one on the re-read is the mid-capture
+    write it exists to catch, and the only way to show it is not comparing a
+    value with itself.
+    """
+
+    def __init__(self, first: object, second: object) -> None:
+        self._reads = [first, second]
+        self.bucket_id = _PROFILE_ID
+
+    def load(self) -> object:
+        return self._reads.pop(0) if len(self._reads) > 1 else self._reads[0]
+
+
+class _StableStore:
+    """A store that answers the same catalogue however often it is asked."""
+
+    def __init__(self, value: object) -> None:
+        self._value = value
+        self.bucket_id = _PROFILE_ID
+
+    def load(self) -> object:
+        return self._value
+
+
+def test_secure_profile_provider_refuses_a_ledger_written_during_capture(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A ledger write between the two reads refuses the whole generation.
+
+    The guard was total when it was written; it stopped being so when Ledger
+    arrived, because the door began reading two stores it never re-checked. A
+    generation could then carry a Ledger snapshot from a different instant
+    than its Declarations with nothing to detect it.
+    """
+    from ...domain.invoices.models import InvoiceCatalogue
+    from ...domain.transactions.models import TransactionCatalogue
+
+    profile = _Repository(UserProfileRecord(profile_id=_PROFILE_ID, setup_state=ProfileSetupState.INCOMPLETE))
+    work_units = _Repository(WorkUnitCatalogue())
+    revisions = _Repository(CalculationRevisionCatalogue())
+    filings = _Repository(ModeloRecordCatalogue())
+
+    def empty_calendar(_profile: object, calendar_range: object, **_kwargs: object) -> OverviewCalendar:
+        return OverviewCalendar(range=calendar_range, entries=(), generated_at=_NOW)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(generation_module, "build_overview_calendar", empty_calendar)
+    written = TransactionCatalogue.model_validate([_synthetic_transaction()])
+    door = SecureProfileWorkbenchGenerationReadDoorV1(
+        profile_id=_PROFILE_ID,
+        profile_repository=cast(Any, profile),
+        work_unit_repository=cast(Any, work_units),
+        calculation_repository=cast(Any, revisions),
+        filing_repository=cast(Any, filings),
+        clock=lambda: _NOW,
+        account_session_reader=lambda: HomeAccountSession(
+            posture=HomeSessionPosture.ACTIVE,
+            profile_label="Perfil local",
+            expires_at=_NOW,
+        ),
+        transaction_repository=cast(Any, _ChangingLedgerStore(TransactionCatalogue(), written)),
+        invoice_repository=cast(Any, _StableStore(InvoiceCatalogue())),
+    )
+
+    with pytest.raises(RuntimeError, match="changed during capture"):
+        door.read_workbench_generation_inputs()
+
+
+def test_a_quiet_ledger_publishes_its_generation(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The guard must not refuse a capture nothing wrote during."""
+    from ...domain.invoices.models import InvoiceCatalogue
+    from ...domain.transactions.models import TransactionCatalogue
+
+    profile = _Repository(UserProfileRecord(profile_id=_PROFILE_ID, setup_state=ProfileSetupState.INCOMPLETE))
+    work_units = _Repository(WorkUnitCatalogue())
+    revisions = _Repository(CalculationRevisionCatalogue())
+    filings = _Repository(ModeloRecordCatalogue())
+
+    def empty_calendar(_profile: object, calendar_range: object, **_kwargs: object) -> OverviewCalendar:
+        return OverviewCalendar(range=calendar_range, entries=(), generated_at=_NOW)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(generation_module, "build_overview_calendar", empty_calendar)
+    door = SecureProfileWorkbenchGenerationReadDoorV1(
+        profile_id=_PROFILE_ID,
+        profile_repository=cast(Any, profile),
+        work_unit_repository=cast(Any, work_units),
+        calculation_repository=cast(Any, revisions),
+        filing_repository=cast(Any, filings),
+        clock=lambda: _NOW,
+        account_session_reader=lambda: HomeAccountSession(
+            posture=HomeSessionPosture.ACTIVE,
+            profile_label="Perfil local",
+            expires_at=_NOW,
+        ),
+        transaction_repository=cast(Any, _StableStore(TransactionCatalogue())),
+        invoice_repository=cast(Any, _StableStore(InvoiceCatalogue())),
+    )
+
+    inputs = door.read_workbench_generation_inputs()
+
+    assert inputs.ledger.value is not None
 
 
 def test_calendar_evidence_scope_preserves_available_empty_for_historical_filing() -> None:

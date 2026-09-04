@@ -578,8 +578,14 @@ def summarize_manual_transactions(
     decrypted read and, if a write interleaved, would describe a different
     instant from the rows the caller is projecting beside it.
     """
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    transactions = tuple((catalogue if catalogue is not None else repository.load()).values())
+    if catalogue is None:
+        # Resolving the concrete repository is a precondition of READING, not
+        # of summarising: a caller that already holds this bucket's catalogue
+        # has nothing left for the repository to do unless a period is given.
+        catalogue = resolve_transaction_repository(
+            bucket_id=bucket_id, repository=transaction_repository
+        ).load()
+    transactions = tuple(catalogue.values())
     status_counts: dict[LedgerReviewStatus, int] = {
         LedgerReviewStatus.PENDING: 0,
         LedgerReviewStatus.REVIEWED: 0,
@@ -596,7 +602,9 @@ def summarize_manual_transactions(
         preflight = preflight_ledger_tax_readiness(
             bucket_id=bucket_id,
             period=period,
-            transaction_repository=repository,
+            transaction_repository=resolve_transaction_repository(
+                bucket_id=bucket_id, repository=transaction_repository
+            ),
         )
         checked = preflight.checked_transaction_count
         issue_count = len(preflight.issues)
