@@ -505,8 +505,11 @@ class LedgerCapabilityIdentityV1(BaseModel):
 
     @model_validator(mode="after")
     def _check_hierarchy(self) -> LedgerCapabilityIdentityV1:
-        for field_name in ("capability_id", "operation_id", "suboperation_id"):
-            _require_identity(getattr(self, field_name), field_name=field_name, pattern=_CAPABILITY_ID_PATTERN)
+        # Derived from the model for the same reason as the semantic home above.
+        for field_name in type(self).model_fields:
+            value = getattr(self, field_name)
+            if isinstance(value, str):
+                _require_identity(value, field_name=field_name, pattern=_CAPABILITY_ID_PATTERN)
         if self.operation_id == self.capability_id or not self.operation_id.startswith(f"{self.capability_id}."):
             raise ValueError("operation_id must be a child of capability_id")
         if self.suboperation_id != self.operation_id and not self.suboperation_id.startswith(f"{self.operation_id}."):
@@ -530,8 +533,12 @@ class CanonicalSemanticHomeV1(BaseModel):
 
     @model_validator(mode="after")
     def _check_values(self) -> CanonicalSemanticHomeV1:
-        for field_name in ("owner", "command_type", "result_type"):
-            _require_non_placeholder(getattr(self, field_name), field_name=field_name)
+        # Derived from the model, not listed: a field added here was silently
+        # exempt from the placeholder check while the tuple went on naming three.
+        for field_name in type(self).model_fields:
+            value = getattr(self, field_name)
+            if isinstance(value, str):
+                _require_non_placeholder(value, field_name=field_name)
         return self
 
 
