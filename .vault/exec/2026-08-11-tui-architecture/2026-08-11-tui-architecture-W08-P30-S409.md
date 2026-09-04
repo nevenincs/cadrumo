@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:338c044724b2a54b05bc5fb6e2adc74f73327e6ba3f9c6ae59be0462f5363ccb'
+body_hash: 'sha256:6b6c42e66e047b9a82f4c94b73a6628e268c20a4c881df8706b9a3237202581f'
 step_id: 'S409'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -61,7 +61,31 @@ means deciding what Home's actions zone MEANS and minting reason codes plus
 copy for it; guessing renders the degraded generic line the fixture gate now
 catches.
 
-DECLARATIONS -- blocked on a state mapping. The join itself is available: the
+DECLARATIONS -- WIRED. The "blocked on a decision" label was too cautious, and
+re-measuring it is what unblocked it. Original note follows for the record.
+
+The mapping is not an invention: `CalculationRevisionState` names its own
+meanings. `VERIFICADO_COMPLETO` says verified and complete, which is the only
+thing READY can honestly mean; `BORRADOR` is a calculation that exists and has
+not been verified, which is exactly NEEDS_REVIEW; both PRESENTADO forms are
+filed; DESCARTADO is discarded. A work unit with no calculation at all is
+DRAFT, because there is nothing yet to review or file.
+
+It errs safe in the one direction that matters. Nothing reaches READY except
+the state whose name asserts verification, so the failure mode -- telling an
+operator a declaration is ready to file when nobody verified it -- cannot be
+reached by inference. The display name comes from `WorkUnit.name`, and a
+declaration naming a work unit this session did not load refuses the whole zone
+rather than inventing a label.
+
+Gated by `test_only_a_verified_calculation_reads_as_ready_on_home`, which
+asserts the WHOLE table is declared -- so a new calculation state cannot be
+added and silently default -- and that READY has exactly one source. Teeth
+proven by mapping BORRADOR to READY: the gate names both offenders. Restored by
+copy; 25 passed.
+
+ORIGINAL NOTE, kept because the caution was wrong and the reason is worth
+seeing: blocked on a state mapping. The join itself is available: the
 ref lacks a display name but `WorkUnit.name` has one and the door already holds
 the catalogue, so the earlier note calling this blocked on a missing name was
 half wrong. What is genuinely missing is the mapping. `WorkUnitState` has two

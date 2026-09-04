@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:85d8992687fad799af6b8ebab2f8e29aa871eeb1a346883217446e3a0535b27e'
+body_hash: 'sha256:96af8f998f66d0a93d19f02bce52b3a8727c7118dd08585ba9aa2b588ce2840e'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-adr]]"
@@ -24,11 +24,21 @@ blockers.
 
 ## Findings
 
-No blocking findings. The 51 focused tests contain both valid controls and
+No blocking findings. The 92 focused cases contain both valid controls and
 representative mutations; focused pytest, Ruff, BasedPyright, and compile
 checks all pass.
+
+### S02 test contract review | low | reopened adversarial coverage gaps resolved
+
+The reopened review required durable coverage for malformed model-copy inputs,
+exact G0 baseline evidence, every G2 axis and gap class, every G3 CLI contract
+and scoped gap, every G4 hold/proof/role/finding branch, explicit empty inputs,
+and typed ACCEPT attestation substitution. Those positive controls and
+detectors now live in the focused test module; no production contract was
+changed.
 
 ## Recommendations
 
 Keep S02 tests paired so each gate contract retains a positive control and a
 failure detector when later matrix rows and evidence producers are added.
+

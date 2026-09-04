@@ -5,16 +5,11 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:38a336c49d690b1633aec62daeacce06c4ee372e1bff4b025958242ee508bb23'
+body_hash: 'sha256:9e07eeb9d846f37cb60ca741ec245d1248b0d82bfd34364f3d2ef53365a4c444'
 step_id: 'S18'
 related:
   - "[[2026-09-03-duplication-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Run duplication, import, semantic, architecture, type, lint, focused, and full quality gates without threshold or exclusion changes
 
