@@ -31,11 +31,11 @@ from ..diagnostic_classification import (
     load_registry_diagnostic_classification,
 )
 from ..filing_export_proof import (
-    canonical_filing_export_conformance_vectors,
     CanonicalTwoChannelFilingExportProofAuthority,
     FilingExportConformanceEnrollmentReport,
     FilingExportConformanceVector,
     _derive_static_filing_export_conformance_enrollment,
+    canonical_filing_export_conformance_vectors,
     canonical_two_channel_filing_export_proof_authority,
     derive_diagnostic_filing_export_conformance_enrollment,
     derive_filing_export_conformance_enrollment,
@@ -191,7 +191,10 @@ def test_diagnostic_classification_has_no_runtime_authority_or_success_path() ->
         registry_root=bundled_path("registry", "aeat"),
         source_root=bundled_path(),
         classification=classification,
-        vectors=canonical_filing_export_conformance_vectors(registry_root=registry_root, source_root=source_root),
+        vectors=canonical_filing_export_conformance_vectors(
+            registry_root=bundled_path("registry", "aeat"),
+            source_root=bundled_path(),
+        ),
     )
     assert enrollment.full_registry_validation_error == "strict registry validation failed"
     assert not enrollment.materializable_vectors
@@ -294,14 +297,20 @@ def test_static_projection_matches_validated_classification_for_every_selected_r
         registry_root=bundled_path("registry", "aeat"),
         source_root=bundled_path(),
         authority=registry,
-        vectors=canonical_filing_export_conformance_vectors(registry_root=registry_root, source_root=source_root),
+        vectors=canonical_filing_export_conformance_vectors(
+            registry_root=bundled_path("registry", "aeat"),
+            source_root=bundled_path(),
+        ),
     )
     diagnostic_report = derive_diagnostic_filing_export_conformance_enrollment(
         workspace_root=_REPOSITORY_ROOT,
         registry_root=bundled_path("registry", "aeat"),
         source_root=bundled_path(),
         classification=classification,
-        vectors=canonical_filing_export_conformance_vectors(registry_root=registry_root, source_root=source_root),
+        vectors=canonical_filing_export_conformance_vectors(
+            registry_root=bundled_path("registry", "aeat"),
+            source_root=bundled_path(),
+        ),
     )
 
     static_inspections = tuple(
@@ -330,7 +339,10 @@ def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() 
             registry_root=bundled_path("registry", "aeat"),
             source_root=bundled_path(),
             classification=classification,
-            vectors=canonical_filing_export_conformance_vectors(registry_root=registry_root, source_root=source_root),
+            vectors=canonical_filing_export_conformance_vectors(
+            registry_root=bundled_path("registry", "aeat"),
+            source_root=bundled_path(),
+        ),
         )
         selected_coordinates = {
             (str(selected.modelo), str(selected.revision)) for selected in classification.filing_revisions
@@ -388,7 +400,10 @@ def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() 
     residue_coordinates = {(str(residue.modelo), str(residue.revision)) for residue in enrollment.residues}
     canonical_vector_coordinates = {
         (str(vector.evidence.coordinate.modelo), str(vector.evidence.coordinate.revision))
-        for vector in canonical_filing_export_conformance_vectors(registry_root=registry_root, source_root=source_root)
+        for vector in canonical_filing_export_conformance_vectors(
+            registry_root=bundled_path("registry", "aeat"),
+            source_root=bundled_path(),
+        )
     }
 
     assert selected_coordinates == materialized_coordinates | residue_coordinates
