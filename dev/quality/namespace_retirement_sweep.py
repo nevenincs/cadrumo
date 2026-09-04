@@ -33,6 +33,8 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from .unread_inputs import report_unread
+
 SRC = Path("src/cadrumo")
 ROOT = SRC.parent
 apply = "--apply" in sys.argv
@@ -58,14 +60,17 @@ def _read(path: Path) -> str | None:
 def fix_dot_depth() -> int:
     """Reduce by one the dot count of a relative import that lands nowhere."""
     fixed = 0
+    unread: list[str] = []
     for path in sorted(SRC.rglob("*.py")):
         pkg = path.relative_to(ROOT).with_suffix("").parts[:-1]
         source = _read(path)
         if source is None:
+            unread.append(f"{path}: unreadable")
             continue
         try:
             tree = ast.parse(source)
-        except SyntaxError:
+        except SyntaxError as error:
+            unread.append(f"{path}: {error}")
             continue
         bad = []
         for n in ast.walk(tree):
@@ -99,22 +104,30 @@ def fix_dot_depth() -> int:
                 )
             path.write_text("".join(lines), encoding="utf-8")
         fixed += 1
+    report_unread(
+        "namespace retirement sweep (fix_dot_depth)",
+        "a relative import needing its depth corrected in one of them is left unmigrated",
+        unread,
+    )
     return fixed
 
 
 def fix_module_object_imports() -> int:
     """Rename a module imported as an object by its old private name, and its uses."""
     fixed = 0
+    unread: list[str] = []
     for path in sorted(SRC.rglob("*.py")):
         text = _read(path)
         if text is None:
+            unread.append(f"{path}: unreadable")
             continue
         if "import _" not in text:
             continue
         pkg = path.relative_to(ROOT).with_suffix("").parts[:-1]
         try:
             tree = ast.parse(text)
-        except SyntaxError:
+        except SyntaxError as error:
+            unread.append(f"{path}: {error}")
             continue
         subs = []
         for n in ast.walk(tree):
@@ -139,6 +152,11 @@ def fix_module_object_imports() -> int:
                 text = re.sub(rf"(?<![\w.]){re.escape(old)}\b", new, text)
             path.write_text(text, encoding="utf-8")
         fixed += 1
+    report_unread(
+        "namespace retirement sweep (fix_module_object_imports)",
+        "a module-object import in one of them is left unmigrated",
+        unread,
+    )
     return fixed
 
 
@@ -285,13 +303,16 @@ def fix_string_module_paths() -> int:
         return None
 
     changed = 0
+    unread: list[str] = []
     for path in sorted(SRC.rglob("*.py")) + sorted(Path("dev").rglob("*.py")):
         text = _read(path)
         if text is None:
+            unread.append(f"{path}: unreadable")
             continue
         try:
             tree = ast.parse(text)
-        except SyntaxError:
+        except SyntaxError as error:
+            unread.append(f"{path}: {error}")
             continue
         lines = text.splitlines()
         subs: set[tuple[str, str]] = set()
@@ -317,6 +338,11 @@ def fix_string_module_paths() -> int:
                 text = text.replace(old, new)
             path.write_text(text, encoding="utf-8")
         changed += 1
+    report_unread(
+        "namespace retirement sweep (fix_string_module_paths)",
+        "a stringified module path in one of them is left unmigrated",
+        unread,
+    )
     return changed
 
 
