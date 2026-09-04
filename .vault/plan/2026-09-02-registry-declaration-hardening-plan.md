@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:0a81ca7933ebef5e7e237c5085f7eff8a60e769c1213057c867436819758d5fd'
+body_hash: 'sha256:f0af866374b83aa395eeab78e561af1dac8f67d9c0d0f01b418fe40571298139'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -410,6 +410,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S527` - Lift the import-reference rule into imported_modules so the three walks that each got it wrong ask one function: a statement references its resolved target plus the module each imported name may be, and the promoter now consumes it rather than re-deriving it; `dev/quality/facade_retirement.py,dev/quality/module_promotion.py,dev/quality/tests/test_facade_retirement.py`.
 - [x] `W02.P02.S528` - Turn the untested-module count into a report ranked by what each module can do, since 16 of the 42 write to the tree and three of those also declare an apply flag, and give it tests so it stops counting itself; `dev/quality/module_test_reach.py,dev/quality/tests/test_module_test_reach.py`.
 - [x] `W02.P02.S529` - Test the result-disposition fragment generator the reach report ranked first, proving above all that a run without apply leaves the tree untouched, and pinning both render branches and the filing-grade and campaign-owned exclusions; `dev/registry/tests/test_result_disposition_fragment_generator.py`.
+- [x] `W02.P02.S530` - Test the registry parity maintenance wiring without mocking the domain, since a real run over an empty root returns in a hundredth of a second: no output path means no write, and output and resume_from are proven as a pair by writing one report and resuming from it; `dev/registry/tests/test_parity_maintenance.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

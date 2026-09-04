@@ -14343,3 +14343,42 @@ that remain at the top are the import codemods belonging to another campaign.
 The instrument built one iteration ago picked the target, the target is done, and
 the number moved because of it - which is the whole case for ranking a list
 rather than counting it.
+
+
+## A thin wrapper is still worth testing, and testing it cost four seconds
+
+`dev/registry/parity/maintenance.py` was the next writing module in this plan's
+own subject: 153 lines wrapping the domain's live-parity functions, one write
+site, no tests.
+
+The obvious objection is that a wrapper's behaviour is its callee's, so testing
+it means either running heavy machinery or mocking the domain - and this project
+forbids the second. That objection turned out to be wrong for a measurable
+reason: `verify_registry_workbooks` over a constructed empty root returns a real
+report in **0.01 seconds**, because there is nothing to scan. The wiring can be
+exercised end to end with nothing patched.
+
+Five tests, and the first is again the one that matters: **no output path means
+no write**. The write is conditional on an argument, and a conditional write is
+only safe if the other branch is proven.
+
+The pair worth pinning together is `output` and `resume_from`. They are only
+useful in sequence - a run writes a report and a later run continues from it -
+so the test writes one and resumes from it rather than comparing the model field
+by field. A serialisation the resume path cannot parse would satisfy a field
+comparison and still break the workflow.
+
+Two smaller properties: the report names the root it was given, since a report
+naming a different tree is evidence about nothing; and an empty root produces an
+honest empty report - zero workbooks, zero failures, no rows - rather than a
+clean verdict. That is the distinction this campaign keeps returning to, asserted
+here because an empty scan is exactly what these tests run.
+
+The reach report is now **40 unreached, 14 writing, 2 applying**. Three modules
+have left it in two iterations, each picked by the instrument rather than by
+preference, and the remaining two at the top belong to another campaign.
+
+The general point is worth keeping separate from the module. "It is only a thin
+wrapper" is a claim about cost, and it was cheaper to measure the cost than to
+argue about it: one probe, four seconds of test runtime, and the objection
+dissolved.
