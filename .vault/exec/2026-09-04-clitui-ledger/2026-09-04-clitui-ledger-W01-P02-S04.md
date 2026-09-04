@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:6f38dd20d874e7911feb06d88273b8de319b31e33bb50e0f32db69368a95fd9f'
+body_hash: 'sha256:0daefd2f3b5ae6a74f98ac79d6c357d17524c0ce511259a7910ea815ae7200ef'
 step_id: 'S04'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
@@ -34,3 +34,5 @@ related:
 ## Notes
 
 The shared branch advanced during S04. Commits `3e642ad9ee` and `8fc40a069f` captured the source projection and initial reference publication before this record could be committed; this step preserves those commits and only corrects the source digest after the shared formatter change.
+
+The approved S04 scope names the production spec module only. No new test file was added; the existing 30 focused graph/spec tests and direct duplicate-invocable refusal exercise passed, while a durable detector test remains for a separately scoped test owner or reviewer to require.
