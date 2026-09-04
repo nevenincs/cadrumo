@@ -648,3 +648,55 @@ def test_only_a_verified_calculation_reads_as_ready_on_home() -> None:
     assert _HOME_DECLARATION_STATES[CalculationRevisionState.BORRADOR] is (
         HomeDeclarationState.NEEDS_REVIEW
     ), "an unverified calculation must keep review in front of the operator"
+
+def test_home_offers_ledger_work_only_when_there_is_some_and_never_for_an_unmeasured_area() -> None:
+    """An offered action must correspond to work that exists and can be named.
+
+    Two failure modes, both worse than an empty zone. Offering "classify"
+    when the classification area holds zero entries sends the operator to an
+    empty screen. Offering it when the area is UNMEASURED is the same mistake
+    dressed as a fact: `item_count` is a plain integer, so an area nobody
+    measured reports the same zero a finished one does.
+
+    Also asserts the reason codes are Home's OWN declared vocabulary. A code
+    with no `tui.home.reason.*` entry renders the degraded generic line, so an
+    action invented to fill the zone would arrive unreadable.
+    """
+    from ..workbench_generation import _home_ledger_actions
+
+    populated = _ledger_projection_with_statuses(LedgerWorkspaceStatus.NEEDS_ATTENTION)
+    offered = _home_ledger_actions(populated)
+    assert offered is not None
+    assert {item.reason_code for item in offered} == {
+        "ledger_classification_pending",
+        "evidence_missing",
+    }
+    assert [item.rank for item in offered] == list(range(len(offered)))
+
+    catalogue = _home_reason_keys_for_test()
+    for item in offered:
+        assert f"tui.home.reason.{item.reason_code}" in catalogue, (
+            f"offered action reason {item.reason_code!r} has no copy, so Home degrades to its "
+            f"generic line"
+        )
+
+    for area in (LedgerWorkspaceArea.CLASSIFICATION, LedgerWorkspaceArea.EVIDENCE):
+        unmeasured = _ledger_projection_with_statuses(
+            LedgerWorkspaceStatus.NEEDS_ATTENTION, unmeasured=area
+        )
+        assert _home_ledger_actions(unmeasured) is None, (
+            f"an unmeasured {area.value} area still produced an offer, so Home invites the "
+            f"operator to work nobody measured"
+        )
+
+    assert _home_ledger_actions(None) is None
+
+
+def _home_reason_keys_for_test() -> frozenset[str]:
+    """Every `tui.home.reason.*` key the Spanish catalogue declares."""
+    import yaml
+
+    root = Path(__file__).resolve().parents[2] / "locales" / "es" / "common.yml"
+    raw = yaml.safe_load(root.read_text(encoding="utf-8"))
+    reasons = raw["tui"]["home"]["reason"]
+    return frozenset(f"tui.home.reason.{name}" for name in reasons)
