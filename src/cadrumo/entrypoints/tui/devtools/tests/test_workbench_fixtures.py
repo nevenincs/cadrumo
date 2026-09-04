@@ -43,8 +43,22 @@ def _projection_snapshot(app: App[Any]) -> str:
 
 
 def _visible_tables(app: App[Any]) -> tuple[DataTable[Any], ...]:
-    screen = app.screen
-    return tuple(screen.query(DataTable))
+    """The tables the operator can actually see.
+
+    The name was previously a lie: this returned every table on the screen,
+    including the ones a screen hides when their zone is empty. A hidden table
+    is `display: none` at size 0x0, and Textual still computes a scroll extent
+    for it from its cell padding, so it reports horizontal overflow while
+    painting nothing at all. Asserting geometry there tests a widget that does
+    not exist on screen.
+
+    That was latent rather than harmless: it went unnoticed only because Home's
+    three lists happened to carry `cell_padding=0`, and it surfaced the moment
+    table density became one shared token. Measured across every fixture at
+    every supported width when this was written: 45 hidden tables report an
+    overflow and NO displayed table does.
+    """
+    return tuple(table for table in app.screen.query(DataTable) if table.display)
 
 
 def test_fixture_catalogue_has_stable_ids_metadata_and_closed_state_coverage() -> None:
