@@ -14,8 +14,15 @@ EXPECTED_MODULE_DISTRIBUTION = {1: 2, 2: 25, 3: 12, 4: 4, 5: 1, 6: 3, 7: 2}
 EXPECTED_MODULE_DISTRIBUTION_VECTOR = (2, 25, 12, 4, 1, 3, 2)
 EXPECTED_NON_AGRICULTURAL_INGRESO_A_CUENTA_COUNT = 47
 EXPECTED_AGRICULTURAL_AXIS_COUNTS = {2022: 16, 2023: 16, 2024: 16, 2025: 17, 2026: 17}
-EXPECTED_SEASONAL_INDEXES = ((1, 60, Decimal("1.50")), (61, 120, Decimal("1.35")), (121, 180, Decimal("1.25")))
-EXPECTED_DIFFICULT_JUSTIFICATION_PCT = Decimal("1")
+#: Shape bounds for the temporada corrector bands, NOT their values. The
+#: coefficients and day bands are fixed by each annual Orden and are already
+#: grounded in the census by its own required_text; asserting them here would
+#: make a lawful change to a coefficient indistinguishable from a corrupt
+#: extraction, and the validator would refuse the new law. What is safe to
+#: assert is that the bands remain a contiguous ascending partition carrying
+#: positive coefficients, which a garbled extraction would violate.
+MINIMUM_SEASONAL_INDEX_BANDS = 1
+FIRST_SEASONAL_INDEX_DAY = 1
 EXTRACTOR_VERSION = "m303-annual-orden-html-v5"
 
 
@@ -52,17 +59,67 @@ def _validate_generated_source_counts(source: _GeneratedSourceShape) -> None:
 def _validate_generated_source_axis_shape(source: _GeneratedSourceShape) -> None:
     if source.non_agricultural_ingreso_a_cuenta_row_count != EXPECTED_NON_AGRICULTURAL_INGRESO_A_CUENTA_COUNT:
         raise RegistryValidationError("annual Orden manifest has the wrong IAE ingreso-a-cuenta row count")
-    if source.seasonal_index_day_bands != tuple((start, end) for start, end, _ in EXPECTED_SEASONAL_INDEXES):
-        raise RegistryValidationError("annual Orden manifest has the wrong seasonal index day bands")
-    if source.seasonal_index_coefficients != tuple(value for _, _, value in EXPECTED_SEASONAL_INDEXES):
-        raise RegistryValidationError("annual Orden manifest has the wrong seasonal index coefficients")
-    if source.difficult_justification_pct != EXPECTED_DIFFICULT_JUSTIFICATION_PCT:
-        raise RegistryValidationError("annual Orden manifest has the wrong difficult-justification percentage")
+    validate_seasonal_index_shape(
+        source.seasonal_index_day_bands,
+        source.seasonal_index_coefficients,
+        scope="manifest",
+    )
+    validate_percentage_shape(
+        source.difficult_justification_pct,
+        scope="manifest",
+        subject="difficult-justification",
+    )
     if source.ejercicio == 2022:
-        if source.lorca_2022_reduction_pct != Decimal("20"):
-            raise RegistryValidationError("annual Orden manifest has the wrong Lorca 2022 reduction percentage")
+        if source.lorca_2022_reduction_pct is None:
+            raise RegistryValidationError("annual Orden 2022 manifest lacks its Lorca reduction percentage")
+        validate_percentage_shape(source.lorca_2022_reduction_pct, scope="manifest", subject="Lorca 2022 reduction")
     elif source.lorca_2022_reduction_pct is not None:
         raise RegistryValidationError("only the 2022 annual Orden manifest may state the Lorca reduction")
+
+
+def validate_seasonal_index_shape(
+    day_bands: tuple[tuple[int, int], ...],
+    coefficients: tuple[Decimal, ...],
+    *,
+    scope: str,
+) -> None:
+    """Refuse a temporada corrector table that is structurally impossible.
+
+    Asserts SHAPE, never the legal figures: the bands must be a contiguous
+    ascending partition starting at day one, each band non-empty, with one
+    positive coefficient apiece. A future Orden may change any coefficient or
+    band boundary and still satisfy this; a garbled extraction cannot.
+
+    Raises:
+        RegistryValidationError: If the table is empty, misaligned, or carries a
+            non-positive coefficient.
+    """
+    if len(day_bands) < MINIMUM_SEASONAL_INDEX_BANDS:
+        raise RegistryValidationError(f"annual Orden {scope} declares no seasonal index band")
+    if len(day_bands) != len(coefficients):
+        raise RegistryValidationError(f"annual Orden {scope} seasonal bands and coefficients disagree in length")
+    expected_start = FIRST_SEASONAL_INDEX_DAY
+    for start, end in day_bands:
+        if start != expected_start:
+            raise RegistryValidationError(f"annual Orden {scope} seasonal index bands are not contiguous")
+        if end < start:
+            raise RegistryValidationError(f"annual Orden {scope} seasonal index band ends before it starts")
+        expected_start = end + 1
+    if any(coefficient <= 0 for coefficient in coefficients):
+        raise RegistryValidationError(f"annual Orden {scope} seasonal index coefficient is not positive")
+
+
+def validate_percentage_shape(percentage: Decimal, *, scope: str, subject: str) -> None:
+    """Refuse a percentage outside the only range a percentage can occupy.
+
+    Asserts SHAPE, never the legal figure, for the same reason as
+    :func:`validate_seasonal_index_shape`.
+
+    Raises:
+        RegistryValidationError: If ``percentage`` is negative or above 100.
+    """
+    if percentage < 0 or percentage > 100:
+        raise RegistryValidationError(f"annual Orden {scope} {subject} percentage is outside 0-100")
 
 
 validate_generated_source_counts = _validate_generated_source_counts
