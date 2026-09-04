@@ -274,11 +274,7 @@ def _ledger_invocable_specs(
     specs: tuple[CommandSpec, ...] = LEDGER_COMMAND_SPECS,
 ) -> tuple[CommandSpec, ...]:
     """Return leaves and explicitly executable groups from the sole Ledger spec tree."""
-    return tuple(
-        spec
-        for spec in specs
-        if spec.kind is CommandNodeKind.LEAF or spec.invocation.invoke_without_command
-    )
+    return tuple(spec for spec in specs if spec.kind is CommandNodeKind.LEAF or spec.invocation.invoke_without_command)
 
 
 def _ledger_path_for(spec: CommandSpec, by_key: Mapping[str, CommandSpec]) -> tuple[str, ...]:

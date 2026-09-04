@@ -117,6 +117,17 @@ _PARAMS = BienesInversionRegularizacionParameters(
     provenance=_PROVENANCE,
 )
 
+
+def _params_for(year: int) -> BienesInversionRegularizacionParameters:
+    """The bundle, resolved for ``year``.
+
+    The projection refuses a bundle resolved for a different filing year, so a
+    fixture cannot pin one year and be applied to another.
+    """
+    return _PARAMS.model_copy(
+        update={"provenance": _PARAMS.provenance.model_copy(update={"resolved_on": _prov_date(year, 12, 31)})}
+    )
+
 _SOURCE_REF = "aeat-dr-303-2026"
 _SOURCE_SHA256 = "0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6b9b8489b"
 _REVISION_ID = "2026-y-siguientes"
@@ -588,9 +599,9 @@ def _m303_filing_facts(
             computed_count=0,
             pending_percentage_count=0,
             sector_contributions=(),
-            parameters_provenance=_PROVENANCE,
+            parameters_provenance=_params_for(period.filing_year).provenance,
         ),
-        bienes_parameters=_PARAMS,
+        bienes_parameters=_params_for(period.filing_year),
     )
 
 
