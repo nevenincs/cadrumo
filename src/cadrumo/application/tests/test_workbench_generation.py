@@ -10,6 +10,7 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
+from ...core.period import Period
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue, CalculationRevisionState
 from ...domain.modelos.filing_record import ModeloRecordCatalogue
 from ...domain.modelos.work_unit import WorkUnitCatalogue
@@ -700,3 +701,54 @@ def _home_reason_keys_for_test() -> frozenset[str]:
     raw = yaml.safe_load(root.read_text(encoding="utf-8"))
     reasons = raw["tui"]["home"]["reason"]
     return frozenset(f"tui.home.reason.{name}" for name in reasons)
+
+def test_a_declaration_needing_review_is_offered_with_its_own_address() -> None:
+    """A declaration-addressed action carries the declaration it is about.
+
+    `declaration_needs_review` without an address is advice; with modelo,
+    filing year and period it is a task the operator can act on, and Home
+    renders that address beside the row. The action is the catalogue's
+    `operator.modelo.work.revisions`, which takes the work unit id the resume
+    already carries, so nothing is minted to fill the zone.
+
+    Only NEEDS_REVIEW is offered. A verified, filed, draft or discarded
+    declaration is not work the operator has been asked to do, and offering it
+    would make the zone a list of everything rather than a list of what is
+    outstanding.
+    """
+    from ..overview.home import HomeDeclarationResume
+    from ..workbench_generation import _home_declaration_actions
+
+    def _resume(state: HomeDeclarationState, unit: str) -> HomeDeclarationResume:
+        return HomeDeclarationResume(
+            work_unit_id=unit * 64,
+            modelo="303",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "3T"),
+            name=f"{unit}-declaration",
+            state=state,
+        )
+
+    resumes = tuple(
+        _resume(state, letter)
+        for state, letter in (
+            (HomeDeclarationState.NEEDS_REVIEW, "a"),
+            (HomeDeclarationState.READY, "b"),
+            (HomeDeclarationState.FILED, "c"),
+            (HomeDeclarationState.DRAFT, "d"),
+            (HomeDeclarationState.DISCARDED, "e"),
+        )
+    )
+    offered = _home_declaration_actions(resumes)
+
+    assert len(offered) == 1, (
+        f"only a declaration needing review is outstanding work; got "
+        f"{[item.reason_code for item in offered]}"
+    )
+    only = offered[0]
+    assert only.reason_code == "declaration_needs_review"
+    assert (only.modelo, only.filing_year) == ("303", 2026)
+    assert only.period is not None, "an addressed action without its period cannot be acted on"
+    assert only.action.action.action_id == "operator.modelo.work.revisions"
+
+    assert _home_declaration_actions(None) == ()

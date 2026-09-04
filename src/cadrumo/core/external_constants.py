@@ -818,33 +818,6 @@ SAL_RESERVA_DOTACION_RATE: Final[Decimal] = Decimal("0.10")
 #: alcance al menos una cifra superior al doble del capital social").
 SAL_RESERVA_CAPITAL_MULTIPLE: Final[Decimal] = Decimal("2")
 
-#: LIVA art. 103.Dos.2.º as redrafted by Ley 28/2014 art. 1.26 (BOE-A-2014-12329),
-#: in force from 01-01-2015: the prorrata especial regime is mandatory "cuando el
-#: montante total de las cuotas deducibles en un año natural por aplicación de la
-#: regla de prorrata general exceda en un 10 por ciento o más del que resultaría
-#: por aplicación de la regla de prorrata especial". The margin is INCLUSIVE ("o
-#: más" reaches it), so the regime switches at
-#: ``deduction_general >= deduction_especial * 1.10``.
-PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_FROM_2015: Final[Decimal] = Decimal("1.10")
-
-#: LIVA art. 103.Dos.2.º in its ORIGINAL redaction (Ley 37/1992, BOE-A-1992-28740,
-#: in force 01-01-1993 to 31-12-2014): "Cuando el montante total de las cuotas
-#: deducibles en un año natural por aplicación de la regla de prorrata general
-#: exceda en un 20 por 100 del que resultaría por aplicación de la regla de
-#: prorrata especial". Twenty percent, and with no "o más", so the margin must be
-#: passed rather than merely reached:
-#: ``deduction_general > deduction_especial * 1.20``.
-PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_UNTIL_2014: Final[Decimal] = Decimal("1.20")
-
-#: First filing year governed by the Ley 28/2014 (BOE-A-2014-12329) redaction of
-#: LIVA art. 103.Dos.2.º. The bundled consolidated corpus records the amendment
-#: verbatim ("Se modifica el apartado 2.2º por el art. 1.26 de la Ley 28/2014, de
-#: 27 de noviembre") and dates it "en vigor a partir del 01/01/2015", and the Ley
-#: 28/2014 preamble states the change as "disminuir del 20 al 10 por ciento la
-#: diferencia admisible". Filing years at or above this take the ten-percent
-#: inclusive margin; earlier years take the original twenty-percent exclusive one.
-PRORRATA_ESPECIAL_MANDATORY_LEY_28_2014_FIRST_YEAR: Final[int] = 2015
-
 #: LIVA art. 9.1.c (Ley 37/1992, BOE-A-1992-28740) sectoral-separation threshold:
 #: régimen de sectores diferenciados is mandatory when the spread between the highest
 #: and lowest general prorrata across sectors exceeds fifty percentage points.

@@ -321,6 +321,34 @@ def _keyed_bracket_windows_overlap(first: KeyedBracketEntry, second: KeyedBracke
     return second.valid_to is None or second.valid_to >= first.valid_from
 
 
+class NonFilingAxisAdmission(RegistryModel):
+    """The declared justification for keying a parameter to a non-filing date.
+
+    Every dated value that ships today uses ``filing_period``, and that is not an
+    accident of authoring: for most regulated figures the period a declaration
+    covers IS the thing the law keys to. The other axes exist for figures fixed
+    by an EVENT -- a capital good's acquisition, an invoice's issue date -- where
+    the filing period genuinely cannot express the rule.
+
+    That distinction is a legal claim, so it is declared rather than inferred. A
+    parameter reaching for a non-filing axis must name the provision that fixes
+    the event date and say why the filing period cannot carry it, and the pair is
+    checked at load. Without this an author can silently move a figure onto an
+    event axis, which changes WHICH LAW applies to an old fact -- the exact defect
+    the single-value tripwires elsewhere in this tree exist to force into the open.
+
+    Attributes:
+        date_axis: The axis being admitted. Must equal the axis the parameter's
+            values actually carry, so the declaration cannot drift from the data.
+        legal_ref: Catalogue id of the provision that fixes the event date.
+        reason: Why the filing period cannot express this figure's applicability.
+    """
+
+    date_axis: DateAxisField
+    legal_ref: str = Field(min_length=1, max_length=200)
+    reason: str = Field(min_length=40, max_length=1000)
+
+
 class ParameterDefinition(RegistryModel):
     """Declare a dated or bracketed parameter with legal/source grounding.
 
@@ -335,6 +363,7 @@ class ParameterDefinition(RegistryModel):
     brackets: tuple[BracketEntry, ...] = Field(default_factory=tuple)
     keyed_brackets: tuple[KeyedBracketEntry, ...] = Field(default_factory=tuple)
     bracket_axis: DateAxisField | None = None
+    non_filing_axis_admission: NonFilingAxisAdmission | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)

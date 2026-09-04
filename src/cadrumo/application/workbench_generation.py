@@ -663,7 +663,19 @@ def _secure_profile_home_input(
         if declarations is not None
         else unavailable("workbench.home.declarations_resume_projector_unavailable")
     )
-    actions = _home_ledger_actions(ledger)
+    addressed = _home_declaration_actions(declarations)
+    cross_cutting = _home_ledger_actions(ledger)
+    actions = (
+        None
+        if cross_cutting is None
+        else (
+            *addressed,
+            *(
+                item.model_copy(update={"rank": len(addressed) + offset})
+                for offset, item in enumerate(cross_cutting)
+            ),
+        )
+    )
     actions_state = (
         HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=observed_at)
         if actions is not None
@@ -809,6 +821,38 @@ Classification comes first because an unclassified entry has no settled tax
 treatment yet, while a missing justificante is a gap in evidence for a
 treatment already chosen.
 """
+
+
+def _home_declaration_actions(
+    resumes: tuple[HomeDeclarationResume, ...] | None,
+) -> tuple[HomeNextAction, ...]:
+    """One action per declaration whose calculation is not yet verified.
+
+    `operator.modelo.work.revisions` takes the work unit id the resume already
+    carries, and listing a work unit's calculation revisions is precisely what
+    `declaration_needs_review` asks the operator to do -- so the action is the
+    catalogue's, the reason is Home's, and the address is the declaration's.
+    Nothing here is minted for the zone.
+
+    Ranked ahead of the cross-cutting Ledger offers because these name a single
+    declaration the operator can finish, while "classify the ledger" is work
+    spread across every record.
+    """
+    if resumes is None:
+        return ()
+    return tuple(
+        HomeNextAction(
+            rank=index,
+            action=declare_next_action("operator.modelo.work.revisions", work_unit_id=resume.work_unit_id),
+            reason_code="declaration_needs_review",
+            modelo=resume.modelo,
+            filing_year=resume.filing_year,
+            period=resume.period,
+        )
+        for index, resume in enumerate(
+            item for item in resumes if item.state is HomeDeclarationState.NEEDS_REVIEW
+        )
+    )
 
 
 def _home_ledger_actions(ledger: LedgerWorkspaceProjectionV1 | None) -> tuple[HomeNextAction, ...] | None:
