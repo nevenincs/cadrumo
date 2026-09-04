@@ -44,6 +44,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
+from ...core.decimal.constants import HUNDRED
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.iva.schema import IvaCategory
@@ -56,8 +57,6 @@ __all__ = [
     "default_invoice_extraction_period",
     "resolve_invoice_extraction_authority_values",
 ]
-
-_PCT_SCALE: Decimal = Decimal("100")
 
 
 class InvoiceExtractionAuthorityValues(BaseModel):
@@ -144,7 +143,7 @@ def _as_pcts(fractions: Iterable[Decimal]) -> tuple[Decimal, ...]:
     how a transaction carries one; a printed invoice states the percentage, so
     the prompt is given percentages and the conversion happens once, here.
     """
-    return tuple(sorted(fraction * _PCT_SCALE for fraction in fractions))
+    return tuple(sorted(fraction * HUNDRED for fraction in fractions))
 
 
 def resolve_invoice_extraction_authority_values(*, period: Period) -> InvoiceExtractionAuthorityValues:

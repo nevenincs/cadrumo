@@ -52,14 +52,12 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
-from ...core.decimal.constants import ONE, ZERO
+from ...core.decimal.constants import HUNDRED, ONE, ZERO
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents
 from .errors import IvaRateNotFoundError
 from .lookup import coexisting_tier_rates, lookup_rate
 from .schema import EUMemberState, IvaCategory, IvaRateKind, IvaRateRecord
-
-_ONE_HUNDRED = Decimal("100")
 
 # Spanish domestic categories whose rate is a single registry rate tier.
 # Maps the operator-/LLM-selected IvaCategory onto the IvaRateKind whose
@@ -287,7 +285,7 @@ def resolve_category_rate(category: IvaCategory, *, on_date: date) -> IvaRateRes
     return IvaRateResolution(
         category=category,
         derivable=True,
-        rate=record.pct / _ONE_HUNDRED,
+        rate=record.pct / HUNDRED,
         rate_kind=rate_kind,
         reason="",
     )

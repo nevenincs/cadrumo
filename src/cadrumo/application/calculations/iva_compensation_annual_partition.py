@@ -17,6 +17,7 @@ from typing import ClassVar, Final
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
+from ...core.decimal.constants import ZERO
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.logging import get_logger
 from ...core.modelo import Modelo
@@ -60,7 +61,6 @@ _log = get_logger(__name__)
 
 STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 _SOURCE_KIND: Final = BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION
-_ZERO: Final = Decimal("0")
 _303_GENERADA_ID: Final[CasillaId] = M303_GENERADA_CASILLA
 _303_APLICADA_ID: Final[CasillaId] = M303_COMPENSACION_APLICADA_CASILLA
 _303_DISPONIBLE_ID: Final[CasillaId] = M303_DISPONIBLE_CASILLA
@@ -108,7 +108,7 @@ def _period_state_from_303_envelope(envelope: ObservationEnvelopePayload) -> Iva
             translated_message="application.calculations.m303_carry.errors.generated_compensation_amount_missing",
             context={"casilla_id": _303_GENERADA_ID},
         )
-    applied = _observed_value(values, _303_APLICADA_ID) or _ZERO
+    applied = _observed_value(values, _303_APLICADA_ID) or ZERO
     posterior = _observed_value(values, _303_POSTERIOR_ID)
     available = _observed_value(values, _303_DISPONIBLE_ID)
     if available is None:

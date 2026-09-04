@@ -510,6 +510,7 @@ def test_no_adapter_entrypoint_io_imports_and_initializer_is_inert() -> None:
     initializer = ast.parse((module.parent / "__init__.py").read_text(encoding="utf-8"))
     assert not any(isinstance(node, (ast.Import, ast.ImportFrom)) for node in ast.walk(initializer))
 
+
 def test_a_comparison_zone_reports_no_count_until_both_sides_are_observed() -> None:
     """A comparison whose AEAT half was never pulled has no count, not zero.
 

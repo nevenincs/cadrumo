@@ -47,6 +47,7 @@ from pydantic import BaseModel
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.decimal.constants import MONEY_ZERO
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -112,7 +113,6 @@ STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVers
 _LEDGER_VOLUME_DIVERGENCE_SOURCE_KIND = "prorrata_regularizacion_ledger_volume_divergence"
 _OUTPUT_MODELO_303_CASILLA_44: Final = "modelo_303_casilla_44"
 _OUTPUT_MODELO_390_REGULARIZACION_ANUAL: Final = "modelo_390_regularizacion_anual"
-_ZERO: Final = Decimal("0.00")
 _SOURCE_PERIODS: Final[tuple[str, ...]] = ("1T", "2T", "3T", "4T")
 _CUOTA_DEDUCIBLE_TOTAL_ID: Final[CasillaId] = validated_casilla_id(
     "iva.cuota-deducible-total",
@@ -816,8 +816,8 @@ def _resolve_prorrata_regularizacion_binding_values(
         operaciones_sin_derecho_deduccion=volumen_total - volumen_con_derecho,
     )
     values_by_output = {
-        _OUTPUT_MODELO_303_CASILLA_44: projection.modelo_303_casilla_44_value or _ZERO,
-        _OUTPUT_MODELO_390_REGULARIZACION_ANUAL: projection.modelo_390_regularizacion_anual_value or _ZERO,
+        _OUTPUT_MODELO_303_CASILLA_44: projection.modelo_303_casilla_44_value or MONEY_ZERO,
+        _OUTPUT_MODELO_390_REGULARIZACION_ANUAL: projection.modelo_390_regularizacion_anual_value or MONEY_ZERO,
     }
     return {
         binding_id: values_by_output[output]
@@ -972,7 +972,7 @@ class ProrrataRegularizacionSourceResolver:
             declared_volume_con_derecho=current_year_values[_VOLUMEN_CON_DERECHO_ID],
         )
         if not applicability.applies:
-            zero_values = {binding_id: _ZERO for binding_id in declared_binding_ids}
+            zero_values = {binding_id: MONEY_ZERO for binding_id in declared_binding_ids}
             return CalculationSourceResolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,

@@ -118,7 +118,13 @@ def _ledger_documents(
     projection: LedgerWorkspaceProjectionV1,
     admission: WorkbenchDestinationAdmission,
 ) -> tuple[WorkbenchSearchDocument, ...]:
-    """Project Ledger entries without exposing their content or amounts."""
+    """Project Ledger entries so the operator can find them by what they recall.
+
+    The counterparty, description, date and amount are what someone actually
+    searches for; the transaction id is what the machine addresses the row by,
+    and it stays out of the matchable terms because nobody types a 64-character
+    hex string into a command palette.
+    """
     return tuple(
         WorkbenchSearchDocument(
             kind=WorkbenchSearchKind.LEDGER_ENTRY,
@@ -127,6 +133,17 @@ def _ledger_documents(
             label_key=WorkbenchSearchLabelKey.LEDGER_ENTRY,
             admission=admission,
             identity_basis=SecretStr(str(row.transaction_id)),
+            content_terms=tuple(
+                term
+                for term in (
+                    row.counterparty,
+                    row.description,
+                    row.date,
+                    row.amount,
+                    row.currency,
+                )
+                if term
+            ),
         )
         for row in projection.entries
     )

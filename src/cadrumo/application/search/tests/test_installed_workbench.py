@@ -316,3 +316,36 @@ def test_snapshot_assembly_has_no_io_network_or_token_reachability_import() -> N
     }
     forbidden = {"httpx", "pathlib", "requests", "socket", "sqlite3", "token", "urllib"}
     assert all(not any(part in forbidden for part in module.split(".")) for module in imports)
+
+
+def test_an_entry_is_findable_by_the_words_the_operator_would_actually_recall() -> None:
+    """Search matches the counterparty and description, not only the enum names.
+
+    The palette previously indexed `kind`, `label_key`, `status` and the
+    address -- so an operator could find "ledger entry" but not "Suministros
+    Delta SL", which is the only part of the record they are likely to
+    remember. Under the authenticated-TUI visibility decision the terms are
+    the operator's own, and a search that cannot reach them makes the palette
+    a table of contents rather than a way to find anything.
+
+    The transaction id is deliberately NOT matchable: it is machine
+    addressing, nobody types 64 hex characters, and it remains a secret
+    identity basis excluded from serialization.
+    """
+    inputs = InstalledWorkbenchSearchInputsV1(
+        ledger=_ledger(),
+        declarations=_declarations(),
+        aeat_sync=_aeat_sync(),
+        modelo=(_modelo(),),
+        ledger_admission=_admission("workbench.ledger"),
+        declarations_admission=_admission("workbench.declarations"),
+        aeat_sync_admission=_admission("workbench.aeat_sync"),
+    )
+    service = inputs.snapshot().service()
+
+    for query in ("Suministros Delta SL", "Material de oficina", "1250.00"):
+        response = service.search(WorkbenchSearchRequest(query=query))
+        assert response.total_matches >= 1, f"searching {query!r} finds nothing"
+
+    identifier = service.search(WorkbenchSearchRequest(query="a" * 64))
+    assert identifier.total_matches == 0, "the raw transaction id must not be a search term"

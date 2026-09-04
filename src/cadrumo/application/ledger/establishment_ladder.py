@@ -91,11 +91,12 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import StrEnum
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
 from ...core.classifier_input_source import ClassifierInputSource
+from ...core.decimal.constants import HUNDRED
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.iva.classification import IvaTerritorialScope
 from ...domain.iva.establishment import (
@@ -315,7 +316,6 @@ def _party_country_code(
     return resolved_country_code
 
 
-_PERCENT: Final[Decimal] = Decimal("100")
 """What a printed IVA rate is divided by to reach the fraction the registry keys on."""
 
 
@@ -350,7 +350,7 @@ def _spanish_iva_was_charged(
     if on_date is None:
         return False
     return any(
-        rate_kinds_for_declared_rate(EUMemberState.ES, rate / _PERCENT, on_date)
+        rate_kinds_for_declared_rate(EUMemberState.ES, rate / HUNDRED, on_date)
         for rate in charged_iva_rates
         # Zero is excluded before the lookup and not by it. The registry answers
         # that 0 % is always a legitimate Spanish ZERO-tier rate, which is true
@@ -444,7 +444,7 @@ def _taxed_under_the_registration_state(
     if on_date is None:
         return False
     return any(
-        rate_kinds_for_declared_rate(identification, rate / _PERCENT, on_date)
+        rate_kinds_for_declared_rate(identification, rate / HUNDRED, on_date)
         for rate in charged_iva_rates
         # Zero is excluded for the reason it is excluded on the Spanish side: a
         # zero-rated line charges no tax under anybody law, so it places the
