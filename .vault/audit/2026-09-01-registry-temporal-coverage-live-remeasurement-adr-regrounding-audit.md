@@ -13366,3 +13366,59 @@ the exit status through `| tail` reported **zero for a run the tool had just
 exited one on** - the filter's status, not the tool's, which is exactly the
 failure the module's own docstring lists fourth. Re-read unpiped, the statuses
 are 1 for the tainted run and 0 for the two evidence runs.
+
+
+## Which label disagreements mean something
+
+The catalogues key a casilla label by revision, so every revision carries its own
+copy of every label. The collapse was already proved lossless - 87,298 strings to
+57,249, with the residue being casillas whose text genuinely differs. What the
+residue does NOT say is which of those differences are real.
+
+Spanish is the source. If a casilla's Spanish is byte-identical across two
+revisions, the official wording did not change between them, so a translation
+differing across those same two revisions is not tracking anything.
+
+Measured by `python -m dev.locales.translation_drift` on 2026-09-04:
+
+- **897 Catalan, 1,057 English and 1,203 Hungarian casillas drift** - two
+  renderings of one unchanged Spanish string. `Ownership (%)` against
+  `Ownership percentage`; `CNAE code of the main activity` against `NACE code of
+  the principal activity`, which is not a style difference at all, since CNAE is
+  the Spanish classification and NACE the European one.
+- 723, 743 and 730 track a genuine Spanish change, so roughly three in five
+  varying casillas are drift rather than translation doing its job.
+- 37, 34 and 34 cannot be compared: the locale labels the casilla under
+  revisions the Spanish catalogue does not.
+
+The varying totals - 1,620, 1,800 and 1,933 - match the override populations the
+derivation module reports for the same locales exactly. Two modules reaching the
+same figure by different routes is worth more than either alone.
+
+The plan's Step recorded 931 Hungarian, 807 English and 687 Catalan for this,
+which no measurement here reproduces. The ordering is the same and the
+magnitudes are not; the figures above are stated with their date, their
+definition and their command so the next reader can tell which is which.
+
+**The inverse defect is the sharper one and a first version could not see it.**
+A screen looking only at casillas whose TRANSLATION varies cannot find a
+translation that failed to follow a source change, because such a translation is
+constant - which is also what a correct translation of an unchanged string looks
+like. Iterating from the source side as well finds **29 Catalan, 9 English and 22
+Hungarian** casillas where the official Spanish changed between revisions and the
+translation did not. A filer reads text that no longer matches the official
+wording, and nothing in the translation says so.
+
+Two smaller corrections are worth recording. The first version counted casillas
+with no comparable revision pair as tracking a source change, which credits a
+translation with following something nobody looked at; they are their own
+condition now. And the screen's own docstring said "three conditions" after the
+fourth was added - the exact staleness the registry screens' condition-count gate
+exists to catch, found here by reading rather than by a gate, because this
+package has no such gate.
+
+The screen prints identifiers and counts, not label text. Writing Catalan and
+Hungarian labels to a redirected stdout fails on the ambient Windows encoding:
+the first full run truncated mid-stream and exited 1, while the same output
+piped through `tail` had looked fine. That is the second time this session that
+a pipe hid a non-zero status.
