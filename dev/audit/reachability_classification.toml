@@ -1,0 +1,143 @@
+# Reachability classification
+#
+# One recorded class per module the reachability audit reports outside the
+# deferred `cadrumo.entrypoints.tui` prefix. The audit establishes that a
+# module is not reached from a declared console script. It cannot establish
+# WHY, and the remedies differ completely: relocating harness code, deleting an
+# orphan, and waiting on a staged capability are three different actions, and
+# applying the wrong one either deletes shipped capability or wires code to
+# nothing.
+#
+# THIS FILE IS A CLASSIFICATION LEDGER, NOT A MUTE. Nothing here changes what
+# the audit reports, what it counts, or whether the ratchet passes. It records
+# what a reviewer found and the evidence that established it.
+#
+# `class` is one of the closed taxonomy:
+#
+#   harness-code          reached only by `dev/`; belongs beside the dev
+#                         consumer that drives it.
+#   test-support          reached only by tests and written to serve them;
+#                         belongs under the wheel-excluded test tree.
+#   superseded            a reachable module already discharges the
+#                         responsibility; delete with its tests. Requires a
+#                         named live module found by MEANING, not by name.
+#   staged-capability     built ahead of a dependency, with an accepted
+#                         decision recording what it waits on. Never delete.
+#   orphaned              nothing reaches it and no decision explains it;
+#                         delete with its tests.
+#   should-be-live        a product command needs it and the wiring is the
+#                         defect.
+#   deferred-by-ownership inside, or an exclusive supplier of, a frozen prefix
+#                         owned by another in-flight campaign.
+#
+# `evidence` names what established the class: the consuming module, or the
+# accepted decision. A class asserted without evidence is relabelling.
+
+[meta]
+generated_from = "dev.audit.unreachable_code --json"
+measured = "2026-09-04"
+modules_reported = 43
+tui_deferred = 26
+classified_here = 17
+
+# ---------------------------------------------------------------------------
+# harness-code -- reached only by dev/ tooling
+# ---------------------------------------------------------------------------
+
+[[module]]
+name = "cadrumo.application.operator_surface.calculation_workflows"
+class = "harness-code"
+evidence = "dev/source_connectivity/source_connectivity_authority.py and dev/source_connectivity/live_proof.py are its only non-test consumers."
+
+[[module]]
+name = "cadrumo.application.operator_surface.crud_registry"
+class = "harness-code"
+evidence = "dev/quality/crud_contract_drift.py consumes the catalogue; the module's own docstring states it is the source of truth consumed by cross-cutting conformance tests."
+
+[[module]]
+name = "cadrumo.application.operator_surface.crud_contract"
+class = "harness-code"
+evidence = "dev/quality/crud_contract_drift.py; the contract types exist to be checked against the shipped Typer subgroups, not to be called at runtime."
+
+[[module]]
+name = "cadrumo.domain.calculations.registry.record_spec"
+class = "harness-code"
+evidence = "dev/registry/analysis/load_census_classification.py and dev/registry/pipeline/_export_tree.py are its only non-test consumers."
+
+# ---------------------------------------------------------------------------
+# staged-capability -- an accepted decision records what each waits on
+# ---------------------------------------------------------------------------
+
+[[module]]
+name = "cadrumo.domain.fincas"
+class = "staged-capability"
+evidence = "Accepted decision `2026-09-03-unreachable-capability-fincas-titularidad-adr` extends this domain with per-property titularidad and usufructo attribution; the record states the engine currently attributes at 100 per cent, which no-silent-under-declaration forbids."
+
+[[module]]
+name = "cadrumo.adapters.persistence.profile.fincas"
+class = "staged-capability"
+evidence = "Persistence side of the same accepted fincas titularidad decision; the record names the shipped domain record and its persistence row as both changing."
+
+[[module]]
+name = "cadrumo.application.modelo._edit_facade"
+class = "staged-capability"
+evidence = "Accepted decision `2026-08-24-modelo-edit-contract-adr`; the module projects UNMEASURED in V1 and its docstring states the row becomes available once the green financial-operand dependency receipt exists."
+
+[[module]]
+name = "cadrumo.application.modelo.edit_session"
+class = "staged-capability"
+evidence = "Same accepted edit-contract decision; the operator-level face of an in-progress edit, awaiting the same receipt."
+
+[[module]]
+name = "cadrumo.core.compatibility_lifecycle"
+class = "staged-capability"
+evidence = "Accepted decision `2026-07-09-compatibility-lifecycle-adr` governs the regime-switched policy for persisted formats."
+
+[[module]]
+name = "cadrumo.adapters.outbound.aeat.sede.renta_web_open"
+class = "staged-capability"
+evidence = "A live read-only browser driver for the AEAT electronic office; the ratchet records it and its safety oracle as a cluster that stands or falls together."
+
+[[module]]
+name = "cadrumo.adapters.outbound.aeat.sede._renta_web_open_safety"
+class = "staged-capability"
+evidence = "Click-time safety enforcement for the driver above; deleting it alone would remove the guard while leaving the driver, so the two are one unit."
+
+[[module]]
+name = "cadrumo.adapters.persistence.profile.filing_export_replay"
+class = "staged-capability"
+evidence = "Encrypted custody adapter for source-owned filing export replay proof; its namespace is registered in adapters/persistence/storage/secure_object_namespaces.py."
+
+[[module]]
+name = "cadrumo.core.address_components"
+class = "staged-capability"
+evidence = "Already carried as an [[intentional]] design_time_authority in the module ratchet: the canonical AEAT address-component vocabulary constrains producer-key declarations and deliberately has no runtime transport caller."
+
+# ---------------------------------------------------------------------------
+# deferred-by-ownership -- the TUI campaign owns these
+# ---------------------------------------------------------------------------
+
+[[module]]
+name = "cadrumo.application.user_profile.status_projection"
+class = "deferred-by-ownership"
+evidence = "Its only non-test consumers are cadrumo.entrypoints.tui.devtools.surfaces and cadrumo.entrypoints.tui.profile.status; the ratchet reports it as deferred through the exclusive-supplier closure of the frozen TUI prefix."
+
+[[module]]
+name = "cadrumo.application.wizard.legal_zone"
+class = "deferred-by-ownership"
+evidence = "Consumed by cadrumo.application.flows copy, definition and line_frontend, which are themselves part of the wizard flow-surface cluster the ratchet names as owned elsewhere."
+
+# ---------------------------------------------------------------------------
+# unresolved -- evidence gathered, remedy needs its owner's decision
+# ---------------------------------------------------------------------------
+
+[[module]]
+name = "cadrumo.application.wizard._registered_values"
+class = "orphaned"
+evidence = "No non-test consumer anywhere in src/cadrumo or dev/. A registered-values projection for the setup flow's review overview whose caller is gone; the ratchet names the wizard flow surfaces among the orphaned-domain cluster."
+remedy_requires_decision = true
+
+[[module]]
+name = "cadrumo.domain.portals.drift"
+class = "staged-capability"
+evidence = "Reported type-only: an `if TYPE_CHECKING` import is its sole reference, so the typed portal-drift record exists for annotation rather than execution."
