@@ -5,16 +5,11 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:d57d02cfce03d3b0fdab91aebb98fd29677739677913381dbd7626c67fab7c1a'
+body_hash: 'sha256:64c1cc15cbaed9d17d0feec5f6cf92b7386d2ecc7d4aa2e31598843d28256a48'
 step_id: 'S12'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Re-measure every signal from one stable revision and prove no false green remains
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:00e5549bfe20050bc4eef27448cd541cd00a7cf22bdaaabbc36c5c0cc23a3082'
+body_hash: 'sha256:f3726241f972849729bcbd109d1a5686b809ee586f467bb95effa1fee36b40da'
 step_id: 'S409'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -20,23 +20,33 @@ related:
 ## Changes
 
 - `M` `src/cadrumo/application/workbench_generation.py`
-- `verify:` `uv run --no-sync pytest -q src/cadrumo/application/tests/test_workbench_generation.py` -> `pass`
-- `verify:` `uv run --no-sync pytest -q -m integration src/cadrumo/entrypoints/tui/tests/test_installed_workbench.py src/cadrumo/entrypoints/tui/tests/test_workbench_security.py` -> `pass`
-- `verify:` `uv run --no-sync python -m dev.quality.types` -> `pass`
+- `M` `src/cadrumo/application/tests/test_workbench_generation.py`
+- `verify:` `pytest -n0 -m '' application/tests/test_workbench_generation.py tui/tests/test_home.py` -> `pass` (23)
 
 ## Notes
 
-PARTIAL: one of six Home zones. The agenda needed only facts the door already held, so it
-is now AVAILABLE with its entries, and the agenda-evidence zone carries the evidence read's
-own AEAT state -- NEVER_CAPTURED before a pull -- rather than a blanket refusal that would
-have implied a broken reader.
+Step left OPEN: two of Home's six zones are now wired, four remain refused.
 
-The other five stay refused and each names what is missing, because none can be derived
-honestly from what the session reads today. Actions needs the next-actions projector.
-Declarations cannot be built at all from the current ref: HomeDeclarationResume requires a
-human name the DeclarationsWorkspaceDeclarationRefV1 does not carry, and synthesising one
-would be fabrication. Ledger readiness enforces that review, unclassified and
-missing-evidence counts are subsets of the entry count, and the Ledger area counts are not
-provably subsets, so mapping them across could publish a false total or trip the invariant;
-the semantics have to be settled before that zone can be filled. Messages has no
-notification projection.
+Landed. The AGENDA zone reads the real overview agenda, and the LEDGER zone now
+reads the Ledger workspace projection the generation door already builds --
+`_read_ledger` ran and its result was discarded on the way to Home, which is
+what "nothing yet calls them" meant here: the authority was not missing, the
+call was.
+
+The interesting part is the refusal rule rather than the wiring.
+`LedgerWorkspaceAreaStateV1.item_count` is a plain integer, so an area nobody
+measured reports 0 -- the same value a genuinely empty area reports. The Ledger
+workspace keeps those apart through `status` and renders UNMEASURED as
+"Sin medir" rather than a digit. Home has no such room: its readiness block is
+four bare numbers, and a zero there reads as a finding. So the block refuses
+when ANY of its four areas is unmeasured rather than publishing three real
+counts beside one fabricated one -- partial truth in a summary is
+indistinguishable from whole truth once rendered.
+
+Teeth proven by accepting unmeasured areas: `an unmeasured entries area still
+produced a readiness block, so Home renders a zero nobody measured`. Restored
+by copy and verified.
+
+Remaining and NOT done: actions, resumable declarations and messages. Each
+needs its authority identified and its refusal semantics settled the same way
+this one did, which is a step apiece rather than a sweep.
