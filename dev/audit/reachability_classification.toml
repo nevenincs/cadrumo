@@ -102,8 +102,8 @@ evidence = "Accepted decision `2026-08-24-modelo-edit-contract-adr`; the module 
 
 [[module]]
 name = "cadrumo.application.modelo.edit_session"
-class = "staged-capability"
-evidence = "Same accepted edit-contract decision; the operator-level face of an in-progress edit, awaiting the same receipt."
+class = "deferred-by-ownership"
+evidence = "Consumed by cadrumo.entrypoints.tui.modelo.edit controller, fields, review and rows; the ratchet reports it deferred through the exclusive-supplier closure of the frozen TUI prefix. The accepted modelo edit-contract decision governs the capability, but its current consumers are owned by the TUI campaign, so that ownership is the operative class here."
 
 [[module]]
 name = "cadrumo.core.compatibility_lifecycle"
