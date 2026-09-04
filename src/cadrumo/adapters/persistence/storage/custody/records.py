@@ -21,6 +21,7 @@ from .....core.hashing import (
     validate_prefixed_digest,
 )
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .._kdf_salt import KDF_SALT_BYTES
 from ..crypto.aead import GCM_TAG_SIZE, KEY_SIZE, NONCE_SIZE
 from .digest_model import CustodyDigestModel
 from .errors import ProfileCustodyPasswordError, ProfileCustodyRecordError
@@ -39,7 +40,6 @@ PROFILE_CUSTODY_KDF_MEMORY_MIB: Final[frozenset[int]] = frozenset({19, 32, 64, 1
 PROFILE_CUSTODY_KDF_ITERATIONS: Final[frozenset[int]] = frozenset({2, 3, 4, 6, 8, 10})
 PROFILE_CUSTODY_KDF_PARALLELISM: Final[frozenset[int]] = frozenset({1, 2, 4})
 
-_KDF_SALT_BYTES: Final = 16
 _DEK_EPOCH_BYTES: Final = 16
 _SHA256_DIGEST_RE: Final = re.compile(r"sha256:[0-9a-f]{64}\Z")
 _KEY_SCHEDULE: Final = "profile-password-dek-wrap/v1"
@@ -104,7 +104,7 @@ class ProfileCustodyKdfParameters(BaseModel):
     @field_validator("salt_b64")
     @classmethod
     def _validate_salt(cls, value: str) -> str:
-        return _decode_canonical_b64(value, field_name="salt_b64", expected_bytes=_KDF_SALT_BYTES)
+        return _decode_canonical_b64(value, field_name="salt_b64", expected_bytes=KDF_SALT_BYTES)
 
 
 class ProfileCustodyWrappedDek(BaseModel):

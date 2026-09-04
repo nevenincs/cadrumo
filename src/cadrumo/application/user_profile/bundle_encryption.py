@@ -177,12 +177,10 @@ def decrypt_profile_bundle_with_passphrase(
             translated_message="errors.refused.refused_user_profile_validation",
             context={"kdf_supported": False},
         )
-    # Gated against the Argon2 ALGORITHM version the writer stamps --
-    # deliberately not against the
-    # file-backed provider's ``KDF_PARAMS_VERSION``, a different concept naming
-    # the master.kdf record SHAPE. The two are unequal, so confusing them would
-    # refuse every bundle this build writes.
-    #
+    # Gated against the Argon2 ALGORITHM version the writer stamps, which is a
+    # different concept from any on-disk record SHAPE version: the two carry
+    # unequal values, so gating on the wrong one would refuse every bundle this
+    # build writes.
     crypto = default_profile_record_crypto_port()
     kdf_policy = crypto.passphrase_kdf_policy()
     if envelope.kdf_version != kdf_policy.version:
