@@ -22,6 +22,8 @@
 # This is a backlog, not an endorsement.
 
 [symbols]
+"cadrumo.application.user_profile.capsule_restore" = 2
+"cadrumo.entrypoints.cli._modelo" = 1
 "cadrumo.adapters.inbound.einvoice.shape" = 1
 "cadrumo.adapters.inbound.financial.providers.detection" = 1
 "cadrumo.adapters.inbound.pdf.label_regex" = 1
