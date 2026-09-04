@@ -80,8 +80,33 @@ def _assert_cli_version(work_dir: Path, venv_path: Path) -> None:
     record_proof("installed CLI version smoke")
 
 
-def main(argv: list[str] | None = None) -> int:
-    """Run the aggregate optional-extras installed-wheel packaging smoke gate."""
+def declared_claims(*, skip_export_checks: bool) -> tuple[str, ...]:
+    """Return the claims this lane promises to prove, for its smoke manifest.
+
+    The manifest refuses a declared claim whose assertion never ran, so this
+    list and the lane body are one contract: skipping the export checks must
+    drop their claim, or the run fails naming a claim with nothing behind it.
+
+    Extracted so that coupling is provable without building a wheel, a venv
+    and every optional extra - which is what this lane exists to install.
+    """
+    claims = [
+        "wheel tracked shipped-data payload",
+        "wheel metadata dependency surface",
+        "stdlib venv creation",
+        "exact local cohort install with pip",
+        "pip dependency check",
+        "installed bundled data resources",
+        "all capability-gated optional imports",
+        "installed CLI version smoke",
+    ]
+    if not skip_export_checks:
+        claims.insert(0, "frozen dependency exports")
+    return tuple(claims)
+
+
+def build_parser() -> argparse.ArgumentParser:
+    """Return the lane's argument parser, so its contract is testable alone."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--python",
@@ -100,6 +125,12 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Skip frozen uv export surface checks and run only the installed-wheel smoke.",
     )
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Run the aggregate optional-extras installed-wheel packaging smoke gate."""
+    parser = build_parser()
     args = parser.parse_args(argv)
 
     repo_root = REPO_ROOT
@@ -134,18 +165,7 @@ def main(argv: list[str] | None = None) -> int:
     _assert_all_extra_imports(work_dir, venv_path)
     _assert_cli_version(work_dir, venv_path)
 
-    declared = [
-        "wheel tracked shipped-data payload",
-        "wheel metadata dependency surface",
-        "stdlib venv creation",
-        "exact local cohort install with pip",
-        "pip dependency check",
-        "installed bundled data resources",
-        "all capability-gated optional imports",
-        "installed CLI version smoke",
-    ]
-    if not args.skip_export_checks:
-        declared.insert(0, "frozen dependency exports")
+    declared = declared_claims(skip_export_checks=args.skip_export_checks)
     manifest = write_smoke_manifest(
         work_dir,
         lane="all-extras-wheel",
