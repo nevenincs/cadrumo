@@ -555,33 +555,6 @@ M347_THRESHOLD_EUR: Final[Decimal] = Decimal("3005.06")
 #: year, and each is judged against its own floor.
 M347_CLAVE_C_THRESHOLD_EUR: Final[Decimal] = Decimal("300.51")
 
-#: IVA regularización de deducciones por bienes de inversión — regulatory constants
-#: (LIVA arts. 107-109, Ley 37/1992, BOE-A-1992-28740), re-read verbatim from the
-#: bundled consolidated corpus ``corpus/normatives/html/ley-37-1992-art-107.html``
-#: and ``-art-109.html`` per ``aeat-calculation-grounding``.
-#:
-#: Art. 107.Uno: movable capital goods regularise over the "cuatro años naturales
-#: siguientes" to acquisition; art. 107.Tres: "terrenos o edificaciones" over the
-#: "nueve años naturales siguientes". These are the count of FOLLOWING years in the
-#: regularisation window (the acquisition year itself is the year the deduction was
-#: made).
-IVA_BIEN_INVERSION_MUEBLE_VENTANA_ANOS: Final[int] = 4
-IVA_BIEN_INVERSION_INMUEBLE_VENTANA_ANOS: Final[int] = 9
-
-#: Art. 107.Uno: the regularisation is practised only "cuando … exista una diferencia
-#: superior a diez puntos" between the definitive deduction percentage of the year and
-#: the one that prevailed in the acquisition year. The gate is STRICT (> 10 points);
-#: a difference of exactly 10 points does not trigger a regularisation. Binding
-#: provision: Art. 107.Uno LIVA (Ley 37/1992).
-IVA_BIEN_INVERSION_REGULARIZACION_UMBRAL_PUNTOS: Final[Decimal] = Decimal("10")
-
-#: Art. 109.3.º: "La diferencia positiva o negativa se dividirá por cinco o, tratándose
-#: de terrenos o edificaciones, por diez". The per-year regularisation quotient divides
-#: the deduction difference by 5 for movable goods and 10 for land/buildings. Binding
-#: provision: Art. 109.3.º LIVA (Ley 37/1992).
-IVA_BIEN_INVERSION_MUEBLE_DIVISOR: Final[Decimal] = Decimal("5")
-IVA_BIEN_INVERSION_INMUEBLE_DIVISOR: Final[Decimal] = Decimal("10")
-
 #: Art. 108.Dos.5.º bienes-de-escaso-valor exclusion: a good "cuyo valor de adquisición
 #: sea inferior a quinientas mil pesetas" is NOT a bien de inversión. The consolidated
 #: corpus still states the figure in pesetas; 500.000 ptas is the historic amount whose

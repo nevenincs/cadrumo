@@ -39,7 +39,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import NamedTuple
@@ -73,6 +73,9 @@ from ...domain.bienes_inversion.register import (
     BienesInversionIvaRegister,
     RegistroRegularizacionResult,
     compute_registro_regularizacion,
+)
+from ...domain.bienes_inversion.regularizacion_parameters import (
+    resolve_bienes_inversion_regularizacion_parameters,
 )
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
@@ -681,8 +684,13 @@ def _resolve_m303_export_arrivals(
         )
     else:
         contributions = ()
+    bienes_parameters = resolve_bienes_inversion_regularizacion_parameters(
+        snapshot.revision,
+        modelo_id=Modelo.M303.value,
+        filing_period_date=date(period.filing_year, 12, 31),
+    )
     definitive_by_identifier: dict[str, Decimal] = {}
-    for record in bienes_register.in_window_records(period.filing_year):
+    for record in bienes_register.in_window_records(period.filing_year, parameters=bienes_parameters):
         entry = prorrata_register.entry_for(
             period.filing_year,
             sector_id=record.prorrata_sector_id,
@@ -693,6 +701,7 @@ def _resolve_m303_export_arrivals(
         bienes_register,
         regularizacion_year=period.filing_year,
         prorrata_definitiva_by_identifier=definitive_by_identifier,
+        parameters=bienes_parameters,
     )
     if regularisation_result.pending_percentage_count:
         raise FilingProducerSnapshotError(

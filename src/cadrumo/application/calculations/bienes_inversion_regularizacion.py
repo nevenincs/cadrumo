@@ -23,6 +23,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import date
 from decimal import Decimal
 from typing import ClassVar
 
@@ -39,6 +40,11 @@ from ...domain.bienes_inversion.register import (
     RegistroTransmisionesResult,
     compute_registro_regularizacion,
     compute_registro_transmisiones,
+)
+from ...domain.bienes_inversion.regularizacion_parameters import (
+    BienesInversionParameterResolutionError,
+    BienesInversionRegularizacionParameters,
+    resolve_bienes_inversion_regularizacion_parameters,
 )
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import ModeloRevision
@@ -179,6 +185,7 @@ def build_bienes_inversion_regularizacion_advisory(
     *,
     regularizacion_year: int,
     prorrata_definitiva_by_identifier: Mapping[str, Decimal],
+    parameters: BienesInversionRegularizacionParameters,
 ) -> tuple[RegistroRegularizacionResult, CalculationSourceDiagnostic | None]:
     """Project the register and build the fallback advisory diagnostic.
 
@@ -205,6 +212,8 @@ def build_bienes_inversion_regularizacion_advisory(
         regularizacion_year: The year being calculated.
         prorrata_definitiva_by_identifier: Current-year definitive deduction
             percentages keyed by record identifier (absent keys are pending).
+        parameters: Registry-resolved LIVA art-107/109 figures for the filing
+            context; the arithmetic below cannot run without them.
 
     Returns:
         ``(projection, diagnostic)`` where ``projection`` is a
@@ -215,6 +224,7 @@ def build_bienes_inversion_regularizacion_advisory(
         register,
         regularizacion_year=regularizacion_year,
         prorrata_definitiva_by_identifier=prorrata_definitiva_by_identifier,
+        parameters=parameters,
     )
     in_window = len(projection.rows)
     if in_window == 0:
@@ -247,6 +257,7 @@ def build_bienes_inversion_transmision_advisory(
     register: BienesInversionIvaRegister,
     *,
     disposal_year: int,
+    parameters: BienesInversionRegularizacionParameters,
     cuota_devengada_entrega_by_identifier: Mapping[str, Decimal] | None = None,
 ) -> tuple[RegistroTransmisionesResult, CalculationSourceDiagnostic | None]:
     """Project the register's art-110 disposals and build the advisory diagnostic.
@@ -272,6 +283,8 @@ def build_bienes_inversion_transmision_advisory(
         cuota_devengada_entrega_by_identifier: Optional per-good cuota devengada on
             the disposal itself, applied as the regla-1ª cap. Absent keys leave
             regla 1ª uncapped for that good.
+        parameters: Registry-resolved LIVA art-107/109 figures for the filing
+            context; the arithmetic below cannot run without them.
 
     Returns:
         ``(projection, diagnostic)`` where ``projection`` is a
@@ -282,6 +295,7 @@ def build_bienes_inversion_transmision_advisory(
         register,
         disposal_year=disposal_year,
         cuota_devengada_entrega_by_identifier=cuota_devengada_entrega_by_identifier,
+        parameters=parameters,
     )
     if projection.computed_count == 0:
         return projection, None
@@ -352,6 +366,32 @@ class BienesInversionRegularizacionSourceResolver:
                 ),
             )
 
+        try:
+            parameters = resolve_bienes_inversion_regularizacion_parameters(
+                context.revision,
+                modelo_id=context.modelo,
+                filing_period_date=date(context.filing_year, 12, 31),
+            )
+        except BienesInversionParameterResolutionError as exc:
+            # Modelo 390 revisions declare the parameter family NOT APPLICABLE,
+            # so this refuses for the resumen anual today. That is deliberate:
+            # the alternative is to project a filing-bound figure computed from
+            # figures the active revision never declared, which is precisely the
+            # silent under-declaration the diagnostic exists to prevent. The
+            # deeper question -- whether casilla 63 should restate the periodic
+            # casilla 43 rather than recompute it -- is a legal one, and it is
+            # recorded for review rather than settled here.
+            return CalculationSourceResolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                unresolved_binding_ids=declared_binding_ids,
+                diagnostics=_unresolved_binding_diagnostics(
+                    binding_ids=declared_binding_ids,
+                    resolver_id=self.resolver_id,
+                    message=str(exc),
+                ),
+            )
+
         repository = self._register_repository or BienesInversionIvaRegisterRepository(bucket_id=context.bucket_id)
         try:
             register = repository.load()
@@ -398,15 +438,18 @@ class BienesInversionRegularizacionSourceResolver:
         )
         annual_projection = compute_registro_regularizacion(
             register,
+            parameters=parameters,
             regularizacion_year=context.filing_year,
             prorrata_definitiva_by_identifier={}
             if missing_pct
             else {
                 record.identifier: current_year_values[_CURRENT_YEAR_PRORRATA_ID]
-                for record in register.in_window_records(context.filing_year)
+                for record in register.in_window_records(context.filing_year, parameters=parameters)
             },
         )
-        disposal_projection = compute_registro_transmisiones(register, disposal_year=context.filing_year)
+        disposal_projection = compute_registro_transmisiones(
+            register, disposal_year=context.filing_year, parameters=parameters
+        )
         if annual_projection.pending_percentage_count:
             return CalculationSourceResolution(
                 resolver_id=self.resolver_id,

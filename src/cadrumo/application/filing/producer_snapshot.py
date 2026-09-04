@@ -25,6 +25,9 @@ from ...domain.bienes_inversion.register import (
     RegistroRegularizacionResult,
     compute_registro_regularizacion,
 )
+from ...domain.bienes_inversion.regularizacion_parameters import (
+    BienesInversionRegularizacionParameters,
+)
 from ...domain.deadlines.models import ChargeAccount, ModeloIVAProfile, RefundAccount, TaxpayerProfile
 from ...domain.modelos.calculation_revision import CalculationRevisionAmendmentKind, FilingInstanceEvidence
 from ...domain.modelos.calculation_revision_amendment import (
@@ -82,6 +85,7 @@ def assert_m303_regularisation_result_matches_bienes_register(
     *,
     bienes_register: BienesInversionIvaRegister,
     regularisation_result: RegistroRegularizacionResult,
+    parameters: BienesInversionRegularizacionParameters,
 ) -> None:
     """Refuse a result that is not the register's exact annual projection.
 
@@ -98,6 +102,7 @@ def assert_m303_regularisation_result_matches_bienes_register(
             for row in regularisation_result.rows
             if row.prorrata_anio_pct is not None
         },
+        parameters=parameters,
     )
     if regularisation_result != canonical:
         raise ValueError("M303 regularisation result must be the canonical projection of the supplied Bienes register")
