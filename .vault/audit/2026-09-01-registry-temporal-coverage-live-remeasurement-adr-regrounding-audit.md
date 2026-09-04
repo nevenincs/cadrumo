@@ -13795,3 +13795,41 @@ is not rediscovered.
 The four sites in the gate's own test file are not offenders: they are the
 constructed citations proving each pattern matches, and the gate skips its own
 module for exactly that reason, saying so where it does it.
+
+
+## A gate that could not see its own module
+
+The vault-citation gate skipped its own test file entirely, with a comment
+explaining why: the module necessarily contains example citations, so scanning it
+would make the gate report itself.
+
+The reasoning is right and the remedy was too broad by a factor of forty.
+Measured, the file is 1,365 lines and the citations that must be there occupy
+33 - the pattern table naming the vault path prefix, and the paired detector
+constructing one citation of each kind. The other 1,332 lines were unscanned, in
+a gate about references hiding where nobody looks.
+
+The exemption is now two regions located by parsing the module rather than by
+line number, so an edit above them cannot slide the exemption onto innocent
+code. A region the parse cannot find is left in place and reported, which is the
+safe direction.
+
+Three things went wrong while narrowing it and all three are the same shape.
+
+The helper matched `ast.Assign` and the pattern table is an `AnnAssign`, because
+it carries a type annotation - so the region it most needed to exempt was the one
+it missed. Then the gate reported **my own comment**, which explained the
+exemption by naming the literal it exempts. Then it reported **my own test**,
+whose planted citation proves the narrowed gate still detects one; a
+detector-teeth fixture written outside the exempted regions is a real violation
+of the gate it tests.
+
+Each was caught within seconds by the gate itself, which is the argument for the
+narrowing in one line: the version that skipped the file would have accepted all
+three in silence.
+
+The fixture is now assembled at runtime rather than spelled out, and the test
+asserts the exemption stays small - fewer than sixty lines and under a twentieth
+of the module - because growing the exemption to cover the new test is exactly
+the move the narrowing exists to prevent, and it would have been the easier fix
+each of the three times.

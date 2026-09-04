@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:6851c415c1f1f0f183eeb16510e7db2a17362564ea9d14af802b504c0b6b2c7e'
+body_hash: 'sha256:7d42899ba9611496023881dd21daa67896c105128745cb50297b23655f96b79d'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -392,6 +392,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S509` - Remove the stray empty .vault/tmp directory, one of the two standing vault errors this session repeatedly attributed to a peers ADR without reading the detail; the remaining error is the test-reconciliation-sweep ADR carrying no grounding references; `.vault`.
 - [x] `W02.P02.S510` - Decompose the vault health total this session reported opaquely: 353 body-sections, 44 features, 27 exec-mapping and the rest belong to other features, while both features this session writes to report all checks passed; `.vault`.
 - [x] `W02.P02.S511` - Measure what the vault-citation gate does not match: its four patterns are all dotted, so seventeen bare step-prefixed names across three files pass a gate whose docstring says it exists so step identifiers do not; `dev/registry/tests/test_declaration_invariant_gates.py`.
+- [x] `W02.P02.S512` - Narrow the citation gates self-exemption from a whole-file skip to two regions located by parsing the module, shrinking the blind spot from 1365 lines to 33, with a test asserting the exemption stays under a twentieth of the file; `dev/registry/tests/test_declaration_invariant_gates.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
