@@ -12,7 +12,7 @@ command handling (the identical transport
 :func:`cadrumo_harness.mcp._dispatch.tool_request_argv` projects the
 ``cadrumo_modelo_work_calculate`` MCP tool call onto: ``app modelo work calculate``),
 decodes the JSON RESPONSE payload's ``observations`` rows, and feeds them into
-:func:`dev.agent_eval.run_golden_scenario` via its ``response_observations``
+:func:`dev.agent_eval._runner.run_golden_scenario` via its ``response_observations``
 parameter so the ``response_provenance_present`` dimension asserts over the
 payload the operator actually reads.
 
@@ -43,7 +43,8 @@ from cadrumo.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.profile_capsule import open_test_profile_session, seed_test_profile_record
 from cadrumo.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 
-from .. import GoldenScenario, load_scenario, run_golden_scenario
+from .._models import GoldenScenario
+from .._runner import load_scenario, run_golden_scenario
 from ._real_cli_support import create_m130_work_unit, valid_cli_commands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

@@ -15,7 +15,7 @@ so casilla 07 resolves to the same 1.600,00 EUR oracle figure
 ``test_modelo_130_value_oracle.py`` grounds, runs the real
 ``cadrumo_harness.mcp._faithfulness.faithfulness_check`` against real narration
 text and the captured calculate JSON, and feeds the verdict into
-:func:`dev.agent_eval.run_golden_scenario` via its
+:func:`dev.agent_eval._runner.run_golden_scenario` via its
 ``narration_faithfulness_checks`` parameter so the pass/fail composition itself
 proves the two-part posture: advisory off the handoff path, hard block on it.
 
@@ -49,7 +49,8 @@ from cadrumo.tests.profile_capsule import open_test_profile_session, seed_test_p
 from cadrumo.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from cadrumo_harness.mcp import faithfulness_check
 
-from .. import NarrationFaithfulness, load_scenario, run_golden_scenario
+from .._models import NarrationFaithfulness
+from .._runner import load_scenario, run_golden_scenario
 from ._real_cli_support import create_m130_work_unit, valid_cli_commands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

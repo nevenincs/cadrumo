@@ -27,12 +27,8 @@ import pytest
 
 from cadrumo_harness.mcp import build_tool_descriptors
 
-from .. import (
-    LiveToolCallRecord,
-    LiveTrajectory,
-    load_scenario,
-    run_golden_scenario,
-)
+from .._models import LiveToolCallRecord, LiveTrajectory
+from .._runner import load_scenario, run_golden_scenario
 from .._live_scoring import (
     DiscoveryScore,
     SurfaceDiscoveryComparison,

@@ -30,12 +30,8 @@ from cadrumo_harness.mcp import (
     tool_name_for_command,
 )
 
-from .. import (
-    LiveToolCallRecord,
-    LiveTrajectory,
-    load_scenario,
-    run_golden_scenario,
-)
+from .._models import LiveToolCallRecord, LiveTrajectory
+from .._runner import load_scenario, run_golden_scenario
 from .._live_scoring import IdentityConfirmationScore, score_identity_trajectory
 from ._real_cli_support import valid_cli_commands
 

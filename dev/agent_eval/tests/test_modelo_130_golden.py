@@ -17,7 +17,7 @@ import pytest
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 
-from .. import load_scenario, run_golden_scenario
+from .._runner import load_scenario, run_golden_scenario
 from ._real_cli_support import valid_cli_commands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

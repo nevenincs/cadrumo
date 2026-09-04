@@ -32,7 +32,8 @@ from cadrumo.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.profile_capsule import open_test_profile_session, seed_test_profile_record
 from cadrumo.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 
-from .. import ExitCodeScenario, check_exit_code_scenario
+from .._models import ExitCodeScenario
+from .._runner import check_exit_code_scenario
 from .._action_coverage import LeafConditionScenario, production_leaf_condition_scenario_matrix
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
