@@ -31,8 +31,8 @@ from ..._paths import REPO_ROOT
 from ..casilla_reference import CasillaReferenceError, CasillaReferenceResult, render_casilla_reference
 from ..terminology import project_casilla_search_records
 from ..terminology._casilla_anchor import casilla_page_anchor
-from ..terminology._search_record import CasillaSearchRecord, SearchRecordKind
-from ..terminology._unified_record import to_search_record
+from ..terminology.search_record import CasillaSearchRecord, SearchRecordKind
+from ..terminology.unified_record import to_search_record
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 

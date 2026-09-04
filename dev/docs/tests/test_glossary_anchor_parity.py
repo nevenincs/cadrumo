@@ -32,8 +32,8 @@ from ..glossary_reference import render_glossary
 from ..pagefind_inject import _SUMMARY_MAX_CHARS, _summary_for
 from ..terminology._concept_cards import project_concept_cards
 from ..terminology._glossary_anchor import glossary_term_anchor
-from ..terminology._search_record import SearchRecordKind
-from ..terminology._unified_record import to_search_record
+from ..terminology.search_record import SearchRecordKind
+from ..terminology.unified_record import to_search_record
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 

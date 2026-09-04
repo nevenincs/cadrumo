@@ -38,8 +38,8 @@ from ..glossary_reference import generate_glossary_reference
 from ..pagefind_index import build_search_index
 from ..pagefind_inject import _inject_records, _Materialised
 from ..terminology._concept_cards import project_concept_cards
-from ..terminology._search_record import ResultDisplayClass, SearchRecordKind
-from ..terminology._unified_record import (
+from ..terminology.search_record import ResultDisplayClass, SearchRecordKind
+from ..terminology.unified_record import (
     RankingTier,
     SearchRecord,
     SearchRecordMetadata,

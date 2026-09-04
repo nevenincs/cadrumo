@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from ..pagefind_inject import _Materialised
 from ..terminology._concept_cards import project_concept_cards
-from ..terminology._unified_record import to_search_record
+from ..terminology.unified_record import to_search_record
 
 
 def concept_records() -> _Materialised:

@@ -13,7 +13,7 @@ The records are materialised by the deterministic projections (concept cards
 from the Handbook, casilla projections from the registry authority, CLI
 surface records from the live command tree, legal provisions from the
 registry-backed legal-reference projection) and funnelled through the uniform
-:class:`~dev.docs.terminology._unified_record.SearchRecord`. Each record is
+:class:`~dev.docs.terminology.unified_record.SearchRecord`. Each record is
 injected ONCE, into the language of the root being built, with content
 carrying every language's description (see :func:`_content_for`). It is not
 injected once per language section: Pagefind's reader loads only the index
@@ -48,7 +48,7 @@ from cadrumo.core.external_constants import OutputLanguage
 
 from .._paths import REPO_ROOT, UTF_8
 from .terminology._sweep import SweepResult
-from .terminology._unified_record import SearchRecord, derive_display_class, to_search_record
+from .terminology.unified_record import SearchRecord, derive_display_class, to_search_record
 
 if TYPE_CHECKING:
     from pagefind.index import PagefindIndex
@@ -168,9 +168,9 @@ def _materialise_records(repo_root: Path | None = None) -> _Materialised:
     are loaded from the registry-backed generated legal-reference surface and
     fail closed when that authored catalogue cannot produce a safe destination.
     """
-    from .terminology._casilla_projection import project_casilla_search_records
     from .terminology._concept_cards import project_concept_cards
     from .terminology._legal_projection import project_legal_search_records
+    from .terminology.casilla_projection import project_casilla_search_records
 
     out = _Materialised()
     root = repo_root if repo_root is not None else REPO_ROOT
@@ -248,7 +248,7 @@ def _effective_weight(record: SearchRecord, relevance: dict[str, float]) -> floa
     the classes above it for every query. A record the relevance file does not
     name keeps the weight the funnel gave it.
     """
-    from .terminology._unified_record import contain_boost_in_band, derive_display_class
+    from .terminology.unified_record import contain_boost_in_band, derive_display_class
 
     boost = relevance.get(record.id)
     if boost is None:

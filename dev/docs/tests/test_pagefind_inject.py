@@ -90,8 +90,8 @@ def test_relevance_file_present_is_loaded(tmp_path: Path) -> None:
     map. A record id that several query terms resolved to keeps its STRONGEST
     weight.
     """
-    from ..terminology._search_record import SearchRecordKind
     from ..terminology._sweep import SweepResult, TermRelevanceMapping, TermTargetRef
+    from ..terminology.search_record import SearchRecordKind
 
     def _target(record_id: str, weight: float) -> TermTargetRef:
         return TermTargetRef(
