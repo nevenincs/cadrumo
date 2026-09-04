@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:68592868e9ac1b678b8e4475d88e78e29c1311a9e10c98b5f11773f0bc4639d5'
+body_hash: 'sha256:5f9f1b6ad3db70a78e426649aede6d8408fb6ede1a8ce6c5c1c9c8569f7d2c67'
 step_id: 'S06'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
@@ -28,4 +28,4 @@ related:
 
 ## Notes
 
-The shared-worktree formatter committed the reference-body change as `513ed0a123` before the Step Record and plan closure were ready. The scoped closure commit therefore contains the Step Record, plan state, and generated feature index; the source publication remains traceable to that immediately preceding commit.
+The shared-worktree formatter committed the reference-body change as `513ed0a123` before the Step Record and plan closure were ready. Shared automation then committed the Step Record and plan state as `87fb621848`; the generated feature index followed in `fcac0237d6`, and the full source-revision correction in `9428f7b7d0`. The split is retained rather than rewriting concurrent history.
