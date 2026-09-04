@@ -442,3 +442,60 @@ async def test_a_heading_shares_its_left_edge_with_the_rows_it_owns(surface: str
         )
 
     assert checked, f"{surface}: no heading had content beneath it to compare against"
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("surface", ["aeat-sync-overview--ready"])
+async def test_every_control_can_be_brought_into_view(surface: str) -> None:
+    """A control the operator cannot reach is not a control.
+
+    Vertical rhythm buys separation with rows, and rows are what a short
+    terminal has least of: the two AEAT Sync section headings cost six of the
+    floor's twenty-four, which pushed that screen's operation buttons off the
+    first screenful. Below the fold is acceptable -- the page scrolls -- but
+    UNREACHABLE is not, and the difference is invisible in a rendered frame
+    because both look like a button that is simply not there.
+
+    Parametrised over the one surface that can currently exercise this. The
+    other workbench fixtures either compose no button or hide theirs when the
+    zone is empty, so at any height every control of theirs is on the first
+    screenful; the vacuity guard below reports that rather than letting them
+    pass silently. Add surfaces here as fixtures gain controls.
+
+    Run at a DELIBERATELY short viewport rather than the supported sizes. A
+    first version swept the four supported terminals and proved nothing: every
+    control in these fixtures already fits at those heights, so
+    `scroll_visible` was a no-op and the assertion held however broken the
+    scrolling was -- confirmed by disabling the page's vertical overflow and
+    watching all twelve parametrisations still pass. Forcing the fold above the
+    controls is what makes the reachability claim testable at all.
+    """
+    from textual.widgets import Button
+
+    from ..devtools.workbench_fixtures import resolve_workbench_fixture
+
+    width, height = 80, 10
+    app = resolve_workbench_fixture(surface).build()
+    unreachable: list[str] = []
+    below_the_fold = 0
+    async with app.run_test(size=(width, height)) as pilot:
+        await pilot.pause()
+        for button in app.screen.query(Button):
+            if not button.display:
+                continue
+            if button.region.y + button.region.height > height:
+                below_the_fold += 1
+            button.scroll_visible(animate=False)
+            await pilot.pause()
+            region = button.region
+            if region.y < 0 or region.y + region.height > height or region.width <= 0:
+                unreachable.append(f"{button.id or button.__class__.__name__} at {region}")
+        app.exit(None)
+
+    assert below_the_fold, (
+        f"{surface} at {width}x{height} put every control on the first screenful, so this "
+        f"never exercised scrolling and proves nothing"
+    )
+    assert not unreachable, (
+        f"{surface} at {width}x{height} has controls that cannot be scrolled into view: "
+        + ", ".join(unreachable)
+    )
