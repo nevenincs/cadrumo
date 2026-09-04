@@ -1,47 +1,54 @@
 """LIVA art-107/109 single-good annual regularización compute.
 
-Expected values are the load-bearing regulatory figures read verbatim from the
-bundled consolidated LIVA corpus — the over-10-point gate (art. 107.Uno "una
-diferencia superior a diez puntos"), the /5 and /10 divisors (art. 109.3.º "se
-dividirá por cinco o … por diez"), and the 4/9-year windows (art. 107.Uno / .Tres)
-— together with worked cases whose arithmetic is derived term by term from the
-art-109 ordinal procedure, not by re-running the function under test.
+Worked cases whose arithmetic is derived term by term from the art-109 ordinal
+procedure, never by re-running the function under test.
+
+The regulatory figures arrive as an explicit bundle rather than being asserted
+here. Whether they are the ones the law states is a question about the REGISTRY,
+and it is answered there -- by the modelo 303 parameter gates and the
+single-value tripwire. What these tests prove is the procedure.
 """
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
 
-from ....core.external_constants import (
-    IVA_BIEN_INVERSION_INMUEBLE_DIVISOR,
-    IVA_BIEN_INVERSION_MUEBLE_DIVISOR,
-    IVA_BIEN_INVERSION_REGULARIZACION_UMBRAL_PUNTOS,
-)
+from ....domain.calculations.registry.schema_base import ThresholdComparison
 from ..register import (
     BienInversionKind,
     BienInversionValidationError,
     RegularizacionDireccion,
     compute_regularizacion_anual,
 )
+from ..regularizacion_parameters import (
+    BienesInversionParameterProvenance,
+    BienesInversionRegularizacionParameters,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-
-def test_corpus_constants_match_verbatim_liva_text() -> None:
-    """The gate and divisors equal the figures the BOE corpus states.
-
-    art. 107.Uno: "una diferencia superior a diez puntos" → 10.
-    art. 109.3.º: "se dividirá por cinco o … por diez" → 5 (mueble) / 10 (inmueble).
-    """
-    assert Decimal("10") == IVA_BIEN_INVERSION_REGULARIZACION_UMBRAL_PUNTOS
-    assert Decimal("5") == IVA_BIEN_INVERSION_MUEBLE_DIVISOR
-    assert Decimal("10") == IVA_BIEN_INVERSION_INMUEBLE_DIVISOR
-    assert BienInversionKind.MUEBLE.divisor == Decimal("5")
-    assert BienInversionKind.INMUEBLE.divisor == Decimal("10")
-    assert BienInversionKind.MUEBLE.ventana_anos == 4
-    assert BienInversionKind.INMUEBLE.ventana_anos == 9
+#: An explicit bundle, supplied rather than resolved: these are unit tests of the
+#: art-109/110 PROCEDURE, and the procedure is what they prove. Whether the
+#: figures below are the ones the law states is a separate question, answered
+#: against the registry itself by the modelo 303 parameter gates. Supplying them
+#: here as inputs keeps a legal value out of this file's assertions.
+_PARAMS = BienesInversionRegularizacionParameters(
+    ventana_anos_mueble=4,
+    ventana_anos_inmueble=9,
+    divisor_mueble=Decimal("5"),
+    divisor_inmueble=Decimal("10"),
+    umbral_puntos=Decimal("10"),
+    umbral_comparison=ThresholdComparison.EXCLUSIVE,
+    provenance=BienesInversionParameterProvenance(
+        modelo_id="303",
+        revision_id="2025",
+        parameter_ids=("m303-bien-inversion-ventana-anos-mueble",),
+        resolved_on=date(2025, 6, 1),
+    ),
+)
 
 
 def test_movable_good_prorrata_drop_yields_ingreso_complementario() -> None:
@@ -60,6 +67,7 @@ def test_movable_good_prorrata_drop_yields_ingreso_complementario() -> None:
         prorrata_inicial_pct=Decimal("70"),
         prorrata_anio_pct=Decimal("50"),
         kind=BienInversionKind.MUEBLE,
+        parameters=_PARAMS,
     )
     assert result.aplica is True
     assert result.diferencia_puntos == Decimal("20")
@@ -78,6 +86,7 @@ def test_real_estate_good_uses_the_ten_divisor() -> None:
         prorrata_inicial_pct=Decimal("70"),
         prorrata_anio_pct=Decimal("50"),
         kind=BienInversionKind.INMUEBLE,
+        parameters=_PARAMS,
     )
     assert result.aplica is True
     assert result.divisor == Decimal("10")
@@ -96,6 +105,7 @@ def test_prorrata_rise_yields_deduccion_complementaria() -> None:
         prorrata_inicial_pct=Decimal("50"),
         prorrata_anio_pct=Decimal("75"),
         kind=BienInversionKind.MUEBLE,
+        parameters=_PARAMS,
     )
     assert result.aplica is True
     assert result.importe == Decimal("-630.00")
@@ -109,6 +119,7 @@ def test_exactly_ten_points_does_not_regularise() -> None:
         prorrata_inicial_pct=Decimal("60"),
         prorrata_anio_pct=Decimal("50"),
         kind=BienInversionKind.MUEBLE,
+        parameters=_PARAMS,
     )
     assert result.diferencia_puntos == Decimal("10")
     assert result.aplica is False
@@ -123,6 +134,7 @@ def test_just_over_ten_points_regularises() -> None:
         prorrata_inicial_pct=Decimal("60"),
         prorrata_anio_pct=Decimal("49.99"),
         kind=BienInversionKind.MUEBLE,
+        parameters=_PARAMS,
     )
     assert result.diferencia_puntos == Decimal("10.01")
     assert result.aplica is True
@@ -132,6 +144,7 @@ def test_non_positive_cuota_is_refused() -> None:
     """A non-positive cuota soportada is an instructive refusal, not a silent zero."""
     with pytest.raises(BienInversionValidationError, match="cuota_soportada"):
         compute_regularizacion_anual(
+            parameters=_PARAMS,
             cuota_soportada=Decimal("0"),
             prorrata_inicial_pct=Decimal("70"),
             prorrata_anio_pct=Decimal("50"),
@@ -143,6 +156,7 @@ def test_out_of_range_percentage_is_refused() -> None:
     """A percentage outside 0-100 is refused."""
     with pytest.raises(BienInversionValidationError, match="prorrata_anio_pct"):
         compute_regularizacion_anual(
+            parameters=_PARAMS,
             cuota_soportada=Decimal("1000"),
             prorrata_inicial_pct=Decimal("70"),
             prorrata_anio_pct=Decimal("120"),

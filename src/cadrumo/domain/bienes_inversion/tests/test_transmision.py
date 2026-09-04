@@ -27,10 +27,12 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
 
+from ....domain.calculations.registry.schema_base import ThresholdComparison
 from ..register import (
     BienInversionDisposalRegime,
     BienInversionKind,
@@ -38,8 +40,32 @@ from ..register import (
     RegularizacionDireccion,
     compute_regularizacion_transmision,
 )
+from ..regularizacion_parameters import (
+    BienesInversionParameterProvenance,
+    BienesInversionRegularizacionParameters,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+#: An explicit bundle, supplied rather than resolved: these are unit tests of the
+#: art-109/110 PROCEDURE, and the procedure is what they prove. Whether the
+#: figures below are the ones the law states is a separate question, answered
+#: against the registry itself by the modelo 303 parameter gates. Supplying them
+#: here as inputs keeps a legal value out of this file's assertions.
+_PARAMS = BienesInversionRegularizacionParameters(
+    ventana_anos_mueble=4,
+    ventana_anos_inmueble=9,
+    divisor_mueble=Decimal("5"),
+    divisor_inmueble=Decimal("10"),
+    umbral_puntos=Decimal("10"),
+    umbral_comparison=ThresholdComparison.EXCLUSIVE,
+    provenance=BienesInversionParameterProvenance(
+        modelo_id="303",
+        revision_id="2025",
+        parameter_ids=("m303-bien-inversion-ventana-anos-mueble",),
+        resolved_on=date(2025, 6, 1),
+    ),
+)
 
 
 def test_regla_primera_sujeta_no_exenta_imputes_full_usage_for_remaining_years() -> None:
@@ -60,6 +86,7 @@ def test_regla_primera_sujeta_no_exenta_imputes_full_usage_for_remaining_years()
         anos_restantes=3,
         kind=BienInversionKind.MUEBLE,
         regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA,
+        parameters=_PARAMS,
     )
     assert result.anos_restantes == 3
     assert result.divisor == Decimal("5")
@@ -84,6 +111,7 @@ def test_regla_primera_caps_additional_deduction_at_cuota_devengada() -> None:
         kind=BienInversionKind.MUEBLE,
         regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA,
         cuota_devengada_entrega=Decimal("1500.00"),
+        parameters=_PARAMS,
     )
     assert result.importe_sin_limite == Decimal("-2400.00")
     assert result.importe == Decimal("-1500.00")
@@ -100,6 +128,7 @@ def test_regla_primera_cap_does_not_bind_when_devengada_exceeds_quotient() -> No
         kind=BienInversionKind.MUEBLE,
         regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA,
         cuota_devengada_entrega=Decimal("5000.00"),
+        parameters=_PARAMS,
     )
     assert result.importe == Decimal("-2400.00")
     assert result.capped is False
@@ -123,6 +152,7 @@ def test_regla_segunda_exenta_o_no_sujeta_imputes_zero_usage_for_remaining_years
         anos_restantes=4,
         kind=BienInversionKind.INMUEBLE,
         regime=BienInversionDisposalRegime.EXENTA_O_NO_SUJETA,
+        parameters=_PARAMS,
     )
     assert result.anos_restantes == 4
     assert result.divisor == Decimal("10")
@@ -141,6 +171,7 @@ def test_regla_segunda_cap_never_applies_even_when_devengada_supplied() -> None:
         kind=BienInversionKind.INMUEBLE,
         regime=BienInversionDisposalRegime.EXENTA_O_NO_SUJETA,
         cuota_devengada_entrega=Decimal("1.00"),
+        parameters=_PARAMS,
     )
     assert result.importe == Decimal("8190.00")
     assert result.capped is False
@@ -160,6 +191,7 @@ def test_no_diferencia_de_puntos_gate_a_disposal_always_regularises() -> None:
         anos_restantes=1,
         kind=BienInversionKind.MUEBLE,
         regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA,
+        parameters=_PARAMS,
     )
     # efectuada = 4500,00; imputada = 5000,00; diff = -500,00; x1 / 5 = -100,00
     assert result.importe == Decimal("-100.00")
@@ -170,6 +202,7 @@ def test_non_positive_cuota_is_refused() -> None:
     """A non-positive cuota soportada is an instructive refusal, not a silent zero."""
     with pytest.raises(BienInversionValidationError, match="cuota_soportada"):
         compute_regularizacion_transmision(
+            parameters=_PARAMS,
             cuota_soportada=Decimal("0"),
             prorrata_inicial_pct=Decimal("70"),
             anos_restantes=1,
@@ -182,6 +215,7 @@ def test_out_of_range_percentage_is_refused() -> None:
     """A percentage outside 0-100 is refused."""
     with pytest.raises(BienInversionValidationError, match="prorrata_inicial_pct"):
         compute_regularizacion_transmision(
+            parameters=_PARAMS,
             cuota_soportada=Decimal("1000"),
             prorrata_inicial_pct=Decimal("120"),
             anos_restantes=1,
@@ -194,6 +228,7 @@ def test_non_positive_anos_restantes_is_refused() -> None:
     """A disposal outside the regularisation window has nothing left to regularise."""
     with pytest.raises(BienInversionValidationError, match="anos_restantes"):
         compute_regularizacion_transmision(
+            parameters=_PARAMS,
             cuota_soportada=Decimal("1000"),
             prorrata_inicial_pct=Decimal("70"),
             anos_restantes=0,
@@ -206,6 +241,7 @@ def test_negative_cuota_devengada_entrega_is_refused() -> None:
     """A negative cuota devengada is a structural error, not a silent clamp."""
     with pytest.raises(BienInversionValidationError, match="cuota_devengada_entrega"):
         compute_regularizacion_transmision(
+            parameters=_PARAMS,
             cuota_soportada=Decimal("1000"),
             prorrata_inicial_pct=Decimal("70"),
             anos_restantes=1,

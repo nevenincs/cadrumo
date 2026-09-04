@@ -9,10 +9,13 @@ for a good disposed of during its regularisation window.
 
 The register is a taxpayer-fact store (owned goods, acquisition year, cuota
 soportada, initial definitive prorrata percentage), sibling to
-:mod:`domain.iva_compensation`; the regulatory constants it consumes (the
-4/9-year windows, the over-10-point gate, and the /5, /10 divisors) live in the
-central authoring surface :mod:`core.external_constants`, grounded verbatim
-in the bundled consolidated LIVA corpus.
+:mod:`domain.iva_compensation`. The regulatory figures it consumes -- the
+art-107 windows, the art-107.Uno de-minimis gate, and the art-109 divisors --
+are NOT constants here: they are declared per revision in the registry and
+arrive as a resolved
+:class:`~domain.bienes_inversion.regularizacion_parameters.BienesInversionRegularizacionParameters`
+that the application boundary supplies. Every computation below therefore
+requires that bundle and none of them can run on an ungrounded figure.
 
 Register-wide projection returns :class:`RegistroRegularizacionResult` for the
 ordinary annual art-109 path: each art-108-eligible in-window good (not yet
@@ -52,25 +55,11 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.decimal.constants import HUNDRED
 from ...core.errors.hierarchy import CadrumoError as _CadrumoError
-from ...core.external_constants import (
-    IVA_BIEN_INVERSION_INMUEBLE_DIVISOR as _IVA_BIEN_INVERSION_INMUEBLE_DIVISOR,
-)
-from ...core.external_constants import (
-    IVA_BIEN_INVERSION_INMUEBLE_VENTANA_ANOS as _IVA_BIEN_INVERSION_INMUEBLE_VENTANA_ANOS,
-)
-from ...core.external_constants import (
-    IVA_BIEN_INVERSION_MUEBLE_DIVISOR as _IVA_BIEN_INVERSION_MUEBLE_DIVISOR,
-)
-from ...core.external_constants import (
-    IVA_BIEN_INVERSION_MUEBLE_VENTANA_ANOS as _IVA_BIEN_INVERSION_MUEBLE_VENTANA_ANOS,
-)
-from ...core.external_constants import (
-    IVA_BIEN_INVERSION_REGULARIZACION_UMBRAL_PUNTOS as _IVA_BIEN_INVERSION_REGULARIZACION_UMBRAL_PUNTOS,
-)
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents as _quantize
 from ...core.percentage import Percentage
+from .regularizacion_parameters import BienesInversionRegularizacionParameters
 
 
 class BienInversionRecordError(_CadrumoError):
@@ -101,35 +90,24 @@ class BienInversionKind(StrEnum):
     MUEBLE = "mueble"
     INMUEBLE = "inmueble"
 
-    @property
-    def ventana_anos(self) -> int:
-        """Count of following calendar years in the art-107 regularisation window.
 
-        Reverted to a property, and the value stays here for now, because the
-        acquisition_year parameter an earlier step added was never consumed: the
-        registry read cannot happen at this layer at all. A parameter is hosted on
-        a revision, and only the filing context names one; this enum has no filing
-        context and no domain module in the tree performs revision selection. The
-        accepted placement decision resolves at the application boundary and passes
-        the values in, at which point this enum stops carrying values entirely and
-        becomes a pure classifier.
+def _ventana_anos(kind: BienInversionKind, parameters: BienesInversionRegularizacionParameters) -> int:
+    """Select the art-107 window the resolved bundle declares for ``kind``.
 
-        Leaving a discarded argument standing would have been worse than reverting:
-        a parameter with no consumer reads as threading that already works.
-        """
-        if self is BienInversionKind.INMUEBLE:
-            return _IVA_BIEN_INVERSION_INMUEBLE_VENTANA_ANOS
-        return _IVA_BIEN_INVERSION_MUEBLE_VENTANA_ANOS
+    The kind-to-figure mapping lives here, with the taxonomy that owns it, rather
+    than on the bundle: the bundle is imported BY this module, so a bundle method
+    taking a :class:`BienInversionKind` would close an import cycle.
+    """
+    if kind is BienInversionKind.INMUEBLE:
+        return parameters.ventana_anos_inmueble
+    return parameters.ventana_anos_mueble
 
-    @property
-    def divisor(self) -> Decimal:
-        """Art-109 per-year regularisation divisor (5 mueble / 10 inmueble).
 
-        Reverted alongside :attr:`ventana_anos`, for the same reason.
-        """
-        if self is BienInversionKind.INMUEBLE:
-            return _IVA_BIEN_INVERSION_INMUEBLE_DIVISOR
-        return _IVA_BIEN_INVERSION_MUEBLE_DIVISOR
+def _divisor(kind: BienInversionKind, parameters: BienesInversionRegularizacionParameters) -> Decimal:
+    """Select the art-109.3a divisor the resolved bundle declares for ``kind``."""
+    if kind is BienInversionKind.INMUEBLE:
+        return parameters.divisor_inmueble
+    return parameters.divisor_mueble
 
 
 class BienInversionDisposalRegime(StrEnum):
@@ -227,18 +205,28 @@ class BienInversionIvaRecord(BaseModel):
         """Deduction actually made in the acquisition year (cuota × prorrata inicial)."""
         return _quantize(self.cuota_soportada * self.prorrata_inicial_pct / HUNDRED)
 
-    def is_within_regularization_window(self, regularization_year: int) -> bool:
+    def is_within_regularization_window(
+        self,
+        regularization_year: int,
+        *,
+        parameters: BienesInversionRegularizacionParameters,
+    ) -> bool:
         """Whether ``regularization_year`` is one of the art-107 following window years.
 
-        The window is the ``ventana_anos`` calendar years *following* acquisition
-        (art. 107.Uno "los cuatro años naturales siguientes" / art. 107.Tres "los
-        nueve años naturales siguientes"). The acquisition year itself is excluded:
-        that is the year the original deduction was made, not a regularisation year.
+        The window is the registry-declared count of calendar years *following*
+        acquisition (art. 107.Uno for a mueble, art. 107.Tres for terrenos o
+        edificaciones). The acquisition year itself is excluded: that is the year
+        the original deduction was made, not a regularisation year.
         """
-        last_year = self.acquisition_year + self.kind.ventana_anos
+        last_year = self.acquisition_year + _ventana_anos(self.kind, parameters)
         return self.acquisition_year < regularization_year <= last_year
 
-    def remaining_regularization_years(self, disposal_year: int) -> int:
+    def remaining_regularization_years(
+        self,
+        disposal_year: int,
+        *,
+        parameters: BienesInversionRegularizacionParameters,
+    ) -> int:
         """Count of art-110 "años que resten" from ``disposal_year`` to window end.
 
         Art. 110.Uno: "se efectuará una regularización única por el tiempo de dicho
@@ -247,7 +235,7 @@ class BienInversionIvaRecord(BaseModel):
         the acquisition year itself counts the full window (the deduction was never
         regularised, so every following window year remains to transcur).
         """
-        last_year = self.acquisition_year + self.kind.ventana_anos
+        last_year = self.acquisition_year + _ventana_anos(self.kind, parameters)
         first_pending_year = max(disposal_year, self.acquisition_year + 1)
         return max(0, last_year - first_pending_year + 1)
 
@@ -296,6 +284,7 @@ def compute_regularizacion_anual(
     prorrata_inicial_pct: Decimal,
     prorrata_anio_pct: Decimal,
     kind: BienInversionKind,
+    parameters: BienesInversionRegularizacionParameters,
 ) -> RegularizacionAnualResult:
     """Compute the LIVA art-109 annual regularización for one capital good.
 
@@ -308,11 +297,11 @@ def compute_regularizacion_anual(
     3.º divide the (positive or negative) difference by 5, or by 10 for land and
         buildings; the quotient is the ingreso / deducción complementaria.
 
-    The art-107.Uno gate applies: the regularisation is practised only when the
-    absolute difference between the two definitive percentages is *strictly greater
-    than* :data:`core.external_constants.IVA_BIEN_INVERSION_REGULARIZACION_UMBRAL_PUNTOS`
-    (10 points). When
-    the gate does not fire, ``importe`` is ``0.00`` and ``direccion`` is
+    The art-107.Uno de-minimis gate applies: the regularisation is practised only
+    when the absolute difference between the two definitive percentages exceeds
+    the threshold the resolved bundle declares. Both the threshold and whether it
+    is exceeded strictly are registry data, so neither appears here. When the gate
+    does not fire, ``importe`` is ``0.00`` and ``direccion`` is
     :attr:`RegularizacionDireccion.NINGUNA`.
 
     Both percentages are supplied as inputs; deriving the current-year definitive
@@ -326,6 +315,8 @@ def compute_regularizacion_anual(
         prorrata_anio_pct: Definitive deduction percentage of the regularisation
             year (0-100).
         kind: :class:`BienInversionKind` selecting the divisor.
+        parameters: Registry-resolved LIVA art-107/109 figures for the filing
+            context; see :mod:`domain.bienes_inversion.regularizacion_parameters`.
 
     Returns:
         A :class:`RegularizacionAnualResult`.
@@ -341,8 +332,8 @@ def compute_regularizacion_anual(
             raise BienInversionValidationError(f"{label} must be between 0 and 100")
 
     diferencia_puntos = abs(prorrata_anio_pct - prorrata_inicial_pct)
-    divisor = kind.divisor
-    if diferencia_puntos <= _IVA_BIEN_INVERSION_REGULARIZACION_UMBRAL_PUNTOS:
+    divisor = _divisor(kind, parameters)
+    if not parameters.regularizacion_applies(diferencia_puntos):
         return RegularizacionAnualResult(
             aplica=False,
             diferencia_puntos=diferencia_puntos,
@@ -409,6 +400,7 @@ def compute_regularizacion_transmision(
     anos_restantes: int,
     kind: BienInversionKind,
     regime: BienInversionDisposalRegime,
+    parameters: BienesInversionRegularizacionParameters,
     cuota_devengada_entrega: Decimal | None = None,
 ) -> RegularizacionTransmisionResult:
     """Compute the LIVA art-110 single ("única") disposal regularización.
@@ -455,6 +447,8 @@ def compute_regularizacion_transmision(
         kind: :class:`BienInversionKind` selecting the divisor.
         regime: :class:`BienInversionDisposalRegime` selecting regla 1ª (100%
             imputation, capped) or regla 2ª (0% imputation, uncapped).
+        parameters: Registry-resolved LIVA art-107/109 figures for the filing
+            context; see :mod:`domain.bienes_inversion.regularizacion_parameters`.
         cuota_devengada_entrega: The cuota devengada on the disposal itself,
             applied as the regla-1ª cap. ``None`` leaves regla 1ª uncapped (the
             caller has not supplied the disposal's own cuota devengada yet).
@@ -477,7 +471,7 @@ def compute_regularizacion_transmision(
         raise BienInversionValidationError("cuota_devengada_entrega must not be negative")
 
     prorrata_imputada_pct = HUNDRED if regime is BienInversionDisposalRegime.SUJETA_NO_EXENTA else Decimal("0")
-    divisor = kind.divisor
+    divisor = _divisor(kind, parameters)
     deduccion_efectuada = cuota_soportada * prorrata_inicial_pct / HUNDRED
     deduccion_imputada = cuota_soportada * prorrata_imputada_pct / HUNDRED
     importe_sin_limite = _quantize((deduccion_efectuada - deduccion_imputada) * anos_restantes / divisor)
@@ -550,7 +544,12 @@ class BienesInversionIvaRegister(BaseModel):
             raise BienInversionValidationError("register carries duplicate acquisition_ledger_id values")
         return self
 
-    def in_window_records(self, regularization_year: int) -> tuple[BienInversionIvaRecord, ...]:
+    def in_window_records(
+        self,
+        regularization_year: int,
+        *,
+        parameters: BienesInversionRegularizacionParameters,
+    ) -> tuple[BienInversionIvaRecord, ...]:
         """Return each art-108-eligible :class:`BienInversionIvaRecord` in-window for the year.
 
         A good disposed of AT OR BEFORE ``regularization_year`` is excluded: art.
@@ -563,11 +562,16 @@ class BienesInversionIvaRegister(BaseModel):
             record
             for record in self.records
             if record.art108_elegible
-            and record.is_within_regularization_window(regularization_year)
+            and record.is_within_regularization_window(regularization_year, parameters=parameters)
             and (record.disposal is None or record.disposal.year > regularization_year)
         )
 
-    def disposed_records(self, disposal_year: int) -> tuple[BienInversionIvaRecord, ...]:
+    def disposed_records(
+        self,
+        disposal_year: int,
+        *,
+        parameters: BienesInversionRegularizacionParameters,
+    ) -> tuple[BienInversionIvaRecord, ...]:
         """Return each art-108-eligible good whose art-110 disposal falls in ``disposal_year``.
 
         Only a disposal that still leaves window time to regularise is included
@@ -581,7 +585,7 @@ class BienesInversionIvaRegister(BaseModel):
             if record.art108_elegible
             and record.disposal is not None
             and record.disposal.year == disposal_year
-            and record.remaining_regularization_years(disposal_year) > 0
+            and record.remaining_regularization_years(disposal_year, parameters=parameters) > 0
         )
 
 
@@ -684,6 +688,7 @@ def compute_registro_regularizacion(
     *,
     regularizacion_year: int,
     prorrata_definitiva_by_identifier: Mapping[str, Decimal],
+    parameters: BienesInversionRegularizacionParameters,
 ) -> RegistroRegularizacionResult:
     """Project the register onto its annual art-109 regularización for a year.
 
@@ -700,6 +705,8 @@ def compute_registro_regularizacion(
         prorrata_definitiva_by_identifier: Current-year definitive deduction
             percentage (0-100) keyed by record identifier. Absent keys mark a good
             whose percentage is not yet known.
+        parameters: Registry-resolved LIVA art-107/109 figures for the filing
+            context; see :mod:`domain.bienes_inversion.regularizacion_parameters`.
 
     Returns:
         A :class:`RegistroRegularizacionResult`.
@@ -709,7 +716,7 @@ def compute_registro_regularizacion(
     proposed = Decimal("0.00")
     computed_count = 0
     pending = 0
-    for record in register.in_window_records(regularizacion_year):
+    for record in register.in_window_records(regularizacion_year, parameters=parameters):
         pct = prorrata_definitiva_by_identifier.get(record.identifier)
         if pct is None:
             pending += 1
@@ -728,6 +735,7 @@ def compute_registro_regularizacion(
             prorrata_inicial_pct=record.prorrata_inicial_pct,
             prorrata_anio_pct=pct,
             kind=record.kind,
+            parameters=parameters,
         )
         if result.aplica:
             computed_count += 1
@@ -811,6 +819,7 @@ def compute_registro_transmisiones(
     register: BienesInversionIvaRegister,
     *,
     disposal_year: int,
+    parameters: BienesInversionRegularizacionParameters,
     cuota_devengada_entrega_by_identifier: Mapping[str, Decimal] | None = None,
 ) -> RegistroTransmisionesResult:
     """Project the register onto its art-110 single ("única") regularización for a year.
@@ -830,6 +839,8 @@ def compute_registro_transmisiones(
     Args:
         register: The persisted :class:`BienesInversionIvaRegister`.
         disposal_year: The year to project disposals for.
+        parameters: Registry-resolved LIVA art-107/109 figures for the filing
+            context; see :mod:`domain.bienes_inversion.regularizacion_parameters`.
         cuota_devengada_entrega_by_identifier: Optional per-good cuota devengada on
             the disposal itself, applied as the regla-1ª cap
             (:func:`compute_regularizacion_transmision`). Absent keys leave regla 1ª
@@ -842,7 +853,7 @@ def compute_registro_transmisiones(
     rows: list[RegistroTransmisionRow] = []
     contributions: list[BienesInversionSectorContribution] = []
     proposed = Decimal("0.00")
-    for record in register.disposed_records(disposal_year):
+    for record in register.disposed_records(disposal_year, parameters=parameters):
         disposal = record.disposal
         if disposal is None:
             raise BienInversionValidationError(
@@ -852,9 +863,10 @@ def compute_registro_transmisiones(
         result = compute_regularizacion_transmision(
             cuota_soportada=record.cuota_soportada,
             prorrata_inicial_pct=record.prorrata_inicial_pct,
-            anos_restantes=record.remaining_regularization_years(disposal_year),
+            anos_restantes=record.remaining_regularization_years(disposal_year, parameters=parameters),
             kind=record.kind,
             regime=disposal.regime,
+            parameters=parameters,
             cuota_devengada_entrega=cap_by_identifier.get(record.identifier),
         )
         proposed += result.importe
