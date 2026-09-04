@@ -325,3 +325,45 @@ async def test_every_section_heading_is_separated_from_the_content_it_owns(surfa
     # Without this the below-the-fold skip above could quietly consume every
     # heading and leave the test asserting nothing at all.
     assert checked, f"{surface} at {width}x{height}: no heading was in view to check"
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "surface",
+    ["aeat-sync-overview--ready", "declarations-calendar--ready", "ledger-entries--ready"],
+)
+async def test_no_cell_is_truncated_while_its_row_still_has_room(surface: str) -> None:
+    """Spare width beside a shortened value means the width was misallocated.
+
+    Read from the painted frame and keyed on the ellipsis Textual writes when
+    it shortens a cell, so this is independent of the sizing policy rather than
+    a restatement of it -- a test that recomputed the policy would agree with
+    any bug the policy contained.
+
+    The header gate next to this one cannot see it: a clipped VALUE beside an
+    empty right-hand margin paints exactly like a value that fits, and the
+    overflow gates pass because nothing crosses the edge. That combination --
+    invisible to every existing gate -- is how `Modelo 130 · 202` and
+    `Declaraciones pr` survived in a suite that was green.
+
+    A trailing margin is required before failing: at the narrow sizes a table
+    legitimately fills its row, and shortening is then the correct behaviour
+    rather than a misallocation.
+    """
+    from ..devtools.frame import screen_text
+    from ..devtools.workbench_fixtures import resolve_workbench_fixture
+
+    width, height = TERMINAL_ORDINARY
+    app = resolve_workbench_fixture(surface).build()
+    async with app.run_test(size=(width, height)) as pilot:
+        await pilot.pause()
+        painted = screen_text(app, width, height).splitlines()
+        app.exit(None)
+
+    offenders = [
+        line
+        for line in painted
+        if "…" in line and len(line.rstrip()) < width - 2
+    ]
+    assert not offenders, (
+        f"{surface} shortens a value while its row still has room:\n" + "\n".join(offenders)
+    )
