@@ -115,10 +115,10 @@ def test_the_architecture_token_is_normalised_away_from_the_windows_spelling() -
     unnormalised would miss every key in the table and return NO brew finding
     rather than a failing one - a capability gap reported as nothing at all.
     """
-    token = _machine()
+    architecture = _machine()
 
-    assert token != "AMD64"
-    assert token
+    assert architecture != "AMD64"
+    assert architecture
 
 
 def test_the_brew_table_is_keyed_on_normalised_tokens() -> None:

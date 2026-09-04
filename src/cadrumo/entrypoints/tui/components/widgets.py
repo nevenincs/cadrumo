@@ -14,6 +14,7 @@ from textual.widget import Widget
 from textual.widgets import Button, Collapsible, DataTable, Static
 
 from ....core.presentation import NoticePresentation
+from .theme import tokenised
 
 
 class ContentScroll(VerticalScroll, can_focus=False):
@@ -250,6 +251,21 @@ class DisclosureGroup(Collapsible):
     widget instead of each host reaching for `Collapsible` under its own
     title and defaults.
     """
+
+    DEFAULT_CSS = tokenised(
+        """
+        DisclosureGroup {
+            /* The SAME section gap a panel and a heading take. A disclosure
+               group is the third way this product marks a logical group, and
+               it was the only one inheriting Textual's default spacing: two
+               groups a single row apart read as one smeared list however
+               correctly each is titled. Grouping mechanisms may differ in
+               affordance -- a panel is static, this collapses -- but the
+               distance that says "new group" has to be one distance. */
+            margin-bottom: $cadrumo-section;
+        }
+        """
+    )
 
     def __init__(self, *children: Widget, title: str, collapsed: bool = True, id: str | None = None) -> None:
         """Store the group's already-localized title and initial disclosure state."""
