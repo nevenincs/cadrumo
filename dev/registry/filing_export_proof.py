@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import tomllib
 from collections.abc import Mapping
+from decimal import Decimal
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, Protocol
@@ -39,13 +40,23 @@ from cadrumo.application.filing.export_proof import (
 )
 from cadrumo.application.filing.export_proof import FilingExportProof as TwoChannelFilingExportProof
 from cadrumo.application.filing.draft_construction import build_draft
-from cadrumo.application.filing.producer_snapshot import FilingProducerSnapshot
+from cadrumo.application.filing.producer_snapshot import (
+    FilingElectionFacts,
+    FilingProducerSnapshot,
+    GeneralFilingProfileFacts,
+    PresenterIdentity,
+    TaxpayerIdentityFacts,
+    build_filing_producer_snapshot,
+)
 from cadrumo.application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.period import Period
+from cadrumo.core.payment_election import PaymentElection
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
+from cadrumo.core.refund_election import RefundElection
+from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.core.product_identity import AeatProductSoftwareIdentity
 from cadrumo.core.time.clock import now
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
@@ -89,6 +100,7 @@ __all__ = [
     "CANONICAL_FILING_EXPORT_CONFORMANCE_VECTORS",
     "ModeloSociedadesConformanceVectorBuilder",
     "load_pinned_conformance_evidence",
+    "load_pinned_conformance_inputs",
     "canonical_filing_export_conformance_vectors",
     "CANONICAL_LIVE_FILING_EXPORT_PROOF_ENTRIES",
     "CanonicalTwoChannelFilingExportProofAuthority",
@@ -300,6 +312,18 @@ def load_pinned_conformance_evidence(path: Path) -> FilingExportConformanceVecto
     )
 
 
+def load_pinned_conformance_inputs(path: Path) -> dict[str, object]:
+    """Load one pinned vector's declared non-sensitive mechanism inputs.
+
+    Returns:
+        The flat binding / relation input map the canonical draft builder reads.
+    """
+    raw = tomllib.loads(path.read_text(encoding="utf-8")).get("inputs", {})
+    inputs: dict[str, object] = {key: Decimal(value) for key, value in raw.get("decimal", {}).items()}
+    inputs.update(raw.get("enum", {}))
+    return inputs
+
+
 @dataclass(frozen=True, slots=True)
 class ModeloSociedadesConformanceVectorBuilder:
     """Materialise value-independent Modelo 200 conformance inputs.
@@ -313,6 +337,7 @@ class ModeloSociedadesConformanceVectorBuilder:
 
     registry_root: Path
     source_root: Path
+    pinned_path: Path
 
     def build(
         self,
@@ -335,7 +360,7 @@ class ModeloSociedadesConformanceVectorBuilder:
             modelo=modelo_id,
             period=evidence.period,
             profile=ModeloOperatorProfile(tax_id=_CONFORMANCE_SUBJECT_TAX_ID, display_name=_CONFORMANCE_SUBJECT_NAME),
-            inputs={},
+            inputs=load_pinned_conformance_inputs(self.pinned_path),
             schema_provider=schema_provider,
         )
         return FilingExportConformanceRenderInputs(
@@ -395,6 +420,7 @@ def canonical_filing_export_conformance_vectors(
             builder=ModeloSociedadesConformanceVectorBuilder(
                 registry_root=registry_root,
                 source_root=source_root,
+                pinned_path=_MODELO_200_2025_PINNED_EVIDENCE,
             ),
         ),
     )

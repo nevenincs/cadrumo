@@ -8,6 +8,28 @@ mechanism_source_sha256 = "3d6e85cfdfdb24b67798ff025f9aea35d9ff55579d4254aa5e912
 filing_year = 2025
 period_code = "0A"
 
+# Declared non-sensitive mechanism inputs. These are NOT taxpayer truth and NOT a
+# source-owned calculation: they are the minimum declared boundary values the
+# canonical writer needs to render this layout at all, so the proof exercises
+# writer and layout MECHANICS. Real value arrival is the secure-replay channel's
+# separate burden and is never claimed here. Every id below is a binding or
+# relation the revision itself declares as calculation-consumed.
+[inputs.decimal]
+"modelo-200-2024-profile-new-entity-flag" = "0"
+"modelo-200-2024-profile-incn-prior-12-months" = "0"
+"modelo-200-2024-profile-tributacion-estado-porcentaje" = "100"
+"modelo-200-2024-bin-pendiente-ejercicios-anteriores" = "0"
+"modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores" = "0"
+"modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores" = "0"
+"modelo-200-2024-rel-202-pagos-fraccionados" = "0"
+"modelo-200-2024-rel-202-pagos-fraccionados-40-2" = "0"
+"modelo-200-2024-rel-self-bin-pendiente-anterior" = "0"
+"modelo-200-2024-rel-self-dotaciones-deterioro-cumplido-anterior" = "0"
+"modelo-200-2024-rel-self-dotaciones-deterioro-no-cumplido-anterior" = "0"
+
+[inputs.enum]
+"modelo-200-2024-profile-legal-entity-form" = "sl"
+
 [coordinate]
 modelo = "200"
 revision = "2025-y-siguientes"
