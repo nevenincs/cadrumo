@@ -2,7 +2,7 @@
 
 A reference point is a figure someone measured, kept because it answers "is the
 pipeline design capable of this at all?". It is deliberately NOT a
-:class:`~dev.ingest_harness.ResultRow`: it was not produced by this harness
+:class:`~dev.ingest_harness._result.ResultRow`: it was not produced by this harness
 against this key's denominators, so giving it the same type would let it flow
 into a baseline calculation that must never see it.
 

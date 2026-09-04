@@ -1,14 +1,14 @@
 """The scoring arm: turning an emission into counts the key itself authorises.
 
 The harness could record ``matched``, ``wrong`` and ``fabricated`` long before
-anything could COMPUTE them -- :class:`~dev.ingest_harness.Scored` took all three
+anything could COMPUTE them -- :class:`~dev.ingest_harness._result.Scored` took all three
 as caller-supplied integers, so the one failure mode the campaign exists to
 measure had a place to be written down and no code that produced it. This module
 is the missing half, and it is deliberately the only place a verdict is decided.
 
 **Every slot comes from the corpus, never from an example.** The scorable slots
-are :attr:`~dev.ingest_harness.CorpusDocument.scorable_fields` and the traps are
-:attr:`~dev.ingest_harness.CorpusDocument.fabrication_trap_fields`, both derived
+are :attr:`~dev.ingest_harness._key.CorpusDocument.scorable_fields` and the traps are
+:attr:`~dev.ingest_harness._key.CorpusDocument.fabrication_trap_fields`, both derived
 from the document's own authored truth. Nothing here enumerates a field name, so
 a corpus that adds a field is scored on it without this module changing.
 
@@ -17,7 +17,7 @@ into a ``null``-truth slot answers a question the document does not ask, and a
 model that invents plausibly outscores one that abstains the moment those two are
 averaged together. :class:`FieldVerdict` keeps them distinct all the way to the
 report, and :meth:`FieldScoring.as_scored` carries ``fabricated`` across into
-:class:`~dev.ingest_harness.Scored` without ever folding it into the numerator or
+:class:`~dev.ingest_harness._result.Scored` without ever folding it into the numerator or
 the denominator.
 
 **An emitted field the key does not declare is neither.** The key makes no claim
@@ -35,7 +35,7 @@ Comparison is derived from the truth value's own shape rather than from a
 field-name table, and it is STRICT:
 
 * A truth string that parses as a finite decimal is compared with
-  :func:`~dev.ingest_harness.amounts_match` at the document's own
+  :func:`~dev.ingest_harness._result.amounts_match` at the document's own
   ``tolerance_cents``. An emitted value that does not parse the same way is
   ``WRONG`` rather than coerced -- so ``"766,30"`` against a truth of ``"766.30"``
   scores wrong. That is a form divergence, not a reading failure, and it is
@@ -48,7 +48,7 @@ field-name table, and it is STRICT:
   recursively, and is one slot -- the key declares it as one field.
 
 See Also:
-    :func:`~dev.ingest_harness.build_result_row`
+    :func:`~dev.ingest_harness._result.build_result_row`
         Consumes :meth:`FieldScoring.as_scored` and stamps the document's caveats.
 """
 
@@ -207,10 +207,10 @@ class FieldScoring(BaseModel):
 
         Raises:
             HarnessRefusalError: When the document declared no scorable slot.
-                :class:`~dev.ingest_harness.Scored` requires a positive
+                :class:`~dev.ingest_harness._result.Scored` requires a positive
                 denominator, and an accuracy over nothing is undefined rather
                 than zero -- the caller wants
-                :class:`~dev.ingest_harness.EmittedOnly`.
+                :class:`~dev.ingest_harness._result.EmittedOnly`.
         """
         if self.scorable_field_count == 0:
             raise HarnessRefusalError(

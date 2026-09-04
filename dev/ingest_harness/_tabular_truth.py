@@ -4,7 +4,7 @@
 figure in this harness is scored against the pinned corpus key. This one cannot
 be: the key authors no column-role mapping for any tabular document, and all nine
 carry ``ground_truth == {}``, so
-:func:`~dev.ingest_harness.score_emission` refuses every one of them for want of
+:func:`~dev.ingest_harness._scoring.score_emission` refuses every one of them for want of
 a denominator. The choice is between an operator-authored expectation and no
 mapping measurement at all. Anything derived from it — an acceptance floor above
 all — is a floor against an operator's judgement, never against the corpus, and
@@ -37,9 +37,9 @@ as simply wrong would understate the reader, and silently accepting it would
 overstate it — so both numbers are printed and neither is called the score alone.
 
 See Also:
-    :func:`~dev.ingest_harness.score_emission`
+    :func:`~dev.ingest_harness._scoring.score_emission`
         Consumes the projection this module builds. No second scorer exists.
-    :data:`~dev.ingest_harness.KEY_FIELD_MAPPINGS`
+    :data:`~dev.ingest_harness._field_mapping.KEY_FIELD_MAPPINGS`
         The neighbouring map, and a different concept that should not be merged
         with this one: it translates the key's own FIELD vocabulary onto the
         draft's for documents that DO carry authored truth. This module authors
