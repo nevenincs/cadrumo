@@ -40,6 +40,7 @@ from cadrumo.application.filing.export_proof import (
 )
 from cadrumo.application.filing.export_proof import FilingExportProof as TwoChannelFilingExportProof
 from cadrumo.application.filing.draft_construction import build_draft
+from cadrumo.application.filing.draft_review import approve_draft
 from cadrumo.application.filing.producer_snapshot import (
     FilingElectionFacts,
     FilingProducerSnapshot,
@@ -69,6 +70,8 @@ from cadrumo.domain.calculations.registry.static_inspection import (
     RegistryRevisionInspection,
 )
 from cadrumo.domain.filing.errors import FilingExportError
+from cadrumo.domain.invoices.models import InvoiceCatalogue
+from cadrumo.domain.transactions.models import TransactionCatalogue
 from cadrumo.domain.filing.schema import ModeloDraft
 from cadrumo.tests.filing_export_authority import (
     FilingExportProof,
@@ -363,17 +366,37 @@ class ModeloSociedadesConformanceVectorBuilder:
             inputs=load_pinned_conformance_inputs(self.pinned_path),
             schema_provider=schema_provider,
         )
+        # The render contract requires an APPROVED draft, so the vector runs the
+        # canonical review path rather than stamping the status by hand. Every
+        # catalogue and fingerprint is supplied explicitly so no bucket-scoped
+        # secure repository is opened for a public mechanism proof.
+        approved = approve_draft(
+            draft,
+            bucket_id=_CONFORMANCE_BUCKET_ID,
+            approved_by=_CONFORMANCE_BUCKET_ID,
+            schema_provider=schema_provider,
+            transaction_catalogue=TransactionCatalogue(),
+            invoice_catalogue=InvoiceCatalogue(),
+            prior_filing_observations_fingerprint=_EMPTY_STATE_FINGERPRINT,
+            profile_activity_fingerprint=_EMPTY_STATE_FINGERPRINT,
+            category_profiles={},
+        )
         return FilingExportConformanceRenderInputs(
             coordinate=evidence.coordinate,
             filing_year=evidence.filing_year,
             period=evidence.period,
-            draft=draft,
+            draft=approved,
             producer_snapshot=_conformance_producer_snapshot(),
         )
 
 
 # Synthetic, non-sensitive identity. A CIF-shaped test value and a plainly
 # fictional name: no real taxpayer is identifiable from a conformance vector.
+# The conformance vector genuinely HAS no prior filing observations and no
+# taxpayer profile activity, so both fingerprints are the digest of empty state
+# rather than a placeholder: an honest digest of nothing, not a fake digest.
+_EMPTY_STATE_FINGERPRINT = sha256_hex(b"")
+_CONFORMANCE_BUCKET_ID = "filing-export-conformance"
 _CONFORMANCE_SUBJECT_TAX_ID = "A58818501"
 _CONFORMANCE_SUBJECT_NAME = "Sociedad Conformance Prueba"
 
