@@ -561,6 +561,7 @@ def test_slice3_modules_have_no_io_cli_adapter_or_sensitive_content_access() -> 
     assert not any("entrypoints.cli" in item or "adapters" in item for item in imports)
     assert not {"open", "read", "read_text", "Path", "load_manifest", "verify_blob"} & calls
 
+
 @pytest.mark.asyncio
 async def test_a_suggested_link_shows_the_values_it_was_suggested_on() -> None:
     """A match verdict the operator cannot check is not evidence.

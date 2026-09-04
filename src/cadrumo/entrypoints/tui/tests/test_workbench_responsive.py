@@ -326,6 +326,7 @@ async def test_every_section_heading_is_separated_from_the_content_it_owns(surfa
     # heading and leave the test asserting nothing at all.
     assert checked, f"{surface} at {width}x{height}: no heading was in view to check"
 
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "surface",
@@ -359,11 +360,5 @@ async def test_no_cell_is_truncated_while_its_row_still_has_room(surface: str) -
         painted = screen_text(app, width, height).splitlines()
         app.exit(None)
 
-    offenders = [
-        line
-        for line in painted
-        if "…" in line and len(line.rstrip()) < width - 2
-    ]
-    assert not offenders, (
-        f"{surface} shortens a value while its row still has room:\n" + "\n".join(offenders)
-    )
+    offenders = [line for line in painted if "…" in line and len(line.rstrip()) < width - 2]
+    assert not offenders, f"{surface} shortens a value while its row still has room:\n" + "\n".join(offenders)
