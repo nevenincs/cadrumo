@@ -214,3 +214,78 @@ async def test_no_table_header_is_clipped_while_the_row_has_width_to_spare(surfa
     assert not missing, (
         f"{surface} clips these column headers out of the painted frame: {missing}"
     )
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("surface", ["home--ready", "aeat-sync-overview--ready"])
+async def test_every_section_heading_is_separated_from_the_content_it_owns(surface: str) -> None:
+    """A heading fused to its rows makes the operator parse structure line by line.
+
+    Read from the PAINTED frame, not the stylesheet. A margin declaration
+    proves only that someone wrote it: the rule can be overridden, the widget
+    can carry the wrong class, or a container can collapse the gap, and every
+    one of those paints as the continuous run of data the operator reported
+    while the declaration still reads correctly.
+
+    The rhythm is deliberately asymmetric -- a wider gap above binds the
+    heading away from the previous group, a narrower one below binds it to its
+    own rows -- so this asserts BOTH: at least one blank line under the
+    heading, and strictly more above it. Equal gaps leave the heading floating
+    between the two groups, which is the defect in its subtler form.
+
+    Blankness is measured inside the heading's OWN column span, not across the
+    full painted line. Home is two columns, so a full-width test reports the
+    gap above a left-column heading as occupied whenever the right column
+    happens to paint on that row -- which says nothing about the rhythm the
+    operator sees in that column.
+    """
+    from ..devtools.frame import screen_text
+    from ..devtools.workbench_fixtures import resolve_workbench_fixture
+
+    width, height = TERMINAL_ORDINARY
+    app = resolve_workbench_fixture(surface).build()
+    async with app.run_test(size=(width, height)) as pilot:
+        await pilot.pause()
+        headings = [
+            (str(node.render()).strip(), node.region)
+            for node in app.screen.query(".cadrumo-heading")
+            if str(node.render()).strip()
+        ]
+        painted = screen_text(app, width, height).splitlines()
+        app.exit(None)
+
+    assert headings, f"{surface} declares no .cadrumo-heading to check"
+
+    for heading, region in headings:
+        left, right = region.x, region.x + region.width
+        column = [line[left:right] for line in painted]
+
+        def blanks_after(index: int, column: list[str] = column) -> int:
+            count = 0
+            for line in column[index + 1 :]:
+                if line.strip():
+                    break
+                count += 1
+            return count
+
+        def blanks_before(index: int, column: list[str] = column) -> int:
+            count = 0
+            for line in reversed(column[:index]):
+                if line.strip():
+                    break
+                count += 1
+            return count
+
+        rows = [i for i, line in enumerate(column) if heading in line]
+        assert rows, f"{surface}: heading {heading!r} never reached the painted frame"
+        row = rows[0]
+        below, above = blanks_after(row), blanks_before(row)
+        # The topmost heading has the banner above it and no group to separate from.
+        if above == 0 and row <= 2:
+            continue
+        assert below >= 1, (
+            f"{surface}: {heading!r} is fused to its content (0 blank rows below)"
+        )
+        assert above > below, (
+            f"{surface}: {heading!r} floats between groups "
+            f"({above} blank rows above, {below} below); the gap above must be larger"
+        )

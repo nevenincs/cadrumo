@@ -1664,7 +1664,6 @@ def _ccaa_was_defaulted(
 
 _MODIFY_NO_RESUME_CODE = "config.profile.edit.modify_no_resume"
 _MODIFY_DESCENDANTS_DOOR_CODE = "config.profile.edit.descendants_via_door"
-_DESCENDIENTE_DOOR_COMMAND = "aeat config profile descendiente"
 
 
 def _emit_wizard_success(

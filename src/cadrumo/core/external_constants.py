@@ -472,7 +472,6 @@ LATIN_1_ENCODING: Final[str] = "latin-1"
 #:
 #: Identical in coverage to :data:`LATIN_1_ENCODING` at runtime; the literal
 #: type preserves the exact public registry-codec spelling for static callers.
-ISO_8859_1_ENCODING: Final[Literal["iso-8859-1"]] = "iso-8859-1"
 
 #: UTF-8 character encoding used for all text file I/O in the application layer.
 UTF_8_ENCODING: Final[str] = "utf-8"
