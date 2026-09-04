@@ -1083,6 +1083,9 @@ tui:
       operation_handoff: Operation handoff is unavailable.
       source: This source is unavailable for viewing.
       unread_notification: Unread notifications cannot open documents.
+    section:
+      areas: Synchronisation areas
+      detail: Selected area detail
     source:
       aeat:
         census: AEAT census

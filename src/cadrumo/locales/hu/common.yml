@@ -1107,6 +1107,9 @@ tui:
       operation_handoff: A művelet átadása nem érhető el.
       source: Ez a forrás nem érhető el megtekintésre.
       unread_notification: Olvasatlan értesítések dokumentumai nem nyithatók meg.
+    section:
+      areas: Szinkronizációs területek
+      detail: A kiválasztott terület részletei
     source:
       aeat:
         census: AEAT-nyilvántartás

@@ -1112,6 +1112,9 @@ tui:
       operation_handoff: El lliurament de l'operació no està disponible.
       source: Aquesta font no està disponible per consultar-la.
       unread_notification: Les notificacions no llegides no poden obrir documents.
+    section:
+      areas: Àrees de sincronització
+      detail: Detall de l'àrea seleccionada
     source:
       aeat:
         census: Cens de l'AEAT

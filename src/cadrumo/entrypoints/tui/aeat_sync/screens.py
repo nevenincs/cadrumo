@@ -161,7 +161,17 @@ class AeatSyncWorkspaceScreen(Screen[None]):
     def compose(self) -> ComposeResult:
         yield Static(aeat_sync_copy(self.heading), classes="cadrumo-banner", markup=False)
         with ContentScroll(id="aeat-sync-page", classes="cadrumo-scroll"):
+            yield Static(
+                aeat_sync_copy("tui.aeat_sync.section.areas"),
+                classes="cadrumo-heading",
+                markup=False,
+            )
             yield ContentDataTable[str](id="aeat-sync-navigation", cursor_type="row", zebra_stripes=True)
+            yield Static(
+                aeat_sync_copy("tui.aeat_sync.section.detail"),
+                classes="cadrumo-heading",
+                markup=False,
+            )
             yield ContentDataTable[str](id="aeat-sync-rows", cursor_type="row", zebra_stripes=True)
             yield Static(id="aeat-sync-status", markup=False)
 
