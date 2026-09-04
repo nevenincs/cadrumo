@@ -22,7 +22,6 @@
 # This is a backlog, not an endorsement.
 
 [symbols]
-"cadrumo.core.no_such_module" = 2
 "cadrumo.adapters.inbound.einvoice.shape" = 1
 "cadrumo.adapters.inbound.financial.providers.detection" = 1
 "cadrumo.adapters.inbound.pdf.label_regex" = 1

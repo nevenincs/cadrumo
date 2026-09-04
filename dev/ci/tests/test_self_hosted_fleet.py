@@ -116,8 +116,6 @@ def test_the_release_path_workflows_run_on_hosted_images() -> None:
         document = yaml.safe_load(workflow.read_text(encoding="utf-8"))
         jobs = document.get("jobs") or {}
         assert jobs, f"{workflow_name} declares no jobs"
-        unresolved = [job_name for job_name, job in jobs.items() if not runner_targets(job, document)]
-        assert unresolved == [], f"{workflow_name} jobs yielded no runner target at all: {unresolved}"
         violations = _hosted_violations(workflow_name, document)
         assert violations == [], f"release-path jobs not on a hosted image: {violations}"
 

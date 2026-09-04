@@ -285,6 +285,15 @@ check-architecture:
 check-unreachable-ratchet:
     @uv run --no-sync python -m dev.quality.unreachable_module_ratchet
 
+# Verify no reachable module started carrying unused symbols, and no orphaned
+# test module appeared. The baseline in dev/quality/unused_symbol_ratchet.toml
+# may only shrink; a module that grows, or one absent from the file, fails
+# rather than being absorbed. Covers the population the module ratchet cannot
+# see: a symbol inside a module that is itself reachable.
+[group('static-checks')]
+check-unused-symbol-ratchet:
+    @uv run --no-sync python -m dev.quality.unused_symbol_ratchet
+
 # Verify every persistence surface a product command READS still has a
 # production writer. The baseline in dev/quality/write_path_backlog.toml may
 # only shrink; a newly writerless store fails rather than being absorbed.

@@ -408,7 +408,7 @@ def test_the_gate_refuses_a_member_held_out_by_marker_alone() -> None:
     """
     members = _harness_members(_REPOSITORY_ROOT)
     member_markers = _member_markers(_REPOSITORY_ROOT, members)
-    member = members[0]
+    member = next(candidate for candidate in members if candidate.startswith(f"{_MEMBER_PARENT}/"))
     covering = Lane(
         source="synthetic",
         paths=(_MEMBER_PARENT,),

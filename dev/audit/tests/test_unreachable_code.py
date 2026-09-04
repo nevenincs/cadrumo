@@ -716,7 +716,7 @@ def test_the_live_reference_walk_read_every_file(capsys: pytest.CaptureFixture[s
     assert "were unreadable during the reference walk" not in capsys.readouterr().err
 
 
-def test_the_test_walk_refuses_a_module_that_does_not_parse(tmp_path: pathlib.Path) -> None:
+def test_the_test_walk_refuses_a_module_that_does_not_parse(tmp_path: Path) -> None:
     """A finding set, not a reference set.
 
     ``_test_findings`` REPORTS test modules whose every shipped subject is
