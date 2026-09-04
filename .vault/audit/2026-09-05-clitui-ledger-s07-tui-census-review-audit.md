@@ -99,3 +99,76 @@ the supported-surface stream exact and complete.
   defects for new/missing/duplicate routes, a new consumer, a mutation door,
   and a source outside the observed set. Refresh the reference, record,
   plan/index state, then obtain another independent review.
+
+## Remediation review
+
+Ruling: **NOT ACCEPTED**. The Overview classification HIGH is closed, but the
+supported-surface detector HIGH remains open because its AST extraction does
+not identify the semantics it publishes.
+
+The corrected live projection reports `ledger.overview` as the sole installed
+read-only internal route and exactly six routes as `component_only`. Zero
+detected message consumers continues to bound the other routes' reachability.
+The source selector contains 126 files: all production TUI Python modules
+excluding tests/devtools, three dedicated Ledger harness files, three installed
+composition harness files, four application workspace/search-generation files,
+and all Ledger command-spec modules. It imports no product TUI while building
+the census and does not introduce business authority.
+
+Independent standard-library reconstruction confirms the NUL-terminated v1
+domains, sorted repository-relative paths, unsigned eight-byte big-endian path
+and body frames, canonical ASCII JSON, and framed payload. The source digest is
+`sha256:e7337508a02ef2260e0b28205c31bb872b69f59aa51a18391ae209c21b8f9d57`
+and the census digest is
+`sha256:c136cfe1ae3f82a239476c00e805f8c9a29e010d502e74397963cea7e6f42371`.
+The live semantic result contains seven routes, zero reported message
+consumers, two read-action ids, zero mutation doors, and 78 CLI statuses all
+equal to `not-implemented`. The governed harness scope has six files and 65
+test functions; the narrower dedicated component harness remains three files,
+38 functions, and 78 collected integration cases.
+
+### supported-surface-ast-semantics | high | The detector confuses matching syntax with installed consumers, actions, and routes
+
+The consumer extractor collects any function whose name matches Textual's
+conventional handler spelling, regardless of whether it is a method on a
+mounted message recipient. The committed mutation test appends a module-level
+free function to `app.py`; the census calls that unreachable function an
+installed `LedgerRouteRequested` consumer. Conversely, an independently
+injected real `@on(LedgerRouteRequested)` method on `CadrumoTuiApp` with a
+nonconventional method name remains classified as zero consumers. The extractor
+also excludes the complete `ledger/controller.py` module, so a future real
+consumer there cannot enter the semantic result.
+
+The same syntax-only problem affects other fields. Adding an unused
+`_LEDGER_UNUSED_ACTION = "operator.ledger.unused"` constant makes the census
+report a third injected read action even though no composition consumes it.
+Adding an unused helper that merely constructs
+`LedgerRouteV1("ledger.shadow", ...)` makes the census report an eighth route,
+although the constructor is not an entry in `LEDGER_ROUTES`. Installed-door
+extraction similarly accepts keywords from every call named
+`ledger_screen_factory` in `launcher.py`, without proving that the call is the
+production-installed factory invocation.
+
+All these mutations move the source digest, but the semantic projection is the
+fact S07 publishes and S08 will ingest. Refreshing the baseline after an
+ordinary source change would preserve a false positive or false negative. A
+byte-drift alarm therefore does not repair the classifier. This remains HIGH
+under detector-teeth and no-silent-under-declaration because the gate can
+misstate whether a route, consumer, action, or mutation door is actually
+installed.
+
+The detector must bind AST facts to their owning constructs: route calls in the
+`LEDGER_ROUTES` assignment; action constants actually passed into
+`InstalledWorkbenchFactoryDependenciesV1`; mutation keywords on the returned
+production `_ledger_generation_factory` call path; and both conventional and
+decorator-based Textual handlers on classes that can receive the installed
+messages. Add negative controls for dead free functions, unused constants,
+unused factory calls, and unrelated route constructors, plus a positive
+decorated-handler mutation. Then refresh S07 evidence and obtain another
+independent review.
+
+The ten focused census tests pass and Ruff, scoped `ty`, and basedpyright are
+clean. The full matrix-suite result and final Vault check are recorded in the
+review handoff. G0 remains OPEN, the TUI hold remains effective, the record and
+plan/index state otherwise agree, and the remediation contains no production
+TUI change.
