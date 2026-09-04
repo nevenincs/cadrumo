@@ -21,9 +21,11 @@ rather than by reaching into module state.
 from __future__ import annotations
 
 import pathlib
+import sys
 
 import pytest
 
+from .._smoke_common import run_checked_marker
 from ..smoke_dev import _DEV_COMMANDS, _assert_dev_commands
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -73,3 +75,32 @@ def test_the_surface_covers_the_gates_the_repository_actually_runs() -> None:
     executables = {command[0] for command in _DEV_COMMANDS}
 
     assert {"ruff", "pytest", "ty", "pyrefly", "lint-imports", "deptry"} <= executables
+
+
+def test_a_child_that_skipped_its_tail_is_refused(tmp_path: pathlib.Path) -> None:
+    """A completion marker printed into a void proves nothing.
+
+    Five child programs across these lanes end with a print naming what they
+    proved, and nothing asserted any of them: the parent read the exit code
+    alone. A child that exits 0 having skipped its tail was indistinguishable
+    from one that ran every assertion in it.
+    """
+    silent = [sys.executable, "-c", "raise SystemExit(0)"]
+
+    with pytest.raises(SystemExit, match="without printing"):
+        run_checked_marker(silent, cwd=tmp_path, marker="expected-marker")
+
+
+def test_a_child_that_printed_its_marker_is_accepted(tmp_path: pathlib.Path) -> None:
+    """The success path, so the requirement is not satisfied by refusing everything."""
+    speaking = [sys.executable, "-c", "print('expected-marker')"]
+
+    assert run_checked_marker(speaking, cwd=tmp_path, marker="expected-marker").returncode == 0
+
+
+def test_a_failing_child_still_fails_on_its_exit_code(tmp_path: pathlib.Path) -> None:
+    """The marker requirement is additional, never a replacement for the status."""
+    failing = [sys.executable, "-c", "print('expected-marker'); raise SystemExit(3)"]
+
+    with pytest.raises(SystemExit):
+        run_checked_marker(failing, cwd=tmp_path, marker="expected-marker")

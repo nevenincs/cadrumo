@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Final, override
+from typing import Any, Final, override
 
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical, VerticalScroll
@@ -43,10 +43,10 @@ class ContentDataTable[CellType](DataTable[CellType]):
     DEFAULT_CELL_PADDING: Final = int(CADRUMO_CSS_TOKENS["cadrumo-cell-padding"])
     """The product's one table density, so no call site names a number."""
 
-    def __init__(self, *args: object, **kwargs: object) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Apply the shared density unless a caller states its own."""
         kwargs.setdefault("cell_padding", self.DEFAULT_CELL_PADDING)
-        super().__init__(*args, **kwargs)  # type: ignore[arg-type]
+        super().__init__(*args, **kwargs)
 
     def watch_virtual_size(self, size: Size) -> None:
         """Keep the layout box equal to the current rows and header."""

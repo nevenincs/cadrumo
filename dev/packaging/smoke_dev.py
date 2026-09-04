@@ -16,6 +16,7 @@ from ._smoke_common import (
     require_executable,
     resolve_work_dir,
     run_checked,
+    run_checked_marker,
     venv_bin_dir,
     venv_cadrumo_path,
     venv_python_path,
@@ -119,7 +120,7 @@ import yaml
 
 print("dev-imports-ok")
 """
-    run_checked([str(venv_python_path(venv)), "-c", code], cwd=work_dir)
+    run_checked_marker([str(venv_python_path(venv)), "-c", code], cwd=work_dir, marker="dev-imports-ok")
     record_proof("dev optional runtime imports")
 
 

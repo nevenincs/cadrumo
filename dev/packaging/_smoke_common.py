@@ -342,6 +342,30 @@ def run_checked(
     return completed
 
 
+def run_checked_marker(
+    argv: list[str],
+    *,
+    cwd: Path,
+    marker: str,
+    env: dict[str, str] | None = None,
+) -> CommandResult:
+    """Run a child that ends with a completion marker, and require the marker.
+
+    Five child programs across these lanes end with a print naming what they
+    proved, and nothing asserted any of them: the parent read the exit code
+    alone. A child that exits 0 having skipped its tail - a mis-assembled
+    program string, an early return, a truncated block - was indistinguishable
+    from one that ran every assertion in it. The marker is the evidence the
+    tail was reached, so it is required here rather than printed into a void.
+    """
+    completed = run_checked(argv, cwd=cwd, env=env)
+    if marker not in completed.stdout:
+        sys.stderr.write(completed.stdout)
+        sys.stderr.write(completed.stderr)
+        raise SystemExit(f"the child exited 0 without printing {marker!r}, so its assertions did not all run")
+    return completed
+
+
 #: SGR colour sequences `uv export` emits when it judges the stream a terminal.
 #: They precede the payload, so a comment line reads as `[32m# ...` and never
 #: matches a bare `#` prefix test. The export parser strips them rather than
@@ -1159,7 +1183,9 @@ else:
 print("attachment-and-llm-surfaces-ok")
 """
     env = installed_product_env(runtime_root / "import-state", venv_path)
-    run_checked([str(venv_python_path(venv_path)), "-c", code], cwd=work_dir, env=env)
+    run_checked_marker(
+        [str(venv_python_path(venv_path)), "-c", code], cwd=work_dir, env=env, marker="attachment-and-llm-surfaces-ok"
+    )
     record_proof("attachment storage round-trip")
     record_proof("core LLM missing-extra boundary")
 

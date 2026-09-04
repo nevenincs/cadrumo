@@ -21,6 +21,7 @@ from ._smoke_common import (
     require_executable,
     resolve_work_dir,
     run_checked,
+    run_checked_marker,
     validate_frozen_exports,
     venv_cadrumo_path,
     venv_python_path,
@@ -65,7 +66,9 @@ for extra in (GOOGLE_EXTRA, BROWSER_EXTRA, ANTHROPIC_EXTRA):
 print("all-extra-imports-ok")
 """
     env = isolated_product_env(work_dir / "all-extras-import-state")
-    run_checked([str(venv_python_path(venv_path)), "-c", code], cwd=work_dir, env=env)
+    run_checked_marker(
+        [str(venv_python_path(venv_path)), "-c", code], cwd=work_dir, env=env, marker="all-extra-imports-ok"
+    )
     record_proof("all capability-gated optional imports")
 
 
