@@ -11,21 +11,33 @@ was partial and nothing said so.
 So the rules below cover every destination a release can collide with, and
 answer with the destination that owns the version rather than a bare refusal:
 
-*Package indexes.* A version any of the three projects already carries. Uploads
-there are irreversible, so this is the collision with no remedy.
+*Package indexes.* A version EVERY project in the cohort already carries.
+Uploads there are irreversible, so a complete set is the collision with no
+remedy: nothing is left to send and the run could only attempt bytes the index
+will not take back. A set only SOME of the projects carry is a different state
+and is permitted -- six files go up and that upload is not atomic, so a refused
+publisher registration or a dropped connection leaves part of the cohort
+published. Re-running the same tag is how that converges, and a partial set
+read as a collision would refuse the remedy and spend the version for a cause
+that was never a version problem. A permitted partial is always stated -- see
+:func:`index_convergence_notice`.
 
 *The tag and release namespace.* A version the source forge already carries as
-a tag or a release, INCLUDING drafts. Drafts count because a draft holds the
-tag. Both namespaces exempt the refs belonging to the run being guarded, by
-commit identity -- see :func:`refs_owning`.
+a tag or a release, drafts included where the credential can see them. A draft
+counts because it holds its tag; the forge lists drafts only to a caller with
+push access, so a run whose credential lacks it says which releases it could
+see rather than implying more -- see :func:`forge_push_access`. Both namespaces
+exempt the refs belonging to the run being guarded, by commit identity -- see
+:func:`refs_owning`.
 
 *The burned ledger.* A version the world may hold bytes under, whether or not
 any destination still shows it. See :mod:`dev.release.burned_versions` for why
 the floor cannot express this.
 
-*The monotonic floor.* A version at or below the highest the release-please
-manifest has recorded. Ordinary backward-bump protection, and the one rule no
-:class:`Gate` below enforces -- see :func:`manifest_floor`.
+*The monotonic floor.* A version strictly below the highest the release-please
+manifest has recorded. Ordinary backward-bump protection, asked by the
+publication gate alone -- see :func:`manifest_floor` for why the monotonic form
+is unsatisfiable and this regression form is what remains.
 
 Which of those bear on a run is not one answer but two, because the two places
 this runs are not the same act:
@@ -52,6 +64,8 @@ that gathers the state.
 See Also:
     :func:`version_conflicts`
         The pure decision core: observed state in, refusals out.
+    :func:`index_convergence_notice`
+        The pure companion that says a permitted partial upload out loud.
     :func:`gate_conflicts`
         The pure gate filter: which of those rules bear on which gate.
     :func:`assert_gate_permits`
@@ -64,6 +78,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 import urllib.error
@@ -77,10 +92,19 @@ from typing import Final
 from packaging.version import InvalidVersion, Version
 
 from .._paths import REPO_ROOT, UTF_8
-from .burned_versions import burn_reason, is_burned
+from .burned_versions import BurnedVersionLedgerError, burn_reason, is_burned
 
 _UTF_8: Final[str] = UTF_8
 _PROBE_TIMEOUT_S: Final[int] = 20
+
+#: Where the per-version index metadata lives. A parameter of the probe rather
+#: than a literal inside it, so both directions of "a 404 is the only answer
+#: that means free" are provable against a real endpoint instead of against a
+#: stand-in for :mod:`urllib`.
+_PYPI_JSON_INDEX: Final[str] = "https://pypi.org/pypi"
+
+#: A Git object name: forty hex digits and nothing else.
+_OBJECT_NAME: Final[re.Pattern[str]] = re.compile(r"[0-9a-f]{40}")
 
 #: The three projects one cohort publishes together. A conflict on any one of
 #: them refuses the whole cohort: they ship as a set and a partial set is not a
@@ -191,10 +215,31 @@ def _parsed(version: str, *, label: str) -> Version:
         raise VersionIdentityError(f"{label} {version!r} is not a valid version") from exc
 
 
+def _object_name(value: str, *, label: str) -> str:
+    """Return ``value`` as a normalised object name, refusing anything else.
+
+    The exemption below compares commits, and only a commit can identify one
+    run's own refs. A release cut in the forge's web interface records a BRANCH
+    in the same field a release cut from a tag records a commit in, so a bare
+    branch name reaching the comparison would exempt every release that targets
+    that branch -- an unbounded exemption wearing the shape of an identity
+    check. Refusing anything that is not an object name is what keeps the
+    exemption bounded to one commit.
+    """
+    normalised = value.strip().casefold()
+    if _OBJECT_NAME.fullmatch(normalised) is None:
+        raise VersionIdentityError(
+            f"{label} {value!r} is not a 40-character object name; a branch name there would exempt "
+            "every ref that targets that branch instead of this run's own",
+        )
+    return normalised
+
+
 def version_conflicts(
     version: str,
     *,
     owning_projects: Iterable[str] = (),
+    target_projects: Iterable[str] = PYPI_PROJECTS,
     existing_tags: Iterable[str] = (),
     existing_releases: Iterable[str] = (),
     floor: str | None = None,
@@ -203,7 +248,17 @@ def version_conflicts(
 
     Pure: every input is observed state, so each rule is provable against real
     data. An empty result means no destination owns the version and no rule
-    forbids it.
+    forbids it. ``target_projects`` is the cohort the index question is asked
+    about, passed in rather than decided at the call site, because whether the
+    index owns a version is a question about the whole cohort and not about one
+    project at a time.
+
+    The index refuses a COMPLETE set only. Every project carrying the version
+    leaves nothing to upload, so the run can only be an overwrite attempt. A
+    partial set is the state a non-atomic six-file upload leaves behind, and
+    re-running the same tag is its remedy, so it is permitted here and reported
+    by :func:`index_convergence_notice` instead. A version that belongs to some
+    other release is still caught by the tag and release namespaces below.
 
     Every conflict is reported rather than the first, because an operator fixing
     one collision should not have to re-run to discover the next.
@@ -211,9 +266,12 @@ def version_conflicts(
     candidate = _parsed(version, label="candidate version")
     refusals: list[str] = []
 
-    for project in sorted(set(owning_projects)):
+    carrying = sorted(set(owning_projects))
+    targets = set(target_projects)
+    if carrying and targets and targets <= set(carrying):
         refusals.append(
-            f"package index already carries {project} {version}; an index upload cannot be undone, "
+            f"package index already carries {version} for every project in the cohort "
+            f"({', '.join(carrying)}); nothing is left to upload and an index upload cannot be undone, "
             "so this version can never be republished: cut a new version",
         )
 
@@ -231,8 +289,13 @@ def version_conflicts(
             "dispatched for (drafts included, because a draft holds its tag); cut a new version",
         )
 
-    if is_burned(version):
-        refusals.append(f"version {version} is burned and can never be minted again: {burn_reason(version)}")
+    # The canonical form, because the ledger records one spelling per number
+    # while an index treats every spelling of it as the same release: `0.02.1`
+    # would otherwise walk past a ledger entry for `0.2.1` and publish under a
+    # number the world already holds bytes for.
+    canonical = str(candidate)
+    if is_burned(canonical):
+        refusals.append(f"version {version} is burned and can never be minted again: {burn_reason(canonical)}")
 
     if floor is not None:
         recorded = _parsed(floor, label="manifest floor")
@@ -246,11 +309,42 @@ def version_conflicts(
     return tuple(refusals)
 
 
+def index_convergence_notice(
+    version: str,
+    *,
+    owning_projects: Iterable[str] = (),
+    target_projects: Iterable[str] = PYPI_PROJECTS,
+) -> str | None:
+    """Return what a permitted partial index state must say, or ``None``.
+
+    Pure, and the other half of the index rule: :func:`version_conflicts`
+    permits a partial set, and permitting it silently would tell an operator
+    that no index carries the version when some already do. A pass that
+    overstates what it found is the defect this module exists to remove, so the
+    permit carries its own evidence -- which projects hold the version, which
+    are still missing, and that this run completes rather than replaces.
+
+    ``None`` for the two states with nothing to say: no project carries the
+    version, or every project does and :func:`version_conflicts` has already
+    refused it.
+    """
+    carrying = sorted(set(owning_projects))
+    remaining = sorted(set(target_projects) - set(carrying))
+    if not carrying or not remaining:
+        return None
+    return (
+        f"the package index already carries {version} for {', '.join(carrying)} and not yet for "
+        f"{', '.join(remaining)}; this run completes that partial upload, and the files already "
+        "uploaded are checked against the index rather than replaced"
+    )
+
+
 def gate_conflicts(
     gate: Gate,
     version: str,
     *,
     owning_projects: Iterable[str] = (),
+    target_projects: Iterable[str] = PYPI_PROJECTS,
     existing_tags: Iterable[str] = (),
     existing_releases: Iterable[str] = (),
     floor: str | None = None,
@@ -266,13 +360,19 @@ def gate_conflicts(
     return version_conflicts(
         version,
         owning_projects=owning_projects if gate.checks_index else (),
+        target_projects=target_projects,
         existing_tags=existing_tags if gate.checks_forge else (),
         existing_releases=existing_releases if gate.checks_forge else (),
         floor=floor if gate.checks_floor else None,
     )
 
 
-def pypi_projects_owning(version: str, *, projects: Iterable[str] = PYPI_PROJECTS) -> tuple[str, ...]:
+def pypi_projects_owning(
+    version: str,
+    *,
+    projects: Iterable[str] = PYPI_PROJECTS,
+    index_url: str = _PYPI_JSON_INDEX,
+) -> tuple[str, ...]:
     """Return the projects whose index already carries ``version``.
 
     A 404 is the only answer that means "free". Any other failure refuses
@@ -282,8 +382,8 @@ def pypi_projects_owning(version: str, *, projects: Iterable[str] = PYPI_PROJECT
     """
     owning: list[str] = []
     for project in projects:
-        request = urllib.request.Request(  # fixed HTTPS index endpoint.
-            f"https://pypi.org/pypi/{project}/{version}/json",
+        request = urllib.request.Request(  # HTTPS index endpoint, defaulted above.
+            f"{index_url}/{project}/{version}/json",
             headers={"Accept": "application/json"},
         )
         try:
@@ -330,12 +430,34 @@ def forge_tags_owning(version: str, *, repository: str, own_source_commit: str |
     return refs_owning(entries, version, own_source_commit=own_source_commit)
 
 
-def forge_releases_owning(version: str, *, repository: str, own_source_commit: str | None = None) -> tuple[str, ...]:
-    """Return releases matching ``version``, drafts included.
+def forge_push_access(repository: str) -> bool:
+    """Return whether the credential in use has push access to ``repository``.
 
-    Drafts are included deliberately: a draft holds its tag, so a later attempt
+    The release-namespace answer's reach depends on it. The forge returns DRAFT
+    releases only to a caller with push access, so a read-only credential is
+    told about published releases and hears nothing about the drafts -- a
+    partial answer that looks exactly like a clean one. Asking is what lets a
+    run report which it got instead of implying the wider reach.
+    """
+    return _forge_refs(f"repos/{repository}", ".permissions.push // false") == ("true",)
+
+
+#: What a run must add to its pass when it could not see draft releases. Stated
+#: rather than assumed, because a draft holds its tag and an invisible one is
+#: still a collision waiting at the release step after the upload.
+DRAFT_BLIND_NOTICE: Final[str] = (
+    "the release namespace was read with a credential that does not report push access, and the forge "
+    "returns draft releases only to callers that have it; this answer covers published releases only"
+)
+
+
+def forge_releases_owning(version: str, *, repository: str, own_source_commit: str | None = None) -> tuple[str, ...]:
+    """Return releases matching ``version``, drafts included where visible.
+
+    Drafts are asked for deliberately: a draft holds its tag, so a later attempt
     to create the release would fail after an irreversible index upload had
-    already happened.
+    already happened. Whether they come back depends on the credential -- see
+    :func:`forge_push_access`, which is how a run says which answer it got.
 
     ``own_source_commit`` exempts the release this run is publishing, which the
     release that cut the tag already created from this same commit. A release on
@@ -359,13 +481,19 @@ def refs_owning(
     the rule most worth proving: getting it wrong either blocks the release it
     was dispatched for, by refusing the very tag and release that dispatched it,
     or launders a foreign ref, by exempting one it should have refused.
+
+    The exemption is object-name identity, so ``own_source_commit`` is validated
+    as one and both sides are normalised before they are compared -- see
+    :func:`_object_name` for the branch name that would otherwise be exempted
+    wholesale.
     """
+    own = None if own_source_commit is None else _object_name(own_source_commit, label="own source commit")
     owning: list[str] = []
     for entry in entries:
         name, _, target = entry.partition(" ")
         if name not in {version, f"v{version}"}:
             continue
-        if own_source_commit is not None and target.strip() == own_source_commit:
+        if own is not None and target.strip().casefold() == own:
             continue
         owning.append(name)
     return tuple(owning)
@@ -376,6 +504,7 @@ def assert_gate_permits(
     version: str,
     *,
     owning_projects: Iterable[str] = (),
+    target_projects: Iterable[str] = PYPI_PROJECTS,
     existing_tags: Iterable[str] = (),
     existing_releases: Iterable[str] = (),
     floor: str | None = None,
@@ -389,6 +518,7 @@ def assert_gate_permits(
         gate,
         version,
         owning_projects=owning_projects,
+        target_projects=target_projects,
         existing_tags=existing_tags,
         existing_releases=existing_releases,
         floor=floor,
@@ -408,7 +538,9 @@ def forge_arguments(repository: str | None, own_source_commit: str | None) -> tu
     Without the repository there is nothing to ask. Without the commit, the tag
     and release this run was dispatched for look exactly like a stranger's, and
     every release would be refused moments before its upload for colliding with
-    itself.
+    itself. The commit is validated as an object name here rather than at the
+    comparison, so an argument that could only ever exempt too much is an
+    operator error reported before the first probe.
     """
     if not repository:
         raise VersionIdentityError("--repository is required to ask the forge which refs own this version")
@@ -417,7 +549,7 @@ def forge_arguments(repository: str | None, own_source_commit: str | None) -> tu
             "--own-source-commit is required: the tag and release being published already exist, and "
             "without the commit they sit on they cannot be told apart from a foreign ref",
         )
-    return repository, own_source_commit
+    return repository, _object_name(own_source_commit, label="--own-source-commit")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -450,12 +582,20 @@ def main(argv: list[str] | None = None) -> int:
     owning: tuple[str, ...] = ()
     tags: tuple[str, ...] = ()
     releases: tuple[str, ...] = ()
+    # What the pass has to say for itself beyond "available": a state that was
+    # permitted rather than absent, and a question whose answer was narrower
+    # than the question. Silence about either is how a partial check reads as a
+    # clean one.
+    notices: list[str] = []
     try:
         # Argument validation precedes every probe: an operator who forgot a
         # flag learns that immediately, not after two network round trips.
         forge = forge_arguments(args.repository, args.own_source_commit) if gate.checks_forge else None
         if gate.checks_index:
             owning = pypi_projects_owning(args.version)
+            partial = index_convergence_notice(args.version, owning_projects=owning)
+            if partial is not None:
+                notices.append(partial)
         if forge is not None:
             repository, own_source_commit = forge
             tags = forge_tags_owning(args.version, repository=repository, own_source_commit=own_source_commit)
@@ -464,6 +604,8 @@ def main(argv: list[str] | None = None) -> int:
                 repository=repository,
                 own_source_commit=own_source_commit,
             )
+            if not forge_push_access(repository):
+                notices.append(DRAFT_BLIND_NOTICE)
 
         assert_gate_permits(
             gate,
@@ -473,11 +615,15 @@ def main(argv: list[str] | None = None) -> int:
             existing_releases=releases,
             floor=manifest_floor() if gate.checks_floor else None,
         )
-    except VersionIdentityError as exc:
+    except (VersionIdentityError, BurnedVersionLedgerError) as exc:
         # An operator reads this at a refusal, so it must be the message and not
-        # a traceback with the message buried at the bottom.
+        # a traceback with the message buried at the bottom. The ledger's own
+        # error is caught alongside because it is raised on the seal's only
+        # remaining rule, where a traceback would be the whole output.
         print(f"REFUSED: {exc}", file=sys.stderr)
         return 1
+    for notice in notices:
+        print(f"NOTE: {notice}")
     print(f"version {args.version} is available to {gate.name} ({gate.summary()} checked)")
     return 0
 
