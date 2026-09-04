@@ -60,6 +60,23 @@ _AEAT_SOURCES: Final[frozenset[AeatSyncWorkspaceSource]] = frozenset(
 
 _NEVER_PULLED: Final[str] = "workbench.aeat_sync.never_pulled"
 _NO_LOCAL_ROW_READER: Final[str] = "workbench.aeat_sync.local_row_reader_unavailable"
+"""No local authority produces these rows at all.
+
+True of LOCAL_RECONCILIATION: nothing in the codebase records local
+reconciliation decisions, so there is nothing for a session to read.
+"""
+
+_READER_NOT_COMPOSED: Final[str] = "workbench.aeat_sync.local_reader_not_composed"
+"""The authority EXISTS but this session does not read it.
+
+Distinct from `_NO_LOCAL_ROW_READER`, which claims no reader exists, and from
+`_NEVER_PULLED`, which claims nothing has been captured. Both would be false of
+LOCAL_NOTIFICATION_CUSTODY: `NotificationDocumentService.list_documents` reads
+local custody and answers before any pull -- with an empty tuple when custody
+is empty, which is a proven zero rather than an absence. Naming it a missing
+reader points whoever picks this up at writing one that is already written; the
+gap is composition, and saying so is the difference between a task and a
+wild-goose chase."""
 
 _OVERVIEW_ACTIONS: Final[dict[AeatSyncOverviewArea, tuple[str, ...]]] = {
     AeatSyncOverviewArea.CENSUS: ("operator.profile.edit",),
@@ -79,17 +96,24 @@ _OVERVIEW_OPERATIONS: Final[dict[AeatSyncOverviewArea, tuple[str, ...]]] = {
 }
 
 
+_LOCAL_REFUSALS: Final[dict[AeatSyncWorkspaceSource, str]] = {
+    AeatSyncWorkspaceSource.LOCAL_NOTIFICATION_CUSTODY: _READER_NOT_COMPOSED,
+}
+"""Sources whose refusal is a composition gap rather than a missing authority."""
+
+
 def _local_observation(
     source: AeatSyncWorkspaceSource,
     *,
     observed_at: UtcInstant,
     item_count: int | None,
+    refusal: str = _NO_LOCAL_ROW_READER,
 ) -> AeatSyncWorkspaceSourceObservationV1:
     if item_count is None:
         return AeatSyncWorkspaceSourceObservationV1(
             source=source,
             availability=AeatSyncWorkspaceAvailability.UNAVAILABLE,
-            refusal=_NO_LOCAL_ROW_READER,
+            refusal=refusal,
         )
     return AeatSyncWorkspaceSourceObservationV1(
         source=source,
@@ -118,7 +142,12 @@ def _observation(
         AeatSyncWorkspaceSource.LOCAL_NOTIFICATION_CUSTODY: None,
         AeatSyncWorkspaceSource.LOCAL_RECONCILIATION: None,
     }
-    return _local_observation(source, observed_at=observed_at, item_count=counts[source])
+    return _local_observation(
+        source,
+        observed_at=observed_at,
+        item_count=counts[source],
+        refusal=_LOCAL_REFUSALS.get(source, _NO_LOCAL_ROW_READER),
+    )
 
 
 def _admitted_capabilities(
