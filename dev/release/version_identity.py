@@ -570,8 +570,9 @@ def main(argv: list[str] | None = None) -> int:
     """Refuse a candidate version the gate being run cannot let through.
 
     One authority, two gates. Sealing a cohort writes to no destination, so it
-    refuses only a burned version. Publishing is the write, and refuses every
-    destination that already owns the version.
+    refuses only a burned version. Publishing is the write, and refuses the
+    destinations that own the version outright -- along with anything the pass
+    itself has to disclose, which is printed before it.
     """
     parser = argparse.ArgumentParser(description="Refuse a version the named gate cannot let through.")
     parser.add_argument("--version", required=True)
@@ -581,8 +582,9 @@ def main(argv: list[str] | None = None) -> int:
         choices=tuple(GATES),
         help=(
             "seal: a cohort BUILD, which uploads nothing, so only a burned version is refused. "
-            "publish: the irreversible upload, which additionally refuses every package index, tag "
-            "and release namespace that already owns the version."
+            "publish: the irreversible upload, which additionally refuses a version every index "
+            "project already carries, a tag or release namespace that owns it, and a version below "
+            "the recorded floor."
         ),
     )
     parser.add_argument("--repository", help="owner/name of the forge repository; required by --scope publish")
