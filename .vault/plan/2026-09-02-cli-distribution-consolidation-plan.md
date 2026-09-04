@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:c76e40335900ea9ec9600d5330603f4dd4c87054f7694081dd0908102bf1c95a'
+body_hash: 'sha256:6a030642d9f68171787f974457ba2300cd60e8c47229c424af0ca375d6a08ef1'
 ---
 
 <!-- RETIRED: S39 -->
@@ -117,7 +117,7 @@ Build every declared distribution and channel artifact from one command and prov
 - [x] `P09.S48` - Separate the seal check from the publication check and guard the upload with the authority that names it; `dev/release/version_identity.py`.
 - [x] `P09.S49` - Remove the repeated passes the cohort build makes over artifacts it has already produced; `dev/packaging/python_cohort.py`.
 - [x] `P09.S52` - Close the review findings on the publication gate, starting with the partial-upload deadlock; `dev/release/version_identity.py`.
-- [ ] `P09.S55` - Give the hand-assembled cohort fixtures the wheelhouse the manifest requires; `packaging/homebrew/tests/test_homebrew_generate.py`.
+- [x] `P09.S55` - Give the hand-assembled cohort fixtures the wheelhouse the manifest requires; `packaging/homebrew/tests/test_homebrew_generate.py`.
 - [ ] `P09.S56` - Close the generator assertions the wheelhouse refusal was hiding; `packaging/scoop/tests/test_scoop_generate.py`.
 
 ### Phase `P10` - Prune the release and packaging surfaces without consumers
