@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:77bf9f5e3b59257a0ee282fb8356be02c9ce0259ed73dc000eeef4e8646774a2'
+body_hash: 'sha256:54927b34f895adfb01498a9c4bea054ff637be61ab7efa7c7ac84cca74b744f0'
 step_id: 'S424'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -78,3 +78,27 @@ Teeth proven by adding a free-text field to a census row -- `note is free text
 (<class 'str'>), so protected prose could be carried there and the removed
 sentinels would need reinstating`. The byte scan is kept as belt-and-braces
 with its limits stated, rather than deleted or left reading as the guard.
+
+SWEEP COMPLETED over the remaining absence assertions in this campaign's
+surfaces, applying the rule the byte scan produced: an absence check needs a
+route for the value to arrive by.
+
+The notification selection-key check is the one absence assertion here that
+holds up, and it was verified rather than assumed. `notification-alpha` is
+genuinely supplied through a fact's `private_identity`, the projected row
+carries a `selection_key` DERIVED from it, and the test asserts both that the
+raw value is absent from json, repr and pickle and that the key is not the
+plain digest of it. That is a real route: a wrong derivation would leak.
+Injecting one -- returning the raw identity as the key -- fails eleven tests.
+Restored by copy; 26 passed.
+
+The first attempt at that injection did not apply, because the anchor string
+contained an escape the edit script mangled, and the suite went green on
+unmodified source. That is the second time in this campaign a teeth check
+passed for that reason, so the injection is now confirmed present in the file
+before the suite is trusted -- a grep, not an assumption.
+
+No further vacuous absence checks were found in the ledger, AEAT Sync, search
+or workbench-generation surfaces. The remaining `not in` assertions in the tree
+belong to the aggregation and auth areas, which are outside this campaign and
+were not audited.

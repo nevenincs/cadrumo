@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-registry-dated-validity-regulatory-constant-placement-sweep-audit]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:33bacca80df6fa078c6cf3fac705ec42aec71e70dac9a7538f915638ea184b87'
+body_hash: 'sha256:b20fac0ee6bb56b4ef55a771abddd78311993fb412e533a177b1b5057b739649'
 ---
 
 <!-- RETIRED: S01 -->
@@ -47,7 +47,7 @@ Thread the event date into the consumers that cannot resolve without it, then au
 - [ ] `P03.S12` - Add the declared-reason gate the event-date ADR's own constraints require but which was never planned: admission to a non-filing axis must name the provision and the axis and be enumerable in both directions, landing as the precondition before any future parameter uses one; `src/cadrumo/domain/calculations/registry/_validate_parameter_temporal.py, src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `P03.S09` - Dispatch a fresh-context reviewer over the landed change to verify no legal claim was fabricated, the retroactive guard still refuses forward values, and every shipped parameter still resolves, then implement its findings; `.vault/audit/`.
 - [x] `P03.S14` - Rewire the domain compute surface to take the resolved bundle instead of module constants: `compute_regularizacion_anual`, `compute_regularizacion_transmision`, `compute_registro_regularizacion`, `compute_registro_transmisiones`, and the two record window helpers, then reduce `BienInversionKind` to a pure classifier by deleting its `ventana_anos` and `divisor` properties and the `core.external_constants` imports behind them; `src/cadrumo/domain/bienes_inversion/register.py, src/cadrumo/domain/bienes_inversion/tests/`.
-- [ ] `P03.S15` - Wire the application boundary to resolve the bundle for modelo 303 and to emit a classified refusal diagnostic for modelo 390 naming the not-applicable parameter disposition, rather than computing a filing-bound figure on ungrounded constants; `src/cadrumo/application/calculations/bienes_inversion_regularizacion.py, src/cadrumo/application/modelo/_calculation_source_staging.py`.
+- [x] `P03.S15` - Wire the application boundary to resolve the bundle for modelo 303 and to emit a classified refusal diagnostic for modelo 390 naming the not-applicable parameter disposition, rather than computing a filing-bound figure on ungrounded constants; `src/cadrumo/application/calculations/bienes_inversion_regularizacion.py, src/cadrumo/application/modelo/_calculation_source_staging.py`.
 - [ ] `P03.S16` - Harden the producer-snapshot oracle to refuse a result whose carried parameter provenance disagrees with the bundle it was handed, so supplying one wrong bundle to both producer and oracle cannot be self-consistent; `src/cadrumo/application/filing/producer_snapshot.py`.
 - [ ] `P03.S17` - Record the modelo 390 twin-computation-path defect in the audit: every M390 revision declares parameters not applicable on the verified ground that the resumen anual restates the periodic outcome, yet the source resolver recomputes the regularisation from the register for M390 as well as M303, so one legal figure has two computation paths; `.vault/audit/`.
 
