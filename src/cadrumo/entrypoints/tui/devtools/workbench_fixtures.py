@@ -19,11 +19,6 @@ from typing import Any, Final, cast
 from textual.app import App
 from textual.screen import Screen
 
-from ....application.ledger.workspace import (
-    LedgerWorkspaceArea,
-    LedgerWorkspaceAreaStateV1,
-    LedgerWorkspaceProjectionV1,
-)
 from ....application.aeat_sync.workspace import (
     AeatSyncAeatObservationState,
     AeatSyncCensusCategory,
@@ -52,6 +47,11 @@ from ....application.aeat_sync.workspace import (
     AeatSyncWorkspaceZoneObservationV1,
     aeat_sync_workspace_sources,
     project_aeat_sync_workspace,
+)
+from ....application.ledger.workspace import (
+    LedgerWorkspaceArea,
+    LedgerWorkspaceAreaStateV1,
+    LedgerWorkspaceProjectionV1,
 )
 from ....application.modelo.declarations_calendar import (
     DeclarationsCalendarProjectionV1,
@@ -127,6 +127,7 @@ from ..declarations.models import DeclarationsDestinationIdV1
 from ..declarations.overview import DeclarationsModeloWorkspaceLauncherScreen
 from ..declarations.routes import resolve_declarations_screen
 from ..home import HomeScreen
+from ..ledger.controller import LedgerWorkspaceController
 from ..navigation import (
     TuiDestinationAdmissionV1,
     TuiScreenContextV1,
