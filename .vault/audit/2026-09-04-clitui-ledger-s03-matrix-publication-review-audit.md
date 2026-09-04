@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:ccef4eaafceeae12b43d44b4445692d29ab240c5529a675a26d07006793c1378'
+body_hash: 'sha256:10e20d16b09af35f61e88473f47cf4e7fbe7a0a629e0c7837258e404246087fa'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-reference]]"
@@ -54,6 +54,28 @@ provisional.
 ### batch-patch-atomicity-resolution | low | Corrected row now preserves all-or-none financial mutation
 
 The corrected candidate contract names a version-bound atomic multi-row result, and the proof obligation requires all-or-none rollback, idempotency, stable target identity, and baseline-concurrency refusal. A fresh independent review found no remaining best-effort or partial-success wording for financial batch mutation; remaining best-effort references are confined to ADR-authorized import, proposal generation, and provider ingestion behavior.
+
+### batch-patch-proof-coordinate-retest | medium | S86 still mixes best-effort proof into the atomic mutation phase
+
+Reference correction `9b04ca76c0` correctly changes the batch-patch row to a
+version-bound atomic multi-row result and its proof note to all-or-none rollback,
+and the reference now contains no best-effort or partial-result wording. However,
+that row still names S86 as proof, while approved S86 requires “best-effort item
+isolation” inside the change-set, notes, and evidence-lifecycle phase. S78's
+multi-row patch, S80's batch note append, and S82's evidence replacement are all
+atomic under the accepted ADR; no operation in that phase authorizes a
+best-effort transaction mode. The proof coordinate therefore remains ambiguous
+and can still test or normalize a forbidden partial-success contract.
+
+### provider-best-effort-scope | low | S114 does not distinguish item outcomes from transaction mode
+
+Approved S114 asks the CLI boundary to normalize “best-effort item outcomes” for
+provider handling. This may mean reporting independently atomic provider items,
+but it does not say so, while the accepted ADR confines `BEST_EFFORT` mutation
+semantics to bulk import and classification or evidence-reading proposal
+generation. Clarify the wording so it cannot establish another best-effort
+mutation family.
+
 ## Recommendations
 
 No open recommendation remains. Preserve the provisional/fail-closed state until S04-S14 replace baseline families with a complete, reviewed, digest-bound denominator and an exact acceptance attestation.
@@ -61,3 +83,13 @@ No open recommendation remains. Preserve the provisional/fail-closed state until
 The `batch-patch-atomicity-fork` recommendation is resolved by the corrected S78 candidate contract and the passing atomicity re-review.
 
 Final disposition: **ACCEPTED**. Open severity counts are CRITICAL 0, HIGH 0, MEDIUM 0, LOW 0.
+
+For `batch-patch-proof-coordinate-retest`, remove the best-effort obligation from
+S86 or bind it explicitly to a separately named ADR-authorized bulk-import or
+proposal-generation proof outside the atomic mutation cohort. For
+`provider-best-effort-scope`, state that S114 projects per-item outcomes for an
+authorized bulk ingestion plan and does not define a partial mutation mode.
+
+Corrective re-review disposition: **NOT ACCEPTED**. Open severity counts are
+CRITICAL 0, HIGH 0, MEDIUM 1, LOW 1. This disposition supersedes the earlier
+acceptance above.
