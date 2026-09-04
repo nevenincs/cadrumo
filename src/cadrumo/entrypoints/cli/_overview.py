@@ -182,7 +182,7 @@ def _undeclared_taxpayer_model_refusal(profile: TaxpayerProfile) -> CliRefusedBo
     )
     from ...application.user_profile.preflight import format_profile_selector_requirements
     from ...domain.calculations.registry.profile_grounding import build_profile_grounding_index
-    from ...domain.deadlines.models import EntityType
+    from ...domain.contribuyente.entity_type import EntityType
     from ...domain.user_profile.loader import load_user_profile_schema
     from ._common import attach_cli_policy_verdict
     from .errors import CliRefusedBoundaryError

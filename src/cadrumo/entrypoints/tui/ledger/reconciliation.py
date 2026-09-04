@@ -30,10 +30,23 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
         with ledger_workspace_page() as navigation:
             yield navigation
             yield Static(ledger_copy("tui.ledger.reconciliation.local_only"), markup=False)
+            yield Static(
+                ledger_copy("tui.ledger.reconciliation.suggestions"),
+                classes="cadrumo-heading cadrumo-heading-lead",
+                markup=False,
+            )
             yield ContentDataTable[str](id="ledger-suggestions", cursor_type="row", zebra_stripes=True)
-            yield Static(ledger_copy("tui.ledger.reconciliation.inconsistencies"), markup=False)
+            yield Static(
+                ledger_copy("tui.ledger.reconciliation.inconsistencies"),
+                classes="cadrumo-heading",
+                markup=False,
+            )
             yield ContentDataTable[str](id="ledger-inconsistencies", cursor_type="row", zebra_stripes=True)
-            yield Static(ledger_copy("tui.ledger.reconciliation.affected"), markup=False)
+            yield Static(
+                ledger_copy("tui.ledger.reconciliation.affected"),
+                classes="cadrumo-heading",
+                markup=False,
+            )
             yield ContentDataTable[str](id="ledger-affected", cursor_type="row", zebra_stripes=True)
             yield Static("", id="ledger-flow-status", markup=False)
             yield Button(
@@ -58,9 +71,16 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
             evidence = "\n".join(
                 (
                     f"{ledger_copy('tui.ledger.reconciliation.score')}: {row.score}",
-                    f"{ledger_copy('tui.ledger.reconciliation.amount_match')}: {yes if row.amount_match else no}",
+                    # The verdict AND the two values it was reached on. A bare
+                    # yes/no asks the operator to confirm a link while hiding
+                    # what was compared, and a bare "no" reports a
+                    # disagreement without saying between what and what.
+                    f"{ledger_copy('tui.ledger.reconciliation.amount_match')}: "
+                    f"{yes if row.amount_match else no} "
+                    f"({row.transaction_amount} / {row.invoice_total})",
                     f"{ledger_copy('tui.ledger.reconciliation.counterparty_match')}: "
-                    f"{yes if row.counterparty_match else no}",
+                    f"{yes if row.counterparty_match else no} "
+                    f"({row.transaction_counterparty} / {row.invoice_counterparty})",
                 )
             )
             suggestions.add_row(

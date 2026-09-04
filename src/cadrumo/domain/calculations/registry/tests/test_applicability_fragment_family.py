@@ -126,8 +126,8 @@ def test_hydrate_applicability_rule_round_trips_every_axis() -> None:
 
     hydrated = hydrate_applicability_rule(Modelo.M100, fragment)
 
+    from .....domain.contribuyente.entity_type import EntityType
     from .....domain.deadlines.models import (
-        EntityType,
         FiscalResidency,
         IrpfEstimationRegime,
         IrpfIncomeCategory,

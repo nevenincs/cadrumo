@@ -19,10 +19,9 @@ set -euo pipefail
 #
 # /usr/local/bin now carries gh and just from the IMAGE (the upstream runner
 # image ships neither). gh in particular is assumed present the way it is on
-# GitHub-hosted runners: dev.release.version_identity shells out to it for the
-# tag and release namespace check, and its absence surfaces mid-release as
-# "REFUSED: forge check needs the gh CLI on PATH" rather than as a missing-tool
-# error.
+# GitHub-hosted runners: the acquisition and campaign lanes invoke it directly,
+# no workflow installs it, and its absence surfaces mid-lane as a
+# command-not-found inside a step rather than as a missing-tool error.
 #
 # /home/runner/tools/bin is kept ahead of it for backward compatibility: a
 # container still running on the OLD stock image keeps its volume-provisioned

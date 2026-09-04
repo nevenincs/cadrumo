@@ -791,6 +791,7 @@ def test_modelo_130_calculate_p95_cpu_within_budget_and_full_scan_control(
     wall_samples: list[float] = []
     cpu_samples: list[float] = []
     caplog.clear()
+    per_quarter: list[tuple[str, float, float]] = []
     with caplog.at_level(logging.DEBUG, logger=_TRANSACTION_REPOSITORY_LOGGER):
         for year in _M130_DIAGNOSTIC_YEARS:
             for quarter in quarters:
@@ -815,8 +816,11 @@ def test_modelo_130_calculate_p95_cpu_within_budget_and_full_scan_control(
                     invoice_repository=invoice_repo,
                     clock=filed_at,
                 )
-                cpu_samples.append(time.process_time() - cpu_started)
-                wall_samples.append(time.perf_counter() - wall_started)
+                quarter_cpu = time.process_time() - cpu_started
+                quarter_wall = time.perf_counter() - wall_started
+                cpu_samples.append(quarter_cpu)
+                wall_samples.append(quarter_wall)
+                per_quarter.append((f"{year}-{quarter}", quarter_cpu, quarter_wall))
                 assert revision.casilla_values  # the engine produced real casilla output, not an empty stub
                 persist_filed_revision_observation(
                     revision=revision,
@@ -832,8 +836,20 @@ def test_modelo_130_calculate_p95_cpu_within_budget_and_full_scan_control(
     assert not full_catalogue_reads, (
         "M130 calculation performed a full-catalogue load instead of targeted contributor reads"
     )
-    cpu_p95 = _p95(cpu_samples)
-    wall_p95 = _p95(wall_samples)
+    # NOT a sample distribution. M130's casilla-05/15 previous_filing bindings
+    # require the preceding quarter to be filed, so each quarter is persisted
+    # before the next is calculated and Q4 carries three prior filings where Q1
+    # carries none. The four measurements are four DIFFERENT workloads of
+    # increasing dependency depth, and a percentile over them reported the
+    # deepest one as if it were the tail of a distribution over one operation.
+    # Measured: 1.344, 1.781, 2.375, 3.500 CPU-s, monotonic in filing order.
+    # Each quarter is therefore gated on its own, which is at least as strict
+    # and tells an operator WHICH quarter breaches.
+    assert len(per_quarter) == len(cpu_samples) == len(_M130_DIAGNOSTIC_YEARS) * len(quarters), (
+        f"expected one measurement per filed quarter, got {len(per_quarter)}"
+    )
+    cpu_worst = max(cpu_samples)
+    wall_worst = max(wall_samples)
     partition_messages = _partition_log_messages(caplog.records)
     partition_read_count = len(partition_messages)
     partition_in_window_rows = _partition_in_window_rows(partition_messages)
@@ -848,16 +864,19 @@ def test_modelo_130_calculate_p95_cpu_within_budget_and_full_scan_control(
     assert len(full_scan_catalogue.transactions) == _TOTAL_TRANSACTIONS
     print(
         f"\n[bench] modelo_130_calculate: n={len(cpu_samples)} "
-        f"cpu_p95={cpu_p95:.3f}s cpu_mean={statistics.mean(cpu_samples):.3f}s "
+        f"cpu_worst={cpu_worst:.3f}s cpu_mean={statistics.mean(cpu_samples):.3f}s "
+        f"per_quarter={[(label, round(cpu, 3)) for label, cpu, _ in per_quarter]} "
         f"cpu_min={min(cpu_samples):.3f}s cpu_max={max(cpu_samples):.3f}s "
         f"gate=cpu<{_P95_BUDGET_CPU_SECONDS:.1f}s "
-        f"wall_p95={wall_p95:.3f}s wall_mean={statistics.mean(wall_samples):.3f}s "
+        f"wall_worst={wall_worst:.3f}s wall_mean={statistics.mean(wall_samples):.3f}s "
         f"full_scan_control_cpu={full_scan_cpu:.3f}s "
         f"partition_reads={partition_read_count} partition_in_window_rows={partition_in_window_rows}",
     )
-    assert cpu_p95 < _P95_BUDGET_CPU_SECONDS, (
-        f"M130 calculate P95 {cpu_p95:.3f} CPU-s at {_TOTAL_TRANSACTIONS}-row ledger scale exceeds "
-        f"the {_P95_BUDGET_CPU_SECONDS:.1f} CPU-s budget (samples={cpu_samples!r})"
+    over_budget = [(label, cpu) for label, cpu, _ in per_quarter if cpu >= _P95_BUDGET_CPU_SECONDS]
+    assert not over_budget, (
+        f"M130 calculate exceeds the {_P95_BUDGET_CPU_SECONDS:.1f} CPU-s budget for "
+        f"{[label for label, _ in over_budget]} at {_TOTAL_TRANSACTIONS}-row ledger scale; "
+        f"per-quarter CPU-s: {[(label, round(cpu, 3)) for label, cpu, _ in per_quarter]}"
     )
     assert full_scan_cpu > _P95_BUDGET_CPU_SECONDS, (
         f"the removed full-catalogue draft-anchor read measured {full_scan_cpu:.3f} CPU-s and no longer "

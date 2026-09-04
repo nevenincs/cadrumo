@@ -60,7 +60,6 @@ from ..pdf.label_regex import parse_spanish_decimal
 from .errors import SancionArithmeticError, SancionParseError
 
 _CENT: Final = Decimal("0.01")
-_ZERO: Final = Decimal("0.00")
 
 _STRICT_PERCENTAGE_RE: Final[re.Pattern[str]] = re.compile(r"^\d{1,3}(?:,\d{1,2})?$")
 """Anchored percentage shape, comma-decimal, at most two decimals."""

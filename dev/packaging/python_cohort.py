@@ -12,6 +12,7 @@ import subprocess
 import sys
 import tarfile
 import zipfile
+from collections.abc import Collection
 from dataclasses import dataclass
 from email.parser import Parser
 from pathlib import Path, PurePosixPath
@@ -411,6 +412,59 @@ def _artifact_command_projection(
     return tuple(sorted((*wheel_members, *sdist_members, *source_members)))
 
 
+_ARTIFACT_PROJECTION_CACHE: Final[dict[tuple[str, str, str], tuple[tuple[str, str], ...]]] = {}
+_ARTIFACT_PROJECTION_CACHE_LIMIT: Final[int] = 4
+"""How many distinct artifact triples the projection memo retains.
+
+A bound rather than an unbounded map because the cached value is the full
+member listing of three archives -- tens of thousands of rows. One process
+handles one cohort in the build path and at most a small handful when a
+release run loads a cohort and its copy, so four entries carry every real
+reuse; past that the map is cleared rather than evicted one at a time, since
+a process that has touched five cohorts is not going to reuse the first.
+"""
+
+
+def _cached_artifact_command_projection(
+    root_wheel: Path,
+    root_sdist: Path,
+    source_archive: Path,
+    *,
+    digests: tuple[str, str, str],
+) -> tuple[tuple[str, str], ...]:
+    """Return the artifact member cohort, reusing an identical earlier walk.
+
+    Both the attestation and the manifest-loading verification need the same
+    projection over the same three archives, and computing it re-opens the
+    wheel, the sdist and the multi-hundred-megabyte source archive each time.
+
+    Keyed on the three artifacts' SHA-256 digests rather than on their paths or
+    modification times: the digests are the only key that cannot be stale, and
+    every caller already holds them, so the key costs nothing. A path key would
+    serve a rebuilt artifact from the previous build's listing, and an mtime key
+    would do the same for two writes landing inside one filesystem timestamp
+    tick -- 15.6 ms on a default Windows clock, which a test rewriting a fixture
+    clears easily.
+    """
+    cached = _ARTIFACT_PROJECTION_CACHE.get(digests)
+    if cached is not None:
+        return cached
+    projection = _artifact_command_projection(root_wheel, root_sdist, source_archive)
+    if len(_ARTIFACT_PROJECTION_CACHE) >= _ARTIFACT_PROJECTION_CACHE_LIMIT:
+        _ARTIFACT_PROJECTION_CACHE.clear()
+    _ARTIFACT_PROJECTION_CACHE[digests] = projection
+    return projection
+
+
+def _forbidden_command_artifacts(
+    projection: tuple[tuple[str, str], ...],
+) -> tuple[tuple[str, str], ...]:
+    """Return every projected member whose filename names a command authority artifact."""
+    return tuple(
+        (kind, member) for kind, member in projection if PurePosixPath(member).name in _FORBIDDEN_COMMAND_ARTIFACT_NAMES
+    )
+
+
 def _validate_command_spec_attestation(
     value: object,
     *,
@@ -462,38 +516,45 @@ def _validate_command_spec_attestation(
     return {str(key): item for key, item in value.items()}
 
 
-def _attest_installed_command_specs(
-    root_wheel: Path,
-    root_sdist: Path,
-    source_commit: str,
-    source_archive: Path,
-    *,
-    work_root: Path,
-    uv: str,
-) -> dict[str, object]:
-    install_root = work_root / ".command-spec-installed"
-    if install_root.exists():
-        shutil.rmtree(install_root)
-    install_root.mkdir()
+def _probe_installed_command_specs(*, site_root: Path, work_root: Path) -> dict[str, Any]:
+    """Run every CommandSpec probe mode against one importable Cadrumo tree.
+
+    ``site_root`` is the directory added to the probe's import path, and the
+    probe refuses any Cadrumo module that resolves outside it, so the tree it is
+    pointed at is the entire universe the projection can describe.
+
+    The caller supplies the extracted build tree that ``uv build`` packaged the
+    wheel from, which exists on disk for the whole build. Reconstructing an
+    equivalent tree by unpacking the finished wheel into a throwaway target
+    describes the same modules at the cost of writing out twenty-five thousand
+    files that were already there. What the wheel round trip additionally proved
+    -- that every module the probe imported is one the wheel actually ships,
+    which matters because the build tree is a superset that also carries the
+    excluded test payload -- is proved directly instead, by
+    :func:`_assert_origins_are_wheel_members` against the wheel member listing
+    the attestation already computes.
+
+    Returns:
+        The first probe mode's projection, with the selected-path import budgets
+        of the remaining modes merged into it.
+    """
+    dependency_site = next(path for path in map(Path, sys.path) if path.name == "site-packages" and path.is_dir())
+    bytecode_root = work_root / ".command-spec-bytecode"
+    if bytecode_root.exists():
+        shutil.rmtree(bytecode_root)
+    bytecode_root.mkdir(parents=True)
+    environment = os.environ.copy()
+    environment["PYTHONPATH"] = ""
+    environment["AEAT_DEPENDENCY_SITE"] = str(dependency_site)
+    environment["AEAT_INSTALL_SITE"] = str(site_root.resolve(strict=True))
+    # Bytecode is written HERE rather than into ``site_root``. The probe reads a
+    # tree that defines a published artifact, and a reader that leaves thousands
+    # of files behind in it is not a reader. Redirecting rather than disabling
+    # keeps the four modes below sharing one compile of some fifteen hundred
+    # modules, which disabling would pay for four times.
+    environment["PYTHONPYCACHEPREFIX"] = str(bytecode_root)
+    projections: list[dict[str, Any]] = []
     try:
-        _run(
-            [
-                uv,
-                "pip",
-                "install",
-                "--target",
-                str(install_root),
-                "--no-deps",
-                digest_install_target("cadrumo", root_wheel),
-            ],
-            cwd=work_root,
-        )
-        dependency_site = next(path for path in map(Path, sys.path) if path.name == "site-packages" and path.is_dir())
-        environment = os.environ.copy()
-        environment["PYTHONPATH"] = ""
-        environment["AEAT_DEPENDENCY_SITE"] = str(dependency_site)
-        environment["AEAT_INSTALL_SITE"] = str(install_root)
-        projections: list[dict[str, Any]] = []
         for mode in (
             "projection",
             "aeat config profile list",
@@ -517,43 +578,91 @@ def _attest_installed_command_specs(
             if not isinstance(value, dict):
                 raise SystemExit("installed CommandSpec projection must be a JSON object")
             projections.append(value)
-        projection = projections[0]
-        projection["import_budgets"] = {
-            "graph_projection_first_party_modules": projection["import_budgets"][
-                "graph_projection_first_party_modules"
-            ],
-            "handler_modules_loaded": projection["import_budgets"]["handler_modules_loaded"],
-            "selected_path_deltas": [
-                item
-                for selected_projection in projections[1:]
-                for item in selected_projection["import_budgets"]["selected_path_deltas"]
-            ],
-        }
-        artifact_projection = _artifact_command_projection(root_wheel, root_sdist, source_archive)
-        forbidden_members = tuple(
-            (kind, member)
-            for kind, member in artifact_projection
-            if PurePosixPath(member).name in _FORBIDDEN_COMMAND_ARTIFACT_NAMES
-        )
-        attestation: dict[str, object] = {
-            "schema": _COMMAND_SPEC_ATTESTATION_SCHEMA,
-            "node_count": len(projection["identities"]),
-            "source_commit": source_commit,
-            "root_wheel_sha256": sha256_path(root_wheel),
-            "root_sdist_sha256": sha256_path(root_sdist),
-            "source_archive_sha256": sha256_path(source_archive),
-            "artifact_members_sha256": _projection_digest(artifact_projection),
-            "forbidden_artifacts_absent": not forbidden_members,
-            **{
-                f"{field}_sha256": _projection_digest(projection[field])
-                for field in ("identities", "locales", "policies", "schemas", "import_budgets", "origins")
-            },
-        }
-        attestation["envelope_sha256"] = _projection_digest(attestation)
-        return _validate_command_spec_attestation(attestation)
     finally:
-        if install_root.exists():
-            shutil.rmtree(install_root)
+        shutil.rmtree(bytecode_root, ignore_errors=True)
+    projection = projections[0]
+    projection["import_budgets"] = {
+        "graph_projection_first_party_modules": projection["import_budgets"]["graph_projection_first_party_modules"],
+        "handler_modules_loaded": projection["import_budgets"]["handler_modules_loaded"],
+        "selected_path_deltas": [
+            item
+            for selected_projection in projections[1:]
+            for item in selected_projection["import_budgets"]["selected_path_deltas"]
+        ],
+    }
+    return projection
+
+
+def _assert_origins_are_wheel_members(
+    projection: dict[str, Any],
+    artifact_projection: tuple[tuple[str, str], ...],
+    *,
+    site_root: Path,
+) -> None:
+    """Refuse an attestation naming a module the root wheel does not ship.
+
+    The probe already proves every Cadrumo module it imported resolved inside
+    ``site_root``. This adds the second half: that ``site_root``'s copy of each
+    of those modules is also carried by the wheel. The build tree deliberately
+    holds more than the wheel does -- the wheel target excludes the test payload
+    -- so a projection taken over the tree without this check could describe a
+    module no installation would ever have.
+    """
+    wheel_members = {member for kind, member in artifact_projection if kind == "wheel"}
+    root = site_root.resolve()
+    recorded: list[tuple[str, str]] = list(projection["origins"])
+    unshipped: list[str] = []
+    for name, origin in recorded:
+        try:
+            member = Path(origin).relative_to(root).as_posix()
+        except ValueError:
+            raise SystemExit(f"CommandSpec attestation origin escaped its probe tree: {name} at {origin}") from None
+        if member not in wheel_members:
+            unshipped.append(member)
+    if unshipped:
+        raise SystemExit(
+            f"CommandSpec attestation names modules the root wheel does not ship: {sorted(unshipped)[:20]!r}",
+        )
+
+
+def _command_spec_attestation(
+    projection: dict[str, Any],
+    artifact_projection: tuple[tuple[str, str], ...],
+    *,
+    source_commit: str,
+    root_wheel_sha256: str,
+    root_sdist_sha256: str,
+    source_archive_sha256: str,
+) -> dict[str, object]:
+    """Seal one validated CommandSpec attestation over already-derived inputs.
+
+    Every digest it binds is passed in rather than recomputed: the caller hashed
+    those three artifacts to write the manifest, and hashing 400 MB again to
+    restate the same three numbers is the recomputation this separation exists
+    to remove.
+    """
+    attestation: dict[str, object] = {
+        "schema": _COMMAND_SPEC_ATTESTATION_SCHEMA,
+        "node_count": len(projection["identities"]),
+        "source_commit": source_commit,
+        "root_wheel_sha256": root_wheel_sha256,
+        "root_sdist_sha256": root_sdist_sha256,
+        "source_archive_sha256": source_archive_sha256,
+        "artifact_members_sha256": _projection_digest(artifact_projection),
+        "forbidden_artifacts_absent": not _forbidden_command_artifacts(artifact_projection),
+        **{
+            f"{field}_sha256": _projection_digest(projection[field])
+            for field in ("identities", "locales", "policies", "schemas", "import_budgets", "origins")
+        },
+    }
+    attestation["envelope_sha256"] = _projection_digest(attestation)
+    return _validate_command_spec_attestation(
+        attestation,
+        expected_source_commit=source_commit,
+        expected_root_wheel_sha256=root_wheel_sha256,
+        expected_root_sdist_sha256=root_sdist_sha256,
+        expected_source_archive_sha256=source_archive_sha256,
+    )
 
 
 def _single(directory: Path, pattern: str, *, label: str) -> Path:
@@ -747,8 +856,117 @@ def _stamp_bundled_registry_records_into_build_tree(build_root: Path) -> frozens
     )
 
 
+def _assert_closed_cohort_inventory(cohort_dir: Path, declared_filenames: Collection[str]) -> None:
+    """Refuse a cohort directory holding anything the manifest does not declare.
+
+    The cohort directory is a closed world: the manifest plus exactly the
+    artifacts it names. An extra file crosses acquisition, smoke, and promote
+    gates unnoticed when only the declared names are checked, so the inventory
+    is compared before any per-artifact digest work.
+    """
+    declared = set(declared_filenames) | {_MANIFEST_NAME}
+    observed = {
+        path.relative_to(cohort_dir).as_posix()
+        for path in scan_directory(cohort_dir, recursive=True)
+        if path.is_file() and path.name not in _BUILD_TOOL_EMITTED_FILES
+    }
+    if observed != declared:
+        raise SystemExit(
+            f"Python cohort file inventory drifted: declared={sorted(declared)!r}, observed={sorted(observed)!r}",
+        )
+
+
+def _sealed_lock_digest(source_archive: Path) -> str:
+    """Return the digest of the ``uv.lock`` the cohort's source archive seals."""
+    with zipfile.ZipFile(source_archive) as source_bundle:
+        try:
+            return hashlib.sha256(source_bundle.read("uv.lock")).hexdigest()
+        except KeyError as exc:
+            raise SystemExit("Python cohort source archive omits uv.lock") from exc
+
+
+def _assert_source_archive_binds_wheelhouse(
+    source_archive: Path,
+    wheelhouse_manifest: dict[str, Any],
+) -> None:
+    """Refuse a wheelhouse resolved from a lock the sealed source does not carry."""
+    if wheelhouse_manifest.get("lock_sha256") != _sealed_lock_digest(source_archive):
+        raise SystemExit("runtime wheelhouse does not bind the tested uv.lock")
+
+
+def attest_command_specs(
+    *,
+    site_root: Path,
+    root_wheel: Path,
+    root_sdist: Path,
+    source_archive: Path,
+    source_commit: str,
+    work_root: Path,
+    digests: tuple[str, str, str] | None = None,
+) -> dict[str, object]:
+    """Probe one importable Cadrumo tree and seal the attestation it supports.
+
+    The single composition of the four steps a cohort attestation takes: probe
+    the tree, project the artifact members, prove every probed module is one the
+    root wheel ships, and seal the envelope. The cohort builder and every
+    fixture that assembles a cohort from real artifacts call this rather than
+    reproducing the ordering, since a caller that skipped the third step would
+    seal a projection describing modules no installation has.
+
+    Args:
+        site_root: The importable tree to probe -- the ``src`` directory of the
+            tree ``uv build`` packaged ``root_wheel`` from. The probe refuses
+            any Cadrumo module resolving outside it. Nothing is written into it;
+            the probe's bytecode is redirected elsewhere.
+        root_wheel: The cohort's root wheel.
+        root_sdist: The cohort's root source distribution.
+        source_archive: The cohort's retained source archive.
+        source_commit: The commit the cohort is built from.
+        work_root: Working directory for the probe processes and their
+            redirected bytecode.
+        digests: The three artifacts' already-known SHA-256 values, in the order
+            ``(wheel, sdist, source archive)``. Hashed here when omitted; a
+            caller that has just written them into a manifest passes them
+            instead of hashing several hundred megabytes again.
+
+    Returns:
+        The validated attestation envelope.
+    """
+    projection = _probe_installed_command_specs(site_root=site_root, work_root=work_root)
+    resolved = digests or (sha256_path(root_wheel), sha256_path(root_sdist), sha256_path(source_archive))
+    artifact_projection = _cached_artifact_command_projection(
+        root_wheel,
+        root_sdist,
+        source_archive,
+        digests=resolved,
+    )
+    _assert_origins_are_wheel_members(projection, artifact_projection, site_root=site_root)
+    return _command_spec_attestation(
+        projection,
+        artifact_projection,
+        source_commit=source_commit,
+        root_wheel_sha256=resolved[0],
+        root_sdist_sha256=resolved[1],
+        source_archive_sha256=resolved[2],
+    )
+
+
 def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
-    """Build one clean-commit cohort and write its immutable digest manifest."""
+    """Build one clean-commit cohort and write its immutable digest manifest.
+
+    Returns the cohort assembled from what the build already derived -- the
+    resolved artifact paths, the digests written into the manifest, the runtime
+    wheelhouse this build validated, and the attestation it sealed -- rather
+    than by reading the manifest back through :func:`load_python_cohort`. That
+    reload re-hashed every artifact, re-walked the member projection, re-parsed
+    the wheel and sdist metadata and revalidated the attestation, all against
+    bytes this function had just produced and checked.
+
+    The invariants that reload asserted which are NOT restatements of work
+    already done here are kept and asserted directly: the closed-world file
+    inventory, and the binding between the sealed source archive's lock and the
+    wheelhouse resolved from it.
+    """
     root = repo_root.resolve(strict=True)
     output = output_dir.resolve()
     drift = source_snapshot_drift(root)
@@ -795,7 +1013,7 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
             ],
             cwd=build_root,
         )
-        build_runtime_wheelhouse(
+        wheelhouse = build_runtime_wheelhouse(
             build_root,
             output / "cadrumo-runtime-wheelhouse.zip",
         )
@@ -813,76 +1031,81 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
             ],
             cwd=build_root,
         )
+        # uv seeds its --out-dir with a `.gitignore`; that is a build-tool
+        # artifact, not a release artifact, and the release-cohort completeness
+        # check refuses any file the manifest does not declare.
+        uv_gitignore = output / ".gitignore"
+        if uv_gitignore.exists():
+            uv_gitignore.unlink()
+
+        root_wheel = _single(output, "cadrumo-*.whl", label="cadrumo wheel")
+        root_sdist = _single(output, "cadrumo-*.tar.gz", label="cadrumo sdist")
+        runtime_wheelhouse = _single(
+            output,
+            "cadrumo-runtime-wheelhouse*.zip",
+            label="runtime dependency wheelhouse",
+        )
+        manuals_wheel = _single(
+            output,
+            "cadrumo_data_manuals-*.whl",
+            label="manuals wheel",
+        )
+        official_wheel = _single(
+            output,
+            "cadrumo_data_official-*.whl",
+            label="official wheel",
+        )
+        manuals_sdist = _single(
+            output,
+            "cadrumo_data_manuals-*.tar.gz",
+            label="manuals sdist",
+        )
+        official_sdist = _single(
+            output,
+            "cadrumo_data_official-*.tar.gz",
+            label="official sdist",
+        )
+        version = _validate_wheel_contract(
+            root_wheel,
+            manuals_wheel,
+            official_wheel,
+        )
+        _validate_sdist_contract(
+            root_sdist,
+            manuals_sdist,
+            official_sdist,
+            expected_version=version,
+        )
+        artifacts = {
+            "cadrumo": root_wheel.name,
+            "cadrumo-sdist": root_sdist.name,
+            "source-archive": retained_source_archive.name,
+            "runtime-wheelhouse": runtime_wheelhouse.name,
+            "cadrumo-data-manuals": manuals_wheel.name,
+            "cadrumo-data-manuals-sdist": manuals_sdist.name,
+            "cadrumo-data-official": official_wheel.name,
+            "cadrumo-data-official-sdist": official_sdist.name,
+        }
+        sha256 = {name: sha256_path(output / filename) for name, filename in artifacts.items()}
+        # Attested here, INSIDE the block that owns the build tree, because the
+        # probe reads the tree `uv build` packaged the wheel from. Below this
+        # block that tree is gone, and reconstructing an importable copy of it
+        # costs a full unpack of the wheel that was just written from it.
+        command_spec_attestation = attest_command_specs(
+            site_root=(build_root / _BUILD_TREE_SOURCE_DIR).resolve(strict=True),
+            root_wheel=root_wheel,
+            root_sdist=root_sdist,
+            source_archive=retained_source_archive,
+            source_commit=source_commit,
+            work_root=output.parent,
+            digests=(sha256["cadrumo"], sha256["cadrumo-sdist"], sha256["source-archive"]),
+        )
     finally:
         if archive.exists():
             archive.unlink()
         if build_root.exists():
             shutil.rmtree(build_root)
 
-    # uv seeds its --out-dir with a `.gitignore`; that is a build-tool artifact,
-    # not a release artifact, and the release-cohort completeness check refuses
-    # any file the manifest does not declare.
-    uv_gitignore = output / ".gitignore"
-    if uv_gitignore.exists():
-        uv_gitignore.unlink()
-
-    root_wheel = _single(output, "cadrumo-*.whl", label="cadrumo wheel")
-    root_sdist = _single(output, "cadrumo-*.tar.gz", label="cadrumo sdist")
-    runtime_wheelhouse = _single(
-        output,
-        "cadrumo-runtime-wheelhouse*.zip",
-        label="runtime dependency wheelhouse",
-    )
-    manuals_wheel = _single(
-        output,
-        "cadrumo_data_manuals-*.whl",
-        label="manuals wheel",
-    )
-    official_wheel = _single(
-        output,
-        "cadrumo_data_official-*.whl",
-        label="official wheel",
-    )
-    manuals_sdist = _single(
-        output,
-        "cadrumo_data_manuals-*.tar.gz",
-        label="manuals sdist",
-    )
-    official_sdist = _single(
-        output,
-        "cadrumo_data_official-*.tar.gz",
-        label="official sdist",
-    )
-    version = _validate_wheel_contract(
-        root_wheel,
-        manuals_wheel,
-        official_wheel,
-    )
-    _validate_sdist_contract(
-        root_sdist,
-        manuals_sdist,
-        official_sdist,
-        expected_version=version,
-    )
-    artifacts = {
-        "cadrumo": root_wheel.name,
-        "cadrumo-sdist": root_sdist.name,
-        "source-archive": retained_source_archive.name,
-        "runtime-wheelhouse": runtime_wheelhouse.name,
-        "cadrumo-data-manuals": manuals_wheel.name,
-        "cadrumo-data-manuals-sdist": manuals_sdist.name,
-        "cadrumo-data-official": official_wheel.name,
-        "cadrumo-data-official-sdist": official_sdist.name,
-    }
-    sha256 = {name: sha256_path(output / filename) for name, filename in artifacts.items()}
-    command_spec_attestation = _attest_installed_command_specs(
-        root_wheel,
-        root_sdist,
-        source_commit,
-        retained_source_archive,
-        work_root=output.parent,
-        uv=uv,
-    )
     manifest = output / _MANIFEST_NAME
     manifest.write_text(
         json.dumps(
@@ -900,7 +1123,25 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
         encoding=_UTF_8,
         newline="\n",
     )
-    return load_python_cohort(output)
+    _assert_closed_cohort_inventory(output, artifacts.values())
+    _assert_source_archive_binds_wheelhouse(retained_source_archive, wheelhouse.manifest)
+    return PythonCohort(
+        directory=output,
+        manifest=manifest,
+        source_commit=source_commit,
+        version=version,
+        root_wheel=root_wheel,
+        root_sdist=root_sdist,
+        source_archive=retained_source_archive,
+        runtime_wheelhouse=runtime_wheelhouse,
+        runtime_wheelhouse_manifest=wheelhouse.manifest,
+        manuals_wheel=manuals_wheel,
+        manuals_sdist=manuals_sdist,
+        official_wheel=official_wheel,
+        official_sdist=official_sdist,
+        sha256=sha256,
+        command_spec_attestation=command_spec_attestation,
+    )
 
 
 def load_python_cohort(directory: Path) -> PythonCohort:
@@ -939,22 +1180,7 @@ def load_python_cohort(directory: Path) -> PythonCohort:
             f"Python cohort manifest keys drifted: artifacts={set(artifacts)!r}, sha256={set(sha256)!r}",
         )
 
-    # The cohort directory is a closed world: the manifest plus exactly the
-    # artifacts it declares. An unmanifested file is refused here -- before any
-    # per-artifact digest work -- for the same reason ``load_release_cohort``
-    # compares the inventory first: an extra file crosses acquisition, smoke,
-    # and promote gates unnoticed when only the declared names are checked.
-    declared_files = {str(name) for name in artifacts.values()} | {_MANIFEST_NAME}
-    observed_files = {
-        path.relative_to(cohort_dir).as_posix()
-        for path in scan_directory(cohort_dir, recursive=True)
-        if path.is_file() and path.name not in _BUILD_TOOL_EMITTED_FILES
-    }
-    if observed_files != declared_files:
-        raise SystemExit(
-            f"Python cohort file inventory drifted: "
-            f"declared={sorted(declared_files)!r}, observed={sorted(observed_files)!r}",
-        )
+    _assert_closed_cohort_inventory(cohort_dir, {str(name) for name in artifacts.values()})
 
     resolved: dict[str, Path] = {}
     for name in sorted(expected_keys):
@@ -974,32 +1200,31 @@ def load_python_cohort(directory: Path) -> PythonCohort:
             )
         resolved[name] = artifact
 
+    root_wheel_digest = str(sha256["cadrumo"])
+    root_sdist_digest = str(sha256["cadrumo-sdist"])
+    source_archive_digest = str(sha256["source-archive"])
     command_spec_attestation = _validate_command_spec_attestation(
         command_spec_attestation_value,
         expected_source_commit=source_commit,
-        expected_root_wheel_sha256=str(sha256["cadrumo"]),
-        expected_root_sdist_sha256=str(sha256["cadrumo-sdist"]),
-        expected_source_archive_sha256=str(sha256["source-archive"]),
+        expected_root_wheel_sha256=root_wheel_digest,
+        expected_root_sdist_sha256=root_sdist_digest,
+        expected_source_archive_sha256=source_archive_digest,
     )
-    projection = _artifact_command_projection(
-        resolved["cadrumo"], resolved["cadrumo-sdist"], resolved["source-archive"]
+    projection = _cached_artifact_command_projection(
+        resolved["cadrumo"],
+        resolved["cadrumo-sdist"],
+        resolved["source-archive"],
+        digests=(root_wheel_digest, root_sdist_digest, source_archive_digest),
     )
     if command_spec_attestation["artifact_members_sha256"] != _projection_digest(projection):
         raise SystemExit("Python cohort CommandSpec attestation artifact member projection drifted")
-    forbidden_members = tuple(
-        (kind, member) for kind, member in projection if PurePosixPath(member).name in _FORBIDDEN_COMMAND_ARTIFACT_NAMES
-    )
+    forbidden_members = _forbidden_command_artifacts(projection)
     if forbidden_members:
         raise SystemExit(f"Python cohort contains forbidden command authority artifacts: {forbidden_members!r}")
 
-    with zipfile.ZipFile(resolved["source-archive"]) as source_bundle:
-        try:
-            sealed_lock_sha256 = hashlib.sha256(source_bundle.read("uv.lock")).hexdigest()
-        except KeyError as exc:
-            raise SystemExit("Python cohort source archive omits uv.lock") from exc
     runtime_wheelhouse = load_runtime_wheelhouse(
         resolved["runtime-wheelhouse"],
-        expected_lock_sha256=sealed_lock_sha256,
+        expected_lock_sha256=_sealed_lock_digest(resolved["source-archive"]),
     )
 
     observed_version = _validate_wheel_contract(
@@ -1036,23 +1261,60 @@ def load_python_cohort(directory: Path) -> PythonCohort:
     )
 
 
-def digest_install_target(name: str, artifact: Path, *, extras: tuple[str, ...] = ()) -> str:
+def digest_install_target(
+    name: str,
+    artifact: Path,
+    *,
+    extras: tuple[str, ...] = (),
+    digest: str | None = None,
+) -> str:
     """Return one digest-pinned direct URL requirement for a local artifact.
 
     The ``#sha256=`` fragment makes the installer itself verify the artifact
     bytes at install time and fail closed on drift — installers do not reliably
     record ``archive_info.hashes`` for bare local paths (uv records an empty
     ``archive_info``), so the fragment is the enforceable digest channel.
+
+    Args:
+        name: Distribution name to pin.
+        artifact: The local wheel or sdist the requirement points at.
+        extras: Extras to bracket between the name and the ``@`` separator.
+        digest: The artifact's already-known SHA-256, hashed here when omitted.
+            A caller holding a :class:`PythonCohort` holds a digest that was
+            computed over these exact bytes and verified against them at load,
+            so re-hashing a hundred-megabyte wheel to restate it adds no
+            assurance. Supplying a digest that does not match the bytes would
+            simply produce a requirement the installer refuses.
     """
     resolved = artifact.resolve(strict=True)
-    digest = sha256_path(resolved)
+    pinned = sha256_path(resolved) if digest is None else digest
     extras_suffix = f"[{','.join(extras)}]" if extras else ""
-    return f"{name}{extras_suffix} @ {resolved.as_uri()}#sha256={digest}"
+    return f"{name}{extras_suffix} @ {resolved.as_uri()}#sha256={pinned}"
 
 
-def root_install_target(root_artifact: Path, *, extras: tuple[str, ...] = ()) -> str:
+def root_install_target(
+    root_artifact: Path,
+    *,
+    extras: tuple[str, ...] = (),
+    digest: str | None = None,
+) -> str:
     """Return one digest-pinned direct local root target, optionally with extras."""
-    return digest_install_target("cadrumo", root_artifact, extras=extras)
+    return digest_install_target("cadrumo", root_artifact, extras=extras, digest=digest)
+
+
+def _cohort_digest_for(cohort: PythonCohort, artifact: Path) -> str | None:
+    """Return the cohort's recorded digest for ``artifact``, or ``None`` if unrecorded.
+
+    Matched by resolved path against the two shapes a root artifact takes — the
+    root wheel and the root sdist — mirroring how :func:`_verify_direct_urls`
+    already picks the expected digest for the same choice.
+    """
+    resolved = artifact.resolve()
+    if resolved == cohort.root_wheel.resolve():
+        return cohort.sha256.get("cadrumo")
+    if resolved == cohort.root_sdist.resolve():
+        return cohort.sha256.get("cadrumo-sdist")
+    return None
 
 
 def install_targets(
@@ -1063,9 +1325,17 @@ def install_targets(
 ) -> tuple[str, ...]:
     """Return explicit local targets that prevent companion index resolution."""
     return (
-        root_install_target(root_artifact, extras=extras),
-        digest_install_target("cadrumo-data-manuals", cohort.manuals_wheel),
-        digest_install_target("cadrumo-data-official", cohort.official_wheel),
+        root_install_target(root_artifact, extras=extras, digest=_cohort_digest_for(cohort, root_artifact)),
+        digest_install_target(
+            "cadrumo-data-manuals",
+            cohort.manuals_wheel,
+            digest=cohort.sha256.get("cadrumo-data-manuals"),
+        ),
+        digest_install_target(
+            "cadrumo-data-official",
+            cohort.official_wheel,
+            digest=cohort.sha256.get("cadrumo-data-official"),
+        ),
     )
 
 

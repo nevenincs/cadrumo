@@ -197,8 +197,14 @@ class HomeScreen(Screen[None]):
         HomeScreen.wide #home-layout { layout: horizontal; }
         HomeScreen.wide #home-main { width: 2fr; padding-right: $cadrumo-control-gap; }
         HomeScreen.wide #home-sidebar { width: 1fr; }
-        .home-heading { text-style: bold; margin-top: $cadrumo-stack; }
-        .home-state { color: $text-muted; height: auto; }
+        /* Rhythm comes from the shared .cadrumo-heading rule. */
+        /* Same inset as the headings and the table rows: a state line that
+           starts a cell to their left reads as belonging to something else. */
+        .home-state {
+            color: $text-muted;
+            height: auto;
+            padding-left: $cadrumo-cell-padding;
+        }
         .home-table { width: 100%; height: auto; }
         """
     )
@@ -239,7 +245,11 @@ class HomeScreen(Screen[None]):
         )
         with ContentScroll(id="home-page", classes="cadrumo-scroll"), Static(id="home-layout"):
             with Static(id="home-main"):
-                yield Static(tr("tui.home.heading.actions"), classes="home-heading", markup=False)
+                yield Static(
+                    tr("tui.home.heading.actions"),
+                    classes="cadrumo-heading cadrumo-heading-lead",
+                    markup=False,
+                )
                 yield Static(
                     _state_copy(
                         projection.actions_state,
@@ -254,11 +264,10 @@ class HomeScreen(Screen[None]):
                     cursor_type="row",
                     zebra_stripes=True,
                     show_header=False,
-                    cell_padding=0,
                     classes="home-table",
                 )
                 yield Static(id="home-action-contexts", classes="home-state", markup=False)
-                yield Static(tr("tui.home.heading.declarations"), classes="home-heading", markup=False)
+                yield Static(tr("tui.home.heading.declarations"), classes="cadrumo-heading", markup=False)
                 yield Static(
                     _state_copy(
                         projection.declarations_state,
@@ -273,11 +282,10 @@ class HomeScreen(Screen[None]):
                     cursor_type="row",
                     zebra_stripes=True,
                     show_header=False,
-                    cell_padding=0,
                     classes="home-table",
                 )
             with Static(id="home-sidebar"):
-                yield Static(tr("tui.home.heading.agenda"), classes="home-heading", markup=False)
+                yield Static(tr("tui.home.heading.agenda"), classes="cadrumo-heading", markup=False)
                 yield Static(
                     _state_copy(
                         projection.agenda_state,
@@ -292,14 +300,13 @@ class HomeScreen(Screen[None]):
                     cursor_type="row",
                     zebra_stripes=True,
                     show_header=False,
-                    cell_padding=0,
                     classes="home-table",
                 )
                 yield Static(id="home-agenda-evidence", classes="home-state", markup=False)
                 yield Static(id="home-evidence", classes="home-state", markup=False)
-                yield Static(tr("tui.home.heading.ledger"), classes="home-heading", markup=False)
+                yield Static(tr("tui.home.heading.ledger"), classes="cadrumo-heading", markup=False)
                 yield Static(id="home-ledger", classes="home-state", markup=False)
-                yield Static(tr("tui.home.heading.messages"), classes="home-heading", markup=False)
+                yield Static(tr("tui.home.heading.messages"), classes="cadrumo-heading", markup=False)
                 yield Static(id="home-messages", classes="home-state", markup=False)
 
     def on_resize(self, event: events.Resize) -> None:
@@ -368,6 +375,30 @@ class HomeScreen(Screen[None]):
         if first is not None and not self._restore((actions, declarations, agenda)):
             self.set_focus(first)
             self._highlight(first.ordered_rows[0].key.value)
+            # Focusing scrolls the target into view, and in the single-column
+            # layout the first table is far enough down that doing so scrolls
+            # the top of the page away: the operator arrives on Home already
+            # past its opening heading, with no indication anything is above.
+            # This is a FRESH arrival with nothing to restore, so the top is
+            # where they belong; the restored-selection branch above keeps its
+            # own scroll position deliberately.
+            # After the refresh, not during it: the scroll that focusing causes
+            # is applied once layout settles, so a scroll issued here in mount
+            # order is simply overwritten by it.
+            self.call_after_refresh(self._scroll_to_top)
+        if first is None:
+            # Every zone is empty or refused, so the three tables are hidden and
+            # nothing on the page can take focus. Home is the destination an
+            # operator lands on first, and a keyboard user needs somewhere to
+            # arrive: the page itself takes focus so the zone states can be
+            # read and scrolled, and Escape still returns.
+            page = self.query_one("#home-page", ContentScroll)
+            page.can_focus = True
+            self.set_focus(page)
+
+    def _scroll_to_top(self) -> None:
+        """Return the page to its opening heading after focus has settled."""
+        self.query_one("#home-page", ContentScroll).scroll_home(animate=False)
 
     def _remember(self, kind: HomeTargetKind, identity: str) -> str:
         self._targets[identity] = HomeTarget(kind=kind, identity=identity)

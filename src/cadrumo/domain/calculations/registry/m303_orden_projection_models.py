@@ -24,8 +24,9 @@ from ....domain.iva.regimen_simplificado_rows import (
 from ._m303_orden_constants import (
     EXPECTED_ACTIVITY_COUNT,
     EXPECTED_NON_AGRICULTURAL_INGRESO_A_CUENTA_COUNT,
-    EXPECTED_SEASONAL_INDEXES,
     EXTRACTOR_VERSION,
+    validate_percentage_shape,
+    validate_seasonal_index_shape,
 )
 from ._m303_orden_constants import (
     validate_2022_annual_orden_coordinate as _validate_2022_annual_orden_coordinate,
@@ -170,16 +171,14 @@ def _validate_projection_iae_identity(projection: M303AnnualOrdenProjection) -> 
 
 
 def _validate_projection_axis_shape(projection: M303AnnualOrdenProjection) -> None:
-    seasonal_shape = tuple(
-        (item.minimum_days, item.maximum_days, item.coefficient) for item in projection.seasonal_indexes
-    )
     _require_invariant(
         len(projection.non_agricultural_ingresos_a_cuenta) == EXPECTED_NON_AGRICULTURAL_INGRESO_A_CUENTA_COUNT,
         "annual Orden projection has the wrong IAE ingreso-a-cuenta row count",
     )
-    _require_invariant(
-        seasonal_shape == EXPECTED_SEASONAL_INDEXES,
-        "annual Orden projection has the wrong seasonal index bands",
+    validate_seasonal_index_shape(
+        tuple((item.minimum_days, item.maximum_days) for item in projection.seasonal_indexes),
+        tuple(item.coefficient for item in projection.seasonal_indexes),
+        scope="projection",
     )
     _require_invariant(
         projection.agricultural_authority.annual_orden_source_ref == projection.source_ref,
@@ -205,10 +204,7 @@ def _validate_projection_lorca_2022_reduction(projection: M303AnnualOrdenProject
         )
         if reduction is None:
             raise RegistryValidationError("annual Orden 2022 projection lacks its Lorca reduction authority")
-        _require_invariant(
-            reduction.percentage == Decimal("20"),
-            "annual Orden 2022 projection lacks its Lorca reduction authority",
-        )
+        validate_percentage_shape(reduction.percentage, scope="projection", subject="Lorca reduction")
         _require_invariant(
             reduction.source_refs == (projection.source_ref,),
             "annual Orden Lorca reduction must retain its exact source reference",

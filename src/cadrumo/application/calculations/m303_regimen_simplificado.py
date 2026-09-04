@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from decimal import Decimal, InvalidOperation
 
+from ...core.decimal.constants import HUNDRED
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.money.rounding import round_to_cents
 from ...core.period import Period
@@ -43,7 +44,6 @@ _DANA_2024_SOURCE_REFS = (
     "boe-rdl-6-2024-dana-authority",
     "boe-correccion-errores-rdl-6-2024",
 )
-_HUNDRED = Decimal("100")
 
 
 class M303RegimenSimplificadoCalculationError(CoreValidationError):
@@ -244,8 +244,8 @@ def _calculate_activity_adjustments(
     difficult_justification_pct: Decimal,
     minimum_pct: Decimal,
 ) -> tuple[Decimal, Decimal]:
-    difficult = round_to_cents(cuota_tras_dana * difficult_justification_pct / _HUNDRED)
-    minimum = round_to_cents(cuota_tras_dana * minimum_pct / _HUNDRED)
+    difficult = round_to_cents(cuota_tras_dana * difficult_justification_pct / HUNDRED)
+    minimum = round_to_cents(cuota_tras_dana * minimum_pct / HUNDRED)
     return difficult, minimum
 
 

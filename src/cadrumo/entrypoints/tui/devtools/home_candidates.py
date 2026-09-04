@@ -35,6 +35,7 @@ from ....application.overview.home import (
 )
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
+from ..components.theme import tokenised
 from ..components.widgets import ContentDataTable, ContentScroll
 from ..home import (
     home_action_identity as _action_identity,
@@ -451,7 +452,7 @@ class _ProjectionCandidateScreen(Screen[None]):
 class DueDrivenHomeCandidateScreen(_ProjectionCandidateScreen):
     """Actions-first overview with declarations and a deadline/status rail."""
 
-    CSS = """
+    CSS = tokenised("""
     DueDrivenHomeCandidateScreen { layout: vertical; }
     #due-page { width: 100%; height: 1fr; }
     #due-layout, #due-main, #due-sidebar { width: 100%; height: auto; }
@@ -459,11 +460,16 @@ class DueDrivenHomeCandidateScreen(_ProjectionCandidateScreen):
     DueDrivenHomeCandidateScreen.wide #due-layout { layout: horizontal; }
     DueDrivenHomeCandidateScreen.wide #due-main { width: 2fr; }
     DueDrivenHomeCandidateScreen.wide #due-sidebar { width: 1fr; }
-    .candidate-panel { height: auto; margin: 0 1 1 0; padding: 0 1; border: round $primary-darken-2; }
-    .candidate-heading { text-style: bold; margin-top: 1; }
+    .candidate-panel {
+        height: auto;
+        margin: $cadrumo-tight $cadrumo-space-1 $cadrumo-stack $cadrumo-tight;
+        padding: $cadrumo-space-0 $cadrumo-space-1;
+        border: $cadrumo-radius $primary-darken-2;
+    }
+    .candidate-heading { text-style: bold; margin-top: $cadrumo-stack; }
     .candidate-state { color: $text-muted; }
     .candidate-table { width: 100%; height: auto; }
-    """
+    """)
 
     @override
     def compose(self) -> ComposeResult:
@@ -622,7 +628,7 @@ class DueDrivenHomeCandidateScreen(_ProjectionCandidateScreen):
 class TaskLauncherHomeCandidateScreen(_ProjectionCandidateScreen):
     """Single quick-task chooser with contextual detail and compact signals."""
 
-    CSS = """
+    CSS = tokenised("""
     TaskLauncherHomeCandidateScreen { layout: vertical; }
     #launcher-page { width: 100%; height: 1fr; }
     #launcher-layout { width: 100%; height: auto; layout: vertical; }
@@ -630,11 +636,16 @@ class TaskLauncherHomeCandidateScreen(_ProjectionCandidateScreen):
     #launcher-chooser-panel, #launcher-detail-panel { width: 100%; height: auto; }
     TaskLauncherHomeCandidateScreen.wide #launcher-chooser-panel { width: 3fr; }
     TaskLauncherHomeCandidateScreen.wide #launcher-detail-panel { width: 2fr; }
-    .candidate-panel { height: auto; margin: 0 1 1 0; padding: 0 1; border: round $primary-darken-2; }
-    .candidate-heading { text-style: bold; margin-top: 1; }
+    .candidate-panel {
+        height: auto;
+        margin: $cadrumo-tight $cadrumo-space-1 $cadrumo-stack $cadrumo-tight;
+        padding: $cadrumo-space-0 $cadrumo-space-1;
+        border: $cadrumo-radius $primary-darken-2;
+    }
+    .candidate-heading { text-style: bold; margin-top: $cadrumo-stack; }
     .candidate-state { color: $text-muted; }
     .candidate-table { width: 100%; height: auto; }
-    """
+    """)
 
     def __init__(
         self,

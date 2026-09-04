@@ -51,6 +51,7 @@ from ._smoke_common import (
     require_executable,
     resolve_work_dir,
     run_checked,
+    run_checked_marker,
     venv_cadrumo_path,
     venv_python_path,
     wheel_metadata,
@@ -550,10 +551,11 @@ if LLM_EXTRA.extra != {_EXPECTED_EXTRA!r}:
     raise SystemExit(f"unexpected extra identity: {{LLM_EXTRA.extra!r}}")
 print("llm-extra-absent-ok")
 """
-    run_checked(
+    run_checked_marker(
         [str(venv_python_path(venv_path)), "-c", code],
         cwd=work_dir,
         env=_lane_env(work_dir, "probe-state"),
+        marker="llm-extra-absent-ok",
     )
     record_proof(_CLAIM_EXTRA_PROBES_ABSENT)
 

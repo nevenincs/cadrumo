@@ -30,6 +30,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from ...core.decimal.constants import ZERO
 from ...core.irnr import ConvenioOverrideKind, TipoRentaIrnr
 from ...domain.calculations.registry.convenio import ConvenioOverride
 from ...domain.calculations.registry.ids import (
@@ -47,8 +48,6 @@ from ...domain.modelos.verification_report import (
 if TYPE_CHECKING:
     from ...core.casilla_id import CasillaId
     from ...domain.calculations.registry.schema_formula import ParameterDefinition
-
-_ZERO = Decimal("0")
 
 
 def _m210_blocking_finding(
@@ -149,7 +148,7 @@ def _resolve_convenio_override(
         return None, [finding]
 
     if override.kind is ConvenioOverrideKind.EXEMPT:
-        return _ZERO, []
+        return ZERO, []
     if override.kind is ConvenioOverrideKind.FLAT and override.rate is not None:
         return override.rate, []
     if override.kind is ConvenioOverrideKind.CEILING and override.rate is not None:

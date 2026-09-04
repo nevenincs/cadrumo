@@ -15,11 +15,11 @@ from ....domain.iva.regimen_simplificado_rows import IaeEpigrafe
 from ._m303_orden_constants import (
     EXPECTED_ACTIVITY_COUNT,
     EXPECTED_AGRICULTURAL_AXIS_COUNTS,
-    EXPECTED_DIFFICULT_JUSTIFICATION_PCT,
     EXPECTED_MODULE_COUNT,
     EXPECTED_MODULE_DISTRIBUTION,
     EXPECTED_NON_AGRICULTURAL_INGRESO_A_CUENTA_COUNT,
-    EXPECTED_SEASONAL_INDEXES,
+    validate_percentage_shape,
+    validate_seasonal_index_shape,
 )
 from .errors import RegistryValidationError
 from .ids import SourceRefId
@@ -173,11 +173,16 @@ def _validate_source_agricultural_axes(census: M303AnnualOrdenSourceCensus) -> N
 def _validate_source_common_axes(census: M303AnnualOrdenSourceCensus) -> None:
     if len(census.non_agricultural_ingresos_a_cuenta) != EXPECTED_NON_AGRICULTURAL_INGRESO_A_CUENTA_COUNT:
         raise RegistryValidationError("annual Orden source has the wrong IAE ingreso-a-cuenta row count")
-    seasonal_shape = tuple((item.minimum_days, item.maximum_days, item.coefficient) for item in census.seasonal_indexes)
-    if seasonal_shape != EXPECTED_SEASONAL_INDEXES:
-        raise RegistryValidationError("annual Orden source has the wrong seasonal index bands")
-    if census.difficult_justification.percentage != EXPECTED_DIFFICULT_JUSTIFICATION_PCT:
-        raise RegistryValidationError("annual Orden source has the wrong difficult-justification percentage")
+    validate_seasonal_index_shape(
+        tuple((item.minimum_days, item.maximum_days) for item in census.seasonal_indexes),
+        tuple(item.coefficient for item in census.seasonal_indexes),
+        scope="source",
+    )
+    validate_percentage_shape(
+        census.difficult_justification.percentage,
+        scope="source",
+        subject="difficult-justification",
+    )
 
 
 def _validate_source_lorca_2022_reduction(census: M303AnnualOrdenSourceCensus) -> None:
@@ -185,7 +190,6 @@ def _validate_source_lorca_2022_reduction(census: M303AnnualOrdenSourceCensus) -
     if census.ejercicio == 2022:
         if reduction is None:
             raise RegistryValidationError("annual Orden 2022 source lacks its Lorca IVA reduction authority")
-        if reduction.percentage != Decimal("20"):
-            raise RegistryValidationError("annual Orden 2022 source has the wrong Lorca IVA reduction percentage")
+        validate_percentage_shape(reduction.percentage, scope="source", subject="Lorca IVA reduction")
     elif reduction is not None:
         raise RegistryValidationError("only the 2022 annual Orden may publish the Lorca 2022 reduction")

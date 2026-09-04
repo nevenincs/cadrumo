@@ -50,16 +50,23 @@ def workbooks_verify(
     resume_from: Annotated[Path | None, typer.Option("--resume-from")] = None,
     output: Annotated[Path | None, typer.Option("--output")] = None,
 ) -> None:
-    """Verify official workbook artefacts and available calculation backends."""
-    _json(
-        verify_registry_workbooks(
-            root=root,
-            limit=limit,
-            per_file_timeout_seconds=per_file_timeout,
-            resume_from=resume_from,
-            output=output,
-        ),
+    """Verify official workbook artefacts and available calculation backends.
+
+    Exits non-zero when the report carries failures. It previously printed
+    ``failed_count`` and returned 0 regardless, so a contributor scripting this
+    verb got the same exit status whether every workbook verified or none did -
+    while its sibling ``audit-oracles`` in this same file already refused.
+    """
+    report = verify_registry_workbooks(
+        root=root,
+        limit=limit,
+        per_file_timeout_seconds=per_file_timeout,
+        resume_from=resume_from,
+        output=output,
     )
+    _json(report)
+    if report.failed_count:
+        raise typer.Exit(1)
 
 
 @app.command("parity-run")
@@ -87,8 +94,17 @@ def parity_replay(
     registry_root: Annotated[Path, typer.Option("--registry-root")] = _REGISTRY_ROOT,
     source_root: Annotated[Path, typer.Option("--source-root")] = _SOURCE_ROOT,
 ) -> None:
-    """Replay an archived parity tape against current product behavior."""
-    _json(replay_registry_parity(tape_path=tape, registry_root=registry_root, source_root=source_root))
+    """Replay an archived parity tape against current product behavior.
+
+    Exits non-zero on a mismatch. A replay whose whole purpose is to detect
+    that the product diverged from an archived tape reported that divergence
+    in its JSON and then exited 0, so the divergence and the agreement were
+    indistinguishable to anything reading the status code.
+    """
+    report = replay_registry_parity(tape_path=tape, registry_root=registry_root, source_root=source_root)
+    _json(report)
+    if report.status != "match":
+        raise typer.Exit(1)
 
 
 if __name__ == "__main__":

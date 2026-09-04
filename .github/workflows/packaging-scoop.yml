@@ -277,7 +277,6 @@ jobs:
           uv run --no-project --with packaging python packaging/scoop/generate.py `
             --cohort-dir "$env:CADRUMO_SCOOP_ROOT/cohort" `
             --version $version.Trim() `
-            --release-base-url "https://github.com/nevenincs/cadrumo/releases/download/v$($version.Trim())" `
             --output $output
           if ($LASTEXITCODE -ne 0) {
             throw "Scoop source manifest generation failed"

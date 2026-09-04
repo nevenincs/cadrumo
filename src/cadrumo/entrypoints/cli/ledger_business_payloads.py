@@ -25,11 +25,11 @@ InventoryLedgerPayload`` (etc.) call sites keep resolving unchanged.
 
 from __future__ import annotations
 
-from decimal import Decimal
 from typing import TYPE_CHECKING, Annotated
 
 from pydantic import AfterValidator, NonNegativeInt, field_validator
 
+from ...core.decimal.constants import ZERO
 from ...core.decimal.grammar import is_non_negative_canonical_decimal
 from ...core.identity import BucketId, InvoiceId, TaxIdIdentityToken
 from ...core.json_contract import OutputSchema
@@ -46,8 +46,6 @@ from ...domain.contribuyente.inventory.records import (
 from ._decimal_wire import bounded_decimal_wire_text
 from ._wire_scalars import IsoDateText, enum_value_text
 
-_ZERO = Decimal("0")
-
 # The inventory transport is built by dumping the canonical InventoryLedger to
 # JSON and re-validating the mapping, so every field below stays a string on
 # the wire while carrying the canonical model's own bound.
@@ -58,8 +56,8 @@ _ZERO = Decimal("0")
 # deductible ratio on the share scale, and a local ``_HUNDRED`` beside a local
 # ``_ONE`` is exactly the pairing that lets one field silently take the other
 # convention. Named constants say which scale is meant.
-_PositiveQuantity = bounded_decimal_wire_text(minimum=_ZERO, exclusive_minimum=True)
-_NonNegativeAmount = bounded_decimal_wire_text(minimum=_ZERO)
+_PositiveQuantity = bounded_decimal_wire_text(minimum=ZERO, exclusive_minimum=True)
+_NonNegativeAmount = bounded_decimal_wire_text(minimum=ZERO)
 _IvaRatePct = bounded_decimal_wire_text(minimum=PERCENTAGE_MIN, maximum=PERCENTAGE_MAX)
 _DeductibleRatio = bounded_decimal_wire_text(minimum=UNIT_PROPORTION_MIN, maximum=UNIT_PROPORTION_MAX)
 _MovementKindText = enum_value_text(MovementKind)

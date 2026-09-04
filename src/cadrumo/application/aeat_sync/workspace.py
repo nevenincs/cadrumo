@@ -278,7 +278,14 @@ class AeatSyncWorkspaceOverviewRowV1(AeatSyncWorkspaceActionRowV1):
 
 
 class AeatSyncWorkspaceCensusRowV1(AeatSyncWorkspaceActionRowV1):
-    """Safe public census row without values."""
+    """One census field's local-versus-AEAT status.
+
+    Carries no value yet, and the docstring no longer claims that as a safety
+    property: it is a GAP. Nothing produces these rows outside fixtures, and
+    their AEAT side stays never-captured until a pull happens, so there is no
+    captured value to carry. When a producer exists the values belong here, on
+    the same reasoning as every other authenticated surface.
+    """
 
     path: str = Field(min_length=1, max_length=256)
     category: AeatSyncCensusCategory
@@ -698,8 +705,18 @@ def _source_claims(
             row = fact.row
             if isinstance(row, AeatSyncWorkspaceOverviewRowV1):
                 local_source, aeat_source = _OVERVIEW_SOURCES[row.area]
-                _require(row.local_state is AeatSyncSourceState.NOT_OBSERVED, sources[local_source], "local")
-                _require(row.aeat_state is AeatSyncSourceState.NOT_OBSERVED, sources[aeat_source], "AEAT")
+                _require(
+                    row.local_state is AeatSyncSourceState.NOT_OBSERVED,
+                    sources[local_source],
+                    "local",
+                    absent=row.local_state is AeatSyncSourceState.ABSENT,
+                )
+                _require(
+                    row.aeat_state is AeatSyncSourceState.NOT_OBSERVED,
+                    sources[aeat_source],
+                    "AEAT",
+                    absent=row.aeat_state is AeatSyncSourceState.ABSENT,
+                )
             if isinstance(row, AeatSyncWorkspaceCensusRowV1):
                 _require(False, sources[AeatSyncWorkspaceSource.LOCAL_PROFILE], "local census")
                 _require(False, sources[AeatSyncWorkspaceSource.AEAT_CENSUS], "AEAT census")
@@ -738,8 +755,28 @@ def _source_claims(
                 _require(missing, sources[AeatSyncWorkspaceSource.LOCAL_NOTIFICATION_CUSTODY], "notification custody")
 
 
-def _require(unconfident: bool, source: AeatSyncWorkspaceSourceObservationV1, axis: str) -> None:
-    if not unconfident and (not _observable(source.availability) or source.item_count == 0):
+def _require(
+    unconfident: bool,
+    source: AeatSyncWorkspaceSourceObservationV1,
+    axis: str,
+    *,
+    absent: bool = False,
+) -> None:
+    """Refuse a confident row state its own source cannot support.
+
+    A row asserting something POSITIVE about a side needs a source that was
+    observable and actually contributed items. A row asserting ABSENCE needs
+    only that the source was observable: an observed zero is precisely a
+    readable source with nothing in it, and requiring a non-zero count there
+    would make an observed empty catalogue inexpressible -- forcing it to be
+    reported as never observed, which is the collapse this contract exists to
+    prevent.
+    """
+    if unconfident:
+        return
+    if not _observable(source.availability):
+        raise AeatSyncWorkspaceProjectionError(f"confident {axis} state lacks observable source")
+    if not absent and source.item_count == 0:
         raise AeatSyncWorkspaceProjectionError(f"confident {axis} state lacks observable source")
 
 
@@ -797,9 +834,30 @@ def _public_notification_row(
     return AeatSyncWorkspaceNotificationRowV1.model_validate(values)
 
 
+_COMPARISON_ZONES: Final = frozenset(
+    {
+        AeatSyncWorkspaceZone.EVIDENCE_COMPARISON,
+        AeatSyncWorkspaceZone.RECONCILIATION,
+    }
+)
+"""Zones whose rows are a COMPARISON and cannot exist from one side alone.
+
+A list zone can be counted as soon as any one of its sources is readable: the
+count is of what that source holds. A comparison zone cannot. Its rows are
+discrepancies BETWEEN sources, so with the AEAT half never pulled there is no
+count to report -- and reporting the local half's zero as the zone's count
+tells the operator "no discrepancies" when the truth is "never compared".
+Those are exactly the two states `no-silent-under-declaration` forbids
+collapsing into one.
+"""
+
+
 def _zone_state(observation: AeatSyncWorkspaceZoneObservationV1, count: int) -> AeatSyncWorkspaceZoneStateV1:
     states = tuple(item.availability for item in observation.sources)
-    seen = any(_observable(item) for item in states)
+    if observation.zone in _COMPARISON_ZONES:
+        seen = all(_observable(item) for item in states)
+    else:
+        seen = any(_observable(item) for item in states)
     if all(item is AeatSyncWorkspaceAvailability.AVAILABLE for item in states):
         availability = AeatSyncWorkspaceAvailability.AVAILABLE
     elif seen:

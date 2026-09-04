@@ -328,13 +328,22 @@ def _validate_projection(
 class WorkbenchSearchDocument(BaseModel):
     """Intrinsically safe source projection accepted by the query service.
 
-    Every serializable field is a closed enum, canonical natural address, or
-    technical namespaced action/admission token. Multi-record families carry a
+    Structural fields are closed enums, canonical natural addresses, or
+    technical namespaced action/admission tokens. Multi-record families carry a
     private source identity basis that is retained only in memory, excluded from
     serialization and representation, and converted to a process-keyed opaque
-    result identity. There is no provider-authored label, raw search term, token
-    index, caller-visible source identifier, or asserted stable identity.
-    ``action_candidate_id`` remains unresolved until S369's catalogue admits it.
+    result identity. There is no provider-authored label, caller-visible source
+    identifier, or asserted stable identity. ``action_candidate_id`` remains
+    unresolved until S369's catalogue admits it.
+
+    ``content_terms`` carries the operator's own words -- a counterparty, a
+    description, an amount -- so that searching for them finds the record they
+    belong to. A search index over enum names alone can only answer questions
+    the operator already knows the vocabulary for: they can find "ledger entry"
+    but not "Suministros Delta", which is the only thing they actually
+    remember. The session is authenticated against their own data, so the terms
+    are theirs; the identity basis stays secret because it is machine
+    addressing, and that distinction is the point.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -347,6 +356,8 @@ class WorkbenchSearchDocument(BaseModel):
     admission: WorkbenchDestinationAdmission
     action_candidate_id: NamespacedId | None = None
     identity_basis: SecretStr | None = Field(default=None, exclude=True, repr=False, min_length=1, max_length=512)
+    content_terms: tuple[str, ...] = ()
+    """The operator's own words for this record, matched alongside the enums."""
 
     @field_validator("identity_basis")
     @classmethod
@@ -441,6 +452,7 @@ def _safe_search_terms(document: WorkbenchSearchDocument) -> tuple[str, ...]:
         document.label_key.value.removeprefix("search.").replace("_", " "),
     ]
     terms.extend(document.status.value.split("."))
+    terms.extend(document.content_terms)
     if document.address is not None:
         terms.extend(
             (

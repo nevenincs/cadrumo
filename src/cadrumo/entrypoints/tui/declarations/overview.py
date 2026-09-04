@@ -34,7 +34,17 @@ class DeclarationsOverviewScreen(DeclarationsWorkspaceScreen):
     def compose(self) -> ComposeResult:
         yield Static(declarations_copy("tui.declarations.overview.title"), classes="cadrumo-banner", markup=False)
         with ContentScroll(id="declarations-page", classes="cadrumo-scroll declarations-page"):
+            yield Static(
+                declarations_copy("tui.declarations.overview.areas"),
+                classes="cadrumo-heading cadrumo-heading-lead",
+                markup=False,
+            )
             yield ContentDataTable[str](id="declarations-navigation", cursor_type="row", zebra_stripes=True)
+            yield Static(
+                declarations_copy("tui.declarations.overview.declarations"),
+                classes="cadrumo-heading",
+                markup=False,
+            )
             yield ContentDataTable[str](id="declarations-list", cursor_type="row", zebra_stripes=True)
             yield Static(id="declarations-refusal", classes="declarations-refusal", markup=False)
 

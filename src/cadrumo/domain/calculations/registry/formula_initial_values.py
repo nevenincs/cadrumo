@@ -26,6 +26,7 @@ from decimal import Decimal
 
 from ....core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
 from ....core.casilla_id import CasillaId
+from ....core.decimal.constants import ZERO
 from .binding_selector_utils import selector_as_dict as _binding_selector_as_dict
 from .binding_targets import bound_casilla_binding_ids
 from .bindings import CasillaObservation, CasillaObservationValueKind, resolve_bound_casilla_binding_value
@@ -36,8 +37,6 @@ from .ids import BindingId
 from .schema import DataBindingDefinition, ModeloRevision
 from .schema_input_kind import InputKind
 from .schema_surfaces import CasillaDefinition
-
-_ZERO = Decimal("0")
 
 
 def materialise_observations(
@@ -180,7 +179,7 @@ def binding_values_with_absent_by_design_defaults(
         if any(equivalent_id in resolved for equivalent_id in equivalent_group if equivalent_id != binding.id):
             continue
         if _binding_is_absent_by_design(binding, target_period=target_period):
-            resolved[binding.id] = _ZERO
+            resolved[binding.id] = ZERO
     return resolved
 
 
@@ -346,12 +345,12 @@ def _initial_value_for_casilla(
     """Resolve one manual or observation-backed initial casilla value."""
     bindings = _observation_backed_bindings_for_bound_casilla(casilla, bindings_by_id)
     if not bindings:
-        return inputs.get(casilla.id, _ZERO), False
+        return inputs.get(casilla.id, ZERO), False
     value, _present_binding_ids = resolve_bound_casilla_binding_value(casilla, binding_values)
     if value is not None:
         return value, False
     if any(_binding_is_absent_by_design(binding, target_period=target_period) for binding in bindings):
-        return _ZERO, True
+        return ZERO, True
     binding_ids = bound_casilla_binding_ids(casilla)
     raise RegistryValidationError(
         f"bound casilla {casilla.id!r} requires resolved value for one of {binding_ids!r}",

@@ -22,6 +22,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
+from ....core.decimal.constants import HUNDRED, MONEY_ZERO, ONE
 from ....core.errors.hierarchy import CadrumoError as _CadrumoError
 from ....core.errors.hierarchy import CoreValidationError as _CoreValidationError
 from ....core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT as _DEFAULT_IVA_GENERAL_RATE_PCT
@@ -81,10 +82,6 @@ class BasisCapExceededError(AmortizacionLedgerError):
 
 INVENTORY_SCHEMA_VERSION = "3"
 """Forward-compatible schema version stamped onto every record in this module."""
-
-_ZERO = Decimal("0.00")
-_ONE = Decimal("1")
-_HUNDRED = Decimal("100")
 
 
 class MovementKind(StrEnum):
@@ -151,9 +148,9 @@ class InventoryAttributableCostComponent(BaseModel):
 
     component_id: str = Field(min_length=1, max_length=128)
     kind: InventoryAttributableCostKind
-    taxable_base: Decimal = Field(gt=_ZERO)
-    iva_amount: Decimal = Field(ge=_ZERO)
-    deductible_iva_ratio: Decimal = Field(ge=_ZERO, le=_ONE)
+    taxable_base: Decimal = Field(gt=MONEY_ZERO)
+    iva_amount: Decimal = Field(ge=MONEY_ZERO)
+    deductible_iva_ratio: Decimal = Field(ge=MONEY_ZERO, le=ONE)
     evidence_references: tuple[FilingEvidenceReference, ...] = Field(min_length=1)
 
     @field_validator("component_id")
@@ -206,16 +203,16 @@ class InventoryAcquisitionCost(BaseModel):
 
     model_config = _STRICT_FROZEN_CONFIG
 
-    consideration_excluding_iva: Decimal = Field(ge=_ZERO)
-    consideration_iva_amount: Decimal = Field(ge=_ZERO)
-    consideration_deductible_iva_ratio: Decimal = Field(ge=_ZERO, le=_ONE)
+    consideration_excluding_iva: Decimal = Field(ge=MONEY_ZERO)
+    consideration_iva_amount: Decimal = Field(ge=MONEY_ZERO)
+    consideration_deductible_iva_ratio: Decimal = Field(ge=MONEY_ZERO, le=ONE)
     attributable_cost_components: tuple[InventoryAttributableCostComponent, ...]
     evidence: tuple[InventoryAcquisitionEvidence, ...] = Field(min_length=1)
     completeness: InventoryAcquisitionCompleteness
-    directly_attributable_cost_total: Decimal = Field(ge=_ZERO)
-    nonrecoverable_iva_included: Decimal = Field(ge=_ZERO)
-    recoverable_iva_excluded: Decimal = Field(ge=_ZERO)
-    total_acquisition_cost: Decimal = Field(ge=_ZERO)
+    directly_attributable_cost_total: Decimal = Field(ge=MONEY_ZERO)
+    nonrecoverable_iva_included: Decimal = Field(ge=MONEY_ZERO)
+    recoverable_iva_excluded: Decimal = Field(ge=MONEY_ZERO)
+    total_acquisition_cost: Decimal = Field(ge=MONEY_ZERO)
 
     @field_validator(
         "consideration_excluding_iva",
@@ -268,13 +265,13 @@ class InventoryAcquisitionCost(BaseModel):
         }:
             raise InventoryValidationError("purchase consideration requires acquisition evidence, not review evidence")
 
-        attributable = sum((item.taxable_base for item in self.attributable_cost_components), _ZERO)
+        attributable = sum((item.taxable_base for item in self.attributable_cost_components), MONEY_ZERO)
         recoverable = _quantize(
             self.consideration_iva_amount * self.consideration_deductible_iva_ratio,
-        ) + sum((item.recoverable_iva for item in self.attributable_cost_components), _ZERO)
+        ) + sum((item.recoverable_iva for item in self.attributable_cost_components), MONEY_ZERO)
         total_iva = self.consideration_iva_amount + sum(
             (item.iva_amount for item in self.attributable_cost_components),
-            _ZERO,
+            MONEY_ZERO,
         )
         nonrecoverable = total_iva - recoverable
         total = self.consideration_excluding_iva + attributable + nonrecoverable
@@ -392,7 +389,7 @@ class PhysicalClosingObservation(BaseModel):
     as_of_date: date
     actividad_id: str = Field(min_length=1)
     filing_year: FilingYear
-    closing_value: Decimal = Field(ge=_ZERO)
+    closing_value: Decimal = Field(ge=MONEY_ZERO)
     valuation_basis: InventoryClosingValuationBasis
     evidence: tuple[PhysicalClosingEvidence, ...] = Field(min_length=2)
 
@@ -539,8 +536,8 @@ class PriorAuthoritativeClosingLink(BaseModel):
     actividad_id: str = Field(min_length=1)
     current_filing_year: int = Field(ge=1901)
     prior_filing_year: FilingYear
-    prior_authoritative_closing_value: Decimal = Field(ge=_ZERO)
-    current_opening_value: Decimal = Field(ge=_ZERO)
+    prior_authoritative_closing_value: Decimal = Field(ge=MONEY_ZERO)
+    current_opening_value: Decimal = Field(ge=MONEY_ZERO)
     prior_authoritative_source_fingerprint: ContentDigest
     prior_authoritative_closing_fingerprint: ContentDigest
     evidence: tuple[PriorClosingContinuityEvidence, ...] = Field(min_length=1)
@@ -602,8 +599,8 @@ class InventoryClosingConflictDiagnostic(BaseModel):
 
     actividad_id: str = Field(min_length=1)
     filing_year: FilingYear
-    movement_derived_value: Decimal = Field(ge=_ZERO)
-    physical_observed_value: Decimal = Field(ge=_ZERO)
+    movement_derived_value: Decimal = Field(ge=MONEY_ZERO)
+    physical_observed_value: Decimal = Field(ge=MONEY_ZERO)
     physical_observation_fingerprint: ContentDigest
 
     @field_validator("movement_derived_value", "physical_observed_value")
@@ -620,9 +617,9 @@ class InventoryClosingResolution(BaseModel):
     actividad_id: str = Field(min_length=1)
     filing_year: FilingYear
     authority: InventoryClosingAuthority
-    authoritative_value: Decimal = Field(ge=_ZERO)
-    movement_derived_value: Decimal = Field(ge=_ZERO)
-    physical_observed_value: Decimal | None = Field(default=None, ge=_ZERO)
+    authoritative_value: Decimal = Field(ge=MONEY_ZERO)
+    movement_derived_value: Decimal = Field(ge=MONEY_ZERO)
+    physical_observed_value: Decimal | None = Field(default=None, ge=MONEY_ZERO)
     physical_observation_fingerprint: ContentDigest | None = None
     decision_id: str = Field(min_length=1, max_length=128)
     decision_fingerprint: ContentDigest
@@ -750,7 +747,7 @@ class MovementRecord(BaseModel):
         """Project one complete acquisition into its canonical purchase movement."""
         consideration = acquisition_cost.consideration_excluding_iva
         iva_amount = acquisition_cost.consideration_iva_amount
-        iva_rate = _ZERO if consideration == _ZERO else iva_amount * _HUNDRED / consideration
+        iva_rate = MONEY_ZERO if consideration == MONEY_ZERO else iva_amount * HUNDRED / consideration
         return cls(
             movement_id=movement_id,
             movement_date=movement_date,
@@ -770,7 +767,7 @@ class MovementRecord(BaseModel):
         if self.taxable_base is not None:
             return self.taxable_base
         if self.unit_cost is None:
-            return _ZERO
+            return MONEY_ZERO
         return self.quantity * self.unit_cost
 
     @property
@@ -791,7 +788,7 @@ class MovementRecord(BaseModel):
         if self.unit_cost is not None:
             return self.unit_cost
         if self.taxable_base is None:
-            return _ZERO
+            return MONEY_ZERO
         return self.taxable_base / self.quantity
 
     @field_validator("schema_version")
@@ -809,7 +806,7 @@ class MovementRecord(BaseModel):
         if needs_cost and self.unit_cost is None and self.taxable_base is None:
             raise InventoryValidationError("opening and purchase movements require unit_cost or taxable_base")
         if self.taxable_base is not None:
-            computed_iva = _quantize(self.taxable_base * self.iva_rate / _HUNDRED)
+            computed_iva = _quantize(self.taxable_base * self.iva_rate / HUNDRED)
             if self.iva_amount is not None and self.iva_amount != computed_iva:
                 raise InventoryValidationError("iva_amount must equal taxable_base * iva_rate")
         if (
@@ -825,7 +822,7 @@ class MovementRecord(BaseModel):
                 raise InventoryValidationError("acquisition consideration must equal the purchase consideration")
             expected_iva = self.iva_amount
             if expected_iva is None:
-                expected_iva = _quantize(self.value * self.iva_rate / _HUNDRED)
+                expected_iva = _quantize(self.value * self.iva_rate / HUNDRED)
             if self.acquisition_cost.consideration_iva_amount != expected_iva:
                 raise InventoryValidationError("acquisition consideration IVA must equal the purchase IVA")
             if self.acquisition_cost.consideration_deductible_iva_ratio != self.deductible_iva_ratio:
@@ -1035,22 +1032,22 @@ class InventoryAnexoDResult(BaseModel):
     source_ledger_fingerprint: ContentDigest
     actividad_id: str = Field(min_length=1)
     filing_year: Literal[2025]
-    opening_value: Decimal = Field(ge=_ZERO)
-    movement_derived_closing_value: Decimal = Field(ge=_ZERO)
-    authoritative_closing_value: Decimal = Field(ge=_ZERO)
+    opening_value: Decimal = Field(ge=MONEY_ZERO)
+    movement_derived_closing_value: Decimal = Field(ge=MONEY_ZERO)
+    authoritative_closing_value: Decimal = Field(ge=MONEY_ZERO)
     selected_authority: InventoryClosingAuthority
     authority_record_fingerprint: ContentDigest
     decision_id: str = Field(min_length=1, max_length=128)
     decision_fingerprint: ContentDigest
     physical_observation_id: str | None = Field(default=None, min_length=1, max_length=128)
     physical_observation_fingerprint: ContentDigest | None = None
-    physical_observed_closing_value: Decimal | None = Field(default=None, ge=_ZERO)
+    physical_observed_closing_value: Decimal | None = Field(default=None, ge=MONEY_ZERO)
     prior_closing_link_fingerprint: ContentDigest
-    complete_acquisition_total: Decimal = Field(ge=_ZERO)
+    complete_acquisition_total: Decimal = Field(ge=MONEY_ZERO)
     acquisition_fingerprints: tuple[ContentDigest, ...]
-    casilla_0177: Decimal = Field(ge=_ZERO)
-    casilla_0181: Decimal = Field(ge=_ZERO)
-    casilla_0182: Decimal = Field(ge=_ZERO)
+    casilla_0177: Decimal = Field(ge=MONEY_ZERO)
+    casilla_0181: Decimal = Field(ge=MONEY_ZERO)
+    casilla_0182: Decimal = Field(ge=MONEY_ZERO)
     closing_conflict: InventoryClosingConflictDiagnostic | None = None
     issues: tuple[Literal["physical_closing_conflict"], ...] = ()
     projection_fingerprint: ContentDigest
@@ -1083,15 +1080,15 @@ class InventoryAnexoDResult(BaseModel):
         if any(value != _quantize(value) for value in monetary_values):
             raise InventoryValidationError("inventory Anexo D values must be quantised to cents")
         signed_variation = _quantize(self.authoritative_closing_value - self.opening_value)
-        expected_increase = max(signed_variation, _ZERO)
-        expected_decrease = max(-signed_variation, _ZERO)
+        expected_increase = max(signed_variation, MONEY_ZERO)
+        expected_decrease = max(-signed_variation, MONEY_ZERO)
         if self.casilla_0177 != expected_increase or self.casilla_0182 != expected_decrease:
             raise InventoryValidationError(
                 "inventory Anexo D outputs must be the mutually exclusive split of closing minus opening",
             )
         if self.casilla_0181 != self.complete_acquisition_total:
             raise InventoryValidationError("casilla 0181 must equal complete inventory acquisition cost")
-        if self.complete_acquisition_total > _ZERO and not self.acquisition_fingerprints:
+        if self.complete_acquisition_total > MONEY_ZERO and not self.acquisition_fingerprints:
             raise InventoryValidationError("nonzero acquisition cost requires acquisition fingerprints")
         if len(set(self.acquisition_fingerprints)) != len(self.acquisition_fingerprints):
             raise InventoryValidationError("acquisition fingerprints must be unique")

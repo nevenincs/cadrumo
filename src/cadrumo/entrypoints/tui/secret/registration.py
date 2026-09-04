@@ -541,9 +541,9 @@ class RecoveryWordsScreen(Screen[None]):
         border: $cadrumo-radius $primary;
         padding: $cadrumo-space-1 $cadrumo-gutter;
     }
-    #words-heading { text-style: bold; margin-bottom: 1; }
-    #words-value { color: $warning; margin-bottom: 1; }
-    #words-warning { color: $text-muted; margin-bottom: 1; }
+    #words-heading { text-style: bold; margin-bottom: $cadrumo-stack; }
+    #words-value { color: $warning; margin-bottom: $cadrumo-stack; }
+    #words-warning { color: $text-muted; margin-bottom: $cadrumo-stack; }
     #words-actions { height: auto; align-horizontal: right; }
     """)
 

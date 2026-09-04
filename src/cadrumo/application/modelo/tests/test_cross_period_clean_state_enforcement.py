@@ -19,9 +19,9 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import (
     CrossPeriodGroupMemberRoster,
-    EntityType,
     IrpfIncomeCategory,
     IVARegime,
     M303RegimeComposition,

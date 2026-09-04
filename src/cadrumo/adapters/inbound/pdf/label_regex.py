@@ -93,7 +93,11 @@ MODELO_LABEL = r"(?:Modelo|Form)"
 EJERCICIO_LABEL = r"(?:Ejercicio|Financial\s*year)"
 """Non-capturing alternation of AEAT's Spanish and English tax-year labels."""
 
-_WHITESPACE_RE = re.compile(r"\s")
+#: A single whitespace character, DELETED rather than collapsed: a PDF label
+#: is matched with its spacing removed entirely. Named for that operation so
+#: it no longer collides with the run-collapsing pattern three other modules
+#: used under the name ``_WHITESPACE_RE``.
+_WHITESPACE_TO_DELETE_RE = re.compile(r"\s")
 
 
 def parse_spanish_decimal(raw: str) -> Decimal | None:
@@ -114,7 +118,7 @@ def parse_spanish_decimal(raw: str) -> Decimal | None:
         otherwise unparseable.
     """
     # Strip every whitespace character (ASCII space, tab, NBSP, narrow NBSP).
-    cleaned = _WHITESPACE_RE.sub("", raw).strip()
+    cleaned = _WHITESPACE_TO_DELETE_RE.sub("", raw).strip()
     if not cleaned or cleaned == "-":
         return None
     if "," in cleaned and "." in cleaned:

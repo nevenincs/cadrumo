@@ -55,6 +55,25 @@ VALID_DIGEST: Final[str] = hashlib.sha256(b"probe").hexdigest()
 INVALID_VALUES: Final[tuple[str, ...]] = ("Z" * 64, "!" * 64)
 
 
+def admitted_shape(value: str) -> str:
+    """Name what an admitted value actually is, for the report line.
+
+    The label was derived from a leading ``Z`` and read ``upper-hex``. Neither
+    probe value is hexadecimal at all - they are sixty-four ``Z`` characters
+    and sixty-four exclamation marks - so that line told a reviewer the field
+    had accepted an UPPERCASE DIGEST, which is near enough to correct that it
+    invites triage as case-insensitivity. What the field actually accepted was
+    sixty-four arbitrary letters standing in for a SHA-256.
+    """
+    if all(character in "0123456789abcdefABCDEF" for character in value):
+        return "hex"
+    if value.isalpha():
+        return "non-hex-letters"
+    if not any(character.isalnum() for character in value):
+        return "punctuation"
+    return "mixed"
+
+
 class Verdict(StrEnum):
     """What the probe established about one field.
 
@@ -96,7 +115,7 @@ class ProbeResult:
 
     def rendered(self) -> str:
         """A single deterministic line for a report."""
-        marks = ",".join("upper-hex" if v.startswith("Z") else "punctuation" for v in self.accepted)
+        marks = ",".join(admitted_shape(value) for value in self.accepted)
         suffix = f" [{marks}]" if marks else (f" ({self.detail})" if self.detail else "")
         return f"{self.verdict.value.upper():<16} {self.path} {self.model}.{self.field}{suffix}"
 

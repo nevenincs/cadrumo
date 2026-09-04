@@ -33,6 +33,7 @@ from decimal import Decimal, localcontext
 from pydantic import BaseModel, Field, model_validator
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.decimal.constants import ZERO
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....domain.period import calculation_filing_date
 from . import _formula_runtime_irnr as _irnr
@@ -102,8 +103,6 @@ from .runtime_graph import formula_evaluation_order
 from .schema import RegistrySnapshot
 from .schema_formula import FormulaExpression, ParameterDefinition
 
-_ZERO = Decimal("0")
-_ONE = Decimal("1")
 read_parameter = _read_parameter
 
 
@@ -554,12 +553,12 @@ def _validate_external_value_ids(
     _reject_unknown_external_values(resolved_bindings, binding_ids, "binding")
     _reject_unknown_external_values(resolved_relations, relation_ids, "relation")
     _reject_unknown_external_values(
-        {relation_id: _ZERO for relation_id in resolved_unresolved_relations},
+        {relation_id: ZERO for relation_id in resolved_unresolved_relations},
         relation_ids,
         "unresolved_relation",
     )
     _reject_unknown_external_values(
-        {binding_id: _ZERO for binding_id in resolved_unresolved_bindings},
+        {binding_id: ZERO for binding_id in resolved_unresolved_bindings},
         binding_ids,
         "unresolved_binding",
     )
@@ -905,7 +904,7 @@ def _evaluate_if_then_else(expression: FormulaExpression, ctx: _EvalContext) -> 
     if len(expression.args) != 3:
         raise RegistryValidationError("formula op 'if_then_else' expects 3 args")
     predicate_value = _evaluate_with_ctx(expression.args[0], ctx)
-    selected_branch = expression.args[1] if predicate_value != _ZERO else expression.args[2]
+    selected_branch = expression.args[1] if predicate_value != ZERO else expression.args[2]
     return _evaluate_with_ctx(selected_branch, ctx)
 
 

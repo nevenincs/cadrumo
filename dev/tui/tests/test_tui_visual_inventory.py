@@ -22,7 +22,9 @@ from .._artifacts import (
     RenderedFrame,
     SkippedFrame,
     now,
+    purge_stale_artifacts,
     read_manifest,
+    stale_artifacts,
     unaccounted_frames,
     write_index,
     write_manifest,
@@ -277,9 +279,9 @@ def _rendered(surface: str, viewport: str, theme: str) -> RenderedFrame:
         rows=40,
         orientation="landscape",
         theme=theme,
-        png="a.png",
-        svg="a.svg",
-        text="a.txt",
+        png="png/a.png",
+        svg="svg/a.svg",
+        text="text/a.txt",
         png_sha256="0" * 64,
         text_sha256="0" * 64,
     )
@@ -978,3 +980,44 @@ def test_column_mapping_survives_floating_point_cell_origins() -> None:
     for origin, column in ((536.8, 44), (719.8, 59), (561.2, 46), (707.6, 58), (0.0, 0)):
         assert round(origin / cell) == column, f"{origin} should map to column {column}"
     assert int(536.8 // cell) == 43, "the floored form is wrong here; that is why rounding is used"
+
+def test_a_run_directory_reports_the_frames_its_manifest_does_not_claim(tmp_path: Path) -> None:
+    """A frame from an earlier render is indistinguishable from a current one.
+
+    The manifest is right in both directions; the DIRECTORY is what misleads a
+    reviewer who opens it, which is how a surface gets signed off as it looked
+    two code changes ago.
+    """
+    for kind in ("png", "svg", "text"):
+        (tmp_path / kind).mkdir()
+    (tmp_path / "png" / "a.png").write_bytes(b"")
+    (tmp_path / "svg" / "a.svg").write_text("", encoding="utf-8")
+    (tmp_path / "text" / "a.txt").write_text("", encoding="utf-8")
+    (tmp_path / "png" / "left-behind.png").write_bytes(b"")
+
+    manifest = _manifest(frames=(_rendered("home--ready", "medium", "dark"),))
+    stale = stale_artifacts(tmp_path, manifest)
+
+    assert [path.name for path in stale] == ["left-behind.png"]
+
+
+def test_purging_removes_only_the_unclaimed_frames(tmp_path: Path) -> None:
+    """The claimed frames, the manifest and the index all survive a purge."""
+    for kind in ("png", "svg", "text"):
+        (tmp_path / kind).mkdir()
+    (tmp_path / "png" / "a.png").write_bytes(b"")
+    (tmp_path / "svg" / "a.svg").write_text("", encoding="utf-8")
+    (tmp_path / "text" / "a.txt").write_text("", encoding="utf-8")
+    (tmp_path / "png" / "left-behind.png").write_bytes(b"")
+    (tmp_path / "manifest.json").write_text("{}", encoding="utf-8")
+
+    manifest = _manifest(frames=(_rendered("home--ready", "medium", "dark"),))
+    removed = purge_stale_artifacts(tmp_path, manifest)
+
+    assert [path.name for path in removed] == ["left-behind.png"]
+    assert (tmp_path / "png" / "a.png").is_file()
+    assert (tmp_path / "svg" / "a.svg").is_file()
+    assert (tmp_path / "text" / "a.txt").is_file()
+    assert (tmp_path / "manifest.json").is_file()
+    assert stale_artifacts(tmp_path, manifest) == ()
+

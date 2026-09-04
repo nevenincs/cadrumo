@@ -41,7 +41,7 @@ class ObjectNameDeclusteringCliError(RuntimeError):
 def _repo_root(start: Path) -> Path:
     raw = start.absolute()
     for candidate in (raw, *raw.parents):
-        if (candidate / ".git").is_dir() and (candidate / "src").is_dir() and (candidate / "dev").is_dir():
+        if (candidate / ".git").exists() and (candidate / "src").is_dir() and (candidate / "dev").is_dir():
             current = candidate
             while current != current.parent:
                 if is_link_like(current):

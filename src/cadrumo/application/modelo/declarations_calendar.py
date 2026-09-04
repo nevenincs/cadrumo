@@ -187,7 +187,12 @@ def project_declarations_calendar(
     as_of: date,
     schedule_observation: DeclarationsCalendarSourceObservationV1,
 ) -> DeclarationsCalendarProjectionV1:
-    """Join already-built calendar authorities into a redacted safe projection."""
+    """Join already-built calendar authorities into one deadline projection.
+
+    Not "redacted": this projection's subject is dates, legal windows and
+    observation states, and it carries all of them. It withholds nothing the
+    operator is entitled to; there is simply no monetary fact in a calendar.
+    """
     if schedule_observation.source is not DeclarationsCalendarSource.SCHEDULE:
         raise DeclarationsCalendarProjectionError("schedule observation names another calendar source")
     schedule_observable = _observable(schedule_observation.availability)

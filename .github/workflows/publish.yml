@@ -185,6 +185,28 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
 
+      # The last check before the upload below, which cannot be undone. Every
+      # earlier step in this workflow is reversible; from the next step onward
+      # nothing is, so the question "does some destination already own this
+      # version" is asked here and not before.
+      #
+      # The tag and the release for this version already exist: the release cut
+      # them and dispatched this run. They are exempted by commit identity, not
+      # by being skipped - the tag this job checked out and the release that
+      # targets the same commit are its own, while a tag or release carrying
+      # this version on ANY other commit is a genuine collision and still
+      # refuses.
+      - name: Refuse a version any destination already owns
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          uv run --frozen python -m dev.release.version_identity \
+            --version "${TAG#v}" \
+            --repository "$GITHUB_REPOSITORY" \
+            --own-source-commit "$(git rev-parse HEAD)" \
+            --scope publish
+
       # Distributions only, by explicit suffix. The directory also carries the
       # checksum manifest sealed above and the marker `uv build` leaves behind,
       # and neither is an uploadable file: a bare `dist/*` offers them to the

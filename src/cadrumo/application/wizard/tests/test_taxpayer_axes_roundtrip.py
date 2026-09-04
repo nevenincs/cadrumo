@@ -14,7 +14,8 @@ from __future__ import annotations
 import pytest
 
 from ....core.setup_answers import SetupAnswers
-from ....domain.deadlines.models import EntityType, IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, LegalEntityForm
+from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
+from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
 from ....domain.deadlines.profiles import taxpayer_profile_from_mapping
 from ..catalogue import SETUP_FLOW
 from ..persistence import project_answers, serialise_answers

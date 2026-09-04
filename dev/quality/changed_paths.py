@@ -43,32 +43,56 @@ from .._paths import REPO_ROOT
 _RUFF: Final[tuple[str, ...]] = ("uv", "run", "--no-sync", "ruff")
 
 
-def changed_python_paths(base: str) -> tuple[Path, ...]:
-    """Return the existing Python files that differ from ``base``.
-
-    Deleted and renamed-away paths are dropped rather than reported: a check
-    cannot speak about a file that is no longer there, and asking ruff to read
-    one is an error about this module rather than about the change.
-    """
+def _git_lines(arguments: list[str], *, failure: str, repo_root: Path = REPO_ROOT) -> list[str]:
+    """Run one read-only git query and return its non-empty output lines."""
     completed = subprocess.run(  # noqa: S603 - fixed argv, no shell
-        ["git", "diff", "--name-only", base],  # noqa: S607 - repository tool is fixed
-        cwd=REPO_ROOT,
+        ["git", *arguments],  # noqa: S607 - repository tool is fixed
+        cwd=repo_root,
         capture_output=True,
         text=True,
         check=False,
     )
     if completed.returncode != 0:
-        message = completed.stderr.strip() or f"git diff against {base!r} failed"
+        message = completed.stderr.strip() or failure
         raise SystemExit(f"check-changed: {message}")
+    return [line.strip() for line in completed.stdout.splitlines() if line.strip()]
 
-    paths = []
-    for line in completed.stdout.splitlines():
-        name = line.strip()
+
+def changed_python_paths(base: str, *, repo_root: Path = REPO_ROOT) -> tuple[Path, ...]:
+    """Return the existing Python files that differ from ``base``.
+
+    Untracked files are included alongside the diff. ``git diff`` reports
+    only what git already knows about, so a change consisting entirely of
+    NEW files produced an empty path set and the preflight exited 0 having
+    checked nothing - reporting the change clean at the exact moment its
+    files had never been looked at once.
+
+    Ignored files stay out: ``--exclude-standard`` honours the same ignore
+    rules the contributor already declared, so build output and caches do not
+    become the preflight's problem.
+
+    Deleted and renamed-away paths are dropped rather than reported: a check
+    cannot speak about a file that is no longer there, and asking ruff to read
+    one is an error about this module rather than about the change.
+    """
+    names = _git_lines(
+        ["diff", "--name-only", base],
+        failure=f"git diff against {base!r} failed",
+        repo_root=repo_root,
+    )
+    names += _git_lines(
+        ["ls-files", "--others", "--exclude-standard"],
+        failure="git could not list the untracked files",
+        repo_root=repo_root,
+    )
+
+    paths = set()
+    for name in names:
         if not name.endswith(".py"):
             continue
-        candidate = REPO_ROOT / name
+        candidate = repo_root / name
         if candidate.is_file():
-            paths.append(candidate)
+            paths.add(candidate)
     return tuple(sorted(paths))
 
 

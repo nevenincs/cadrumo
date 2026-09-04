@@ -9,8 +9,9 @@ before the tool's first line of real work. The tool then fails identically on
 every run, for a reason that has nothing to do with what it checks.
 
 This is not hypothetical. `runner_queue_watchdog` was invoked as a script from
-FIVE workflows - packaging-quick, packaging-claude, packaging-homebrew, and both
-runner probes - and had therefore never once executed. Its job is to fail a lane
+FIVE workflows - packaging-quick, packaging-homebrew, packaging-scoop,
+packaging-smoke, and runner-fleet-health - and had therefore never once
+executed. Its job is to fail a lane
 fast when no online runner can serve it, and its step is named "Fail fast on a
 lane no online runner can serve", so its failures read as the watchdog DOING its
 job. During a real runner outage on 2026-08-31 it produced exactly that

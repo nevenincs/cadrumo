@@ -12,10 +12,9 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from ...core.decimal.constants import MONEY_ZERO
 from ...core.identity import AeatCertificadoId, AeatClaveLiquidacion, ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
-
-_ZERO = Decimal("0.00")
 
 
 class SancionLiquidacion(BaseModel):
@@ -47,4 +46,4 @@ class SancionLiquidacion(BaseModel):
     @property
     def reducciones_total(self) -> Decimal:
         """Return the sum of every reducción the document actually printed."""
-        return (self.reduccion_conformidad or _ZERO) + (self.reduccion_pronto_pago or _ZERO)
+        return (self.reduccion_conformidad or MONEY_ZERO) + (self.reduccion_pronto_pago or MONEY_ZERO)

@@ -47,6 +47,11 @@ from cadrumo_harness.mcp import build_tool_descriptors
 
 from .._models import ContradictionScenario
 from .._runner import check_contradiction_scenario
+from ._scripted_registration_channels import (
+    creation_secrets_payload,
+    login_secrets_payload,
+    scripted_registration_descriptors,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -54,7 +59,14 @@ _PROFILE_ID = "operator"
 _MODELO = "347"
 _FILING_YEAR = 2024
 _PERIOD = "0A"
-_REVISION = "2008-2024"
+_REVISION = "2011-2024"
+"""The law-determined M347 revision for the 2024 annual period.
+
+Not a free choice: the CLI refuses a requested revision that is not the one
+the period-to-revision binding fixes, and it names the correct one in the
+refusal. This constant read ``2008-2024`` until that refusal started firing,
+which is the binding doing exactly what it exists to do.
+"""
 
 _READINESS_STEP = "modelo.readiness"
 _BLOCKING_STEP = "modelo.work.verify"
@@ -74,19 +86,41 @@ _MUTATING_COMMANDS = (
 
 
 def _create_profile() -> None:
-    result = invoke_cached_cli(
-        [
-            "config", "profile", "create", _PROFILE_ID,
-            "--quiet", "--accept-defaults",
-            "--entity-type", "natural_person",
-            "--irpf-income-categories", "actividad_economica",
-            "--tax-id", "12345678Z",
-            "--name", "Operator",
-            "--surnames", "Contradiction",
-            "--activity", "design",
-        ],
-    )  # fmt: skip
+    with scripted_registration_descriptors() as (handoff, verification):
+        result = invoke_cached_cli(
+            [
+                "config", "profile", "create", _PROFILE_ID,
+                "--quiet", "--accept-defaults",
+                "--entity-type", "natural_person",
+                "--irpf-income-categories", "actividad_economica",
+                "--tax-id", "12345678Z",
+                "--name", "Operator",
+                "--surnames", "Contradiction",
+                "--activity", "design",
+                "--tax-residence-jurisdiction-scope", "common_regime",
+                "--tax-residence-ccaa", "madrid",
+                "--iva-regime", "GENERAL",
+                "--iva-m303-regime-composition", "general",
+                "--no-iva-redeme-enrolled",
+                "--no-iva-cash-accounting-regime-enrolled",
+                "--no-iva-voluntary-sii-enrolled",
+                "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
+                "--secrets-stdin",
+                "--recovery-handoff-fd", str(handoff),
+                "--recovery-verification-fd", str(verification),
+            ],
+            input=creation_secrets_payload(),
+        )  # fmt: skip
     assert result.exit_code == 0, result.output
+
+    session = invoke_cached_cli(
+        ["config", "login", _PROFILE_ID, "--secrets-stdin"],
+        input=login_secrets_payload(),
+    )
+    assert session.exit_code == 0, session.output
+
+    completed = invoke_cached_cli(["config", "profile", "complete-setup"])
+    assert completed.exit_code == 0, completed.output
 
 
 def _prepare_calculated_m347_draft() -> None:

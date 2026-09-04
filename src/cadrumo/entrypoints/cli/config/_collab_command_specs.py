@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ..command_spec import (
+    TEXT_VALUE,
     ArgumentSpec,
     CommandNodeKind,
     CommandSpec,
@@ -14,14 +15,12 @@ from ..command_spec import (
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
-    ValueContract,
 )
 from ._spec_policies import ENCRYPTED_DESTRUCTIVE, ENCRYPTED_READ, ENCRYPTED_WRITE, STATE_FREE
 
-_STRING = ValueContract(DeferredTarget("builtins", "str"))
 _RECIPIENT_ID = ArgumentSpec(
     name="recipient_id",
-    value=_STRING,
+    value=TEXT_VALUE,
     default=ParameterDefault.required(),
     help_key=TranslationKey("cli.config.collab.recipient.recipient_id_help"),
 )
@@ -79,14 +78,14 @@ CONFIG_COLLAB_COMMAND_SPECS = (
             OptionSpec(
                 name="public_key",
                 declarations=("--public-key",),
-                value=_STRING,
+                value=TEXT_VALUE,
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.config.collab.recipient.public_key_help"),
             ),
             OptionSpec(
                 name="label",
                 declarations=("--label",),
-                value=_STRING,
+                value=TEXT_VALUE,
                 default=ParameterDefault.value(""),
                 help_key=TranslationKey("cli.config.collab.recipient.label_help"),
             ),

@@ -28,7 +28,7 @@ from .....core.external_constants import PDF_MIME_TYPE
 from .....core.i18n import tr
 from .....core.identity import tax_id_identity_token
 from .....core.models import STRICT_FROZEN_CONFIG
-from .....core.text_fold import fold_diacritics
+from .....core.text_fold import fold_for_matching
 
 if TYPE_CHECKING:
     from playwright.async_api import Locator, Page
@@ -394,8 +394,7 @@ def normalize_response_text(text: str) -> str:
     """Casefold + strip diacritics + collapse whitespace for marker matching."""
     if not text:
         return ""
-    without_accents = fold_diacritics(text)
-    return _WHITESPACE_RE.sub(" ", without_accents.casefold()).strip()
+    return fold_for_matching(text)
 
 
 def normalize_display_text(text: str) -> str:

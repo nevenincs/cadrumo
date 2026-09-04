@@ -23,7 +23,6 @@ if TYPE_CHECKING:
     from .calculation_revision_aggregate import CalculationRevisionAggregateContext
 
 _LOGGER = get_logger(__name__)
-_CALCULATION_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_calculation_revision_persistence"
 
 
 class CalculationRevisionPersistenceError(ModeloError):

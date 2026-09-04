@@ -80,15 +80,6 @@ _UTF_8: Final[str] = UTF_8
 
 _BASELINE_PATH: Final = Path(__file__).resolve().parent / "checkout_drift_baseline.json"
 
-_BASELINE_COMMENT: Final = (
-    "Shrink-only ceiling for tracked files whose on-disk bytes differ from their "
-    "committed bytes while git reports them unmodified. Regenerate with "
-    "The default screen run "
-    "never fails; `--check` applies this ceiling and is not wired into a blocking "
-    "lane. 'buckets' are top-level path segments, so growth is attributable to a "
-    "tree rather than only to the total."
-)
-
 
 def blob_hash(data: bytes) -> str:
     """Return the git blob object name for *data* exactly as it sits on disk.
@@ -254,37 +245,24 @@ def load_ceiling(path: Path = _BASELINE_PATH) -> tuple[int | None, dict[str, int
     return None, {}
 
 
-def write_ceiling(measurement: DriftMeasurement, head: str, path: Path = _BASELINE_PATH) -> None:
-    """Record *measurement* as the new ceiling.
-
-    The explicit newline is not incidental here. This module measures files
-    whose terminators were translated by a writer that did not pin them; a
-    baseline written through the platform default would enter its own worklist
-    on the next run.
-    """
-    document = {
-        "_comment": _BASELINE_COMMENT,
-        "measured_at_head": head,
-        "scanned": measurement.scanned,
-        "total": measurement.total,
-        "carrying_crlf": measurement.carrying_crlf,
-        "buckets": measurement.buckets,
-    }
-    path.write_text(
-        json.dumps(document, indent=2, ensure_ascii=False) + "\n",
-        encoding=_UTF_8,
-        newline="\n",
-    )
-
-
 def growth_against_ceiling(measurement: DriftMeasurement, total: int | None, buckets: dict[str, int]) -> list[str]:
     """Return one line per counter that moved in the weakening direction.
 
-    A tree absent from the ceiling is compared against zero, so a brand-new
-    drifted tree is growth rather than an unmeasured free pass.
+    No recorded ceiling means nothing to move away from, so the answer is
+    empty. Comparing each tree against an implicit zero instead reported every
+    populated bucket as a breach: ``--check`` exited 1 naming ten trees as
+    exceeding ``the recorded ceiling 0`` in the same run that printed ``no
+    ceiling is recorded or accepted``, and the advisory dimension went RED where
+    its own contract says AMBER. That is precisely the population-pinned ratchet
+    this module's header says it refuses to be.
+
+    WITHIN a recorded ceiling a tree absent from it is still compared against
+    zero, so a newly drifted tree is growth rather than an unmeasured free pass.
     """
+    if total is None:
+        return []
     findings: list[str] = []
-    if total is not None and measurement.total > total:
+    if measurement.total > total:
         findings.append(f"total {measurement.total} exceeds the recorded ceiling {total}")
     for bucket, count in measurement.buckets.items():
         allowed = buckets.get(bucket, 0)
@@ -300,6 +278,9 @@ def _render(measurement: DriftMeasurement, total: int | None, buckets: dict[str,
     print(f"  of those carrying CRLF on disk: {measurement.carrying_crlf}")
 
     for bucket, count in measurement.buckets.items():
+        if total is None:
+            print(f"    {bucket:<14} {count}")
+            continue
         allowed = buckets.get(bucket, 0)
         marker = "  <-- above ceiling" if count > allowed else ""
         print(f"    {bucket:<14} {count} (ceiling {allowed}){marker}")
@@ -359,7 +340,10 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  {line}", file=sys.stderr)
         return 1
 
-    print("\ncheckout drift: within the recorded ceiling.")
+    if total is None:
+        print("\ncheckout drift: no ceiling is recorded, so there is nothing to ratchet against.")
+    else:
+        print("\ncheckout drift: within the recorded ceiling.")
     return 0
 
 

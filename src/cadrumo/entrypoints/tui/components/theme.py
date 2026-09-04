@@ -171,11 +171,20 @@ CADRUMO_CSS_TOKENS: Final[Mapping[str, str]] = MappingProxyType(
         # than the library intends, while the complaint was that they were
         # small.
         "cadrumo-control-min-width": "16",
+        "cadrumo-control-max-width": "28",
         # The gap between sibling action buttons. Nine stylesheets each
         # repeated this as a literal; two bordered boxes one cell apart
         # read as one smeared control, so the role gets a name and a
         # value that actually separates them.
         "cadrumo-control-gap": "2",
+        # Table density. One number for every table in the product, because a
+        # row's leading is what the eye uses to find the column edge: Home's
+        # lists sat flush at column 0 while every other table was inset by one
+        # cell, so two surfaces of the same product disagreed about where a row
+        # begins. Tables also inset their FIRST column by this much, so the
+        # heading above them takes the same indent and the group shares one
+        # left edge.
+        "cadrumo-cell-padding": "1",
         # -- Chrome ---------------------------------------------------------
         "cadrumo-scrollbar": "1",
     },
@@ -266,6 +275,38 @@ BASE_CSS: Final[str] = tokenised("""
         height: auto;
         overflow-y: hidden;
         scrollbar-size-vertical: $cadrumo-space-0;
+    }
+
+    /* A section heading and the content it owns. The two gaps are
+       deliberately asymmetric: the SECTION gap above separates this group from
+       the previous one, the smaller STACK gap below binds the heading to its
+       own rows. A heading equidistant from both reads as floating between
+       them; a heading with no gap below reads as fused to its content, which
+       is how a screen becomes one continuous run of data. */
+    .cadrumo-heading {
+        height: auto;
+        text-style: bold;
+        /* The same inset a table gives its first column, so a heading and the
+           rows it owns share one left edge. Without it the heading starts a
+           cell to the left of its own data and the group reads as ragged. */
+        padding-left: $cadrumo-cell-padding;
+        margin-top: $cadrumo-section;
+        margin-bottom: $cadrumo-stack;
+    }
+    /* The heading that OPENS a scroll region takes the SMALLER gap. It has no
+       previous group to separate from, so the section gap buys nothing there
+       -- and on Home it actively costs: the leading heading is only painted
+       at this value. At `0` it lands on the row the session line occupies and
+       is overdrawn; at the section gap it disappears from the frame entirely.
+       Both are measurable at 100x40 and neither is a rhythm problem: the
+       enclosing `height: auto` container mis-places its first child. Until
+       that is fixed, this value is a workaround, not a design choice. */
+    .cadrumo-heading.cadrumo-heading-lead {
+        margin-top: $cadrumo-stack;
+        /* Restated, not inherited: a rule that sets one margin edge here
+           replaces the whole box, so omitting this silently zeroes the gap
+           the heading needs BELOW it and refuses the rhythm entirely. */
+        margin-bottom: $cadrumo-stack;
     }
 
     .cadrumo-banner {

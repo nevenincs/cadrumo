@@ -176,6 +176,25 @@ def _absolute_import_from(node: cst.ImportFrom, module_name: str, *, package_mod
         return None
 
 
+def _absolute_qualified_name(name: str, module_name: str, *, package_module: bool) -> str:
+    """Return a qualified name as an absolute dotted path.
+
+    ``QualifiedNameProvider`` reports a symbol reached through a relative import
+    with the spelling the importing module used -- ``.producer_snapshot.Klass``
+    for ``from .producer_snapshot import Klass``. Operation locators are always
+    absolute, so a relative spelling never compares equal and the reference is
+    silently skipped: the import gets renamed while every annotation that uses
+    it keeps the old name, leaving a tree that no longer type-checks.
+    """
+    if not name.startswith("."):
+        return name
+    package = module_name if package_module else module_name.rpartition(".")[0]
+    try:
+        return importlib.util.resolve_name(name, package)
+    except (ImportError, ValueError):
+        return name
+
+
 def _qualified_names(transformer: _RenameTransformer, node: cst.CSTNode) -> frozenset[QualifiedName]:
     return frozenset(cast("set[QualifiedName]", transformer.get_metadata(QualifiedNameProvider, node, set())))
 
@@ -492,7 +511,12 @@ class _RenameTransformer(cst.CSTTransformer):
             if original_node.value != old_name:
                 continue
             target_names = {old_module, f"{old_module}.{old_name}"}
-            matching = {name for name in names if name.name in target_names}
+            matching = {
+                name
+                for name in names
+                if _absolute_qualified_name(name.name, self.module_name, package_module=self.package_module)
+                in target_names
+            }
             local_definition_reference = (
                 operation.operation_kind == "symbol-rename"
                 and self.module_name == old_module

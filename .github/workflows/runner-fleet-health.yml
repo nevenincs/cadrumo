@@ -17,9 +17,10 @@
 # The host-capability job is the cheap half and the one that earns its keep: it
 # found `gh` unreachable on the macOS runner, because ~/actions-runner/.path
 # omitted /opt/homebrew/bin while .env included it, and `.path` is what the
-# runner applies to job steps. Eight workflows invoke bare `gh` and none install
-# it, so that was a live break on every macOS/ARM leg of packaging-homebrew and
-# packaging-smoke.
+# runner applies to job steps. Four workflows invoke bare `gh` and none install
+# it — packaging-campaign-trigger, packaging-homebrew, packaging-scoop and
+# release-please — so that was a live break on every macOS/ARM leg that reached
+# one of them.
 
 name: Cadrumo Runner Fleet Health
 

@@ -169,7 +169,8 @@ def _taxpayer_type_choice_values() -> tuple[list[str], list[str], list[str], lis
     flag choices never drift from the values the wizard catalogue and
     the profile schema validate against.
     """
-    from ...domain.deadlines.models import EntityType, IrpfEstimationRegime, IrpfIncomeCategory, LegalEntityForm
+    from ...domain.contribuyente.entity_type import EntityType, LegalEntityForm
+    from ...domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory
 
     return (
         [member.value for member in EntityType],
@@ -1663,7 +1664,6 @@ def _ccaa_was_defaulted(
 
 _MODIFY_NO_RESUME_CODE = "config.profile.edit.modify_no_resume"
 _MODIFY_DESCENDANTS_DOOR_CODE = "config.profile.edit.descendants_via_door"
-_DESCENDIENTE_DOOR_COMMAND = "aeat config profile descendiente"
 
 
 def _emit_wizard_success(

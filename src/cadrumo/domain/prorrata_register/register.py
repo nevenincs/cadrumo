@@ -45,6 +45,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ...core.decimal.constants import HUNDRED
 from ...core.errors.hierarchy import CadrumoError as _CadrumoError
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
@@ -66,7 +67,6 @@ class ProrrataRegisterValidationError(ProrrataRegisterError, ValueError):
 PRORRATA_REGISTER_SCHEMA_VERSION = "2"
 """Forward-compatible schema version stamped onto every record in this module."""
 
-_HUNDRED = Decimal("100")
 #: Lowest ejercicio the register accepts. IVA prorrata (LIVA arts. 102-106)
 #: predates it, but a pre-2000 ejercicio can never be a modelled filing year.
 _MIN_EJERCICIO = 2000
@@ -185,7 +185,7 @@ class ProrrataActivityRow(BaseModel):
     operaciones_total: Decimal = Field(ge=Decimal("0"))
     operaciones_con_derecho: Decimal = Field(ge=Decimal("0"))
     prorrata_type: _ProrrataActivityRowType
-    percentage: Decimal = Field(ge=Decimal("0"), le=_HUNDRED)
+    percentage: Decimal = Field(ge=Decimal("0"), le=HUNDRED)
     evidence_reference: str = Field(min_length=1, max_length=256)
 
     @model_validator(mode="after")
@@ -261,10 +261,10 @@ class ProrrataRegisterEntry(BaseModel):
     especial_transition: ProrrataEspecialTransitionEvidence | None
     sector_id: str | None = Field(default=None, min_length=1, max_length=64)
     interrupted: bool = False
-    provisional_percentage: Decimal | None = Field(default=None, ge=Decimal("0"), le=_HUNDRED)
+    provisional_percentage: Decimal | None = Field(default=None, ge=Decimal("0"), le=HUNDRED)
     provisional_provenance: _ProrrataProvisionalProvenance | None = None
     authorisation_reference: str | None = Field(default=None, min_length=1)
-    definitive_percentage: Decimal | None = Field(default=None, ge=Decimal("0"), le=_HUNDRED)
+    definitive_percentage: Decimal | None = Field(default=None, ge=Decimal("0"), le=HUNDRED)
     definitive_volume_con_derecho: Decimal | None = Field(default=None, ge=Decimal("0"))
     definitive_volume_sin_derecho: Decimal | None = Field(default=None, ge=Decimal("0"))
     source_observation_ref: str | None = Field(default=None, min_length=1)

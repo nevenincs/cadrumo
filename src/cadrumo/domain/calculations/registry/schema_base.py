@@ -438,7 +438,31 @@ class DateAxis(StrEnum):
     """The date the declaration was submitted."""
 
 
+class ThresholdComparison(StrEnum):
+    """How a dated value is compared when it is used as a threshold.
+
+    A provision can be redrafted so that only the COMPARISON changes: LIVA art.
+    103.Dos.2 read "exceda en un 20 por 100" until 2014 and "exceda en un 10 por
+    ciento o mas" from 2015, and the added "o mas" moves the boundary case from
+    excluded to included. A value alone cannot express that, so two redactions of
+    one provision could not be two dated values while the operator lived in code.
+
+    EXCLUSIVE is the default because it is the semantics every shipped value is
+    read with today, so declaring the field changes no existing meaning.
+    """
+
+    EXCLUSIVE = "exclusive"
+    """The threshold is met only when the compared amount is strictly beyond it."""
+
+    INCLUSIVE = "inclusive"
+    """The threshold is met when the compared amount reaches it."""
+
+
 DateAxisField = Annotated[DateAxis, BeforeValidator(coerce_enum_member(DateAxis))]
+ThresholdComparisonField = Annotated[
+    ThresholdComparison,
+    BeforeValidator(coerce_enum_member(ThresholdComparison)),
+]
 """Registry date-axis token hydrated into a member.
 
 Registry schema models validate strictly, which refuses a bare TOML string for an

@@ -18,7 +18,6 @@ from .errors import ModeloError
 from .filing_record import ModeloRecord, ModeloRecordCatalogue
 
 _LOGGER = get_logger(__name__)
-_FILING_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_filing_record_persistence"
 
 
 class ModeloRecordPersistenceError(ModeloError):

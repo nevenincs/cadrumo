@@ -142,15 +142,53 @@ def _is_transcribed_value(value: ast.expr) -> bool:
     return False
 
 
+def _name_words(name: str) -> set[str]:
+    """Split an identifier into its lowercase word components.
+
+    Handles snake_case and camelCase, so ``resumeSession`` and
+    ``resume_session`` both yield ``resume``.
+    """
+    words: list[str] = []
+    current = ""
+    for character in name:
+        if character.isupper() and current:
+            words.append(current)
+            current = character.lower()
+        elif character.isalnum():
+            current += character.lower()
+        else:
+            if current:
+                words.append(current)
+            current = ""
+    if current:
+        words.append(current)
+    return set(words)
+
+
 def _is_calculation(value: ast.expr) -> bool:
-    """Whether an expression performs arithmetic or invokes a calculation primitive."""
+    """Whether an expression performs arithmetic or invokes a calculation primitive.
+
+    ``sum`` is matched as a WORD, not a substring. Matched as a substring it
+    also caught ``resume``, ``consume``, ``assume`` and ``summary`` - all of
+    which occur in this tree, ``resume_profile_session`` among them - so an
+    adapter merely resuming a session was classified as computing a tax base
+    and reported as a hexagonal leak.
+
+    The longer tokens stay substring matches on purpose: they have no common
+    false friends, and matching them loosely keeps ``recalculate`` and
+    ``precompute`` in scope.
+    """
     if isinstance(value, (ast.BinOp, ast.UnaryOp)):
         return True
     if not isinstance(value, ast.Call):
         return False
     name = _call_name(value)
-    if name is not None and any(token in name.lower() for token in ("calculate", "compute", "derive", "sum")):
-        return True
+    if name is not None:
+        lowered = name.lower()
+        if any(token in lowered for token in ("calculate", "compute", "derive")):
+            return True
+        if _name_words(name) & {"sum", "sums"}:
+            return True
     return any(_is_calculation(argument) for argument in value.args)
 
 

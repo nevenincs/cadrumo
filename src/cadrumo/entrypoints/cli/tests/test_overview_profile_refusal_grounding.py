@@ -212,7 +212,7 @@ def test_a_natural_person_without_income_categories_is_told_about_the_categories
     The entity type IS declared here, so naming it would send the operator
     back to a box they already answered.
     """
-    from ....domain.deadlines.models import EntityType
+    from ....domain.contribuyente.entity_type import EntityType
 
     refusal = _undeclared_taxpayer_model_refusal(_profile(entity_type=EntityType.NATURAL_PERSON))
 

@@ -125,7 +125,7 @@ def _run_exact_commands(
                 f"post-apply command failed: argv={outcome.argv!r}, return_code={outcome.return_code}, "
                 f"stdout_sha256={outcome.stdout_sha256}, stderr_sha256={outcome.stderr_sha256}"
             )
-    if outcomes != expected:
+    if _command_verdicts(outcomes) != _command_verdicts(expected):
         raise ObjectNameReplayError("post-apply command output evidence differs from the receipt")
     return outcomes
 
@@ -332,6 +332,23 @@ def _restore(
         raise ObjectNameReplayError("rollback was incomplete: " + "; ".join(failures))
 
 
+def _command_verdicts(
+    outcomes: tuple[ObjectNameGateOutcome, ...],
+) -> tuple[tuple[str, tuple[str, ...], int], ...]:
+    """Reduce recorded command evidence to the part a replay can reproduce.
+
+    A gate's verdict is its return code; its chatter is not evidence. The
+    recorded stdout/stderr digests stay on the outcome because a refusal message
+    quotes them, but they cannot participate in this equality: the declared
+    gates include pytest, whose ``-q`` summary prints its own elapsed time, so
+    two runs of an unchanged tree differ by the wall clock alone. Comparing the
+    digests here made every replay refuse regardless of the manifest. What the
+    transformation actually did is still compared byte for byte through
+    ``proposed_file_digests``, ``changed_paths`` and ``finding_delta``.
+    """
+    return tuple((str(outcome.family), tuple(outcome.argv), outcome.return_code) for outcome in outcomes)
+
+
 def replay_object_name_component(
     manifest: ObjectNameRenameManifest,
     *,
@@ -346,7 +363,7 @@ def replay_object_name_component(
     if is_link_like(raw_root):
         raise ObjectNameReplayError(f"live replay root is link-like: {raw_root}")
     root = raw_root.resolve()
-    if not (root / ".git").is_dir() or not (root / "src").is_dir() or not (root / "dev").is_dir():
+    if not (root / ".git").exists() or not (root / "src").is_dir() or not (root / "dev").is_dir():
         raise ObjectNameReplayError(f"live replay root is not a repository worktree: {root}")
     if receipt.manifest_digest != object_name_manifest_digest(manifest):
         raise ObjectNameReplayError("receipt manifest digest differs from the supplied manifest")
@@ -370,15 +387,15 @@ def replay_object_name_component(
         exact.changed_paths,
         exact.finding_delta,
         exact.tool_versions,
-        exact.generator_outcomes,
-        exact.gate_outcomes,
+        _command_verdicts(exact.generator_outcomes),
+        _command_verdicts(exact.gate_outcomes),
     ) != (
         receipt.proposed_file_digests,
         receipt.changed_paths,
         receipt.finding_delta,
         receipt.tool_versions,
-        receipt.generator_outcomes,
-        receipt.gate_outcomes,
+        _command_verdicts(receipt.generator_outcomes),
+        _command_verdicts(receipt.gate_outcomes),
     ):
         raise ObjectNameReplayError("regenerated transformation or verification differs from the receipt")
     reviewed_paths = tuple(

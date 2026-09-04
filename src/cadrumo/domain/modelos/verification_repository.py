@@ -25,7 +25,6 @@ if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     pass
 
 _LOGGER = get_logger(__name__)
-_VERIFICATION_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_verification_report_persistence"
 
 
 class VerificationReportPersistenceError(ModeloError):

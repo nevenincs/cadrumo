@@ -6,7 +6,7 @@ from datetime import date
 from enum import StrEnum
 from typing import Annotated, Final, Literal
 
-from pydantic import AfterValidator, AnyHttpUrl, BeforeValidator, Field, TypeAdapter, field_validator, model_validator
+from pydantic import AfterValidator, BeforeValidator, Field, field_validator, model_validator
 
 from ....core.external_constants import (
     PDF_EXTENSION,
@@ -19,6 +19,7 @@ from ....core.identity import ContentDigest
 from ....core.period import RegistryPeriodCode, RegistrySelectorPeriodCode
 from ....core.record_design_epoch import RECORD_DESIGN_EPOCH_RE
 from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
+from ....core.url_validation import ANY_HTTP_URL_ADAPTER
 from .errors import RegistryValidationError
 from .ids import LegalRefId, ModeloId, ParameterId, RevisionId, SourceRefId
 from .schema_base import (
@@ -48,12 +49,9 @@ __all__ = [
 ]
 
 
-_HTTP_URL_ADAPTER = TypeAdapter(AnyHttpUrl)
-
-
 def _validate_registry_external_link(value: str) -> str:
     """Validate one authoritative link while retaining registry string semantics."""
-    parsed = _HTTP_URL_ADAPTER.validate_python(value)
+    parsed = ANY_HTTP_URL_ADAPTER.validate_python(value)
     if parsed.scheme != "https":
         raise RegistryValidationError(f"registry external link scheme must be https, got {parsed.scheme!r}")
     return str(parsed)

@@ -32,6 +32,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, NoReturn
 
 from ....core.casilla_id import CasillaId
+from ....core.decimal.constants import ZERO
 from ....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
 from ...contribuyente.renta_codes import UE_EEA_COUNTRY_CODES
 from .convenio import ConvenioOverride
@@ -57,8 +58,6 @@ if TYPE_CHECKING:
     from .formula_runtime import EvalContext
 
     _EvalContext = EvalContext
-
-_ZERO = Decimal("0")
 
 
 @dataclass(frozen=True, slots=True)
@@ -247,7 +246,7 @@ def _apply_convenio_override(override: ConvenioOverride, *, baseline_rate: Decim
     """Apply a non-pension treaty override to the domestic baseline rate."""
     kind = override.kind
     if kind is ConvenioOverrideKind.EXEMPT:
-        return _ZERO
+        return ZERO
     if kind is ConvenioOverrideKind.ALLOCATION_DOMESTIC_TARIFF:
         return baseline_rate
     if override.rate is None:
@@ -271,7 +270,7 @@ def _irnr_pension_effective_rate(
         if override is None:
             return None
         if override.kind is ConvenioOverrideKind.EXEMPT:
-            return _ZERO
+            return ZERO
         if override.kind is ConvenioOverrideKind.FLAT and override.rate is not None:
             return override.rate
         if override.kind is ConvenioOverrideKind.CEILING and override.rate is not None:
@@ -304,8 +303,8 @@ def _m210_effective_rate_from_tariff(
     ctx.operand_refs.append(tariff_parameter_id)
     cuota = _resolve_bracket(tariff_parameter, base, ctx.date_context)
     ctx.operand_values.append(cuota)
-    if base == _ZERO:
-        return _ZERO
+    if base == ZERO:
+        return ZERO
     return cuota / base
 
 
@@ -326,7 +325,7 @@ def evaluate_m210_resolve_base_imponible(expression: FormulaExpression, ctx: _Ev
     country = (ctx.enum_binding_values.get(args.country_binding) or "").upper()
     ctx.operand_refs.append(args.country_binding)
     deductible_expenses = _numeric_casilla_value(args.deductible_expenses_casilla_id, ctx)
-    if deductible_expenses < _ZERO:
+    if deductible_expenses < ZERO:
         raise RegistryValidationError(
             "M210 gastos_deducibles must be non-negative",
             translated_message="errors.calc.m210_gastos_deducibles_negative",
@@ -334,7 +333,7 @@ def evaluate_m210_resolve_base_imponible(expression: FormulaExpression, ctx: _Ev
         )
     if tipo_renta != "inmobiliaria":
         gross = _numeric_casilla_value(args.gross_casilla_id, ctx)
-        if deductible_expenses == _ZERO:
+        if deductible_expenses == ZERO:
             return gross
         if not _m210_allows_art_24_6_expenses(tipo_renta=tipo_renta, country_code=country):
             raise RegistryValidationError(
@@ -347,7 +346,7 @@ def evaluate_m210_resolve_base_imponible(expression: FormulaExpression, ctx: _Ev
                 },
             )
         return gross - deductible_expenses
-    if deductible_expenses != _ZERO:
+    if deductible_expenses != ZERO:
         raise RegistryValidationError(
             "M210 imputed real-estate own-use base cannot deduct gastos_deducibles",
             translated_message="errors.calc.m210_gastos_deducibles_not_allowed",
@@ -361,7 +360,7 @@ def evaluate_m210_resolve_base_imponible(expression: FormulaExpression, ctx: _Ev
     days = _m210_imputation_days(args.imputation_days_casilla_id, ctx)
     days_fraction = days / Decimal(_m210_days_in_filing_year(ctx.filing_year))
     catastral_value = _numeric_casilla_value(args.catastral_value_casilla_id, ctx)
-    if catastral_value > _ZERO:
+    if catastral_value > ZERO:
         recent_rate = _resolve_scalar_parameter(
             args.recent_rate_parameter,
             ctx,
@@ -389,7 +388,7 @@ def evaluate_m210_resolve_base_imponible(expression: FormulaExpression, ctx: _Ev
     acquisition_value = _numeric_casilla_value(args.acquisition_value_casilla_id, ctx)
     administrative_value = _numeric_casilla_value(args.administrative_value_casilla_id, ctx)
     substitute_value = max(acquisition_value, administrative_value)
-    if substitute_value <= _ZERO:
+    if substitute_value <= ZERO:
         raise RegistryValidationError(
             "M210 inmobiliaria without cadastral value requires a positive acquisition or administrative checked value",
             translated_message="errors.calc.m210_imputation_no_catastral_value_missing",
@@ -476,7 +475,7 @@ def _m210_allows_art_24_6_expenses(*, tipo_renta: str, country_code: str) -> boo
 def _m210_imputation_days(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:
     days = _numeric_casilla_value(casilla_id, ctx)
     year_days = Decimal(_m210_days_in_filing_year(ctx.filing_year))
-    if days != days.to_integral_value() or days <= _ZERO or days > year_days:
+    if days != days.to_integral_value() or days <= ZERO or days > year_days:
         raise RegistryValidationError(
             f"M210 inmobiliaria imputation days must be an integer in [1, {year_days}]",
             translated_message="errors.calc.m210_imputation_days_invalid",

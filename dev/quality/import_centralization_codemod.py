@@ -49,13 +49,18 @@ from typing import Final
 
 from cadrumo.core.directory_scan import scan_directory
 
+# Imported through the package rather than by inserting this directory on
+# ``sys.path`` and importing the bare name. That loaded the sibling as a
+# TOP-LEVEL module, so its own ``from .._paths import ...`` had no parent
+# package and raised - which made this codemod unimportable by any route,
+# including ``python -m``. A tool that rewrites source files behind an
+# ``--apply`` flag had been dead for as long as nothing imported it.
+from . import import_hygiene_scan as scan
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = REPO_ROOT / "src"
 PKG_ROOT = SRC_ROOT / "cadrumo"
 _UTF_8: Final[str] = "utf-8"
-
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import import_hygiene_scan as scan  # noqa: E402
 
 
 @dataclass

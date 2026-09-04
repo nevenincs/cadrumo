@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from .command_spec import (
+    TEXT_VALUE,
+    WHOLE_NUMBER_VALUE,
     ArgumentSpec,
     CommandNodeKind,
     CommandSpec,
@@ -32,8 +34,6 @@ _CALCULATION_WRITE = ExecutionPolicySpec(
     "compute",
     CommandWriteRoute.PROFILE_BOUND,
 )
-_STR = ValueContract(DeferredTarget("builtins", "str"))
-_INT = ValueContract(DeferredTarget("builtins", "int"))
 _LANGUAGE = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
 _MODELO = ValueContract(
     DeferredTarget("builtins", "str"),
@@ -98,10 +98,10 @@ def _leaf(
 
 _ADDRESS_OPTIONS = (
     _option("modelo", ("--modelo",), _MODELO, "cli.app.modelo.work.modelo_help"),
-    _option("year", ("--year",), _INT, "cli.app.modelo.work.year_help"),
-    _option("period", ("--period",), _STR, "cli.app.modelo.work.period_help"),
-    _option("revision", ("--revision",), _STR, "cli.app.modelo.work.revision_help"),
-    _option("bucket_id", ("--bucket-id",), _STR, "cli.app.modelo.work.bucket_id_help"),
+    _option("year", ("--year",), WHOLE_NUMBER_VALUE, "cli.app.modelo.work.year_help"),
+    _option("period", ("--period",), TEXT_VALUE, "cli.app.modelo.work.period_help"),
+    _option("revision", ("--revision",), TEXT_VALUE, "cli.app.modelo.work.revision_help"),
+    _option("bucket_id", ("--bucket-id",), TEXT_VALUE, "cli.app.modelo.work.bucket_id_help"),
 )
 
 MODELO_CORE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
@@ -126,7 +126,7 @@ MODELO_CORE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "work_compare_taxation",
         (
             ArgumentSpec(
-                "work_unit_id", _STR, ParameterDefault.value(None), _key("cli.app.modelo.work.work_unit_id_help")
+                "work_unit_id", TEXT_VALUE, ParameterDefault.value(None), _key("cli.app.modelo.work.work_unit_id_help")
             ),
             *_ADDRESS_OPTIONS,
             _option(
@@ -150,7 +150,7 @@ MODELO_CORE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         (
             ArgumentSpec(
                 "work_unit_id",
-                _STR,
+                TEXT_VALUE,
                 ParameterDefault.value(None),
                 _key("cli.app.modelo.work.history_work_unit_id_help"),
             ),
@@ -177,22 +177,22 @@ MODELO_CORE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option(
                 "from_filing_record_id",
                 ("--from-filing-record",),
-                _STR,
+                TEXT_VALUE,
                 "cli.app.modelo.work.from_filing_record_help",
             ),
             _option("kind", ("--kind",), _AMENDMENT_KIND, "cli.app.modelo.work.amendment_kind_help"),
-            _option("reason", ("--reason",), _STR, "cli.app.modelo.work.amendment_reason_help"),
+            _option("reason", ("--reason",), TEXT_VALUE, "cli.app.modelo.work.amendment_reason_help"),
             _option(
                 "m303_rectificativa_motive",
                 ("--m303-rectificativa-motive",),
                 _M303_MOTIVE,
                 "cli.app.modelo.work.m303_rectificativa_motive_help",
             ),
-            _option("actor", ("--by",), _STR, "cli.app.modelo.work.actor_help"),
+            _option("actor", ("--by",), TEXT_VALUE, "cli.app.modelo.work.actor_help"),
             _option(
                 "set_overrides",
                 ("--set",),
-                _STR,
+                TEXT_VALUE,
                 "cli.app.modelo.work.set_override_help",
                 multiple=True,
             ),
@@ -216,8 +216,8 @@ MODELO_CORE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 ParameterDefault.required(),
                 _key("cli.app.modelo.history.modelo_help"),
             ),
-            _option("year", ("--year",), _INT, "cli.app.modelo.history.year_help"),
-            _option("period", ("--period",), _STR, "cli.app.modelo.history.period_help"),
+            _option("year", ("--year",), WHOLE_NUMBER_VALUE, "cli.app.modelo.history.year_help"),
+            _option("period", ("--period",), TEXT_VALUE, "cli.app.modelo.history.period_help"),
         ),
         _MODEL_READ,
         "cadrumo.entrypoints.cli._modelo_payloads",

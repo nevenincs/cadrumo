@@ -14,6 +14,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ....core.casilla_id import CasillaId
+from ....core.decimal.constants import ONE, ZERO
 from .errors import RegistryValidationError
 from .formula_runtime_ops import (
     numeric_casilla_value as _numeric_casilla_value,
@@ -26,9 +27,6 @@ from .schema_formula import FormulaExpression
 
 if TYPE_CHECKING:
     from .formula_runtime import EvalContext as _EvalContext
-
-_ZERO = Decimal("0")
-_ONE = Decimal("1")
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,7 +67,7 @@ def evaluate_m100_resolve_renta_inmobiliaria_imputada(
     mixed_use_days = _numeric_casilla_value(args.mixed_use_days_casilla_id, ctx)
     is_revised = _m100_revised_cadastral_value_flag(args.revised_flag_casilla_id, ctx)
 
-    if catastral_value < _ZERO:
+    if catastral_value < ZERO:
         raise RegistryValidationError(
             "M100 Art.85 valor catastral must be non-negative",
             translated_message="errors.calc.m100_art85_catastral_value_negative",
@@ -80,14 +78,14 @@ def evaluate_m100_resolve_renta_inmobiliaria_imputada(
         (args.disposal_percentage_casilla_id, disposal_percentage),
         (args.mixed_use_days_casilla_id, mixed_use_days),
     ):
-        if value < _ZERO:
+        if value < ZERO:
             raise RegistryValidationError(
                 "M100 Art.85 numeric inputs must be non-negative",
                 translated_message="errors.calc.m100_art85_input_negative",
                 context={"casilla_id": casilla_id, "value": str(value)},
             )
-    if catastral_value == _ZERO:
-        if disposal_days > _ZERO or mixed_use_days > _ZERO or mixed_use or disposal_percentage > _ZERO:
+    if catastral_value == ZERO:
+        if disposal_days > ZERO or mixed_use_days > ZERO or mixed_use or disposal_percentage > ZERO:
             raise RegistryValidationError(
                 "M100 Art.85 no-catastral imputation requires substitute-base casillas that are not "
                 "present in the 0083-0089 registry row",
@@ -98,7 +96,7 @@ def evaluate_m100_resolve_renta_inmobiliaria_imputada(
                     "mixed_use_days_casilla_id": args.mixed_use_days_casilla_id,
                 },
             )
-        return _ZERO
+        return ZERO
 
     effective_days = mixed_use_days if mixed_use else disposal_days
     year_days = _resolve_scalar_parameter(args.year_days_parameter, ctx, op=op)
@@ -108,7 +106,7 @@ def evaluate_m100_resolve_renta_inmobiliaria_imputada(
         max_days=year_days,
         max_days_parameter_id=args.year_days_parameter,
     )
-    if not mixed_use and (mixed_use_days != _ZERO or disposal_percentage != _ZERO):
+    if not mixed_use and (mixed_use_days != ZERO or disposal_percentage != ZERO):
         raise RegistryValidationError(
             "M100 Art.85 mixed-use days or percentage require casilla 0086 to be checked",
             translated_message="errors.calc.m100_art85_mixed_use_inputs_without_flag",
@@ -118,9 +116,9 @@ def evaluate_m100_resolve_renta_inmobiliaria_imputada(
                 "disposal_percentage_casilla_id": args.disposal_percentage_casilla_id,
             },
         )
-    share = _ONE
+    share = ONE
     if mixed_use:
-        if disposal_percentage <= _ZERO or disposal_percentage > Decimal("100"):
+        if disposal_percentage <= ZERO or disposal_percentage > Decimal("100"):
             raise RegistryValidationError(
                 "M100 Art.85 mixed-use percentage must be in (0, 100]",
                 translated_message="errors.calc.m100_art85_disposal_percentage_invalid",
@@ -201,13 +199,13 @@ def _m100_revised_cadastral_value_flag(casilla_id: CasillaId, ctx: _EvalContext)
 
 def _m100_boolean_casilla_value(casilla_id: CasillaId, ctx: _EvalContext, *, op: str) -> bool:
     value = _numeric_casilla_value(casilla_id, ctx)
-    if value not in {_ZERO, _ONE}:
+    if value not in {ZERO, ONE}:
         raise RegistryValidationError(
             "M100 Art.85 boolean casilla must be 0 or 1",
             translated_message="errors.calc.m100_art85_boolean_invalid",
             context={"casilla_id": casilla_id, "value": str(value), "op": op},
         )
-    return value == _ONE
+    return value == ONE
 
 
 def _m100_validate_imputation_days(
@@ -217,13 +215,13 @@ def _m100_validate_imputation_days(
     max_days: Decimal,
     max_days_parameter_id: ParameterId,
 ) -> None:
-    if max_days != max_days.to_integral_value() or max_days <= _ZERO or max_days > Decimal("366"):
+    if max_days != max_days.to_integral_value() or max_days <= ZERO or max_days > Decimal("366"):
         raise RegistryValidationError(
             "M100 Art.85 imputation year-days parameter must be an integer in [1, 366]",
             translated_message="errors.calc.m100_art85_imputation_days_invalid",
             context={"parameter_id": max_days_parameter_id, "value": str(max_days), "max_days": "366"},
         )
-    if days != days.to_integral_value() or days <= _ZERO or days > max_days:
+    if days != days.to_integral_value() or days <= ZERO or days > max_days:
         raise RegistryValidationError(
             f"M100 Art.85 imputation days must be an integer in [1, {max_days}]",
             translated_message="errors.calc.m100_art85_imputation_days_invalid",
@@ -305,9 +303,9 @@ def _m100_eo_agraria_read_indice(casilla_id: CasillaId, ctx: _EvalContext) -> De
         ctx.operand_casilla_refs.append(casilla_id)
         raw_text = ctx.text_values[casilla_id].strip()
         try:
-            value = Decimal(raw_text) if raw_text else _ZERO
+            value = Decimal(raw_text) if raw_text else ZERO
         except ArithmeticError:
-            value = _ZERO
+            value = ZERO
         ctx.operand_values.append(value)
         return value
     return _numeric_casilla_value(casilla_id, ctx)
@@ -352,12 +350,12 @@ def evaluate_m100_resolve_eo_agraria_indices_correctores(
     minorado = _numeric_casilla_value(args.minorado_casilla_id, ctx)
     ctx.operand_refs.append(args.minorado_casilla_id)
     ctx.operand_casilla_refs.append(args.minorado_casilla_id)
-    if minorado <= _ZERO:
+    if minorado <= ZERO:
         return minorado
     rendimiento = minorado
     for indice_casilla_id in args.indice_casilla_ids:
         indice = _m100_eo_agraria_read_indice(indice_casilla_id, ctx)
-        if indice <= _ZERO:
+        if indice <= ZERO:
             continue
         rendimiento = rendimiento * indice
     return rendimiento

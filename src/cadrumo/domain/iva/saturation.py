@@ -52,15 +52,12 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
+from ...core.decimal.constants import HUNDRED, ONE, ZERO
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents
 from .errors import IvaRateNotFoundError
 from .lookup import coexisting_tier_rates, lookup_rate
 from .schema import EUMemberState, IvaCategory, IvaRateKind, IvaRateRecord
-
-_ONE_HUNDRED = Decimal("100")
-_ONE = Decimal("1")
-_ZERO = Decimal("0")
 
 # Spanish domestic categories whose rate is a single registry rate tier.
 # Maps the operator-/LLM-selected IvaCategory onto the IvaRateKind whose
@@ -217,8 +214,8 @@ class IvaRateResolution(BaseModel):
     derivable: bool = Field(description="Whether a domestic rate fraction was derived.")
     rate: Decimal | None = Field(
         default=None,
-        ge=_ZERO,
-        le=_ONE,
+        ge=ZERO,
+        le=ONE,
         description="Applicable IVA rate as a decimal fraction in [0, 1], or None.",
     )
     rate_kind: IvaRateKind | None = Field(
@@ -280,7 +277,7 @@ def resolve_category_rate(category: IvaCategory, *, on_date: date) -> IvaRateRes
         return IvaRateResolution(
             category=category,
             derivable=True,
-            rate=_ZERO,
+            rate=ZERO,
             rate_kind=rate_kind,
             reason="",
         )
@@ -288,7 +285,7 @@ def resolve_category_rate(category: IvaCategory, *, on_date: date) -> IvaRateRes
     return IvaRateResolution(
         category=category,
         derivable=True,
-        rate=record.pct / _ONE_HUNDRED,
+        rate=record.pct / HUNDRED,
         rate_kind=rate_kind,
         reason="",
     )
@@ -318,10 +315,10 @@ def split_gross_at_rate(gross: Decimal, rate: Decimal) -> tuple[Decimal, Decimal
         A ``(taxable_base, iva_amount)`` tuple, each quantised to euro
         cents, whose sum equals ``round_to_cents(gross)`` to the cent.
     """
-    if rate == _ZERO:
+    if rate == ZERO:
         base = round_to_cents(gross)
         return base, round_to_cents(gross - base)
-    base = round_to_cents(gross / (_ONE + rate))
+    base = round_to_cents(gross / (ONE + rate))
     return base, round_to_cents(gross - base)
 
 

@@ -172,12 +172,11 @@ the container runners are covered instead by `just runner-image-test`.
 
 What counts as "assumed" is measured, not guessed. Parsing the `run:` blocks of
 every workflow shows `uv`, `just`, and `node` are each installed by a pinned
-setup action, while **`gh` is invoked by eight workflows and installed by none**
-(`publish-release`, `release-orchestrator`, `release-soak-promoter`,
-`packaging-smoke`, `packaging-scoop`, `packaging-claude`, `packaging-homebrew`,
-`packaging-campaign-trigger`). `packaging-scoop` requests the `windows-scoop`
-label that no runner carries, so that lane never schedules and `scoop` is
-deliberately not probed.
+setup action, while **`gh` is invoked by four workflows and installed by none**
+(`packaging-campaign-trigger`, `packaging-homebrew`, `packaging-scoop` and
+`release-please`). `packaging-scoop` requests the `windows-scoop` label that no
+runner carries, so that lane never schedules and `scoop` is deliberately not
+probed.
 
 **`.path` beats `.env`, and that is how `gh` went missing on macOS.** The runner
 root can hold both files. `.env` sets the service environment; `.path` sets the
@@ -251,10 +250,10 @@ Baking it into the image removes the failure mode entirely.
 **`gh` is assumed present the way it is on GitHub-hosted runners, and the
 upstream image does not ship it.** The image carries `jq`, `git`, `curl`, `tar`
 and the docker client only. Workflows install `just` and `uv` themselves through
-actions, but nothing installs `gh`; when it is absent
-`dev.release.version_identity` fails its forge check with `REFUSED: forge check
-needs the gh CLI on PATH`, which surfaces mid-release as a cohort-seal failure
-rather than as a missing-tool error. The `runner` stage pins the current
+actions, but nothing installs `gh`; the acquisition and campaign lanes that run
+on this fleet invoke it directly, so when it is absent they fail mid-lane with a
+command-not-found inside a step that never names the missing tool. The `runner`
+stage pins the current
 upstream release (Ubuntu 24.04's own package is several minor versions behind)
 and installs it to `/usr/local/bin`.
 

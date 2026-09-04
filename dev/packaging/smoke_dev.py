@@ -16,6 +16,7 @@ from ._smoke_common import (
     require_executable,
     resolve_work_dir,
     run_checked,
+    run_checked_marker,
     venv_bin_dir,
     venv_cadrumo_path,
     venv_python_path,
@@ -87,9 +88,21 @@ def _sync_dev_environment(repo_root: Path, work_dir: Path, uv: str, python: str)
     record_proof("pip dependency check")
 
 
-def _assert_dev_commands(work_dir: Path, venv: Path) -> None:
-    """Verify the declared developer command surface starts in the clean venv."""
-    for command in _DEV_COMMANDS:
+def _assert_dev_commands(
+    work_dir: Path,
+    venv: Path,
+    commands: tuple[tuple[str, ...], ...] = _DEV_COMMANDS,
+) -> None:
+    """Verify the declared developer command surface starts in the clean venv.
+
+    The proof is recorded only once a command has actually run. Recorded
+    unconditionally after the loop, an emptied command list would have
+    satisfied the manifest proof contract having started nothing - and that
+    contract exists precisely to stop a claim appearing without its assertion.
+    """
+    if not commands:
+        raise SystemExit("the developer command surface is empty; this lane would prove nothing")
+    for command in commands:
         executable, *args = command
         run_checked([_venv_script(venv, executable), *args], cwd=work_dir)
     record_proof("developer command surface")
@@ -107,7 +120,7 @@ import yaml
 
 print("dev-imports-ok")
 """
-    run_checked([str(venv_python_path(venv)), "-c", code], cwd=work_dir)
+    run_checked_marker([str(venv_python_path(venv)), "-c", code], cwd=work_dir, marker="dev-imports-ok")
     record_proof("dev optional runtime imports")
 
 

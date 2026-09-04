@@ -39,11 +39,8 @@ from .ledger_business_payloads import EvidenceConsentListResult, EvidenceConsent
 
 _UNRECALLABLE_LOCALE_KEY = "cli.app.ledger.evidence.consent.bytes_unrecallable"
 _NO_HISTORY_LOCALE_KEY = "cli.app.ledger.evidence.consent.no_history"
-_LIST_HELP_LOCALE_KEY = "cli.app.ledger.evidence.consent.list_help"
-_REDERIVE_HELP_LOCALE_KEY = "cli.app.ledger.evidence.consent.rederive_help"
 _REDERIVED_LOCALE_KEY = "cli.app.ledger.evidence.consent.rederived"
 _REDERIVE_REFUSED_LOCALE_KEY = "cli.app.ledger.evidence.consent.rederive_refused"
-_GROUP_HELP_LOCALE_KEY = "cli.app.ledger.evidence.consent.group_help"
 
 
 def _unrecallable_notice() -> Notice:

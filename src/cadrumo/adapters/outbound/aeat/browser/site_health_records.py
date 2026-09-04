@@ -32,13 +32,13 @@ from pydantic import (
     AwareDatetime,
     BaseModel,
     Field,
-    TypeAdapter,
     field_validator,
 )
 
 from .....core.errors.hierarchy import SiteHealthState
 from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.redaction.rules import redact_for_log
+from .....core.url_validation import ANY_HTTP_URL_ADAPTER
 from .errors import BrowserValidationError
 
 _MAX_HTML_FRAGMENT_CHARS: Final = 4096
@@ -125,10 +125,9 @@ class SiteHealthStatus(_SiteHealthRecord):
     retry_after_seconds: int | None = Field(default=None, ge=1)
 
 
-_URL_ADAPTER: TypeAdapter[AnyHttpUrl] = TypeAdapter(AnyHttpUrl)
 """Module-level adapter used by parser call sites to validate URLs."""
 
 
 def parse_site_health_url(value: str) -> AnyHttpUrl:
     """Validate one URL for a concrete site-health evidence record."""
-    return _URL_ADAPTER.validate_python(value)
+    return ANY_HTTP_URL_ADAPTER.validate_python(value)

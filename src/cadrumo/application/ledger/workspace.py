@@ -39,7 +39,7 @@ from ...domain.transactions.enums import TransactionLifecycleState
 from ...domain.transactions.models import TransactionCatalogue
 from ..review.filter import LedgerReviewStatus
 from .actions_manual import ledger_transaction_review_payload
-from .models import LedgerReviewQueryResult, LedgerStatusReport
+from .models import LedgerReviewQueryResult, LedgerStatusReport, LedgerTransactionReviewPayload
 from .preflight import LedgerPreflightReport
 
 LEDGER_WORKSPACE_CONTRACT_VERSION: Final[int] = 1
@@ -120,16 +120,47 @@ class LedgerWorkspaceAreaStateV1(BaseModel):
 
 
 class LedgerWorkspaceEntryRefV1(BaseModel):
-    """Safe semantic coordinate for one local Ledger entry."""
+    """One local Ledger entry, as the operator's own record.
+
+    This carries the entry's substance, not a coordinate pointing at it. The
+    surface that reads this projection is reached only through an
+    authenticated session over the operator's own ledger, so withholding the
+    date, amount, counterparty or classification withholds nothing from an
+    adversary and everything from the person doing the work: an opaque
+    identifier and a status word cannot be reviewed, and review is what the
+    surface is for.
+
+    Storage and transport rules are untouched by this. Nothing here weakens
+    encryption at rest, and a diagnostic or log record -- which can travel
+    somewhere an authenticated session does not -- keeps its own redaction.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: TransactionId
     review_status: str
+    date: str
+    amount: str
+    currency: str
+    direction: str
+    counterparty: str
+    description: str
+    business_classification: str
 
 
 class LedgerInvoiceReconciliationRefV1(BaseModel):
-    """Safe coordinate for one suggested local invoice/entry link."""
+    """One suggested invoice/entry link, with the values it was suggested on.
+
+    The booleans alone are unreviewable. `amount_match=True` asks the operator
+    to confirm a link while withholding the two amounts that supposedly match,
+    and `amount_match=False` is worse: it reports a disagreement without
+    saying between what and what. A suggestion is a claim the operator is meant
+    to ADJUDICATE, and adjudicating it means seeing both sides.
+
+    Both values are local records the session is already authenticated for, and
+    both are in scope where the suggestion is built -- they were being
+    discarded, not protected.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -138,6 +169,10 @@ class LedgerInvoiceReconciliationRefV1(BaseModel):
     amount_match: bool
     counterparty_match: bool
     score: str
+    invoice_total: str
+    transaction_amount: str
+    invoice_counterparty: str
+    transaction_counterparty: str
 
 
 class LedgerLinkInconsistencyRefV1(BaseModel):
@@ -317,10 +352,7 @@ def project_ledger_workspace(
     )
 
     entries = tuple(
-        LedgerWorkspaceEntryRefV1(
-            transaction_id=transaction.transaction_id,
-            review_status=ledger_transaction_review_payload(transaction).review_status,
-        )
+        _entry_ref(ledger_transaction_review_payload(transaction))
         for transaction in sorted(transactions.values(), key=lambda item: item.transaction_id)
     )
     review_ids = tuple(row.id for row in review.rows)
@@ -331,6 +363,10 @@ def project_ledger_workspace(
             amount_match=row.amount_match,
             counterparty_match=row.counterparty_match,
             score=str(row.score),
+            invoice_total=str(invoices.invoices[row.invoice_id].grand_total),
+            transaction_amount=str(transactions.transactions[row.transaction_id].raw.amount),
+            invoice_counterparty=invoices.invoices[row.invoice_id].counterparty_name or "",
+            transaction_counterparty=transactions.transactions[row.transaction_id].raw.counterparty or "",
         )
         for row in invoice_reconciliation_reader(invoices, transactions)
     )
@@ -415,6 +451,21 @@ def project_ledger_workspace(
         invoice_reconciliations=suggestions,
         link_inconsistencies=inconsistencies,
         affected_declarations=affected,
+    )
+
+
+def _entry_ref(payload: LedgerTransactionReviewPayload) -> LedgerWorkspaceEntryRefV1:
+    """Carry the entry's own facts into the projection, not a pointer to them."""
+    return LedgerWorkspaceEntryRefV1(
+        transaction_id=payload.transaction_id,
+        review_status=payload.review_status,
+        date=payload.date,
+        amount=payload.amount,
+        currency=payload.currency,
+        direction=payload.direction,
+        counterparty=payload.counterparty,
+        description=payload.description,
+        business_classification=payload.business_classification,
     )
 
 

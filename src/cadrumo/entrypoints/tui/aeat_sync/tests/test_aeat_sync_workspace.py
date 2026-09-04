@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 from collections.abc import Callable
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -434,13 +435,51 @@ def _table_text(table: DataTable[str]) -> str:
     return "\n".join((*labels, *cells))
 
 
+def _referenced_aeat_sync_keys() -> frozenset[str]:
+    """Every literal `tui.aeat_sync.*` key the shipped package asks for.
+
+    Literals only. Keys assembled at runtime from an enum value cannot be read
+    statically, so this is deliberately a SUBSET of what the surface uses and
+    the locale set-equality above carries the rest.
+    """
+    package = Path(__file__).resolve().parent.parent
+    found: set[str] = set()
+    for source in package.glob("*.py"):
+        tree = ast.parse(source.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if not (isinstance(node, ast.Constant) and isinstance(node.value, str)):
+                continue
+            if not node.value.startswith("tui.aeat_sync."):
+                continue
+            key = node.value.removeprefix("tui.aeat_sync.")
+            # A single segment is a NAMESPACE prefix that the code completes at
+            # runtime from an enum value ("tui.aeat_sync.area." + area.value),
+            # not a leaf anyone can look up. Only leaves are assertable here.
+            if "." in key:
+                found.add(key)
+    return frozenset(found)
+
+
 @pytest.mark.parametrize("locale", ("en", "es", "ca", "hu"))
 def test_aeat_sync_namespace_matches_all_locales_and_hu_has_only_explicit_invariants(locale: str) -> None:
-    """Keep the complete 111-key surface translated, with a tiny HU allowlist."""
+    """Keep the whole namespace translated, with a tiny HU allowlist.
+
+    The count this once asserted (112, and 111 in the docstring before that) is
+    replaced by the invariant it was standing in for. A frozen number cannot
+    tell a key that was ADDED from one that was LOST -- it fails identically
+    for both, and its only repair is to edit the number, which is why adding
+    two section headings broke it while translating nothing. It also never
+    checked the thing that matters: that the keys the code asks for exist.
+    """
     english = _aeat_sync_catalogue("en")
     translated = _aeat_sync_catalogue(locale)
-    assert len(english) == 112
+    assert english, "the English aeat_sync namespace is empty"
     assert set(translated) == set(english)
+
+    referenced = _referenced_aeat_sync_keys()
+    assert referenced, "no literal aeat_sync keys were found; the scan is broken"
+    missing = sorted(key for key in referenced if key not in translated)
+    assert not missing, f"{locale} is missing keys the code asks for: {missing}"
     if locale == "hu":
         identical = {key for key, value in translated.items() if value == english[key]}
         assert identical == _AEAT_SYNC_INTENTIONAL_IDENTICAL_HU

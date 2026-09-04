@@ -426,6 +426,16 @@ def _m() -> Any:
     return importlib.import_module("cadrumo.domain.deadlines.models")
 
 
+# ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE: returns the entity-type module
+# object; a typed return would require importing the module at definition
+# time, re-introducing the circular import described above.
+def _e() -> Any:
+    """Return the module that defines the taxpayer entity-type axes (lazy)."""
+    import importlib
+
+    return importlib.import_module("cadrumo.domain.contribuyente.entity_type")
+
+
 # ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE: returns the renta-code module
 # object; typed return would require importing it at definition time,
 # re-introducing the circular import.
@@ -679,7 +689,7 @@ class SetupAnswers(BaseModel):
     def _parse_entity_type(cls, value: object) -> Any:  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR
         if value == "":
             return ""
-        entity_type_cls = _m().EntityType
+        entity_type_cls = _e().EntityType
         if isinstance(value, entity_type_cls):
             return value
         if isinstance(value, str):
@@ -694,7 +704,7 @@ class SetupAnswers(BaseModel):
     def _parse_legal_entity_form(cls, value: object) -> Any:  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR
         if value == "":
             return ""
-        legal_entity_form_cls = _m().LegalEntityForm
+        legal_entity_form_cls = _e().LegalEntityForm
         if isinstance(value, legal_entity_form_cls):
             return value
         if isinstance(value, str):

@@ -1083,6 +1083,9 @@ tui:
       operation_handoff: Operation handoff is unavailable.
       source: This source is unavailable for viewing.
       unread_notification: Unread notifications cannot open documents.
+    section:
+      areas: Synchronisation areas
+      detail: Selected area detail
     source:
       aeat:
         census: AEAT census
@@ -1234,6 +1237,8 @@ tui:
       superseded: Filing superseded locally
       verified: Verification completed
     overview:
+      areas: Declaration areas
+      declarations: Declarations
       title: Declarations overview
     refusal:
       handoff: This destination has not been supplied by the host.
@@ -1259,6 +1264,12 @@ tui:
     work_state:
       borrador: Draft
       descartado: Discarded
+  destination:
+    aeat_sync: AEAT Sync
+    declarations: Declarations
+    home: Home
+    ledger: Ledger
+    profile: Profile
   home:
     account_fallback: Account
     action:
@@ -1354,9 +1365,15 @@ tui:
       target: Entry {position} of {total} · reference {short_id}
       title: Classify ledger entry
     column:
+      amount: Amount
       area: Area
       availability: Availability
+      classification: Classification
+      counterparty: Counterparty
+      date: Date
+      description: Description
       destination: Destination
+      direction: Direction
       entry: Entry
       items: Items
       next: Next step
@@ -1364,7 +1381,6 @@ tui:
       status: Status
     entries:
       empty: No entries are present in this snapshot.
-      redacted: Safe entry index; financial details remain protected.
       title: Ledger entries
     evidence:
       column:
@@ -1395,6 +1411,7 @@ tui:
       title: Import ledger entries
     overview:
       affected_declarations: Affected declarations
+      areas: Ledger areas
       quality: Data quality and unresolved work
       title: Ledger overview
     reconciliation:
@@ -1421,6 +1438,7 @@ tui:
       progress: Linking…
       score: Canonical score
       success: Link saved.
+      suggestions: Suggested links
       title: Local Ledger reconciliation
       'yes': 'Yes'
     refusal:
@@ -1478,6 +1496,11 @@ tui:
       ledger: Open Ledger
       profile: Open Profile
       unknown: Open workbench area
+    refusal:
+      not_composed: Not every workbench source could be read yet.
+      refresh_failed: The last refresh could not rebuild the index.
+      unavailable: Search is unavailable in this session
+      unknown: Search could not be prepared.
     result:
       address: Modelo %{modelo} · %{filing_year} · %{period}
       label:

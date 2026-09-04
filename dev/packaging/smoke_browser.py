@@ -15,6 +15,7 @@ from ._smoke_common import (
     requirement_name,
     resolve_work_dir,
     run_checked,
+    run_checked_marker,
     venv_python_path,
     wheel_metadata,
     write_smoke_manifest,
@@ -135,10 +136,11 @@ async def main():
 asyncio.run(main())
 print("browser-health-ok")
 """
-    run_checked(
+    run_checked_marker(
         [str(venv_python_path(venv)), "-c", code],
         cwd=work_dir,
         env=env,
+        marker="browser-health-ok",
     )
     record_proof("localhost browser health smoke")
 

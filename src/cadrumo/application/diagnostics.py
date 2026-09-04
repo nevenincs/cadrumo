@@ -50,8 +50,6 @@ from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
-from pydantic import AnyHttpUrl, TypeAdapter
-
 from .. import __version__
 from ..core.async_cleanup import close_async_resources
 from ..core.config import Settings
@@ -64,6 +62,7 @@ from ..core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from ..core.requirement import Requirement, RequirementValue
 from ..core.resources.bundled_data import bundled_path
 from ..core.time.clock import now
+from ..core.url_validation import ANY_HTTP_URL_ADAPTER
 from .diagnostic_models import (
     CliVersionReport as _CliVersionReport,
 )
@@ -124,7 +123,6 @@ _log = get_logger(__name__)
 
 _REGISTRY_INTEGRITY_PROBE_YEAR: Final[int] = 2025
 _REGISTRY_INTEGRITY_PROBE_DATE: Final[date] = date(2025, 12, 31)
-_SITE_HEALTH_URL_ADAPTER: Final[TypeAdapter[AnyHttpUrl]] = TypeAdapter(AnyHttpUrl)
 
 
 def build_cli_version_report(
@@ -376,7 +374,7 @@ def _ok_site_health_status(url: str) -> SiteHealthStatus:
     return SiteHealthStatus(
         state=SiteHealthState.OK,
         evidence=SiteHealthEvidence(
-            url=_SITE_HEALTH_URL_ADAPTER.validate_python(url),
+            url=ANY_HTTP_URL_ADAPTER.validate_python(url),
             http_status=200,
             html_fragment="",
             detected_markers=("healthy",),

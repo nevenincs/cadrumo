@@ -1,0 +1,59 @@
+# Modelo 2020 LIRPF art. 58 / 61 QUALIFYING CONDITIONS for the minimo familiar.
+#
+# The minimo AMOUNTS of art. 58 are already registry parameters in this revision.
+# The conditions that SELECT which amount applies -- the ordinary age ceiling, the
+# menor-de-tres supplement ceiling, and the art. 61.4a shared-custody prorrata --
+# existed only as Python literals, so a consumer could resolve the money but not
+# the rule that awards it. The sibling age-band parameters carry their band in the
+# FILENAME rather than in a field, which is the same gap from the other side.
+
+[[revisions."2020".parameters]]
+id = "renta-2020-minimo-descendiente-edad-maxima"
+data_type = "integer"
+unit = "years"
+legal_refs = ["ley-35-2006:art-58"]
+source_refs = ["aeat-renta-2020-manual-parte1"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["a) Que el descendiente, en los términos anteriormente comentados, sea menor de 25 años a"]
+
+[[revisions."2020".parameters.values]]
+value = "25"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters]]
+id = "renta-2020-minimo-menor-tres-edad-maxima"
+data_type = "integer"
+unit = "years"
+legal_refs = ["ley-35-2006:art-58"]
+source_refs = ["aeat-renta-2020-manual-parte1"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Cuando el descendiente sea menor de tres años, el mínimo que corresponda de los indicados"]
+
+[[revisions."2020".parameters.values]]
+value = "3"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters]]
+id = "renta-2020-minimo-custodia-compartida-prorrata"
+data_type = "ratio"
+unit = "fraction"
+legal_refs = ["ley-35-2006:art-61"]
+source_refs = ["aeat-renta-2020-manual-parte1"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["los hijos menores de edad y mayores incapacitados, por partes iguales,"]
+
+[[revisions."2020".parameters.values]]
+value = "0.5"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31

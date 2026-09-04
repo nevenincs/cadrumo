@@ -115,27 +115,14 @@ class Exemption:
 #: the opposite direction: the canonical type is NARROWER than what the site
 #: legitimately accepts, so promoting it would refuse a value the site exists
 #: to handle.
-ALLOWLIST: Final[tuple[Exemption, ...]] = (
-    Exemption(
-        path="src/cadrumo/application/modelo/selectors.py",
-        symbol="_WorkUnitLookupId",
-        reason=(
-            "A CLI lookup accepts an abbreviated 12-character prefix as well as the full "
-            "64, and lowercases its input. Hex64Str admits only the full 64 and does not "
-            "lowercase, so it is strictly NARROWER: promoting this would refuse every "
-            "abbreviated lookup the surface exists to serve."
-        ),
-    ),
-    Exemption(
-        path="src/cadrumo/application/modelo/export.py",
-        symbol="_Sha256Ref",
-        reason=(
-            "A 'sha256:'-prefixed reference, 71 characters including the prefix. A "
-            "different shape carrying a different concept -- the algorithm label is part "
-            "of the value -- so it is not the bare digest Hex64Str describes."
-        ),
-    ),
-)
+#: Empty, and that is a measured state rather than an oversight. Both entries
+#: this tuple carried named symbols that no longer exist at HEAD - a lookup
+#: alias and a prefixed-reference alias, each removed from the source it
+#: excused - so both had stopped excusing anything while still reading as a
+#: considered judgement. The gate that reports a stale exemption is what
+#: caught them; an entry belongs here only while its (path, symbol) answers a
+#: live occurrence.
+ALLOWLIST: Final[tuple[Exemption, ...]] = ()
 
 
 @dataclass(frozen=True, slots=True)

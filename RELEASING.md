@@ -148,9 +148,49 @@ Never add a stable classifier for a prerelease row, and never change
 `.python-version` as part of runtime promotion; the builder identity is an
 independent reproducibility coordinate.
 
+## Release-candidate evidence
+
+The channel descriptors declare distribution evidence rows, and the release-readiness
+gate refuses a release until every declared row is present and passing. Those rows come
+from one place: the `Cadrumo Packaging Smoke` workflow, dispatched by hand. It never runs
+on push, because the three-OS matrix is the most expensive workflow in the repository.
+
+Dispatch it against the release PR's branch, not against `main`.
+
+```console
+gh pr list --repo nevenincs/cadrumo --label "autorelease: pending" --json headRefName
+gh workflow run packaging-smoke.yml --repo nevenincs/cadrumo --ref <RELEASE_BRANCH>
+```
+
+The branch is not a preference. The readiness gate binds every distribution-evidence row
+to the cohort that produced it, and refuses unless that cohort's source commit equals the
+checked-out commit and its tag equals `v<VERSION>`. Both hold on the release branch, where
+the bump has landed and nothing has been published yet. A campaign dispatched against
+`main` mints evidence bound to a `main` commit, which is not the commit the release is cut
+from, so the gate reports the evidence set incomplete when it is run before the merge:
+
+```text
+[BLOCK] distribution-evidence-complete: cohort commit <COMMIT> does not match checked-out commit <COMMIT>
+```
+
+The cohort seal itself does not refuse a version some destination already owns. Building a
+cohort uploads nothing, and between releases the commit legitimately declares the version
+that is already published, so the seal refuses only a version recorded in the burned
+ledger. The collision rules are asked once, by `publish.yml`, immediately before the
+upload.
+
+The matrix needs all three self-hosted runner shapes online — Linux x64, Windows x64 and
+macOS ARM64. Confirm before dispatching, or the jobs queue until they are cancelled:
+
+```console
+gh api repos/nevenincs/cadrumo/actions/runners --jq '.runners[] | "\(.status)  \(.name)"'
+```
+
+Merge the release PR once the campaign is green.
+
 ## Release
 
-Merge the open release pull request. Everything else follows from that merge.
+Merge the open release PR. Everything else follows from that merge.
 
 ```console
 gh pr list --repo nevenincs/cadrumo --label "autorelease: pending"
@@ -186,6 +226,21 @@ The smoke check proves both console scripts: `aeat` reports the released version
 lists both root command families, and `cadrumo-mcp` resolves with its server runtime
 present.
 
+## Roll back a released version
+
+An index upload cannot be undone, so a rollback is a forward action: yank the bad
+version and release a corrected one. The recipe prints the procedure and runs nothing
+destructive itself.
+
+```console
+just release-rollback <VERSION>
+```
+
+The conditions that oblige a rollback, the hotfix cycle times they must be answered
+within, and the checks the audit-state gate applies are declared once in
+`docs/_release_checklist.yaml` and consumed by the readiness gate. Change them there
+rather than here.
+
 ## Diagnose and recover
 
 ```console
@@ -195,7 +250,16 @@ gh run view <RUN_ID> --repo nevenincs/cadrumo --log-failed
 **The publish step is refused on some distributions and succeeds on others.** An upload
 is per-file and each distribution carries its own publisher binding. Register the
 missing ones from the one-time setup above and re-run the workflow against the same tag;
-`uv publish` reconciles a partial upload rather than failing on what already landed.
+`uv publish` reconciles a partial upload rather than failing on what already landed. The
+identity check ahead of the upload permits that re-run and names which projects already
+carry the version:
+
+```text
+NOTE: the package index already carries <VERSION> for cadrumo, cadrumo-data-manuals and not yet for cadrumo-data-official; ...
+```
+
+It refuses only once every project carries the version, because at that point nothing is
+left to converge and the run could only attempt bytes the index will not take back.
 
 **A distribution is at or over the index file cap.** The build stops before anything is
 uploaded. The corpus split exists to keep every file under that limit, so a refusal here

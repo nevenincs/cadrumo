@@ -1,0 +1,30 @@
+# Modelo 2023 LIRPF art. 23.1.a) carry-forward window for gastos de reparacion y
+# conservacion.
+#
+# Existed only as a Python literal. It keys on the FILING PERIOD and modelo 100
+# declares a revision for every supported year, so it is authorable here without
+# the acquisition-year trap that blocks the LIVA bienes-de-inversion figures.
+#
+# The RIRPF grado-de-discapacidad threshold was authored alongside this and then
+# WITHDRAWN: it cites RIRPF art. 72, which is not present in the legal catalogue,
+# and the registry correctly refused it as an unknown legal id. Citing a
+# catalogued-but-wrong article to make it pass would be worse than leaving the
+# figure in Python, so it stays a Python constant until its provision is
+# catalogued.
+
+[[revisions."2023".parameters]]
+id = "renta-2023-gastos-carry-forward-anos"
+data_type = "integer"
+unit = "years"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["reparación y conservación podrán ser deducidos en los cuatro años siguientes, respetando cada año el límite"]
+
+[[revisions."2023".parameters.values]]
+value = "4"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+valid_to = 2023-12-31

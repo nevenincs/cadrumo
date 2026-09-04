@@ -57,11 +57,27 @@ def _run(name: str, args: list[str], *, env: dict[str, str] | None = None) -> su
     )
 
 
+def installed_version(distribution: str) -> str:
+    """Return an installed distribution version, refusing instructively when absent.
+
+    An absent distribution raises ``PackageNotFoundError``, which nothing here
+    caught. This runs against an isolated environment whose only content is the
+    artifact under test, so a companion corpus that failed to install is the
+    likeliest packaging failure there is - and it is precisely what this check
+    exists to catch. It surfaced as an unhandled traceback instead of the one
+    FAIL line every other refusal in this file produces.
+    """
+    try:
+        return importlib.metadata.version(distribution)
+    except importlib.metadata.PackageNotFoundError:
+        _fail(f"{distribution} is not installed in this environment")
+
+
 def check_metadata() -> str:
     """The distribution and its two pinned corpora are installed."""
-    version = importlib.metadata.version("cadrumo")
+    version = installed_version("cadrumo")
     for companion in COMPANIONS:
-        companion_version = importlib.metadata.version(companion)
+        companion_version = installed_version(companion)
         if companion_version != version:
             _fail(f"{companion} is {companion_version}, expected {version} to match cadrumo")
     _ok(f"cadrumo {version} installed with both corpora at the same version")

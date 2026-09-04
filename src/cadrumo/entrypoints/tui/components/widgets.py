@@ -5,15 +5,17 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Final, override
+from typing import Any, Final, override
 
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.geometry import Size
 from textual.widget import Widget
 from textual.widgets import Button, Collapsible, DataTable, Static
+from textual.widgets.data_table import Column, ColumnKey
 
 from ....core.presentation import NoticePresentation
+from .theme import CADRUMO_CSS_TOKENS, tokenised
 
 
 class ContentScroll(VerticalScroll, can_focus=False):
@@ -21,11 +23,142 @@ class ContentScroll(VerticalScroll, can_focus=False):
 
 
 class ContentDataTable[CellType](DataTable[CellType]):
-    """A table that expands to its rows inside the shared scroll host."""
+    """A table that expands to its rows, and to the width it is given.
+
+    Textual's own ``add_column`` offers a fixed cell count or shrink-to-fit and
+    nothing between, so a table built from fixed widths keeps them however wide
+    the terminal is: it clips its own headers and identifiers while the rest of
+    the row sits empty. The height side of that problem was already solved here
+    by ``watch_virtual_size``; this is its missing counterpart.
+
+    The surplus goes to ONE column -- ``fill_column``, defaulting to the last --
+    rather than being spread across all of them, because widening an identifier
+    or a state word past its content buys nothing while a truncated description
+    is exactly what the space is for.
+    """
+
+    fill_column: int | None = -1
+    """Index of the column that absorbs surplus width; ``None`` disables it."""
+
+    DEFAULT_CELL_PADDING: Final = int(CADRUMO_CSS_TOKENS["cadrumo-cell-padding"])
+    """The product's one table density, so no call site names a number."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Apply the shared density unless a caller states its own."""
+        kwargs.setdefault("cell_padding", self.DEFAULT_CELL_PADDING)
+        super().__init__(*args, **kwargs)
 
     def watch_virtual_size(self, size: Size) -> None:
         """Keep the layout box equal to the current rows and header."""
         self.styles.height = max(1, size.height)
+
+    def on_resize(self) -> None:
+        """Give the surplus width to the fill column."""
+        self._absorb_surplus_width()
+
+    def absorb_surplus_width(self) -> None:
+        """Re-apply the width policy after an owner rebuilds the columns.
+
+        A screen that rebuilds its column set (responsive tables do) replaces
+        the columns this widget already corrected, and the resize that would
+        correct them again has been and gone. Such an owner calls this itself.
+        """
+        self._absorb_surplus_width()
+
+    def _absorb_surplus_width(self) -> None:
+        """Give every column its header, then hand the surplus to one of them.
+
+        Two rules, in order, because they answer different failures.
+
+        A column narrower than its own HEADER is unreadable whatever else
+        happens -- `Disponibilidad` clipped to `Disponibilid` stops the operator
+        knowing what the column is -- so the header length is a floor on every
+        column before any surplus is considered.
+
+        The surplus then goes to ONE column rather than being spread, because
+        widening an identifier or a state word past its content buys nothing
+        while a truncated description is exactly what the space is for.
+
+        Deliberately one-way: columns only grow. A table narrower than its
+        container may be a layout choice this cannot see; a column narrower than
+        its own header, or than its content while the container has room to
+        spare, is the defect.
+        """
+        if not self.columns:
+            return
+        available = self.container_size.width - self.scrollbar_size_vertical
+        if available <= 0:
+            return
+
+        widened = False
+        for column in self.columns.values():
+            header = len(str(column.label))
+            if column.width < header:
+                column.width = header
+                widened = True
+
+        # Value-driven sizing. An authored width is a guess made before anyone
+        # saw the data, and it is wrong in the direction that costs the
+        # operator information: `Declaraciones presentadas` clipped to
+        # `Declaraciones pr` at width 16 while one very wide column sat beside
+        # it.
+        #
+        # The short columns are made whole and the FILL column yields, rather
+        # than every column growing together. Growing together fails exactly
+        # when it is needed: one long free-text column makes the natural total
+        # overflow, so nothing grows and a two-character shortfall elsewhere
+        # goes unfixed. Yielding is also the right way round -- a truncated
+        # identifier or state word is unrecoverable, while the fill column is
+        # prose the operator can open the row to read.
+        keys = list(self.columns)
+        fill_key = None
+        if self.fill_column is not None and keys:
+            try:
+                fill_key = keys[self.fill_column]
+            except IndexError:  # pragma: no cover - a table without that column
+                fill_key = None
+        natural = {key: self._natural_width(key, column) for key, column in self.columns.items()}
+        padding = self.cell_padding * 2 * len(self.columns)
+        others = sum(width for key, width in natural.items() if key is not fill_key)
+        # What the fill column would be left with. Its own header is the floor:
+        # below that the fill column stops naming itself, which is the defect
+        # this method exists to prevent, so the whole pass stands down.
+        fill_floor = len(str(self.columns[fill_key].label)) if fill_key is not None else 0
+        if fill_key is None or available - others - padding >= fill_floor:
+            for key, column in self.columns.items():
+                if key is not fill_key and column.width < natural[key]:
+                    column.width = natural[key]
+                    widened = True
+
+        if self.fill_column is not None:
+            keys = list(self.columns)
+            try:
+                fill_key = keys[self.fill_column]
+            except IndexError:  # pragma: no cover - a table without that column
+                fill_key = None
+            if fill_key is not None:
+                target = self.columns[fill_key]
+                others = sum(
+                    column.width + self.cell_padding * 2 for key, column in self.columns.items() if key is not fill_key
+                )
+                surplus = available - others - self.cell_padding * 2
+                if surplus > target.width:
+                    target.width = surplus
+                    widened = True
+
+        if widened:
+            self.refresh()
+
+    def _natural_width(self, key: ColumnKey, column: Column) -> int:
+        """The width at which this column stops hiding anything."""
+        widest = len(str(column.label))
+        for index in range(self.row_count):
+            row = self.get_row_at(index)
+            for position, cell_key in enumerate(self.columns):
+                if cell_key is key and position < len(row):
+                    for line in str(row[position]).splitlines():
+                        widest = max(widest, len(line))
+        return widest
 
 
 _NOTICE_GLYPH: Final[dict[str, str]] = {
@@ -127,6 +260,21 @@ class DisclosureGroup(Collapsible):
     widget instead of each host reaching for `Collapsible` under its own
     title and defaults.
     """
+
+    DEFAULT_CSS = tokenised(
+        """
+        DisclosureGroup {
+            /* The SAME section gap a panel and a heading take. A disclosure
+               group is the third way this product marks a logical group, and
+               it was the only one inheriting Textual's default spacing: two
+               groups a single row apart read as one smeared list however
+               correctly each is titled. Grouping mechanisms may differ in
+               affordance -- a panel is static, this collapses -- but the
+               distance that says "new group" has to be one distance. */
+            margin-bottom: $cadrumo-section;
+        }
+        """
+    )
 
     def __init__(self, *children: Widget, title: str, collapsed: bool = True, id: str | None = None) -> None:
         """Store the group's already-localized title and initial disclosure state."""
@@ -245,7 +393,16 @@ class SourceActionCard(Vertical):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(self._descriptor.title, classes="cadrumo-source-card-title", markup=False)
+        # The card title IS this group's heading, so it takes the shared rhythm
+        # rather than a private one: the section gap above separates each source
+        # from the previous card's action button, which they were running
+        # straight into, and the stack gap below binds the title to its own
+        # description.
+        yield Static(
+            self._descriptor.title,
+            classes="cadrumo-source-card-title cadrumo-heading",
+            markup=False,
+        )
         yield Static(self._descriptor.description, classes="cadrumo-source-card-description", markup=False)
         requirement = self._descriptor.credential_requirement
         if requirement is not None:

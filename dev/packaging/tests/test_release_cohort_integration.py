@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from ..._paths import REPO_ROOT
+from ..build_scratch_reclaim import integration_snapshot_name, matching_family, remove_tree
 from ..cohort_manifest import REQUIRED_ARTIFACT_KINDS
 from ..release_cohort import build_release_cohort
 
@@ -65,8 +66,10 @@ def test_real_clean_source_build_is_complete_and_reproducible() -> None:
     """Build the real 12-member cohort twice from the branch tip and compare every digest."""
     repo_root = REPO_ROOT
     var = (repo_root / "var").resolve(strict=True)
-    run_id = uuid.uuid4().hex
-    snapshot = var / f"release-cohort-integration-{run_id}-source"
+    # Named through the scratch registry rather than spelled here, so the
+    # collection-time reclaim and this mint site cannot disagree about the
+    # family, and so the name carries this process as its owner.
+    snapshot = var / integration_snapshot_name(uuid.uuid4().hex)
     try:
         source = _stable_source_clone(repo_root, snapshot)
         outputs = (
@@ -105,10 +108,12 @@ def test_real_clean_source_build_is_complete_and_reproducible() -> None:
         )
     finally:
         # One removal covers both cohorts: they are built inside the snapshot.
+        #
+        # NOT `shutil.rmtree(..., ignore_errors=True)`. The snapshot is a Git
+        # clone, whose object files are read-only, and Windows refuses to
+        # unlink a read-only file; `ignore_errors` swallows that refusal, so
+        # the block reported success while leaving the clone on disk. The
+        # shared reclaim clears the attribute and retries.
         resolved = snapshot.resolve()
-        if (
-            resolved.parent == var
-            and resolved.name == f"release-cohort-integration-{run_id}-source"
-            and resolved.exists()
-        ):
-            shutil.rmtree(resolved, ignore_errors=True)
+        if resolved.parent == var and matching_family(resolved.name) is not None and resolved.exists():
+            remove_tree(resolved)

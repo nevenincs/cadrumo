@@ -60,7 +60,9 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, ClassVar, Final, NamedTuple, TypedDict
 
-from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
+from ...adapters.persistence.storage.errors import (
+    STORAGE_DEGRADATION_ERRORS as _STORAGE_DEGRADATION_ERRORS,
+)
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
 from ...core.decimal.grammar import try_parse_canonical_decimal
@@ -114,9 +116,9 @@ from .relation_prefill_m202 import (
 from .revision_carry_gate import revision_carry_outcome
 
 if TYPE_CHECKING:
-    from ...domain.deadlines.models import EntityType
+    from ...domain.contribuyente.entity_type import EntityType
 
-STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
+STORAGE_DEGRADATION_ERRORS = _STORAGE_DEGRADATION_ERRORS
 _ECONOMIC_ACTIVITY_CATEGORY: Final = "actividad_economica"
 _DIRECT_ESTIMATION_REGIMES: Final = frozenset({"directa_normal", "directa_simplificada"})
 _log = get_logger(__name__)
@@ -338,7 +340,7 @@ def _entity_type_from_token(raw: str | None) -> EntityType | None:
     """Map a raw ``taxpayer_type.entity_type`` token to :class:`EntityType`, or ``None``."""
     if not raw:
         return None
-    from ...domain.deadlines.models import EntityType
+    from ...domain.contribuyente.entity_type import EntityType
 
     try:
         return EntityType(raw)

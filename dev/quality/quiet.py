@@ -28,11 +28,16 @@ from .suite import annotate_unevaluated_contracts
 _UTF_8: Final[str] = UTF_8
 
 
-def main() -> int:
-    """Run argv[1:] as a command; echo output only on non-zero exit."""
-    command = sys.argv[1:]
+def main(argv: list[str] | None = None) -> int:
+    """Run the given command; echo output only on non-zero exit.
+
+    Takes its arguments so the wrapper can be exercised. It read ``sys.argv``
+    directly, which left the one primitive every gate runs through reachable
+    only by launching a process.
+    """
+    command = sys.argv[1:] if argv is None else list(argv)
     if not command:
-        sys.stderr.write("quiet_ok.py: no command given\n")
+        sys.stderr.write("quiet: no command given" + chr(10))
         return 2
 
     # Decode explicitly: `text=True` alone uses the locale preferred encoding,
@@ -46,15 +51,23 @@ def main() -> int:
     # rendering before any contract verdict reached us. Naming the child's
     # stdio encoding keeps the tool's UTF-8 output writable at the source.
     child_env = {**os.environ, "PYTHONIOENCODING": _UTF_8}
-    result = subprocess.run(
-        command,
-        capture_output=True,
-        text=True,
-        encoding=_UTF_8,
-        errors="replace",
-        check=False,
-        env=child_env,
-    )
+    try:
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            encoding=_UTF_8,
+            errors="replace",
+            check=False,
+            env=child_env,
+        )
+    except OSError as error:
+        # The wrapper every gate runs through. An absent or unrunnable tool
+        # raised out of here as a traceback whose last line is a Windows error
+        # number, so a mistyped command in a recipe reported neither the tool
+        # nor the recipe - in the one output CI keeps.
+        sys.stderr.write(f"quiet: cannot run {command[0]!r}: {error}" + chr(10))
+        return 127
 
     if result.returncode != 0:
         # Mirror of the decode note above: a cp1252 console cannot encode the

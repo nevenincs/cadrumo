@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from .command_spec import (
+    FLAG_VALUE,
+    TEXT_VALUE,
+    WHOLE_NUMBER_VALUE,
     ArgumentSpec,
     CommandNodeKind,
     CommandSpec,
@@ -23,9 +26,6 @@ _METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), 
 _READ = ExecutionPolicySpec(
     frozenset({"calculation", "encrypted-facts"}), frozenset({"none"}), "compute", CommandWriteRoute.NONE
 )
-_STR = ValueContract(DeferredTarget("builtins", "str"))
-_INT = ValueContract(DeferredTarget("builtins", "int"))
-_BOOL = ValueContract(DeferredTarget("builtins", "bool"))
 _LANG = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
 _MODULE = "cadrumo.entrypoints.cli._overview"
 _PAYLOADS = "cadrumo.entrypoints.cli._overview_payloads"
@@ -95,9 +95,9 @@ OVERVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "cli.overview.status_help",
         "OverviewStatusResult",
         (
-            _option("period", ("--period",), _STR, "cli.overview.period_help"),
-            _option("year", ("--year",), _INT, "cli.overview.year_help"),
-            _option("verbose", ("--verbose",), _BOOL, "cli.overview.verbose_help", default=False),
+            _option("period", ("--period",), TEXT_VALUE, "cli.overview.period_help"),
+            _option("year", ("--year",), WHOLE_NUMBER_VALUE, "cli.overview.year_help"),
+            _option("verbose", ("--verbose",), FLAG_VALUE, "cli.overview.verbose_help", default=False),
         ),
     ),
     _leaf(
@@ -106,26 +106,26 @@ OVERVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "cli.overview.calendar.help",
         "OverviewCalendarResult",
         (
-            _option("from_date", ("--from",), _STR, "cli.overview.calendar.from_help", required=True),
-            _option("to_date", ("--to",), _STR, "cli.overview.calendar.to_help", required=True),
+            _option("from_date", ("--from",), TEXT_VALUE, "cli.overview.calendar.from_help", required=True),
+            _option("to_date", ("--to",), TEXT_VALUE, "cli.overview.calendar.to_help", required=True),
             _option(
                 "allow_incomplete",
                 ("--allow-incomplete",),
-                _BOOL,
+                FLAG_VALUE,
                 "cli.overview.calendar.allow_incomplete_help",
                 default=False,
             ),
             _option(
                 "show_suppressed",
                 ("--show-suppressed",),
-                _BOOL,
+                FLAG_VALUE,
                 "cli.overview.calendar.show_suppressed_help",
                 default=False,
             ),
             _option(
                 "all_profiles",
                 ("--all-profiles",),
-                _BOOL,
+                FLAG_VALUE,
                 "cli.overview.calendar.all_profiles_help",
                 default=False,
             ),
@@ -143,12 +143,12 @@ OVERVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "cli.overview.agenda.help",
         "OverviewAgendaResult",
         (
-            _option("as_of", ("--date",), _STR, "cli.overview.agenda.date_help"),
-            _option("horizon_days", ("--horizon",), _INT, "cli.overview.agenda.horizon_help", default=14),
+            _option("as_of", ("--date",), TEXT_VALUE, "cli.overview.agenda.date_help"),
+            _option("horizon_days", ("--horizon",), WHOLE_NUMBER_VALUE, "cli.overview.agenda.horizon_help", default=14),
             _option(
                 "allow_incomplete",
                 ("--allow-incomplete",),
-                _BOOL,
+                FLAG_VALUE,
                 "cli.overview.agenda.allow_incomplete_help",
                 default=False,
             ),
@@ -160,12 +160,12 @@ OVERVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "cli.overview.backlog.help",
         "OverviewBacklogResult",
         (
-            _option("from_date", ("--from",), _STR, "cli.overview.backlog.from_help"),
-            _option("to_date", ("--to",), _STR, "cli.overview.backlog.to_help"),
+            _option("from_date", ("--from",), TEXT_VALUE, "cli.overview.backlog.from_help"),
+            _option("to_date", ("--to",), TEXT_VALUE, "cli.overview.backlog.to_help"),
             _option(
                 "allow_incomplete",
                 ("--allow-incomplete",),
-                _BOOL,
+                FLAG_VALUE,
                 "cli.overview.backlog.allow_incomplete_help",
                 default=False,
             ),
@@ -177,8 +177,8 @@ OVERVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "cli.overview.explain.help",
         "OverviewExplainResult",
         (
-            ArgumentSpec("modelo", _STR, ParameterDefault.required(), _key("cli.overview.explain.modelo_help")),
-            _option("year", ("--year",), _INT, "cli.overview.explain.year_help"),
+            ArgumentSpec("modelo", TEXT_VALUE, ParameterDefault.required(), _key("cli.overview.explain.modelo_help")),
+            _option("year", ("--year",), WHOLE_NUMBER_VALUE, "cli.overview.explain.year_help"),
         ),
     ),
     _leaf(
@@ -187,9 +187,9 @@ OVERVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "cli.overview.prepare.help",
         "OverviewPrepareResult",
         (
-            _option("modelo", ("--modelo",), _STR, "cli.overview.prepare.modelo_help", required=True),
-            _option("year", ("--year",), _INT, "cli.overview.prepare.year_help", required=True),
-            _option("period", ("--period",), _STR, "cli.overview.prepare.period_help", required=True),
+            _option("modelo", ("--modelo",), TEXT_VALUE, "cli.overview.prepare.modelo_help", required=True),
+            _option("year", ("--year",), WHOLE_NUMBER_VALUE, "cli.overview.prepare.year_help", required=True),
+            _option("period", ("--period",), TEXT_VALUE, "cli.overview.prepare.period_help", required=True),
         ),
     ),
     _leaf(
@@ -198,8 +198,8 @@ OVERVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "cli.overview.pipeline.help",
         "OverviewPipelineResult",
         (
-            _option("year", ("--year",), _INT, "cli.overview.pipeline.year_help", required=True),
-            _option("period", ("--period",), _STR, "cli.overview.pipeline.period_help", required=True),
+            _option("year", ("--year",), WHOLE_NUMBER_VALUE, "cli.overview.pipeline.year_help", required=True),
+            _option("period", ("--period",), TEXT_VALUE, "cli.overview.pipeline.period_help", required=True),
         ),
     ),
 )

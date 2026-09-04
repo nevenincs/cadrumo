@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from .command_spec import (
+    TEXT_VALUE,
+    WHOLE_NUMBER_VALUE,
     CommandNodeKind,
     CommandSpec,
     CommandWriteRoute,
@@ -24,8 +26,6 @@ _CALCULATION_READ = ExecutionPolicySpec(
     performance="compute",
     write_route=CommandWriteRoute.NONE,
 )
-_STR = ValueContract(DeferredTarget("builtins", "str"))
-_INT = ValueContract(DeferredTarget("builtins", "int"))
 _MODELO = ValueContract(
     DeferredTarget("builtins", "str"),
     click_type=DeferredTarget("cadrumo.entrypoints.cli._common", "MODELO_CODE_CHOICE"),
@@ -63,12 +63,12 @@ MODELO_READINESS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(
             _required("modelo", "--modelo", _MODELO, "cli.app.modelo.readiness.modelo_help"),
-            _required("filing_year", "--year", _INT, "cli.app.modelo.readiness.year_help"),
-            _option("revision_id", "--revision-id", _STR, "cli.app.modelo.readiness.revision_help"),
+            _required("filing_year", "--year", WHOLE_NUMBER_VALUE, "cli.app.modelo.readiness.year_help"),
+            _option("revision_id", "--revision-id", TEXT_VALUE, "cli.app.modelo.readiness.revision_help"),
             OptionSpec(
                 name="period",
                 declarations=("--period",),
-                value=_STR,
+                value=TEXT_VALUE,
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.modelo.readiness.period_help"),
             ),

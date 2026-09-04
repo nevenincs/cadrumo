@@ -56,12 +56,12 @@ _LEGACY_DOCS_URL = "https://neve.md/cadrumo/docs"
 _MISSING_DOCS_PATH = "__cadrumo-delivery-missing__.html"
 
 #: The runtime download payload the docs download page enhances with
-#: (``initDownloadCards`` in ``docs/_static/cadrumo-docs.js``). It is attached to
-#: every published GitHub release by ``publish-release.yml`` and pulled — version
-#: agnostically — from the latest release into ``docs/_static`` before the site
-#: build so the served ``_static/download-latest.json`` reflects the current
-#: release. Absent it (no release yet), the offline Tier-1 channel table is the
-#: floor and the site build proceeds unchanged.
+#: (``initDownloadCards`` in ``docs/_static/cadrumo-docs.js``). It is pulled —
+#: version agnostically — from the latest release into ``docs/_static`` before
+#: the site build so the served ``_static/download-latest.json`` reflects the
+#: current release once a release attaches it. Absent it (no release has
+#: attached one yet), the offline Tier-1 channel table is the floor and the
+#: site build proceeds unchanged.
 _DOWNLOAD_LATEST_URL = "https://github.com/nevenincs/cadrumo/releases/latest/download/download-latest.json"
 _DOWNLOAD_LATEST_SCHEMA = "cadrumo.download-latest.v1"
 _DOWNLOAD_LATEST_STATIC_PATH = ("docs", "_static", "download-latest.json")
@@ -173,13 +173,13 @@ def _invalidate_download_latest(destination: Path, reason: str) -> None:
 def _refresh_download_latest(repo_root: Path, *, source_url: str = _DOWNLOAD_LATEST_URL) -> None:
     """Pull the latest release's ``download-latest.json`` into ``docs/_static``.
 
-    Fetches the version-agnostic latest-release asset (attached by
-    ``publish-release.yml``), validates it is the expected schema, and writes it
-    to ``docs/_static/download-latest.json`` so the built site serves a current
-    payload. Any failure — no release yet, network error, an unexpected body
-    (e.g. a 404 page), a schema mismatch, or a local write failure — degrades
-    silently (never raises) AND invalidates any payload retained from an
-    earlier successful run, so the offline Tier-1 channel table is the floor
+    Fetches the version-agnostic latest-release asset, validates it is the
+    expected schema, and writes it to ``docs/_static/download-latest.json`` so
+    the built site serves a current payload. Any failure — no release yet,
+    network error, an unexpected body (e.g. a 404 page), a schema mismatch, or
+    a local write failure — degrades silently (never raises) AND invalidates
+    any payload retained from an earlier successful run, so the offline
+    Tier-1 channel table is the floor
     rather than a stale prior release's links being served as current.
 
     ``source_url`` defaults to the fixed GitHub release asset URL; tests point it

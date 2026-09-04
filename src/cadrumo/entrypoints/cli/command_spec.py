@@ -982,8 +982,22 @@ class CommandSpecGraph:
         return MappingProxyType(rows)
 
 
+#: The three builtin value contracts every command surface declares. They are
+#: immutable and carry no per-module state, so a module-local copy is a
+#: duplicate definition rather than a convenience: eighteen modules each
+#: declared their own `_STR` / `_INT` / `_BOOL` before these were centralised.
+TEXT_VALUE: Final[ValueContract] = ValueContract(DeferredTarget("builtins", "str"))
+WHOLE_NUMBER_VALUE: Final[ValueContract] = ValueContract(DeferredTarget("builtins", "int"))
+FLAG_VALUE: Final[ValueContract] = ValueContract(DeferredTarget("builtins", "bool"))
+PATH_VALUE: Final[ValueContract] = ValueContract(DeferredTarget("pathlib", "Path"))
+
+
 __all__ = [
+    "FLAG_VALUE",
     "NON_LEAF_COMMAND_KINDS",
+    "PATH_VALUE",
+    "TEXT_VALUE",
+    "WHOLE_NUMBER_VALUE",
     "ArgumentSpec",
     "BindingState",
     "CommandNodeKind",

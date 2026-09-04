@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import os
 import platform
@@ -359,6 +360,13 @@ def build_release_cohort(
             f"expected commit does not equal the currently checked-out HEAD: expected {commit}, got {head}",
         )
     var = (root / "var").resolve()
+    # A build that is killed leaves its staging directory -- a full cohort's
+    # worth of bytes -- behind, and runs no cleanup of its own. Reclaimed at the
+    # start of the next build, which is the only moment that survives a kill.
+    from .build_scratch_reclaim import sweep_var_scratch
+
+    with contextlib.suppress(OSError):
+        sweep_var_scratch(var)
     with tempfile.TemporaryDirectory(prefix="cadrumo-release-") as temporary:
         clean_root = Path(temporary) / "source"
         git = shutil.which("git")

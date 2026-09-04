@@ -1107,6 +1107,9 @@ tui:
       operation_handoff: A művelet átadása nem érhető el.
       source: Ez a forrás nem érhető el megtekintésre.
       unread_notification: Olvasatlan értesítések dokumentumai nem nyithatók meg.
+    section:
+      areas: Szinkronizációs területek
+      detail: A kiválasztott terület részletei
     source:
       aeat:
         census: AEAT-nyilvántartás
@@ -1258,6 +1261,8 @@ tui:
       superseded: Benyújtás helyben felváltva
       verified: Ellenőrzés elkészült
     overview:
+      areas: Bevallási területek
+      declarations: Bevallások
       title: Bevallások áttekintése
     refusal:
       handoff: A gazda nem biztosította ezt a célt.
@@ -1283,6 +1288,12 @@ tui:
     work_state:
       borrador: Piszkozat
       descartado: Elvetve
+  destination:
+    aeat_sync: AEAT-szinkron
+    declarations: Bevallások
+    home: Kezdőlap
+    ledger: Főkönyv
+    profile: Profil
   home:
     account_fallback: Fiók
     action:
@@ -1378,9 +1389,15 @@ tui:
       target: '{position}/{total}. tétel · hivatkozás: {short_id}'
       title: Főkönyvi tétel besorolása
     column:
+      amount: Összeg
       area: Terület
       availability: Elérhetőség
+      classification: Besorolás
+      counterparty: Partner
+      date: Dátum
+      description: Leírás
       destination: Célterület
+      direction: Irány
       entry: Tétel
       items: Elemek
       next: Következő lépés
@@ -1388,7 +1405,6 @@ tui:
       status: Állapot
     entries:
       empty: Ez a pillanatkép nem tartalmaz tételeket.
-      redacted: Biztonságos tételjegyzék; a pénzügyi részletek védettek maradnak.
       title: Főkönyvi tételek
     evidence:
       column:
@@ -1419,6 +1435,7 @@ tui:
       title: Főkönyvi tételek importálása
     overview:
       affected_declarations: Érintett bevallások
+      areas: Főkönyvi területek
       quality: Adatminőség és megoldatlan feladatok
       title: Főkönyvi áttekintés
     reconciliation:
@@ -1445,6 +1462,7 @@ tui:
       progress: Kapcsolás…
       score: Kanonikus pontszám
       success: Kapcsolat mentve.
+      suggestions: Javasolt kapcsolatok
       title: Helyi főkönyvi egyeztetés
       'yes': Igen
     refusal:
@@ -1502,6 +1520,11 @@ tui:
       ledger: Főkönyv megnyitása
       profile: Profil megnyitása
       unknown: Munkafelület megnyitása
+    refusal:
+      not_composed: A munkafelület nem minden forrása volt még olvasható.
+      refresh_failed: A legutóbbi frissítés nem tudta újraépíteni az indexet.
+      unavailable: A keresés nem érhető el ebben a munkamenetben
+      unknown: A keresést nem sikerült előkészíteni.
     result:
       address: Modelo %{modelo} · %{filing_year}. év · %{period} időszak
       label:

@@ -30,9 +30,8 @@ from enum import StrEnum
 from typing import Literal
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.decimal.constants import ZERO
 from .carry_forward import derive_303_compensation_available
-
-_ZERO = Decimal("0")
 
 
 def _casilla_id(value: str) -> CasillaId:
@@ -135,7 +134,7 @@ def derive_m303_compensation_available_from_casillas(
             # registry formula's projection by the callers.
             return M303CompensationAvailableDerivation(
                 available=posterior,
-                generated=_ZERO,
+                generated=ZERO,
                 # This is not a resultado-derived carry.  The disposition has
                 # excluded the period's generated credit, so recording the
                 # ordinary fallback basis would make later evidence claim the

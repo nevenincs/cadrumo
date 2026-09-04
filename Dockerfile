@@ -201,11 +201,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # gh: NOT shipped by the upstream runner image, and assumed present the way it
-# is on GitHub-hosted runners. `dev.release.version_identity` shells out to it
-# for the tag/release namespace check, so its absence surfaces mid-release as
-# "REFUSED: forge check needs the gh CLI on PATH" — a cohort-seal failure that
-# never names the missing tool. Ubuntu 24.04 ships 2.45; pin the current
-# upstream release instead so the fleet matches GitHub-hosted expectations.
+# is on GitHub-hosted runners. The acquisition and campaign lanes that run on
+# this fleet invoke it directly and no workflow installs it, so its absence
+# surfaces mid-lane as a command-not-found in a step that never names the
+# missing tool. Ubuntu 24.04 ships 2.45; pin the current upstream release
+# instead so the fleet matches GitHub-hosted expectations.
 RUN arch="${TARGETARCH:-amd64}" \
     && curl -fsSL "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_${arch}.tar.gz" \
     | tar -xz -C /tmp \

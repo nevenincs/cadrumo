@@ -15,6 +15,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ....core.decimal.constants import HUNDRED, ONE
 from ....core.errors.hierarchy import CadrumoError as _CadrumoError
 from ....core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT as _DEFAULT_IVA_GENERAL_RATE_PCT
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
@@ -33,9 +34,6 @@ class AssetValidationError(AssetRecordError, ValueError):
 
 ASSETS_SCHEMA_VERSION = "1"
 """Forward-compatible schema version stamped onto every record in this module."""
-
-_ONE = Decimal("1")
-_HUNDRED = Decimal("100")
 
 
 class AssetClass(StrEnum):
@@ -161,14 +159,14 @@ class AssetRecord(BaseModel):
     def _validate_iva_decomposition(self) -> AssetRecord:
         """Cross-check IVA decomposition against ``cost_basis``."""
         base = self.taxable_base or self.cost_basis
-        computed_iva = _quantize(base * self.iva_rate / _HUNDRED)
+        computed_iva = _quantize(base * self.iva_rate / HUNDRED)
         if self.iva_amount is not None and self.iva_amount != computed_iva:
             raise AssetValidationError("iva_amount must equal taxable_base * iva_rate")
         computed_gross = _quantize(base + computed_iva)
         if self.gross_total is not None and self.gross_total != computed_gross:
             raise AssetValidationError("gross_total must equal taxable_base + iva_amount")
         if self.taxable_base is not None:
-            non_deductible_iva = computed_iva * (_ONE - self.deductible_iva_ratio)
+            non_deductible_iva = computed_iva * (ONE - self.deductible_iva_ratio)
             expected_basis = _quantize(self.taxable_base + non_deductible_iva)
             if self.cost_basis != expected_basis:
                 raise AssetValidationError("cost_basis must equal taxable_base plus non-deductible IVA")
@@ -182,7 +180,7 @@ class AssetRecord(BaseModel):
     @property
     def resolved_iva_amount(self) -> Decimal:
         """Return the explicit IVA amount or derive it from the taxable base and rate."""
-        return self.iva_amount or _quantize(self.resolved_taxable_base * self.iva_rate / _HUNDRED)
+        return self.iva_amount or _quantize(self.resolved_taxable_base * self.iva_rate / HUNDRED)
 
     @property
     def resolved_gross_total(self) -> Decimal:

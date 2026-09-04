@@ -44,7 +44,7 @@ from ...core.directory_scan import (
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.resources.bundled_data import bundled_path
-from ...core.text_fold import fold_diacritics
+from ...core.text_fold import fold_for_matching
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from .errors import CorpusSearchInputError
 
@@ -100,8 +100,7 @@ class TerminologyHit(BaseModel):
 
 
 def _fold(text: str) -> str:
-    stripped = fold_diacritics(text)
-    return _WHITESPACE_RE.sub(" ", stripped).strip().casefold()
+    return fold_for_matching(text)
 
 
 def _terminology_root() -> Path:

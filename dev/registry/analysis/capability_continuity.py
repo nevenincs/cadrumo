@@ -41,6 +41,7 @@ from __future__ import annotations
 import collections
 import sys
 from dataclasses import dataclass
+from itertools import pairwise
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
@@ -119,7 +120,7 @@ def modelo_findings(
     """Return one modelo's capability losses between consecutive revisions."""
     ordered = sorted(authority.modelo(modelo_id).revisions.items(), key=lambda item: item[1].valid_from)
     findings: list[CapabilityContinuityFinding] = []
-    for (previous_id, previous), (current_id, current) in zip(ordered, ordered[1:], strict=False):
+    for (previous_id, previous), (current_id, current) in pairwise(ordered):
         lost = declared_capabilities(previous) - declared_capabilities(current)
         if not lost:
             continue

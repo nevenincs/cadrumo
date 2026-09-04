@@ -104,12 +104,31 @@ def _run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
     )
 
 
+def require_report(payload: str, result: subprocess.CompletedProcess[str], checker: str) -> None:
+    """Refuse an empty checker stream instead of reading it as zero diagnostics.
+
+    A clean run is not silent. Every checker here prints a report even when it
+    finds nothing - ty prints an empty JSON array, pyrefly an object with an
+    empty errors list - so an empty stream means the checker never produced a
+    report at all.
+
+    Two of the three collectors already refused it; ty returned an empty
+    diagnostic list, which is the answer a genuinely clean tree gives. A ty
+    that failed to start, crashed, or wrote nothing therefore reported green
+    over a run that never happened, and the gate exited 0. The rule lives here
+    once so the three cannot drift apart again.
+    """
+    if payload:
+        return
+    sys.stderr.write(result.stderr)
+    raise RuntimeError(f"{checker} produced no report; see the captured stderr above")
+
+
 def collect_ty() -> list[Diagnostic]:
     """Run ty and parse its GitLab-JSON diagnostics."""
     result = _run(["ty", "check", TY_TARGET, "--output-format", "gitlab", "--color", "never"])
     payload = result.stdout.strip()
-    if not payload:
-        return []
+    require_report(payload, result, "ty")
     try:
         rows = json.loads(payload)
     except json.JSONDecodeError:
@@ -137,13 +156,7 @@ def collect_pyrefly() -> list[Diagnostic]:
     """Run pyrefly and parse its JSON error-level diagnostics."""
     result = _run(["pyrefly", "check", "--output-format", "json"])
     payload = result.stdout.strip()
-    if not payload:
-        # An empty stream is not "clean" — a clean run still prints
-        # `{"errors": []}`. Nothing at all means the checker never produced a
-        # report, so fail loudly instead of reporting a green that was never
-        # measured.
-        sys.stderr.write(result.stderr)
-        raise RuntimeError("pyrefly produced no report; see the captured stderr above")
+    require_report(payload, result, "pyrefly")
     try:
         report = json.loads(payload)
     except json.JSONDecodeError:
@@ -195,9 +208,7 @@ def collect_basedpyright() -> list[Diagnostic]:
         ]
     )
     payload = result.stdout.strip()
-    if not payload:
-        sys.stderr.write(result.stderr)
-        raise RuntimeError("basedpyright produced no report; see the captured stderr above")
+    require_report(payload, result, "basedpyright")
     try:
         report = json.loads(payload)
     except json.JSONDecodeError:

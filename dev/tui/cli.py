@@ -33,6 +33,7 @@ from ._artifacts import (
     digest,
     known_runs,
     now,
+    purge_stale_artifacts,
     read_manifest,
     run_directory,
     unaccounted_frames,
@@ -415,6 +416,7 @@ def render_command(
             "the run left frames unaccounted for, which would read as coverage it does not have: "
             + ", ".join(unaccounted[:5])
         )
+    discarded = purge_stale_artifacts(directory, manifest)
     write_manifest(directory, manifest)
     write_index(directory, manifest)
 
@@ -429,6 +431,8 @@ def render_command(
             "no diagnostics",
         )
         _echo(f"blocked: {name} produced no frame — {reason}")
+    if discarded:
+        _echo(f"removed {len(discarded)} stale frames left by an earlier run")
     if skipped:
         _echo(f"{len(skipped)} frames not attempted behind a refusing surface")
     if failures:
