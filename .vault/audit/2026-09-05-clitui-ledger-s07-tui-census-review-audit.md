@@ -234,3 +234,62 @@ basedpyright are clean, and the feature Vault check passes. No production TUI
 file changed in this remediation. G0 remains OPEN and the TUI hold remains in
 force; the checked S07 record/plan state describes the delivered census but
 cannot close this remaining quality-gate defect.
+
+## Final return-dataflow remediation review
+
+Ruling: **NOT ACCEPTED**. The two prior dead-return counterexamples are now
+rejected and explicit simple alias chains are resolved, but the extractor still
+silently accepts branch-dependent aliases. One HIGH therefore remains.
+
+The live projection remains stable: 126 selected sources, seven routes with
+`ledger.overview` as the sole installed route, zero message consumers, two
+read-action ids, zero mutation doors, 78 CLI declarations all
+`not-implemented`, and six governed harness files with 65 test functions.
+Independent framing again reproduced source digest
+`sha256:e7337508a02ef2260e0b28205c31bb872b69f59aa51a18391ae209c21b8f9d57`
+and census digest
+`sha256:c136cfe1ae3f82a239476c00e805f8c9a29e010d502e74397963cea7e6f42371`.
+No production TUI file changed; G0 remains OPEN and the TUI hold remains in
+force.
+
+The return resolver now identifies the exact nested `create` returned from
+both owning factories, resolves explicit local name aliases, rejects cycles,
+unresolved expressions, multiple non-null returns, and the two prior mutations
+that retained dead matching calls while returning an Entries or generic
+screen. The earlier free-handler, decorated-handler, unused-constant,
+dead-route, dead-factory, real-route, and real-initial-route adversaries also
+behave as required.
+
+### branch-dependent-return-alias | high | Conditional alias writes are ignored instead of failing closed
+
+`_simple_assignments` records only direct statements in a function body. It
+does not reject control-flow statements that write an alias later used by the
+effective return. Consequently the detector treats the direct assignment as
+the complete dataflow and ignores a conditional reassignment.
+
+Two independent valid-shape mutations demonstrate the false result. In the
+Ledger root `create`, assigning `target` to Overview, conditionally reassigning
+it to Entries for the installed context, and returning
+`resolve_ledger_screen(controller, target)` is accepted and still reports
+Overview. In the installed launcher `create`, assigning `screen` from
+`ledger_screen_factory(...)(context)`, conditionally replacing it with
+`Screen()`, and returning `screen` is accepted and still reports
+`workbench.ledger`/Overview as installed. In both cases the effective returned
+screen is branch-dependent, exactly the unsupported shape demanded to fail
+closed.
+
+The correction must reject any assignment to a followed alias outside the one
+supported direct, unconditional assignment, including writes inside `if`,
+`match`, loops, `try`, `with`, comprehensions, or exception paths. It must also
+reject duplicate assignments/deletions and alias reads before their defining
+write. Durable tests in
+`dev/quality/tests/test_clitui_ledger_capability_matrix.py` must cover at least
+the conditional target and conditional screen mutations above, alongside the
+existing cycle, multiple-return, unresolved, dead-call, and positive alias
+controls.
+
+The final focused S07 selection passes 20 tests with 135 deselected, and the
+full matrix module passes all 155 tests. Ruff format/check, scoped `ty`,
+basedpyright, and the feature Vault check pass. The record/reference/plan repeat
+the unchanged live facts, but their completed S07 state cannot satisfy the
+quality gate while this branch false-negative remains.
