@@ -31,6 +31,12 @@ if not __package__:
 from cadrumo.core.directory_scan import scan_directory  # noqa: E402
 
 from ._hashing import sha256_path  # noqa: E402
+from .build_scratch_reclaim import (  # noqa: E402
+    RELEASE_STAGING_FAMILY,
+    matching_family,
+    sweep_var_scratch,
+    var_scratch_name,
+)
 from .cohort_manifest import (  # noqa: E402
     ArtifactKind,
     BuildIdentity,
@@ -361,10 +367,11 @@ def build_release_cohort(
         )
     var = (root / "var").resolve()
     # A build that is killed leaves its staging directory -- a full cohort's
-    # worth of bytes -- behind, and runs no cleanup of its own. Reclaimed at the
-    # start of the next build, which is the only moment that survives a kill.
-    from .build_scratch_reclaim import sweep_var_scratch
-
+    # worth of bytes -- behind, and runs no cleanup of its own. The staging name
+    # below carries this process as its owner, so a previous build's leftovers
+    # are reclaimed here on an observed liveness answer rather than waiting out
+    # the day ceiling an operator has to ask for. The start of a build is the
+    # only moment that survives a kill.
     with contextlib.suppress(OSError):
         sweep_var_scratch(var)
     with tempfile.TemporaryDirectory(prefix="cadrumo-release-") as temporary:
@@ -390,7 +397,7 @@ def build_release_cohort(
             raise SystemExit(
                 f"local clean clone resolved {cloned_commit}, expected source commit {commit}",
             )
-        staging = var / f".{output.name}-{uuid.uuid4().hex}.staging"
+        staging = var / var_scratch_name(RELEASE_STAGING_FAMILY, f"{output.name}-{uuid.uuid4().hex}")
         env = os.environ.copy()
         env["PYTHONPATH"] = os.pathsep.join((str(clean_root / "src"), str(clean_root)))
         argv = [
@@ -409,12 +416,9 @@ def build_release_cohort(
             _run(argv, cwd=clean_root, env=env)
             staging.replace(output)
         except (OSError, SystemExit):
-            if (
-                staging.parent == var
-                and staging.name.startswith(f".{output.name}-")
-                and staging.name.endswith(".staging")
-                and staging.exists()
-            ):
+            # Judged by the same registry the sweep uses, so the guard cannot
+            # drift from the name that was minted a few lines above.
+            if staging.parent == var and matching_family(staging.name) is not None and staging.exists():
                 shutil.rmtree(staging)
             raise
     cohort = load_release_cohort(output)

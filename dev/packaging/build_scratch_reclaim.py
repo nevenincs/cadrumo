@@ -393,16 +393,16 @@ def sweep_var_scratch(
     """Reclaim abandoned build scratch under ``var_root``, sparing everything else.
 
     Safe to run concurrently and repeatedly: nothing it removes belongs to a
-    live run, so two sweepers reaching one directory at once cannot make any
-    run observe a difference. Every filesystem error is absorbed -- this is
-    tidiness, not correctness, and a scratch directory left behind is never
-    read by anything.
+    live run, so two sweepers reaching one entry at once cannot make any run
+    observe a difference. Every filesystem error is absorbed -- this is
+    tidiness, not correctness, and a scratch entry left behind is never read by
+    anything.
 
     Args:
         var_root: The repository's ``var/`` directory.
         now: Reference time, defaulting to the wall clock. Injectable so a test
             can age a directory rather than wait out the grace.
-        exclude: A directory to leave alone regardless of every other rule,
+        exclude: An entry to leave alone regardless of every other rule,
             normally the calling run's own scratch. Its owner is live, so the
             liveness rule already spares it; naming it means the caller never
             depends on that reasoning holding.
@@ -412,8 +412,8 @@ def sweep_var_scratch(
             :func:`_is_reclaimable`.
 
     Returns:
-        ``(removed, spared)`` -- how many scratch directories were reclaimed,
-        and how many were examined and left alone. The spared count is the
+        ``(removed, spared)`` -- how many scratch entries were reclaimed, and
+        how many were examined and left alone. The spared count is the
         safety evidence: a sweep that took everything and a sweep that took
         only what it should both report a removal count.
     """
@@ -426,23 +426,25 @@ def sweep_var_scratch(
     removed = 0
     retained = len(spared)
     for candidate in reclaimable:
-        if remove_tree(candidate):
+        if remove_scratch(candidate):
             removed += 1
         else:
             retained += 1
     return removed, retained
 
 
-def _directory_bytes(directory: Path) -> int:
-    return sum(entry.stat().st_size for entry in scan_directory(directory, recursive=True) if entry.is_file())
+def _scratch_bytes(candidate: Path) -> int:
+    if candidate.is_file():
+        return candidate.stat().st_size
+    return sum(entry.stat().st_size for entry in scan_directory(candidate, recursive=True) if entry.is_file())
 
 
 def main(argv: list[str] | None = None) -> int:
     """Report abandoned ``var/`` build scratch, and reclaim it under ``--apply``.
 
     The operator switch for the inferred ground. Every automatic caller acts
-    only on an observed one, so a directory whose name carries no owner -- the
-    shape every snapshot minted before the family took a process identifier
+    only on an observed one, so an entry whose name carries no readable owner
+    -- the shape every snapshot minted before :func:`var_scratch_name` existed
     has -- is reported here and removed only when asked.
     """
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -450,7 +452,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--apply",
         action="store_true",
-        help="remove the scratch directories judged abandoned; without it nothing is deleted",
+        help="remove the scratch entries judged abandoned; without it nothing is deleted",
     )
     parser.add_argument(
         "--observed-only",
@@ -466,31 +468,33 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  SPARE {candidate.name}", file=sys.stdout)
     total = 0
     for candidate in reclaimable:
-        size = _directory_bytes(candidate)
+        size = _scratch_bytes(candidate)
         total += size
         print(f"  REAP  {candidate.name}  {size / 1_000_000_000:.3f} GB", file=sys.stdout)
     verb = "reclaimed" if arguments.apply else "reclaimable"
     print(f"  {verb}: {total / 1_000_000_000:.3f} GB   spared: {len(spared)}", file=sys.stdout)
     if arguments.apply:
         for candidate in reclaimable:
-            remove_tree(candidate)
+            remove_scratch(candidate)
     else:
         print("  nothing was deleted; pass --apply to act on the REAP lines above", file=sys.stdout)
     return 0
 
 
 __all__ = [
-    "RELEASE_COHORT_INTEGRATION_PREFIX",
-    "RELEASE_COHORT_INTEGRATION_SUFFIX",
-    "RELEASE_STAGING_PREFIX",
-    "RELEASE_STAGING_SUFFIX",
+    "COHORT_BUILD_TREE_FAMILY",
+    "COHORT_SOURCE_ARCHIVE_FAMILY",
+    "COMMAND_SPEC_BYTECODE_FAMILY",
+    "RELEASE_COHORT_INTEGRATION_FAMILY",
+    "RELEASE_STAGING_FAMILY",
     "VAR_SCRATCH_FAMILIES",
     "ScratchFamily",
-    "integration_snapshot_name",
     "matching_family",
     "reclaimable_scratch",
+    "remove_scratch",
     "remove_tree",
     "sweep_var_scratch",
+    "var_scratch_name",
 ]
 
 
