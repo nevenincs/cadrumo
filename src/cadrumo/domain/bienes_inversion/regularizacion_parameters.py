@@ -30,7 +30,7 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ...core.errors.hierarchy import CadrumoError as _CadrumoError
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
@@ -81,8 +81,22 @@ class BienesInversionParameterProvenance(BaseModel):
 
     modelo_id: str = Field(min_length=1, max_length=16)
     revision_id: str = Field(min_length=1, max_length=64)
-    parameter_ids: tuple[str, ...] = Field(min_length=1)
+    parameter_ids: tuple[str, ...] = Field(min_length=len(_REQUIRED_SLUGS), max_length=len(_REQUIRED_SLUGS))
     resolved_on: date
+
+    @model_validator(mode="after")
+    def _names_the_whole_family(self) -> BienesInversionParameterProvenance:
+        """Refuse provenance that does not describe the bundle it travels with.
+
+        A bundle resolves five figures, so provenance naming fewer is not a
+        record of where those values came from -- it is a partial claim that
+        would still satisfy an oracle comparing provenance by equality. Pinning
+        the count and the distinctness here means a hand-built bundle cannot
+        carry a provenance that describes something else.
+        """
+        if len(set(self.parameter_ids)) != len(self.parameter_ids):
+            raise ValueError("parameter_ids must not repeat an id")
+        return self
 
 
 class BienesInversionRegularizacionParameters(BaseModel):

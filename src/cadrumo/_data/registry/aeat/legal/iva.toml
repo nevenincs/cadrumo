@@ -1758,10 +1758,11 @@ de la Ley 37/1992 (en vigor 01-01-1993 a 31-12-2014) exigia que excediera 'en un
 mas', mientras que el art. 1.26 de la Ley 28/2014 (BOE-A-2014-12329, en vigor desde 01-01-2015) lo \
 sustituyo por 'en un 10 por ciento o mas'. La modificacion rebajo el margen Y lo hizo inclusivo: el \
 preambulo de la Ley 28/2014 lo describe como 'disminuir del 20 al 10 por ciento la diferencia \
-admisible'. Base legal del aviso de prorrata especial obligatoria, cuyo margen se resuelve por \
-ejercicio (PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_FROM_2015, \
-PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_UNTIL_2014, \
-PRORRATA_ESPECIAL_MANDATORY_LEY_28_2014_FIRST_YEAR)."""
+admisible'. Base legal del aviso de prorrata especial obligatoria. El margen y su \
+direccion de comparacion se declaran como dato de registro en el parametro \
+m303-prorrata-especial-obligatoria-margen-porcentaje de cada revision del modelo 303; \
+solo se declara la redaccion vigente, y un ejercicio anterior a 2015 se rechaza por \
+carecer de autoridad citable en este corpus."""
 required_text = [
     "La regla de prorrata tendrá dos modalidades de aplicación: general y especial.",
     "La regla de prorrata especial será aplicable en los siguientes supuestos:",

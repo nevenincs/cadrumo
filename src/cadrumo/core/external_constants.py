@@ -14,7 +14,7 @@ passphrases, bucket ids, and SQL routes do not belong here. Loading the registry
 only reads packaged TOML (or an explicit audit/test path) and never opens
 storage, writes files, or contacts remote providers.
 
-The typed root is :class:`ExternalConstantRegistry`, with AEAT-specific subsections
+The typed root is :class:`ExternalConstants`, with AEAT-specific subsections
 grouped under :class:`AeatSection`; callers normally reach it through
 :meth:`core.config.Settings.external_constants`. The volatile Pre303 and
 IVA-wallet browser surface remains lazily validated as :class:`AeatPre303Surface`
@@ -468,11 +468,6 @@ XLSM_EXTENSION: Final[Literal[".xlsm"]] = ".xlsm"
 #: Legacy ISO-8859-1 / Latin-1 encoding used by AEAT sede fixed-width response bodies.
 LATIN_1_ENCODING: Final[str] = "latin-1"
 
-#: ISO-8859-1 encoding string as accepted by the fichero-BOE wire layer.
-#:
-#: Identical in coverage to :data:`LATIN_1_ENCODING` at runtime; the literal
-#: type preserves the exact public registry-codec spelling for static callers.
-
 #: UTF-8 character encoding used for all text file I/O in the application layer.
 UTF_8_ENCODING: Final[str] = "utf-8"
 
@@ -850,7 +845,7 @@ def load_external_constants(path: Path | None = None) -> ExternalConstants:
         path: Optional TOML file to parse instead of the packaged registry.
 
     Returns:
-        The process-wide cached :class:`ExternalConstantRegistry` instance.
+        The process-wide cached :class:`ExternalConstants` instance.
     """
     if path is not None:
         with path.open("rb") as handle:
