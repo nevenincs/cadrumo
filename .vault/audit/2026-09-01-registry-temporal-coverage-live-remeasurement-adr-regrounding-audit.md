@@ -12747,3 +12747,65 @@ eighteen rows are that fact about its size rather than a relationship. Each row
 carries the density that separates the two, and no threshold is applied - where
 the cutoff sits is a reader's judgement, and one written into the module would
 silently drop the next real pair that fell beneath it.
+
+
+## Nine forwarding facades under dev, and the instrument that can retire them
+
+The accepted boundary makes a package initialiser an inert namespace marker.
+Nine initialisers under `dev` are the opposite: they define nothing at all and
+bind 388 names between them, purely to forward. `dev.docs.terminology` forwards
+86, `dev.ingest_harness` 67, `dev.docs.sequences` 60.
+
+Measuring their consumers took three attempts and the first two were confidently
+wrong, in the way this campaign keeps producing.
+
+The first said **zero import sites**, across all nine. That was a bug in the
+relative-import resolver: it read a module's own dotted name as its package, so
+`from . import x` in `dev/locales/cli.py` resolved to `dev.locales.cli` rather
+than `dev.locales`, and no import ever matched a package root. A resolver that
+reports nothing is worse than one that raises - nothing looks like a finished
+job. The true figure is **77 import statements across 70 files, pulling 271
+names**.
+
+The second attempt counted 397 bound names against an independent count of 388
+from the `__all__` lists, and the gap looked like a question of what to count.
+It was not: `from __future__ import annotations` was being read as a re-export,
+once per facade, and nine facades made a constant offset of nine. A constant
+offset is the hardest kind of error to see, because it reads as a definitional
+disagreement rather than a defect. With the directive excluded the two
+independent derivations agree exactly at 388.
+
+Three of the four numbers here count different things - a name the facade binds,
+a name a consumer asks for, and a statement that must be rewritten - and the
+report now prints them separately for that reason.
+
+`dev/quality/facade_retirement.py` does the retirement rather than describing
+it. The mapping from each exported name to the module that defines it is already
+written in the facade's own import statements, so it is read from there and
+never restated; a written inventory would go stale the first time a symbol
+moved. Statements are replaced by AST line span, because a parenthesised
+multi-line import defeats a line-oriented rewrite in both directions, which this
+repository has already paid for once.
+
+It refuses rather than guesses in three cases: a name the facade does not
+forward, a submodule traversal - `from ..package import errors` names a module
+and keeps working after the retirement, sixteen sites of which must not be
+touched - and the initialiser itself, whose emptying is a separate act because
+doing both in one pass leaves the tree unimportable if it is interrupted.
+
+The existing tooling runs the other way and is not a substitute:
+`facade_export_scan` asks whether a facade's names exist, and
+`import_centralization_codemod` rewrites imports ONTO a facade, which was the
+policy before initialisers were made inert. Both are scoped to `src/cadrumo`.
+
+`dev.docs.apidocs` is retired end to end as the proof: two consumers repointed
+at `dev.docs.apidocs.manager`, the initialiser reduced to prose, its fourteen
+package tests and an import smoke check passing. The first application of the
+rewriter was itself wrong in a way worth keeping: it emitted an absolute import
+into a file whose import block is grouped relatively, which lints as an error
+rather than failing - the work would have looked applied and left the tree red.
+The rewriter now preserves the depth the consumer wrote.
+
+One pre-existing failure is visible and is not this change:
+`test_every_source_module_has_a_stub` reports 31 `src/cadrumo` modules without a
+`docs/api` stub. It compares two trees that carry no working-tree change.

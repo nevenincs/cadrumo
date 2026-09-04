@@ -9,9 +9,9 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
   - '[[2026-06-10-period-revision-resolution-adr]]'
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
-modified: '2026-09-03'
+modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:f04215eb8b62d2e287094fc672365fb899a3a731fd0ca2fc5f5344842c50b934'
+body_hash: 'sha256:9bc7329cbd02b78d314b9ea60884124ceb14b77e5755ae89300b38dcd2cc7f03'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -307,6 +307,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S161` - Collapse the redaction label, the familia section identifier and the modelo edit responsible owner onto single declarations; `src/cadrumo`.
 - [x] `W02.P02.S162` - Judge the remaining twenty duplicated name-and-value constants, separating one fact stated twice from two facts that happen to agree; `src/cadrumo`.
 - [x] `W02.P02.S163` - Gate that every deliberately collapsed concept keeps exactly one definition, so a whole-tree sweep cannot silently restore the duplicates; `dev/tests/test_canonical_definitions_stay_singular.py`.
+- [x] `W02.P02.S465` - Build the facade-retirement rewriter that reads each dev initialisers forwarding map from its own import statements and repoints consumers onto the defining modules, preserving alias, indentation and relative depth and refusing submodule traversal and unforwarded names; `dev/quality/facade_retirement.py,dev/quality/tests/test_facade_retirement.py`.
+- [x] `W02.P02.S466` - Retire the dev.docs.apidocs facade end to end as the rewriters proof: two consumers repointed at the defining module and the initialiser reduced to an inert namespace marker; `dev/docs/apidocs/__init__.py,dev/docs/build.py,dev/docs/tests/test_api_stubs.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
