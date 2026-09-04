@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:10e20d16b09af35f61e88473f47cf4e7fbe7a0a629e0c7837258e404246087fa'
+body_hash: 'sha256:8378e33c0e688487ae34828499a8186054016758f27c81a39e08ce738e604ee1'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-reference]]"
@@ -76,6 +76,17 @@ semantics to bulk import and classification or evidence-reading proposal
 generation. Clarify the wording so it cannot establish another best-effort
 mutation family.
 
+### final-plan-atomicity-retest | low | RESOLVED: plan proof and reporting now preserve the ADR transaction modes
+
+Plan correction `2e9911d81d` removes best-effort item isolation from S86, whose
+proof scope now exclusively covers atomic rollback, replay ordering, stale
+baselines, sensitive custody, immutable notes, and evidence cleanup. S114 now
+names ADR-authorized bulk-ingestion per-item reporting and no longer establishes
+a provider partial-mutation mode. The unchanged S03 reference retains its
+version-bound atomic multi-row result and all-or-none rollback proof, with no
+best-effort or partial-result wording. Independent re-review found no publication
+regression or new severity finding.
+
 ## Recommendations
 
 No open recommendation remains. Preserve the provisional/fail-closed state until S04-S14 replace baseline families with a complete, reviewed, digest-bound denominator and an exact acceptance attestation.
@@ -93,3 +104,7 @@ authorized bulk ingestion plan and does not define a partial mutation mode.
 Corrective re-review disposition: **NOT ACCEPTED**. Open severity counts are
 CRITICAL 0, HIGH 0, MEDIUM 1, LOW 1. This disposition supersedes the earlier
 acceptance above.
+
+Final corrective disposition: **ACCEPT**. Open severity counts are CRITICAL 0,
+HIGH 0, MEDIUM 0, LOW 0. The S86 and S114 corrections resolve the final MEDIUM
+and LOW findings and supersede the prior corrective disposition.
