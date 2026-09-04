@@ -11,7 +11,6 @@ from dataclasses import dataclass
 from email.parser import Parser
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
 
 from packaging.markers import Marker
 from packaging.requirements import Requirement
