@@ -24,6 +24,7 @@ from .ids import RevisionId
 from .legal import verify_legal_reference
 from .period_selector_match import registry_period_for_request
 from .schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot, filing_period_from_scope
+from .schema_base import DateAxis
 from .schema_references import LegalReference, governed_period_span
 from .schema_surfaces import CasillaDefinition
 from .temporal import select_revision
@@ -514,8 +515,14 @@ def _check_revision_scoped_legal_windows(
     presentation-window-tolerant for procedural/administrative kinds.
     """
     revision_legal_ids, _revision_source_ids = collect_snapshot_ref_ids(modelo, revision)
+    elsewhere_legal_ids, _elsewhere_source_ids = collect_snapshot_ref_ids(
+        modelo,
+        revision,
+        include_parameters=False,
+    )
     scoped_legal_ids = revision_legal_ids - set(modelo.legal_refs)
     applicability_window = RevisionLegalApplicabilityWindow.from_revision(revision)
+    parameter_spans = _parameter_value_governed_spans(revision)
     failures: list[str] = []
     for legal_id in sorted(scoped_legal_ids):
         reference = catalogues.legal.get(legal_id)
@@ -526,6 +533,7 @@ def _check_revision_scoped_legal_windows(
             reference,
             revision=revision,
             applicability_window=applicability_window,
+            carried_spans=() if legal_id in elsewhere_legal_ids else parameter_spans.get(legal_id, ()),
         )
         if failure is not None:
             failures.append(failure)
@@ -536,15 +544,56 @@ def _check_revision_scoped_legal_windows(
         )
 
 
+def _historical_carrier_admits(
+    reference: LegalReference,
+    carried_spans: tuple[tuple[date, date | None, str], ...],
+) -> bool:
+    """Decide whether a parameter carrier defends this out-of-window citation.
+
+    A revision carrying HISTORICAL values legitimately cites the provisions that
+    governed those periods, because the citation defends the VALUE's window and
+    not the revision's. This is the deadline-window axis of the accepted
+    evidence-window decision, applied to the parameter carrier.
+
+    The exemption is deliberately hard to earn, and every clause below is load
+    bearing. CONTAINMENT rather than overlap, so a value cannot reach a provision
+    it only partly sits inside. A CLOSED window, so the exemption cannot be
+    bought by declaring an open-ended value -- an open window can never be
+    contained in a closed governed span. And never ``submission_date``, because
+    when a declaration was filed fixes no applicable law.
+
+    Carrier EXCLUSIVITY is enforced by the caller, which passes no spans at all
+    for a reference that any non-parameter record also cites.
+
+    Returns:
+        ``True`` when some carried value window is wholly inside the reference's
+        governed span on a law-fixing axis.
+    """
+    if not carried_spans:
+        return False
+    governs_from, governs_to = governed_period_span(reference)
+    for valid_from, valid_to, date_axis in carried_spans:
+        if date_axis == DateAxis.SUBMISSION_DATE.value:
+            continue
+        if valid_to is None:
+            continue
+        if governs_from <= valid_from and (governs_to is None or valid_to <= governs_to):
+            return True
+    return False
+
+
 def _legal_window_failure(
     legal_id: str,
     reference: LegalReference,
     *,
     revision: ModeloRevision,
     applicability_window: RevisionLegalApplicabilityWindow,
+    carried_spans: tuple[tuple[date, date | None, str], ...] = (),
 ) -> str | None:
     """Return the existing refusal detail for one out-of-window legal ref."""
     if _legal_window_covers_devengo(revision, reference):
+        return None
+    if reference.kind in _SUBSTANTIVE_LAW_KINDS and _historical_carrier_admits(reference, carried_spans):
         return None
     if reference.kind not in _SUBSTANTIVE_LAW_KINDS:
         if reference.effective_to is not None and reference.effective_to < applicability_window.starts_on:
