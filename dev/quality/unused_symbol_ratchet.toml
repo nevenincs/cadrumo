@@ -22,6 +22,7 @@
 # This is a backlog, not an endorsement.
 
 [symbols]
+"cadrumo.domain.calculations.registry._validate_relation_periods" = 1
 "cadrumo.application.user_profile.capsule_restore" = 2
 "cadrumo.entrypoints.cli._modelo" = 1
 "cadrumo.adapters.inbound.einvoice.shape" = 1
