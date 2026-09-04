@@ -14,19 +14,17 @@ from pathlib import Path
 
 import pytest
 
-from .. import (
-    TerminologyHandbook,
+from ..errors import TerminologyValidationError
+from ..loader import TerminologyHandbook, load_bundled_terminology_handbook, load_terminology_handbook
+from ..validators import (
+    _bundled_legal_ref_ids,
     approved_completeness_validator,
     default_handbook_validators,
     id_uniqueness_validator,
     legal_refs_resolve_validator,
     lifecycle_replaced_by_validator,
-    load_bundled_terminology_handbook,
-    load_terminology_handbook,
     relation_integrity_validator,
 )
-from ..errors import TerminologyValidationError
-from ..validators import _bundled_legal_ref_ids
 from ._support import write_concept_fragment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

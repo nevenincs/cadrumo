@@ -22,11 +22,8 @@ import pytest
 from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
 
-from ...terminology_handbook import (
-    TermStatus,
-    load_terminology_handbook,
-    terminology_concepts_dir,
-)
+from ...terminology_handbook.enums import TermStatus
+from ...terminology_handbook.loader import load_terminology_handbook, terminology_concepts_dir
 from .._concept_cards import ConceptCardProjectionStats, ConceptCardRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]

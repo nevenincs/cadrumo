@@ -16,18 +16,12 @@ import pytest
 from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.external_constants import OutputLanguage
 
-from .. import (
-    ConceptDomain,
-    EnrolmentCandidate,
-    ScaffoldAction,
-    SeedLabel,
-    build_scaffold_plan,
-    collect_enrolment_candidates,
-    load_terminology_handbook,
-    scaffold_handbook,
-    serialise_concept,
-)
+from .._enrolment import EnrolmentCandidate, SeedLabel, collect_enrolment_candidates
+from .._scaffold import ScaffoldAction, build_scaffold_plan, scaffold_handbook
+from .._serialize import serialise_concept
+from ..enums import ConceptDomain
 from ..errors import TerminologyValidationError
+from ..loader import load_terminology_handbook
 from ._support import write_concept_fragment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

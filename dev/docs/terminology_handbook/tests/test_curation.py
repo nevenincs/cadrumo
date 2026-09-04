@@ -17,22 +17,19 @@ import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
 
-from .. import (
-    ConceptDomain,
+from .._curation import (
     CurationError,
-    EnrolmentCandidate,
-    ScaffoldAction,
-    TermStatus,
     audit_handbook,
-    collect_enrolment_candidates,
-    load_terminology_handbook,
     relate_concepts,
     remove_term,
     retire_concept,
-    scaffold_handbook,
     set_language_field,
     set_term,
 )
+from .._enrolment import EnrolmentCandidate, collect_enrolment_candidates
+from .._scaffold import ScaffoldAction, scaffold_handbook
+from ..enums import ConceptDomain, TermStatus
+from ..loader import load_terminology_handbook
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

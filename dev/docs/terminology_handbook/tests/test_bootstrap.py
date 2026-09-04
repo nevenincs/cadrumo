@@ -15,15 +15,12 @@ from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 
-from .. import (
-    audit_handbook,
-    build_scaffold_plan,
-    collect_enrolment_candidates,
-    default_handbook_validators,
-    load_bundled_terminology_handbook,
-    serialise_concept,
-    terminology_concepts_dir,
-)
+from .._curation import audit_handbook
+from .._enrolment import collect_enrolment_candidates
+from .._scaffold import build_scaffold_plan
+from .._serialize import serialise_concept
+from ..loader import load_bundled_terminology_handbook, terminology_concepts_dir
+from ..validators import default_handbook_validators
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

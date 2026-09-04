@@ -74,8 +74,8 @@ def _approved_anchor_terms() -> tuple[str, ...]:
     """
     from cadrumo.core.concept_lifecycle import ConceptLifecycle
 
-    from .. import load_terminology_handbook
     from ..enums import TermStatus
+    from ..loader import load_terminology_handbook
 
     handbook = load_terminology_handbook()
     labels: set[str] = set()

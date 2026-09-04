@@ -37,7 +37,7 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 
 from ...._paths import REPO_ROOT
-from ...terminology_handbook import load_terminology_handbook
+from ...terminology_handbook.loader import load_terminology_handbook
 from .._sweep import SweepResult, enumerate_query_vocabulary
 from ..search_record import SearchRecordKind
 

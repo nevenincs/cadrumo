@@ -142,7 +142,7 @@ def test_every_display_class_is_exercised_by_the_injected_corpus() -> None:
 
 def test_concept_domain_splits_modelo_from_general_fact() -> None:
     """A modelo-domain concept is ``MODELO``; every other domain is ``DOC``."""
-    from ...terminology_handbook import ConceptDomain
+    from ...terminology_handbook.enums import ConceptDomain
     from ..search_record import ResultDisplayClass, SearchRecordKind
     from ..unified_record import (
         RankingTier,

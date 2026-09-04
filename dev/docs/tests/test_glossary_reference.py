@@ -52,7 +52,7 @@ _REPO_ROOT = REPO_ROOT
 
 
 def _load_handbook():
-    from ..terminology_handbook import load_terminology_handbook
+    from ..terminology_handbook.loader import load_terminology_handbook
 
     return load_terminology_handbook()
 
