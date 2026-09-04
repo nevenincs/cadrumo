@@ -1015,6 +1015,11 @@ async def test_completing_one_overview_operation_keeps_the_other_action_reachabl
         first = screen.query_one("#aeat-sync-operation-0", Button)
         second = screen.query_one("#aeat-sync-operation-1", Button)
         await pilot.click(first)
+        # A click POSTS a message; the handler that disables the button runs on
+        # the next pump. Asserting straight after the click races that handler,
+        # which is why this passed only when earlier tests had shifted the
+        # timing and failed whenever it ran alone.
+        await pilot.pause()
         assert first.disabled
         assert not second.disabled
         if first_fails:
@@ -1023,6 +1028,7 @@ async def test_completing_one_overview_operation_keeps_the_other_action_reachabl
             assert "protected" not in status
             assert "12345678Z" not in status
         await pilot.click(second)
+        await pilot.pause()
     assert tuple(call.action.action_id for call in calls) == (
         "operator.profile.edit",
         "operator.live.filed.pull_all",

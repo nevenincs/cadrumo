@@ -32,6 +32,7 @@ from ..entries import LedgerEntriesScreen
 from ..overview import LedgerOverviewScreen
 from ..review import LedgerReviewScreen
 from ..routes import LEDGER_ROUTES, LedgerUnavailableScreen, ledger_screen_factory, resolve_ledger_screen
+from ..workspace_injection import LedgerWorkspaceInjection
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -120,7 +121,9 @@ def _controller(
     projection: LedgerWorkspaceProjectionV1,
     context: TuiScreenContextV1 | None = None,
 ) -> LedgerWorkspaceController:
-    return LedgerWorkspaceController(context or _context(), projection, review_action=_review_action())
+    return LedgerWorkspaceController(
+        context or _context(), projection, LedgerWorkspaceInjection(review_action=_review_action())
+    )
 
 
 def _all_copy(screen: LedgerOverviewScreen | LedgerEntriesScreen | LedgerReviewScreen) -> str:

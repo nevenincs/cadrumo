@@ -148,6 +148,7 @@ async def test_source_action_card_button_is_reachable_and_pressable_by_keyboard(
 
     assert app.pressed_count == 1
 
+
 @pytest.mark.asyncio
 async def test_every_grouping_mechanism_separates_its_groups_by_the_same_distance() -> None:
     """Three ways to mark a group, one distance between them.
@@ -196,6 +197,7 @@ async def test_every_grouping_mechanism_separates_its_groups_by_the_same_distanc
             f"{mechanism} separates consecutive groups by {gap} rows, not the "
             f"{section_gap} the section token declares; measured {measured}"
         )
+
 
 @pytest.mark.asyncio
 async def test_a_source_card_title_is_separated_from_the_card_above_it() -> None:

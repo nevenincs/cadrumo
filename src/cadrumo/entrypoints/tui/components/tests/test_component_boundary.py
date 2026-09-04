@@ -33,6 +33,7 @@ def test_presentation_symbols_have_one_direct_canonical_home() -> None:
     )
     assert install_cadrumo_themes.__module__ == "cadrumo.entrypoints.tui.components.theme"
 
+
 def test_no_query_passes_a_subscripted_generic_as_its_expected_type() -> None:
     """`query_one(sel, Foo[str])` type-checks and then raises at mount.
 
@@ -67,12 +68,10 @@ def test_no_query_passes_a_subscripted_generic_as_its_expected_type() -> None:
             for argument in node.args[1:]:
                 if isinstance(argument, ast.Subscript):
                     offenders.append(
-                        f"{source.relative_to(package)}:{node.lineno} "
-                        f"{node.func.attr}(..., {ast.unparse(argument)})"
+                        f"{source.relative_to(package)}:{node.lineno} {node.func.attr}(..., {ast.unparse(argument)})"
                     )
 
     assert not offenders, (
         "these calls pass a subscripted generic where Textual will isinstance-check it, "
-        "which raises TypeError at mount; use the bare class and cast the result:\n"
-        + "\n".join(offenders)
+        "which raises TypeError at mount; use the bare class and cast the result:\n" + "\n".join(offenders)
     )

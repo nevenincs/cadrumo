@@ -14,7 +14,6 @@ from ....application.ledger.workspace import LedgerWorkspaceArea, LedgerWorkspac
 from ....application.operator_actions.models import ActionReference
 from ....core.identity import TransactionId
 from ..navigation import TuiScreenContextV1, TuiScreenFactoryV1
-from .action_guards import require_canonical_ledger_actions
 from .classification import LedgerClassificationScreen
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen, ledger_copy
 from .entries import LedgerEntriesScreen
@@ -32,6 +31,7 @@ from .models import (
 from .overview import LedgerOverviewScreen
 from .reconciliation import LedgerReconciliationScreen
 from .review import LedgerReviewScreen
+from .workspace_injection import LedgerWorkspaceInjection
 from .workspace_presentation import ledger_workspace_page
 
 type LedgerInternalScreenFactoryV1 = Callable[[LedgerWorkspaceController], LedgerWorkspaceScreen]
@@ -140,28 +140,21 @@ def ledger_screen_factory(
     link_submitter: LedgerLinkSubmitterV1 | None = None,
 ) -> TuiScreenFactoryV1:
     """Bind an injected immutable projection to the outer navigation factory contract."""
-    require_canonical_ledger_actions(
+    injection = LedgerWorkspaceInjection(
         review_action=review_action,
         classify_action=classify_action,
+        classification_target=classification_target,
+        classification_submitter=classification_submitter,
+        prepared_imports=prepared_imports,
+        import_submitter=import_submitter,
         evidence_action=evidence_action,
+        evidence_items=evidence_items,
         link_action=link_action,
+        link_submitter=link_submitter,
     )
 
     def create(context: TuiScreenContextV1) -> LedgerWorkspaceScreen:
-        controller = LedgerWorkspaceController(
-            context,
-            projection,
-            review_action=review_action,
-            classify_action=classify_action,
-            classification_target=classification_target,
-            classification_submitter=classification_submitter,
-            prepared_imports=prepared_imports,
-            import_submitter=import_submitter,
-            evidence_action=evidence_action,
-            evidence_items=evidence_items,
-            link_action=link_action,
-            link_submitter=link_submitter,
-        )
+        controller = LedgerWorkspaceController(context, projection, injection)
         return resolve_ledger_screen(controller, controller.route_target(LedgerWorkspaceArea.OVERVIEW))
 
     return create
