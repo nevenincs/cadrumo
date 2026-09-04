@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:e125f876711d50b0f7123080916b80f842b8e3262da61fdfd81e2c8554f5ce6f'
+body_hash: 'sha256:beac55b8cf2941caad00dde04297097fada16cc40d439bb477b2c77cc7ece689'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -483,6 +483,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S601` - Cover the identity canary's report shape, which is the clearest example in the tree of the discipline this campaign restores elsewhere, pinning that every section survives and that each path exclusion prints its reason and not merely its count; `dev/identity/tests/test_identity_canary_report.py`.
 - [x] `W02.P02.S602` - Separate an absent enumeration root from an empty one, since a root that does not exist yielded the same nothing as a directory holding no Python files and every walk over it then analysed an empty corpus, the reference walk reporting live code dead and the test walk reporting no tests; `dev/audit/unreachable_code.py,dev/audit/tests/test_unreachable_code.py`.
 - [x] `W02.P02.S603` - Separate an absent compatibility root from an empty one, since a root that does not exist enumerated the same nothing and the union across roots hid which contributed zero, so shipped code could be reported compatible for a Python version without a file under it being read; `dev/quality/python_compatibility_scan.py,dev/quality/tests/test_python_compatibility_scan.py`.
+- [x] `W02.P02.S604` - Pin what the devcontainer checks say when a precondition fails, since they run inside the built image where the only artefact is a CI log and a refusal that does not name both what it found and what it expected costs a rebuild to diagnose; `dev/containers/tests/test_devcontainer_smoke.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
