@@ -89,3 +89,30 @@ def test_a_readable_tree_announces_nothing(
 
     assert scan_source_tree(tmp_path)
     assert capsys.readouterr().err == ""
+
+
+def test_the_manager_announces_a_module_it_could_not_read(
+    tmp_path: pathlib.Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The outer key scan has the same two silences as the AST scanner it calls.
+
+    ``get_codebase_keys`` decides which keys the codebase uses, so a key missed
+    here is a live translation on a deletion path. The lenient decode could cut
+    a key literal in half so the pattern never matched it, and the read failure
+    was logged at debug level.
+    """
+    from ..manager import LocaleManager
+
+    source = tmp_path / "src"
+    source.mkdir()
+    (source / "sound.py").write_text(_DECLARING_SOURCE, encoding="utf-8")
+    (source / "undecodable.py").write_bytes(bytes([0xFF, 0xFE]) + _DECLARING_SOURCE.encode("utf-8"))
+    locales = tmp_path / "locales"
+    locales.mkdir()
+
+    LocaleManager(source, locales).get_codebase_keys()
+
+    error = capsys.readouterr().err
+    assert "would look unused" in error
+    assert "undecodable.py" in error
