@@ -375,6 +375,69 @@ def test_tui_projection_accepts_simple_aliases_on_both_return_dataflows() -> Non
     assert tuple(row.destination for row in candidate.routes if row.reachability == "installed") == ("ledger.overview",)
 
 
+def test_tui_projection_refuses_conditionally_reassigned_route_target_alias() -> None:
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/ledger/routes.py",
+        lambda body: body.replace(
+            b"        return resolve_ledger_screen(controller, controller.route_target(LedgerWorkspaceArea.OVERVIEW))",
+            b"        target = LedgerWorkspaceArea.OVERVIEW\n"
+            b"        if context.destination == 'dead.branch':\n"
+            b"            target = LedgerWorkspaceArea.ENTRIES\n"
+            b"        return resolve_ledger_screen(controller, controller.route_target(target))",
+            1,
+        ),
+    )
+
+    with pytest.raises(ValueError, match="not uniquely and unconditionally defined"):
+        build_ledger_tui_supported_surface_census(source_records=records)
+
+
+def test_tui_projection_refuses_conditionally_reassigned_installed_screen_alias() -> None:
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/launcher.py",
+        lambda body: _alias_installed_screen_return(body).replace(
+            b"        return screen",
+            b"        if context.destination == 'dead.branch':\n            screen = Screen()\n        return screen",
+            1,
+        ),
+    )
+
+    with pytest.raises(ValueError, match="not uniquely and unconditionally defined"):
+        build_ledger_tui_supported_surface_census(source_records=records)
+
+
+@pytest.mark.parametrize(
+    "replacement, message",
+    [
+        (b"        screen = Screen()\n        return screen", "not uniquely and unconditionally defined"),
+        (b"        del screen\n        return screen", "not uniquely and unconditionally defined"),
+        (b"        screen = screen\n        return screen", "not uniquely and unconditionally defined"),
+    ],
+)
+def test_tui_projection_refuses_non_single_assignment_aliases(replacement: bytes, message: str) -> None:
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/launcher.py",
+        lambda body: _alias_installed_screen_return(body).replace(b"        return screen", replacement, 1),
+    )
+
+    with pytest.raises(ValueError, match=message):
+        build_ledger_tui_supported_surface_census(source_records=records)
+
+
+def test_tui_projection_refuses_alias_read_before_definition() -> None:
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/launcher.py",
+        lambda body: (
+            _alias_installed_screen_return(body)
+            .replace(b"screen = ledger_screen_factory", b"candidate = ledger_screen_factory", 1)
+            .replace(b"return screen", b"screen = screen\n        return screen", 1)
+        ),
+    )
+
+    with pytest.raises(ValueError, match="read before its definition"):
+        build_ledger_tui_supported_surface_census(source_records=records)
+
+
 def test_tui_projection_refuses_ambiguous_installed_screen_returns() -> None:
     records = _mutate_tui_source(
         "src/cadrumo/entrypoints/tui/launcher.py",

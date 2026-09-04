@@ -483,31 +483,102 @@ def _function_returns(function: ast.FunctionDef | ast.AsyncFunctionDef) -> tuple
     return tuple(collector.returns)
 
 
-def _simple_assignments(function: ast.FunctionDef | ast.AsyncFunctionDef) -> dict[str, ast.expr]:
-    assignments: dict[str, ast.expr] = {}
+@dataclass(frozen=True)
+class _AliasDefinition:
+    value: ast.expr
+    target: ast.Name
+
+
+class _BindingCollector(ast.NodeVisitor):
+    """Collect same-scope writes without entering nested definitions."""
+
+    def __init__(self) -> None:
+        self.bindings: dict[str, list[ast.AST]] = {}
+
+    @override
+    def visit_Name(self, node: ast.Name) -> None:
+        if isinstance(node.ctx, (ast.Store, ast.Del)):
+            self.bindings.setdefault(node.id, []).append(node)
+
+    @override
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        return
+
+    @override
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        return
+
+    @override
+    def visit_Lambda(self, node: ast.Lambda) -> None:
+        return
+
+    @override
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        return
+
+    @override
+    def visit_ExceptHandler(self, node: ast.ExceptHandler) -> None:
+        if node.name is not None:
+            self.bindings.setdefault(node.name, []).append(node)
+        self.generic_visit(node)
+
+    @override
+    def visit_MatchAs(self, node: ast.MatchAs) -> None:
+        if node.name is not None:
+            self.bindings.setdefault(node.name, []).append(node)
+        self.generic_visit(node)
+
+    @override
+    def visit_MatchStar(self, node: ast.MatchStar) -> None:
+        if node.name is not None:
+            self.bindings.setdefault(node.name, []).append(node)
+
+    @override
+    def visit_MatchMapping(self, node: ast.MatchMapping) -> None:
+        if node.rest is not None:
+            self.bindings.setdefault(node.rest, []).append(node)
+        self.generic_visit(node)
+
+
+def _simple_assignments(function: ast.FunctionDef | ast.AsyncFunctionDef) -> dict[str, _AliasDefinition]:
+    assignments: dict[str, _AliasDefinition] = {}
     for statement in function.body:
         if (
             isinstance(statement, ast.Assign)
             and len(statement.targets) == 1
             and isinstance(statement.targets[0], ast.Name)
         ):
-            assignments[statement.targets[0].id] = statement.value
+            target = statement.targets[0]
+            assignments[target.id] = _AliasDefinition(value=statement.value, target=target)
         elif (
             isinstance(statement, ast.AnnAssign)
             and isinstance(statement.target, ast.Name)
             and statement.value is not None
         ):
-            assignments[statement.target.id] = statement.value
+            assignments[statement.target.id] = _AliasDefinition(value=statement.value, target=statement.target)
     return assignments
 
 
-def _resolve_simple_alias(expression: ast.expr, assignments: Mapping[str, ast.expr]) -> ast.expr:
+def _resolve_simple_alias(
+    expression: ast.expr,
+    function: ast.FunctionDef | ast.AsyncFunctionDef,
+) -> ast.expr:
+    assignments = _simple_assignments(function)
+    collector = _BindingCollector()
+    for statement in function.body:
+        collector.visit(statement)
     seen: set[str] = set()
     while isinstance(expression, ast.Name) and expression.id in assignments:
+        definition = assignments[expression.id]
+        bindings = collector.bindings.get(expression.id, [])
+        if bindings != [definition.target]:
+            raise ValueError(f"Ledger TUI census alias {expression.id!r} is not uniquely and unconditionally defined")
+        if definition.target.lineno >= expression.lineno:
+            raise ValueError(f"Ledger TUI census alias {expression.id!r} is read before its definition")
         if expression.id in seen:
             raise ValueError("Ledger TUI census found a cyclic return alias")
         seen.add(expression.id)
-        expression = assignments[expression.id]
+        expression = definition.value
     return expression
 
 
@@ -520,7 +591,7 @@ def _single_effective_return(function: ast.FunctionDef | ast.AsyncFunctionDef) -
     )
     if len(values) != 1:
         raise ValueError(f"{function.name} must have exactly one non-null return dataflow")
-    return _resolve_simple_alias(values[0], _simple_assignments(function))
+    return _resolve_simple_alias(values[0], function)
 
 
 def _returned_nested_function(
@@ -570,7 +641,7 @@ def _installed_ledger_factory_call(tree: ast.Module) -> ast.Call:
     returned = _single_effective_return(create)
     if not isinstance(returned, ast.Call):
         raise ValueError("installed Ledger create factory must return a screen invocation")
-    factory_expression = _resolve_simple_alias(returned.func, _simple_assignments(create))
+    factory_expression = _resolve_simple_alias(returned.func, create)
     if (
         not isinstance(factory_expression, ast.Call)
         or not isinstance(factory_expression.func, ast.Name)
@@ -614,18 +685,22 @@ def _initial_route_area(tree: ast.Module) -> str:
         or len(returned.args) != 2
     ):
         raise ValueError("Ledger root create return does not resolve one screen")
-    target = _resolve_simple_alias(returned.args[1], _simple_assignments(create))
+    target = _resolve_simple_alias(returned.args[1], create)
     if (
         not isinstance(target, ast.Call)
         or not isinstance(target.func, ast.Attribute)
         or target.func.attr != "route_target"
         or len(target.args) != 1
-        or not isinstance(target.args[0], ast.Attribute)
-        or not isinstance(target.args[0].value, ast.Name)
-        or target.args[0].value.id != "LedgerWorkspaceArea"
     ):
         raise ValueError("Ledger root factory initial route is not statically census-readable")
-    return target.args[0].attr
+    area = _resolve_simple_alias(target.args[0], create)
+    if (
+        not isinstance(area, ast.Attribute)
+        or not isinstance(area.value, ast.Name)
+        or area.value.id != "LedgerWorkspaceArea"
+    ):
+        raise ValueError("Ledger root factory initial route is not statically census-readable")
+    return area.attr
 
 
 def _reachable_recipient_classes(
