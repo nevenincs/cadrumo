@@ -1403,3 +1403,40 @@ def test_the_period_ambiguity_gate_detects_a_planted_clash() -> None:
 
     assert ambiguously_claimed_periods(()) == (), "a revision claiming nothing clashes with nothing"
     assert ambiguously_claimed_periods((("r", 2024, "2T"),)) == (), "one claimant is not two"
+
+
+def test_the_citation_gate_exempts_two_located_regions_and_no_more() -> None:
+    """The gate's self-exemption must not grow back into a whole-file skip.
+
+    It once skipped this module entirely - 1,365 lines unscanned to protect the
+    33 that must contain example citations, which is a blind spot covering the
+    gate's own source in a gate about things hiding where nobody looks.
+
+    Two properties hold it narrow. The exempted regions are located by parsing
+    this module rather than by line number, so an edit above them cannot move
+    the exemption onto innocent code; and blanking them must remove only those
+    lines, which is asserted here by counting rather than trusted.
+    """
+    import pathlib
+
+    source = pathlib.Path(__file__).read_text(encoding=_UTF_8)
+    blanked = _without_self_reference_regions(source)
+
+    original = source.splitlines()
+    remaining = blanked.splitlines()
+    assert len(original) == len(remaining), "blanking must preserve line numbering"
+    emptied = sum(1 for before, after in zip(original, remaining, strict=True) if before and not after)
+    assert 0 < emptied < 60, f"{emptied} lines exempted; the exemption is drifting back to a file skip"
+    assert emptied < len(original) / 20, "the exemption covers more than a twentieth of the module"
+
+    # And what survives is still scanned: a citation written anywhere else in
+    # this module is reported, which is the whole point of narrowing it.
+    assert _vault_citations(blanked) == []
+    # Assembled at runtime rather than written as a literal: this test lives
+    # OUTSIDE the two exempted regions, so a spelled-out citation here would be
+    # a real violation of the gate it is testing. Growing the exemption to cover
+    # this function instead is the move the narrowing exists to prevent.
+    planted = "W04.P08.S" + "99"
+    assert _vault_citations(blanked + chr(10) + f"# see {planted} for the rollout") == [
+        f"wave-phase-step identifier: {planted}"
+    ]
