@@ -53,6 +53,7 @@ from typing import Final
 from cadrumo.core.directory_scan import scan_directory
 
 from ..._paths import REPO_ROOT, UTF_8
+from ...quality.unread_inputs import report_unread
 
 SOURCE_ROOT: Final[Path] = REPO_ROOT / "src" / "cadrumo"
 REGISTRY_PACKAGE_ROOT: Final[Path] = SOURCE_ROOT / "domain" / "calculations" / "registry"
@@ -368,17 +369,30 @@ def census(package_root: Path = REGISTRY_PACKAGE_ROOT) -> tuple[ModeloModuleReco
 def importer_index(source_root: Path = SOURCE_ROOT) -> Mapping[str, tuple[str, ...]]:
     """Return, per module stem, every module under ``source_root`` that imports it."""
     index: dict[str, list[str]] = {}
+    unread: list[str] = []
     for path in scan_directory(source_root, pattern="*.py", recursive=True, prune_directories=("__pycache__",)):
         try:
-            body = path.read_text(encoding=_UTF_8)
+            tree = ast.parse(path.read_text(encoding=_UTF_8))
         except FileNotFoundError:
             # The tree is walked live and peers create and remove scratch modules
             # under it; a file that vanishes between listing and reading imports
             # nothing.
             continue
+        except (SyntaxError, UnicodeDecodeError) as error:
+            # The same race, one step earlier: a peer mid-write leaves a module
+            # that exists but does not parse. Parsing sat outside the guard, so
+            # that far likelier case killed the whole index instead of costing
+            # one file's imports.
+            unread.append(f"{path}: {type(error).__name__}: {error}")
+            continue
         relative = _repo_relative(path)
-        for stem in _imported_stems(ast.parse(body)):
+        for stem in _imported_stems(tree):
             index.setdefault(stem, []).append(relative)
+    report_unread(
+        "modelo embed importer index",
+        "the imports they declare are missing from this index",
+        unread,
+    )
     return {stem: tuple(paths) for stem, paths in index.items()}
 
 

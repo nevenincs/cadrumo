@@ -581,3 +581,11 @@ resolved = false
 remedy_requires_decision = true
 symbols = ["pre_flight_oracle_operations", "evaluate_planned_operations", "resolve_cross_reference_oracle"]
 evidence = "Two are declared in live_parity's __all__ and one is not; none is called anywhere in production or in dev/, and each carries a substantial test suite (9, 5 and 13 references). They are the oracle pre-flight surface for the sede renta-web-open cluster, which is itself carried as unreachable staged capability, so they are most likely transitively dead through it. Deleting exported API from filing-grade registry code on the audit's say-so needs its owner's decision."
+
+[[symbol_cluster]]
+name = "ledger payload keep-alive tuples"
+class = "superseded"
+area = "entrypoints/cli"
+resolved = true
+symbols = ["_LEDGER_BUSINESS_PAYLOAD_EXPORTS", "_LEDGER_RULE_PAYLOAD_EXPORTS", "_LEDGER_RATIOS_PAYLOAD_EXPORTS"]
+evidence = "Three tuples that merely MENTIONED 34 imported payload types so the linter would not strip imports that external callers import from this module. They were load-bearing, not dead: removing them alone would have stripped the imports and broken the re-export surface. Replaced by an explicit __all__ of 91 names, which is the mechanism for the same job and which the linter and a reader both understand. Re-exports verified still reachable and the module's findings fell from three to zero."
