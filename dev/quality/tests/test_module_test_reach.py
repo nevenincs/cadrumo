@@ -159,3 +159,30 @@ def test_the_unambiguous_write_calls_still_rank() -> None:
     for call in ("write_text", "write_bytes", "rename", "unlink", "mkdir", "rmdir"):
         tree = ast.parse(f"target.{call}()\n")
         assert module_capabilities(tree) == ("writes",), f"{call} stopped counting as a write"
+
+
+def test_every_live_writes_attribution_has_a_real_call_site() -> None:
+    """Each ranked module is checked against the call that ranked it.
+
+    Two false positives were found by noticing an implausible module name, which
+    is not a method. This asks the question of every attribution instead: a
+    module ranked as writing must contain a call whose attribute is one of the
+    write names, or the attribution came from somewhere the report cannot show.
+
+    It is deliberately not a re-implementation of the detector. The detector
+    decides from the syntax tree and this reads the same trees back, so a
+    disagreement means the report attributed a capability it cannot point at.
+    """
+    from ..module_test_reach import _WRITE_CALLS, unreached_modules
+
+    ranked = [item for item in unreached_modules() if "writes" in item.capabilities]
+    assert ranked, "no module is ranked as writing, so this proves nothing"
+
+    for item in ranked:
+        tree = ast.parse(pathlib.Path(item.path).read_text(encoding="utf-8"))
+        sites = [
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr in _WRITE_CALLS
+        ]
+        assert sites, f"{item.path} is ranked as writing with no write call to show for it"
