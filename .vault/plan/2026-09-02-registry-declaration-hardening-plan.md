@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:263dbf39bc6db2740383efc07ad116753fc37946a6bcb165b80538422932e725'
+body_hash: 'sha256:94f6e50c78d7c38c2dc80545a7a708e977e77b83da5863f20be6f2b02d8dba21'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -494,6 +494,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S612` - Give the concept-card projection's legal-link counter a reader that compares it against the cards it was computed alongside, since the stat had no reader anywhere in the tree and every caller unpacked the projection stats into a discard; `dev/docs/terminology/tests/test_concept_cards.py`.
 - [x] `W02.P02.S613` - Give the CLI projection's three statistics a reader, since the missing-translation count among them was computed on every run and had zero attribute reads anywhere: both callers unpack the stats into a discard and the frozen dataclass is never serialised; `dev/docs/terminology/tests/test_cli_projection.py`.
 - [x] `W02.P02.S614` - Delete the facade scanner's pure-re-export flag, which appeared once in the tree as its own declaration: never written by the single construction site and never read, so it promised a detection the scan does not perform; `dev/quality/import_hygiene_scan.py`.
+- [x] `W02.P02.S615` - Carry help-text translation coverage into the locale axis summary, since the per-revision record counted authored help values for every casilla at the cost of a walk per locale and both fields had zero readers: the fold reported labels only, so 253 of 384 live records read as complete while their help coverage stood at 17311 of 89034 required leaves; `dev/registry/conformance/manager.py dev/registry/conformance/tests/test_manager_locale_coverage.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
