@@ -52,6 +52,32 @@ _ADJUDICATIONS_OPTION = typer.Option(
 )
 
 
+def casilla_claims(
+    inventory: AeipInventory,
+) -> tuple[dict[tuple[str, str], set[str]], dict[str, set[str]]]:
+    """Return which programmes claim each casilla, per revision and pooled.
+
+    Two different questions were being answered by one number. Pooling every
+    revision under a bare casilla id counts a programme that INHERITED an id
+    in a later year as colliding with the programme that held it earlier,
+    which is ordinary AEAT reassignment and not an identity defect.
+
+    The finding that matters is two programmes claiming one casilla WITHIN a
+    single revision, because only there is the id ambiguous. Measured on the
+    live modelo 100 family, the pooled number reported thirty and the
+    same-revision number was zero - so every reported collision was expected
+    behaviour, and a real one appearing would have moved thirty to thirty-one
+    with nothing to distinguish it.
+    """
+    within_revision: dict[tuple[str, str], set[str]] = {}
+    pooled: dict[str, set[str]] = {}
+    for event in inventory.events:
+        for occurrence in event.occurrences:
+            within_revision.setdefault((occurrence.revision_id, occurrence.casilla_id), set()).add(event.slug)
+            pooled.setdefault(occurrence.casilla_id, set()).add(event.slug)
+    return within_revision, pooled
+
+
 @app.command("inventory")
 def inventory_command(
     modelo: Annotated[str, _MODELO_OPTION] = "100",
@@ -71,13 +97,15 @@ def inventory_command(
         categories = inventory.category_row_counts.get(revision, 0)
         typer.echo(f"  {revision}: {events:>3} event rows, {categories:>3} category rows")
 
-    reuse: dict[str, set[str]] = {}
-    for event in inventory.events:
-        for occurrence in event.occurrences:
-            reuse.setdefault(occurrence.casilla_id, set()).add(event.slug)
-    collisions = {casilla: slugs for casilla, slugs in reuse.items() if len(slugs) > 1}
-    typer.echo(f"  distinct casilla ids  : {len(reuse)}")
-    typer.echo(f"    reused across programmes: {len(collisions)}")
+    within_revision, pooled = casilla_claims(inventory)
+    collisions = sorted(key for key, slugs in within_revision.items() if len(slugs) > 1)
+    reassigned = sorted(casilla for casilla, slugs in pooled.items() if len(slugs) > 1)
+    typer.echo(f"  distinct casilla ids  : {len(pooled)}")
+    typer.echo(f"    same-revision collisions   : {len(collisions)}")
+    for revision, casilla in collisions:
+        claimants = ", ".join(sorted(within_revision[(revision, casilla)]))
+        typer.echo(f"      {revision}:{casilla} claimed by {claimants}")
+    typer.echo(f"    reassigned across revisions: {len(reassigned)} (expected; not a collision)")
 
 
 @app.command("check")
