@@ -22,10 +22,10 @@ from pydantic import BaseModel, Field, computed_field, model_validator
 
 from cadrumo.application.filing.export_proof import FilingExportProofAuthority
 from cadrumo.application.registry.closure import (
+    RegistryClosureFilingChannelRefusal,
     RegistryClosureLimb,
     RegistryClosureLimbName,
     RegistryClosureOwnerDisposition,
-    RegistryClosureFilingChannelRefusal,
     RegistryClosureRefusalReason,
 )
 from cadrumo.application.registry.filing_export_coverage import (

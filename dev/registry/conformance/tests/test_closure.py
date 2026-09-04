@@ -195,6 +195,9 @@ def test_typed_temporal_failure_is_retained_as_an_owned_release_refusal() -> Non
                 "Revalidate the exact law-selected revision and its declared authority-grade snapshot."
             ),
         },
+        # A temporal refusal carries no per-channel filing state; only a
+        # filing-export refusal may, and the model refuses the combination.
+        "filing_channels": (),
     }
     assert report.refusal_reason_census == {"declared_grade_snapshot_refused": 1}
 
