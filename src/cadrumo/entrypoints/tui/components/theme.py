@@ -269,6 +269,19 @@ BASE_CSS: Final[str] = tokenised("""
         scrollbar-size-vertical: $cadrumo-space-0;
     }
 
+    /* A section heading and the content it owns. The two gaps are
+       deliberately asymmetric: the SECTION gap above separates this group from
+       the previous one, the smaller STACK gap below binds the heading to its
+       own rows. A heading equidistant from both reads as floating between
+       them; a heading with no gap below reads as fused to its content, which
+       is how a screen becomes one continuous run of data. */
+    .cadrumo-heading {
+        height: auto;
+        text-style: bold;
+        margin-top: $cadrumo-section;
+        margin-bottom: $cadrumo-stack;
+    }
+
     .cadrumo-banner {
         dock: top;
         height: $cadrumo-band-height;

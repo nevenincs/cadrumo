@@ -197,7 +197,7 @@ class HomeScreen(Screen[None]):
         HomeScreen.wide #home-layout { layout: horizontal; }
         HomeScreen.wide #home-main { width: 2fr; padding-right: $cadrumo-control-gap; }
         HomeScreen.wide #home-sidebar { width: 1fr; }
-        .home-heading { text-style: bold; margin-top: $cadrumo-stack; }
+        /* Rhythm comes from the shared .cadrumo-heading rule. */
         .home-state { color: $text-muted; height: auto; }
         .home-table { width: 100%; height: auto; }
         """
@@ -239,7 +239,7 @@ class HomeScreen(Screen[None]):
         )
         with ContentScroll(id="home-page", classes="cadrumo-scroll"), Static(id="home-layout"):
             with Static(id="home-main"):
-                yield Static(tr("tui.home.heading.actions"), classes="home-heading", markup=False)
+                yield Static(tr("tui.home.heading.actions"), classes="cadrumo-heading", markup=False)
                 yield Static(
                     _state_copy(
                         projection.actions_state,
@@ -258,7 +258,7 @@ class HomeScreen(Screen[None]):
                     classes="home-table",
                 )
                 yield Static(id="home-action-contexts", classes="home-state", markup=False)
-                yield Static(tr("tui.home.heading.declarations"), classes="home-heading", markup=False)
+                yield Static(tr("tui.home.heading.declarations"), classes="cadrumo-heading", markup=False)
                 yield Static(
                     _state_copy(
                         projection.declarations_state,
@@ -277,7 +277,7 @@ class HomeScreen(Screen[None]):
                     classes="home-table",
                 )
             with Static(id="home-sidebar"):
-                yield Static(tr("tui.home.heading.agenda"), classes="home-heading", markup=False)
+                yield Static(tr("tui.home.heading.agenda"), classes="cadrumo-heading", markup=False)
                 yield Static(
                     _state_copy(
                         projection.agenda_state,
@@ -297,9 +297,9 @@ class HomeScreen(Screen[None]):
                 )
                 yield Static(id="home-agenda-evidence", classes="home-state", markup=False)
                 yield Static(id="home-evidence", classes="home-state", markup=False)
-                yield Static(tr("tui.home.heading.ledger"), classes="home-heading", markup=False)
+                yield Static(tr("tui.home.heading.ledger"), classes="cadrumo-heading", markup=False)
                 yield Static(id="home-ledger", classes="home-state", markup=False)
-                yield Static(tr("tui.home.heading.messages"), classes="home-heading", markup=False)
+                yield Static(tr("tui.home.heading.messages"), classes="cadrumo-heading", markup=False)
                 yield Static(id="home-messages", classes="home-state", markup=False)
 
     def on_resize(self, event: events.Resize) -> None:
