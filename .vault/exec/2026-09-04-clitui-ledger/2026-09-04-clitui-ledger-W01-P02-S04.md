@@ -5,16 +5,11 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:0daefd2f3b5ae6a74f98ac79d6c357d17524c0ce511259a7910ea815ae7200ef'
+body_hash: 'sha256:7e78abfae81a8120655685589d758343c1733eec763ca21e223f75e070cf57c8'
 step_id: 'S04'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Enumerate every invocable Ledger command endpoint, sub-operation, handler, schema, and adapter ownership annotation
 
