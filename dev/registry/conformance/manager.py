@@ -503,6 +503,8 @@ class LocaleAxisSummary(ConformanceModel):
     complete_revisions: int = Field(ge=0)
     measured_revisions: int = Field(ge=0)
     stale_keys: int = Field(ge=0)
+    help_required: int = Field(ge=0)
+    help_translated: int = Field(ge=0)
 
 
 class ConformanceReport(ConformanceModel):
@@ -1348,6 +1350,8 @@ def _locale_axis_summary(
     complete: dict[str, int] = {}
     measured: dict[str, int] = {}
     stale: dict[str, int] = {}
+    help_required: dict[str, int] = {}
+    help_translated: dict[str, int] = {}
     for records in locale_index.values():
         for record in records:
             code = record.locale.value
@@ -1356,6 +1360,8 @@ def _locale_axis_summary(
             complete[code] = complete.get(code, 0) + (1 if record.complete else 0)
             measured[code] = measured.get(code, 0) + 1
             stale[code] = stale.get(code, 0) + _stale_key_count(record)
+            help_required[code] = help_required.get(code, 0) + record.help_required
+            help_translated[code] = help_translated.get(code, 0) + record.help_translated
     return tuple(
         LocaleAxisSummary(
             locale=code,
@@ -1364,6 +1370,8 @@ def _locale_axis_summary(
             complete_revisions=complete.get(code, 0),
             measured_revisions=measured.get(code, 0),
             stale_keys=stale.get(code, 0),
+            help_required=help_required.get(code, 0),
+            help_translated=help_translated.get(code, 0),
         )
         for code in sorted(required)
     )
