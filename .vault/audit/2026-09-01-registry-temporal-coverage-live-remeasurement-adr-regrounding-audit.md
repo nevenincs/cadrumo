@@ -14447,3 +14447,28 @@ between creating, writing and destroying would be more accurate than one
 `writes` category. The population that would distinguish them is one module out
 of nine. That is the sixth guard this campaign has declined after measuring, and
 the reason is the same each time: a distinction with one member ranks nothing.
+
+
+## The evidence check, asked of all three categories
+
+The check written last iteration covered `writes` and neither of the other two.
+That is the asymmetry this campaign has now found in a lane, a marker, a gate's
+self-exemption and a docstring - one category with a proof and the rest without -
+sitting inside the module whose entire purpose is to rank categories against
+each other.
+
+It now asks every attribution of every capability: a module ranked `writes`,
+`applies` or `operator` must carry syntax the report can point at. Live, all
+three are exercised - 9, 2 and 19 - and the final assertion refuses to pass if
+any category has no live member, so a capability that stops being attributed
+fails here rather than quietly emptying.
+
+The checker is also shown able to say no. Asked of a tree carrying none of the
+three, it returns nothing for each; asked of trees carrying exactly one, it
+returns that one. A checker that always finds evidence proves nothing about the
+report it checks, and the first version was only ever observed passing.
+
+That is the difference between the two versions worth keeping. The first
+verified the category I had just found bugs in; the second verifies the
+question, which is the only version that would have caught the bugs before I
+noticed them.
