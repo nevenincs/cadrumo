@@ -23,12 +23,34 @@ _FAR_FUTURE = date(9999, 12, 31)
 
 
 def validate_dated_values(scope: str, parameter_id: str, values: Iterable[DatedValue]) -> list[str]:
-    """Return overlap diagnostics for one parameter's dated values."""
+    """Return overlap and axis-coherence diagnostics for one parameter's dated values.
+
+    A parameter carries values on exactly ONE date axis, and mixing them is
+    refused HERE rather than left to the resolver. Two reasons, and both are
+    about where the defect surfaces.
+
+    :func:`~domain.calculations.registry.formula_runtime_ops.resolve_dated_value`
+    requires every value's axis to be present in the caller's ``date_context``,
+    so a parameter that mixes axes breaks every existing caller of it rather than
+    only the one that wanted the new axis.
+
+    And the overlap scan below groups BY axis, so it cannot see a cross-axis
+    double match by construction: two values on different axes can both cover
+    their own selected date, and the resolver then refuses with "expected exactly
+    one dated value" at runtime. That is a confusing symptom for what is really a
+    declaration defect, and a registry defect should fail at load.
+    """
     failures: list[str] = []
     by_axis: dict[str, list[DatedValue]] = {}
     for value in values:
         axis = value.date_axis
         by_axis.setdefault(axis, []).append(value)
+    if len(by_axis) > 1:
+        mixed = ", ".join(sorted(by_axis))
+        failures.append(
+            f"{scope}: parameter {parameter_id!r} mixes date axes ({mixed}); "
+            f"a parameter carries values on exactly one axis",
+        )
     for axis, axis_values in by_axis.items():
         ordered = sorted(axis_values, key=lambda item: item.valid_from)
         for index, current in enumerate(ordered[1:], start=1):
