@@ -40,6 +40,12 @@ Three things are deliberately left alone:
   blast radius, and doing it in the same pass would leave the tree unimportable
   between two writes if the rewrite were interrupted.
 
+Documentation cross-references are rewritten by the same map. A docstring
+saying ``:class:`~dev.ingest_harness.HarnessReport``` names a path that only the
+facade makes true, so emptying the initialiser turns fifteen live references
+into dangling ones. They are the same restatement as the import and are fixed
+from the same evidence.
+
 Read-only by default; ``--apply`` writes. Statements are replaced by their AST
 line span rather than by pattern, because a parenthesised multi-line import
 defeats a line-oriented rewrite in both directions - a fact this repository has
@@ -60,8 +66,10 @@ __all__ = [
     "REFUSALS",
     "FacadePackage",
     "ImportSite",
+    "apply_reference_rewrites",
     "facade_exports",
     "facade_import_sites",
+    "reference_rewrites",
     "refusal_reason",
     "relative_spelling",
     "rewrite_statement",
@@ -328,6 +336,63 @@ def rewrite_statement(site: ImportSite, package: FacadePackage) -> tuple[str, ..
     return tuple(lines)
 
 
+def reference_rewrites(text: str, package: FacadePackage) -> tuple[str, int]:
+    """Repoint dotted documentation references at the defining module.
+
+    ``dev.ingest_harness.score_emission`` becomes
+    ``dev.ingest_harness._scoring.score_emission``: the same correction the
+    import rewrite makes, applied to the prose that states the same path.
+
+    A submodule reference is left alone by construction - it is not in the
+    export map - so ``dev.ingest_harness._scoring`` is not rewritten into
+    itself. Longest names are replaced first so a name that is a prefix of
+    another cannot claim its text.
+    """
+    replaced = 0
+    for name in sorted(package.exports, key=len, reverse=True):
+        if name in package.submodules:
+            continue
+        stale = f"{package.dotted}.{name}"
+        fresh = f"{package.exports[name]}.{name}"
+        if stale == fresh:
+            continue
+        # A reference is followed by a delimiter, never by another identifier
+        # character; without that guard `Scored` would claim the text of
+        # `ScoredField` even with the longest-first ordering above.
+        index = 0
+        while (index := text.find(stale, index)) != -1:
+            after = index + len(stale)
+            if after < len(text) and (text[after].isalnum() or text[after] == "_"):
+                index = after
+                continue
+            text = text[:index] + fresh + text[after:]
+            replaced += 1
+            index += len(fresh)
+    return text, replaced
+
+
+def apply_reference_rewrites(package: FacadePackage, root: pathlib.Path = DEV_ROOT) -> tuple[int, int]:
+    """Rewrite stale references under ``root``; return ``(files, references)``.
+
+    This module's own file is skipped. Its docstring quotes a stale path as the
+    example of what goes wrong, and rewriting that quotation into the corrected
+    form deletes the explanation while leaving the sentence grammatical - the
+    only self-reference here, and the only one that must not be repaired.
+    """
+    own = pathlib.Path(__file__).resolve()
+    files = references = 0
+    for path in sorted(root.rglob("*.py")):
+        if "__pycache__" in path.parts or path.resolve() == own:
+            continue
+        original = path.read_text(encoding="utf-8")
+        rewritten, count = reference_rewrites(original, package)
+        if count:
+            path.write_text(rewritten, encoding="utf-8")
+            files += 1
+            references += count
+    return files, references
+
+
 def apply_rewrites(sites: tuple[ImportSite, ...], packages: tuple[FacadePackage, ...]) -> tuple[int, int]:
     """Rewrite every site in place; return ``(files changed, sites rewritten)``.
 
@@ -361,6 +426,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--package", help="restrict to one dotted package, e.g. dev.docs.apidocs")
     parser.add_argument("--apply", action="store_true", help="rewrite the consumers in place")
+    parser.add_argument(
+        "--references",
+        action="store_true",
+        help="also repoint dotted documentation references at the defining module",
+    )
     arguments = parser.parse_args()
 
     packages = facade_packages()
@@ -392,6 +462,10 @@ def main() -> int:
     if arguments.apply:
         changed, rewritten = apply_rewrites(sites, packages)
         sys.stdout.write(f"applied files={changed} sites={rewritten}\n")
+    if arguments.references and arguments.apply:
+        for package in packages:
+            touched, count = apply_reference_rewrites(package)
+            sys.stdout.write(f"references package={package.dotted} files={touched} rewritten={count}\n")
     sys.stdout.write(
         f"summary packages={len(packages)} exports={sum(len(p.exports) for p in packages)} "
         f"sites={len(sites)} files={files} refused={refused} "
