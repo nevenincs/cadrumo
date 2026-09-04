@@ -18,7 +18,18 @@ import pytest
 from ..._paths import REPO_ROOT
 from ..security import SecurityOutcome, run_security_scan
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.timeout(900)]
+"""The 900-second budget is the tool acquisition, not the scan.
+
+Each test here runs the real external analyser through ``uvx``, and the
+first one pays for resolving and installing it. Under the repository's
+300-second default that overran, and pytest-timeout's thread method
+escalates to killing the process: the worker died and took FOUR sibling
+tests with it, which the harness correctly reported as an INCOMPLETE RUN
+whose failure list is a subset of unknown size.
+
+A budget that kills the runner turns a slow-but-valid run into a result
+nobody can read. The scans themselves stay real and unmocked."""
 
 _REPO_ROOT = REPO_ROOT
 
