@@ -115,7 +115,9 @@ def inventory_command(
     """
     interfaces = _inventory.scan()
     surfaces = tuple(surface.name for surface in _harness.surfaces())
-    _coverage.check(interfaces, surfaces)
+    table = _coverage.merge_rendered_by(_harness.coverage())
+    _coverage.check(interfaces, surfaces, rendered_table=table)
+    resolved_notes = _coverage.notes(table)
 
     directory = run_directory(run)
     rendered: dict[str, tuple[str, ...]] = {}
@@ -124,7 +126,10 @@ def inventory_command(
         rendered = {record.qualname: record.rendered_by for record in manifest.interfaces}
         _echo(f"coverage from run {run!r} ({manifest.generated_at})")
     else:
-        rendered = {interface.qualname: _coverage.rendered_by(interface.qualname, surfaces) for interface in interfaces}
+        rendered = {
+            interface.qualname: _coverage.rendered_by(interface.qualname, surfaces, rendered_table=table)
+            for interface in interfaces
+        }
         _echo(f"no run named {run!r}; showing what the coverage table claims")
     _echo("")
 
@@ -136,7 +141,7 @@ def inventory_command(
         else:
             mark = "NOT RENDERED"
             uncovered += 1
-        note = _coverage.NOTES.get(interface.qualname, "")
+        note = resolved_notes.get(interface.qualname, "")
         suffix = f"  [{note}]" if note else ""
         locator = f"{interface.path.as_posix()}:{interface.line}"
         _echo(f"{interface.kind:<6} {interface.qualname}")

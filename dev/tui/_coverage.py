@@ -273,9 +273,14 @@ def fixture_needed(interfaces: tuple[Interface, ...]) -> tuple[Interface, ...]:
     )
 
 
-def rendered_by(qualname: str, surfaces: tuple[str, ...]) -> tuple[str, ...]:
+def rendered_by(
+    qualname: str,
+    surfaces: tuple[str, ...],
+    *,
+    rendered_table: Mapping[str, tuple[str, ...]] = RENDERED_BY,
+) -> tuple[str, ...]:
     """Which of ``surfaces`` paint the interface named ``qualname``."""
-    return tuple(surface for surface in surfaces if qualname in RENDERED_BY.get(surface, ()))
+    return tuple(surface for surface in surfaces if qualname in rendered_table.get(surface, ()))
 
 
 __all__ = [
