@@ -6,7 +6,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:266d52e5410569516ab964f694385fa452ede319fc9f0275733cc6d5bf8dc6cc'
+body_hash: 'sha256:8b47c8c484cd98824fc6513a680b7f699647866bdfbd13e6eb125609a0150936'
 related:
   - '[[2026-09-02-cli-distribution-consolidation-P01-S01]]'
   - '[[2026-09-02-cli-distribution-consolidation-P01-S02]]'
@@ -53,6 +53,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-P11-S44]]'
   - '[[2026-09-02-cli-distribution-consolidation-P11-S45]]'
   - '[[2026-09-02-cli-distribution-consolidation-P11-S46]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P11-S51]]'
   - '[[2026-09-02-cli-distribution-consolidation-adr]]'
   - '[[2026-09-02-cli-distribution-consolidation-plan]]'
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
@@ -124,6 +125,7 @@ Auto-generated index of all documents tagged with `#cli-distribution-consolidati
 - `2026-09-02-cli-distribution-consolidation-P10-S47` - Close the evidence assertions naming cohort artifacts the adopted path no longer builds
 - `2026-09-02-cli-distribution-consolidation-P11-S45` - Document the release-candidate evidence campaign the runbook omits
 - `2026-09-02-cli-distribution-consolidation-P11-S46` - Restate the workflow names three surfaces still cite from the retired release path
+- `2026-09-02-cli-distribution-consolidation-P11-S51` - Restate the surfaces naming workflows the repository does not contain
 
 ### plan
 

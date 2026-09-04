@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:dea001781e6c8923bd0a25fc2704abd3df140bffeb5f1fc9020597a0b7cb13ab'
+body_hash: 'sha256:47cd5440196e4f662505dafdc57e5988dc367f1fabd55b8d9e7499ed9c237dd9'
 ---
 
 # `reachability-burndown` plan
@@ -74,6 +74,14 @@ Clear the entrypoints and application concentrations without disturbing command 
 
 - [x] `W03.P06.S09` - Resolve the entrypoints/cli symbol concentration without altering command contracts; `src/cadrumo/entrypoints/cli`.
 - [x] `W03.P06.S10` - Resolve the application/modelo and adapters/persistence symbol concentrations; `src/cadrumo/application`.
+
+### Phase `W03.P09` - merge duplicate definitions to canonical homes
+
+Duplicate module-level definitions are a correctness hazard, not untidiness: two copies drift, and a caller reaching the stale one gets a value nobody updated. Each family merges to one canonical home with every call site repointed.
+
+- [ ] `W03.P09.S16` - Merge the duplicated Decimal constants to a canonical home and repoint every call site, since a drifted numeric constant is a calculation defect; `src/cadrumo/core`.
+- [ ] `W03.P09.S17` - Merge the duplicated TypeAdapter declarations at their owning registry boundary; `src/cadrumo/domain/calculations/registry`.
+- [ ] `W03.P09.S18` - Adjudicate the 76 names defined with DIFFERENT values across modules, where merging would be wrong and one side needs renaming; `dev/audit`.
 
 ## Wave `W04` - extend the gate and close
 

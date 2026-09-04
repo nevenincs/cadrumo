@@ -5,16 +5,11 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:705bd66b24fcb1253470dab959bfd01328e625ca6b0a441cfb56bc03afaf20f9'
+body_hash: 'sha256:b162749655e7226ef1b8501995171085bf1542f3c8bc3b9a619f5735c0580289'
 step_id: 'S09'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Resolve the entrypoints/cli symbol concentration without altering command contracts
 

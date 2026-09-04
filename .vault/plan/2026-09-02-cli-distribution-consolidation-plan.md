@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:a87ac7231d416192a638ce554694cf03ce458474fc7b2eee1a4a6b2e0d23389b'
+body_hash: 'sha256:b7698ca2b2fbdbff807a542e9ae25b56c5077a8d86230d670b4cdc5692845cb1'
 ---
 
 <!-- RETIRED: S39 -->
@@ -114,7 +114,8 @@ Build every declared distribution and channel artifact from one command and prov
 - [x] `P09.S35` - Prove both console scripts from the built wheel in an isolated interpreter; `dev/smoke/smoke_check.py`.
 - [x] `P09.S36` - Render the Homebrew formula and the Scoop manifest from the built cohort; `dev/packaging/cohort_manifest.py`.
 - [ ] `P09.S37` - Produce the distribution evidence rows the three channels declare; `dev/release/readiness.py`.
-- [ ] `P09.S48` - Separate the seal check from the publication check and guard the upload with the authority that names it; `dev/release/version_identity.py`.
+- [x] `P09.S48` - Separate the seal check from the publication check and guard the upload with the authority that names it; `dev/release/version_identity.py`.
+- [ ] `P09.S49` - Remove the repeated passes the cohort build makes over artifacts it has already produced; `dev/packaging/python_cohort.py`.
 
 ### Phase `P10` - Prune the release and packaging surfaces without consumers
 
@@ -124,6 +125,7 @@ Delete the development and release modules the adopted path no longer invokes, e
 - [x] `P10.S40` - Remove the evidence leak sweep left without a caller; `dev/packaging/evidence_leak_sweep.py`.
 - [x] `P10.S41` - Reduce the release module family to what the adopted path invokes; `dev/release/environment_inventory.py`.
 - [x] `P10.S47` - Close the evidence assertions naming cohort artifacts the adopted path no longer builds; `dev/packaging/tests/test_distribution_evidence_emit.py`.
+- [ ] `P10.S50` - Reclaim the build scratch a killed run leaves in the working tree; `dev/packaging/tests/test_release_cohort_integration.py`.
 
 ### Phase `P11` - Restate the operator surface against the adopted path
 
@@ -134,6 +136,7 @@ Bring the runbook, the recipe surface and the workflow family back into agreemen
 - [x] `P11.S44` - Reconcile the packaging workflow family against the sibling shape; `.github/workflows/packaging-quick.yml`.
 - [x] `P11.S45` - Document the release-candidate evidence campaign the runbook omits; `RELEASING.md`.
 - [x] `P11.S46` - Restate the workflow names three surfaces still cite from the retired release path; `docs/_release_checklist.yaml`.
+- [x] `P11.S51` - Restate the surfaces naming workflows the repository does not contain; `bucket/README.md`.
 
 ## Parallelization
 
