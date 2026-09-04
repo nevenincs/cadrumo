@@ -146,6 +146,31 @@ def _admitted_capabilities(
     return actions, operations
 
 
+_LOCALLY_READ_AREAS: Final[frozenset[AeatSyncOverviewArea]] = frozenset(
+    {
+        AeatSyncOverviewArea.CENSUS,
+        AeatSyncOverviewArea.FILED_DECLARATIONS,
+        AeatSyncOverviewArea.EVIDENCE_COMPARISON,
+    }
+)
+"""Areas whose local authority this session actually reads.
+
+Census reads the authenticated profile record; filed declarations and evidence
+comparison both declare local.filings as their local source, and the door loads
+that catalogue. Notifications and reconciliation have no local reader here, so
+their local side is genuinely unobserved rather than observed-and-empty.
+"""
+
+
+def _local_area_is_populated(area: AeatSyncOverviewArea, *, filing_count: int) -> bool:
+    """Whether the local authority this area reads holds anything."""
+    if area is AeatSyncOverviewArea.CENSUS:
+        # The profile record exists by construction: the session authenticated
+        # against it before any of this ran.
+        return True
+    return filing_count > 0
+
+
 def _overview_row(
     area: AeatSyncOverviewArea,
     *,
@@ -156,13 +181,24 @@ def _overview_row(
     """State only what the local side genuinely observed for this area.
 
     The AEAT side is never observed before a pull, so every area's comparison
-    is UNOBSERVED. Census is the one area whose local side is a fact the
-    session already holds: the profile record it authenticated against.
+    is UNOBSERVED.
+
+    The local side is a THREE-way answer, not two. An area whose local source
+    this session read reports PRESENT when it holds records and ABSENT when it
+    genuinely holds none -- an observed zero. NOT_OBSERVED is reserved for an
+    area whose local authority was never read at all. Collapsing the observed
+    zero into NOT_OBSERVED would report a source the session did read as one it
+    did not, and would contradict this projection's own source observation,
+    which already says available with a count of zero.
     """
     local_state = AeatSyncSourceState.NOT_OBSERVED
     local_observed_at = None
-    if area is AeatSyncOverviewArea.CENSUS or (area is AeatSyncOverviewArea.FILED_DECLARATIONS and filing_count):
-        local_state = AeatSyncSourceState.PRESENT
+    if area in _LOCALLY_READ_AREAS:
+        local_state = (
+            AeatSyncSourceState.PRESENT
+            if _local_area_is_populated(area, filing_count=filing_count)
+            else AeatSyncSourceState.ABSENT
+        )
         local_observed_at = observed_at
     actions, operations = _admitted_capabilities(area, contracts)
     return AeatSyncWorkspaceOverviewRowV1(
