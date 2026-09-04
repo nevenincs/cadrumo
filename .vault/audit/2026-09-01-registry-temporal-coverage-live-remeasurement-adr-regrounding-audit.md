@@ -14268,3 +14268,39 @@ through the shared function - rather than through a hand-written walk - returns
 **42 of 352**, the corrected figure, where the hand-written walk returned 60.
 The probe that gets it right is now the shorter one to write, which is the only
 durable way this stops happening.
+
+
+## The untested count, made an instrument and ranked by what it can do
+
+The forty-two was a probe in a scratch file. It is now
+`dev/quality/module_test_reach.py`, and the reason to build it rather than quote
+it again is that the count was never the useful part.
+
+Each unreached module is reported with what running it can do, read from its
+syntax rather than by importing it - importing a module to ask what it does is
+how a report acquires the side effects it is measuring. Three capabilities,
+worst first: `writes` (it calls `write_text`, `rename`, `unlink` or `mkdir`),
+`applies` (it declares an `--apply` flag, so it is meant to be run
+destructively), and `operator` (it has a `main`, so somebody invokes it).
+
+Live: **42 unreached, of which 16 write to the tree, 3 declare `--apply`, and 20
+have a `main`.** Three do all of the first two together, and those three are the
+report's whole point:
+
+- `dev/quality/import_centralization_codemod.py`
+- `dev/quality/namespace_retirement_sweep.py`
+- `dev/registry/result_disposition_fragment_generator.py`
+
+Untested code that rewrites source files, with a flag whose purpose is to do it
+for real. Ranking by capability puts them first; a count of forty-two puts them
+nowhere.
+
+The tool counted itself. Its first run reported **43**, including
+`dev/quality/module_test_reach.py`, because a report that measures the tree it
+lives in is subject to what it measures. Writing its tests took the figure to 42,
+which is the honest way to leave that list, and one of those tests asserts
+exactly that - the module must not appear in its own output.
+
+Reach comes from `imported_modules` rather than a walk written here, which is
+the only reason this module can be trusted about its own subject: the last
+hand-written version of this exact measurement was wrong by eighteen modules.
