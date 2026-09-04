@@ -1,0 +1,106 @@
+# LIVA arts. 107 and 109 capital-goods regularisation figures, declared as
+# registry parameters so the calculation resolves them from the authority
+# rather than from a Python constant. Grounded in the same legal and source
+# refs as this revision's own binding 'modelo-303-bienes-inversion-regularizacion-casilla-43', which consumes them.
+#
+# Declared on the FILING-PERIOD axis and bounded to this revision's window.
+# These figures are fixed at ACQUISITION for a given good, not at filing, so a
+# SECOND dated value here would silently apply new law to an old good. The
+# single-value shape is gated; the day a figure moves, that gate fails and the
+# work routes to a proper acquisition-axis declaration instead.
+
+# LIVA art. 107.Uno regularisation window for a non-real-property capital good.
+# Corpus wording: deberán regularizarse durante los cuatro años naturales siguientes
+[[revisions.2023.parameters]]
+id = "m303-bien-inversion-ventana-anos-mueble"
+data_type = "integer"
+unit = "years"
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2023.parameters.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2023.parameters.values]]
+value = "4"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+# LIVA art. 107.Tres regularisation window for terrenos o edificaciones.
+# Corpus wording: deberán regularizarse durante los nueve años naturales siguientes
+[[revisions.2023.parameters]]
+id = "m303-bien-inversion-ventana-anos-inmueble"
+data_type = "integer"
+unit = "years"
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2023.parameters.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2023.parameters.values]]
+value = "9"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+# LIVA art. 109.3a per-year divisor for a non-real-property capital good.
+# Corpus wording: se dividirá por cinco o, tratándose de terrenos o edificaciones, por diez
+[[revisions.2023.parameters]]
+id = "m303-bien-inversion-divisor-mueble"
+data_type = "integer"
+unit = "divisor"
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2023.parameters.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2023.parameters.values]]
+value = "5"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+# LIVA art. 109.3a per-year divisor for terrenos o edificaciones.
+# Corpus wording: se dividirá por cinco o, tratándose de terrenos o edificaciones, por diez
+[[revisions.2023.parameters]]
+id = "m303-bien-inversion-divisor-inmueble"
+data_type = "integer"
+unit = "divisor"
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2023.parameters.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2023.parameters.values]]
+value = "10"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+# LIVA art. 107.Uno de-minimis: regularise only above this many points.
+# Corpus wording: exista una diferencia superior a diez puntos
+[[revisions.2023.parameters]]
+id = "m303-bien-inversion-regularizacion-umbral-puntos"
+data_type = "integer"
+unit = "percentage_points"
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2023.parameters.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2023.parameters.values]]
+value = "10"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+comparison = "exclusive"  # art. 107 "superior a diez puntos"
