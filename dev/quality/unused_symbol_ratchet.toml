@@ -53,12 +53,10 @@
 "cadrumo.adapters.persistence.storage.custody.capsule" = 3
 "cadrumo.adapters.persistence.storage.custody.capsule_discovery" = 1
 "cadrumo.adapters.persistence.storage.custody.kdf_supervision" = 2
-"cadrumo.adapters.persistence.storage.custody.records" = 1
 "cadrumo.adapters.persistence.storage.custody.recovery" = 2
 "cadrumo.adapters.persistence.storage.envelope.contract" = 2
 "cadrumo.adapters.persistence.storage.master_key._live_sessions" = 1
 "cadrumo.adapters.persistence.storage.master_key.master_key" = 1
-"cadrumo.adapters.persistence.storage.master_key.master_key_derivation" = 2
 "cadrumo.adapters.persistence.storage.recovery_key" = 1
 "cadrumo.adapters.persistence.storage.schema_lineage" = 3
 "cadrumo.adapters.persistence.storage.secure_object_namespaces" = 2

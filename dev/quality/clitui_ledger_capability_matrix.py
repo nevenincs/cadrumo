@@ -13,11 +13,18 @@ import json
 import re
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from enum import StrEnum
-from typing import Final, cast
+from pathlib import Path
+from typing import Final, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
+from pydantic_core import to_jsonable_python
+
+from cadrumo.core.aggregation import BindingSourceKind, LEDGER_BINDING_SOURCE_KINDS
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
+from cadrumo.domain.calculations.registry.binding_targets import casillas_by_binding
 
 SCHEMA_VERSION: Final[int] = 3
 _DIGEST_PATTERN: Final[re.Pattern[str]] = re.compile(r"^sha256:[0-9a-f]{64}$")
@@ -29,6 +36,184 @@ _CENSUS_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^census\.ledger(?:\.[a
 _ATTESTATION_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^attestation\.ledger(?:\.[a-z][a-z0-9_]*)*$")
 _PLACEHOLDER_TEXT: Final[frozenset[str]] = frozenset({"", "n/a", "na", "none", "tbd", "todo", "unknown", "unmeasured"})
 ACCEPTED_LEDGER_PARITY_PLAN_OWNER: Final[str] = "clitui-ledger"
+LEDGER_REGISTRY_ROUTE_CENSUS_SCHEMA_VERSION: Final[int] = 1
+LEDGER_REGISTRY_ROUTE_CENSUS_ROOT: Final[str] = "cadrumo.ledger_registry_route_census"
+_LEDGER_REGISTRY_ROUTE_CENSUS_FRAME: Final[bytes] = b"cadrumo:ledger-registry-route-census:v1\x00"
+_LEDGER_REGISTRY_SOURCE_SET_FRAME: Final[bytes] = b"cadrumo:ledger-registry-source-set:v1\x00"
+
+
+def _length_frame(value: bytes) -> bytes:
+    """Frame one byte string without delimiter ambiguity."""
+    return len(value).to_bytes(8, byteorder="big", signed=False) + value
+
+
+def _canonical_json_text(value: object) -> str:
+    """Normalize one registry value to the census' canonical JSON scalar text."""
+    if isinstance(value, BaseModel):
+        value = value.model_dump(mode="json", exclude_none=False)
+    return json.dumps(to_jsonable_python(value), ensure_ascii=True, separators=(",", ":"), sort_keys=True)
+
+
+class LedgerRegistryRouteTargetV1(BaseModel):
+    """One direct registry casilla target; an empty tuple means no direct target."""
+
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+    casilla_id: str = Field(min_length=1)
+    section: tuple[str, ...]
+
+
+class LedgerRegistryRouteRowV1(BaseModel):
+    """One ledger binding declaration projected from the validated authority."""
+
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+    source: BindingSourceKind
+    modelo_id: str = Field(min_length=1)
+    revision_id: str = Field(min_length=1)
+    valid_from: date
+    valid_to: date | None
+    period_selector_json: str = Field(min_length=2)
+    binding_id: str = Field(min_length=1)
+    selector_json: str = Field(min_length=2)
+    targets: tuple[LedgerRegistryRouteTargetV1, ...]
+
+    @model_validator(mode="after")
+    def _canonical_nested_values(self) -> LedgerRegistryRouteRowV1:
+        for field_name in ("period_selector_json", "selector_json"):
+            text = getattr(self, field_name)
+            try:
+                decoded = json.loads(text)
+            except json.JSONDecodeError as exc:
+                raise ValueError(f"{field_name} must be valid JSON") from exc
+            if text != _canonical_json_text(decoded):
+                raise ValueError(f"{field_name} must use canonical JSON")
+        target_keys = tuple((target.casilla_id, target.section) for target in self.targets)
+        if target_keys != tuple(sorted(target_keys)):
+            raise ValueError("targets must use canonical casilla/section order")
+        if len(set(target_keys)) != len(target_keys):
+            raise ValueError("targets must be unique")
+        return self
+
+    @property
+    def sort_key(self) -> tuple[str, str, str, str]:
+        """Return the complete deterministic declaration identity."""
+        return self.source.value, self.modelo_id, self.revision_id, self.binding_id
+
+
+class LedgerRegistryRouteCensusV1(BaseModel):
+    """Versioned canonical projection; it contains no independent route facts."""
+
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+    root: Literal["cadrumo.ledger_registry_route_census"]
+    schema_version: Literal[1]
+    source_set_digest: str
+    rows: tuple[LedgerRegistryRouteRowV1, ...]
+
+    @model_validator(mode="after")
+    def _canonical_rows(self) -> LedgerRegistryRouteCensusV1:
+        _require_digest(self.source_set_digest, field_name="source_set_digest")
+        keys = tuple(row.sort_key for row in self.rows)
+        if keys != tuple(sorted(keys)):
+            raise ValueError("rows must use canonical source/modelo/revision/binding order")
+        if len(set(keys)) != len(keys):
+            raise ValueError("rows must have unique declaration identities")
+        return self
+
+    @property
+    def calculated_digest(self) -> str:
+        """Hash the domain-separated, length-framed canonical JSON bytes."""
+        return ledger_registry_route_census_digest(self)
+
+
+def ledger_registry_source_files(authority: ValidatedRegistryAuthority) -> tuple[Path, ...]:
+    """Return exact TOML files declaring a member of the live seven-family set."""
+    needles = tuple(f'source = "{source.value}"'.encode() for source in sorted(LEDGER_BINDING_SOURCE_KINDS))
+    return tuple(
+        path
+        for path in sorted(
+            authority.root.rglob("*.toml"), key=lambda item: item.relative_to(authority.source_root).as_posix()
+        )
+        if any(needle in path.read_bytes() for needle in needles)
+    )
+
+
+def ledger_registry_source_set_digest(
+    authority: ValidatedRegistryAuthority,
+    *,
+    source_files: Iterable[Path] | None = None,
+    source_records: Iterable[tuple[str, bytes]] | None = None,
+) -> str:
+    """Hash sorted source-root-relative paths and bytes with explicit framing."""
+    if source_files is not None and source_records is not None:
+        raise ValueError("provide source_files or source_records, not both")
+    if source_records is not None:
+        records = list(source_records)
+    else:
+        files = tuple(source_files) if source_files is not None else ledger_registry_source_files(authority)
+        records = []
+        for path in files:
+            relative = path.resolve().relative_to(authority.source_root.resolve()).as_posix()
+            records.append((relative, path.read_bytes()))
+    payload = bytearray(_LEDGER_REGISTRY_SOURCE_SET_FRAME)
+    for relative, body in sorted(records):
+        payload.extend(_length_frame(relative.encode("utf-8")))
+        payload.extend(_length_frame(body))
+    return f"sha256:{hashlib.sha256(payload).hexdigest()}"
+
+
+def build_ledger_registry_route_census(
+    authority: ValidatedRegistryAuthority | None = None,
+) -> LedgerRegistryRouteCensusV1:
+    """Derive the canonical census only from the live validated registry authority."""
+    authority = bundled_authority() if authority is None else authority
+    authority.validate_registry()
+    rows: list[LedgerRegistryRouteRowV1] = []
+    for modelo in authority.modelos:
+        for revision in modelo.revisions.values():
+            target_ids = casillas_by_binding(revision)
+            casillas = {casilla.id: casilla for casilla in revision.casillas}
+            for binding in revision.bindings:
+                if binding.source not in LEDGER_BINDING_SOURCE_KINDS:
+                    continue
+                targets = tuple(
+                    sorted(
+                        (
+                            LedgerRegistryRouteTargetV1(casilla_id=casilla_id, section=casillas[casilla_id].section)
+                            for casilla_id in target_ids.get(binding.id, ())
+                        ),
+                        key=lambda target: (target.casilla_id, target.section),
+                    )
+                )
+                rows.append(
+                    LedgerRegistryRouteRowV1(
+                        source=binding.source,
+                        modelo_id=modelo.id,
+                        revision_id=revision.id,
+                        valid_from=revision.valid_from,
+                        valid_to=revision.valid_to,
+                        period_selector_json=_canonical_json_text(revision.period_selector),
+                        binding_id=binding.id,
+                        selector_json=_canonical_json_text(selector_as_dict(binding)),
+                        targets=targets,
+                    )
+                )
+    return LedgerRegistryRouteCensusV1(
+        root=LEDGER_REGISTRY_ROUTE_CENSUS_ROOT,
+        schema_version=LEDGER_REGISTRY_ROUTE_CENSUS_SCHEMA_VERSION,
+        source_set_digest=ledger_registry_source_set_digest(authority),
+        rows=tuple(sorted(rows, key=lambda row: row.sort_key)),
+    )
+
+
+def ledger_registry_route_census_bytes(census: LedgerRegistryRouteCensusV1) -> bytes:
+    """Serialize a validated census with explicit domain and payload framing."""
+    canonical = LedgerRegistryRouteCensusV1.model_validate(census.model_dump(mode="python"))
+    encoded = _canonical_json_text(canonical).encode("utf-8")
+    return _LEDGER_REGISTRY_ROUTE_CENSUS_FRAME + _length_frame(encoded)
+
+
+def ledger_registry_route_census_digest(census: LedgerRegistryRouteCensusV1) -> str:
+    """Return the canonical route-census SHA-256 digest."""
+    return f"sha256:{hashlib.sha256(ledger_registry_route_census_bytes(census)).hexdigest()}"
 
 
 class LedgerCapabilityAxis(StrEnum):
@@ -1004,9 +1189,7 @@ class LedgerCapabilityMatrixV1(BaseModel):
                 "current_authority_dispositions": current_authority_dispositions,
                 "current_subjects": tuple(sorted(current_subjects, key=lambda subject: subject.subject_id)),
                 "rows": tuple(sorted(rows, key=lambda row: row.identity.row_id)),
-                "campaign_evidence": tuple(
-                    sorted(campaign_evidence, key=lambda coordinate: coordinate.evidence_id)
-                ),
+                "campaign_evidence": tuple(sorted(campaign_evidence, key=lambda coordinate: coordinate.evidence_id)),
             }
         )
 
@@ -1422,10 +1605,20 @@ __all__ = [
     "LedgerGate",
     "LedgerLiveCensusReportV1",
     "LedgerMatrixAcceptanceAttestationV1",
+    "LedgerRegistryRouteCensusV1",
+    "LedgerRegistryRouteRowV1",
+    "LedgerRegistryRouteTargetV1",
+    "LEDGER_REGISTRY_ROUTE_CENSUS_ROOT",
+    "LEDGER_REGISTRY_ROUTE_CENSUS_SCHEMA_VERSION",
     "ReviewRuling",
     "SurfaceCapabilityState",
+    "build_ledger_registry_route_census",
     "evaluate_ledger_capability_gate",
     "evaluate_ledger_capability_gates",
+    "ledger_registry_route_census_bytes",
+    "ledger_registry_route_census_digest",
+    "ledger_registry_source_files",
+    "ledger_registry_source_set_digest",
     "reopened_gates_for_denominator_drift",
     "validate_ledger_matrix_currentness",
 ]

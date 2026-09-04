@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest
 
 from ..constant_value_agreement import (
+    stem_restatements,
     _PACKAGE_ROOT,
     collect_constants,
     constant_census,
@@ -83,3 +84,75 @@ def test_a_boolean_is_not_treated_as_a_shared_value(tmp_path: Path) -> None:
     (tmp_path / "a.py").write_text("ENABLED = True\n", encoding="utf-8")
     (tmp_path / "b.py").write_text("ENABLED = False\n", encoding="utf-8")
     assert "ENABLED" not in collect_constants(tmp_path)
+
+
+def test_a_canonical_constant_restated_under_a_decorated_name_is_detected() -> None:
+    """The defect this kind exists for: the same value under a related name.
+
+    Keying on the name alone cannot reach this. A grep for either spelling
+    returns one definition and reads as canonical, which is how a restatement
+    survives review and then drifts when the real constant moves.
+    """
+    findings = stem_restatements(
+        {
+            "KDF_SALT_BYTES": {"storage/_kdf_salt.py": "16"},
+            "_RECOVERY_KDF_SALT_BYTES": {"user_profile/recovery.py": "16"},
+        }
+    )
+    assert [item.kind for item in findings] == ["stem_restatement"]
+    assert findings[0].sites == (
+        ("storage/_kdf_salt.py", "16"),
+        ("user_profile/recovery.py", "16"),
+    )
+
+
+def test_two_names_sharing_a_stem_but_not_a_value_are_not_restatements() -> None:
+    """Disagreement is a different defect, and the name-keyed kinds own it."""
+    assert (
+        stem_restatements(
+            {
+                "KEY_SIZE": {"crypto/aead.py": "32"},
+                "_RECOVERY_KEY_SIZE": {"storage/recovery.py": "16"},
+            }
+        )
+        == ()
+    )
+
+
+def test_a_single_segment_stem_does_not_pair_every_length_in_the_tree() -> None:
+    """``BYTES`` is a unit, not a concept; pairing on it would report noise."""
+    assert (
+        stem_restatements(
+            {
+                "BYTES": {"a.py": "16"},
+                "_SALT_BYTES": {"b.py": "16"},
+            }
+        )
+        == ()
+    )
+
+
+def test_two_schema_versions_that_both_start_at_one_are_not_paired() -> None:
+    """Each schema owns its version, so agreeing at 1 is where both began."""
+    assert (
+        stem_restatements(
+            {
+                "_SCHEMA_VERSION": {"telemetry/schema.py": "1"},
+                "_BUNDLE_SCHEMA_VERSION": {"user_profile/bundle.py": "1"},
+            }
+        )
+        == ()
+    )
+
+
+def test_one_module_holding_both_names_is_not_a_cross_module_restatement() -> None:
+    """A local alias beside its source is visible; the screen targets distance."""
+    assert (
+        stem_restatements(
+            {
+                "SALT_BYTES": {"a.py": "16"},
+                "_LOCAL_SALT_BYTES": {"a.py": "16"},
+            }
+        )
+        == ()
+    )
