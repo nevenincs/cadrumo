@@ -756,3 +756,20 @@ area = "domain/invoices"
 resolved = false
 symbols = ["find_invoice"]
 evidence = "Its only production caller was get_invoice_from_repository, itself unreferenced dead code removed in the same step, so the capability was already dead one level down and the deletion only made that visible. It is NOT resolved here, and deletion is not the executor's call: the module publishes no __all__, but application/invoices/__init__.py names domain.invoices the sole canonical source for find_invoice alongside find_unmatched, link_transaction, suggest_reconciliations and verify_link_consistency, and those siblings are live. Its remaining test usage is also incidental rather than subject: test_link_transaction_returns_a_fresh_catalogue reads through find_invoice to assert what link_transaction did, so removing it would force an edit to a test about other behaviour. Resolution is a capability decision by the domain owner: retire the family member, or wire the caller its canonical designation implies."
+
+[[symbol_cluster]]
+name = "annual Orden registry projections displaced by the authority path"
+class = "superseded"
+area = "domain/calculations/registry"
+resolved = true
+symbols = ["extract_m303_annual_orden_tables", "m303_annual_orden_activity_anchor", "m303_annual_orden_table_text"]
+evidence = "Three one-line projections over core.orden_anual_html in a module that is otherwise live and imported five times. The live extractor, extract_m303_annual_orden_source, reaches the raw IR through parsed_authority.non_agricultural_activities and never calls the markup-parsing wrapper, so the three were an alternate entry with no caller anywhere: a repo-wide search including non-Python surfaces returned only stale bytecode. Their removal orphaned exactly the three core imports predicted and nothing else; shared_annual_orden_activity_table survives through _m303_orden_legal, and validate_m303_annual_orden_table_shape is still called by the live extractor."
+
+[[symbol_cluster]]
+name = "exported annual Orden table accessor left dead one layer down"
+class = "superseded"
+area = "core"
+resolved = true
+symbols = ["extract_orden_anual_iva_tables"]
+evidence = "Exposed by resolving the registry projections above: this was their only consumer, so removing them left it with no caller, no test and no reference of any kind. Published in __all__, which normally makes removal a surface decision, but its body is a single attribute access -- extract_orden_anual_iva_authority(markup, source_label=source_label).non_agricultural_activities -- so it is a projection of the live sibling rather than a distinct capability, and the live registry path already performs that same access inline. Removed with its __all__ entry. The wider pattern this makes concrete: a chain of one-line wrappers dies in layers, and each deletion must be re-measured because it exposes the next."
+
