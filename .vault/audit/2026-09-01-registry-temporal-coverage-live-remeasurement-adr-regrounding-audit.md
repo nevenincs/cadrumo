@@ -14472,3 +14472,44 @@ That is the difference between the two versions worth keeping. The first
 verified the category I had just found bugs in; the second verifies the
 question, which is the only version that would have caught the bugs before I
 noticed them.
+
+
+## Six declared conditions never fire, and one had no proof either
+
+Asking the reach report's question of the registry screens: of the nine that
+declare a `KINDS` tuple, **four declare a condition the corpus never produces** -
+six conditions in all.
+
+- `revision_name_window`: `name_claims_open_ended`, `name_misstates_closing`,
+  `window_sources_disagree`
+- `footnote_only_wire_facts`: `pointer_resolves_vocabulary_hit`
+- `rule_grounding_coverage`: `ungrounded`
+- `unnumbered_note_scope`: `note_on_several_sheets_differing`
+
+Five of the six are already held by constructed proofs, which is what this plan
+asks for: a condition emptied by a correction is kept with its proof rather than
+deleted, because it is the case somebody must not discover halfway through
+authoring.
+
+The sixth had neither. `pointer_resolves_vocabulary_hit` has no instance in the
+bundled registry and **no test referenced it at all** - and it is in a screen
+written during this campaign, by me, in the same weeks the plan's verification
+section was recording that exact requirement about other screens.
+
+The cause was structural rather than an omission. Its three-branch decision
+lived inline in the walk, so no test could reach it without a full authority and
+a corpus that produces the case - which is the thing that does not exist. This
+plan's own criterion says each classifier takes its inputs explicitly so its
+conditions are reachable from a test; that screen did not.
+
+`classify_pointer` is now a function over evidence and a count, and three tests
+reach all three conditions from input written in them. Two further properties
+came out of separating it: an unresolved pointer outranks the vocabulary
+reading, because a design that never defines a note is a different problem from
+one whose note reads unhelpfully; and the detail line carries the caller's own
+resolved count, since that figure orders a reading queue.
+
+The general form is the one this session keeps arriving at from different
+directions: a rule the author knows is not a rule the code follows, and the
+distance between them is only visible when something asks every member of a
+category rather than the members somebody remembers.

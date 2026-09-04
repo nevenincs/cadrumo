@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:e2d8f106da08b6f87e3bd694d48169c6d209086e7ee7f77eae0e97ad2d0962a3'
+body_hash: 'sha256:990bea3ae842b154e616215cd01d9b0d8cdb80c5ffc6f95f56301b19fa0a342d'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -414,6 +414,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S531` - Correct the reach reports write detection, which counted str.replace as a tree write and over-attributed its worst category from nine modules to fourteen, and pin both the removal and the six unambiguous calls that must still rank; `dev/quality/module_test_reach.py,dev/quality/tests/test_module_test_reach.py`.
 - [x] `W02.P02.S532` - Check every writes attribution against its call site rather than the modules a reader recognises, confirming all nine are genuine, and make the exhaustive check a test that asks the report to show its evidence for each ranked module; `dev/quality/tests/test_module_test_reach.py`.
 - [x] `W02.P02.S533` - Ask the evidence check of all three reach capabilities rather than the one that had bugs, refusing to pass when any category has no live member, and prove the checker can report an absence as well as a presence; `dev/quality/tests/test_module_test_reach.py`.
+- [x] `W02.P02.S534` - Find the six declared screen conditions the corpus never produces and give the one with no proof a reachable classifier: pointer_resolves_vocabulary_hit had no live member and no test, in a screen written during this campaign; `dev/registry/analysis/footnote_only_wire_facts.py,dev/registry/tests/test_footnote_only_wire_facts.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
