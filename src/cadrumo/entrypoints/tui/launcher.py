@@ -385,9 +385,7 @@ def _ledger_generation_factory(
             # second is an absent door. Read here rather than in the
             # generation because the queue is per-visit state an operator acts
             # on, not part of the immutable session snapshot.
-            evidence_items=list_attachment_review_queue(
-                AttachmentStore(bucket_id=dependencies.account.profile_id)
-            ),
+            evidence_items=list_attachment_review_queue(AttachmentStore(bucket_id=dependencies.account.profile_id)),
         )(context)
 
     return create
