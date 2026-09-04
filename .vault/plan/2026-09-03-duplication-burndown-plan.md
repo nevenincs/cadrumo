@@ -11,7 +11,7 @@ related:
   - '[[2026-09-03-duplication-burndown-honest-clone-closure-research]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:6b0f011aa836037e06d8cd98619f3f2c1e777e4c9462b97e57992e0e2442fee7'
+body_hash: 'sha256:70b2cceea8c6e89550f6f6a10af8fe54ff6cd24a7f987fecee8727fc2c95f9ca'
 ---
 
 <!-- RETIRED: W05, W06, W07, P02, P03, P04, P06, P09, P12, P14, P16, P17, P19, P20, P21, P22, P23, P24, P25, P26, P27, S03, S06, S07 -->
@@ -81,7 +81,7 @@ Centralize shared check mechanics while retaining protocol-specific behavior.
 
 Remove duplicated controller and route behavior at the owning TUI boundary.
 
-- [ ] `W03.P13.S15` - Resolve the Ledger controller and route factory clone while preserving dependency injection and refresh ownership; `src/cadrumo/entrypoints/tui/ledger`.
+- [x] `W03.P13.S15` - Resolve the Ledger controller and route factory clone while preserving dependency injection and refresh ownership; `src/cadrumo/entrypoints/tui/ledger`.
 - [x] `W03.P13.S19` - Consolidate the duplicated Ledger injected-action validation into one guard, closing the review-action check the direct construction path omitted; `src/cadrumo/entrypoints/tui/ledger`.
 
 ### Phase `W03.P15` - resolve registry binding pair
