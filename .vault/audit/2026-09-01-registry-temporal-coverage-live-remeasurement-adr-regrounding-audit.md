@@ -13969,3 +13969,95 @@ the point of finding it:
 The one figure that would have been wrong is the one nobody took: comparing this
 session's 1,227 passing registry tests against a default-filtered count from
 another session would have shown 34 tests vanishing and no reason for it.
+
+
+## Seventy-eight tests that run only when somebody types the command
+
+Following the hidden population to its end: the default filter excludes four
+specialised markers, and the question is whether anything ever includes them.
+
+Counted across `dev` and `src`, and paired with the recipe that enrols each and
+the workflows that name it:
+
+- `external_tool`: **24 tests**, one recipe, no workflow.
+- `os_keychain`: **41 tests**, one recipe, no workflow.
+- `resident_service`: **13 tests**, one recipe, no workflow.
+- `serial`: 61 tests, one recipe, and two workflows name it.
+- `perf`: 7 tests, named in three workflows.
+
+So seventy-eight tests have an enrolling command and no automation behind it.
+They run when a person types `just test-workbook-parity`,
+`just test-os-keychain` or `just test-resident-service`, and at no other time -
+the only marker expression any workflow passes to pytest is
+`unit or (integration and not serial)`.
+
+For all three the exclusion is justified and the justification is written into
+the marker description: `external_tool` needs LibreOffice, which the dependency
+set does not install; `os_keychain` needs an interactive desktop logon, and a
+headless runner reaches a backend that refuses every credential call;
+`resident_service` needs a started, fully-indexed local search service. None of
+those is a thing CI can supply, so "no workflow" is the correct arrangement
+rather than an oversight.
+
+What is asymmetric is the enforcement around it. A gate in
+`dev/ci/tests/test_ci_workflow.py` asserts that `test_workbook_parity.py` still
+carries `external_tool`, with a comment explaining that a dropped marker would
+"silently pull a tool-dependent test into the offline unit lane". That gate
+protects the EXCLUSION. Nothing protects the inclusion: if the recipe were
+deleted, renamed, or simply never run again, twenty-four record-design workbook
+parity tests would stop running and every gate in the repository would stay
+green.
+
+This is the same shape as two findings already in this plan - the conformance
+closure suite named by no CI lane, and the complexity audit's test scope whose
+baseline was retired and whose `--tests` flag no lane passes. Three instances is
+enough to name the class: a test population held out of a lane for a good reason,
+with a gate on the holding-out and none on the putting-back.
+
+Recorded rather than acted on. Whether these should run on a schedule, on a
+tagged machine, or on a human's checklist is a project decision with a cost,
+and the useful contribution here is the number and the asymmetry.
+
+
+## Correction: the putting-back is gated, the gate is right, and it is red
+
+The previous entry named a class - "a gate on the holding-out and none on the
+putting-back" - and said nothing protects the inclusion of the 78 tests behind
+`external_tool`, `os_keychain` and `resident_service`. That was wrong, and
+looking for the gate I proposed to build is what found it.
+
+`dev/ci/lane_reachability.py` models the question properly: a lane selects a
+file only when its path scope covers it AND its marker expression can select a
+test in it, and it distinguishes DECLARED lanes from CI-INVOKED ones. Measured
+here: 32 declared lanes, 17 CI-invoked, and none of the three recipes I was
+worried about is among them.
+
+`dev/tests/test_lane_reachability.py` then gates exactly the right invariant, in
+terms sharper than mine: a test no CI lane runs must carry a marker saying why
+the precondition cannot exist on a runner, and its failure message says "A
+justfile recipe is NOT enough - a recipe no workflow invokes has never run."
+All three markers I was concerned about sit in its accepted set with their
+reasons written beside them, so those 78 tests are declared, not stranded. The
+gate's own docstring records that the weaker declared-lane version once reported
+full coverage over `just test-integration` and `just test-dev-tooling`, both
+healthy, both named by no workflow, and both never executed.
+
+So the class I named exists in this repository as a solved problem, and I had
+proposed to rebuild it.
+
+**The gate is currently failing, and that is the finding worth having.** It
+reports **84 tests that no CI lane runs and that carry no marker explaining
+why**: 47 in `dev/tui/tests`, 19 in `dev/registry/conformance/tests`, 18 in
+`dev/packaging/tests`, and one in `dev/tests`.
+
+The nineteen are this plan's own long-standing finding, confirmed by an
+independent authority and given a number for the first time: the conformance
+closure suite that proves real filing outcomes is named by no CI lane and has
+never run. It was recorded here as sixteen ordinary unit tests; the gate counts
+nineteen and reaches them by a model that also explains why nobody noticed.
+
+Two lessons rather than one. Checking for an existing instrument before building
+cost one command and saved building a worse copy of a better tool - the third
+time this session that reading first prevented a redundant build. And a red gate
+is not the same as a missing one: the eighty-four were visible to anyone who ran
+that file, in a repository where the default lane does not run it.

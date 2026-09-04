@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:f2410294c940ffa320c2dc10f10df987484116188c94f3d61f1d69301ca51a77'
+body_hash: 'sha256:76166076a3c47d6eae9749d0e5798d7c6d4172f8dc8f2727eef5ee88d68f12de'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -398,6 +398,9 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [ ] `W02.P02.S515` - Reconcile the complexity audits two-scope docstring with the tree: it describes production and tests baselines that were retired, and no lane passes --tests, so the tests scope has a runner nowhere and a baseline nowhere; `dev/audit/complexity.py`.
 - [x] `W02.P02.S516` - Report the collected population on every run-integrity row, since under xdist a marker-filtered run prints no deselection count at all and the item count is the only trace, while keeping the lost-worker banners own figure where it exists; `dev/quality/run_integrity.py,dev/quality/tests/test_run_integrity.py`.
 - [x] `W02.P02.S517` - Establish that every default pytest run here is filtered by addopts and silent about it under xdist, hiding 34 registry, 22 locale and 22 audit tests, then verify each figure this session quoted was taken at the population it claims; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W02.P02.S518` - Count the tests no automation runs: 24 external_tool, 41 os_keychain and 13 resident_service have an enrolling recipe and no workflow, each excluded for a declared environmental reason, with a gate protecting the exclusion and none protecting the inclusion; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [ ] `W02.P02.S519` - Resolve the 84 tests the lane-reachability gate reports as run by no CI lane and carrying no marker explaining why: 47 in dev/tui/tests, 19 in the conformance closure suite this plan already records, 18 in dev/packaging/tests and one in dev/tests; `justfile,.github/workflows,dev`.
+- [x] `W02.P02.S520` - Correct the claim that nothing gates the putting-back: dev/ci/lane_reachability models declared against CI-invoked lanes at 32 versus 17, and dev/tests/test_lane_reachability gates that a test CI cannot run must declare why, which is red at 84 tests; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W02.P03` - release predicate relocation
 
