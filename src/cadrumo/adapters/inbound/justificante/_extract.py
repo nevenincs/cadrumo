@@ -28,7 +28,7 @@ from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 
-from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
+from pydantic import AnyHttpUrl, ValidationError
 
 from ....core.aeat_csv import is_aeat_csv, normalise_aeat_csv
 from ....core.decimal.grammar import european_thousands_reading_is_ambiguous
@@ -36,6 +36,7 @@ from ....core.logging import get_logger
 from ....core.period import Period, PeriodError
 from ....core.text_fold import fold_diacritics
 from ....core.time.clock import now
+from ....core.url_validation import ANY_HTTP_URL_ADAPTER
 from ....domain.justificante import (
     Justificante,
     JustificanteCsvNotFoundError,
@@ -45,7 +46,6 @@ from ..pdf.label_regex import EJERCICIO_LABEL, MODELO_LABEL, PRESENTADOR_NIF_LAB
 from ..pdf.source_provenance import sha256_file, source_pdf_reference_path
 
 _logger = get_logger(__name__)
-_ANY_HTTP_URL_ADAPTER = TypeAdapter(AnyHttpUrl)
 
 
 # Each tier captures a candidate at the canonical AEAT CSV width
@@ -526,7 +526,7 @@ def _extract_verification_url(text: str, source_label: object) -> AnyHttpUrl:
         # function's own -> AnyHttpUrl annotation.  The PDF text-extraction
         # boundary does not permit a narrower construction without an explicit
         # cast that would add noise without safety benefit.
-        return _ANY_HTTP_URL_ADAPTER.validate_python(verification_url_raw)
+        return ANY_HTTP_URL_ADAPTER.validate_python(verification_url_raw)
     except ValidationError as exc:
         raise JustificanteParseError(
             f"invalid verification URL in {source_label}: {verification_url_raw!r}",

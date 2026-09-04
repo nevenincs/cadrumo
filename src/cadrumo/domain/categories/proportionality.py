@@ -17,13 +17,14 @@ from decimal import Decimal
 from enum import StrEnum
 from urllib.parse import urlsplit
 
-from pydantic import AnyHttpUrl, BaseModel, Field, TypeAdapter, field_validator, model_validator
+from pydantic import AnyHttpUrl, BaseModel, Field, field_validator, model_validator
 
 from ...core.citation_grounding import CitationGrounding
 from ...core.external_constants import load_external_constants
 from ...core.i18n import Translatable as tr
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.unit_proportion import UnitProportion
+from ...core.url_validation import ANY_HTTP_URL_ADAPTER
 from ...core.validity_window import ValidityWindow
 from .errors import CategoryValidationError
 
@@ -313,9 +314,6 @@ class CategoryCitation(_ProportionalityStrictFrozenModel):
             )
 
 
-_HTTP_URL_ADAPTER = TypeAdapter(AnyHttpUrl)
-
-
 def parse_http_url(value: str) -> AnyHttpUrl:
     """Parse a string into a statically typed :class:`AnyHttpUrl`.
 
@@ -325,7 +323,7 @@ def parse_http_url(value: str) -> AnyHttpUrl:
     Returns:
         A validated :class:`pydantic.AnyHttpUrl`.
     """
-    return _HTTP_URL_ADAPTER.validate_python(value)
+    return ANY_HTTP_URL_ADAPTER.validate_python(value)
 
 
 class ProportionalityKind(StrEnum):

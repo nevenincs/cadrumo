@@ -20,7 +20,7 @@ from typing import TypedDict
 from urllib.parse import urljoin, urlsplit
 
 from bs4 import BeautifulSoup, Tag
-from pydantic import AnyHttpUrl, AnyUrl, TypeAdapter
+from pydantic import AnyUrl
 
 from .....core.config import Settings
 from .....core.decimal.coercion import normalize_decimal_separators
@@ -29,6 +29,7 @@ from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import sha256_hex
 from .....core.i18n import tr
 from .....core.period import Period
+from .....core.url_validation import ANY_HTTP_URL_ADAPTER
 from .....domain.calculations.registry.errors import RegistryValidationError
 from .....domain.calculations.registry.remote_state_guard import (
     RemoteOperation,
@@ -41,7 +42,6 @@ from ._adapter_utils import bounded_text, normalize_display_text, normalize_resp
 from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from .schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
 
-_ANY_HTTP_URL_ADAPTER: TypeAdapter[AnyHttpUrl] = TypeAdapter(AnyHttpUrl)
 _AMOUNT_SEPARATOR_CLASS = f"[{re.escape(AEAT_THOUSANDS_SEPARATORS)}]"
 _SPANISH_AMOUNT_RE = re.compile(r"\d{1,3}(?:" + _AMOUNT_SEPARATOR_CLASS + r"\d{3})*,\d{2}|\d+,\d{2}")
 """Unanchored finder for the amount trailing AEAT's aggregate label on one line.
@@ -119,7 +119,7 @@ def parse_iva_compensation_wallet_html(
     under-declare. A genuinely empty wallet renders the same aggregate line at
     ``0,00`` with no detail rows.
     """
-    validated_source_url = _ANY_HTTP_URL_ADAPTER.validate_python(source_url)
+    validated_source_url = ANY_HTTP_URL_ADAPTER.validate_python(source_url)
     soup = parse_html(html)
     summary_total = _parse_wallet_summary_total(soup)
     rows, matched_wallet_table = _parse_wallet_result_rows(soup)

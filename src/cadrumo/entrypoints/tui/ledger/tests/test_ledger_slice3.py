@@ -560,3 +560,37 @@ def test_slice3_modules_have_no_io_cli_adapter_or_sensitive_content_access() -> 
     }
     assert not any("entrypoints.cli" in item or "adapters" in item for item in imports)
     assert not {"open", "read", "read_text", "Path", "load_manifest", "verify_blob"} & calls
+
+@pytest.mark.asyncio
+async def test_a_suggested_link_shows_the_values_it_was_suggested_on() -> None:
+    """A match verdict the operator cannot check is not evidence.
+
+    The suggestion table reported `amount_match: yes` and
+    `counterparty_match: no` and stopped there. The first asks the operator to
+    confirm a link while hiding the two amounts that supposedly agree; the
+    second reports a disagreement without saying between what and what. Both
+    values are local records this session is already authenticated for, and
+    both were in scope where the suggestion is built -- they were discarded,
+    not protected.
+
+    The second fixture row is the one that matters: its counterparties differ
+    ("Cliente Omega SA" against "Omega SA"), which is precisely the case where
+    a bare "no" leaves the operator unable to tell a real mismatch from a
+    formatting difference they would accept at a glance.
+    """
+    controller = LedgerWorkspaceController(
+        TuiScreenContextV1(destination="workbench.ledger"),
+        _two_suggestion_projection(),
+        review_action=_review_action(),
+        link_action=_link_action(),
+        link_submitter=_LinkDoor(),
+    )
+    screen = LedgerReconciliationScreen(controller)
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(120, 40)) as pilot:
+        await pilot.pause()
+        rendered = _render_all(screen)
+        app.exit(None)
+
+    for value in ("1250.00", "Suministros Delta SL", "480.50", "Cliente Omega SA", "Omega SA"):
+        assert value in rendered, f"the suggestion hides {value!r}, so its verdict cannot be checked"

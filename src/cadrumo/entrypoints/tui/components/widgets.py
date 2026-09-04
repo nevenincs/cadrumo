@@ -87,6 +87,39 @@ class ContentDataTable[CellType](DataTable[CellType]):
                 column.width = header
                 widened = True
 
+        # Value-driven sizing. An authored width is a guess made before anyone
+        # saw the data, and it is wrong in the direction that costs the
+        # operator information: `Declaraciones presentadas` clipped to
+        # `Declaraciones pr` at width 16 while one very wide column sat beside
+        # it.
+        #
+        # The short columns are made whole and the FILL column yields, rather
+        # than every column growing together. Growing together fails exactly
+        # when it is needed: one long free-text column makes the natural total
+        # overflow, so nothing grows and a two-character shortfall elsewhere
+        # goes unfixed. Yielding is also the right way round -- a truncated
+        # identifier or state word is unrecoverable, while the fill column is
+        # prose the operator can open the row to read.
+        keys = list(self.columns)
+        fill_key = None
+        if self.fill_column is not None and keys:
+            try:
+                fill_key = keys[self.fill_column]
+            except IndexError:  # pragma: no cover - a table without that column
+                fill_key = None
+        natural = {key: self._natural_width(key, column) for key, column in self.columns.items()}
+        padding = self.cell_padding * 2 * len(self.columns)
+        others = sum(width for key, width in natural.items() if key is not fill_key)
+        # What the fill column would be left with. Its own header is the floor:
+        # below that the fill column stops naming itself, which is the defect
+        # this method exists to prevent, so the whole pass stands down.
+        fill_floor = len(str(self.columns[fill_key].label)) if fill_key is not None else 0
+        if fill_key is None or available - others - padding >= fill_floor:
+            for key, column in self.columns.items():
+                if key is not fill_key and column.width < natural[key]:
+                    column.width = natural[key]
+                    widened = True
+
         if self.fill_column is not None:
             keys = list(self.columns)
             try:
@@ -105,6 +138,17 @@ class ContentDataTable[CellType](DataTable[CellType]):
 
         if widened:
             self.refresh()
+
+    def _natural_width(self, key: object, column: object) -> int:
+        """The width at which this column stops hiding anything."""
+        widest = len(str(column.label))  # type: ignore[attr-defined]
+        for index in range(self.row_count):
+            row = self.get_row_at(index)
+            for position, cell_key in enumerate(self.columns):
+                if cell_key is key and position < len(row):
+                    for line in str(row[position]).splitlines():
+                        widest = max(widest, len(line))
+        return widest
 
 
 _NOTICE_GLYPH: Final[dict[str, str]] = {

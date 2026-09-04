@@ -278,7 +278,14 @@ class AeatSyncWorkspaceOverviewRowV1(AeatSyncWorkspaceActionRowV1):
 
 
 class AeatSyncWorkspaceCensusRowV1(AeatSyncWorkspaceActionRowV1):
-    """Safe public census row without values."""
+    """One census field's local-versus-AEAT status.
+
+    Carries no value yet, and the docstring no longer claims that as a safety
+    property: it is a GAP. Nothing produces these rows outside fixtures, and
+    their AEAT side stays never-captured until a pull happens, so there is no
+    captured value to carry. When a producer exists the values belong here, on
+    the same reasoning as every other authenticated surface.
+    """
 
     path: str = Field(min_length=1, max_length=256)
     category: AeatSyncCensusCategory
