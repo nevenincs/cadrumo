@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:18bf63292a9afbcf9fe798cc69b5e5dfa8a0228484b12a8a152cf4d6f2cb3e40'
+body_hash: 'sha256:00b32021c4a16e975f88af02ad7d6834087a1747375f4d8de43e5e157b05c35e'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -384,7 +384,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S501` - Record the run-integrity tools first live catch of a truncated artefact: a backgrounded suite killed at 22 per cent left 819 bytes of progress bar whose visible dots and two failure marks would have been read as a two-failure result over 1264 tests; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W02.P02.S502` - Re-measure the registry suite with the run judged usable before any figure is taken: 1264 tests, 1227 passing, 37 failing, of which 32 sit in the four generated-tree modules and five are separate questions; `dev/registry`.
 - [x] `W02.P02.S503` - Examine the five registry failures that are not the republication: four are src-side and one is a pair of frozen corpus counts whose failure masks a real movement, 154 orphaned declarations against a frozen 2, all citing the modelo 200 2024 manual; `dev/registry/tests/test_m200_semantic_casilla_candidates.py`.
-- [ ] `W02.P02.S504` - Replace the two frozen corpus counts in the modelo 200 semantic casilla tests with the invariant they stand for, that a declaration has a map owner, since a count assertion reports a fall of four and a rise of a hundred and fifty-two as the same failed equality; `dev/registry/tests/test_m200_semantic_casilla_candidates.py`.
+- [x] `W02.P02.S504` - Replace the two frozen corpus counts in the modelo 200 semantic casilla tests with the invariant they stand for, that a declaration has a map owner, since a count assertion reports a fall of four and a rise of a hundred and fifty-two as the same failed equality; `dev/registry/tests/test_m200_semantic_casilla_candidates.py`.
 - [ ] `W02.P02.S505` - Complete the modelo 200 2024 casilla landing of 11:48 on 2026-09-03, which arrived without map owners or Spanish labels: 154 orphaned declarations and 624 locale resolution failures over about 156 casillas are the same incomplete landing, and closing it clears three failing gates at once; `src/cadrumo/_data/registry/aeat/modelos/200,src/cadrumo/locales`.
 - [x] `W02.P02.S506` - Decline a frozen-count detector after measuring two signals: the first misses the modelo 200 assertion it was built for and the second flags 111 sites including this sessions own correct fixture assertion, since the discriminator is where a value comes from rather than its syntax; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W02.P02.S507` - Declare the dev-side prose-parser false positive rather than narrowing the detector, which its own docstring rules against: the module matches casillas inside a TOML table header in this repositorys authoring files and reads no outside prose, leaving three genuine src parsers undeclared; `dev/registry/analysis/regulatory_prose_parser_channel.toml`.
