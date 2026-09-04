@@ -14382,3 +14382,36 @@ The general point is worth keeping separate from the module. "It is only a thin
 wrapper" is a claim about cost, and it was cheaper to measure the cost than to
 argue about it: one probe, four seconds of test runtime, and the objection
 dissolved.
+
+
+## My own ranking report over-attributed its worst category by a third
+
+Working down the reach report's ranked list, `dev/quality/types.py` appeared
+among the modules that write to the tree. A module named `types` that writes is
+implausible enough to check, and the check found the defect in my own detector:
+its only offence is `path.replace(chr(92), "/")`, normalising a separator.
+
+`replace` was in the write-call set for `Path.replace`, and `str.replace` is far
+commoner. No attribute-name test can tell them apart, and the report matches on
+attribute names by design - which is right for `write_text`, `mkdir`, `unlink`,
+`rmdir`, `write_bytes` and `rename`, none of which a common string or collection
+method shares.
+
+Removing it took the live figure from **fourteen writing modules to nine**. The
+report's worst category was over-attributed by more than a third, one iteration
+after I built it and quoted its figures twice.
+
+The failure matters more than its size because of where it lands. A ranking
+report exists to put the dangerous modules first, so a false positive at the top
+is worse than a miss at the bottom: it sends someone to write tests for a module
+that writes nothing, and it makes the number that justifies the ranking wrong in
+the direction that flatters it. `Path.replace` detections are the price of the
+fix, and they are rare where the other six are not.
+
+Two tests now pin both halves - a string replace is not a write, and each of the
+six survivors still ranks - because removing an over-eager rule is exactly the
+edit that quietly empties a category.
+
+Found by reading the report's own output rather than by trusting it, which is
+the second time this session an instrument I wrote was corrected by looking at
+what it said about a module I happened to know.

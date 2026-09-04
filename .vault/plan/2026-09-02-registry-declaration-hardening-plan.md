@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:f0af866374b83aa395eeab78e561af1dac8f67d9c0d0f01b418fe40571298139'
+body_hash: 'sha256:05f6387547d671a6abd3083f9e93bd38a7fb3de95834c1ba89e17983fc3d894e'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -411,6 +411,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S528` - Turn the untested-module count into a report ranked by what each module can do, since 16 of the 42 write to the tree and three of those also declare an apply flag, and give it tests so it stops counting itself; `dev/quality/module_test_reach.py,dev/quality/tests/test_module_test_reach.py`.
 - [x] `W02.P02.S529` - Test the result-disposition fragment generator the reach report ranked first, proving above all that a run without apply leaves the tree untouched, and pinning both render branches and the filing-grade and campaign-owned exclusions; `dev/registry/tests/test_result_disposition_fragment_generator.py`.
 - [x] `W02.P02.S530` - Test the registry parity maintenance wiring without mocking the domain, since a real run over an empty root returns in a hundredth of a second: no output path means no write, and output and resume_from are proven as a pair by writing one report and resuming from it; `dev/registry/tests/test_parity_maintenance.py`.
+- [x] `W02.P02.S531` - Correct the reach reports write detection, which counted str.replace as a tree write and over-attributed its worst category from nine modules to fourteen, and pin both the removal and the six unambiguous calls that must still rank; `dev/quality/module_test_reach.py,dev/quality/tests/test_module_test_reach.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
@@ -1602,3 +1603,25 @@ before building one: the class it enforces - a population held out of a lane wit
 holding-out and none on the putting-back - had been named here as unsolved, and it is solved, in terms
 sharper than the naming. Its failure message is the sentence worth keeping: a justfile recipe is not
 enough, because a recipe no workflow invokes has never run.
+
+Untested modules are ranked by what running them can do, not counted. `dev/quality/module_test_reach.py`
+reports every module under `dev` that no test reaches, with three capabilities read from its syntax
+rather than by importing it: `writes`, `applies` and `operator`. Live: **40 unreached, of which 9 write
+to the tree, 2 declare an apply flag, and 19 have a main**.
+
+The ranking is the deliverable and it has been paid twice. It put a registry fragment generator and a
+parity maintenance module at the top; both are now tested, and both tests hold the same property first -
+that the unflagged path writes nothing, since a conditional write is only safe when its other branch is
+proven. The two modules still at the top are import codemods belonging to another campaign.
+
+Every figure here has been corrected once, and the corrections are the criterion's evidence rather than
+an embarrassment. Reach was computed by a hand-written walk that reported 60 unreached where the truth
+was 42, because an import references more modules than it RESOLVES to; the rule now lives in
+`imported_modules` and the promoter consumes it too, so the three walks that each got it wrong ask one
+function. The write detector counted `str.replace` as a tree write and reported fourteen writing modules
+where there are nine; a report whose purpose is ranking cannot afford a false positive at the top, so
+the ambiguous name was dropped and both halves of that decision are pinned by tests.
+
+The report also counted itself. Its first run reported 43, including its own module, and writing its
+tests took it to 42 - a tool that measures the tree it lives in should be subject to what it measures,
+and one of its tests asserts exactly that.
