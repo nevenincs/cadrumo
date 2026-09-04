@@ -13467,3 +13467,35 @@ rather than a gate: a description written from the shape the author expected,
 passing because nothing compared it against the members it claimed to describe.
 The test that caught it was written to assert the explanation, and the
 explanation was the thing that was wrong.
+
+
+## An exposure figure that survives its own control, barely
+
+Every one of the 3,157 drifting casillas sits in a revision declaring filing
+grade. Against the 68.9% of all labelled casillas that do, that reads as a
+finding about drift.
+
+It is not, and the control says so. Drift requires a casilla to be labelled
+under at least two revisions, and a casilla labelled under two revisions is far
+more likely to include a filing one. Among the **6,962 casillas that could drift
+at all, 6,381 - 91.7% - already sit in a filing-grade revision.** The honest
+comparison is 100% against 91.7%, not against 68.9%, and the first framing
+overstates the signal by most of its size.
+
+What survives is worth one sentence rather than a module: none of the 3,157 sits
+harmlessly in a revision nobody files. Every one is text a filer can meet. That
+is a reason to treat the worklist as filing-facing, not evidence that drift
+prefers fileable revisions.
+
+No instrument is built for it. A report whose signal is 100% against a 91.7%
+control would rank nothing, and this campaign has now declined that test four
+times - the population-identity sweep, the within-screen overlap gate, the
+import-reach derivation detector, and this.
+
+The small set is different and does rank. All **60 stale translations - where the
+official Spanish changed and the translation did not - sit in filing-grade
+revisions**, concentrated in four modelos: 24 in modelo 100, 24 in modelo 322,
+nine in 202 and three in 369. Sixty rows across four modelos is a worklist
+somebody can finish, and each one is a filer reading text that no longer matches
+the official wording. That is the piece of this measurement worth acting on
+first, and it is two per cent of the number the drift figure leads with.

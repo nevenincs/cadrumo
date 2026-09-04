@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:ce43e70ff6d3e99a2b067b06475d3252bdb3f44a051578c5373d308171fb345f'
+body_hash: 'sha256:47dd2c687e79ac32fe96a7785d2dbf55f9b6b5fe1f16bf18a2e640022a49b409'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -864,6 +864,8 @@ Apply the accepted contract across the registry so restatement becomes unconstru
 - [x] `W06.P14.S496` - Separate label disagreements that track a Spanish change from those that do not: 897 Catalan, 1057 English and 1203 Hungarian casillas carry two renderings of one unchanged source string, and 29, 9 and 22 carry one rendering of a source string that changed; `dev/locales/translation_drift.py,dev/locales/tests/test_translation_drift.py`.
 - [x] `W06.P14.S497` - Split the 3157 drifting casillas by what repairing each costs: 467 identical after folding and 16 the same text differently divided need no judgement, 1475 share their wording and 1199 need a translator against the source; `dev/locales/translation_drift.py,dev/locales/tests/test_translation_drift.py`.
 - [ ] `W06.P14.S498` - Collapse the 483 mechanically resolvable label disagreements, which differ only in case, accent, punctuation or where a word boundary falls, then re-measure; the catalogues are under src/cadrumo/locales so the collapse lands there rather than in dev; `src/cadrumo/locales,dev/locales`.
+- [x] `W06.P14.S499` - Control the drift exposure figure against the population that could drift at all: 100 per cent against 91.7 per cent rather than 68.9, so the claim is that no drifting label is unfileable rather than that drift prefers fileable revisions; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [ ] `W06.P14.S500` - Refresh the sixty stale translations where the official Spanish changed and the translation did not, all sixty in filing-grade revisions and concentrated in modelos 100 and 322 with 24 each, 202 with nine and 369 with three; `src/cadrumo/locales`.
 
 ## Parallelization
 
@@ -1452,3 +1454,31 @@ That run's tally is 24 failed and 291 passed against 317 collected, which is unr
 the two missing tests are visible only in the banner. And the criterion's fourth failure mode
 demonstrated itself during that verification: read through a pipe, the tool's exit status came back
 zero on a run it had exited one on, because the status belonged to the filter.
+
+Every label disagreement is classified by whether the official wording justifies it and by what
+repairing it costs, and neither figure is quoted without the control that decides what it licenses.
+
+The catalogues key a casilla label by revision, so copies are free to disagree, and 5,518 casillas
+across three locales do. Spanish is the source: where its text is byte-identical across two revisions
+the official wording did not change, so **3,157 disagreements are drift** - two renderings of one
+unchanged string, `CNAE code of the main activity` against `NACE code of the principal activity` - and
+2,196 track a real change. A further **60 are the inverse and sharper defect**, where the Spanish
+changed and the translation did not, so a filer reads text that no longer matches the source.
+
+The 3,157 are four worklists, not one: 467 differ only after case, accent and punctuation are folded
+away; 16 are the same text differently divided, an elision or an ordinal; 1,475 share most of their
+wording; and 1,199 need a translator. So 483 need no judgement at all and the genuine translation
+worklist is 1,199, under two-fifths of the headline. The threshold separating the last two is a
+declared constant carrying its own consequence, because a threshold nobody can see is a judgement
+nobody can disagree with.
+
+The exposure figure is where the criterion earns its keep. All 3,157 sit in filing-grade revisions
+against 68.9% of all labelled casillas, which reads as a finding about drift and is not one: drift
+requires two revisions, and **91.7% of the 6,962 casillas that could drift at all are already in a
+filing-grade revision**. What survives the control is that none of the 3,157 is unfileable, which is a
+reason to treat the worklist as filing-facing and not evidence that drift prefers fileable revisions.
+No instrument was built for a signal of 100% against 91.7%.
+
+The 60 stale translations do rank, and are the piece to act on first: all sixty are in filing-grade
+revisions and they sit in four modelos, 24 each in 100 and 322, nine in 202 and three in 369. Sixty
+rows somebody can finish, against a headline of three thousand.
