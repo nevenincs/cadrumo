@@ -15,8 +15,10 @@ property a colour-blind or monochrome operator depends on.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import cast
 
 import pytest
+from textual.screen import Screen
 from textual.widget import Widget
 from textual.widgets import Static
 
@@ -39,26 +41,48 @@ async def test_every_focusable_control_on_a_destination_is_reachable_by_tab(tmp_
             if route.factory is None:
                 continue
             destination = route.descriptor.destination
-            app = ScreenHostApp(route.factory(TuiScreenContextV1(destination=destination)))
-            async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
-                await pilot.pause()
-                focusable = {
-                    widget.id or f"{type(widget).__name__}@{id(widget)}"
-                    for widget in app.screen.query(Widget)
-                    if widget.focusable and widget.display
-                }
-                reached: set[str] = set()
-                for _ in range(len(focusable) * 2 + 2):
-                    await pilot.press("tab")
-                    await pilot.pause()
-                    focused = app.screen.focused
-                    if focused is not None:
-                        reached.add(focused.id or f"{type(focused).__name__}@{id(focused)}")
+            screen = route.factory(TuiScreenContextV1(destination=destination))
+            await _assert_tab_reaches_everything(screen, destination)
 
-                assert focusable <= reached, (
-                    f"{destination} never gives focus to {sorted(focusable - reached)} in a full Tab cycle"
-                )
-                app.exit(None)
+
+async def _assert_tab_reaches_everything(screen: object, label: str) -> None:
+    """Drive a full Tab cycle and require every focusable control to be reached."""
+    app = ScreenHostApp(cast("Screen[None]", screen))
+    async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
+        await pilot.pause()
+        focusable = {
+            widget.id or f"{type(widget).__name__}@{id(widget)}"
+            for widget in app.screen.query(Widget)
+            if widget.focusable and widget.display
+        }
+        reached: set[str] = set()
+        for _ in range(len(focusable) * 2 + 2):
+            await pilot.press("tab")
+            await pilot.pause()
+            focused = app.screen.focused
+            if focused is not None:
+                reached.add(focused.id or f"{type(focused).__name__}@{id(focused)}")
+        app.exit(None)
+
+    assert focusable, f"{label} offers no focusable control at all, so reachability proves nothing"
+    assert focusable <= reached, f"{label} never gives focus to {sorted(focusable - reached)} in a full Tab cycle"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("scenario", ["ready", "blocked"])
+async def test_every_focusable_control_on_a_populated_home_is_reachable_by_tab(scenario: str) -> None:
+    """The empty-profile pass could not see this.
+
+    Home's three tables set display=False when they hold no rows, so over a
+    fresh profile the destination contributes an EMPTY focusable set and the
+    subset assertion holds vacuously -- removing a widget from the focus chain
+    went undetected there. These fixtures populate the tables, so the chain has
+    something to fail on.
+    """
+    from ..devtools.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
+
+    screen = HomeScreen(build_home_projection_fixture(HomeFixtureScenario(scenario)))
+    await _assert_tab_reaches_everything(screen, f"home--{scenario}")
 
 
 @pytest.mark.asyncio
