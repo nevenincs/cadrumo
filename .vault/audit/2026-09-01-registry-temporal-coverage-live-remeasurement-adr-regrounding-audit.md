@@ -13833,3 +13833,32 @@ asserts the exemption stays small - fewer than sixty lines and under a twentieth
 of the module - because growing the exemption to cover the new test is exactly
 the move the narrowing exists to prevent, and it would have been the easier fix
 each of the three times.
+
+
+## Two self-exempting gates in dev, and the second exemption was dead
+
+Having narrowed one gate's self-exemption, the question is whether others carry
+the same shape. A sweep of `dev` for a scan that skips a file by its own name
+finds exactly two: the vault-citation gate, now narrowed, and
+`dev/ci/tests/test_wall_advisory.py`.
+
+The second is a different case and a smaller one. It scans for declarations of
+four pinned performance thresholds and skipped its own file because that file
+holds the reference values. Measured, the skip was **dead**: the pinned names
+appear there only as dictionary keys, indented inside a literal, and the
+pattern is anchored at line start, so the file never matched its own scan. With
+the skip and without it, the same twelve declarations are read.
+
+So it protected nothing and cost the one thing an exemption always costs - the
+file most likely to acquire a stale copy of a threshold it itself defines was
+the only file guaranteed not to be checked for one.
+
+It is removed, with a test that plants a drifted declaration in a file named
+after this very module and asserts it is reported. A name-based exemption
+reintroduced later fails there rather than quietly shrinking the scan.
+
+The pair is worth stating together. One exemption was far too broad and one was
+inert, and neither was wrong when written - each was a reasonable guard against
+a gate reporting itself. What neither carried was a measurement of what it
+actually excluded, and both turned out to exclude something other than what
+their comments described.

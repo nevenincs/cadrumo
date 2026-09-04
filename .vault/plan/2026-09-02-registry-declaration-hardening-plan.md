@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:7d42899ba9611496023881dd21daa67896c105128745cb50297b23655f96b79d'
+body_hash: 'sha256:e831dfb7f37bd770a3180d33f92abea5ad64c9e5e3447df5885da5a319f89827'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -393,6 +393,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S510` - Decompose the vault health total this session reported opaquely: 353 body-sections, 44 features, 27 exec-mapping and the rest belong to other features, while both features this session writes to report all checks passed; `.vault`.
 - [x] `W02.P02.S511` - Measure what the vault-citation gate does not match: its four patterns are all dotted, so seventeen bare step-prefixed names across three files pass a gate whose docstring says it exists so step identifiers do not; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W02.P02.S512` - Narrow the citation gates self-exemption from a whole-file skip to two regions located by parsing the module, shrinking the blind spot from 1365 lines to 33, with a test asserting the exemption stays under a twentieth of the file; `dev/registry/tests/test_declaration_invariant_gates.py`.
+- [ ] `W02.P02.S513` - Remove the dead self-skip from the wall-advisory threshold scan, which excluded the gates own file although its pinned names appear there only as dictionary keys the line-anchored pattern cannot match, with a planted drift in a file of that name as the proof; `dev/ci/tests/test_wall_advisory.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
