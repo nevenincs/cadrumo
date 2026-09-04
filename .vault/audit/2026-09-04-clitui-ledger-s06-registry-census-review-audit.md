@@ -90,3 +90,72 @@ schema.
   target casilla, or target section must move the digest or fail the check.
   Refresh the reference, S06 execution record, plan state, and feature index,
   then obtain another independent review before marking S06 complete.
+
+## Remediation review
+
+Ruling: **NOT ACCEPTED**. The remediation closes the original byte-contract
+finding only in part. Independent serialization from the live validated
+authority reproduces 546 rows, 35 family/modelo/revision sites, seven source
+families, 510 direct routes, 36 rows without a direct edge, and 130 source
+frames. The independently assembled framed payloads reproduce route digest
+`sha256:247b82a244e2a8c9a6ca476cc6aa46a3e15b7357f2aa206f4148fee18175f9ac`
+and source digest
+`sha256:194a9f26ddfbae6c5d7f265ffe58f50964fbe2fcd02a5670fa19845dead5cf6d`.
+The root, version, row keys and types, target section tuple, canonical ASCII
+JSON, domain prefixes, unsigned eight-byte big-endian framing, sorting,
+duplicate rejection, and serializer revalidation all match the published
+contract. The builder validates and projects the live authority through
+`casillas_by_binding`; it does not introduce a second business registry.
+Reversing injected source records is normalized by the declared sort, while a
+reordered already-built census is correctly rejected as noncanonical.
+
+The substantive census remains unchanged: 510 canonical routes plus three
+application-sidecar outputs plus 33 unresolved destinations. The prior review's
+production-chain gaps, non-OSS `source_issues` blocker gap, and FX-provenance
+gap remain accurately published as unproven work. G0 remains OPEN. The S06
+record, plan checkbox, and feature index agree, and the remediation commits
+contain no product or TUI changes.
+
+### s06-registry-census-remediation | high | Full typed selector projection still omits defaults and nulls
+
+The published contract says `selector_json` retains model defaults and nulls
+and later says the digest binds every full typed selector. The implementation
+instead passes every selector through `selector_as_dict`, whose Pydantic branch
+uses `model_dump(exclude={"source"}, exclude_none=True,
+exclude_unset=True)`. Independent comparison of the live Pydantic selector
+values with their census projections found omissions in 498 of 546 Ledger
+declarations; representative IVA rows omit both nullable
+`exemption_articles` and `applied_rates`.
+
+Consequently, a selector-model default or nullable-field representation can
+change outside the 130 TOML source frames without changing the route digest.
+The existing selector mutation test edits an already-projected JSON object and
+does not exercise this loss at the live-authority projection boundary. This is
+still HIGH under the detector-teeth and typed-meaning rules: the evidence
+subject is narrower than its documented identity, so the original freshness
+claim can silently under-declare selector state.
+
+Remediation must choose and implement one truthful contract. If the evidence
+subject is the full validated selector, serialize the selector model with
+defaults and nulls retained (excluding only injected `source`) and add a live
+projection test that fails when an unset/default/null field is dropped or its
+default changes. If the intended subject is the operational normalized
+selector returned by `selector_as_dict`, narrow the reference claim and add a
+test proving that normalization is intentional and semantically sufficient.
+The former is required to preserve the current published full-typed-selector
+claim.
+
+### s06-registry-census-static | medium | New census construction is not clean under `ty`
+
+`ty check` reports scoped errors at
+`dev/quality/clitui_ledger_capability_matrix.py:201-202`: constants annotated
+as `Final[str]` and `Final[int]` are passed to fields requiring the exact root
+and schema `Literal` types. Nine additional diagnostics in the same command are
+pre-existing campaign-matrix test/helper issues and are reported separately,
+not charged to S06. Ruff formatting and lint both pass. The scoped literal
+errors should be resolved without weakening the strict root/schema model.
+
+Focused evidence: `dev/quality/tests/test_clitui_ledger_capability_matrix.py`
+passes 131 tests, including the committed positive and route/source mutation
+cases. The nine-file S06 behavior suite was rerun independently. Its result and
+the feature-scoped Vault checks are recorded in the final review handoff.
