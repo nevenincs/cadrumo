@@ -64,8 +64,8 @@ def _track_in_a_scratch_repository(root: Path) -> None:
     identity configuration are required.
     """
     if not (root / ".git").is_dir():
-        subprocess.run(("git", "init", "-q"), cwd=root, check=True, capture_output=True)  # noqa: S603, S607
-    subprocess.run(("git", "add", "-A"), cwd=root, check=True, capture_output=True)  # noqa: S603, S607
+        subprocess.run(("git", "init", "-q"), cwd=root, check=True, capture_output=True)  # noqa: S607  # fixed repository tool
+    subprocess.run(("git", "add", "-A"), cwd=root, check=True, capture_output=True)  # noqa: S607  # fixed repository tool
 
 
 def _flagged_names(root: Path) -> set[str]:
@@ -220,6 +220,7 @@ def test_a_missing_screened_tree_refuses_rather_than_reporting_clean(tmp_path: P
     findings because it scanned zero files -- is indistinguishable from success.
     """
     (tmp_path / "src" / "cadrumo" / "tests").mkdir(parents=True)
+    _track_in_a_scratch_repository(tmp_path)
 
     with pytest.raises(SystemExit, match="screened tree is missing"):
         screen(tmp_path)

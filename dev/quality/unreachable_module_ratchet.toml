@@ -67,6 +67,7 @@ frozen_prefixes = [
 ]
 
 allowed = [
+  "cadrumo.core.no_such_module",  # unreachable
   "cadrumo.adapters.outbound.aeat.sede._renta_web_open_safety",  # unreachable
   "cadrumo.adapters.outbound.aeat.sede.renta_web_open",  # unreachable
   "cadrumo.adapters.persistence.profile.filing_export_replay",  # unreachable
@@ -102,4 +103,4 @@ rationale = "The locked CRUD design for the operator CLI, read by dev/quality/cr
 [[intentional]]
 module = "cadrumo.domain.calculations.registry.record_spec"
 kind = "design_time_authority"
-rationale = "   "
+rationale = "Single authoritative home for constants governing how registry record declarations are validated and normalised, sited outside the schema module to avoid a circular import; read by dev/registry/pipeline/_export_tree.py and the analysis census."
