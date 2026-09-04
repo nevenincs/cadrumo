@@ -632,7 +632,7 @@ def _handbook_definitions(language: OutputLanguage) -> dict[str, str]:
     """
     from cadrumo.core.concept_lifecycle import ConceptLifecycle
 
-    from .terminology_handbook import load_terminology_handbook
+    from .terminology_handbook.loader import load_terminology_handbook
 
     definitions: dict[str, str] = {}
     for concept in load_terminology_handbook().concepts:

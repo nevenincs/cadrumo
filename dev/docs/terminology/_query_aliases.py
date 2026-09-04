@@ -28,8 +28,8 @@ from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
 
 from ..._paths import REPO_ROOT, UTF_8
-from ..terminology_handbook import TerminologyHandbook
 from ..terminology_handbook.errors import TerminologyLoadError
+from ..terminology_handbook.loader import TerminologyHandbook
 
 __all__ = [
     "QUERY_ALIAS_AUTHORITY_RELPATH",

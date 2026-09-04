@@ -39,7 +39,7 @@ from cadrumo.domain.calculations.registry.ids import (
 )
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
-from ..terminology_handbook import ConceptDomain
+from ..terminology_handbook.enums import ConceptDomain
 from ._casilla_anchor import casilla_reference_target
 from ._cli_projection import CliOptionRecord, CliSurfaceRecord
 from ._concept_cards import ConceptCardRecord

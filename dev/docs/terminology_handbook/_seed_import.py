@@ -33,7 +33,7 @@ Seeds never auto-approve
 A seed adds translations / aliases, NOT an ``es`` grounded definition with a
 source citation, so it does not satisfy the approved-completeness gate: a
 seeded ``draft`` stays ``draft``. Lifecycle promotion is human curation. Every
-seeded value stamps :class:`~dev.docs.terminology_handbook.SeedProvenance`; a seed with no
+seeded value stamps :class:`~dev.docs.terminology_handbook.schema.SeedProvenance`; a seed with no
 attribution is refused at the schema boundary (``attribution`` is
 ``min_length=1``).
 
