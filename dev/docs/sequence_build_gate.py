@@ -4,7 +4,7 @@ This is the docs-build half of the two-surfaces-one-engine gate: the Sphinx
 build runs the engine's check mode from a ``builder-inited`` hook so a golden
 divergence or a failed ``@expect`` reds the docs build, and a peer pytest gate
 (``dev/docs/tests/test_sequence_goldens.py``) calls the same
-:func:`~dev.docs.sequences.check_sequences` so CI catches drift without a full
+:func:`~dev.docs.sequences.checks.check_sequences` so CI catches drift without a full
 docs build. Neither surface re-implements execution or comparison — both wire
 the one engine.
 
@@ -131,7 +131,7 @@ def check_sequence_goldens(app: Sphinx, *, pages: list[str] | None = None) -> No
     """Execute the enrolled sequences and fail the build on any golden divergence.
 
     Calls the one engine check function
-    (:func:`~dev.docs.sequences.check_sequences`) against the pages under the
+    (:func:`~dev.docs.sequences.checks.check_sequences`) against the pages under the
     build's source tree, comparing each executed transcript to its committed
     golden. A non-empty problem set raises :class:`~sphinx.errors.SphinxError`
     carrying every problem verbatim (each already names the page, sequence,
@@ -144,7 +144,8 @@ def check_sequence_goldens(app: Sphinx, *, pages: list[str] | None = None) -> No
             (the incremental changed-page set); ``None`` checks every enrolled
             page (a full build).
     """
-    from .sequences import check_sequences_in_subprocess, refresh_invocation
+    from .sequences.checks import check_sequences_in_subprocess
+    from .sequences.golden_store import refresh_invocation
 
     if not should_check_sequences():
         return

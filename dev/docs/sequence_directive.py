@@ -34,7 +34,9 @@ if TYPE_CHECKING:
     from sphinx.application import Sphinx
 
     from .cli_tree import CliTree
-    from .sequences import CommandToken, GoldenFrame, ParsedSequence, SequenceFrame, SequenceGolden
+    from .sequences.golden_store import GoldenFrame, SequenceGolden
+    from .sequences.schema import ParsedSequence, SequenceFrame
+    from .sequences.tokeniser import CommandToken
 
 __all__ = [
     "CliSequenceDirective",
@@ -234,7 +236,7 @@ def _frame_payload(
     display-only, so it carries no output, no stderr, and no exit code (output is
     never fabricated).
     """
-    from .sequences import tokenise_command
+    from .sequences.tokeniser import tokenise_command
 
     tokens = tokenise_command(parsed_frame.argv)
     token_dicts = [token.model_dump(mode="json") for token in tokens]
@@ -444,13 +446,11 @@ class CliSequenceDirective(Directive):
         """Parse the body, render from the committed golden, and emit the frames + payload."""
         from pathlib import Path
 
-        from .sequences import (
-            parse_sequence,
-            read_golden,
-            read_sequence_contract,
-            refuse_live_frames,
-        )
+        from .sequences.contracts import read_sequence_contract
         from .sequences.errors import SequenceEngineError
+        from .sequences.golden_store import read_golden
+        from .sequences.parser import parse_sequence
+        from .sequences.runner import refuse_live_frames
 
         sequence_id = self.arguments[0].strip()
         env = self.state.document.settings.env
