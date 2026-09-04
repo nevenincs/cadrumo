@@ -27,7 +27,7 @@ from .....tests.terminal_sizes import TERMINAL_WIDE
 from ....tui.components.host import ScreenHostApp
 from ....tui.devtools.frame import geometry_band
 from ....tui.navigation import TuiFocusIdentityV1, TuiScreenContextV1
-from ..controller import LedgerWorkspaceController
+from ..controller import LedgerEntrySelected, LedgerWorkspaceController
 from ..entries import LedgerEntriesScreen
 from ..overview import LedgerOverviewScreen
 from ..review import LedgerReviewScreen
@@ -381,3 +381,45 @@ def test_ledger_tui_has_no_io_adapter_cli_calculation_or_mutation_imports() -> N
         for path in production
         if path.name in {"entries.py", "review.py"}
     )
+
+@pytest.mark.asyncio
+async def test_selecting_an_entry_makes_the_classification_area_reachable() -> None:
+    """A destination the session can never open should not be offered at all.
+
+    Classification is entered WITH a chosen row, and the target used to be
+    fixed when the workspace was composed -- before the operator had chosen
+    anything. So in a real session the area was permanently refused: the
+    navigation table listed a destination that could not open, and the
+    selection made on the entries screen went nowhere.
+
+    Asserts the refusal BEFORE and its absence AFTER, because either half
+    alone proves nothing: a screen that always admits classification would pass
+    the second, and one that never does would pass the first.
+    """
+    projection = _projection()
+    controller = _controller(projection)
+    screen = LedgerEntriesScreen(controller)
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=TERMINAL_WIDE) as pilot:
+        await pilot.pause()
+        assert controller.refusal_for(LedgerWorkspaceArea.CLASSIFICATION) is not None, (
+            "classification was already reachable, so this cannot show a selection changed anything"
+        )
+
+        chosen = projection.entries[0].transaction_id
+        screen.post_message(LedgerEntrySelected(chosen))
+        await pilot.pause()
+
+        assert controller.classification_target == chosen
+        assert controller.refusal_for(LedgerWorkspaceArea.CLASSIFICATION) is None, (
+            "the operator chose an entry and classification is still refused, so the selection "
+            "carried nowhere"
+        )
+        app.exit(None)
+
+
+def test_a_classification_target_outside_the_visible_projection_is_refused() -> None:
+    """A target the snapshot does not contain would open on an invisible row."""
+    controller = _controller(_projection())
+    with pytest.raises(ValueError, match="absent from the visible Ledger projection"):
+        controller.select_classification_target("f" * 64)

@@ -1749,16 +1749,9 @@ def iva_rate_kind_for(rate: Decimal, *, on_date: date) -> IvaRateKind | None:
     return matched[0] if matched else None
 
 
-# Kept as local test-facing names; canonical production consumers use the
-# responsibility-owned names above.
-_flow_direction_for = flow_direction_for
-_business_proportionality = business_proportionality_for
-_has_converted_non_eur_amount = has_converted_non_eur_amount
-_missing_tax_fact_reason = missing_tax_fact_reason
-_missing_tax_fact_detail = missing_tax_fact_detail
-_prorrata_reference_for = prorrata_reference_for
+# One local test-facing name. Seven siblings carried the same comment while no
+# test referenced any of them, so the claim was true only of this one.
 _iva_rate_kind_for = iva_rate_kind_for
-_validate_intracom_export_counterparty = validate_intracom_export_counterparty
 
 
 __all__ = [
