@@ -15,6 +15,7 @@ from textual.app import App, ComposeResult
 from textual.widgets import Button, Static
 
 from .....tests.terminal_sizes import SUPPORTED_TERMINAL_SIZE_IDS, SUPPORTED_TERMINAL_SIZES
+from ..theme import BASE_CSS, CADRUMO_CSS_TOKENS
 from ..widgets import (
     DisclosureGroup,
     RequirementBadge,
@@ -146,3 +147,52 @@ async def test_source_action_card_button_is_reachable_and_pressable_by_keyboard(
         await pilot.pause()
 
     assert app.pressed_count == 1
+
+@pytest.mark.asyncio
+async def test_every_grouping_mechanism_separates_its_groups_by_the_same_distance() -> None:
+    """Three ways to mark a group, one distance between them.
+
+    This product marks a logical group three ways: a bordered panel with a
+    border title, a `.cadrumo-heading` above its rows, and a collapsible
+    `DisclosureGroup`. The affordances genuinely differ -- a panel is static, a
+    disclosure collapses -- so having three is defensible. Having three
+    DISTANCES is not: the operator reads separation, not mechanism, and a
+    surface that mixes two of them at different gaps reads as one smeared list
+    however correctly each group is titled.
+
+    `DisclosureGroup` was the one that drifted. It declared no CSS at all and
+    inherited Textual's default, so two titled groups sat flush against each
+    other while panels and headings stood two rows apart. Measured from the
+    mounted geometry rather than the stylesheet, because a declaration proves
+    only that someone wrote it -- the gap that matters is the one painted.
+    """
+    section_gap = int(CADRUMO_CSS_TOKENS["cadrumo-section"])
+
+    class _Probe(App[None]):
+        CSS = BASE_CSS
+
+        @override
+        def compose(self) -> ComposeResult:
+            yield DisclosureGroup(Static("uno"), title="Uno", collapsed=False, id="group-a")
+            yield DisclosureGroup(Static("dos"), title="Dos", collapsed=False, id="group-b")
+            yield Static("panel-a", classes="cadrumo-panel", id="panel-a")
+            yield Static("panel-b", classes="cadrumo-panel", id="panel-b")
+
+    app = _Probe()
+    async with app.run_test(size=(80, 40)) as pilot:
+        await pilot.pause()
+        measured = {}
+        for mechanism, first, second in (
+            ("DisclosureGroup", "#group-a", "#group-b"),
+            ("cadrumo-panel", "#panel-a", "#panel-b"),
+        ):
+            top = app.screen.query_one(first)
+            bottom = app.screen.query_one(second)
+            measured[mechanism] = bottom.region.y - (top.region.y + top.region.height)
+        app.exit(None)
+
+    for mechanism, gap in measured.items():
+        assert gap == section_gap, (
+            f"{mechanism} separates consecutive groups by {gap} rows, not the "
+            f"{section_gap} the section token declares; measured {measured}"
+        )

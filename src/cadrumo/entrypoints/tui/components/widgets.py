@@ -12,6 +12,7 @@ from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.geometry import Size
 from textual.widget import Widget
 from textual.widgets import Button, Collapsible, DataTable, Static
+from textual.widgets.data_table import Column, ColumnKey
 
 from ....core.presentation import NoticePresentation
 from .theme import tokenised
@@ -140,9 +141,9 @@ class ContentDataTable[CellType](DataTable[CellType]):
         if widened:
             self.refresh()
 
-    def _natural_width(self, key: object, column: object) -> int:
+    def _natural_width(self, key: ColumnKey, column: Column) -> int:
         """The width at which this column stops hiding anything."""
-        widest = len(str(column.label))  # type: ignore[attr-defined]
+        widest = len(str(column.label))
         for index in range(self.row_count):
             row = self.get_row_at(index)
             for position, cell_key in enumerate(self.columns):

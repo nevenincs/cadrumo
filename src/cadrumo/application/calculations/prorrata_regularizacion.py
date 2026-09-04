@@ -111,7 +111,10 @@ CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA: CasillaId = validated_casilla_id(
 )
 
 _SOURCE_KIND: Final = BindingSourceKind.PRORRATA_REGULARIZACION
-STORAGE_DEGRADATION_ERRORS = (*_STORAGE_DEGRADATION_ERRORS, ProrrataRegisterError)
+STORAGE_DEGRADATION_ERRORS: Final[tuple[type[Exception], ...]] = (
+    *_STORAGE_DEGRADATION_ERRORS,
+    ProrrataRegisterError,
+)
 _LEDGER_VOLUME_DIVERGENCE_SOURCE_KIND = "prorrata_regularizacion_ledger_volume_divergence"
 _OUTPUT_MODELO_303_CASILLA_44: Final = "modelo_303_casilla_44"
 _OUTPUT_MODELO_390_REGULARIZACION_ANUAL: Final = "modelo_390_regularizacion_anual"
