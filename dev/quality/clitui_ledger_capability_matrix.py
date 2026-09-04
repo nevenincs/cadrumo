@@ -392,11 +392,27 @@ def _parsed_sources(records: Iterable[tuple[str, bytes]]) -> dict[str, ast.Modul
     return {relative: ast.parse(body.decode("utf-8"), filename=relative) for relative, body in records}
 
 
+def _named_function(tree: ast.Module, name: str) -> ast.FunctionDef | ast.AsyncFunctionDef:
+    matches = tuple(
+        node for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == name
+    )
+    if len(matches) != 1:
+        raise ValueError(f"Ledger TUI census requires exactly one {name} function")
+    return matches[0]
+
+
 def _ledger_route_rows(tree: ast.Module) -> tuple[tuple[str, str, str], ...]:
+    assignments = tuple(
+        node
+        for node in tree.body
+        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id == "LEDGER_ROUTES"
+    )
+    if len(assignments) != 1 or not isinstance(assignments[0].value, (ast.Tuple, ast.List)):
+        raise ValueError("LEDGER_ROUTES must have one statically readable sequence assignment")
     rows: list[tuple[str, str, str]] = []
-    for node in ast.walk(tree):
+    for node in assignments[0].value.elts:
         if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Name) or node.func.id != "LedgerRouteV1":
-            continue
+            raise ValueError("LEDGER_ROUTES entries must be direct LedgerRouteV1 declarations")
         if len(node.args) != 3:
             raise ValueError("LedgerRouteV1 declarations must have three positional arguments")
         destination, area, screen = node.args
@@ -411,22 +427,152 @@ def _ledger_route_rows(tree: ast.Module) -> tuple[tuple[str, str, str], ...]:
     return tuple(sorted(rows))
 
 
-def _string_assignments(tree: ast.Module, prefix: str) -> tuple[str, ...]:
-    values: list[str] = []
+def _module_string_constants(tree: ast.Module) -> dict[str, str]:
+    values: dict[str, str] = {}
     for node in tree.body:
         if not isinstance(node, (ast.Assign, ast.AnnAssign)):
             continue
         targets = node.targets if isinstance(node, ast.Assign) else [node.target]
         value = node.value
-        if not any(isinstance(target, ast.Name) and target.id.startswith(prefix) for target in targets):
-            continue
         if isinstance(value, ast.Constant) and isinstance(value.value, str):
-            values.append(value.value)
+            for target in targets:
+                if isinstance(target, ast.Name):
+                    values[target.id] = value.value
+    return values
+
+
+def _call_named(node: ast.AST, name: str) -> tuple[ast.Call, ...]:
+    return tuple(
+        candidate
+        for candidate in ast.walk(node)
+        if isinstance(candidate, ast.Call) and isinstance(candidate.func, ast.Name) and candidate.func.id == name
+    )
+
+
+def _installed_action_ids(tree: ast.Module) -> tuple[str, ...]:
+    function = _named_function(tree, "compose_authenticated_root_inputs_provider")
+    constructors = _call_named(function, "InstalledWorkbenchFactoryDependenciesV1")
+    if len(constructors) != 1:
+        raise ValueError("installed Ledger dependencies constructor is not unique")
+    constants = _module_string_constants(tree)
+    values: list[str] = []
+    for keyword in constructors[0].keywords:
+        if keyword.arg not in {"ledger_review_action", "ledger_evidence_action"}:
+            continue
+        value = keyword.value
+        if (
+            not isinstance(value, ast.Call)
+            or not isinstance(value.func, ast.Name)
+            or value.func.id != "action"
+            or len(value.args) != 1
+            or not isinstance(value.args[0], ast.Name)
+            or value.args[0].id not in constants
+        ):
+            raise ValueError("installed Ledger action reference is not statically census-readable")
+        values.append(constants[value.args[0].id])
     return tuple(sorted(values))
 
 
-def _function_names(tree: ast.Module) -> frozenset[str]:
-    return frozenset(node.name for node in ast.walk(tree) if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)))
+def _installed_ledger_factory_call(tree: ast.Module) -> ast.Call:
+    function = _named_function(tree, "_ledger_generation_factory")
+    calls = _call_named(function, "ledger_screen_factory")
+    if len(calls) != 1:
+        raise ValueError("installed Ledger screen-factory call is not unique")
+    return calls[0]
+
+
+def _installed_outer_destination(tree: ast.Module) -> str:
+    function = _named_function(tree, "compose_installed_workbench_generation_provider")
+    enrolled = tuple(
+        node
+        for node in ast.walk(function)
+        if isinstance(node, ast.Assign)
+        and any(
+            isinstance(target, ast.Subscript)
+            and isinstance(target.value, ast.Name)
+            and target.value.id == "factories"
+            and isinstance(target.slice, ast.Constant)
+            and target.slice.value == "workbench.ledger"
+            for target in node.targets
+        )
+        and isinstance(node.value, ast.Name)
+        and node.value.id == "ledger_factory"
+    )
+    destinations_calls = _call_named(function, "destinations")
+    if len(enrolled) != 1 or not destinations_calls:
+        raise ValueError("installed workbench does not enroll the Ledger outer factory")
+    return "workbench.ledger"
+
+
+def _initial_route_area(tree: ast.Module) -> str:
+    function = _named_function(tree, "ledger_screen_factory")
+    resolver_calls = _call_named(function, "resolve_ledger_screen")
+    if len(resolver_calls) != 1 or len(resolver_calls[0].args) != 2:
+        raise ValueError("Ledger root factory initial resolver call is not unique")
+    target = resolver_calls[0].args[1]
+    if (
+        not isinstance(target, ast.Call)
+        or not isinstance(target.func, ast.Attribute)
+        or target.func.attr != "route_target"
+        or len(target.args) != 1
+        or not isinstance(target.args[0], ast.Attribute)
+        or not isinstance(target.args[0].value, ast.Name)
+        or target.args[0].value.id != "LedgerWorkspaceArea"
+    ):
+        raise ValueError("Ledger root factory initial route is not statically census-readable")
+    return target.args[0].attr
+
+
+def _reachable_recipient_classes(
+    production_trees: Mapping[str, ast.Module],
+    route_screens: set[str],
+) -> tuple[ast.ClassDef, ...]:
+    classes = {
+        node.name: node for tree in production_trees.values() for node in tree.body if isinstance(node, ast.ClassDef)
+    }
+    pending = ["CadrumoTuiApp", *sorted(route_screens)]
+    reachable: set[str] = set()
+    while pending:
+        name = pending.pop()
+        if name in reachable:
+            continue
+        node = classes.get(name)
+        if node is None:
+            raise ValueError(f"installed Ledger recipient class is unavailable: {name}")
+        reachable.add(name)
+        pending.extend(base.id for base in node.bases if isinstance(base, ast.Name) and base.id in classes)
+    return tuple(classes[name] for name in sorted(reachable))
+
+
+def _message_consumers(classes: Iterable[ast.ClassDef]) -> tuple[str, ...]:
+    conventional = {
+        f"on_{re.sub(r'(?<!^)(?=[A-Z])', '_', message).lower()}": message for message in _LEDGER_MESSAGE_TYPES
+    }
+    found: set[str] = set()
+    for class_node in classes:
+        for method in class_node.body:
+            if not isinstance(method, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            if method.name in conventional:
+                found.add(conventional[method.name])
+            for decorator in method.decorator_list:
+                if not isinstance(decorator, ast.Call) or not decorator.args:
+                    continue
+                decorator_name = (
+                    decorator.func.id
+                    if isinstance(decorator.func, ast.Name)
+                    else decorator.func.attr
+                    if isinstance(decorator.func, ast.Attribute)
+                    else None
+                )
+                message_arg = decorator.args[0]
+                if (
+                    decorator_name == "on"
+                    and isinstance(message_arg, ast.Name)
+                    and message_arg.id in _LEDGER_MESSAGE_TYPES
+                ):
+                    found.add(message_arg.id)
+    return tuple(sorted(found))
 
 
 def build_ledger_tui_supported_surface_census(
@@ -453,14 +599,9 @@ def build_ledger_tui_supported_surface_census(
     if not route_facts:
         raise ValueError("Ledger TUI census found no internal routes")
 
-    routes_body = dict(records)[routes_path].decode("utf-8")
-    launcher_body = dict(records)[launcher_path].decode("utf-8")
-    if 'factories["workbench.ledger"] = ledger_factory' not in launcher_body:
-        raise ValueError("installed workbench does not enroll the Ledger outer factory")
-    initial_match = re.search(r"route_target\(LedgerWorkspaceArea\.([A-Z][A-Z0-9_]*)\)", routes_body)
-    if initial_match is None:
-        raise ValueError("Ledger root factory initial route is not statically census-readable")
-    initial_area = initial_match.group(1)
+    outer_destination = _installed_outer_destination(trees[launcher_path])
+    installed_factory_call = _installed_ledger_factory_call(trees[launcher_path])
+    initial_area = _initial_route_area(trees[routes_path])
     initial_destination = next(
         (destination for destination, area, _screen in route_facts if area == initial_area),
         None,
@@ -473,37 +614,19 @@ def build_ledger_tui_supported_surface_census(
         for relative, tree in trees.items()
         if relative.startswith("src/cadrumo/entrypoints/tui/") and "/tests/" not in relative
     }
+    route_screens = {screen for _destination, _area, screen in route_facts}
     defined_classes = {
-        node.name for tree in production_trees.values() for node in ast.walk(tree) if isinstance(node, ast.ClassDef)
+        node.name for tree in production_trees.values() for node in tree.body if isinstance(node, ast.ClassDef)
     }
-    required_classes = {screen for _destination, _area, screen in route_facts} | {"LedgerWorkspaceController"}
-    if not required_classes <= defined_classes:
+    if not route_screens <= defined_classes or "LedgerWorkspaceController" not in defined_classes:
         raise ValueError("Ledger TUI census route/controller class is unavailable")
-    required_functions = {"ledger_screen_factory", "resolve_ledger_screen"}
-    if not required_functions <= _function_names(trees[routes_path]):
-        raise ValueError("Ledger TUI census factory or resolver is unavailable")
-    handler_names = {
-        name
-        for relative, tree in production_trees.items()
-        if relative != "src/cadrumo/entrypoints/tui/ledger/controller.py"
-        for name in _function_names(tree)
-    }
-    consumers = tuple(
-        sorted(
-            message
-            for message in _LEDGER_MESSAGE_TYPES
-            if f"on_{re.sub(r'(?<!^)(?=[A-Z])', '_', message).lower()}" in handler_names
-        )
-    )
-    installed_keywords = {
-        keyword.arg
-        for node in ast.walk(trees[launcher_path])
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "ledger_screen_factory"
-        for keyword in node.keywords
-        if keyword.arg is not None
-    }
+    _named_function(trees[routes_path], "resolve_ledger_screen")
+    initial_screen = next(screen for destination, _area, screen in route_facts if destination == initial_destination)
+    recipient_classes = _reachable_recipient_classes(production_trees, {initial_screen})
+    consumers = _message_consumers(recipient_classes)
+    installed_keywords = {keyword.arg for keyword in installed_factory_call.keywords if keyword.arg is not None}
     installed_doors = tuple(sorted(installed_keywords & set(_LEDGER_MUTATION_DOORS)))
-    read_actions = _string_assignments(trees[installed_path], "_LEDGER_")
+    read_actions = _installed_action_ids(trees[installed_path])
 
     if cli_tui_capabilities is None:
         from cadrumo.entrypoints.cli._app_ledger_command_specs import LEDGER_CLI_COMMAND_CENSUS
@@ -534,7 +657,7 @@ def build_ledger_tui_supported_surface_census(
         controller="LedgerWorkspaceController",
         root_factory="ledger_screen_factory",
         resolver="resolve_ledger_screen",
-        installed_outer_destination="workbench.ledger",
+        installed_outer_destination=outer_destination,
         initial_internal_destination=initial_destination,
         message_consumers=consumers,
         injected_read_action_ids=read_actions,

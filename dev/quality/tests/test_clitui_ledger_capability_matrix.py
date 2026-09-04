@@ -160,9 +160,16 @@ def test_tui_source_set_normalizes_irrelevant_record_order() -> None:
     [
         pytest.param(
             "src/cadrumo/entrypoints/tui/app.py",
-            lambda body: body + b"\ndef on_ledger_route_requested(event):\n    return event\n",
+            lambda body: body.replace(
+                b"class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):",
+                b"class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):\n"
+                b"    @on(LedgerRouteRequested)\n"
+                b"    def arbitrary_handler_name(self, event):\n"
+                b"        return event\n",
+                1,
+            ),
             "message",
-            id="new-message-consumer",
+            id="new-decorated-message-consumer",
         ),
         pytest.param(
             "src/cadrumo/entrypoints/tui/launcher.py",
@@ -184,6 +191,20 @@ def test_tui_source_set_normalizes_irrelevant_record_order() -> None:
             ),
             "missing-route",
             id="missing-route",
+        ),
+        pytest.param(
+            "src/cadrumo/entrypoints/tui/ledger/routes.py",
+            lambda body: body.replace(
+                b'    LedgerRouteV1("ledger.reconciliation", LedgerWorkspaceArea.RECONCILIATION, '
+                b"LedgerReconciliationScreen),",
+                b'    LedgerRouteV1("ledger.reconciliation", LedgerWorkspaceArea.RECONCILIATION, '
+                b"LedgerReconciliationScreen),\n"
+                b'    LedgerRouteV1("ledger.shadow", LedgerWorkspaceArea.RECONCILIATION, '
+                b"LedgerReconciliationScreen),",
+                1,
+            ),
+            "new-route",
+            id="new-route",
         ),
         pytest.param(
             "src/cadrumo/entrypoints/tui/ledger/entries.py",
@@ -210,8 +231,10 @@ def test_tui_projection_detects_semantic_source_mutations(
         assert candidate.message_consumers == ("LedgerRouteRequested",)
     elif expected == "door":
         assert candidate.installed_mutation_doors == ("classification_submitter",)
-    else:
+    elif expected == "missing-route":
         assert len(candidate.routes) == 6
+    else:
+        assert len(candidate.routes) == 8
 
 
 def test_tui_projection_detects_new_scanned_source_file() -> None:
@@ -224,6 +247,68 @@ def test_tui_projection_detects_new_scanned_source_file() -> None:
 
     assert candidate.source_set_digest != _TUI_SOURCE_DIGEST
     assert candidate.calculated_digest != _TUI_CENSUS_DIGEST
+
+
+@pytest.mark.parametrize(
+    ("relative", "mutation"),
+    [
+        pytest.param(
+            "src/cadrumo/entrypoints/tui/app.py",
+            lambda body: body + b"\ndef on_ledger_route_requested(event):\n    return event\n",
+            id="module-level-conventional-handler",
+        ),
+        pytest.param(
+            "src/cadrumo/entrypoints/tui/installed_session.py",
+            lambda body: body + b'\n_LEDGER_UNUSED_ACTION = "operator.ledger.unused"\n',
+            id="unused-ledger-action-constant",
+        ),
+        pytest.param(
+            "src/cadrumo/entrypoints/tui/ledger/routes.py",
+            lambda body: (
+                body + b'\ndef dead_route_helper():\n    return LedgerRouteV1("ledger.shadow", '
+                b"LedgerWorkspaceArea.OVERVIEW, LedgerOverviewScreen)\n"
+            ),
+            id="dead-route-constructor",
+        ),
+        pytest.param(
+            "src/cadrumo/entrypoints/tui/launcher.py",
+            lambda body: (
+                body + b"\ndef dead_ledger_factory_call(projection, action, submitter):\n"
+                b"    return ledger_screen_factory(projection, review_action=action, "
+                b"classification_submitter=submitter)\n"
+            ),
+            id="dead-same-name-factory-call",
+        ),
+    ],
+)
+def test_tui_projection_ignores_matching_syntax_outside_production_dataflow(
+    relative: str,
+    mutation: Callable[[bytes], bytes],
+) -> None:
+    candidate = build_ledger_tui_supported_surface_census(source_records=_mutate_tui_source(relative, mutation))
+    baseline = _tui_census()
+
+    assert candidate.source_set_digest != baseline.source_set_digest
+    assert candidate.routes == baseline.routes
+    assert candidate.message_consumers == baseline.message_consumers
+    assert candidate.injected_read_action_ids == baseline.injected_read_action_ids
+    assert candidate.installed_mutation_doors == baseline.installed_mutation_doors
+
+
+def test_tui_projection_follows_initial_route_in_the_installed_factory_dataflow() -> None:
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/ledger/routes.py",
+        lambda body: body.replace(
+            b"controller.route_target(LedgerWorkspaceArea.OVERVIEW)",
+            b"controller.route_target(LedgerWorkspaceArea.ENTRIES)",
+            1,
+        ),
+    )
+
+    candidate = build_ledger_tui_supported_surface_census(source_records=records)
+
+    assert candidate.initial_internal_destination == "ledger.entries"
+    assert tuple(row.destination for row in candidate.routes if row.reachability == "installed") == ("ledger.entries",)
 
 
 def test_tui_projection_detects_cli_tui_status_change() -> None:
