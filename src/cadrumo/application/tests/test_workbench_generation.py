@@ -775,6 +775,7 @@ def test_only_a_blocking_dependency_finding_reads_as_a_blocked_declaration() -> 
         VerificationCompletenessStatus,
         VerificationReport,
         VerificationReportCatalogue,
+        derive_verification_report_id,
     )
     from ..workbench_generation import _dependency_blocked_revisions
 
@@ -783,17 +784,27 @@ def test_only_a_blocking_dependency_finding_reads_as_a_blocked_declaration() -> 
         severity: ModeloVerificationFindingSeverity,
         status: VerificationCompletenessStatus,
     ) -> VerificationReportCatalogue:
-        report = VerificationReport(
-            verification_report_id="v" * 64,
-            calculation_revision_id="c" * 64,
-            completeness_status=status,
-            findings=(
-                ModeloVerificationFinding(
-                    kind=kind,
-                    severity=severity,
-                    message_locale_key="application.modelo.findings.cross_period_dependency",
-                ),
+        findings = (
+            ModeloVerificationFinding(
+                kind=kind,
+                severity=severity,
+                message_locale_key="application.modelo.findings.cross_period_dependency",
+                legal_refs=("ley-37-1992:art-99",),
             ),
+        )
+        report = VerificationReport(
+            # Content-addressed: the id is DERIVED from the report's own facts,
+            # so it is computed here rather than invented, which also means a
+            # fixture cannot drift from the identity the domain would assign.
+            verification_report_id=derive_verification_report_id(
+                calculation_revision_id="b" * 64,
+                completeness_status=status,
+                findings=findings,
+                verified_by="operator",
+            ),
+            calculation_revision_id="b" * 64,
+            completeness_status=status,
+            findings=findings,
             run_at=datetime(2026, 9, 4, tzinfo=UTC),
             verified_by="operator",
             granted_verificado_completo=False,
@@ -805,15 +816,15 @@ def test_only_a_blocking_dependency_finding_reads_as_a_blocked_declaration() -> 
         ModeloVerificationFindingSeverity.BLOCKING,
         VerificationCompletenessStatus.BLOCKED,
     )
-    assert _dependency_blocked_revisions(blocked) == frozenset({"c" * 64})
+    assert _dependency_blocked_revisions(blocked) == frozenset({"b" * 64})
 
-    advisory = _catalogue(
+    warning = _catalogue(
         ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN,
-        ModeloVerificationFindingSeverity.ADVISORY,
+        ModeloVerificationFindingSeverity.WARNING,
         VerificationCompletenessStatus.BLOCKED,
     )
-    assert _dependency_blocked_revisions(advisory) == frozenset(), (
-        "an advisory dependency finding is information, not a blocker"
+    assert _dependency_blocked_revisions(warning) == frozenset(), (
+        "a WARNING dependency finding is information, not a blocker"
     )
 
     other_kind = _catalogue(
