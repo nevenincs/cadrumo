@@ -501,7 +501,8 @@ class LedgerCapabilityRowV1(BaseModel):
 
     @model_validator(mode="after")
     def _check_complete_row(self) -> LedgerCapabilityRowV1:
-        if {assessment.axis for assessment in self.assessments} != _ALL_AXES or len(self.assessments) != len(_ALL_AXES):
+        has_all_axes = frozenset(assessment.axis for assessment in self.assessments) == _ALL_AXES
+        if not has_all_axes or len(self.assessments) != len(_ALL_AXES):
             raise ValueError("rows require exactly one reviewed assessment for every axis")
         if not any(assessment.applicability is ApplicabilityState.APPLICABLE for assessment in self.assessments):
             raise ValueError("a capability row cannot be content-free or all not_applicable")

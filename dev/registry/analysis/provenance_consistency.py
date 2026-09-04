@@ -127,9 +127,7 @@ def citing_children(
             continue
         value = getattr(revision, name, None)
         items = tuple(value) if isinstance(value, (tuple, list)) else ((value,) if value is not None else ())
-        carriers = tuple(
-            item for item in items if hasattr(item, "legal_refs") or hasattr(item, "source_refs")
-        )
+        carriers = tuple(item for item in items if hasattr(item, "legal_refs") or hasattr(item, "source_refs"))
         if carriers:
             families.append((name, carriers))
     return tuple(families)

@@ -155,9 +155,7 @@ def _outside_references(authority: ValidatedRegistryAuthority, modelo_ids: tuple
     return sorted(outside_reference_index(tuple(provenance_screen(authority, modelo_ids))))
 
 
-def _fields_without_grounding(
-    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
-) -> Sequence[object]:
+def _fields_without_grounding(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> Sequence[object]:
     """Return only the fields for which no official wording was located.
 
     The grounding screen's own total is, by construction, the count of fields

@@ -207,9 +207,7 @@ def revision_findings(
     inputs = revision_render_inputs(authority, modelo=modelo, revision=revision)
     corpus_path = bundled_path() / authority.catalogues.sources[inputs.joined.source.source_ref].corpus_path
     transcription = design_transcription_path(corpus_path)
-    design_notes = (
-        sheet_unnumbered_notes(transcription.read_text(encoding=_UTF_8)) if transcription.is_file() else {}
-    )
+    design_notes = sheet_unnumbered_notes(transcription.read_text(encoding=_UTF_8)) if transcription.is_file() else {}
 
     return classify_grounding(
         needed,
@@ -280,13 +278,29 @@ def screen_authority(
     authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
 ) -> tuple[GroundingFinding, ...]:
     """Screen every revision that can produce render inputs."""
+    inapplicable: list[tuple[str, str, str]] = []
+    attempted = 0
     findings: list[GroundingFinding] = []
     for modelo_id in modelo_ids:
         for revision_id in authority.modelo(modelo_id).revisions:
+            attempted += 1
             try:
                 findings.extend(revision_findings(authority, modelo=modelo_id, revision=str(revision_id)))
-            except (ValueError, KeyError, FileNotFoundError, OSError):
+            except (ValueError, KeyError, FileNotFoundError, OSError) as error:
+                # Inapplicable, not broken: these revisions declare no export
+                # layout or cite no record design, so the screen genuinely cannot
+                # examine them. The skip is correct; its INVISIBILITY was not.
+                # Measured over the bundled authority: 97 of 128 revisions land
+                # here, so a clean count was reading as corpus-wide coverage when
+                # it covered under a quarter of the corpus.
+                inapplicable.append((modelo_id, str(revision_id), str(error)))
                 continue
+    if inapplicable:
+        sys.stderr.write(
+            f"rule_grounding_coverage: examined {attempted - len(inapplicable)} of {attempted} revision(s); "
+            f"{len(inapplicable)} declared nothing this screen can read and were not "
+            "examined, so the count below is not corpus-wide" + chr(10)
+        )
     return tuple(findings)
 
 

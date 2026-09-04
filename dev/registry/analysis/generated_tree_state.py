@@ -110,9 +110,7 @@ def classify_comparison(
     return "record_drift"
 
 
-def tree_states(
-    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
-) -> tuple[GeneratedTreeState, ...]:
+def tree_states(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> tuple[GeneratedTreeState, ...]:
     """Classify every revision that can render, committed or not."""
     states: list[GeneratedTreeState] = []
     for modelo_id in modelo_ids:
@@ -128,9 +126,7 @@ def tree_states(
                 comparison = None
             differing = tuple(comparison.differing) if comparison is not None else ()
             serialization_only = tuple(comparison.serialization_only) if comparison is not None else ()
-            state = classify_comparison(
-                differing, committed=committed, serialization_only=serialization_only
-            )
+            state = classify_comparison(differing, committed=committed, serialization_only=serialization_only)
             states.append(
                 GeneratedTreeState(
                     modelo=modelo_id,

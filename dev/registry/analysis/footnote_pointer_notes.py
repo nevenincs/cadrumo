@@ -134,8 +134,7 @@ def sheet_note_definitions(extracted: str) -> dict[str, dict[str, str]]:
             continue
         sheets[sheet][current].append(stripped)
     return {
-        name: {label: " ".join(parts).strip() for label, parts in labels.items()}
-        for name, labels in sheets.items()
+        name: {label: " ".join(parts).strip() for label, parts in labels.items()} for name, labels in sheets.items()
     }
 
 
@@ -189,7 +188,6 @@ def sheet_unnumbered_notes(extracted: str) -> dict[str, str]:
         if text and sheet not in notes:
             notes[sheet] = text
     return notes
-
 
 
 def note_definitions(extracted: str, *, sheet: str) -> dict[str, str]:

@@ -145,19 +145,35 @@ def screen_authority(
     revision would multiply the population by how often a design was reused
     rather than by how much wording it carries.
     """
+    inapplicable: list[tuple[str, str, str]] = []
+    attempted = 0
     findings: list[TypeConventionFinding] = []
     seen: set[str] = set()
     for modelo_id in modelo_ids:
         for revision_id in authority.modelo(modelo_id).revisions:
+            attempted += 1
             try:
                 found = revision_findings(authority, modelo=modelo_id, revision=str(revision_id))
-            except (ValueError, KeyError, FileNotFoundError, OSError):
+            except (ValueError, KeyError, FileNotFoundError, OSError) as error:
+                # Inapplicable, not broken: these revisions declare no export
+                # layout or cite no record design, so the screen genuinely cannot
+                # examine them. The skip is correct; its INVISIBILITY was not.
+                # Measured over the bundled authority: 97 of 128 revisions land
+                # here, so a clean count was reading as corpus-wide coverage when
+                # it covered under a quarter of the corpus.
+                inapplicable.append((modelo_id, str(revision_id), str(error)))
                 continue
             if found and found[0].design in seen:
                 continue
             if found:
                 seen.add(found[0].design)
             findings.extend(found)
+    if inapplicable:
+        sys.stderr.write(
+            f"type_convention_notes: examined {attempted - len(inapplicable)} of {attempted} revision(s); "
+            f"{len(inapplicable)} declared nothing this screen can read and were not "
+            "examined, so the count below is not corpus-wide" + chr(10)
+        )
     return tuple(findings)
 
 

@@ -194,14 +194,30 @@ def screen_authority(
     what a content cell says, and a revision with no render inputs has no
     content cells to say it with.
     """
+    inapplicable: list[tuple[str, str, str]] = []
+    attempted = 0
     findings: list[PointerWireFactFinding] = []
     for modelo_id in modelo_ids:
         definition = authority.modelo(modelo_id)
         for revision_id in definition.revisions:
+            attempted += 1
             try:
                 findings.extend(revision_findings(authority, modelo=modelo_id, revision=str(revision_id)))
-            except (ValueError, KeyError, FileNotFoundError, OSError):
+            except (ValueError, KeyError, FileNotFoundError, OSError) as error:
+                # Inapplicable, not broken: these revisions declare no export
+                # layout or cite no record design, so the screen genuinely cannot
+                # examine them. The skip is correct; its INVISIBILITY was not.
+                # Measured over the bundled authority: 97 of 128 revisions land
+                # here, so a clean count was reading as corpus-wide coverage when
+                # it covered under a quarter of the corpus.
+                inapplicable.append((modelo_id, str(revision_id), str(error)))
                 continue
+    if inapplicable:
+        sys.stderr.write(
+            f"footnote_only_wire_facts: examined {attempted - len(inapplicable)} of {attempted} revision(s); "
+            f"{len(inapplicable)} declared nothing this screen can read and were not "
+            "examined, so the count below is not corpus-wide" + chr(10)
+        )
     return tuple(findings)
 
 
