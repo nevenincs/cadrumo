@@ -1393,9 +1393,15 @@ tui:
       target: Assentament {position} de {total} · referència {short_id}
       title: Classificar assentament comptable
     column:
+      amount: Import
       area: Àrea
       availability: Disponibilitat
+      classification: Classificació
+      counterparty: Contrapart
+      date: Data
+      description: Descripció
       destination: Destinació
+      direction: Sentit
       entry: Apunt
       items: Elements
       next: Pas següent
@@ -1403,7 +1409,6 @@ tui:
       status: Estat
     entries:
       empty: Aquesta captura no conté cap apunt.
-      redacted: Índex segur d'apunts; els detalls financers continuen protegits.
       title: Apunts del llibre comptable
     evidence:
       column:

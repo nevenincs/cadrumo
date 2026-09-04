@@ -212,7 +212,6 @@ def _overview_row(
     )
 
 
-
 def _filed_declaration_rows(
     *,
     bucket_id: str,

@@ -1405,9 +1405,15 @@ tui:
       target: Apunte {position} de {total} · referencia {short_id}
       title: Clasificar apunte contable
     column:
+      amount: Importe
       area: Área
       availability: Disponibilidad
+      classification: Clasificación
+      counterparty: Contraparte
+      date: Fecha
+      description: Descripción
       destination: Destino
+      direction: Sentido
       entry: Asiento
       items: Elementos
       next: Siguiente paso
@@ -1415,7 +1421,6 @@ tui:
       status: Estado
     entries:
       empty: Esta captura no contiene asientos.
-      redacted: Índice seguro de asientos; los detalles financieros siguen protegidos.
       title: Asientos del libro contable
     evidence:
       column:

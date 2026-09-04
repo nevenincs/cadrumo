@@ -235,9 +235,7 @@ async def test_a_refused_refresh_never_reports_an_expiry_it_did_not_observe() ->
     app = CadrumoTuiApp(
         services=cast(OperationComposedServices, object()),
         destination_catalogue=_catalogue([]),
-        refresh_home=lambda: (_ for _ in ()).throw(
-            RuntimeError("secure workbench generation changed during capture")
-        ),
+        refresh_home=lambda: (_ for _ in ()).throw(RuntimeError("secure workbench generation changed during capture")),
         workbench_search_service=WorkbenchSearchService(()),
         account_factories=_account_factories(HandoverScreen()),
     )

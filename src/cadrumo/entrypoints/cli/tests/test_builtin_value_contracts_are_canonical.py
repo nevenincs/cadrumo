@@ -22,6 +22,7 @@ import pytest
 
 from ..command_spec import (
     FLAG_VALUE,
+    PATH_VALUE,
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
     DeferredTarget,
@@ -31,7 +32,12 @@ from ..command_spec import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _CLI_ROOT: Final[Path] = Path(__file__).resolve().parents[1]
-_BUILTINS: Final[frozenset[str]] = frozenset({"str", "int", "bool"})
+#: The declared value types that have a canonical contract. `Path` is here for
+#: the same reason the builtins are: the contract is immutable and identical
+#: wherever it is constructed.
+_CANONICAL_TARGETS: Final[frozenset[tuple[str, str]]] = frozenset(
+    {("builtins", "str"), ("builtins", "int"), ("builtins", "bool"), ("pathlib", "Path")}
+)
 
 
 def _defines_builtin_value_contract(path: Path) -> list[str]:
@@ -52,7 +58,7 @@ def _defines_builtin_value_contract(path: Path) -> list[str]:
         if not isinstance(target, ast.Name):
             continue
         rendered = ast.unparse(value)
-        if any(f"ValueContract(DeferredTarget('builtins', '{b}'))" == rendered for b in _BUILTINS):
+        if any(f"ValueContract(DeferredTarget('{m}', '{q}'))" == rendered for m, q in _CANONICAL_TARGETS):
             found.append(target.id)
     return found
 
@@ -62,11 +68,12 @@ def test_the_canonical_contracts_are_what_they_claim() -> None:
     assert ValueContract(DeferredTarget("builtins", "str")) == TEXT_VALUE
     assert ValueContract(DeferredTarget("builtins", "int")) == WHOLE_NUMBER_VALUE
     assert ValueContract(DeferredTarget("builtins", "bool")) == FLAG_VALUE
+    assert ValueContract(DeferredTarget("pathlib", "Path")) == PATH_VALUE
 
 
 def test_the_three_canonical_contracts_stay_distinguishable() -> None:
     """Three contracts collapsing onto one would make every gate here vacuous."""
-    assert len({TEXT_VALUE, WHOLE_NUMBER_VALUE, FLAG_VALUE}) == 3
+    assert len({TEXT_VALUE, WHOLE_NUMBER_VALUE, FLAG_VALUE, PATH_VALUE}) == 4
 
 
 def test_no_cli_module_declares_its_own_builtin_value_contract() -> None:

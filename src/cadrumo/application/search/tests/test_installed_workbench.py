@@ -96,7 +96,19 @@ def _ledger() -> LedgerWorkspaceProjectionV1:
             )
             for area in LedgerWorkspaceArea
         ),
-        entries=(LedgerWorkspaceEntryRefV1(transaction_id="a" * 64, review_status="pending"),),
+        entries=(
+            LedgerWorkspaceEntryRefV1(
+                transaction_id="a" * 64,
+                review_status="pending",
+                date="2026-03-14",
+                amount="1250.00",
+                currency="EUR",
+                direction="outgoing",
+                counterparty="Suministros Delta SL",
+                description="Material de oficina",
+                business_classification="business",
+            ),
+        ),
         review_transaction_ids=("a" * 64,),
         invoice_reconciliations=(),
         link_inconsistencies=(),

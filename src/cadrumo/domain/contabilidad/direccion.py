@@ -48,8 +48,4 @@ class ContabilidadDireccion(StrEnum):
     @property
     def opposite(self) -> ContabilidadDireccion:
         """Return the contra side, for reversals and closing entries."""
-        return (
-            ContabilidadDireccion.HABER
-            if self is ContabilidadDireccion.DEBE
-            else ContabilidadDireccion.DEBE
-        )
+        return ContabilidadDireccion.HABER if self is ContabilidadDireccion.DEBE else ContabilidadDireccion.DEBE

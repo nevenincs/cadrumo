@@ -5,6 +5,7 @@ from __future__ import annotations
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .command_spec import (
     FLAG_VALUE,
+    PATH_VALUE,
     TEXT_VALUE,
     ArgumentSpec,
     CommandNodeKind,
@@ -19,7 +20,6 @@ from .command_spec import (
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
-    ValueContract,
 )
 
 _MODEL_READ = ExecutionPolicySpec(
@@ -41,7 +41,6 @@ _METADATA = ExecutionPolicySpec(
     performance="metadata",
     write_route=CommandWriteRoute.NONE,
 )
-_PATH = ValueContract(DeferredTarget("pathlib", "Path"))
 
 MODELO_ROOT_COMMAND_SPEC = CommandSpec(
     key="app_modelo",
@@ -135,7 +134,7 @@ MODELO_AUDIT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="output",
                 declarations=("--output",),
-                value=_PATH,
+                value=PATH_VALUE,
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.modelo.audit.output_help"),
                 transport_locus=TransportLocus.LOCAL_OUT,

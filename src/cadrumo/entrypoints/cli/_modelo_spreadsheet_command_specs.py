@@ -19,6 +19,7 @@ from __future__ import annotations
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .command_spec import (
     FLAG_VALUE,
+    PATH_VALUE,
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
     CommandNodeKind,
@@ -58,7 +59,6 @@ _GOOGLE_CALCULATION_HANDOFF = ExecutionPolicySpec(
     handoff=True,
 )
 
-_PATH = ValueContract(DeferredTarget("pathlib", "Path"))
 
 _MODULE = "cadrumo.entrypoints.cli._modelo_spreadsheet_cli"
 _PAYLOADS = "cadrumo.entrypoints.cli._modelo_spreadsheet_payloads"
@@ -224,7 +224,7 @@ MODELO_SPREADSHEET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option(
                 "scenario_path",
                 ("--scenario",),
-                _PATH,
+                PATH_VALUE,
                 "cli.app.modelo.spreadsheet.verify.scenario_help",
                 transport_locus=TransportLocus.LOCAL_IN,
                 transport_shape=TransportShape.FILE,

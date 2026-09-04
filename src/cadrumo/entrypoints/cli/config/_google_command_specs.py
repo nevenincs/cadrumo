@@ -7,6 +7,7 @@ from typing import Final
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ..command_spec import (
     FLAG_VALUE,
+    PATH_VALUE,
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
     ArgumentSpec,
@@ -32,7 +33,6 @@ from ._spec_policies import (
     state_free_group_spec,
 )
 
-_PATH = ValueContract(DeferredTarget("pathlib", "Path"))
 _CREDENTIAL_KIND = ValueContract(DeferredTarget("cadrumo.core.google_credential_source", "GoogleCredentialSourceKind"))
 
 
@@ -138,7 +138,7 @@ GOOGLE_COMMAND_SPECS = (
             _option(
                 "client_json",
                 ("--client-json",),
-                _PATH,
+                PATH_VALUE,
                 "cli.config.google.client_json_help",
                 required=True,
                 transport_locus=TransportLocus.LOCAL_IN,

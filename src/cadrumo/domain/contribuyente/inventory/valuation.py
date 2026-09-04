@@ -14,6 +14,7 @@ from typing import Literal
 
 from pydantic import ValidationError
 
+from ....core.decimal.constants import MONEY_ZERO
 from ....core.hashing import content_hash_hex as _content_hash_hex
 from ....core.identity import ContentDigest
 from ....core.money.rounding import round_to_cents as _quantize
@@ -32,8 +33,6 @@ from .records import (
     ValuationMethod,
     resolve_inventory_authoritative_closing,
 )
-
-_ZERO = Decimal("0.00")
 
 
 @dataclass(frozen=True, slots=True)
@@ -154,7 +153,7 @@ def derive_inventory_anexo_d_values(ledger: InventoryLedger) -> _InventoryAnexoD
     acquisition_total = _quantize(
         sum(
             (movement.acquisition_cost.total_acquisition_cost for movement in purchases if movement.acquisition_cost),
-            _ZERO,
+            MONEY_ZERO,
         ),
     )
     acquisition_fingerprints = tuple(inventory_acquisition_fingerprint(movement) for movement in purchases)
@@ -181,9 +180,9 @@ def derive_inventory_anexo_d_values(ledger: InventoryLedger) -> _InventoryAnexoD
         prior_closing_link_fingerprint=resolution.prior_closing_link_fingerprint,
         complete_acquisition_total=acquisition_total,
         acquisition_fingerprints=acquisition_fingerprints,
-        casilla_0177=max(signed_variation, _ZERO),
+        casilla_0177=max(signed_variation, MONEY_ZERO),
         casilla_0181=acquisition_total,
-        casilla_0182=max(-signed_variation, _ZERO),
+        casilla_0182=max(-signed_variation, MONEY_ZERO),
         closing_conflict=resolution.conflict,
         issues=("physical_closing_conflict",) if resolution.conflict is not None else (),
     )
@@ -230,8 +229,8 @@ def compute_inventory_valuation(ledger: InventoryLedger) -> InventoryValuationRe
 
 def _compute_fifo(ledger: InventoryLedger) -> InventoryValuationResult:
     layers = list(_opening_layers(ledger))
-    cogs_value = _ZERO
-    purchase_value = _ZERO
+    cogs_value = MONEY_ZERO
+    purchase_value = MONEY_ZERO
     for movement in _sorted_movements(ledger):
         if movement.kind in {MovementKind.OPENING, MovementKind.PURCHASE}:
             unit_cost = movement.resolved_unit_cost
@@ -263,8 +262,8 @@ def _compute_fifo(ledger: InventoryLedger) -> InventoryValuationResult:
 
 def _compute_weighted_average(ledger: InventoryLedger) -> InventoryValuationResult:
     pools = _weighted_average_opening_pools(ledger)
-    cogs_value = _ZERO
-    purchase_value = _ZERO
+    cogs_value = MONEY_ZERO
+    purchase_value = MONEY_ZERO
     for movement in _sorted_movements(ledger):
         purchase_delta, cogs_delta = _apply_weighted_average_movement(ledger, movement, pools)
         purchase_value += purchase_delta
@@ -272,7 +271,7 @@ def _compute_weighted_average(ledger: InventoryLedger) -> InventoryValuationResu
     layers = _weighted_average_layers(ledger, pools)
     return InventoryValuationResult(
         closing_layers=layers,
-        closing_value=_quantize(sum((quantity_value[1] for quantity_value in pools.values()), _ZERO)),
+        closing_value=_quantize(sum((quantity_value[1] for quantity_value in pools.values()), MONEY_ZERO)),
         cogs_value=_quantize(cogs_value),
         purchase_value=_quantize(purchase_value),
     )
@@ -281,7 +280,7 @@ def _compute_weighted_average(ledger: InventoryLedger) -> InventoryValuationResu
 def _weighted_average_opening_pools(ledger: InventoryLedger) -> dict[str, tuple[Decimal, Decimal]]:
     pools: dict[str, tuple[Decimal, Decimal]] = {}
     for layer in _opening_layers(ledger):
-        quantity, value = pools.get(layer.sku, (_ZERO, _ZERO))
+        quantity, value = pools.get(layer.sku, (MONEY_ZERO, MONEY_ZERO))
         pools[layer.sku] = (quantity + layer.quantity, value + layer.quantity * layer.unit_cost)
     return pools
 
@@ -291,19 +290,19 @@ def _apply_weighted_average_movement(
     movement: MovementRecord,
     pools: dict[str, tuple[Decimal, Decimal]],
 ) -> tuple[Decimal, Decimal]:
-    quantity, value = pools.get(movement.sku, (_ZERO, _ZERO))
+    quantity, value = pools.get(movement.sku, (MONEY_ZERO, MONEY_ZERO))
     if movement.kind in {MovementKind.OPENING, MovementKind.PURCHASE}:
         unit_cost = movement.resolved_unit_cost
         movement_value = movement.quantity * unit_cost
         pools[movement.sku] = (quantity + movement.quantity, value + movement_value)
-        purchase_delta = movement_value if movement.kind is MovementKind.PURCHASE else _ZERO
-        return purchase_delta, _ZERO
+        purchase_delta = movement_value if movement.kind is MovementKind.PURCHASE else MONEY_ZERO
+        return purchase_delta, MONEY_ZERO
     if movement.kind is MovementKind.COGS:
         return _apply_weighted_average_cogs(ledger, movement, quantity, value, pools)
     if movement.kind is MovementKind.COUNT:
-        average = _ZERO if quantity == _ZERO else value / quantity
+        average = MONEY_ZERO if quantity == MONEY_ZERO else value / quantity
         pools[movement.sku] = (movement.quantity, movement.quantity * average)
-    return _ZERO, _ZERO
+    return MONEY_ZERO, MONEY_ZERO
 
 
 def _apply_weighted_average_cogs(
@@ -323,10 +322,10 @@ def _apply_weighted_average_cogs(
                 "requested_quantity": str(movement.quantity),
             },
         )
-    average = _ZERO if quantity == _ZERO else value / quantity
+    average = MONEY_ZERO if quantity == MONEY_ZERO else value / quantity
     consumed = movement.quantity * average
     pools[movement.sku] = (quantity - movement.quantity, value - consumed)
-    return _ZERO, consumed
+    return MONEY_ZERO, consumed
 
 
 def _weighted_average_layers(
@@ -337,29 +336,29 @@ def _weighted_average_layers(
         StockLayer(
             sku=sku,
             quantity=quantity,
-            unit_cost=_ZERO if quantity == _ZERO else value / quantity,
+            unit_cost=MONEY_ZERO if quantity == MONEY_ZERO else value / quantity,
             source_movement_id=f"{ledger.actividad_id}-{ledger.year}-{sku}-weighted-average",
         )
         for sku, (quantity, value) in sorted(pools.items())
-        if quantity > _ZERO
+        if quantity > MONEY_ZERO
     )
 
 
 def _consume_fifo(layers: list[StockLayer], movement: MovementRecord) -> tuple[Decimal, list[StockLayer]]:
     remaining = movement.quantity
-    consumed = _ZERO
+    consumed = MONEY_ZERO
     updated: list[StockLayer] = []
     for layer in layers:
-        if layer.sku != movement.sku or remaining <= _ZERO:
+        if layer.sku != movement.sku or remaining <= MONEY_ZERO:
             updated.append(layer)
             continue
         take = min(layer.quantity, remaining)
         consumed += take * layer.unit_cost
         remaining -= take
         leftover = layer.quantity - take
-        if leftover > _ZERO:
+        if leftover > MONEY_ZERO:
             updated.append(layer.model_copy(update={"quantity": leftover}))
-    if remaining > _ZERO:
+    if remaining > MONEY_ZERO:
         raise InventoryLedgerError(
             "inventory movement would consume more stock than available",
             context={
@@ -372,7 +371,7 @@ def _consume_fifo(layers: list[StockLayer], movement: MovementRecord) -> tuple[D
 
 
 def _apply_count(layers: list[StockLayer], movement: MovementRecord) -> list[StockLayer]:
-    current_quantity = sum((layer.quantity for layer in layers if layer.sku == movement.sku), _ZERO)
+    current_quantity = sum((layer.quantity for layer in layers if layer.sku == movement.sku), MONEY_ZERO)
     if movement.quantity > current_quantity:
         raise InventoryLedgerError(
             "inventory count cannot increase stock without a purchase movement",
@@ -392,7 +391,7 @@ def _apply_count(layers: list[StockLayer], movement: MovementRecord) -> list[Sto
 def _opening_layers(ledger: InventoryLedger) -> tuple[StockLayer, ...]:
     if ledger.opening_layers:
         return ledger.opening_layers
-    if ledger.opening_stock == _ZERO:
+    if ledger.opening_stock == MONEY_ZERO:
         return ()
     return (
         StockLayer(
@@ -410,7 +409,7 @@ def _sorted_movements(ledger: InventoryLedger) -> tuple[MovementRecord, ...]:
 
 def layers_value(layers: tuple[StockLayer, ...] | list[StockLayer]) -> Decimal:
     """Return the total value of ``layers``, summing quantity times unit cost."""
-    return sum((layer.quantity * layer.unit_cost for layer in layers), _ZERO)
+    return sum((layer.quantity * layer.unit_cost for layer in layers), MONEY_ZERO)
 
 
 def inventory_acquisition_fingerprint(movement: MovementRecord) -> ContentDigest:

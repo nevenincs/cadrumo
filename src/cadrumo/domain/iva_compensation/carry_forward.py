@@ -16,6 +16,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
+from ...core.decimal.constants import ZERO
 from ...core.filing_year import FilingYear
 from ...core.identity import AeatExpedienteId, ContentDigest, SubjectTaxId
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
@@ -26,8 +27,6 @@ from .errors import (
     IvaCompensationCarryForwardPolicyError,
     IvaCompensationYearRangeError,
 )
-
-_ZERO = Decimal("0")
 
 #: The provenances whose rows declare an opening carry-forward balance rather
 #: than generating credit in a filed period. Both members belong here: the
@@ -169,9 +168,9 @@ class IvaCompensationCarryForwardLot(BaseModel):
     )
     source_filing_year: FilingYear
     source_period: Period
-    generated_amount: Decimal = Field(ge=_ZERO)
-    applied_amount: Decimal = Field(ge=_ZERO)
-    remaining_amount: Decimal = Field(ge=_ZERO)
+    generated_amount: Decimal = Field(ge=ZERO)
+    applied_amount: Decimal = Field(ge=ZERO)
+    remaining_amount: Decimal = Field(ge=ZERO)
     age_years: NonNegativeInt
     expiry_review_state: IvaCompensationExpiryReviewState
     source_observation_key: str = Field(min_length=1, max_length=96)
@@ -192,7 +191,7 @@ class IvaCompensationCarryForwardReport(BaseModel):
 
     as_of_year: FilingYear
     lots: tuple[IvaCompensationCarryForwardLot, ...]
-    unallocated_applied_amount: Decimal = Field(ge=_ZERO)
+    unallocated_applied_amount: Decimal = Field(ge=ZERO)
 
 
 @dataclass(slots=True)
@@ -230,7 +229,7 @@ def derive_303_compensation_available(
     the negative result generates the carry. Legal basis: RD 1624/1992 art. 30 /
     Ley 37/1992 art. 116 — a devolución-requested credit is not carried.
     """
-    generated = _ZERO if refunded else max(_ZERO, -resultado)
+    generated = ZERO if refunded else max(ZERO, -resultado)
     return posterior + generated
 
 
@@ -255,18 +254,18 @@ def build_iva_compensation_carry_forward_report(
         )
     ordered = tuple(sorted(states, key=lambda item: (item.filing_year, iva_compensation_period_sort_key(item.period))))
     working: list[_WorkingCarryForwardLot] = []
-    unallocated_applied = _ZERO
+    unallocated_applied = ZERO
     for state in ordered:
-        applied = state.applied_amount or _ZERO
+        applied = state.applied_amount or ZERO
         remaining_to_allocate = applied
         for lot in working:
-            if remaining_to_allocate <= _ZERO:
+            if remaining_to_allocate <= ZERO:
                 break
             consumed = min(lot.remaining_amount, remaining_to_allocate)
             lot.applied_amount = lot.applied_amount + consumed
             lot.remaining_amount = lot.remaining_amount - consumed
             remaining_to_allocate -= consumed
-        if remaining_to_allocate > _ZERO:
+        if remaining_to_allocate > ZERO:
             unallocated_applied += remaining_to_allocate
         # A filed period contributes a lot equal to the credit it GENERATED this
         # period. An operator-declared opening balance generated nothing in a
@@ -276,16 +275,16 @@ def build_iva_compensation_carry_forward_report(
         # empty wallet. The two cases are mutually exclusive (an operator-declared
         # opening balance never carries generated_amount), so no double-counting.
         lot_amount = state.generated_amount
-        if lot_amount <= _ZERO and state.provenance in _OPERATOR_DECLARED_PROVENANCES:
+        if lot_amount <= ZERO and state.provenance in _OPERATOR_DECLARED_PROVENANCES:
             lot_amount = state.available_end_amount
-        if lot_amount > _ZERO:
+        if lot_amount > ZERO:
             working.append(
                 _WorkingCarryForwardLot(
                     taxpayer_nif=state.taxpayer_nif,
                     source_filing_year=state.filing_year,
                     source_period=state.period,
                     generated_amount=lot_amount,
-                    applied_amount=_ZERO,
+                    applied_amount=ZERO,
                     remaining_amount=lot_amount,
                     source_observation_key=state.source_observation_key,
                 ),
@@ -345,9 +344,9 @@ class IvaCompensationYearEndCarryPartition(BaseModel):
     model_config = _STRICT_FROZEN
 
     filing_year: FilingYear
-    last_period_amount: Decimal = Field(ge=_ZERO)
-    generated_not_in_last_amount: Decimal = Field(ge=_ZERO)
-    total_year_remaining_amount: Decimal = Field(ge=_ZERO)
+    last_period_amount: Decimal = Field(ge=ZERO)
+    generated_not_in_last_amount: Decimal = Field(ge=ZERO)
+    total_year_remaining_amount: Decimal = Field(ge=ZERO)
 
     @model_validator(mode="after")
     def _partition_sums(self) -> IvaCompensationYearEndCarryPartition:
@@ -398,13 +397,13 @@ def derive_iva_compensation_year_end_carry_partition(
         )
     total_year_remaining = sum(
         (lot.remaining_amount for lot in report.lots if lot.source_filing_year == filing_year),
-        _ZERO,
+        ZERO,
     )
     year_states = sorted(
         (state for state in period_states if state.filing_year == filing_year),
         key=lambda state: iva_compensation_period_sort_key(state.period),
     )
-    last_disponible = year_states[-1].available_end_amount if year_states else _ZERO
+    last_disponible = year_states[-1].available_end_amount if year_states else ZERO
     # The last period's disponible is the year credit it carries forward
     # (iva.anual.compensacion-ultimo-periodo-97, AEAT box 97); it may ALSO carry
     # prior-YEAR credit still pending, which that annual carry id must not
@@ -432,7 +431,7 @@ def enforce_iva_compensation_four_year_window(
     expired = tuple(
         lot
         for lot in report.lots
-        if lot.remaining_amount > _ZERO
+        if lot.remaining_amount > ZERO
         and lot.expiry_review_state is IvaCompensationExpiryReviewState.EXPIRED_REVIEW_REQUIRED
     )
     if expired:

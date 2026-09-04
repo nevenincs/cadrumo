@@ -43,6 +43,7 @@ from ...adapters.persistence.storage.secure_object_namespaces import IVA_COMPENS
 from ...core.casilla_id import CasillaId
 from ...core.casilla_value_kind import CasillaValueKind
 from ...core.classification.policies import SensitivityClass
+from ...core.decimal.constants import ZERO
 from ...core.filing_year import FilingYear
 from ...core.identity import AeatExpedienteId, ContentDigest, SubjectTaxId
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
@@ -85,8 +86,6 @@ from .iva_compensation_casillas import (
 )
 from .observations_repository import CalculationObservationRepository, ObservationEnvelopePayload
 
-_ZERO = Decimal("0")
-
 
 class IvaCompensationAnnualSummary(BaseModel):
     """Filed Modelo 390 annual IVA compensation summary for cross-checking.
@@ -114,9 +113,9 @@ class IvaCompensationAnnualSummary(BaseModel):
     expediente_id: AeatExpedienteId
     status: str = Field(min_length=1, max_length=32)
     presented_at: datetime
-    last_period_compensation_amount: Decimal = Field(ge=_ZERO)
-    generated_not_in_last_period_amount: Decimal = Field(ge=_ZERO)
-    total_pending_amount: Decimal = Field(ge=_ZERO)
+    last_period_compensation_amount: Decimal = Field(ge=ZERO)
+    generated_not_in_last_period_amount: Decimal = Field(ge=ZERO)
+    total_pending_amount: Decimal = Field(ge=ZERO)
     source_observation_key: str = Field(min_length=1, max_length=96)
     source_artefact_sha256: ContentDigest | None = Field(
         default=None,
@@ -146,10 +145,10 @@ class IvaCompensationAnnualCrossCheck(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     filing_year: FilingYear
-    carry_forward_remaining_amount: Decimal = Field(ge=_ZERO)
-    modelo_390_total_pending_amount: Decimal = Field(ge=_ZERO)
-    expected_last_period_compensation_amount: Decimal = Field(ge=_ZERO)
-    expected_generated_not_in_last_period_amount: Decimal = Field(ge=_ZERO)
+    carry_forward_remaining_amount: Decimal = Field(ge=ZERO)
+    modelo_390_total_pending_amount: Decimal = Field(ge=ZERO)
+    expected_last_period_compensation_amount: Decimal = Field(ge=ZERO)
+    expected_generated_not_in_last_period_amount: Decimal = Field(ge=ZERO)
     difference_amount: Decimal
     last_period_difference_amount: Decimal
     generated_not_in_last_period_difference_amount: Decimal
@@ -268,7 +267,7 @@ def seed_iva_compensation_period(
         pending_for_later_amount=amount,
         period_result_amount=None,
         final_result_amount=None,
-        generated_amount=_ZERO,
+        generated_amount=ZERO,
         available_end_amount=amount,
         source_observation_key=f"{_SEED_SOURCE_OBS_PREFIX}:{period.filing_year}:{period.registry_token}",
         source_artefact_sha256=None,
@@ -330,7 +329,7 @@ def correct_iva_compensation_period(
         pending_for_later_amount=amount,
         period_result_amount=None,
         final_result_amount=None,
-        generated_amount=_ZERO,
+        generated_amount=ZERO,
         available_end_amount=amount,
         source_observation_key=f"{_CORRECTED_SOURCE_OBS_PREFIX}:{period.filing_year}:{period.registry_token}",
         source_artefact_sha256=None,
@@ -447,13 +446,13 @@ def iva_compensation_annual_summary_from_filed_observation(
             context={"modelo": observation.modelo},
         )
     values = _decimal_casilla_values(observation)
-    last_period = _resolve_casilla_value(values, _M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA) or _ZERO
+    last_period = _resolve_casilla_value(values, _M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA) or ZERO
     generated_not_in_last = (
         _resolve_casilla_value(
             values,
             _M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA,
         )
-        or _ZERO
+        or ZERO
     )
     source_artefact_sha256 = next(
         (artefact.sha256 for artefact in observation.artefacts if artefact.kind == "submitted_file"),
@@ -512,7 +511,7 @@ def cross_check_iva_compensation_annual_summary(
             (_M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA, last_period_difference),
             (_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA, generated_difference),
         )
-        if drift != _ZERO
+        if drift != ZERO
     )
     return IvaCompensationAnnualCrossCheck(
         filing_year=summary.filing_year,
@@ -523,7 +522,7 @@ def cross_check_iva_compensation_annual_summary(
         difference_amount=difference,
         last_period_difference_amount=last_period_difference,
         generated_not_in_last_period_difference_amount=generated_difference,
-        matches=difference == _ZERO and not mismatches,
+        matches=difference == ZERO and not mismatches,
         mismatched_casilla_ids=mismatches,
         expiry_review_states=tuple(str(lot.expiry_review_state) for lot in report.lots),
         summary_source_observation_key=summary.source_observation_key,

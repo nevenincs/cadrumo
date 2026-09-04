@@ -1387,9 +1387,15 @@ tui:
       target: '{position}/{total}. tétel · hivatkozás: {short_id}'
       title: Főkönyvi tétel besorolása
     column:
+      amount: Összeg
       area: Terület
       availability: Elérhetőség
+      classification: Besorolás
+      counterparty: Partner
+      date: Dátum
+      description: Leírás
       destination: Célterület
+      direction: Irány
       entry: Tétel
       items: Elemek
       next: Következő lépés
@@ -1397,7 +1403,6 @@ tui:
       status: Állapot
     entries:
       empty: Ez a pillanatkép nem tartalmaz tételeket.
-      redacted: Biztonságos tételjegyzék; a pénzügyi részletek védettek maradnak.
       title: Főkönyvi tételek
     evidence:
       column:

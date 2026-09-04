@@ -242,9 +242,7 @@ class WorkbenchSearchProviderV1(Provider):
                 command=_no_navigation,
                 text=_render_locale(_REFUSAL_LOCALE_KEY, None),
                 help=_render_locale(
-                    _REFUSAL_REASON_LOCALE_KEYS.get(
-                        host.workbench_search_refusal_code, _REFUSAL_UNKNOWN_LOCALE_KEY
-                    ),
+                    _REFUSAL_REASON_LOCALE_KEYS.get(host.workbench_search_refusal_code, _REFUSAL_UNKNOWN_LOCALE_KEY),
                     None,
                 ),
             )

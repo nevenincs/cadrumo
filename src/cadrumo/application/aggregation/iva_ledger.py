@@ -47,6 +47,7 @@ from pydantic import BaseModel, Field, StringConstraints, field_serializer, fiel
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.aggregation import BindingSourceKind
+from ...core.decimal.constants import HUNDRED
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...core.identity import TransactionId
@@ -105,8 +106,6 @@ _LedgerId = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
 ]
-
-_HUNDRED = Decimal("100")
 
 
 class IvaLedgerAggregationIssueReason(StrEnum):
@@ -257,7 +256,7 @@ class IvaLedgerSectorApportionment(BaseModel):
     model_config = _STRICT_FROZEN
 
     sector_id: str = Field(min_length=1, max_length=64)
-    percentage: Decimal = Field(..., ge=Decimal("0"), le=_HUNDRED)
+    percentage: Decimal = Field(..., ge=Decimal("0"), le=HUNDRED)
     regime: ProrrataRegisterRegime = ProrrataRegisterRegime.GENERAL
 
 
@@ -287,7 +286,7 @@ class IvaLedgerProrrataApportionment(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    percentage: Decimal = Field(..., ge=Decimal("0"), le=_HUNDRED)
+    percentage: Decimal = Field(..., ge=Decimal("0"), le=HUNDRED)
     provenance: ProrrataProvisionalProvenance
     regime: ProrrataRegisterRegime = ProrrataRegisterRegime.GENERAL
     source_observation_ref: str | None = Field(default=None, min_length=1)
@@ -919,9 +918,9 @@ def resolve_iva_ledger_binding_values(
             prorrata_apportionment,
         )
     # GENERAL regime — byte-identical to the pre-especial behaviour.
-    if prorrata_apportionment.percentage == _HUNDRED:
+    if prorrata_apportionment.percentage == HUNDRED:
         return binding_values
-    multiplier = prorrata_apportionment.percentage / _HUNDRED
+    multiplier = prorrata_apportionment.percentage / HUNDRED
     deducible_binding_ids = _deducible_cuota_binding_ids(revision)
     if not deducible_binding_ids:
         return binding_values
@@ -963,7 +962,7 @@ def _apply_especial_apportionment(
     for classification, partition_observations in partitions.items():
         if not partition_observations:
             continue
-        multiplier = deductible_percentage_for(classification, general_percentage) / _HUNDRED
+        multiplier = deductible_percentage_for(classification, general_percentage) / HUNDRED
         if multiplier == 0:
             # exclusively-non-deductible: contributes nothing to any deducible cuota.
             continue
@@ -1020,7 +1019,7 @@ def _apportioned_deducible_cuota(
         for classification, partition_observations in partitions.items():
             if not partition_observations:
                 continue
-            multiplier = deductible_percentage_for(classification, percentage) / _HUNDRED
+            multiplier = deductible_percentage_for(classification, percentage) / HUNDRED
             if multiplier == 0:
                 continue
             partition_values = resolve_ledger_iva_aggregation_binding_values(revision, partition_observations)
@@ -1028,7 +1027,7 @@ def _apportioned_deducible_cuota(
                 result[binding_id] += partition_values.get(binding_id, Decimal("0")) * multiplier
         return result
     # GENERAL regime: a single multiplier over the whole observation set.
-    multiplier = percentage / _HUNDRED
+    multiplier = percentage / HUNDRED
     partition_values = resolve_ledger_iva_aggregation_binding_values(revision, observations)
     for binding_id in deducible_binding_ids:
         result[binding_id] = partition_values.get(binding_id, Decimal("0")) * multiplier

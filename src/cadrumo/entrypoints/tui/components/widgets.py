@@ -46,6 +46,15 @@ class ContentDataTable[CellType](DataTable[CellType]):
         """Give the surplus width to the fill column."""
         self._absorb_surplus_width()
 
+    def absorb_surplus_width(self) -> None:
+        """Re-apply the width policy after an owner rebuilds the columns.
+
+        A screen that rebuilds its column set (responsive tables do) replaces
+        the columns this widget already corrected, and the resize that would
+        correct them again has been and gone. Such an owner calls this itself.
+        """
+        self._absorb_surplus_width()
+
     def _absorb_surplus_width(self) -> None:
         """Give every column its header, then hand the surplus to one of them.
 
@@ -87,9 +96,7 @@ class ContentDataTable[CellType](DataTable[CellType]):
             if fill_key is not None:
                 target = self.columns[fill_key]
                 others = sum(
-                    column.width + self.cell_padding * 2
-                    for key, column in self.columns.items()
-                    if key is not fill_key
+                    column.width + self.cell_padding * 2 for key, column in self.columns.items() if key is not fill_key
                 )
                 surplus = available - others - self.cell_padding * 2
                 if surplus > target.width:

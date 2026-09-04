@@ -55,8 +55,7 @@ class CuentaPgc(str):
         text = str(value).strip()
         if not _ACCOUNT_CODE.match(text):
             raise DomainValidationError(
-                f"{value!r} is not a PGC account code: expected three to five "
-                f"digits with a leading grupo digit in 1-9"
+                f"{value!r} is not a PGC account code: expected three to five digits with a leading grupo digit in 1-9"
             )
         return super().__new__(cls, text)
 
@@ -79,9 +78,7 @@ class CuentaPgc(str):
         """
         text = str(prefix).strip()
         if not text.isdigit() or not text:
-            raise DomainValidationError(
-                f"{prefix!r} is not a PGC code prefix: expected digits"
-            )
+            raise DomainValidationError(f"{prefix!r} is not a PGC code prefix: expected digits")
         return self.startswith(text)
 
     @classmethod
@@ -90,10 +87,6 @@ class CuentaPgc(str):
         return bool(_SUBGROUP_CODE.match(str(value).strip()))
 
     @classmethod
-    def __get_pydantic_core_schema__(
-        cls, source_type: Any, handler: GetCoreSchemaHandler
-    ) -> core_schema.CoreSchema:
+    def __get_pydantic_core_schema__(cls, source_type: Any, handler: GetCoreSchemaHandler) -> core_schema.CoreSchema:
         """Validate through the constructor when used as a pydantic field."""
-        return core_schema.no_info_after_validator_function(
-            cls, core_schema.str_schema()
-        )
+        return core_schema.no_info_after_validator_function(cls, core_schema.str_schema())

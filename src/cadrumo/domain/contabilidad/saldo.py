@@ -21,12 +21,11 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.decimal.constants import ZERO
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .cuenta import CuentaPgc
 from .direccion import ContabilidadDireccion
 from .errors import SaldoCuentaBalanceError, SumasYSaldosPreCloseError
-
-_ZERO = Decimal("0")
 
 #: Cuenta 129 is *Resultado del ejercicio*. It is written by the asiento de
 #: cierre, so a trial balance captured for Modelo 200 purposes — which must be
@@ -47,11 +46,11 @@ class SaldoCuenta(BaseModel):
     model_config = _STRICT_FROZEN
 
     cuenta: CuentaPgc
-    opening_amount: Decimal = Field(ge=_ZERO)
+    opening_amount: Decimal = Field(ge=ZERO)
     opening_direccion: ContabilidadDireccion
-    debe_amount: Decimal = Field(ge=_ZERO)
-    haber_amount: Decimal = Field(ge=_ZERO)
-    closing_amount: Decimal = Field(ge=_ZERO)
+    debe_amount: Decimal = Field(ge=ZERO)
+    haber_amount: Decimal = Field(ge=ZERO)
+    closing_amount: Decimal = Field(ge=ZERO)
     closing_direccion: ContabilidadDireccion
 
     @property
@@ -69,8 +68,7 @@ class SaldoCuenta(BaseModel):
         expected = self.signed_opening + self.debe_amount - self.haber_amount
         if expected != self.signed_closing:
             raise SaldoCuentaBalanceError(
-                f"closing balance of {self.cuenta} does not follow from its "
-                f"opening balance and movements"
+                f"closing balance of {self.cuenta} does not follow from its opening balance and movements"
             )
         return self
 
@@ -86,10 +84,9 @@ class SaldoCuenta(BaseModel):
             (self.opening_amount, self.opening_direccion, "opening"),
             (self.closing_amount, self.closing_direccion, "closing"),
         ):
-            if amount == _ZERO and direccion is not ContabilidadDireccion.DEBE:
+            if amount == ZERO and direccion is not ContabilidadDireccion.DEBE:
                 raise SaldoCuentaBalanceError(
-                    f"a zero {label} balance must use DEBE as its canonical "
-                    f"direction, not {direccion.value}"
+                    f"a zero {label} balance must use DEBE as its canonical direction, not {direccion.value}"
                 )
         return self
 
@@ -118,10 +115,7 @@ class SumasYSaldos(BaseModel):
     @model_validator(mode="after")
     def _taken_before_the_close(self) -> SumasYSaldos:
         for linea in self.lineas:
-            if (
-                linea.cuenta.is_within(_RESULTADO_DEL_EJERCICIO_PREFIX)
-                and linea.closing_amount != _ZERO
-            ):
+            if linea.cuenta.is_within(_RESULTADO_DEL_EJERCICIO_PREFIX) and linea.closing_amount != ZERO:
                 raise SumasYSaldosPreCloseError(
                     f"cuenta {linea.cuenta} carries a closing balance, so this "
                     f"trial balance was taken after the asiento de cierre"
@@ -131,12 +125,12 @@ class SumasYSaldos(BaseModel):
     @property
     def total_debe(self) -> Decimal:
         """The sum of debe movements, which must equal :attr:`total_haber`."""
-        return sum((linea.debe_amount for linea in self.lineas), _ZERO)
+        return sum((linea.debe_amount for linea in self.lineas), ZERO)
 
     @property
     def total_haber(self) -> Decimal:
         """The sum of haber movements, which must equal :attr:`total_debe`."""
-        return sum((linea.haber_amount for linea in self.lineas), _ZERO)
+        return sum((linea.haber_amount for linea in self.lineas), ZERO)
 
     @property
     def is_cuadrado(self) -> bool:

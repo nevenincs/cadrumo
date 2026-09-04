@@ -29,6 +29,7 @@ from typing import ClassVar
 from ...adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
+from ...core.decimal.constants import MONEY_ZERO
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.bienes_inversion.register import (
@@ -61,7 +62,6 @@ _SOURCE_KIND = BindingSourceKind.BIENES_INVERSION_REGULARIZACION
 _OUTPUT_MODELO_303_CASILLA_43 = "modelo_303_casilla_43"
 _OUTPUT_MODELO_390_CASILLA_63 = "modelo_390_casilla_63"
 _CURRENT_YEAR_PRORRATA_ID: CasillaId = "iva.prorrata-porcentaje"
-_ZERO = Decimal("0.00")
 
 #: Distinct advisory source-kind label for the art-110 disposal path, so an
 #: operator (and a future mesh-binding promotion) can tell the annual comparison
@@ -364,7 +364,7 @@ class BienesInversionRegularizacionSourceResolver:
             )
 
         if not register.records:
-            zero_values = _resolve_binding_values(context.revision, projected_value=_ZERO)
+            zero_values = _resolve_binding_values(context.revision, projected_value=MONEY_ZERO)
             return CalculationSourceResolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,

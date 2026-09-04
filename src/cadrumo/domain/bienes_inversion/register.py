@@ -50,6 +50,7 @@ from typing import Protocol
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ...core.decimal.constants import HUNDRED
 from ...core.errors.hierarchy import CadrumoError as _CadrumoError
 from ...core.external_constants import (
     IVA_BIEN_INVERSION_INMUEBLE_DIVISOR as _IVA_BIEN_INVERSION_INMUEBLE_DIVISOR,
@@ -83,7 +84,6 @@ class BienInversionValidationError(BienInversionRecordError, ValueError):
 BIENES_INVERSION_SCHEMA_VERSION = "2"
 """Forward-compatible schema version stamped onto every record in this module."""
 
-_HUNDRED = Decimal("100")
 #: Lowest calendar year the register accepts; LIVA art. 107 predates it, but a
 #: pre-2000 acquisition can never be in-window for any modelled filing year.
 _MIN_ACQUISITION_YEAR = 2000
@@ -209,7 +209,7 @@ class BienInversionIvaRecord(BaseModel):
     @property
     def deduccion_efectuada(self) -> Decimal:
         """Deduction actually made in the acquisition year (cuota × prorrata inicial)."""
-        return _quantize(self.cuota_soportada * self.prorrata_inicial_pct / _HUNDRED)
+        return _quantize(self.cuota_soportada * self.prorrata_inicial_pct / HUNDRED)
 
     def is_within_regularization_window(self, regularization_year: int) -> bool:
         """Whether ``regularization_year`` is one of the art-107 following window years.
@@ -321,7 +321,7 @@ def compute_regularizacion_anual(
     if cuota_soportada <= Decimal("0"):
         raise BienInversionValidationError("cuota_soportada must be strictly positive")
     for label, pct in (("prorrata_inicial_pct", prorrata_inicial_pct), ("prorrata_anio_pct", prorrata_anio_pct)):
-        if pct < Decimal("0") or pct > _HUNDRED:
+        if pct < Decimal("0") or pct > HUNDRED:
             raise BienInversionValidationError(f"{label} must be between 0 and 100")
 
     diferencia_puntos = abs(prorrata_anio_pct - prorrata_inicial_pct)
@@ -335,8 +335,8 @@ def compute_regularizacion_anual(
             direccion=RegularizacionDireccion.NINGUNA,
         )
 
-    deduccion_efectuada = cuota_soportada * prorrata_inicial_pct / _HUNDRED
-    deduccion_procedente = cuota_soportada * prorrata_anio_pct / _HUNDRED
+    deduccion_efectuada = cuota_soportada * prorrata_inicial_pct / HUNDRED
+    deduccion_procedente = cuota_soportada * prorrata_anio_pct / HUNDRED
     importe = _quantize((deduccion_efectuada - deduccion_procedente) / divisor)
     if importe > Decimal("0"):
         direccion = RegularizacionDireccion.INGRESO
@@ -453,17 +453,17 @@ def compute_regularizacion_transmision(
     """
     if cuota_soportada <= Decimal("0"):
         raise BienInversionValidationError("cuota_soportada must be strictly positive")
-    if prorrata_inicial_pct < Decimal("0") or prorrata_inicial_pct > _HUNDRED:
+    if prorrata_inicial_pct < Decimal("0") or prorrata_inicial_pct > HUNDRED:
         raise BienInversionValidationError("prorrata_inicial_pct must be between 0 and 100")
     if anos_restantes <= 0:
         raise BienInversionValidationError("anos_restantes must be strictly positive")
     if cuota_devengada_entrega is not None and cuota_devengada_entrega < Decimal("0"):
         raise BienInversionValidationError("cuota_devengada_entrega must not be negative")
 
-    prorrata_imputada_pct = _HUNDRED if regime is BienInversionDisposalRegime.SUJETA_NO_EXENTA else Decimal("0")
+    prorrata_imputada_pct = HUNDRED if regime is BienInversionDisposalRegime.SUJETA_NO_EXENTA else Decimal("0")
     divisor = kind.divisor
-    deduccion_efectuada = cuota_soportada * prorrata_inicial_pct / _HUNDRED
-    deduccion_imputada = cuota_soportada * prorrata_imputada_pct / _HUNDRED
+    deduccion_efectuada = cuota_soportada * prorrata_inicial_pct / HUNDRED
+    deduccion_imputada = cuota_soportada * prorrata_imputada_pct / HUNDRED
     importe_sin_limite = _quantize((deduccion_efectuada - deduccion_imputada) * anos_restantes / divisor)
 
     # Regla 1.ª (sujeta y no exenta) imputes 100% usage, so `importe_sin_limite`

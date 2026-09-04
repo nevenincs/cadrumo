@@ -32,6 +32,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ....core.casilla_id import CasillaId
+from ....core.decimal.constants import ZERO
 from .errors import RegistryValidationError
 from .formula_runtime_ops import (
     numeric_casilla_value as _numeric_casilla_value,
@@ -53,8 +54,6 @@ if TYPE_CHECKING:
 
     _EvalContext = EvalContext
 
-_ZERO = Decimal("0")
-
 
 def _read_modulos_indice(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:
     if casilla_id in ctx.text_values:
@@ -62,9 +61,9 @@ def _read_modulos_indice(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:
         ctx.operand_casilla_refs.append(casilla_id)
         raw_text = ctx.text_values[casilla_id].strip()
         try:
-            value = Decimal(raw_text) if raw_text else _ZERO
+            value = Decimal(raw_text) if raw_text else ZERO
         except ArithmeticError:
-            value = _ZERO
+            value = ZERO
         ctx.operand_values.append(value)
         return value
     return _numeric_casilla_value(casilla_id, ctx)
@@ -168,11 +167,11 @@ def evaluate_m131_resolve_modulos_previo(expression: FormulaExpression, ctx: _Ev
     parameter = ctx.parameters.get(args.coefficient_parameter)
     ctx.operand_refs.append(args.coefficient_parameter)
     if not epigrafe or parameter is None:
-        return _ZERO
-    total = _ZERO
+        return ZERO
+    total = ZERO
     for modulo_index, modulo_casilla_id in enumerate(args.modulo_unit_casilla_ids, start=1):
         units = _numeric_casilla_value(modulo_casilla_id, ctx)
-        if units == _ZERO:
+        if units == ZERO:
             continue
         coefficient = _resolve_keyed_bracket(
             parameter,
@@ -186,7 +185,7 @@ def evaluate_m131_resolve_modulos_previo(expression: FormulaExpression, ctx: _Ev
             # WHOLE Fase 1ª product is untabled — the engine cannot mix tabled
             # and untabled módulos for one activity — so the running total is
             # abandoned and the internal casilla resolves to zero.
-            return _ZERO
+            return ZERO
         ctx.operand_values.append(coefficient)
         total += units * coefficient
     return total
@@ -307,18 +306,18 @@ def evaluate_m131_resolve_modulos_minoracion_empleo(expression: FormulaExpressio
     coefficient_parameter = ctx.parameters.get(args.coefficient_parameter)
     ctx.operand_refs.append(args.coefficient_parameter)
     if not epigrafe or coefficient_parameter is None:
-        return _ZERO
+        return ZERO
     modulo_1_coefficient = _resolve_keyed_bracket(
         coefficient_parameter,
         key=f"{epigrafe}:1",
         filing_year=ctx.filing_year,
     )
     if modulo_1_coefficient is None:
-        return _ZERO
+        return ZERO
     ctx.operand_values.append(modulo_1_coefficient)
     actual = _numeric_casilla_value(args.modulo_1_actual_casilla_id, ctx)
     anterior = _numeric_casilla_value(args.modulo_1_anterior_casilla_id, ctx)
-    incremento = actual - anterior if anterior > _ZERO and actual > anterior else _ZERO
+    incremento = actual - anterior if anterior > ZERO and actual > anterior else ZERO
     incremento_rate = _resolve_scalar_parameter(
         args.incremento_rate_parameter,
         ctx,
@@ -328,8 +327,8 @@ def evaluate_m131_resolve_modulos_minoracion_empleo(expression: FormulaExpressio
     base_tramos = actual - incremento
     tramos_parameter = ctx.parameters.get(args.tramos_parameter)
     ctx.operand_refs.append(args.tramos_parameter)
-    if tramos_parameter is None or base_tramos <= _ZERO:
-        coeficiente_tramos = _ZERO
+    if tramos_parameter is None or base_tramos <= ZERO:
+        coeficiente_tramos = ZERO
     else:
         coeficiente_tramos = _resolve_bracket(tramos_parameter, base_tramos, ctx.date_context)
         ctx.operand_values.append(coeficiente_tramos)
@@ -441,7 +440,7 @@ def evaluate_m131_resolve_modulos_indice_exceso(expression: FormulaExpression, c
     ctx.operand_casilla_refs.append(args.epigrafe_casilla_id)
     cuantia_parameter = ctx.parameters.get(args.cuantia_parameter)
     ctx.operand_refs.append(args.cuantia_parameter)
-    if not epigrafe or cuantia_parameter is None or minorado <= _ZERO:
+    if not epigrafe or cuantia_parameter is None or minorado <= ZERO:
         return minorado
     cuantia = _resolve_keyed_bracket(cuantia_parameter, key=epigrafe, filing_year=ctx.filing_year)
     if cuantia is None or minorado <= cuantia:
@@ -617,13 +616,13 @@ def evaluate_m131_resolve_modulos_indices_generales(expression: FormulaExpressio
     epigrafe = ctx.text_values.get(args.epigrafe_casilla_id, "").strip()
     ctx.operand_refs.append(args.epigrafe_casilla_id)
     ctx.operand_casilla_refs.append(args.epigrafe_casilla_id)
-    if minorado <= _ZERO:
+    if minorado <= ZERO:
         return minorado
 
     # b.1) Índice corrector para empresas de pequeña dimensión — first in the
     # Orden's literal enumeration order.
     pequena_dimension = _read_modulos_indice(args.pequena_dimension_casilla_id, ctx)
-    aplica_pequena_dimension = pequena_dimension > _ZERO and epigrafe not in _M131_EPIGRAFES_INDICE_ESPECIAL
+    aplica_pequena_dimension = pequena_dimension > ZERO and epigrafe not in _M131_EPIGRAFES_INDICE_ESPECIAL
 
     rendimiento = minorado
     if aplica_pequena_dimension:
@@ -637,7 +636,7 @@ def evaluate_m131_resolve_modulos_indices_generales(expression: FormulaExpressio
     # no-op here, since b.1 did not apply) and BEFORE b.3's exceso threshold
     # check.
     temporada = _read_modulos_indice(args.temporada_casilla_id, ctx)
-    if temporada > _ZERO:
+    if temporada > ZERO:
         rendimiento = rendimiento * temporada
 
     # b.3) Índice corrector de exceso — third in the Orden's literal
@@ -646,7 +645,7 @@ def evaluate_m131_resolve_modulos_indices_generales(expression: FormulaExpressio
     if epigrafe:
         cuantia_parameter = ctx.parameters.get(args.cuantia_parameter)
         ctx.operand_refs.append(args.cuantia_parameter)
-        if cuantia_parameter is not None and rendimiento > _ZERO:
+        if cuantia_parameter is not None and rendimiento > ZERO:
             cuantia = _resolve_keyed_bracket(cuantia_parameter, key=epigrafe, filing_year=ctx.filing_year)
             if cuantia is not None and rendimiento > cuantia:
                 ctx.operand_values.append(cuantia)
@@ -661,9 +660,9 @@ def evaluate_m131_resolve_modulos_indices_generales(expression: FormulaExpressio
     # Orden's literal enumeration order, applied on the b.3-rectificado
     # figure and only when b.2 (temporada) is absent (the Orden's own
     # mutual-exclusion rule).
-    if temporada <= _ZERO:
+    if temporada <= ZERO:
         inicio_actividad = _read_modulos_indice(args.inicio_actividad_casilla_id, ctx)
-        if inicio_actividad > _ZERO:
+        if inicio_actividad > ZERO:
             rendimiento = rendimiento * inicio_actividad
 
     return rendimiento
@@ -729,9 +728,9 @@ def evaluate_m131_resolve_modulos_pequena_dimension_ignorado_flag(
     ctx.operand_refs.append(args.epigrafe_casilla_id)
     ctx.operand_casilla_refs.append(args.epigrafe_casilla_id)
     pequena_dimension = _numeric_casilla_value(args.pequena_dimension_casilla_id, ctx)
-    if pequena_dimension > _ZERO and epigrafe in _M131_EPIGRAFES_INDICE_ESPECIAL:
+    if pequena_dimension > ZERO and epigrafe in _M131_EPIGRAFES_INDICE_ESPECIAL:
         return Decimal("1")
-    return _ZERO
+    return ZERO
 
 
 @dataclass(frozen=True, slots=True)
@@ -790,6 +789,6 @@ def evaluate_m131_resolve_modulos_temporada_inicio_conflicto_flag(
     args = _m131_resolve_modulos_temporada_inicio_conflicto_flag_args(expression)
     temporada = _numeric_casilla_value(args.temporada_casilla_id, ctx)
     inicio_actividad = _numeric_casilla_value(args.inicio_actividad_casilla_id, ctx)
-    if temporada > _ZERO and inicio_actividad > _ZERO:
+    if temporada > ZERO and inicio_actividad > ZERO:
         return Decimal("1")
-    return _ZERO
+    return ZERO

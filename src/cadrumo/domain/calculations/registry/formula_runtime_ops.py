@@ -29,6 +29,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.decimal.constants import ONE, ZERO
 from ....core.money.rounding import round_to_cents as _round_to_cents
 from ._formula_operator_contracts import require_formula_operator_arity
 from .casilla_membership import undeclared_casilla_ids
@@ -44,8 +45,6 @@ if TYPE_CHECKING:
 
     from .formula_runtime import EvalContext as _EvalContext
 
-_ZERO = Decimal("0")
-_ONE = Decimal("1")
 _COMPARISON_OPS = frozenset({"less_than", "less_equal", "greater_than", "greater_equal", "equal"})
 _UNARY_PASSTHROUGH_OPS = frozenset({"copy", "lookup_parameter", "previous_period_value", "cross_model_sum"})
 
@@ -122,10 +121,10 @@ def evaluate_args_op(op: str, args: list[Decimal]) -> Decimal:
     if op in {"add", "sum", "previous_period_sum"}:
         if op == "previous_period_sum":
             _require_non_empty(op, args)
-        return sum(args, _ZERO)
+        return sum(args, ZERO)
     if op in _COMPARISON_OPS:
         _require_arg_count(op, args, 2)
-        return _ONE if _compare(op, args[0], args[1]) else _ZERO
+        return ONE if _compare(op, args[0], args[1]) else ZERO
     if op in _UNARY_PASSTHROUGH_OPS:
         _require_arg_count(op, args, 1)
         return args[0]
@@ -139,13 +138,13 @@ def _dispatch_named_arithmetic_op(op: str, args: list[Decimal]) -> Decimal:
             _require_arg_count(op, args, 2)
             return args[0] - args[1]
         case "multiply":
-            result = _ONE
+            result = ONE
             for arg in args:
                 result *= arg
             return result
         case "divide":
             _require_arg_count(op, args, 2)
-            if args[1] == _ZERO:
+            if args[1] == ZERO:
                 raise RegistryValidationError(
                     "formula expression divides by zero",
                     translated_message="errors.calc.divide_by_zero",
@@ -364,9 +363,9 @@ def apply_rounding(value: Decimal, rounding: RegistryRoundingCode | None) -> Dec
     if rounding == RegistryRoundingCode.MONEY_2:
         return _round_to_cents(value)
     if rounding == RegistryRoundingCode.INTEGER:
-        return value.quantize(_ONE, rounding=ROUND_HALF_UP)
+        return value.quantize(ONE, rounding=ROUND_HALF_UP)
     if rounding == RegistryRoundingCode.INTEGER_CEILING:
-        return value.quantize(_ONE, rounding=ROUND_CEILING)
+        return value.quantize(ONE, rounding=ROUND_CEILING)
     raise RegistryValidationError(f"unsupported rounding rule {rounding!r}")
 
 

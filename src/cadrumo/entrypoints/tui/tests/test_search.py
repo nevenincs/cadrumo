@@ -326,6 +326,7 @@ def test_search_provider_has_no_network_or_application_search_reimplementation()
     assert all(not any(part in forbidden for part in module.split(".")) for module in imported)
     assert "WorkbenchSearchService" not in imported
 
+
 @pytest.mark.asyncio
 async def test_a_refused_search_reports_why_instead_of_raising() -> None:
     """The palette must survive the state the root already named.

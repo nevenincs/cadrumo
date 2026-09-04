@@ -215,16 +215,13 @@ async def test_no_table_header_is_clipped_while_the_row_has_width_to_spare(surfa
         app.exit(None)
 
     missing = [label for label in declared if label and label not in painted]
-    assert not missing, (
-        f"{surface} clips these column headers out of the painted frame: {missing}"
-    )
+    assert not missing, f"{surface} clips these column headers out of the painted frame: {missing}"
+
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("size", SUPPORTED_TERMINAL_SIZES, ids=SUPPORTED_TERMINAL_SIZE_IDS)
 @pytest.mark.parametrize("surface", ["home--ready", "aeat-sync-overview--ready"])
-async def test_every_section_heading_is_separated_from_the_content_it_owns(
-    surface: str, size: tuple[int, int]
-) -> None:
+async def test_every_section_heading_is_separated_from_the_content_it_owns(surface: str, size: tuple[int, int]) -> None:
     """A heading fused to its rows makes the operator parse structure line by line.
 
     Read from the PAINTED frame, not the stylesheet. A margin declaration
@@ -311,9 +308,7 @@ async def test_every_section_heading_is_separated_from_the_content_it_owns(
         checked += 1
         row = rows[0]
         below, above = blanks_after(row), blanks_before(row)
-        assert below >= 1, (
-            f"{surface}: {heading!r} is fused to its content (0 blank rows below)"
-        )
+        assert below >= 1, f"{surface}: {heading!r} is fused to its content (0 blank rows below)"
         # A heading that OPENS its region has no previous group to be separated
         # from, so the asymmetry has nothing to express there and equal gaps are
         # correct. The gap BELOW is still required of it: that one binds the

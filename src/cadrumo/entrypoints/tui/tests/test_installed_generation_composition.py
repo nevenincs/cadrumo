@@ -383,6 +383,7 @@ def test_refresh_reuses_one_generation_for_search_then_home_and_keeps_missing_so
     assert calls == 2
     assert refreshed_home.generated_at == _NOW + timedelta(minutes=1)
 
+
 def test_a_generation_that_gains_a_source_readmits_its_destination() -> None:
     """Availability belongs to the CURRENT capture, not to the session's first.
 
@@ -438,4 +439,3 @@ def test_a_generation_that_loses_a_source_stops_offering_its_destination() -> No
     route = refreshed.resolve("workbench.aeat_sync")
     assert route.admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE
     assert route.factory is None
-

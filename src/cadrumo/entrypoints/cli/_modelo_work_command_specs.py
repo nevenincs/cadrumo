@@ -7,6 +7,7 @@ from typing import Final
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .command_spec import (
     FLAG_VALUE,
+    PATH_VALUE,
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
     ArgumentSpec,
@@ -31,7 +32,6 @@ from .command_spec import (
 )
 from .command_spec import translation_key as _key
 
-_PATH = ValueContract(DeferredTarget("pathlib", "Path"))
 _LANGUAGE = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
 _MODELO = ValueContract(
     DeferredTarget("builtins", "str"),
@@ -208,7 +208,7 @@ _CALCULATE_PARAMETERS = (
     _o(
         "m303_filing_evidence",
         "--m303-filing-evidence",
-        _PATH,
+        PATH_VALUE,
         transport_locus=TransportLocus.LOCAL_IN,
         transport_shape=TransportShape.FILE,
         transport_role=TransportRole.AUXILIARY,

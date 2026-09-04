@@ -7,6 +7,7 @@ from typing import Final
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ..command_spec import (
     FLAG_VALUE,
+    PATH_VALUE,
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
     ArgumentSpec,
@@ -47,7 +48,6 @@ from ._spec_policies import (
     STATE_FREE,
 )
 
-_PATH = ValueContract(DeferredTarget("pathlib", "Path"))
 _LANG = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
 _CAPABILITY = ValueContract(DeferredTarget("cadrumo.core.capabilities", "ServiceCapability"))
 _TOGGLE = ValueContract(
@@ -378,7 +378,7 @@ PROFILE_COMMAND_SPECS = (
             _option(
                 "output",
                 ("--output",),
-                _PATH,
+                PATH_VALUE,
                 "cli.config.profile.archive.export_out_help",
                 required=True,
                 constraint=ParameterConstraint(dir_okay=False, writable=True),
@@ -444,7 +444,7 @@ PROFILE_COMMAND_SPECS = (
             _option(
                 "file",
                 ("--file",),
-                _PATH,
+                PATH_VALUE,
                 "cli.config.profile.archive.inspect_path_help",
                 required=True,
                 constraint=ParameterConstraint(exists=True, dir_okay=False),
@@ -495,7 +495,7 @@ PROFILE_COMMAND_SPECS = (
             _option(
                 "file",
                 ("--file",),
-                _PATH,
+                PATH_VALUE,
                 "cli.config.profile.censo.file_option_help",
                 required=True,
                 constraint=ParameterConstraint(exists=True, dir_okay=False),
@@ -695,7 +695,7 @@ PROFILE_COMMAND_SPECS = (
             _option(
                 "file",
                 ("--file",),
-                _PATH,
+                PATH_VALUE,
                 "cli.config.profile.archive.import_file_help",
                 required=True,
                 constraint=ParameterConstraint(exists=True),
@@ -706,7 +706,7 @@ PROFILE_COMMAND_SPECS = (
             _option(
                 "artifact",
                 ("--artifact",),
-                _PATH,
+                PATH_VALUE,
                 "cli.config.profile.archive.import_artifact_help",
                 constraint=ParameterConstraint(exists=True, dir_okay=False),
                 transport_locus=TransportLocus.LOCAL_IN,

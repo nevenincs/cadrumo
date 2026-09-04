@@ -23,6 +23,7 @@ from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
 from .....core.external_constants import OutputLanguage
 from .....core.identity import TransactionId
+from .....tests.terminal_sizes import TERMINAL_WIDE
 from ....tui.components.host import ScreenHostApp
 from ....tui.devtools.frame import geometry_band
 from ....tui.navigation import TuiFocusIdentityV1, TuiScreenContextV1
@@ -72,8 +73,28 @@ def _projection(*, unavailable: LedgerWorkspaceArea | None = None) -> LedgerWork
             )
         )
     entries = (
-        LedgerWorkspaceEntryRefV1(transaction_id=_TX_A, review_status="pending"),
-        LedgerWorkspaceEntryRefV1(transaction_id=_TX_B, review_status="reviewed"),
+        LedgerWorkspaceEntryRefV1(
+            transaction_id=_TX_A,
+            review_status="pending",
+            date="2026-03-14",
+            amount="1250.00",
+            currency="EUR",
+            direction="outgoing",
+            counterparty="Suministros Delta SL",
+            description="Material de oficina",
+            business_classification="business",
+        ),
+        LedgerWorkspaceEntryRefV1(
+            transaction_id=_TX_B,
+            review_status="reviewed",
+            date="2026-03-02",
+            amount="480.50",
+            currency="EUR",
+            direction="incoming",
+            counterparty="Cliente Omega SA",
+            description="Servicios de consultoría",
+            business_classification="business",
+        ),
     )
     return LedgerWorkspaceProjectionV1(
         bucket_id="synthetic-bucket",
@@ -208,18 +229,41 @@ async def test_navigation_refusal_and_review_selection_preserve_semantic_identit
 
 
 @pytest.mark.asyncio
-async def test_entry_rows_are_redacted_and_tables_are_each_one_tab_stop() -> None:
+async def test_entry_rows_show_the_operator_their_own_facts_and_tables_are_each_one_tab_stop() -> None:
+    """The authenticated surface shows the entry, not a coordinate for it.
+
+    This replaces a gate that asserted the opposite -- that the screen printed
+    a truncated transaction id and withheld every financial fact. That policy
+    is retired: the session is already authenticated against the operator's own
+    ledger, so withholding the amount and counterparty withheld nothing from an
+    adversary and made the review surface unusable for review.
+
+    What is still asserted, because it is a different concern: the raw 64-char
+    identifier is machine addressing and has no business being painted, and the
+    two tables remain one tab stop each.
+    """
     projection = _projection()
     screen = LedgerEntriesScreen(_controller(projection))
     app = ScreenHostApp[None](screen)
-    async with app.run_test(size=(100, 30)) as pilot:
+    # The widest supported terminal, because the column SET is responsive: a
+    # narrow terminal drops the lowest-priority columns rather than overflowing
+    # the right edge. Full disclosure is therefore asserted where every column
+    # fits, and the sibling overflow gates own the narrow sizes.
+    async with app.run_test(size=TERMINAL_WIDE) as pilot:
         await pilot.pause()
         assert tuple(widget.id for widget in screen.focus_chain) == ("ledger-navigation", "ledger-entries")
         copy = _all_copy(screen)
+        for field in (
+            "2026-03-14",
+            "1250.00",
+            "EUR",
+            "outgoing",
+            "Suministros Delta SL",
+            "Material de oficina",
+        ):
+            assert field in copy, f"the entry's own {field!r} is not shown to the operator"
         assert "a" * 64 not in copy
         assert "b" * 64 not in copy
-        assert "aaaaaaaaaaaa" in copy
-        assert "SENSITIVE" not in copy
 
 
 @pytest.mark.asyncio

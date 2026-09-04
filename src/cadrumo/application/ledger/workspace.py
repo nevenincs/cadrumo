@@ -39,7 +39,7 @@ from ...domain.transactions.enums import TransactionLifecycleState
 from ...domain.transactions.models import TransactionCatalogue
 from ..review.filter import LedgerReviewStatus
 from .actions_manual import ledger_transaction_review_payload
-from .models import LedgerReviewQueryResult, LedgerStatusReport
+from .models import LedgerReviewQueryResult, LedgerStatusReport, LedgerTransactionReviewPayload
 from .preflight import LedgerPreflightReport
 
 LEDGER_WORKSPACE_CONTRACT_VERSION: Final[int] = 1
@@ -120,12 +120,32 @@ class LedgerWorkspaceAreaStateV1(BaseModel):
 
 
 class LedgerWorkspaceEntryRefV1(BaseModel):
-    """Safe semantic coordinate for one local Ledger entry."""
+    """One local Ledger entry, as the operator's own record.
+
+    This carries the entry's substance, not a coordinate pointing at it. The
+    surface that reads this projection is reached only through an
+    authenticated session over the operator's own ledger, so withholding the
+    date, amount, counterparty or classification withholds nothing from an
+    adversary and everything from the person doing the work: an opaque
+    identifier and a status word cannot be reviewed, and review is what the
+    surface is for.
+
+    Storage and transport rules are untouched by this. Nothing here weakens
+    encryption at rest, and a diagnostic or log record -- which can travel
+    somewhere an authenticated session does not -- keeps its own redaction.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: TransactionId
     review_status: str
+    date: str
+    amount: str
+    currency: str
+    direction: str
+    counterparty: str
+    description: str
+    business_classification: str
 
 
 class LedgerInvoiceReconciliationRefV1(BaseModel):
@@ -317,10 +337,7 @@ def project_ledger_workspace(
     )
 
     entries = tuple(
-        LedgerWorkspaceEntryRefV1(
-            transaction_id=transaction.transaction_id,
-            review_status=ledger_transaction_review_payload(transaction).review_status,
-        )
+        _entry_ref(ledger_transaction_review_payload(transaction))
         for transaction in sorted(transactions.values(), key=lambda item: item.transaction_id)
     )
     review_ids = tuple(row.id for row in review.rows)
@@ -415,6 +432,21 @@ def project_ledger_workspace(
         invoice_reconciliations=suggestions,
         link_inconsistencies=inconsistencies,
         affected_declarations=affected,
+    )
+
+
+def _entry_ref(payload: LedgerTransactionReviewPayload) -> LedgerWorkspaceEntryRefV1:
+    """Carry the entry's own facts into the projection, not a pointer to them."""
+    return LedgerWorkspaceEntryRefV1(
+        transaction_id=payload.transaction_id,
+        review_status=payload.review_status,
+        date=payload.date,
+        amount=payload.amount,
+        currency=payload.currency,
+        direction=payload.direction,
+        counterparty=payload.counterparty,
+        description=payload.description,
+        business_classification=payload.business_classification,
     )
 
 

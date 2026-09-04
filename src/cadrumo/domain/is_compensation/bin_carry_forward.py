@@ -27,11 +27,10 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.decimal.constants import ZERO
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .errors import BinCohortShapeError
-
-_ZERO = Decimal("0")
 
 
 class BinCohortStock(BaseModel):
@@ -53,9 +52,9 @@ class BinCohortStock(BaseModel):
     model_config = _STRICT_FROZEN
 
     generation_year: FilingYear
-    pending_opening_amount: Decimal = Field(ge=_ZERO)
-    applied_amount: Decimal | None = Field(default=None, ge=_ZERO)
-    pending_future_amount: Decimal = Field(ge=_ZERO)
+    pending_opening_amount: Decimal = Field(ge=ZERO)
+    applied_amount: Decimal | None = Field(default=None, ge=ZERO)
+    pending_future_amount: Decimal = Field(ge=ZERO)
 
     @property
     def is_current_period_cohort(self) -> bool:
@@ -64,11 +63,9 @@ class BinCohortStock(BaseModel):
 
     @model_validator(mode="after")
     def _legs_balance(self) -> BinCohortStock:
-        applied = _ZERO if self.applied_amount is None else self.applied_amount
+        applied = ZERO if self.applied_amount is None else self.applied_amount
         if applied + self.pending_future_amount != self.pending_opening_amount:
-            raise BinCohortShapeError(
-                "applied_amount + pending_future_amount must equal pending_opening_amount"
-            )
+            raise BinCohortShapeError("applied_amount + pending_future_amount must equal pending_opening_amount")
         return self
 
 
@@ -93,9 +90,7 @@ class BinStock(BaseModel):
             raise BinCohortShapeError("cohorts must be unique on generation_year")
         for cohort in self.cohorts:
             if cohort.generation_year > self.filing_year:
-                raise BinCohortShapeError(
-                    "a cohort cannot be generated after the filing year"
-                )
+                raise BinCohortShapeError("a cohort cannot be generated after the filing year")
             is_current = cohort.generation_year == self.filing_year
             if is_current and cohort.applied_amount is not None:
                 raise BinCohortShapeError(
@@ -104,8 +99,7 @@ class BinStock(BaseModel):
                 )
             if not is_current and cohort.applied_amount is None:
                 raise BinCohortShapeError(
-                    "a prior-period cohort must state its applied_amount, "
-                    "using Decimal('0') where nothing was applied"
+                    "a prior-period cohort must state its applied_amount, using Decimal('0') where nothing was applied"
                 )
         return self
 
@@ -114,15 +108,15 @@ class BinStock(BaseModel):
         """The sum reported in the cuadro's TOTAL ``aplicado`` leg."""
         return sum(
             (c.applied_amount for c in self.cohorts if c.applied_amount is not None),
-            _ZERO,
+            ZERO,
         )
 
     @property
     def total_pending_future_amount(self) -> Decimal:
         """The sum reported in the cuadro's TOTAL ``pendiente futuro`` leg."""
-        return sum((c.pending_future_amount for c in self.cohorts), _ZERO)
+        return sum((c.pending_future_amount for c in self.cohorts), ZERO)
 
     @property
     def total_pending_opening_amount(self) -> Decimal:
         """The sum reported in the cuadro's TOTAL opening leg."""
-        return sum((c.pending_opening_amount for c in self.cohorts), _ZERO)
+        return sum((c.pending_opening_amount for c in self.cohorts), ZERO)

@@ -827,9 +827,30 @@ def _public_notification_row(
     return AeatSyncWorkspaceNotificationRowV1.model_validate(values)
 
 
+_COMPARISON_ZONES: Final = frozenset(
+    {
+        AeatSyncWorkspaceZone.EVIDENCE_COMPARISON,
+        AeatSyncWorkspaceZone.RECONCILIATION,
+    }
+)
+"""Zones whose rows are a COMPARISON and cannot exist from one side alone.
+
+A list zone can be counted as soon as any one of its sources is readable: the
+count is of what that source holds. A comparison zone cannot. Its rows are
+discrepancies BETWEEN sources, so with the AEAT half never pulled there is no
+count to report -- and reporting the local half's zero as the zone's count
+tells the operator "no discrepancies" when the truth is "never compared".
+Those are exactly the two states `no-silent-under-declaration` forbids
+collapsing into one.
+"""
+
+
 def _zone_state(observation: AeatSyncWorkspaceZoneObservationV1, count: int) -> AeatSyncWorkspaceZoneStateV1:
     states = tuple(item.availability for item in observation.sources)
-    seen = any(_observable(item) for item in states)
+    if observation.zone in _COMPARISON_ZONES:
+        seen = all(_observable(item) for item in states)
+    else:
+        seen = any(_observable(item) for item in states)
     if all(item is AeatSyncWorkspaceAvailability.AVAILABLE for item in states):
         availability = AeatSyncWorkspaceAvailability.AVAILABLE
     elif seen:

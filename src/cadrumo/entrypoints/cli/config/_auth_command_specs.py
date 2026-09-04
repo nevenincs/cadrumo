@@ -7,6 +7,7 @@ from typing import Final
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ..command_spec import (
     FLAG_VALUE,
+    PATH_VALUE,
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
     ArgumentSpec,
@@ -29,7 +30,6 @@ from ..command_spec import translation_key as _key
 from ._command_spec_schema import config_payload_schema as _schema
 from ._spec_policies import ENCRYPTED_DESTRUCTIVE, ENCRYPTED_READ, ENCRYPTED_WRITE, state_free_group_spec
 
-_PATH = ValueContract(DeferredTarget("pathlib", "Path"))
 _OUTPUT_LANGUAGE = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
 _PHONE_STATE = ValueContract(DeferredTarget("cadrumo.application.auth.diagnostics", "AuthDiagnosticPhoneState"))
 
@@ -152,7 +152,7 @@ AUTH_COMMAND_SPECS = (
             _option(
                 "file",
                 ("--file",),
-                _PATH,
+                PATH_VALUE,
                 "cli.config.auth.file_help",
                 transport_locus=TransportLocus.LOCAL_IN,
                 transport_shape=TransportShape.FILE,
@@ -353,7 +353,7 @@ AUTH_COMMAND_SPECS = (
             _option(
                 "file",
                 ("--file",),
-                _PATH,
+                PATH_VALUE,
                 "cli.config.auth.certificate.register.file_help",
                 required=True,
                 transport_locus=TransportLocus.LOCAL_IN,

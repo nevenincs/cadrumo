@@ -33,6 +33,7 @@ from typing import get_args
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.decimal.coercion import coerce_decimal_strict
+from ...core.decimal.constants import ZERO
 from ...core.modelo import Modelo
 from ...core.money.rounding import round_to_cents
 from ...core.operator_action_enums import ActionEvidenceProvenance
@@ -66,7 +67,6 @@ _M349_NUMERO_OPERADORES_BINDING: BindingId = "iva-349-declarante-numero-operador
 _M349_IMPORTE_OPERACIONES_BINDING: BindingId = "iva-349-declarante-importe-operaciones"
 _M349_NUMERO_RECTIFICACIONES_BINDING: BindingId = "iva-349-declarante-numero-rectificaciones"
 _M349_IMPORTE_RECTIFICACIONES_BINDING: BindingId = "iva-349-declarante-importe-rectificaciones"
-_ZERO = Decimal("0")
 _M390_ANNUAL_PERIOD_CODE = "0A"
 _M131_DATA_BASE_RENDIMIENTO_CASILLA: CasillaId = "01"
 _M131_DATA_BASE_PAGO_PREVIO_CASILLA: CasillaId = "02"
@@ -327,7 +327,7 @@ def _m349_row_field_template_casilla_ids(revision: ModeloRevision) -> frozenset[
 
 def _calculated_decimal(value: object | None) -> Decimal:
     if value is None:
-        return _ZERO
+        return ZERO
     return coerce_decimal_strict(value)
 
 
@@ -383,7 +383,7 @@ def _raise_if_m390_303_reconciliation_would_save_silent_zero(
     ):
         if binding_id in resolved_binding_values:
             continue
-        if _calculated_decimal(casilla_values.get(annual_casilla)) == _ZERO:
+        if _calculated_decimal(casilla_values.get(annual_casilla)) == ZERO:
             continue
         missing_relations.append(relation_id)
         missing_bindings.append(binding_id)

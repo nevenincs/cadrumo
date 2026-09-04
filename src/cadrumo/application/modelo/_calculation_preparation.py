@@ -435,5 +435,3 @@ def _m200_accounting_ledger_transaction_count(
         if period.contains(effective_date):
             count += 1
     return count
-
-

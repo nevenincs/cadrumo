@@ -27,10 +27,9 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.decimal.constants import ZERO
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .errors import AjusteExtracontableShapeError
-
-_ZERO = Decimal("0")
 
 
 class AjusteDireccion(StrEnum):
@@ -73,10 +72,10 @@ class AjusteExtracontable(BaseModel):
 
     clase: AjusteClase
     direccion: AjusteDireccion
-    origen_ejercicio_amount: Decimal = Field(default=_ZERO, ge=_ZERO)
-    origen_anterior_amount: Decimal = Field(default=_ZERO, ge=_ZERO)
-    pendiente_inicio_amount: Decimal | None = Field(default=None, ge=_ZERO)
-    pendiente_fin_amount: Decimal | None = Field(default=None, ge=_ZERO)
+    origen_ejercicio_amount: Decimal = Field(default=ZERO, ge=ZERO)
+    origen_anterior_amount: Decimal = Field(default=ZERO, ge=ZERO)
+    pendiente_inicio_amount: Decimal | None = Field(default=None, ge=ZERO)
+    pendiente_fin_amount: Decimal | None = Field(default=None, ge=ZERO)
 
     @property
     def period_amount(self) -> Decimal:
@@ -90,10 +89,7 @@ class AjusteExtracontable(BaseModel):
 
     @model_validator(mode="after")
     def _pending_shape_follows_the_clase(self) -> AjusteExtracontable:
-        has_pending = (
-            self.pendiente_inicio_amount is not None
-            or self.pendiente_fin_amount is not None
-        )
+        has_pending = self.pendiente_inicio_amount is not None or self.pendiente_fin_amount is not None
         if self.clase is AjusteClase.PERMANENTE:
             if has_pending:
                 raise AjusteExtracontableShapeError(
@@ -101,16 +97,12 @@ class AjusteExtracontable(BaseModel):
                     "never reverses, so the balance does not exist rather than "
                     "being zero"
                 )
-            if self.origen_anterior_amount != _ZERO:
+            if self.origen_anterior_amount != ZERO:
                 raise AjusteExtracontableShapeError(
-                    "a permanent correction cannot arise from an earlier "
-                    "ejercicio: it has no balance to carry forward"
+                    "a permanent correction cannot arise from an earlier ejercicio: it has no balance to carry forward"
                 )
             return self
-        if (
-            self.pendiente_inicio_amount is None
-            or self.pendiente_fin_amount is None
-        ):
+        if self.pendiente_inicio_amount is None or self.pendiente_fin_amount is None:
             raise AjusteExtracontableShapeError(
                 "a temporary correction must state both pending balances, "
                 "using Decimal('0') where the balance is genuinely nil"
@@ -123,7 +115,6 @@ class AjusteExtracontable(BaseModel):
             return self
         if self.origen_anterior_amount > self.pendiente_inicio_amount:
             raise AjusteExtracontableShapeError(
-                "a correction arising from earlier ejercicios cannot exceed the "
-                "pending balance it reverses"
+                "a correction arising from earlier ejercicios cannot exceed the pending balance it reverses"
             )
         return self

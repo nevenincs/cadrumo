@@ -139,13 +139,22 @@ def test_the_session_child_imports_no_cli_internals() -> None:
 
     The CLI reaches the session by executing this module in a child
     interpreter, never by importing it, so the started session's import graph
-    must still contain no CLI module. Observed in a fresh process running the
-    same ``-m`` surface the CLI spawns.
+    must still contain no CLI module. Observed in a fresh process.
+
+    Both invocation shapes are probed, through the module the CLI actually
+    spawns. `-m cadrumo.entrypoints.tui` runs `__main__`, so importing the
+    launcher alone leaves `__main__` itself, the shared session protocol and
+    the entire destination path unobserved -- and the destination path is the
+    one most likely to reach for a CLI helper, because it is the arm that
+    carries a request across the process boundary. `__main__` is imported
+    rather than run so the probe observes the import graph without starting a
+    Textual session it would then have to kill.
     """
     probe = (
-        "import json, sys, runpy\n"
+        "import json, sys\n"
         f"sys.modules.pop({_SESSION_MODULE!r}, None)\n"
-        f"__import__({_SESSION_MODULE!r} + '.launcher')\n"
+        f"__import__({_SESSION_MODULE!r} + '.__main__')\n"
+        f"__import__({_SESSION_MODULE!r} + '.destination_session')\n"
         "print(json.dumps(sorted(m for m in sys.modules if m.startswith('cadrumo.entrypoints.'))))\n"
     )
     completed = subprocess.run(  # noqa: S603 - fixed interpreter and literal probe
@@ -160,5 +169,8 @@ def test_the_session_child_imports_no_cli_internals() -> None:
     imported = json.loads(completed.stdout.splitlines()[-1])
     cli_modules = [name for name in imported if name.startswith("cadrumo.entrypoints.cli")]
 
-    assert f"{_SESSION_MODULE}.launcher" in imported, f"the session module did not import its launcher: {imported}"
+    for required in (".__main__", ".launcher", ".destination_session"):
+        assert f"{_SESSION_MODULE}{required}" in imported, (
+            f"the probe never reached {required}, so it proves nothing: {imported}"
+        )
     assert not cli_modules, f"starting the TUI pulled in CLI internals: {cli_modules}"

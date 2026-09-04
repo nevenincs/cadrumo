@@ -26,6 +26,7 @@ from pathlib import Path
 
 from pydantic import Field, field_validator, model_validator
 
+from ....core.decimal.constants import ONE, ZERO
 from ....core.directory_scan import scan_directory
 from ....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
 from ....core.toml import freeze_toml, read_toml
@@ -33,9 +34,6 @@ from .errors import RegistryLoadError, RegistryValidationError
 from .ids import LegalRefId
 from .loader_cache import toml_file_fingerprint
 from .schema_base import RegistryModel
-
-_ZERO = Decimal("0")
-_ONE = Decimal("1")
 
 
 class ConvenioOverrideRow(RegistryModel):
@@ -90,7 +88,7 @@ class ConvenioOverrideRow(RegistryModel):
                 raise RegistryValidationError(
                     f"convenio override rate must be a parseable Decimal; got {self.rate!r}",
                 ) from exc
-            if parsed < _ZERO or parsed > _ONE:
+            if parsed < ZERO or parsed > ONE:
                 raise RegistryValidationError(
                     f"convenio override rate must be within [0, 1]; got {self.rate!r}",
                 )

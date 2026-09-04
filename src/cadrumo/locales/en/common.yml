@@ -1363,9 +1363,15 @@ tui:
       target: Entry {position} of {total} · reference {short_id}
       title: Classify ledger entry
     column:
+      amount: Amount
       area: Area
       availability: Availability
+      classification: Classification
+      counterparty: Counterparty
+      date: Date
+      description: Description
       destination: Destination
+      direction: Direction
       entry: Entry
       items: Items
       next: Next step
@@ -1373,7 +1379,6 @@ tui:
       status: Status
     entries:
       empty: No entries are present in this snapshot.
-      redacted: Safe entry index; financial details remain protected.
       title: Ledger entries
     evidence:
       column:

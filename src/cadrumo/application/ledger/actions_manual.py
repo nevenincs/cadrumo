@@ -582,9 +582,7 @@ def summarize_manual_transactions(
         # Resolving the concrete repository is a precondition of READING, not
         # of summarising: a caller that already holds this bucket's catalogue
         # has nothing left for the repository to do unless a period is given.
-        catalogue = resolve_transaction_repository(
-            bucket_id=bucket_id, repository=transaction_repository
-        ).load()
+        catalogue = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository).load()
     transactions = tuple(catalogue.values())
     status_counts: dict[LedgerReviewStatus, int] = {
         LedgerReviewStatus.PENDING: 0,

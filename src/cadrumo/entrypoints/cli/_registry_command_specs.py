@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .command_spec import (
+    PATH_VALUE,
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
     ArgumentSpec,
@@ -25,7 +26,6 @@ from .command_spec import translation_key as _key
 
 _METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), "metadata", CommandWriteRoute.NONE)
 _READ = ExecutionPolicySpec(frozenset({"registry"}), frozenset({"none"}), "compute", CommandWriteRoute.NONE)
-_PATH = ValueContract(DeferredTarget("pathlib", "Path"))
 _MANUAL = ValueContract(DeferredTarget("cadrumo.application.registry.corpus", "RegistryManualId"))
 _PART = ValueContract(DeferredTarget("cadrumo.domain.manuals._ids", "ManualPart"))
 
@@ -61,7 +61,7 @@ def _option(
 _REGISTRY_ROOT = _option(
     "registry_root",
     ("--registry-root",),
-    _PATH,
+    PATH_VALUE,
     "cli.registry.inspect_registry_root_help",
     constraint=ParameterConstraint(file_okay=False, readable=True),
     transport_locus=TransportLocus.LOCAL_IN,
@@ -71,7 +71,7 @@ _REGISTRY_ROOT = _option(
 _SOURCE_ROOT = _option(
     "source_root",
     ("--source-root",),
-    _PATH,
+    PATH_VALUE,
     "cli.registry.verify_source_root_help",
     constraint=ParameterConstraint(exists=True, file_okay=False, readable=True),
     transport_locus=TransportLocus.LOCAL_IN,
@@ -170,7 +170,7 @@ REGISTRY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option(
                 "observation_path",
                 ("--observation",),
-                _PATH,
+                PATH_VALUE,
                 "cli.registry.observation_help",
                 required=True,
                 transport_locus=TransportLocus.LOCAL_IN,
@@ -180,7 +180,7 @@ REGISTRY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option(
                 "source_observation_paths",
                 ("--source-observation",),
-                _PATH,
+                PATH_VALUE,
                 "cli.registry.source_observation_help",
                 multiple=True,
                 transport_locus=TransportLocus.LOCAL_IN,

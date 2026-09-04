@@ -989,11 +989,13 @@ class CommandSpecGraph:
 TEXT_VALUE: Final[ValueContract] = ValueContract(DeferredTarget("builtins", "str"))
 WHOLE_NUMBER_VALUE: Final[ValueContract] = ValueContract(DeferredTarget("builtins", "int"))
 FLAG_VALUE: Final[ValueContract] = ValueContract(DeferredTarget("builtins", "bool"))
+PATH_VALUE: Final[ValueContract] = ValueContract(DeferredTarget("pathlib", "Path"))
 
 
 __all__ = [
     "FLAG_VALUE",
     "NON_LEAF_COMMAND_KINDS",
+    "PATH_VALUE",
     "TEXT_VALUE",
     "WHOLE_NUMBER_VALUE",
     "ArgumentSpec",

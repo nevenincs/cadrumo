@@ -14,6 +14,7 @@ from typing import ClassVar
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
+from ...core.decimal.constants import ZERO
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.modelo import Modelo
 from ...core.period import Period
@@ -50,7 +51,6 @@ from ..aggregation import CalculationSourceContext, CalculationSourceProvenance,
 
 _SOURCE_KIND = BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY
 _SOURCE_CASILLA_VALUES: tuple[CasillaId, ...] = ("51", "53", "52", "54", "55", "56", "57", "58")
-_ZERO = Decimal("0")
 
 
 class M303RegimenSimplificadoAnnualSummaryHandoffError(CoreValidationError):
@@ -388,10 +388,10 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
         activities: tuple[M303RegimenSimplificadoActivityCalculationResult, ...],
         source_values: Mapping[CasillaId, Decimal],
     ) -> Mapping[CasillaId, Decimal]:
-        non_agricultural_result = sum((item.cuota_resultante for item in activities), start=_ZERO)
+        non_agricultural_result = sum((item.cuota_resultante for item in activities), start=ZERO)
         return {
             M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[0]: non_agricultural_result,
-            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[1]: _ZERO,
+            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[1]: ZERO,
             M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[2]: source_values["51"],
             M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[3]: source_values["53"],
             M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[4]: source_values["52"],
@@ -405,7 +405,7 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
     def _require_arithmetic_coherence(self, values: Mapping[CasillaId, Decimal]) -> None:
         if values[M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[5]] != sum(
             (values[casilla_id] for casilla_id in M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[:5]),
-            start=_ZERO,
+            start=ZERO,
         ):
             raise M303RegimenSimplificadoAnnualSummaryHandoffError(
                 "M303 annual-summary source casilla 54 disagrees with the declared 74-78 total",

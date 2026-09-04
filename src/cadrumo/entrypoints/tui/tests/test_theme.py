@@ -333,6 +333,8 @@ drift and buried the real offenders under false ones.
 def _is_structural(word: str) -> bool:
     """Whether one declaration word is topology rather than a spendable measure."""
     return word in _STRUCTURAL_VALUES or bool(_FRACTION.match(word)) or word.startswith("$")
+
+
 """Values that describe topology rather than measure.
 
 ``auto``/``1fr``/``100%`` say "fill what is there", which is a layout

@@ -28,6 +28,7 @@ from enum import StrEnum
 from typing import Final
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ...core.decimal.constants import ZERO
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.calculations.registry.authority import bundled_authority
@@ -42,7 +43,6 @@ from ...domain.transactions.protocols import TransactionCatalogueRepositoryProto
 from ...domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
 from ...domain.transactions.volumen_ingresos import counts_toward_art_109_activity_income
 
-_ZERO = Decimal("0")
 _ART_109_THRESHOLD_PARAMETER_ID = "irpf.art_109_retained_income_exemption_ratio"
 _ART_109_EXEMPT_ACTIVITIES_SELECTOR: Final[str] = (
     "rd-439-2007-art-109:selector-m036-actividades-exencion-pago-fraccionado"
@@ -178,8 +178,8 @@ def derive_art109_activity_income_coverage(
     net_of_subvenciones_activities = tipo_actividad_code_set(
         _ART_109_BASE_NET_OF_SUBVENCIONES_SELECTOR,
     )
-    numerator = _ZERO
-    denominator = _ZERO
+    numerator = ZERO
+    denominator = ZERO
     for transaction in catalogue.values():
         row = _classify_current_period_row(transaction, period=period)
         if row is _RowKind.IGNORE:
@@ -207,13 +207,13 @@ def derive_art109_activity_income_coverage(
             continue
 
         computable_income = _proved_computable_income(transaction)
-        if computable_income is None or computable_income <= _ZERO:
+        if computable_income is None or computable_income <= ZERO:
             return _insufficient("current_period_activity_income_substrate_incomplete")
         denominator += computable_income
         if _proved_withheld_income(transaction):
             numerator += computable_income
 
-    if denominator <= _ZERO:
+    if denominator <= ZERO:
         return _insufficient("current_period_activity_income_absent")
 
     return Art109ActivityIncomeCoverage(
@@ -279,8 +279,8 @@ def _insufficient(reason: str) -> Art109ActivityIncomeCoverage:
     return Art109ActivityIncomeCoverage(
         status=Art109ActivityIncomeCoverageStatus.INSUFFICIENT,
         meets_threshold=None,
-        numerator=_ZERO,
-        denominator=_ZERO,
+        numerator=ZERO,
+        denominator=ZERO,
         reason=reason,
     )
 

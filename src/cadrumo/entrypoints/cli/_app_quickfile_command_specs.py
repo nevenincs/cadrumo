@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .command_spec import (
+    PATH_VALUE,
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
     CommandNodeKind,
@@ -28,7 +29,6 @@ _POLICY = ExecutionPolicySpec(
     CommandWriteRoute.PROFILE_BOUND,
     handoff=True,
 )
-_PATH = ValueContract(DeferredTarget("pathlib", "Path"))
 _LANG = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
 
 
@@ -79,7 +79,7 @@ QUICKFILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option(
                 "output",
                 ("--output",),
-                _PATH,
+                PATH_VALUE,
                 "cli.app.modelo.export.output_help",
                 transport_locus=TransportLocus.LOCAL_OUT,
                 transport_shape=TransportShape.FILE,
@@ -118,7 +118,7 @@ QUICKFILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option(
                 "m303_filing_evidence",
                 ("--m303-filing-evidence",),
-                _PATH,
+                PATH_VALUE,
                 "cli.app.modelo.work.m303_filing_evidence_help",
                 transport_locus=TransportLocus.LOCAL_IN,
                 transport_shape=TransportShape.FILE,

@@ -13,6 +13,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from ...core.decimal.constants import ZERO
 from ...core.errors.hierarchy import CoreValidationError, TerminalPreconditionErrorMixin
 from ...core.modelo import Modelo
 from ...core.resources.bundled_data import bundled_path
@@ -78,7 +79,6 @@ _POSITIVE_DISPOSITIONS = frozenset(
         ResultDisposition.DOMICILIACION,
     },
 )
-_ZERO = Decimal("0")
 
 
 class M303CarryIngressError(_M303CarryIngressErrorMixin, CoreValidationError):
@@ -262,9 +262,9 @@ def _assert_result_sign_compatible(
             context={"casilla_id": M303_COMPENSATION_RESULTADO_CASILLA},
         )
     compatible = (
-        (disposition in _NEGATIVE_DISPOSITIONS and resultado < _ZERO)
-        or (disposition in _POSITIVE_DISPOSITIONS and resultado > _ZERO)
-        or (disposition is ResultDisposition.NEGATIVA and resultado == _ZERO)
+        (disposition in _NEGATIVE_DISPOSITIONS and resultado < ZERO)
+        or (disposition in _POSITIVE_DISPOSITIONS and resultado > ZERO)
+        or (disposition is ResultDisposition.NEGATIVA and resultado == ZERO)
     )
     if not compatible:
         raise M303CarryIngressError(
@@ -300,7 +300,7 @@ def _normalize_carry_observation(
         )
 
     values = dict(observation.casilla_values)
-    values.setdefault(M303_COMPENSATION_POSTERIOR_CASILLA, _ZERO)
+    values.setdefault(M303_COMPENSATION_POSTERIOR_CASILLA, ZERO)
     # A resultado-basis normalization materializes the generated casilla so
     # every persisted envelope carries the full pair. On revalidation that
     # materialized row is evidence of the already selected result basis, not a

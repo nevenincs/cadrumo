@@ -793,8 +793,28 @@ def _ledger_projection(scenario: WorkbenchFixtureScenario) -> LedgerWorkspacePro
     populated = scenario in {WorkbenchFixtureScenario.READY, WorkbenchFixtureScenario.STALE}
     entries = (
         (
-            LedgerWorkspaceEntryRefV1(transaction_id=_LEDGER_TX_A, review_status="pending"),
-            LedgerWorkspaceEntryRefV1(transaction_id=_LEDGER_TX_B, review_status="reviewed"),
+            LedgerWorkspaceEntryRefV1(
+                transaction_id=_LEDGER_TX_A,
+                review_status="pending",
+                date="2026-03-14",
+                amount="1250.00",
+                currency="EUR",
+                direction="outgoing",
+                counterparty="Suministros Delta SL",
+                description="Material de oficina y consumibles",
+                business_classification="business",
+            ),
+            LedgerWorkspaceEntryRefV1(
+                transaction_id=_LEDGER_TX_B,
+                review_status="reviewed",
+                date="2026-03-02",
+                amount="480.50",
+                currency="EUR",
+                direction="incoming",
+                counterparty="Cliente Omega SA",
+                description="Servicios de consultoría marzo",
+                business_classification="business",
+            ),
         )
         if populated
         else ()

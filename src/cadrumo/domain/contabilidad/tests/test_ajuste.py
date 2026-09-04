@@ -68,9 +68,7 @@ def test_a_permanent_correction_cannot_arise_from_an_earlier_ejercicio() -> None
 
 def test_a_zero_pending_balance_is_not_the_same_as_no_pending_balance() -> None:
     """A temporaria whose balance is nil still has one; a permanente has none."""
-    temporaria = _temporaria(
-        origen_ejercicio_amount=Decimal("0"), pendiente_fin_amount=Decimal("0")
-    )
+    temporaria = _temporaria(origen_ejercicio_amount=Decimal("0"), pendiente_fin_amount=Decimal("0"))
 
     assert temporaria.pendiente_inicio_amount == Decimal("0")
     assert temporaria.carries_pending_balance
@@ -111,9 +109,7 @@ def test_a_reversal_within_the_balance_is_accepted() -> None:
 
 
 def test_both_directions_are_expressible_for_either_clase() -> None:
-    assert _permanente(direccion=AjusteDireccion.DISMINUCION).direccion is (
-        AjusteDireccion.DISMINUCION
-    )
+    assert _permanente(direccion=AjusteDireccion.DISMINUCION).direccion is (AjusteDireccion.DISMINUCION)
     assert _temporaria().direccion is AjusteDireccion.AUMENTO
 
 
