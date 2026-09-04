@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-registry-dated-validity-regulatory-constant-placement-sweep-audit]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:f2fae14ce2bf632b6d999394f2f8c9856ce17448393ad92ad51ec9cb89e00174'
+body_hash: 'sha256:ac2388177052de8147d375a1ee4bc97f119915409996e14ebef6fbb2e7feda2f'
 ---
 
 <!-- RETIRED: S01 -->
@@ -49,7 +49,7 @@ Thread the event date into the consumers that cannot resolve without it, then au
 - [x] `P03.S14` - Rewire the domain compute surface to take the resolved bundle instead of module constants: `compute_regularizacion_anual`, `compute_regularizacion_transmision`, `compute_registro_regularizacion`, `compute_registro_transmisiones`, and the two record window helpers, then reduce `BienInversionKind` to a pure classifier by deleting its `ventana_anos` and `divisor` properties and the `core.external_constants` imports behind them; `src/cadrumo/domain/bienes_inversion/register.py, src/cadrumo/domain/bienes_inversion/tests/`.
 - [x] `P03.S15` - Wire the application boundary to resolve the bundle for modelo 303 and to emit a classified refusal diagnostic for modelo 390 naming the not-applicable parameter disposition, rather than computing a filing-bound figure on ungrounded constants; `src/cadrumo/application/calculations/bienes_inversion_regularizacion.py, src/cadrumo/application/modelo/_calculation_source_staging.py`.
 - [x] `P03.S16` - Harden the producer-snapshot oracle to refuse a result whose carried parameter provenance disagrees with the bundle it was handed, so supplying one wrong bundle to both producer and oracle cannot be self-consistent; `src/cadrumo/application/filing/producer_snapshot.py`.
-- [ ] `P03.S17` - Record the modelo 390 twin-computation-path defect in the audit: every M390 revision declares parameters not applicable on the verified ground that the resumen anual restates the periodic outcome, yet the source resolver recomputes the regularisation from the register for M390 as well as M303, so one legal figure has two computation paths; `.vault/audit/`.
+- [x] `P03.S17` - Record the modelo 390 twin-computation-path defect in the audit: every M390 revision declares parameters not applicable on the verified ground that the resumen anual restates the periodic outcome, yet the source resolver recomputes the regularisation from the register for M390 as well as M303, so one legal figure has two computation paths; `.vault/audit/`.
 
 ## Parallelization
 

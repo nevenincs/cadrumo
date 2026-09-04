@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:192fc5f496214df9610ef3462b6f08e9afac03d83cde67f3fb838b3ee36a4600'
+body_hash: 'sha256:cca71b1246644d3cfea77e9adea7fdb61992675165897c351515049104349e46'
 related:
   - "[[2026-08-27-registry-dated-validity-frozen-constant-hunt-audit]]"
 ---
@@ -221,6 +221,53 @@ figures the law re-sets, so year-versioning them would duplicate an invariant
 across every revision to vary nothing. Assessed against the method above, that
 argument is SOUND. These are not defects and a blanket relocation would be
 wrong.
+
+### m390-regularizacion-has-two-computation-paths | high | UNADJUDICATED, a legal question
+
+Surfaced while authoring the LIVA art-107/109 figures as registry parameters,
+and deliberately NOT settled here: it is a question about what Modelo 390
+casilla 63 legally IS, not about where a constant lives.
+
+Every Modelo 390 revision declares `family_dispositions.parameters` NOT
+APPLICABLE, and the declaration is reasoned and revision-verified rather than a
+blanket assertion: it states that the resumen anual "restates their outcome and
+applies nothing of its own", having checked that the revision declares zero
+parameters and that its four formulas aggregate already-computed period figures.
+The registry loader enforces that disposition, and it REFUSED an attempt to
+author the art-107/109 figures onto those revisions.
+
+The code disagrees. `application/calculations/bienes_inversion_regularizacion.py`
+admits both Modelo 303 and Modelo 390 in the same resolver branch and calls
+`compute_registro_regularizacion` for both, so casilla 63 RECOMPUTES the
+regularisation from the capital-goods register rather than restating the Modelo
+303 casilla 43 that already computed it for the same ejercicio. One legal figure,
+two computation paths, with no parity check between them.
+
+Either the disposition is wrong and Modelo 390 does apply figures of its own, or
+the code is wrong and casilla 63 should carry the periodic outcome forward. Both
+readings are defensible from the documents available in this tree, and the choice
+decides what a filed annual summary contains. It is therefore left open for an
+operator or reviewer with the authority to read AEAT's design intent for the
+resumen anual.
+
+What was done in the meantime, and why it is not a settlement: the parameter
+resolver refuses a Modelo 390 revision, so the source resolver now returns an
+unresolved binding with a classified diagnostic instead of projecting a
+filing-bound figure computed from values the active revision never declared.
+That is the no-silent-under-declaration answer to an ungrounded value, not an
+answer to the legal question. It is a USER-VISIBLE behaviour change on a
+non-blocking advisory path and was reported as such. Two resolver tests that
+previously proved casilla 63 projected a value were rewritten to pin the refusal,
+with their original claims preserved in their docstrings rather than deleted.
+
+The constraint that forced this shape is worth recording for whoever adjudicates:
+no validated registry authority handle reaches `calculation_actions.py` or
+`_calculation_source_staging.py`, and the calculation source context carries a
+single revision and no authority, so the application layer CANNOT select a Modelo
+303 revision while serving Modelo 390. Resolving the figures cross-modelo — which
+is what the "restates the periodic outcome" reading would require — needs an
+authority threaded through several layers, and that is a change with its own
+design cost, not a local fix.
 
 ## Recommendations
 

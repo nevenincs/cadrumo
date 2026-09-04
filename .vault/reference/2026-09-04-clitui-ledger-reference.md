@@ -5,18 +5,130 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:675ed06c36f462242bbd6ff5adb19fe5d5299b036f091d11115ab73687810526'
+body_hash: 'sha256:f19ba1f54326296c9fb79d3df2c6f44589d80b3046c9c724f7eee82c3050ea58'
 related:
   - "[[2026-09-04-clitui-ledger-research]]"
   - "[[2026-06-10-ledger-interface-contract-adr]]"
   - "[[2026-08-11-tui-architecture-adr]]"
 ---
-
 # `clitui-ledger` reference: `CLI to backend capability authority census`
 
 This reference maps the first semantic-search-led census of Ledger behavior owned by the CLI to existing or proposed frontend-neutral application homes. It is an initial denominator, not an exhaustive command-graph classification. Every implementation step must refresh affected rows against the live tree.
 
 ## Summary
+
+### Campaign matrix publication
+
+This document is the authoritative human-readable publication surface for the `LedgerCapabilityMatrixV1` campaign contract in `dev/quality/clitui_ledger_capability_matrix.py`. The S03 publication is deliberately a **provisional baseline**, not a serialized accepted matrix: S04-S08 have not yet produced a complete live union census or adjudicated every typed semantic home, S09 has not recorded the cross-plan hold control, and S12-S14 have not reviewed and accepted the frozen denominator. The contract therefore requires the publication to fail closed instead of inventing a denominator digest, matrix digest, evidence attestation, or G0 closure.
+
+| Publication field | Current value |
+| --- | --- |
+| Contract / schema | `LedgerCapabilityMatrixV1` / `3` |
+| Publication revision | `s03-baseline-1` |
+| Observation timestamp | `2026-09-04T18:34:43.4364135Z` |
+| Source revision | `c2fd4b4c5e040d2c5e9814e3319ff0c911b741c8` |
+| Contract source digest | `sha256:c2998c8ff958ae820b59fa7055a36d83117bb35282fe2679761032fab7a15a10` |
+| Accepted plan owner | `clitui-ledger` |
+| Denominator revision / digest | Not issued: the mandatory S04-S08 live census and adjudication are open |
+| Matrix digest | Not issued: a digest-bound `LedgerCapabilityMatrixV1` cannot exist before the complete denominator and current evidence subjects exist |
+| Acceptance attestation | Absent by design: only S14 may record an independent `ACCEPT` ruling bound to the frozen digest |
+| TUI hold | Campaign sequencing bars Ledger TUI implementation; the cross-plan recorded control remains open until S09 and row-level applicability/hold classification remains open until S07, S08, and S11 |
+
+#### Mandatory source-stream landscape
+
+Every stream below must become one complete, readable, unambiguous, digest-bound `CensusStreamObservationV1`. A known count is baseline evidence only; it is not a declaration that the stream census is complete.
+
+| Source stream | S03 observation | Readiness | Closure owner |
+| --- | --- | --- | --- |
+| `cli_endpoint` | 78 invocable endpoints are established by the command-graph baseline below | Partial: endpoint-to-row ownership annotations remain uncensused | S04 |
+| `cli_suboperation` | CLI-owned sub-operation families are listed in the disposition baseline below | Partial: exhaustive sub-operation identities remain uncensused | S04 |
+| `backend_only` | Existing backend primitives and composite gaps are catalogued below | Partial: exhaustive backend-only operation and direct-proof census remains open | S05 |
+| `missing_product` | Nine explicit missing product/provenance families are published below | Partial: union review and canonical row admission remain open | S05 and S08 |
+| `registry_route` | Seven Ledger binding families and 546 declarations are established below | Partial: every route, calculation consumer, filing consumer, and proof obligation remains open | S06 |
+| `artifact_product` | Flat CSV/JSONL/XLSX exists; review package, Google transport, and restore archive remain distinct missing products | Partial: product identities and artifact proof remain open | S05, S06, and S08 |
+| `supported_surface` | CLI enrollment and TUI component existence/installed reachability are known to be distinct | Partial: exhaustive component and navigation reachability census remains open | S07 |
+
+#### Axis contract and publication notation
+
+The eight independent axes are `backend`, `cli`, `tui`, `composition`, `artifact`, `provenance`, `registry`, and `proof`. A reviewed row will carry `applicable` or `not_applicable` plus `unproven`, `partial`, or `proven`; backend/CLI/TUI additionally carry `absent`, `partial`, or `proven`. Ownership and reachability use the independent annotations `cli_owned`, `delegating`, `component_only`, and `installed`. In the provisional tables, `REVIEW` means the S07/S08 applicability decision has not happened and therefore no contract state is asserted.
+
+| Profile | Backend | CLI | TUI | Composition | Artifact | Provenance | Registry | Proof |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `AUTHORITY` | `applicable`; `absent` or `partial`; `unproven`/`partial` | `applicable`; `partial`; `cli_owned` | `REVIEW` | `REVIEW` | `REVIEW` | `REVIEW` | `REVIEW` | `applicable`; `unproven`/`partial` |
+| `DELEGATE` | `applicable`; current primitive present; proof bounded below | `applicable`; parser/adapter exists; delegation proof remains open | `REVIEW` | `REVIEW` | `REVIEW` | `REVIEW` | `REVIEW` | Current proof is bounded to cited behavior, never whole-row completion |
+| `PRODUCT` | `applicable`; `absent`; `unproven` | Surface applicability remains for S08 | `REVIEW` | `applicable`; `unproven` | `applicable`; `unproven` where artifact-bearing | `applicable`; `unproven` | `REVIEW` | `applicable`; `unproven` |
+| `REGISTRY` | `applicable`; `partial` | `REVIEW` | `REVIEW` | `applicable`; `partial` | `REVIEW` | `applicable`; `partial` | `applicable`; `partial` | `applicable`; `partial` or `unproven` per the registry table below |
+
+#### Provisional capability rows
+
+These 38 family rows are the S03 baseline keys. They are not yet admitted `LedgerCapabilityRowV1` instances: S04-S07 may split them into endpoint/sub-operation rows or add rows from another stream, and S08 must adjudicate their canonical identity, applicability, exact command type, and exact result type. The table names the candidate semantic owner and the planned step that must turn that candidate into an exact typed contract.
+
+| Baseline row key | Profile | Candidate semantic owner and typed-contract closure | Open gap / next evidence |
+| --- | --- | --- | --- |
+| `ledger.transaction.create` | `AUTHORITY` | `application/ledger/operator_commands.py`; exact command/result in S23 and S70 | `authority`; disposition and backend direct proof in S04/S05 then S23/S34 |
+| `ledger.transaction.allocate` | `AUTHORITY` | `application/ledger/operator_commands.py`; exact command/result in S24 and S70 | `authority`; S24/S28/S34 |
+| `ledger.transaction.classify_direct` | `AUTHORITY` | `application/ledger/operator_commands.py`; discriminated command/result in S24 and S70 | `authority`; S24/S28/S34 |
+| `ledger.transaction.classify_m210` | `AUTHORITY` | `application/ledger/operator_commands.py`; discriminated command/result in S24 and S70 | `authority`; S24/S30/S34 |
+| `ledger.transaction.invoice_link` | `DELEGATE` | `application/ledger/actions_manual.py`; current atomic writer/result, exact facade disposition in S08/S70 | Duplicate CLI policy; S04/S08 adjudication |
+| `ledger.transaction.query` | `AUTHORITY` | `application/ledger/query_service.py`; query/result in S15 and S70 | `authority`, `product`, `proof`; S15/S18/S22 |
+| `ledger.transaction.composite_read` | `AUTHORITY` | `application/ledger/composite_reader.py`; discriminated read result in S16 and S70 | `authority`, `composition`, `proof`; S16/S19/S22 |
+| `ledger.classification.rule_preview` | `AUTHORITY` | `application/ledger/actions_classification.py`; preview result in S25 and S70 | `authority`, `proof`; S25/S32/S34 |
+| `ledger.import.per_file` | `DELEGATE` | `application/ledger/actions_import.py`; existing typed import result, exact row contract in S08 | Direct proof bounded to one source; S05/S08 |
+| `ledger.import.multi_source` | `AUTHORITY` | `application/ledger/import_workflows.py`; plan/batch result in S36 and S70 | `authority`, `composition`, `proof`; S36/S44/S53 |
+| `ledger.evidence.drive_ingest` | `AUTHORITY` | `application/ledger/provider_evidence_workflows.py`; item/batch result in S38 and S70 | `authority`, `composition`, `proof`; S38/S46/S53 |
+| `ledger.evidence.extraction_consent` | `AUTHORITY` | `application/ledger/review_workflows.py`; consent outcome in S40 and S70 | `authority`, `composition`; S40/S48/S53 |
+| `ledger.evidence.review` | `AUTHORITY` | `application/ledger/review_queries.py` and `review_workflows.py`; query/disposition results in S17/S40/S70 | `authority`, `composition`, `proof`; S17/S21/S40/S53 |
+| `ledger.evidence.consent_survey` | `AUTHORITY` | `application/ledger/review_queries.py`; port-backed projection in S17 and S70 | `authority`, `composition`; S17/S50/S53 |
+| `ledger.llm.routing` | `AUTHORITY` | `application/ledger/llm_workflows.py`; discriminated terminal outcome in S42 and S70 | `authority`, `composition`, `provenance`; S42/S52/S53 |
+| `ledger.invoice.workflow` | `AUTHORITY` | `application/ledger/invoice_workflows.py`; workflow results in S54 and S70 | `authority`, `composition`; S54/S60/S68 |
+| `ledger.ratio.workflow` | `AUTHORITY` | `application/ledger/ratio_workflows.py`; atomic result in S56 and S70 | `authority`, `composition`, `proof`; S56/S63/S68 |
+| `ledger.counterparty.confirmation` | `AUTHORITY` | `application/ledger/counterparty_establishment.py`; typed confirmation outcome in S55/S70 | `authority`, `proof`; S55/S61/S68 |
+| `ledger.prorrata.workflow` | `AUTHORITY` | `application/ledger/prorrata_workflows.py`; operator-command result in S57/S70 | `authority`, `composition`, `proof`; S57/S65/S68 |
+| `ledger.investment_goods.workflow` | `AUTHORITY` | `application/ledger/investment_goods_workflows.py`; acquisition/disposal result in S58/S70 | `authority`, `composition`, `proof`; S58/S66/S68 |
+| `ledger.inventory.workflow` | `DELEGATE` | `application/ledger/InventoryService`; exact command/result in S08/S70 | Backend primitive exists; surface delegation and direct-proof scope need S04/S05/S08 |
+| `ledger.payload.projection` | `AUTHORITY` | `application/ledger/models.py`; immutable result models in S70 | `authority`, `product`; CLI-local fact redeclaration census in S04 |
+| `ledger.export.flat` | `DELEGATE` | `application/ledger/actions_export.py`; current flat export result, exact row contract in S08 | `artifact`, `proof`; flat product only, not restore |
+| `ledger.export.review_package` | `PRODUCT` | `application/ledger/review_package_export.py`; plan/result in S89/S93 | `product`, `artifact`, `provenance`, `proof` |
+| `ledger.export.google_transport` | `PRODUCT` | transport-neutral review plan plus Google adapter; exact owner/result in S90/S93 | `product`, `composition`, `artifact`, `proof` |
+| `ledger.export.restore_archive` | `PRODUCT` | `application/ledger/archive_service.py`; versioned export/restore results in S94/S97 | `product`, `artifact`, `provenance`, `proof` |
+| `ledger.evidence.download` | `PRODUCT` | `application/ledger/evidence_commands.py`; download result in S78/S87 | `product`, `artifact`, `proof` |
+| `ledger.evidence.replace` | `PRODUCT` | `application/ledger/evidence_commands.py`; atomic replacement result in S79/S87 | `product`, `composition`, `provenance`, `proof` |
+| `ledger.note.append` | `PRODUCT` | `application/ledger/note_commands.py`; append-only note result in S80/S87 | `product`, `provenance`, `proof` |
+| `ledger.field_change.provenance` | `PRODUCT` | `application/ledger/provenance.py`; encrypted change-set result in S81/S87 | `product`, `provenance`, `proof` |
+| `ledger.transaction.batch_patch` | `PRODUCT` | `application/ledger/batch_commands.py`; atomic/best-effort result in S82/S87 | `product`, `composition`, `provenance`, `proof` |
+| `ledger.registry.iva` | `REGISTRY` | registry binding/resolution and calculation route; exact route contract in S06/S100 | `registry`, `proof`; nonzero M309/M322/M353 route proof open |
+| `ledger.registry.oss` | `REGISTRY` | registry binding/resolution and M369 route; exact route contract in S06/S100 | Preserve issued-invoice-catalogue distinction; proof bounded below |
+| `ledger.registry.renta_expense` | `REGISTRY` | registry binding/resolution and M100 route; exact route contract in S06/S100 | Preserve evidence and deduction-ratio requirements |
+| `ledger.registry.renta_income` | `REGISTRY` | registry binding/resolution and M100/M130/M131 routes; exact route contract in S06/S100 | `registry`, `proof`; M131 live path and M130 c06 hardcoded projection open |
+| `ledger.registry.m130_expense` | `REGISTRY` | registry binding/resolution and M130 c02 route; exact route contract in S06/S100 | `registry`, `proof`; explicit nonzero c02 route assertion open |
+| `ledger.registry.impatriado_income` | `REGISTRY` | registry binding/resolution and M151 route; exact route contract in S06/S100 | `registry`, `proof`; calculate-to-export proof and manual savings base open |
+| `ledger.registry.irnr_income` | `REGISTRY` | registry binding/resolution and M210 route; exact route contract in S06/S100 | Preserve explicit classification and mutual exclusion; proof bounded below |
+
+#### Evidence-coordinate register
+
+These coordinates bind the S03 claims to the current observation revision. They are publication locators, not contract `EvidenceCoordinateV1` objects yet; S08/S12 must assign row/axis roles and current subject snapshots before admission.
+
+| Coordinate | Locator | Subject digest | Claim boundary |
+| --- | --- | --- | --- |
+| `evidence.baseline.matrix_contract` | `dev/quality/clitui_ledger_capability_matrix.py:22` | `sha256:c2998c8ff958ae820b59fa7055a36d83117bb35282fe2679761032fab7a15a10` | Schema 3, eight axes, source kinds, gaps, controls, evidence currentness, and G0-G4 predicates |
+| `evidence.baseline.cli_command_graph` | `src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py:24` | `sha256:55f8d9d3980ed700abec7abf457dabec9640914db2e713618efdc6fc02d3b6ef` | Existing 78-endpoint command baseline only; exhaustive S04 ownership census is open |
+| `evidence.baseline.cli_authority` | `2026-09-04-clitui-ledger-reference`, CLI-to-backend disposition matrix | Bound by this document's CLI-maintained `body_hash` after publication | Initial authority families and candidate application homes |
+| `evidence.baseline.backend_behavior` | `2026-09-04-clitui-ledger-reference`, Direct backend behavior gate | Bound by this document's CLI-maintained `body_hash` after publication | Existing direct-proof boundaries and missing facades |
+| `evidence.baseline.missing_products` | `2026-09-04-clitui-ledger-reference`, Missing capability and reuse map | Bound by this document's CLI-maintained `body_hash` after publication | Explicit product/artifact/provenance gaps |
+| `evidence.baseline.registry_routes` | `src/cadrumo/domain/calculations/registry/bindings.py:926` | `sha256:957fca756cca97d606a42d34ec0b4d9fc074454a1b3d4bff08953e9408333252` | Seven family enrollment baseline; route-level S06 proof census is open |
+| `evidence.baseline.cli_boundary` | `2026-09-04-clitui-ledger-reference`, Valid CLI boundary | Bound by this document's CLI-maintained `body_hash` after publication | Allowed adapter concerns and forbidden business ownership |
+
+#### Gate summary
+
+| Gate | State at S03 | Blocking facts |
+| --- | --- | --- |
+| G0 denominator and ownership freeze | **OPEN** | S04-S08 complete census/adjudication, S09/S11 hold records, S12 row review, S13 reopening detector, and S14 digest-bound independent `ACCEPT` are outstanding |
+| G1 semantic authority recovery | **LOCKED by G0** | `AUTHORITY` rows retain CLI-owned or missing application authority; no cohort may claim closure before its backend behavior and adapter detector evidence exists |
+| G2 backend product completeness | **LOCKED by G0/G1** | Missing products, composition, artifacts, provenance, registry routes, and direct proof remain open |
+| G3 CLI clean break and completeness | **LOCKED by G0-G2** | CLI delegation, success/refusal behavior, and artifact proof are not complete across the admitted denominator |
+| G4 TUI admission and parity | **HELD and LOCKED by G0-G3** | No Ledger TUI implementation is authorized; component existence and installed reachability remain separate, and S09/S11 must record the hold before G0 can close |
+
+Any new endpoint, sub-operation, backend-only operation, missing product, registry route, artifact, or supported surface invalidates the corresponding current source report and reopens G0 plus all later gates. The detailed baseline sections below remain the single homes for changing counts and proof findings; this publication layer references them rather than restating their evidence.
 
 ### Live command denominator
 
