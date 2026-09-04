@@ -59,7 +59,14 @@ _PROFILE_ID = "operator"
 _MODELO = "347"
 _FILING_YEAR = 2024
 _PERIOD = "0A"
-_REVISION = "2008-2024"
+_REVISION = "2011-2024"
+"""The law-determined M347 revision for the 2024 annual period.
+
+Not a free choice: the CLI refuses a requested revision that is not the one
+the period-to-revision binding fixes, and it names the correct one in the
+refusal. This constant read ``2008-2024`` until that refusal started firing,
+which is the binding doing exactly what it exists to do.
+"""
 
 _READINESS_STEP = "modelo.readiness"
 _BLOCKING_STEP = "modelo.work.verify"

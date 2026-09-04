@@ -368,6 +368,15 @@ class HomeScreen(Screen[None]):
         if first is not None and not self._restore((actions, declarations, agenda)):
             self.set_focus(first)
             self._highlight(first.ordered_rows[0].key.value)
+        if first is None:
+            # Every zone is empty or refused, so the three tables are hidden and
+            # nothing on the page can take focus. Home is the destination an
+            # operator lands on first, and a keyboard user needs somewhere to
+            # arrive: the page itself takes focus so the zone states can be
+            # read and scrolled, and Escape still returns.
+            page = self.query_one("#home-page", ContentScroll)
+            page.can_focus = True
+            self.set_focus(page)
 
     def _remember(self, kind: HomeTargetKind, identity: str) -> str:
         self._targets[identity] = HomeTarget(kind=kind, identity=identity)
