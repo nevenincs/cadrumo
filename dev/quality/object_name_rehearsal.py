@@ -220,30 +220,40 @@ def _snapshot(repo_root: Path, paths: Sequence[str]) -> tuple[tuple[str, str | N
     return tuple(files)
 
 
-def _git_ignored_prefixes(repo_root: Path) -> tuple[str, ...]:
-    """Return the repo-relative paths and directory prefixes git ignores.
+def _git_ignored(repo_root: Path, candidates: Sequence[str]) -> frozenset[str]:
+    """Return the candidates the source repo's ignore rules match.
 
     ``_git_snapshot_paths`` enumerates the baseline with ``--exclude-standard``,
-    so an ignored path is never part of the "before" side of the comparison. The
-    "after" side is a raw filesystem walk of the copy, which has no ``.git`` of
-    its own and so cannot re-derive that. Any gate that writes an ignored file
-    while it runs -- a local index, a cache, a lock -- would otherwise surface as
-    an unreviewed change and refuse the rehearsal. Carrying the source repo's
-    ignore universe across keeps both sides of the comparison the same universe.
+    so an ignored path is never on the "before" side of the comparison. The
+    "after" side is a raw filesystem walk of a copy that has no ``.git`` of its
+    own, so it cannot re-derive that. A gate that writes an ignored file while it
+    runs -- a local index, a cache, a lock -- would otherwise surface as an
+    unreviewed change and refuse the rehearsal.
+
+    The rules are evaluated rather than the source tree's existing ignored files
+    enumerated: a path the gates create in the copy need not exist in the source
+    at all, which is exactly the case in a freshly created worktree. Only paths
+    absent from the baseline are ever offered here, so a tracked file can never
+    be filtered out of the comparison by an ignore rule.
     """
+    if not candidates:
+        return frozenset()
     try:
         result = subprocess.run(
-            ["git", "ls-files", "-z", "--others", "--ignored", "--exclude-standard", "--directory"],  # noqa: S607
+            ["git", "check-ignore", "--stdin", "--no-index", "-z"],  # noqa: S607
             cwd=repo_root,
-            check=True,
+            input="\0".join(candidates).encode(),
             capture_output=True,
+            check=False,
         )
-    except (OSError, subprocess.CalledProcessError) as exc:
-        raise ObjectNameRehearsalError("cannot enumerate ignored paths") from exc
-    return tuple(sorted(entry for entry in result.stdout.decode().split("\0") if entry))
+    except OSError as exc:
+        raise ObjectNameRehearsalError("cannot evaluate ignore rules") from exc
+    if result.returncode not in {0, 1}:
+        raise ObjectNameRehearsalError("cannot evaluate ignore rules")
+    return frozenset(entry for entry in result.stdout.decode().split("\0") if entry)
 
 
-def _temporary_paths(repo_root: Path, ignored: Sequence[str] = ()) -> tuple[str, ...]:
+def _temporary_paths(repo_root: Path) -> tuple[str, ...]:
     paths: list[str] = []
     for directory, directory_names, file_names in os.walk(repo_root, followlinks=False):
         owner = Path(directory)
@@ -264,8 +274,6 @@ def _temporary_paths(repo_root: Path, ignored: Sequence[str] = ()) -> tuple[str,
             relative = path.relative_to(repo_root).as_posix()
             if is_link_like(path):
                 raise ObjectNameRehearsalError(f"temporary command created a link-like path: {relative}")
-            if any(relative == entry or relative.startswith(entry) for entry in ignored):
-                continue
             paths.append(relative)
     return tuple(sorted(paths))
 
@@ -740,7 +748,10 @@ def rehearse_object_name_component(
         if finding_delta.after_count > finding_delta.before_count or finding_delta.introduced_signatures:
             raise ObjectNameRehearsalError("rehearsal introduces an enforced object-name finding")
 
-        after_paths = _temporary_paths(temporary_root, _git_ignored_prefixes(root))
+        walked_paths = _temporary_paths(temporary_root)
+        baseline_names = set(dict(copied_baseline_files))
+        ignored_new = _git_ignored(root, [path for path in walked_paths if path not in baseline_names])
+        after_paths = tuple(path for path in walked_paths if path not in ignored_new)
         after_files = _snapshot(temporary_root, after_paths)
         changed = tuple(
             sorted(

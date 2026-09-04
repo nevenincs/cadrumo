@@ -80,7 +80,7 @@ class _Frozen(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
 
-class AeatDomains(_Frozen):
+class AeatDomainSection(_Frozen):
     """AEAT and related government hostnames.
 
     Hostnames are registry data, not executable literals in live drivers.
@@ -102,7 +102,7 @@ class AeatDomains(_Frozen):
     boe: str = Field(min_length=1)
 
 
-class AeatSedePaths(_Frozen):
+class AeatSedePathSection(_Frozen):
     """Relative path templates against configured AEAT origins.
 
     These values are route fragments and templates only; consumers choose the
@@ -243,7 +243,7 @@ class AeatPre303Surface(_Frozen):
         return value
 
 
-class AeatHelpPages(_Frozen):
+class AeatHelpPageSection(_Frozen):
     """Static help/landing pages rooted under the sede origin."""
 
     csv_verification: str
@@ -274,7 +274,7 @@ class AeatNotificationsQuery(_Frozen):
     detail_view_action: str
 
 
-class AeatOracles(_Frozen):
+class AeatOracleSection(_Frozen):
     """Absolute URLs of AEAT parity oracles."""
 
     nif_iva_verification: str
@@ -318,7 +318,7 @@ class AeatLiveSafety(_Frozen):
         return value
 
 
-class AeatPortalPaths(_Frozen):
+class AeatPortalPathSection(_Frozen):
     """Centralized AEAT portal catalogue paths keyed by :class:`Portal` id.
 
     Portal entries resolve their route fragments from this registry so the
@@ -367,19 +367,19 @@ class AeatSection(_Frozen):
     …) entirely unaffected.
     """
 
-    domains: AeatDomains
-    sede_paths: AeatSedePaths
+    domains: AeatDomainSection
+    sede_paths: AeatSedePathSection
     clave_movil: AeatClaveMovilSurface
     clave_permanente: AeatClavePermanenteSurface
     # ANY-RETURN-RATIONALE-PRE303-RAW-STAGING:
     # Raw TOML parse staging slot; cached_property converts to typed
     # AeatPre303Surface boundary model.
     pre303_raw: dict[str, Any] = Field(default_factory=dict, alias="pre303")
-    help_pages: AeatHelpPages
+    help_pages: AeatHelpPageSection
     notifications_query: AeatNotificationsQuery
-    oracles: AeatOracles
+    oracles: AeatOracleSection
     live_safety: AeatLiveSafety
-    portal_paths: AeatPortalPaths
+    portal_paths: AeatPortalPathSection
 
     @cached_property
     def pre303(self) -> AeatPre303Surface:
@@ -408,7 +408,7 @@ class AeatSection(_Frozen):
             ) from exc
 
 
-class GoogleOAuthScopes(_Frozen):
+class GoogleOAuthScopeSection(_Frozen):
     """OAuth scope strings the Google integration requests."""
 
     openid: str
@@ -417,16 +417,16 @@ class GoogleOAuthScopes(_Frozen):
     spreadsheets: str
 
 
-class GoogleServices(_Frozen):
+class GoogleServiceSection(_Frozen):
     """Google-hosted service surfaces."""
 
-    oauth_scopes: GoogleOAuthScopes
+    oauth_scopes: GoogleOAuthScopeSection
 
 
 class OnlineServicesSection(_Frozen):
     """Aggregates non-AEAT online service constants."""
 
-    google: GoogleServices
+    google: GoogleServiceSection
 
 
 class ExternalConstants(_Frozen):
