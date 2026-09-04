@@ -5,50 +5,23 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:55f716e1a31db42ced230d36745d80cdb2b1c9c2f3b614314b3473e44f5d0a75'
+body_hash: 'sha256:d01f012bafb7fb0c39e34b1953bf5b97abff0c63932ee21621058bb53b90e8ea'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-reference]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace clitui-ledger with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
 # `clitui-ledger` audit: `S03 matrix publication review`
 
 ## Scope
 
-<!-- What was audited and why -->
+Review the S03 capability-matrix publication against the accepted ADR, approved plan, schema-3 matrix contract, S01/S02 proof, and current source locators. The review covers provisional-state honesty, all eight independent axes, all seven denominator streams, semantic-home coordinates, evidence currentness, gate blockers, sole-plan ownership, and the Ledger TUI hold.
 
 ## Findings
 
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
+### incorrect-plan-coordinates | high | Resolved superseded mutation and artifact targets
 
-       ### S03 matrix publication review | {level} | {summary}
-
-     followed by a paragraph carrying the detail. S03 matrix publication review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
+The initial S03 publication pointed review exchange, Google transport, recovery archive, evidence lifecycle, notes, field provenance, and batch patch rows at filenames and step numbers that do not exist in the approved plan. The publication now names the approved S78, S80, S82, S84-S91 targets and separately tracks manual-override, source-column normalization, and FX provenance. Independent re-review accepted the corrected revision with no remaining severity finding.
 
 ## Recommendations
 
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
+No open recommendation remains. Preserve the provisional/fail-closed state until S04-S14 replace baseline families with a complete, reviewed, digest-bound denominator and an exact acceptance attestation.
