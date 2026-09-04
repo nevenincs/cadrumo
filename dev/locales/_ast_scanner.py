@@ -64,7 +64,6 @@ from __future__ import annotations
 
 import ast
 import re
-import sys
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Final
@@ -73,6 +72,7 @@ from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.logging import get_logger
 
 from .._paths import UTF_8
+from ..quality.unread_inputs import report_unread
 
 _log = get_logger(__name__)
 _UTF_8: Final[str] = UTF_8
@@ -897,12 +897,11 @@ def _iter_parseable_python_modules(root: Path) -> Iterator[tuple[Path, ast.Modul
             skipped.append(f"{module}: does not parse")
             continue
         yield module, tree
-    if skipped:
-        sys.stderr.write(
-            f"locale ast scan: {len(skipped)} module(s) declaring locale keys could not be "
-            "read; the keys they declare are absent from this scan and would look unused "
-            "to a cleanup sweep: " + repr(skipped) + chr(10)
-        )
+    report_unread(
+        "locale ast scan",
+        "the keys they declare are absent from this scan and would look unused to a cleanup sweep",
+        skipped,
+    )
 
 
 def scan_source_tree(root: Path) -> set[str]:

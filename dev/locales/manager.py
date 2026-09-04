@@ -8,7 +8,6 @@ shared by the manager and parity tests.
 
 import json
 import re
-import sys
 from collections.abc import Hashable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum, auto
@@ -350,6 +349,7 @@ class LocaleManager:
         through a separate parity assertion that verifies at least one
         concrete locale key exists under each declared prefix.
         """
+        from ..quality.unread_inputs import report_unread
         from ._ast_scanner import scan_source_tree
         from ._fstring_registry import get_registered_keys
 
@@ -379,11 +379,11 @@ class LocaleManager:
         keys.update(scan_registry_keys())
         keys.update(scan_profile_schema_keys())
         keys.update(scan_modelo_schema_keys())
-        if unread:
-            sys.stderr.write(
-                f"locale key scan: {len(unread)} module(s) could not be read; any key they use is absent "
-                "from this set and would look unused: " + repr(unread) + chr(10)
-            )
+        report_unread(
+            "locale key scan",
+            "any key they use is absent from this set and would look unused",
+            unread,
+        )
         self._codebase_keys = frozenset(keys)
         return keys
 
