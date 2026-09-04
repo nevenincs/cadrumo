@@ -101,16 +101,39 @@ class BienInversionKind(StrEnum):
     MUEBLE = "mueble"
     INMUEBLE = "inmueble"
 
-    @property
-    def ventana_anos(self) -> int:
-        """Count of following calendar years in the art-107 regularisation window."""
+    def ventana_anos(self, acquisition_year: int) -> int:
+        """Count of following calendar years in the art-107 regularisation window.
+
+        Takes the acquisition year because the window length is fixed by the law
+        in force when the good was ACQUIRED, not by the year the regularisation
+        is computed in: a good bought in 2016 keeps its acquisition-year window
+        for the nine following years. The parameter is threaded now so the value
+        can be resolved from the registry without another signature change;
+        today it still comes from the module constant.
+
+        Args:
+            acquisition_year: Calendar year the good was acquired.
+
+        Returns:
+            The count of following years the art-107 window spans.
+        """
+        del acquisition_year
         if self is BienInversionKind.INMUEBLE:
             return _IVA_BIEN_INVERSION_INMUEBLE_VENTANA_ANOS
         return _IVA_BIEN_INVERSION_MUEBLE_VENTANA_ANOS
 
-    @property
-    def divisor(self) -> Decimal:
-        """Art-109 per-year regularisation divisor (5 mueble / 10 inmueble)."""
+    def divisor(self, acquisition_year: int) -> Decimal:
+        """Art-109 per-year regularisation divisor (5 mueble / 10 inmueble).
+
+        Takes the acquisition year for the same reason as :meth:`ventana_anos`.
+
+        Args:
+            acquisition_year: Calendar year the good was acquired.
+
+        Returns:
+            The art-109 per-year divisor.
+        """
+        del acquisition_year
         if self is BienInversionKind.INMUEBLE:
             return _IVA_BIEN_INVERSION_INMUEBLE_DIVISOR
         return _IVA_BIEN_INVERSION_MUEBLE_DIVISOR
@@ -219,7 +242,7 @@ class BienInversionIvaRecord(BaseModel):
         nueve años naturales siguientes"). The acquisition year itself is excluded:
         that is the year the original deduction was made, not a regularisation year.
         """
-        last_year = self.acquisition_year + self.kind.ventana_anos
+        last_year = self.acquisition_year + self.kind.ventana_anos(self.acquisition_year)
         return self.acquisition_year < regularization_year <= last_year
 
     def remaining_regularization_years(self, disposal_year: int) -> int:
@@ -231,7 +254,7 @@ class BienInversionIvaRecord(BaseModel):
         the acquisition year itself counts the full window (the deduction was never
         regularised, so every following window year remains to transcur).
         """
-        last_year = self.acquisition_year + self.kind.ventana_anos
+        last_year = self.acquisition_year + self.kind.ventana_anos(self.acquisition_year)
         first_pending_year = max(disposal_year, self.acquisition_year + 1)
         return max(0, last_year - first_pending_year + 1)
 
@@ -280,6 +303,7 @@ def compute_regularizacion_anual(
     prorrata_inicial_pct: Decimal,
     prorrata_anio_pct: Decimal,
     kind: BienInversionKind,
+    acquisition_year: int,
 ) -> RegularizacionAnualResult:
     """Compute the LIVA art-109 annual regularización for one capital good.
 
@@ -310,6 +334,9 @@ def compute_regularizacion_anual(
         prorrata_anio_pct: Definitive deduction percentage of the regularisation
             year (0-100).
         kind: :class:`BienInversionKind` selecting the divisor.
+        acquisition_year: Calendar year the good was acquired, which fixes the
+            applicable divisor: art-109 attaches at acquisition, not at the
+            year the regularisation is computed in.
 
     Returns:
         A :class:`RegularizacionAnualResult`.
@@ -325,7 +352,7 @@ def compute_regularizacion_anual(
             raise BienInversionValidationError(f"{label} must be between 0 and 100")
 
     diferencia_puntos = abs(prorrata_anio_pct - prorrata_inicial_pct)
-    divisor = kind.divisor
+    divisor = kind.divisor(acquisition_year)
     if diferencia_puntos <= _IVA_BIEN_INVERSION_REGULARIZACION_UMBRAL_PUNTOS:
         return RegularizacionAnualResult(
             aplica=False,
@@ -392,6 +419,7 @@ def compute_regularizacion_transmision(
     prorrata_inicial_pct: Decimal,
     anos_restantes: int,
     kind: BienInversionKind,
+    acquisition_year: int,
     regime: BienInversionDisposalRegime,
     cuota_devengada_entrega: Decimal | None = None,
 ) -> RegularizacionTransmisionResult:
@@ -437,6 +465,9 @@ def compute_regularizacion_transmision(
             Must be strictly positive (a disposal outside the window has nothing
             left to regularise and is a caller-level concern, not this function's).
         kind: :class:`BienInversionKind` selecting the divisor.
+        acquisition_year: Calendar year the good was acquired, which fixes the
+            applicable divisor: art-109 attaches at acquisition, not at the
+            year the regularisation is computed in.
         regime: :class:`BienInversionDisposalRegime` selecting regla 1ª (100%
             imputation, capped) or regla 2ª (0% imputation, uncapped).
         cuota_devengada_entrega: The cuota devengada on the disposal itself,
@@ -461,7 +492,7 @@ def compute_regularizacion_transmision(
         raise BienInversionValidationError("cuota_devengada_entrega must not be negative")
 
     prorrata_imputada_pct = HUNDRED if regime is BienInversionDisposalRegime.SUJETA_NO_EXENTA else Decimal("0")
-    divisor = kind.divisor
+    divisor = kind.divisor(acquisition_year)
     deduccion_efectuada = cuota_soportada * prorrata_inicial_pct / HUNDRED
     deduccion_imputada = cuota_soportada * prorrata_imputada_pct / HUNDRED
     importe_sin_limite = _quantize((deduccion_efectuada - deduccion_imputada) * anos_restantes / divisor)
@@ -712,6 +743,7 @@ def compute_registro_regularizacion(
             prorrata_inicial_pct=record.prorrata_inicial_pct,
             prorrata_anio_pct=pct,
             kind=record.kind,
+            acquisition_year=record.acquisition_year,
         )
         if result.aplica:
             computed_count += 1
@@ -838,6 +870,7 @@ def compute_registro_transmisiones(
             prorrata_inicial_pct=record.prorrata_inicial_pct,
             anos_restantes=record.remaining_regularization_years(disposal_year),
             kind=record.kind,
+            acquisition_year=record.acquisition_year,
             regime=disposal.regime,
             cuota_devengada_entrega=cap_by_identifier.get(record.identifier),
         )

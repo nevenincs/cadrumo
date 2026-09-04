@@ -13,6 +13,7 @@ gates that actually run jscpd over the tree live in ``test_duplication_scan``.
 from __future__ import annotations
 
 import ast
+import pathlib
 import shutil
 import subprocess
 from collections import Counter
@@ -372,3 +373,49 @@ def test_an_unavailable_scan_cannot_be_read_as_full_coverage() -> None:
         "an unavailable scan trivially reports full coverage; the live gate must "
         "reject the outcome before trusting this read"
     )
+
+
+def test_the_corpus_refuses_a_module_it_cannot_parse(tmp_path: pathlib.Path) -> None:
+    """The corpus every detector in that module reads.
+
+    A silently skipped module hid its duplicates from all of them at once, and
+    nothing downstream reports a corpus size, so a short corpus and a clean one
+    looked identical. Measured against the shipped tree there are 2103 source
+    files and none unparsable, which is why the defect is proven here on a
+    constructed one.
+    """
+    from ..semantic_duplication import _load_modules
+
+    package = tmp_path / "cadrumo"
+    package.mkdir()
+    (package / "sound.py").write_text("VALUE = 1" + chr(10), encoding="utf-8")
+    (package / "broken.py").write_text("def (:" + chr(10), encoding="utf-8")
+
+    with pytest.raises(SystemExit, match="could not be parsed"):
+        _load_modules(package)
+
+
+def test_an_empty_corpus_refuses_rather_than_reporting_clean(tmp_path: pathlib.Path) -> None:
+    """Zero modules is the answer a perfectly deduplicated tree gives.
+
+    Every detector iterates this list, so an empty one makes all of them report
+    no findings while having compared nothing.
+    """
+    from ..semantic_duplication import _load_modules
+
+    empty = tmp_path / "cadrumo"
+    empty.mkdir()
+
+    with pytest.raises(SystemExit, match="no production modules"):
+        _load_modules(empty)
+
+
+def test_a_readable_corpus_still_loads(tmp_path: pathlib.Path) -> None:
+    """The success path, so the refusals are not satisfied by refusing everything."""
+    from ..semantic_duplication import _load_modules
+
+    package = tmp_path / "cadrumo"
+    package.mkdir()
+    (package / "sound.py").write_text("VALUE = 1" + chr(10), encoding="utf-8")
+
+    assert [module.relative for module in _load_modules(package)] == ["sound.py"]

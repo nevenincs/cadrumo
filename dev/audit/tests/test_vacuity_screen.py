@@ -69,7 +69,7 @@ def _track_in_a_scratch_repository(root: Path) -> None:
 
 
 def _flagged_names(root: Path) -> set[str]:
-    scanned, flagged = screen(root)
+    scanned, flagged, _ = screen(root)
     assert scanned > 0, "the screen walked no modules, so its verdict would be meaningless"
     return {name for _, name, _ in flagged}
 
@@ -319,3 +319,55 @@ def test_a_guard_in_an_uncalled_helper_does_not_clear_the_hit(tmp_path: Path) ->
     )
 
     assert _flagged_names(tmp_path) == {"test_no_offenders"}
+
+
+def test_a_module_that_cannot_be_parsed_is_not_counted_as_screened(tmp_path: Path) -> None:
+    """The defect: an unreadable module inflated the clean denominator.
+
+    ``scanned`` is the denominator of the vacuity proportion, so a file the
+    screen could not read at all was counted as evidence of health - the same
+    inflation this module's header warns about for an untracked tree, arriving
+    through a different door.
+    """
+    _write_screened_tree(
+        tmp_path,
+        "test_readable.py",
+        """
+        def test_scans_the_catalogue():
+            for row in CATALOGUE:
+                assert row
+        """,
+    )
+    (tmp_path / "src" / "cadrumo" / "tests" / "test_broken.py").write_bytes(b"def (:" + bytes([10]))
+    _track_in_a_scratch_repository(tmp_path)
+
+    scanned, flagged, unreadable = screen(tmp_path)
+
+    assert unreadable == ["src/cadrumo/tests/test_broken.py"]
+    assert "src/cadrumo/tests/test_broken.py" not in {path for path, _, _ in flagged}
+    assert scanned == 1, "the unreadable module was counted among the screened ones"
+
+
+def test_the_walk_continues_past_an_unreadable_module(tmp_path: Path) -> None:
+    """A screen that abandoned the walk at the first bad file would report
+    every module after it as clean by never reaching it.
+
+    The broken module sorts first, so a walk that stopped there would screen
+    nothing at all.
+    """
+    _write_screened_tree(
+        tmp_path,
+        "test_zulu_readable.py",
+        """
+        def test_scans_the_catalogue():
+            for row in CATALOGUE:
+                assert row
+        """,
+    )
+    (tmp_path / "src" / "cadrumo" / "tests" / "test_aaa_broken.py").write_bytes(b"def (:" + bytes([10]))
+    _track_in_a_scratch_repository(tmp_path)
+
+    scanned, _, unreadable = screen(tmp_path)
+
+    assert unreadable
+    assert scanned == 1, "the readable module after the broken one was never screened"

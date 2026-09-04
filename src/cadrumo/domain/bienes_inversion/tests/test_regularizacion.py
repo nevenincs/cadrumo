@@ -38,10 +38,10 @@ def test_corpus_constants_match_verbatim_liva_text() -> None:
     assert Decimal("10") == IVA_BIEN_INVERSION_REGULARIZACION_UMBRAL_PUNTOS
     assert Decimal("5") == IVA_BIEN_INVERSION_MUEBLE_DIVISOR
     assert Decimal("10") == IVA_BIEN_INVERSION_INMUEBLE_DIVISOR
-    assert BienInversionKind.MUEBLE.divisor == Decimal("5")
-    assert BienInversionKind.INMUEBLE.divisor == Decimal("10")
-    assert BienInversionKind.MUEBLE.ventana_anos == 4
-    assert BienInversionKind.INMUEBLE.ventana_anos == 9
+    assert BienInversionKind.MUEBLE.divisor(2024) == Decimal("5")
+    assert BienInversionKind.INMUEBLE.divisor(2024) == Decimal("10")
+    assert BienInversionKind.MUEBLE.ventana_anos(2024) == 4
+    assert BienInversionKind.INMUEBLE.ventana_anos(2024) == 9
 
 
 def test_movable_good_prorrata_drop_yields_ingreso_complementario() -> None:
@@ -60,6 +60,7 @@ def test_movable_good_prorrata_drop_yields_ingreso_complementario() -> None:
         prorrata_inicial_pct=Decimal("70"),
         prorrata_anio_pct=Decimal("50"),
         kind=BienInversionKind.MUEBLE,
+        acquisition_year=2024,
     )
     assert result.aplica is True
     assert result.diferencia_puntos == Decimal("20")
@@ -78,6 +79,7 @@ def test_real_estate_good_uses_the_ten_divisor() -> None:
         prorrata_inicial_pct=Decimal("70"),
         prorrata_anio_pct=Decimal("50"),
         kind=BienInversionKind.INMUEBLE,
+        acquisition_year=2024,
     )
     assert result.aplica is True
     assert result.divisor == Decimal("10")
@@ -96,6 +98,7 @@ def test_prorrata_rise_yields_deduccion_complementaria() -> None:
         prorrata_inicial_pct=Decimal("50"),
         prorrata_anio_pct=Decimal("75"),
         kind=BienInversionKind.MUEBLE,
+        acquisition_year=2024,
     )
     assert result.aplica is True
     assert result.importe == Decimal("-630.00")
@@ -109,6 +112,7 @@ def test_exactly_ten_points_does_not_regularise() -> None:
         prorrata_inicial_pct=Decimal("60"),
         prorrata_anio_pct=Decimal("50"),
         kind=BienInversionKind.MUEBLE,
+        acquisition_year=2024,
     )
     assert result.diferencia_puntos == Decimal("10")
     assert result.aplica is False
@@ -123,6 +127,7 @@ def test_just_over_ten_points_regularises() -> None:
         prorrata_inicial_pct=Decimal("60"),
         prorrata_anio_pct=Decimal("49.99"),
         kind=BienInversionKind.MUEBLE,
+        acquisition_year=2024,
     )
     assert result.diferencia_puntos == Decimal("10.01")
     assert result.aplica is True
@@ -136,6 +141,7 @@ def test_non_positive_cuota_is_refused() -> None:
             prorrata_inicial_pct=Decimal("70"),
             prorrata_anio_pct=Decimal("50"),
             kind=BienInversionKind.MUEBLE,
+            acquisition_year=2024,
         )
 
 
@@ -147,4 +153,5 @@ def test_out_of_range_percentage_is_refused() -> None:
             prorrata_inicial_pct=Decimal("70"),
             prorrata_anio_pct=Decimal("120"),
             kind=BienInversionKind.MUEBLE,
+            acquisition_year=2024,
         )

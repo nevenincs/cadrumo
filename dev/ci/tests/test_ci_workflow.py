@@ -85,7 +85,12 @@ def test_ci_workflow_runs_canonical_cadrumo_commands_and_paths() -> None:
     """Per-push CI has independent static, unit, and harness verdicts."""
     document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
     assert document["name"] == "Cadrumo CI"
-    assert set(document["jobs"]) == {"cadrumo-static", "cadrumo-unit", "cadrumo-test-harness"}
+    assert set(document["jobs"]) == {
+        "cadrumo-workflow-lint",
+        "cadrumo-static",
+        "cadrumo-unit",
+        "cadrumo-test-harness",
+    }
 
     static = document["jobs"]["cadrumo-static"]
     static_commands = "\n".join(str(step.get("run", "")) for step in static["steps"])
@@ -109,6 +114,35 @@ def test_ci_workflow_runs_canonical_cadrumo_commands_and_paths() -> None:
     # locally) so the marker expression and the durations/worker overrides
     # have one declaration site; the recipe's substance is pinned below.
     assert "CADRUMO_PYTEST_WORKERS=8 just test-unit 50" in unit_commands
+
+
+def test_workflow_lint_is_a_standalone_blocking_verdict_over_every_workflow() -> None:
+    """The static workflow check is a gate, not a decoration.
+
+    Its subject is the failure class that produces no failure: a `runs-on:`
+    label no registered runner carries does not error at dispatch, it queues
+    unbounded and silently. A job that lints one file, tolerates its own
+    failure, or runs an archive it never verified would report the same green
+    tick while proving none of that, so each is asserted separately.
+
+    Ordering is load-bearing in the same way the checksum is: verifying an
+    archive after executing it verifies nothing.
+    """
+    job = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))["jobs"]["cadrumo-workflow-lint"]
+    assert "needs" not in job, "an independent verdict must not be gated behind another job"
+    assert job.get("continue-on-error") is not True
+    assert job["timeout-minutes"] <= 15
+
+    executed = "\n".join(
+        line
+        for step in job["steps"]
+        if "run" in step
+        for line in str(step["run"]).splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    )
+    assert ".github/workflows/*.yml" in executed, "the linter must read every workflow, not a chosen few"
+    verification = executed.index("sha256sum --check --strict")
+    assert verification < executed.index("-no-color"), "the archive is executed before its digest is checked"
 
 
 def test_harness_recipe_runs_every_real_proof_outer_serially_and_non_vacuously() -> None:
@@ -192,25 +226,34 @@ def test_harness_member_preflight_rejects_empty_collection_even_when_another_mem
         members[0],
     ]
 
+    # The fixture members live outside the repository, and pytest builds its
+    # collection tree from the ancestors of the paths it is given. Without an
+    # explicit root it therefore walks up to the drive root and stats every
+    # entry on the way -- which aborts collection outright on a host whose
+    # profile directory holds an untraversable mount point (a cloud-sync
+    # placeholder, a disconnected network drive), before either member is read.
+    # Naming the root bounds that walk to the fixture directory.
+    invocation = [*command[:-1], "--rootdir", str(tmp_path)]
+
     aggregate = run_command(
-        [*command[:-1], str(populated_member), str(empty_member)],
+        [*invocation, str(populated_member), str(empty_member)],
         cwd=_REPOSITORY_ROOT,
         timeout_seconds=30,
     )
     assert aggregate.returncode == 0, (
         "the populated control must make aggregate collection non-empty\n"
-        f"command: {shlex.join([*command[:-1], str(populated_member), str(empty_member)])}\n"
+        f"command: {shlex.join([*invocation, str(populated_member), str(empty_member)])}\n"
         f"stdout:\n{aggregate.stdout}\nstderr:\n{aggregate.stderr}"
     )
 
     empty_preflight = run_command(
-        [*command[:-1], str(empty_member)],
+        [*invocation, str(empty_member)],
         cwd=_REPOSITORY_ROOT,
         timeout_seconds=30,
     )
     assert empty_preflight.returncode == 5, (
         "the per-member collect preflight must preserve pytest exit 5 for an empty member\n"
-        f"command: {shlex.join([*command[:-1], str(empty_member)])}\n"
+        f"command: {shlex.join([*invocation, str(empty_member)])}\n"
         f"stdout:\n{empty_preflight.stdout}\nstderr:\n{empty_preflight.stderr}"
     )
 
@@ -361,6 +404,7 @@ def test_ci_per_push_jobs_carry_the_speed_budget_ceilings() -> None:
     live in the dispatch-only full lane.
     """
     document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
+    assert document["jobs"]["cadrumo-workflow-lint"]["timeout-minutes"] <= 15
     assert document["jobs"]["cadrumo-static"]["timeout-minutes"] <= 25
     assert document["jobs"]["cadrumo-unit"]["timeout-minutes"] <= 40
     commands = "\n".join(str(step.get("run", "")) for job in document["jobs"].values() for step in job["steps"])

@@ -59,6 +59,7 @@ def test_regla_primera_sujeta_no_exenta_imputes_full_usage_for_remaining_years()
         prorrata_inicial_pct=Decimal("60"),
         anos_restantes=3,
         kind=BienInversionKind.MUEBLE,
+        acquisition_year=2024,
         regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA,
     )
     assert result.anos_restantes == 3
@@ -82,6 +83,7 @@ def test_regla_primera_caps_additional_deduction_at_cuota_devengada() -> None:
         prorrata_inicial_pct=Decimal("60"),
         anos_restantes=3,
         kind=BienInversionKind.MUEBLE,
+        acquisition_year=2024,
         regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA,
         cuota_devengada_entrega=Decimal("1500.00"),
     )
@@ -98,6 +100,7 @@ def test_regla_primera_cap_does_not_bind_when_devengada_exceeds_quotient() -> No
         prorrata_inicial_pct=Decimal("60"),
         anos_restantes=3,
         kind=BienInversionKind.MUEBLE,
+        acquisition_year=2024,
         regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA,
         cuota_devengada_entrega=Decimal("5000.00"),
     )
@@ -122,6 +125,7 @@ def test_regla_segunda_exenta_o_no_sujeta_imputes_zero_usage_for_remaining_years
         prorrata_inicial_pct=Decimal("65"),
         anos_restantes=4,
         kind=BienInversionKind.INMUEBLE,
+        acquisition_year=2024,
         regime=BienInversionDisposalRegime.EXENTA_O_NO_SUJETA,
     )
     assert result.anos_restantes == 4
@@ -139,6 +143,7 @@ def test_regla_segunda_cap_never_applies_even_when_devengada_supplied() -> None:
         prorrata_inicial_pct=Decimal("65"),
         anos_restantes=4,
         kind=BienInversionKind.INMUEBLE,
+        acquisition_year=2024,
         regime=BienInversionDisposalRegime.EXENTA_O_NO_SUJETA,
         cuota_devengada_entrega=Decimal("1.00"),
     )
@@ -159,6 +164,7 @@ def test_no_diferencia_de_puntos_gate_a_disposal_always_regularises() -> None:
         prorrata_inicial_pct=Decimal("90"),
         anos_restantes=1,
         kind=BienInversionKind.MUEBLE,
+        acquisition_year=2024,
         regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA,
     )
     # efectuada = 4500,00; imputada = 5000,00; diff = -500,00; x1 / 5 = -100,00
@@ -174,6 +180,7 @@ def test_non_positive_cuota_is_refused() -> None:
             prorrata_inicial_pct=Decimal("70"),
             anos_restantes=1,
             kind=BienInversionKind.MUEBLE,
+            acquisition_year=2024,
             regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA,
         )
 
@@ -186,6 +193,7 @@ def test_out_of_range_percentage_is_refused() -> None:
             prorrata_inicial_pct=Decimal("120"),
             anos_restantes=1,
             kind=BienInversionKind.MUEBLE,
+            acquisition_year=2024,
             regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA,
         )
 
@@ -198,6 +206,7 @@ def test_non_positive_anos_restantes_is_refused() -> None:
             prorrata_inicial_pct=Decimal("70"),
             anos_restantes=0,
             kind=BienInversionKind.MUEBLE,
+            acquisition_year=2024,
             regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA,
         )
 
@@ -210,6 +219,7 @@ def test_negative_cuota_devengada_entrega_is_refused() -> None:
             prorrata_inicial_pct=Decimal("70"),
             anos_restantes=1,
             kind=BienInversionKind.MUEBLE,
+            acquisition_year=2024,
             regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA,
             cuota_devengada_entrega=Decimal("-1"),
         )

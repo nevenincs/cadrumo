@@ -132,14 +132,28 @@ def _closed_enum_names(modules: Sequence[Module]) -> frozenset[str]:
 
 
 def _load_modules(root: Path) -> list[Module]:
-    """Parse every production module once; every detector reads these."""
+    """Parse every production module once; every detector reads these.
+
+    A module that does not parse is REFUSED rather than dropped. This list is
+    the corpus for every detector in this file, so a silently skipped module
+    hides its duplicates from all of them at once - and nothing downstream
+    reports a corpus size, so a short corpus and a clean one look identical.
+
+    Measured against the shipped tree: 2103 source files, none unparsable, so
+    refusing costs nothing today and says so immediately if that changes.
+    """
     modules: list[Module] = []
     for path in _iter_source_files(root):
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"))
-        except (SyntaxError, UnicodeDecodeError):
-            continue
+        except (SyntaxError, UnicodeDecodeError) as error:
+            raise SystemExit(
+                f"{path} could not be parsed, so the duplication corpus would be short "
+                f"by exactly the module nobody can analyse: {error}"
+            ) from error
         modules.append(Module(path=path, relative=path.relative_to(root).as_posix(), tree=tree))
+    if not modules:
+        raise SystemExit(f"no production modules found under {root}; every detector would report clean")
     return modules
 
 

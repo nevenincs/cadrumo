@@ -34,6 +34,7 @@ from ..runner_queue_watchdog import (
     occupied_label_keys,
     parse_jobs,
 )
+from ..workflow_runner_targets import is_unresolved, runner_targets
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -260,19 +261,21 @@ def _workflow_documents() -> list[tuple[Path, dict[str, Any]]]:
 
 
 def _off_watchdog_lane_jobs(document: dict[str, Any]) -> list[str]:
-    """Jobs targeting a label set the watchdog's own lane does not cover."""
+    """Jobs targeting a label set the watchdog's own lane does not cover.
+
+    Targets come from the shared runner-target authority, so a matrix computed
+    at runtime is followed to the step that emits its labels instead of raising
+    on a `strategy.matrix` that is a string. A reference that authority cannot
+    follow counts as off-lane: an unknown lane is the case this gate exists for,
+    and a job whose labels nobody can read is precisely one that could queue
+    unserved without anyone noticing.
+    """
     off_lane: list[str] = []
     for job_name, job in (document.get("jobs") or {}).items():
-        runs_on = job.get("runs-on")
-        targets = [runs_on] if isinstance(runs_on, list) else []
-        if isinstance(runs_on, str) and "matrix" in runs_on:
-            matrix = (job.get("strategy") or {}).get("matrix") or {}
-            key = runs_on.split("matrix.")[1].split("}")[0].strip()
-            targets = [row[key] for row in matrix.get("include") or [] if isinstance(row, dict) and key in row]
-            if isinstance(matrix.get(key), list):
-                targets += [target for target in matrix[key] if isinstance(target, list)]
-        for target in targets:
-            if isinstance(target, list) and tuple(sorted(target)) != _WATCHDOG_LABELS:
+        for target in runner_targets(job, document):
+            unknown_lane = is_unresolved(target)
+            other_lane = isinstance(target, list) and tuple(sorted(target)) != _WATCHDOG_LABELS
+            if unknown_lane or other_lane:
                 off_lane.append(job_name)
                 break
     return off_lane
@@ -311,6 +314,64 @@ def test_the_gate_refuses_a_new_unwatched_lane(tmp_path: Path) -> None:
     document = yaml.safe_load((tmp_path / "unwatched.yml").read_text(encoding="utf-8"))
     assert _off_watchdog_lane_jobs(document) == ["lonely-windows"]
     assert _WATCHDOG_JOB_ID not in (document.get("jobs") or {})
+
+
+def _runtime_matrix_document(emitted_labels: str) -> dict[str, Any]:
+    """A job whose lane is decided by another job's output at run time."""
+    return yaml.safe_load(
+        "name: Cadrumo Runtime\n"
+        "on: workflow_dispatch\n"
+        "jobs:\n"
+        "  inventory:\n"
+        "    runs-on: [self-hosted, Linux, X64]\n"
+        "    outputs:\n"
+        "      matrix: ${{ steps.emit.outputs.matrix }}\n"
+        "    steps:\n"
+        "      - name: Emit\n"
+        "        id: emit\n"
+        "        run: |\n"
+        f"          emit --targets {emitted_labels}\n"
+        "  fanned:\n"
+        "    needs: inventory\n"
+        "    strategy:\n"
+        "      matrix: ${{ fromJSON(needs.inventory.outputs.matrix) }}\n"
+        "    runs-on: ${{ matrix.os }}\n"
+        "    steps: []\n",
+    )
+
+
+def test_a_runtime_matrix_on_hosted_images_needs_no_watchdog() -> None:
+    """A hosted lane cannot queue behind this fleet, so it is not off-lane.
+
+    The positive control for the refusal below. A reader that treated every
+    runtime matrix as unknown would demand a watchdog in the publication
+    workflow, which schedules nothing on the fleet at all -- and a demand that
+    is always made is not a signal.
+    """
+    document = _runtime_matrix_document('"ubuntu-latest" "macos-latest" "windows-latest"')
+
+    assert runner_targets(document["jobs"]["fanned"], document) == [
+        "ubuntu-latest",
+        "macos-latest",
+        "windows-latest",
+    ]
+    assert _off_watchdog_lane_jobs(document) == []
+
+
+def test_a_lane_whose_labels_cannot_be_read_counts_as_off_lane() -> None:
+    """Fail closed: an unreadable lane is watched, not assumed to be safe.
+
+    This is the shape the previous reader raised on, and raising is how the
+    question went unasked. Now it is asked and answered conservatively, so a
+    lane nobody can classify still carries the instrument that would notice it
+    queueing forever.
+    """
+    document = _runtime_matrix_document("--from-file targets.json")
+
+    targets = runner_targets(document["jobs"]["fanned"], document)
+
+    assert [target for target in targets if is_unresolved(target)] == targets
+    assert _off_watchdog_lane_jobs(document) == ["fanned"]
 
 
 def test_every_watchdog_job_invokes_the_shared_module() -> None:

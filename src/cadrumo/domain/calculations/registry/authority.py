@@ -88,7 +88,6 @@ def collect_registry_identity_fingerprints(resolved_root: Path) -> FingerprintTu
 
 _SnapshotKey = tuple[str, int, str, date | None, str | None, RegistryAuthorityGrade]
 _DeadlineWindow = tuple[str, ModeloRevision, DeadlineWindowDefinition]
-_RegistryFingerprints = tuple[tuple[str, int, int, str], ...]
 _SourceEvidenceFingerprints = tuple[tuple[str, int, int], ...]
 
 

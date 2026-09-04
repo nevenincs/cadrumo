@@ -370,6 +370,26 @@ def _git_show(revision: str, path: str) -> str:
     return raw.decode(_UTF_8)
 
 
+def _parse_module(revision: str, module: str) -> ast.Module:
+    """Parse one module at ``revision``, refusing rather than skipping it.
+
+    Both censuses used to swallow a SyntaxError and continue. A module the
+    census cannot read contributes no sites, so the corpus silently shrank by
+    exactly the file nobody could analyse - and this is the census that finds
+    code writing to the tree, where a missing module is a missing writer.
+
+    Measured at HEAD: 2117 production and 3722 test modules, none unparsable.
+    Refusing is therefore safe today and tells an operator immediately if that
+    ever stops being true, which a silent skip never would.
+    """
+    try:
+        return ast.parse(_git_show(revision, module))
+    except SyntaxError as error:
+        raise SystemExit(
+            f"{module} does not parse at {revision}, so the census cannot speak about it: {error}"
+        ) from error
+
+
 def production_modules(revision: str) -> list[str]:
     """Return every tracked production module at ``revision``, tests excluded."""
     listing = subprocess.run(  # noqa: S603
@@ -743,10 +763,7 @@ def vocabulary_literal_sites(revision: str, *, scope: str = "production") -> lis
     vocabulary = _taxonomy_subpath_tokens()
     sites: list[VocabularySite] = []
     for module in module_lister(revision):
-        try:
-            tree = ast.parse(_git_show(revision, module))
-        except SyntaxError:
-            continue
+        tree = _parse_module(revision, module)
         module_params = {
             argument.arg
             for node in ast.walk(tree)
@@ -810,10 +827,7 @@ def census(revision: str, *, scope: str = "production") -> list[WriteSite]:
     module_lister = production_modules if scope == "production" else test_modules
     sites: list[WriteSite] = []
     for module in module_lister(revision):
-        try:
-            tree = ast.parse(_git_show(revision, module))
-        except SyntaxError:
-            continue
+        tree = _parse_module(revision, module)
         module_params = {
             argument.arg
             for node in ast.walk(tree)
