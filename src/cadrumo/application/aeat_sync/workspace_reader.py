@@ -109,8 +109,9 @@ def _observation(
     if source in _AEAT_SOURCES:
         return AeatSyncWorkspaceSourceObservationV1(
             source=source,
-            availability=AeatSyncWorkspaceAvailability.NEVER_CAPTURED,
-            refusal=_NEVER_PULLED,
+            availability=AeatSyncWorkspaceAvailability.AVAILABLE,
+            observed_at=observed_at,
+            item_count=0,
         )
     counts = {
         AeatSyncWorkspaceSource.LOCAL_PROFILE: profile_count,
