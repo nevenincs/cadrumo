@@ -80,9 +80,13 @@ def test_unratified_candidates_are_absent_from_shipped_query_vocabulary() -> Non
     queue = load_synonym_ratification_queue()
     shipped = {(query.concept_id, query.query.casefold()) for query in enumerate_query_vocabulary()}
 
-    for entry in queue.entries:
-        if entry.status is RatificationStatus.RATIFIED:
-            continue
+    unratified = [entry for entry in queue.entries if entry.status is not RatificationStatus.RATIFIED]
+    assert unratified, (
+        "the queue holds no unratified candidate, so the exclusion below would be "
+        "asserted zero times and this test would report clean having checked nothing"
+    )
+
+    for entry in unratified:
         assert (entry.concept_id, entry.candidate.casefold()) not in shipped
 
 
