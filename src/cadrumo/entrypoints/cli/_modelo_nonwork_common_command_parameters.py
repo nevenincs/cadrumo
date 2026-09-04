@@ -5,6 +5,9 @@ from __future__ import annotations
 from typing import Final
 
 from .command_spec import (
+    FLAG_VALUE,
+    TEXT_VALUE,
+    WHOLE_NUMBER_VALUE,
     ArgumentSpec,
     DeferredTarget,
     OptionSpec,
@@ -13,10 +16,6 @@ from .command_spec import (
     TranslationKey,
     ValueContract,
 )
-
-_TEXT_VALUE: Final[ValueContract] = ValueContract(DeferredTarget("builtins", "str"))
-_WHOLE_NUMBER_VALUE: Final[ValueContract] = ValueContract(DeferredTarget("builtins", "int"))
-_FLAG_VALUE: Final[ValueContract] = ValueContract(DeferredTarget("builtins", "bool"))
 
 
 def _optional_text_option(name: str, declarations: tuple[str, ...], help_key: str) -> OptionSpec:
@@ -33,7 +32,7 @@ def _optional_text_option(name: str, declarations: tuple[str, ...], help_key: st
     return OptionSpec(
         name=name,
         declarations=declarations,
-        value=_TEXT_VALUE,
+        value=TEXT_VALUE,
         default=ParameterDefault.value(None),
         help_key=TranslationKey(help_key),
         multiple=False,
@@ -57,7 +56,7 @@ def _required_text_option(name: str, declarations: tuple[str, ...], help_key: st
     return OptionSpec(
         name=name,
         declarations=declarations,
-        value=_TEXT_VALUE,
+        value=TEXT_VALUE,
         default=ParameterDefault.required(),
         help_key=TranslationKey(help_key),
         multiple=False,
@@ -81,7 +80,7 @@ def _optional_whole_number_option(name: str, declarations: tuple[str, ...], help
     return OptionSpec(
         name=name,
         declarations=declarations,
-        value=_WHOLE_NUMBER_VALUE,
+        value=WHOLE_NUMBER_VALUE,
         default=ParameterDefault.value(None),
         help_key=TranslationKey(help_key),
         multiple=False,
@@ -105,7 +104,7 @@ def _required_whole_number_option(name: str, declarations: tuple[str, ...], help
     return OptionSpec(
         name=name,
         declarations=declarations,
-        value=_WHOLE_NUMBER_VALUE,
+        value=WHOLE_NUMBER_VALUE,
         default=ParameterDefault.required(),
         help_key=TranslationKey(help_key),
         multiple=False,
@@ -129,7 +128,7 @@ def _repeatable_text_option(name: str, declarations: tuple[str, ...], help_key: 
     return OptionSpec(
         name=name,
         declarations=declarations,
-        value=_TEXT_VALUE,
+        value=TEXT_VALUE,
         default=ParameterDefault.value(()),
         help_key=TranslationKey(help_key),
         multiple=True,
@@ -157,7 +156,7 @@ def _boolean_flag_option(name: str, declarations: tuple[str, ...], help_key: str
     return OptionSpec(
         name=name,
         declarations=declarations,
-        value=_FLAG_VALUE,
+        value=FLAG_VALUE,
         default=ParameterDefault.value(False),
         help_key=TranslationKey(help_key),
         multiple=False,
@@ -179,7 +178,7 @@ def _required_text_argument(name: str, help_key: str) -> ArgumentSpec:
     """
     return ArgumentSpec(
         name=name,
-        value=_TEXT_VALUE,
+        value=TEXT_VALUE,
         default=ParameterDefault.required(),
         help_key=TranslationKey(help_key),
     )
@@ -197,7 +196,7 @@ def _optional_text_argument(name: str, help_key: str) -> ArgumentSpec:
     """
     return ArgumentSpec(
         name=name,
-        value=_TEXT_VALUE,
+        value=TEXT_VALUE,
         default=ParameterDefault.value(None),
         help_key=TranslationKey(help_key),
     )

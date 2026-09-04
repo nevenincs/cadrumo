@@ -6,6 +6,9 @@ from typing import Final
 
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ..command_spec import (
+    FLAG_VALUE,
+    TEXT_VALUE,
+    WHOLE_NUMBER_VALUE,
     ArgumentSpec,
     CommandNodeKind,
     CommandSpec,
@@ -44,10 +47,7 @@ from ._spec_policies import (
     STATE_FREE,
 )
 
-_BOOL = ValueContract(DeferredTarget("builtins", "bool"))
-_INT = ValueContract(DeferredTarget("builtins", "int"))
 _PATH = ValueContract(DeferredTarget("pathlib", "Path"))
-_STR = ValueContract(DeferredTarget("builtins", "str"))
 _LANG = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
 _CAPABILITY = ValueContract(DeferredTarget("cadrumo.core.capabilities", "ServiceCapability"))
 _TOGGLE = ValueContract(
@@ -256,25 +256,25 @@ def _wizard_option(token: str) -> OptionSpec:
         return _option(
             name,
             (f"--{token}", f"--no-{token}"),
-            _BOOL,
+            FLAG_VALUE,
             help_key,
             flag=True,
         )
     if token in _WIZARD_CHECKBOX_FIELDS:
-        return _option(name, (f"--{token}",), _STR, help_key, default=(), multiple=True)
+        return _option(name, (f"--{token}",), TEXT_VALUE, help_key, default=(), multiple=True)
     enum_contract = _WIZARD_ENUM_FIELDS.get(token)
     if enum_contract is not None:
         return _option(name, (f"--{token}",), enum_contract, help_key)
-    return _option(name, (f"--{token}",), _STR, help_key)
+    return _option(name, (f"--{token}",), TEXT_VALUE, help_key)
 
 
 _WIZARD_BASE_PARAMETERS: tuple[ArgumentSpec | OptionSpec, ...] = (
-    _argument("profile_name", _STR, "cli.config.setup.profile_name_help", required=False),
-    _option("quiet", ("--quiet",), _BOOL, "cli.config.setup.quiet_help", default=False, flag=True),
+    _argument("profile_name", TEXT_VALUE, "cli.config.setup.profile_name_help", required=False),
+    _option("quiet", ("--quiet",), FLAG_VALUE, "cli.config.setup.quiet_help", default=False, flag=True),
     _option(
         "accept_defaults",
         ("--accept-defaults",),
-        _BOOL,
+        FLAG_VALUE,
         "cli.config.setup.accept_defaults_help",
         default=False,
         flag=True,
@@ -286,7 +286,7 @@ _WIZARD_CREATE_PARAMETERS = (
     _option(
         "secrets_stdin",
         ("--secrets-stdin",),
-        _BOOL,
+        FLAG_VALUE,
         "cli.config.custody.secrets_stdin_help",
         default=False,
         flag=True,
@@ -295,20 +295,20 @@ _WIZARD_CREATE_PARAMETERS = (
     _option(
         "secrets_fd",
         ("--secrets-fd",),
-        _INT,
+        WHOLE_NUMBER_VALUE,
         "cli.config.custody.secrets_fd_help",
         machine_secret_channel=MachineSecretChannelKind.FILE_DESCRIPTOR,
     ),
     _option(
         "recovery_handoff_fd",
         ("--recovery-handoff-fd",),
-        _INT,
+        WHOLE_NUMBER_VALUE,
         "cli.config.profile.create_recovery_handoff_fd_help",
     ),
     _option(
         "recovery_verification_fd",
         ("--recovery-verification-fd",),
-        _INT,
+        WHOLE_NUMBER_VALUE,
         "cli.config.profile.create_recovery_verification_fd_help",
     ),
 )
@@ -351,11 +351,11 @@ PROFILE_COMMAND_SPECS = (
         "ConfigProfileAddRowResult",
         ENCRYPTED_WRITE,
         (
-            _argument("section", _STR, "cli.config.profile.add_row.section_help"),
+            _argument("section", TEXT_VALUE, "cli.config.profile.add_row.section_help"),
             _option(
                 "value",
                 ("--value",),
-                _STR,
+                TEXT_VALUE,
                 "cli.config.profile.add_row.value_help",
                 required=True,
                 multiple=True,
@@ -374,7 +374,7 @@ PROFILE_COMMAND_SPECS = (
         "ConfigProfileArchiveExportResult",
         BOOTSTRAP_WRITE,
         (
-            _argument("name", _STR, "cli.config.profile.archive.export_name_help"),
+            _argument("name", TEXT_VALUE, "cli.config.profile.archive.export_name_help"),
             _option(
                 "output",
                 ("--output",),
@@ -400,18 +400,18 @@ PROFILE_COMMAND_SPECS = (
         "ProfileArchivePushResult",
         GOOGLE_WRITE,
         (
-            _option("namespace_filter", ("--namespace",), _STR, "cli.config.profile.archive.push_namespace_help"),
+            _option("namespace_filter", ("--namespace",), TEXT_VALUE, "cli.config.profile.archive.push_namespace_help"),
             _option(
                 "limit",
                 ("--limit",),
-                _INT,
+                WHOLE_NUMBER_VALUE,
                 "cli.config.profile.archive.push_limit_help",
                 constraint=ParameterConstraint(minimum=1),
             ),
             _option(
                 "dry_run",
                 ("--dry-run/--no-dry-run",),
-                _BOOL,
+                FLAG_VALUE,
                 "cli.config.profile.archive.push_dry_run_help",
                 default=False,
                 flag=True,
@@ -503,7 +503,7 @@ PROFILE_COMMAND_SPECS = (
                 transport_shape=TransportShape.FILE,
                 transport_role=TransportRole.PRIMARY,
             ),
-            _option("apply", ("--apply",), _BOOL, "cli.config.profile.censo.apply_help", default=False, flag=True),
+            _option("apply", ("--apply",), FLAG_VALUE, "cli.config.profile.censo.apply_help", default=False, flag=True),
         ),
     ),
     _leaf(
@@ -520,7 +520,7 @@ PROFILE_COMMAND_SPECS = (
             _option(
                 "apply",
                 ("--apply",),
-                _BOOL,
+                FLAG_VALUE,
                 "cli.config.profile.censo.pull_apply_help",
                 default=False,
                 flag=True,
@@ -593,8 +593,8 @@ PROFILE_COMMAND_SPECS = (
         "ConfigProfileDeleteResult",
         BOOTSTRAP_DESTRUCTIVE,
         (
-            _argument("name", _STR, "cli.config.profile.delete.name_help"),
-            _option("yes", ("--yes",), _BOOL, "cli.config.profile.delete.yes_help", default=False, flag=True),
+            _argument("name", TEXT_VALUE, "cli.config.profile.delete.name_help"),
+            _option("yes", ("--yes",), FLAG_VALUE, "cli.config.profile.delete.yes_help", default=False, flag=True),
             _LANGUAGE,
         ),
     ),
@@ -612,7 +612,7 @@ PROFILE_COMMAND_SPECS = (
             _option(
                 "descendiente",
                 ("--descendiente",),
-                _STR,
+                TEXT_VALUE,
                 "cli.config.profile.descendiente.add_flag_help",
                 required=True,
                 multiple=True,
@@ -642,7 +642,7 @@ PROFILE_COMMAND_SPECS = (
         "cadrumo.entrypoints.cli._config_descendiente_payloads",
         "ConfigProfileDescendienteRemoveResult",
         ENCRYPTED_DESTRUCTIVE,
-        (_argument("index", _INT, "cli.config.profile.descendiente.remove_index_help"), _LANGUAGE),
+        (_argument("index", WHOLE_NUMBER_VALUE, "cli.config.profile.descendiente.remove_index_help"), _LANGUAGE),
     ),
     _leaf(
         "config_profile_edit",
@@ -668,12 +668,14 @@ PROFILE_COMMAND_SPECS = (
         "BucketHistoryResult",
         ENCRYPTED_READ,
         (
-            _argument("profile", _STR, "cli.config.profile.history_bucket_id_help", required=False),
-            _option("event_type", ("--event-type",), _STR, "cli.config.profile.history_event_type_help", multiple=True),
-            _option("since", ("--since",), _STR, "cli.config.profile.history_since_help"),
-            _option("until", ("--until",), _STR, "cli.config.profile.history_until_help"),
-            _option("object_id", ("--object-id",), _STR, "cli.config.profile.history_object_id_help"),
-            _option("actor", ("--actor",), _STR, "cli.config.profile.history_actor_help"),
+            _argument("profile", TEXT_VALUE, "cli.config.profile.history_bucket_id_help", required=False),
+            _option(
+                "event_type", ("--event-type",), TEXT_VALUE, "cli.config.profile.history_event_type_help", multiple=True
+            ),
+            _option("since", ("--since",), TEXT_VALUE, "cli.config.profile.history_since_help"),
+            _option("until", ("--until",), TEXT_VALUE, "cli.config.profile.history_until_help"),
+            _option("object_id", ("--object-id",), TEXT_VALUE, "cli.config.profile.history_object_id_help"),
+            _option("actor", ("--actor",), TEXT_VALUE, "cli.config.profile.history_actor_help"),
             _LANGUAGE,
         ),
         profile_target_parameter="profile",
@@ -689,7 +691,7 @@ PROFILE_COMMAND_SPECS = (
         "ConfigProfileArchiveImportResult",
         BOOTSTRAP_WRITE,
         (
-            _argument("label", _STR, "cli.config.profile.archive.import_label_help"),
+            _argument("label", TEXT_VALUE, "cli.config.profile.archive.import_label_help"),
             _option(
                 "file",
                 ("--file",),
@@ -714,7 +716,7 @@ PROFILE_COMMAND_SPECS = (
             _option(
                 "secrets_stdin",
                 ("--secrets-stdin",),
-                _BOOL,
+                FLAG_VALUE,
                 "cli.config.custody.secrets_stdin_help",
                 default=False,
                 flag=True,
@@ -723,7 +725,7 @@ PROFILE_COMMAND_SPECS = (
             _option(
                 "secrets_fd",
                 ("--secrets-fd",),
-                _INT,
+                WHOLE_NUMBER_VALUE,
                 "cli.config.custody.secrets_fd_help",
                 machine_secret_channel=MachineSecretChannelKind.FILE_DESCRIPTOR,
             ),
@@ -756,7 +758,7 @@ PROFILE_COMMAND_SPECS = (
         _PAYLOADS,
         "ConfigProfileViewResult",
         ENCRYPTED_READ,
-        (_argument("name", _STR, "cli.config.profile.show_name_help", required=False), _LANGUAGE),
+        (_argument("name", TEXT_VALUE, "cli.config.profile.show_name_help", required=False), _LANGUAGE),
         profile_target_parameter="name",
     ),
     _leaf(
@@ -769,7 +771,7 @@ PROFILE_COMMAND_SPECS = (
         _PAYLOADS,
         "ConfigProfileValidateResult",
         CALCULATION_READ,
-        (_argument("name", _STR, "cli.config.profile.validate_name_help", required=False), _LANGUAGE),
+        (_argument("name", TEXT_VALUE, "cli.config.profile.validate_name_help", required=False), _LANGUAGE),
         profile_target_parameter="name",
     ),
 )

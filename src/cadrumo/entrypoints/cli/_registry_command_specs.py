@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .command_spec import (
+    TEXT_VALUE,
+    WHOLE_NUMBER_VALUE,
     ArgumentSpec,
     CommandNodeKind,
     CommandSpec,
@@ -23,8 +25,6 @@ from .command_spec import translation_key as _key
 
 _METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), "metadata", CommandWriteRoute.NONE)
 _READ = ExecutionPolicySpec(frozenset({"registry"}), frozenset({"none"}), "compute", CommandWriteRoute.NONE)
-_STR = ValueContract(DeferredTarget("builtins", "str"))
-_INT = ValueContract(DeferredTarget("builtins", "int"))
 _PATH = ValueContract(DeferredTarget("pathlib", "Path"))
 _MANUAL = ValueContract(DeferredTarget("cadrumo.application.registry.corpus", "RegistryManualId"))
 _PART = ValueContract(DeferredTarget("cadrumo.domain.manuals._ids", "ManualPart"))
@@ -189,7 +189,7 @@ REGISTRY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
             _REGISTRY_ROOT,
             _SOURCE_ROOT,
-            _option("required_casilla_refs", ("--casilla",), _STR, "cli.registry.casilla_help", multiple=True),
+            _option("required_casilla_refs", ("--casilla",), TEXT_VALUE, "cli.registry.casilla_help", multiple=True),
         ),
     ),
     _leaf(
@@ -202,9 +202,19 @@ REGISTRY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "cadrumo.entrypoints.cli._registry_diff_payloads",
         "RegistryDiffRevisionsResult",
         (
-            ArgumentSpec("modelo", _STR, ParameterDefault.required(), _key("cli.registry.diff_revisions_modelo_help")),
-            _option("from_year", ("--from-year",), _INT, "cli.registry.diff_revisions_from_year_help", required=True),
-            _option("to_year", ("--to-year",), _INT, "cli.registry.diff_revisions_to_year_help", required=True),
+            ArgumentSpec(
+                "modelo", TEXT_VALUE, ParameterDefault.required(), _key("cli.registry.diff_revisions_modelo_help")
+            ),
+            _option(
+                "from_year",
+                ("--from-year",),
+                WHOLE_NUMBER_VALUE,
+                "cli.registry.diff_revisions_from_year_help",
+                required=True,
+            ),
+            _option(
+                "to_year", ("--to-year",), WHOLE_NUMBER_VALUE, "cli.registry.diff_revisions_to_year_help", required=True
+            ),
             _REGISTRY_ROOT,
             _SOURCE_ROOT,
         ),
@@ -228,7 +238,7 @@ REGISTRY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "list_citations_cmd",
         _CORPUS_PAYLOADS,
         "CitationListResult",
-        (_option("tag", ("--tag",), _STR, "cli.registry.citations.tag_help"),),
+        (_option("tag", ("--tag",), TEXT_VALUE, "cli.registry.citations.tag_help"),),
     ),
     _leaf(
         "app_registry_citations_view",
@@ -240,8 +250,10 @@ REGISTRY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         _CORPUS_PAYLOADS,
         "CitationShowResult",
         (
-            ArgumentSpec("legal_id", _STR, ParameterDefault.required(), _key("cli.registry.citations.legal_id_help")),
-            _option("articulo", ("--articulo",), _STR, "cli.registry.citations.articulo_help"),
+            ArgumentSpec(
+                "legal_id", TEXT_VALUE, ParameterDefault.required(), _key("cli.registry.citations.legal_id_help")
+            ),
+            _option("articulo", ("--articulo",), TEXT_VALUE, "cli.registry.citations.articulo_help"),
         ),
     ),
     _leaf(
@@ -265,7 +277,7 @@ REGISTRY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "ManualListResult",
         (
             _option("manual", ("--manual",), _MANUAL, "cli.registry.manuals.manual_help"),
-            _option("year", ("--year",), _INT, "cli.registry.manuals.year_help"),
+            _option("year", ("--year",), WHOLE_NUMBER_VALUE, "cli.registry.manuals.year_help"),
         ),
     ),
     _leaf(
@@ -279,9 +291,9 @@ REGISTRY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "ManualShowResult",
         (
             _option("manual", ("--manual",), _MANUAL, "cli.registry.manuals.manual_help", required=True),
-            _option("year", ("--year",), _INT, "cli.registry.manuals.year_help", required=True),
+            _option("year", ("--year",), WHOLE_NUMBER_VALUE, "cli.registry.manuals.year_help", required=True),
             _option("part", ("--part",), _PART, "cli.registry.manuals.part_help", default="single"),
-            _option("section", ("--section",), _STR, "cli.registry.manuals.section_help"),
+            _option("section", ("--section",), TEXT_VALUE, "cli.registry.manuals.section_help"),
         ),
     ),
     _leaf(
@@ -295,9 +307,9 @@ REGISTRY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "ManualRulesListResult",
         (
             _option("manual", ("--manual",), _MANUAL, "cli.registry.manuals.manual_help", required=True),
-            _option("year", ("--year",), _INT, "cli.registry.manuals.year_help", required=True),
+            _option("year", ("--year",), WHOLE_NUMBER_VALUE, "cli.registry.manuals.year_help", required=True),
             _option("part", ("--part",), _PART, "cli.registry.manuals.part_help", default="single"),
-            _option("kind", ("--kind",), _STR, "cli.registry.manuals.kind_help"),
+            _option("kind", ("--kind",), TEXT_VALUE, "cli.registry.manuals.kind_help"),
         ),
     ),
     _leaf(
@@ -311,7 +323,7 @@ REGISTRY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "ManualVerifyResult",
         (
             _option("manual", ("--manual",), _MANUAL, "cli.registry.manuals.manual_help", required=True),
-            _option("year", ("--year",), _INT, "cli.registry.manuals.year_help", required=True),
+            _option("year", ("--year",), WHOLE_NUMBER_VALUE, "cli.registry.manuals.year_help", required=True),
             _option("part", ("--part",), _PART, "cli.registry.manuals.part_help", default="single"),
         ),
     ),

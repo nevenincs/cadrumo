@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from .command_spec import (
+    FLAG_VALUE,
+    TEXT_VALUE,
     ArgumentSpec,
     CommandNodeKind,
     CommandSpec,
@@ -21,9 +23,7 @@ from .command_spec import translation_key as _key
 
 _METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), "metadata", CommandWriteRoute.NONE)
 _READ = ExecutionPolicySpec(frozenset({"encrypted-facts"}), frozenset({"none"}), "local-io", CommandWriteRoute.NONE)
-_STR = ValueContract(DeferredTarget("builtins", "str"))
 _FLOAT = ValueContract(DeferredTarget("builtins", "float"))
-_BOOL = ValueContract(DeferredTarget("builtins", "bool"))
 _LANG = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
 _STATE = ValueContract(
     DeferredTarget("cadrumo.application.review.enums", "ReviewState"),
@@ -75,14 +75,19 @@ REVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         None,
         InvocationSpec(context_parameter="ctx"),
         (
-            _option("kinds", ("--kind",), _STR, "cli.review.queue.kind_help", default=(), multiple=True),
+            _option("kinds", ("--kind",), TEXT_VALUE, "cli.review.queue.kind_help", default=(), multiple=True),
             _option(
-                "source_kinds", ("--source-kind",), _STR, "cli.review.queue.source_kind_help", default=(), multiple=True
+                "source_kinds",
+                ("--source-kind",),
+                TEXT_VALUE,
+                "cli.review.queue.source_kind_help",
+                default=(),
+                multiple=True,
             ),
             _option("state", ("--state",), _STATE, "cli.review.queue.state_help"),
-            _option("modelo", ("--modelo",), _STR, "cli.review.queue.modelo_help"),
+            _option("modelo", ("--modelo",), TEXT_VALUE, "cli.review.queue.modelo_help"),
             _option("confidence_below", ("--confidence-below",), _FLOAT, "cli.review.queue.confidence_below_help"),
-            _option("explain", ("--explain",), _BOOL, "cli.review.queue.explain_help", default=False),
+            _option("explain", ("--explain",), FLAG_VALUE, "cli.review.queue.explain_help", default=False),
             _option(
                 "output_language",
                 ("--output-language", "--language"),
@@ -107,8 +112,8 @@ REVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         None,
         InvocationSpec(context_parameter="ctx"),
         (
-            ArgumentSpec("item_id", _STR, ParameterDefault.required(), _key("cli.review.show.id_help")),
-            _option("explain", ("--explain",), _BOOL, "cli.review.show.explain_help", default=False),
+            ArgumentSpec("item_id", TEXT_VALUE, ParameterDefault.required(), _key("cli.review.show.id_help")),
+            _option("explain", ("--explain",), FLAG_VALUE, "cli.review.show.explain_help", default=False),
             _option(
                 "output_language",
                 ("--output-language", "--language"),

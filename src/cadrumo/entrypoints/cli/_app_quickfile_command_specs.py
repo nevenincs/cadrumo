@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .command_spec import (
+    TEXT_VALUE,
+    WHOLE_NUMBER_VALUE,
     CommandNodeKind,
     CommandSpec,
     CommandWriteRoute,
@@ -26,8 +28,6 @@ _POLICY = ExecutionPolicySpec(
     CommandWriteRoute.PROFILE_BOUND,
     handoff=True,
 )
-_STR = ValueContract(DeferredTarget("builtins", "str"))
-_INT = ValueContract(DeferredTarget("builtins", "int"))
 _PATH = ValueContract(DeferredTarget("pathlib", "Path"))
 _LANG = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
 
@@ -73,9 +73,9 @@ QUICKFILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             terminal_behavior="executable",
         ),
         (
-            _option("modelo", ("--modelo",), _STR, "cli.app.modelo.work.modelo_help", required=True),
-            _option("year", ("--year",), _INT, "cli.app.modelo.work.year_help", required=True),
-            _option("period", ("--period",), _STR, "cli.app.modelo.work.period_help", required=True),
+            _option("modelo", ("--modelo",), TEXT_VALUE, "cli.app.modelo.work.modelo_help", required=True),
+            _option("year", ("--year",), WHOLE_NUMBER_VALUE, "cli.app.modelo.work.year_help", required=True),
+            _option("period", ("--period",), TEXT_VALUE, "cli.app.modelo.work.period_help", required=True),
             _option(
                 "output",
                 ("--output",),
@@ -85,13 +85,13 @@ QUICKFILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 transport_shape=TransportShape.FILE,
                 transport_role=TransportRole.PRIMARY,
             ),
-            _option("revision", ("--revision",), _STR, "cli.app.modelo.work.revision_help"),
-            _option("bucket_id", ("--bucket-id",), _STR, "cli.app.modelo.work.bucket_id_help"),
-            _option("casilla", ("--casilla",), _STR, "cli.app.modelo.work.casilla_help", multiple=True),
-            _option("binding", ("--binding",), _STR, "cli.app.modelo.work.override_help", multiple=True),
-            _option("relation", ("--relation",), _STR, "cli.app.modelo.work.relation_help", multiple=True),
-            _option("row", ("--row",), _STR, "cli.app.modelo.work.row_help", multiple=True),
-            _option("actor", ("--by",), _STR, "cli.app.modelo.work.actor_help"),
+            _option("revision", ("--revision",), TEXT_VALUE, "cli.app.modelo.work.revision_help"),
+            _option("bucket_id", ("--bucket-id",), TEXT_VALUE, "cli.app.modelo.work.bucket_id_help"),
+            _option("casilla", ("--casilla",), TEXT_VALUE, "cli.app.modelo.work.casilla_help", multiple=True),
+            _option("binding", ("--binding",), TEXT_VALUE, "cli.app.modelo.work.override_help", multiple=True),
+            _option("relation", ("--relation",), TEXT_VALUE, "cli.app.modelo.work.relation_help", multiple=True),
+            _option("row", ("--row",), TEXT_VALUE, "cli.app.modelo.work.row_help", multiple=True),
+            _option("actor", ("--by",), TEXT_VALUE, "cli.app.modelo.work.actor_help"),
             _option(
                 "refund_election",
                 ("--refund-election",),

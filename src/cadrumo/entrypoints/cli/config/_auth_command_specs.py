@@ -6,6 +6,9 @@ from typing import Final
 
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ..command_spec import (
+    FLAG_VALUE,
+    TEXT_VALUE,
+    WHOLE_NUMBER_VALUE,
     ArgumentSpec,
     CommandNodeKind,
     CommandSpec,
@@ -26,10 +29,7 @@ from ..command_spec import translation_key as _key
 from ._command_spec_schema import config_payload_schema as _schema
 from ._spec_policies import ENCRYPTED_DESTRUCTIVE, ENCRYPTED_READ, ENCRYPTED_WRITE, state_free_group_spec
 
-_BOOL = ValueContract(DeferredTarget("builtins", "bool"))
-_INT = ValueContract(DeferredTarget("builtins", "int"))
 _PATH = ValueContract(DeferredTarget("pathlib", "Path"))
-_STR = ValueContract(DeferredTarget("builtins", "str"))
 _OUTPUT_LANGUAGE = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
 _PHONE_STATE = ValueContract(DeferredTarget("cadrumo.application.auth.diagnostics", "AuthDiagnosticPhoneState"))
 
@@ -120,8 +120,10 @@ def _leaf(
     )
 
 
-_PROVIDER = _option("provider", ("--provider",), _STR, "cli.config.auth.provider_help")
-_NAME_REGISTER = _option("name", ("--name",), _STR, "cli.config.auth.certificate.register.name_help", required=True)
+_PROVIDER = _option("provider", ("--provider",), TEXT_VALUE, "cli.config.auth.provider_help")
+_NAME_REGISTER = _option(
+    "name", ("--name",), TEXT_VALUE, "cli.config.auth.certificate.register.name_help", required=True
+)
 
 
 AUTH_COMMAND_SPECS = (
@@ -146,7 +148,7 @@ AUTH_COMMAND_SPECS = (
         "AuthConfigurePayload",
         ENCRYPTED_WRITE,
         (
-            _option("provider", ("--provider",), _STR, "cli.config.auth.provider_help", required=True),
+            _option("provider", ("--provider",), TEXT_VALUE, "cli.config.auth.provider_help", required=True),
             _option(
                 "file",
                 ("--file",),
@@ -191,8 +193,8 @@ AUTH_COMMAND_SPECS = (
         ENCRYPTED_WRITE,
         (
             _PROVIDER,
-            _option("fresh", ("--fresh",), _BOOL, "cli.config.auth.login_fresh_help", flag=True),
-            _option("reset_lock", ("--reset-lock",), _BOOL, "cli.config.auth.login_reset_lock_help", flag=True),
+            _option("fresh", ("--fresh",), FLAG_VALUE, "cli.config.auth.login_fresh_help", flag=True),
+            _option("reset_lock", ("--reset-lock",), FLAG_VALUE, "cli.config.auth.login_reset_lock_help", flag=True),
         ),
     ),
     _leaf(
@@ -206,7 +208,7 @@ AUTH_COMMAND_SPECS = (
         ENCRYPTED_WRITE,
         (
             _PROVIDER,
-            _option("all_providers", ("--all",), _BOOL, "cli.config.auth.logout_all_help", flag=True),
+            _option("all_providers", ("--all",), FLAG_VALUE, "cli.config.auth.logout_all_help", flag=True),
         ),
     ),
     _leaf(
@@ -220,8 +222,8 @@ AUTH_COMMAND_SPECS = (
         ENCRYPTED_DESTRUCTIVE,
         (
             _PROVIDER,
-            _option("all_providers", ("--all",), _BOOL, "cli.config.auth.reset_all_help", flag=True),
-            _option("yes", ("--yes",), _BOOL, "cli.config.auth.reset_yes_help", flag=True),
+            _option("all_providers", ("--all",), FLAG_VALUE, "cli.config.auth.reset_all_help", flag=True),
+            _option("yes", ("--yes",), FLAG_VALUE, "cli.config.auth.reset_yes_help", flag=True),
         ),
     ),
     state_free_group_spec("config_auth_diagnostics", "config_auth", "diagnostics", "cli.config.auth.diagnostics.help"),
@@ -246,7 +248,7 @@ AUTH_COMMAND_SPECS = (
         ENCRYPTED_READ,
         (
             ArgumentSpec(
-                "diagnostic_id", _STR, ParameterDefault.required(), _key("cli.config.auth.diagnostics.id_help")
+                "diagnostic_id", TEXT_VALUE, ParameterDefault.required(), _key("cli.config.auth.diagnostics.id_help")
             ),
         ),
     ),
@@ -261,7 +263,7 @@ AUTH_COMMAND_SPECS = (
         ENCRYPTED_WRITE,
         (
             ArgumentSpec(
-                "diagnostic_id", _STR, ParameterDefault.required(), _key("cli.config.auth.diagnostics.id_help")
+                "diagnostic_id", TEXT_VALUE, ParameterDefault.required(), _key("cli.config.auth.diagnostics.id_help")
             ),
             _option(
                 "phone_state",
@@ -296,10 +298,10 @@ AUTH_COMMAND_SPECS = (
             _option(
                 "represented_nif",
                 ("--represented-nif",),
-                _STR,
+                TEXT_VALUE,
                 "cli.config.auth.apoderado.configure.represented_nif_help",
             ),
-            _option("scope", ("--scope",), _STR, "cli.config.auth.apoderado.configure.scope_help", multiple=True),
+            _option("scope", ("--scope",), TEXT_VALUE, "cli.config.auth.apoderado.configure.scope_help", multiple=True),
         ),
         tui_capability=TuiCapability.NOT_IMPLEMENTED,
     ),
@@ -359,7 +361,10 @@ AUTH_COMMAND_SPECS = (
                 transport_role=TransportRole.PRIMARY,
             ),
             _option(
-                "friendly_name", ("--friendly-name",), _STR, "cli.config.auth.certificate.register.friendly_name_help"
+                "friendly_name",
+                ("--friendly-name",),
+                TEXT_VALUE,
+                "cli.config.auth.certificate.register.friendly_name_help",
             ),
         ),
     ),
@@ -382,7 +387,7 @@ AUTH_COMMAND_SPECS = (
         "certificate_select",
         "CertificateSourceMutationPayload",
         ENCRYPTED_WRITE,
-        (_option("name", ("--name",), _STR, "cli.config.auth.certificate.select.name_help", required=True),),
+        (_option("name", ("--name",), TEXT_VALUE, "cli.config.auth.certificate.select.name_help", required=True),),
     ),
     _leaf(
         "config_auth_certificate_remove",
@@ -393,7 +398,7 @@ AUTH_COMMAND_SPECS = (
         "certificate_remove",
         "CertificateSourceMutationPayload",
         ENCRYPTED_DESTRUCTIVE,
-        (_option("name", ("--name",), _STR, "cli.config.auth.certificate.remove.name_help", required=True),),
+        (_option("name", ("--name",), TEXT_VALUE, "cli.config.auth.certificate.remove.name_help", required=True),),
     ),
     _leaf(
         "config_auth_certificate_check",
@@ -418,11 +423,11 @@ AUTH_COMMAND_SPECS = (
         "CertificateSourceSecretMutationPayload",
         ENCRYPTED_WRITE,
         (
-            _option("name", ("--name",), _STR, "cli.config.auth.certificate.secret.set.name_help", required=True),
+            _option("name", ("--name",), TEXT_VALUE, "cli.config.auth.certificate.secret.set.name_help", required=True),
             _option(
                 "secrets_stdin",
                 ("--secrets-stdin",),
-                _BOOL,
+                FLAG_VALUE,
                 "cli.config.custody.secrets_stdin_help",
                 flag=True,
                 machine_secret_channel=MachineSecretChannelKind.STDIN,
@@ -430,7 +435,7 @@ AUTH_COMMAND_SPECS = (
             _option(
                 "secrets_fd",
                 ("--secrets-fd",),
-                _INT,
+                WHOLE_NUMBER_VALUE,
                 "cli.config.custody.secrets_fd_help",
                 machine_secret_channel=MachineSecretChannelKind.FILE_DESCRIPTOR,
             ),
@@ -457,7 +462,11 @@ AUTH_COMMAND_SPECS = (
         "certificate_secret_remove",
         "CertificateSourceSecretMutationPayload",
         ENCRYPTED_DESTRUCTIVE,
-        (_option("name", ("--name",), _STR, "cli.config.auth.certificate.secret.remove.name_help", required=True),),
+        (
+            _option(
+                "name", ("--name",), TEXT_VALUE, "cli.config.auth.certificate.secret.remove.name_help", required=True
+            ),
+        ),
     ),
 )
 

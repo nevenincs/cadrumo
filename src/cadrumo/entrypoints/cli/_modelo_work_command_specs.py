@@ -6,6 +6,9 @@ from typing import Final
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .command_spec import (
+    FLAG_VALUE,
+    TEXT_VALUE,
+    WHOLE_NUMBER_VALUE,
     ArgumentSpec,
     Capability,
     CommandNodeKind,
@@ -28,9 +31,6 @@ from .command_spec import (
 )
 from .command_spec import translation_key as _key
 
-_STR = ValueContract(DeferredTarget("builtins", "str"))
-_INT = ValueContract(DeferredTarget("builtins", "int"))
-_BOOL = ValueContract(DeferredTarget("builtins", "bool"))
 _PATH = ValueContract(DeferredTarget("pathlib", "Path"))
 _LANGUAGE = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
 _MODELO = ValueContract(
@@ -101,7 +101,7 @@ _WIZARD = _policy(
 def _o(
     name: str,
     declaration: str,
-    value: ValueContract = _STR,
+    value: ValueContract = TEXT_VALUE,
     *,
     help_name: str | None = None,
     default: LiteralValue | tuple[LiteralValue, ...] = None,
@@ -131,7 +131,7 @@ def _o(
 def _a(name: str, *, help_name: str | None = None, required: bool = False) -> ArgumentSpec:
     return ArgumentSpec(
         name,
-        _STR,
+        TEXT_VALUE,
         ParameterDefault.required() if required else ParameterDefault.value(None),
         _key(f"cli.app.modelo.work.{help_name or name}_help"),
     )
@@ -139,7 +139,7 @@ def _a(name: str, *, help_name: str | None = None, required: bool = False) -> Ar
 
 _ADDRESS: Final = (
     _o("modelo", "--modelo", _MODELO),
-    _o("year", "--year", _INT),
+    _o("year", "--year", WHOLE_NUMBER_VALUE),
     _o("period", "--period"),
     _o("revision", "--revision"),
     _o("bucket_id", "--bucket-id"),
@@ -200,8 +200,8 @@ _CALCULATE_PARAMETERS = (
     _o("rescate_plan_pensiones_aportaciones_pre_2007", "--rescate-plan-pensiones-aportaciones-pre-2007"),
     _o("rescate_plan_pensiones_aportaciones_totales", "--rescate-plan-pensiones-aportaciones-totales"),
     _o("rescate_type", "--rescate-type", _RESCATE_TYPE),
-    _o("contingencia_year", "--contingencia-year", _INT, help_name="rescate_contingencia_year"),
-    _o("rescate_year", "--rescate-year", _INT),
+    _o("contingencia_year", "--contingencia-year", WHOLE_NUMBER_VALUE, help_name="rescate_contingencia_year"),
+    _o("rescate_year", "--rescate-year", WHOLE_NUMBER_VALUE),
     _o("sal_beneficio_neto", "--sal-beneficio-neto"),
     _o("sal_reserva_dotada", "--sal-reserva-dotada"),
     _o("sal_capital_social", "--sal-capital-social"),
@@ -219,7 +219,7 @@ _CALCULATE_PARAMETERS = (
 
 _REVISION_ADDRESS = (
     _o("modelo", "--modelo", _MODELO),
-    _o("year", "--year", _INT),
+    _o("year", "--year", WHOLE_NUMBER_VALUE),
     _o("period", "--period"),
     _o("registry_revision", "--registry-revision", help_name="revision"),
     _o("work_unit_id", "--work-unit-id"),
@@ -241,13 +241,13 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "cadrumo.entrypoints.cli._modelo_work_lifecycle_cli",
         (
             _o("modelo", "--modelo", _MODELO_OPEN, required=True),
-            _o("year", "--year", _INT, required=True),
+            _o("year", "--year", WHOLE_NUMBER_VALUE, required=True),
             _o("period", "--period", required=True),
             *_ADDRESS[3:],
             _o("name", "--name"),
             _o("actor", "--by"),
-            _o("allow_not_applicable", "--allow-not-applicable", _BOOL, flag=True),
-            _o("quiet", "--quiet", _BOOL, help_name="create_quiet", flag=True),
+            _o("allow_not_applicable", "--allow-not-applicable", FLAG_VALUE, flag=True),
+            _o("quiet", "--quiet", FLAG_VALUE, help_name="create_quiet", flag=True),
             _o("causante_ccaa_raw", "--causante-ccaa", help_name="causante_ccaa"),
             _LANG,
         ),
@@ -258,7 +258,12 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     _leaf(
         "dependencies",
         "cadrumo.entrypoints.cli._modelo_work_verification_cli",
-        (_o("year", "--year", _INT, required=True), _o("modelo", "--modelo", _MODELO), _o("period", "--period"), _LANG),
+        (
+            _o("year", "--year", WHOLE_NUMBER_VALUE, required=True),
+            _o("modelo", "--modelo", _MODELO),
+            _o("period", "--period"),
+            _LANG,
+        ),
         _CALC_READ,
         "cadrumo.entrypoints.cli._modelo_payloads",
         "WorkDependenciesResult",
@@ -271,7 +276,7 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             *_ADDRESS,
             _o("actor", "--by"),
             _o("reason", "--reason"),
-            _o("confirmed", "--yes", _BOOL, help_name="discard_yes", flag=True),
+            _o("confirmed", "--yes", FLAG_VALUE, help_name="discard_yes", flag=True),
         ),
         _policy(
             frozenset({"encrypted-facts"}),
@@ -286,7 +291,7 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     _leaf(
         "list",
         "cadrumo.entrypoints.cli._modelo_work_lifecycle_cli",
-        (_o("bucket_id", "--bucket-id"), _o("include_discarded", "--include-discarded", _BOOL, flag=True), _LANG),
+        (_o("bucket_id", "--bucket-id"), _o("include_discarded", "--include-discarded", FLAG_VALUE, flag=True), _LANG),
         _MODEL_READ,
         "cadrumo.entrypoints.cli._modelo_payloads",
         "WorkListResult",
@@ -294,7 +299,7 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     _leaf(
         "select",
         "cadrumo.entrypoints.cli._modelo_work_select_cli",
-        (_o("bucket_id", "--bucket-id"), _o("include_discarded", "--include-discarded", _BOOL, flag=True), _LANG),
+        (_o("bucket_id", "--bucket-id"), _o("include_discarded", "--include-discarded", FLAG_VALUE, flag=True), _LANG),
         _MODEL_READ,
         "cadrumo.entrypoints.cli._modelo_payloads",
         "WorkSelectResult",
@@ -339,7 +344,7 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         (
             _a("calculation_revision_id"),
             *_REVISION_ADDRESS,
-            _o("verbose", "--verbose", _BOOL, help_name="revision_verbose", flag=True),
+            _o("verbose", "--verbose", FLAG_VALUE, help_name="revision_verbose", flag=True),
             _LANG,
         ),
         _MODEL_READ,

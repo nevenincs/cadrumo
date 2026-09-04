@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .command_spec import (
+    FLAG_VALUE,
+    TEXT_VALUE,
     ArgumentSpec,
     CommandNodeKind,
     CommandSpec,
@@ -39,8 +41,6 @@ _METADATA = ExecutionPolicySpec(
     performance="metadata",
     write_route=CommandWriteRoute.NONE,
 )
-_STR = ValueContract(DeferredTarget("builtins", "str"))
-_BOOL = ValueContract(DeferredTarget("builtins", "bool"))
 _PATH = ValueContract(DeferredTarget("pathlib", "Path"))
 
 MODELO_ROOT_COMMAND_SPEC = CommandSpec(
@@ -89,7 +89,7 @@ def _leaf(
 
 _BUNDLE_ID = ArgumentSpec(
     name="bundle_id",
-    value=_STR,
+    value=TEXT_VALUE,
     default=ParameterDefault.required(),
     help_key=TranslationKey("cli.app.modelo.audit.bundle_id_help"),
 )
@@ -145,7 +145,7 @@ MODELO_AUDIT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="force_incomplete",
                 declarations=("--force-incomplete",),
-                value=_BOOL,
+                value=FLAG_VALUE,
                 default=ParameterDefault.value(False),
                 help_key=TranslationKey("cli.app.modelo.audit.force_incomplete_help"),
                 is_flag=True,

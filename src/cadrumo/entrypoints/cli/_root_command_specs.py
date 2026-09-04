@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from .command_spec import (
+    FLAG_VALUE,
+    WHOLE_NUMBER_VALUE,
     CommandNodeKind,
     CommandSpec,
     CommandWriteRoute,
@@ -23,8 +25,6 @@ from .command_spec import (
 )
 
 _STRING = ValueContract(DeferredTarget("builtins", "str"))
-_BOOL = ValueContract(DeferredTarget("builtins", "bool"))
-_INT = ValueContract(DeferredTarget("builtins", "int"))
 _OUTPUT_LANGUAGE = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
 _OUTPUT_FORMAT = ValueContract(DeferredTarget("cadrumo.core.output_rendering", "OutputFormat"))
 _STATE_FREE = ExecutionPolicySpec(
@@ -76,7 +76,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="profile_secrets_stdin",
                 declarations=("--profile-secrets-stdin",),
-                value=_BOOL,
+                value=FLAG_VALUE,
                 default=ParameterDefault.value(False),
                 help_key=TranslationKey("cli.config.custody.profile_secrets_stdin_help"),
                 is_flag=True,
@@ -85,7 +85,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="profile_secrets_fd",
                 declarations=("--profile-secrets-fd",),
-                value=_INT,
+                value=WHOLE_NUMBER_VALUE,
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.config.custody.profile_secrets_fd_help"),
                 profile_secret_channel=ProfileSecretChannelKind.FILE_DESCRIPTOR,
@@ -93,7 +93,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="version",
                 declarations=("--version", "-V"),
-                value=_BOOL,
+                value=FLAG_VALUE,
                 default=ParameterDefault.value(False),
                 help_key=TranslationKey("cli.root.version_help"),
                 is_flag=True,
@@ -102,7 +102,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="detail",
                 declarations=("--detail",),
-                value=_BOOL,
+                value=FLAG_VALUE,
                 default=ParameterDefault.value(False),
                 help_key=TranslationKey("cli.root.detail_help"),
                 is_flag=True,
@@ -111,7 +111,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="help_",
                 declarations=("--help", "-h"),
-                value=_BOOL,
+                value=FLAG_VALUE,
                 default=ParameterDefault.value(False),
                 help_key=TranslationKey("cli.root.help_help"),
                 is_flag=True,
@@ -127,7 +127,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="tui",
                 declarations=("--tui",),
-                value=_BOOL,
+                value=FLAG_VALUE,
                 default=ParameterDefault.value(False),
                 help_key=TranslationKey("cli.root.tui_help"),
                 is_flag=True,
@@ -135,7 +135,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="self_test",
                 declarations=("--self-test",),
-                value=_BOOL,
+                value=FLAG_VALUE,
                 default=ParameterDefault.value(False),
                 help_key=TranslationKey("cli.root.self_test_help"),
                 is_flag=True,
@@ -143,7 +143,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="quiet",
                 declarations=("--quiet",),
-                value=_BOOL,
+                value=FLAG_VALUE,
                 default=ParameterDefault.value(False),
                 help_key=TranslationKey("cli.root.quiet_help"),
                 is_flag=True,
@@ -151,7 +151,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="verbose",
                 declarations=("--verbose",),
-                value=_BOOL,
+                value=FLAG_VALUE,
                 default=ParameterDefault.value(False),
                 help_key=TranslationKey("cli.root.verbose_help"),
                 is_flag=True,
@@ -159,7 +159,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="debug",
                 declarations=("--debug",),
-                value=_BOOL,
+                value=FLAG_VALUE,
                 default=ParameterDefault.value(False),
                 help_key=TranslationKey("cli.root.debug_help"),
                 is_flag=True,
@@ -197,7 +197,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="help_",
                 declarations=("--help", "-h"),
-                value=_BOOL,
+                value=FLAG_VALUE,
                 default=ParameterDefault.value(False),
                 help_key=TranslationKey("cli.root.app_help_help"),
                 is_flag=True,
@@ -230,7 +230,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="help_",
                 declarations=("--help", "-h"),
-                value=_BOOL,
+                value=FLAG_VALUE,
                 default=ParameterDefault.value(False),
                 help_key=TranslationKey("cli.config.workflow_help"),
                 is_flag=True,

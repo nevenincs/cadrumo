@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from .command_spec import (
+    FLAG_VALUE,
+    TEXT_VALUE,
+    WHOLE_NUMBER_VALUE,
     CommandNodeKind,
     CommandSpec,
     CommandWriteRoute,
@@ -24,9 +27,6 @@ _WRITE = ExecutionPolicySpec(
     frozenset({"local-storage"}), frozenset({"local-state"}), "local-io", CommandWriteRoute.NONE
 )
 _METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), "metadata", CommandWriteRoute.NONE)
-_STR = ValueContract(DeferredTarget("builtins", "str"))
-_INT = ValueContract(DeferredTarget("builtins", "int"))
-_BOOL = ValueContract(DeferredTarget("builtins", "bool"))
 _TIER = ValueContract(DeferredTarget("cadrumo.core.telemetry.tier", "TelemetryTier"))
 _PAYLOADS = "cadrumo.entrypoints.cli._diagnostics_payloads"
 
@@ -82,19 +82,19 @@ def _leaf(
 
 def _range(prefix: str, *, limit: bool = False) -> tuple[OptionSpec, ...]:
     values = (
-        _option("since", ("--since",), _STR, f"cli.diagnostics.{prefix}.since_help"),
-        _option("until", ("--until",), _STR, f"cli.diagnostics.{prefix}.until_help"),
-        _option("provider", ("--provider",), _STR, f"cli.diagnostics.{prefix}.provider_help"),
+        _option("since", ("--since",), TEXT_VALUE, f"cli.diagnostics.{prefix}.since_help"),
+        _option("until", ("--until",), TEXT_VALUE, f"cli.diagnostics.{prefix}.until_help"),
+        _option("provider", ("--provider",), TEXT_VALUE, f"cli.diagnostics.{prefix}.provider_help"),
     )
     if not limit:
         return values
-    return (*values, _option("limit", ("--limit",), _INT, "cli.diagnostics.runs.limit_help", minimum=1))
+    return (*values, _option("limit", ("--limit",), WHOLE_NUMBER_VALUE, "cli.diagnostics.runs.limit_help", minimum=1))
 
 
 _TELEMETRY_COMMON = (
-    _option("opt_in", ("--opt-in/--no-opt-in",), _BOOL, "cli.diagnostics.telemetry.opt_in_help"),
+    _option("opt_in", ("--opt-in/--no-opt-in",), FLAG_VALUE, "cli.diagnostics.telemetry.opt_in_help"),
     _option("tier", ("--tier",), _TIER, "cli.diagnostics.telemetry.tier_help"),
-    _option("endpoint", ("--endpoint",), _STR, "cli.diagnostics.telemetry.endpoint_help"),
+    _option("endpoint", ("--endpoint",), TEXT_VALUE, "cli.diagnostics.telemetry.endpoint_help"),
 )
 
 DIAGNOSTICS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
@@ -208,7 +208,7 @@ DIAGNOSTICS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option(
                 "dry_run",
                 ("--dry-run/--no-dry-run",),
-                _BOOL,
+                FLAG_VALUE,
                 "cli.diagnostics.telemetry.flush.dry_run_help",
                 default=True,
             ),
@@ -216,7 +216,7 @@ DIAGNOSTICS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option(
                 "acknowledge",
                 ("--acknowledge-remote-telemetry",),
-                _BOOL,
+                FLAG_VALUE,
                 "cli.diagnostics.telemetry.flush.acknowledge_help",
                 default=False,
             ),

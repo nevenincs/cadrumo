@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Final
 
 from ..command_spec import (
+    FLAG_VALUE,
     CommandNodeKind,
     CommandSpec,
     DeferredTarget,
@@ -30,7 +31,6 @@ from ._spec_policies import (
     STATE_FREE,
 )
 
-_BOOL = ValueContract(DeferredTarget("builtins", "bool"))
 _STRING = ValueContract(DeferredTarget("builtins", "str"))
 
 
@@ -59,7 +59,7 @@ def _flag(
     return OptionSpec(
         name=name,
         declarations=(declaration,),
-        value=_BOOL,
+        value=FLAG_VALUE,
         default=ParameterDefault.value(default),
         help_key=TranslationKey(help_key) if help_key is not None else None,
         is_flag=True,

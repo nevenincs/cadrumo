@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ..command_spec import (
+    FLAG_VALUE,
     CommandNodeKind,
     CommandSpec,
     DeferredTarget,
@@ -18,12 +19,11 @@ from ..command_spec import (
 from ._command_spec_schema import config_payload_schema as _schema
 from ._spec_policies import BOOTSTRAP_DESTRUCTIVE, PROFILE_READ, STATE_FREE
 
-_BOOL = ValueContract(DeferredTarget("builtins", "bool"))
 _OPTIONAL_STRING = ValueContract(DeferredTarget("builtins", "str"))
 _YES = OptionSpec(
     name="yes",
     declarations=("--yes",),
-    value=_BOOL,
+    value=FLAG_VALUE,
     default=ParameterDefault.value(False),
     help_key=TranslationKey("cli.config.reset.yes_help"),
     is_flag=True,
@@ -32,7 +32,7 @@ _YES = OptionSpec(
 _OVERRIDE_RETENTION = OptionSpec(
     name="override_retention",
     declarations=("--override-retention",),
-    value=_BOOL,
+    value=FLAG_VALUE,
     default=ParameterDefault.value(False),
     help_key=TranslationKey("cli.config.reset.override_retention_help"),
     is_flag=True,

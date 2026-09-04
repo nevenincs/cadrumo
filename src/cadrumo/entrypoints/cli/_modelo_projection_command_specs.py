@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from ...core.modelo import Modelo
 from .command_spec import (
+    TEXT_VALUE,
+    WHOLE_NUMBER_VALUE,
     CommandNodeKind,
     CommandSpec,
     CommandWriteRoute,
@@ -22,8 +24,6 @@ from .command_spec import (
 _CALCULATION_READ = ExecutionPolicySpec(
     frozenset({"calculation", "encrypted-facts"}), frozenset({"none"}), "compute", CommandWriteRoute.NONE
 )
-_STR = ValueContract(DeferredTarget("builtins", "str"))
-_INT = ValueContract(DeferredTarget("builtins", "int"))
 _MODELO = ValueContract(
     DeferredTarget("builtins", "str"),
     click_type=DeferredTarget("cadrumo.entrypoints.cli._common", "MODELO_CODE_CHOICE"),
@@ -84,12 +84,12 @@ MODELO_PROJECTION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "cli.app.modelo.project_help",
         "modelo_project",
         (
-            _option("year", ("--year",), _INT, "cli.app.modelo.project.year_help", required=True),
-            _option("ccaa", ("--ccaa",), _STR, "cli.app.modelo.project.ccaa_help", required=True),
+            _option("year", ("--year",), WHOLE_NUMBER_VALUE, "cli.app.modelo.project.year_help", required=True),
+            _option("ccaa", ("--ccaa",), TEXT_VALUE, "cli.app.modelo.project.ccaa_help", required=True),
             _option(
                 "casilla",
                 ("--casilla",),
-                _STR,
+                TEXT_VALUE,
                 "cli.app.modelo.project.casilla_help",
                 default=(),
                 multiple=True,
@@ -97,7 +97,7 @@ MODELO_PROJECTION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option(
                 "binding",
                 ("--binding",),
-                _STR,
+                TEXT_VALUE,
                 "cli.app.modelo.project.binding_help",
                 default=(),
                 multiple=True,
@@ -114,7 +114,7 @@ MODELO_PROJECTION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option(
                 "year",
                 ("--year",),
-                _INT,
+                WHOLE_NUMBER_VALUE,
                 "cli.app.modelo.compare.year_help",
                 default=(),
                 multiple=True,

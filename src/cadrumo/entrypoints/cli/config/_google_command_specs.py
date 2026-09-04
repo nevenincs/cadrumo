@@ -6,6 +6,9 @@ from typing import Final
 
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ..command_spec import (
+    FLAG_VALUE,
+    TEXT_VALUE,
+    WHOLE_NUMBER_VALUE,
     ArgumentSpec,
     CommandNodeKind,
     CommandSpec,
@@ -29,10 +32,7 @@ from ._spec_policies import (
     state_free_group_spec,
 )
 
-_BOOL = ValueContract(DeferredTarget("builtins", "bool"))
-_INT = ValueContract(DeferredTarget("builtins", "int"))
 _PATH = ValueContract(DeferredTarget("pathlib", "Path"))
-_STR = ValueContract(DeferredTarget("builtins", "str"))
 _CREDENTIAL_KIND = ValueContract(DeferredTarget("cadrumo.core.google_credential_source", "GoogleCredentialSourceKind"))
 
 
@@ -161,7 +161,7 @@ GOOGLE_COMMAND_SPECS = (
             _option(
                 "refresh_only",
                 ("--refresh-only",),
-                _BOOL,
+                FLAG_VALUE,
                 "cli.config.google.refresh_only_help",
                 default=False,
                 flag=True,
@@ -213,26 +213,29 @@ GOOGLE_COMMAND_SPECS = (
             _option(
                 "target_principal",
                 ("--target-principal",),
-                _STR,
+                TEXT_VALUE,
                 "cli.config.google.credential_source.target_principal_help",
             ),
             _option(
                 "scopes",
                 ("--scope",),
-                _STR,
+                TEXT_VALUE,
                 "cli.config.google.credential_source.scope_help",
                 multiple=True,
             ),
             _option(
                 "delegates",
                 ("--delegate",),
-                _STR,
+                TEXT_VALUE,
                 "cli.config.google.credential_source.delegate_help",
                 multiple=True,
             ),
-            _option("subject", ("--subject",), _STR, "cli.config.google.credential_source.subject_help"),
+            _option("subject", ("--subject",), TEXT_VALUE, "cli.config.google.credential_source.subject_help"),
             _option(
-                "lifetime_seconds", ("--lifetime-seconds",), _INT, "cli.config.google.credential_source.lifetime_help"
+                "lifetime_seconds",
+                ("--lifetime-seconds",),
+                WHOLE_NUMBER_VALUE,
+                "cli.config.google.credential_source.lifetime_help",
             ),
         ),
     ),
@@ -261,7 +264,7 @@ GOOGLE_COMMAND_SPECS = (
         (
             ArgumentSpec(
                 "folder_id",
-                _STR,
+                TEXT_VALUE,
                 ParameterDefault.required(),
                 _key("cli.config.google.folder.folder_id_help"),
                 transport_locus=TransportLocus.REMOTE_HANDLE,
@@ -295,7 +298,7 @@ GOOGLE_COMMAND_SPECS = (
             _option(
                 "read_only",
                 ("--read-only/--no-read-only",),
-                _BOOL,
+                FLAG_VALUE,
                 "cli.config.google.probe_read_only_help",
                 default=False,
                 flag=True,

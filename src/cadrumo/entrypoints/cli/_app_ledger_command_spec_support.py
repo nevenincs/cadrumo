@@ -5,6 +5,8 @@ from __future__ import annotations
 from typing import Final
 
 from .command_spec import (
+    FLAG_VALUE,
+    TEXT_VALUE,
     ArgumentSpec,
     DeferredTarget,
     InvocationSpec,
@@ -29,9 +31,6 @@ _LEAF_INVOCATION: Final[InvocationSpec] = InvocationSpec(
 )
 _NO_RESULT_SCHEMA: Final[ResultSchemaSpec] = ResultSchemaSpec(SchemaState.NOT_SUPPORTED)
 
-_TEXT_VALUE: Final[ValueContract] = ValueContract(DeferredTarget("builtins", "str"))
-_FLAG_VALUE: Final[ValueContract] = ValueContract(DeferredTarget("builtins", "bool"))
-
 
 def _optional_text_option(name: str, declarations: tuple[str, ...], help_key: str) -> OptionSpec:
     """Declare an optional free-text option defaulting to absent.
@@ -51,7 +50,7 @@ def _optional_text_option(name: str, declarations: tuple[str, ...], help_key: st
     return OptionSpec(
         name=name,
         declarations=declarations,
-        value=_TEXT_VALUE,
+        value=TEXT_VALUE,
         default=ParameterDefault.value(None),
         help_key=TranslationKey(help_key),
         metavar=None,
@@ -84,7 +83,7 @@ def _required_text_option(name: str, declarations: tuple[str, ...], help_key: st
     return OptionSpec(
         name=name,
         declarations=declarations,
-        value=_TEXT_VALUE,
+        value=TEXT_VALUE,
         default=ParameterDefault.required(),
         help_key=TranslationKey(help_key),
         metavar=None,
@@ -118,7 +117,7 @@ def _blank_default_text_option(name: str, declarations: tuple[str, ...], help_ke
     return OptionSpec(
         name=name,
         declarations=declarations,
-        value=_TEXT_VALUE,
+        value=TEXT_VALUE,
         default=ParameterDefault.value(""),
         help_key=TranslationKey(help_key),
         metavar=None,
@@ -147,7 +146,7 @@ def _repeatable_text_option(name: str, declarations: tuple[str, ...], help_key: 
     return OptionSpec(
         name=name,
         declarations=declarations,
-        value=_TEXT_VALUE,
+        value=TEXT_VALUE,
         default=ParameterDefault.value(()),
         help_key=TranslationKey(help_key),
         metavar=None,
@@ -176,7 +175,7 @@ def _boolean_flag_option(name: str, declarations: tuple[str, ...], help_key: str
     return OptionSpec(
         name=name,
         declarations=declarations,
-        value=_FLAG_VALUE,
+        value=FLAG_VALUE,
         default=ParameterDefault.value(False),
         help_key=TranslationKey(help_key),
         metavar=None,
@@ -203,7 +202,7 @@ def _required_text_argument(name: str, help_key: str) -> ArgumentSpec:
     """
     return ArgumentSpec(
         name=name,
-        value=_TEXT_VALUE,
+        value=TEXT_VALUE,
         default=ParameterDefault.required(),
         help_key=TranslationKey(help_key),
         metavar=None,

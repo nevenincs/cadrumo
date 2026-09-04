@@ -18,6 +18,9 @@ from __future__ import annotations
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .command_spec import (
+    FLAG_VALUE,
+    TEXT_VALUE,
+    WHOLE_NUMBER_VALUE,
     CommandNodeKind,
     CommandSpec,
     CommandWriteRoute,
@@ -55,9 +58,6 @@ _GOOGLE_CALCULATION_HANDOFF = ExecutionPolicySpec(
     handoff=True,
 )
 
-_STR = ValueContract(DeferredTarget("builtins", "str"))
-_INT = ValueContract(DeferredTarget("builtins", "int"))
-_BOOL = ValueContract(DeferredTarget("builtins", "bool"))
 _PATH = ValueContract(DeferredTarget("pathlib", "Path"))
 
 _MODULE = "cadrumo.entrypoints.cli._modelo_spreadsheet_cli"
@@ -120,13 +120,13 @@ def _leaf(
     )
 
 
-_MODELO = _option("modelo", ("--modelo",), _STR, "cli.app.modelo.spreadsheet.modelo_help", required=True)
-_PERIOD = _option("period", ("--period",), _STR, "cli.app.modelo.spreadsheet.period_help", required=True)
-_YEAR = _option("year", ("--year",), _INT, "cli.app.modelo.spreadsheet.year_help", required=True)
+_MODELO = _option("modelo", ("--modelo",), TEXT_VALUE, "cli.app.modelo.spreadsheet.modelo_help", required=True)
+_PERIOD = _option("period", ("--period",), TEXT_VALUE, "cli.app.modelo.spreadsheet.period_help", required=True)
+_YEAR = _option("year", ("--year",), WHOLE_NUMBER_VALUE, "cli.app.modelo.spreadsheet.year_help", required=True)
 _SPREADSHEET_ID = _option(
     "spreadsheet_id",
     ("--spreadsheet-id",),
-    _STR,
+    TEXT_VALUE,
     "cli.app.modelo.spreadsheet.spreadsheet_id_help",
     required=True,
     transport_locus=TransportLocus.REMOTE_HANDLE,
@@ -161,7 +161,7 @@ MODELO_SPREADSHEET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option(
                 "prefill_relations",
                 ("--prefill-relations/--no-prefill-relations",),
-                _BOOL,
+                FLAG_VALUE,
                 "cli.app.modelo.spreadsheet.push.prefill_relations_help",
                 default=False,
                 flag=True,
@@ -169,7 +169,7 @@ MODELO_SPREADSHEET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option(
                 "dry_run",
                 ("--dry-run",),
-                _BOOL,
+                FLAG_VALUE,
                 "cli.app.modelo.spreadsheet.push.dry_run_help",
                 default=False,
                 flag=True,
@@ -192,7 +192,7 @@ MODELO_SPREADSHEET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option(
                 "assemble_observations",
                 ("--assemble-observations/--no-assemble-observations",),
-                _BOOL,
+                FLAG_VALUE,
                 "cli.app.modelo.spreadsheet.pull.assemble_observations_help",
                 default=False,
                 flag=True,
