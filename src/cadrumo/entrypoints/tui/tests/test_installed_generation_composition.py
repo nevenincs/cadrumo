@@ -395,7 +395,7 @@ def test_a_generation_that_gains_a_source_readmits_its_destination() -> None:
     """
     generations = [_inputs(_NOW), _inputs(_NOW, aeat_sync_available=True)]
 
-    def read() -> object:
+    def read() -> WorkbenchGenerationInputsV1:
         return generations.pop(0) if len(generations) > 1 else generations[0]
 
     provider = InstalledWorkbenchGenerationProviderV1(CallableWorkbenchGenerationReadDoorV1(read))
@@ -422,7 +422,7 @@ def test_a_generation_that_loses_a_source_stops_offering_its_destination() -> No
     """
     generations = [_inputs(_NOW, aeat_sync_available=True), _inputs(_NOW)]
 
-    def read() -> object:
+    def read() -> WorkbenchGenerationInputsV1:
         return generations.pop(0) if len(generations) > 1 else generations[0]
 
     provider = InstalledWorkbenchGenerationProviderV1(CallableWorkbenchGenerationReadDoorV1(read))
