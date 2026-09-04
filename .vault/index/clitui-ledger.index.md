@@ -6,7 +6,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:c29657fe46c597ccbbd45b5a7d1370f5fb7ad540f8545e4b791d364837d533d5'
+body_hash: 'sha256:953f004bd67188b542838a19b505e957351c0a5a7cf28db019051783ef9fdb3e'
 related:
   - '[[2026-09-04-clitui-ledger-W01-P01-S01]]'
   - '[[2026-09-04-clitui-ledger-W01-P01-S02]]'
@@ -15,6 +15,7 @@ related:
   - '[[2026-09-04-clitui-ledger-W01-P02-S04]]'
   - '[[2026-09-04-clitui-ledger-W01-P02-S05]]'
   - '[[2026-09-04-clitui-ledger-W01-P02-S06]]'
+  - '[[2026-09-04-clitui-ledger-W01-P02-S07]]'
   - '[[2026-09-04-clitui-ledger-adr]]'
   - '[[2026-09-04-clitui-ledger-plan]]'
   - '[[2026-09-04-clitui-ledger-reference]]'
@@ -57,6 +58,7 @@ Auto-generated index of all documents tagged with `#clitui-ledger`.
 - `2026-09-04-clitui-ledger-W01-P02-S04` - Enumerate every invocable Ledger command endpoint, sub-operation, handler, schema, and adapter ownership annotation
 - `2026-09-04-clitui-ledger-W01-P02-S05` - Enumerate existing application operations, direct behavioral proof, and backend-only Ledger capabilities
 - `2026-09-04-clitui-ledger-W01-P02-S06` - Enumerate the seven binding families, every declared route, calculation consumer, filing consumer, and unresolved proof obligation
+- `2026-09-04-clitui-ledger-W01-P02-S07` - Enumerate existing Ledger component factories separately from installed navigation reachability
 
 ### plan
 
