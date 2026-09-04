@@ -19,8 +19,8 @@ from pathlib import Path
 from typing import Final
 
 from ..._paths import REPO_ROOT, UTF_8
-from ._parser import _FrameBuilder, parse_frame_lines
-from ._schema import FrameKind
+from .parser import _FrameBuilder, parse_frame_lines
+from .schema import FrameKind
 
 __all__ = ["SEED_SUFFIX", "default_seeds_root", "load_seed_frames"]
 

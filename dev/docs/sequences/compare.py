@@ -1,8 +1,8 @@
 """Golden comparison and semantic expectation evaluation.
 
 One comparison policy per frame kind, applied to an executed
-:class:`~dev.docs.sequences._runner.SequenceTranscript` against its committed
-:class:`~dev.docs.sequences._golden_store.SequenceGolden`:
+:class:`~dev.docs.sequences.runner.SequenceTranscript` against its committed
+:class:`~dev.docs.sequences.golden_store.SequenceGolden`:
 
 - **JSON frames** compare via the shared observability substrate —
   ``canonicalise`` + ``mask_document`` with exactly the central
@@ -22,7 +22,7 @@ One comparison policy per frame kind, applied to an executed
   — so a newly nondeterministic field is enrolled in the one central set with
   its anti-tautology proof, never masked locally.
 - **Text frames** compare by exact string equality after the declared narrow
-  normalisation (:func:`~dev.docs.sequences._golden_store.normalise_text_output`
+  normalisation (:func:`~dev.docs.sequences.golden_store.normalise_text_output`
   — sandbox paths to stable tokens, centrally-masked ids to the sentinel),
   reporting a unified diff on failure. No wildcards, no fuzzy matching, no
   "contains".
@@ -46,7 +46,8 @@ from collections.abc import Mapping
 
 from cadrumo.tests.golden_comparison import canonicalise, differing_paths, mask_document
 
-from ._golden_store import (
+from .errors import SequenceGoldenMismatchError
+from .golden_store import (
     SequenceGolden,
     mask_host_conditional_details,
     masked_envelope_values,
@@ -54,9 +55,8 @@ from ._golden_store import (
     normalise_text_output,
     refresh_invocation,
 )
-from ._runner import FrameExecution, SequenceTranscript, _resolve_json_path
-from ._schema import ParsedSequence
-from .errors import SequenceGoldenMismatchError
+from .runner import FrameExecution, SequenceTranscript, _resolve_json_path
+from .schema import ParsedSequence
 
 __all__ = [
     "assert_transcript_matches_golden",

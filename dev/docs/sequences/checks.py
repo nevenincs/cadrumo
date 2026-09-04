@@ -29,22 +29,22 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 from ..._paths import REPO_ROOT, UTF_8
-from ._compare import check_transcript, evaluate_expectations
-from ._contracts import read_sequence_contract
-from ._golden_store import (
+from .compare import check_transcript, evaluate_expectations
+from .contracts import read_sequence_contract
+from .errors import SequenceEngineError, SequenceParseError
+from .golden_store import (
     read_golden,
     write_golden,
 )
-from ._parser import parse_sequence
-from ._runner import (
+from .parser import parse_sequence
+from .runner import (
     _PROGRESS_JOURNAL_ENV,
     SequenceTranscript,
     _sequence_progress_scope,
     execute_page_sequences,
     execute_sequence,
 )
-from ._schema import ParsedSequence, SequenceId
-from .errors import SequenceEngineError, SequenceParseError
+from .schema import ParsedSequence, SequenceId
 
 __all__ = [
     "DiscoveredSequence",
@@ -375,7 +375,7 @@ def check_sequences(
         differing paths or unified diff, and the run closes with the exact
         refresh invocation (appended by :func:`main`'s check mode; callers
         composing their own output can use
-        :func:`~dev.docs.sequences._golden_store.refresh_invocation`).
+        :func:`~dev.docs.sequences.golden_store.refresh_invocation`).
     """
     discovered, problems = discover_sequences(docs_root=docs_root, page=page, sequence_id=sequence_id)
     all_problems = list(problems)

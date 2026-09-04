@@ -1,7 +1,7 @@
 """Frame-grammar parser for the ``cli-sequence`` MyST directive.
 
 Parses a directive body of plain frame lines into a strict
-:class:`~dev.docs.sequences._schema.ParsedSequence`. The grammar, line by line:
+:class:`~dev.docs.sequences.schema.ParsedSequence`. The grammar, line by line:
 
 - ``aeat ...`` -- a visible command frame.
 - ``@setup aeat ...`` -- an executed, visually collapsed setup frame.
@@ -12,7 +12,7 @@ Parses a directive body of plain frame lines into a strict
 - ``@expect <json-path> == <literal>`` -- a semantic assertion on the preceding
   frame.
 - ``@blocked <code> <detail>`` -- the MANDATORY reason a preceding ``@static``
-  frame is not executed: a closed-set :class:`~dev.docs.sequences._schema.StaticBlocker`
+  frame is not executed: a closed-set :class:`~dev.docs.sequences.schema.StaticBlocker`
   code a gate can cross-check against the frame's own argv, plus the specific
   sentence naming what is unavailable. Refused on an executed frame.
 - ``@step <imperative sentence>`` -- a narration caption for the NEXT frame
@@ -41,7 +41,8 @@ from typing import get_args
 
 from pydantic import StringConstraints
 
-from ._schema import (
+from .errors import SequenceParseError
+from .schema import (
     BlockedDetail,
     BlockedReason,
     CaptureBinding,
@@ -57,7 +58,6 @@ from ._schema import (
     StepSentence,
     VerifySentence,
 )
-from .errors import SequenceParseError
 
 __all__ = ["parse_frame_lines", "parse_sequence", "result_frame_asserts_result_payload"]
 

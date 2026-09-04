@@ -466,7 +466,7 @@ class TestLiveAeatRefusal:
     def test_option_value_spelled_like_a_pull_verb_is_not_flagged(self) -> None:
         """The scan skips option VALUES: '--file pull-history.csv' is a local
         file input, not a live verb (the reviewer-named false positive)."""
-        from .._runner import _live_aeat_tokens
+        from ..runner import _live_aeat_tokens
 
         benign = _result_sequence(
             "@setup aeat app ledger import --file pull-history.csv\n"
@@ -556,7 +556,7 @@ class TestNumericJsonPathResolution:
     """
 
     def test_digit_segment_resolves_a_string_object_key(self) -> None:
-        from .._runner import _resolve_json_path
+        from ..runner import _resolve_json_path
 
         document = {"result": {"casilla_values": {"03": "500.00", "01": "1000.00"}}}
         assert _resolve_json_path(document, "result.casilla_values.03") == (True, "500.00")
@@ -564,7 +564,7 @@ class TestNumericJsonPathResolution:
         assert _resolve_json_path(document, "result.casilla_values.99") == (False, None)
 
     def test_digit_segment_resolves_a_list_index_when_the_node_is_a_list(self) -> None:
-        from .._runner import _resolve_json_path
+        from ..runner import _resolve_json_path
 
         document = {"result": {"items": [{"id": "first"}, {"id": "second"}]}}
         assert _resolve_json_path(document, "result.items.1.id") == (True, "second")
@@ -573,14 +573,14 @@ class TestNumericJsonPathResolution:
         assert _resolve_json_path(document, "result.items[0].id") == (True, "first")
 
     def test_bracket_form_never_indexes_an_object(self) -> None:
-        from .._runner import _resolve_json_path
+        from ..runner import _resolve_json_path
 
         document = {"result": {"casilla_values": {"0": "zero-key"}}}
         assert _resolve_json_path(document, "result.casilla_values[0]") == (False, None)
         assert _resolve_json_path(document, "result.casilla_values.0") == (True, "zero-key")
 
     def test_bracket_quoted_segment_resolves_a_dotted_hyphenated_object_key(self) -> None:
-        from .._runner import _resolve_json_path
+        from ..runner import _resolve_json_path
 
         # M349's declarante casillas are flat string keys carrying a literal dot
         # and hyphens; the dotted grammar would split on the dot, so the
@@ -599,7 +599,7 @@ class TestNumericJsonPathResolution:
         assert _resolve_json_path(document, 'result.casilla_values["decl.nope"]') == (False, None)
 
     def test_bracket_quoted_segment_is_a_dict_key_never_a_list_index(self) -> None:
-        from .._runner import _resolve_json_path
+        from ..runner import _resolve_json_path
 
         # On a list node the quoted form addresses no element and misses cleanly
         # (it is a literal object key only, never a list index).
@@ -610,7 +610,7 @@ class TestNumericJsonPathResolution:
         assert _resolve_json_path(digit_key_doc, 'result.casilla_values["0"]') == (True, "zero-key")
 
     def test_bracket_quoted_segment_on_a_non_dict_node_misses_cleanly(self) -> None:
-        from .._runner import _resolve_json_path
+        from ..runner import _resolve_json_path
 
         # A quoted key applied to a scalar (non-Mapping, non-list) node returns
         # (False, None) rather than raising.
@@ -629,7 +629,7 @@ class TestAmbientEnvNeutralisation:
         survives, and everything is restored verbatim on exit."""
         import os
 
-        from .._runner import sequence_sandbox
+        from ..runner import sequence_sandbox
 
         with (
             scoped_env_var("CADRUMO_CLAVE_MOVIL_DNI_NIE", "fake-operator-dni-99999999R"),
@@ -658,7 +658,7 @@ class TestAmbientEnvNeutralisation:
             probe_subprocess_providers,
         )
 
-        from .._runner import sequence_sandbox
+        from ..runner import sequence_sandbox
 
         original_path = os.environ.get("PATH")
         with sequence_sandbox(sequence_id="external-tool-probe", sandbox_root=tmp_path / "scope"):
@@ -704,7 +704,7 @@ class TestAmbientEnvNeutralisation:
         import keyring
         import keyring.core
 
-        from .._runner import sequence_sandbox
+        from ..runner import sequence_sandbox
 
         host_backend = keyring.core._keyring_backend
         with sequence_sandbox(sequence_id="credential-vault-probe", sandbox_root=tmp_path / "scope"):
@@ -765,7 +765,7 @@ class TestAmbientEnvNeutralisation:
 
         from cadrumo.tests.env_loader import bridge_env_file_into_environ
 
-        from .._runner import sequence_sandbox
+        from ..runner import sequence_sandbox
 
         secret = "fake-operator-dni-77777777H"  # noqa: S105 - synthetic test value
         env_var_name = "CADRUMO_CLAVE_MOVIL_DNI_NIE"

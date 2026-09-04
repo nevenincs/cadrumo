@@ -21,14 +21,26 @@ justification stated and cross-checkable.
 
 from __future__ import annotations
 
-from ._compare import (
+from ._seeds import SEED_SUFFIX, default_seeds_root, load_seed_frames
+from .checks import (
+    COHERENCE_TIER_PREFIX,
+    DiscoveredSequence,
+    check_page_coherence,
+    check_page_coherence_in_subprocess,
+    check_sequences,
+    check_sequences_in_subprocess,
+    default_docs_root,
+    discover_sequences,
+    refresh_sequences,
+)
+from .compare import (
     assert_transcript_matches_golden,
     check_transcript,
     compare_transcript_to_golden,
     evaluate_expectations,
 )
-from ._contracts import read_sequence_contract, sequence_contract_path
-from ._golden_store import (
+from .contracts import read_sequence_contract, sequence_contract_path
+from .golden_store import (
     REPO_ROOT_TOKEN,
     SANDBOX_STORAGE_ROOT_TOKEN,
     SANDBOX_WORKDIR_TOKEN,
@@ -44,8 +56,8 @@ from ._golden_store import (
     refresh_invocation,
     write_golden,
 )
-from ._parser import parse_frame_lines, parse_sequence, result_frame_asserts_result_payload
-from ._runner import (
+from .parser import parse_frame_lines, parse_sequence, result_frame_asserts_result_payload
+from .runner import (
     SANDBOX_INSTANT,
     SANDBOX_PROFILE_ID,
     SANDBOX_PROFILE_LABEL,
@@ -59,9 +71,9 @@ from ._runner import (
     execute_sequence,
     sequence_sandbox,
 )
-from ._runner import _live_aeat_tokens as live_aeat_tokens
-from ._runner import _refuse_live_frames as refuse_live_frames
-from ._schema import (
+from .runner import _live_aeat_tokens as live_aeat_tokens
+from .runner import _refuse_live_frames as refuse_live_frames
+from .schema import (
     BlockedReason,
     CaptureBinding,
     ExpectAssertion,
@@ -70,19 +82,7 @@ from ._schema import (
     SequenceFrame,
     StaticBlocker,
 )
-from ._seeds import SEED_SUFFIX, default_seeds_root, load_seed_frames
-from ._tokeniser import CommandToken, TokenKind, command_path_key, tokenise_command
-from .checks import (
-    COHERENCE_TIER_PREFIX,
-    DiscoveredSequence,
-    check_page_coherence,
-    check_page_coherence_in_subprocess,
-    check_sequences,
-    check_sequences_in_subprocess,
-    default_docs_root,
-    discover_sequences,
-    refresh_sequences,
-)
+from .tokeniser import CommandToken, TokenKind, command_path_key, tokenise_command
 
 __all__ = [
     "COHERENCE_TIER_PREFIX",

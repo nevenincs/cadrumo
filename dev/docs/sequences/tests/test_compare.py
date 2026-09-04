@@ -48,8 +48,8 @@ from .. import (
     read_golden,
     write_golden,
 )
-from .._golden_store import _repo_root
 from ..errors import SequenceGoldenError, SequenceGoldenMismatchError
+from ..golden_store import _repo_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 

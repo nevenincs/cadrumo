@@ -1,6 +1,6 @@
 """Per-sequence hermetic sandbox runner for ``cli-sequence`` frames.
 
-Each :class:`~dev.docs.sequences._schema.ParsedSequence` executes in FULL
+Each :class:`~dev.docs.sequences.schema.ParsedSequence` executes in FULL
 isolation: a fresh real-crypto storage root (:func:`isolated_profile_storage_root`
 — genuine ``bucket-dek-v1`` provisioning under the ephemeral dev-test master-key
 backend), the project-wide frozen instant :data:`SANDBOX_INSTANT`
@@ -17,7 +17,7 @@ Click tree (:func:`~cadrumo.tests.cli_runner.invoke_cached_cli`). Sequences neve
 share state — not across pages and not within a page.
 
 Capture threading: after a frame executes, each of its
-:class:`~dev.docs.sequences._schema.CaptureBinding` json-paths is read from the
+:class:`~dev.docs.sequences.schema.CaptureBinding` json-paths is read from the
 frame's parsed JSON envelope and bound; later frames interpolate the bound value
 into their ``{name}`` placeholder tokens before execution. A capture against
 non-JSON output, a json-path missing from the envelope, a non-scalar or null
@@ -89,7 +89,8 @@ from cadrumo.tests.profile_persistence import composed_profile_persistence_ports
 from cadrumo.tests.secure_sql import isolated_profile_storage_root
 
 from ..._paths import REPO_ROOT
-from ._schema import (
+from .errors import SequenceExecutionError
+from .schema import (
     FrameKind,
     Identifier,
     JsonPath,
@@ -97,7 +98,6 @@ from ._schema import (
     SequenceFrame,
     SequenceId,
 )
-from .errors import SequenceExecutionError
 
 __all__ = [
     "SANDBOX_INSTANT",

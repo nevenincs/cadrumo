@@ -433,8 +433,8 @@ def test_parser_regexes_are_derived_from_the_schema_constraints() -> None:
 
     from pydantic import StringConstraints
 
-    from .._parser import _IDENTIFIER_RE, _JSON_PATH_RE, _SEQUENCE_ID_RE
-    from .._schema import Identifier, JsonPath, SequenceId
+    from ..parser import _IDENTIFIER_RE, _JSON_PATH_RE, _SEQUENCE_ID_RE
+    from ..schema import Identifier, JsonPath, SequenceId
 
     def _pattern(alias: object) -> str:
         pattern = next(meta for meta in get_args(alias) if isinstance(meta, StringConstraints)).pattern

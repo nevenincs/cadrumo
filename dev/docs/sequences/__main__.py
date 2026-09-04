@@ -34,9 +34,6 @@ from __future__ import annotations
 
 import sys
 
-from ._golden_store import (
-    refresh_invocation,
-)
 from .checks import (
     _build_argument_parser,
     _owning_page,
@@ -47,6 +44,9 @@ from .checks import (
     refresh_sequences,
 )
 from .errors import SequenceEngineError
+from .golden_store import (
+    refresh_invocation,
+)
 
 
 def main(argv: list[str] | None = None) -> int:
