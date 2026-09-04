@@ -14,7 +14,6 @@ typed envelope through :func:`emit_envelope`.
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from decimal import Decimal
 
 import typer
@@ -31,7 +30,6 @@ from ...application.modelo.projection import (
     compare_modelo_years,
     project_modelo_100_from_m130,
 )
-from ...core.casilla_id import CasillaId
 from ...core.modelo import Modelo
 from ...core.output_rendering import jsonable_output_payload
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
@@ -52,10 +50,6 @@ from ._modelo_payloads import (
     ModeloCompareResult,
     ModeloProjectResult,
 )
-
-CasillaParseOverride = Callable[[str], tuple[CasillaId, str]]
-BindingParseOverride = Callable[[str], tuple[str, str]]
-BadParameterRenderer = Callable[[BaseException], typer.BadParameter]
 
 
 def _delta_row_payload(row: ModeloCompareDeltaRow) -> DeltaRowPayload:

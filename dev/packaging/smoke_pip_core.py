@@ -41,8 +41,33 @@ def _install_artifact_with_pip(work_dir: Path, artifact: Path, venv_path: Path) 
     _install_target_with_pip(work_dir, str(artifact.resolve()), venv_path)
 
 
-def main(argv: list[str] | None = None) -> int:
-    """Run the pip-installed core wheel packaging smoke gate."""
+def declared_claims(*, skip_export_checks: bool) -> tuple[str, ...]:
+    """Return the claims this lane promises to prove, for its smoke manifest.
+
+    The manifest refuses a declared claim whose assertion never ran, so this
+    list and the lane body are one contract: skipping the export checks must
+    drop their claim, or the run fails with a ProofContractError naming it.
+
+    Extracted so that contract is provable without building a wheel and a venv.
+    """
+    claims = [
+        "wheel tracked shipped-data payload",
+        "wheel metadata dependency surface",
+        "stdlib venv creation",
+        "exact local cohort install with pip",
+        "pip dependency check",
+        "installed bundled data resources",
+        "attachment storage round-trip",
+        "core LLM missing-extra boundary",
+        "installed CLI config/profile smoke",
+    ]
+    if not skip_export_checks:
+        claims.insert(0, "frozen dependency exports")
+    return tuple(claims)
+
+
+def build_parser() -> argparse.ArgumentParser:
+    """Return the lane's argument parser, so its contract is testable alone."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--python",
@@ -61,6 +86,12 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Skip frozen uv export surface checks and run only the installed-wheel smoke.",
     )
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Run the pip-installed core wheel packaging smoke gate."""
+    parser = build_parser()
     args = parser.parse_args(argv)
 
     repo_root = REPO_ROOT
@@ -99,19 +130,7 @@ def main(argv: list[str] | None = None) -> int:
     assert_attachment_and_llm_surfaces(work_dir, venv_path)
     assert_cli_smoke(work_dir, venv_path)
 
-    declared = [
-        "wheel tracked shipped-data payload",
-        "wheel metadata dependency surface",
-        "stdlib venv creation",
-        "exact local cohort install with pip",
-        "pip dependency check",
-        "installed bundled data resources",
-        "attachment storage round-trip",
-        "core LLM missing-extra boundary",
-        "installed CLI config/profile smoke",
-    ]
-    if not args.skip_export_checks:
-        declared.insert(0, "frozen dependency exports")
+    declared = declared_claims(skip_export_checks=args.skip_export_checks)
     manifest = write_smoke_manifest(
         work_dir,
         lane="pip-core-wheel",

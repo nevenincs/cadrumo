@@ -10,13 +10,20 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
-from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
+from ...core.period import Period
+from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue, CalculationRevisionState
 from ...domain.modelos.filing_record import ModeloRecordCatalogue
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from .. import workbench_generation as generation_module
 from ..aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
-from ..ledger.workspace import LedgerWorkspaceProjectionV1
+from ..ledger.workspace import (
+    LedgerWorkspaceArea,
+    LedgerWorkspaceAreaStateV1,
+    LedgerWorkspaceProjectionV1,
+    LedgerWorkspaceSource,
+    LedgerWorkspaceStatus,
+)
 from ..modelo.declarations_calendar import DeclarationsCalendarProjectionV1
 from ..modelo.declarations_workspace import DeclarationsWorkspaceProjectionV1
 from ..modelo.workspace_models import ModeloWorkspaceProjectionV1
@@ -24,6 +31,7 @@ from ..overview.calendar_models import OverviewCalendar, OverviewCalendarRange
 from ..overview.home import (
     HomeAccountSession,
     HomeAvailability,
+    HomeDeclarationState,
     HomeProjectionInput,
     HomeSessionPosture,
     HomeZoneState,
@@ -505,3 +513,325 @@ def test_structural_read_door_is_accepted() -> None:
     """Composition accepts a typed protocol implementation without a frontend."""
     generation = assemble_workbench_generation_from(_Door(_inputs()))
     assert generation.home.projection is not None
+
+
+def _ledger_projection_with_statuses(
+    status: LedgerWorkspaceStatus,
+    *,
+    unmeasured: LedgerWorkspaceArea | None = None,
+) -> LedgerWorkspaceProjectionV1:
+    """A Ledger projection whose areas carry a chosen status, one optionally unmeasured."""
+    return LedgerWorkspaceProjectionV1(
+        bucket_id="bucket",
+        areas=tuple(
+            LedgerWorkspaceAreaStateV1(
+                area=area,
+                sources=(LedgerWorkspaceSource.LOCAL_LEDGER,),
+                status=LedgerWorkspaceStatus.UNMEASURED if area is unmeasured else status,
+                item_count=2,
+            )
+            for area in LedgerWorkspaceArea
+        ),
+        entries=(),
+        review_transaction_ids=(),
+        invoice_reconciliations=(),
+        link_inconsistencies=(),
+        affected_declarations=(),
+    )
+
+
+def test_home_refuses_its_ledger_zone_rather_than_publishing_an_unmeasured_zero() -> None:
+    """An unmeasured Ledger area must not reach Home as the number nought.
+
+    `LedgerWorkspaceAreaStateV1.item_count` is a plain integer, so an area that
+    nobody measured reports 0 -- the same value a genuinely empty area reports.
+    The Ledger workspace keeps them apart through `status`, rendering
+    UNMEASURED as "Sin medir" rather than a digit. Home has no such room: its
+    readiness block is four bare numbers, and a zero there reads as a finding.
+
+    So the whole block refuses when ANY of its four areas is unmeasured, rather
+    than publishing three real counts beside one fabricated one. Partial truth
+    in a summary is indistinguishable from whole truth once rendered.
+    """
+    from ..overview.home import HomeLedgerReadiness
+    from ..workbench_generation import _home_ledger_readiness
+
+    measured = _ledger_projection_with_statuses(LedgerWorkspaceStatus.READY)
+    readiness = _home_ledger_readiness(measured)
+    assert isinstance(readiness, HomeLedgerReadiness)
+    assert (readiness.entries, readiness.requiring_review) == (2, 2)
+
+    for area in (
+        LedgerWorkspaceArea.ENTRIES,
+        LedgerWorkspaceArea.REVIEW,
+        LedgerWorkspaceArea.CLASSIFICATION,
+        LedgerWorkspaceArea.EVIDENCE,
+    ):
+        partial = _ledger_projection_with_statuses(LedgerWorkspaceStatus.READY, unmeasured=area)
+        assert _home_ledger_readiness(partial) is None, (
+            f"an unmeasured {area.value} area still produced a readiness block, so Home renders a zero nobody measured"
+        )
+
+    assert _home_ledger_readiness(None) is None
+
+
+def test_a_zone_awaiting_a_pull_is_never_captured_not_unavailable() -> None:
+    """Home must not report absent remote data as a broken reader.
+
+    AEAT notifications exist only once a pull has persisted a snapshot. Before
+    that the reader is perfectly able to answer and the DATA is what is
+    missing, which is exactly the distinction `no-silent-under-declaration`
+    keeps: UNAVAILABLE says something is wrong, NEVER_CAPTURED says nothing has
+    been fetched yet. Only the second tells the operator that a pull is the
+    action that resolves the zone; the first sends them looking for a fault
+    that does not exist.
+
+    Asserted on the reason code as well as the availability, because a zone
+    that carries the right state under a reason code naming a "reader
+    unavailable" still tells the operator the wrong story wherever that code is
+    rendered or logged.
+    """
+    from datetime import UTC, datetime
+
+    from ..overview.home import HomeAccountSession, HomeAvailability, HomeSessionPosture, HomeZoneState
+    from ..workbench_generation import _secure_profile_home_input
+
+    observed_at = datetime(2026, 9, 4, tzinfo=UTC)
+    home = _secure_profile_home_input(
+        observed_at=observed_at,
+        account_session=HomeAccountSession(posture=HomeSessionPosture.NO_PROFILE),
+        agenda=None,
+        agenda_evidence_state=HomeZoneState(
+            availability=HomeAvailability.NEVER_CAPTURED,
+            reason_code="workbench.home.agenda_evidence_never_pulled",
+        ),
+        ledger=None,
+        declarations=None,
+    )
+
+    assert home.messages_state.availability is HomeAvailability.NEVER_CAPTURED, (
+        "Home reports never-pulled AEAT notifications as an unavailable reader, "
+        "which points the operator at a fault instead of at the pull"
+    )
+    assert home.messages_state.reason_code is not None
+    assert "reader_unavailable" not in home.messages_state.reason_code, (
+        f"the reason code {home.messages_state.reason_code!r} still blames the reader"
+    )
+
+
+def test_only_a_verified_calculation_reads_as_ready_on_home() -> None:
+    """READY is the one Home state that must never be reached by inference.
+
+    Telling an operator a declaration is ready to file when nobody verified it
+    is a filing-grade harm, so the mapping errs in exactly one direction: the
+    only calculation state that becomes READY is the one whose name says
+    verified and complete. Every other state resolves to something that keeps
+    work in front of them.
+
+    The mapping is read from the domain's own vocabulary rather than invented
+    for Home, and this asserts the whole table so a new calculation state
+    cannot be added and silently default to anything.
+    """
+    from ..workbench_generation import _HOME_DECLARATION_STATES
+
+    assert set(_HOME_DECLARATION_STATES) == set(CalculationRevisionState), (
+        "a calculation state has no declared Home reading, so it would raise or "
+        "default rather than being mapped deliberately"
+    )
+
+    ready = {state for state, home in _HOME_DECLARATION_STATES.items() if home is HomeDeclarationState.READY}
+    assert ready == {CalculationRevisionState.VERIFICADO_COMPLETO}, (
+        f"only a verified-complete calculation may read as READY on Home; found {sorted(ready)}"
+    )
+
+    assert _HOME_DECLARATION_STATES[CalculationRevisionState.BORRADOR] is (HomeDeclarationState.NEEDS_REVIEW), (
+        "an unverified calculation must keep review in front of the operator"
+    )
+
+
+def test_home_offers_ledger_work_only_when_there_is_some_and_never_for_an_unmeasured_area() -> None:
+    """An offered action must correspond to work that exists and can be named.
+
+    Two failure modes, both worse than an empty zone. Offering "classify"
+    when the classification area holds zero entries sends the operator to an
+    empty screen. Offering it when the area is UNMEASURED is the same mistake
+    dressed as a fact: `item_count` is a plain integer, so an area nobody
+    measured reports the same zero a finished one does.
+
+    Also asserts the reason codes are Home's OWN declared vocabulary. A code
+    with no `tui.home.reason.*` entry renders the degraded generic line, so an
+    action invented to fill the zone would arrive unreadable.
+    """
+    from ..workbench_generation import _home_ledger_actions
+
+    populated = _ledger_projection_with_statuses(LedgerWorkspaceStatus.NEEDS_ATTENTION)
+    offered = _home_ledger_actions(populated)
+    assert offered is not None
+    assert {item.reason_code for item in offered} == {
+        "ledger_classification_pending",
+        "evidence_missing",
+    }
+    assert [item.rank for item in offered] == list(range(len(offered)))
+
+    catalogue = _home_reason_keys_for_test()
+    for item in offered:
+        assert f"tui.home.reason.{item.reason_code}" in catalogue, (
+            f"offered action reason {item.reason_code!r} has no copy, so Home degrades to its generic line"
+        )
+
+    for area in (LedgerWorkspaceArea.CLASSIFICATION, LedgerWorkspaceArea.EVIDENCE):
+        unmeasured = _ledger_projection_with_statuses(LedgerWorkspaceStatus.NEEDS_ATTENTION, unmeasured=area)
+        assert _home_ledger_actions(unmeasured) is None, (
+            f"an unmeasured {area.value} area still produced an offer, so Home invites the "
+            f"operator to work nobody measured"
+        )
+
+    assert _home_ledger_actions(None) is None
+
+
+def _home_reason_keys_for_test() -> frozenset[str]:
+    """Every `tui.home.reason.*` key the Spanish catalogue declares."""
+    import yaml
+
+    root = Path(__file__).resolve().parents[2] / "locales" / "es" / "common.yml"
+    raw = yaml.safe_load(root.read_text(encoding="utf-8"))
+    reasons = raw["tui"]["home"]["reason"]
+    return frozenset(f"tui.home.reason.{name}" for name in reasons)
+
+
+def test_a_declaration_needing_review_is_offered_with_its_own_address() -> None:
+    """A declaration-addressed action carries the declaration it is about.
+
+    `declaration_needs_review` without an address is advice; with modelo,
+    filing year and period it is a task the operator can act on, and Home
+    renders that address beside the row. The action is the catalogue's
+    `operator.modelo.work.revisions`, which takes the work unit id the resume
+    already carries, so nothing is minted to fill the zone.
+
+    Only NEEDS_REVIEW is offered. A verified, filed, draft or discarded
+    declaration is not work the operator has been asked to do, and offering it
+    would make the zone a list of everything rather than a list of what is
+    outstanding.
+    """
+    from ..overview.home import HomeDeclarationResume
+    from ..workbench_generation import _home_declaration_actions
+
+    def _resume(state: HomeDeclarationState, unit: str) -> HomeDeclarationResume:
+        return HomeDeclarationResume(
+            work_unit_id=unit * 64,
+            modelo="303",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "3T"),
+            name=f"{unit}-declaration",
+            state=state,
+        )
+
+    resumes = tuple(
+        _resume(state, letter)
+        for state, letter in (
+            (HomeDeclarationState.NEEDS_REVIEW, "a"),
+            (HomeDeclarationState.READY, "b"),
+            (HomeDeclarationState.FILED, "c"),
+            (HomeDeclarationState.DRAFT, "d"),
+            (HomeDeclarationState.DISCARDED, "e"),
+        )
+    )
+    offered = _home_declaration_actions(resumes)
+
+    assert len(offered) == 1, (
+        f"only a declaration needing review is outstanding work; got {[item.reason_code for item in offered]}"
+    )
+    only = offered[0]
+    assert only.reason_code == "declaration_needs_review"
+    assert (only.modelo, only.filing_year) == ("303", 2026)
+    assert only.period is not None, "an addressed action without its period cannot be acted on"
+    assert only.action.action.action_id == "operator.modelo.work.revisions"
+
+    assert _home_declaration_actions(None) == ()
+
+
+def test_only_a_blocking_dependency_finding_reads_as_a_blocked_declaration() -> None:
+    """`blocked_dependency` is produced from the domain's own word, or not at all.
+
+    `CROSS_PERIOD_DEPENDENCY_UNCLEAN` names the condition Home's
+    `blocked_dependency` describes, so that one code is grounded. The other two
+    Home declares are deliberately unproduced: nothing in
+    `ModeloVerificationFindingKind` names evidence, and routing
+    `blocked_review` to BLOCKING_RULE or MISSING_REQUIRED_CASILLA would be a
+    guess wearing a finding's clothes.
+
+    Severity and completeness both gate it. An ADVISORY finding of the same
+    kind is information rather than a blocker, and a report that is not BLOCKED
+    has nothing outstanding -- offering either as blocked work would send the
+    operator at something nothing is waiting on.
+    """
+    from ...domain.modelos.verification_report import (
+        ModeloVerificationFinding,
+        ModeloVerificationFindingKind,
+        ModeloVerificationFindingSeverity,
+        VerificationCompletenessStatus,
+        VerificationReport,
+        VerificationReportCatalogue,
+        derive_verification_report_id,
+    )
+    from ..workbench_generation import _dependency_blocked_revisions
+
+    def _catalogue(
+        kind: ModeloVerificationFindingKind,
+        severity: ModeloVerificationFindingSeverity,
+        status: VerificationCompletenessStatus,
+    ) -> VerificationReportCatalogue:
+        findings = (
+            ModeloVerificationFinding(
+                kind=kind,
+                severity=severity,
+                message_locale_key="application.modelo.findings.cross_period_dependency",
+                legal_refs=("ley-37-1992:art-99",),
+            ),
+        )
+        report = VerificationReport(
+            # Content-addressed: the id is DERIVED from the report's own facts,
+            # so it is computed here rather than invented, which also means a
+            # fixture cannot drift from the identity the domain would assign.
+            verification_report_id=derive_verification_report_id(
+                calculation_revision_id="b" * 64,
+                completeness_status=status,
+                findings=findings,
+                verified_by="operator",
+            ),
+            calculation_revision_id="b" * 64,
+            completeness_status=status,
+            findings=findings,
+            run_at=datetime(2026, 9, 4, tzinfo=UTC),
+            verified_by="operator",
+            granted_verificado_completo=False,
+        )
+        return VerificationReportCatalogue(reports={report.verification_report_id: report})
+
+    blocked = _catalogue(
+        ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN,
+        ModeloVerificationFindingSeverity.BLOCKING,
+        VerificationCompletenessStatus.BLOCKED,
+    )
+    assert _dependency_blocked_revisions(blocked) == frozenset({"b" * 64})
+
+    warning = _catalogue(
+        ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN,
+        ModeloVerificationFindingSeverity.WARNING,
+        VerificationCompletenessStatus.BLOCKED,
+    )
+    assert _dependency_blocked_revisions(warning) == frozenset(), (
+        "a WARNING dependency finding is information, not a blocker"
+    )
+
+    other_kind = _catalogue(
+        ModeloVerificationFindingKind.BLOCKING_RULE,
+        ModeloVerificationFindingSeverity.BLOCKING,
+        VerificationCompletenessStatus.BLOCKED,
+    )
+    assert _dependency_blocked_revisions(other_kind) == frozenset(), (
+        "only the dependency finding kind may read as blocked_dependency; another kind "
+        "reaching it would be a guess about what the operator is blocked on"
+    )
+
+    assert _dependency_blocked_revisions(None) == frozenset()

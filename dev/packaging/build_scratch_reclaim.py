@@ -6,9 +6,9 @@ long-lived probe trees there, and the release build drops working copies
 beside all of that. So the reclaim rule here cannot be "remove what looks
 old" -- it is "remove members of the scratch families this package mints,
 and nothing else". :data:`VAR_SCRATCH_FAMILIES` is that registry, every
-entry anchored at both ends, and the mint sites take their names from these
-same constants so a rename cannot leave the sweep looking for a name nothing
-writes any more.
+entry anchored at both ends, and every mint site builds its name with
+:func:`var_scratch_name` from the family constant it is registered under, so
+a rename cannot leave the sweep looking for a name nothing writes any more.
 
 The reclaim exists because a finalizer cannot cover the case that produces
 the leak. A killed process runs no ``finally`` block and no ``atexit`` hook,
@@ -19,14 +19,22 @@ written again, because a second probe is a second chance to get the Windows
 failure mode wrong in the direction that deletes a live run's tree.
 
 What the automatic callers act on is narrower than what that sweep takes, and
-deliberately so. Here a directory is reclaimed on its own initiative only when
+deliberately so. An entry is reclaimed on the sweep's own initiative only when
 its name carries an owner and that process is OBSERVED to be gone. The day-long
 mtime ceiling -- an INFERENCE, and the only rule available to a name carrying
-no owner -- is applied when an operator asks for it, through ``--apply`` on
-this module or ``reclaim_by_age`` on the sweep. That is the same line the
-temp-file reaper in this tree draws, and it matters more here: the OS temp
-directory holds nothing anyone curates, and ``var/`` holds gigabytes an
+no readable owner -- is applied when an operator asks for it, through
+``--apply`` on this module or ``reclaim_by_age`` on the sweep. That is the same
+line the temp-file reaper in this tree draws, and it matters more here: the OS
+temp directory holds nothing anyone curates, and ``var/`` holds gigabytes an
 operator keeps on purpose beside the scratch.
+
+Carrying the owner is therefore what makes a family reclaimable without an
+operator, and :func:`var_scratch_name` is the only mint. A family whose names
+were spelled by hand at the call site could be reclaimed by nothing but an
+operator, however plainly a comment beside it promised otherwise. Names minted
+before that helper existed carry no readable owner and stay operator-only;
+they are why the ownerless path remains a supported answer rather than an
+error.
 
 Removal is deliberately not ``shutil.rmtree(..., ignore_errors=True)``. The
 largest family here is a Git clone, whose object files are read-only, and on
@@ -67,11 +75,12 @@ class ScratchFamily:
 
     prefix: str
     suffix: str
-    carries_owner_pid: bool
 
 
-RELEASE_COHORT_INTEGRATION_PREFIX: Final[str] = "release-cohort-integration-"
-RELEASE_COHORT_INTEGRATION_SUFFIX: Final[str] = "-source"
+RELEASE_COHORT_INTEGRATION_FAMILY: Final[ScratchFamily] = ScratchFamily(
+    prefix="release-cohort-integration-",
+    suffix="-source",
+)
 """Bracket the source clone the real double-build integration proof works from.
 
 That test clones the repository so both of its builds see one immovable tip,
@@ -81,37 +90,70 @@ suite's own ceiling documents that a worker parked in ``subprocess.wait()``
 exits uncleanly rather than unwinding.
 """
 
-RELEASE_STAGING_PREFIX: Final[str] = "."
-RELEASE_STAGING_SUFFIX: Final[str] = ".staging"
+RELEASE_STAGING_FAMILY: Final[ScratchFamily] = ScratchFamily(
+    prefix=".",
+    suffix=".staging",
+)
 """Bracket the directory a release cohort is assembled in before it is published.
 
 ``build_release_cohort`` builds into a hidden sibling of its output and moves
 it into place at the end, removing it explicitly when the build raises. A kill
-lands between those two, leaving a full cohort's worth of bytes behind.
+lands between those two, leaving a full cohort's worth of bytes behind -- both
+sdists, the wheelhouse and the several-hundred-megabyte source archive. The
+name carries its owner, so the next build's sweep reclaims it on an observed
+liveness answer rather than leaving it for an operator.
+"""
+
+COHORT_BUILD_TREE_FAMILY: Final[ScratchFamily] = ScratchFamily(
+    prefix=".",
+    suffix="-source",
+)
+"""Bracket the extracted Git archive ``uv build`` packages the cohort from.
+
+Some thirty-nine thousand files, extracted beside the cohort output and removed
+in a ``finally`` block -- which is the coverage this module exists because of.
+"""
+
+COHORT_SOURCE_ARCHIVE_FAMILY: Final[ScratchFamily] = ScratchFamily(
+    prefix=".",
+    suffix="-source.zip",
+)
+"""Bracket the Git archive the build tree is extracted from.
+
+The one registered family whose member is a FILE rather than a directory: it is
+moved into the cohort on the success path, so what survives a kill is a
+several-hundred-megabyte archive at the working name.
+"""
+
+COMMAND_SPEC_BYTECODE_FAMILY: Final[ScratchFamily] = ScratchFamily(
+    prefix=".",
+    suffix="-command-spec-bytecode",
+)
+"""Bracket the redirected bytecode root the installed CommandSpec probe compiles into.
+
+The probe reads a tree that defines a published artifact, so its bytecode is
+written beside that tree rather than into it. Removed in a ``finally`` block on
+every path the probe returns from, and left behind by every path it does not.
 """
 
 VAR_SCRATCH_FAMILIES: Final[tuple[ScratchFamily, ...]] = (
-    ScratchFamily(
-        prefix=RELEASE_COHORT_INTEGRATION_PREFIX,
-        suffix=RELEASE_COHORT_INTEGRATION_SUFFIX,
-        carries_owner_pid=True,
-    ),
-    ScratchFamily(
-        prefix=RELEASE_STAGING_PREFIX,
-        suffix=RELEASE_STAGING_SUFFIX,
-        carries_owner_pid=False,
-    ),
+    RELEASE_COHORT_INTEGRATION_FAMILY,
+    RELEASE_STAGING_FAMILY,
+    COHORT_BUILD_TREE_FAMILY,
+    COHORT_SOURCE_ARCHIVE_FAMILY,
+    COMMAND_SPEC_BYTECODE_FAMILY,
 )
 """Every family this sweep will consider. Anything not matching one is spared.
 
 A family added to a mint site and not to this tuple leaks without bound; a
 family named here that no mint site writes reclaims nothing and costs one
-string comparison. The asymmetry is why the mint sites import the constants
-above rather than spelling their own names.
+string comparison. The asymmetry is why every mint site builds its name with
+:func:`var_scratch_name` from one of the constants above rather than spelling
+its own, and why a gate reads this tuple back against the sites.
 """
 
 _STALE_AFTER_SECONDS: Final[float] = 24 * 60 * 60
-"""Age past which a scratch directory is reclaimed on mtime alone.
+"""Age past which a scratch entry is reclaimed on mtime alone.
 
 Deliberately the same generous day used for the abandoned storage roots under
 the OS temp directory, and for the same reason: mtime is only a PROXY for
@@ -126,19 +168,47 @@ _ABANDONED_AFTER_SECONDS: Final[float] = 10 * 60
 
 Not a staleness estimate: it covers clock skew on the mtime read and a process
 that has just exited whose own cleanup is still mid-removal. It applies only to
-a family whose names carry an owner, which is the only case where liveness is
+a name that carries a readable owner, which is the only case where liveness is
 observed rather than inferred.
 """
 
+_MAX_OWNER_DIGITS: Final[int] = 10
+_MAX_OWNER_PID: Final[int] = 2**31
+"""Bounds on the owner token a scratch name may claim to carry.
 
-def integration_snapshot_name(run_id: str) -> str:
-    """Return the ``var/`` name for one integration build's source clone.
+A process identifier is a small positive integer on every platform this runs
+on. Refusing anything outside that range costs nothing and keeps a hand-created
+directory -- whose name this module has no control over -- from reaching
+:func:`int` with a thousand-digit run of decimals, which raises rather than
+returning a number. The sweep runs from a session hook that suppresses only
+``OSError``, so a value error there would abort collection for the whole suite
+instead of sparing one directory.
+"""
 
-    Carries this process's identifier so the reclaim can ask the operating
-    system whether the owner is still running, instead of waiting out the
-    day-long ceiling that a name without an owner leaves as the only rule.
+
+def var_scratch_name(family: ScratchFamily, body: str) -> str:
+    """Return one ``var/`` name in ``family``, owned by this process.
+
+    The single mint. The owner is placed immediately after the family prefix,
+    which is what lets :func:`_owning_pid` read it back without knowing
+    anything about the body, and what lets the sweep act on an OBSERVED
+    liveness answer rather than waiting out the day-long mtime ceiling that a
+    name without a readable owner leaves as the only rule.
+
+    Args:
+        family: The registered family the name must belong to.
+        body: The caller's own discriminator -- an output name, a run id, or
+            both. Must be non-empty: a bare prefix and suffix is the shape
+            :func:`matching_family` deliberately refuses, so a name built from
+            an empty body would be minted outside every family and swept by
+            nothing.
+
+    Returns:
+        A name :func:`matching_family` places in ``family``.
     """
-    return f"{RELEASE_COHORT_INTEGRATION_PREFIX}{os.getpid()}-{run_id}{RELEASE_COHORT_INTEGRATION_SUFFIX}"
+    if not body:
+        raise ValueError(f"a scratch name needs a body to distinguish it: {family!r}")
+    return f"{family.prefix}{os.getpid()}-{body}{family.suffix}"
 
 
 def matching_family(name: str) -> ScratchFamily | None:
@@ -165,13 +235,22 @@ def _owning_pid(name: str, family: ScratchFamily) -> int | None:
     """Return the process identifier ``name`` carries, or ``None`` if it carries none.
 
     ``None`` is the answer that leaves the mtime ceiling as the only rule, and
-    it covers every shape that is not a leading run of digits -- including the
-    names minted before this module existed, which carry a bare hex run id.
+    it covers every shape :func:`var_scratch_name` did not produce -- including
+    the names minted before that helper existed, which carry a bare hex run id.
+
+    The token is read as DECIMAL rather than as "digits". ``str.isdigit`` is
+    true of characters :func:`int` refuses -- superscripts among them -- and
+    imposes no magnitude, so a hand-created ``var/`` entry could reach
+    :func:`int` with a value that raises. Nothing above catches that: the
+    session hook this runs from suppresses ``OSError`` alone, so the refusal
+    would abort collection for every packaging test rather than spare one
+    directory.
     """
-    if not family.carries_owner_pid:
-        return None
     owner = name.removeprefix(family.prefix).split("-", maxsplit=1)[0]
-    return int(owner) if owner.isdigit() else None
+    if not owner.isdecimal() or len(owner) > _MAX_OWNER_DIGITS:
+        return None
+    pid = int(owner)
+    return pid if 0 < pid < _MAX_OWNER_PID else None
 
 
 def _is_reclaimable(
@@ -242,6 +321,27 @@ def remove_tree(directory: Path) -> bool:
     return True
 
 
+def remove_scratch(candidate: Path) -> bool:
+    """Remove one judged scratch entry, whichever kind it is.
+
+    Most registered families name directories, but the cohort build's Git
+    archive is a single several-hundred-megabyte FILE at a working name until
+    the moment it is moved into the cohort. Leaving files to the next sweep
+    would mean the sweep never reclaimed one.
+
+    Returns:
+        Whether the entry is gone afterwards.
+    """
+    if candidate.is_dir():
+        return remove_tree(candidate)
+    try:
+        os.chmod(candidate, stat.S_IWRITE)
+        candidate.unlink(missing_ok=True)
+    except OSError:
+        return not candidate.exists()
+    return True
+
+
 def reclaimable_scratch(
     var_root: Path,
     *,
@@ -256,9 +356,9 @@ def reclaimable_scratch(
     being at risk while they do.
 
     Returns:
-        ``(reclaimable, spared)`` -- the scratch directories that may be
-        removed, and the ones a rule refused. Entries belonging to no
-        registered family appear in neither: they were never candidates.
+        ``(reclaimable, spared)`` -- the scratch entries that may be removed,
+        and the ones a rule refused. Entries belonging to no registered family
+        appear in neither: they were never candidates.
     """
     reference = time.time() if now is None else now
     spared_name = None if exclude is None else exclude.name
@@ -272,7 +372,11 @@ def reclaimable_scratch(
             spared.append(candidate)
             continue
         try:
-            if is_link_like(candidate) or not candidate.is_dir():
+            # A link is not the tree it names, and the families here are
+            # anchored on a name rather than on an inode: removing a link
+            # because its name matched would remove whatever an operator
+            # pointed it at.
+            if is_link_like(candidate):
                 continue
             verdict = _is_reclaimable(candidate, family, reference, reclaim_by_age=reclaim_by_age)
         except OSError:
@@ -292,16 +396,16 @@ def sweep_var_scratch(
     """Reclaim abandoned build scratch under ``var_root``, sparing everything else.
 
     Safe to run concurrently and repeatedly: nothing it removes belongs to a
-    live run, so two sweepers reaching one directory at once cannot make any
-    run observe a difference. Every filesystem error is absorbed -- this is
-    tidiness, not correctness, and a scratch directory left behind is never
-    read by anything.
+    live run, so two sweepers reaching one entry at once cannot make any run
+    observe a difference. Every filesystem error is absorbed -- this is
+    tidiness, not correctness, and a scratch entry left behind is never read by
+    anything.
 
     Args:
         var_root: The repository's ``var/`` directory.
         now: Reference time, defaulting to the wall clock. Injectable so a test
             can age a directory rather than wait out the grace.
-        exclude: A directory to leave alone regardless of every other rule,
+        exclude: An entry to leave alone regardless of every other rule,
             normally the calling run's own scratch. Its owner is live, so the
             liveness rule already spares it; naming it means the caller never
             depends on that reasoning holding.
@@ -311,8 +415,8 @@ def sweep_var_scratch(
             :func:`_is_reclaimable`.
 
     Returns:
-        ``(removed, spared)`` -- how many scratch directories were reclaimed,
-        and how many were examined and left alone. The spared count is the
+        ``(removed, spared)`` -- how many scratch entries were reclaimed, and
+        how many were examined and left alone. The spared count is the
         safety evidence: a sweep that took everything and a sweep that took
         only what it should both report a removal count.
     """
@@ -325,23 +429,25 @@ def sweep_var_scratch(
     removed = 0
     retained = len(spared)
     for candidate in reclaimable:
-        if remove_tree(candidate):
+        if remove_scratch(candidate):
             removed += 1
         else:
             retained += 1
     return removed, retained
 
 
-def _directory_bytes(directory: Path) -> int:
-    return sum(entry.stat().st_size for entry in scan_directory(directory, recursive=True) if entry.is_file())
+def _scratch_bytes(candidate: Path) -> int:
+    if candidate.is_file():
+        return candidate.stat().st_size
+    return sum(entry.stat().st_size for entry in scan_directory(candidate, recursive=True) if entry.is_file())
 
 
 def main(argv: list[str] | None = None) -> int:
     """Report abandoned ``var/`` build scratch, and reclaim it under ``--apply``.
 
     The operator switch for the inferred ground. Every automatic caller acts
-    only on an observed one, so a directory whose name carries no owner -- the
-    shape every snapshot minted before the family took a process identifier
+    only on an observed one, so an entry whose name carries no readable owner
+    -- the shape every snapshot minted before :func:`var_scratch_name` existed
     has -- is reported here and removed only when asked.
     """
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -349,7 +455,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--apply",
         action="store_true",
-        help="remove the scratch directories judged abandoned; without it nothing is deleted",
+        help="remove the scratch entries judged abandoned; without it nothing is deleted",
     )
     parser.add_argument(
         "--observed-only",
@@ -365,31 +471,33 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  SPARE {candidate.name}", file=sys.stdout)
     total = 0
     for candidate in reclaimable:
-        size = _directory_bytes(candidate)
+        size = _scratch_bytes(candidate)
         total += size
         print(f"  REAP  {candidate.name}  {size / 1_000_000_000:.3f} GB", file=sys.stdout)
     verb = "reclaimed" if arguments.apply else "reclaimable"
     print(f"  {verb}: {total / 1_000_000_000:.3f} GB   spared: {len(spared)}", file=sys.stdout)
     if arguments.apply:
         for candidate in reclaimable:
-            remove_tree(candidate)
+            remove_scratch(candidate)
     else:
         print("  nothing was deleted; pass --apply to act on the REAP lines above", file=sys.stdout)
     return 0
 
 
 __all__ = [
-    "RELEASE_COHORT_INTEGRATION_PREFIX",
-    "RELEASE_COHORT_INTEGRATION_SUFFIX",
-    "RELEASE_STAGING_PREFIX",
-    "RELEASE_STAGING_SUFFIX",
+    "COHORT_BUILD_TREE_FAMILY",
+    "COHORT_SOURCE_ARCHIVE_FAMILY",
+    "COMMAND_SPEC_BYTECODE_FAMILY",
+    "RELEASE_COHORT_INTEGRATION_FAMILY",
+    "RELEASE_STAGING_FAMILY",
     "VAR_SCRATCH_FAMILIES",
     "ScratchFamily",
-    "integration_snapshot_name",
     "matching_family",
     "reclaimable_scratch",
+    "remove_scratch",
     "remove_tree",
     "sweep_var_scratch",
+    "var_scratch_name",
 ]
 
 

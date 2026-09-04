@@ -115,3 +115,45 @@ def test_a_string_that_is_not_python_is_left_alone() -> None:
 def test_a_file_that_does_not_parse_reports_no_constants() -> None:
     """A syntax error is a file this sweep cannot speak about, not an empty one."""
     assert _constants("def (:\n") == []
+
+
+def test_a_pass_announces_the_files_it_left_unmigrated(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: pathlib.Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A codemod that skips a file leaves the tree partially migrated.
+
+    Each pass reports how many files it fixed; the files it could not read were
+    invisible, so an incomplete migration looked complete. That is a different
+    shape from a lost finding - the count is honest about what it did and silent
+    about what it did not.
+    """
+    from .. import namespace_retirement_sweep as sweep
+
+    (tmp_path / "broken.py").write_text("def (:" + chr(10), encoding="utf-8")
+    monkeypatch.setattr(sweep, "SRC", tmp_path)
+    monkeypatch.setattr(sweep, "ROOT", tmp_path)
+
+    sweep.fix_dot_depth()
+
+    error = capsys.readouterr().err
+    assert "left unmigrated" in error
+    assert "broken.py" in error
+
+
+def test_a_readable_tree_leaves_the_pass_silent(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: pathlib.Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A notice on every run would tell a reader nothing about this run."""
+    from .. import namespace_retirement_sweep as sweep
+
+    (tmp_path / "sound.py").write_text("VALUE = 1" + chr(10), encoding="utf-8")
+    monkeypatch.setattr(sweep, "SRC", tmp_path)
+    monkeypatch.setattr(sweep, "ROOT", tmp_path)
+
+    sweep.fix_dot_depth()
+
+    assert capsys.readouterr().err == ""

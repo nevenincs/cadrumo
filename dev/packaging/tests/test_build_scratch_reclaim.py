@@ -26,14 +26,19 @@ import pytest
 
 from ..._paths import REPO_ROOT, UTF_8
 from ..build_scratch_reclaim import (
-    RELEASE_COHORT_INTEGRATION_PREFIX,
-    RELEASE_COHORT_INTEGRATION_SUFFIX,
-    RELEASE_STAGING_PREFIX,
-    RELEASE_STAGING_SUFFIX,
-    integration_snapshot_name,
+    COHORT_BUILD_TREE_FAMILY,
+    COHORT_SOURCE_ARCHIVE_FAMILY,
+    COMMAND_SPEC_BYTECODE_FAMILY,
+    RELEASE_COHORT_INTEGRATION_FAMILY,
+    RELEASE_STAGING_FAMILY,
+    VAR_SCRATCH_FAMILIES,
+    ScratchFamily,
+    _owning_pid,
     matching_family,
+    remove_scratch,
     remove_tree,
     sweep_var_scratch,
+    var_scratch_name,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -53,11 +58,11 @@ _DISCOVERY_EXCLUSIONS: Final[frozenset[str]] = frozenset(
 )
 
 
-def _aged(directory: Path, seconds: float) -> Path:
-    """Backdate ``directory``'s modification time by ``seconds``."""
+def _aged(entry: Path, seconds: float) -> Path:
+    """Backdate ``entry``'s modification time by ``seconds``."""
     stamp = time.time() - seconds
-    os.utime(directory, (stamp, stamp))
-    return directory
+    os.utime(entry, (stamp, stamp))
+    return entry
 
 
 def _scratch_tree(var: Path, name: str, *, read_only: bool = False) -> Path:
@@ -78,8 +83,20 @@ def _scratch_tree(var: Path, name: str, *, read_only: bool = False) -> Path:
     return directory
 
 
-def _abandoned_snapshot_name() -> str:
-    """Return a snapshot name owned by a process that really ran and really ended.
+def _scratch_file(var: Path, name: str) -> Path:
+    """Create one scratch FILE under ``var``.
+
+    The cohort build's Git archive is a file at a working name until the moment
+    it is moved into the cohort, so a sweep that considered directories alone
+    left several hundred megabytes of it behind after every kill.
+    """
+    path = var / name
+    path.write_bytes(b"archive bytes")
+    return path
+
+
+def _foreign_owner_name(family: ScratchFamily, body: str) -> str:
+    """Return a ``family`` name owned by a process that really ran and really ended.
 
     A real child rather than an invented number: the liveness answer then comes
     from the operating system about a process it genuinely knew, which is the
@@ -87,13 +104,47 @@ def _abandoned_snapshot_name() -> str:
     """
     finished = subprocess.Popen([sys.executable, "-c", "pass"])
     finished.wait()
-    return f"{RELEASE_COHORT_INTEGRATION_PREFIX}{finished.pid}-abc{RELEASE_COHORT_INTEGRATION_SUFFIX}"
+    return f"{family.prefix}{finished.pid}-{body}{family.suffix}"
+
+
+def _abandoned_snapshot_name() -> str:
+    """Return an integration snapshot name whose owner has exited."""
+    return _foreign_owner_name(RELEASE_COHORT_INTEGRATION_FAMILY, "abc")
+
+
+def _legacy_ownerless_name() -> str:
+    """Return an integration snapshot name from before the mint carried an owner.
+
+    A bare hex run id where the owner token would now be, which is the shape
+    already sitting in the development box's ``var/`` and the shape the
+    automatic callers must not act on.
+    """
+    family = RELEASE_COHORT_INTEGRATION_FAMILY
+    return f"{family.prefix}0979c0c733fe{family.suffix}"
 
 
 def _var(tmp_path: Path) -> Path:
     var = tmp_path / "var"
     var.mkdir()
     return var
+
+
+def _var_naming_surfaces() -> list[Path]:
+    """Return every tracked surface that can name a ``var/`` member.
+
+    Not just Python. A lane's ``var/`` directory is as often named in the
+    workflow that runs it or in the recipe that invokes it as in the module
+    that reads it, and a discovery that saw only ``dev/**/*.py`` would judge
+    the sweep safe against a fraction of its real inputs. The names those two
+    surfaces contribute today fall inside no family, so this widening changes
+    no verdict -- it removes the case where a lane adds one that does and
+    nothing notices.
+    """
+    return [
+        *(path for path in REPO_ROOT.joinpath("dev").rglob("*.py") if path.name not in _DISCOVERY_EXCLUSIONS),
+        *sorted(REPO_ROOT.joinpath(".github", "workflows").glob("*.yml")),
+        REPO_ROOT / "justfile",
+    ]
 
 
 def _live_var_members() -> frozenset[str]:
@@ -105,10 +156,11 @@ def _live_var_members() -> frozenset[str]:
     failure that ends in a sweep deleting a release's evidence.
     """
     members: set[str] = set()
-    for source in REPO_ROOT.joinpath("dev").rglob("*.py"):
-        if source.name in _DISCOVERY_EXCLUSIONS:
+    for source in _var_naming_surfaces():
+        try:
+            text = source.read_text(encoding=UTF_8, errors="ignore")
+        except OSError:
             continue
-        text = source.read_text(encoding=UTF_8, errors="ignore")
         for pattern in _VAR_MEMBER_PATTERNS:
             members.update(pattern.findall(text))
     return frozenset(members)
@@ -131,6 +183,27 @@ def test_discovered_live_var_members_cover_the_readiness_gate_inputs() -> None:
         "packaging-smoke-cohort",
     } <= discovered
     assert len(discovered) >= 10
+
+
+def test_discovery_reaches_the_surfaces_outside_the_python_tree() -> None:
+    """A ``var/`` name only a workflow or the justfile carries is still discovered.
+
+    The teeth for the widening. Each name below appears in exactly one of the
+    two non-Python surfaces and nowhere under ``dev/**/*.py``, so a discovery
+    narrowed back to the Python tree fails here rather than silently judging
+    the sweep against a fraction of its inputs.
+    """
+    python_only: set[str] = set()
+    for source in REPO_ROOT.joinpath("dev").rglob("*.py"):
+        if source.name in _DISCOVERY_EXCLUSIONS:
+            continue
+        text = source.read_text(encoding=UTF_8, errors="ignore")
+        for pattern in _VAR_MEMBER_PATTERNS:
+            python_only.update(pattern.findall(text))
+
+    beyond_python = _live_var_members() - python_only
+
+    assert {"distributions", "oracle-emit-work", "release"} <= beyond_python
 
 
 def test_no_live_var_member_falls_inside_a_scratch_family() -> None:
@@ -185,7 +258,7 @@ def test_naive_ignore_errors_removal_is_not_what_the_sweep_does(tmp_path: Path) 
     afterwards the tree is gone and the function said so.
     """
     var = _var(tmp_path)
-    tree = _scratch_tree(var, integration_snapshot_name("a" * 32), read_only=True)
+    tree = _scratch_tree(var, var_scratch_name(RELEASE_COHORT_INTEGRATION_FAMILY, "a" * 32), read_only=True)
 
     assert remove_tree(tree) is True
     assert not tree.exists()
@@ -194,7 +267,7 @@ def test_naive_ignore_errors_removal_is_not_what_the_sweep_does(tmp_path: Path) 
 def test_sweep_spares_a_scratch_directory_a_concurrent_build_is_writing(tmp_path: Path) -> None:
     """Freshly written scratch belongs to a running build and is left alone."""
     var = _var(tmp_path)
-    running = _scratch_tree(var, f"{RELEASE_STAGING_PREFIX}release-cohort-9f{RELEASE_STAGING_SUFFIX}")
+    running = _scratch_tree(var, var_scratch_name(RELEASE_STAGING_FAMILY, "release-cohort-9f"))
 
     removed, spared = sweep_var_scratch(var, now=time.time())
 
@@ -221,7 +294,7 @@ def test_sweep_reclaims_an_owned_snapshot_once_its_owner_has_exited(tmp_path: Pa
 def test_sweep_spares_a_snapshot_whose_named_owner_is_still_running(tmp_path: Path) -> None:
     """This process is alive, so the snapshot naming it survives the same age."""
     var = _var(tmp_path)
-    mine = _aged(_scratch_tree(var, integration_snapshot_name("b" * 32)), 20 * 60)
+    mine = _aged(_scratch_tree(var, var_scratch_name(RELEASE_COHORT_INTEGRATION_FAMILY, "b" * 32)), 20 * 60)
 
     removed, spared = sweep_var_scratch(var, now=time.time())
 
@@ -238,7 +311,7 @@ def test_an_ownerless_snapshot_is_never_reclaimed_on_the_sweep_own_initiative(tm
     whether it is abandoned, so only an operator decides.
     """
     var = _var(tmp_path)
-    name = f"{RELEASE_COHORT_INTEGRATION_PREFIX}0979c0c733fe{RELEASE_COHORT_INTEGRATION_SUFFIX}"
+    name = _legacy_ownerless_name()
     ownerless = _aged(_scratch_tree(var, name), 30 * _DAY)
 
     assert sweep_var_scratch(var, now=time.time()) == (0, 1)
@@ -248,7 +321,7 @@ def test_an_ownerless_snapshot_is_never_reclaimed_on_the_sweep_own_initiative(tm
 def test_an_ownerless_snapshot_is_reclaimed_when_an_operator_asks_by_age(tmp_path: Path) -> None:
     """The day ceiling is available, and it is what ``--apply`` reaches."""
     var = _var(tmp_path)
-    name = f"{RELEASE_COHORT_INTEGRATION_PREFIX}0979c0c733fe{RELEASE_COHORT_INTEGRATION_SUFFIX}"
+    name = _legacy_ownerless_name()
     _aged(_scratch_tree(var, name), 20 * 60)
 
     assert sweep_var_scratch(var, now=time.time(), reclaim_by_age=True) == (0, 1)
@@ -269,7 +342,7 @@ def test_a_live_owner_is_spared_by_the_automatic_sweep_however_old(tmp_path: Pat
     itself is allowed to turn on that timestamp.
     """
     var = _var(tmp_path)
-    mine = _aged(_scratch_tree(var, integration_snapshot_name("d" * 32)), 30 * _DAY)
+    mine = _aged(_scratch_tree(var, var_scratch_name(RELEASE_COHORT_INTEGRATION_FAMILY, "d" * 32)), 30 * _DAY)
 
     assert sweep_var_scratch(var, now=time.time()) == (0, 1)
     assert mine.is_dir()
@@ -285,7 +358,7 @@ def test_the_day_ceiling_is_the_backstop_for_a_recycled_identifier(tmp_path: Pat
     caps itself at an hour.
     """
     var = _var(tmp_path)
-    looks_owned = _aged(_scratch_tree(var, integration_snapshot_name("e" * 32)), 2 * _DAY)
+    looks_owned = _aged(_scratch_tree(var, var_scratch_name(RELEASE_COHORT_INTEGRATION_FAMILY, "e" * 32)), 2 * _DAY)
 
     assert sweep_var_scratch(var, now=time.time(), reclaim_by_age=True) == (1, 0)
     assert not looks_owned.exists()
@@ -324,6 +397,10 @@ def test_names_outside_every_family_are_not_scratch(name: str) -> None:
         "release-cohort-integration-4812-9f2a-source",
         ".release-cohort-9f2a.staging",
         ".packaging-smoke-cohort-1.staging",
+        ".4812-release-cohort-9f2a.staging",
+        ".4812-release-python-9f2a-source",
+        ".4812-release-python-9f2a-source.zip",
+        ".4812-probe-command-spec-bytecode",
     ],
 )
 def test_registered_scratch_names_are_recognised(name: str) -> None:
@@ -346,7 +423,7 @@ def test_sweep_does_not_follow_a_link_named_like_scratch(tmp_path: Path) -> None
     target = tmp_path / "protected"
     target.mkdir()
     (target / "keep").write_bytes(b"not scratch")
-    link = var / integration_snapshot_name("c" * 32)
+    link = var / var_scratch_name(RELEASE_COHORT_INTEGRATION_FAMILY, "c" * 32)
     try:
         if sys.platform == "win32":
             command_shell = shutil.which("cmd")
@@ -367,3 +444,141 @@ def test_sweep_does_not_follow_a_link_named_like_scratch(tmp_path: Path) -> None
     assert (removed, spared) == (0, 0)
     assert (target / "keep").is_file()
     shutil.rmtree(link, ignore_errors=True)
+
+
+def test_an_abandoned_release_staging_directory_is_reclaimed(tmp_path: Path) -> None:
+    """A killed release build's staging cohort goes without an operator asking.
+
+    The property the call site's comment claims. Staging names carry their
+    owner, so a build that died leaves a name the sweep can resolve a liveness
+    answer for -- and a full cohort's worth of bytes is reclaimed at the start
+    of the next build rather than sitting until someone runs ``--apply`` a day
+    later.
+    """
+    var = _var(tmp_path)
+    abandoned = _aged(_scratch_tree(var, _foreign_owner_name(RELEASE_STAGING_FAMILY, "release-cohort-9f2a")), 20 * 60)
+
+    removed, spared = sweep_var_scratch(var, now=time.time())
+
+    assert (removed, spared) == (1, 0)
+    assert not abandoned.exists()
+
+
+def test_an_abandoned_cohort_build_tree_and_its_archive_are_reclaimed(tmp_path: Path) -> None:
+    """The extracted source tree and the Git archive beside it both go.
+
+    Thirty-nine thousand files and a several-hundred-megabyte zip, removed by
+    the cohort build in a ``finally`` block that a kill never reaches. The
+    archive is the registered family whose member is a FILE, so this is also
+    the proof that the sweep is not directory-only.
+    """
+    var = _var(tmp_path)
+    tree = _aged(
+        _scratch_tree(var, _foreign_owner_name(COHORT_BUILD_TREE_FAMILY, "release-python-9f2a")),
+        20 * 60,
+    )
+    archive = _aged(
+        _scratch_file(var, _foreign_owner_name(COHORT_SOURCE_ARCHIVE_FAMILY, "release-python-9f2a")),
+        20 * 60,
+    )
+
+    removed, spared = sweep_var_scratch(var, now=time.time())
+
+    assert (removed, spared) == (2, 0)
+    assert not tree.exists()
+    assert not archive.exists()
+
+
+def test_an_abandoned_probe_bytecode_root_is_reclaimed(tmp_path: Path) -> None:
+    """The attestation probe's redirected bytecode root is registered scratch too."""
+    var = _var(tmp_path)
+    bytecode = _aged(_scratch_tree(var, _foreign_owner_name(COMMAND_SPEC_BYTECODE_FAMILY, "probe")), 20 * 60)
+
+    removed, spared = sweep_var_scratch(var, now=time.time())
+
+    assert (removed, spared) == (1, 0)
+    assert not bytecode.exists()
+
+
+def test_a_live_owner_spares_every_registered_family(tmp_path: Path) -> None:
+    """This process's own scratch survives in every family, at any age.
+
+    Parametrised over the registry rather than over a written list, so a family
+    added to :data:`VAR_SCRATCH_FAMILIES` is covered by this safety property the
+    moment it is registered.
+    """
+    var = _var(tmp_path)
+    mine = [_aged(_scratch_tree(var, var_scratch_name(family, "body")), 30 * _DAY) for family in VAR_SCRATCH_FAMILIES]
+
+    assert sweep_var_scratch(var, now=time.time()) == (0, len(VAR_SCRATCH_FAMILIES))
+    assert all(entry.is_dir() for entry in mine)
+
+
+def test_every_minted_name_lands_in_the_family_it_was_minted_from() -> None:
+    """The mint and the judge agree, family by family.
+
+    The single-sourcing this module rests on: a name built from a family
+    constant must be recognised as belonging to that same family, or the mint
+    sites and the sweep are describing different things.
+    """
+    minted = {family: var_scratch_name(family, "body") for family in VAR_SCRATCH_FAMILIES}
+
+    assert {family: matching_family(name) for family, name in minted.items()} == {
+        family: family for family in VAR_SCRATCH_FAMILIES
+    }
+    assert {_owning_pid(name, family) for family, name in minted.items()} == {os.getpid()}
+
+
+def test_a_minted_name_needs_a_body_to_distinguish_it() -> None:
+    """A bare prefix and suffix is the shape the judge refuses, so the mint refuses it.
+
+    Without this the caller would receive a name no sweep would ever consider
+    and no error would say so.
+    """
+    with pytest.raises(ValueError, match="needs a body"):
+        var_scratch_name(RELEASE_STAGING_FAMILY, "")
+
+
+@pytest.mark.parametrize(
+    "owner",
+    [
+        "\N{SUPERSCRIPT TWO}",
+        "9" * 5000,
+        "0",
+        "-4",
+        str(2**31),
+    ],
+)
+def test_an_unreadable_owner_token_is_no_owner_rather_than_a_refusal(owner: str) -> None:
+    """A name this module did not mint cannot abort the session that reads it.
+
+    ``str.isdigit`` is true of characters :func:`int` refuses and imposes no
+    magnitude, and the sweep runs from a session hook that suppresses only
+    ``OSError``. A hand-created ``var/`` entry carrying any of these would have
+    ended collection for every packaging test rather than being spared.
+    """
+    family = RELEASE_STAGING_FAMILY
+    name = f"{family.prefix}{owner}-body{family.suffix}"
+
+    assert matching_family(name) is family
+    assert _owning_pid(name, family) is None
+
+
+def test_a_legacy_ownerless_name_is_read_as_carrying_no_owner() -> None:
+    """The hex run ids minted before the owner existed stay operator-only."""
+    family = RELEASE_COHORT_INTEGRATION_FAMILY
+    name = _legacy_ownerless_name()
+
+    assert matching_family(name) is family
+    assert _owning_pid(name, family) is None
+
+
+def test_remove_scratch_takes_a_file_as_well_as_a_tree(tmp_path: Path) -> None:
+    """Stated as a property of the removal, since one registered family is a file."""
+    var = _var(tmp_path)
+    archive = _scratch_file(var, _foreign_owner_name(COHORT_SOURCE_ARCHIVE_FAMILY, "release-python-9f2a"))
+    tree = _scratch_tree(var, _foreign_owner_name(COHORT_BUILD_TREE_FAMILY, "release-python-9f2a"))
+
+    assert remove_scratch(archive) is True
+    assert remove_scratch(tree) is True
+    assert list(var.iterdir()) == []

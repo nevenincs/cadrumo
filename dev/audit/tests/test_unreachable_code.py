@@ -752,3 +752,74 @@ def test_the_live_test_walk_read_every_module() -> None:
         parse_module(path)
 
     assert walked > 0, "the walk found no test modules, so this would prove nothing"
+
+
+def test_an_unreadable_data_file_is_announced_as_a_deletion_risk(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Data tokens are a REFERENCE set, so losing one makes a live member look dead.
+
+    Registry declarations and locale catalogues address fields and enum values
+    by name; a token found only in a file that could not be read leaves that
+    member reported unreachable, and unreachable members here are deletion
+    candidates. The lenient decode was worse than the skip - a replaced byte can
+    split a token so it never matches, with nothing said either way.
+    """
+    from ..unreachable_code import ShippedTreeSpec, _data_tokens
+
+    package = tmp_path / "src" / "cadrumo" / "_data" / "registry"
+    package.mkdir(parents=True)
+    (package / "sound.json").write_text('{"field": "readable_token"}' + chr(10), encoding="utf-8")
+    (package / "undecodable.json").write_bytes(bytes([0xFF, 0xFE]) + b'{"field": "hidden_token"}')
+
+    spec = ShippedTreeSpec(
+        repo_root=tmp_path,
+        src_root=tmp_path / "src",
+        package="cadrumo",
+        entry_points=(),
+        data_globs=("_data/registry/**/*.json",),
+    )
+    tokens = _data_tokens(spec)
+
+    assert "readable_token" in tokens
+    error = capsys.readouterr().err
+    assert "deletion candidate" in error
+    assert "undecodable.json" in error
+
+
+def test_an_absent_root_is_announced_while_an_empty_one_is_not(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Absence and emptiness were the same event, and they are not the same fact.
+
+    A root that exists and holds no Python files yields nothing truthfully. A
+    root that does not exist yielded the same nothing, and every caller then
+    analysed an empty corpus - the reference walk seeing no references reports
+    live code dead, the test walk seeing no tests reports none.
+    """
+    from ..unreachable_code import iter_python_files
+
+    empty = tmp_path / "empty"
+    empty.mkdir()
+
+    assert list(iter_python_files(empty)) == []
+    assert capsys.readouterr().err == "", "an empty directory is a true answer, not a defect"
+
+    assert list(iter_python_files(tmp_path / "never-created")) == []
+    assert "does not exist" in capsys.readouterr().err
+
+
+def test_a_single_file_root_is_still_enumerated(tmp_path: Path) -> None:
+    """One configured corpus in this repository IS a single file, not a directory.
+
+    The absent-root branch must not swallow that case, which the live spec
+    exercises today.
+    """
+    from ..unreachable_code import iter_python_files
+
+    module = tmp_path / "solo.py"
+    module.write_text("VALUE = 1" + chr(10), encoding="utf-8")
+
+    assert list(iter_python_files(module)) == [module]

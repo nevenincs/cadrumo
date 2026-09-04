@@ -16,7 +16,7 @@ import pytest
 from .._hashing import sha256_path
 from ..python_cohort import (
     _artifact_command_projection,
-    _assert_origins_are_wheel_members,
+    _assert_probe_reads_are_wheel_members,
     _cached_artifact_command_projection,
     _command_spec_attestation,
     _validate_command_spec_attestation,
@@ -173,11 +173,22 @@ def test_load_python_cohort_rejects_digest_drift_before_metadata_parsing(
         load_python_cohort(tmp_path)
 
 
-def _projection_over(root: Path, origins: tuple[str, ...]) -> dict[str, object]:
-    """Return a CommandSpec projection naming ``origins`` beneath ``root``."""
+def _projection_over(
+    root: Path,
+    origins: tuple[str, ...],
+    resources: tuple[str, ...] = ("cadrumo/locales/en/application.yml",),
+) -> dict[str, object]:
+    """Return a CommandSpec projection naming ``origins`` and ``resources`` beneath ``root``.
+
+    Both halves are supplied because the probe reports both: the modules it
+    imported, and the packaged locale files the sealed locale rows were read
+    out of. The resource default is one real shard name, so a case that is
+    about modules does not accidentally exercise the empty-resource refusal.
+    """
     return {
         "identities": [["cadrumo", "root", "group"]],
         "origins": [[member.replace("/", "."), str(root / member)] for member in origins],
+        "packaged_resources": [str(root / member) for member in resources],
     }
 
 
@@ -201,19 +212,77 @@ def test_attestation_refuses_an_origin_the_root_wheel_does_not_ship(tmp_path: Pa
     (site_root / "cadrumo" / "tests").mkdir(parents=True)
     artifact_projection = (
         ("wheel", "cadrumo/__init__.py"),
+        ("wheel", "cadrumo/locales/en/application.yml"),
         ("source", "src/cadrumo/tests/helper.py"),
     )
     projection = _projection_over(site_root, ("cadrumo/__init__.py", "cadrumo/tests/helper.py"))
 
     with pytest.raises(SystemExit, match="does not ship"):
-        _assert_origins_are_wheel_members(projection, artifact_projection, site_root=site_root)
+        _assert_probe_reads_are_wheel_members(projection, artifact_projection, site_root=site_root)
 
 
-def test_attestation_accepts_origins_the_root_wheel_carries(tmp_path: Path) -> None:
-    """Every origin present as a wheel member passes, from a real archive listing."""
+def test_attestation_refuses_packaged_data_the_root_wheel_does_not_ship(tmp_path: Path) -> None:
+    """A locale shard present in the build tree and absent from the wheel fails closed.
+
+    The DATA half, and the one with the sharper consequence. The probe reads the
+    packaged catalogue out of its tree, refuses an incomplete locale projection,
+    and the digest of those rows is sealed into the published envelope. A wheel
+    exclusion that sheds one language leaves the tree complete and the archive
+    short, so without this the release ships a Spanish command surface rendering
+    raw translation keys under an attestation certifying a complete catalogue.
+
+    The wheel listing here carries the English shard and not the Spanish one,
+    which is exactly that exclusion.
+    """
+    site_root = tmp_path / "src"
+    (site_root / "cadrumo" / "locales" / "es").mkdir(parents=True)
+    artifact_projection = (
+        ("wheel", "cadrumo/__init__.py"),
+        ("wheel", "cadrumo/locales/en/application.yml"),
+        ("source", "src/cadrumo/locales/es/application.yml"),
+    )
+    projection = _projection_over(
+        site_root,
+        ("cadrumo/__init__.py",),
+        resources=("cadrumo/locales/en/application.yml", "cadrumo/locales/es/application.yml"),
+    )
+
+    with pytest.raises(SystemExit, match="does not ship") as refusal:
+        _assert_probe_reads_are_wheel_members(projection, artifact_projection, site_root=site_root)
+
+    assert "cadrumo/locales/es/application.yml" in str(refusal.value)
+
+
+def test_attestation_refuses_a_projection_that_read_no_packaged_data(tmp_path: Path) -> None:
+    """An empty resource report is vacuity, not absence.
+
+    The probe's locale completeness check passes trivially over a catalogue with
+    nothing in it, so a projection reporting no resource read cannot have sealed
+    the locale rows it claims to. Refused rather than skipped, because skipping
+    would restore exactly the module-only check this replaced.
+    """
     site_root = tmp_path / "src"
     (site_root / "cadrumo").mkdir(parents=True)
-    members = ("cadrumo/__init__.py", "cadrumo/core/i18n.py")
+    projection = _projection_over(site_root, ("cadrumo/__init__.py",), resources=())
+
+    with pytest.raises(SystemExit, match="no packaged resource file"):
+        _assert_probe_reads_are_wheel_members(
+            projection,
+            (("wheel", "cadrumo/__init__.py"),),
+            site_root=site_root,
+        )
+
+
+def test_attestation_accepts_origins_and_data_the_root_wheel_carries(tmp_path: Path) -> None:
+    """Every module and resource present as a wheel member passes, from a real archive listing."""
+    site_root = tmp_path / "src"
+    (site_root / "cadrumo").mkdir(parents=True)
+    members = (
+        "cadrumo/__init__.py",
+        "cadrumo/core/i18n/render.py",
+        "cadrumo/locales/en/application.yml",
+        "cadrumo/locales/es/application.yml",
+    )
     root_wheel = _wheel_carrying(tmp_path / "cadrumo-1.0.0-py3-none-any.whl", members)
     root_sdist = tmp_path / "cadrumo-1.0.0.tar.gz"
     with tarfile.open(root_sdist, "w:gz") as archive:
@@ -223,9 +292,9 @@ def test_attestation_accepts_origins_the_root_wheel_carries(tmp_path: Path) -> N
     source_archive = _wheel_carrying(tmp_path / "cadrumo-source.zip", ("pyproject.toml",))
 
     artifact_projection = _artifact_command_projection(root_wheel, root_sdist, source_archive)
-    projection = _projection_over(site_root, members)
+    projection = _projection_over(site_root, members[:2], resources=members[2:])
 
-    _assert_origins_are_wheel_members(projection, artifact_projection, site_root=site_root)
+    _assert_probe_reads_are_wheel_members(projection, artifact_projection, site_root=site_root)
 
 
 def test_attestation_refuses_an_origin_outside_the_probe_tree(tmp_path: Path) -> None:
@@ -237,7 +306,35 @@ def test_attestation_refuses_an_origin_outside_the_probe_tree(tmp_path: Path) ->
     projection = _projection_over(elsewhere, ("cadrumo/__init__.py",))
 
     with pytest.raises(SystemExit, match="escaped its probe tree"):
-        _assert_origins_are_wheel_members(projection, (("wheel", "cadrumo/__init__.py"),), site_root=site_root)
+        _assert_probe_reads_are_wheel_members(
+            projection,
+            (("wheel", "cadrumo/__init__.py"),),
+            site_root=site_root,
+        )
+
+
+def test_attestation_refuses_packaged_data_outside_the_probe_tree(tmp_path: Path) -> None:
+    """A resource resolving outside the probed root is refused for the same reason.
+
+    A catalogue read from a neighbouring installation would describe locale rows
+    the wheel under attestation has no relationship to.
+    """
+    site_root = tmp_path / "src"
+    site_root.mkdir()
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    projection = {
+        "identities": [["cadrumo", "root", "group"]],
+        "origins": [["cadrumo", str(site_root / "cadrumo" / "__init__.py")]],
+        "packaged_resources": [str(elsewhere / "cadrumo" / "locales" / "en" / "application.yml")],
+    }
+
+    with pytest.raises(SystemExit, match="escaped its probe tree"):
+        _assert_probe_reads_are_wheel_members(
+            projection,
+            (("wheel", "cadrumo/__init__.py"),),
+            site_root=site_root,
+        )
 
 
 def test_attestation_binds_the_digests_it_is_handed(tmp_path: Path) -> None:

@@ -898,6 +898,7 @@ errors:
       nem elemezhető decimálisként.'
     refused_iva_compensation_year_range: 'Elutasítva: az IVA-kompenzáció éve az elfogadott
       tartományon kívül van.'
+    refused_iva_prorrata_especial_margin_ungrounded: A kötelező különleges arányosítási küszöb nem alapozható meg erre az adóévre.
     refused_iva_wallet_reconciliation_invariant: Az IVA tárca egyeztetési bemenetek
       egy szükséges feltételt sértenek. Ellenőrizze a tárca-kor beállítást, és próbálja
       újra.
@@ -983,6 +984,7 @@ errors:
       érvényesítésen.
     refused_profile_basis_cap_exceeded: A halmozott amortizáció meghaladná a vagyonelem
       bekerülési értékét.
+    refused_profile_bienes_inversion_parameters: Az aktív revízió nem határoz meg beruházási javakra vonatkozó áfa-korrekciós értékeket ehhez a bevallási környezethez.
     refused_profile_bienes_inversion_validation: Egy beruházási javak áfa-korrekciós
       nyilvántartása nem ment át az ellenőrzésen.
     refused_profile_binding_resolution: A számításhoz szükséges profiladatot nem sikerült

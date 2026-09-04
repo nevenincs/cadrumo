@@ -95,3 +95,47 @@ def test_a_missing_corpus_directory_is_distinguishable_from_an_absent_field(tmp_
 
     assert evidence.corpus_files_scanned == 0
     assert not evidence.declares_the_field
+
+
+def test_an_unreadable_file_is_not_counted_as_scanned(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """``corpus_files_scanned`` exists to tell a real zero from an absent directory.
+
+    Counting a file before reading it inflated exactly that denominator with
+    files never examined, so the anti-vacuity signal this evidence carries was
+    itself vacuous. The lenient decode was the other half: a replaced byte can
+    break the field anchor or the code pattern and lose evidence with no sign.
+    """
+    from ..derive_result_dispositions import read_diseno_evidence
+
+    base = tmp_path / "modelo_999"
+    base.mkdir()
+    (base / "sound.txt").write_text("nothing of interest" + chr(10), encoding="utf-8")
+    (base / "undecodable.txt").write_bytes(bytes([0xFF, 0xFE]) + b"nothing of interest")
+
+    evidence = read_diseno_evidence("999", root=tmp_path)
+
+    assert evidence.corpus_files_scanned == 1, "the unreadable file was counted as scanned"
+    error = capsys.readouterr().err
+    assert "over-stated the corpus" in error
+    assert "undecodable.txt" in error
+
+
+def test_a_readable_corpus_counts_every_file_and_stays_silent(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The success path, so the new guard cannot be satisfied by counting nothing."""
+    from ..derive_result_dispositions import read_diseno_evidence
+
+    base = tmp_path / "modelo_999"
+    base.mkdir()
+    (base / "one.txt").write_text("alpha" + chr(10), encoding="utf-8")
+    (base / "two.txt").write_text("bravo" + chr(10), encoding="utf-8")
+
+    evidence = read_diseno_evidence("999", root=tmp_path)
+
+    assert evidence.corpus_files_scanned == 2
+    assert capsys.readouterr().err == ""

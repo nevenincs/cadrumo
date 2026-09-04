@@ -99,3 +99,42 @@ def test_the_shipped_record_design_authority_is_enrolled() -> None:
 
     assert "src/cadrumo/domain/calculations/registry/record_design.py" in rows
     assert rows["src/cadrumo/domain/calculations/registry/record_design.py"].corpus
+
+
+def test_an_unreadable_module_is_announced_as_a_missing_prose_parser(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A skipped module cannot appear in the derived list.
+
+    This channel exists to name every module that compiles a regulatory-prose
+    pattern - the places where legal text is interpreted by regex. One that is
+    silently skipped is a parser nobody reviews.
+    """
+    from ..analysis import regulatory_prose_parser_channel as channel
+
+    (tmp_path / "broken.py").write_text("def (:" + chr(10), encoding="utf-8")
+    monkeypatch.setattr(channel, "_iter_scanned_modules", lambda: iter(sorted(tmp_path.rglob("*.py"))))
+
+    channel.derive_prose_parsers()
+
+    error = capsys.readouterr().err
+    assert "absent from this list" in error
+    assert "broken.py" in error
+
+
+def test_a_readable_tree_announces_nothing(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A notice on every run would carry no information."""
+    from ..analysis import regulatory_prose_parser_channel as channel
+
+    (tmp_path / "sound.py").write_text("VALUE = 1" + chr(10), encoding="utf-8")
+    monkeypatch.setattr(channel, "_iter_scanned_modules", lambda: iter(sorted(tmp_path.rglob("*.py"))))
+
+    channel.derive_prose_parsers()
+
+    assert capsys.readouterr().err == ""

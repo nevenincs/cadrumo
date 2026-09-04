@@ -32,6 +32,7 @@ general deducible cuota  = (10.50 + 10.50 + 10.50) * 60% = 18.90 (all inputs fla
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
+from datetime import date as _esp_date
 from decimal import Decimal
 from pathlib import Path
 
@@ -46,8 +47,10 @@ from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRe
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.schema_base import ThresholdComparison
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.prorrata import InputClassification
+from ....domain.iva.prorrata_especial_parameters import ProrrataEspecialMandatoryParameters
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.prorrata_regularizacion import build_prorrata_especial_mandatory_advisory
@@ -55,6 +58,18 @@ from .. import aggregate_iva_ledger_observations_from_repositories
 from ..iva_ledger import resolve_iva_ledger_binding_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+#: An explicit resolved margin. These tests exercise the PREDICATE and the
+#: advisory wording, not the law; whether 10 inclusive is what art. 103.Dos.2
+#: states is answered against the registry by the modelo 303 parameter gate.
+_ESPECIAL_PARAMS = ProrrataEspecialMandatoryParameters(
+    margin_percentage=Decimal("10"),
+    comparison=ThresholdComparison.INCLUSIVE,
+    modelo_id="303",
+    revision_id="2025",
+    resolved_on=_esp_date(2025, 12, 31),
+)
 
 _BUCKET_ID = "79797979-7979-4979-8979-797979797979"
 _PERIOD = Period.from_year_and_code(2026, "1T")
@@ -237,6 +252,7 @@ def test_plus_ten_percent_advisory_fires_on_production_general_vs_especial_total
         deduction_under_general=general_cuota,
         deduction_under_especial=especial_cuota,
         ejercicio=2026,
+        parameters=_ESPECIAL_PARAMS,
     )
 
     assert notice is not None
@@ -250,6 +266,7 @@ def test_plus_ten_percent_advisory_fires_on_production_general_vs_especial_total
             deduction_under_general=especial_cuota,
             deduction_under_especial=especial_cuota,
             ejercicio=2026,
+            parameters=_ESPECIAL_PARAMS,
         )
         is None
     )

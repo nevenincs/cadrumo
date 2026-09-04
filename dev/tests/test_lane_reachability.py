@@ -17,6 +17,11 @@ this file run" (too quiet). Reporting per test resolves both.
 No stored baseline and no allowlist. The worklist is recomputed from the tree on
 every run, so coverage can only ratchet up: a new test outside every lane fails
 immediately rather than being absorbed into an accepted set that nobody revisits.
+The one declaration channel that exists -- ``UNSWEPT_TEST_DIRECTORIES``, for a
+directory deliberately held out with its reason -- is held to the same standard
+rather than exempted from it: an entry is reported back as stale the moment a
+lane sweeps the directory or the directory stops existing, so it cannot decay
+into the accepted set this paragraph refuses.
 
 THIS MODULE'S LOCATION IS LOAD-BEARING, and the requirement is reach rather than
 a particular directory: a guard against unreachable tests must itself sit inside
@@ -39,7 +44,8 @@ path-only and could not see marker exclusion; this one asks BOTH questions, so
 it strictly subsumes it -- verified before deletion at 178 ``dev/`` test files,
 with zero findings the retired gate would have caught and this one misses.
 
-Two questions, not one, and the second exists because the first has blind spots:
+Three questions, not one, each existing because the one above it has a blind
+spot the next closes:
 
 * Per-test: does some lane's path scope cover this file AND its marker
   expression select this test's own effective markers?
@@ -48,6 +54,20 @@ Two questions, not one, and the second exists because the first has blind spots:
   and to a tracked file absent from disk. Both classes are empty in this tree
   today; neither is impossible, and a consolidation that silently drops the
   check would be a regression wearing a consolidation's clothes.
+* Directory-level: does any lane's path scope SWEEP the directory, rather than
+  happen to name a file inside it? Both questions above start from a file that
+  already exists, so both can only report a hole after somebody has fallen into
+  it. ``dev/harness/tests`` held one module, one recipe named that module by
+  path, and so both passed while the directory sat in no lane's scope at all --
+  a second proof added beside the first would have been collected by nothing.
+  An empty ``tests`` package is the same hole with the fall not yet taken, and
+  it offers the file-level questions nothing to report however orphaned it is.
+
+The directory question is deliberately answered from DERIVED sides, both of
+them: the lane scopes from the justfile through the same authority the other
+two use, the directory set from the tracked tree. A hand-maintained list on
+either side would reproduce one level up the exact defect being caught, because
+an enumeration nobody extends is how every hole above was dug.
 """
 
 from __future__ import annotations
@@ -59,14 +79,17 @@ import pytest
 from .._paths import REPO_ROOT
 from ..ci.lane_reachability import (
     Lane,
+    analyse_directory_coverage,
     analyse_reachability,
     ci_invoked_lanes,
     ci_invoked_recipes,
     configured_testpaths,
     declared_lanes,
+    discover_test_directories,
     discover_test_files,
     expression_selects,
     marker_sets_in,
+    tracked_test_directories,
     tracked_test_files,
 )
 
@@ -96,10 +119,30 @@ _CI_INCAPABLE_MARKERS: frozenset[str] = frozenset(
 )
 
 
+#: A module whose one test is module-marked ``unit``, so a lane accepting
+#: ``unit`` selects it and the finding under test is never marker noise.
+_UNIT_MODULE: str = (
+    "import pytest\n\npytestmark = [pytest.mark.unit]\n\n\ndef test_{name}() -> None:\n    assert True\n"
+)
+
+
 def _synthetic_repository(root: Path, *, lane: str) -> None:
     """Write a minimal tree carrying one declared lane and no tests yet."""
     (root / "pyproject.toml").write_text('testpaths = ["src"]\n', encoding="utf-8")
     (root / "justfile").write_text(f"check:\n    {lane}\n", encoding="utf-8")
+
+
+def _repository_with_lanes(root: Path, *lanes: str) -> None:
+    """Write a minimal tree whose justfile declares exactly these pytest lanes.
+
+    The multi-lane form of :func:`_synthetic_repository`. The directory
+    questions need a tree where one lane sweeps a scope and another names a
+    single file inside a different one, which is the shape a one-lane fixture
+    cannot express.
+    """
+    (root / "pyproject.toml").write_text('testpaths = ["src"]\n', encoding="utf-8")
+    body = "\n".join(f"    {lane}" for lane in lanes)
+    (root / "justfile").write_text(f"check:\n{body}\n", encoding="utf-8")
 
 
 def _write_test(path: Path, body: str) -> None:
@@ -306,6 +349,239 @@ def test_the_gate_measured_a_real_corpus() -> None:
         f"{len(report.skipped)} tracked files were unreadable against {report.analysed} analysed; "
         "that is mass-skip, not a peer mid-edit"
     )
+
+
+def test_no_test_directory_sits_outside_every_lane_path() -> None:
+    """The directory question: would a module written here be collected by anything?
+
+    Every other check in this module starts from a file that already exists, so
+    each can only report a hole once somebody has fallen into it. This one
+    reports the hole while it is still empty.
+
+    The concrete case it was built from: ``dev/harness/tests`` held one module,
+    ``just test-harness`` named that module by path, and so the file was
+    covered, its markers were selected, and both file-level checks above passed
+    -- while the DIRECTORY sat inside no lane's scope at all. A second proof
+    added beside the first would have been collected by no lane, no CI job and
+    no local sweep, and nothing in this file would have said so until someone
+    wrote it and noticed it never ran.
+    """
+    report = analyse_directory_coverage(_ROOT)
+
+    assert report.uncovered == (), (
+        "no lane's path scope sweeps these test directories, so a module written into one is "
+        "collected by nothing -- name the directory in the lane that owns it, or declare it in "
+        "UNSWEPT_TEST_DIRECTORIES with the reason it is held out:\n  " + "\n  ".join(report.uncovered)
+    )
+
+
+def test_the_directory_gate_measured_a_real_corpus() -> None:
+    """The gate's own failure mode: a walker that found nothing reports a clean tree.
+
+    An empty ``uncovered`` is the same value whether every directory is swept
+    or none was discovered, so the corpus size has to be pinned beside the
+    finding or the two outcomes are indistinguishable.
+    """
+    report = analyse_directory_coverage(_ROOT)
+    lanes = declared_lanes(_ROOT)
+
+    assert len(lanes) > 10, "lane discovery collapsed; the gate would be measuring nothing"
+    assert report.analysed > 100, f"only {report.analysed} test directories discovered; the walker has stopped matching"
+    assert tracked_test_directories(_ROOT) == tuple(sorted(set(tracked_test_directories(_ROOT)))), (
+        "directory discovery must be sorted and duplicate-free, or the finding's order is not stable"
+    )
+
+
+def test_no_holdout_declaration_has_gone_stale() -> None:
+    """A declaration stops being an explanation the moment it stops describing the tree.
+
+    An entry naming a directory a lane now sweeps, or one that no longer
+    exists, suppresses without explaining. Reporting it is what keeps the
+    declaration channel from ageing into the allowlist this gate exists to
+    avoid needing.
+    """
+    report = analyse_directory_coverage(_ROOT)
+
+    assert report.stale == (), (
+        "these holdout declarations no longer describe the tree -- the directory is either swept by a "
+        "lane now or gone -- so they only suppress; remove them:\n  " + "\n  ".join(report.stale)
+    )
+
+
+def test_the_harness_package_is_swept_by_its_lane_not_merely_named() -> None:
+    """The concrete fix, pinned positively against the real justfile.
+
+    Positive rather than incidental, for the reason the template-residue check
+    below states: a widened or narrowed lane only ever changes which things
+    look reachable, and nothing reds when the change is in the permissive
+    direction. Asserting that the harness lane's scope is the DIRECTORY is the
+    only signal that distinguishes the fixed state from the one where a recipe
+    happens to name every module in it one by one.
+    """
+    package = "dev/harness/tests"
+    assert (_ROOT / package).is_dir(), f"{package} does not exist, so 'a lane sweeps it' cannot be a real claim"
+
+    lanes = declared_lanes(_ROOT)
+    harness_lanes = [lane for lane in lanes if lane.recipe == "test-harness"]
+    assert harness_lanes, "test-harness must still be declared"
+    assert any(lane.covers_directory(package) for lane in harness_lanes), (
+        f"test-harness must sweep {package} rather than name a module inside it; a file-scoped lane "
+        "leaves the next module added beside it collected by nothing"
+    )
+
+    # The exclusion side of the same contract: the corpus lanes must still hold
+    # the whole package out, because a member spawns a real child pytest and
+    # collecting one inside a worker pool nests a pool in a pool.
+    corpus_lanes = [lane for lane in lanes if lane.recipe in {"test-integration", "test-integration-parallel"}]
+    assert corpus_lanes, "the integration recipe(s) must still be declared"
+    for lane in corpus_lanes:
+        assert not lane.covers_directory(package), f"{lane.recipe} must not sweep {package}"
+
+
+def test_a_directory_whose_only_module_is_named_individually_is_still_uncovered(tmp_path: Path) -> None:
+    """Detector teeth for the exact defect, in an isolated tree.
+
+    A lane names ONE file inside ``outside/tests``. Every file-level question
+    is satisfied by that -- the file is covered, its markers are selected, no
+    test is unreachable and no file is unnamed -- so a gate built only on those
+    questions reports a clean tree. The directory is swept by nothing, and the
+    next module written beside the named one would be collected by nobody.
+    """
+    _repository_with_lanes(
+        tmp_path,
+        "pytest -q src -m unit",
+        "pytest -q outside/tests/test_named_individually.py -m unit",
+    )
+    _write_test(tmp_path / "src" / "tests" / "test_covered.py", _UNIT_MODULE.format(name="covered"))
+    _write_test(tmp_path / "outside" / "tests" / "test_named_individually.py", _UNIT_MODULE.format(name="named"))
+
+    files = analyse_reachability(tmp_path, files=discover_test_files(tmp_path))
+    directories = analyse_directory_coverage(tmp_path, directories=discover_test_directories(tmp_path))
+
+    assert files.unreachable == (), "the control: the named file really is selected, so this is not marker noise"
+    assert files.unnamed == (), "the control: the file-level question is satisfied and reports a clean tree"
+
+    assert directories.uncovered == ("outside/tests",)
+    assert directories.analysed == 2, "both directories must be measured, or the finding is an artefact of one"
+
+
+def test_a_directory_a_lane_sweeps_is_accepted(tmp_path: Path) -> None:
+    """The positive case: widening the lane from the file to its directory clears the finding.
+
+    Same tree as the detector above with one token changed, so the difference
+    between reported and accepted is the lane scope and nothing else.
+    """
+    _repository_with_lanes(tmp_path, "pytest -q src -m unit", "pytest -q outside/tests -m unit")
+    _write_test(tmp_path / "src" / "tests" / "test_covered.py", _UNIT_MODULE.format(name="covered"))
+    _write_test(tmp_path / "outside" / "tests" / "test_named_individually.py", _UNIT_MODULE.format(name="named"))
+
+    directories = analyse_directory_coverage(tmp_path, directories=discover_test_directories(tmp_path))
+
+    assert directories.uncovered == ()
+    assert directories.analysed == 2, "a clean result over an empty corpus would be meaningless"
+
+
+def test_an_empty_tests_package_is_reported_before_a_module_falls_into_it(tmp_path: Path) -> None:
+    """The hole with the fall not yet taken, which no file-level model can see.
+
+    A ``tests`` package holding only ``__init__.py`` offers the per-file and
+    per-test questions nothing to analyse however orphaned it is. It is
+    nonetheless the emptiest form of the defect: the first module written into
+    it is collected by nobody, and the author learns that from a silent absence
+    rather than a failure.
+    """
+    _repository_with_lanes(tmp_path, "pytest -q src -m unit")
+    _write_test(tmp_path / "src" / "tests" / "test_covered.py", _UNIT_MODULE.format(name="covered"))
+    empty_package = tmp_path / "outside" / "tests"
+    empty_package.mkdir(parents=True)
+    (empty_package / "__init__.py").write_text('"""Tests for a subsystem with none yet."""\n', encoding="utf-8")
+
+    files = analyse_reachability(tmp_path, files=discover_test_files(tmp_path))
+    directories = analyse_directory_coverage(tmp_path, directories=discover_test_directories(tmp_path))
+
+    assert files.unnamed == (), "an empty package offers the file-level question nothing to report"
+    assert files.unreachable == ()
+    assert directories.uncovered == ("outside/tests",)
+
+
+def test_a_collapsed_lane_parse_condemns_the_corpus_rather_than_absolving_it(tmp_path: Path) -> None:
+    """Anti-vacuity in the other direction: a broken reader must not score perfectly.
+
+    Zero lanes means nothing is swept. A model that answered "covered" for a
+    directory no lane names would turn a parser that stopped matching into a
+    clean tree, which is the false green this whole module refuses.
+    """
+    _repository_with_lanes(tmp_path, "pytest -q src -m unit")
+    _write_test(tmp_path / "src" / "tests" / "test_covered.py", _UNIT_MODULE.format(name="covered"))
+    discovered = discover_test_directories(tmp_path)
+    assert discovered, "the fixture must discover something for the claim to mean anything"
+
+    report = analyse_directory_coverage(tmp_path, lanes=(), directories=discovered)
+
+    assert report.uncovered == discovered
+    assert report.analysed == len(discovered)
+
+
+def test_a_holdout_declaration_is_honoured_and_a_rotted_one_is_reported(tmp_path: Path) -> None:
+    """The declaration channel, both halves, because only the pair keeps it from being an allowlist.
+
+    A directory deliberately outside every lane says so in one place with a
+    reason and is accepted. A declaration that has stopped describing the tree
+    -- because a lane now sweeps the directory, or because the directory is
+    gone -- is reported instead of honoured, so a parked problem surfaces
+    rather than ageing quietly behind an entry nobody rereads.
+    """
+    _repository_with_lanes(tmp_path, "pytest -q src -m unit")
+    _write_test(tmp_path / "src" / "tests" / "test_covered.py", _UNIT_MODULE.format(name="covered"))
+    _write_test(tmp_path / "outside" / "tests" / "test_held_out.py", _UNIT_MODULE.format(name="held_out"))
+    discovered = discover_test_directories(tmp_path)
+
+    honoured = analyse_directory_coverage(
+        tmp_path,
+        directories=discovered,
+        unswept={"outside/tests": "runs only under an operator-supplied device"},
+    )
+    assert honoured.uncovered == ()
+    assert honoured.declared == ("outside/tests",)
+    assert honoured.stale == ()
+
+    swept = analyse_directory_coverage(
+        tmp_path,
+        directories=discovered,
+        unswept={"src/tests": "a reason that stopped being true when a lane started sweeping it"},
+    )
+    assert swept.stale == ("src/tests",), "a declaration for a swept directory explains nothing and only suppresses"
+
+    absent = analyse_directory_coverage(
+        tmp_path,
+        directories=discovered,
+        unswept={"deleted/tests": "a reason for a directory that no longer exists"},
+    )
+    assert absent.stale == ("deleted/tests",)
+
+
+def test_a_file_level_exclusion_does_not_unsweep_its_directory(tmp_path: Path) -> None:
+    """``--ignore`` of one module holds that module out; the directory keeps its sweep.
+
+    The distinction decides whether an exclusion is read as a hole. A lane that
+    sweeps ``src`` and ignores one file still collects the next file added
+    beside it, so the directory is covered and reporting it would be a false
+    positive. An ignore of the DIRECTORY is the case that genuinely unsweeps
+    it, which is what the harness package relies on.
+    """
+    _repository_with_lanes(
+        tmp_path,
+        "pytest -q src --ignore=src/tests/test_excluded.py -m unit",
+        "pytest -q outside --ignore=outside/tests -m unit",
+    )
+    _write_test(tmp_path / "src" / "tests" / "test_excluded.py", _UNIT_MODULE.format(name="excluded"))
+    _write_test(tmp_path / "outside" / "tests" / "test_in_ignored_dir.py", _UNIT_MODULE.format(name="ignored"))
+
+    lane, directory_lane = declared_lanes(tmp_path)
+
+    assert lane.covers_directory("src/tests"), "one ignored file must not unsweep the directory around it"
+    assert not lane.covers("src/tests/test_excluded.py"), "the ignored file itself is still held out"
+    assert not directory_lane.covers_directory("outside/tests"), "an ignored directory is genuinely unswept"
 
 
 def test_tracked_discovery_ignores_untracked_scratch(tmp_path: Path) -> None:

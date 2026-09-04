@@ -7,6 +7,8 @@ emitted is a class nobody has shown it can emit.
 
 from __future__ import annotations
 
+import pathlib
+
 import pytest
 
 from ..name_collision_census import (
@@ -102,3 +104,36 @@ def test_arity_is_carried_so_two_claims_can_be_told_apart(
     collision = _named(collision_census(definitions), "review_view")
     assert len({item.argc for item in collision.definitions}) > 1
     assert "argc=" in collision.detail
+
+
+def test_an_unreadable_module_is_announced_as_absent_from_the_corpus(
+    tmp_path: pathlib.Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A collision is detected only between names both present in this corpus.
+
+    A silently skipped module cannot collide with anything, so the census
+    reported fewer collisions than exist. The skip stays - the tree is edited
+    while this runs and one half-written file must not cost the census - but it
+    now says which names are missing from the comparison.
+    """
+    (tmp_path / "sound.py").write_text("def widen():" + chr(10) + "    return 1" + chr(10), encoding="utf-8")
+    (tmp_path / "broken.py").write_text("def (:" + chr(10), encoding="utf-8")
+
+    collected = collect_public_definitions(tmp_path)
+
+    assert [item.name for item in collected] == ["widen"]
+    error = capsys.readouterr().err
+    assert "cannot be reported as colliding" in error
+    assert "broken.py" in error
+
+
+def test_a_readable_corpus_announces_nothing(
+    tmp_path: pathlib.Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A notice that fires on every run would tell a reader nothing."""
+    (tmp_path / "sound.py").write_text("def widen():" + chr(10) + "    return 1" + chr(10), encoding="utf-8")
+
+    assert collect_public_definitions(tmp_path)
+    assert capsys.readouterr().err == ""

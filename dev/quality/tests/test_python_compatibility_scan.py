@@ -132,3 +132,39 @@ def test_module_ast_is_valid_for_the_test_source_itself() -> None:
     """Keep the representative fixtures ordinary Python syntax."""
     source = Path(__file__).read_text(encoding="utf-8")
     ast.parse(source, filename=str(__file__))
+
+
+def test_an_absent_root_is_announced_while_an_empty_one_is_not(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The scan reported a root clean when it had not read a file under it.
+
+    A root that exists and holds no Python files enumerates nothing truthfully.
+    A root that does not exist enumerated the same nothing, and the union in
+    ``source_paths`` then hid which root contributed zero - so shipped code
+    could go unchecked for the version compatibility this gate exists to prove.
+    """
+    from ..python_compatibility_scan import _source_files
+
+    empty = tmp_path / "empty"
+    empty.mkdir()
+
+    assert _source_files(empty) == ()
+    assert capsys.readouterr().err == "", "an empty directory is a true answer, not a defect"
+
+    assert _source_files(tmp_path / "never-created") == ()
+    assert "does not exist" in capsys.readouterr().err
+
+
+def test_a_populated_root_is_enumerated_silently(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The success path, so the notice cannot become unconditional."""
+    from ..python_compatibility_scan import _source_files
+
+    (tmp_path / "module.py").write_text("VALUE = 1" + chr(10), encoding="utf-8")
+
+    assert len(_source_files(tmp_path)) == 1
+    assert capsys.readouterr().err == ""

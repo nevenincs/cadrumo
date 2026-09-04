@@ -181,3 +181,40 @@ def test_the_detector_still_finds_the_anchor_embed() -> None:
     entry = next(item for item in adjudicated() if item.path == ANCHOR_EMBED)
     assert entry.classification is Classification.REGULATORY_DATA_EMBED
     assert entry.tree_ownership is TreeOwnership.UNOWNED
+
+
+def test_a_half_written_peer_module_costs_one_file_not_the_index(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The race the guard anticipated was the less likely one.
+
+    ``FileNotFoundError`` was caught because peers create and remove scratch
+    modules under the walked tree, but parsing sat outside that guard - so a
+    peer caught mid-write, which leaves a file that exists and does not parse,
+    raised out of the whole index build instead of costing one file's imports.
+    """
+    from ..analysis.modelo_embed_classification import importer_index
+
+    (tmp_path / "sound.py").write_text("import json" + chr(10), encoding="utf-8")
+    (tmp_path / "half_written.py").write_text("from cadrumo import (" + chr(10), encoding="utf-8")
+
+    index = importer_index(tmp_path)
+
+    assert "json" in index, "the readable module's imports were lost with the broken one"
+    error = capsys.readouterr().err
+    assert "missing from this index" in error
+    assert "half_written.py" in error
+
+
+def test_a_readable_tree_indexes_silently(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A notice on every run would carry no information."""
+    from ..analysis.modelo_embed_classification import importer_index
+
+    (tmp_path / "sound.py").write_text("import json" + chr(10), encoding="utf-8")
+
+    assert importer_index(tmp_path)
+    assert capsys.readouterr().err == ""

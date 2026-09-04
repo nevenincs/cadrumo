@@ -111,6 +111,19 @@ def unreached_modules(root: pathlib.Path = _DEV_ROOT) -> tuple[UnreachedModule, 
 
     Package initialisers are excluded: they are inert namespace markers in this
     tree, so "no test imports it" says nothing about them.
+
+    Both walks below skip a file they cannot read, and the two skips fail in
+    OPPOSITE directions, which is why they are reported separately.
+
+    A skipped TEST contributes no imports, so every module only it reaches is
+    reported unreached - a false finding, and this list is used to choose
+    work. A skipped MODULE is dropped from the result entirely, so a genuinely
+    unreached module becomes invisible - the finding disappears instead.
+
+    Measured over this tree: 520 test modules and 356 modules, none
+    unparsable. Both skips are announced rather than fatal, because a tree
+    edited concurrently can present a half-written file and one bad file must
+    not cost the report.
     """
     modules: dict[str, pathlib.Path] = {}
     tests: list[pathlib.Path] = []
@@ -122,11 +135,14 @@ def unreached_modules(root: pathlib.Path = _DEV_ROOT) -> tuple[UnreachedModule, 
         else:
             modules[".".join(path.with_suffix("").parts)] = path
 
+    unread_tests: list[str] = []
+    unread_modules: list[str] = []
     reached: set[str] = set()
     for path in tests:
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"))
-        except (SyntaxError, UnicodeDecodeError, OSError):
+        except (SyntaxError, UnicodeDecodeError, OSError) as error:
+            unread_tests.append(f"{path}: {error}")
             continue
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom | ast.Import):
@@ -138,9 +154,20 @@ def unreached_modules(root: pathlib.Path = _DEV_ROOT) -> tuple[UnreachedModule, 
             continue
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"))
-        except (SyntaxError, UnicodeDecodeError, OSError):
+        except (SyntaxError, UnicodeDecodeError, OSError) as error:
+            unread_modules.append(f"{path}: {error}")
             continue
         unreached.append(UnreachedModule(dotted=dotted, path=path.as_posix(), capabilities=module_capabilities(tree)))
+    if unread_tests:
+        sys.stderr.write(
+            f"module_test_reach: {len(unread_tests)} test module(s) could not be read, so any "
+            "module only they import is listed unreached in error: " + repr(unread_tests) + chr(10)
+        )
+    if unread_modules:
+        sys.stderr.write(
+            f"module_test_reach: {len(unread_modules)} module(s) could not be read and are "
+            "absent from this report entirely: " + repr(unread_modules) + chr(10)
+        )
     return tuple(sorted(unreached, key=lambda item: (item.rank, item.dotted)))
 
 

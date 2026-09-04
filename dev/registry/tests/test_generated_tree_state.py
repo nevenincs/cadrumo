@@ -45,9 +45,9 @@ def test_a_reformatted_record_is_not_drift() -> None:
     first version of the classifier did the former for every tree in the corpus.
     """
     records = tuple(f"000{n}-record-m322-page-0{n}.toml" for n in range(1, 6))
-    assert classify_comparison(
-        (*records, _MANIFEST), committed=True, serialization_only=records
-    ) == "manifest_only_stale"
+    assert (
+        classify_comparison((*records, _MANIFEST), committed=True, serialization_only=records) == "manifest_only_stale"
+    )
     # Without the subtraction the same input reads as drift, which is the bug.
     assert classify_comparison((*records, _MANIFEST), committed=True) == "record_drift"
 

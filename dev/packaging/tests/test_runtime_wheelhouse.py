@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import threading
 import zipfile
+from concurrent.futures import ThreadPoolExecutor
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 import pytest
@@ -14,7 +17,12 @@ from ..runtime_wheelhouse import (
     PLATFORM_FLOORS,
     SUPPORTED_TARGETS,
     WHEELHOUSE_SCHEMA,
+    LockedWheel,
+    RuntimeWheelhousePlan,
+    _acquire_all,
+    _store_in_cache,
     extract_runtime_wheelhouse,
+    grouped_wheel_requests,
     load_runtime_wheelhouse,
     plan_runtime_wheelhouses,
 )
@@ -124,3 +132,154 @@ def test_current_lock_selects_distinct_stable_runtime_wheels() -> None:
     assert "cp313-cp313" in plans["3.13"].platforms["linux-x86-64"]["cffi"]
     assert "cp314-cp314" in plans["3.14"].platforms["linux-x86-64"]["cffi"]
     assert {item["distribution"] for item in plans["3.15"].missing} == {"pydantic-core", "pyyaml"}
+
+
+def _locked_wheel(payload: bytes, url: str) -> LockedWheel:
+    return LockedWheel(
+        distribution="universal-dependency",
+        version="1.0.0",
+        filename="universal_dependency-1.0.0-py3-none-any.whl",
+        url=url,
+        sha256=hashlib.sha256(payload).hexdigest(),
+        size=len(payload),
+    )
+
+
+def _plan(runtime: str, wheel: LockedWheel) -> RuntimeWheelhousePlan:
+    return RuntimeWheelhousePlan(
+        python_version=runtime,
+        platforms={target.name: {"universal-dependency": wheel.filename} for target in SUPPORTED_TARGETS},
+        wheels=(wheel,),
+    )
+
+
+class _CountingIndex:
+    """A real HTTP index that serves one wheel and counts the requests it answers.
+
+    A real socket and a real ``urlopen`` rather than a substituted downloader:
+    the property under test is how many times the acquisition reaches the index,
+    and a stand-in for the download would be measuring the test's own bookkeeping
+    instead of the behaviour.
+    """
+
+    def __init__(self, payload: bytes) -> None:
+        self.payload = payload
+        self.requests = 0
+        index = self
+
+        class _Handler(BaseHTTPRequestHandler):
+            def do_GET(self) -> None:
+                index.requests += 1
+                self.send_response(200)
+                self.send_header("Content-Length", str(len(index.payload)))
+                self.end_headers()
+                self.wfile.write(index.payload)
+
+            def log_message(self, *_args: object) -> None:
+                return
+
+        self._server = ThreadingHTTPServer(("127.0.0.1", 0), _Handler)
+        self._thread = threading.Thread(target=self._server.serve_forever, daemon=True)
+
+    def __enter__(self) -> _CountingIndex:
+        self._thread.start()
+        host, port = self._server.server_address[:2]
+        self.url = f"http://{host!s}:{port}/universal_dependency-1.0.0-py3-none-any.whl"
+        return self
+
+    def __exit__(self, *_exc: object) -> None:
+        self._server.shutdown()
+        self._server.server_close()
+        self._thread.join(timeout=10)
+
+
+def test_one_universal_wheel_selected_by_three_runtimes_is_fetched_once(tmp_path: Path) -> None:
+    """The saving the acquisition claims is delivered, against a real index.
+
+    Every runtime selects the same ``py3-none-any`` wheel, and all of them are
+    submitted into one pool in one process. Deduplicating on the lock-recorded
+    digest before submission is what makes the collapse real: without it three
+    workers miss the cold cache together, each downloads, and their stores then
+    race for one cache entry.
+    """
+    payload = b"universal wheel bytes"
+    cache = tmp_path / "cache"
+    wheel_dir = tmp_path / "wheels"
+    runtimes = ("3.13", "3.14", "3.15")
+    for runtime in runtimes:
+        (wheel_dir / runtime).mkdir(parents=True)
+
+    with _CountingIndex(payload) as index:
+        wheel = _locked_wheel(payload, index.url)
+        _acquire_all([_plan(runtime, wheel) for runtime in runtimes], wheel_dir, cache)
+
+        assert index.requests == 1
+
+    for runtime in runtimes:
+        assert (wheel_dir / runtime / wheel.filename).read_bytes() == payload
+    assert sorted(path.name for path in cache.iterdir()) == [wheel.sha256]
+
+
+def test_a_concurrent_cache_store_leaves_no_partial_entry(tmp_path: Path) -> None:
+    """Two writers publishing one digest at once both land, and neither is observed partial.
+
+    The staging neighbour is unique per WRITE rather than per process, because
+    the writers that meet here are threads of one process. Sharing a staging
+    path made the second replace fail with a Windows sharing violation, which
+    this function swallows -- so the failure was silent and the entry was
+    whichever writer happened to win.
+    """
+    payload = b"universal wheel bytes"
+    cache = tmp_path / "cache"
+    source = tmp_path / "source.whl"
+    source.write_bytes(payload)
+    wheel = _locked_wheel(payload, "http://index.invalid/unused")
+
+    barrier = threading.Barrier(4)
+
+    def store() -> None:
+        barrier.wait(timeout=10)
+        _store_in_cache(cache, wheel, source)
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        for future in [pool.submit(store) for _ in range(4)]:
+            future.result()
+
+    assert sorted(path.name for path in cache.iterdir()) == [wheel.sha256]
+    assert (cache / wheel.sha256).read_bytes() == payload
+
+
+def test_requests_are_grouped_by_digest_not_by_filename() -> None:
+    """Two runtimes selecting the same bytes make one request carrying both destinations.
+
+    Grouped on the lock-recorded digest, which is what makes two selections the
+    same bytes; a filename key would collapse two genuinely different wheels
+    that happen to share a name.
+    """
+    same = b"universal wheel bytes"
+    other = b"a different wheel entirely"
+    universal = _locked_wheel(same, "http://index.invalid/universal")
+    native = LockedWheel(
+        distribution="native-dependency",
+        version="1.0.0",
+        filename="universal_dependency-1.0.0-py3-none-any.whl",
+        url="http://index.invalid/native",
+        sha256=hashlib.sha256(other).hexdigest(),
+        size=len(other),
+    )
+
+    grouped = grouped_wheel_requests(
+        [
+            _plan("3.13", universal),
+            _plan("3.14", universal),
+            RuntimeWheelhousePlan(python_version="3.15", platforms={}, wheels=(native,)),
+        ]
+    )
+
+    assert [(wheel.sha256, [str(path) for path in destinations]) for wheel, destinations in grouped] == [
+        (
+            universal.sha256,
+            [str(Path("3.13") / universal.filename), str(Path("3.14") / universal.filename)],
+        ),
+        (native.sha256, [str(Path("3.15") / native.filename)]),
+    ]

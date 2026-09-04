@@ -24,9 +24,7 @@ def _design(root: pathlib.Path, name: str, *lines: str) -> None:
     """Write a constructed design under a modelo directory, as the corpus does."""
     directory = root / "modelo_999" / "files"
     directory.mkdir(parents=True, exist_ok=True)
-    (directory / f"{name}.xlsx.extracted.md").write_text(
-        LINE_BREAK.join(lines) + LINE_BREAK, encoding="utf-8"
-    )
+    (directory / f"{name}.xlsx.extracted.md").write_text(LINE_BREAK.join(lines) + LINE_BREAK, encoding="utf-8")
 
 
 def test_one_label_with_two_texts_across_designs_is_reported(tmp_path: pathlib.Path) -> None:

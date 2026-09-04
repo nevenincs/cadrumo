@@ -34,6 +34,7 @@ from pathlib import Path
 from typing import Final, override
 
 from .._paths import REPO_ROOT, UTF_8
+from .unread_inputs import report_unread
 
 __all__ = [
     "DEFAULT_SOURCE_ROOTS",
@@ -522,8 +523,20 @@ def scan_python_compatibility(path: Path, source: str | None = None) -> tuple[Co
 
 
 def _source_files(root: Path) -> tuple[Path, ...]:
-    """Enumerate Python files below one source root without importing it."""
+    """Enumerate Python files below one source root without importing it.
+
+    A root that exists and holds no Python files enumerates nothing, which is
+    true. A root that does not exist enumerated the same nothing, and the
+    scan then reported that root clean: shipped code goes unchecked for the
+    version compatibility this gate exists to prove, and the union in
+    ``source_paths`` hides which root contributed zero.
+    """
     if not root.is_dir():
+        report_unread(
+            "python compatibility scan",
+            "it does not exist, so every file under it was reported compatible without being read",
+            [str(root)],
+        )
         return ()
     found: list[Path] = []
     for directory, subdirectories, filenames in os.walk(root):

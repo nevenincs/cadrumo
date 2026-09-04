@@ -419,3 +419,37 @@ def test_a_readable_corpus_still_loads(tmp_path: pathlib.Path) -> None:
     (package / "sound.py").write_text("VALUE = 1" + chr(10), encoding="utf-8")
 
     assert [module.relative for module in _load_modules(package)] == ["sound.py"]
+
+
+def test_the_summary_counts_match_the_recorded_classifications() -> None:
+    """Each summary count must equal the groups actually carrying that class.
+
+    The existing arithmetic gate compares TOTALS, so a summary can sum correctly
+    while attributing groups to the wrong class. That is not hypothetical: a
+    regeneration that failed part-way left `intentional = 0` beside a group
+    classified `intentional`, and the totals still balanced because the count had
+    been absorbed into `cluster_owned`.
+
+    Per-class equality closes that, and it is what makes the summary readable as
+    a claim about the tree rather than as a number that happens to add up.
+    """
+    dispositions = _load_dispositions()
+    groups = dispositions["group"]
+    summary = dispositions["summary"]
+
+    assert groups, "the record declares no groups at all; nothing was parsed"
+    actual = Counter(group["classification"] for group in groups)
+    mismatched = {
+        name: (summary[key], actual[name])
+        for key, name in (
+            ("cluster_owned", "cluster-owned"),
+            ("intentional", "intentional"),
+            ("advisory_residue", "advisory-residue"),
+            ("actionable", "actionable"),
+        )
+        if summary[key] != actual[name]
+    }
+
+    assert mismatched == {}, (
+        f"summary counts disagree with the recorded classifications (recorded, actual): {mismatched}"
+    )

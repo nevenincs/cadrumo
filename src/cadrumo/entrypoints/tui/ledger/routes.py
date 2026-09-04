@@ -11,7 +11,6 @@ from textual.widgets import DataTable, Static
 
 from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.workspace import LedgerWorkspaceArea, LedgerWorkspaceProjectionV1
-from ....application.operator_actions.catalogue import lookup_action
 from ....application.operator_actions.models import ActionReference
 from ....core.identity import TransactionId
 from ..navigation import TuiScreenContextV1, TuiScreenFactoryV1
@@ -32,6 +31,7 @@ from .models import (
 from .overview import LedgerOverviewScreen
 from .reconciliation import LedgerReconciliationScreen
 from .review import LedgerReviewScreen
+from .workspace_injection import LedgerWorkspaceInjection
 from .workspace_presentation import ledger_workspace_page
 
 type LedgerInternalScreenFactoryV1 = Callable[[LedgerWorkspaceController], LedgerWorkspaceScreen]
@@ -140,37 +140,21 @@ def ledger_screen_factory(
     link_submitter: LedgerLinkSubmitterV1 | None = None,
 ) -> TuiScreenFactoryV1:
     """Bind an injected immutable projection to the outer navigation factory contract."""
-    declaration = lookup_action(review_action.action_id)
-    if declaration.target_command_key != "ledger.review":
-        raise ValueError("injected Ledger review action does not resolve to the canonical review query")
-    if classify_action is not None:
-        classification_declaration = lookup_action(classify_action.action_id)
-        if classification_declaration.target_command_key != "ledger.classify":
-            raise ValueError("injected Ledger classification action does not resolve to the canonical command")
-    if evidence_action is not None:
-        evidence_declaration = lookup_action(evidence_action.action_id)
-        if evidence_declaration.target_command_key != "ledger.evidence.review.list":
-            raise ValueError("injected Ledger evidence action does not resolve to the canonical review query")
-    if link_action is not None:
-        link_declaration = lookup_action(link_action.action_id)
-        if link_declaration.target_command_key != "ledger.link":
-            raise ValueError("injected Ledger link action does not resolve to the canonical command")
+    injection = LedgerWorkspaceInjection(
+        review_action=review_action,
+        classify_action=classify_action,
+        classification_target=classification_target,
+        classification_submitter=classification_submitter,
+        prepared_imports=prepared_imports,
+        import_submitter=import_submitter,
+        evidence_action=evidence_action,
+        evidence_items=evidence_items,
+        link_action=link_action,
+        link_submitter=link_submitter,
+    )
 
     def create(context: TuiScreenContextV1) -> LedgerWorkspaceScreen:
-        controller = LedgerWorkspaceController(
-            context,
-            projection,
-            review_action=review_action,
-            classify_action=classify_action,
-            classification_target=classification_target,
-            classification_submitter=classification_submitter,
-            prepared_imports=prepared_imports,
-            import_submitter=import_submitter,
-            evidence_action=evidence_action,
-            evidence_items=evidence_items,
-            link_action=link_action,
-            link_submitter=link_submitter,
-        )
+        controller = LedgerWorkspaceController(context, projection, injection)
         return resolve_ledger_screen(controller, controller.route_target(LedgerWorkspaceArea.OVERVIEW))
 
     return create

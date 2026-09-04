@@ -108,9 +108,7 @@ def test_populated_actions_cover_declaration_addressed_and_cross_cutting_tasks(
     assert addressed.filing_year == 2026
     assert addressed.period == Period.from_year_and_code(2026, "3T")
     addressless = [
-        item
-        for item in projection.actions
-        if (item.modelo, item.filing_year, item.period) == (None, None, None)
+        item for item in projection.actions if (item.modelo, item.filing_year, item.period) == (None, None, None)
     ]
     assert addressless, (
         f"{scenario} carries no cross-cutting action, so Home never renders one: "

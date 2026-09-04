@@ -878,6 +878,7 @@ errors:
       not be parsed as a decimal.'
     refused_iva_compensation_year_range: 'Refused: IVA compensation year is outside
       the accepted range.'
+    refused_iva_prorrata_especial_margin_ungrounded: The mandatory prorrata especial margin cannot be grounded for that ejercicio.
     refused_iva_wallet_reconciliation_invariant: The IVA wallet reconciliation inputs
       violate a required invariant. Check the wallet age configuration and retry.
     refused_ledger_confirmation_blocked: This document has findings a human must answer
@@ -963,6 +964,7 @@ errors:
     refused_profile_asset_validation: A profile asset record failed validation.
     refused_profile_basis_cap_exceeded: The cumulative amortization would exceed the
       asset's cost basis.
+    refused_profile_bienes_inversion_parameters: The active revision declares no capital-goods regularisation figures for this filing context.
     refused_profile_bienes_inversion_validation: A capital-goods IVA regularisation
       record failed validation.
     refused_profile_binding_resolution: A profile fact required for the calculation

@@ -31,6 +31,7 @@ from ._validate_extraction_profiles import (
     validate_provisional_declaracion_pdf_evidence_state,
 )
 from ._validate_helpers import missing_refs
+from ._validate_parameter_temporal import validate_non_filing_axis_admission
 from ._validate_revision_rules import validate_dated_values
 from .binding_selector_utils import selector_as_dict
 from .bindings import validate_binding_selector_shape
@@ -212,6 +213,7 @@ def validate_parameter_section(
             ),
         )
         failures.extend(validate_dated_values(prefix, parameter.id, parameter.values))
+        failures.extend(validate_non_filing_axis_admission(prefix, parameter, legal_refs))
     return failures
 
 

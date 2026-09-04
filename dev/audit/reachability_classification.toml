@@ -581,3 +581,146 @@ resolved = false
 remedy_requires_decision = true
 symbols = ["pre_flight_oracle_operations", "evaluate_planned_operations", "resolve_cross_reference_oracle"]
 evidence = "Two are declared in live_parity's __all__ and one is not; none is called anywhere in production or in dev/, and each carries a substantial test suite (9, 5 and 13 references). They are the oracle pre-flight surface for the sede renta-web-open cluster, which is itself carried as unreachable staged capability, so they are most likely transitively dead through it. Deleting exported API from filing-grade registry code on the audit's say-so needs its owner's decision."
+
+[[symbol_cluster]]
+name = "ledger payload keep-alive tuples"
+class = "superseded"
+area = "entrypoints/cli"
+resolved = true
+symbols = ["_LEDGER_BUSINESS_PAYLOAD_EXPORTS", "_LEDGER_RULE_PAYLOAD_EXPORTS", "_LEDGER_RATIOS_PAYLOAD_EXPORTS"]
+evidence = "Three tuples that merely MENTIONED 34 imported payload types so the linter would not strip imports that external callers import from this module. They were load-bearing, not dead: removing them alone would have stripped the imports and broken the re-export surface. Replaced by an explicit __all__ of 91 names, which is the mechanism for the same job and which the linter and a reader both understand. Re-exports verified still reachable and the module's findings fell from three to zero."
+
+[[symbol_cluster]]
+name = "iva ledger test-facing aliases that no test faced"
+class = "orphaned"
+area = "application/aggregation"
+resolved = true
+symbols = [
+  "_flow_direction_for", "_business_proportionality", "_has_converted_non_eur_amount",
+  "_missing_tax_fact_reason", "_missing_tax_fact_detail", "_prorrata_reference_for",
+  "_validate_intracom_export_counterparty",
+]
+evidence = "Seven private aliases to public imports, carrying the comment 'Kept as local test-facing names'. No test referenced any of them, none appeared in __all__, and each public original appeared exactly twice in the module -- its import and the alias -- so nothing in production used them either. A sibling alias under the same comment, _iva_rate_kind_for, IS referenced by tests six times and was kept, which is what shows the comment was true of one line and inherited by seven."
+
+# ---------------------------------------------------------------------------
+# Exported-but-unconsumed published surface
+#
+# Measured 2026-09-04 across the shipped package: of 8524 names declared in a
+# module `__all__`, 367 are reported unused by the audit AND are from-imported
+# by no other module. That is 4.3 per cent of the published surface promising
+# something nothing collects.
+#
+# This is a distinct class from ordinary dead code and it dominates what remains
+# of the symbol backlog. A name in `__all__` cannot be deleted as an internal
+# cleanup: removal changes what the package publishes, and `no-legacy-compatibility`
+# makes that a decision about a released surface rather than a tidy-up. Equally
+# it cannot be left unremarked, because an exported name reads as supported.
+#
+# Concentrations: domain/calculations 53, entrypoints/cli 43, application/modelo
+# 38, adapters/persistence 27, entrypoints/tui 20 (deferred), application/
+# user_profile 18, domain/iva 16, application/filing 15.
+#
+# The remedy for the class is an owner decision per area: publish it deliberately
+# (and cover it), or unpublish it. Nothing here is actioned without that.
+# ---------------------------------------------------------------------------
+
+[exported_unused]
+declared_exports = 8524
+exported_and_unconsumed = 367
+method = "a name counts as consumed only when another module from-imports it FROM the declaring module; bare-name matching would count same-named symbols in unrelated packages"
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "modelo operation definitions exported projections"
+class = "should-be-live"
+area = "application/modelo"
+resolved = false
+remedy_requires_decision = true
+symbols = [
+  "MODELO_WORK_VERIFY_PROGRESS_UNIT", "project_modelo_work_verify_result",
+  "project_modelo_export_result", "project_modelo_edit_apply_result",
+]
+evidence = "Each is declared in operation_definitions' __all__ and imported by no module anywhere. They are exported public API with no consumer rather than internal dead code, so removing them changes the published surface. A fifth sibling, wire_detail_row, is NOT exported and is consumed only by application.modelo.edit_session, which this ledger already classifies deferred-by-ownership, so it is transitively dead through that cluster and resolves with it."
+
+[[symbol_cluster]]
+name = "modelo projection CLI dead type aliases"
+class = "orphaned"
+area = "entrypoints/cli"
+resolved = true
+symbols = ["CasillaParseOverride", "BindingParseOverride", "BadParameterRenderer"]
+evidence = "Three Callable type aliases, each appearing exactly once tree-wide at its own definition, none declared in an __all__. Same shape as the registry authority alias already removed: a named type nothing annotates."
+
+# ---------------------------------------------------------------------------
+# A declared legal threshold with no application
+#
+# `core/external_constants.py` declares IVA_BIEN_ESCASO_VALOR_UMBRAL_EUR as
+# Decimal("3005.06") and nothing reads it. That is not dead code in the ordinary
+# sense: an AEAT threshold present in the constants but applied nowhere means the
+# rule it encodes is not enforced anywhere in the engine.
+#
+# Under no-silent-under-declaration that is the interesting direction. A missing
+# threshold check does not fail loudly; it produces a total that silently omits
+# the rule. Recorded for its owner rather than deleted, because deleting it would
+# remove the evidence that the rule was ever intended.
+# ---------------------------------------------------------------------------
+
+[[symbol_cluster]]
+name = "unapplied IVA bien de escaso valor threshold"
+class = "should-be-live"
+area = "core"
+resolved = false
+remedy_requires_decision = true
+symbols = ["IVA_BIEN_ESCASO_VALOR_UMBRAL_EUR"]
+evidence = "Declared once in core/external_constants.py as Decimal('3005.06') and read by nothing in src/cadrumo or dev/. A legal threshold that no calculation applies is an unenforced rule rather than an unused value, so the remedy is to wire it or to record why the capability is unsupported."
+
+
+# ---------------------------------------------------------------------------
+# Legal figures in external_constants are documented defaults, not dead values
+#
+# Nine constants in core/external_constants.py have no production reader, and
+# the first reading -- that AEAT rules were declared but never enforced -- was
+# WRONG. `domain/contribuyente/deduccion_maternidad.py` states the contract
+# outright: "The registry is the causal authority: a missing revision or
+# parameter is a grounding defect and raises RegistryValidationError rather than
+# falling back to the module constant, which is a documented default the
+# arithmetic must not silently prefer."
+#
+# So the arithmetic reads the dated Modelo 100 registry parameter and the
+# constant records the legal figure for a reader. Being unread is the design
+# holding, exactly as it is for the operator-surface CRUD catalogue: a
+# declaration whose only consumers are a reader and a test is not waiting for a
+# caller.
+#
+# This also explains the shape of the tests that touch them. The
+# `external_constants_centralisation` tests assert WHERE a figure lives, not that
+# a calculation applies it, so a constant can pass its test while no arithmetic
+# reads it -- which is correct here, and would be a defect anywhere the registry
+# was not the causal authority.
+# ---------------------------------------------------------------------------
+
+[[symbol_cluster]]
+name = "external constants documented legal defaults"
+class = "design-time-authority"
+area = "core"
+resolved = false
+symbols = [
+  "MODELO_840_IAE_CIFRA_NEGOCIOS_EXEMPTION_THRESHOLD_EUR",
+  "WORK_INCOME_GENERAL_DECLARATION_LIMIT_EUR",
+  "AMORTIZACION_INMUEBLE_RATE",
+  "DEDUCCION_MATERNIDAD_MENSUAL_EUR",
+  "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
+  "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR",
+  "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR",
+]
+evidence = "Each records an AEAT legal figure that the engine deliberately does NOT read: compute_deduccion_maternidad_0611 resolves every figure through _resolve_maternidad_figure against the dated Modelo 100 registry parameter, and its docstring states that falling back to the module constant is forbidden. AMORTIZACION_INMUEBLE_RATE is additionally imported by domain/fincas/amortization_ledger, inside the staged fincas cluster. Removing any of them would delete the documented legal reference while changing no arithmetic."
+
+[[symbol_cluster]]
+name = "unreferenced CLI and capsule constants"
+class = "orphaned"
+area = "mixed"
+resolved = true
+symbols = [
+  "_HEX_DIGITS", "_M200_M202_PAGOS_RELATION_IDS",
+  "_ENVELOPE_RELATIVE", "_SENTINEL_RELATIVE", "_DATABASE_RELATIVE",
+]
+evidence = "Each appeared exactly once tree-wide, at its own definition, and none was exported. The _modelo copy of _HEX_DIGITS was the dead one of four identical definitions: the three siblings in outbound storage integrity, persistence attachment and the attachments domain each carry a real use, so only this copy was removed. The three capsule path tuples named custody artefact locations whose literals appear nowhere else in that module, which resolves capsule paths through its ports instead."

@@ -9,7 +9,6 @@ from textual.message import Message
 from textual.screen import Screen
 from textual.widgets import DataTable, Static
 
-from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.models import (
     LedgerSourceImportResult,
     ManualLedgerTransactionPatch,
@@ -23,7 +22,6 @@ from ....application.ledger.workspace import (
     LedgerWorkspaceProjectionV1,
     LedgerWorkspaceStatus,
 )
-from ....application.operator_actions.catalogue import lookup_action
 from ....application.operator_actions.models import ActionReference
 from ....core.i18n.render import tr
 from ....core.identity import InvoiceId, TransactionId
@@ -31,19 +29,17 @@ from ..components.theme import BASE_CSS, tokenised
 from ..navigation import TuiScreenContextV1
 from .models import (
     LedgerClassificationSubmissionV1,
-    LedgerClassificationSubmitterV1,
     LedgerDestinationIdV1,
     LedgerEntryRowV1,
     LedgerEvidenceRowV1,
-    LedgerImportSubmitterV1,
     LedgerLinkResultV1,
     LedgerLinkSubmissionV1,
-    LedgerLinkSubmitterV1,
     LedgerPreparedImportV1,
     LedgerReviewRowV1,
     LedgerRouteRefusalV1,
     LedgerRouteTargetV1,
 )
+from .workspace_injection import LedgerWorkspaceInjection
 
 _DESTINATION_BY_AREA: Final = {
     LedgerWorkspaceArea.OVERVIEW: "ledger.overview",
@@ -226,17 +222,7 @@ class LedgerWorkspaceController:
         self,
         context: TuiScreenContextV1,
         projection: LedgerWorkspaceProjectionV1,
-        *,
-        review_action: ActionReference,
-        classify_action: ActionReference | None = None,
-        classification_target: TransactionId | None = None,
-        classification_submitter: LedgerClassificationSubmitterV1 | None = None,
-        prepared_imports: tuple[LedgerPreparedImportV1, ...] = (),
-        import_submitter: LedgerImportSubmitterV1 | None = None,
-        evidence_action: ActionReference | None = None,
-        evidence_items: tuple[AttachmentReviewItem, ...] | None = None,
-        link_action: ActionReference | None = None,
-        link_submitter: LedgerLinkSubmitterV1 | None = None,
+        injection: LedgerWorkspaceInjection,
     ) -> None:
         """Admit an outer Ledger context and retain its immutable snapshot."""
         if context.destination != "workbench.ledger":
@@ -246,34 +232,38 @@ class LedgerWorkspaceController:
         self.context = context
         self.projection = projection
         visible_ids = {row.transaction_id for row in projection.entries}
-        if classification_target is not None and classification_target not in visible_ids:
+        if injection.classification_target is not None and injection.classification_target not in visible_ids:
             raise ValueError("classification target is absent from the visible Ledger projection")
-        if (
-            classify_action is not None
-            and lookup_action(classify_action.action_id).target_command_key != "ledger.classify"
-        ):
-            raise ValueError("injected Ledger classification action does not resolve to the canonical command")
-        if (
-            evidence_action is not None
-            and lookup_action(evidence_action.action_id).target_command_key != "ledger.evidence.review.list"
-        ):
-            raise ValueError("injected Ledger evidence action does not resolve to the canonical review query")
-        if link_action is not None and lookup_action(link_action.action_id).target_command_key != "ledger.link":
-            raise ValueError("injected Ledger link action does not resolve to the canonical command")
-        choice_ids = tuple(choice.choice_id for choice in prepared_imports)
-        if len(choice_ids) != len(set(choice_ids)):
-            raise ValueError("prepared import choice identities must be unique")
-        self.review_action = review_action
-        self.classify_action = classify_action
-        self.classification_target = classification_target
-        self.classification_submitter = classification_submitter
-        self.prepared_imports = prepared_imports
-        self.import_submitter = import_submitter
-        self.evidence_action = evidence_action
-        self.evidence_items = evidence_items
-        self.link_action = link_action
-        self.link_submitter = link_submitter
+        self.injection = injection
+        self.review_action = injection.review_action
+        self.classify_action = injection.classify_action
+        self.classification_target = injection.classification_target
+        self.classification_submitter = injection.classification_submitter
+        self.prepared_imports = injection.prepared_imports
+        self.import_submitter = injection.import_submitter
+        self.evidence_action = injection.evidence_action
+        self.evidence_items = injection.evidence_items
+        self.link_action = injection.link_action
+        self.link_submitter = injection.link_submitter
         self._states = {row.area: row for row in projection.areas}
+
+    def select_classification_target(self, transaction_id: TransactionId) -> None:
+        """Carry an operator's chosen entry into the classification area.
+
+        Classification refuses without a target, and the target was previously
+        fixed when the workspace was composed -- before the operator had chosen
+        anything. So the area was permanently refused in a real session: the
+        navigation table offered a destination the session could never open,
+        and the selection the operator made on the entries screen went nowhere.
+
+        The chosen id is checked against the VISIBLE projection, the same
+        invariant the constructor enforces. A target the current snapshot does
+        not contain would let classification open on a row the operator cannot
+        see, which is worse than the refusal it replaces.
+        """
+        if all(row.transaction_id != transaction_id for row in self.projection.entries):
+            raise ValueError("classification target is absent from the visible Ledger projection")
+        self.classification_target = transaction_id
 
     def classification_target_coordinate(self) -> tuple[int, int, str]:
         """Return a safe position and redacted identifier from the visible projection."""
@@ -497,6 +487,21 @@ class LedgerWorkspaceScreen(Screen[None]):
         self.requested_target: LedgerRouteTargetV1 | None = None
         self.refusal: LedgerRouteRefusalV1 | None = None
         self.back_requested = False
+
+    def on_ledger_entry_selected(self, event: LedgerEntrySelected) -> None:
+        """Carry the chosen entry into the classification area.
+
+        Handled on the shared base rather than on the entries screen alone,
+        because the review screen names the same selection and both feed the
+        one area that is entered WITH a row. The navigation table is repainted
+        so the destination stops reading as refused the moment it becomes
+        reachable -- an operator who selects a row and sees no change has no
+        way to tell whether the selection registered.
+        """
+        self.controller.select_classification_target(event.transaction_id)
+        table = cast("DataTable[str]", self.query_one("#ledger-navigation", DataTable))
+        table.clear(columns=True)
+        self.populate_navigation()
 
     def populate_navigation(self) -> None:
         """Populate the complete seven-area catalogue in canonical order."""

@@ -45,10 +45,6 @@ if TYPE_CHECKING:
         ProfileCustodySentinelPort,
     )
 
-_ENVELOPE_RELATIVE = ("custody", "envelope.v1.json")
-_SENTINEL_RELATIVE = ("data", "dek.sentinel.v1.json")
-_DATABASE_RELATIVE = ("db", "cadrumo.db")
-
 
 class ProfileCapsuleSourceError(CadrumoError):
     """Raised when a restore source is not a readable capsule."""

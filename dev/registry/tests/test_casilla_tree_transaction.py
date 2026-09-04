@@ -187,9 +187,7 @@ def test_external_workspace_keeps_all_transaction_artifacts_out_of_the_revision(
     ("keyword", "value"),
     (("journal_name", "../escaped.json"), ("stage_prefix", "../stage-"), ("backup_prefix", "dir\\backup-")),
 )
-def test_transaction_artifact_components_cannot_escape_the_workspace(
-    tmp_path: Path, keyword: str, value: str
-) -> None:
+def test_transaction_artifact_components_cannot_escape_the_workspace(tmp_path: Path, keyword: str, value: str) -> None:
     root = tmp_path / "revision" / "casillas"
     workspace = tmp_path / "workspace"
     root.mkdir(parents=True)

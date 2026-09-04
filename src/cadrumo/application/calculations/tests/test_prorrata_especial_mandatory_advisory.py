@@ -9,14 +9,34 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date as _esp_date
 from decimal import Decimal
 
 import pytest
 
 from ....core.json_contract import NoticeSeverity
+from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema_base import ThresholdComparison
+from ....domain.iva.prorrata_especial_parameters import (
+    ProrrataEspecialMandatoryParameterError,
+    ProrrataEspecialMandatoryParameters,
+    resolve_prorrata_especial_mandatory_parameters,
+)
 from ..prorrata_regularizacion import build_prorrata_especial_mandatory_advisory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+#: An explicit resolved margin. These tests exercise the PREDICATE and the
+#: advisory wording, not the law; whether 10 inclusive is what art. 103.Dos.2
+#: states is answered against the registry by the modelo 303 parameter gate.
+_ESPECIAL_PARAMS = ProrrataEspecialMandatoryParameters(
+    margin_percentage=Decimal("10"),
+    comparison=ThresholdComparison.INCLUSIVE,
+    modelo_id="303",
+    revision_id="2025",
+    resolved_on=_esp_date(2025, 12, 31),
+)
 
 
 def test_advisory_fires_when_general_exceeds_especial_by_more_than_ten_percent() -> None:
@@ -25,6 +45,7 @@ def test_advisory_fires_when_general_exceeds_especial_by_more_than_ten_percent()
         deduction_under_general=Decimal("111.00"),
         deduction_under_especial=Decimal("100.00"),
         ejercicio=2026,
+        parameters=_ESPECIAL_PARAMS,
     )
 
     assert notice is not None
@@ -51,6 +72,7 @@ def test_advisory_fires_at_exactly_ten_percent_boundary_from_2015() -> None:
         deduction_under_general=Decimal("110.00"),
         deduction_under_especial=Decimal("100.00"),
         ejercicio=2026,
+        parameters=_ESPECIAL_PARAMS,
     )
 
     assert notice is not None
@@ -65,45 +87,68 @@ def test_advisory_fires_at_exactly_ten_percent_boundary_from_2015() -> None:
             deduction_under_general=Decimal("109.99"),
             deduction_under_especial=Decimal("100.00"),
             ejercicio=2026,
+            parameters=_ESPECIAL_PARAMS,
         )
         is None
     )
 
 
-def test_advisory_applies_the_original_twenty_percent_margin_before_2015() -> None:
-    """Before Ley 28/2014 the margin was twenty percent and carried no "o más".
+def test_the_advisory_envelope_reports_the_margin_it_was_handed() -> None:
+    """The notice quotes the bundle's figures, so a reader can tell which text applied.
 
-    The same amounts that are obligatory for a 2026 ejercicio are not for a
-    2014 one, and the pre-2015 margin only trips once passed.
+    This replaces a test that asserted the repealed pre-2015 twenty-percent
+    exclusive margin. That redaction is declared nowhere in this tree -- no
+    modelo 303 revision covers a pre-2015 filing year, and the bundled
+    consolidated corpus carries only the text in force -- so the advisory can no
+    longer produce it, and asserting it here would be a legal claim with no
+    citable authority behind it. A companion test pins that such an ejercicio is
+    refused at the resolver instead.
+
+    Probed with a margin that is deliberately NOT the shipped one, so an
+    advisory that reinstated a hardcoded figure would fail rather than pass by
+    coincidence.
     """
-    assert (
-        build_prorrata_especial_mandatory_advisory(
-            deduction_under_general=Decimal("110.00"),
-            deduction_under_especial=Decimal("100.00"),
-            ejercicio=2014,
-        )
-        is None
+    arbitrary = ProrrataEspecialMandatoryParameters(
+        margin_percentage=Decimal("37"),
+        comparison=ThresholdComparison.EXCLUSIVE,
+        modelo_id="303",
+        revision_id="2025",
+        resolved_on=_esp_date(2025, 12, 31),
     )
+    # Exclusive at exactly the margin: 137 against 100 must NOT fire.
     assert (
         build_prorrata_especial_mandatory_advisory(
-            deduction_under_general=Decimal("120.00"),
+            deduction_under_general=Decimal("137.00"),
             deduction_under_especial=Decimal("100.00"),
-            ejercicio=2014,
+            ejercicio=2025,
+            parameters=arbitrary,
         )
         is None
     )
     notice = build_prorrata_especial_mandatory_advisory(
-        deduction_under_general=Decimal("120.01"),
+        deduction_under_general=Decimal("137.01"),
         deduction_under_especial=Decimal("100.00"),
-        ejercicio=2014,
+        ejercicio=2025,
+        parameters=arbitrary,
     )
     assert notice is not None
     assert notice.context is not None
-    # The envelope reports the margin the predicate actually applied. The
-    # original redaction's twenty percent is not inclusive, so a reader can
-    # tell which text produced the obligation.
-    assert notice.context["margin_percentage"] == "20"
+    assert notice.context["margin_percentage"] == "37"
     assert notice.context["margin_inclusive"] == "false"
+
+
+def test_a_pre_2015_ejercicio_is_refused_at_the_resolver() -> None:
+    """TEETH: the uncitable redaction is refused rather than silently reused.
+
+    The advisory itself no longer decides anything by year, so the defence
+    against applying today's margin to a 2014 ejercicio lives one layer up, at
+    the resolver that would have to supply the bundle.
+    """
+    authority = bundled_authority()
+    revision = authority.modelo("303").revisions["2025"]
+    with pytest.raises(ProrrataEspecialMandatoryParameterError) as excinfo:
+        resolve_prorrata_especial_mandatory_parameters(revision, modelo_id="303", ejercicio=2014)
+    assert "predates the only redaction" in str(excinfo.value)
 
 
 def test_advisory_silent_when_general_does_not_exceed_especial() -> None:
@@ -112,6 +157,7 @@ def test_advisory_silent_when_general_does_not_exceed_especial() -> None:
         deduction_under_general=Decimal("95.00"),
         deduction_under_especial=Decimal("100.00"),
         ejercicio=2026,
+        parameters=_ESPECIAL_PARAMS,
     )
 
     assert notice is None
@@ -123,6 +169,7 @@ def test_advisory_fires_when_especial_is_zero_and_general_is_positive() -> None:
         deduction_under_general=Decimal("0.01"),
         deduction_under_especial=Decimal("0.00"),
         ejercicio=2026,
+        parameters=_ESPECIAL_PARAMS,
     )
 
     assert notice is not None

@@ -36,6 +36,7 @@ from ._artifacts import (
     purge_stale_artifacts,
     read_manifest,
     run_directory,
+    source_fingerprint,
     unaccounted_frames,
     write_index,
     write_manifest,
@@ -313,6 +314,12 @@ def render_command(
     directory = run_directory(run)
     directory.mkdir(parents=True, exist_ok=True)
 
+    # Taken BEFORE the first frame, compared after the last: a full matrix runs
+    # for about twenty-five minutes, and an edit landing inside that window
+    # produces a set that is half old and half new while the manifest reports
+    # every frame as current.
+    source_at_start = source_fingerprint()
+
     frames: list[RenderedFrame] = []
     failures: list[FailedFrame] = []
     skipped: list[SkippedFrame] = []
@@ -390,6 +397,8 @@ def render_command(
     rendered_surfaces = tuple(sorted({frame.surface for frame in frames}))
     manifest = Manifest(
         generated_at=now(),
+        source_revision=source_at_start,
+        source_revision_at_end=source_fingerprint(),
         cell_height=cell_height,
         frames=tuple(frames),
         interfaces=tuple(
@@ -415,6 +424,12 @@ def render_command(
         raise typer.BadParameter(
             "the run left frames unaccounted for, which would read as coverage it does not have: "
             + ", ".join(unaccounted[:5])
+        )
+    if manifest.spans_a_source_change:
+        raise typer.BadParameter(
+            "the TUI source changed while this run was rendering, so its frames come from two "
+            "different builds and no reviewer can tell which is which. Nothing was written. "
+            "Re-run against a settled tree."
         )
     discarded = purge_stale_artifacts(directory, manifest)
     write_manifest(directory, manifest)

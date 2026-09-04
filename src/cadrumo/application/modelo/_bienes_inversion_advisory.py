@@ -51,10 +51,16 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
+
 from ...adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.bienes_inversion.register import BienInversionRecordError
+from ...domain.bienes_inversion.regularizacion_parameters import (
+    BienesInversionParameterResolutionError,
+    resolve_bienes_inversion_regularizacion_parameters,
+)
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.iva.m303_settlement import is_m303_annual_settlement_period
 from ..aggregation import CalculationSourceDiagnostic
@@ -133,11 +139,25 @@ def collect_bienes_inversion_regularizacion_diagnostics(
 
     diagnostics: list[CalculationSourceDiagnostic] = []
 
+    # Resolved from the revision this function already holds. A refusal means the
+    # revision declares none of the art-107/109 family, which for modelo 390 is
+    # its stated disposition; the advisory then has nothing grounded to project
+    # and stays silent rather than inventing a figure.
+    try:
+        parameters = resolve_bienes_inversion_regularizacion_parameters(
+            revision,
+            modelo_id=modelo,
+            filing_period_date=date(filing_year, 12, 31),
+        )
+    except BienesInversionParameterResolutionError:
+        return ()
+
     _annual_projection, annual_diagnostic = build_bienes_inversion_regularizacion_advisory(
         revision,
         register,
         regularizacion_year=filing_year,
         prorrata_definitiva_by_identifier={},
+        parameters=parameters,
     )
     if annual_diagnostic is not None:
         diagnostics.append(annual_diagnostic)
@@ -146,6 +166,7 @@ def collect_bienes_inversion_regularizacion_diagnostics(
         revision,
         register,
         disposal_year=filing_year,
+        parameters=parameters,
     )
     if transmision_diagnostic is not None:
         diagnostics.append(transmision_diagnostic)

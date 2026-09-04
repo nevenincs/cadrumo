@@ -951,6 +951,7 @@ errors:
       de IVA no se pudo interpretar como decimal.'
     refused_iva_compensation_year_range: 'Rechazado: el ejercicio de compensación
       de IVA esta fuera del rango aceptado.'
+    refused_iva_prorrata_especial_margin_ungrounded: El margen de prorrata especial obligatoria no puede fundamentarse para ese ejercicio.
     refused_iva_wallet_reconciliation_invariant: Las entradas de conciliación de la
       cartera IVA incumplen un invariante obligatorio. Compruebe la configuración
       de antigüedad de la cartera y vuelva a intentarlo.
@@ -1041,6 +1042,7 @@ errors:
       validación.
     refused_profile_basis_cap_exceeded: La amortización acumulada superaría la base
       de coste del activo.
+    refused_profile_bienes_inversion_parameters: La revisión activa no declara los importes de regularización de bienes de inversión para este contexto de declaración.
     refused_profile_bienes_inversion_validation: Un registro de regularización de
       IVA por bienes de inversión no superó la validación.
     refused_profile_binding_resolution: Un dato del perfil necesario para el cálculo

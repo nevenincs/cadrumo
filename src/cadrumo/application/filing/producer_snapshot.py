@@ -25,6 +25,9 @@ from ...domain.bienes_inversion.register import (
     RegistroRegularizacionResult,
     compute_registro_regularizacion,
 )
+from ...domain.bienes_inversion.regularizacion_parameters import (
+    BienesInversionRegularizacionParameters,
+)
 from ...domain.deadlines.models import ChargeAccount, ModeloIVAProfile, RefundAccount, TaxpayerProfile
 from ...domain.modelos.calculation_revision import CalculationRevisionAmendmentKind, FilingInstanceEvidence
 from ...domain.modelos.calculation_revision_amendment import (
@@ -82,6 +85,7 @@ def assert_m303_regularisation_result_matches_bienes_register(
     *,
     bienes_register: BienesInversionIvaRegister,
     regularisation_result: RegistroRegularizacionResult,
+    parameters: BienesInversionRegularizacionParameters,
 ) -> None:
     """Refuse a result that is not the register's exact annual projection.
 
@@ -89,7 +93,23 @@ def assert_m303_regularisation_result_matches_bienes_register(
     so replay the canonical domain projection from those facts and compare the
     complete immutable result.  This admits no result-row omission, foreign
     register, substituted contribution, or invented pending state.
+
+    The result also carries the registry declaration its figures came from, and
+    that is checked against ``parameters`` FIRST and by identity rather than by
+    replay.  A result produced under a different revision would otherwise be
+    silently re-derived under this one and compared against itself, so the
+    provenance check is what stops the replay from confirming the wrong law.
     """
+    if regularisation_result.parameters_provenance != parameters.provenance:
+        raise ValueError(
+            "M303 regularisation result was produced from registry declaration "
+            f"{regularisation_result.parameters_provenance.modelo_id}/"
+            f"{regularisation_result.parameters_provenance.revision_id}"
+            f"@{regularisation_result.parameters_provenance.resolved_on.isoformat()}, "
+            "not from the supplied "
+            f"{parameters.provenance.modelo_id}/{parameters.provenance.revision_id}"
+            f"@{parameters.provenance.resolved_on.isoformat()}",
+        )
     canonical = compute_registro_regularizacion(
         bienes_register,
         regularizacion_year=regularisation_result.regularizacion_year,
@@ -98,6 +118,7 @@ def assert_m303_regularisation_result_matches_bienes_register(
             for row in regularisation_result.rows
             if row.prorrata_anio_pct is not None
         },
+        parameters=parameters,
     )
     if regularisation_result != canonical:
         raise ValueError("M303 regularisation result must be the canonical projection of the supplied Bienes register")
@@ -842,6 +863,12 @@ class M303FilingFacts(BaseModel):
     differentiated_contributions: tuple[IvaDifferentiatedDeductionContribution, ...]
     bienes_register: BienesInversionIvaRegister
     regularisation_result: RegistroRegularizacionResult
+    #: The registry-resolved figures the regularisation result was produced
+    #: under. Carried on the facts rather than resolved here because this
+    #: model holds no revision, and because the oracle's independence depends
+    #: on comparing the result's own provenance against a bundle supplied
+    #: from outside it.
+    bienes_parameters: BienesInversionRegularizacionParameters
 
     @model_validator(mode="after")
     def _arrivals_share_one_filing_period(self) -> M303FilingFacts:
@@ -870,6 +897,7 @@ def _validate_m303_register_evidence(facts: M303FilingFacts) -> None:
     assert_m303_regularisation_result_matches_bienes_register(
         bienes_register=facts.bienes_register,
         regularisation_result=facts.regularisation_result,
+        parameters=facts.bienes_parameters,
     )
     if facts.prorrata_transition.is_applicable and not facts.prorrata_register.has_complete_current_entry_coverage(
         facts.period.filing_year
@@ -889,6 +917,7 @@ def resolve_m303_filing_facts(
     differentiated_contributions: tuple[IvaDifferentiatedDeductionContribution, ...],
     bienes_register: BienesInversionIvaRegister,
     regularisation_result: RegistroRegularizacionResult,
+    bienes_parameters: BienesInversionRegularizacionParameters,
 ) -> M303FilingFacts:
     """Project persisted M303 evidence together with canonical arrival facts."""
     m303 = evidence.m303
@@ -907,6 +936,7 @@ def resolve_m303_filing_facts(
         differentiated_contributions=differentiated_contributions,
         bienes_register=bienes_register,
         regularisation_result=regularisation_result,
+        bienes_parameters=bienes_parameters,
     )
 
 
@@ -1190,22 +1220,16 @@ __all__ = [
     "M202_UNSUPPORTED_PRODUCER_IDS",
     "AmendmentEvidence",
     "ChargeAccountSelection",
-    "FilingElectionFactSet",
     "FilingModelProfileFacts",
     "FilingProducerSnapshot",
     "FilingProducerSnapshotError",
-    "GeneralFilingProfileFactSet",
     "M202UnsupportedProducerId",
-    "M303FilingFactSet",
     "M303InsolvencyFilingFact",
     "M303InsolvencyFilingSubtype",
-    "Modelo111ProfileFactSet",
-    "Modelo202ActivityFactSet",
     "Modelo202ProducerProfile",
     "PresenterIdentity",
     "RefundAccountSelection",
     "SelectedFilingAccount",
-    "TaxpayerIdentityFactSet",
     "assert_m303_regularisation_result_matches_bienes_register",
     "build_filing_producer_snapshot",
     "resolve_m303_filing_facts",

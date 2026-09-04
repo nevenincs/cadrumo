@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from datetime import date
+from datetime import date as _date
 from decimal import Decimal
 
 import pydantic
 import pytest
 
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....domain.calculations.registry.schema_base import ThresholdComparison
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
@@ -26,8 +28,49 @@ from ..register import (
     compute_registro_transmisiones,
     validate_investment_asset_reciprocity,
 )
+from ..regularizacion_parameters import (
+    BienesInversionParameterProvenance,
+    BienesInversionRegularizacionParameters,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+#: An explicit bundle, supplied rather than resolved: these are unit tests of the
+#: art-109/110 PROCEDURE, and the procedure is what they prove. Whether the
+#: figures below are the ones the law states is a separate question, answered
+#: against the registry itself by the modelo 303 parameter gates. Supplying them
+#: here as inputs keeps a legal value out of this file's assertions.
+_PARAMS = BienesInversionRegularizacionParameters(
+    ventana_anos_mueble=4,
+    ventana_anos_inmueble=9,
+    divisor_mueble=Decimal("5"),
+    divisor_inmueble=Decimal("10"),
+    umbral_puntos=Decimal("10"),
+    umbral_comparison=ThresholdComparison.EXCLUSIVE,
+    provenance=BienesInversionParameterProvenance(
+        modelo_id="303",
+        revision_id="2025",
+        parameter_ids=(
+            "m303-bien-inversion-ventana-anos-mueble",
+            "m303-bien-inversion-ventana-anos-inmueble",
+            "m303-bien-inversion-divisor-mueble",
+            "m303-bien-inversion-divisor-inmueble",
+            "m303-bien-inversion-regularizacion-umbral-puntos",
+        ),
+        resolved_on=date(2025, 6, 1),
+    ),
+)
+
+
+def _params_for(year: int) -> BienesInversionRegularizacionParameters:
+    """The bundle, resolved for ``year``.
+
+    The projection now refuses a bundle resolved for a different filing year, so
+    a fixture cannot carry one fixed year and be applied to another.
+    """
+    return _PARAMS.model_copy(
+        update={"provenance": _PARAMS.provenance.model_copy(update={"resolved_on": _date(year, 12, 31)})}
+    )
 
 
 def _record(identifier: str = "bi-2022-furgoneta", **overrides: object) -> BienInversionIvaRecord:
@@ -53,17 +96,17 @@ def test_deduccion_efectuada_is_cuota_times_initial_prorrata() -> None:
 def test_movable_window_spans_four_following_years() -> None:
     """A mueble acquired in 2022 regularises 2023-2026, not 2022 or 2027."""
     record = _record(acquisition_year=2022, kind=BienInversionKind.MUEBLE)
-    assert record.is_within_regularization_window(2022) is False  # acquisition year excluded
-    assert record.is_within_regularization_window(2023) is True
-    assert record.is_within_regularization_window(2026) is True
-    assert record.is_within_regularization_window(2027) is False
+    assert record.is_within_regularization_window(2022, parameters=_PARAMS) is False  # acquisition year excluded
+    assert record.is_within_regularization_window(2023, parameters=_PARAMS) is True
+    assert record.is_within_regularization_window(2026, parameters=_PARAMS) is True
+    assert record.is_within_regularization_window(2027, parameters=_PARAMS) is False
 
 
 def test_real_estate_window_spans_nine_following_years() -> None:
     """An inmueble acquired in 2022 regularises 2023-2031, not 2032."""
     record = _record(acquisition_year=2022, kind=BienInversionKind.INMUEBLE)
-    assert record.is_within_regularization_window(2031) is True
-    assert record.is_within_regularization_window(2032) is False
+    assert record.is_within_regularization_window(2031, parameters=_PARAMS) is True
+    assert record.is_within_regularization_window(2032, parameters=_PARAMS) is False
 
 
 def test_disposal_before_acquisition_is_refused() -> None:
@@ -78,25 +121,25 @@ def test_disposal_before_acquisition_is_refused() -> None:
 def test_remaining_regularization_years_mid_window_disposal() -> None:
     """A mueble (2022, window 2023-2026) disposed of in 2024 has 3 years left (2024-2026)."""
     record = _record(acquisition_year=2022, kind=BienInversionKind.MUEBLE)
-    assert record.remaining_regularization_years(2024) == 3
+    assert record.remaining_regularization_years(2024, parameters=_PARAMS) == 3
 
 
 def test_remaining_regularization_years_disposal_in_acquisition_year_counts_full_window() -> None:
     """A disposal in the acquisition year itself still owes the full following window."""
     record = _record(acquisition_year=2022, kind=BienInversionKind.MUEBLE)
-    assert record.remaining_regularization_years(2022) == 4
+    assert record.remaining_regularization_years(2022, parameters=_PARAMS) == 4
 
 
 def test_remaining_regularization_years_disposal_in_last_window_year() -> None:
     """A disposal in the final window year leaves exactly that one year."""
     record = _record(acquisition_year=2022, kind=BienInversionKind.MUEBLE)
-    assert record.remaining_regularization_years(2026) == 1
+    assert record.remaining_regularization_years(2026, parameters=_PARAMS) == 1
 
 
 def test_remaining_regularization_years_disposal_outside_window_is_zero() -> None:
     """A disposal after window expiry leaves nothing to regularise."""
     record = _record(acquisition_year=2022, kind=BienInversionKind.MUEBLE)
-    assert record.remaining_regularization_years(2027) == 0
+    assert record.remaining_regularization_years(2027, parameters=_PARAMS) == 0
 
 
 def test_register_rejects_duplicate_identifiers() -> None:
@@ -122,7 +165,7 @@ def test_in_window_records_filters_by_eligibility_and_window() -> None:
     out_of_window = _record("old", acquisition_year=2015, kind=BienInversionKind.MUEBLE)
     ineligible = _record("cheap", acquisition_year=2022, art108_elegible=False)
     register = BienesInversionIvaRegister(records=(in_window, out_of_window, ineligible))
-    result = register.in_window_records(2024)
+    result = register.in_window_records(2024, parameters=_PARAMS)
     assert tuple(r.identifier for r in result) == ("in-window",)
 
 
@@ -156,6 +199,7 @@ def test_registro_projection_folds_computed_importes_and_reports_pending() -> No
         register,
         regularizacion_year=2024,
         prorrata_definitiva_by_identifier={"bi-computed": Decimal("60")},
+        parameters=_params_for(2024),
     )
     assert projection.computed_count == 1
     assert projection.pending_percentage_count == 1
@@ -200,7 +244,7 @@ def test_in_window_records_excludes_a_good_disposed_at_or_before_the_year() -> N
     register = BienesInversionIvaRegister(
         records=(disposed_same_year, disposed_earlier_year, disposed_later_year, never_disposed)
     )
-    result = register.in_window_records(2024)
+    result = register.in_window_records(2024, parameters=_PARAMS)
     assert tuple(r.identifier for r in result) == ("disposed-later-year", "never-disposed")
 
 
@@ -218,7 +262,7 @@ def test_disposed_records_filters_by_disposal_year_and_remaining_window() -> Non
     )
     no_disposal = _record("no-disposal", acquisition_year=2022)
     register = BienesInversionIvaRegister(records=(in_scope, different_year, no_disposal))
-    result = register.disposed_records(2024)
+    result = register.disposed_records(2024, parameters=_PARAMS)
     assert tuple(r.identifier for r in result) == ("in-scope",)
 
 
@@ -251,7 +295,7 @@ def test_registro_transmisiones_folds_disposed_goods_into_casilla_43() -> None:
         disposal=BienInversionDisposal(year=2024, regime=BienInversionDisposalRegime.EXENTA_O_NO_SUJETA),
     )
     register = BienesInversionIvaRegister(records=(regla_primera, regla_segunda))
-    projection = compute_registro_transmisiones(register, disposal_year=2024)
+    projection = compute_registro_transmisiones(register, disposal_year=2024, parameters=_params_for(2024))
     assert projection.computed_count == 2
     assert projection.proposed_casilla_43 == Decimal("11932.50")
     assert projection.sector_contributions == (
@@ -289,6 +333,7 @@ def test_registro_transmisiones_applies_the_supplied_cap_per_identifier() -> Non
         register,
         disposal_year=2024,
         cuota_devengada_entrega_by_identifier={"bi-capped": Decimal("1500.00")},
+        parameters=_params_for(2024),
     )
     assert projection.proposed_casilla_43 == Decimal("-1500.00")
     row = projection.rows[0]
@@ -304,7 +349,7 @@ def test_registro_transmisiones_excludes_a_disposal_with_no_window_time_remainin
         disposal=BienInversionDisposal(year=2027, regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA),
     )
     register = BienesInversionIvaRegister(records=(out_of_window_disposal,))
-    projection = compute_registro_transmisiones(register, disposal_year=2027)
+    projection = compute_registro_transmisiones(register, disposal_year=2027, parameters=_params_for(2027))
     assert projection.computed_count == 0
     assert projection.rows == ()
     assert projection.proposed_casilla_43 == Decimal("0.00")

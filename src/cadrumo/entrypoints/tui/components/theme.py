@@ -171,7 +171,21 @@ CADRUMO_CSS_TOKENS: Final[Mapping[str, str]] = MappingProxyType(
         # than the library intends, while the complaint was that they were
         # small.
         "cadrumo-control-min-width": "16",
-        "cadrumo-control-max-width": "28",
+        # Wide enough that no declared action label wraps. Derived, not
+        # chosen: the longest is 43 cells ("Obtener todas las declaraciones
+        # presentadas" in es, and the Catalan of the same length), and a button
+        # spends two on its border and two on `line-pad`, so 47 is the floor
+        # and this is the next even value.
+        #
+        # The old 28 wrapped almost every action label in every locale --
+        # measured, only one of the four AEAT actions fits it in any language.
+        # A wrapped label costs a row and makes that button alone taller,
+        # producing the ragged action row the `control-pad-x` note above
+        # already warns against; two buttons in one column then measured 3 and
+        # 5 rows tall. It also had a consequence beyond looks: the taller
+        # neighbour reached far enough to consume a simulated press aimed at
+        # the button above it.
+        "cadrumo-control-max-width": "48",
         # The gap between sibling action buttons. Nine stylesheets each
         # repeated this as a literal; two bordered boxes one cell apart
         # read as one smeared control, so the role gets a name and a

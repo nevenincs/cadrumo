@@ -80,15 +80,6 @@ from ._modelo_rendering import (
 )
 
 _log = get_logger(__name__)
-_HEX_DIGITS = frozenset("0123456789abcdef")
-
-
-_M200_M202_PAGOS_RELATION_IDS: frozenset[str] = frozenset(
-    {
-        "modelo-200-2024-rel-202-pagos-fraccionados",
-        "modelo-200-2024-rel-202-pagos-fraccionados-40-2",
-    },
-)
 
 
 def work_compare_taxation(

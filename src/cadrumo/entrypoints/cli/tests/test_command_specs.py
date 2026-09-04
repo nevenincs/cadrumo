@@ -4,11 +4,30 @@ import ast
 import json
 import subprocess
 import sys
+from dataclasses import replace
 from importlib.util import find_spec, resolve_name
 from pathlib import Path
 
 import pytest
 
+from .._app_ledger_command_specs import (
+    _LEDGER_CLI_CENSUS_ANNOTATIONS,
+    LEDGER_CLI_COMMAND_CENSUS,
+    LEDGER_COMMAND_SPECS,
+    LedgerCliAdapterOwnership,
+    LedgerCliCensusAnnotation,
+    _build_ledger_cli_command_census,
+    _ledger_invocable_specs,
+    _validated_annotations,
+)
+from ..command_spec import (
+    CommandNodeKind,
+    LazyBinding,
+    ResultSchemaSpec,
+    SchemaState,
+    TuiCapability,
+    translation_key,
+)
 from ..command_specs import COMMAND_GRAPH, COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -97,3 +116,121 @@ def test_handler_target_modules_do_not_import_the_cli_package_facade() -> None:
             ):
                 violations.append(module)
     assert violations == []
+
+
+def test_ledger_census_projects_every_live_invocable_command_spec() -> None:
+    invocables = _ledger_invocable_specs()
+    live_paths = {
+        node.spec.key: node.path
+        for node in COMMAND_GRAPH.nodes()
+        if node.path[:3] == ("aeat", "app", "ledger")
+        and (node.spec.kind is CommandNodeKind.LEAF or node.spec.invocation.invoke_without_command)
+    }
+
+    assert len(LEDGER_CLI_COMMAND_CENSUS) == len(invocables) == len(live_paths)
+    assert {entry.command_key for entry in LEDGER_CLI_COMMAND_CENSUS} == {spec.key for spec in invocables}
+    assert "app_ledger_participation" in live_paths
+    for entry in LEDGER_CLI_COMMAND_CENSUS:
+        spec = next(spec for spec in invocables if spec.key == entry.command_key)
+        assert spec.handler is not None and spec.handler.target is not None
+        assert spec.result_schema.identity is not None
+        assert entry.path == live_paths[spec.key]
+        assert entry.handler_identity == spec.handler.target.identity
+        assert entry.result_schema_identity == spec.result_schema.identity
+        assert entry.tui_capability is spec.tui_capability is TuiCapability.NOT_IMPLEMENTED
+
+
+def test_ledger_census_keeps_auto_split_effect_outcomes_distinct() -> None:
+    classify = next(entry for entry in LEDGER_CLI_COMMAND_CENSUS if entry.command_key == "app_ledger_classify")
+
+    assert classify.suboperation_ids == (
+        "ledger.classify.direct",
+        "ledger.classify.m210",
+        "ledger.classify.iva_derive",
+        "ledger.classify.llm_preview",
+        "ledger.classify.llm_apply",
+        "ledger.classify.llm_reject",
+        "ledger.classify.llm_saturate_preview",
+        "ledger.classify.llm_saturate_apply",
+        "ledger.classify.llm_saturate_reject",
+        "ledger.classify.evidence_read",
+        "ledger.classify.auto_split.reject",
+        "ledger.classify.auto_split.split_preview",
+        "ledger.classify.auto_split.split_apply",
+        "ledger.classify.auto_split.single_preview",
+        "ledger.classify.auto_split.single_apply",
+        "ledger.classify.bulk_csv",
+    )
+
+
+def test_ledger_census_rejects_missing_unknown_and_duplicate_annotations() -> None:
+    invocables = _ledger_invocable_specs()
+
+    with pytest.raises(ValueError, match=r"unknown=.*app_ledger_unknown"):
+        _validated_annotations(
+            invocables,
+            (
+                *_LEDGER_CLI_CENSUS_ANNOTATIONS,
+                LedgerCliCensusAnnotation("app_ledger_unknown", LedgerCliAdapterOwnership.MIXED),
+            ),
+        )
+    with pytest.raises(ValueError, match=r"missing=.*app_ledger_add"):
+        _validated_annotations(invocables, _LEDGER_CLI_CENSUS_ANNOTATIONS[1:])
+    with pytest.raises(ValueError, match="duplicate ownership annotations"):
+        _validated_annotations(invocables, (*_LEDGER_CLI_CENSUS_ANNOTATIONS, _LEDGER_CLI_CENSUS_ANNOTATIONS[0]))
+
+
+def test_ledger_census_rejects_new_and_duplicate_invocable_endpoints() -> None:
+    invocables = _ledger_invocable_specs()
+    unannotated = replace(invocables[0], key="app_ledger_unadjudicated")
+
+    with pytest.raises(ValueError, match=r"missing=.*app_ledger_unadjudicated"):
+        _validated_annotations((unannotated, *invocables[1:]))
+    with pytest.raises(ValueError, match="duplicate invocable command keys"):
+        _validated_annotations((*invocables, invocables[0]))
+
+
+def test_ledger_census_rejects_duplicate_suboperation_annotations() -> None:
+    duplicate_identity = _LEDGER_CLI_CENSUS_ANNOTATIONS[8].suboperation_ids[0]
+    duplicate = replace(
+        _LEDGER_CLI_CENSUS_ANNOTATIONS[0],
+        suboperation_ids=(duplicate_identity,),
+    )
+
+    with pytest.raises(ValueError, match="duplicate semantic sub-operation identities"):
+        _validated_annotations(
+            _ledger_invocable_specs(),
+            (duplicate, *_LEDGER_CLI_CENSUS_ANNOTATIONS[1:]),
+        )
+
+
+@pytest.mark.parametrize(
+    "identity",
+    ("ledger.fooBar", "ledger.é", "ledger._alpha", "ledger.a-", "ledger.", "ledger"),
+)
+def test_ledger_census_rejects_noncanonical_suboperation_identities(identity: str) -> None:
+    with pytest.raises(ValueError, match="not a stable identity"):
+        LedgerCliCensusAnnotation("app_ledger_add", LedgerCliAdapterOwnership.MIXED, (identity,))
+
+
+def test_ledger_census_rejects_unavailable_handler_or_schema() -> None:
+    invocables = _ledger_invocable_specs()
+    target = invocables[0]
+    unavailable_handler = replace(
+        target,
+        handler=LazyBinding.unavailable(translation_key("ledger.census.handler.unavailable")),
+    )
+    unavailable_schema = replace(
+        target,
+        result_schema=ResultSchemaSpec(
+            SchemaState.UNAVAILABLE,
+            reason_key=translation_key("ledger.census.schema.unavailable"),
+        ),
+    )
+    handler_specs = tuple(unavailable_handler if spec.key == target.key else spec for spec in LEDGER_COMMAND_SPECS)
+    schema_specs = tuple(unavailable_schema if spec.key == target.key else spec for spec in LEDGER_COMMAND_SPECS)
+
+    with pytest.raises(ValueError, match="lacks an available deferred handler"):
+        _build_ledger_cli_command_census(handler_specs)
+    with pytest.raises(ValueError, match="lacks an available result schema"):
+        _build_ledger_cli_command_census(schema_specs)

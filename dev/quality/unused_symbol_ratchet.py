@@ -59,6 +59,16 @@ class RatchetVerdict:
     resolved: tuple[str, ...]
     orphan_tests_unrecorded: tuple[str, ...]
     orphan_tests_resolved: tuple[str, ...]
+    deferred_symbols: int = 0
+    deferred_tests: int = 0
+    """Findings excluded by the deferral prefix, carried so they can be stated.
+
+    The prefix sets scope; the module says so itself - deferral is not
+    permission. But the verdict never mentioned it, so a green run reported
+    that the tree matches the baseline while a documented population sat
+    outside the comparison entirely. Deferred is a distinct state from
+    proven-clean and has to reach whoever reads the result.
+    """
 
     @property
     def ok(self) -> bool:
@@ -113,13 +123,29 @@ def evaluate(repo_root: Path = REPO_ROOT) -> RatchetVerdict:
         resolved=resolved,
         orphan_tests_unrecorded=tuple(sorted(live_tests - recorded_tests)),
         orphan_tests_resolved=tuple(sorted(recorded_tests - live_tests)),
+        deferred_symbols=sum(
+            1
+            for finding in result.symbols
+            if finding.confidence.value == "exact" and finding.module.startswith(_DEFERRED_PREFIX)
+        ),
+        deferred_tests=sum(1 for finding in result.tests if finding.module.startswith(_DEFERRED_PREFIX)),
+    )
+
+
+def _deferral_note(verdict: RatchetVerdict) -> str:
+    """Return the standing deferral, or empty when nothing is deferred."""
+    if not (verdict.deferred_symbols or verdict.deferred_tests):
+        return ""
+    return (
+        f" ({verdict.deferred_symbols} symbol finding(s) and {verdict.deferred_tests} orphaned test "
+        f"module(s) are deferred under {_DEFERRED_PREFIX} and were not compared)"
     )
 
 
 def render(verdict: RatchetVerdict) -> str:
     """Render the verdict for an operator."""
     if verdict.ok:
-        return "unused-symbol ratchet: tree matches baseline"
+        return "unused-symbol ratchet: tree matches baseline" + _deferral_note(verdict)
 
     lines: list[str] = []
     if verdict.unrecorded:
@@ -141,7 +167,7 @@ def render(verdict: RatchetVerdict) -> str:
     if verdict.orphan_tests_resolved:
         lines.append("recorded orphaned test module(s) the tree no longer reports; remove them:")
         lines += [f"  - {module}" for module in verdict.orphan_tests_resolved]
-    return "\n".join(lines)
+    return chr(10).join([*lines, _deferral_note(verdict).lstrip()]) if _deferral_note(verdict) else chr(10).join(lines)
 
 
 def main() -> int:

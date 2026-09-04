@@ -10,7 +10,12 @@ from pathlib import Path
 import pytest
 
 from ..._paths import REPO_ROOT
-from ..build_scratch_reclaim import integration_snapshot_name, matching_family, remove_tree
+from ..build_scratch_reclaim import (
+    RELEASE_COHORT_INTEGRATION_FAMILY,
+    matching_family,
+    remove_tree,
+    var_scratch_name,
+)
 from ..cohort_manifest import REQUIRED_ARTIFACT_KINDS
 from ..release_cohort import build_release_cohort
 
@@ -69,7 +74,7 @@ def test_real_clean_source_build_is_complete_and_reproducible() -> None:
     # Named through the scratch registry rather than spelled here, so the
     # collection-time reclaim and this mint site cannot disagree about the
     # family, and so the name carries this process as its owner.
-    snapshot = var / integration_snapshot_name(uuid.uuid4().hex)
+    snapshot = var / var_scratch_name(RELEASE_COHORT_INTEGRATION_FAMILY, uuid.uuid4().hex)
     try:
         source = _stable_source_clone(repo_root, snapshot)
         outputs = (

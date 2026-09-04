@@ -23,6 +23,7 @@ written.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Annotated
 
@@ -50,6 +51,11 @@ from ._seed_import import (
 )
 from .enums import TermStatus
 from .errors import TerminologyError
+
+#: The curation baseline recorded beside this package. Named here because
+#: nothing referenced the file at all, which is how it stayed inert.
+_CURATION_BASELINE_NAME = "curation-ratchet.json"
+_BASELINE_ENCODING = "utf-8"
 
 app = typer.Typer(name="terminology", help=tr("Terminology Handbook maintenance."), no_args_is_help=True)
 
@@ -141,6 +147,31 @@ def retire(
     typer.echo(f"retired {concept_id} -> replaced_by {replaced_by} ({path.name})")
 
 
+def _recorded_curation_baseline() -> dict[str, object]:
+    """Return the recorded curation baseline, or an empty mapping when absent.
+
+    The file records a draft count, an empty-short-description count, a date
+    and a review cadence, and NOTHING loaded it: no module, no recipe, no
+    other declaration named it. It read as governance while being inert, and
+    it had already been passed - 99 and 100 recorded, 101 and 102 live - with
+    nothing to notice.
+
+    It is reported rather than enforced. The recorded numbers are a frozen
+    corpus count, which this project's quality rule disfavours as proof of
+    anything; what they can honestly do is show a reader how far the tree has
+    moved since someone last reviewed it.
+    """
+    path = Path(__file__).with_name(_CURATION_BASELINE_NAME)
+    if not path.is_file():
+        return {}
+    try:
+        loaded = json.loads(path.read_text(encoding=_BASELINE_ENCODING))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        typer.echo(f"  recorded baseline at {path.name} could not be read: {error}")
+        return {}
+    return loaded if isinstance(loaded, dict) else {}
+
+
 @app.command("audit")
 def audit() -> None:
     """Print the structured curation-health report."""
@@ -152,6 +183,14 @@ def audit() -> None:
         f"{report.deprecated_count} deprecated, {report.retired_count} retired)",
     )
     typer.echo(f"  seed provenance: {report.seeded_count} seeded, {report.hand_authored_count} hand-authored")
+    baseline = _recorded_curation_baseline()
+    if baseline:
+        typer.echo(
+            f"  recorded {baseline.get('recorded_at', 'an unknown date')}: "
+            f"{baseline.get('draft_count', '?')} draft, "
+            f"{baseline.get('empty_short_description_count', '?')} empty short_description "
+            f"(live: {report.draft_count} and {len(report.empty_short_description)})"
+        )
     if report.empty_short_description:
         typer.echo(f"  empty short_description: {len(report.empty_short_description)} concept(s)")
         for concept_id, langs in sorted(report.empty_short_description.items()):

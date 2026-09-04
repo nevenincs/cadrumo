@@ -27,6 +27,12 @@ from ._distribution_limits import PYPI_FILE_CAP_BYTES
 from ._distribution_names import normalise_distribution_name
 from ._hashing import sha256_path
 from ._proof_ledger import record_proof
+from .build_scratch_reclaim import (
+    COHORT_BUILD_TREE_FAMILY,
+    COHORT_SOURCE_ARCHIVE_FAMILY,
+    COMMAND_SPEC_BYTECODE_FAMILY,
+    var_scratch_name,
+)
 from .runtime_wheelhouse import build_runtime_wheelhouse, load_runtime_wheelhouse
 
 _UTF_8: Final[str] = UTF_8
@@ -121,11 +127,15 @@ _FORBIDDEN_COMMAND_ARTIFACT_NAMES: Final[frozenset[str]] = frozenset(
 _COMMAND_SPEC_PROBE: Final[str] = r"""
 import dataclasses
 import importlib
+import importlib.resources
 import json
 import os
 from pathlib import Path
 import site
 import sys
+
+def first_party(name):
+    return name in ("cadrumo", "cadrumo_harness") or name.startswith(("cadrumo.", "cadrumo_harness."))
 
 site.addsitedir(os.environ["AEAT_INSTALL_SITE"])
 for dependency_site in os.environ["AEAT_DEPENDENCY_SITE"].split(os.pathsep):
@@ -235,9 +245,7 @@ handler_modules = {
     if node.spec.handler is not None and target is node.spec.handler.target
 }
 import_budgets = {
-    "graph_projection_first_party_modules": sorted(
-        name for name in sys.modules if name == "cadrumo" or name.startswith("cadrumo.")
-    ),
+    "graph_projection_first_party_modules": sorted(name for name in sys.modules if first_party(name)),
     "handler_modules_loaded": sorted(handler_modules.intersection(sys.modules)),
     "selected_path_deltas": [],
 }
@@ -276,11 +284,7 @@ elif probe_mode in selected_contracts:
     result = runner.invoke(get_command(cli.app), [*path[1:], "--help"])
     if result.exit_code != 0:
         raise AssertionError(f"selected installed help failed: {path}: {result.output}")
-    delta = sorted(
-        name
-        for name in set(sys.modules) - before
-        if name == "cadrumo" or name.startswith("cadrumo.")
-    )
+    delta = sorted(name for name in set(sys.modules) - before if first_party(name))
     selected_handler = (
         None
         if selected.handler is None or selected.handler.target is None
@@ -303,16 +307,39 @@ else:
 if set(import_budgets["handler_modules_loaded"]) - {"cadrumo.entrypoints.cli"}:
     raise AssertionError(f"installed CommandSpec projection exceeded selected-path import budgets: {import_budgets}")
 install_root = Path(os.environ["AEAT_INSTALL_SITE"]).resolve()
+# A first-party module carrying no __file__ is a namespace package, and it is
+# REFUSED rather than skipped. Skipping would drop it from the origins the
+# wheel-member check reads while leaving it in the module budget the envelope
+# seals, so the attestation would describe a module nothing had located.
+unlocatable = sorted(
+    name
+    for name, module in sys.modules.items()
+    if first_party(name) and module is not None and getattr(module, "__file__", None) is None
+)
+if unlocatable:
+    raise AssertionError(f"installed CommandSpec probe imported unlocatable first-party modules: {unlocatable}")
 origins = sorted(
     (name, str(Path(module.__file__).resolve()))
     for name, module in sys.modules.items()
-    if (name == "cadrumo" or name.startswith("cadrumo.")) and getattr(module, "__file__", None)
+    if first_party(name) and getattr(module, "__file__", None)
 )
 if not origins or any(not Path(origin).is_relative_to(install_root) for _name, origin in origins):
     raise AssertionError(f"installed CommandSpec probe escaped its wheel target: {origins}")
+# The locale rows above are the projection's only DATA-derived field: they are
+# read out of the packaged catalogue this same expression resolves, and the
+# completeness refusal a few lines up is asserted against whatever that
+# directory happens to hold. Reporting the files makes the seal checkable
+# against the wheel's member listing rather than against the probe's tree.
+locale_root = Path(str(importlib.resources.files("cadrumo").joinpath("locales")))
+packaged_resources = sorted(str(path.resolve()) for path in locale_root.rglob("*") if path.is_file())
+if not packaged_resources:
+    raise AssertionError(f"installed CommandSpec probe resolved no packaged locale resource: {locale_root}")
+if any(not Path(resource).is_relative_to(install_root) for resource in packaged_resources):
+    raise AssertionError(f"installed CommandSpec probe read packaged data outside its wheel target: {locale_root}")
 print(json.dumps({
     "identities": identities,
     "locales": locales,
+    "packaged_resources": packaged_resources,
     "policies": policies,
     "schemas": schemas,
     "import_budgets": import_budgets,
@@ -528,18 +555,22 @@ def _probe_installed_command_specs(*, site_root: Path, work_root: Path) -> dict[
     equivalent tree by unpacking the finished wheel into a throwaway target
     describes the same modules at the cost of writing out twenty-five thousand
     files that were already there. What the wheel round trip additionally proved
-    -- that every module the probe imported is one the wheel actually ships,
+    -- that everything the probe read is something the wheel actually ships,
     which matters because the build tree is a superset that also carries the
     excluded test payload -- is proved directly instead, by
-    :func:`_assert_origins_are_wheel_members` against the wheel member listing
-    the attestation already computes.
+    :func:`_assert_probe_reads_are_wheel_members` against the wheel member
+    listing the attestation already computes. The projection therefore reports
+    the packaged locale files it resolved as well as its module origins: the
+    round trip covered data and modules alike because the installed target was
+    the wheel, and half a substitute would seal a locale projection nothing
+    compared against the archive.
 
     Returns:
         The first probe mode's projection, with the selected-path import budgets
         of the remaining modes merged into it.
     """
     dependency_site = next(path for path in map(Path, sys.path) if path.name == "site-packages" and path.is_dir())
-    bytecode_root = work_root / ".command-spec-bytecode"
+    bytecode_root = work_root / var_scratch_name(COMMAND_SPEC_BYTECODE_FAMILY, "probe")
     if bytecode_root.exists():
         shutil.rmtree(bytecode_root)
     bytecode_root.mkdir(parents=True)
@@ -593,35 +624,54 @@ def _probe_installed_command_specs(*, site_root: Path, work_root: Path) -> dict[
     return projection
 
 
-def _assert_origins_are_wheel_members(
+def _assert_probe_reads_are_wheel_members(
     projection: dict[str, Any],
     artifact_projection: tuple[tuple[str, str], ...],
     *,
     site_root: Path,
 ) -> None:
-    """Refuse an attestation naming a module the root wheel does not ship.
+    """Refuse an attestation describing anything the root wheel does not ship.
 
-    The probe already proves every Cadrumo module it imported resolved inside
-    ``site_root``. This adds the second half: that ``site_root``'s copy of each
-    of those modules is also carried by the wheel. The build tree deliberately
-    holds more than the wheel does -- the wheel target excludes the test payload
-    -- so a projection taken over the tree without this check could describe a
-    module no installation would ever have.
+    The probe already proves everything it read resolved inside ``site_root``.
+    This adds the second half: that ``site_root``'s copy of each of those files
+    is also carried by the wheel. The build tree deliberately holds more than
+    the wheel does -- the wheel target excludes the test payload -- so a
+    projection taken over the tree without this check could describe files no
+    installation would ever have.
+
+    Both halves of what the probe read are checked, because the probe reads
+    both. The MODULES are its origins. The DATA is the packaged locale
+    catalogue: the projection's ``locales`` rows are resolved out of it, and
+    the completeness refusal that makes those rows load-bearing is asserted
+    against whatever directory the probe's tree happens to hold. Checking the
+    modules alone would seal a complete four-locale projection over a wheel
+    that ships one locale, and the diagnosis would be a Spanish command
+    surface rendering raw translation keys against an attestation certifying
+    the opposite.
     """
     wheel_members = {member for kind, member in artifact_projection if kind == "wheel"}
     root = site_root.resolve()
-    recorded: list[tuple[str, str]] = list(projection["origins"])
-    unshipped: list[str] = []
-    for name, origin in recorded:
+
+    def member_of(label: str, path: str) -> str:
         try:
-            member = Path(origin).relative_to(root).as_posix()
+            return Path(path).relative_to(root).as_posix()
         except ValueError:
-            raise SystemExit(f"CommandSpec attestation origin escaped its probe tree: {name} at {origin}") from None
-        if member not in wheel_members:
-            unshipped.append(member)
+            raise SystemExit(f"CommandSpec attestation {label} escaped its probe tree: {path}") from None
+
+    resources: list[str] = list(projection["packaged_resources"])
+    if not resources:
+        # Vacuity, not absence: the locale completeness check the probe runs
+        # passes trivially over an empty catalogue, so an attestation reporting
+        # no resource read cannot have sealed the projection it claims to.
+        raise SystemExit("CommandSpec attestation sealed a locale projection over no packaged resource file")
+    read: list[str] = [
+        *(member_of(f"origin {name}", origin) for name, origin in projection["origins"]),
+        *(member_of("packaged resource", resource) for resource in resources),
+    ]
+    unshipped = sorted({member for member in read if member not in wheel_members})
     if unshipped:
         raise SystemExit(
-            f"CommandSpec attestation names modules the root wheel does not ship: {sorted(unshipped)[:20]!r}",
+            f"CommandSpec attestation names files the root wheel does not ship: {unshipped[:20]!r}",
         )
 
 
@@ -907,11 +957,11 @@ def attest_command_specs(
     """Probe one importable Cadrumo tree and seal the attestation it supports.
 
     The single composition of the four steps a cohort attestation takes: probe
-    the tree, project the artifact members, prove every probed module is one the
-    root wheel ships, and seal the envelope. The cohort builder and every
-    fixture that assembles a cohort from real artifacts call this rather than
-    reproducing the ordering, since a caller that skipped the third step would
-    seal a projection describing modules no installation has.
+    the tree, project the artifact members, prove everything the probe read is
+    something the root wheel ships, and seal the envelope. The cohort builder
+    and every fixture that assembles a cohort from real artifacts call this
+    rather than reproducing the ordering, since a caller that skipped the third
+    step would seal a projection describing files no installation has.
 
     Args:
         site_root: The importable tree to probe -- the ``src`` directory of the
@@ -940,7 +990,7 @@ def attest_command_specs(
         source_archive,
         digests=resolved,
     )
-    _assert_origins_are_wheel_members(projection, artifact_projection, site_root=site_root)
+    _assert_probe_reads_are_wheel_members(projection, artifact_projection, site_root=site_root)
     return _command_spec_attestation(
         projection,
         artifact_projection,
@@ -980,11 +1030,11 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
     if len(source_commit) != 40:
         raise SystemExit(f"git returned an invalid source commit: {source_commit!r}")
 
-    build_root = output.parent / f".{output.name}-source"
+    build_root = output.parent / var_scratch_name(COHORT_BUILD_TREE_FAMILY, output.name)
     if build_root.exists():
         shutil.rmtree(build_root)
     build_root.mkdir(parents=True)
-    archive = output.parent / f".{output.name}-source.zip"
+    archive = output.parent / var_scratch_name(COHORT_SOURCE_ARCHIVE_FAMILY, output.name)
     if archive.exists():
         archive.unlink()
     retained_source_archive = output / f"cadrumo-source-{source_commit}.zip"

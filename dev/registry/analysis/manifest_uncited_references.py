@@ -69,9 +69,7 @@ class UncitedManifestReference:
     kind: str = "manifest_reference_uncited"
 
 
-def uncited_manifest_references(
-    revision: ModeloRevision, *, modelo_id: str
-) -> tuple[UncitedManifestReference, ...]:
+def uncited_manifest_references(revision: ModeloRevision, *, modelo_id: str) -> tuple[UncitedManifestReference, ...]:
     """Return manifest references no child of the revision cites.
 
     The mirror of the condition above, and it was unmeasured. A manifest and its
@@ -120,6 +118,7 @@ def screen_authority(
             found.extend(uncited_manifest_references(revision, modelo_id=modelo_id))
     return tuple(found)
 
+
 def main() -> int:
     """Print one greppable row per finding and a closing census; always exit 0."""
     findings = screen_authority(bundled_authority(), bundled_modelo_ids())
@@ -131,8 +130,7 @@ def main() -> int:
     tally = collections.Counter(item.ref_kind for item in findings)
     revisions = len({(item.modelo, item.revision) for item in findings})
     sys.stdout.write(
-        f"summary findings={len(findings)} revisions={revisions} "
-        f"legal={tally['legal']} source={tally['source']}\n"
+        f"summary findings={len(findings)} revisions={revisions} legal={tally['legal']} source={tally['source']}\n"
     )
     return 0
 

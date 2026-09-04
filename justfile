@@ -648,9 +648,19 @@ pytest_workers := env_var_or_default("CADRUMO_PYTEST_WORKERS", "auto")
 # every corpus-walking lane excludes exactly these -- derived with `prepend`,
 # never restated, because a member list repeated at five call sites is five
 # chances to drift into a lane that silently nests a worker pool inside a pool.
+#
+# One member is a FILE and one is a DIRECTORY, and the asymmetry is deliberate.
+# The worker hook sits among hundreds of ordinary unit modules in
+# `src/cadrumo/tests`, so naming its directory would drag that whole corpus into
+# an outer-serial lane and out of every parallel one; only the file can be named.
+# `dev/harness` is the opposite: the package exists solely to hold outer-serial
+# members, nothing else may live there, and naming the file left the DIRECTORY
+# inside no lane's scope at all -- so a second proof added beside the first would
+# have been collected by nothing, silently. Naming the directory makes membership
+# a property of where a module lives rather than of remembering to edit this line.
 harness_worker_hook := "src/cadrumo/tests/test_worker_count_hook_harness.py"
-harness_full_corpus := "dev/harness/tests/test_full_corpus_collectability_harness.py"
-harness_members := harness_worker_hook + " " + harness_full_corpus
+harness_package := "dev/harness/tests"
+harness_members := harness_worker_hook + " " + harness_package
 harness_exclusions := prepend("--ignore=", harness_members)
 
 # Run the fast test-framework ratchets for discovery, markers, skip/xfail, mock/test-double, monkeypatch, broad raises, bare except, and tautology drift.
@@ -673,7 +683,7 @@ test-ratchets:
 [group('testing')]
 test-harness:
     @uv run --no-sync pytest -q -m integration --collect-only -n0 {{harness_worker_hook}}
-    @uv run --no-sync pytest -q -m integration --collect-only -n0 {{harness_full_corpus}}
+    @uv run --no-sync pytest -q -m integration --collect-only -n0 {{harness_package}}
     @uv run --no-sync pytest -q -m integration -rsf -n0 --timeout=900 {{harness_members}}
 
 # Run the unit test suite in parallel, ignoring workbook parity tests. Quiet
@@ -747,10 +757,16 @@ test-integration:
 # the reason `packaging-smoke-preflight-tests` states it: these directories are
 # mixed-marker, so inheriting the default `-m 'unit and ...'` would silently
 # deselect the integration contracts and still exit zero.
-[doc('Run the dev/ tooling gates that no other lane reaches (audit, deploy, env, identity, locales, sanitizer, registry, docs, agent-eval, ingest-harness subsystems).')]
+#
+# `dev/benchmarks/cli/tests` holds no test module yet, and that is exactly why
+# it is named: an empty `tests` package is the emptiest form of the hole this
+# lane list keeps producing. Nothing collects from it today, so the cost is one
+# directory walk; the first proof written into it runs on the push that adds it
+# rather than waiting for someone to remember this line.
+[doc('Run the dev/ tooling gates that no other lane reaches (audit, benchmarks, deploy, env, identity, locales, sanitizer, registry, docs, agent-eval, ingest-harness subsystems).')]
 [group('testing')]
 test-dev-tooling:
-    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "(unit or integration) and not resident_service and not external_tool" dev/audit/tests dev/corpus/tests dev/deploy/tests dev/docs/tests dev/env/tests dev/identity/tests dev/locales/tests dev/readme/tests dev/tests dev/sanitizer/tests dev/registry/tests dev/registry/newmodelo/tests dev/registry/aeip/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests dev/agent_eval/tests dev/ingest_harness/tests
+    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "(unit or integration) and not resident_service and not external_tool" dev/audit/tests dev/benchmarks/cli/tests dev/corpus/tests dev/deploy/tests dev/docs/tests dev/env/tests dev/identity/tests dev/locales/tests dev/readme/tests dev/tests dev/sanitizer/tests dev/registry/tests dev/registry/newmodelo/tests dev/registry/aeip/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests dev/agent_eval/tests dev/ingest_harness/tests
 
 # Run the dev-tree workflow/tooling conformance gates that CI runs per-push
 # (workflow structural pins, evidence-transport conformance, shard-plugin

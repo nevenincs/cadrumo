@@ -19,12 +19,14 @@ Legal authorities cited:
 
 from __future__ import annotations
 
+from datetime import date as _esp_date
 from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
 
 from ....core.directory_scan import scan_directory
+from ...calculations.registry.schema_base import ThresholdComparison
 from ..errors import ProrrataInputError, ProrrataSectorError
 from ..prorrata import (
     InputClassification,
@@ -44,8 +46,21 @@ from ..prorrata import (
     sum_deductible_amounts,
     validate_prorrata_reference,
 )
+from ..prorrata_especial_parameters import ProrrataEspecialMandatoryParameters
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+#: An explicit resolved margin. These tests exercise the PREDICATE and the
+#: advisory wording, not the law; whether 10 inclusive is what art. 103.Dos.2
+#: states is answered against the registry by the modelo 303 parameter gate.
+_ESPECIAL_PARAMS = ProrrataEspecialMandatoryParameters(
+    margin_percentage=Decimal("10"),
+    comparison=ThresholdComparison.INCLUSIVE,
+    modelo_id="303",
+    revision_id="2025",
+    resolved_on=_esp_date(2025, 12, 31),
+)
 
 _INPUT_DEDUCTION_CASES = (
     (
@@ -80,24 +95,22 @@ _INPUT_DEDUCTION_CASES = (
 # "exceda en un 20 por 100" with no "o más", so that twenty-percent margin must
 # be passed rather than merely reached.
 _ESPECIAL_MANDATORY_CASES = (
-    # Ley 28/2014 redaction: ten percent, inclusive.
-    (2015, Decimal("110.01"), Decimal("100.00"), True),
-    (2026, Decimal("110.01"), Decimal("100.00"), True),
-    (2015, Decimal("110.00"), Decimal("100.00"), True),
-    (2026, Decimal("110.00"), Decimal("100.00"), True),
-    (2026, Decimal("109.99"), Decimal("100.00"), False),
-    (2026, Decimal("100.00"), Decimal("100.00"), False),
-    # Original redaction: twenty percent, exclusive.
-    (2014, Decimal("120.01"), Decimal("100.00"), True),
-    (2009, Decimal("120.01"), Decimal("100.00"), True),
-    (2014, Decimal("120.00"), Decimal("100.00"), False),
-    (2014, Decimal("110.00"), Decimal("100.00"), False),
-    (2014, Decimal("119.99"), Decimal("100.00"), False),
-    # A zero especial deduction is exceeded without bound under both redactions.
-    (2026, Decimal("50.00"), Decimal("0.00"), True),
-    (2014, Decimal("50.00"), Decimal("0.00"), True),
-    (2026, Decimal("0.00"), Decimal("0.00"), False),
-    (2014, Decimal("0.00"), Decimal("0.00"), False),
+    # Keyed by the resolved bundle rather than by year: the predicate no longer
+    # decides a margin from a filing year, it applies the one it is handed.
+    # The exclusive rows prove it honours the other comparison shape too, and
+    # are NOT a claim about what any particular ejercicio's law says.
+    ("inclusive", Decimal("110.01"), Decimal("100.00"), True),
+    ("inclusive", Decimal("110.00"), Decimal("100.00"), True),
+    ("inclusive", Decimal("109.99"), Decimal("100.00"), False),
+    ("inclusive", Decimal("100.00"), Decimal("100.00"), False),
+    ("exclusive", Decimal("110.01"), Decimal("100.00"), True),
+    ("exclusive", Decimal("110.00"), Decimal("100.00"), False),
+    ("exclusive", Decimal("109.99"), Decimal("100.00"), False),
+    # A zero especial deduction is exceeded without bound under either shape.
+    ("inclusive", Decimal("50.00"), Decimal("0.00"), True),
+    ("exclusive", Decimal("50.00"), Decimal("0.00"), True),
+    ("inclusive", Decimal("0.00"), Decimal("0.00"), False),
+    ("exclusive", Decimal("0.00"), Decimal("0.00"), False),
 )
 
 _ACCEPTED_PRORRATA_REFERENCE_CASES = (
@@ -271,15 +284,33 @@ def test_classify_input_deduction_cases() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_especial_mandatory_cases() -> None:
-    """LIVA art. 103.Dos.2.º per-year margin boundary and zero-deduction defences."""
+def _params(comparison: str, year: int = 2025) -> ProrrataEspecialMandatoryParameters:
+    """A bundle carrying a ten-point margin with the named comparison, for ``year``.
 
-    for year, general_deduction, especial_deduction, expected in _ESPECIAL_MANDATORY_CASES:
-        assert is_especial_mandatory(general_deduction, especial_deduction, year=year) is expected, (
-            year,
-            general_deduction,
-            especial_deduction,
-        )
+    The rule now refuses a bundle resolved for a different filing year, so the
+    year is a parameter rather than a fixed 2025.
+    """
+    return ProrrataEspecialMandatoryParameters(
+        margin_percentage=Decimal("10"),
+        comparison=ThresholdComparison(comparison),
+        modelo_id="303",
+        revision_id="2025",
+        resolved_on=_esp_date(year, 12, 31),
+    )
+
+
+def test_especial_mandatory_cases() -> None:
+    """The predicate applies the margin AND the comparison direction it is handed."""
+    for comparison, general_deduction, especial_deduction, expected in _ESPECIAL_MANDATORY_CASES:
+        assert (
+            is_especial_mandatory(
+                general_deduction,
+                especial_deduction,
+                year=2025,
+                parameters=_params(comparison),
+            )
+            is expected
+        ), (comparison, general_deduction, especial_deduction)
 
 
 def test_especial_mandatory_ten_percent_margin_is_inclusive_from_2015() -> None:
@@ -291,47 +322,67 @@ def test_especial_mandatory_ten_percent_margin_is_inclusive_from_2015() -> None:
     (109.99, a 9.99 percent excess) must stay outside it, so the assertion
     cannot be satisfied by a predicate that simply answers ``True``.
     """
-    assert is_especial_mandatory(Decimal("110.00"), Decimal("100.00"), year=2026) is True
-    assert is_especial_mandatory(Decimal("109.99"), Decimal("100.00"), year=2026) is False
+    assert (
+        is_especial_mandatory(Decimal("110.00"), Decimal("100.00"), year=2026, parameters=_params("inclusive", 2026))
+        is True
+    )
+    assert (
+        is_especial_mandatory(Decimal("109.99"), Decimal("100.00"), year=2026, parameters=_params("inclusive", 2026))
+        is False
+    )
 
 
-def test_especial_mandatory_twenty_percent_margin_is_exclusive_until_2014() -> None:
-    """The original Ley 37/1992 redaction reads "exceda en un 20 por 100" with no "o más".
+def test_an_exclusive_margin_must_be_passed_not_merely_reached() -> None:
+    """The comparison direction is load-bearing, so both shapes are exercised.
 
-    Without "o más" the margin must be passed, so exactly 120 against 100 does
-    not trip it while 120.01 does. The 110-against-100 case proves the year
-    split is real: identical amounts are mandatory in 2015 and not in 2014.
+    This replaces a test that asserted the repealed pre-2015 twenty-percent
+    redaction. That redaction is declared nowhere in this tree -- no modelo 303
+    revision covers a pre-2015 filing year and the consolidated corpus carries
+    only the text in force -- so asserting it here would be a legal claim with
+    no citable authority behind it. What survives, and is what the predicate is
+    actually responsible for, is that an exclusive bundle and an inclusive one
+    disagree at exactly the boundary.
     """
-    assert is_especial_mandatory(Decimal("120.00"), Decimal("100.00"), year=2014) is False
-    assert is_especial_mandatory(Decimal("120.01"), Decimal("100.00"), year=2014) is True
-    assert is_especial_mandatory(Decimal("110.00"), Decimal("100.00"), year=2014) is False
-    assert is_especial_mandatory(Decimal("110.00"), Decimal("100.00"), year=2015) is True
+    on_the_margin, especial = Decimal("110.00"), Decimal("100.00")
+    assert is_especial_mandatory(on_the_margin, especial, year=2025, parameters=_params("exclusive")) is False
+    assert is_especial_mandatory(on_the_margin, especial, year=2025, parameters=_params("inclusive")) is True
 
 
 def test_especial_mandatory_rule_reports_the_margin_the_predicate_applied() -> None:
-    """The margin an operator message quotes is derived from the multiple the predicate compares against."""
-    for year, multiple, margin, inclusive in (
-        (2014, Decimal("1.20"), Decimal("20"), False),
-        (2015, Decimal("1.10"), Decimal("10"), True),
-        (2026, Decimal("1.10"), Decimal("10"), True),
-    ):
-        rule = especial_mandatory_rule(year)
-        assert (rule.year, rule.multiple, rule.margin_percentage, rule.inclusive) == (year, multiple, margin, inclusive)
+    """The margin an operator message quotes is the one the bundle carried.
+
+    Probed with a figure that is deliberately NOT the shipped one, so a rule
+    that ignored its bundle and reinstated a hardcoded margin would fail.
+    """
+    arbitrary = ProrrataEspecialMandatoryParameters(
+        margin_percentage=Decimal("37"),
+        comparison=ThresholdComparison.EXCLUSIVE,
+        modelo_id="303",
+        revision_id="2025",
+        resolved_on=_esp_date(2025, 12, 31),
+    )
+    rule = especial_mandatory_rule(2025, parameters=arbitrary)
+    assert (rule.year, rule.multiple, rule.margin_percentage, rule.inclusive) == (
+        2025,
+        Decimal("1.37"),
+        Decimal("37"),
+        False,
+    )
 
 
 def test_is_especial_mandatory_rejects_negative_amounts() -> None:
     with pytest.raises(ProrrataInputError, match=r"deduction amounts must be non-negative"):
-        is_especial_mandatory(Decimal("-1"), Decimal("100"), year=2026)
+        is_especial_mandatory(Decimal("-1"), Decimal("100"), year=2026, parameters=_ESPECIAL_PARAMS)
     with pytest.raises(ProrrataInputError, match=r"deduction amounts must be non-negative"):
-        is_especial_mandatory(Decimal("100"), Decimal("-1"), year=2026)
+        is_especial_mandatory(Decimal("100"), Decimal("-1"), year=2026, parameters=_ESPECIAL_PARAMS)
 
 
 def test_is_especial_mandatory_rejects_out_of_range_year() -> None:
     """The year selects the applicable redaction, so an unsupported year refuses rather than guessing one."""
     with pytest.raises(ProrrataInputError, match=r"year out of supported range"):
-        is_especial_mandatory(Decimal("200"), Decimal("100"), year=1999)
+        is_especial_mandatory(Decimal("200"), Decimal("100"), year=1999, parameters=_ESPECIAL_PARAMS)
     with pytest.raises(ProrrataInputError, match=r"year out of supported range"):
-        especial_mandatory_rule(2101)
+        especial_mandatory_rule(2101, parameters=_ESPECIAL_PARAMS)
 
 
 # ---------------------------------------------------------------------------

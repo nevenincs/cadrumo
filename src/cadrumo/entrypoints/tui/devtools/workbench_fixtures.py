@@ -128,6 +128,7 @@ from ..declarations.overview import DeclarationsModeloWorkspaceLauncherScreen
 from ..declarations.routes import resolve_declarations_screen
 from ..home import HomeScreen
 from ..ledger.controller import LedgerWorkspaceController
+from ..ledger.workspace_injection import LedgerWorkspaceInjection
 from ..navigation import (
     TuiDestinationAdmissionV1,
     TuiScreenContextV1,
@@ -838,21 +839,16 @@ def _ledger_controller(scenario: WorkbenchFixtureScenario) -> LedgerWorkspaceCon
     return LedgerWorkspaceController(
         TuiScreenContextV1(destination="workbench.ledger"),
         _ledger_projection(scenario),
-        review_action=ActionReference(action_id=lookup_action("operator.ledger.review").action_id),
-        classify_action=ActionReference(action_id=lookup_action("operator.ledger.classify").action_id),
-        # Only where the projection actually carries the row: the controller
-        # refuses a target its visible entries do not contain, which is the
-        # right refusal and the reason classification has no empty reading.
-        classification_target=(
-            _LEDGER_TX_A if scenario in {WorkbenchFixtureScenario.READY, WorkbenchFixtureScenario.STALE} else None
+        LedgerWorkspaceInjection(
+            review_action=ActionReference(action_id=lookup_action("operator.ledger.review").action_id),
+            classify_action=ActionReference(action_id=lookup_action("operator.ledger.classify").action_id),
+            classification_target=_LEDGER_TX_A
+            if scenario in {WorkbenchFixtureScenario.READY, WorkbenchFixtureScenario.STALE}
+            else None,
+            evidence_action=ActionReference(action_id=lookup_action("operator.ledger.evidence.review.list").action_id),
+            evidence_items=(),
+            link_action=ActionReference(action_id=lookup_action("operator.ledger.link").action_id),
         ),
-        evidence_action=ActionReference(action_id=lookup_action("operator.ledger.evidence.review.list").action_id),
-        # An empty TUPLE, not None: the evidence area distinguishes "reviewed
-        # and nothing outstanding" from "never read", and only the second is
-        # an absent door. A fixture that passed None would render the
-        # unavailable branch in every state.
-        evidence_items=(),
-        link_action=ActionReference(action_id=lookup_action("operator.ledger.link").action_id),
     )
 
 

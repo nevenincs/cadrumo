@@ -61,12 +61,28 @@ SECRET_VALUES = (
     BUCKET,
     SUBJECT,
     "12345678Z",
-    "Protected Name",
-    "https://private.invalid/evidence",
-    "document prose",
     "certificate-private",
     "notification-private",
 )
+"""Sentinels for the byte scan below, which is belt-and-braces, NOT the guard.
+
+Stated plainly because the shape of this test invites the opposite reading:
+`AeatSyncWorkspaceProjectionV1` declares only `contract_version`, `zones` and
+six tuples of typed rows. It has no `bucket_id`, no `subject_key` and no
+identity field of any kind -- those live on `AeatSyncWorkspaceFactV1`, which is
+an INPUT the projector consumes and never emits. So no value in this tuple can
+reach the output while the types stay as they are, and the scan cannot fail.
+
+Four sentinels were removed for a sharper reason: `Protected Name`,
+`https://private.invalid/evidence` and `document prose` appeared nowhere in
+this file except the tuple itself. Nothing introduced them at all, so their
+absence was doubly meaningless. Supplying one of them was tried and reverted --
+feeding a fact changes nothing, because facts are not part of the output.
+
+The protection is the TYPE, and the structural assertion below is the honest
+expression of it: it fails the moment a row gains a free-text field, which is
+the only way any of this could start leaking.
+"""
 
 
 def _period(modelo: str = "130") -> Period:
@@ -327,6 +343,19 @@ def test_output_physically_omits_protected_scope_payload_and_identity() -> None:
         "certificado_id",
         "concepto",
     }
+    # The three sentinels removed above are excluded BY CONSTRUCTION, and this
+    # is what that claim looks like as an assertion: every field a row exposes
+    # is a closed enum, a typed address component, an observation state or a
+    # bounded identifier, so there is nowhere for a name, a URL or document
+    # prose to be carried even by a careless producer.
+    for row_type in (AeatSyncWorkspaceCensusRowV1, AeatSyncWorkspaceFiledDeclarationRowV1):
+        for name, field in row_type.model_fields.items():
+            annotation = str(field.annotation)
+            assert "str" not in annotation or name in {"path"}, (
+                f"{row_type.__name__}.{name} is free text ({annotation}), so protected prose "
+                f"could be carried there and the removed sentinels would need reinstating"
+            )
+
     for value in (
         projection,
         *projection.overview,
@@ -548,4 +577,54 @@ def test_a_comparison_zone_reports_no_count_until_both_sides_are_observed() -> N
     assert census.item_count == 0, (
         "the census zone reads one local authority that is present and empty, so its zero is "
         f"an observed zero and must survive; got {census.item_count!r}"
+    )
+
+
+def test_a_refused_local_source_names_whether_the_reader_is_missing_or_uncomposed() -> None:
+    """Two refusals that look alike point at opposite work.
+
+    LOCAL_RECONCILIATION has no authority anywhere: nothing records local
+    reconciliation decisions, so `local_row_reader_unavailable` is exactly
+    right and the work is to write one.
+
+    LOCAL_NOTIFICATION_CUSTODY is different.
+    `NotificationDocumentService.list_documents` reads local custody today and
+    answers before any pull -- with an empty tuple when custody is empty, which
+    is a proven zero rather than an absence. Calling that a missing reader
+    sends the next person to write something already written; the gap is that
+    this session does not compose it.
+
+    Asserted because the two states are indistinguishable on screen -- both
+    render as a refused source -- so nothing but the reason code carries the
+    difference, and nothing but a gate keeps them from collapsing back into one
+    convenient constant.
+    """
+    from datetime import UTC, datetime
+
+    from ..workspace_reader import read_local_aeat_sync_workspace_projection
+
+    projection = read_local_aeat_sync_workspace_projection(
+        bucket_id="bucket",
+        subject_key="subject",
+        observed_at=datetime(2026, 9, 4, tzinfo=UTC),
+        filings=(),
+        operation_contracts=OperationPublicContractSetV1.build(
+            (build_censal_operation_registration(CENSAL_OPERATION_DEFINITION).contract,)
+        ),
+    )
+    refusals = {
+        observation.source: observation.refusal
+        for state in projection.zones
+        for observation in state.sources
+        if observation.refusal is not None
+    }
+
+    assert refusals[AeatSyncWorkspaceSource.LOCAL_RECONCILIATION] == (
+        "workbench.aeat_sync.local_row_reader_unavailable"
+    ), "local reconciliation has no authority, so its refusal must say the reader is missing"
+    assert refusals[AeatSyncWorkspaceSource.LOCAL_NOTIFICATION_CUSTODY] == (
+        "workbench.aeat_sync.local_reader_not_composed"
+    ), (
+        "notification custody IS readable today, so calling its refusal a missing reader "
+        "sends the next person to write a reader that already exists"
     )

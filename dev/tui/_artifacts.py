@@ -150,6 +150,23 @@ class Manifest(BaseModel):
 
     schema_version: int = MANIFEST_SCHEMA_VERSION
     generated_at: str
+    source_revision: str
+    """Fingerprint of the rendered source, taken when the run STARTED.
+
+    A full matrix takes about twenty-five minutes and renders each surface in
+    its own subprocess, so code landing mid-run splits the output: early frames
+    show the old behaviour, late frames the new, and a manifest that records
+    only `generated_at` claims all of them equally. That is worse than stale
+    frames from an earlier run -- those at least announce themselves as another
+    run, while these are all reported as current.
+    """
+    source_revision_at_end: str
+    """The same fingerprint taken when the run FINISHED.
+
+    Equal to `source_revision` on a coherent run. When the two differ the run
+    spans an edit and the frames cannot all be trusted, which is what
+    `spans_a_source_change` reports and what the writer refuses on.
+    """
     cell_height: int
     frames: tuple[RenderedFrame, ...] = ()
     interfaces: tuple[InterfaceRecord, ...] = ()
@@ -158,6 +175,11 @@ class Manifest(BaseModel):
     run that silently omits what it could not render reads as full coverage."""
     skipped: tuple[SkippedFrame, ...] = Field(default=())
     """Frames deliberately not attempted after their surface refused."""
+
+    @property
+    def spans_a_source_change(self) -> bool:
+        """Whether the tree changed while this run was rendering."""
+        return self.source_revision != self.source_revision_at_end
 
     @property
     def blocked_surfaces(self) -> tuple[str, ...]:
@@ -170,6 +192,31 @@ class Manifest(BaseModel):
     def uncovered(self) -> tuple[InterfaceRecord, ...]:
         """Interfaces this run never painted."""
         return tuple(record for record in self.interfaces if not record.covered)
+
+
+def source_fingerprint(root: Path | None = None) -> str:
+    """A digest of the TUI source the renderer will execute.
+
+    Content-based rather than a git revision: a run is normally started from a
+    DIRTY worktree, where `git rev-parse HEAD` is identical before and after an
+    edit and so cannot see the change this exists to catch. Hashing the files
+    that produce the frames answers the actual question -- is the code that
+    rendered frame 1 the code that rendered frame 174.
+
+    Arguments:
+        root: Tree to fingerprint. Defaults to the shipped TUI package, which
+            is what a render actually executes; injectable so a test can prove
+            the fingerprint moves without editing the real worktree, which is
+            shared and which a concurrent writer may commit at any moment.
+    """
+    root = root or Path(__file__).resolve().parents[2] / "src" / "cadrumo" / "entrypoints" / "tui"
+    accumulator = sha256()
+    for path in sorted(root.rglob("*.py")):
+        if "__pycache__" in path.parts:
+            continue
+        accumulator.update(path.relative_to(root).as_posix().encode(UTF_8))
+        accumulator.update(path.read_bytes())
+    return accumulator.hexdigest()
 
 
 def digest(path: Path) -> str:

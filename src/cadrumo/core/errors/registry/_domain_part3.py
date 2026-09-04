@@ -98,6 +98,26 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.iva.prorrata_especial_parameters.ProrrataEspecialMandatoryParameterError",
+        ErrorCode(
+            code="REFUSED_IVA_PRORRATA_ESPECIAL_MARGIN_UNGROUNDED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_iva_prorrata_especial_margin_ungrounded",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.bienes_inversion.regularizacion_parameters.BienesInversionParameterResolutionError",
+        ErrorCode(
+            code="REFUSED_PROFILE_BIENES_INVERSION_PARAMETERS",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_profile_bienes_inversion_parameters",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.prorrata_register.register.ProrrataRegisterError",
         ErrorCode(
             code="ERROR_PROFILE_PRORRATA_REGISTER_RECORD",

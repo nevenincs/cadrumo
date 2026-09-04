@@ -20,6 +20,7 @@ from dev.packaging._smoke_common import (
     run_checked,
 )
 from dev.packaging.python_cohort import attest_command_specs
+from dev.packaging.tests._cohort_attestation import add_test_runtime_wheelhouse, add_test_source_archive
 from dev.packaging.uv_constraints import export_runtime_constraints
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
@@ -135,15 +136,14 @@ def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
         "cadrumo-data-official": copied_official.name,
         "cadrumo-data-official-sdist": next(path.name for path in copied_sdists if "official" in path.name),
     }
-    source_archive = cohort_dir / f"cadrumo-source-{'a' * 40}.zip"
-    with zipfile.ZipFile(source_archive, "w") as archive:
-        archive.writestr("pyproject.toml", "[project]\nname='cadrumo'\n")
-    artifacts["source-archive"] = source_archive.name
+    digests = {name: sha256_path(cohort_dir / filename) for name, filename in artifacts.items()}
+    source_archive = add_test_source_archive(cohort_dir, artifacts, digests)
+    add_test_runtime_wheelhouse(cohort_dir, artifacts, digests)
     (cohort_dir / "python-cohort.json").write_text(
         json.dumps(
             {
                 "artifacts": artifacts,
-                "sha256": {name: sha256_path(cohort_dir / filename) for name, filename in artifacts.items()},
+                "sha256": digests,
                 "source_commit": "a" * 40,
                 "version": version,
                 "command_spec_attestation": attest_command_specs(

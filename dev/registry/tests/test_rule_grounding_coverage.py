@@ -162,9 +162,7 @@ def test_an_unresolved_citation_is_not_grounding() -> None:
     from ..analysis.rule_grounding_coverage import classify_grounding
 
     field = _Field(aeat_type="Num", cell="A!B1", notes=("nota 1",), kind="pointer_unresolved")
-    findings = classify_grounding(
-        (field,), by_type={}, design_notes=("DP200001",), modelo="200", revision="r"
-    )
+    findings = classify_grounding((field,), by_type={}, design_notes=("DP200001",), modelo="200", revision="r")
     assert [item.kind for item in findings] == ["grounded_by_design_note"]
 
 

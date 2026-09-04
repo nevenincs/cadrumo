@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import date as _date
+from datetime import date as _prov_date
 from decimal import Decimal
 from pathlib import Path
 
@@ -17,8 +19,13 @@ from ....core.prorrata_register import ProrrataRegisterRegime
 from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister, compute_registro_regularizacion
+from ....domain.bienes_inversion.regularizacion_parameters import (
+    BienesInversionParameterProvenance,
+    BienesInversionRegularizacionParameters,
+)
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from ....domain.calculations.registry.schema_base import ThresholdComparison
 from ....domain.deadlines.models import M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva.regimen_simplificado_rows import (
@@ -49,6 +56,43 @@ from ..producer_snapshot import (
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+#: An explicit bundle. These tests exercise the surrounding wiring, not the law;
+#: whether these are the figures the law states is answered against the registry
+#: by the modelo 303 parameter gates.
+_PARAMS = BienesInversionRegularizacionParameters(
+    ventana_anos_mueble=4,
+    ventana_anos_inmueble=9,
+    divisor_mueble=Decimal("5"),
+    divisor_inmueble=Decimal("10"),
+    umbral_puntos=Decimal("10"),
+    umbral_comparison=ThresholdComparison.EXCLUSIVE,
+    provenance=BienesInversionParameterProvenance(
+        modelo_id="303",
+        revision_id="2025",
+        parameter_ids=(
+            "m303-bien-inversion-ventana-anos-mueble",
+            "m303-bien-inversion-ventana-anos-inmueble",
+            "m303-bien-inversion-divisor-mueble",
+            "m303-bien-inversion-divisor-inmueble",
+            "m303-bien-inversion-regularizacion-umbral-puntos",
+        ),
+        resolved_on=_date(2025, 6, 1),
+    ),
+)
+
+
+def _params_for(year: int) -> BienesInversionRegularizacionParameters:
+    """The bundle, resolved for ``year``.
+
+    The projection refuses a bundle resolved for a different filing year, so a
+    fixture cannot pin one year and be applied to another.
+    """
+    return _PARAMS.model_copy(
+        update={"provenance": _PARAMS.provenance.model_copy(update={"resolved_on": _prov_date(year, 12, 31)})}
+    )
+
 
 _ENDPOINTS = frozenset(
     {
@@ -219,7 +263,9 @@ def test_exonerado_complete_revision_evidence_reaches_withdrawn_layout_without_o
                 bienes_register,
                 regularizacion_year=period.filing_year,
                 prorrata_definitiva_by_identifier={},
+                parameters=_params_for(period.filing_year),
             ),
+            bienes_parameters=_params_for(period.filing_year),
         ),
     )
     output = tmp_path / "modelo-303-exonerado.txt"

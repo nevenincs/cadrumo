@@ -32,6 +32,7 @@ from ..entries import LedgerEntriesScreen
 from ..overview import LedgerOverviewScreen
 from ..review import LedgerReviewScreen
 from ..routes import LEDGER_ROUTES, LedgerUnavailableScreen, ledger_screen_factory, resolve_ledger_screen
+from ..workspace_injection import LedgerWorkspaceInjection
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -120,7 +121,9 @@ def _controller(
     projection: LedgerWorkspaceProjectionV1,
     context: TuiScreenContextV1 | None = None,
 ) -> LedgerWorkspaceController:
-    return LedgerWorkspaceController(context or _context(), projection, review_action=_review_action())
+    return LedgerWorkspaceController(
+        context or _context(), projection, LedgerWorkspaceInjection(review_action=_review_action())
+    )
 
 
 def _all_copy(screen: LedgerOverviewScreen | LedgerEntriesScreen | LedgerReviewScreen) -> str:
@@ -378,3 +381,10 @@ def test_ledger_tui_has_no_io_adapter_cli_calculation_or_mutation_imports() -> N
         for path in production
         if path.name in {"entries.py", "review.py"}
     )
+
+
+def test_a_classification_target_outside_the_visible_projection_is_refused() -> None:
+    """A target the snapshot does not contain would open on an invisible row."""
+    controller = _controller(_projection())
+    with pytest.raises(ValueError, match="absent from the visible Ledger projection"):
+        controller.select_classification_target("f" * 64)

@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+from datetime import date as _prov_date
 from decimal import Decimal
 
 import pytest
 
 from ....core.period import Period
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister, RegistroRegularizacionResult
+from ....domain.bienes_inversion.regularizacion_parameters import (
+    BienesInversionParameterProvenance,
+    BienesInversionRegularizacionParameters,
+)
+from ....domain.calculations.registry.schema_base import ThresholdComparison
 from ....domain.deadlines.models import M303RegimeComposition
 from ....domain.prorrata_register.register import ProrrataRegister
 from ...aggregation import (
@@ -20,6 +26,37 @@ from ..export import _require_m303_regimen_simplificado_scope_matches_profile
 from ._export_test_support import _general_m303_filing_evidence, _profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+#: Provenance stamped onto directly-constructed projections in this module. A
+#: result must name the registry declaration its figures came from; these tests
+#: build results by hand rather than by projection, so they state it explicitly.
+_PROVENANCE = BienesInversionParameterProvenance(
+    modelo_id="303",
+    revision_id="2025",
+    parameter_ids=(
+        "m303-bien-inversion-ventana-anos-mueble",
+        "m303-bien-inversion-ventana-anos-inmueble",
+        "m303-bien-inversion-divisor-mueble",
+        "m303-bien-inversion-divisor-inmueble",
+        "m303-bien-inversion-regularizacion-umbral-puntos",
+    ),
+    resolved_on=_prov_date(2025, 6, 1),
+)
+
+
+#: The resolved bundle the regularisation result above was produced under. The
+#: oracle compares the result's carried provenance against this, so the two must
+#: name the same declaration.
+_PARAMS = BienesInversionRegularizacionParameters(
+    ventana_anos_mueble=4,
+    ventana_anos_inmueble=9,
+    divisor_mueble=Decimal("5"),
+    divisor_inmueble=Decimal("10"),
+    umbral_puntos=Decimal("10"),
+    umbral_comparison=ThresholdComparison.EXCLUSIVE,
+    provenance=_PROVENANCE,
+)
 
 
 def _general_m303_filing_facts():
@@ -45,7 +82,9 @@ def _general_m303_filing_facts():
             computed_count=0,
             pending_percentage_count=0,
             sector_contributions=(),
+            parameters_provenance=_PROVENANCE,
         ),
+        bienes_parameters=_PARAMS,
     )
 
 

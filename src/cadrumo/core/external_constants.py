@@ -14,7 +14,7 @@ passphrases, bucket ids, and SQL routes do not belong here. Loading the registry
 only reads packaged TOML (or an explicit audit/test path) and never opens
 storage, writes files, or contacts remote providers.
 
-The typed root is :class:`ExternalConstantRegistry`, with AEAT-specific subsections
+The typed root is :class:`ExternalConstants`, with AEAT-specific subsections
 grouped under :class:`AeatSection`; callers normally reach it through
 :meth:`core.config.Settings.external_constants`. The volatile Pre303 and
 IVA-wallet browser surface remains lazily validated as :class:`AeatPre303Surface`
@@ -468,11 +468,6 @@ XLSM_EXTENSION: Final[Literal[".xlsm"]] = ".xlsm"
 #: Legacy ISO-8859-1 / Latin-1 encoding used by AEAT sede fixed-width response bodies.
 LATIN_1_ENCODING: Final[str] = "latin-1"
 
-#: ISO-8859-1 encoding string as accepted by the fichero-BOE wire layer.
-#:
-#: Identical in coverage to :data:`LATIN_1_ENCODING` at runtime; the literal
-#: type preserves the exact public registry-codec spelling for static callers.
-
 #: UTF-8 character encoding used for all text file I/O in the application layer.
 UTF_8_ENCODING: Final[str] = "utf-8"
 
@@ -554,33 +549,6 @@ M347_THRESHOLD_EUR: Final[Decimal] = Decimal("3005.06")
 #: counterparty can carry both ordinary and clave-C operations in the same
 #: year, and each is judged against its own floor.
 M347_CLAVE_C_THRESHOLD_EUR: Final[Decimal] = Decimal("300.51")
-
-#: IVA regularización de deducciones por bienes de inversión — regulatory constants
-#: (LIVA arts. 107-109, Ley 37/1992, BOE-A-1992-28740), re-read verbatim from the
-#: bundled consolidated corpus ``corpus/normatives/html/ley-37-1992-art-107.html``
-#: and ``-art-109.html`` per ``aeat-calculation-grounding``.
-#:
-#: Art. 107.Uno: movable capital goods regularise over the "cuatro años naturales
-#: siguientes" to acquisition; art. 107.Tres: "terrenos o edificaciones" over the
-#: "nueve años naturales siguientes". These are the count of FOLLOWING years in the
-#: regularisation window (the acquisition year itself is the year the deduction was
-#: made).
-IVA_BIEN_INVERSION_MUEBLE_VENTANA_ANOS: Final[int] = 4
-IVA_BIEN_INVERSION_INMUEBLE_VENTANA_ANOS: Final[int] = 9
-
-#: Art. 107.Uno: the regularisation is practised only "cuando … exista una diferencia
-#: superior a diez puntos" between the definitive deduction percentage of the year and
-#: the one that prevailed in the acquisition year. The gate is STRICT (> 10 points);
-#: a difference of exactly 10 points does not trigger a regularisation. Binding
-#: provision: Art. 107.Uno LIVA (Ley 37/1992).
-IVA_BIEN_INVERSION_REGULARIZACION_UMBRAL_PUNTOS: Final[Decimal] = Decimal("10")
-
-#: Art. 109.3.º: "La diferencia positiva o negativa se dividirá por cinco o, tratándose
-#: de terrenos o edificaciones, por diez". The per-year regularisation quotient divides
-#: the deduction difference by 5 for movable goods and 10 for land/buildings. Binding
-#: provision: Art. 109.3.º LIVA (Ley 37/1992).
-IVA_BIEN_INVERSION_MUEBLE_DIVISOR: Final[Decimal] = Decimal("5")
-IVA_BIEN_INVERSION_INMUEBLE_DIVISOR: Final[Decimal] = Decimal("10")
 
 #: Art. 108.Dos.5.º bienes-de-escaso-valor exclusion: a good "cuyo valor de adquisición
 #: sea inferior a quinientas mil pesetas" is NOT a bien de inversión. The consolidated
@@ -845,33 +813,6 @@ SAL_RESERVA_DOTACION_RATE: Final[Decimal] = Decimal("0.10")
 #: alcance al menos una cifra superior al doble del capital social").
 SAL_RESERVA_CAPITAL_MULTIPLE: Final[Decimal] = Decimal("2")
 
-#: LIVA art. 103.Dos.2.º as redrafted by Ley 28/2014 art. 1.26 (BOE-A-2014-12329),
-#: in force from 01-01-2015: the prorrata especial regime is mandatory "cuando el
-#: montante total de las cuotas deducibles en un año natural por aplicación de la
-#: regla de prorrata general exceda en un 10 por ciento o más del que resultaría
-#: por aplicación de la regla de prorrata especial". The margin is INCLUSIVE ("o
-#: más" reaches it), so the regime switches at
-#: ``deduction_general >= deduction_especial * 1.10``.
-PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_FROM_2015: Final[Decimal] = Decimal("1.10")
-
-#: LIVA art. 103.Dos.2.º in its ORIGINAL redaction (Ley 37/1992, BOE-A-1992-28740,
-#: in force 01-01-1993 to 31-12-2014): "Cuando el montante total de las cuotas
-#: deducibles en un año natural por aplicación de la regla de prorrata general
-#: exceda en un 20 por 100 del que resultaría por aplicación de la regla de
-#: prorrata especial". Twenty percent, and with no "o más", so the margin must be
-#: passed rather than merely reached:
-#: ``deduction_general > deduction_especial * 1.20``.
-PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_UNTIL_2014: Final[Decimal] = Decimal("1.20")
-
-#: First filing year governed by the Ley 28/2014 (BOE-A-2014-12329) redaction of
-#: LIVA art. 103.Dos.2.º. The bundled consolidated corpus records the amendment
-#: verbatim ("Se modifica el apartado 2.2º por el art. 1.26 de la Ley 28/2014, de
-#: 27 de noviembre") and dates it "en vigor a partir del 01/01/2015", and the Ley
-#: 28/2014 preamble states the change as "disminuir del 20 al 10 por ciento la
-#: diferencia admisible". Filing years at or above this take the ten-percent
-#: inclusive margin; earlier years take the original twenty-percent exclusive one.
-PRORRATA_ESPECIAL_MANDATORY_LEY_28_2014_FIRST_YEAR: Final[int] = 2015
-
 #: LIVA art. 9.1.c (Ley 37/1992, BOE-A-1992-28740) sectoral-separation threshold:
 #: régimen de sectores diferenciados is mandatory when the spread between the highest
 #: and lowest general prorrata across sectors exceeds fifty percentage points.
@@ -904,7 +845,7 @@ def load_external_constants(path: Path | None = None) -> ExternalConstants:
         path: Optional TOML file to parse instead of the packaged registry.
 
     Returns:
-        The process-wide cached :class:`ExternalConstantRegistry` instance.
+        The process-wide cached :class:`ExternalConstants` instance.
     """
     if path is not None:
         with path.open("rb") as handle:

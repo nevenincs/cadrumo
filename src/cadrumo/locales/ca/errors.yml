@@ -957,6 +957,7 @@ errors:
       no s''ha pogut interpretar com a decimal.'
     refused_iva_compensation_year_range: 'Refusat: l''exercici de compensació d''IVA
       és fora del rang acceptat.'
+    refused_iva_prorrata_especial_margin_ungrounded: El marge de prorrata especial obligatòria no es pot fonamentar per a aquest exercici.
     refused_iva_wallet_reconciliation_invariant: Les entrades de conciliació de la
       cartera IVA incompleixen un invariant obligatori. Comproveu la configuració
       d'antiguitat de la cartera i torneu-ho a intentar.
@@ -1047,6 +1048,7 @@ errors:
       la validació.
     refused_profile_basis_cap_exceeded: L'amortització acumulada superaria la base
       de cost de l'actiu.
+    refused_profile_bienes_inversion_parameters: La revisió activa no declara els imports de regularització de béns d'inversió per a aquest context de declaració.
     refused_profile_bienes_inversion_validation: Un registre de regularització d'IVA
       per béns d'inversió no ha superat la validació.
     refused_profile_binding_resolution: Una dada del perfil necessària per al càlcul

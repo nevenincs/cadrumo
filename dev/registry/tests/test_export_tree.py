@@ -136,7 +136,7 @@ id = "nested-decoy"
 
     assert written == (path,)
     rendered = path.read_text(encoding="utf-8")
-    assert "id = 'literal-id'\nsource_refs = [\"source\"]\nexport_refs = [\"generated.literal\"]" in rendered
+    assert 'id = \'literal-id\'\nsource_refs = ["source"]\nexport_refs = ["generated.literal"]' in rendered
     assert 'id = "basic-id"\nsource_refs = ["source"]\nexport_refs = ["generated.basic"]' in rendered
     assert "nested-decoy\nexport_refs" not in rendered
 
