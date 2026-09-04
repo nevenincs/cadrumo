@@ -6,12 +6,13 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:944fada18e5096239f59ef7d2ae640d4660b1c216e347bdf706089c91fc9443a'
+body_hash: 'sha256:ffb7186d78fda145f750003823a1fb5778d32662349bb70e6f890428a0331461'
 related:
   - '[[2026-09-04-clitui-ledger-W01-P01-S01]]'
   - '[[2026-09-04-clitui-ledger-W01-P01-S02]]'
   - '[[2026-09-04-clitui-ledger-W01-P01-S03]]'
   - '[[2026-09-04-clitui-ledger-W01-P01-summary]]'
+  - '[[2026-09-04-clitui-ledger-W01-P02-S04]]'
   - '[[2026-09-04-clitui-ledger-adr]]'
   - '[[2026-09-04-clitui-ledger-plan]]'
   - '[[2026-09-04-clitui-ledger-reference]]'
@@ -45,6 +46,7 @@ Auto-generated index of all documents tagged with `#clitui-ledger`.
 - `2026-09-04-clitui-ledger-W01-P01-S02` - Test identifier stability, denominator completeness, legal state transitions, evidence validation, and closed-gate reopening
 - `2026-09-04-clitui-ledger-W01-P01-S03` - Generate the continuously updated matrix and gate summary as the authoritative campaign reference
 - `2026-09-04-clitui-ledger-W01-P01-summary` - `clitui-ledger` `W01.P01` summary
+- `2026-09-04-clitui-ledger-W01-P02-S04` - Enumerate every invocable Ledger command endpoint, sub-operation, handler, schema, and adapter ownership annotation
 
 ### plan
 
