@@ -1,47 +1,35 @@
 #!/usr/bin/env python
-"""Code complexity and maintainability auditor with a debt ratchet.
+"""Code complexity and maintainability auditor.
 
-Reports cyclomatic complexity (Radon CC), maintainability index (Radon MI),
-and cognitive complexity (Complexipy) against a committed baseline of
-grandfathered debt, so the audit holds the line without demanding that ~300
-pre-existing hotspots be refactored at once.
+Reports cyclomatic complexity (Radon CC), maintainability index (Radon MI), and
+cognitive complexity (Complexipy) against fixed thresholds. Every hit is
+reported as it stands.
 
-Ratchet semantics
------------------
-The current tree carries standing complexity debt: hundreds of grade-C+
-cyclomatic functions, a handful of sub-A maintainability files, and a dozen
-cognitive-complexity hotspots. Refactoring them all at once is infeasible and
-unsafe, so they are *grandfathered* into a committed baseline
-(``dev/audit/complexity_baseline.json``). Every baseline entry is a
-SPLIT-CANDIDATE its owning area should pay down over time.
+No ratchet
+----------
+This audit carried a committed baseline of grandfathered debt and a reviewed
+allowlist, and both were retired. There is no ceiling to be within, no
+"resolved" notice for an entry that stopped violating, and no ``--strict``
+distinction between the two - ``load_baseline`` returns an empty baseline and
+says so, and the run's own closing line reports that there is no baseline,
+allowlist, or accept flag.
 
-The audit FAILS (exit 1) only on:
+The run therefore FAILS while any hotspot exists, which is the intended reading:
+the figure is standing debt, not a regression signal. It stood at 667 production
+hotspots when this docstring was reconciled with the code beneath it, which had
+already been updated while these paragraphs still described the retired
+mechanism.
 
-* a NEW hotspot — a function/file that violates a threshold but is absent from
-  the baseline, or
-* a REGRESSION — an existing hotspot whose score got WORSE than its baselined
-  value (higher cyclomatic/cognitive score, or lower — worse — maintainability
-  index).
-
-It exits 0 when every current violation is within its baselined ceiling. This
-mirrors the size-budget ratchet in
-``src/cadrumo/tests/test_codebase_size_budgets.py``, whose limits are generated
-into ``dev/audit/size_budget_baseline.json`` by ``dev/audit/size_budget.py``.
-
-Baseline entries that NO LONGER violate are reported as a soft "resolved"
-notice so the baseline can shrink over time; they do not fail the run unless
-``--strict`` is passed.
+Scope
+-----
+The default run audits production code; ``--tests`` audits test files instead.
+The two are separate populations rather than a ratchet with two scopes, since
+there is no longer a baseline for either to be measured against, and no lane
+passes ``--tests`` today.
 
 Keys are stable: ``path::qualified_function_name`` for cyclomatic and cognitive
-hits, ``path`` for maintainability files. Line numbers are deliberately
-excluded so unrelated edits above a function do not churn the baseline.
-
-The baseline file holds two independent scopes — ``production`` (the default
-run) and ``tests`` (the ``--tests`` run) — so the test-scope ratchet never
-of the current run and preserves the other.
-
-baseline must be reviewed and committed; it is grandfathered debt, not a mute
-button.
+hits, ``path`` for maintainability files. Line numbers are deliberately excluded
+so unrelated edits above a function do not churn a report.
 
 Pass ``--full`` to list every current finding (uncapped) for deep review.
 """
