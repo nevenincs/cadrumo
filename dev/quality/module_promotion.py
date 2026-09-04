@@ -12,7 +12,22 @@ do not look alike:
 - an absolute import, ``from dev.docs.preprocess._html import build_outputs``
 - a relative import from inside the package, ``from ._html import build_outputs``
 - a relative import from OUTSIDE it, ``from ...docs.preprocess._html import ...``
+- the module imported BY NAME from its package, ``from .. import _html``
 - dotted prose in a docstring, ``:mod:`dev.docs.preprocess._html```
+
+The fourth resolves to the PACKAGE, not to the module, so a resolver looking for
+the module's own dotted name never sees it - and the name it imports is exactly
+the one that changes. Two files broke this way after seven renames, and a test
+here had asserted the opposite: that traversal survives a rename. It does not.
+Traversal survives a FACADE retirement, which is a different operation.
+
+A module imported by name is then USED by name - ``_runner.publish(...)``,
+``inspect.getsource(_compare)`` - and both have to move together. Rewriting the
+import alone leaves the body referring to a name nothing binds, which is a
+``NameError`` at the first call rather than an ``ImportError`` at collection:
+later, and in a narrower test. Body uses are rewritten only in files whose
+traversal import was itself rewritten, so a same-named local elsewhere is never
+touched.
 
 The third is the one that gets missed, and it was: a first version of this
 handled relative imports for files inside the package and dotted text anywhere,
@@ -62,7 +77,9 @@ class ReferenceEdit:
     lineno: int
     before: str
     after: str
-    #: ``import`` for a resolved import statement, ``prose`` for dotted text.
+    #: ``import`` for a resolved import statement, ``traversal`` for the module
+    #: imported by name from its package, ``usage`` for a body reference to that
+    #: name, ``prose`` for dotted text.
     kind: str
 
 
@@ -99,6 +116,27 @@ def public_name_is_safe(name: str) -> bool:
     return not name.startswith("_") and name not in STDLIB_COLLISIONS
 
 
+def _rename_imported_name(line: str, old_stem: str, new_stem: str) -> str:
+    """Replace a bare imported NAME on one line, leaving similar words alone.
+
+    ``from .. import _compare`` and ``from .. import _compare, _schema`` both
+    occur, and so does a multi-line parenthesised form where the name sits on
+    its own line. The name is bounded by non-identifier characters on both
+    sides, so ``_compare`` cannot claim the text of ``_comparison``.
+    """
+    result: list[str] = []
+    index = 0
+    while (found := line.find(old_stem, index)) != -1:
+        before_ok = found == 0 or not (line[found - 1].isalnum() or line[found - 1] == "_")
+        end = found + len(old_stem)
+        after_ok = end >= len(line) or not (line[end].isalnum() or line[end] == "_")
+        result.append(line[index:found])
+        result.append(new_stem if (before_ok and after_ok) else old_stem)
+        index = end
+    result.append(line[index:])
+    return "".join(result)
+
+
 def plan_promotion(
     package_dir: pathlib.Path, old_stem: str, new_stem: str, *, search_root: pathlib.Path
 ) -> PromotionPlan:
@@ -118,6 +156,7 @@ def plan_promotion(
     edits: list[ReferenceEdit] = []
     unhandled: list[ReferenceEdit] = []
     unreadable: list[pathlib.Path] = []
+    traversal_files: set[pathlib.Path] = set()
     for path in sorted(search_root.rglob("*.py")):
         if "__pycache__" in path.parts:
             continue
@@ -135,6 +174,34 @@ def plan_promotion(
             after = before.replace(f".{old_stem} import", f".{new_stem} import", 1)
             record = ReferenceEdit(path=path, lineno=node.lineno, before=before, after=after, kind="import")
             (edits if after != before else unhandled).append(record)
+        for node in ast.walk(tree):
+            # The module imported by name from its own package. This resolves to
+            # the package, so the loop above never sees it, and the name in the
+            # import list is precisely what the rename changes.
+            if not isinstance(node, ast.ImportFrom) or resolve_relative(node, path) != package_dotted:
+                continue
+            if not any(alias.name == old_stem for alias in node.names):
+                continue
+            for offset in range(node.lineno - 1, node.end_lineno or node.lineno):
+                before = lines[offset]
+                after = _rename_imported_name(before, old_stem, new_stem)
+                if after == before:
+                    continue
+                edits.append(ReferenceEdit(path=path, lineno=offset + 1, before=before, after=after, kind="traversal"))
+                traversal_files.add(path)
+
+    # A module imported by name is used by name; the two must move together.
+    for path in sorted(traversal_files):
+        text = path.read_text(encoding="utf-8")
+        tree = ast.parse(text)
+        lines = text.splitlines()
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Name) or node.id != old_stem or not isinstance(node.ctx, ast.Load):
+                continue
+            before = lines[node.lineno - 1]
+            after = _rename_imported_name(before, old_stem, new_stem)
+            if after != before:
+                edits.append(ReferenceEdit(path=path, lineno=node.lineno, before=before, after=after, kind="usage"))
         for index, line in enumerate(lines, start=1):
             if old_dotted in line:
                 edits.append(
