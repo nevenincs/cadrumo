@@ -507,7 +507,7 @@ class Modelo296ProfileFacts(BaseModel):
     anexo_certificado_rows: tuple[Modelo296AnexoCertificadoRow, ...] = ()
 
 
-class Modelo210ContribuyenteFacts(BaseModel):
+class Modelo210ContribuyenteFactSet(BaseModel):
     """Modelo 210 contribuyente facts, flat members named from the AEAT component vocabulary."""
 
     model_config = STRICT_FROZEN_CONFIG
@@ -532,7 +532,7 @@ class Modelo210ContribuyenteFacts(BaseModel):
     tax_residence_country_code: str | None = None
 
 
-class Modelo210DeclaracionFacts(BaseModel):
+class Modelo210DeclaracionFactSet(BaseModel):
     """Modelo 210 declaracion facts, flat members named from the AEAT component vocabulary."""
 
     model_config = STRICT_FROZEN_CONFIG
@@ -540,7 +540,7 @@ class Modelo210DeclaracionFacts(BaseModel):
     tipo: str | None = None
 
 
-class Modelo210DeclaranteFacts(BaseModel):
+class Modelo210DeclaranteFactSet(BaseModel):
     """Modelo 210 declarante facts, flat members named from the AEAT component vocabulary."""
 
     model_config = STRICT_FROZEN_CONFIG
@@ -555,7 +555,7 @@ class Modelo210DeclaranteFacts(BaseModel):
     tax_id: str | None = None
 
 
-class Modelo210DevengoFacts(BaseModel):
+class Modelo210DevengoFactSet(BaseModel):
     """Modelo 210 devengo facts, flat members named from the AEAT component vocabulary."""
 
     model_config = STRICT_FROZEN_CONFIG
@@ -564,7 +564,7 @@ class Modelo210DevengoFacts(BaseModel):
     fecha_devengo: str | None = None
 
 
-class Modelo210DevolucionFacts(BaseModel):
+class Modelo210DevolucionFactSet(BaseModel):
     """Modelo 210 devolucion facts, flat members named from the AEAT component vocabulary."""
 
     model_config = STRICT_FROZEN_CONFIG
@@ -582,7 +582,7 @@ class Modelo210DevolucionFacts(BaseModel):
     renuncia_a_favor_del_tesoro: str | None = None
 
 
-class Modelo210GananciaInmobiliariaFacts(BaseModel):
+class Modelo210GananciaInmobiliariaFactSet(BaseModel):
     """Modelo 210 ganancia inmobiliaria facts, flat members named from the AEAT component vocabulary."""
 
     model_config = STRICT_FROZEN_CONFIG
@@ -597,7 +597,7 @@ class Modelo210GananciaInmobiliariaFacts(BaseModel):
     titularidad: str | None = None
 
 
-class Modelo210IngresoFacts(BaseModel):
+class Modelo210IngresoFactSet(BaseModel):
     """Modelo 210 ingreso facts, flat members named from the AEAT component vocabulary."""
 
     model_config = STRICT_FROZEN_CONFIG
@@ -615,7 +615,7 @@ class Modelo210IngresoFacts(BaseModel):
     forma_pago: str | None = None
 
 
-class Modelo210InmuebleFacts(BaseModel):
+class Modelo210InmuebleFactSet(BaseModel):
     """Modelo 210 inmueble facts, flat members named from the AEAT component vocabulary."""
 
     model_config = STRICT_FROZEN_CONFIG
@@ -638,7 +638,7 @@ class Modelo210InmuebleFacts(BaseModel):
     situacion_tipo_via: str | None = None
 
 
-class Modelo210PagadorFacts(BaseModel):
+class Modelo210PagadorFactSet(BaseModel):
     """Modelo 210 pagador facts, flat members named from the AEAT component vocabulary."""
 
     model_config = STRICT_FROZEN_CONFIG
@@ -648,7 +648,7 @@ class Modelo210PagadorFacts(BaseModel):
     tax_id: str | None = None
 
 
-class Modelo210RentaFacts(BaseModel):
+class Modelo210RentaFactSet(BaseModel):
     """Modelo 210 renta facts, flat members named from the AEAT component vocabulary."""
 
     model_config = STRICT_FROZEN_CONFIG
@@ -656,7 +656,7 @@ class Modelo210RentaFacts(BaseModel):
     clave_divisa: str | None = None
 
 
-class Modelo210RepresentanteFacts(BaseModel):
+class Modelo210RepresentanteFactSet(BaseModel):
     """Modelo 210 representante facts, flat members named from the AEAT component vocabulary."""
 
     model_config = STRICT_FROZEN_CONFIG
@@ -685,7 +685,7 @@ class Modelo210RepresentanteFacts(BaseModel):
     tax_id: str | None = None
 
 
-class Modelo210SinIngresoNiDevolucionFacts(BaseModel):
+class Modelo210SinIngresoNiDevolucionFactSet(BaseModel):
     """Modelo 210 sin ingreso ni devolucion facts, flat members named from the AEAT component vocabulary."""
 
     model_config = STRICT_FROZEN_CONFIG
@@ -716,18 +716,18 @@ class Modelo210ProfileFacts(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    contribuyente: Modelo210ContribuyenteFacts | None = None
-    declaracion: Modelo210DeclaracionFacts | None = None
-    declarante: Modelo210DeclaranteFacts | None = None
-    devengo: Modelo210DevengoFacts | None = None
-    devolucion: Modelo210DevolucionFacts | None = None
-    ganancia_inmobiliaria: Modelo210GananciaInmobiliariaFacts | None = None
-    ingreso: Modelo210IngresoFacts | None = None
-    inmueble: Modelo210InmuebleFacts | None = None
-    pagador: Modelo210PagadorFacts | None = None
-    renta: Modelo210RentaFacts | None = None
-    representante: Modelo210RepresentanteFacts | None = None
-    sin_ingreso_ni_devolucion: Modelo210SinIngresoNiDevolucionFacts | None = None
+    contribuyente: Modelo210ContribuyenteFactSet | None = None
+    declaracion: Modelo210DeclaracionFactSet | None = None
+    declarante: Modelo210DeclaranteFactSet | None = None
+    devengo: Modelo210DevengoFactSet | None = None
+    devolucion: Modelo210DevolucionFactSet | None = None
+    ganancia_inmobiliaria: Modelo210GananciaInmobiliariaFactSet | None = None
+    ingreso: Modelo210IngresoFactSet | None = None
+    inmueble: Modelo210InmuebleFactSet | None = None
+    pagador: Modelo210PagadorFactSet | None = None
+    renta: Modelo210RentaFactSet | None = None
+    representante: Modelo210RepresentanteFactSet | None = None
+    sin_ingreso_ni_devolucion: Modelo210SinIngresoNiDevolucionFactSet | None = None
 
 
 class GeneralFilingProfileFacts(BaseModel):
