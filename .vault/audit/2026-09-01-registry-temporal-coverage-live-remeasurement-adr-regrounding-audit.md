@@ -12855,3 +12855,55 @@ The rewriter skips its own file when doing that, and the exception is worth
 stating because it is the only one: this module's docstring QUOTES a stale path
 as the example of what goes wrong, and rewriting the quotation into the
 corrected form deletes the explanation while leaving the sentence grammatical.
+
+
+## Four facades retired, and the residue is all one shape
+
+`dev.docs.apidocs`, `dev.ingest_harness`, `dev.agent_eval` and `dev.locales` are
+retired: 30 consumer statements repointed onto their defining modules, four
+initialisers reduced from 130-190 lines to inert prose, and 158 forwarded names
+withdrawn. Nine facades are five, 388 bound names are 230, and 77 consumer sites
+are 47.
+
+Every one of the 47 remaining sites is refused, and all 33 refusals - the count
+is now the whole of what is refusable - are the same reason:
+`cross_package_private_target`. The residue is not a long tail of special cases.
+It is one blocked precondition, `S470`, repeated across five packages.
+
+Two method corrections came out of this round and both are about evidence rather
+than code.
+
+**Baseline before, not after.** The `agent_eval` suite reported 8 failures and 13
+errors after the rewrite, and establishing they were not mine took three separate
+probes: importing every private module to show none composes the profile custody
+port, an A/B of one file against its `HEAD` content, and an A/B of every file
+still differing. All three agreed, and the failures name `src`-side runtime
+composition and a missing `cadrumo_contract` tool descriptor - states an import
+repoint cannot reach. For `dev.locales` the baseline was taken FIRST: 10 failed,
+627 passed. That cost one command and settled in advance what the other took
+three probes to establish afterwards.
+
+The A/B also showed something about working here: of the twelve files rewritten,
+**only four still differed by the time the baseline ran**. A peer had committed
+the other eight mid-run, so the `HEAD` baseline already contained them. A
+before-and-after comparison in this worktree has a shelf life measured in
+minutes, which is the second argument for taking the baseline first.
+
+**The retirement is behaviour-neutral, and that is asserted rather than assumed.**
+`agent_eval` reported 8 failed / 108 passed / 13 errors before emptying its
+initialiser and exactly the same after. `dev.locales` returned to its baseline
+of 10 / 627 once one test was corrected.
+
+That one test is worth recording, because it is this campaign's subject in
+miniature. `test_errors_live_in_public_defining_module_without_facade_reexports`
+asserted that two error names were absent from the package's `__all__`. The
+property was right; the spelling assumed an `__all__` existed to read, which was
+true only while the initialiser forwarded forty-three other names. Emptying it
+made the assertion raise `AttributeError` - a test that depended on the defect it
+was checking for. It now states the property directly and more strongly: the
+initialiser declares no exports at all, and every public name it carries is one
+of its own submodules.
+
+Three sibling tests (`sequences`, `terminology_handbook`, `sanitizer`) are
+written the same way and will need the same correction when their facades come
+down, which is after `S470`.
