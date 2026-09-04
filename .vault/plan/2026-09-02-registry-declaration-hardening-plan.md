@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:008721cdb84758ff41e9cba1a19ba252417d09c00314382ae31084e51000fba7'
+body_hash: 'sha256:17bea4a78f949b5acd5ca43251787fefa0f1afc4f3e80f0e1831f5474c337136'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -385,7 +385,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S502` - Re-measure the registry suite with the run judged usable before any figure is taken: 1264 tests, 1227 passing, 37 failing, of which 32 sit in the four generated-tree modules and five are separate questions; `dev/registry`.
 - [x] `W02.P02.S503` - Examine the five registry failures that are not the republication: four are src-side and one is a pair of frozen corpus counts whose failure masks a real movement, 154 orphaned declarations against a frozen 2, all citing the modelo 200 2024 manual; `dev/registry/tests/test_m200_semantic_casilla_candidates.py`.
 - [ ] `W02.P02.S504` - Replace the two frozen corpus counts in the modelo 200 semantic casilla tests with the invariant they stand for, that a declaration has a map owner, since a count assertion reports a fall of four and a rise of a hundred and fifty-two as the same failed equality; `dev/registry/tests/test_m200_semantic_casilla_candidates.py`.
-- [ ] `W02.P02.S505` - Resolve the 154 unmapped modelo 200 declarations, 152 of them citing the 2024 record design, which landed at 11:48 on 2026-09-03 against counts frozen at 08:05 the same morning, so the declarations arrived ahead of the map that will own them; `src/cadrumo/_data/registry/aeat/modelos/200`.
+- [ ] `W02.P02.S505` - Complete the modelo 200 2024 casilla landing of 11:48 on 2026-09-03, which arrived without map owners or Spanish labels: 154 orphaned declarations and 624 locale resolution failures over about 156 casillas are the same incomplete landing, and closing it clears three failing gates at once; `src/cadrumo/_data/registry/aeat/modelos/200,src/cadrumo/locales`.
 - [x] `W02.P02.S506` - Decline a frozen-count detector after measuring two signals: the first misses the modelo 200 assertion it was built for and the second flags 111 sites including this sessions own correct fixture assertion, since the discriminator is where a value comes from rather than its syntax; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W02.P02.S507` - Declare the dev-side prose-parser false positive rather than narrowing the detector, which its own docstring rules against: the module matches casillas inside a TOML table header in this repositorys authoring files and reads no outside prose, leaving three genuine src parsers undeclared; `dev/registry/analysis/regulatory_prose_parser_channel.toml`.
 - [ ] `W02.P02.S508` - Enrol the three genuine src prose parsers in the channel: the borrador modelo 100 summary extractor reading NIF and Ejercicio, the record-design PDF row repairs, and the workbook reader matching entidades desarrolladoras; `src/cadrumo`.
@@ -417,6 +417,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S534` - Find the six declared screen conditions the corpus never produces and give the one with no proof a reachable classifier: pointer_resolves_vocabulary_hit had no live member and no test, in a screen written during this campaign; `dev/registry/analysis/footnote_only_wire_facts.py,dev/registry/tests/test_footnote_only_wire_facts.py`.
 - [x] `W02.P02.S535` - Gate that every declared screen condition has a live member or a test naming it, which the six emptied conditions now satisfy, with the gate stating that a prose mention would satisfy its weak proof standard; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W02.P02.S536` - Sweep the full files and directories behind this sessions targeted runs: the registry suite is 1286 collected with 1249 passing and a failure set identical line by line to the earlier full measurement, and the twenty-two tests added all pass; `dev`.
+- [x] `W02.P02.S537` - Connect three separately recorded failures to one landing: the modelo 200 2024 casillas arrived without map owners or translations, so 154 orphaned declarations, a broken frozen count and 624 locale resolution failures are the same event; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W02.P03` - release predicate relocation
 
@@ -1630,3 +1631,23 @@ the ambiguous name was dropped and both halves of that decision are pinned by te
 The report also counted itself. Its first run reported 43, including its own module, and writing its
 tests took it to 42 - a tool that measures the tree it lives in should be subject to what it measures,
 and one of its tests asserts exactly that.
+
+Failures are read together before they are read separately. Three of this plan's records turned out to
+describe one event: the modelo 200 2024 casilla declarations landed at 11:48 on 2026-09-03 without map
+owners and without Spanish labels, and the tree reports that as 154 orphaned declarations in the m200
+worklist, a frozen count broken three hours and forty-three minutes after it was written, and 624
+modelo-schema locale resolution failures. Thirteen of the thirteen casillas visible in the locale gate's
+truncated assertion are in the orphan set, and 624 failures across four locales implies about 156
+casillas against those 154.
+
+Read apart they are a mapping problem, a stale test and a translation gap, with three different owners.
+Read together they are one incomplete landing whose remaining work is enumerable, and closing it turns
+three gates green at once. `S505` now says that rather than naming the mapping half alone.
+
+No gate is at fault here and none could have found it. Each reported exactly what it watches on the day
+it happened; what nothing does is notice that three of them started failing together, and the connection
+took a set intersection rather than a better instrument.
+
+The registry carries no casilla text of its own - a casilla declares `localization_keys` and the
+catalogues hold the words - so the obvious duplication on that axis does not exist. That is recorded as a
+measured negative, because the next reader will otherwise ask.

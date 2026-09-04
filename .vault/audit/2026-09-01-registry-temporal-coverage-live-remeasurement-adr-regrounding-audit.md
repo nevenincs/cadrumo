@@ -14572,3 +14572,39 @@ trustworthy way to finish one. The rule this session ends with is narrower than
 "always run everything": run the whole file you edited, because that is where a
 textual replacement can land on the wrong occurrence, and the failure it causes
 is invisible to the test you were writing.
+
+
+## Three failing gates, one data landing
+
+The registry carries no casilla text at all - a casilla declares
+`localization_keys` and the catalogues hold the words - so that axis of
+restatement does not exist here, which is worth recording as a clean negative
+rather than measuring again.
+
+What the keys do produce is a reconciliation, and it is gated:
+`test_every_shipped_modelo_schema_localization_resolves_for_every_output_locale`
+reports **624 resolution failures**, every one a modelo 200 revision 2024 casilla
+whose label key is declared and untranslated.
+
+Those are the same casillas as the orphaned declarations. Of the thirteen visible
+in the truncated assertion - `00067`, `00093` among them - **thirteen of thirteen
+are in the 154-member orphan set**, and 624 failures across four locales implies
+about 156 casillas against those 154.
+
+So three failures this plan records separately are one event: the modelo 200 2024
+casilla declarations landed at 11:48 on 2026-09-03, and they arrived without map
+owners and without translations. The m200 worklist reports 154 unmapped
+declarations, the frozen count that broke reports the same movement as a failed
+equality, and the locale gate reports 624 untranslated keys. Three instruments,
+three vocabularies, one landing.
+
+That is worth more than any of the three alone, because it changes what the
+repair is. Read separately they are a mapping problem, a stale test and a
+translation gap, and each has a different owner. Read together they are one
+incomplete landing whose remaining work is enumerable: give those casillas their
+map owners and their Spanish labels, and all three go green at once.
+
+Nothing here is a defect in the gates. Each reported exactly what it watches, on
+the day it happened. What no instrument does is notice that three of them started
+failing together - and the connection took a set intersection to see, not a
+better gate.
