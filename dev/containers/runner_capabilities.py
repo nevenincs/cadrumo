@@ -8,11 +8,10 @@ fleet was unmodelled.
 
 What "assumed" means here is measured, not guessed. Parsing the ``run:`` blocks
 of every workflow shows ``uv``, ``just`` and ``node`` are each installed by a
-pinned setup action, while ``gh`` is invoked by eight workflows and installed by
-none: ``publish-release``, ``release-orchestrator``, ``release-soak-promoter``,
-``packaging-smoke``, ``packaging-scoop``, ``packaging-claude``,
-``packaging-homebrew`` and ``packaging-campaign-trigger``. Its absence surfaces
-as ``REFUSED: forge check needs the gh CLI on PATH`` mid-release — a cohort-seal
+pinned setup action, while ``gh`` is invoked by four workflows and installed by
+none: ``packaging-campaign-trigger``, ``packaging-homebrew``,
+``packaging-scoop`` and ``release-please``. Its absence surfaces as
+``REFUSED: forge check needs the gh CLI on PATH`` mid-release — a cohort-seal
 failure that never names the missing tool.
 
 The Homebrew acquisition matrix additionally pins an EXACT brew path per leg
@@ -78,14 +77,14 @@ def _version_of(executable: str) -> str:
 
 
 def _check_gh() -> Finding:
-    """`gh` is the one tool no workflow installs and eight workflows invoke."""
+    """`gh` is the one tool no workflow installs and four workflows invoke."""
     resolved = shutil.which("gh")
     if resolved is None:
         return Finding(
             "gh",
             ok=False,
             detail=(
-                "NOT on PATH. Eight workflows invoke it and none install it; "
+                "NOT on PATH. Four workflows invoke it and none install it; "
                 "dev.release.version_identity fails its forge check with "
                 "'REFUSED: forge check needs the gh CLI on PATH' mid-release."
             ),
