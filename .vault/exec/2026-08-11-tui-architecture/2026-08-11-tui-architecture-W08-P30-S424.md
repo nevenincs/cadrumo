@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:b64ab5359611889cdc48d9158347234da000fdf42bfcfc4bfac11dbcc82fa961'
+body_hash: 'sha256:77bf9f5e3b59257a0ee282fb8356be02c9ce0259ed73dc000eeef4e8646774a2'
 step_id: 'S424'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -24,42 +24,57 @@ related:
 - `M` `src/cadrumo/application/modelo/declarations_calendar.py`
 - `M` `src/cadrumo/entrypoints/tui/ledger/reconciliation.py`
 - `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_ledger_slice3.py`
-- `verify:` `pytest -n0 -m '' tui/ledger/tests application/ledger/tests/test_workspace.py` -> `pass` (85)
+- `M` `src/cadrumo/application/aeat_sync/tests/test_workspace.py`
+- `M` `src/cadrumo/application/search/tests/test_workbench.py`
+- `verify:` `pytest -n0 -m '' application/aeat_sync/tests application/search/tests` -> `pass` (26 + 40)
 
 ## Notes
 
-Step left OPEN: the sweep found one unblocked defect, fixed it, and the rest of
-what it names is blocked or is framing debt. Recording which is which.
+Step left OPEN: the census and declaration-result values remain blocked as
+recorded below. What this pass added is the gate half of the sweep.
 
-FIXED. `LedgerInvoiceReconciliationRefV1` reported `amount_match` and
-`counterparty_match` as bare booleans. A `True` asks the operator to confirm a
-link while hiding the two amounts that supposedly agree; a `False` reports a
-disagreement without saying between what and what. A suggestion is a claim the
-operator is meant to ADJUDICATE, and both values are local records the session
-is already authenticated for, in scope at the projection site -- discarded, not
-protected. The ref now carries invoice total, transaction amount and both
-counterparties, and the screen prints them beside the verdict. The gate uses
-the fixture row whose counterparties differ ("Cliente Omega SA" against "Omega
-SA"), the case where a bare "no" cannot be told from a formatting difference.
-Teeth proven by removing the values from the rendered line.
+FIXED EARLIER IN THIS STEP. `LedgerInvoiceReconciliationRefV1` reported
+`amount_match` and `counterparty_match` as bare booleans, hiding the two values
+compared. A `True` asks the operator to confirm a link while withholding the
+amounts that supposedly agree; a `False` reports a disagreement without saying
+between what and what. The ref now carries invoice total, transaction amount
+and both counterparties, and the screen prints them beside the verdict. Teeth
+proven by removing the values from the rendered line.
 
-BLOCKED, unchanged. Census values: no producer outside fixtures, AEAT side
-never captured until a pull (S408). Declaration result amounts on the
-declarations and revisions lists: `casilla_values` holds the computed outputs,
-but WHICH casilla is the result is not declared anywhere in the registry --
-only ad-hoc per-modelo constants exist (`_M130_RESULTADO_FINAL_CASILLA = "19"`,
-`_M200_ACCOUNTING_RESULT_CASILLA = "00501"`), covering two modelos. Showing a
-guessed result on a filing-facing list is worse than showing none, so this
-stays unsupported pending a registry-declared result casilla. That constant
-scattering is itself a `aeat-calculation-grounding` finding.
+BLOCKED, unchanged. Census values have no producer outside fixtures. Declaration
+result amounts need a registry-declared result casilla, which does not exist --
+only ad-hoc constants for two modelos -- and guessing on a filing-facing list is
+worse than showing none.
 
-CHECKED AND CLEARED, so the sweep is not re-run over them: PDF, log and
-authenticator redaction (diagnostics can travel where an authenticated session
-cannot, and the decision explicitly leaves them); `ModeloEditMutationResultReceiptV1`
-(a compare-and-swap receipt, not a display surface); the modelo work wizard
-(shows the casilla and an empty input -- fresh entry, not withholding).
+GATES SWEPT, and two were passing without proving their subject.
 
-FRAMING corrected where the prose asserted the retired policy as a property:
-the census row no longer calls its missing values a safety feature, and the
-declarations calendar is no longer described as "redacted" when it carries
-every date and state it is about.
+The search document prohibition banned a field NAMED `search_terms`, and the
+`content_terms` field this campaign added does that job under another name. The
+gate stayed green while the policy it described had been retired underneath it.
+It now names the sanctioned channel -- matchable text arrives through
+`content_terms` and nothing else -- which survives a rename.
+
+The AEAT byte scan asserted that eight protected strings are absent from the
+projection. `AeatSyncWorkspaceProjectionV1` declares `contract_version`,
+`zones` and six tuples of typed rows: no `bucket_id`, no `subject_key`, no
+identity field at all. Those live on `AeatSyncWorkspaceFactV1`, an INPUT the
+projector consumes and never emits, so NO value in that tuple could reach the
+output and the scan could not fail. Four of the eight were worse still --
+`Protected Name`, the evidence URL and `document prose` appeared nowhere in the
+file except the tuple, so nothing ever introduced them.
+
+Two corrections were needed inside this fix, both recorded because the second
+invalidated the first. Supplying `certificate-private` through a census fact
+was tried, to make one sentinel meaningful; it changes nothing, because facts
+are not part of the output, and it was reverted. Injecting a `__repr__` leak
+onto the fact also proved nothing -- pydantic builds `__repr__` from fields --
+and that inconclusive result is what prompted reading the projection's own
+field list, which settled it.
+
+The protection is the TYPE. The test now says so and asserts it structurally:
+every field a row exposes must be a closed enum, a typed address component, a
+state or a bounded identifier, so there is nowhere for prose to be carried.
+Teeth proven by adding a free-text field to a census row -- `note is free text
+(<class 'str'>), so protected prose could be carried there and the removed
+sentinels would need reinstating`. The byte scan is kept as belt-and-braces
+with its limits stated, rather than deleted or left reading as the guard.

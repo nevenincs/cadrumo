@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:fdbfc432ff3b4d7f343138ccb33a6209b47890294a7d91bdfed2759c6c2b235b'
+body_hash: 'sha256:58f68fbee76b33ee8adea826e7d1092616229513960aec2dff74301ded9ac535'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -471,6 +471,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S589` - Stop the type-only runtime-use scan reporting clean over what it did not read, where an unparsable module returned an empty result identical to a clean one and a lenient decode dropped bad bytes so the scan analysed text the file does not contain; what goes unreported is a guard-only name evaluated at runtime, a NameError waiting in shipped code; `dev/quality/type_checking_runtime_use_scan.py,dev/tests/test_type_checking_runtime_use_gate.py`.
 - [x] `W02.P02.S590` - Announce every module the locale key scanner cannot read, where a lenient decode scanned text the file does not contain and a read or parse failure was logged at debug level, since a key never seen declared looks unused and this is the scanner that once put seventy-seven catalogue entries on a deletion path; `dev/locales/_ast_scanner.py,dev/locales/tests/test_ast_scanner_reports_unread_modules.py`.
 - [x] `W02.P02.S591` - Read strictly and announce in the locale manager's key scan, the outer half of the pair fixed for the AST scanner, since a lenient decode could cut a key literal in half so the pattern never matched it and a read failure was logged at debug level, in the set that decides which keys the codebase uses; `dev/locales/manager.py,dev/locales/tests/test_ast_scanner_reports_unread_modules.py`.
+- [x] `W02.P02.S592` - Share one unread-input notice instead of writing a thirteenth copy, keeping each caller's consequence as a parameter because that sentence is the only part a reader acts on, and route the two locale key scans through it; the helper reports and never refuses, since a walk over a concurrently edited tree must survive a half-written file; `dev/quality/unread_inputs.py,dev/quality/tests/test_unread_inputs.py,dev/locales/_ast_scanner.py,dev/locales/manager.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
