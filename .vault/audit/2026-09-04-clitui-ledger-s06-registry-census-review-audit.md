@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:25f480c131bf394b938607dc9baf880b5127375fede6894f990c2013f878ade5'
+body_hash: 'sha256:a36112852b2955af4e8b7095847264ea90a44f55d3d84b74fc46c9f17a86bb99'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-reference]]"
@@ -157,5 +157,5 @@ errors should be resolved without weakening the strict root/schema model.
 
 Focused evidence: `dev/quality/tests/test_clitui_ledger_capability_matrix.py`
 passes 131 tests, including the committed positive and route/source mutation
-cases. The nine-file S06 behavior suite was rerun independently. Its result and
-the feature-scoped Vault checks are recorded in the final review handoff.
+cases. The independently rerun nine-file S06 behavior suite passes all 87
+tests. Feature-scoped Vault checks are recorded in the final review handoff.
