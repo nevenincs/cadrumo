@@ -177,6 +177,14 @@ CADRUMO_CSS_TOKENS: Final[Mapping[str, str]] = MappingProxyType(
         # read as one smeared control, so the role gets a name and a
         # value that actually separates them.
         "cadrumo-control-gap": "2",
+        # Table density. One number for every table in the product, because a
+        # row's leading is what the eye uses to find the column edge: Home's
+        # lists sat flush at column 0 while every other table was inset by one
+        # cell, so two surfaces of the same product disagreed about where a row
+        # begins. Tables also inset their FIRST column by this much, so the
+        # heading above them takes the same indent and the group shares one
+        # left edge.
+        "cadrumo-cell-padding": "1",
         # -- Chrome ---------------------------------------------------------
         "cadrumo-scrollbar": "1",
     },
@@ -278,6 +286,10 @@ BASE_CSS: Final[str] = tokenised("""
     .cadrumo-heading {
         height: auto;
         text-style: bold;
+        /* The same inset a table gives its first column, so a heading and the
+           rows it owns share one left edge. Without it the heading starts a
+           cell to the left of its own data and the group reads as ragged. */
+        padding-left: $cadrumo-cell-padding;
         margin-top: $cadrumo-section;
         margin-bottom: $cadrumo-stack;
     }

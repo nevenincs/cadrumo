@@ -15,7 +15,7 @@ from textual.widgets import Button, Collapsible, DataTable, Static
 from textual.widgets.data_table import Column, ColumnKey
 
 from ....core.presentation import NoticePresentation
-from .theme import tokenised
+from .theme import CADRUMO_CSS_TOKENS, tokenised
 
 
 class ContentScroll(VerticalScroll, can_focus=False):
@@ -39,6 +39,14 @@ class ContentDataTable[CellType](DataTable[CellType]):
 
     fill_column: int | None = -1
     """Index of the column that absorbs surplus width; ``None`` disables it."""
+
+    DEFAULT_CELL_PADDING: Final = int(CADRUMO_CSS_TOKENS["cadrumo-cell-padding"])
+    """The product's one table density, so no call site names a number."""
+
+    def __init__(self, *args: object, **kwargs: object) -> None:
+        """Apply the shared density unless a caller states its own."""
+        kwargs.setdefault("cell_padding", self.DEFAULT_CELL_PADDING)
+        super().__init__(*args, **kwargs)  # type: ignore[arg-type]
 
     def watch_virtual_size(self, size: Size) -> None:
         """Keep the layout box equal to the current rows and header."""

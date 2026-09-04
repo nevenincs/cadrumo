@@ -59,7 +59,7 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
     def on_mount(self) -> None:
         """Populate the safe entry index using semantic row identities."""
         self.populate_navigation()
-        table = cast("DataTable[str]", self.query_one("#ledger-entries", DataTable))
+        table = self.query_one("#ledger-entries", ContentDataTable[str])
         self._fill_table(table, self.app.size.width)
         if not table.row_count:
             self.query_one("#ledger-refusal", Static).update(ledger_copy("tui.ledger.entries.empty"))
@@ -87,7 +87,7 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
             used += cost
         return tuple(taken)
 
-    def _fill_table(self, table: DataTable[str], width: int) -> None:
+    def _fill_table(self, table: ContentDataTable[str], width: int) -> None:
         """Rebuild the table for this width, preserving row identity.
 
         A rebuild replaces every row object, so the cursor -- which addresses a
@@ -135,7 +135,7 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
 
     def on_resize(self) -> None:
         """Re-take the column set for the new width."""
-        table = cast("DataTable[str]", self.query_one("#ledger-entries", DataTable))
+        table = self.query_one("#ledger-entries", ContentDataTable[str])
         self._fill_table(table, self.app.size.width)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:

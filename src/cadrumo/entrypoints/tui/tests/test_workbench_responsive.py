@@ -376,3 +376,65 @@ async def test_no_cell_is_truncated_while_its_row_still_has_room(surface: str) -
 
     offenders = [line for line in painted if "…" in line and len(line.rstrip()) < width - 2]
     assert not offenders, f"{surface} shortens a value while its row still has room:\n" + "\n".join(offenders)
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "surface",
+    [
+        "home--ready",
+        "aeat-sync-overview--ready",
+        "ledger-overview--ready",
+        "declarations-overview--ready",
+    ],
+)
+async def test_a_heading_shares_its_left_edge_with_the_rows_it_owns(surface: str) -> None:
+    """A group with two left edges reads as ragged, whatever the gaps are.
+
+    A table insets its first column by the cell padding, so a heading placed
+    flush at the container edge starts one cell to the LEFT of its own data.
+    Home was worse than ragged: its lists set `cell_padding=0` while every
+    other table in the product used Textual's default of 1, so two surfaces
+    disagreed about where a row begins. Density is now one token and the
+    heading takes the same inset.
+
+    Measured from the painted frame: the column at which the heading's text
+    starts must equal the column at which the row beneath it starts. This is
+    the horizontal counterpart of the rhythm gate, and neither can see the
+    other's defect -- correct gaps above and below a heading say nothing about
+    whether it lines up with the rows it introduces.
+    """
+    from ..devtools.frame import screen_text
+    from ..devtools.workbench_fixtures import resolve_workbench_fixture
+
+    width, height = TERMINAL_ORDINARY
+    app = resolve_workbench_fixture(surface).build()
+    async with app.run_test(size=(width, height)) as pilot:
+        await pilot.pause()
+        headings = [
+            (str(node.render()).strip(), node.region)
+            for node in app.screen.query(".cadrumo-heading")
+            if str(node.render()).strip()
+        ]
+        painted = screen_text(app, width, height).splitlines()
+        app.exit(None)
+
+    assert headings, f"{surface} declares no .cadrumo-heading to check"
+
+    checked = 0
+    for heading, region in headings:
+        if not (0 <= region.y < len(painted)) or heading not in painted[region.y]:
+            continue
+        indent = len(painted[region.y]) - len(painted[region.y].lstrip())
+        following = [
+            line for line in painted[region.y + 1 :][:6] if line.strip()
+        ]
+        if not following:
+            continue
+        checked += 1
+        row_indent = len(following[0]) - len(following[0].lstrip())
+        assert indent == row_indent, (
+            f"{surface}: heading {heading!r} starts at column {indent} while the row "
+            f"beneath it starts at column {row_indent}; the group has two left edges"
+        )
+
+    assert checked, f"{surface}: no heading had content beneath it to compare against"

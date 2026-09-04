@@ -196,3 +196,52 @@ async def test_every_grouping_mechanism_separates_its_groups_by_the_same_distanc
             f"{mechanism} separates consecutive groups by {gap} rows, not the "
             f"{section_gap} the section token declares; measured {measured}"
         )
+
+@pytest.mark.asyncio
+async def test_a_source_card_title_is_separated_from_the_card_above_it() -> None:
+    """Stacked source cards must not run into one another.
+
+    The Profile manager stacks these, and each card is a group: a title, the
+    sentence explaining it, and the button that acts on it. The title carried
+    no rhythm, so the second card's title sat directly beneath the first
+    card's action button and the panel read as one list of alternating
+    sentences and buttons rather than two offers.
+
+    Asserted from the mounted geometry because the Profile manager surface
+    refuses to open standalone -- it needs an active profile pointer -- so
+    this is where the rhythm can actually be observed. The asymmetry is the
+    claim: a wider gap ABOVE binds the title away from the previous card, a
+    narrower one BELOW binds it to its own description. Equal gaps leave it
+    floating between the two.
+    """
+    section_gap = int(CADRUMO_CSS_TOKENS["cadrumo-section"])
+    stack_gap = int(CADRUMO_CSS_TOKENS["cadrumo-stack"])
+
+    class _Probe(App[None]):
+        CSS = BASE_CSS
+
+        @override
+        def compose(self) -> ComposeResult:
+            for name in ("Censo", "Historial"):
+                yield SourceActionCard(
+                    SourceActionDescriptor(
+                        title=f"{name} de la AEAT",
+                        description=f"Descripcion de {name}.",
+                        action_label=f"Abrir {name}",
+                    ),
+                    id=f"card-{name.lower()}",
+                )
+
+    app = _Probe()
+    async with app.run_test(size=(80, 30)) as pilot:
+        await pilot.pause()
+        titles = list(app.screen.query(".cadrumo-source-card-title"))
+        margins = [(node.styles.margin.top, node.styles.margin.bottom) for node in titles]
+        app.exit(None)
+
+    assert len(titles) == 2, "the probe did not mount two cards, so it proves nothing"
+    for top, bottom in margins:
+        assert (top, bottom) == (section_gap, stack_gap), (
+            f"a source card title carries {(top, bottom)} rather than the "
+            f"{(section_gap, stack_gap)} rhythm, so it does not own its own description"
+        )

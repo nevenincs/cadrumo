@@ -198,7 +198,13 @@ class HomeScreen(Screen[None]):
         HomeScreen.wide #home-main { width: 2fr; padding-right: $cadrumo-control-gap; }
         HomeScreen.wide #home-sidebar { width: 1fr; }
         /* Rhythm comes from the shared .cadrumo-heading rule. */
-        .home-state { color: $text-muted; height: auto; }
+        /* Same inset as the headings and the table rows: a state line that
+           starts a cell to their left reads as belonging to something else. */
+        .home-state {
+            color: $text-muted;
+            height: auto;
+            padding-left: $cadrumo-cell-padding;
+        }
         .home-table { width: 100%; height: auto; }
         """
     )
@@ -258,7 +264,6 @@ class HomeScreen(Screen[None]):
                     cursor_type="row",
                     zebra_stripes=True,
                     show_header=False,
-                    cell_padding=0,
                     classes="home-table",
                 )
                 yield Static(id="home-action-contexts", classes="home-state", markup=False)
@@ -277,7 +282,6 @@ class HomeScreen(Screen[None]):
                     cursor_type="row",
                     zebra_stripes=True,
                     show_header=False,
-                    cell_padding=0,
                     classes="home-table",
                 )
             with Static(id="home-sidebar"):
@@ -296,7 +300,6 @@ class HomeScreen(Screen[None]):
                     cursor_type="row",
                     zebra_stripes=True,
                     show_header=False,
-                    cell_padding=0,
                     classes="home-table",
                 )
                 yield Static(id="home-agenda-evidence", classes="home-state", markup=False)
