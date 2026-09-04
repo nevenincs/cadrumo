@@ -23,6 +23,7 @@ from textual.widget import Widget
 from ....tests.terminal_sizes import SUPPORTED_TERMINAL_SIZES
 from ..components.host import ScreenHostApp
 from ..components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
+from ..home import HomeScreen
 from ..navigation import TuiScreenContextV1
 from .workbench_session import installed_workbench_root
 
@@ -121,3 +122,39 @@ async def test_home_renders_under_both_appearances(tmp_path: Path) -> None:
                 app.exit(None)
 
         assert len(set(painted.values())) == 1, f"appearance changed the mounted content: {painted}"
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("size", [s for s in SUPPORTED_TERMINAL_SIZES if s[0] >= 120])
+@pytest.mark.parametrize("scenario", ["ready", "blocked"])
+async def test_home_keeps_a_gutter_between_its_two_columns(scenario: str, size: tuple[int, int]) -> None:
+    """Wrapped left-column text must never abut the sidebar.
+
+    Two touching columns produce rows like "...En todosAEAT: no observada",
+    where a reader cannot tell where one fact ends and the next begins. An
+    overflow check cannot see it -- nothing leaves the screen -- so this reads
+    the painted cells either side of the column boundary instead.
+
+    It runs over the POPULATED fixtures rather than a live session, and that
+    is the whole point: a fresh profile's Home has no action rows long enough
+    to reach the boundary, so a live-session version of this proof passes
+    whether or not the gutter exists. Verified by removing the gutter: the
+    live-session form still passed, these fail.
+    """
+    from ..devtools.frame import screen_text
+    from ..devtools.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
+
+    width, height = size
+    screen = HomeScreen(build_home_projection_fixture(HomeFixtureScenario(scenario)))
+    app = ScreenHostApp(screen)
+    async with app.run_test(size=(width, height)) as pilot:
+        await pilot.pause()
+        sidebar = app.screen.query("#home-sidebar")
+        assert sidebar, f"Home is not in its two-column layout at {size}"
+        boundary = sidebar.first().region.x
+        rows = screen_text(app, width, height).splitlines()
+        collisions = [
+            row for row in rows if len(row) > boundary and row[boundary - 1] != " " and row[boundary] != " "
+        ]
+        app.exit(None)
+
+    assert not collisions, "Home paints left-column text against the sidebar:\n" + "\n".join(collisions[:3])
