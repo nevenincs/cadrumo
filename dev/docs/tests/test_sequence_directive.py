@@ -33,15 +33,10 @@ from ..sequence_directive import (
     render_sequence_html,
     wrap_token_lines,
 )
-from ..sequences import (
-    FrameKind,
-    GoldenFrame,
-    ParsedSequence,
-    SequenceGolden,
-    TokenKind,
-    parse_sequence,
-    tokenise_command,
-)
+from ..sequences.golden_store import GoldenFrame, SequenceGolden
+from ..sequences.parser import parse_sequence
+from ..sequences.schema import FrameKind, ParsedSequence
+from ..sequences.tokeniser import TokenKind, tokenise_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 

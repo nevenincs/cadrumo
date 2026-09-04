@@ -33,12 +33,9 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 
-from ..sequences import (
-    FrameKind,
-    default_docs_root,
-    discover_sequences,
-    read_golden,
-)
+from ..sequences.checks import default_docs_root, discover_sequences
+from ..sequences.golden_store import read_golden
+from ..sequences.schema import FrameKind
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 

@@ -25,12 +25,9 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 
-from ..sequences import (
-    default_docs_root,
-    discover_sequences,
-    read_golden,
-    result_frame_asserts_result_payload,
-)
+from ..sequences.checks import default_docs_root, discover_sequences
+from ..sequences.golden_store import read_golden
+from ..sequences.parser import result_frame_asserts_result_payload
 from ._ratchet_support import ratchet_divergences
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]

@@ -12,15 +12,9 @@ from __future__ import annotations
 
 import pytest
 
-from .. import (
-    CaptureBinding,
-    ExpectAssertion,
-    FrameKind,
-    StaticBlocker,
-    parse_sequence,
-    result_frame_asserts_result_payload,
-)
 from ..errors import SequenceParseError
+from ..parser import parse_sequence, result_frame_asserts_result_payload
+from ..schema import CaptureBinding, ExpectAssertion, FrameKind, StaticBlocker
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
