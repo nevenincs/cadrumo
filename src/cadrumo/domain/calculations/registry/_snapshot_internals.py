@@ -573,6 +573,42 @@ def _legal_window_failure(
     )
 
 
+def _parameter_value_governed_spans(
+    revision: ModeloRevision,
+) -> dict[str, tuple[tuple[date, date | None, str], ...]]:
+    """Map every parameter-cited legal ref to the windows its dated values defend.
+
+    The legal-side twin of :func:`_deadline_window_source_spans`, and it exists
+    for the same reason. A revision that carries HISTORICAL values legitimately
+    cites the provisions that governed those periods: modelo 303's 2022 revision
+    can hold the pre-2015 prorrata especial margin, whose wording was repealed in
+    2014. Intersecting that citation with the revision's own devengo window
+    rejects a correct grounding, and the cheapest way to silence the refusal is
+    to backdate the provision or to declare a forward reach it cannot state in
+    its own text -- fabricated grounding in the name of a window check.
+
+    A dated value's own ``valid_from``/``valid_to`` is the span that citation has
+    to defend, because the resolver is fail-closed and exactly-one-match, so that
+    window is precisely the set of axis dates on which the value can ever apply.
+
+    ``DatedValue`` carries no ``legal_refs`` of its own; grounding is declared at
+    parameter level, so every value of a parameter earns the parameter's refs.
+    The axis travels with the window because not every axis fixes applicable law.
+
+    Returns:
+        Legal ref id mapped to its carried ``(valid_from, valid_to, date_axis)``
+        triples.
+    """
+    spans: dict[str, list[tuple[date, date | None, str]]] = {}
+    for parameter in revision.parameters:
+        carried = tuple((value.valid_from, value.valid_to, str(value.date_axis)) for value in parameter.values)
+        if not carried:
+            continue
+        for legal_id in parameter.legal_refs:
+            spans.setdefault(legal_id, []).extend(carried)
+    return {legal_id: tuple(windows) for legal_id, windows in spans.items()}
+
+
 def _deadline_window_source_spans(
     revision: ModeloRevision,
 ) -> dict[str, tuple[tuple[date, date], ...]]:
@@ -686,6 +722,7 @@ def collect_snapshot_ref_ids(
     *,
     include_deadline_windows: bool = True,
     include_constructs: bool = True,
+    include_parameters: bool = True,
 ) -> tuple[set[str], set[str]]:
     """Walk every record kind and return its (legal_ids, source_ids) pair.
 
@@ -724,7 +761,7 @@ def collect_snapshot_ref_ids(
     flat_records = (
         revision.casillas,
         revision.formulas,
-        revision.parameters,
+        *((revision.parameters,) if include_parameters else ()),
         revision.bindings,
         revision.relations,
         revision.projection_endpoints,
