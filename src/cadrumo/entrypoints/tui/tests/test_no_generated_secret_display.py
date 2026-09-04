@@ -40,11 +40,17 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _MINTING_CALLABLES: tuple[tuple[str, str], ...] = (
     ("cadrumo.application.user_profile.custody_ports", "create_profile_recovery_enrollment_material"),
     ("cadrumo.application.user_profile.recovery_custody", "mint_profile_creation_recovery"),
-    # The primitive beneath both, and a SECOND reachable path: it is exported from
-    # the storage facade in its own right, so a prohibition naming only
-    # application-layer callables could be walked around by importing this
-    # directly. The list this replaces did exactly that.
-    ("cadrumo.adapters.persistence.storage", "generate_recovery_key"),
+    # The primitive beneath both, and a SECOND reachable path: a prohibition
+    # naming only application-layer callables could be walked around by
+    # importing this directly. The list this replaces did exactly that.
+    #
+    # Named at its CANONICAL defining module. It was reachable through the
+    # storage package until the import-centralisation work removed that
+    # re-export, which reds this anchor rather than silently emptying the
+    # prohibition below -- the anchor doing precisely the job it was written
+    # for. The prohibition itself scans for the symbol NAME, so it is
+    # unaffected by where the definition lives.
+    ("cadrumo.adapters.persistence.storage.recovery_key", "generate_recovery_key"),
 )
 
 #: The collecting counterparts. They are NOT prohibited — they take a mnemonic
