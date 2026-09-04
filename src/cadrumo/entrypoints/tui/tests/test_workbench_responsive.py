@@ -246,7 +246,7 @@ async def test_every_section_heading_is_separated_from_the_content_it_owns(surfa
     async with app.run_test(size=(width, height)) as pilot:
         await pilot.pause()
         headings = [
-            (str(node.render()).strip(), node.region)
+            (str(node.render()).strip(), node.region, node.has_class("cadrumo-heading-lead"))
             for node in app.screen.query(".cadrumo-heading")
             if str(node.render()).strip()
         ]
@@ -255,7 +255,7 @@ async def test_every_section_heading_is_separated_from_the_content_it_owns(surfa
 
     assert headings, f"{surface} declares no .cadrumo-heading to check"
 
-    for heading, region in headings:
+    for heading, region, leads in headings:
         left, right = region.x, region.x + region.width
         column = [line[left:right] for line in painted]
 
@@ -279,12 +279,17 @@ async def test_every_section_heading_is_separated_from_the_content_it_owns(surfa
         assert rows, f"{surface}: heading {heading!r} never reached the painted frame"
         row = rows[0]
         below, above = blanks_after(row), blanks_before(row)
-        # The topmost heading has the banner above it and no group to separate from.
-        if above == 0 and row <= 2:
-            continue
         assert below >= 1, (
             f"{surface}: {heading!r} is fused to its content (0 blank rows below)"
         )
+        # A heading that OPENS its region has no previous group to be separated
+        # from, so the asymmetry has nothing to express there and equal gaps are
+        # correct. The gap BELOW is still required of it: that one binds the
+        # heading to its own rows and is the half the operator actually reported
+        # missing. Keyed on the declared class, not on position, so a heading
+        # that merely happens to sort first cannot claim the exemption.
+        if leads:
+            continue
         assert above > below, (
             f"{surface}: {heading!r} floats between groups "
             f"({above} blank rows above, {below} below); the gap above must be larger"

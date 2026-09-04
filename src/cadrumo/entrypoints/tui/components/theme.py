@@ -281,6 +281,21 @@ BASE_CSS: Final[str] = tokenised("""
         margin-top: $cadrumo-section;
         margin-bottom: $cadrumo-stack;
     }
+    /* The heading that OPENS a scroll region takes the SMALLER gap. It has no
+       previous group to separate from, so the section gap buys nothing there
+       -- and on Home it actively costs: the leading heading is only painted
+       at this value. At `0` it lands on the row the session line occupies and
+       is overdrawn; at the section gap it disappears from the frame entirely.
+       Both are measurable at 100x40 and neither is a rhythm problem: the
+       enclosing `height: auto` container mis-places its first child. Until
+       that is fixed, this value is a workaround, not a design choice. */
+    .cadrumo-heading.cadrumo-heading-lead {
+        margin-top: $cadrumo-stack;
+        /* Restated, not inherited: a rule that sets one margin edge here
+           replaces the whole box, so omitting this silently zeroes the gap
+           the heading needs BELOW it and refuses the rhythm entirely. */
+        margin-bottom: $cadrumo-stack;
+    }
 
     .cadrumo-banner {
         dock: top;
