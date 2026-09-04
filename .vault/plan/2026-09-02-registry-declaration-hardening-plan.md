@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:b95da5cfe49b36416b22d8827f3bef6bd0bc0b012d6f6dcdc3d861a6a333fd3f'
+body_hash: 'sha256:747c9577e38f56e3c7823faed9ed17d2536b467b0327ce0d173e9defcb6a7dfb'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -457,6 +457,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S575` - Stop the developer smoke lane recording its command-surface proof after a loop that may not have run, and give the wheel data expectation the emptiness refusal its sealed-source sibling already had, so neither can satisfy the manifest proof contract having asserted nothing; `dev/packaging/smoke_dev.py,dev/packaging/_smoke_common.py,dev/packaging/tests/test_smoke_dev.py`.
 - [x] `W02.P02.S576` - Name the M130 budget statistic for what it measures: the loop takes four samples, one year over four quarters, and at that count the nearest-rank P95 is the maximum, so a single contended run was being reported as a tail statistic; gate on the worst sample with a guard that fires if the sample count ever grows past that point; `dev/ci/tests/test_ledger_scale_benchmark.py`.
 - [x] `W02.P02.S577` - Gate each M130 quarter on its own budget instead of taking a percentile across them, since the previous_filing bindings make Q4 carry three prior filings where Q1 carries none, so the four measurements are four workloads of increasing dependency depth and the deepest was being reported as a distribution tail; `dev/ci/tests/test_ledger_scale_benchmark.py`.
+- [x] `W02.P02.S578` - Require the completion marker every packaging-smoke child prints, since five lanes ended their child programs with a print naming what they proved and nothing asserted any of them, so a child exiting zero having skipped its tail was indistinguishable from one that ran every assertion in it; `dev/packaging/_smoke_common.py,dev/packaging/all_extra_smoke.py,dev/packaging/smoke_absent_llm.py,dev/packaging/smoke_browser.py,dev/packaging/smoke_dev.py,dev/packaging/tests/test_smoke_dev.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
