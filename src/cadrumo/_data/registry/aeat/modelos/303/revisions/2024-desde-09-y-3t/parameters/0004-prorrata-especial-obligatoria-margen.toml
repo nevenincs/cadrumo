@@ -1,0 +1,34 @@
+# LIVA art. 103.Dos.2 mandatory prorrata especial margin, declared as registry
+# data so neither the figure nor the COMPARISON DIRECTION lives in Python.
+#
+# The provision has had exactly two redactions and they differ on both axes:
+# the original (in force to 31-12-2014) required the general-regime deduction
+# to exceed the especial-regime one "en un 20 por 100", with no "o mas" and so
+# EXCLUSIVE; Ley 28/2014 art. 1.26 (in force from 01-01-2015) replaced it with
+# "en un 10 por ciento o mas", lowering the margin AND making it inclusive.
+#
+# Only the CURRENT redaction is declared. No revision of this modelo covers a
+# pre-2015 filing year, and the bundled consolidated corpus carries only the
+# text in force, so the repealed redaction has no citable authority here. The
+# calculation refuses a pre-2015 ejercicio by name rather than resolving it
+# from a figure nothing in this tree can ground.
+#
+# Corpus wording: exceda en un 10 por ciento o más del que resultaría por aplicación de la regla de prorrata especial
+
+[[revisions.2024-desde-09-y-3t.parameters]]
+id = "m303-prorrata-especial-obligatoria-margen-porcentaje"
+data_type = "integer"
+unit = "percentage_points"
+legal_refs = ["ley-37-1992:art-103", "ley-37-1992:art-104", "ley-37-1992:art-105", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "orden-eha-3786-2008:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2024-desde-09-y-3t.parameters.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2024-desde-09-y-3t.parameters.values]]
+value = "10"
+date_axis = "filing_period"
+valid_from = 2024-09-01
+valid_to = 2024-12-31
+comparison = "inclusive"  # art. 103.Dos.2 "o mas" reaches the margin

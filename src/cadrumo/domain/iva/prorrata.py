@@ -92,15 +92,13 @@ from pydantic import (
 )
 
 from ...core.external_constants import (
-    PRORRATA_ESPECIAL_MANDATORY_LEY_28_2014_FIRST_YEAR,
-    PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_FROM_2015,
-    PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_UNTIL_2014,
     PRORRATA_SECTORAL_SEPARATION_SPREAD_PP,
 )
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents as _round_to_cents
 from ...core.percentage import Percentage
 from .errors import ProrrataInputError, ProrrataSectorError
+from .prorrata_especial_parameters import ProrrataEspecialMandatoryParameters
 
 
 class _ProrrataStrictFrozen(BaseModel):
@@ -506,39 +504,39 @@ def classify_input_deduction(
     )
 
 
-def especial_mandatory_rule(year: int) -> EspecialMandatoryRule:
-    """Return the LIVA art. 103.Dos.2.º rule in force for filing ``year``.
+def especial_mandatory_rule(
+    year: int,
+    *,
+    parameters: ProrrataEspecialMandatoryParameters,
+) -> EspecialMandatoryRule:
+    """Return the LIVA art. 103.Dos.2 rule in force for filing ``year``.
 
-    Art. 103.Dos.2.º has had exactly two redactions, and they differ on
-    both axes the predicate reads:
+    Both halves of the rule are registry data and neither is decided here. The
+    margin and its comparison direction arrive already resolved from the
+    revision the application boundary selected, because art. 103.Dos.2 has had
+    two redactions differing on BOTH -- the original required an excess "en un
+    20 por 100" with no "o más" and so exclusive, and Ley 28/2014 art. 1.26
+    replaced it from 01-01-2015 with "en un 10 por ciento o más", lowering the
+    margin and making it inclusive.
 
-    * Original (Ley 37/1992, BOE-A-1992-28740, in force 01-01-1993 to
-      31-12-2014): "exceda en un 20 por 100 del que resultaría por
-      aplicación de la regla de prorrata especial" — a twenty-percent
-      margin with no "o más", hence EXCLUSIVE.
-    * Current (Ley 28/2014 art. 1.26, BOE-A-2014-12329, in force from
-      01-01-2015): "exceda en un 10 por ciento o más del que resultaría
-      por aplicación de la regla de prorrata especial" — ten percent, and
-      "o más" reaches the margin, hence INCLUSIVE.
+    A pre-2015 ejercicio never reaches this function: the resolver refuses it by
+    name, because the repealed redaction has no citable authority in this tree
+    and no revision covers such a filing year.
 
-    This is the single place the year split is decided, so
-    :func:`is_especial_mandatory` and any operator-facing message quoting
-    the margin cannot drift apart.
+    Args:
+        year: The filing year the deductions belong to.
+        parameters: The registry-resolved margin and comparison direction.
 
     Raises:
         ProrrataInputError: when the year is outside the supported range.
     """
     _validate_year(year)
-    if year >= PRORRATA_ESPECIAL_MANDATORY_LEY_28_2014_FIRST_YEAR:
-        multiple, inclusive = PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_FROM_2015, True
-    else:
-        multiple, inclusive = PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_UNTIL_2014, False
-    margin = (multiple - Decimal("1")) * Decimal("100")
+    margin = parameters.margin_percentage
     return EspecialMandatoryRule(
         year=year,
-        multiple=multiple,
+        multiple=parameters.multiple,
         margin_percentage=margin.quantize(Decimal("1")) if margin == margin.to_integral_value() else margin,
-        inclusive=inclusive,
+        inclusive=parameters.inclusive,
     )
 
 
@@ -547,6 +545,7 @@ def is_especial_mandatory(
     deduction_under_especial: Decimal,
     *,
     year: int,
+    parameters: ProrrataEspecialMandatoryParameters,
 ) -> bool:
     """Return True when LIVA art. 103.Dos.2.º forces the prorrata especial regime.
 
@@ -574,7 +573,7 @@ def is_especial_mandatory(
     """
     if deduction_under_general < 0 or deduction_under_especial < 0:
         raise ProrrataInputError("deduction amounts must be non-negative")
-    rule = especial_mandatory_rule(year)
+    rule = especial_mandatory_rule(year, parameters=parameters)
     if deduction_under_especial == 0:
         return deduction_under_general > 0
     threshold = deduction_under_especial * rule.multiple
