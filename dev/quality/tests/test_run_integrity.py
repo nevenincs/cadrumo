@@ -123,3 +123,55 @@ def test_error_and_warning_plurals_are_counted_under_one_name() -> None:
     plural = classify_run("==== 1 failed, 2 errors in 0.1s ====\n")
     assert singular.counts["errors"] == 1
     assert plural.counts["errors"] == 2
+
+
+_XDIST = """
+created: 6/6 workers
+6 workers [356 items]
+================= 356 passed in 155.70s (0:02:35) =========================
+"""
+
+_SERIAL = """
+collected 24 items / 21 deselected / 3 selected
+================= 3 passed, 21 deselected in 1.20s ========================
+"""
+
+
+def test_the_collected_population_is_read_from_the_xdist_worker_line() -> None:
+    """Under xdist a marker-filtered run prints no deselection count at all.
+
+    Its only trace is the population: ``6 workers [356 items]`` against
+    ``[371 items]`` for the same directory unfiltered. The verdict cannot see
+    the difference, so the number is reported and the caller supplies the
+    expectation.
+    """
+    result = classify_run(_XDIST)
+    assert result.collected == 356
+    assert result.verdict == "usable"
+    assert "collected=356" in result.headline()
+
+
+def test_the_collected_population_is_read_from_a_serial_collection_line() -> None:
+    """Without workers pytest writes the count differently, and says deselected."""
+    result = classify_run(_SERIAL)
+    assert result.collected == 24
+    assert result.counts["deselected"] == 21
+    assert result.counts["passed"] == 3
+
+
+def test_a_lost_worker_run_keeps_the_population_from_its_own_banner() -> None:
+    """The banner's figure is authoritative there and must not be overwritten.
+
+    It states how many were collected against how many never reported, which is
+    a stronger statement than the worker line and belongs to the same event.
+    """
+    result = classify_run(_CRASHED)
+    assert (result.collected, result.unreported) == (317, 2)
+    assert "unreported=2/317" in result.headline()
+
+
+def test_a_run_with_no_collection_line_reports_no_population() -> None:
+    """Absent is not zero, and a headline must not invent a number it lacks."""
+    result = classify_run(_CLEAN)
+    assert result.collected == 0
+    assert "collected=" not in result.headline()

@@ -9,7 +9,13 @@ and each looked like a result:
   ``INCOMPLETE RUN`` banner, and the banner is easy not to read when the summary
   line beneath it reports a plausible tally.
 - A marker deselected most of a file, so three passing tests stood for
-  twenty-four.
+  twenty-four. This one cannot be given a verdict from a saved run, and the
+  reason is worth stating: under xdist a marker-filtered run prints NO
+  deselection count anywhere. Its only trace is the collected population -
+  ``6 workers [356 items]`` against ``[371 items]`` - which means nothing
+  without the number it should have been. The population is therefore reported
+  on every row so two runs can be compared for it, and the caller supplies the
+  expectation this module cannot.
 - A run reported nothing at all, which a comparison reads as "no failures".
 - A run was piped through a filter, so the exit status belonged to the filter
   and a red lane read as zero.
@@ -54,6 +60,9 @@ _INCOMPLETE = "INCOMPLETE RUN"
 _NOTHING_RAN = "NOTHING RAN"
 _CRASHED = re.compile(r"worker '(\w+)' crashed while running '([^']+)'")
 _UNREPORTED = re.compile(r"(\d+) of (\d+) collected test\(s\) never reported an outcome")
+#: The collected population, in either shape pytest writes it: the xdist worker
+#: line, and the plain collection line when no workers are used.
+_COLLECTED = re.compile(r"(?:workers? \[(\d+) items?\]|collected (\d+) items?)")
 _SUMMARY = re.compile(r"^=+ (.*?) in \d+\.\d+s.*?=+$", re.MULTILINE)
 _COUNT = re.compile(r"(\d+) (passed|failed|error|errors|skipped|xfailed|xpassed|deselected|warning|warnings)")
 
@@ -78,7 +87,11 @@ class RunIntegrity:
     def headline(self) -> str:
         """One line naming the verdict and what supports it."""
         tally = " ".join(f"{name}={value}" for name, value in sorted(self.counts.items()))
-        detail = f" unreported={self.unreported}/{self.collected}" if self.unreported else ""
+        detail = (
+            f" unreported={self.unreported}/{self.collected}"
+            if self.unreported
+            else (f" collected={self.collected}" if self.collected else "")
+        )
         crashed = f" crashed={len(self.crashed)}" if self.crashed else ""
         return f"run_integrity verdict={self.verdict} {tally}{detail}{crashed}"
 
@@ -100,6 +113,12 @@ def classify_run(text: str) -> RunIntegrity:
     unreported_match = _UNREPORTED.search(text)
     unreported = int(unreported_match.group(1)) if unreported_match else 0
     collected = int(unreported_match.group(2)) if unreported_match else 0
+    if not collected:
+        # The banner reports a population only when a worker was lost, so the
+        # ordinary case reads it from the collection line instead.
+        collected_match = _COLLECTED.search(text)
+        if collected_match:
+            collected = int(collected_match.group(1) or collected_match.group(2))
 
     summary = _SUMMARY.findall(text)
     counts: dict[str, int] = {}
