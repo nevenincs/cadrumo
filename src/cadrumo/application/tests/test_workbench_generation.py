@@ -752,3 +752,78 @@ def test_a_declaration_needing_review_is_offered_with_its_own_address() -> None:
     assert only.action.action.action_id == "operator.modelo.work.revisions"
 
     assert _home_declaration_actions(None) == ()
+
+def test_only_a_blocking_dependency_finding_reads_as_a_blocked_declaration() -> None:
+    """`blocked_dependency` is produced from the domain's own word, or not at all.
+
+    `CROSS_PERIOD_DEPENDENCY_UNCLEAN` names the condition Home's
+    `blocked_dependency` describes, so that one code is grounded. The other two
+    Home declares are deliberately unproduced: nothing in
+    `ModeloVerificationFindingKind` names evidence, and routing
+    `blocked_review` to BLOCKING_RULE or MISSING_REQUIRED_CASILLA would be a
+    guess wearing a finding's clothes.
+
+    Severity and completeness both gate it. An ADVISORY finding of the same
+    kind is information rather than a blocker, and a report that is not BLOCKED
+    has nothing outstanding -- offering either as blocked work would send the
+    operator at something nothing is waiting on.
+    """
+    from ...domain.modelos.verification_report import (
+        ModeloVerificationFinding,
+        ModeloVerificationFindingKind,
+        ModeloVerificationFindingSeverity,
+        VerificationCompletenessStatus,
+        VerificationReport,
+        VerificationReportCatalogue,
+    )
+    from ..workbench_generation import _dependency_blocked_revisions
+
+    def _catalogue(
+        kind: ModeloVerificationFindingKind,
+        severity: ModeloVerificationFindingSeverity,
+        status: VerificationCompletenessStatus,
+    ) -> VerificationReportCatalogue:
+        report = VerificationReport(
+            verification_report_id="v" * 64,
+            calculation_revision_id="c" * 64,
+            completeness_status=status,
+            findings=(
+                ModeloVerificationFinding(
+                    kind=kind,
+                    severity=severity,
+                    message_locale_key="application.modelo.findings.cross_period_dependency",
+                ),
+            ),
+            run_at=datetime(2026, 9, 4, tzinfo=UTC),
+            verified_by="operator",
+            granted_verificado_completo=False,
+        )
+        return VerificationReportCatalogue(reports={report.verification_report_id: report})
+
+    blocked = _catalogue(
+        ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN,
+        ModeloVerificationFindingSeverity.BLOCKING,
+        VerificationCompletenessStatus.BLOCKED,
+    )
+    assert _dependency_blocked_revisions(blocked) == frozenset({"c" * 64})
+
+    advisory = _catalogue(
+        ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN,
+        ModeloVerificationFindingSeverity.ADVISORY,
+        VerificationCompletenessStatus.BLOCKED,
+    )
+    assert _dependency_blocked_revisions(advisory) == frozenset(), (
+        "an advisory dependency finding is information, not a blocker"
+    )
+
+    other_kind = _catalogue(
+        ModeloVerificationFindingKind.BLOCKING_RULE,
+        ModeloVerificationFindingSeverity.BLOCKING,
+        VerificationCompletenessStatus.BLOCKED,
+    )
+    assert _dependency_blocked_revisions(other_kind) == frozenset(), (
+        "only the dependency finding kind may read as blocked_dependency; another kind "
+        "reaching it would be a guess about what the operator is blocked on"
+    )
+
+    assert _dependency_blocked_revisions(None) == frozenset()

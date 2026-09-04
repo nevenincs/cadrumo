@@ -34,6 +34,13 @@ from ..domain.modelos.filing_record import ModeloRecord
 from ..domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
+    VerificationReportCatalogueRepositoryProtocol,
+)
+from ..domain.modelos.verification_report import (
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+    VerificationCompletenessStatus,
+    VerificationReportCatalogue,
 )
 from ..domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState
 from ..domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
@@ -316,6 +323,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None
+    verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None
     operation_contracts: OperationPublicContractSetV1 | None = None
     modelo_projection_reader: Callable[[WorkUnit], ModeloWorkspaceProjectionV1] | None = None
     """An absent reader below is a composition fact, not a data fact.
@@ -399,6 +407,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         )
         agenda = build_overview_agenda(taxpayer, as_of=as_of, raw_values=raw_values)
         ledger_sources = self._load_ledger_sources()
+        verification = self._load_verification_reports()
         ledger = self._read_ledger(revisions.revisions, work_units, sources=ledger_sources)
         modelo = self._read_modelo(work_units)
         aeat_sync = self._read_aeat_sync(
@@ -417,6 +426,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             or final_calculations_revision != calculations_revision
             or final_filings_revision != filings_revision
             or self._load_ledger_sources() != ledger_sources
+            or self._load_verification_reports() != verification
         ):
             raise RuntimeError("secure workbench generation changed during capture")
         return WorkbenchGenerationInputsV1(
@@ -429,6 +439,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                     agenda_evidence_state=evidence.aeat_state,
                     ledger=ledger,
                     declarations=_home_declarations(declarations, work_units),
+                    blocked_revision_ids=_dependency_blocked_revisions(verification),
                 ),
                 observed_at=observed_at,
             ),
@@ -488,6 +499,17 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                 )
             ),
         )
+
+    def _load_verification_reports(self) -> VerificationReportCatalogue | None:
+        """Read the verification catalogue, or nothing when no host bound one.
+
+        Loaded inside the capture window and re-read at its close like every
+        other source, because a report that lands mid-capture would let Home
+        offer work against a blocker that no longer exists.
+        """
+        if self.verification_repository is None:
+            return None
+        return self.verification_repository.load()
 
     def _load_ledger_sources(self) -> tuple[TransactionCatalogue, InvoiceCatalogue] | None:
         """Read the ledger stores once, as the value the guard compares.
@@ -635,6 +657,7 @@ def _secure_profile_home_input(
     agenda_evidence_state: HomeZoneState,
     ledger: LedgerWorkspaceProjectionV1 | None,
     declarations: tuple[HomeDeclarationResume, ...] | None,
+    blocked_revision_ids: frozenset[str] = frozenset(),
 ) -> HomeProjectionInput:
     """Assemble Home from the authorities this session actually read.
 
@@ -663,7 +686,7 @@ def _secure_profile_home_input(
         if declarations is not None
         else unavailable("workbench.home.declarations_resume_projector_unavailable")
     )
-    addressed = _home_declaration_actions(declarations)
+    addressed = _home_declaration_actions(declarations, blocked_revision_ids)
     cross_cutting = _home_ledger_actions(ledger)
     actions = (
         None
@@ -823,8 +846,41 @@ treatment already chosen.
 """
 
 
+def _dependency_blocked_revisions(
+    verification: VerificationReportCatalogue | None,
+) -> frozenset[str]:
+    """Calculation revisions blocked by an unclean cross-period dependency.
+
+    ONE finding kind is read, deliberately. `CROSS_PERIOD_DEPENDENCY_UNCLEAN`
+    is `blocked_dependency` by its own name, so the reason Home renders is the
+    domain's own word for the condition. The other two blocked reason codes
+    Home declares are left unproduced: nothing in
+    `ModeloVerificationFindingKind` names evidence, and routing
+    `blocked_review` to BLOCKING_RULE or MISSING_REQUIRED_CASILLA would be a
+    guess dressed as a finding.
+
+    Only BLOCKING severity counts, and only on a report whose completeness is
+    BLOCKED. An advisory finding of the same kind is information, not a
+    blocker, and offering it as one would put work in front of an operator that
+    nothing is actually waiting on.
+    """
+    if verification is None:
+        return frozenset()
+    return frozenset(
+        report.calculation_revision_id
+        for report in verification.reports.values()
+        if report.completeness_status is VerificationCompletenessStatus.BLOCKED
+        and any(
+            finding.kind is ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN
+            and finding.severity is ModeloVerificationFindingSeverity.BLOCKING
+            for finding in report.findings
+        )
+    )
+
+
 def _home_declaration_actions(
     resumes: tuple[HomeDeclarationResume, ...] | None,
+    blocked_revision_ids: frozenset[str] = frozenset(),
 ) -> tuple[HomeNextAction, ...]:
     """One action per declaration whose calculation is not yet verified.
 
@@ -840,19 +896,28 @@ def _home_declaration_actions(
     """
     if resumes is None:
         return ()
-    return tuple(
-        HomeNextAction(
-            rank=index,
-            action=declare_next_action("operator.modelo.work.revisions", work_unit_id=resume.work_unit_id),
-            reason_code="declaration_needs_review",
-            modelo=resume.modelo,
-            filing_year=resume.filing_year,
-            period=resume.period,
+    offered: list[HomeNextAction] = []
+    for resume in resumes:
+        blocked = resume.revision_id is not None and resume.revision_id in blocked_revision_ids
+        if not blocked and resume.state is not HomeDeclarationState.NEEDS_REVIEW:
+            continue
+        offered.append(
+            HomeNextAction(
+                rank=len(offered),
+                # A blocked declaration is named by its blocker rather than by
+                # the generic review prompt: "a dependency is blocked" tells
+                # the operator why the work will not close, where "needs
+                # review" invites them to try and find out.
+                reason_code="blocked_dependency" if blocked else "declaration_needs_review",
+                action=declare_next_action(
+                    "operator.modelo.work.revisions", work_unit_id=resume.work_unit_id
+                ),
+                modelo=resume.modelo,
+                filing_year=resume.filing_year,
+                period=resume.period,
+            )
         )
-        for index, resume in enumerate(
-            item for item in resumes if item.state is HomeDeclarationState.NEEDS_REVIEW
-        )
-    )
+    return tuple(offered)
 
 
 def _home_ledger_actions(ledger: LedgerWorkspaceProjectionV1 | None) -> tuple[HomeNextAction, ...] | None:

@@ -92,6 +92,9 @@ def compose_secure_profile_workbench_generation_provider(
     from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+    from ...adapters.persistence.profile.modelos_verification_reports import (
+        VerificationReportCatalogueRepository,
+    )
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...application.overview.home import HomeAccountSession, HomeSessionPosture
@@ -137,6 +140,7 @@ def compose_secure_profile_workbench_generation_provider(
         transaction_repository=TransactionCatalogueRepository(bucket_id=profile_id),
         invoice_repository=InvoiceCatalogueRepository(bucket_id=profile_id),
         bucket_event_repository=build_bucket_event_history_repository(bucket_id=profile_id),
+        verification_repository=VerificationReportCatalogueRepository(bucket_id=profile_id),
         operation_contracts=operation_contracts,
         modelo_projection_reader=_modelo_projection_reader(),
     )

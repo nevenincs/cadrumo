@@ -164,11 +164,9 @@ def test_the_live_tree_declares_no_non_filing_axis_parameter(
     gate above is not silently excusing something already shipped.
     """
     admitted: list[str] = []
-    for modelo_id in ("100", "111", "130", "200", "303", "347", "390", "721", "840"):
-        try:
-            modelo = registry_authority.modelo(modelo_id)
-        except Exception:
-            continue
+    # Every modelo the authority actually holds, so the sweep cannot silently
+    # miss one and report a false "none" -- and so no exception needs swallowing.
+    for modelo in registry_authority.modelos:
         for revision in modelo.revisions.values():
             admitted.extend(parameter.id for parameter, _ in non_filing_axis_parameters(revision))
     assert admitted == [], (
