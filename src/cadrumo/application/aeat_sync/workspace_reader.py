@@ -26,11 +26,15 @@ from ..operations.registry import OperationFrontendProjection
 from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
 from ..operator_actions.models import ActionReference
 from .workspace import (
+    AeatSyncAeatObservationState,
     AeatSyncDiscrepancyKind,
+    AeatSyncJustificanteState,
+    AeatSyncLocalFilingState,
     AeatSyncOverviewArea,
     AeatSyncSourceState,
     AeatSyncWorkspaceAvailability,
     AeatSyncWorkspaceFactV1,
+    AeatSyncWorkspaceFiledDeclarationRowV1,
     AeatSyncWorkspaceOverviewRowV1,
     AeatSyncWorkspaceProjectionV1,
     AeatSyncWorkspaceSource,
@@ -43,6 +47,7 @@ from .workspace import (
 
 if TYPE_CHECKING:
     from ...core.time.utc import UtcInstant
+    from ...domain.modelos.filing_record import ModeloRecord
     from ..operations.registry import OperationPublicContractSetV1
 
 _AEAT_SOURCES: Final[frozenset[AeatSyncWorkspaceSource]] = frozenset(
@@ -171,12 +176,59 @@ def _overview_row(
     )
 
 
+
+def _filed_declaration_rows(
+    *,
+    bucket_id: str,
+    subject_key: str,
+    filings: tuple[ModeloRecord, ...],
+    contracts: OperationPublicContractSetV1,
+) -> tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceFiledDeclarationRowV1], ...]:
+    """Show what this profile filed locally, with the AEAT side unobserved.
+
+    The local half of this comparison is a fact the session already holds, and
+    withholding it until a pull happens would understate what the operator has
+    done. The AEAT half is NOT OBSERVED until they pull, and the justificante
+    with it -- a receipt cannot be confident about a submission nobody has
+    looked for.
+
+    One row per address. A superseded record and its replacement describe the
+    same declaration, so the row carries the LATEST filing for each address
+    rather than one row per revision.
+    """
+    actions, operations = _admitted_capabilities(AeatSyncOverviewArea.FILED_DECLARATIONS, contracts)
+    latest: dict[tuple[str, int, str], ModeloRecord] = {}
+    for record in filings:
+        key = (str(record.modelo), int(record.filing_year), record.period.registry_token)
+        current = latest.get(key)
+        if current is None or record.filed_at > current.filed_at:
+            latest[key] = record
+    return tuple(
+        AeatSyncWorkspaceFactV1(
+            bucket_id=bucket_id,
+            subject_key=subject_key,
+            row=AeatSyncWorkspaceFiledDeclarationRowV1(
+                modelo=record.modelo,
+                filing_year=record.filing_year,
+                period=record.period,
+                local_filing_state=AeatSyncLocalFilingState.FILED,
+                local_filed_at=record.filed_at,
+                aeat_observation_state=AeatSyncAeatObservationState.NOT_OBSERVED,
+                justificante_state=AeatSyncJustificanteState.NOT_OBSERVED,
+                supported_actions=actions,
+                supported_operations=operations,
+            ),
+        )
+        for record in sorted(latest.values(), key=lambda item: (str(item.modelo), item.filing_year))
+    )
+
+
 def read_local_aeat_sync_workspace_projection(
     *,
     bucket_id: str,
     subject_key: str,
     observed_at: UtcInstant,
-    filing_count: int,
+    filings: tuple[ModeloRecord, ...],
     operation_contracts: OperationPublicContractSetV1,
 ) -> AeatSyncWorkspaceProjectionV1:
     """Project the pre-pull AEAT Sync workspace for one authenticated profile."""
@@ -191,7 +243,7 @@ def read_local_aeat_sync_workspace_projection(
                         source,
                         observed_at=observed_at,
                         profile_count=1,
-                        filing_count=filing_count,
+                        filing_count=len(filings),
                     )
                     for source in aeat_sync_workspace_sources(zone)
                 ),
@@ -207,11 +259,17 @@ def read_local_aeat_sync_workspace_projection(
                 row=_overview_row(
                     area,
                     observed_at=observed_at,
-                    filing_count=filing_count,
+                    filing_count=len(filings),
                     contracts=operation_contracts,
                 ),
             )
             for area in AeatSyncOverviewArea
+        ),
+        filed_declarations=_filed_declaration_rows(
+            bucket_id=bucket_id,
+            subject_key=subject_key,
+            filings=filings,
+            contracts=operation_contracts,
         ),
     )
 

@@ -395,7 +395,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         aeat_sync = self._read_aeat_sync(
             _declared_tax_id(raw_values),
             observed_at=observed_at,
-            filing_count=len(filings.records),
+            filings=tuple(filings.records.values()),
         )
         account_session = self.account_session_reader()
         final_record = self.profile_repository.load(self.profile_id)
@@ -538,7 +538,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         subject_key: str | None,
         *,
         observed_at: UtcInstant,
-        filing_count: int,
+        filings: tuple[ModeloRecord, ...],
     ) -> AeatSyncWorkspaceProjectionV1 | None:
         """Project the pre-pull AEAT Sync workspace against composed contracts.
 
@@ -555,7 +555,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             bucket_id=self.profile_id,
             subject_key=subject_key,
             observed_at=observed_at,
-            filing_count=filing_count,
+            filings=filings,
             operation_contracts=self.operation_contracts,
         )
 
