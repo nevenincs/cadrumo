@@ -13523,3 +13523,38 @@ Worth separating from the instance: the backgrounding mistake was mine and the
 tool did not prevent it. What it prevented was the mistake AFTER it - reading a
 truncated artefact as a result. An instrument that cannot stop a bad run can
 still stop a bad conclusion, and those are different jobs.
+
+
+## The registry suite re-measured, and the shape of it has not moved
+
+Re-measured on 2026-09-04 by
+`uv run --no-sync pytest dev/registry/tests dev/registry/newmodelo/tests dev/registry/aeip/tests -p no:randomly -m ""`,
+with the run judged `usable` by `dev.quality.run_integrity` before any figure was
+taken from it: **1,264 tests, 1,227 passing, 37 failing**.
+
+The plan quotes 1,152 passing and 36 failing from 2026-09-03. The suite has grown
+by 76 tests and gained one failure, so what looks like drift is almost entirely
+growth.
+
+The distribution is the part that matters and it is unchanged in shape.
+**Thirty-two of the 37 failures sit in four generated-tree modules** - 28 in the
+tree comparison itself, two in publication, one in the modelo 303 envelope proof
+and one in the CLI. The plan recorded 30 in four modules; the two added are the
+trees enrolled earlier in this campaign, which were rendering and untested and
+whose failures were made deliberately visible rather than discovered.
+
+So five failures across the whole directory are not the republication repair:
+two in the modelo 200 semantic casilla candidates, and one each in static
+inspection, the regulatory prose parser channel and the modelo-specific embed
+classification.
+
+That ratio is the useful statement. Thirty-two of thirty-seven are one repair
+somebody with the scope to run the publish verb can clear in a single operation,
+and the plan's parallelization section already records that the verb exists and
+the constraint blocking it was lifted. The remaining five are five separate
+questions.
+
+The figure is stated with its date, its command and its verdict because the last
+three attempts to quote a suite total in this campaign were each wrong in a
+different way - a marker deselecting most of a file, a lost worker, and a
+truncated artefact - and none of the three announced itself.

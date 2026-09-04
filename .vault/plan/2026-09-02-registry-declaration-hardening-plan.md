@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:0a8c5d3d1cd6aaaa5dbaff7bd5b98ec8dd6efd8ad962c1c9dd8089c59686718b'
+body_hash: 'sha256:4dc79e4e0f645340f432f5f3564e29b58399690ee653849998b81087e421fee2'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -375,6 +375,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S494` - Re-run and sweep this sessions two set comparisons for lost-worker markers, since both were taken in the combination that crashes a worker: preprocess identical at 23 failures and sequences identical, each with zero crash markers; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W02.P02.S495` - Turn the lost-worker sweep from a remembered grep into a command that judges a saved pytest run and exits non-zero when it is unusable, recognising a lost worker, a run that executed nothing, truncated output and a complete run; `dev/quality/run_integrity.py,dev/quality/tests/test_run_integrity.py`.
 - [x] `W02.P02.S501` - Record the run-integrity tools first live catch of a truncated artefact: a backgrounded suite killed at 22 per cent left 819 bytes of progress bar whose visible dots and two failure marks would have been read as a two-failure result over 1264 tests; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W02.P02.S502` - Re-measure the registry suite with the run judged usable before any figure is taken: 1264 tests, 1227 passing, 37 failing, of which 32 sit in the four generated-tree modules and five are separate questions; `dev/registry`.
 
 ### Phase `W02.P03` - release predicate relocation
 
