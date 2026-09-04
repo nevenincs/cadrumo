@@ -29,7 +29,7 @@ from cadrumo.core.external_constants import OutputLanguage
 
 from ..._paths import UTF_8
 from ..terminology_handbook import TerminologyHandbook, load_terminology_handbook
-from ..terminology_handbook._enums import TermStatus
+from ..terminology_handbook.enums import TermStatus
 from ..terminology_handbook.errors import TerminologyLoadError
 from ._sweep import enumerate_query_vocabulary
 

@@ -55,9 +55,9 @@ from ._locale_chrome import docs_chrome
 from .build import docs_build_language
 from .legal_reference import LEGAL_CATALOGUE_RELPATH, legal_citation
 from .terminology_handbook import load_terminology_handbook
-from .terminology_handbook._enums import TermStatus
-from .terminology_handbook._loader import TerminologyHandbook
-from .terminology_handbook._schema import ConceptRecord, LanguageSection
+from .terminology_handbook.enums import TermStatus
+from .terminology_handbook.loader import TerminologyHandbook
+from .terminology_handbook.schema import ConceptRecord, LanguageSection
 
 _UTF_8 = UTF_8
 

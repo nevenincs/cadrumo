@@ -118,7 +118,7 @@ def test_term_lines_are_declared_surfaces_and_aliases_share_one_entry() -> None:
     """
     from cadrumo.core.concept_lifecycle import ConceptLifecycle
 
-    from ..terminology_handbook._enums import TermStatus
+    from ..terminology_handbook.enums import TermStatus
 
     handbook = _load_handbook()
     rst, _ = render_glossary(_REPO_ROOT, handbook)
