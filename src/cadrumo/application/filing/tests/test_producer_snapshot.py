@@ -145,6 +145,18 @@ _PARAMS = BienesInversionRegularizacionParameters(
     ),
 )
 
+
+def _params_for(year: int) -> BienesInversionRegularizacionParameters:
+    """The bundle, resolved for ``year``.
+
+    The projection refuses a bundle resolved for a different filing year, so a
+    fixture cannot pin one year and be applied to another.
+    """
+    return _PARAMS.model_copy(
+        update={"provenance": _PARAMS.provenance.model_copy(update={"resolved_on": _prov_date(year, 12, 31)})}
+    )
+
+
 _TAXPAYER_TAX_ID = "12345678Z"
 _PRESENTER_TAX_ID = "00000000T"
 _CHARGE_IBAN = "ES9121000418450200051332"
@@ -246,7 +258,7 @@ def _empty_m303_export_arrivals(
         bienes_register,
         regularizacion_year=filing_year,
         prorrata_definitiva_by_identifier={},
-        parameters=_PARAMS,
+        parameters=_params_for(filing_year),
     )
     return register, bienes_register, regularisation
 
@@ -1179,7 +1191,7 @@ def test_m303_filing_facts_accept_the_canonical_bienes_regularisation_result() -
         register,
         regularizacion_year=2026,
         prorrata_definitiva_by_identifier={"canonical-bien": Decimal("80")},
-        parameters=_PARAMS,
+        parameters=_params_for(2026),
     )
 
     facts = M303FilingFacts.model_validate(
@@ -1221,7 +1233,7 @@ def test_m303_filing_facts_refuse_a_regularisation_from_another_bienes_register(
         foreign_register,
         regularizacion_year=2026,
         prorrata_definitiva_by_identifier={"foreign-bien": Decimal("80")},
-        parameters=_PARAMS,
+        parameters=_params_for(2026),
     )
 
     with pytest.raises(ValidationError, match="canonical projection of the supplied Bienes register"):
@@ -1239,7 +1251,7 @@ def test_m303_filing_facts_refuse_a_regularisation_that_omits_an_in_window_bien(
         register,
         regularizacion_year=2026,
         prorrata_definitiva_by_identifier={},
-        parameters=_PARAMS,
+        parameters=_params_for(2026),
     )
     omitted = RegistroRegularizacionResult(
         regularizacion_year=2026,

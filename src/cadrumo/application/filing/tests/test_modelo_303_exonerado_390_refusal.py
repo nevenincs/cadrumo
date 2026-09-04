@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date as _date
+from datetime import date as _prov_date
 from decimal import Decimal
 from pathlib import Path
 
@@ -80,6 +81,18 @@ _PARAMS = BienesInversionRegularizacionParameters(
         resolved_on=_date(2025, 6, 1),
     ),
 )
+
+
+def _params_for(year: int) -> BienesInversionRegularizacionParameters:
+    """The bundle, resolved for ``year``.
+
+    The projection refuses a bundle resolved for a different filing year, so a
+    fixture cannot pin one year and be applied to another.
+    """
+    return _PARAMS.model_copy(
+        update={"provenance": _PARAMS.provenance.model_copy(update={"resolved_on": _prov_date(year, 12, 31)})}
+    )
+
 
 _ENDPOINTS = frozenset(
     {
@@ -250,7 +263,7 @@ def test_exonerado_complete_revision_evidence_reaches_withdrawn_layout_without_o
                 bienes_register,
                 regularizacion_year=period.filing_year,
                 prorrata_definitiva_by_identifier={},
-                parameters=_PARAMS,
+                parameters=_params_for(period.filing_year),
             ),
             bienes_parameters=_PARAMS,
         ),

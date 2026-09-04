@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 from datetime import date as _date
+from datetime import date as _prov_date
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, cast, override
@@ -66,6 +67,18 @@ _PARAMS = BienesInversionRegularizacionParameters(
         resolved_on=_date(2025, 6, 1),
     ),
 )
+
+
+def _params_for(year: int) -> BienesInversionRegularizacionParameters:
+    """The bundle, resolved for ``year``.
+
+    The projection refuses a bundle resolved for a different filing year, so a
+    fixture cannot pin one year and be applied to another.
+    """
+    return _PARAMS.model_copy(
+        update={"provenance": _PARAMS.provenance.model_copy(update={"resolved_on": _prov_date(year, 12, 31)})}
+    )
+
 
 _BINDING_ID = "modelo-303-bienes-inversion-regularizacion-casilla-43"
 _M390_BINDING_ID = "modelo-390-bienes-inversion-regularizacion-casilla-63"
@@ -165,7 +178,7 @@ def test_advisory_surfaces_proposed_casilla_43_for_in_window_goods() -> None:
         _register(),
         regularizacion_year=2024,
         prorrata_definitiva_by_identifier={"bi-2022-maquina": Decimal("60")},
-        parameters=_PARAMS,
+        parameters=_params_for(2024),
     )
     assert projection.proposed_casilla_43 == Decimal("200.00")
     assert diagnostic is not None
@@ -192,7 +205,7 @@ def test_advisory_fires_even_when_percentage_pending() -> None:
         _register(),
         regularizacion_year=2024,
         prorrata_definitiva_by_identifier={},
-        parameters=_PARAMS,
+        parameters=_params_for(2024),
     )
     assert projection.pending_percentage_count == 1
     assert projection.proposed_casilla_43 == Decimal("0.00")
@@ -207,7 +220,7 @@ def test_no_advisory_when_no_in_window_goods() -> None:
         _register(),
         regularizacion_year=2030,  # outside the 2023-2026 mueble window
         prorrata_definitiva_by_identifier={},
-        parameters=_PARAMS,
+        parameters=_params_for(2030),
     )
     assert projection.rows == ()
     assert diagnostic is None
@@ -448,7 +461,7 @@ def test_transmision_advisory_surfaces_proposed_casilla_43_for_disposed_good() -
         _m303_revision(),
         _disposed_register(),
         disposal_year=2024,
-        parameters=_PARAMS,
+        parameters=_params_for(2024),
     )
     assert projection.proposed_casilla_43 == Decimal("-2400.00")
     assert diagnostic is not None
@@ -466,7 +479,7 @@ def test_transmision_advisory_applies_supplied_cap() -> None:
         _disposed_register(),
         disposal_year=2024,
         cuota_devengada_entrega_by_identifier={"bi-2022-furgoneta": Decimal("1500.00")},
-        parameters=_PARAMS,
+        parameters=_params_for(2024),
     )
     assert projection.proposed_casilla_43 == Decimal("-1500.00")
     assert diagnostic is not None
@@ -479,7 +492,7 @@ def test_no_transmision_advisory_when_no_disposal_in_year() -> None:
         _m303_revision(),
         _disposed_register(),
         disposal_year=2023,  # the recorded disposal is 2024
-        parameters=_PARAMS,
+        parameters=_params_for(2023),
     )
     assert projection.rows == ()
     assert diagnostic is None
