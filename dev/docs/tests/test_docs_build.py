@@ -444,8 +444,8 @@ _SEQUENCE_DIRECTIVE_BODY = (
 
 def _sequence_golden_json() -> str:
     """Return a schema-valid golden matching the fixture directive's three frames."""
-    from ..sequences._golden_store import GoldenFrame, SequenceGolden
-    from ..sequences._schema import FrameKind
+    from ..sequences.golden_store import GoldenFrame, SequenceGolden
+    from ..sequences.schema import FrameKind
 
     golden = SequenceGolden(
         sequence_id=_SEQUENCE_ID,

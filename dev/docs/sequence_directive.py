@@ -199,7 +199,7 @@ def _with_live_version(body: str) -> str:
     """
     from cadrumo import __version__
 
-    from .sequences._golden_store import PACKAGE_VERSION_TOKEN
+    from .sequences.golden_store import PACKAGE_VERSION_TOKEN
 
     return body.replace(PACKAGE_VERSION_TOKEN, __version__)
 
