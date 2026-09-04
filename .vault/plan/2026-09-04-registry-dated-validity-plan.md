@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-registry-dated-validity-regulatory-constant-placement-sweep-audit]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:a67496f1f4507537ecbc5a56ae1073267dbac027c4a75321173ad84251885064'
+body_hash: 'sha256:364af5cf07274ec55cbe67f38116f11912495a0968edec9859fde615c5b1772c'
 ---
 
 <!-- RETIRED: S01 -->
@@ -38,7 +38,7 @@ The prorrata pair differs by comparison operator as well as value, so without an
 
 Thread the event date into the consumers that cannot resolve without it, then author the blocked clusters as new single-axis parameters. The bienes de inversion values are reached through zero-argument enum properties; the prorrata predicate is a pure domain function with no registry dependency, so its routing is an application-boundary decision.
 
-- [ ] `P03.S06` - Thread the acquisition date into the bienes de inversion window and divisor lookups, which are today zero-argument enum properties, keeping the enum as the classifier and moving the value resolution to a function that takes the date; `src/cadrumo/domain/bienes_inversion/register.py, src/cadrumo/domain/bienes_inversion/tests/`.
+- [x] `P03.S06` - Thread the acquisition date into the bienes de inversion window and divisor lookups, which are today zero-argument enum properties, keeping the enum as the classifier and moving the value resolution to a function that takes the date; `src/cadrumo/domain/bienes_inversion/register.py, src/cadrumo/domain/bienes_inversion/tests/`.
 - [ ] `P03.S07` - Author the bienes de inversion windows, threshold and divisors as new single-axis transaction-date parameters under modelo 303, reusing the transaction-date member rather than adding a synonym, with grounding located in the corpus before authoring; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/`.
 - [ ] `P03.S08` - Author the prorrata especial margin pair with its two operators and two windows as registry data, and decide at the application boundary how the pure-domain year predicate obtains them without inverting the dependency direction; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/, src/cadrumo/application/`.
 - [ ] `P03.S09` - Dispatch a fresh-context reviewer over the landed change to verify no legal claim was fabricated, the retroactive guard still refuses forward values, and every shipped parameter still resolves, then implement its findings; `.vault/audit/`.

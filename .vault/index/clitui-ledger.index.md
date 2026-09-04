@@ -6,13 +6,14 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:53189ee15a9058680dbba454457f783b9f1098f2c2fb43127153b445eab36d8d'
+body_hash: 'sha256:c903b66e32ccdbd49a5e38058d7cfb82414d963c2e2845c16dc41fdccd2baebc'
 related:
   - '[[2026-09-04-clitui-ledger-W01-P01-S01]]'
   - '[[2026-09-04-clitui-ledger-adr]]'
   - '[[2026-09-04-clitui-ledger-plan]]'
   - '[[2026-09-04-clitui-ledger-reference]]'
   - '[[2026-09-04-clitui-ledger-research]]'
+  - '[[2026-09-04-clitui-ledger-s01-matrix-contract-review-audit]]'
 ---
 
 # `clitui-ledger` feature index
@@ -24,6 +25,10 @@ Auto-generated index of all documents tagged with `#clitui-ledger`.
 ### adr
 
 - `2026-09-04-clitui-ledger-adr` - `clitui-ledger` adr: `backend authority and interface parity gates` | (**status:** `accepted`)
+
+### audit
+
+- `2026-09-04-clitui-ledger-s01-matrix-contract-review-audit` - `clitui-ledger` audit: `S01 matrix contract implementation review`
 
 ### exec
 

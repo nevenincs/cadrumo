@@ -21,6 +21,7 @@ related:
 
 - `M` `src/cadrumo/entrypoints/tui/tests/test_installed_entrypoint.py`
 - `M` `src/cadrumo/entrypoints/tui/tests/test_no_generated_secret_display.py`
+- `M` `src/cadrumo/entrypoints/tui/devtools/tests/test_home_fixtures.py`
 - `verify:` `pytest -n0 -m '' tui/tests/test_installed_entrypoint.py test_no_generated_secret_display.py test_home.py` -> `pass` (5 + 12)
 
 ## Notes
@@ -60,3 +61,24 @@ Both halves re-proven. Importing the primitive into `home.py` fails the
 prohibition with `Offenders: home.py:generate_recovery_key`; renaming the
 anchored symbol fails the anchor with `module ... has no attribute`. Each file
 restored by copy and the restore verified.
+
+A third gate was stale rather than protective. `test_home_fixtures.py` pinned
+the synthetic names `fixture.classify`, `fixture.review_blocker` and
+`fixture.blocked_dependency`. Those ids and codes no longer exist: reason codes
+and action ids are transport tokens keying `tui.home.reason.<code>`, and the
+fixtures were deliberately moved onto the real `operator.*` ids and semantic
+codes so their copy resolves through the catalogue. A `fixture.`-prefixed code
+resolves to nothing and renders Home's degraded generic line, so the gate was
+pinning the wrong thing AND failing for a reason unrelated to what it checked.
+
+Both assertions now check the property instead of the name. The cross-cutting
+action is found by the ABSENCE of an address, which is what Home actually has
+to render alongside an addressed one. Every reason code must reach real copy,
+read from the catalogue file rather than through `tr()` -- `tr()` humanises a
+missing key into a plausible sentence, so a resolution check routed through it
+can never observe the absence it exists to find.
+
+Teeth proven on both halves: a code with no copy fails with
+`'no_such_reason' has no copy, so Home degrades to its generic line`, and
+giving every action an address fails the structural half. Restored by copy,
+restores verified. Devtools then ran fully green: 157 passed.

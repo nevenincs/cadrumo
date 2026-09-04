@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:daaf091029b66771614ddb829a59132bbab416fa70177c1451ae72ee13b7a924'
+body_hash: 'sha256:fadf93bf030a21d7e1b7d88a6e3d81ec7cb6aeb64bc2f4daf37a827be36e9c1b'
 ---
 
 # `reachability-burndown` plan
@@ -92,7 +92,7 @@ Extend the ratchet to symbols and orphaned test modules once their populations c
 
 Bring symbols and orphaned test modules under the gate, shrink-only.
 
-- [ ] `W04.P07.S11` - Extend the ratchet to unused symbols and orphaned test modules with detector-teeth proof; `dev/quality`.
+- [x] `W04.P07.S11` - Extend the ratchet to unused symbols and orphaned test modules with detector-teeth proof; `dev/quality`.
 
 ### Phase `W04.P08` - prove the joined state
 
