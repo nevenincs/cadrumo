@@ -1,0 +1,64 @@
+# Modelo 100 Art. 81.1 LIRPF deduccion por maternidad figures.
+#
+# Authored because these existed ONLY as Python literals in
+# core.external_constants, while the Art. 81.2 guarderia cap of the SAME article
+# already had a resolvable parameter. One article was carried two ways in one
+# product: the money in the registry for apartado 2, and in code for apartado 1.
+#
+# The ordinary monthly accrual and the annual cap per hijo are the two figures
+# the ordinary formula needs; the post-birth alta increment is a third, distinct
+# figure that only ADDS to a hijo's total and raises that hijo's cap. The raised
+# cap is deliberately NOT authored as a fourth parameter: it is the sum of the
+# cap and the increment, and storing a derived total as an independent value is
+# how the two inputs drift apart from it.
+
+[[revisions."2024".parameters]]
+id = "renta-2024-maternidad-mensual"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-81"]
+source_refs = ["aeat-renta-2024-manual-parte1"]
+
+[[revisions."2024".parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["100 euros por cada mes a partir de mayo"]
+
+[[revisions."2024".parameters.values]]
+value = "100"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions."2024".parameters]]
+id = "renta-2024-maternidad-cap-anual"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-81"]
+source_refs = ["aeat-renta-2024-manual-parte1"]
+
+[[revisions."2024".parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["podrá superar 1.200 euros anuales, salvo en el supuesto en que resulte de aplicación"]
+
+[[revisions."2024".parameters.values]]
+value = "1200"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions."2024".parameters]]
+id = "renta-2024-maternidad-alta-posterior-incremento"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-81"]
+source_refs = ["aeat-renta-2024-manual-parte1"]
+
+[[revisions."2024".parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["el incremento de 150 euros, en cuyo caso, dicho límite se eleva en dicho ejercicio"]
+
+[[revisions."2024".parameters.values]]
+value = "150"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
