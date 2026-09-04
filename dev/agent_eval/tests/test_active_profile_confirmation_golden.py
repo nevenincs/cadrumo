@@ -34,7 +34,11 @@ from cadrumo_harness.mcp import ConfirmationPolicy, build_tool_descriptors, conf
 from .._models import ProfileConfirmationScenario
 from .._runner import check_profile_confirmation_scenario
 from ._real_cli_support import valid_cli_commands
-from ._scripted_registration_channels import creation_secrets_payload, scripted_registration_descriptors
+from ._scripted_registration_channels import (
+    creation_secrets_payload,
+    login_secrets_payload,
+    scripted_registration_descriptors,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -78,6 +82,12 @@ def _create_profile() -> None:
             input=creation_secrets_payload(),
         )  # fmt: skip
     assert result.exit_code == 0, result.output
+
+    session = invoke_cached_cli(
+        ["config", "login", _PROFILE_ID, "--secrets-stdin"],
+        input=login_secrets_payload(),
+    )
+    assert session.exit_code == 0, session.output
 
 
 def _dispatch_confirmation() -> str | None:

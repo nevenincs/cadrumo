@@ -84,3 +84,15 @@ def scripted_registration_descriptors() -> Iterator[tuple[int, int]]:
             with suppress(OSError):
                 os.close(descriptor)
         relay.join(timeout=5.0)
+
+
+def login_secrets_payload() -> str:
+    """Return the strict-JSON payload that unlocks a just-created profile.
+
+    Creation mints the custody envelope but leaves the session closed, so
+    every verb after it refuses with `You are not logged in`. The passphrase
+    is resolvable from no environment, settings entry or keyring, so the
+    unlock has to come over the same bounded channel the creation used.
+    """
+    passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
+    return json.dumps({"passphrase": passphrase})

@@ -407,3 +407,38 @@ area = "domain/calculations/registry"
 resolved = true
 symbols = ["_NATURAL_PERSON", "_LEGAL_ENTITY", "_ATTRIBUTION_ENTITY", "_PAYER_FACT_ENTITY_TYPES"]
 evidence = "Each appeared only at its own definition line, with no use anywhere in the module or the tree. _PAYER_FACT_ENTITY_TYPES additionally duplicated _IVA_OBLIGED_ENTITY_TYPES member for member, which is a duplicate definition the architecture boundaries forbid."
+
+# ---------------------------------------------------------------------------
+# Tree-wide alias-facade survey
+#
+# `PUBLIC = _PRIVATE` at module scope is an alias layer the architecture
+# boundaries forbid outright. An AST sweep of the shipped package found 157 of
+# them; 17 are reported unused by the audit. The distinction that matters is
+# whether anything outside the defining module names the alias.
+#
+# The six below carry exactly one reference tree-wide -- the alias assignment
+# itself -- and appear in no `__all__`. Each private original stays in use in
+# its own module, so removing the alias changes no behaviour. They are the same
+# shape as the five already removed from applicability.py.
+#
+# `did_page_required` was found by the same sweep and deliberately EXCLUDED: it
+# is declared in its module's `__all__`, so it is exported public API with no
+# consumer rather than a dead alias, and removing it would change the published
+# surface. That needs its own decision.
+# ---------------------------------------------------------------------------
+
+[[symbol_cluster]]
+name = "application-layer alias facades"
+class = "orphaned"
+area = "application"
+resolved = false
+owning_step = "the application and adapters symbol Step, not the domain one"
+symbols = [
+  "IVA_LEDGER_EXEMPT_REGIMES",
+  "raise_if_ledger_preflight_blocks_calculation",
+  "M210_UNRESOLVED_RATE_REASONS",
+  "parse_predicate_date",
+  "roll_forward_balance_reconciles",
+  "validated_predicate_casilla_id",
+]
+evidence = "AST sweep for module-level public-to-private aliases, cross-referenced against the live audit. Each carries one reference tree-wide (its own assignment), appears in no __all__, and its private original remains used three or more times inside the defining module."
