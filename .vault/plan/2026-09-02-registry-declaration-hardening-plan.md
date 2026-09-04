@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:42d63e94161108686852c187775819de39f9b5c12ed6315afb6c0bc3e9b14653'
+body_hash: 'sha256:12611ba88c643d03409d052867abf55347c6f36d6a33630d3705a96c82c147a4'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -440,6 +440,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S558` - Stop the docstring-only-change prover passing on nothing, where an empty path list and a bare invocation both exited 0 exactly as a clean edit does, and report a tracked file that vanished instead of ending the run in a traceback that leaves the rest of the change unexamined; `dev/quality/docstring_only_diff.py,dev/quality/tests/test_docstring_only_diff.py`.
 - [x] `W02.P02.S559` - Pin the census source universe against the tracked tree at one resolved revision, so an export-ignore attribute cannot silently shrink the denominator three identity censuses and the identifier namespace gate all share and none of them can check; `dev/quality/tests/test_repository_sources.py`.
 - [x] `W02.P02.S560` - Enforce the vulture whitelist's own staleness rule by resolving every exempted parameter against the signature it cites, so a suppression cannot outlive its reason and go on hiding a dead parameter in a report that stays clean; `dev/audit/tests/test_vulture_whitelist_is_not_stale.py`.
+- [x] `W02.P02.S561` - Remove the dead requirement-name helpers and the orphaned citation left in the runtime constraint exporter by a retired harness-coverage check, and prove the closure the Scoop manifest and MCPB bundle pin is non-empty, version-exact, product-row-free and covers the agent transport stack; `dev/packaging/uv_constraints.py,dev/packaging/tests/test_uv_constraints.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
