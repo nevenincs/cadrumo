@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:47cd5440196e4f662505dafdc57e5988dc367f1fabd55b8d9e7499ed9c237dd9'
+body_hash: 'sha256:fab1fc4dc032ac5c003b8b12823c3973bc930a3661a5f8a3f66c7185432dc6c6'
 ---
 
 # `reachability-burndown` plan
@@ -79,7 +79,7 @@ Clear the entrypoints and application concentrations without disturbing command 
 
 Duplicate module-level definitions are a correctness hazard, not untidiness: two copies drift, and a caller reaching the stale one gets a value nobody updated. Each family merges to one canonical home with every call site repointed.
 
-- [ ] `W03.P09.S16` - Merge the duplicated Decimal constants to a canonical home and repoint every call site, since a drifted numeric constant is a calculation defect; `src/cadrumo/core`.
+- [x] `W03.P09.S16` - Merge the duplicated Decimal constants to a canonical home and repoint every call site, since a drifted numeric constant is a calculation defect; `src/cadrumo/core`.
 - [ ] `W03.P09.S17` - Merge the duplicated TypeAdapter declarations at their owning registry boundary; `src/cadrumo/domain/calculations/registry`.
 - [ ] `W03.P09.S18` - Adjudicate the 76 names defined with DIFFERENT values across modules, where merging would be wrong and one side needs renaming; `dev/audit`.
 

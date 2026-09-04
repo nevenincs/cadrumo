@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:e66d2dff2cc469c83293545cc22d2b7c21be27e623c8c3eb567e54d503dfc860'
+body_hash: 'sha256:b8231653696a9797cfdd64d1982e694e064f3172408e139869ad0505cffe0a7c'
 related:
   - "[[2026-09-04-registry-dated-validity-regulatory-constant-placement-sweep-audit]]"
   - "[[2026-08-19-registry-evidence-window-axes-adr]]"
@@ -13,7 +13,7 @@ related:
   - "[[2026-08-28-registry-narrow-mechanism-widening-adr]]"
 ---
 
-# `registry-dated-validity` adr: `event-date keyed regulatory parameters` | (**status:** `proposed`)
+# `registry-dated-validity` adr: `event-date keyed regulatory parameters` | (**status:** `accepted`)
 
 ## Problem Statement
 

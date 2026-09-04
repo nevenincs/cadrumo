@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:8006b301671b9da80e9878205262614951bb22cda35cc2a2ba57f94a998c03f7'
+body_hash: 'sha256:6aa5d14004dd623d98868fed1e84521def802140a3e499dba701782b2f7a7d8f'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -446,6 +446,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S564` - Separate same-revision casilla collisions from ordinary cross-revision reassignment in the AEIP inventory, which pooled every revision under a bare casilla id and so reported thirty collisions of which none were real while a genuine ambiguity would have been indistinguishable inside that number; `dev/registry/aeip/cli.py,dev/registry/aeip/tests/__init__.py,dev/registry/aeip/tests/test_cli_casilla_claims.py`.
 - [x] `W02.P02.S565` - Cover the apidocs CLI wiring that turns a drift result into an exit code, asserting the check and audit verbs agree with their own reports and with each other, without ever invoking the writing path that rebuilds the real stub tree; `dev/docs/apidocs/tests/test_cli.py`.
 - [x] `W02.P02.S566` - Make the changed-path preflight see untracked files, since a change consisting entirely of new files gave it an empty path set and it exited 0 having checked nothing, and give it an injectable root so the union is provable against scratch repositories; `dev/quality/changed_paths.py,dev/quality/tests/test_changed_paths.py`.
+- [x] `W02.P02.S567` - Match the semantic audit's sum token as a word rather than a substring, which had classified resume, consume, assume and summary as tax-base calculations so an adapter merely resuming a session was reported as a hexagonal leak, and pin both directions of the classification; `dev/audit/semantic.py,dev/audit/tests/test_semantic_classification.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
