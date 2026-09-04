@@ -297,7 +297,9 @@ def render_command(
     run = DEFAULT_RUN_NAME
     available = _harness.surfaces()
     interfaces = _inventory.scan()
-    _coverage.check(interfaces, tuple(item.name for item in available))
+    coverage_table = _coverage.merge_rendered_by(_harness.coverage())
+    coverage_notes = _coverage.notes(coverage_table)
+    _coverage.check(interfaces, tuple(item.name for item in available), rendered_table=coverage_table)
 
     chosen_surfaces = _resolve_surfaces(surface, available)
     chosen_viewports = _resolve_viewports(viewport)
@@ -393,8 +395,8 @@ def render_command(
                 qualname=item.qualname,
                 kind=item.kind,
                 locator=f"{item.path.as_posix()}:{item.line}",
-                rendered_by=_coverage.rendered_by(item.qualname, rendered_surfaces),
-                note=_coverage.NOTES.get(item.qualname, ""),
+                rendered_by=_coverage.rendered_by(item.qualname, rendered_surfaces, rendered_table=coverage_table),
+                note=coverage_notes.get(item.qualname, ""),
             )
             for item in interfaces
         ),
