@@ -6,7 +6,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:78bc9105f9b7b25846d3f370422026af6d20f23186e1aaf9715cb6aa39c0ab7b'
+body_hash: 'sha256:01c08d6789e22128185a14ec015226612b686dd750c377744fd29dbbec0fc1f9'
 related:
   - '[[2026-09-02-cli-distribution-consolidation-P01-S01]]'
   - '[[2026-09-02-cli-distribution-consolidation-P01-S02]]'
@@ -47,6 +47,10 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-P09-S48]]'
   - '[[2026-09-02-cli-distribution-consolidation-P09-S49]]'
   - '[[2026-09-02-cli-distribution-consolidation-P09-S52]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P09-S55]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P09-S56]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P09-S57]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P09-S58]]'
   - '[[2026-09-02-cli-distribution-consolidation-P10-S38]]'
   - '[[2026-09-02-cli-distribution-consolidation-P10-S40]]'
   - '[[2026-09-02-cli-distribution-consolidation-P10-S41]]'
@@ -58,6 +62,8 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-P11-S45]]'
   - '[[2026-09-02-cli-distribution-consolidation-P11-S46]]'
   - '[[2026-09-02-cli-distribution-consolidation-P11-S51]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P11-S53]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P11-S54]]'
   - '[[2026-09-02-cli-distribution-consolidation-adr]]'
   - '[[2026-09-02-cli-distribution-consolidation-plan]]'
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
@@ -128,12 +134,18 @@ Auto-generated index of all documents tagged with `#cli-distribution-consolidati
 - `2026-09-02-cli-distribution-consolidation-P09-S48` - Separate the seal check from the publication check and guard the upload with the authority that names it
 - `2026-09-02-cli-distribution-consolidation-P09-S49` - Remove the repeated passes the cohort build makes over artifacts it has already produced
 - `2026-09-02-cli-distribution-consolidation-P09-S52` - Close the review findings on the publication gate, starting with the partial-upload deadlock
+- `2026-09-02-cli-distribution-consolidation-P09-S55` - Give the hand-assembled cohort fixtures the wheelhouse the manifest requires
+- `2026-09-02-cli-distribution-consolidation-P09-S56` - Close the generator assertions the wheelhouse refusal was hiding
+- `2026-09-02-cli-distribution-consolidation-P09-S57` - Stop the clean-tree build root from carrying files git ignores and the wheel cannot
+- `2026-09-02-cli-distribution-consolidation-P09-S58` - Keep a corpus annotation in the same distribution as the file it annotates
 - `2026-09-02-cli-distribution-consolidation-P10-S40` - Remove the evidence leak sweep left without a caller
 - `2026-09-02-cli-distribution-consolidation-P10-S47` - Close the evidence assertions naming cohort artifacts the adopted path no longer builds
 - `2026-09-02-cli-distribution-consolidation-P10-S50` - Reclaim the build scratch a killed run leaves in the working tree
 - `2026-09-02-cli-distribution-consolidation-P11-S45` - Document the release-candidate evidence campaign the runbook omits
 - `2026-09-02-cli-distribution-consolidation-P11-S46` - Restate the workflow names three surfaces still cite from the retired release path
 - `2026-09-02-cli-distribution-consolidation-P11-S51` - Restate the surfaces naming workflows the repository does not contain
+- `2026-09-02-cli-distribution-consolidation-P11-S53` - Close the workflow-reading gates that crash or drift against the live workflow set
+- `2026-09-02-cli-distribution-consolidation-P11-S54` - Cover the test directory reachable only by naming one file, and discover the class
 
 ### plan
 
