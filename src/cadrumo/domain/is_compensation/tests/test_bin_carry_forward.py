@@ -5,9 +5,11 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
 from ..bin_carry_forward import BinCohortStock, BinStock
-from ..errors import BinCohortShapeError
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _prior(year: int, opening: str, applied: str, future: str) -> BinCohortStock:
@@ -43,7 +45,7 @@ def test_prior_cohort_legs_balance_and_totals_sum() -> None:
 
 
 def test_legs_that_do_not_balance_are_refused() -> None:
-    with pytest.raises(BinCohortShapeError):
+    with pytest.raises(ValidationError):
         _prior(2019, "1000", "400", "500")
 
 
@@ -68,7 +70,7 @@ def test_applying_the_current_period_cohort_is_refused() -> None:
         pending_future_amount=Decimal("150"),
     )
 
-    with pytest.raises(BinCohortShapeError, match="current-period cohort"):
+    with pytest.raises(ValidationError, match="current-period cohort"):
         BinStock(filing_year=2025, cohorts=(forbidden,))
 
 
@@ -84,17 +86,17 @@ def test_zero_applied_is_not_the_same_as_not_applicable() -> None:
 
 
 def test_prior_cohort_omitting_its_applied_leg_is_refused() -> None:
-    with pytest.raises(BinCohortShapeError, match="must state its applied_amount"):
+    with pytest.raises(ValidationError, match="must state its applied_amount"):
         BinStock(filing_year=2025, cohorts=(_current(2019, "1000"),))
 
 
 def test_cohort_generated_after_the_filing_year_is_refused() -> None:
-    with pytest.raises(BinCohortShapeError, match="after the filing year"):
+    with pytest.raises(ValidationError, match="after the filing year"):
         BinStock(filing_year=2024, cohorts=(_current(2025, "100"),))
 
 
 def test_duplicate_generation_years_are_refused() -> None:
-    with pytest.raises(BinCohortShapeError, match="unique on generation_year"):
+    with pytest.raises(ValidationError, match="unique on generation_year"):
         BinStock(
             filing_year=2025,
             cohorts=(_prior(2019, "100", "0", "100"), _prior(2019, "200", "0", "200")),
