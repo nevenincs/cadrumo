@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:a47a9a57e580b63f0ac105147237af12e0dcd055cf8dfe85782e58a1025e5615'
+body_hash: 'sha256:e125f876711d50b0f7123080916b80f842b8e3262da61fdfd81e2c8554f5ce6f'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -482,6 +482,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S600` - Make the unused-symbol ratchet state what its deferral prefix excluded, since the module says deferral sets scope rather than granting permission yet the verdict never mentioned it, so a tree-matches-baseline result was silent about twenty-two symbol findings and two orphaned test modules never compared; `dev/quality/unused_symbol_ratchet.py,dev/quality/tests/test_unused_symbol_ratchet.py`.
 - [x] `W02.P02.S601` - Cover the identity canary's report shape, which is the clearest example in the tree of the discipline this campaign restores elsewhere, pinning that every section survives and that each path exclusion prints its reason and not merely its count; `dev/identity/tests/test_identity_canary_report.py`.
 - [x] `W02.P02.S602` - Separate an absent enumeration root from an empty one, since a root that does not exist yielded the same nothing as a directory holding no Python files and every walk over it then analysed an empty corpus, the reference walk reporting live code dead and the test walk reporting no tests; `dev/audit/unreachable_code.py,dev/audit/tests/test_unreachable_code.py`.
+- [x] `W02.P02.S603` - Separate an absent compatibility root from an empty one, since a root that does not exist enumerated the same nothing and the union across roots hid which contributed zero, so shipped code could be reported compatible for a Python version without a file under it being read; `dev/quality/python_compatibility_scan.py,dev/quality/tests/test_python_compatibility_scan.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
