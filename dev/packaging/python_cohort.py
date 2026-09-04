@@ -539,34 +539,47 @@ def _probe_installed_command_specs(*, site_root: Path, work_root: Path) -> dict[
         of the remaining modes merged into it.
     """
     dependency_site = next(path for path in map(Path, sys.path) if path.name == "site-packages" and path.is_dir())
+    bytecode_root = work_root / ".command-spec-bytecode"
+    if bytecode_root.exists():
+        shutil.rmtree(bytecode_root)
+    bytecode_root.mkdir(parents=True)
     environment = os.environ.copy()
     environment["PYTHONPATH"] = ""
     environment["AEAT_DEPENDENCY_SITE"] = str(dependency_site)
     environment["AEAT_INSTALL_SITE"] = str(site_root.resolve(strict=True))
+    # Bytecode is written HERE rather than into ``site_root``. The probe reads a
+    # tree that defines a published artifact, and a reader that leaves thousands
+    # of files behind in it is not a reader. Redirecting rather than disabling
+    # keeps the four modes below sharing one compile of some fifteen hundred
+    # modules, which disabling would pay for four times.
+    environment["PYTHONPYCACHEPREFIX"] = str(bytecode_root)
     projections: list[dict[str, Any]] = []
-    for mode in (
-        "projection",
-        "aeat config profile list",
-        "aeat app registry inspect",
-        "aeat app modelo work calculate",
-    ):
-        environment["AEAT_COMMAND_SPEC_PROBE_MODE"] = mode
-        completed = subprocess.run(  # noqa: S603 - fixed installed-artifact attestation probe.
-            [sys.executable, "-S", "-c", _COMMAND_SPEC_PROBE],
-            cwd=work_root,
-            env=environment,
-            check=False,
-            capture_output=True,
-            text=True,
-            encoding=_UTF_8,
-            errors="strict",
-        )
-        if completed.returncode != 0:
-            raise SystemExit(f"installed CommandSpec attestation failed ({mode}):\n{completed.stderr}")
-        value = json.loads(completed.stdout)
-        if not isinstance(value, dict):
-            raise SystemExit("installed CommandSpec projection must be a JSON object")
-        projections.append(value)
+    try:
+        for mode in (
+            "projection",
+            "aeat config profile list",
+            "aeat app registry inspect",
+            "aeat app modelo work calculate",
+        ):
+            environment["AEAT_COMMAND_SPEC_PROBE_MODE"] = mode
+            completed = subprocess.run(  # noqa: S603 - fixed installed-artifact attestation probe.
+                [sys.executable, "-S", "-c", _COMMAND_SPEC_PROBE],
+                cwd=work_root,
+                env=environment,
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding=_UTF_8,
+                errors="strict",
+            )
+            if completed.returncode != 0:
+                raise SystemExit(f"installed CommandSpec attestation failed ({mode}):\n{completed.stderr}")
+            value = json.loads(completed.stdout)
+            if not isinstance(value, dict):
+                raise SystemExit("installed CommandSpec projection must be a JSON object")
+            projections.append(value)
+    finally:
+        shutil.rmtree(bytecode_root, ignore_errors=True)
     projection = projections[0]
     projection["import_budgets"] = {
         "graph_projection_first_party_modules": projection["import_budgets"]["graph_projection_first_party_modules"],

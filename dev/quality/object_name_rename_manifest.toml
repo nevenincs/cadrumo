@@ -1,5 +1,5 @@
 schema_version = 1
-inventory_digest = "sha256:79e87a41d8d4b4ad06776ff69545d417d9e8b6f1081108695cef6a43a80c04ff"
+inventory_digest = "sha256:1ebaeff5075983839f7e7b965cb080278a55edd8f17c128657da9292e3b07b23"
 
 [[operations]]
 operation_id = "rename-declaration-contact-facts"
