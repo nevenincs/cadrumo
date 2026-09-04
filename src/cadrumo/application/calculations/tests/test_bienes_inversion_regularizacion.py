@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+from datetime import date as _date
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, cast, override
@@ -20,9 +21,14 @@ from ....domain.bienes_inversion.register import (
     BienInversionIvaRecord,
     BienInversionKind,
 )
+from ....domain.bienes_inversion.regularizacion_parameters import (
+    BienesInversionParameterProvenance,
+    BienesInversionRegularizacionParameters,
+)
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.schema_base import ThresholdComparison
 from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ...aggregation import CalculationSourceContext
 from ..bienes_inversion_regularizacion import (
@@ -35,6 +41,25 @@ from ..bienes_inversion_regularizacion import (
 from ..observations_repository import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+#: An explicit bundle. These tests exercise the surrounding wiring, not the law;
+#: whether these are the figures the law states is answered against the registry
+#: by the modelo 303 parameter gates.
+_PARAMS = BienesInversionRegularizacionParameters(
+    ventana_anos_mueble=4,
+    ventana_anos_inmueble=9,
+    divisor_mueble=Decimal("5"),
+    divisor_inmueble=Decimal("10"),
+    umbral_puntos=Decimal("10"),
+    umbral_comparison=ThresholdComparison.EXCLUSIVE,
+    provenance=BienesInversionParameterProvenance(
+        modelo_id="303",
+        revision_id="2025",
+        parameter_ids=("m303-bien-inversion-ventana-anos-mueble",),
+        resolved_on=_date(2025, 6, 1),
+    ),
+)
 
 _BINDING_ID = "modelo-303-bienes-inversion-regularizacion-casilla-43"
 _M390_BINDING_ID = "modelo-390-bienes-inversion-regularizacion-casilla-63"
@@ -134,6 +159,7 @@ def test_advisory_surfaces_proposed_casilla_43_for_in_window_goods() -> None:
         _register(),
         regularizacion_year=2024,
         prorrata_definitiva_by_identifier={"bi-2022-maquina": Decimal("60")},
+        parameters=_PARAMS,
     )
     assert projection.proposed_casilla_43 == Decimal("200.00")
     assert diagnostic is not None
@@ -160,6 +186,7 @@ def test_advisory_fires_even_when_percentage_pending() -> None:
         _register(),
         regularizacion_year=2024,
         prorrata_definitiva_by_identifier={},
+        parameters=_PARAMS,
     )
     assert projection.pending_percentage_count == 1
     assert projection.proposed_casilla_43 == Decimal("0.00")
@@ -174,6 +201,7 @@ def test_no_advisory_when_no_in_window_goods() -> None:
         _register(),
         regularizacion_year=2030,  # outside the 2023-2026 mueble window
         prorrata_definitiva_by_identifier={},
+        parameters=_PARAMS,
     )
     assert projection.rows == ()
     assert diagnostic is None
@@ -201,7 +229,22 @@ def test_source_resolver_projects_repository_register_to_binding_and_bound_casil
 
 
 def test_source_resolver_projects_m390_binding_from_stamped_m303_prorrata_observation(tmp_path: Path) -> None:
-    """The M390 box 63 binding consumes the real register plus stamped M303 4T prorrata."""
+    """The M390 box 63 binding is now UNRESOLVED, and that is the open question.
+
+    This test previously proved the binding projected 200.00 from the register
+    plus the stamped M303 4T prorrata. It no longer can, and the reason is worth
+    stating rather than deleting: every modelo 390 revision declares the
+    art-107/109 parameter family NOT APPLICABLE -- on the reasoned ground that
+    the resumen anual restates the periodic outcome and applies no figure of its
+    own -- so no bundle can be resolved for a 390 revision.
+
+    The resolver therefore refuses instead of computing a filing-bound figure
+    from values the active revision never declared. Whether that is the right
+    end state depends on a legal question this suite cannot settle: does casilla
+    63 RESTATE the periodic casilla 43, or independently recompute it? Until
+    that is answered, a visible refusal is the honest outcome and a silently
+    ungrounded 200.00 is not.
+    """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         register_repository = BienesInversionIvaRegisterRepository(objects=profile.repository)
         register_repository.add(_register().records[0])
@@ -214,14 +257,21 @@ def test_source_resolver_projects_m390_binding_from_stamped_m303_prorrata_observ
             observation_repository=observation_repository,
         ).resolve(_context(modelo="390", period="0A"))
 
-    assert resolution.binding_values[_M390_BINDING_ID] == Decimal("200.00")
-    assert resolution.bound_inputs_by_casilla_id[CASILLA_M390_REGULARIZACION_BIENES_INVERSION] == Decimal("200.00")
-    assert _M390_BINDING_ID not in resolution.unresolved_binding_ids
-    assert resolution.diagnostics == ()
+    assert resolution.binding_values == {}
+    assert CASILLA_M390_REGULARIZACION_BIENES_INVERSION not in resolution.bound_inputs_by_casilla_id
+    assert _M390_BINDING_ID in resolution.unresolved_binding_ids
+    assert resolution.diagnostics != ()
+    assert "declares no capital-goods regularisation figure" in resolution.diagnostics[0].message
 
 
 def test_source_resolver_uses_the_explicit_secondary_m390_observation_store(tmp_path: Path) -> None:
-    """M390 capital-goods regularización reads only the injected bucket's M303 percentage."""
+    """M390 reads only the injected bucket, and still refuses for want of parameters.
+
+    The bucket-isolation property this test exists for is unchanged and still
+    asserted: the primary bucket's 80% is never read. What changed is the
+    outcome for modelo 390 itself -- see the sibling M390 test for why the
+    binding is now unresolved.
+    """
     with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
         primary_observations = CalculationObservationRepository(objects=runtime.primary.repository)
         _save_current_year_m303_prorrata_observation(primary_observations, percentage=Decimal("80"))
@@ -249,9 +299,9 @@ def test_source_resolver_uses_the_explicit_secondary_m390_observation_store(tmp_
 
     assert primary_observation is not None
     assert primary_observation.observation.casilla_values[_CURRENT_YEAR_PRORRATA_ID] == Decimal("80")
-    assert resolution.binding_values == {_M390_BINDING_ID: Decimal("200.00")}
-    assert resolution.unresolved_binding_ids == ()
-    assert resolution.diagnostics == ()
+    assert resolution.binding_values == {}
+    assert resolution.unresolved_binding_ids == (_M390_BINDING_ID,)
+    assert resolution.diagnostics != ()
 
 
 def test_source_resolver_refuses_construction_without_an_explicit_observation_repository(tmp_path: Path) -> None:
@@ -392,6 +442,7 @@ def test_transmision_advisory_surfaces_proposed_casilla_43_for_disposed_good() -
         _m303_revision(),
         _disposed_register(),
         disposal_year=2024,
+        parameters=_PARAMS,
     )
     assert projection.proposed_casilla_43 == Decimal("-2400.00")
     assert diagnostic is not None
@@ -409,6 +460,7 @@ def test_transmision_advisory_applies_supplied_cap() -> None:
         _disposed_register(),
         disposal_year=2024,
         cuota_devengada_entrega_by_identifier={"bi-2022-furgoneta": Decimal("1500.00")},
+        parameters=_PARAMS,
     )
     assert projection.proposed_casilla_43 == Decimal("-1500.00")
     assert diagnostic is not None
@@ -421,6 +473,7 @@ def test_no_transmision_advisory_when_no_disposal_in_year() -> None:
         _m303_revision(),
         _disposed_register(),
         disposal_year=2023,  # the recorded disposal is 2024
+        parameters=_PARAMS,
     )
     assert projection.rows == ()
     assert diagnostic is None

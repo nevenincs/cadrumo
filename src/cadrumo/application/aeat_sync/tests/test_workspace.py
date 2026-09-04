@@ -61,12 +61,23 @@ SECRET_VALUES = (
     BUCKET,
     SUBJECT,
     "12345678Z",
-    "Protected Name",
-    "https://private.invalid/evidence",
-    "document prose",
     "certificate-private",
     "notification-private",
 )
+"""Values this test actually FEEDS the projection, so their absence means something.
+
+Four sentinels were removed rather than kept. `Protected Name`,
+`https://private.invalid/evidence` and `document prose` appeared nowhere in
+this file except the tuple itself: nothing introduced them, so asserting they
+did not come out the other end proved nothing at all. They are also
+unrepresentable -- the row models carry typed enums, modelo addresses and
+observation states, and no field on a row or on `AeatSyncWorkspaceFactV1` can
+hold free prose, a name or a URL -- so their exclusion is enforced by
+construction and is asserted as such below rather than mimed with a sentinel.
+
+`certificate-private` was in the same position and is now genuinely supplied,
+through the second private identity the census fact carries.
+"""
 
 
 def _period(modelo: str = "130") -> Period:
@@ -207,7 +218,7 @@ def _projection(**updates):
             (build_censal_operation_registration(CENSAL_OPERATION_DEFINITION).contract,)
         ),
         overview=(_fact(_overview()),),
-        census=(_fact(_census()),),
+        census=(_fact(_census(), private_identity="certificate-private"),),
         filed_declarations=(_fact(_filed()),),
         notifications=(_fact(_notification(), private_identity="notification-private"),),
         evidence_comparison=(_fact(_comparison()),),
@@ -327,6 +338,19 @@ def test_output_physically_omits_protected_scope_payload_and_identity() -> None:
         "certificado_id",
         "concepto",
     }
+    # The three sentinels removed above are excluded BY CONSTRUCTION, and this
+    # is what that claim looks like as an assertion: every field a row exposes
+    # is a closed enum, a typed address component, an observation state or a
+    # bounded identifier, so there is nowhere for a name, a URL or document
+    # prose to be carried even by a careless producer.
+    for row_type in (AeatSyncWorkspaceCensusRowV1, AeatSyncWorkspaceFiledDeclarationRowV1):
+        for name, field in row_type.model_fields.items():
+            annotation = str(field.annotation)
+            assert "str" not in annotation or name in {"path"}, (
+                f"{row_type.__name__}.{name} is free text ({annotation}), so protected prose "
+                f"could be carried there and the removed sentinels would need reinstating"
+            )
+
     for value in (
         projection,
         *projection.overview,

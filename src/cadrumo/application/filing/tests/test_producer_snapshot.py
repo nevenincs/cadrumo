@@ -2,6 +2,7 @@
 
 import json
 from datetime import UTC, date, datetime
+from datetime import date as _date
 from decimal import Decimal
 from hashlib import sha256
 from pathlib import Path
@@ -26,8 +27,13 @@ from ....domain.bienes_inversion.register import (
     RegistroRegularizacionResult,
     compute_registro_regularizacion,
 )
+from ....domain.bienes_inversion.regularizacion_parameters import (
+    BienesInversionParameterProvenance,
+    BienesInversionRegularizacionParameters,
+)
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from ....domain.calculations.registry.schema_base import ThresholdComparison
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.deadlines.models import (
     ChargeAccount,
@@ -95,6 +101,25 @@ from ..producer_snapshot import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+#: An explicit bundle. These tests exercise the surrounding wiring, not the law;
+#: whether these are the figures the law states is answered against the registry
+#: by the modelo 303 parameter gates.
+_PARAMS = BienesInversionRegularizacionParameters(
+    ventana_anos_mueble=4,
+    ventana_anos_inmueble=9,
+    divisor_mueble=Decimal("5"),
+    divisor_inmueble=Decimal("10"),
+    umbral_puntos=Decimal("10"),
+    umbral_comparison=ThresholdComparison.EXCLUSIVE,
+    provenance=BienesInversionParameterProvenance(
+        modelo_id="303",
+        revision_id="2025",
+        parameter_ids=("m303-bien-inversion-ventana-anos-mueble",),
+        resolved_on=_date(2025, 6, 1),
+    ),
+)
 
 _TAXPAYER_TAX_ID = "12345678Z"
 _PRESENTER_TAX_ID = "00000000T"
@@ -197,6 +222,7 @@ def _empty_m303_export_arrivals(
         bienes_register,
         regularizacion_year=filing_year,
         prorrata_definitiva_by_identifier={},
+        parameters=_PARAMS,
     )
     return register, bienes_register, regularisation
 
@@ -1125,6 +1151,7 @@ def test_m303_filing_facts_accept_the_canonical_bienes_regularisation_result() -
         register,
         regularizacion_year=2026,
         prorrata_definitiva_by_identifier={"canonical-bien": Decimal("80")},
+        parameters=_PARAMS,
     )
 
     facts = M303FilingFacts.model_validate(
@@ -1165,6 +1192,7 @@ def test_m303_filing_facts_refuse_a_regularisation_from_another_bienes_register(
         foreign_register,
         regularizacion_year=2026,
         prorrata_definitiva_by_identifier={"foreign-bien": Decimal("80")},
+        parameters=_PARAMS,
     )
 
     with pytest.raises(ValidationError, match="canonical projection of the supplied Bienes register"):
@@ -1182,6 +1210,7 @@ def test_m303_filing_facts_refuse_a_regularisation_that_omits_an_in_window_bien(
         register,
         regularizacion_year=2026,
         prorrata_definitiva_by_identifier={},
+        parameters=_PARAMS,
     )
     omitted = RegistroRegularizacionResult(
         regularizacion_year=2026,

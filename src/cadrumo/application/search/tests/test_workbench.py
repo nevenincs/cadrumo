@@ -175,10 +175,30 @@ def _result_data(**changes: Any) -> dict[str, Any]:
     return data
 
 
-def test_provider_authored_labels_terms_hashes_and_stable_ids_are_not_fields() -> None:
+def test_provider_authored_labels_hashes_and_stable_ids_are_not_fields() -> None:
+    """What a provider may NOT put on a document, and the one channel that is allowed.
+
+    Three of the four original prohibitions stand unchanged: a provider-authored
+    `label` would let two producers describe the same record differently, a
+    `token_digests` field would carry a precomputed dictionary-attackable hash,
+    and a `stable_id` would assert an identity the service derives itself.
+
+    The fourth, `search_terms`, was retired by the authenticated-TUI visibility
+    decision, and this test asserted its ABSENCE by name -- so `content_terms`
+    arriving to do exactly that job left the prohibition reading as enforced
+    while a rename walked past it. Naming the sanctioned channel here is what
+    stops the next term field being added quietly beside it: adding one now
+    means changing this list and reading why.
+    """
     fields = set(WorkbenchSearchDocument.model_fields)
-    assert fields.isdisjoint({"label", "search_terms", "token_digests", "stable_id"})
+    assert fields.isdisjoint({"label", "token_digests", "stable_id"})
     assert "digest_operator_safe_tokens" not in workbench_module.__all__
+
+    matchable = {name for name in fields if "term" in name}
+    assert matchable == {"content_terms"}, (
+        f"matchable text on a search document must arrive through the one declared channel; "
+        f"found {sorted(matchable)}"
+    )
 
 
 def test_nif_iban_label_raw_hex_identity_and_search_terms_fail_closed() -> None:
@@ -186,6 +206,9 @@ def test_nif_iban_label_raw_hex_identity_and_search_terms_fail_closed() -> None:
     attacks = (
         {"label": "X2482300W · ES91 2100 0418 4502 0005 1332"},
         {"stable_id": "1" * 64},
+        # `search_terms` is no longer prohibited by NAME -- `content_terms`
+        # carries the operator's own words -- but an UNDECLARED field of any
+        # name is still refused, which is what this line now proves.
         {"search_terms": ("X2482300W",)},
         {"token_digests": (hashlib.sha256(b"x2482300w").hexdigest(),)},
     )
