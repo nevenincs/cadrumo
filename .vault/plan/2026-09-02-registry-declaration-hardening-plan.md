@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:d024f45a7da679617f9892d768891a1e94b28c643367b66eb207a4936d823ed4'
+body_hash: 'sha256:2bbbbcffbc53684a523f043bcdae9fb6dc14320c82e27de51e124099d8bdf261'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -430,6 +430,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [ ] `W02.P02.S548` - Declare the precondition for the ten agent_eval tests that refuse without a passphrase channel, which need a marker of the os_keychain class rather than a composition, now that the setup errors no longer hide the reason; `dev/agent_eval/tests`.
 - [x] `W02.P02.S549` - Test the size-budget baseline writer the reach report ranked, whose destination is an argument so the write is provable, pinning the retired readers emptiness and the notes rule that carries surviving prose forward and drops the rest; `dev/audit/tests/test_size_budget_baseline.py`.
 - [x] `W02.P02.S550` - Give the vacuity screen's synthetic trees the git repository the screen requires, clearing sixteen failures that all raised exit 128 from git ls-files before a single assertion ran, so the instrument that hunts unproven gates is itself proven; `dev/audit/tests/test_vacuity_screen.py`.
+- [x] `W02.P02.S551` - Make the miss-rate report writer return the evaluation it wrote so the command stops measuring a second time to print numbers it did not read from the file, and test the writer the reach report ranked, pinning the byte-comparable regeneration its docstring claims; `dev/docs/terminology/miss_rate.py,dev/docs/terminology/tests/test_miss_rate_report_cli.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
