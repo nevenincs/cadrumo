@@ -282,7 +282,6 @@
 "cadrumo.domain.modelos.protocols" = 1
 "cadrumo.domain.modelos.repository" = 1
 "cadrumo.domain.modelos.verification_repository" = 1
-"cadrumo.domain.prorrata_register.register" = 2
 "cadrumo.domain.renta._first_slice_routing" = 2
 "cadrumo.domain.submission.models" = 2
 "cadrumo.domain.submission.protocols" = 1

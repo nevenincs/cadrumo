@@ -732,3 +732,11 @@ area = "domain/calculations/registry"
 resolved = true
 symbols = ["validate_source_year_coverage", "relation_fixed_source_year"]
 evidence = "A sibling in the same module, validate_relation_source_coordinate_coverage, discharges the responsibility and is the one production runs: _validate_relation_sources imports it, and _validate_previous_filing_year_coverage's own prose calls it 'the relation-source sibling gate which the registry build already runs for relations'. It is also strictly stronger, resolving every (source year, source period) coordinate against the union of revisions with exactly one owner, which covers the multi-revision year partition an interval comparison would miss. Neither removed function had a production caller or a test, and relation_fixed_source_year fed only the removed validator's fixed_source_year argument."
+
+[[symbol_cluster]]
+name = "prorrata register duplicate filing-year bounds"
+class = "superseded"
+area = "domain/prorrata_register"
+resolved = true
+symbols = ["_MIN_EJERCICIO", "_MAX_EJERCICIO"]
+evidence = "Both restated the canonical filing-year bounds that core/filing_year.py already declares as FILING_YEAR_MIN and FILING_YEAR_MAX, and which the FilingYear annotation on every register entry actually enforces. The local pair was read by nothing, so the range it described was never the range applied. Values agreed with canonical at removal, which is why this was a latent rather than an active defect: a change to the canonical bound would have left the local comment describing a range no longer in force. The domain note the constants carried, that IVA prorrata predates the lower bound while a pre-2000 ejercicio can never be a modelled filing year, was kept as prose."
