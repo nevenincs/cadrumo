@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:b779ffc3c05fb9e7c881e4d8051e7f42abed7fe85e2b2e2f6ff6939bd9a02505'
+body_hash: 'sha256:13dbfa2b2b8fb6bfb0596b1b2a437c8b5143fbb8ecacb188bd70c1a3a85c7f5a'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -356,6 +356,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [ ] `W02.P02.S492` - Apply the dev retirement template to the twelve non-inert package namespaces under src/cadrumo, which are the same defect class the dev campaign cleared and which the src-side scanner already enumerates; `src/cadrumo`.
 - [x] `W02.P02.S493` - Write the initialiser retirement into the plans Description, Parallelization and Verification prose: the restatement it removed, the two ordering constraints discovered by breaking them, and the inertness criterion with its four constructed proofs; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W02.P02.S494` - Re-run and sweep this sessions two set comparisons for lost-worker markers, since both were taken in the combination that crashes a worker: preprocess identical at 23 failures and sequences identical, each with zero crash markers; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W02.P02.S495` - Turn the lost-worker sweep from a remembered grep into a command that judges a saved pytest run and exits non-zero when it is unusable, recognising a lost worker, a run that executed nothing, truncated output and a complete run; `dev/quality/run_integrity.py,dev/quality/tests/test_run_integrity.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
@@ -1431,3 +1432,20 @@ unparseable files reported a clean plan over a tree it had not finished reading.
 they could not examine. A third defect - a prose scan nested inside the wrong loop - ran under seven
 live promotions before its test caught it, and a sweep afterwards found nothing lost. That is recorded
 as luck rather than as a clean result, because the difference matters to whoever reads this next.
+
+A run this plan quotes can be shown to be usable, rather than assumed to be. The criterion changed
+from a habit to a command: `python -m dev.quality.run_integrity <saved run>` classifies a saved pytest
+output and exits non-zero when it is unusable, recognising a lost worker, a run that executed nothing,
+output truncated before its summary, and a complete run. Verdicts are ranked, and `lost_workers`
+outranks the rest, because a run that also deselected half its tests is unusable for the first reason
+and reporting the second invites fixing the marker and re-reading the same subset.
+
+It judges a SAVED run rather than invoking pytest, because the question is whether the artefact a
+comparison was drawn from meant anything - a question that outlives the tree it was taken on.
+
+The evidence is that it was run against this session's three captured outputs and classified all
+three correctly, including the tainted one, which it names down to the worker and the test it died on.
+That run's tally is 24 failed and 291 passed against 317 collected, which is unremarkable to look at;
+the two missing tests are visible only in the banner. And the criterion's fourth failure mode
+demonstrated itself during that verification: read through a pipe, the tool's exit status came back
+zero on a run it had exited one on, because the status belonged to the filter.

@@ -13329,3 +13329,40 @@ flakes under `-n auto` is the `serial` marker, but the lane running
 decorative and the crash would continue. Adding the exclusion means editing the
 recipe file, which is outside this session's scope. `S483` now says that, so the
 next attempt does not begin by rediscovering that the obvious fix is inert.
+
+
+## The sweep becomes a command
+
+Establishing that this session's two set comparisons were untainted meant
+remembering to grep for a banner. That is the shape of defect this whole
+campaign is about - a fact everyone must remember rather than an instrument that
+holds it - so `dev/quality/run_integrity.py` now judges a saved run and exits
+non-zero when it is unusable.
+
+Four shapes are recognised and each cost this campaign a wrong conclusion
+before the banners existed to name them: a run that lost a worker, a run that
+executed nothing, a run whose output was truncated before its summary, and an
+ordinary complete run. The verdict is `lost_workers` above all others, because a
+run that also deselected half its tests is unusable for the first reason and
+reporting the second would invite fixing the marker and re-reading the same
+subset.
+
+It reads a SAVED run rather than invoking pytest. The point is to judge the
+artefact a comparison was drawn from, possibly much later, and a tool that
+re-ran the suite would answer a different question about a different tree.
+
+Run against this session's three real captured outputs it classifies all three
+correctly: the tainted one as `lost_workers`, naming worker `gw5` and the test
+it died on and reporting 2 of 317 collected tests unreported, and the two
+evidence runs as `usable` at 23 failed / 294 passed and 8 failed / 173 passed.
+
+The lost-worker case is the one worth stating carefully, because its tally is
+not suspicious. Twenty-four failed and 291 passed is 315 of 317, and nothing
+about those numbers looks wrong. The run must be judged by the banner, not by
+whether its arithmetic surprises the reader.
+
+The fourth shape demonstrated itself while the tool was being verified. Reading
+the exit status through `| tail` reported **zero for a run the tool had just
+exited one on** - the filter's status, not the tool's, which is exactly the
+failure the module's own docstring lists fourth. Re-read unpiped, the statuses
+are 1 for the tainted run and 0 for the two evidence runs.
