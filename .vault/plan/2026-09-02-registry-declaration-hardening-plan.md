@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:8db18fa0aac8f93aa3a810634f290d057cdd4524fabcd9042200ec145dd3a808'
+body_hash: 'sha256:16d3f73f9226f2965f3a6554de81d5509f240957b9bf5268b25d063b8de9304f'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -488,6 +488,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S606` - Read the curation baseline nothing loaded, which recorded counts and a review cadence while being referenced by no module, recipe or declaration, and had already been passed unnoticed at 99 and 100 recorded against 101 and 102 live; reported beside the audit rather than enforced, since the numbers are a frozen corpus count; `dev/docs/terminology_handbook/cli.py,dev/docs/terminology_handbook/tests/test_curation_baseline_is_read.py`.
 - [x] `W02.P02.S607` - Share one real canary scan across the two section tests that read its report, since running it per-test measured the same deterministic report twice at 209s and 182s inside a 300-second budget whose expiry kills the worker and reports every sibling as never having run; `dev/identity/tests/test_identity_canary_report.py`.
 - [x] `W02.P02.S608` - Share one whole-tree helper census across the three tests that read it and lift their refusal guard into the fixture, since each censused the tracked tree independently at 82.8s, 79.8s and 77.2s for one deterministic result and reported an unreadable tree three different ways, one of them not at all; `dev/quality/tests/test_helper_body_census.py`.
+- [x] `W02.P02.S609` - Gate every committed justificante fixture on the leak markers rather than only those carrying a sanitiser sidecar, since the pair was appended only when the sidecar existed and three of sixty-three committed fixtures never met the assertions that need no sidecar at all, and declare the sidecar-less set so a new one must be classified instead of vanishing; `dev/sanitizer/tests/test_adversarial_absence.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
