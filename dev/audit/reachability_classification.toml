@@ -589,3 +589,15 @@ area = "entrypoints/cli"
 resolved = true
 symbols = ["_LEDGER_BUSINESS_PAYLOAD_EXPORTS", "_LEDGER_RULE_PAYLOAD_EXPORTS", "_LEDGER_RATIOS_PAYLOAD_EXPORTS"]
 evidence = "Three tuples that merely MENTIONED 34 imported payload types so the linter would not strip imports that external callers import from this module. They were load-bearing, not dead: removing them alone would have stripped the imports and broken the re-export surface. Replaced by an explicit __all__ of 91 names, which is the mechanism for the same job and which the linter and a reader both understand. Re-exports verified still reachable and the module's findings fell from three to zero."
+
+[[symbol_cluster]]
+name = "iva ledger test-facing aliases that no test faced"
+class = "orphaned"
+area = "application/aggregation"
+resolved = true
+symbols = [
+  "_flow_direction_for", "_business_proportionality", "_has_converted_non_eur_amount",
+  "_missing_tax_fact_reason", "_missing_tax_fact_detail", "_prorrata_reference_for",
+  "_validate_intracom_export_counterparty",
+]
+evidence = "Seven private aliases to public imports, carrying the comment 'Kept as local test-facing names'. No test referenced any of them, none appeared in __all__, and each public original appeared exactly twice in the module -- its import and the alias -- so nothing in production used them either. A sibling alias under the same comment, _iva_rate_kind_for, IS referenced by tests six times and was kept, which is what shows the comment was true of one line and inherited by seven."
