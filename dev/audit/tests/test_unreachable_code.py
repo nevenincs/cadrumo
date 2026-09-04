@@ -680,3 +680,37 @@ def test_importers_exclude_a_findings_own_span(tmp_path: Path) -> None:
     cluster = next(f for f in outcome.modules if f.module == "pkg.cluster")
     assert cluster.spanned_modules == 3
     assert cluster.importers == ()
+
+
+def test_the_reference_walk_records_what_it_could_not_read() -> None:
+    """A skipped file's references are never seen, so symbols only IT uses look dead.
+
+    The skip itself is deliberate - this tree is edited while the audit runs and
+    a file can vanish mid-scan - but it was silent, so the findings were computed
+    over an incomplete corpus with nothing saying so. Any deletion list derived
+    from that corpus could name a symbol that is used.
+    """
+    from ..unreachable_code import _OutsideUse
+
+    fresh = _OutsideUse()
+
+    assert fresh.unreadable == [], "the accumulator starts with nothing lost"
+
+    fresh.unreadable.append("src/cadrumo/vanished.py")
+
+    assert fresh.unreadable == ["src/cadrumo/vanished.py"]
+
+
+def test_the_live_reference_walk_read_every_file(capsys: pytest.CaptureFixture[str]) -> None:
+    """The healthy state, asserted rather than assumed.
+
+    If this ever fails, the audit's findings for that run were computed over a
+    corpus missing the named files, and the run should be repeated rather than
+    acted on.
+    """
+    from ..._paths import REPO_ROOT
+    from ..unreachable_code import run_unreachable_code_scan
+
+    run_unreachable_code_scan(REPO_ROOT)
+
+    assert "were unreadable during the reference walk" not in capsys.readouterr().err
