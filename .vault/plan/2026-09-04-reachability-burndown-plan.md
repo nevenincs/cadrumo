@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:999b3ae773c09cb31be9520472329dc010450776ce8d9487c6ceec88b9720aef'
+body_hash: 'sha256:c684d9170d9e5ebf93b904cf288d823719c9e390fc75e4ad004217cf762de8c6'
 ---
 
 # `reachability-burndown` plan
@@ -54,7 +54,7 @@ Move shared test support into the wheel-excluded test tree and verify the distri
 Resolve modules requiring a delete-or-wire decision, each with its authorising record.
 
 - [x] `W02.P04.S06` - Resolve the operator_surface CRUD catalogue cluster against its conformance-test consumer; `src/cadrumo/application/operator_surface`.
-- [ ] `W02.P04.S07` - Adjudicate the staged-capability modules against their authorising decisions and classify or wire each; `src/cadrumo/application`.
+- [x] `W02.P04.S07` - Adjudicate the staged-capability modules against their authorising decisions and classify or wire each; `src/cadrumo/application`.
 
 ## Wave `W03` - burn down the symbol backlog
 
