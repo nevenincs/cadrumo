@@ -22,6 +22,8 @@ from .schema_base import (
     RegistryModel,
     SourceCitation,
     SourceRefs,
+    ThresholdComparison,
+    ThresholdComparisonField,
     coerce_enum_member,
 )
 from .schema_scalars import DecimalValue
@@ -179,6 +181,20 @@ class DatedValue(RegistryModel):
     date_axis: DateAxisField
     valid_from: date
     valid_to: date | None = None
+    comparison: ThresholdComparisonField = ThresholdComparison.EXCLUSIVE
+    """How this value is compared when it is used as a threshold.
+
+    A provision can be redrafted so that only the COMPARISON moves: LIVA art.
+    103.Dos.2 read "exceda en un 20 por 100" until 2014 and "exceda en un 10 por
+    ciento o mas" from 2015, and the added "o mas" shifts the boundary case from
+    excluded to included. Two redactions of one provision therefore differ on the
+    operator as well as the value, and could not be two dated values while the
+    operator lived in a Python year branch.
+
+    Defaults to EXCLUSIVE, which is the semantics every shipped value is read
+    with today, so declaring the field changes no existing meaning. A value that
+    is not used as a threshold simply never has it read.
+    """
 
     @model_validator(mode="after")
     def _validate_window(self) -> DatedValue:

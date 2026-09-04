@@ -248,11 +248,25 @@ def resolve_bracket(
     return selected_entry.fixed_addition + selected_entry.marginal_rate * (base - selected_entry.lower_bound)
 
 
-def resolve_parameter(parameter: ParameterDefinition, date_context: Mapping[str, date]) -> Decimal:
-    """Resolve one dated value from a :class:`ParameterDefinition`.
+def resolve_dated_value(parameter: ParameterDefinition, date_context: Mapping[str, date]) -> DatedValue:
+    """Resolve the one dated value a :class:`ParameterDefinition` selects.
 
     Exactly one :class:`~domain.calculations.registry._schema_formula.DatedValue` must match
     the selected date axes for the parameter lookup to be deterministic.
+
+    Returns the RECORD rather than its scalar, because a value can carry more
+    than the number: a threshold's comparison operator moves independently of its
+    amount, so a caller applying a threshold needs the value and the operator
+    that the same redaction fixed. :func:`resolve_parameter` delegates here so
+    the selection lives in one place and the two cannot drift.
+
+    Returns:
+        The single matching :class:`DatedValue`.
+
+    Raises:
+        RegistryValidationError: If the parameter declares no values, a required
+            date axis is absent from ``date_context``, or the match is not exactly
+            one.
     """
     if not parameter.values:
         raise RegistryValidationError(f"parameter {parameter.id!r} has no dated values")
@@ -267,7 +281,16 @@ def resolve_parameter(parameter: ParameterDefinition, date_context: Mapping[str,
         raise RegistryValidationError(
             f"parameter {parameter.id!r} expected exactly one dated value, found {len(matches)}",
         )
-    return matches[0].value
+    return matches[0]
+
+
+def resolve_parameter(parameter: ParameterDefinition, date_context: Mapping[str, date]) -> Decimal:
+    """Resolve one dated scalar from a :class:`ParameterDefinition`.
+
+    Returns:
+        The selected value's scalar.
+    """
+    return resolve_dated_value(parameter, date_context).value
 
 
 def resolve_scalar_parameter(parameter_id: str, ctx: _EvalContext, *, op: str) -> Decimal:
