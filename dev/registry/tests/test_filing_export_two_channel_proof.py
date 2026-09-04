@@ -283,8 +283,17 @@ def _residue_signature(report: FilingExportConformanceEnrollmentReport) -> tuple
 
 
 @pytest.mark.timeout(600)
-def test_static_projection_matches_validated_classification_for_every_selected_revision() -> None:
-    """The immutable diagnostic projection preserves every strict disposition."""
+def test_static_projection_preserves_every_strict_disposition_and_fails_closed_on_the_success_set() -> None:
+    """The degraded read loses no disposition and refuses exactly where the strict read materializes.
+
+    Plain residue equality cannot hold once ANY vector is materializable: the
+    diagnostic projection runs against an unvalidated registry by construction,
+    so a coordinate the strict path proves must refuse here as
+    ``registry_validation_incomplete``. Materializing it instead would be the
+    consumer-side upgrade of an ungrounded capability the authority-flow rule
+    forbids. This asserts the stronger property: no strict disposition is lost,
+    and the only extra degraded residues are exactly the strict success set.
+    """
     registry = bundled_authority()
     classification = load_registry_diagnostic_classification(
         bundled_path("registry", "aeat"),
@@ -320,8 +329,22 @@ def test_static_projection_matches_validated_classification_for_every_selected_r
     assert all(isinstance(inspection, StaticGeneratedArtifactInspection) for inspection in static_inspections)
     assert not any(isinstance(value, RegistryRevisionInspection) for value in _static_data_graph(classification))
     assert _candidate_signature(diagnostic_report) == _candidate_signature(strict_report)
-    assert _residue_signature(diagnostic_report) == _residue_signature(strict_report)
     assert not diagnostic_report.materializable_vectors
+
+    materialized = {
+        (str(vector.evidence.coordinate.modelo), str(vector.evidence.coordinate.revision))
+        for vector in strict_report.materializable_vectors
+    }
+    assert materialized, "the parity claim is vacuous unless the strict path materializes something"
+
+    strict_residues = set(_residue_signature(strict_report))
+    degraded_residues = set(_residue_signature(diagnostic_report))
+    assert not strict_residues - degraded_residues, "the degraded read must not lose a strict disposition"
+
+    only_degraded = degraded_residues - strict_residues
+    assert {(row[0], row[1]) for row in only_degraded} == materialized
+    assert {row[3] for row in only_degraded} == {"registry_validation_incomplete"}
+    assert {row[6] for row in only_degraded} == {str(classification.strict_validation_error)}
 
 
 def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() -> None:
@@ -340,9 +363,9 @@ def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() 
             source_root=bundled_path(),
             classification=classification,
             vectors=canonical_filing_export_conformance_vectors(
-            registry_root=bundled_path("registry", "aeat"),
-            source_root=bundled_path(),
-        ),
+                registry_root=bundled_path("registry", "aeat"),
+                source_root=bundled_path(),
+            ),
         )
         selected_coordinates = {
             (str(selected.modelo), str(selected.revision)) for selected in classification.filing_revisions

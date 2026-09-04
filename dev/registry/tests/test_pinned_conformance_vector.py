@@ -92,7 +92,7 @@ def test_a_corrupt_pin_refuses_as_a_typed_registry_error(tmp_path: Path) -> None
     """A truncated or malformed pin must not escape as an unowned crash."""
     truncated = tmp_path / "truncated.toml"
     shutil.copy(_PINNED, truncated)
-    truncated.write_text("authority_id = \"only-this\"\n", encoding="utf-8")
+    truncated.write_text('authority_id = "only-this"\n', encoding="utf-8")
     with pytest.raises(RegistryValidationError, match="pinned-vector contract"):
         load_pinned_conformance_document(truncated)
 
@@ -112,7 +112,7 @@ def test_one_id_declared_on_both_input_channels_is_refused(tmp_path: Path) -> No
     text = _PINNED.read_text(encoding="utf-8")
     colliding.write_text(
         text.replace(
-            '[inputs.enum]',
+            "[inputs.enum]",
             '[inputs.enum]\n"00501" = "sl"',
             1,
         ),

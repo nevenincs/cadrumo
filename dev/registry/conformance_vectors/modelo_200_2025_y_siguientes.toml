@@ -27,13 +27,15 @@ layout_ids = ["generated-modelo-200-2025-y-siguientes-fichero"]
 # exercised; a zero here would render a degenerate base and prove far less.
 "00501" = "100000"
 "modelo-200-2024-profile-new-entity-flag" = "0"
-# INCN of the preceding 12 months. NOT a neutral zero: LIS DT 44a (Ley 7/2024)
-# gives an INCN below one million euros the transitional microempresa scale
-# (21%/22% in 2025) instead of the general art. 29 rate. A zero here would
-# silently prove only the reduced-rate branch while reading as a mere
-# rendering minimum. This value sits ABOVE the threshold and is coherent with
-# the declared 00501 result, so the GENERAL rate branch is the one exercised.
-"modelo-200-2024-profile-incn-prior-12-months" = "2000000"
+# INCN of the preceding 12 months. NOT a neutral zero: this value selects the
+# tipo de gravamen branch outright. Below one million euros LIS DT 44a gives
+# the transitional microempresa scale (21%/22% for 2025); below ten million it
+# gives the ERD art. 101 rate that DT 44a phases down (24% for 2025, parameter
+# is.modelo-200.tipo-gravamen-erd-art101). Only above the art. 101 ceiling does
+# the GENERAL art. 29 rate of 25% apply. This value clears that ceiling, so the
+# general branch is the one exercised, and it is coherent with the declared
+# 00501 result.
+"modelo-200-2024-profile-incn-prior-12-months" = "12000000"
 "modelo-200-2024-profile-tributacion-estado-porcentaje" = "100"
 "modelo-200-2024-bin-pendiente-ejercicios-anteriores" = "0"
 "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores" = "0"
