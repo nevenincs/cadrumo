@@ -20,13 +20,25 @@ _SOURCE_SHA256 = "6a84b40c8c1b6a6771598f77d5334b9af858f5fbdc8fe96c3a8b2511af0f45
 
 
 def test_errors_live_in_public_defining_module_without_facade_reexports() -> None:
-    """The public module owns the hierarchy and the package has no error facade."""
+    """The public module owns the hierarchy and the package forwards nothing.
+
+    The assertion used to read the package's ``__all__`` and check the two error
+    names were absent from it, which assumed an ``__all__`` existed - true only
+    while the initialiser forwarded twenty-three other names. The property it was
+    after survives and is stated directly: the initialiser exports nothing, so no
+    name can be absent from a list that no longer exists.
+    """
     assert errors.__name__ == "dev.sanitizer.errors"
     assert {SanitizationError.__module__, AlreadySanitizedError.__module__} == {errors.__name__}
-    assert "SanitizationError" not in sanitizer_package.__all__
-    assert "AlreadySanitizedError" not in sanitizer_package.__all__
+    assert not hasattr(sanitizer_package, "__all__"), "an inert initialiser declares no exports"
     assert not hasattr(sanitizer_package, "SanitizationError")
     assert not hasattr(sanitizer_package, "AlreadySanitizedError")
+    # Nothing but submodules, which is what importing a package leaves behind
+    # and the only thing an inert initialiser may carry.
+    public = [name for name in vars(sanitizer_package) if not name.startswith("_")]
+    assert all(getattr(sanitizer_package, name).__name__.startswith("dev.sanitizer.") for name in public), (
+        f"the initialiser still forwards non-module names: {public}"
+    )
 
 
 def test_the_family_stays_outside_the_product_error_registry() -> None:

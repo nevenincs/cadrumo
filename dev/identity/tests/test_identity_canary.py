@@ -43,7 +43,7 @@ from pathlib import Path
 import pytest
 
 from ..._paths import REPO_ROOT
-from ...sanitizer import ResidualKind
+from ...sanitizer.residual_identity import ResidualKind
 from .._tree_scan import (
     BLOCKING_KINDS,
     BLOCKING_TRACKING,

@@ -85,13 +85,9 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.tests import SRC_CADRUMO
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
-from .. import (
-    CHECKSUM_VERIFIED_KINDS,
-    ResidualKind,
-    sanitize_pdf,
-    scan_for_residual_identities,
-)
+from .._pipeline import sanitize_pdf
 from .._records import IbanReplacement, NameReplacement, NifReplacement, TokenMap
+from ..residual_identity import CHECKSUM_VERIFIED_KINDS, ResidualKind, scan_for_residual_identities
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
