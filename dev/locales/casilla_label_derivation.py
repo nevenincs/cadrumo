@@ -82,9 +82,7 @@ def _canonical_text(texts: dict[str, str]) -> str:
     return min(text for text, count in tally.items() if count == best)
 
 
-def derived_from(
-    labels: dict[str, dict[str, dict[str, str]]], *, locale: str = "es"
-) -> DerivedLabels:
+def derived_from(labels: dict[str, dict[str, dict[str, str]]], *, locale: str = "es") -> DerivedLabels:
     """Derive per-casilla labels from an already-read mapping.
 
     Separated from the corpus read so constructed input travels the same code
