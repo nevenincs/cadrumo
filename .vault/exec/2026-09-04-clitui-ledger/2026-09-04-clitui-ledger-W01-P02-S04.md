@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:7e78abfae81a8120655685589d758343c1733eec763ca21e223f75e070cf57c8'
+body_hash: 'sha256:e7525fb8478ab7c7200bd0840104f70c5228703a79a558174dbfe0b9c5cc7b6c'
 step_id: 'S04'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
@@ -24,7 +24,9 @@ related:
 - `A` `.vault/exec/2026-09-04-clitui-ledger/2026-09-04-clitui-ledger-W01-P02-S04.md`
 - `M` `.vault/plan/2026-09-04-clitui-ledger-plan.md`
 - `M` `.vault/index/clitui-ledger.index.md`
-- `verify:` `uv run --no-sync pytest -q src/cadrumo/entrypoints/cli/tests/test_command_spec_deferred_targets.py src/cadrumo/entrypoints/cli/tests/test_command_spec_kernel.py src/cadrumo/entrypoints/cli/tests/test_command_specs.py src/cadrumo/entrypoints/cli/tests/test_command_graph_consumers.py` -> `pass`
+- `verify:` `uv run --no-sync pytest -q -n 0 src/cadrumo/entrypoints/cli/tests/test_command_spec_deferred_targets.py` -> `pass`
+- `verify:` `uv run --no-sync pytest -q -n 0 src/cadrumo/entrypoints/cli/tests/test_command_spec_kernel.py src/cadrumo/entrypoints/cli/tests/test_command_specs.py` -> `pass`
+- `verify:` `uv run --no-sync pytest -q -n 0 src/cadrumo/entrypoints/cli/tests/test_command_graph_consumers.py` -> `pass`
 
 ## Notes
 
