@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 from textual.widget import Widget
 
-from ....tests.terminal_sizes import SUPPORTED_TERMINAL_SIZES
+from ....tests.terminal_sizes import SUPPORTED_TERMINAL_SIZES, TERMINAL_ORDINARY
 from ..components.host import ScreenHostApp
 from ..components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
 from ..home import HomeScreen
@@ -177,3 +177,40 @@ async def test_home_keeps_a_gutter_between_its_two_columns(scenario: str, size: 
         app.exit(None)
 
     assert not collisions, "Home paints left-column text against the sidebar:\n" + "\n".join(collisions[:3])
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "surface",
+    ["aeat-sync-overview--ready", "aeat-sync-filed-declarations--ready", "declarations-calendar--ready"],
+)
+async def test_no_table_header_is_clipped_while_the_row_has_width_to_spare(surface: str) -> None:
+    """A clipped header stops the operator knowing what a column is.
+
+    NO OTHER GATE CAN SEE THIS. The overflow check asserts nothing crosses the
+    right edge, and nothing does -- truncation inside a table with room beside
+    it paints exactly like a table that fits. So this reads the painted header
+    row and compares it against the labels the screen actually declared.
+
+    Measured before the fix: `Disponibilidad` painted as `Disponibilid` while
+    the row stopped near column 78 of 120.
+    """
+    from textual.widgets import DataTable
+
+    from ..devtools.frame import screen_text
+    from ..devtools.workbench_fixtures import resolve_workbench_fixture
+
+    width, height = TERMINAL_ORDINARY
+    app = resolve_workbench_fixture(surface).build()
+    async with app.run_test(size=(width, height)) as pilot:
+        await pilot.pause()
+        declared: list[str] = []
+        for table in app.screen.query(DataTable):
+            declared.extend(str(column.label).strip() for column in table.columns.values())
+        painted = screen_text(app, width, height)
+        app.exit(None)
+
+    missing = [label for label in declared if label and label not in painted]
+    assert not missing, (
+        f"{surface} clips these column headers out of the painted frame: {missing}"
+    )
