@@ -15,18 +15,20 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
-from typing import Final
+from typing import Final, cast
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-SCHEMA_VERSION: Final[int] = 2
+SCHEMA_VERSION: Final[int] = 3
 _DIGEST_PATTERN: Final[re.Pattern[str]] = re.compile(r"^sha256:[0-9a-f]{64}$")
 _CAPABILITY_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^ledger(?:\.[a-z][a-z0-9_]*)(?:\.[a-z][a-z0-9_]*)*$")
 _EVIDENCE_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^evidence\.[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)*$")
 _FINDING_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^finding\.[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)*$")
 _SUBJECT_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^subject\.[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)*$")
 _CENSUS_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^census\.ledger(?:\.[a-z][a-z0-9_]*)*$")
+_ATTESTATION_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^attestation\.ledger(?:\.[a-z][a-z0-9_]*)*$")
 _PLACEHOLDER_TEXT: Final[frozenset[str]] = frozenset({"", "n/a", "na", "none", "tbd", "todo", "unknown", "unmeasured"})
+ACCEPTED_LEDGER_PARITY_PLAN_OWNER: Final[str] = "clitui-ledger"
 
 
 class LedgerCapabilityAxis(StrEnum):
@@ -106,6 +108,14 @@ class DenominatorSourceKind(StrEnum):
     REGISTRY_ROUTE = "registry_route"
     ARTIFACT_PRODUCT = "artifact_product"
     SUPPORTED_SURFACE = "supported_surface"
+
+
+class ReviewRuling(StrEnum):
+    """The closed independent-review decision vocabulary."""
+
+    ACCEPT = "accept"
+    ACCEPT_WITH_REQUIRED_CHANGES = "accept_with_required_changes"
+    REJECT = "reject"
 
 
 class EvidenceKind(StrEnum):
@@ -197,6 +207,39 @@ def _require_observed_at(value: datetime, *, field_name: str) -> datetime:
     if value.tzinfo is None or value.utcoffset() is None:
         raise ValueError(f"{field_name} must carry an explicit timezone")
     return value
+
+
+def _canonical_value(value: object) -> object:
+    """Return a recursively stable JSON value for digest-bearing contracts."""
+    if isinstance(value, BaseModel):
+        return _canonical_value(value.model_dump(mode="python"))
+    if isinstance(value, StrEnum):
+        return value.value
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, Mapping):
+        mapping = cast(Mapping[object, object], value)
+        pairs = sorted(((str(key), item) for key, item in mapping.items()), key=lambda item: item[0])
+        return {key: _canonical_value(item) for key, item in pairs}
+    if isinstance(value, (frozenset, set)):
+        values = cast(frozenset[object] | set[object], value)
+        normalized = [_canonical_value(item) for item in values]
+        return sorted(
+            normalized,
+            key=lambda item: json.dumps(item, ensure_ascii=True, separators=(",", ":"), sort_keys=True),
+        )
+    if isinstance(value, tuple | list):
+        values = cast(tuple[object, ...] | list[object], value)
+        return [_canonical_value(item) for item in values]
+    return value
+
+
+def _canonical_digest(payload: object) -> str:
+    """Return the SHA-256 digest of the contract's canonical JSON payload."""
+    encoded = json.dumps(_canonical_value(payload), ensure_ascii=True, separators=(",", ":"), sort_keys=True).encode(
+        "utf-8"
+    )
+    return f"sha256:{hashlib.sha256(encoded).hexdigest()}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -366,6 +409,136 @@ class DenominatorEntryV1(BaseModel):
         return self
 
 
+class CensusStreamObservationV1(BaseModel):
+    """One independently readable mandatory source stream in a live census."""
+
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+
+    source: DenominatorSourceKind
+    revision: str = Field(min_length=1)
+    observed_at: datetime
+    scan_succeeded: bool
+    readable: bool
+    complete: bool
+    ambiguous: bool
+    reviewed_zero: bool
+    capability_ids: tuple[str, ...] = ()
+    digest: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _check_stream(self) -> CensusStreamObservationV1:
+        _require_non_placeholder(self.revision, field_name="revision")
+        _require_observed_at(self.observed_at, field_name="observed_at")
+        identities = self.capability_ids
+        if len(set(identities)) != len(identities):
+            raise ValueError(f"{self.source.value} census stream has duplicate capability identities")
+        for capability_id in identities:
+            _require_identity(capability_id, field_name="capability_id", pattern=_CAPABILITY_ID_PATTERN)
+        if identities and self.reviewed_zero:
+            raise ValueError("a nonempty census stream cannot be declared reviewed zero")
+        if not identities and not self.reviewed_zero:
+            raise ValueError("an empty census stream requires an explicit reviewed zero")
+        _require_digest(self.digest, field_name="digest")
+        if self.digest != self.calculated_digest:
+            raise ValueError(f"{self.source.value} census stream digest does not match its observation")
+        return self
+
+    @property
+    def calculated_digest(self) -> str:
+        """Return the canonical digest of every scan result and declared zero."""
+        return _canonical_digest(
+            {
+                "source": self.source,
+                "revision": self.revision,
+                "observed_at": self.observed_at,
+                "scan_succeeded": self.scan_succeeded,
+                "readable": self.readable,
+                "complete": self.complete,
+                "ambiguous": self.ambiguous,
+                "reviewed_zero": self.reviewed_zero,
+                "capability_ids": tuple(sorted(self.capability_ids)),
+            }
+        )
+
+    @property
+    def readiness_errors(self) -> tuple[str, ...]:
+        """Return fail-closed diagnostics for an unavailable source stream."""
+        errors: list[str] = []
+        if not self.scan_succeeded:
+            errors.append(f"{self.source.value} census stream did not scan successfully")
+        if not self.readable:
+            errors.append(f"{self.source.value} census stream is unreadable")
+        if not self.complete:
+            errors.append(f"{self.source.value} census stream is partial")
+        if self.ambiguous:
+            errors.append(f"{self.source.value} census stream is ambiguous")
+        return tuple(errors)
+
+
+class LedgerLiveCensusReportV1(BaseModel):
+    """A complete external observation of every denominator source stream."""
+
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+
+    census_id: str = Field(min_length=1)
+    revision: str = Field(min_length=1)
+    observed_at: datetime
+    streams: tuple[CensusStreamObservationV1, ...]
+    digest: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _check_report(self) -> LedgerLiveCensusReportV1:
+        _require_identity(self.census_id, field_name="census_id", pattern=_CENSUS_ID_PATTERN)
+        _require_non_placeholder(self.revision, field_name="revision")
+        _require_observed_at(self.observed_at, field_name="observed_at")
+        sources = tuple(stream.source for stream in self.streams)
+        if len(set(sources)) != len(sources) or frozenset(sources) != frozenset(DenominatorSourceKind):
+            raise ValueError("a live census report must account for every mandatory source stream exactly once")
+        if not self.capability_ids:
+            raise ValueError("a complete live census report cannot be empty")
+        _require_digest(self.digest, field_name="digest")
+        if self.digest != self.calculated_digest:
+            raise ValueError("live census report digest does not match its complete stream observations")
+        return self
+
+    @property
+    def capability_ids(self) -> frozenset[str]:
+        """Return the union of identities selected by all successful streams."""
+        return frozenset(capability_id for stream in self.streams for capability_id in stream.capability_ids)
+
+    @property
+    def denominator_entries(self) -> tuple[DenominatorEntryV1, ...]:
+        """Project source-stream observations into the complete union denominator."""
+        sources_by_capability: dict[str, set[DenominatorSourceKind]] = {}
+        for stream in self.streams:
+            for capability_id in stream.capability_ids:
+                sources_by_capability.setdefault(capability_id, set()).add(stream.source)
+        return tuple(
+            DenominatorEntryV1(capability_id=capability_id, sources=frozenset(sources))
+            for capability_id, sources in sorted(sources_by_capability.items())
+        )
+
+    @property
+    def calculated_digest(self) -> str:
+        """Return the canonical digest of the full source-stream observation."""
+        return _canonical_digest(
+            {
+                "census_id": self.census_id,
+                "revision": self.revision,
+                "observed_at": self.observed_at,
+                "streams": tuple(sorted(self.streams, key=lambda stream: stream.source.value)),
+            }
+        )
+
+    @property
+    def readiness_errors(self) -> tuple[str, ...]:
+        """Return the complete fail-closed diagnostics for this live census."""
+        errors = [error for stream in self.streams for error in stream.readiness_errors]
+        if not self.capability_ids:
+            errors.append("the complete live census report is empty")
+        return tuple(errors)
+
+
 class LedgerDenominatorSnapshotV1(BaseModel):
     """A digested and dated complete denominator snapshot."""
 
@@ -375,6 +548,9 @@ class LedgerDenominatorSnapshotV1(BaseModel):
     revision: str = Field(min_length=1)
     observed_at: datetime
     entries: tuple[DenominatorEntryV1, ...]
+    source_report_digest: str = Field(min_length=1)
+    source_report_revision: str = Field(min_length=1)
+    source_report_observed_at: datetime
     digest: str = Field(min_length=1)
 
     @model_validator(mode="after")
@@ -382,6 +558,9 @@ class LedgerDenominatorSnapshotV1(BaseModel):
         _require_identity(self.census_id, field_name="census_id", pattern=_CENSUS_ID_PATTERN)
         _require_non_placeholder(self.revision, field_name="revision")
         _require_observed_at(self.observed_at, field_name="observed_at")
+        _require_digest(self.source_report_digest, field_name="source_report_digest")
+        _require_non_placeholder(self.source_report_revision, field_name="source_report_revision")
+        _require_observed_at(self.source_report_observed_at, field_name="source_report_observed_at")
         if not self.entries:
             raise ValueError("a denominator census cannot be content-free")
         identities = tuple(entry.capability_id for entry in self.entries)
@@ -400,12 +579,32 @@ class LedgerDenominatorSnapshotV1(BaseModel):
     @property
     def calculated_digest(self) -> str:
         """Return the canonical digest of identities and source categories."""
-        payload = [
-            {"capability_id": entry.capability_id, "sources": sorted(source.value for source in entry.sources)}
-            for entry in sorted(self.entries, key=lambda item: item.capability_id)
-        ]
-        encoded = json.dumps(payload, ensure_ascii=True, separators=(",", ":"), sort_keys=True).encode("utf-8")
-        return f"sha256:{hashlib.sha256(encoded).hexdigest()}"
+        return _canonical_digest(
+            {
+                "census_id": self.census_id,
+                "revision": self.revision,
+                "observed_at": self.observed_at,
+                "entries": tuple(sorted(self.entries, key=lambda entry: entry.capability_id)),
+                "source_report_digest": self.source_report_digest,
+                "source_report_revision": self.source_report_revision,
+                "source_report_observed_at": self.source_report_observed_at,
+            }
+        )
+
+    @classmethod
+    def from_live_report(cls, report: LedgerLiveCensusReportV1) -> LedgerDenominatorSnapshotV1:
+        """Freeze a denominator snapshot that remains bound to its live report."""
+        provisional = cls.model_construct(
+            census_id=report.census_id,
+            revision=report.revision,
+            observed_at=report.observed_at,
+            entries=report.denominator_entries,
+            source_report_digest=report.digest,
+            source_report_revision=report.revision,
+            source_report_observed_at=report.observed_at,
+            digest="",
+        )
+        return cls(**provisional.model_dump(exclude={"digest"}), digest=provisional.calculated_digest)
 
 
 class AxisAssessmentV1(BaseModel):
@@ -486,6 +685,62 @@ class AuthorityMigrationHistoryV1(BaseModel):
     migration_completed: bool
 
 
+class AuthorityDispositionEntryV1(BaseModel):
+    """The initial CLI authority fact for one stable denominator row."""
+
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+
+    row_id: str = Field(min_length=1)
+    initial_cli_ownership: InitialCliOwnership
+
+    @model_validator(mode="after")
+    def _check_entry(self) -> AuthorityDispositionEntryV1:
+        _require_identity(self.row_id, field_name="row_id", pattern=_CAPABILITY_ID_PATTERN)
+        return self
+
+
+class AuthorityDispositionSnapshotV1(BaseModel):
+    """Digested immutable initial-ownership dispositions across matrix revisions."""
+
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+
+    census_id: str = Field(min_length=1)
+    revision: str = Field(min_length=1)
+    observed_at: datetime
+    entries: tuple[AuthorityDispositionEntryV1, ...]
+    digest: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _check_snapshot(self) -> AuthorityDispositionSnapshotV1:
+        _require_identity(self.census_id, field_name="census_id", pattern=_CENSUS_ID_PATTERN)
+        _require_non_placeholder(self.revision, field_name="revision")
+        _require_observed_at(self.observed_at, field_name="observed_at")
+        row_ids = tuple(entry.row_id for entry in self.entries)
+        if not row_ids or len(set(row_ids)) != len(row_ids):
+            raise ValueError("authority disposition snapshots require unique nonempty row identities")
+        _require_digest(self.digest, field_name="digest")
+        if self.digest != self.calculated_digest:
+            raise ValueError("authority disposition snapshot digest does not match its entries")
+        return self
+
+    @property
+    def dispositions(self) -> Mapping[str, InitialCliOwnership]:
+        """Return initial ownership keyed by stable row identity."""
+        return {entry.row_id: entry.initial_cli_ownership for entry in self.entries}
+
+    @property
+    def calculated_digest(self) -> str:
+        """Return the canonical digest of immutable initial ownership facts."""
+        return _canonical_digest(
+            {
+                "census_id": self.census_id,
+                "revision": self.revision,
+                "observed_at": self.observed_at,
+                "entries": tuple(sorted(self.entries, key=lambda entry: entry.row_id)),
+            }
+        )
+
+
 class LedgerCapabilityRowV1(BaseModel):
     """One complete reviewed row bound to the union denominator."""
 
@@ -529,6 +784,13 @@ class LedgerCapabilityRowV1(BaseModel):
                 raise ValueError("CLI-owned rows require matching migration and delegation state")
             if not history.migration_completed and CapabilityAnnotation.CLI_OWNED not in self.annotations:
                 raise ValueError("uncut CLI-owned rows retain cli_owned")
+            if not history.migration_completed and not any(
+                finding.gap_class is LedgerGapClass.AUTHORITY and LedgerCapabilityAxis.CLI in finding.affected_axes
+                for finding in self.findings
+            ):
+                raise ValueError(
+                    "an incomplete CLI-owned migration requires an authority finding and next closure action"
+                )
         elif CapabilityAnnotation.CLI_OWNED in self.annotations:
             raise ValueError("cli_owned contradicts immutable initial ownership")
         if (
@@ -576,7 +838,43 @@ class LedgerCampaignControlsV1(BaseModel):
 
     @model_validator(mode="after")
     def _check_owner(self) -> LedgerCampaignControlsV1:
-        _require_non_placeholder(self.sole_ledger_parity_plan_owner, field_name="sole_ledger_parity_plan_owner")
+        if self.sole_ledger_parity_plan_owner != ACCEPTED_LEDGER_PARITY_PLAN_OWNER:
+            raise ValueError("sole_ledger_parity_plan_owner must be the accepted clitui-ledger plan identity")
+        return self
+
+
+class LedgerMatrixAcceptanceAttestationV1(BaseModel):
+    """An independent ACCEPT ruling for one exact frozen matrix state."""
+
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+
+    attestation_id: str = Field(min_length=1)
+    reviewer: str = Field(min_length=1)
+    ruling: ReviewRuling
+    plan_owner: str = Field(min_length=1)
+    matrix_digest: str = Field(min_length=1)
+    denominator_digest: str = Field(min_length=1)
+    denominator_revision: str = Field(min_length=1)
+    review_subject_id: str = Field(min_length=1)
+    review_subject_revision: str = Field(min_length=1)
+    review_subject_digest: str = Field(min_length=1)
+    review_subject_observed_at: datetime
+    attested_at: datetime
+
+    @model_validator(mode="after")
+    def _check_attestation(self) -> LedgerMatrixAcceptanceAttestationV1:
+        _require_identity(self.attestation_id, field_name="attestation_id", pattern=_ATTESTATION_ID_PATTERN)
+        _require_non_placeholder(self.reviewer, field_name="reviewer")
+        if self.plan_owner != ACCEPTED_LEDGER_PARITY_PLAN_OWNER:
+            raise ValueError("acceptance attestation must name the accepted clitui-ledger plan identity")
+        _require_digest(self.matrix_digest, field_name="matrix_digest")
+        _require_digest(self.denominator_digest, field_name="denominator_digest")
+        _require_non_placeholder(self.denominator_revision, field_name="denominator_revision")
+        _require_identity(self.review_subject_id, field_name="review_subject_id", pattern=_SUBJECT_ID_PATTERN)
+        _require_non_placeholder(self.review_subject_revision, field_name="review_subject_revision")
+        _require_digest(self.review_subject_digest, field_name="review_subject_digest")
+        _require_observed_at(self.review_subject_observed_at, field_name="review_subject_observed_at")
+        _require_observed_at(self.attested_at, field_name="attested_at")
         return self
 
 
@@ -589,9 +887,13 @@ class LedgerCapabilityMatrixV1(BaseModel):
     controls: LedgerCampaignControlsV1
     accepted_denominator: LedgerDenominatorSnapshotV1
     current_denominator: LedgerDenominatorSnapshotV1
+    accepted_authority_dispositions: AuthorityDispositionSnapshotV1
+    current_authority_dispositions: AuthorityDispositionSnapshotV1
     current_subjects: tuple[EvidenceSubjectSnapshotV1, ...]
     rows: tuple[LedgerCapabilityRowV1, ...]
     campaign_evidence: tuple[EvidenceCoordinateV1, ...] = ()
+    matrix_digest: str = Field(min_length=1)
+    acceptance_attestation: LedgerMatrixAcceptanceAttestationV1
 
     @model_validator(mode="after")
     def _check_matrix(self) -> LedgerCapabilityMatrixV1:
@@ -607,6 +909,18 @@ class LedgerCapabilityMatrixV1(BaseModel):
             raise ValueError("matrix contains duplicate row identities")
         if frozenset(row_ids) != self.current_denominator.capability_ids:
             raise ValueError("matrix rows must exactly equal current complete denominator")
+        if frozenset(self.accepted_authority_dispositions.dispositions) != self.accepted_denominator.capability_ids:
+            raise ValueError("accepted authority dispositions must exactly equal the accepted denominator")
+        if self.accepted_authority_dispositions.census_id != self.accepted_denominator.census_id:
+            raise ValueError("accepted authority dispositions must bind the accepted denominator census")
+        if frozenset(row_ids) != frozenset(self.current_authority_dispositions.dispositions):
+            raise ValueError("current authority dispositions must exactly equal matrix rows")
+        if self.current_authority_dispositions.census_id != self.current_denominator.census_id:
+            raise ValueError("current authority dispositions must bind the current denominator census")
+        current_dispositions = self.current_authority_dispositions.dispositions
+        for row in self.rows:
+            if current_dispositions[row.identity.row_id] is not row.authority_migration.initial_cli_ownership:
+                raise ValueError("current authority disposition contradicts immutable row history")
         evidence = tuple(self.iter_evidence())
         evidence_ids = tuple(coordinate.evidence_id for coordinate in evidence)
         if len(set(evidence_ids)) != len(evidence_ids):
@@ -616,6 +930,26 @@ class LedgerCapabilityMatrixV1(BaseModel):
             subject = subjects.get(coordinate.subject_id)
             if subject is None or not coordinate.is_current_against(subject):
                 raise ValueError(f"evidence {coordinate.evidence_id!r} is stale or absent from current subjects")
+        _require_digest(self.matrix_digest, field_name="matrix_digest")
+        if self.matrix_digest != self.calculated_matrix_digest:
+            raise ValueError("matrix digest does not bind the current campaign state")
+        attestation = self.acceptance_attestation
+        if attestation.plan_owner != self.controls.sole_ledger_parity_plan_owner:
+            raise ValueError("acceptance attestation plan owner differs from campaign controls")
+        if attestation.matrix_digest != self.matrix_digest:
+            raise ValueError("acceptance attestation is not bound to this exact matrix digest")
+        if (
+            attestation.denominator_digest != self.current_denominator.digest
+            or attestation.denominator_revision != self.current_denominator.revision
+        ):
+            raise ValueError("acceptance attestation is not bound to this exact denominator revision")
+        review_subject = subjects.get(attestation.review_subject_id)
+        if review_subject is None or (
+            attestation.review_subject_revision != review_subject.revision
+            or attestation.review_subject_digest != review_subject.digest
+            or attestation.review_subject_observed_at != review_subject.observed_at
+        ):
+            raise ValueError("acceptance attestation review subject is stale or absent")
         return self
 
     def iter_evidence(self) -> Iterable[EvidenceCoordinateV1]:
@@ -629,6 +963,25 @@ class LedgerCapabilityMatrixV1(BaseModel):
     def has_campaign_evidence(self, role: EvidenceRole) -> bool:
         """Return whether a current campaign-wide coordinate has a role."""
         return any(coordinate.role is role for coordinate in self.campaign_evidence)
+
+    @property
+    def calculated_matrix_digest(self) -> str:
+        """Return the digest of all mutable semantic and proof-bearing campaign facts."""
+        return _canonical_digest(
+            {
+                "schema_version": self.schema_version,
+                "controls": self.controls,
+                "accepted_denominator": self.accepted_denominator,
+                "current_denominator": self.current_denominator,
+                "accepted_authority_dispositions": self.accepted_authority_dispositions,
+                "current_authority_dispositions": self.current_authority_dispositions,
+                "current_subjects": tuple(sorted(self.current_subjects, key=lambda subject: subject.subject_id)),
+                "rows": tuple(sorted(self.rows, key=lambda row: row.identity.row_id)),
+                "campaign_evidence": tuple(
+                    sorted(self.campaign_evidence, key=lambda coordinate: coordinate.evidence_id)
+                ),
+            }
+        )
 
 
 class GateAssessmentV1(BaseModel):
@@ -662,21 +1015,62 @@ def _denominator_drift(accepted: LedgerDenominatorSnapshotV1, current: LedgerDen
     for identity in sorted(accepted_entries.keys() & current_entries.keys()):
         if accepted_entries[identity] != current_entries[identity]:
             drift.append(f"denominator source classification drifted: {identity}")
+    if accepted.revision != current.revision:
+        drift.append("denominator revision drifted")
+    if accepted.observed_at != current.observed_at:
+        drift.append("denominator observation time drifted")
+    if accepted.source_report_revision != current.source_report_revision:
+        drift.append("denominator source-report revision drifted")
+    if accepted.source_report_observed_at != current.source_report_observed_at:
+        drift.append("denominator source-report observation time drifted")
+    if accepted.source_report_digest != current.source_report_digest:
+        drift.append("denominator source-report digest drifted")
     if accepted.digest != current.digest and not drift:
         drift.append("denominator digest drifted without an entry-level explanation")
+    return tuple(drift)
+
+
+def _authority_disposition_drift(
+    accepted: AuthorityDispositionSnapshotV1, current: AuthorityDispositionSnapshotV1
+) -> tuple[str, ...]:
+    """Detect erased or changed immutable initial CLI ownership across revisions."""
+    if accepted.census_id != current.census_id:
+        return ("accepted and current authority disposition census identities differ",)
+    accepted_entries = accepted.dispositions
+    current_entries = current.dispositions
+    drift: list[str] = []
+    for row_id in sorted(current_entries.keys() - accepted_entries.keys()):
+        drift.append(f"new authority disposition row: {row_id}")
+    for row_id in sorted(accepted_entries.keys() - current_entries.keys()):
+        drift.append(f"accepted authority disposition missing from current snapshot: {row_id}")
+    for row_id in sorted(accepted_entries.keys() & current_entries.keys()):
+        if accepted_entries[row_id] is not current_entries[row_id]:
+            drift.append(f"immutable initial CLI ownership drifted: {row_id}")
+    if accepted.revision != current.revision:
+        drift.append("authority disposition revision drifted")
+    if accepted.observed_at != current.observed_at:
+        drift.append("authority disposition observation time drifted")
+    if accepted.digest != current.digest and not drift:
+        drift.append("authority disposition digest drifted without an entry-level explanation")
     return tuple(drift)
 
 
 def validate_ledger_matrix_currentness(
     matrix: LedgerCapabilityMatrixV1,
     *,
-    observed_denominator: LedgerDenominatorSnapshotV1,
+    observed_census: LedgerLiveCensusReportV1,
     observed_subjects: tuple[EvidenceSubjectSnapshotV1, ...],
 ) -> list[str]:
-    """Compare a persisted matrix snapshot with fresh live census observations."""
-    errors = list(_denominator_drift(matrix.current_denominator, observed_denominator))
+    """Compare persisted state to mandatory live census and evidence observations."""
+    errors = list(observed_census.readiness_errors)
+    observed_denominator = LedgerDenominatorSnapshotV1.from_live_report(observed_census)
+    errors.extend(_denominator_drift(matrix.current_denominator, observed_denominator))
+    if not observed_subjects:
+        errors.append("live evidence-subject observation is empty")
     expected = {subject.subject_id: subject for subject in matrix.current_subjects}
     observed = {subject.subject_id: subject for subject in observed_subjects}
+    if len(observed) != len(observed_subjects):
+        errors.append("live evidence-subject observation contains duplicate identities")
     for subject_id in sorted(observed.keys() - expected.keys()):
         errors.append(f"new evidence subject absent from matrix snapshot: {subject_id}")
     for subject_id in sorted(expected.keys() - observed.keys()):
@@ -695,24 +1089,25 @@ def evaluate_ledger_capability_gate(
     matrix: LedgerCapabilityMatrixV1,
     gate: LedgerGate,
     *,
-    observed_denominator: LedgerDenominatorSnapshotV1 | None = None,
-    observed_subjects: tuple[EvidenceSubjectSnapshotV1, ...] | None = None,
+    observed_census: LedgerLiveCensusReportV1,
+    observed_subjects: tuple[EvidenceSubjectSnapshotV1, ...],
 ) -> GateAssessmentV1:
     """Evaluate the exact G0--G4 predicate against typed current evidence."""
     blockers: list[str] = []
-    observed_denominator = observed_denominator or matrix.current_denominator
-    observed_subjects = observed_subjects or matrix.current_subjects
     if gate is LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE:
         blockers.extend(_denominator_drift(matrix.accepted_denominator, matrix.current_denominator))
         blockers.extend(
+            _authority_disposition_drift(matrix.accepted_authority_dispositions, matrix.current_authority_dispositions)
+        )
+        blockers.extend(
             validate_ledger_matrix_currentness(
-                matrix, observed_denominator=observed_denominator, observed_subjects=observed_subjects
+                matrix, observed_census=observed_census, observed_subjects=observed_subjects
             )
         )
         if not matrix.controls.tui_implementation_hold_recorded or not matrix.controls.tui_implementation_hold_active:
             blockers.append("the Ledger TUI implementation hold is not recorded and active")
-        if not matrix.has_campaign_evidence(EvidenceRole.INDEPENDENT_ENGINEERING_REVIEW):
-            blockers.append("independent engineering review of the frozen matrix is missing")
+        if matrix.acceptance_attestation.ruling is not ReviewRuling.ACCEPT:
+            blockers.append("independent review has not issued an ACCEPT attestation for the frozen matrix")
         for row in matrix.rows:
             for assessment in row.assessments:
                 if (
@@ -813,15 +1208,15 @@ def evaluate_ledger_capability_gate(
 def evaluate_ledger_capability_gates(
     matrix: LedgerCapabilityMatrixV1,
     *,
-    observed_denominator: LedgerDenominatorSnapshotV1 | None = None,
-    observed_subjects: tuple[EvidenceSubjectSnapshotV1, ...] | None = None,
+    observed_census: LedgerLiveCensusReportV1,
+    observed_subjects: tuple[EvidenceSubjectSnapshotV1, ...],
 ) -> tuple[GateAssessmentV1, ...]:
     """Evaluate ordered gates without allowing a later false closure."""
     assessments: list[GateAssessmentV1] = []
     prior_open = False
     for gate in _GATE_ORDER:
         assessment = evaluate_ledger_capability_gate(
-            matrix, gate, observed_denominator=observed_denominator, observed_subjects=observed_subjects
+            matrix, gate, observed_census=observed_census, observed_subjects=observed_subjects
         )
         if prior_open and assessment.closed:
             assessment = GateAssessmentV1(
@@ -840,14 +1235,18 @@ def reopened_gates_for_denominator_drift(
 
 
 __all__ = [
+    "ACCEPTED_LEDGER_PARITY_PLAN_OWNER",
     "SCHEMA_VERSION",
     "ApplicabilityState",
+    "AuthorityDispositionEntryV1",
+    "AuthorityDispositionSnapshotV1",
     "AuthorityMigrationHistoryV1",
     "AxisAssessmentV1",
     "AxisProofState",
     "CanonicalSemanticHomeV1",
     "CapabilityAnnotation",
     "CapabilityFindingV1",
+    "CensusStreamObservationV1",
     "DenominatorEntryV1",
     "DenominatorSourceKind",
     "EvidenceCoordinateV1",
@@ -864,6 +1263,9 @@ __all__ = [
     "LedgerDenominatorSnapshotV1",
     "LedgerGapClass",
     "LedgerGate",
+    "LedgerLiveCensusReportV1",
+    "LedgerMatrixAcceptanceAttestationV1",
+    "ReviewRuling",
     "SurfaceCapabilityState",
     "evaluate_ledger_capability_gate",
     "evaluate_ledger_capability_gates",

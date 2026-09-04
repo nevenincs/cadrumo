@@ -239,3 +239,53 @@ def test_the_evidence_check_can_report_an_absence() -> None:
     assert _evidence_for("writes", ast.parse("target.write_text('x')\n"))
     assert _evidence_for("applies", ast.parse("parser.add_argument('--apply')\n"))
     assert _evidence_for("operator", ast.parse("def main() -> int:\n    return 0\n"))
+
+
+def test_an_unreadable_test_is_announced_as_inflating_the_list(
+    tmp_path: pathlib.Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A skipped test contributes no imports, so what it covers looks unreached.
+
+    This list is used to choose work, so a false entry costs an iteration spent
+    testing something already tested. The skip stays - a concurrently edited
+    tree can present a half-written file - but it is no longer silent.
+    """
+    (tmp_path / "subject.py").write_text("VALUE = 1" + chr(10), encoding="utf-8")
+    (tmp_path / "test_broken.py").write_text("def (:" + chr(10), encoding="utf-8")
+
+    unreached_modules(tmp_path)
+
+    error = capsys.readouterr().err
+    assert "test module(s) could not be read" in error
+    assert "test_broken.py" in error
+
+
+def test_an_unreadable_module_is_announced_as_absent_from_the_report(
+    tmp_path: pathlib.Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The opposite direction: the finding disappears rather than being false.
+
+    A module that cannot be parsed is dropped from the result, so a genuinely
+    unreached module becomes invisible - the report shrinks by exactly the file
+    nobody could read.
+    """
+    (tmp_path / "broken.py").write_text("def (:" + chr(10), encoding="utf-8")
+
+    reported = unreached_modules(tmp_path)
+
+    assert "broken" not in {item.dotted.rsplit(".", 1)[-1] for item in reported}
+    assert "absent from this report entirely" in capsys.readouterr().err
+
+
+def test_a_readable_tree_announces_nothing(
+    tmp_path: pathlib.Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A notice that fires for every run would carry no information."""
+    (tmp_path / "subject.py").write_text("VALUE = 1" + chr(10), encoding="utf-8")
+
+    unreached_modules(tmp_path)
+
+    assert capsys.readouterr().err == ""
