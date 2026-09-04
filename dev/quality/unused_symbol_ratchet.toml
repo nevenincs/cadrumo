@@ -207,7 +207,6 @@
 "cadrumo.domain.buckets.event" = 1
 "cadrumo.domain.calculations.registry._citation_blocklist" = 1
 "cadrumo.domain.calculations.registry._invoice_row_materialization" = 1
-"cadrumo.domain.calculations.registry._m303_orden_source" = 3
 "cadrumo.domain.calculations.registry._snapshot_internals" = 2
 "cadrumo.domain.calculations.registry._source_evidence_fingerprint" = 1
 "cadrumo.domain.calculations.registry._validate_cross_revision" = 1
