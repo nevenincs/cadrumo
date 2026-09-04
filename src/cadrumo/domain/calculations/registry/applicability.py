@@ -102,13 +102,13 @@ from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.time.clock import today_madrid
 from ...deadlines.models import (
-    EntityType,
     FiscalResidency,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
     IVARegime,
     TaxpayerProfile,
 )
+from ...contribuyente.entity_type import EntityType
 from ._applicability_labels import PAYER_FACT_INCOMPLETE_LABELS as _PAYER_FACT_INCOMPLETE_LABELS
 from .applicability_payer_facts import PayerFact, payer_fact_holds
 from .applicability_routes import TAX_ROUTE_FOR_ENTITY_TYPE as _TAX_ROUTE_FOR_ENTITY_TYPE

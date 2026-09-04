@@ -24,16 +24,15 @@ from ...domain.contribuyente.renta_codes import (
     SituacionFamiliar,
 )
 from ...domain.deadlines.models import (
-    EntityType,
     FiscalResidency,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
     IrpfSpecialRegime,
     IVARegime,
-    LegalEntityForm,
     M303RegimeComposition,
     M303TaxTerritory,
 )
+from ...domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from .models import (
     WizardChoice,
     WizardCondition,

@@ -6,14 +6,13 @@ import pytest
 
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
 from ....domain.deadlines.models import (
-    EntityType,
     IVARegime,
-    LegalEntityForm,
     M303RegimeComposition,
     M303TaxTerritory,
     ModeloIVAProfile,
     TaxpayerProfile,
 )
+from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

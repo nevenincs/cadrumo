@@ -25,7 +25,8 @@ from ....application.overview.calendar_models import OverviewCalendarRange, Over
 from ....application.overview.coverage import AdvisedObligation, CoverageAdviceReason, ObligationCoverageReport
 from ....application.overview.next_actions import OverviewStatusNextStepId
 from ....core.json_contract import Notice, ResolvedNoticeAction
-from ....domain.deadlines.models import EntityType, IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
+from ....domain.contribuyente.entity_type import EntityType
 from .._common import _action_text_lines
 from .._overview_rendering import (
     overview_calendar_output,

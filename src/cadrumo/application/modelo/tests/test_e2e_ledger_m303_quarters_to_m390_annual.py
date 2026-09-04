@@ -60,7 +60,8 @@ from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeduct
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.deadlines.models import EntityType, IVARegime, LegalEntityForm, TaxpayerProfile
+from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance

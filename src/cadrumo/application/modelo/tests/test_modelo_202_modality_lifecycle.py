@@ -26,14 +26,13 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core.period import Period
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.deadlines.models import (
-    EntityType,
     IVARegime,
-    LegalEntityForm,
     M303RegimeComposition,
     M303TaxTerritory,
     ModeloIVAProfile,
     TaxpayerProfile,
 )
+from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,

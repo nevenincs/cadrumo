@@ -28,13 +28,12 @@ from pydantic import ValidationError
 from ....core.modelo import OUT_OF_SCOPE_OBLIGATIONS, UNMODELED_OBLIGATIONS, Modelo
 from ....domain.calculations.registry.applicability import has_applicability_rule
 from ....domain.deadlines.models import (
-    EntityType,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
     IVARegime,
-    LegalEntityForm,
     TaxpayerProfile,
 )
+from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....tests.attribute_scope import scoped_attribute
 from ...modelo.registry_discovery import registry_modelo_codes
 from .. import coverage as _coverage

@@ -15,7 +15,8 @@ from ....core.period import Period
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines.engine import DeadlineEngine
-from ....domain.deadlines.models import EntityType, IVARegime, LegalEntityForm, ObligationStatus, TaxpayerProfile
+from ....domain.deadlines.models import IVARegime, ObligationStatus, TaxpayerProfile
+from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...live.expedientes import PersistedExpedientesSnapshot

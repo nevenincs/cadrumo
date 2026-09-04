@@ -1523,6 +1523,12 @@ tui:
       ledger: Abrir libro mayor
       profile: Abrir perfil
       unknown: Abrir área de trabajo
+    refusal:
+      not_composed: Todavía no se han podido leer todas las fuentes del espacio de
+        trabajo.
+      refresh_failed: La última actualización no pudo reconstruir el índice.
+      unavailable: La búsqueda no está disponible en esta sesión
+      unknown: No se ha podido preparar la búsqueda.
     result:
       address: Modelo %{modelo} · %{filing_year} · %{period}
       label:

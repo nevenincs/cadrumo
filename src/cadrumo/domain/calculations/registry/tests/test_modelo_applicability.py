@@ -9,15 +9,14 @@ import pytest
 from pydantic import ValidationError
 
 from ....deadlines.models import (
-    EntityType,
     FiscalResidency,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
     IrpfSpecialRegime,
     IVARegime,
-    LegalEntityForm,
     TaxpayerProfile,
 )
+from ....contribuyente.entity_type import EntityType, LegalEntityForm
 from ..applicability import (
     MODELO_APPLICABILITY_RULES,
     ApplicabilityVerdict,

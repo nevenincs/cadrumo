@@ -239,8 +239,8 @@ bienes-extranjero-above-threshold monedas-virtuales-extranjero-above-threshold l
 #: validator upper-cases the token before constructing the enum, so it accepts
 #: lowercase input a Choice would refuse.
 _WIZARD_ENUM_FIELDS: dict[str, ValueContract] = {
-    "entity-type": ValueContract(DeferredTarget("cadrumo.domain.deadlines.models", "EntityType")),
-    "legal-entity-form": ValueContract(DeferredTarget("cadrumo.domain.deadlines.models", "LegalEntityForm")),
+    "entity-type": ValueContract(DeferredTarget("cadrumo.domain.contribuyente.entity_type", "EntityType")),
+    "legal-entity-form": ValueContract(DeferredTarget("cadrumo.domain.contribuyente.entity_type", "LegalEntityForm")),
     "irpf-estimation-regime": ValueContract(DeferredTarget("cadrumo.domain.deadlines.models", "IrpfEstimationRegime")),
     "irpf-special-regime": ValueContract(DeferredTarget("cadrumo.domain.deadlines.models", "IrpfSpecialRegime")),
     "fiscal-residency": ValueContract(DeferredTarget("cadrumo.domain.contribuyente.renta_codes", "FiscalResidency")),

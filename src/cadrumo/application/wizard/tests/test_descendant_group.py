@@ -26,7 +26,7 @@ from ....core.flows import (
     FlowWidgetKind,
 )
 from ....core.models import STRICT_FROZEN_CONFIG
-from ....domain.deadlines.models import EntityType
+from ....domain.contribuyente.entity_type import EntityType
 from ...flows.definition import CopyRef, FlowChoice, FlowDefinition, FlowPage, FlowSection
 from ...flows.engine import FlowState, answer, start_flow, visible_sequence
 from ...flows.validators import resolve_cross_field_validator

@@ -42,7 +42,8 @@ from ...domain.calculations.registry.profile_grounding import (
 )
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.temporal import select_revision
-from ...domain.deadlines.models import EntityType, IrpfIncomeCategory
+from ...domain.deadlines.models import IrpfIncomeCategory
+from ...domain.contribuyente.entity_type import EntityType
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.loader import load_user_profile_schema

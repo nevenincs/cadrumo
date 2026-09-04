@@ -169,7 +169,8 @@ def _taxpayer_type_choice_values() -> tuple[list[str], list[str], list[str], lis
     flag choices never drift from the values the wizard catalogue and
     the profile schema validate against.
     """
-    from ...domain.deadlines.models import EntityType, IrpfEstimationRegime, IrpfIncomeCategory, LegalEntityForm
+    from ...domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory
+    from ...domain.contribuyente.entity_type import EntityType, LegalEntityForm
 
     return (
         [member.value for member in EntityType],

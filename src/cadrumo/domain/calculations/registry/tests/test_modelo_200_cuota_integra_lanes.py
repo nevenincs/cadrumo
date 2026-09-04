@@ -31,7 +31,8 @@ import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from ....deadlines.models import EntityType, IVARegime, LegalEntityForm, TaxpayerProfile
+from ....deadlines.models import IVARegime, TaxpayerProfile
+from ....contribuyente.entity_type import EntityType, LegalEntityForm
 from ..applicability_modelo202 import Modelo202Modality, derive_modelo_202_modality
 from ..formula_runtime import calculate_registry_snapshot
 from ._registry_schema_support import _committed_snapshot

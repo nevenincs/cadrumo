@@ -104,17 +104,29 @@ def _document(
 class SearchHostApp(App[None]):
     """Minimal root seam that receives palette targets for assertion."""
 
-    def __init__(self, *, service: WorkbenchSearchService, catalogue: TuiDestinationCatalogueV1) -> None:
+    def __init__(
+        self,
+        *,
+        service: WorkbenchSearchService,
+        catalogue: TuiDestinationCatalogueV1,
+        refusal_code: str | None = None,
+    ) -> None:
         """Bind the real application search service and current catalogue."""
         super().__init__()
         self._service = service
         self._catalogue = catalogue
+        self._refusal_code = refusal_code
         self.targets: list[TuiNavigationTargetV1] = []
 
     @property
     def workbench_search_service(self) -> WorkbenchSearchService:
         """Return the application-owned service without wrapping its result."""
         return self._service
+
+    @property
+    def workbench_search_refusal_code(self) -> str | None:
+        """Mirror the root's sanitized refusal channel."""
+        return self._refusal_code
 
     @property
     def destination_catalogue(self) -> TuiDestinationCatalogueV1:
@@ -313,3 +325,43 @@ def test_search_provider_has_no_network_or_application_search_reimplementation()
     forbidden = {"httpx", "requests", "socket", "urllib", "pathlib", "sqlite3"}
     assert all(not any(part in forbidden for part in module.split(".")) for module in imported)
     assert "WorkbenchSearchService" not in imported
+
+@pytest.mark.asyncio
+async def test_a_refused_search_reports_why_instead_of_raising() -> None:
+    """The palette must survive the state the root already named.
+
+    None is the DESIGNED refusal value for the search service -- it is the
+    first-run state for a profile whose sources are not all readable yet -- and
+    the provider used to dereference it and raise RuntimeError into the palette.
+    The refusal code exists for this and had no consumer anywhere in production.
+    """
+    app = SearchHostApp(
+        service=WorkbenchSearchService(()),
+        catalogue=_catalogue(),
+        refusal_code="workbench.search.unavailable",
+    )
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        hits = [hit async for hit in WorkbenchSearchProviderV1(app.screen).search("mod")]
+        app.exit(None)
+
+    assert len(hits) == 1
+    assert "unavailable" in hits[0].text.lower() or "disponible" in hits[0].text.lower()
+    assert hits[0].command() is None
+
+
+@pytest.mark.asyncio
+async def test_an_unrecognised_refusal_code_is_never_shown_raw() -> None:
+    """A reason code is an internal token, not operator copy."""
+    app = SearchHostApp(
+        service=WorkbenchSearchService(()),
+        catalogue=_catalogue(),
+        refusal_code="workbench.search.some_future_code",
+    )
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        hits = [hit async for hit in WorkbenchSearchProviderV1(app.screen).search("mod")]
+        app.exit(None)
+
+    assert len(hits) == 1
+    assert "workbench.search.some_future_code" not in (hits[0].text + str(hits[0].help))

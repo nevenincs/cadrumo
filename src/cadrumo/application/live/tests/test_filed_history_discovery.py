@@ -67,7 +67,8 @@ def _autonomo(
     ``object`` on the way into the model, which is what a supplied date being
     silently the wrong type would have hidden.
     """
-    from ....domain.deadlines.models import EntityType, IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
+    from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
+    from ....domain.contribuyente.entity_type import EntityType
 
     return TaxpayerProfile(
         tax_id="X1234567L",
@@ -174,7 +175,8 @@ def test_the_modelo_axis_differs_between_two_different_profiles() -> None:
     # The signal is worthless unless it is genuinely taxpayer-specific, so this
     # asserts the derivation actually responds to declared facts rather than
     # returning one universal list under a taxpayer-specific name.
-    from ....domain.deadlines.models import EntityType, IVARegime
+    from ....domain.deadlines.models import IVARegime
+    from ....domain.contribuyente.entity_type import EntityType
 
     natural = expected_filed_declaration_grid(_autonomo(), today=_TODAY)
     company = expected_filed_declaration_grid(

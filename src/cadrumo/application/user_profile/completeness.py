@@ -6,11 +6,11 @@ from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING
 
 from ...domain.deadlines.models import (
-    EntityType,
     FiscalResidency,
     IrpfIncomeCategory,
     irnr_representante_fiscal_required,
 )
+from ...domain.contribuyente.entity_type import EntityType
 from ...domain.deadlines.profiles import modelo_iva_profile_required_paths
 
 if TYPE_CHECKING:

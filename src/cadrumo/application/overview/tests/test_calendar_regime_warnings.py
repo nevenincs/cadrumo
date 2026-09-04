@@ -6,7 +6,8 @@ from datetime import date
 
 import pytest
 
-from ....domain.deadlines.models import EntityType, IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
+from ....domain.contribuyente.entity_type import EntityType
 from ..calendar import build_overview_calendar
 from ..calendar_models import OverviewCalendarRange
 

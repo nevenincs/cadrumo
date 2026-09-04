@@ -114,7 +114,7 @@ from .relation_prefill_m202 import (
 from .revision_carry_gate import revision_carry_outcome
 
 if TYPE_CHECKING:
-    from ...domain.deadlines.models import EntityType
+    from ...domain.contribuyente.entity_type import EntityType
 
 STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 _ECONOMIC_ACTIVITY_CATEGORY: Final = "actividad_economica"
@@ -338,7 +338,7 @@ def _entity_type_from_token(raw: str | None) -> EntityType | None:
     """Map a raw ``taxpayer_type.entity_type`` token to :class:`EntityType`, or ``None``."""
     if not raw:
         return None
-    from ...domain.deadlines.models import EntityType
+    from ...domain.contribuyente.entity_type import EntityType
 
     try:
         return EntityType(raw)

@@ -28,7 +28,8 @@ import pytest
 
 from ....core.casilla_id import validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.deadlines.models import EntityType, IrpfIncomeCategory, IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import IrpfIncomeCategory, IVARegime, TaxpayerProfile
+from ....domain.contribuyente.entity_type import EntityType
 from .._verification_predicates import _evaluate_predicate_expression
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
