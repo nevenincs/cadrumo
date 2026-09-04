@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:ee16b2ef9cecd977cde658988d31aa32736703c728b55f3486fb1cab29e35375'
+body_hash: 'sha256:ba3ad74facaf6cefd702fd190e6922b98c6a281801519a40fc3610639752a4c8'
 related:
   - "[[2026-09-04-clitui-ledger-research]]"
   - "[[2026-06-10-ledger-interface-contract-adr]]"
@@ -166,13 +166,13 @@ The `Request contract` column records the contract that exists now. `keyword par
 | Consent withdrawal (2) | `ledger.evidence.consent_survey`, `ledger.evidence.consent_rederive` | keyword parameters and injected ports | `ConsentWithdrawalSurvey` / `LocalRederivation` | `test_consent_withdrawal.py` and batch runner composition |
 | Counterparty establishment (3) | `ledger.counterparty.record`, `ledger.counterparty.forget`, `ledger.counterparty.resolve` | keyword parameters | `ConfirmedCounterpartyFacts` / `bool` / `ConfirmedCounterpartyResolution` | counterparty establishment and identity tests |
 | Invoice evidence reading (2) | `ledger.invoice.extract_draft`, `ledger.invoice.confirm_draft` | keyword parameters | `InvoiceDraft` / `InvoiceConfirmationResult` | extraction, confirmation, direction, document identity, and establishment tests |
-| Model-assisted review (12) | `ledger.llm.classify_with_evidence`, `ledger.llm.suggest`, `ledger.llm.apply`, `ledger.llm.saturate`, `ledger.llm.apply_saturated`, `ledger.llm.iva_derive`, `ledger.llm.suggest_split`, `ledger.llm.apply_split`, `ledger.llm.apply_evidence_classification`, `ledger.llm.reject`, `ledger.llm.diagnostics`, `ledger.llm.review_decision` | typed suggestion/request fragments plus keyword parameters; `LlmReviewRequest` exists but `execute_reviewed_decision` does not consume it | typed suggestion/apply/rejection/diagnostic unions; `LlmReviewResult` | direct LLM classification, saturation, split, rejection, telemetry, evidence-wiring, and review-workflow tests |
+| Model-assisted review (12) | `ledger.llm.classify_with_evidence`, `ledger.llm.suggest`, `ledger.llm.apply`, `ledger.llm.saturate`, `ledger.llm.apply_saturated`, `ledger.llm.iva_derive`, `ledger.llm.suggest_split`, `ledger.llm.apply_split`, `ledger.llm.apply_evidence_classification`, `ledger.llm.reject`, `ledger.llm.diagnostics`, `ledger.llm.review_decision` | typed suggestion/request fragments plus keyword parameters; `LlmReviewRequest` exists but `execute_reviewed_decision` does not consume it | typed suggestion/apply/rejection/diagnostic unions; `LlmReviewResult` | Classification, saturation, split, rejection, telemetry, evidence-wiring, and review-workflow operations have direct tests; `ledger.llm.diagnostics` is **UNPROVEN** directly |
 | Participation read (1) | `ledger.participation.get` | keyword parameters | `TransactionRevisionParticipationIndex` | **UNPROVEN** directly; only CLI-surface proof located |
 | Preflight (2) | `ledger.preflight.readiness`, `ledger.preflight.catalogue` | keyword parameters | `LedgerPreflightReport` | repository, category, IVA, home-office, and anomaly tests |
 | Usage ratios (4) | `ledger.ratio.list`, `ledger.ratio.validate`, `ledger.ratio.set`, `ledger.ratio.unset` | keyword parameters | tuple / `RatiosValidationReport` / prior `Decimal` or `None` | `test_ratios.py`, `test_ratios_concurrency.py` |
 | Workspace composition (3) | `ledger.workspace.affected_declarations`, `ledger.workspace.project`, `ledger.workspace.read` | keyword parameters and injected readers/repositories | tuple of `LedgerAffectedDeclarationRefV1` / `LedgerWorkspaceProjectionV1` | Pure projectors: `test_workspace.py`; installed reader: **UNPROVEN** directly |
 
-The exact proof census is 56 operations with a direct symbol-level behavioral test and seven without one: `ledger.classification.rule_add`, `ledger.classification.rule_apply`, `ledger.import.aggregate_results`, `ledger.evidence.attachment_view`, `ledger.evidence.attachment_queue`, `ledger.participation.get`, and `ledger.workspace.read`. A direct test is evidence only for the behavior it exercises; it does not make the enclosing family or backend axis complete.
+The exact proof census is 55 operations with a direct symbol-level behavioral test and eight without one: `ledger.classification.rule_add`, `ledger.classification.rule_apply`, `ledger.import.aggregate_results`, `ledger.evidence.attachment_view`, `ledger.evidence.attachment_queue`, `ledger.llm.diagnostics` (`build_llm_diagnostics_report`), `ledger.participation.get`, and `ledger.workspace.read`. The existing diagnostics test exercises a CLI-owned projection helper over a prebuilt report; it does not invoke `build_llm_diagnostics_report` and therefore is not direct backend proof. A direct test is evidence only for the behavior it exercises; it does not make the enclosing family or backend axis complete.
 
 #### Production composition and backend-only disposition
 
