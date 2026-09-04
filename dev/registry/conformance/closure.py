@@ -124,6 +124,9 @@ class RegistryClosurePredicateRefusal(_ClosureReportModel):
     def _require_matching_disposition_limb(self) -> RegistryClosurePredicateRefusal:
         if self.filing_channels and self.limb != "filing_export":
             raise ValueError("only a filing-export refusal may carry per-channel filing states")
+        channels = tuple(item.channel for item in self.filing_channels)
+        if len(channels) != len(set(channels)):
+            raise ValueError("closure predicate refusal permits at most one refusal per filing-proof channel")
         if self.disposition.limb != self.limb:
             raise ValueError("closure predicate refusal disposition must name its refusal limb")
         return self

@@ -12,7 +12,9 @@ from typer.testing import CliRunner
 from cadrumo.application.filing.export_proof import FilingExportProofAssessment, FilingExportProofCoordinate
 from cadrumo.application.registry.closure import (
     RegistryClosureEvidence,
+    RegistryClosureFilingChannelRefusal,
     RegistryClosureLimb,
+    RegistryClosureOwnerDisposition,
     RegistryClosureRefusalReason,
 )
 from cadrumo.application.registry.filing_export_coverage import FilingExportCoverageReport
@@ -31,7 +33,9 @@ from ..authorities import RegistryClosureAuthorities
 from ..cli import app
 from ..closure import (
     _TEMPORAL_WORK_ITEMS,
+    RegistryClosurePredicateRefusal,
     RegistryClosurePredicateRefusalReason,
+    _render_filing_channels,
     build_registry_closure_report,
     check_registry_closure_release,
     load_registry_closure_report,
@@ -391,3 +395,82 @@ def _predicate_reason_values() -> set[str]:
             else:
                 pending.append(getattr(argument, "__value__", argument))
     return values
+
+
+def _filing_disposition() -> RegistryClosureOwnerDisposition:
+    return RegistryClosureOwnerDisposition(
+        limb="filing_export",
+        state="blocked",
+        owner="aeat-export-fragment-generator-authority",
+        work_item="aeat-export-fragment-generator-authority:production-emission-proof",
+        reconsideration_condition="Verify public conformance and provide a current secure replay receipt.",
+    )
+
+
+def test_a_populated_filing_channel_refusal_renders_both_channels_structurally() -> None:
+    """The two channels must be readable as tokens, not only as prose detail."""
+    refusal = RegistryClosurePredicateRefusal(
+        limb="filing_export",
+        reason="missing_evidence",
+        detail="two-channel filing export assessment refused",
+        disposition=_filing_disposition(),
+        filing_channels=(
+            RegistryClosureFilingChannelRefusal(channel="conformance", reason="proof_validation_failed"),
+            RegistryClosureFilingChannelRefusal(channel="secure_replay", reason="authority_unavailable"),
+        ),
+    )
+
+    assert _render_filing_channels(refusal) == (
+        "conformance:proof_validation_failed,secure_replay:authority_unavailable"
+    )
+
+
+def test_a_refusal_without_channels_renders_not_measured_rather_than_a_value() -> None:
+    """Absent per-channel state stays distinct from a literal channel reason."""
+    refusal = RegistryClosurePredicateRefusal(
+        limb="temporal_coverage",
+        reason="declared_grade_snapshot_refused",
+        detail="the declared grade could not open its validated snapshot",
+        disposition=RegistryClosureOwnerDisposition(
+            limb="temporal_coverage",
+            state="blocked",
+            owner="registry-temporal-coverage",
+            work_item="registry-temporal-coverage:authority-grade",
+            reconsideration_condition="Revalidate the exact law-selected revision.",
+        ),
+    )
+
+    assert _render_filing_channels(refusal) == "n/a"
+
+
+def test_only_a_filing_export_refusal_may_carry_per_channel_state() -> None:
+    """A non-filing limb cannot smuggle filing-proof channel state into the report."""
+    with pytest.raises(ValidationError, match="only a filing-export refusal may carry per-channel filing states"):
+        RegistryClosurePredicateRefusal(
+            limb="source_connectivity",
+            reason="unmeasured",
+            detail="the census declares no evidence scoped to this revision",
+            disposition=RegistryClosureOwnerDisposition(
+                limb="source_connectivity",
+                state="deferred",
+                owner="source-domain-to-casilla-connectivity",
+                work_item="source-domain-to-casilla-connectivity:scope",
+                reconsideration_condition="Declare current evidence scoped to this revision.",
+            ),
+            filing_channels=(RegistryClosureFilingChannelRefusal(channel="conformance", reason="evidence_missing"),),
+        )
+
+
+def test_one_channel_cannot_be_refused_twice_in_the_same_refusal() -> None:
+    """A duplicated channel would render an incoherent two-value state for one channel."""
+    with pytest.raises(ValidationError, match="at most one refusal per filing-proof channel"):
+        RegistryClosurePredicateRefusal(
+            limb="filing_export",
+            reason="missing_evidence",
+            detail="two-channel filing export assessment refused",
+            disposition=_filing_disposition(),
+            filing_channels=(
+                RegistryClosureFilingChannelRefusal(channel="conformance", reason="evidence_missing"),
+                RegistryClosureFilingChannelRefusal(channel="conformance", reason="proof_validation_failed"),
+            ),
+        )
