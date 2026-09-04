@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:6825f16742bf4e221516bb0b6e4407c1abc40647443512457632b1b619e59d09'
+body_hash: 'sha256:6ee750ec784cd43c75f7da0c4a74ee2f6b4a275995fdb93728a15fc644342466'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -420,7 +420,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S537` - Connect three separately recorded failures to one landing: the modelo 200 2024 casillas arrived without map owners or translations, so 154 orphaned declarations, a broken frozen count and 624 locale resolution failures are the same event; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W02.P02.S538` - Decline a failure correlator after measuring: one line in a 37-failure registry run carries a modelo coordinate, since a count assertion names no member and the repository takes every run with a short traceback, so the signal lives in typed findings rather than failure text; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W02.P02.S539` - Measure cross-package finding correlation and find it empty: four registry conditions carry a casilla once the census is excluded and they share none with the locale drift screen, because neither instrument behind the m200 connection is an enrolled screen; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
-- [ ] `W02.P02.S540` - Decide whether the orphaned-declaration worklist and the locale resolution check should be enrolled as screens, since both produce typed findings that no correlator can reach while one is an unenrolled analysis module and the other lives inside a test assertion; `dev/registry/analysis/screens.py,dev/locales`.
+- [x] `W02.P02.S540` - Enrol neither as a screen, on evidence: the locale resolution check already refuses through assert failures == () and carries its own detector proof, so enrolling it would demote a gate to a report, and the orphaned-declaration worklist is scoped to modelo 200 revision 2024 and would report zero permanently once that landing completes; the corpus-wide condition it exposes, a declaration with no map owner, is covered by none of the eighteen enrolled screens and is the gap worth a grounded screen of its own; `dev/registry/analysis/screens.py,dev/locales`.
 - [x] `W02.P02.S541` - Assert the one fact the conformance manager computes for itself, its locale coverage axis, whose required-per-locale and translated-across-locales fields read as a fraction exceeding one and were reconciled only by two untested derived properties; `dev/registry/conformance/tests/test_manager_locale_coverage.py`.
 - [x] `W02.P02.S542` - Name the conformance suites one failure exactly: an AttributeError where a caller invokes assess_for on the single-channel proof authority that implements proof_for, which is the transitional object S109 schedules for deletion rather than inherited debt; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W02.P02.S543` - Repair the import codemod that could not be imported at all, because it put its own directory on sys.path and imported a package sibling by bare name so that siblings relative import had no parent; `dev/quality/import_centralization_codemod.py`.

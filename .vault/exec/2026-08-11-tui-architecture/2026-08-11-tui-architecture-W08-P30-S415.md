@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:18946b1ac6af237b879b54d678277bc85723a0b74bb11764613b9d0d66057193'
+body_hash: 'sha256:37b8b4143c782af25f5d470686d8585d4097ea0b20ad2861f123a2e0d37e8110'
 step_id: 'S415'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -102,6 +102,14 @@ mechanism: flattening `DisclosureGroup` reports
 the stack token reports `{'DisclosureGroup': 2, 'cadrumo-panel': 1}`. Each file
 restored by copy; 86 passed across the component and theme suites.
 
-Still NOT gated, stated plainly: the Profile source-card rhythm was verified by
-mounting two cards and reading their regions, not by a committed test. Row
-density remains untouched.
+The source-card rhythm is gated too:
+`test_a_source_card_title_is_separated_from_the_card_above_it` mounts two cards
+and asserts each title carries the asymmetric pair, `(section, stack)`, rather
+than any pair at all -- equal gaps would leave the title floating between the
+two cards. Asserted from mounted geometry because the Profile manager surface
+refuses to open standalone (it needs an active profile pointer), so this is the
+only place the rhythm can be observed. Teeth proven by removing the heading
+class: `(0, 0) rather than the (2, 1) rhythm`. Restored by copy; 51 passed.
+
+Row density remains untouched, and is the one part of this step's scope not
+addressed.

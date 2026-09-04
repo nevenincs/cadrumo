@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:91b816f181fd221b2facf26b7c4a12869e973bf479c81b5e582e146cce8b807c'
+body_hash: 'sha256:3bf174362b2c46ec9d508b24871acf9c094e26e051a48bb6247c784155e680b3'
 related:
   - "[[2026-09-04-clitui-ledger-research]]"
   - "[[2026-09-04-clitui-ledger-reference]]"
@@ -17,10 +17,10 @@ related:
   - '[[2026-06-10-llm-evidence-classification-adr]]'
   - '[[2026-07-14-google-optional-adapter-boundary-adr]]'
   - '[[2026-06-03-modelo-export-evidence-parity-adr]]'
-  - '[[2026-07-24-evidence-revision-identity-adr]]'
+  - '[[2026-07-26-evidence-revision-identity-adr]]'
 ---
 
-# `clitui-ledger` adr: `backend authority and interface parity gates` | (**status:** `proposed`)
+# `clitui-ledger` adr: `backend authority and interface parity gates` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -78,7 +78,7 @@ Backend proof exercises real repositories and observable effects. Applicable ope
 
 ### Ledger semantics and provenance
 
-Evidence supports attach, metadata/view, download, detach, and atomic replace with immutable revision lineage. Replacement is refused for finalized filing evidence unless the filing is reopened through its governing workflow; the old revision remains encrypted and addressable by authorized history, references move only at commit, and failed persistence leaves the old revision authoritative while cleaning uncommitted encrypted bytes. Notes are append-only events: a committed note is never deleted or compensated, although a failed atomic transaction emits none.
+Evidence supports attach, metadata/view, download, detach, and atomic replace with immutable revision lineage. Replacement is always refused against a frozen finalized filing revision and never mutates its evidence references; corrected evidence may feed a new amendment or re-file revision through the governing workflow. The old revision remains encrypted and addressable by authorized history, references on a mutable Ledger aggregate move only at commit, and failed persistence leaves the old revision authoritative while cleaning uncommitted encrypted bytes. Notes are append-only events: a committed note is never deleted or compensated, although a failed atomic transaction emits none.
 
 Typed field edits bind to an aggregate version, stable actor/source identity, and exact changed-field set. Sensitive before/after values exist only in encrypted custody; ordinary projections are redacted. Stale baselines and same-idempotency-key/different-payload calls are refused. Manual overrides retain basis, actor, time, prior value, review state, and version. Imports record source-column mapping and normalization outcomes. Currency normalization records original amount and currency, normalized amount and currency, rate, rate source, effective date, and operation identity.
 
@@ -105,6 +105,11 @@ At G0, active overlapping Ledger TUI plans are reconciled and `clitui-ledger` be
 ### Approval protocol
 
 This ADR remains proposed until two independent architectural reviewers issue `ACCEPT` for the same decision-content revision. A ruling is `ACCEPT`, `ACCEPT_WITH_REQUIRED_CHANGES`, or `REJECT`; any decision-content change invalidates both rulings and requires two fresh reviews. The approval record stores reviewer, date, reviewed decision-content hash, ruling, and blocking conditions. Administrative status and approval-record edits are excluded from the reviewed decision content to avoid a self-referential hash.
+
+### Approval record
+
+- Reviewer A, architecture and authority boundaries; 2026-09-04; decision-content hash `sha256:93f4b836bb04eb6391370172a66a9910ab73bda42dcde3a8c5b5d6d771460f95`; `ACCEPT`; blocking conditions: none.
+- Reviewer B, production behavior, financial/security semantics, registries, model-assisted review, batch editing, and artifact contracts; 2026-09-04; decision-content hash `sha256:93f4b836bb04eb6391370172a66a9910ab73bda42dcde3a8c5b5d6d771460f95`; `ACCEPT`; blocking conditions: none.
 
 ## Rationale
 
