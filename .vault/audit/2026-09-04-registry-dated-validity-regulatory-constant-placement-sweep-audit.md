@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:48ae9d7e02de8851a61987314d217b090e5d3c20137a0070fed90943614200b3'
+body_hash: 'sha256:8fff638250fed37da6d2f176590a3faa1a3c8f7e3f3b39d62c3b54fec9e4a22d'
 related:
   - "[[2026-08-27-registry-dated-validity-frozen-constant-hunt-audit]]"
 ---
@@ -151,9 +151,15 @@ hardcoded copies of themselves, which detects an edit to the constant but can
 never detect divergence from the registry, because the registry is never read.
 
 The amortizacion rate and the maritime exemption fraction sit behind the second
-kind. The amortizacion rate is declared as a proper dated parameter across six
-Modelo 100 revisions. The values agree today and nothing enforces that they
-continue to.
+kind.
+
+CORRECTED DURING REMEDIATION: the amortizacion rate is nevertheless NOT tier
+three. The rental amortisation ledger already resolves its dated Modelo 100
+parameter at runtime and raises on a missing one, and the arithmetic multiplies
+by that resolved value rather than by the constant, which is a documented alias
+the computation never touches. It was already tier one. The original assessment
+was reached by reading the test and not the runtime path. The maritime exemption
+fraction has no registry parameter at all, so it cannot be bound to one.
 
 ### provision-grounded-figure-absent | high | the cleanest form of the defect, where the registry knows the article but not the number
 
@@ -218,15 +224,23 @@ wrong.
 
 ## Recommendations
 
-Remediate tier four first, despite it being smallest. Invert the annual-Orden
-comparison so the census is authoritative and the constants become expectations
-derived from it, or delete the constants and let the census required-text carry
-the grounding. A gate that rejects correct new law is worse than no gate.
+Remediate tier four first, despite it being smallest. REMEDIATED: the
+annual-Orden validators now assert shape rather than the legal figures, so a
+future Orden changing a coefficient is accepted while a garbled extraction is
+still refused. Both directions were proved by execution.
 
 Extend the real drift-gate pattern rather than claiming one exists. Every
 constant that has a corresponding registry parameter should be bound by a test
 that RESOLVES the parameter, on the model of the IVA rate assertion. Retire or
 rename the literal-restating cases so they cannot be mistaken for protection.
+REMEDIATED: the amortizacion rate now has such a gate, and the literal-restating
+test is renamed and documented as not being a drift gate.
+
+The promotion recommendation below has a smaller scope than it first appears.
+Only two constants have a registry parameter at all, and both already sit at
+tier one or tier two. The bottleneck is not promotion but ABSENCE: the remaining
+values have no parameter to resolve, so authoring one is the prerequisite for
+every other fix. Rank that authoring by consumer count and filing impact.
 
 Prefer promotion to tier one over tier two wherever a consumer already runs
 inside a period context. Reading the parameter at runtime and failing closed on
@@ -234,8 +248,12 @@ absence is strictly stronger than testing agreement, and it is already
 implemented in the rental tier resolver.
 
 Give inline formula literals a home. This is the largest population and the
-least discoverable. Adjudicating all 160 individually is a campaign in itself;
-begin with the Modelo 200 rate-band thresholds, which have a demonstrated cost.
+least discoverable. Adjudicating all 160 individually is a campaign in itself.
+REMEDIATED for the Modelo 200 rate-band thresholds, which had the demonstrated
+cost: both turnover ceilings are now typed money parameters carrying their own
+legal references and dated validity, and all ten inline occurrences across both
+revisions were replaced by parameter references. All three rate bands were
+re-measured and still select the same tipo.
 
 Apply a selective test, never blanket relocation. For each value ask whether the
 provision fixes a number or a reference to a number somebody else re-fixes.
