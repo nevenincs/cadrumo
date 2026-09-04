@@ -14197,3 +14197,42 @@ I wrote the round-trip test against guessed field names and it failed on
 `Baseline.cc` where the dataclass says `cyclomatic`. That is the same
 guess-instead-of-read this campaign has recorded before, and it cost one run
 because the names are three lines from the function under test.
+
+
+## Forty-two untested dev modules, after correcting my own count by thirty per cent
+
+The complexity audit's missing tests raised the general question, and nothing in
+the tree answers it: `dev/audit/unreachable_code.py` audits the SHIPPED tree from
+its console scripts, which is a different question about a different tree.
+
+The first measurement said 60 of 352 `dev` modules are reached by no test, and it
+was wrong. It counted an import by what it RESOLVES to, so
+`from ..analysis import m200_2024_blocker_adjudications as subject` - which
+resolves to the package - never credited the module it actually names. Six m200
+modules read as untested while their test files sat beside them in the same
+directory.
+
+**That is the third appearance of the same blind spot**, and the first two were
+mine as well: the facade consumer scan reported zero consumers where there were
+ninety, and the module promoter left two files pointing at a renamed module. I
+fixed it in the promoter two iterations ago, wrote a test pinning it, and then
+wrote a fresh probe with the same hole in it.
+
+Corrected, the figure is **42 of 352, twelve per cent**, and `dev/registry/analysis`
+leaves the list entirely.
+
+The distribution: 8 in `dev/quality`, 5 each in `dev/docs/terminology` and
+`dev/packaging`, 4 in `dev/audit`, and a tail of ones and twos.
+
+Two of the eight are worth naming because of what they do rather than where they
+are. `dev/quality/import_centralization_codemod.py` and
+`dev/quality/namespace_retirement_sweep.py` both take `--apply` and both write to
+source files - six write sites between them - and neither has a test. A codemod
+that rewrites the tree with nothing asserting its behaviour is the highest-cost
+untested module a repository can hold, and this campaign has just spent several
+iterations demonstrating why: the two codemods written here had three silent
+defects between them, every one found by their own tests.
+
+Recorded rather than fixed. Writing tests for another campaign's codemods is
+work with an owner, and the useful contribution is the corrected number and the
+two names.

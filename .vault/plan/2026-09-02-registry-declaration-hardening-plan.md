@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:cd75b378629777c7b0509658abde2e8cb8d04dde11f574cb4c8af4e812b49b5f'
+body_hash: 'sha256:142eaecfa8230cee7deef02a86516aa8b4a6747fcd55c2b3e012e6bf77773642'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -405,6 +405,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S522` - Locate the conformance closure suites absence exactly: nineteen tests unreachable by any declared lane and two files outside every lane path scope, against 66 declared-unreachable and 181 CI-unreachable tests overall; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W02.P02.S523` - Audit this sessions own closures and reachability: all eight Steps scoped outside dev and .vault are open, and no test module this session added is unreachable by a CI-invoked lane; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W02.P02.S524` - Cover the complexity audits three classifiers, which had no tests after its own test modules were retired with the baseline, pinning the ceiling-versus-floor asymmetry that one copied comparison operator would invert; `dev/audit/tests/test_complexity_classification.py`.
+- [x] `W02.P02.S525` - Measure dev modules no test reaches, correcting the first count from 60 to 42 after the submodule-by-name blind spot inflated it by thirty per cent, and name the two untested codemods that write to source files; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [ ] `W02.P02.S526` - Test the two untested codemods that write to source files, six write sites between them, since the two written in this campaign carried three silent defects each found only by their own tests; `dev/quality/import_centralization_codemod.py,dev/quality/namespace_retirement_sweep.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
