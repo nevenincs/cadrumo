@@ -104,8 +104,11 @@ def assert_m303_regularisation_result_matches_bienes_register(
         raise ValueError(
             "M303 regularisation result was produced from registry declaration "
             f"{regularisation_result.parameters_provenance.modelo_id}/"
-            f"{regularisation_result.parameters_provenance.revision_id}, not from the supplied "
-            f"{parameters.provenance.modelo_id}/{parameters.provenance.revision_id}",
+            f"{regularisation_result.parameters_provenance.revision_id}"
+            f"@{regularisation_result.parameters_provenance.resolved_on.isoformat()}, "
+            "not from the supplied "
+            f"{parameters.provenance.modelo_id}/{parameters.provenance.revision_id}"
+            f"@{parameters.provenance.resolved_on.isoformat()}",
         )
     canonical = compute_registro_regularizacion(
         bienes_register,
