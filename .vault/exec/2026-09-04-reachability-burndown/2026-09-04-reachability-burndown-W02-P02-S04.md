@@ -5,16 +5,11 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:84d8a9d0fe056a4dda090a1fbf5a644551d616cb5e9accf41cc1ccbef50e6769'
+body_hash: 'sha256:938530d20a9fdf8af9c60dd06c6114c3f086befb9b82c9bac96ea0bad0d176c3'
 step_id: 'S04'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Relocate dev-only harness modules beside their dev consumers and shrink the ratchet by the entries resolved
 

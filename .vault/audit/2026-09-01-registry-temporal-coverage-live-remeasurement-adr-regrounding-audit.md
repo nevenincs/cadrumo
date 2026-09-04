@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:dece18057e437bf756dce060526e10ec5b2fea83402deef5fd613f4297a34af1'
+body_hash: 'sha256:86fa6c22f58a8e7602854917969a027ea660a3ae33ad8ac0f99b85913e922f1d'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -14705,7 +14705,6 @@ scanner cannot see is not a scanner problem in the abstract; it is a translated
 string that a cleanup sweep would delete with a clear conscience, in four
 locales, with nothing to notice it had gone.
 
-
 ## A relocation that left two fixtures behind, and twelve errors
 
 `dev/ci/tests` reported twelve errors at setup. Errors rather than failures,
@@ -14742,7 +14741,6 @@ That is the difference between an error and a failure, and why errors are worth
 opening first: a failing test tells you something is wrong, and an erroring test
 tells you nothing at all while looking equally red.
 
-
 ## The same gap in agent_eval, and a result worth stating carefully
 
 `dev/agent_eval/tests` had the same absence: no conftest, and thirteen tests
@@ -14774,7 +14772,6 @@ The residue is a marker decision belonging to that campaign - these ten need a
 declared precondition, not a composition - and it is recorded rather than
 guessed at from here. What is not in doubt is that the relocation left the
 composition behind in two directories, and both are now attached to it.
-
 
 ## The composition gap swept, and a writer that could actually be tested
 

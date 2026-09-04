@@ -5,16 +5,11 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:63d5c5309f5c4d2626f81ad9304690b8dc833d70a1951e8f4dba6b8ea92b5793'
+body_hash: 'sha256:b8599b599c9bc95b6777692c8b237b57b0d3f8226c9ad19dfa07a534eb995a37'
 step_id: 'S03'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Partition the exact-confidence symbol population by owning package and record the dominant kinds per area
 
