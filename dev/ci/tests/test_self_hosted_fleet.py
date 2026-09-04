@@ -16,11 +16,15 @@ mandate: those workflows build a `py3-none-any` artifact the host cannot
 affect, and publication must not be gated on a fleet runner being free. The
 spend premise does not apply either - this repository is public, and hosted
 runners are free for public repositories.
+
+Both directions resolve their targets through the shared runner-target
+authority, including the runtime-computed matrix the release path uses: the
+hosted split had never once been inspected there, because the reader raised
+before it reached an assertion.
 """
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
 from typing import Any, Final
 
@@ -30,12 +34,19 @@ import yaml
 from cadrumo.core.directory_scan import scan_directory
 
 from ..._paths import REPO_ROOT
+from ..workflow_runner_targets import (
+    UNRESOLVED_ZERO_TARGETS,
+    is_fleet_label_set,
+    is_hosted_image,
+    runner_targets,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _WORKFLOWS_DIR: Final = REPO_ROOT / ".github" / "workflows"
-_MATRIX_DIMENSION: Final = re.compile(r"matrix\.([A-Za-z_][\w-]*)")
-_UNRESOLVED: Final = "<matrix runs-on resolved to zero targets>"
+#: The release path's own matrix indirection, reused by the fixtures below so
+#: the refusals are driven against the shape this repository actually ships.
+_RUNTIME_MATRIX_REFERENCE: Final = "${{ fromJSON(needs.inventory.outputs.matrix) }}"
 
 #: Workflows whose every job runs on a GitHub-hosted image.
 #:
@@ -51,30 +62,6 @@ _UNRESOLVED: Final = "<matrix runs-on resolved to zero targets>"
 HOSTED_WORKFLOWS: Final[frozenset[str]] = frozenset({"release-please.yml", "publish.yml"})
 
 
-def _runner_targets(job: dict[str, Any]) -> list[object]:
-    """Resolve a job's concrete runner targets, expanding matrix indirection.
-
-    Both matrix shapes feed targets: ``include`` rows carrying the referenced
-    key, and a top-level list dimension of the same name (``matrix.os:
-    [ubuntu-latest]``). A matrix reference that resolves to nothing returns a
-    sentinel so the gate refuses rather than silently passing zero targets.
-    """
-    runs_on = job.get("runs-on")
-    if not (isinstance(runs_on, str) and "matrix" in runs_on):
-        return [runs_on]
-    matrix = (job.get("strategy") or {}).get("matrix") or {}
-    dimension_match = _MATRIX_DIMENSION.search(runs_on)
-    dimension = dimension_match.group(1) if dimension_match else None
-    targets: list[object] = []
-    for row in matrix.get("include") or []:
-        if isinstance(row, dict) and dimension in row:
-            targets.append(row[dimension])
-    top_level = matrix.get(dimension)
-    if isinstance(top_level, list):
-        targets.extend(top_level)
-    return targets or [_UNRESOLVED]
-
-
 def _collect_violations(workflows_dir: Path) -> list[tuple[str, str, object]]:
     """Return every (workflow, job, target) whose runner is not self-hosted."""
     workflows = sorted(
@@ -86,11 +73,28 @@ def _collect_violations(workflows_dir: Path) -> list[tuple[str, str, object]]:
         if workflow.name in HOSTED_WORKFLOWS:
             continue
         document = yaml.safe_load(workflow.read_text(encoding="utf-8"))
-        for job_name, job in (document.get("jobs") or {}).items():
-            for target in _runner_targets(job):
-                if not (isinstance(target, list) and target and target[0] == "self-hosted"):
-                    violations.append((workflow.name, job_name, target))
+        violations.extend(_fleet_violations(workflow.name, document))
     return violations
+
+
+def _fleet_violations(workflow_name: str, document: dict[str, Any]) -> list[tuple[str, str, object]]:
+    """Return every target in ``document`` that is not a self-hosted label set."""
+    return [
+        (workflow_name, job_name, target)
+        for job_name, job in (document.get("jobs") or {}).items()
+        for target in runner_targets(job, document)
+        if not is_fleet_label_set(target)
+    ]
+
+
+def _hosted_violations(workflow_name: str, document: dict[str, Any]) -> list[tuple[str, str, object]]:
+    """Return every target in ``document`` that is not a hosted runner image."""
+    return [
+        (workflow_name, job_name, target)
+        for job_name, job in (document.get("jobs") or {}).items()
+        for target in runner_targets(job, document)
+        if not is_hosted_image(target)
+    ]
 
 
 def test_the_release_path_workflows_run_on_hosted_images() -> None:
@@ -99,6 +103,12 @@ def test_the_release_path_workflows_run_on_hosted_images() -> None:
     A release job that drifts onto the fleet reintroduces the availability
     dependency the split exists to remove, and does so silently: the run does
     not error, it queues behind whatever already holds the runner.
+
+    The release path computes one of its matrices at runtime, so its runner
+    labels are read from the step that emits them rather than from a matrix
+    mapping that does not exist yet. An unresolvable reference is a violation
+    here exactly as a fleet label would be: an exemption granted on the ground
+    that every job is hosted has to be able to see every job.
     """
     for workflow_name in sorted(HOSTED_WORKFLOWS):
         workflow = _WORKFLOWS_DIR / workflow_name
@@ -106,11 +116,10 @@ def test_the_release_path_workflows_run_on_hosted_images() -> None:
         document = yaml.safe_load(workflow.read_text(encoding="utf-8"))
         jobs = document.get("jobs") or {}
         assert jobs, f"{workflow_name} declares no jobs"
-        for job_name, job in jobs.items():
-            for target in _runner_targets(job):
-                assert isinstance(target, str) and target != _UNRESOLVED, (
-                    f"{workflow_name}:{job_name} runs on {target!r}, not a hosted image"
-                )
+        unresolved = [job_name for job_name, job in jobs.items() if not runner_targets(job, document)]
+        assert unresolved == [], f"{workflow_name} jobs yielded no runner target at all: {unresolved}"
+        violations = _hosted_violations(workflow_name, document)
+        assert violations == [], f"release-path jobs not on a hosted image: {violations}"
 
 
 def test_every_workflow_job_runs_on_the_self_hosted_fleet() -> None:
@@ -183,6 +192,108 @@ def test_gate_fails_closed_on_an_unresolvable_matrix_reference(tmp_path: Path) -
         encoding="utf-8",
     )
     violations = _collect_violations(tmp_path)
+    assert violations == [("opaque.yml", "build", UNRESOLVED_ZERO_TARGETS)]
+
+
+def _runtime_matrix_workflow(*, emitted_labels: str, matrix: str = _RUNTIME_MATRIX_REFERENCE) -> dict[str, Any]:
+    """Return a release-shaped document whose matrix is computed at runtime.
+
+    Modelled on the publication workflow: one job validates an inventory and
+    writes the smoke matrix to an output, and the job that consumes it names no
+    runner of its own. The runner labels exist only inside the producing
+    script, which is the whole difficulty this fixture exists to reproduce.
+    """
+    return yaml.safe_load(
+        "name: runtime\n"
+        "on: workflow_dispatch\n"
+        "jobs:\n"
+        "  inventory:\n"
+        "    runs-on: ubuntu-latest\n"
+        "    outputs:\n"
+        "      matrix: ${{ steps.emit-matrix.outputs.matrix }}\n"
+        "    steps:\n"
+        "      - name: Emit\n"
+        "        id: emit-matrix\n"
+        "        run: |\n"
+        f"          emit --targets {emitted_labels}\n"
+        "  smoke:\n"
+        "    needs: inventory\n"
+        "    strategy:\n"
+        f"      matrix: {matrix}\n"
+        "    runs-on: ${{ matrix.os }}\n"
+        "    steps: []\n",
+    )
+
+
+def test_the_gate_reads_the_labels_a_runtime_matrix_producer_emits() -> None:
+    """The release path's own shape resolves to real targets, not to a shrug.
+
+    This is the positive control for the refusals below. Without it a resolver
+    that reported every runtime matrix unresolvable would look identical to one
+    that reads them, and the exemption would be pinned by a gate that never
+    agrees the document is fine.
+    """
+    document = _runtime_matrix_workflow(emitted_labels='"ubuntu-latest" "macos-latest" "windows-latest"')
+
+    targets = runner_targets(document["jobs"]["smoke"], document)
+
+    assert targets == ["ubuntu-latest", "macos-latest", "windows-latest"]
+    assert _hosted_violations("runtime.yml", document) == []
+
+
+def test_a_runtime_matrix_producer_emitting_a_fleet_label_is_refused() -> None:
+    """Detector teeth: a release job put back on the fleet is caught.
+
+    The label never appears in the consuming job -- it is written in the script
+    that computes the matrix -- so this is exactly the drift the previous
+    reader could not see, and the one the exemption cannot survive.
+    """
+    document = _runtime_matrix_workflow(emitted_labels='"ubuntu-latest" "self-hosted"')
+
+    assert _hosted_violations("runtime.yml", document) == [("runtime.yml", "smoke", "self-hosted")]
+
+
+def test_a_runtime_matrix_producer_naming_no_label_is_refused() -> None:
+    """A producer whose labels are invisible fails closed rather than passing."""
+    document = _runtime_matrix_workflow(emitted_labels="--from-file targets.json")
+
+    violations = _hosted_violations("runtime.yml", document)
+
     assert len(violations) == 1
-    assert violations[0][:2] == ("opaque.yml", "build")
-    assert "zero targets" in str(violations[0][2])
+    assert "names no runner label literal" in str(violations[0][2])
+
+
+@pytest.mark.parametrize(
+    ("matrix", "expected"),
+    [
+        ("${{ fromJSON(inputs.matrix) }}", "not a fromJSON(needs.<job>.outputs.<output>) reference"),
+        ("${{ fromJSON(needs.absent.outputs.matrix) }}", "is not declared in this workflow"),
+        ("${{ fromJSON(needs.inventory.outputs.absent) }}", "not a ${{ steps.<id>.outputs.<key> }} reference"),
+    ],
+    ids=("not-a-job-output", "producer-absent", "output-absent"),
+)
+def test_a_runtime_matrix_reference_the_gate_cannot_follow_is_refused(matrix: str, expected: str) -> None:
+    """Each way the indirection can break is a refusal, never a silent pass."""
+    document = _runtime_matrix_workflow(emitted_labels='"ubuntu-latest"', matrix=matrix)
+
+    violations = _hosted_violations("runtime.yml", document)
+
+    assert len(violations) == 1
+    assert expected in str(violations[0][2])
+
+
+def test_a_runtime_matrix_cannot_prove_a_fleet_lane(tmp_path: Path) -> None:
+    """Outside the exemption the same document is refused, and must be.
+
+    A self-hosted lane is a label LIST, and a runtime matrix carries labels one
+    string at a time with no way to say which of them belong to the same job.
+    So a fleet workflow declares `runs-on:` statically -- as every fleet
+    workflow here already does -- and one that stops doing so fails rather than
+    being taken on trust.
+    """
+    document = _runtime_matrix_workflow(emitted_labels='"self-hosted" "Linux" "X64"')
+    (tmp_path / "fleet.yml").write_text(yaml.safe_dump(document), encoding="utf-8")
+
+    violations = _collect_violations(tmp_path)
+
+    assert ("fleet.yml", "smoke", "self-hosted") in violations
