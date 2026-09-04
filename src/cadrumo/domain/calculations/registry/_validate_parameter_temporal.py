@@ -266,7 +266,7 @@ def validate_non_filing_axis_admission(
     if not non_filing:
         failures.append(
             f"{scope}: parameter {parameter.id!r} declares a non-filing axis admission for "
-            f"{admission.date_axis!r} but every value is on {FILING_PERIOD_AXIS!r}; "
+            f"{admission.date_axis.value!r} but every value is on {FILING_PERIOD_AXIS!r}; "
             f"remove the admission or key the values to the axis it admits",
         )
         return failures
@@ -274,7 +274,7 @@ def validate_non_filing_axis_admission(
     if admission.date_axis not in non_filing:
         declared = ", ".join(sorted(non_filing))
         failures.append(
-            f"{scope}: parameter {parameter.id!r} admits axis {admission.date_axis!r} but its "
+            f"{scope}: parameter {parameter.id!r} admits axis {admission.date_axis.value!r} but its "
             f"values are keyed to ({declared}); the admission must name the axis actually used",
         )
 
