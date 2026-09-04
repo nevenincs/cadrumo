@@ -77,6 +77,7 @@ __all__ = [
     "apply_reference_rewrites",
     "facade_exports",
     "facade_import_sites",
+    "imported_modules",
     "non_inert_contents",
     "reference_rewrites",
     "refusal_reason",
@@ -152,6 +153,32 @@ def resolve_relative(node: ast.ImportFrom, path: pathlib.Path) -> str:
     package = _package_of(path)
     base = package[: len(package) - (node.level - 1)]
     return ".".join(base + ([node.module] if node.module else []))
+
+
+def imported_modules(node: ast.ImportFrom | ast.Import, path: pathlib.Path) -> tuple[str, ...]:
+    """Return every module an import statement can be said to reference.
+
+    :func:`resolve_relative` answers what an ``ImportFrom`` resolves TO, which is
+    the package for ``from ..analysis import thing``. That is correct and it is
+    not the whole answer: the name being imported may itself be a module, and a
+    caller asking "which modules does this statement reference" needs both.
+
+    This has been got wrong three times in one campaign, each time in a fresh
+    walk written by someone who knew the rule: a facade consumer scan reported
+    zero consumers where there were ninety, a module promoter left two files
+    pointing at a module it had renamed, and a coverage probe reported six
+    tested modules as untested while their test files sat beside them. The
+    knowledge belongs in one function rather than in each walk's author.
+
+    The result is CANDIDATES. ``from x import y`` yields both ``x`` and ``x.y``
+    because ``y`` may be a module or may be a symbol, and nothing in the syntax
+    says which. Callers intersect it with the module set they know about, which
+    is the only place that question can be answered.
+    """
+    if isinstance(node, ast.Import):
+        return tuple(alias.name for alias in node.names)
+    resolved = resolve_relative(node, path)
+    return (resolved, *(f"{resolved}.{alias.name}" for alias in node.names))
 
 
 def submodule_names(directory: pathlib.Path) -> frozenset[str]:

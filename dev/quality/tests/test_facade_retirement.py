@@ -320,3 +320,62 @@ def test_the_inertness_gate_detects_each_kind_it_names(relative_root: pathlib.Pa
     for kind, body in planted.items():
         initialiser.write_text('"""Doc."""' + chr(10) + body, encoding="utf-8")
         assert kind in non_inert_contents(initialiser), f"{kind} was not detected"
+
+
+def test_import_candidates_include_the_module_a_name_may_refer_to() -> None:
+    """``from x import y`` references both ``x`` and possibly ``x.y``.
+
+    Resolving only to ``x`` is correct about what the statement resolves to and
+    wrong about which modules it references, and that gap has produced three
+    separate defects in this campaign - a consumer scan reporting zero where
+    there were ninety, a rename leaving two files pointing at the old module,
+    and a coverage probe calling six tested modules untested.
+    """
+    import ast
+
+    from ..facade_retirement import imported_modules
+
+    node = ast.parse("from ..analysis import m200_2024_blocker_adjudications as subject").body[0]
+    assert isinstance(node, ast.ImportFrom)
+    candidates = imported_modules(node, pathlib.Path("dev/registry/tests/test_x.py"))
+    assert candidates == (
+        "dev.registry.analysis",
+        "dev.registry.analysis.m200_2024_blocker_adjudications",
+    )
+
+
+def test_import_candidates_cover_a_symbol_import_and_a_plain_import() -> None:
+    """A symbol yields a candidate that is simply not a module, and that is fine.
+
+    Nothing in the syntax distinguishes a submodule from a symbol, so the
+    function returns both and the caller intersects with the modules it knows.
+    Pretending to decide here would be guessing with extra steps.
+    """
+    import ast
+
+    from ..facade_retirement import imported_modules
+
+    symbol = ast.parse("from dev.quality.run_integrity import classify_run").body[0]
+    assert isinstance(symbol, ast.ImportFrom)
+    assert imported_modules(symbol, pathlib.Path("anywhere.py")) == (
+        "dev.quality.run_integrity",
+        "dev.quality.run_integrity.classify_run",
+    )
+
+    plain = ast.parse("import dev.quality.run_integrity").body[0]
+    assert isinstance(plain, ast.Import)
+    assert imported_modules(plain, pathlib.Path("anywhere.py")) == ("dev.quality.run_integrity",)
+
+
+def test_import_candidates_credit_a_relative_import_at_its_own_depth() -> None:
+    """The depth rule the resolver owns, exercised through the candidate view."""
+    import ast
+
+    from ..facade_retirement import imported_modules
+
+    node = ast.parse("from . import errors").body[0]
+    assert isinstance(node, ast.ImportFrom)
+    assert imported_modules(node, pathlib.Path("dev/locales/cli.py")) == (
+        "dev.locales",
+        "dev.locales.errors",
+    )

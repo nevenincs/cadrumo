@@ -53,7 +53,7 @@ import sys
 from dataclasses import dataclass
 from typing import Final
 
-from .facade_retirement import resolve_relative
+from .facade_retirement import imported_modules, resolve_relative
 
 __all__ = [
     "PromotionPlan",
@@ -175,12 +175,17 @@ def plan_promotion(
             record = ReferenceEdit(path=path, lineno=node.lineno, before=before, after=after, kind="import")
             (edits if after != before else unhandled).append(record)
         for node in ast.walk(tree):
-            # The module imported by name from its own package. This resolves to
+            # The module imported by name from its own package. This RESOLVES to
             # the package, so the loop above never sees it, and the name in the
             # import list is precisely what the rename changes.
-            if not isinstance(node, ast.ImportFrom) or resolve_relative(node, path) != package_dotted:
+            # ``imported_modules`` is the shared answer to "which modules does
+            # this statement reference", and asking it here rather than
+            # re-deriving the rule is what keeps the two walks agreeing.
+            if not isinstance(node, ast.ImportFrom):
                 continue
-            if not any(alias.name == old_stem for alias in node.names):
+            if old_dotted not in imported_modules(node, path):
+                continue
+            if resolve_relative(node, path) != package_dotted:
                 continue
             for offset in range(node.lineno - 1, node.end_lineno or node.lineno):
                 before = lines[offset]
