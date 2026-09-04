@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#worktree-commit-attribution'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-09-04'
+body_schema: 'body-v2'
 body_hash: 'sha256:b07fba222e469be8e84927d61e478578dfaa83ac83c2fd1524bf3e4a764d0e0a'
 related:
   - '[[2026-07-24-worktree-commit-attribution-audit]]'

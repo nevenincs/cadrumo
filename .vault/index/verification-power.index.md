@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#verification-power'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-09-04'
+body_schema: 'body-v2'
 body_hash: 'sha256:d13d8386dd345f9168aac0d2cc45e50f128a532ab8b303f26a47b3bf1907f568'
 related:
   - '[[2026-07-01-verification-power-adr]]'

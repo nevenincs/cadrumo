@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:9c97d57b41e82522f9b4309855dc3dbfe0296c91f19c1a006ac977ca80f49ba4'
+body_hash: 'sha256:38691abe295caefe8f20afa2eb272b7be791677784623aa852722627a5094af7'
 ---
 
 # `reachability-burndown` plan
@@ -28,7 +28,7 @@ Turn one undifferentiated audit population into evidenced classes. Every later w
 
 Produce an evidenced classification for every module and orphaned-test finding, and for the symbol population by owning package.
 
-- [ ] `W01.P01.S01` - Classify every unreachable and module-exec-only module by outside-use label and semantic uniqueness probe, recording the evidence behind each supersession or staging claim; `dev/audit`.
+- [x] `W01.P01.S01` - Classify every unreachable and module-exec-only module by outside-use label and semantic uniqueness probe, recording the evidence behind each supersession or staging claim; `dev/audit`.
 - [ ] `W01.P01.S02` - Classify the 21 orphaned test modules against whether their shipped subjects are themselves findings; `src/cadrumo`.
 - [ ] `W01.P01.S03` - Partition the exact-confidence symbol population by owning package and record the dominant kinds per area; `dev/audit`.
 

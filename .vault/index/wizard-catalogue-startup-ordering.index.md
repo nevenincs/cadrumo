@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#wizard-catalogue-startup-ordering'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-09-04'
+body_schema: 'body-v2'
 body_hash: 'sha256:4afc03f6ec96127867a78ac4cf9ad6fc2df5056c32706b75716dcc5c29551155'
 related:
   - '[[2026-06-03-wizard-catalogue-startup-ordering-adr]]'

@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#user-profile-backend-schema'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-09-04'
+body_schema: 'body-v2'
 body_hash: 'sha256:3f47298325472f556b4aa4d054a1ef0240fa310d939955311f5de3b2ab7ed814'
 related:
   - '[[2026-05-07-user-profile-backend-schema-exec]]'
