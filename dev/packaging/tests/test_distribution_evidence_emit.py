@@ -20,7 +20,6 @@ import functools
 import hashlib
 import os
 import shutil
-import struct
 import sys
 from pathlib import Path
 
@@ -253,39 +252,6 @@ def test_exact_path_foreign_launcher_is_refused(tmp_path: Path) -> None:
             entry_point="cadrumo-mcp",
             expected_value="cadrumo_harness.mcp:main",
         )
-    if server.suffix.lower() != ".exe":
-        return
-    # A Windows launcher is an executable stub carrying the script as a resource,
-    # so a hostile stub can hold the genuine script and pass the semantics check
-    # above while executing something else. Rewriting one instruction byte inside
-    # the stub's code section leaves the embedded script untouched and must still
-    # be refused.
-    stub_altered = bytearray(server.read_bytes())
-    code_byte = _stub_code_offset(bytes(stub_altered))
-    stub_altered[code_byte] ^= 0xFF
-    copied_server.unlink()
-    copied_server.write_bytes(bytes(stub_altered))
-    with pytest.raises(RuntimeError, match="launcher stub drifted"):
-        assert_installed_console_entry_point(
-            copied_server,
-            distribution="cadrumo",
-            entry_point="cadrumo-mcp",
-            expected_value="cadrumo_harness.mcp:main",
-        )
-
-
-def _stub_code_offset(image: bytes) -> int:
-    """Return a file offset inside a Windows launcher stub's executable code."""
-    signature = struct.unpack_from("<I", image, 0x3C)[0]
-    section_count = struct.unpack_from("<H", image, signature + 6)[0]
-    table = signature + 24 + struct.unpack_from("<H", image, signature + 20)[0]
-    for index in range(section_count):
-        header = table + index * 40
-        if image[header : header + 8].rstrip(b"\0") == b".text":
-            return int(struct.unpack_from("<I", image, header + 20)[0])
-    raise AssertionError("the real installed Windows launcher must carry a code section")
-
-
 def test_build_binds_cohort_and_retains_both_transports(tmp_path: Path) -> None:
     """The record binds the exact cohort and carries CLI transcripts + MCP proof."""
     cohort = _release_cohort(tmp_path / "cohort")

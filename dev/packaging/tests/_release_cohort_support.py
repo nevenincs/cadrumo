@@ -112,13 +112,16 @@ def _real_product_wheel() -> Path:
 def client_venv_template() -> Path:
     """Install the real product wheel into a minimal venv, once per process.
 
-    The launcher-facing tests need exactly two things from an environment: the
-    genuine installer-generated ``aeat`` and ``cadrumo-mcp`` console scripts and
-    the interpreter that owns them. Resolving those from the ambient development
-    environment drags its entire dependency closure into every copy -- gigabytes
-    of machine-learning, browser-automation and type-checker payload that no
-    assertion here reads. Installing the product wheel with ``--no-deps`` yields
-    the same real launchers over the distribution that actually supplies them.
+    The launcher-facing tests need the genuine installer-generated ``aeat`` and
+    ``cadrumo-mcp`` console scripts, the interpreter that owns them, and an
+    environment those scripts can actually import in: the installed-console
+    entry-point binding resolves each entry point through the confined
+    interpreter and imports its module, so a dependency-less install fails on
+    the first runtime import rather than on anything the binding is testing.
+    The install therefore carries the wheel's own declared closure -- the shape
+    a published lane installs -- and nothing from the ambient development
+    environment, whose machine-learning, browser-automation and type-checker
+    payload no assertion here reads.
 
     Callers hard-link this template into their own root rather than reinstalling,
     so the environment is materialised once for the whole process.
@@ -133,7 +136,7 @@ def client_venv_template() -> Path:
     interpreter = venv_bin_dir(template) / ("python.exe" if os.name == "nt" else "python")
     for argv in (
         [uv, "venv", "--python", sys.executable, str(template)],
-        [uv, "pip", "install", "--python", str(interpreter), "--no-deps", str(_real_product_wheel())],
+        [uv, "pip", "install", "--python", str(interpreter), str(_real_product_wheel())],
     ):
         completed = subprocess.run(  # noqa: S603 - fixed uv argv over fixture-owned paths.
             argv,
