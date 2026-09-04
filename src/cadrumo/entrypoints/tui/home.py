@@ -13,6 +13,7 @@ from typing import ClassVar, Final, cast, override
 from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
+from textual.containers import Vertical
 from textual.message import Message
 from textual.screen import Screen
 from textual.widgets import DataTable, Static
@@ -237,8 +238,8 @@ class HomeScreen(Screen[None]):
             classes="home-state",
             markup=False,
         )
-        with ContentScroll(id="home-page", classes="cadrumo-scroll"), Static(id="home-layout"):
-            with Static(id="home-main"):
+        with ContentScroll(id="home-page", classes="cadrumo-scroll"), Vertical(id="home-layout"):
+            with Vertical(id="home-main"):
                 yield Static(tr("tui.home.heading.actions"), classes="cadrumo-heading", markup=False)
                 yield Static(
                     _state_copy(
@@ -276,7 +277,7 @@ class HomeScreen(Screen[None]):
                     cell_padding=0,
                     classes="home-table",
                 )
-            with Static(id="home-sidebar"):
+            with Vertical(id="home-sidebar"):
                 yield Static(tr("tui.home.heading.agenda"), classes="cadrumo-heading", markup=False)
                 yield Static(
                     _state_copy(
