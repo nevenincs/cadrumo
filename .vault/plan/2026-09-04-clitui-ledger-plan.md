@@ -10,7 +10,7 @@ related:
   - '[[2026-09-04-clitui-ledger-reference]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:48006f3eb2b0baeffcbf17a68582714a252be8f2c7b15a16f3d73b60a9c36775'
+body_hash: 'sha256:1b6de3fd829d27f487a24e55dd9198fe2f66ae33f28bf0b868a0602748bf80a7'
 ---
 
 <!-- LINK RULES:
@@ -22,6 +22,8 @@ body_hash: 'sha256:48006f3eb2b0baeffcbf17a68582714a252be8f2c7b15a16f3d73b60a9c36
        footers do not exist.
      - NEVER use [[wiki-links]] or markdown links in the
        document body. -->
+
+<!-- RETIRED: S27, S29, S31, S33, S35, S37, S39, S41, S43, S45, S47, S49, S51, S59 -->
 
 <!-- FRONTMATTER RULES:
      tags: one directory tag (hardcoded #plan) and one feature tag.
@@ -174,21 +176,35 @@ templates. -->
 
 Create the stable generated matrix contract, validation, and reference publication used throughout every gate.
 
+- [ ] `W01.P01.S01` - Define stable capability identities, axes, gap classes, applicability, evidence coordinates, and gate predicates; `dev/quality/clitui_ledger_capability_matrix.py`.
+- [ ] `W01.P01.S02` - Test identifier stability, denominator completeness, legal state transitions, evidence validation, and closed-gate reopening; `dev/quality/tests/test_clitui_ledger_capability_matrix.py`.
+- [ ] `W01.P01.S03` - Generate the continuously updated matrix and gate summary as the authoritative campaign reference; `.vault/reference/2026-09-04-clitui-ledger-reference.md`.
 
 ### Phase `W01.P02` - freeze the union denominator and ownership
 
 Enumerate commands, backend-only operations, missing products, registry consumers, artifacts, and installed surfaces with explicit applicability and semantic ownership.
 
+- [ ] `W01.P02.S04` - Enumerate every invocable Ledger command endpoint, sub-operation, handler, schema, and adapter ownership annotation; `src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py`.
+- [ ] `W01.P02.S05` - Enumerate existing application operations, direct behavioral proof, and backend-only Ledger capabilities; `src/cadrumo/application/ledger/`.
+- [ ] `W01.P02.S06` - Enumerate the seven binding families, every declared route, calculation consumer, filing consumer, and unresolved proof obligation; `src/cadrumo/domain/calculations/registry/bindings.py`.
+- [ ] `W01.P02.S07` - Enumerate existing Ledger component factories separately from installed navigation reachability; `src/cadrumo/entrypoints/tui/ledger/`.
+- [ ] `W01.P02.S08` - Adjudicate canonical semantic homes and typed command-result contracts for every denominator row; `.vault/reference/2026-09-04-clitui-ledger-reference.md`.
 
 ### Phase `W01.P03` - record sole plan ownership and the TUI hold
 
 Reconcile overlapping Ledger work without changing production TUI code and make the hold visible in campaign state.
 
+- [ ] `W01.P03.S09` - Record clitui-ledger as sole Ledger parity owner and place unresolved Ledger TUI rows under the implementation hold; `.vault/plan/2026-08-11-tui-architecture-plan.md`.
+- [ ] `W01.P03.S10` - Publish the active-plan ownership, hold state, and gate dependency chain without duplicating evidence; `.vault/index/clitui-ledger.index.md`.
+- [ ] `W01.P03.S11` - Mark every TUI-applicable matrix row held until G3 and retain component-only versus installed distinctions; `.vault/reference/2026-09-04-clitui-ledger-reference.md`.
 
 ### Phase `W01.P04` - adjudicate and close G0
 
 Review every denominator row and require evidence or explicit UNPROVEN state before authority work starts.
 
+- [ ] `W01.P04.S12` - Review every row for explicit applicability, semantic owner, proof state, gap class, and next closure action; `.vault/reference/2026-09-04-clitui-ledger-reference.md`.
+- [ ] `W01.P04.S13` - Enforce that new capabilities reopen affected gates and that G0 cannot close over an incomplete union denominator; `dev/quality/tests/test_clitui_ledger_capability_matrix.py`.
+- [ ] `W01.P04.S14` - Record G0 closure only after an independent engineering review accepts the frozen matrix; `.vault/reference/2026-09-04-clitui-ledger-reference.md`.
 
 ## Wave `W02` - recover backend semantic authority
 
@@ -198,21 +214,55 @@ Close G1 cohort by cohort: implement each typed backend owner, immediately cut a
 
 Implement typed read authorities, cut each affected query and read handler over immediately, then prove the cohort before proceeding.
 
+- [ ] `W02.P05.S15` - Implement typed list, filter, sort, group, stable-page, search, review-state, and rejection query semantics; `src/cadrumo/application/ledger/query_service.py`.
+- [ ] `W02.P05.S16` - Implement canonical check, status, history, view, track, staleness, and participation composite reads; `src/cadrumo/application/ledger/composite_reader.py`.
+- [ ] `W02.P05.S17` - Implement typed evidence-review, extraction-eligibility, consent-survey, and advisory projections; `src/cadrumo/application/ledger/review_queries.py`.
+- [ ] `W02.P05.S18` - Delegate list, filter, sort, group, page, search, and review handling to the typed query use case; `src/cadrumo/entrypoints/cli/_ledger_list.py`.
+- [ ] `W02.P05.S19` - Delegate check, status, history, view, track, staleness, and participation handling to composite reads; `src/cadrumo/entrypoints/cli/_ledger_read_cli.py`.
+- [ ] `W02.P05.S20` - Delegate Ledger review filtering and projection to the typed review query; `src/cadrumo/entrypoints/cli/_ledger_review_cli.py`.
+- [ ] `W02.P05.S21` - Delegate evidence review filtering, blockers, and advisories to the typed evidence review query; `src/cadrumo/entrypoints/cli/_ledger_evidence_review_cli.py`.
+- [ ] `W02.P05.S22` - Prove backend read behavior plus thin-handler delegation and detector coverage for the complete cohort; `src/cadrumo/application/ledger/tests/test_query_and_composite_use_cases.py`.
 
 ### Phase `W02.P06` - backport and delegate core mutation policy
 
 Implement manual creation, allocation, classification, and rule-preview authorities, cut each affected handler over immediately, then prove the cohort.
 
+- [ ] `W02.P06.S23` - Implement operator-intent creation with category, Censo percentage, jurisdiction, FX, prorrata, version, and idempotency policy; `src/cadrumo/application/ledger/operator_commands.py`.
+- [ ] `W02.P06.S24` - Implement dedicated allocation and discriminated direct and M210 classification commands; `src/cadrumo/application/ledger/operator_commands.py`.
+- [ ] `W02.P06.S25` - Implement canonical rule dry-run through the same eligibility and first-match engine used by live apply; `src/cadrumo/application/ledger/actions_classification.py`.
+- [ ] `W02.P06.S26` - Delegate manual transaction creation to the operator-intent creation command; `src/cadrumo/entrypoints/cli/_ledger.py`.
+- [ ] `W02.P06.S28` - Delegate allocation and direct classification to their dedicated backend commands; `src/cadrumo/entrypoints/cli/_ledger.py`.
+- [ ] `W02.P06.S30` - Delegate M210 classification routing and completeness decisions to its discriminated backend command; `src/cadrumo/entrypoints/cli/_ledger_m210_classify_cli.py`.
+- [ ] `W02.P06.S32` - Delegate rule dry-run and apply to the canonical classification engine; `src/cadrumo/entrypoints/cli/_ledger_rules_cli.py`.
+- [ ] `W02.P06.S34` - Prove backend mutation behavior plus thin-handler delegation and detector coverage for the complete cohort; `src/cadrumo/application/ledger/tests/test_operator_commands.py`.
 
 ### Phase `W02.P07` - backport and delegate provider and review workflows
 
 Implement import, Drive, evidence-review, consent, and model-routing authorities, cut each affected handler over immediately, then prove the cohort.
 
+- [ ] `W02.P07.S36` - Implement directory and multi-source import planning, dry-run summaries, stable input order, and best-effort results; `src/cadrumo/application/ledger/import_workflows.py`.
+- [ ] `W02.P07.S38` - Implement one-item and batch Drive evidence ingestion over provider and secure-custody ports; `src/cadrumo/application/ledger/provider_evidence_workflows.py`.
+- [ ] `W02.P07.S40` - Implement extraction consent, eligibility, review filtering, proposal disposition, and atomic selected-apply use cases; `src/cadrumo/application/ledger/review_workflows.py`.
+- [ ] `W02.P07.S42` - Implement frontend-neutral classify, saturate, split, preview, and apply routing with typed terminal outcomes; `src/cadrumo/application/ledger/llm_workflows.py`.
+- [ ] `W02.P07.S44` - Delegate folder enumeration, per-source execution, and result aggregation to the import workflow; `src/cadrumo/entrypoints/cli/_ledger_import_cli.py`.
+- [ ] `W02.P07.S46` - Delegate Drive evidence fetch, MIME decisions, custody, linking, and partial-success semantics to the provider workflow; `src/cadrumo/entrypoints/cli/ledger_lifecycle_cli.py`.
+- [ ] `W02.P07.S48` - Delegate extraction eligibility and consent-token decisions to the review workflow; `src/cadrumo/entrypoints/cli/_ledger_evidence_cli.py`.
+- [ ] `W02.P07.S50` - Delegate consent survey joins and projections to the port-backed application reader; `src/cadrumo/entrypoints/cli/_ledger_evidence_consent_cli.py`.
+- [ ] `W02.P07.S52` - Delegate classify, saturate, split, preview, apply, and terminal model outcomes to the model workflow; `src/cadrumo/entrypoints/cli/_ledger_llm_cli.py`.
+- [ ] `W02.P07.S53` - Prove backend provider and review behavior plus thin-handler delegation and detector coverage for the complete cohort; `src/cadrumo/application/ledger/tests/test_provider_and_review_workflows.py`.
 
 ### Phase `W02.P08` - backport and delegate invoice and adjacent-register workflows
 
 Implement invoice, counterparty, ratio, prorrata, and bienes authorities, cut each affected handler over immediately, then prove the cohort.
 
+- [ ] `W02.P08.S54` - Implement invoice add, import, list, mapping, lifecycle advisory, and transaction-link orchestration; `src/cadrumo/application/ledger/invoice_workflows.py`.
+- [ ] `W02.P08.S55` - Return typed counterparty-confirmation outcomes from canonical preconditions and persistence; `src/cadrumo/application/ledger/counterparty_establishment.py`.
+- [ ] `W02.P08.S56` - Implement atomic usage-ratio workflows with Censo joins, warnings, versions, events, and persistence; `src/cadrumo/application/ledger/ratio_workflows.py`.
+- [ ] `W02.P08.S57` - Implement end-to-end prorrata operator commands with legality, precedence, blockers, persistence, and typed results; `src/cadrumo/application/ledger/prorrata_workflows.py`.
+- [ ] `W02.P08.S58` - Implement bienes de inversion acquisition and disposal commands from operator intent; `src/cadrumo/application/ledger/investment_goods_workflows.py`.
+- [ ] `W02.P08.S60` - Delegate invoice intake, mapping, list, lifecycle advisory, and linking to invoice workflows; `src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py`.
+- [ ] `W02.P08.S61` - Delegate counterparty outcome inference and preconditions to the canonical counterparty command; `src/cadrumo/entrypoints/cli/_ledger_counterparty_cli.py`.
+- [ ] `W02.P08.S62` - Retirement placeholder for S62; `.vault/plan/2026-09-04-clitui-ledger-plan.md`.
 
 ### Phase `W02.P09` - prove the clean authority boundary
 
