@@ -10,7 +10,6 @@ related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-adr]]"
 ---
-
 # `clitui-ledger` audit: `S02 test contract review`
 
 ## Scope
@@ -41,4 +40,3 @@ changed.
 
 Keep S02 tests paired so each gate contract retains a positive control and a
 failure detector when later matrix rows and evidence producers are added.
-

@@ -10,7 +10,6 @@ step_id: 'S02'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
 ---
-
 # Test identifier stability, denominator completeness, legal state transitions, evidence validation, and closed-gate reopening
 
 ## Scope
@@ -24,4 +23,3 @@ related:
 - `M` `.vault/plan/2026-09-04-clitui-ledger-plan.md`
 - `M` `.vault/index/clitui-ledger.index.md`
 - `verify:` `uv run pytest -q dev/quality/tests/test_clitui_ledger_capability_matrix.py -o addopts=''` -> `92 passed`; `uv run ruff check dev/quality/tests/test_clitui_ledger_capability_matrix.py`; `uv run basedpyright dev/quality/tests/test_clitui_ledger_capability_matrix.py`; `uv run python -m compileall -q dev/quality/tests/test_clitui_ledger_capability_matrix.py`; `uv run vaultspec-core vault check all --feature clitui-ledger --no-hints` -> `pass`
-
