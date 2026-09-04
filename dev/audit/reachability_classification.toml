@@ -127,7 +127,7 @@ evidence = "Encrypted custody adapter for source-owned filing export replay proo
 
 [[module]]
 name = "cadrumo.core.address_components"
-class = "staged-capability"
+class = "design-time-authority"
 evidence = "Already carried as an [[intentional]] design_time_authority in the module ratchet: the canonical AEAT address-component vocabulary constrains producer-key declarations and deliberately has no runtime transport caller."
 
 # ---------------------------------------------------------------------------
@@ -156,8 +156,9 @@ remedy_requires_decision = true
 
 [[module]]
 name = "cadrumo.domain.portals.drift"
-class = "staged-capability"
-evidence = "Reported type-only: an `if TYPE_CHECKING` import is its sole reference, so the typed portal-drift record exists for annotation rather than execution."
+class = "should-be-live"
+evidence = "cadrumo.application.preflight.probe_portal_registry_health accepts drift_events and grades a drift by URL stability tier, but no production caller ever passes them: evaluate_portal_drift, the only producer, is reached solely by tests. The portal-registry:health row therefore always takes the offline default and always reports OK, so it cannot distinguish no-drift from drift-never-evaluated. The missing wiring is the defect."
+remedy_requires_decision = true
 
 # ---------------------------------------------------------------------------
 # Orphaned test modules
