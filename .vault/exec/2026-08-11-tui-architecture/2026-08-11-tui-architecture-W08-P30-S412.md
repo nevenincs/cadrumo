@@ -23,18 +23,18 @@ related:
 - `M` `dev/tui/cli.py`
 - `M` `dev/tui/tests/test_tui_visual_inventory.py`
 - `verify:` `uv run --no-sync pytest -q dev/tui/tests` -> `pass`
+- `verify:` `uv run --no-sync python -m dev.tui render -v medium -t dark -t light` -> `pass`
 
 ## Notes
 
-A run now removes the frames its own manifest does not claim, and says how many went. The
-purge is deliberately narrow: regular files under this run's png, svg and text directories
-only, and only those the manifest does not name -- the manifest, index and log are never
+Proven end to end, not only by unit gates: a real run reported `removed 351 stale frames
+left by an earlier run` and left the directory holding exactly the 174 its manifest names.
+The run says what it discarded rather than tidying silently.
+
+The purge is deliberately narrow -- regular files under this run's png, svg and text
+directories, only those the manifest does not claim; the manifest, index and log are never
 touched and nothing outside the run directory is considered.
 
-This is the inverse of the gate S407 added. That one catches frames a run should have
-produced and did not; this catches frames it serves but did not produce. The manifest was
-correct in both cases and the directory was what misled.
-
-Worth recording because the first version of the test failed and the code was right: the
-fixture used bare filenames while a real manifest stores png/<name>.png. The fix belonged in
-the fixture, checked against a real manifest before anything was changed.
+Closing this surfaced a WORSE sibling hazard, filed separately: the purge only removes
+frames from EARLIER runs, so a run whose own frames span a code change is internally
+inconsistent while every frame is reported as current.
