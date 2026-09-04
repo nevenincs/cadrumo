@@ -13168,3 +13168,53 @@ Two things it must not do. `_runner.py` already exists in that package, so the
 new public module cannot be called `runner`; and the name must clear the
 standard library, which the promoter now checks mechanically rather than by
 recollection.
+
+
+## Zero facades, and three things the promoter did not know
+
+`dev.docs.sequences` is retired and **`facade_retirement` now reports
+`packages=0`**. Of the 388 names nine `dev` initialisers bound, none remain. The
+CLI still answers `python -m dev.docs.sequences --help`.
+
+The library came out of `__main__` first: 23 definitions and nine constants into
+`checks.py`, leaving a 161-line entry point holding `main`, its parser and the
+`if __name__` block. The `__all__` an entry point had no callers to declare is
+gone. Then seven private modules were promoted and the initialiser went from 148
+lines to 23.
+
+Three failures were mine, and each taught the promoter something it did not
+know.
+
+**A rename tool pointed at a split gets one name wrong.** The promoter offered to
+rewrite all three references to `__main__`, and one of them imports `main`,
+which STAYS. Applying it would have silently broken the entry-point import.
+Nothing was wrong with the tool - it was the wrong instrument, and the only
+thing that caught it was reading the three lines before applying.
+
+**Traversal does not survive a rename.** `from .. import _compare` resolves to
+the PACKAGE, so a resolver looking for the module's dotted name never sees it -
+and the name it imports is exactly the one that changes. Two files broke. A test
+of mine had asserted the opposite in a comment: that traversal survives. It
+survives a FACADE retirement, which is a different operation, and I had carried
+the claim across from one to the other. The promoter now handles the shape and
+the comment is corrected.
+
+**A module imported by name is used by name.** Rewriting the import alone leaves
+the body naming something nothing binds - a `NameError` at first call rather
+than an `ImportError` at collection, so it surfaces later and in a narrower
+test. Body uses are now rewritten too, and only in files whose traversal import
+was itself rewritten, so a same-named local elsewhere is never touched.
+
+And one hazard that belongs to the process rather than the tool: running
+`ruff check --fix` between the two halves of a rename **deleted the imports**.
+With the import renamed and the body not yet, `compare` and `runner` looked
+unused, and the autofixer removed them; renaming the body then left undefined
+names. The fix is ordering - rewrite both halves before running the autofixer -
+and it is the second time in this campaign that a tool being right about what it
+could see produced a wrong result overall.
+
+Verified at every stage by set rather than count: the package's eight-item
+failure set is identical after the split, after the seven promotions, after the
+consumers were repointed, and after the initialiser was emptied. The one new
+failure that appeared was the one predicted at `S475`, the last of the three
+sibling error-ownership tests, now restated like the other two.

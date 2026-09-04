@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:0e08eeb1ce34c154c68f1be61e8d1438eeff03a3d00bce58170454837154a9a3'
+body_hash: 'sha256:e8972770ca1f7f039228d1e75e556259c7199d2ecad82e4f3413930696ac4ae7'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -316,10 +316,10 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S472` - Retire the dev.agent_eval facade: twelve consumer statements repointed onto five defining modules and the initialiser reduced from 130 lines to inert prose, with the suites 8 failed and 13 errors proven pre-existing by an import side-effect probe and two HEAD comparisons and unchanged after; `dev/agent_eval`.
 - [x] `W02.P02.S473` - Retire the dev.locales facade against a baseline taken first: fifteen statements repointed across twelve files, the initialiser reduced from 116 lines, and the suite returned to its recorded 10 failed and 627 passed; `dev/locales`.
 - [x] `W02.P02.S474` - Restate the locale error-ownership test so it no longer depends on the facade it checks for: assert the initialiser declares no exports and carries only its own submodules, rather than asserting two names are absent from an __all__ that an inert initialiser does not have; `dev/locales/tests/test_errors.py`.
-- [ ] `W02.P02.S475` - Restate the last sibling error-ownership test, dev/docs/sequences/tests/test_errors.py, when the sequences facade comes down; the sanitizer and terminology_handbook ones are done; `dev/docs/sequences/tests/test_errors.py`.
+- [x] `W02.P02.S475` - Restate the last sibling error-ownership test, dev/docs/sequences/tests/test_errors.py, when the sequences facade comes down; the sanitizer and terminology_handbook ones are done; `dev/docs/sequences/tests/test_errors.py`.
 - [x] `W02.P02.S476` - Separate the entry-point refusal from the privacy one: a symbol forwarded out of __main__ is refused everywhere including inside its own package and reported under its own reason, since making __main__ public is not a fix anyone should carry out; `dev/quality/facade_retirement.py,dev/quality/tests/test_facade_retirement.py`.
-- [ ] `W02.P02.S477` - Move the 23 library definitions and nine module constants out of dev.docs.sequences.__main__ into a public module, leaving only the 106-line main and its if-name block, and drop the __all__ an entry point has no callers to declare; the name may not be runner, which is taken by a private module; `dev/docs/sequences`.
-- [ ] `W02.P02.S478` - Give a public defining module to the 48 symbols the four remaining facades forward out of 18 leading-underscore modules, largest first: sequences _golden_store and _schema, terminology _unified_record, terminology_handbook _loader; `dev`.
+- [x] `W02.P02.S477` - Move the 23 library definitions and nine module constants out of dev.docs.sequences.__main__ into a public module, leaving only the 106-line main and its if-name block, and drop the __all__ an entry point has no callers to declare; the name may not be runner, which is taken by a private module; `dev/docs/sequences`.
+- [x] `W02.P02.S478` - Give a public defining module to the 48 symbols the four remaining facades forward out of 18 leading-underscore modules, largest first: sequences _golden_store and _schema, terminology _unified_record, terminology_handbook _loader; `dev`.
 - [x] `W02.P02.S479` - Promote dev.sanitizer._residual_identity to residual_identity, since two of its symbols are consumed by dev.identity and a module reached from another package is not an implementation detail, then retire the facade: four sites repointed and the initialiser reduced from 84 lines; `dev/sanitizer,dev/identity`.
 - [x] `W02.P02.S480` - Invert the sanitizer re-export test, which asserted a non-empty __all__ and was hardened against an empty one so that emptying the facade could not pass silently: it could not be satisfied alongside the inert-initialiser boundary and was protecting the defect; `dev/sanitizer/tests/test_pipeline.py,dev/sanitizer/tests/test_errors.py`.
 - [x] `W02.P02.S481` - Search the three remaining dev.docs packages for tests that assert the facade contract itself rather than reading it incidentally, since such a test cannot be satisfied alongside the inert-initialiser boundary and surfaces only when the retirement is attempted; `dev/docs/sequences/tests,dev/docs/terminology_handbook/tests`.
@@ -328,6 +328,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S484` - Build the private-to-public module promoter that resolves every import to its absolute dotted name so relative depth stops mattering, reports files it could not parse beside statements it could not rewrite, and refuses a public name that shadows the live interpreters standard library; `dev/quality/module_promotion.py,dev/quality/tests/test_module_promotion.py`.
 - [x] `W02.P02.S485` - Promote the three terminology private modules and retire the facade: 135 references moved across 62 file-touches with zero unhandled and zero unreadable, the initialiser cut from 208 lines to 12, and the 62-item failure set identical at each stage; `dev/docs/terminology,dev/docs,dev/deploy`.
 - [x] `W02.P02.S486` - Retire the terminology_handbook facade by promoting only the four private modules actually reached from another package rather than all nine, leaving five correctly private, with the failure set identical across all four stages; `dev/docs/terminology_handbook,dev/docs`.
+- [x] `W02.P02.S487` - Split the sequences library out of __main__ into checks.py, leaving a 161-line entry point, then promote seven private modules and retire the last facade so facade_retirement reports zero packages; `dev/docs/sequences`.
+- [x] `W02.P02.S488` - Teach the promoter that a module imported by name from its package is a reference too, and that its body usages must move with it, since a rename leaves both naming something nothing binds; `dev/quality/module_promotion.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
