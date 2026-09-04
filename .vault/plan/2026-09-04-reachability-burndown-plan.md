@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:cbafa2590c877babd3639ceb40d4dcaf50dc26b16de4c8f40f54837d4dbeb96e'
+body_hash: 'sha256:999b3ae773c09cb31be9520472329dc010450776ce8d9487c6ceec88b9720aef'
 ---
 
 # `reachability-burndown` plan
@@ -47,13 +47,13 @@ Move modules whose only callers are dev/ beside the consumer that drives them.
 
 Move shared test support into the wheel-excluded test tree and verify the distributed artifact.
 
-- [ ] `W02.P03.S05` - Relocate test-only support into the wheel-excluded test tree and prove the distributed artifact no longer carries it; `src/cadrumo/tests`.
+- [x] `W02.P03.S05` - Relocate test-only support into the wheel-excluded test tree and prove the distributed artifact no longer carries it; `src/cadrumo/tests`.
 
 ### Phase `W02.P04` - adjudicate owner-decision modules
 
 Resolve modules requiring a delete-or-wire decision, each with its authorising record.
 
-- [ ] `W02.P04.S06` - Resolve the operator_surface CRUD catalogue cluster against its conformance-test consumer; `src/cadrumo/application/operator_surface`.
+- [x] `W02.P04.S06` - Resolve the operator_surface CRUD catalogue cluster against its conformance-test consumer; `src/cadrumo/application/operator_surface`.
 - [ ] `W02.P04.S07` - Adjudicate the staged-capability modules against their authorising decisions and classify or wire each; `src/cadrumo/application`.
 
 ## Wave `W03` - burn down the symbol backlog
