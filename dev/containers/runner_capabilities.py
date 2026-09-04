@@ -62,34 +62,42 @@ def _machine() -> str:
     return {"AMD64": "x86_64", "arm64": "arm64", "aarch64": "aarch64"}.get(machine, machine)
 
 
-def _version_of(executable: str) -> str:
-    """Return a one-line version string, or a failure note."""
+def version_probe(executable: str) -> tuple[bool, str]:
+    """Return whether an executable is usable, and a one-line description.
+
+    Presence is not capability. This returned a DETAIL string for every
+    outcome, including a binary that resolved but whose --version failed, and
+    the caller marked the finding ok regardless - so a gh that could not run
+    at all was reported as a carried capability, printed under an ok marker,
+    and the probe exited 0. On a fleet where a job lands on whichever runner
+    is free, that is the coin-flip failure this module exists to remove.
+    """
     resolved = shutil.which(executable)
     if resolved is None:
-        return "not on PATH"
+        return False, "not on PATH"
     completed = subprocess.run(  # noqa: S603 - `shutil.which`-resolved executable, fixed argv
         [resolved, "--version"], capture_output=True, text=True, check=False
     )
     if completed.returncode != 0:
-        return f"present at {resolved} but --version failed"
+        return False, f"present at {resolved} but --version failed: {completed.stderr.strip()[:120]}"
     first = completed.stdout.strip().splitlines()
-    return first[0] if first else resolved
+    return True, first[0] if first else resolved
 
 
 def _check_gh() -> Finding:
     """`gh` is the one tool no workflow installs and four workflows invoke."""
-    resolved = shutil.which("gh")
-    if resolved is None:
+    usable, detail = version_probe("gh")
+    if not usable:
         return Finding(
             "gh",
             ok=False,
             detail=(
-                "NOT on PATH. Four workflows invoke it and none install it; "
+                f"{detail}. Four workflows invoke it and none install it; "
                 "three of them run on this fleet, so their gh steps fail with "
                 "a command-not-found that never names the missing tool."
             ),
         )
-    return Finding("gh", ok=True, detail=_version_of("gh"))
+    return Finding("gh", ok=True, detail=detail)
 
 
 def _check_brew() -> Finding | None:

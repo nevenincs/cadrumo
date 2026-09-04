@@ -11,11 +11,11 @@ nothing red.
 
 The index answers here come from a real HTTP origin on loopback, because the
 subject is the STATUS CODE and a status has to be held still to be asserted
-against. Nothing stands in for `urllib`, the socket, or the response: the
-probe builds its own request, opens its own connection, and reaches its own
-branch. The live companion module asks the same probe the same questions
-against the real index, which is what keeps this file from proving only that
-loopback works.
+against. Nothing stands in for `urllib`, the socket, or the response: the probe
+builds its own request, opens its own connection, and reaches its own branch.
+What loopback cannot prove is that the request goes to the right place, so the
+origin also records the path it was asked for and one case asserts the endpoint
+shape the real index serves.
 
 The ledger case at the end is the CLI's, not a probe's: the seal's one
 remaining rule reads a file that can be malformed, and an operator meets that
@@ -32,6 +32,7 @@ import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
+from typing import NamedTuple
 
 import pytest
 
@@ -47,12 +48,21 @@ _CANDIDATE: str = "9.9.9"
 _CLOSED_INDEX: str = "http://127.0.0.1:9/pypi"
 
 
+class _Origin(NamedTuple):
+    """A loopback index endpoint and the paths it was asked for."""
+
+    url: str
+    requested: list[str]
+
+
 @contextmanager
-def _index_answering(status: int) -> Iterator[str]:
-    """Serve ``status`` from loopback and yield the index base URL for it."""
+def _index_answering(status: int) -> Iterator[_Origin]:
+    """Serve ``status`` from loopback and yield the endpoint that answers it."""
+    requested: list[str] = []
 
     class _FixedStatus(http.server.BaseHTTPRequestHandler):
         def do_GET(self) -> None:
+            requested.append(self.path)
             self.send_response(status)
             self.send_header("Content-Length", "0")
             self.end_headers()
@@ -64,7 +74,7 @@ def _index_answering(status: int) -> Iterator[str]:
     serving = threading.Thread(target=server.serve_forever, daemon=True)
     serving.start()
     try:
-        yield f"http://127.0.0.1:{server.server_address[1]}/pypi"
+        yield _Origin(f"http://127.0.0.1:{server.server_address[1]}/pypi", requested)
     finally:
         server.shutdown()
         server.server_close()
@@ -73,8 +83,8 @@ def _index_answering(status: int) -> Iterator[str]:
 
 def test_a_404_is_read_as_free() -> None:
     """The permit direction, without which the guard refuses every release."""
-    with _index_answering(404) as index_url:
-        assert pypi_projects_owning(_CANDIDATE, index_url=index_url) == ()
+    with _index_answering(404) as origin:
+        assert pypi_projects_owning(_CANDIDATE, index_url=origin.url) == ()
 
 
 def test_an_answer_that_is_not_404_is_read_as_carried() -> None:
@@ -83,8 +93,8 @@ def test_an_answer_that_is_not_404_is_read_as_carried() -> None:
     Asserted from the same shell as the case above, so the one branch that
     separates them cannot be inverted with both still passing.
     """
-    with _index_answering(200) as index_url:
-        assert pypi_projects_owning(_CANDIDATE, index_url=index_url) == PYPI_PROJECTS
+    with _index_answering(200) as origin:
+        assert pypi_projects_owning(_CANDIDATE, index_url=origin.url) == PYPI_PROJECTS
 
 
 @pytest.mark.parametrize("status", [403, 429, 500, 503])
@@ -95,8 +105,27 @@ def test_an_index_that_cannot_answer_refuses_rather_than_reading_as_absence(stat
     that treats a failed lookup as a clean one permits the upload it exists to
     refuse, and says nothing while doing it.
     """
-    with _index_answering(status) as index_url, pytest.raises(VersionIdentityError, match="index check failed"):
-        pypi_projects_owning(_CANDIDATE, projects=["cadrumo"], index_url=index_url)
+    with _index_answering(status) as origin, pytest.raises(VersionIdentityError, match="index check failed"):
+        pypi_projects_owning(_CANDIDATE, projects=["cadrumo"], index_url=origin.url)
+
+
+def test_the_probe_asks_the_endpoint_that_carries_the_answer() -> None:
+    """A probe reaching the wrong path is answered 404 by anything.
+
+    Every status case above holds whatever URL the probe builds, so the shape
+    of the question needs its own case: a wrong path returns "not found" from a
+    healthy index and reads as free for every project at once.
+    """
+    with _index_answering(404) as origin:
+        pypi_projects_owning("1.2.3", projects=["cadrumo-data-official"], index_url=origin.url)
+        assert origin.requested == ["/pypi/cadrumo-data-official/1.2.3/json"]
+
+
+@pytest.mark.parametrize("endpoint", ["file:///c:/tmp", "ftp://example.invalid/pypi", "pypi.org/pypi"])
+def test_an_endpoint_that_is_not_http_is_refused(endpoint: str) -> None:
+    """A local file that opens would read exactly like a carried version."""
+    with pytest.raises(VersionIdentityError, match="not an HTTP endpoint"):
+        pypi_projects_owning(_CANDIDATE, projects=["cadrumo"], index_url=endpoint)
 
 
 def test_an_unreachable_index_refuses() -> None:
