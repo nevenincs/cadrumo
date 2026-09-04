@@ -1214,7 +1214,7 @@ def test_m303_filing_facts_refuse_an_empty_regularisation_for_a_register_bien() 
         computed_count=0,
         pending_percentage_count=0,
         sector_contributions=(),
-        parameters_provenance=_PROVENANCE,
+        parameters_provenance=_params_for(2026).provenance,
     )
 
     with pytest.raises(ValidationError, match="canonical projection of the supplied Bienes register"):
@@ -1260,7 +1260,7 @@ def test_m303_filing_facts_refuse_a_regularisation_that_omits_an_in_window_bien(
         computed_count=0,
         pending_percentage_count=1,
         sector_contributions=(),
-        parameters_provenance=_PROVENANCE,
+        parameters_provenance=_params_for(2026).provenance,
     )
 
     with pytest.raises(ValidationError, match="canonical projection of the supplied Bienes register"):
