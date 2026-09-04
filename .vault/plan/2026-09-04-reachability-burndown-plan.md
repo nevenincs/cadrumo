@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:48ce9dbbf71e04c04d7869710764a6d88625b5c91ca0d98cbaafb57f9693bfa4'
+body_hash: 'sha256:0f1ecc3ba374d493cf668855c1370294e7a4912b71222c7f4b24ca740a0f13e2'
 ---
 
 # `reachability-burndown` plan
@@ -99,6 +99,24 @@ Bring symbols and orphaned test modules under the gate, shrink-only.
 Re-measure every signal from one stable revision and prove no false green remains.
 
 - [x] `W04.P08.S12` - Re-measure every signal from one stable revision and prove no false green remains; `dev/audit`.
+
+## Wave `W05` - Residue the completed waves did not reach
+
+Waves one to four closed on their declared scope, and the live audit still reports 136 unreferenced in-scope symbols, 58 unreachable modules and 25 orphaned test modules. The gap is not unfinished execution but unclassified residue: 85 of the 136 are names their module publishes in `__all__`, so removing one changes what the package offers and is an owner's decision rather than a deletion. This wave separates the 51 that are safe to delete from the 85 that need a published-surface ruling, and stops treating a complete plan as a closed backlog.
+
+### Phase `W05.P10` - Delete the residue that publishes nothing
+
+The 51 findings no module publishes and no caller reaches. Each is removed at its definition with its deletion cascade followed to the helpers it orphans, and the module's ratchet count lowered rather than dropped whenever findings remain.
+
+- [x] `W05.P10.S20` - Retire the constants superseded by the file-backed master-key provider's deletion and merge the storage KDF salt length onto its one canonical home; `src/cadrumo/adapters/persistence/storage`.
+- [x] `W05.P10.S21` - Extend the constant-agreement screen to detect a canonical value restated under a related name, with detector-teeth proof for both noise guards; `dev/quality/constant_value_agreement.py`.
+- [ ] `W05.P10.S22` - Delete the remaining unreferenced non-exported findings module by module, following each deletion cascade and lowering the ratchet rather than removing a still-populated entry; `src/cadrumo`.
+
+### Phase `W05.P11` - Rule on the published surface
+
+The 85 exported findings, and the 367 declared exports package-wide that no module imports. Removal changes what the package publishes, so this phase produces the inventory and a proposed disposition per area for an owner to rule on; it does not delete a published name on the executor's own authority.
+
+- [ ] `W05.P11.S23` - Inventory every exported-but-unimported name by owning area and propose a disposition per area for an owner's ruling; `dev/audit`.
 
 ## Parallelization
 
