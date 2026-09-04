@@ -422,12 +422,15 @@ async def test_a_heading_shares_its_left_edge_with_the_rows_it_owns(surface: str
 
     checked = 0
     for heading, region in headings:
-        if not (0 <= region.y < len(painted)) or heading not in painted[region.y]:
+        # Measured inside the heading's OWN column span, like the rhythm gate:
+        # Home is two columns, so reading the full painted line finds the
+        # sidebar's text and reports the left edge of a different group
+        # entirely.
+        column = [line[region.x : region.x + region.width] for line in painted]
+        if not (0 <= region.y < len(column)) or heading not in column[region.y]:
             continue
-        indent = len(painted[region.y]) - len(painted[region.y].lstrip())
-        following = [
-            line for line in painted[region.y + 1 :][:6] if line.strip()
-        ]
+        indent = len(column[region.y]) - len(column[region.y].lstrip())
+        following = [line for line in column[region.y + 1 :][:6] if line.strip()]
         if not following:
             continue
         checked += 1

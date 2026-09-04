@@ -33,7 +33,7 @@ _SAMPLES: Final[tuple[str, ...]] = (
     "   ",
     "  Año  FISCAL\tÑ  ",
     "ÁRBOL   \n  ÍNDICE",
-    "MiXeD Case  Text",
+    "MiXeD\u00a0Case  Text",
     "İstanbul  ß  STRASSE",
     "Modelo 303  —  IVA",
 )

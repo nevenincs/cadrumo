@@ -894,6 +894,63 @@ def _assert_source_archive_binds_wheelhouse(
         raise SystemExit("runtime wheelhouse does not bind the tested uv.lock")
 
 
+def attest_command_specs(
+    *,
+    site_root: Path,
+    root_wheel: Path,
+    root_sdist: Path,
+    source_archive: Path,
+    source_commit: str,
+    work_root: Path,
+    digests: tuple[str, str, str] | None = None,
+) -> dict[str, object]:
+    """Probe one importable Cadrumo tree and seal the attestation it supports.
+
+    The single composition of the four steps a cohort attestation takes: probe
+    the tree, project the artifact members, prove every probed module is one the
+    root wheel ships, and seal the envelope. The cohort builder and every
+    fixture that assembles a cohort from real artifacts call this rather than
+    reproducing the ordering, since a caller that skipped the third step would
+    seal a projection describing modules no installation has.
+
+    Args:
+        site_root: The importable tree to probe -- the ``src`` directory of the
+            tree ``uv build`` packaged ``root_wheel`` from. The probe refuses
+            any Cadrumo module resolving outside it. Nothing is written into it;
+            the probe's bytecode is redirected elsewhere.
+        root_wheel: The cohort's root wheel.
+        root_sdist: The cohort's root source distribution.
+        source_archive: The cohort's retained source archive.
+        source_commit: The commit the cohort is built from.
+        work_root: Working directory for the probe processes and their
+            redirected bytecode.
+        digests: The three artifacts' already-known SHA-256 values, in the order
+            ``(wheel, sdist, source archive)``. Hashed here when omitted; a
+            caller that has just written them into a manifest passes them
+            instead of hashing several hundred megabytes again.
+
+    Returns:
+        The validated attestation envelope.
+    """
+    projection = _probe_installed_command_specs(site_root=site_root, work_root=work_root)
+    resolved = digests or (sha256_path(root_wheel), sha256_path(root_sdist), sha256_path(source_archive))
+    artifact_projection = _cached_artifact_command_projection(
+        root_wheel,
+        root_sdist,
+        source_archive,
+        digests=resolved,
+    )
+    _assert_origins_are_wheel_members(projection, artifact_projection, site_root=site_root)
+    return _command_spec_attestation(
+        projection,
+        artifact_projection,
+        source_commit=source_commit,
+        root_wheel_sha256=resolved[0],
+        root_sdist_sha256=resolved[1],
+        source_archive_sha256=resolved[2],
+    )
+
+
 def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
     """Build one clean-commit cohort and write its immutable digest manifest.
 
@@ -974,13 +1031,74 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
             ],
             cwd=build_root,
         )
-        # Probed here, while the tree `uv build` packaged from is still on disk.
-        # Below this block it is deleted, and recreating an importable copy of it
+        # uv seeds its --out-dir with a `.gitignore`; that is a build-tool
+        # artifact, not a release artifact, and the release-cohort completeness
+        # check refuses any file the manifest does not declare.
+        uv_gitignore = output / ".gitignore"
+        if uv_gitignore.exists():
+            uv_gitignore.unlink()
+
+        root_wheel = _single(output, "cadrumo-*.whl", label="cadrumo wheel")
+        root_sdist = _single(output, "cadrumo-*.tar.gz", label="cadrumo sdist")
+        runtime_wheelhouse = _single(
+            output,
+            "cadrumo-runtime-wheelhouse*.zip",
+            label="runtime dependency wheelhouse",
+        )
+        manuals_wheel = _single(
+            output,
+            "cadrumo_data_manuals-*.whl",
+            label="manuals wheel",
+        )
+        official_wheel = _single(
+            output,
+            "cadrumo_data_official-*.whl",
+            label="official wheel",
+        )
+        manuals_sdist = _single(
+            output,
+            "cadrumo_data_manuals-*.tar.gz",
+            label="manuals sdist",
+        )
+        official_sdist = _single(
+            output,
+            "cadrumo_data_official-*.tar.gz",
+            label="official sdist",
+        )
+        version = _validate_wheel_contract(
+            root_wheel,
+            manuals_wheel,
+            official_wheel,
+        )
+        _validate_sdist_contract(
+            root_sdist,
+            manuals_sdist,
+            official_sdist,
+            expected_version=version,
+        )
+        artifacts = {
+            "cadrumo": root_wheel.name,
+            "cadrumo-sdist": root_sdist.name,
+            "source-archive": retained_source_archive.name,
+            "runtime-wheelhouse": runtime_wheelhouse.name,
+            "cadrumo-data-manuals": manuals_wheel.name,
+            "cadrumo-data-manuals-sdist": manuals_sdist.name,
+            "cadrumo-data-official": official_wheel.name,
+            "cadrumo-data-official-sdist": official_sdist.name,
+        }
+        sha256 = {name: sha256_path(output / filename) for name, filename in artifacts.items()}
+        # Attested here, INSIDE the block that owns the build tree, because the
+        # probe reads the tree `uv build` packaged the wheel from. Below this
+        # block that tree is gone, and reconstructing an importable copy of it
         # costs a full unpack of the wheel that was just written from it.
-        build_tree_source_root = (build_root / _BUILD_TREE_SOURCE_DIR).resolve(strict=True)
-        command_spec_projection = _probe_installed_command_specs(
-            site_root=build_tree_source_root,
+        command_spec_attestation = attest_command_specs(
+            site_root=(build_root / _BUILD_TREE_SOURCE_DIR).resolve(strict=True),
+            root_wheel=root_wheel,
+            root_sdist=root_sdist,
+            source_archive=retained_source_archive,
+            source_commit=source_commit,
             work_root=output.parent,
+            digests=(sha256["cadrumo"], sha256["cadrumo-sdist"], sha256["source-archive"]),
         )
     finally:
         if archive.exists():
@@ -988,81 +1106,6 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
         if build_root.exists():
             shutil.rmtree(build_root)
 
-    # uv seeds its --out-dir with a `.gitignore`; that is a build-tool artifact,
-    # not a release artifact, and the release-cohort completeness check refuses
-    # any file the manifest does not declare.
-    uv_gitignore = output / ".gitignore"
-    if uv_gitignore.exists():
-        uv_gitignore.unlink()
-
-    root_wheel = _single(output, "cadrumo-*.whl", label="cadrumo wheel")
-    root_sdist = _single(output, "cadrumo-*.tar.gz", label="cadrumo sdist")
-    runtime_wheelhouse = _single(
-        output,
-        "cadrumo-runtime-wheelhouse*.zip",
-        label="runtime dependency wheelhouse",
-    )
-    manuals_wheel = _single(
-        output,
-        "cadrumo_data_manuals-*.whl",
-        label="manuals wheel",
-    )
-    official_wheel = _single(
-        output,
-        "cadrumo_data_official-*.whl",
-        label="official wheel",
-    )
-    manuals_sdist = _single(
-        output,
-        "cadrumo_data_manuals-*.tar.gz",
-        label="manuals sdist",
-    )
-    official_sdist = _single(
-        output,
-        "cadrumo_data_official-*.tar.gz",
-        label="official sdist",
-    )
-    version = _validate_wheel_contract(
-        root_wheel,
-        manuals_wheel,
-        official_wheel,
-    )
-    _validate_sdist_contract(
-        root_sdist,
-        manuals_sdist,
-        official_sdist,
-        expected_version=version,
-    )
-    artifacts = {
-        "cadrumo": root_wheel.name,
-        "cadrumo-sdist": root_sdist.name,
-        "source-archive": retained_source_archive.name,
-        "runtime-wheelhouse": runtime_wheelhouse.name,
-        "cadrumo-data-manuals": manuals_wheel.name,
-        "cadrumo-data-manuals-sdist": manuals_sdist.name,
-        "cadrumo-data-official": official_wheel.name,
-        "cadrumo-data-official-sdist": official_sdist.name,
-    }
-    sha256 = {name: sha256_path(output / filename) for name, filename in artifacts.items()}
-    artifact_projection = _cached_artifact_command_projection(
-        root_wheel,
-        root_sdist,
-        retained_source_archive,
-        digests=(sha256["cadrumo"], sha256["cadrumo-sdist"], sha256["source-archive"]),
-    )
-    _assert_origins_are_wheel_members(
-        command_spec_projection,
-        artifact_projection,
-        site_root=build_tree_source_root,
-    )
-    command_spec_attestation = _command_spec_attestation(
-        command_spec_projection,
-        artifact_projection,
-        source_commit=source_commit,
-        root_wheel_sha256=sha256["cadrumo"],
-        root_sdist_sha256=sha256["cadrumo-sdist"],
-        source_archive_sha256=sha256["source-archive"],
-    )
     manifest = output / _MANIFEST_NAME
     manifest.write_text(
         json.dumps(

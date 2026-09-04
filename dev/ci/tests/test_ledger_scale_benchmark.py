@@ -832,8 +832,16 @@ def test_modelo_130_calculate_p95_cpu_within_budget_and_full_scan_control(
     assert not full_catalogue_reads, (
         "M130 calculation performed a full-catalogue load instead of targeted contributor reads"
     )
-    cpu_p95 = _p95(cpu_samples)
-    wall_p95 = _p95(wall_samples)
+    # Four samples: one diagnostic year over four quarters. At that count the
+    # nearest-rank P95 IS the maximum, so calling it a P95 claimed a tail
+    # statistic the sample size cannot support and made a single contended run
+    # read as a distribution. The worst sample is the honest name, and gating on
+    # it is strictly stricter than gating on a real P95 would be.
+    cpu_worst = max(cpu_samples)
+    wall_worst = max(wall_samples)
+    assert cpu_worst == _p95(cpu_samples), (
+        "the sample count grew past the point where the worst sample is the P95; gate on _p95 and rename these"
+    )
     partition_messages = _partition_log_messages(caplog.records)
     partition_read_count = len(partition_messages)
     partition_in_window_rows = _partition_in_window_rows(partition_messages)
@@ -848,15 +856,16 @@ def test_modelo_130_calculate_p95_cpu_within_budget_and_full_scan_control(
     assert len(full_scan_catalogue.transactions) == _TOTAL_TRANSACTIONS
     print(
         f"\n[bench] modelo_130_calculate: n={len(cpu_samples)} "
-        f"cpu_p95={cpu_p95:.3f}s cpu_mean={statistics.mean(cpu_samples):.3f}s "
+        f"cpu_worst={cpu_worst:.3f}s cpu_mean={statistics.mean(cpu_samples):.3f}s "
         f"cpu_min={min(cpu_samples):.3f}s cpu_max={max(cpu_samples):.3f}s "
         f"gate=cpu<{_P95_BUDGET_CPU_SECONDS:.1f}s "
-        f"wall_p95={wall_p95:.3f}s wall_mean={statistics.mean(wall_samples):.3f}s "
+        f"wall_worst={wall_worst:.3f}s wall_mean={statistics.mean(wall_samples):.3f}s "
         f"full_scan_control_cpu={full_scan_cpu:.3f}s "
         f"partition_reads={partition_read_count} partition_in_window_rows={partition_in_window_rows}",
     )
-    assert cpu_p95 < _P95_BUDGET_CPU_SECONDS, (
-        f"M130 calculate P95 {cpu_p95:.3f} CPU-s at {_TOTAL_TRANSACTIONS}-row ledger scale exceeds "
+    assert cpu_worst < _P95_BUDGET_CPU_SECONDS, (
+        f"M130 calculate worst-of-{len(cpu_samples)} {cpu_worst:.3f} CPU-s at "
+        f"{_TOTAL_TRANSACTIONS}-row ledger scale exceeds "
         f"the {_P95_BUDGET_CPU_SECONDS:.1f} CPU-s budget (samples={cpu_samples!r})"
     )
     assert full_scan_cpu > _P95_BUDGET_CPU_SECONDS, (

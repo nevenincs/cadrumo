@@ -19,7 +19,7 @@ from dev.packaging._smoke_common import (
     commit_defined_build_root,
     run_checked,
 )
-from dev.packaging.python_cohort import _attest_installed_command_specs
+from dev.packaging.python_cohort import attest_command_specs
 from dev.packaging.uv_constraints import export_runtime_constraints
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
@@ -146,13 +146,13 @@ def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
                 "sha256": {name: sha256_path(cohort_dir / filename) for name, filename in artifacts.items()},
                 "source_commit": "a" * 40,
                 "version": version,
-                "command_spec_attestation": _attest_installed_command_specs(
-                    copied_root,
-                    copied_sdists[0],
-                    "a" * 40,
-                    source_archive,
+                "command_spec_attestation": attest_command_specs(
+                    site_root=build_root / "src",
+                    root_wheel=copied_root,
+                    root_sdist=copied_sdists[0],
+                    source_archive=source_archive,
+                    source_commit="a" * 40,
                     work_root=root_dir,
-                    uv=uv,
                 ),
             },
             sort_keys=True,

@@ -140,7 +140,7 @@ def _legacy_cohort_fallbacks(source: str) -> tuple[str, ...]:
     forbidden = (
         "var/packaging-smoke-cohort",
         "packaging/cadrumo_harness",
-        "_attest_installed_command_specs",
+        "attest_command_specs",
     )
     normalized = source.replace("\\", "/")
     return tuple(token for token in forbidden if token in normalized)
