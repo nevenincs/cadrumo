@@ -1,5 +1,5 @@
 schema_version = 1
-inventory_digest = "sha256:4cdc62b96274061e2e628cf1654cba344119b34a6d5f4296757edfb76775bbdc"
+inventory_digest = "sha256:aea0747ebf2348ef14c67d5ed5b4f26abc9599bc5ffb714fed89fad611b9bce4"
 
 [[operations]]
 operation_id = "rename-declaration-contact-facts"
@@ -24,7 +24,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:c44fd6e2e7fd93aeb69b348d7fac597a2a20ebb36cd2f38e081766eaeab5f86b"
+sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/_profile_export_binding.py"
@@ -61,7 +61,7 @@ sha256 = "sha256:ca9f284f3a92fd672e902b4433467a05372cb23af6757bcc8d1d0c7d7b53ce9
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:c44fd6e2e7fd93aeb69b348d7fac597a2a20ebb36cd2f38e081766eaeab5f86b"
+sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/tests/_export_support.py"
@@ -126,7 +126,7 @@ sha256 = "sha256:ca9f284f3a92fd672e902b4433467a05372cb23af6757bcc8d1d0c7d7b53ce9
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:c44fd6e2e7fd93aeb69b348d7fac597a2a20ebb36cd2f38e081766eaeab5f86b"
+sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/tests/_export_support.py"
@@ -179,7 +179,7 @@ sha256 = "sha256:a000b47379b6b5519a7b180975227752c7eff524f62176b651364ea4b8f0c98
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:c44fd6e2e7fd93aeb69b348d7fac597a2a20ebb36cd2f38e081766eaeab5f86b"
+sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/projection.py"
@@ -228,7 +228,7 @@ sha256 = "sha256:a000b47379b6b5519a7b180975227752c7eff524f62176b651364ea4b8f0c98
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:c44fd6e2e7fd93aeb69b348d7fac597a2a20ebb36cd2f38e081766eaeab5f86b"
+sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/tests/_export_support.py"
@@ -273,7 +273,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:c44fd6e2e7fd93aeb69b348d7fac597a2a20ebb36cd2f38e081766eaeab5f86b"
+sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/tests/test_producer_snapshot.py"
@@ -302,7 +302,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:c44fd6e2e7fd93aeb69b348d7fac597a2a20ebb36cd2f38e081766eaeab5f86b"
+sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
 
 [[operations]]
 operation_id = "rename-modelo-2-1-0-declaracion-facts"
@@ -327,7 +327,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:c44fd6e2e7fd93aeb69b348d7fac597a2a20ebb36cd2f38e081766eaeab5f86b"
+sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
 
 [[operations]]
 operation_id = "rename-modelo-2-1-0-declarante-facts"
@@ -352,7 +352,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:c44fd6e2e7fd93aeb69b348d7fac597a2a20ebb36cd2f38e081766eaeab5f86b"
+sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
 
 [[operations]]
 operation_id = "rename-modelo-2-1-0-devengo-facts"
@@ -377,7 +377,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:c44fd6e2e7fd93aeb69b348d7fac597a2a20ebb36cd2f38e081766eaeab5f86b"
+sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
 
 [[operations]]
 operation_id = "rename-modelo-2-1-0-devolucion-facts"
@@ -402,7 +402,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:c44fd6e2e7fd93aeb69b348d7fac597a2a20ebb36cd2f38e081766eaeab5f86b"
+sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
 
 [[operations]]
 operation_id = "rename-modelo-2-1-0-ganancia-inmobiliaria-facts"
@@ -427,7 +427,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:c44fd6e2e7fd93aeb69b348d7fac597a2a20ebb36cd2f38e081766eaeab5f86b"
+sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
 
 [[operations]]
 operation_id = "rename-modelo-2-1-0-ingreso-facts"
@@ -452,7 +452,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:c44fd6e2e7fd93aeb69b348d7fac597a2a20ebb36cd2f38e081766eaeab5f86b"
+sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
 
 [[operations]]
 operation_id = "rename-modelo-2-1-0-inmueble-facts"
@@ -477,7 +477,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:c44fd6e2e7fd93aeb69b348d7fac597a2a20ebb36cd2f38e081766eaeab5f86b"
+sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
 
 [[operations]]
 operation_id = "rename-modelo-2-1-0-pagador-facts"
@@ -502,7 +502,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:c44fd6e2e7fd93aeb69b348d7fac597a2a20ebb36cd2f38e081766eaeab5f86b"
+sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
 
 [[operations]]
 operation_id = "rename-modelo-2-1-0-profile-facts"
@@ -531,7 +531,7 @@ sha256 = "sha256:a000b47379b6b5519a7b180975227752c7eff524f62176b651364ea4b8f0c98
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:c44fd6e2e7fd93aeb69b348d7fac597a2a20ebb36cd2f38e081766eaeab5f86b"
+sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
 
 [[operations]]
 operation_id = "rename-modelo-2-1-0-renta-facts"
@@ -556,7 +556,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:c44fd6e2e7fd93aeb69b348d7fac597a2a20ebb36cd2f38e081766eaeab5f86b"
+sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
 
 [[operations]]
 operation_id = "rename-modelo-2-1-0-representante-facts"
@@ -581,7 +581,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:c44fd6e2e7fd93aeb69b348d7fac597a2a20ebb36cd2f38e081766eaeab5f86b"
+sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
 
 [[operations]]
 operation_id = "rename-modelo-2-1-0-sin-ingreso-ni-devolucion-facts"
@@ -606,7 +606,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:c44fd6e2e7fd93aeb69b348d7fac597a2a20ebb36cd2f38e081766eaeab5f86b"
+sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
 
 [[operations]]
 operation_id = "rename-modelo-2-2-2-profile-facts"
@@ -635,7 +635,7 @@ sha256 = "sha256:a000b47379b6b5519a7b180975227752c7eff524f62176b651364ea4b8f0c98
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:c44fd6e2e7fd93aeb69b348d7fac597a2a20ebb36cd2f38e081766eaeab5f86b"
+sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
 
 [[operations]]
 operation_id = "rename-modelo-2-9-6-profile-facts"
@@ -668,7 +668,7 @@ sha256 = "sha256:a000b47379b6b5519a7b180975227752c7eff524f62176b651364ea4b8f0c98
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:c44fd6e2e7fd93aeb69b348d7fac597a2a20ebb36cd2f38e081766eaeab5f86b"
+sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/tests/test_m296_detail_records_repeat.py"
@@ -701,7 +701,7 @@ sha256 = "sha256:a000b47379b6b5519a7b180975227752c7eff524f62176b651364ea4b8f0c98
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:c44fd6e2e7fd93aeb69b348d7fac597a2a20ebb36cd2f38e081766eaeab5f86b"
+sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
 
 [[operations]]
 operation_id = "rename-taxpayer-identity-facts"
@@ -738,7 +738,7 @@ sha256 = "sha256:ce6011dbd63905e9e05833b48a44ec98d407ca85bd9640024498884d6e702cb
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/producer_snapshot.py"
-sha256 = "sha256:c44fd6e2e7fd93aeb69b348d7fac597a2a20ebb36cd2f38e081766eaeab5f86b"
+sha256 = "sha256:3711650df36c614a83910ab8b69b16f248b88b80477ff351cb0f30de08401180"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/filing/tests/_export_support.py"
