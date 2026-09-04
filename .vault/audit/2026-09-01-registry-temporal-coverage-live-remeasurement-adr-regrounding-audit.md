@@ -14513,3 +14513,32 @@ The general form is the one this session keeps arriving at from different
 directions: a rule the author knows is not a rule the code follows, and the
 distance between them is only visible when something asks every member of a
 category rather than the members somebody remembers.
+
+
+## Gate thirty-nine, and a near-miss inside writing it
+
+The unproven condition was found by a probe. Now that all six emptied conditions
+carry proofs, the invariant is landable, and it is gate thirty-nine: **every
+declared condition has a live member or a test that names it**.
+
+It states its own weakness. "Proof" here is the condition's name appearing in a
+test module, which a mention in prose would satisfy. That is the available
+signal, and it is still the difference between a condition somebody considered
+and one nobody has looked at since it emptied; the strong version - reachable
+from constructed input - is what the owning screen's tests assert. The gate
+refuses to pass over fewer than twenty declared conditions, so it cannot go
+quiet by the screens emptying.
+
+Writing it produced a mistake worth recording, because it is the first edit this
+session to break something other than what it touched. A replacement of a call
+site matched the FIRST occurrence in the file rather than mine - the two are 960
+lines apart and textually identical - and renamed a call in a neighbouring gate
+to a symbol only my function imports. My own gate passed, because I ran it alone
+with `-k`; the broken one was never executed.
+
+Caught by running the whole file rather than the test I had changed, which is
+the only reason it was caught at all. A targeted `-k` run is the fastest way to
+verify a change and the easiest way to miss what it did to its neighbours, and
+this campaign has now recorded that twice from opposite directions: once when a
+suite run hid a regression among 36 pre-existing failures, and once here, when a
+targeted run hid a regression by not running it.

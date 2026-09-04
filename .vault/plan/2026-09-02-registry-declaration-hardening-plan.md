@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:990bea3ae842b154e616215cd01d9b0d8cdb80c5ffc6f95f56301b19fa0a342d'
+body_hash: 'sha256:22a1af6d749c6d7cb2455645d83d2087f1786cb3d98fcf1d2d7952b65dcc2010'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -415,6 +415,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S532` - Check every writes attribution against its call site rather than the modules a reader recognises, confirming all nine are genuine, and make the exhaustive check a test that asks the report to show its evidence for each ranked module; `dev/quality/tests/test_module_test_reach.py`.
 - [x] `W02.P02.S533` - Ask the evidence check of all three reach capabilities rather than the one that had bugs, refusing to pass when any category has no live member, and prove the checker can report an absence as well as a presence; `dev/quality/tests/test_module_test_reach.py`.
 - [x] `W02.P02.S534` - Find the six declared screen conditions the corpus never produces and give the one with no proof a reachable classifier: pointer_resolves_vocabulary_hit had no live member and no test, in a screen written during this campaign; `dev/registry/analysis/footnote_only_wire_facts.py,dev/registry/tests/test_footnote_only_wire_facts.py`.
+- [x] `W02.P02.S535` - Gate that every declared screen condition has a live member or a test naming it, which the six emptied conditions now satisfy, with the gate stating that a prose mention would satisfy its weak proof standard; `dev/registry/tests/test_declaration_invariant_gates.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
