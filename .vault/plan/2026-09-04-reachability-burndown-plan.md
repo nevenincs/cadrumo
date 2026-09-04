@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:c684d9170d9e5ebf93b904cf288d823719c9e390fc75e4ad004217cf762de8c6'
+body_hash: 'sha256:74d3c7e1d46b88c0a52a9e18e8af5bb7a38f9424b16e31856e1e83a6e693cebe'
 ---
 
 # `reachability-burndown` plan
@@ -66,7 +66,7 @@ Clear the largest exact-confidence concentration at its owning boundary.
 
 - [ ] `W03.P05.S08` - Resolve the domain/calculations exact-confidence symbol concentration at its owning boundary; `src/cadrumo/domain/calculations`.
 - [ ] `W03.P05.S13` - Resolve the superseded-constant population detected by literal-value supersession, naming the live holder for each before removal; `src/cadrumo`.
-- [ ] `W03.P05.S14` - Triage the test-only symbol population into behaviour that retires with its test and seams whose missing production call is the defect; `dev/audit`.
+- [x] `W03.P05.S14` - Triage the test-only symbol population into behaviour that retires with its test and seams whose missing production call is the defect; `dev/audit`.
 
 ### Phase `W03.P06` - resolve CLI and application symbols
 
