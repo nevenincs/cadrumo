@@ -47,32 +47,56 @@ class ContentDataTable[CellType](DataTable[CellType]):
         self._absorb_surplus_width()
 
     def _absorb_surplus_width(self) -> None:
-        """Widen the fill column to consume whatever the container is not using.
+        """Give every column its header, then hand the surplus to one of them.
 
-        Deliberately one-way: the column only ever grows to fill space, and its
-        authored width is the floor. A table narrower than its container is a
-        layout choice this cannot see; a column narrower than its content while
-        the container has room to spare is the defect.
+        Two rules, in order, because they answer different failures.
+
+        A column narrower than its own HEADER is unreadable whatever else
+        happens -- `Disponibilidad` clipped to `Disponibilid` stops the operator
+        knowing what the column is -- so the header length is a floor on every
+        column before any surplus is considered.
+
+        The surplus then goes to ONE column rather than being spread, because
+        widening an identifier or a state word past its content buys nothing
+        while a truncated description is exactly what the space is for.
+
+        Deliberately one-way: columns only grow. A table narrower than its
+        container may be a layout choice this cannot see; a column narrower than
+        its own header, or than its content while the container has room to
+        spare, is the defect.
         """
-        if self.fill_column is None or not self.columns:
+        if not self.columns:
             return
         available = self.container_size.width - self.scrollbar_size_vertical
         if available <= 0:
             return
-        keys = list(self.columns)
-        try:
-            target = self.columns[keys[self.fill_column]]
-        except (IndexError, KeyError):  # pragma: no cover - a table without that column
-            return
-        fill_key = keys[self.fill_column]
-        others = sum(
-            column.width + self.cell_padding * 2
-            for key, column in self.columns.items()
-            if key is not fill_key
-        )
-        surplus = available - others - self.cell_padding * 2
-        if surplus > target.width:
-            target.width = surplus
+
+        widened = False
+        for column in self.columns.values():
+            header = len(str(column.label))
+            if column.width < header:
+                column.width = header
+                widened = True
+
+        if self.fill_column is not None:
+            keys = list(self.columns)
+            try:
+                fill_key = keys[self.fill_column]
+            except IndexError:  # pragma: no cover - a table without that column
+                fill_key = None
+            if fill_key is not None:
+                target = self.columns[fill_key]
+                others = sum(
+                    column.width + self.cell_padding * 2
+                    for key, column in self.columns.items()
+                    if key is not fill_key
+                )
+                surplus = available - others - self.cell_padding * 2
+                if surplus > target.width:
+                    target.width = surplus
+                    widened = True
+
+        if widened:
             self.refresh()
 
 
