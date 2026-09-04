@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:4dc79e4e0f645340f432f5f3564e29b58399690ee653849998b81087e421fee2'
+body_hash: 'sha256:a00cafdf25957f91f6852e1d218123885dfba693853844f0fc2b1fa9a3056e61'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -376,6 +376,9 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S495` - Turn the lost-worker sweep from a remembered grep into a command that judges a saved pytest run and exits non-zero when it is unusable, recognising a lost worker, a run that executed nothing, truncated output and a complete run; `dev/quality/run_integrity.py,dev/quality/tests/test_run_integrity.py`.
 - [x] `W02.P02.S501` - Record the run-integrity tools first live catch of a truncated artefact: a backgrounded suite killed at 22 per cent left 819 bytes of progress bar whose visible dots and two failure marks would have been read as a two-failure result over 1264 tests; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W02.P02.S502` - Re-measure the registry suite with the run judged usable before any figure is taken: 1264 tests, 1227 passing, 37 failing, of which 32 sit in the four generated-tree modules and five are separate questions; `dev/registry`.
+- [x] `W02.P02.S503` - Examine the five registry failures that are not the republication: four are src-side and one is a pair of frozen corpus counts whose failure masks a real movement, 154 orphaned declarations against a frozen 2, all citing the modelo 200 2024 manual; `dev/registry/tests/test_m200_semantic_casilla_candidates.py`.
+- [ ] `W02.P02.S504` - Replace the two frozen corpus counts in the modelo 200 semantic casilla tests with the invariant they stand for, that a declaration has a map owner, since a count assertion reports a fall of four and a rise of a hundred and fifty-two as the same failed equality; `dev/registry/tests/test_m200_semantic_casilla_candidates.py`.
+- [ ] `W02.P02.S505` - Resolve the 154 unmapped modelo 200 declarations, 152 of them citing the 2024 record design, which landed at 11:48 on 2026-09-03 against counts frozen at 08:05 the same morning, so the declarations arrived ahead of the map that will own them; `src/cadrumo/_data/registry/aeat/modelos/200`.
 
 ### Phase `W02.P03` - release predicate relocation
 

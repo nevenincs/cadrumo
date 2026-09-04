@@ -13558,3 +13558,74 @@ The figure is stated with its date, its command and its verdict because the last
 three attempts to quote a suite total in this campaign were each wrong in a
 different way - a marker deselecting most of a file, a lost worker, and a
 truncated artefact - and none of the three announced itself.
+
+
+## The five that are not the republication, examined
+
+Thirty-two of the registry directory's 37 failures are one repair. The other five
+were worth opening, and four of them are `src`-side and outside this session's
+reach:
+
+- `test_every_derived_module_is_adjudicated_exactly_once` reports **21 modules
+  carrying no classification**, every one under
+  `src/cadrumo/domain/calculations/registry/`.
+- `test_inspection_api_cannot_cross_from_static_authority_into_runtime_boundaries`
+  names five `src` files reaching `RegistryRevisionInspection` across the
+  boundary.
+- `test_every_prose_parser_is_declared_in_the_channel` reports four undeclared
+  parsers, three of them `src` and one `dev` - so even the dev half cannot make
+  the test pass alone.
+
+None is mine. That was checked rather than assumed: this campaign added eleven
+modules to `dev/registry/analysis`, and an adjudication gate over derived modules
+is exactly the kind a new module breaks. It reports none of them.
+
+**The fifth and sixth are one finding, and it is the interesting one.** Both
+modelo 200 semantic-casilla tests assert FROZEN CORPUS COUNTS - 185 map-owner
+mismatches and 2 orphaned declarations - which is the gate shape this project's
+own quality rule forbids in as many words. The corpus has moved past both.
+
+Live: **181 mismatches and 154 orphaned declarations**, every orphan carrying the
+single disposition `unmapped_declaration`. The mismatch count fell by four, which
+is progress. The orphan count rose from two to a hundred and fifty-four, which is
+not.
+
+Traced to their sources, all 154 cite `aeat-modelo-200-manual-2024` and 152 also
+cite `aeat-dr-200-2024`: the movement is entirely inside modelo 200's 2024
+cohort, which this plan already tracks across several Steps. The casilla
+identifiers run from `00067` to `DP200018:00588` and all 154 are distinct.
+
+The frozen count is what surfaced it, and that is worth being precise about
+rather than treating as an argument for frozen counts. A count assertion cannot
+say WHICH of two directions moved or why, and here it reported one number falling
+by four and another rising by a hundred and fifty-two as the same kind of event -
+a failed equality. The invariant worth asserting is that a declaration has a map
+owner; the count told us only that something changed.
+
+
+## The frozen count survived three and a half hours
+
+Whether the jump from two orphaned declarations to a hundred and fifty-four is a
+data movement or a measurement change is answerable from the history, and the
+answer is sharper than either.
+
+The counts were frozen in `9121d2a4e8` at **08:05 on 2026-09-03**. The modelo 200
+2024 casilla declarations were revised in `76f6305ff3` at **11:48 the same day** -
+three hours and forty-three minutes later. The count has been red ever since.
+
+So it is a data landing, and probably an intended one: declarations arriving
+ahead of the map that will own them is a normal order to work in, and 152 of the
+154 orphans cite the same 2024 record design. What is not normal is that the only
+thing recording the gap is an equality assertion that was stale within an
+afternoon of being written.
+
+This is the strongest case this campaign has produced against frozen corpus
+counts, and it is worth stating as more than a rule citation. The count did
+detect something. What it could not do is say what: it reported a fall of four in
+one number and a rise of a hundred and fifty-two in another as one failed
+equality, gave no name to either population, and offered the next reader no way
+to tell an intended in-flight state from a regression without doing what I just
+did - opening the history and timing two commits against each other.
+
+An invariant would have said `154 declarations have no map owner` on the day it
+happened, in the failure message, without the archaeology.
