@@ -37,7 +37,6 @@ class BuiltCohort:
     manuals: Path
     official: Path
     version: str
-    release_base: str
 
 
 def _generator_command(cohort: BuiltCohort, *, cohort_dir: Path | None = None) -> list[str]:
@@ -48,8 +47,6 @@ def _generator_command(cohort: BuiltCohort, *, cohort_dir: Path | None = None) -
         str(cohort.directory if cohort_dir is None else cohort_dir),
         "--version",
         cohort.version,
-        "--release-base-url",
-        cohort.release_base,
     ]
 
 
@@ -130,7 +127,6 @@ def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
         copied_sdists.append(target)
     with (_REPO_ROOT / "pyproject.toml").open("rb") as handle:
         version = tomllib.load(handle)["project"]["version"]
-    release_base = f"https://github.com/nevenincs/cadrumo/releases/download/v{version}"
     artifacts = {
         "cadrumo": copied_root.name,
         "cadrumo-sdist": copied_sdists[0].name,
@@ -169,7 +165,6 @@ def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
         manuals=copied_manuals,
         official=copied_official,
         version=version,
-        release_base=release_base,
     )
 
 
@@ -178,7 +173,6 @@ def test_generated_manifest_binds_exact_cohort_and_the_cli_command(
     built_cohort: BuiltCohort,
 ) -> None:
     """Require deterministic Scoop material for the exact real cohort."""
-    artifacts = (built_cohort.root, built_cohort.manuals, built_cohort.official)
 
     first = tmp_path / "first.json"
     second = tmp_path / "second.json"
@@ -190,10 +184,14 @@ def test_generated_manifest_binds_exact_cohort_and_the_cli_command(
     manifest = json.loads(first.read_text(encoding="utf-8"))
     assert manifest["version"] == built_cohort.version
     assert "post_install" not in manifest
-    assert set(manifest["architecture"]) == {"64bit"}
-    architecture = manifest["architecture"]["64bit"]
-    assert architecture["url"] == [f"{built_cohort.release_base}/{artifact.name}" for artifact in artifacts]
-    assert architecture["hash"] == [sha256_path(artifact) for artifact in artifacts]
+    # No download block: the manifest installs what the index serves, by name
+    # and exact version. Only a source distribution has a stable address on the
+    # index ahead of an upload, so a wheel URL here could only be a release
+    # asset -- a surface no workflow populates.
+    assert "architecture" not in manifest
+    install = "\n".join(manifest["pre_install"])
+    assert f"'cadrumo=={built_cohort.version}'" in install
+    assert "releases/download" not in json.dumps(manifest)
     assert manifest["depends"] == ["python", "uv"]
     # The manifest exposes only the product CLI.
     assert manifest["bin"] == [["aeat.cmd", "aeat"]]
@@ -246,26 +244,6 @@ def test_manifest_pins_transitive_closure_from_lock(
         assert line in write_hook
     # The pinned file must actually gate the install, not merely be written.
     assert "--constraint (Join-Path $dir 'constraints.txt')" in install_hook
-
-
-@pytest.mark.parametrize(
-    "release_base",
-    [
-        "http://github.com/nevenincs/cadrumo/releases/download/v0.2.1",
-        "https://github.com/nevenincs/cadrumo/releases/latest/download",
-        "https://github.com/nevenincs/cadrumo/releases/download/v0.2.1?mutable=1",
-    ],
-)
-def test_generator_rejects_mutable_release_urls(
-    tmp_path: Path,
-    built_cohort: BuiltCohort,
-    release_base: str,
-) -> None:
-    """Require immutable HTTPS acquisition URLs."""
-    command = _generator_command(built_cohort)
-    command[command.index("--release-base-url") + 1] = release_base
-    with pytest.raises(SystemExit):
-        run_checked([*command, "--output", str(tmp_path / "manifest.json")], cwd=_REPO_ROOT)
 
 
 def test_generator_rejects_missing_and_duplicate_wheels(
@@ -332,7 +310,6 @@ def test_generator_rejects_distribution_and_version_mismatches(
 
     command = _generator_command(built_cohort)
     command[command.index("--version") + 1] = "999.0.0"
-    command[command.index("--release-base-url") + 1] = "https://github.com/nevenincs/cadrumo/releases/download/v999.0.0"
     with pytest.raises(SystemExit):
         run_checked([*command, "--output", str(tmp_path / "version.json")], cwd=_REPO_ROOT)
 
