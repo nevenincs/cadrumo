@@ -29,6 +29,13 @@ Three things are deliberately left alone:
   best and wrong at worst.
 - **A name the facade does not forward.** If the initialiser does not bind it,
   this module has no evidence about where it lives and refuses to guess.
+- **A private defining module reached from another package.** Most of these
+  facades forward out of leading-underscore modules, and the same boundary that
+  makes an initialiser inert makes a private module private to its own package.
+  Repointing an outside consumer at it would trade a facade for a cross-package
+  private import, which is the worse of the two violations. Those sites are
+  refused with a reason, and the fix is to make the defining module public
+  first - work the facade was concealing.
 - **The initialiser itself.** Emptying it is a separate act with a separate
   blast radius, and doing it in the same pass would leave the tree unimportable
   between two writes if the rewrite were interrupted.
@@ -50,10 +57,12 @@ from dataclasses import dataclass
 from typing import Final
 
 __all__ = [
+    "REFUSALS",
     "FacadePackage",
     "ImportSite",
     "facade_exports",
     "facade_import_sites",
+    "refusal_reason",
     "relative_spelling",
     "rewrite_statement",
     "submodule_names",
@@ -247,6 +256,37 @@ def relative_spelling(target: str, *, consumer_package: str) -> str | None:
     return "." * (len(consumer) - shared + 1) + ".".join(parts[shared:])
 
 
+#: Every reason a site can be refused, declared once so a caller can group by
+#: it without reading the strings out of this module's source.
+REFUSALS: Final[tuple[str, ...]] = ("unforwarded_name", "cross_package_private_target")
+
+
+def refusal_reason(site: ImportSite, package: FacadePackage) -> str | None:
+    """Return why this site cannot be rewritten, or ``None`` if it can.
+
+    Two reasons, and the second is the one that makes this a report rather than
+    a codemod that finishes the job. A facade forwarding out of ``_residual_identity``
+    hides the fact that its public symbol has no public home; repointing an
+    outside consumer straight at the private module satisfies the initialiser
+    rule and breaks the module-privacy rule in the same edit. The site is left
+    alone and named instead.
+
+    Intra-package consumers are not refused: a private module is private to its
+    own package, and its own tests may import it directly.
+    """
+    for name, _ in site.names:
+        if name in package.submodules:
+            continue
+        module = package.exports.get(name)
+        if module is None:
+            return "unforwarded_name"
+        leaf = module.rsplit(".", 1)[-1]
+        inside = site.consumer_package == package.dotted or site.consumer_package.startswith(f"{package.dotted}.")
+        if leaf.startswith("_") and not inside:
+            return "cross_package_private_target"
+    return None
+
+
 def rewrite_statement(site: ImportSite, package: FacadePackage) -> tuple[str, ...]:
     """Return the lines replacing one import statement, or ``()`` to refuse.
 
@@ -263,15 +303,15 @@ def rewrite_statement(site: ImportSite, package: FacadePackage) -> tuple[str, ..
     itself, because then the consumer's name and the defining module's name are
     different symbols and repointing would import the wrong one.
     """
+    if refusal_reason(site, package) is not None:
+        return ()
     by_module: dict[str, list[str]] = collections.defaultdict(list)
     kept: list[str] = []
     for name, asname in site.names:
         if name in package.submodules:
             kept.append(name if asname is None else f"{name} as {asname}")
             continue
-        module = package.exports.get(name)
-        if module is None:
-            return ()
+        module = package.exports[name]
         by_module[module].append(name if asname is None else f"{name} as {asname}")
 
     def spell(target: str) -> str:
@@ -332,11 +372,17 @@ def main() -> int:
     sites = facade_import_sites(packages)
 
     by_package: collections.Counter[str] = collections.Counter(site.package for site in sites)
-    refused = 0
     by_dotted = {package.dotted: package for package in packages}
+    refusals: collections.Counter[str] = collections.Counter()
     for site in sites:
-        if not rewrite_statement(site, by_dotted[site.package]):
-            refused += 1
+        reason = refusal_reason(site, by_dotted[site.package])
+        if reason is not None:
+            refusals[reason] += 1
+            sys.stdout.write(
+                f"facade_retirement refused path={site.path} package={site.package} "
+                f"line={site.lineno} reason={reason}" + chr(10)
+            )
+    refused = sum(refusals.values())
     for package in packages:
         sys.stdout.write(
             f"facade_retirement package={package.dotted} exports={len(package.exports)} "
