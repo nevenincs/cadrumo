@@ -365,6 +365,44 @@ def test_amortizacion_inmueble_rate_matches_registry() -> None:
         assert registry_rate == AMORTIZACION_INMUEBLE_RATE, period_year
 
 
+def test_minimo_familiar_conditions_match_registry() -> None:
+    """The Art. 58 / 61 qualifying conditions equal their dated Modelo 100 parameters.
+
+    The minimo AMOUNTS were already registry parameters while the conditions that
+    SELECT them lived only here. The conditions are now declared too, and this
+    binds the constants to them across every supported filing year so the two
+    cannot diverge. The consumers read the constants directly at roughly twenty
+    call sites, several inside per-descendant predicates, so this is a drift gate
+    rather than a runtime resolution: the registry is the declared authority and
+    CI refuses any disagreement.
+    """
+
+    from datetime import date
+
+    from ...core.modelo import Modelo
+    from ...domain.calculations.registry.formula_runtime_ops import read_parameter
+    from ..external_constants import (
+        CUSTODIA_COMPARTIDA_PRORRATA_FACTOR,
+        MINIMO_DESCENDIENTE_MAX_AGE,
+        MINIMO_MENOR_TRES_MAX_AGE,
+    )
+
+    cases = (
+        ("minimo-descendiente-edad-maxima", MINIMO_DESCENDIENTE_MAX_AGE),
+        ("minimo-menor-tres-edad-maxima", MINIMO_MENOR_TRES_MAX_AGE),
+        ("minimo-custodia-compartida-prorrata", CUSTODIA_COMPARTIDA_PRORRATA_FACTOR),
+    )
+    for filing_year in (2020, 2021, 2022, 2023, 2024, 2025):
+        for slug, constant in cases:
+            registry_value = read_parameter(
+                Modelo.M100.value,
+                str(filing_year),
+                f"renta-{filing_year}-{slug}",
+                date_context={"filing_period": date(filing_year, 12, 31)},
+            )
+            assert registry_value == constant, (filing_year, slug)
+
+
 def test_default_iva_general_rate_pct_has_core_as_its_only_public_home() -> None:
     """The IVA default is public only from ``core.external_constants``."""
     from ...domain.contribuyente import assets, inventory
