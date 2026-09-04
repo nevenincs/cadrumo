@@ -121,21 +121,69 @@ def test_dotted_prose_is_moved_with_the_module(relative_root: pathlib.Path) -> N
     assert all(plan.new_dotted in edit.after for edit in prose)
 
 
-def test_an_unrewritable_statement_is_reported_rather_than_skipped(relative_root: pathlib.Path) -> None:
-    """Silence is the failure mode that costs the most.
+def test_the_module_imported_by_name_from_its_package_is_rewritten(
+    relative_root: pathlib.Path,
+) -> None:
+    """Traversal does NOT survive a rename, and a test here once said it did.
 
-    An import resolving to the module but not carrying the stem in a rewritable
-    position - ``from .. import sub`` style traversal reaching it another way -
-    must appear in ``unhandled`` so the plan is visibly incomplete. The same
-    class of silent miss reported zero consumers where there were ninety.
+    ``from pkg.sub import _target`` resolves to the PACKAGE, so a resolver
+    looking for the module's own dotted name never sees it - and the name it
+    imports is exactly the one the rename changes. Two files broke this way
+    after seven renames.
+
+    The claim in the earlier version of this test was carried over from facade
+    retirement, where traversal genuinely does survive: emptying an initialiser
+    leaves ``from pkg import submodule`` working, because the submodule is still
+    called that. A rename is the other operation, and the two were conflated.
     """
     package = _tree(relative_root)
-    (relative_root / "odd.py").write_text(f"from {'.'.join(package.parts)} import _target\n", encoding="utf-8")
+    (relative_root / "odd.py").write_text(f"from {'.'.join(package.parts)} import _target" + chr(10), encoding="utf-8")
     plan = plan_promotion(package, "_target", "target", search_root=relative_root)
-    # This one resolves to the PACKAGE, not the module, so it is correctly not
-    # claimed at all - traversal, like a submodule import, survives the rename
-    # only because the name it imports is what changes.
-    assert not [edit for edit in plan.edits if edit.path.name == "odd.py"]
+
+    traversal = [edit for edit in plan.edits if edit.path.name == "odd.py"]
+    assert len(traversal) == 1
+    assert traversal[0].kind == "traversal"
+    assert traversal[0].after.strip() == "from pkg.sub import target"
+
+
+def test_a_body_use_of_a_module_imported_by_name_moves_with_the_import(
+    relative_root: pathlib.Path,
+) -> None:
+    """Rewriting the import alone leaves the body naming nothing.
+
+    That is a ``NameError`` at the first call rather than an ``ImportError`` at
+    collection, so it surfaces later and in a narrower test than the breakage it
+    represents.
+    """
+    package = _tree(relative_root)
+    (relative_root / "uses.py").write_text(
+        f"from {'.'.join(package.parts)} import _target" + chr(10) + "VALUE = _target.VALUE" + chr(10),
+        encoding="utf-8",
+    )
+    plan = plan_promotion(package, "_target", "target", search_root=relative_root)
+
+    kinds = {edit.kind for edit in plan.edits if edit.path.name == "uses.py"}
+    assert kinds == {"traversal", "usage"}
+    apply_promotion(plan, new_stem="target")
+    rewritten = (relative_root / "uses.py").read_text(encoding="utf-8")
+    assert "_target" not in rewritten
+    assert "VALUE = target.VALUE" in rewritten
+
+
+def test_a_body_use_is_not_rewritten_in_a_file_that_never_imported_the_module(
+    relative_root: pathlib.Path,
+) -> None:
+    """A same-named local elsewhere must not be touched.
+
+    Body rewriting is keyed to files whose traversal import was itself
+    rewritten, so a variable that happens to share the module's name in an
+    unrelated file is left alone.
+    """
+    package = _tree(relative_root)
+    (relative_root / "unrelated.py").write_text("_target = 3" + chr(10) + "print(_target)" + chr(10), encoding="utf-8")
+
+    plan = plan_promotion(package, "_target", "target", search_root=relative_root)
+    assert not [edit for edit in plan.edits if edit.path.name == "unrelated.py"]
 
 
 def test_apply_refuses_a_plan_carrying_an_unhandled_statement(tmp_path: pathlib.Path) -> None:

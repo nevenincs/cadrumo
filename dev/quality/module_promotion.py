@@ -189,6 +189,17 @@ def plan_promotion(
                     continue
                 edits.append(ReferenceEdit(path=path, lineno=offset + 1, before=before, after=after, kind="traversal"))
                 traversal_files.add(path)
+        for index, line in enumerate(lines, start=1):
+            if old_dotted in line:
+                edits.append(
+                    ReferenceEdit(
+                        path=path,
+                        lineno=index,
+                        before=line,
+                        after=line.replace(old_dotted, new_dotted),
+                        kind="prose",
+                    )
+                )
 
     # A module imported by name is used by name; the two must move together.
     for path in sorted(traversal_files):
@@ -202,17 +213,6 @@ def plan_promotion(
             after = _rename_imported_name(before, old_stem, new_stem)
             if after != before:
                 edits.append(ReferenceEdit(path=path, lineno=node.lineno, before=before, after=after, kind="usage"))
-        for index, line in enumerate(lines, start=1):
-            if old_dotted in line:
-                edits.append(
-                    ReferenceEdit(
-                        path=path,
-                        lineno=index,
-                        before=line,
-                        after=line.replace(old_dotted, new_dotted),
-                        kind="prose",
-                    )
-                )
     return PromotionPlan(
         old_dotted=old_dotted,
         new_dotted=new_dotted,

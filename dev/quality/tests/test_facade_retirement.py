@@ -9,6 +9,7 @@ constructed package tree, never by pointing it at the live one and hoping.
 from __future__ import annotations
 
 import ast
+import os
 import pathlib
 
 import pytest
@@ -24,6 +25,21 @@ from ..facade_retirement import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+@pytest.fixture
+def relative_root(tmp_path: pathlib.Path) -> pathlib.Path:
+    """A scratch tree entered as the working directory, yielded as ``.``.
+
+    A package's dotted name is derived from its path parts, so the scanners are
+    always invoked with a repository-relative path.
+    """
+    previous = pathlib.Path.cwd()
+    os.chdir(tmp_path)
+    try:
+        yield pathlib.Path()
+    finally:
+        os.chdir(previous)
 
 
 def _package(tmp_path: pathlib.Path) -> pathlib.Path:
@@ -205,161 +221,49 @@ def test_a_multi_line_parenthesised_import_is_replaced_by_its_whole_span(tmp_pat
     assert ")" not in rewritten_text.splitlines()[0]
 
 
-def test_the_live_report_never_names_a_submodule_or_an_unforwarded_name() -> None:
-    """What the live tree offers is checked against the two exclusions.
+def test_no_dev_package_initialiser_forwards_a_name() -> None:
+    """The gate the retirement made landable.
 
-    A site listing a submodule would put a legitimate traversal into a worklist
-    that must not touch it; a site listing an unforwarded name would be a
-    rewrite this module has no evidence for.
+    This replaces two tests that measured the live facade population - how many
+    consumer sites there were, and that both underscore refusal reasons still
+    occurred. Both were useful while nine initialisers forwarded 388 names
+    between them; both began failing on their own "so this proves nothing"
+    guards the moment the last facade came down, because the population they
+    described had gone.
+
+    That is the right way for a measurement to end. What replaces it is the
+    invariant the measurements were in service of: a package initialiser under
+    ``dev`` is an inert namespace marker, so no facade exists to find. A gate
+    saying that could not have been written before now - it would have failed on
+    nine packages.
     """
     from ..facade_retirement import facade_packages
 
-    packages = facade_packages()
-    assert packages, "no dev facade was found, so this proves nothing"
-    by_dotted = {package.dotted: package for package in packages}
-    sites = facade_import_sites(packages)
-    assert sites, "no consumer was found, so this proves nothing"
-    for site in sites:
-        package = by_dotted[site.package]
-        forwarded = [name for name, _ in site.names if name not in package.submodules]
-        assert forwarded, "a site was reported that asks the facade for nothing"
-        assert all(name in package.exports for name in forwarded)
-
-
-def test_a_private_target_reached_from_another_package_is_refused() -> None:
-    """Retiring the facade must not create the worse violation in its place.
-
-    A facade forwarding out of ``_residual_identity`` is the only public home
-    that symbol has. Repointing an outside consumer straight at the private
-    module satisfies the inert-initialiser rule and breaks module privacy in the
-    same edit, and 33 of the corpus's 75 sites are in exactly that position.
-    """
-    from ..facade_retirement import refusal_reason, rewrite_statement
-
-    private = FacadePackage(dotted="widget", exports={"Motor": "widget._engine"}, submodules=frozenset({"_engine"}))
-    outsider = _site((("Motor", None),), package="other.package")
-    assert refusal_reason(outsider, private) == "cross_package_private_target"
-    assert rewrite_statement(outsider, private) == ()
-
-
-def test_a_private_target_inside_the_owning_package_is_allowed() -> None:
-    """A private module is private to its own package, so its tests may reach it.
-
-    Refusing these too would leave every one of the 42 safe sites unrewritable
-    and the retirement blocked everywhere rather than in the 33 places it is
-    genuinely blocked.
-    """
-    from ..facade_retirement import refusal_reason, rewrite_statement
-
-    private = FacadePackage(dotted="widget", exports={"Motor": "widget._engine"}, submodules=frozenset({"_engine"}))
-    for package in ("widget", "widget.tests"):
-        inside = _site((("Motor", None),), package=package)
-        assert refusal_reason(inside, private) is None
-        assert rewrite_statement(inside, private) == ("from widget._engine import Motor",)
-
-
-def test_a_public_target_is_never_refused_for_privacy() -> None:
-    """The refusal is about the underscore, not about crossing a package."""
-    from ..facade_retirement import refusal_reason
-
-    assert refusal_reason(_site((("Motor", None),), package="other.package"), _FACADE) is None
-
-
-def test_documentation_references_move_with_the_same_map() -> None:
-    """A docstring path that only the facade makes true goes dangling without this."""
-    from ..facade_retirement import reference_rewrites
-
-    package = FacadePackage(
-        dotted="dev.harness",
-        exports={"Scored": "dev.harness._scoring", "score": "dev.harness._scoring"},
-        submodules=frozenset({"_scoring"}),
+    forwarding = facade_packages()
+    assert not forwarding, "package initialiser(s) forwarding names: " + ", ".join(
+        f"{package.dotted} ({len(package.exports)})" for package in forwarding
     )
-    text = "See :class:`~dev.harness.Scored` and :func:`~dev.harness.score`.\n"
-    rewritten, count = reference_rewrites(text, package)
-    assert count == 2
-    assert "dev.harness._scoring.Scored" in rewritten
-    assert "dev.harness._scoring.score" in rewritten
 
 
-def test_a_reference_to_a_submodule_is_not_rewritten_into_itself() -> None:
-    """``dev.harness._scoring`` is a module path, not a forwarded name."""
-    from ..facade_retirement import reference_rewrites
+def test_the_gate_detects_a_forwarding_initialiser(relative_root: pathlib.Path) -> None:
+    """A gate over a clean tree proves the tree is clean, not that the gate works.
 
-    package = FacadePackage(
-        dotted="dev.harness",
-        exports={"Scored": "dev.harness._scoring"},
-        submodules=frozenset({"_scoring"}),
+    Constructed rather than planted in the working tree: the detector is shown a
+    package whose initialiser forwards a name, and must report it.
+    """
+    from ..facade_retirement import facade_exports, facade_packages
+
+    package = relative_root / "widget"
+    package.mkdir()
+    (package / "engine.py").write_text("class Motor:" + chr(10) + "    pass" + chr(10), encoding="utf-8")
+    (package / "__init__.py").write_text(
+        "from .engine import Motor" + chr(10) + chr(10) + '__all__ = ["Motor"]' + chr(10), encoding="utf-8"
     )
-    text = "Defined in :mod:`~dev.harness._scoring`.\n"
-    assert reference_rewrites(text, package) == (text, 0)
 
+    detected = facade_exports(package)
+    assert detected.exports == {"Motor": "widget.engine"}
+    assert facade_packages(relative_root), "a forwarding initialiser must be reported"
 
-def test_a_reference_does_not_claim_a_longer_name_that_starts_with_it() -> None:
-    """``Scored`` must not eat the text of ``ScoredField``.
-
-    Longest-first ordering alone does not prevent it: the shorter name is still
-    tried, and without a delimiter check it matches the prefix of the longer one
-    and produces a path that names nothing.
-    """
-    from ..facade_retirement import reference_rewrites
-
-    package = FacadePackage(
-        dotted="dev.harness",
-        exports={"Scored": "dev.harness._scoring", "ScoredField": "dev.harness._fields"},
-        submodules=frozenset({"_scoring", "_fields"}),
-    )
-    text = "Both :class:`~dev.harness.ScoredField` and :class:`~dev.harness.Scored` exist.\n"
-    rewritten, count = reference_rewrites(text, package)
-    assert count == 2
-    assert "dev.harness._fields.ScoredField" in rewritten
-    assert "dev.harness._scoring.Scored" in rewritten
-    assert "_scoring.ScoredField" not in rewritten
-
-
-def test_an_entry_point_target_is_refused_under_its_own_reason() -> None:
-    """``__main__`` is not a privacy problem and must not be reported as one.
-
-    It matches the underscore test, so the privacy rule would claim it and send
-    a reader to make ``__main__`` public - which is not the fix and is not a
-    thing anyone should do. A module run as ``python -m package`` is an entry
-    point; a facade forwarding a library symbol out of one means the library
-    lives inside the entry point.
-    """
-    from ..facade_retirement import refusal_reason, rewrite_statement
-
-    entry = FacadePackage(dotted="widget", exports={"run": "widget.__main__"}, submodules=frozenset({"__main__"}))
-    outsider = _site((("run", None),), package="other.package")
-    assert refusal_reason(outsider, entry) == "entry_point_target"
-    assert rewrite_statement(outsider, entry) == ()
-
-
-def test_an_entry_point_target_is_refused_inside_the_owning_package_too() -> None:
-    """Unlike privacy, this refusal does not soften within the package.
-
-    A private module may legitimately be reached by its own tests. An entry
-    point holding library code is wrong for everyone, including its own package,
-    so the exemption that applies to the first must not apply to the second.
-    """
-    from ..facade_retirement import refusal_reason
-
-    entry = FacadePackage(dotted="widget", exports={"run": "widget.__main__"}, submodules=frozenset({"__main__"}))
-    assert refusal_reason(_site((("run", None),), package="widget"), entry) == "entry_point_target"
-    assert refusal_reason(_site((("run", None),), package="widget.tests"), entry) == "entry_point_target"
-
-
-def test_the_two_underscore_refusals_are_reported_separately_on_the_live_tree() -> None:
-    """Both reasons occur live, and neither is folded into the other.
-
-    Collapsing them would report the repository as having 33 sites needing a
-    public module, when 31 need one and 2 need a library moved out of an entry
-    point - different work with a different owner.
-    """
-    from ..facade_retirement import REFUSALS, facade_import_sites, facade_packages, refusal_reason
-
-    packages = facade_packages()
-    by_dotted = {package.dotted: package for package in packages}
-    reasons = [refusal_reason(site, by_dotted[site.package]) for site in facade_import_sites(packages)]
-    seen = {reason for reason in reasons if reason is not None}
-    assert seen <= set(REFUSALS)
-    assert "cross_package_private_target" in seen, "no private target found, so this proves nothing"
-    assert "entry_point_target" in seen, "no entry-point target found, so this proves nothing"
+    # And an inert one is not reported, so the gate is not simply always red.
+    (package / "__init__.py").write_text('"""Inert namespace marker."""' + chr(10), encoding="utf-8")
+    assert not facade_packages(relative_root)
