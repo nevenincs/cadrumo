@@ -73,7 +73,7 @@ _SUBJECT_ID: Final[str] = "subject.ledger.matrix"
 _CENSUS_ID: Final[str] = "census.ledger.baseline"
 _ROW_ID: Final[str] = "ledger.entries.list"
 _SUBJECT_DIGEST: Final[str] = "sha256:" + "a" * 64
-_REGISTRY_ROUTE_DIGEST: Final[str] = "sha256:247b82a244e2a8c9a6ca476cc6aa46a3e15b7357f2aa206f4148fee18175f9ac"
+_REGISTRY_ROUTE_DIGEST: Final[str] = "sha256:20b2d2df5558b2a3fdbd1eab6e9f781a973e93c6211e211f8e679cf7b4782aca"
 _REGISTRY_SOURCE_DIGEST: Final[str] = "sha256:194a9f26ddfbae6c5d7f265ffe58f50964fbe2fcd02a5670fa19845dead5cf6d"
 
 
