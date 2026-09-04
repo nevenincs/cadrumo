@@ -12,24 +12,38 @@ from ..ajuste import AjusteClase, AjusteDireccion, AjusteExtracontable
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _permanente(**kw: object) -> AjusteExtracontable:
-    base: dict[str, object] = {
-        "clase": AjusteClase.PERMANENTE,
-        "direccion": AjusteDireccion.AUMENTO,
-        "origen_ejercicio_amount": Decimal("150"),
-    }
-    return AjusteExtracontable(**(base | kw))
+def _permanente(
+    direccion: AjusteDireccion = AjusteDireccion.AUMENTO,
+    origen_ejercicio_amount: Decimal = Decimal("150"),
+    origen_anterior_amount: Decimal = Decimal("0"),
+    pendiente_inicio_amount: Decimal | None = None,
+    pendiente_fin_amount: Decimal | None = None,
+) -> AjusteExtracontable:
+    return AjusteExtracontable(
+        clase=AjusteClase.PERMANENTE,
+        direccion=direccion,
+        origen_ejercicio_amount=origen_ejercicio_amount,
+        origen_anterior_amount=origen_anterior_amount,
+        pendiente_inicio_amount=pendiente_inicio_amount,
+        pendiente_fin_amount=pendiente_fin_amount,
+    )
 
 
-def _temporaria(**kw: object) -> AjusteExtracontable:
-    base: dict[str, object] = {
-        "clase": AjusteClase.TEMPORARIA,
-        "direccion": AjusteDireccion.AUMENTO,
-        "origen_ejercicio_amount": Decimal("1000"),
-        "pendiente_inicio_amount": Decimal("0"),
-        "pendiente_fin_amount": Decimal("1000"),
-    }
-    return AjusteExtracontable(**(base | kw))
+def _temporaria(
+    direccion: AjusteDireccion = AjusteDireccion.AUMENTO,
+    origen_ejercicio_amount: Decimal = Decimal("1000"),
+    origen_anterior_amount: Decimal = Decimal("0"),
+    pendiente_inicio_amount: Decimal | None = Decimal("0"),
+    pendiente_fin_amount: Decimal | None = Decimal("1000"),
+) -> AjusteExtracontable:
+    return AjusteExtracontable(
+        clase=AjusteClase.TEMPORARIA,
+        direccion=direccion,
+        origen_ejercicio_amount=origen_ejercicio_amount,
+        origen_anterior_amount=origen_anterior_amount,
+        pendiente_inicio_amount=pendiente_inicio_amount,
+        pendiente_fin_amount=pendiente_fin_amount,
+    )
 
 
 def test_a_permanent_correction_carries_no_pending_balance() -> None:
