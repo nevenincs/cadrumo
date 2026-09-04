@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:fef6c75d49b6706d73afde43c6bcf04c8d50b621e76572cef9162f840eead0af'
+body_hash: 'sha256:7357f6476640e8af2ee15768af4c1e57d02e0d0af4bfe1d5df6446fe8c9916a3'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -496,6 +496,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S614` - Delete the facade scanner's pure-re-export flag, which appeared once in the tree as its own declaration: never written by the single construction site and never read, so it promised a detection the scan does not perform; `dev/quality/import_hygiene_scan.py`.
 - [x] `W02.P02.S615` - Carry help-text translation coverage into the locale axis summary, since the per-revision record counted authored help values for every casilla at the cost of a walk per locale and both fields had zero readers: the fold reported labels only, so 253 of 384 live records read as complete while their help coverage stood at 17311 of 89034 required leaves; `dev/registry/conformance/manager.py dev/registry/conformance/tests/test_manager_locale_coverage.py`.
 - [x] `W02.P02.S616` - Give the registry closure suite a budget covering its live-mode walk, measured at 297.85s against the 300-second default, whose expiry kills the worker rather than failing the test and reported this directory as a truncated run with a node down under xdist; `dev/registry/conformance/tests/test_closure.py`.
+- [x] `W02.P02.S617` - Assert the mirror half of the epoch anchor partition, since the pairing computed both directions and only the target half was ever read: the set naming anchors an epoch stops declaring stood at 86, 16, 18, 30 and 9 across the five boundaries with nothing examining it; `dev/registry/tests/test_modelo_303_semantic_maps.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
