@@ -276,3 +276,74 @@ name = "cadrumo.entrypoints.cli.tests.test_state_free_capability_isolation"
 follows = "symbol"
 anchor = "cadrumo.entrypoints.cli:command_graph"
 subjects = 1
+
+# ---------------------------------------------------------------------------
+# Exact-confidence symbol partition
+#
+# 602 of the 1408 symbol findings are `exact` -- resolved through the import
+# graph rather than by attribute-name matching -- and the audit's own guidance
+# is to start a cleanup there. The `name-match` and `name-match-data` tiers are
+# members reached by attribute access the scan cannot bind to a type, so they
+# are candidates for review rather than findings to act on.
+#
+# The exact tier contains only functions, constants and classes. Every
+# enum-member, attribute and method finding sits in the lower tiers, which is
+# why this campaign's symbol work is bounded by the counts below rather than by
+# the headline 1408.
+#
+# The population splits by OUTSIDE USE, exactly as the modules did, and the
+# split is what determines the remedy:
+#
+#   test-only     a symbol only its tests reach. Either the behaviour has no
+#                 production caller and retires with its test, or the test is
+#                 exercising a seam that should be reached and the missing call
+#                 is the defect.
+#   unreferenced  nothing reaches it at all. The sharpest population, and where
+#                 supersession concentrates.
+#   dev-reached   reached from `dev/`; follows its module's harness-code remedy.
+#
+# SUPERSESSION IS DETECTABLE, NOT GUESSED. For a constant, the test is whether
+# its literal VALUE still appears in production outside its defining module: the
+# value moved to a declaration and the name was left behind. Applied to the
+# sixteen unreferenced constants carrying an inspectable string literal, eleven
+# proved superseded, with the live holder named in each case -- the error-code
+# registry, the namespace registry, and the CommandSpec declarations. A name
+# search cannot produce that evidence, which is why the governing decision
+# requires it for this class.
+# ---------------------------------------------------------------------------
+
+[symbol_partition]
+exact_total = 602
+test_only = 350
+unreferenced = 198
+dev_reached = 54
+
+[symbol_partition.by_kind]
+"test-only.function" = 233
+"test-only.constant" = 90
+"test-only.class" = 27
+"unreferenced.function" = 83
+"unreferenced.constant" = 89
+"unreferenced.class" = 26
+"dev-reached.function" = 30
+"dev-reached.constant" = 20
+"dev-reached.class" = 4
+
+[symbol_partition.by_area]
+"domain/calculations" = 106
+"entrypoints/cli" = 77
+"application/modelo" = 60
+"adapters/persistence" = 46
+"entrypoints/tui" = 22
+"application/user_profile" = 21
+"application/filing" = 20
+"adapters/outbound" = 17
+"domain/iva" = 17
+"application/aggregation" = 14
+"domain/transactions" = 11
+"application/workflow" = 10
+
+[symbol_partition.supersession_probe]
+constants_with_inspectable_literal = 16
+superseded_with_named_holder = 11
+method = "the constant's literal value still appears in production outside its defining module"
