@@ -84,6 +84,7 @@
 "cadrumo.application.filing.runtime" = 2
 "cadrumo.application.flows.checkpoint" = 1
 "cadrumo.application.flows.engine" = 1
+"cadrumo.application.invoices.catalogue_reads" = 2
 "cadrumo.application.flows.review" = 1
 "cadrumo.application.invoices.bulk_import" = 1
 "cadrumo.application.ledger.confirmation_record" = 1
