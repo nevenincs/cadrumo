@@ -6,7 +6,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:ce2b8b14acb2db59a3025f8f35e1891bd2fbef35f5d90c53b4d5f9dbeb66a613'
+body_hash: 'sha256:cc18b1d96c74d99450b9a5fd0e15ab77ca7dd4154e4b4cd3c8f9d1c5b5dead2a'
 related:
   - '[[2026-09-04-clitui-ledger-W01-P01-S01]]'
   - '[[2026-09-04-clitui-ledger-W01-P01-S02]]'
@@ -15,6 +15,7 @@ related:
   - '[[2026-09-04-clitui-ledger-reference]]'
   - '[[2026-09-04-clitui-ledger-research]]'
   - '[[2026-09-04-clitui-ledger-s01-matrix-contract-review-audit]]'
+  - '[[2026-09-04-clitui-ledger-s02-test-contract-review-audit]]'
 ---
 
 # `clitui-ledger` feature index
@@ -30,6 +31,7 @@ Auto-generated index of all documents tagged with `#clitui-ledger`.
 ### audit
 
 - `2026-09-04-clitui-ledger-s01-matrix-contract-review-audit` - `clitui-ledger` audit: `S01 matrix contract implementation review`
+- `2026-09-04-clitui-ledger-s02-test-contract-review-audit` - `clitui-ledger` audit: `S02 test contract review`
 
 ### exec
 
