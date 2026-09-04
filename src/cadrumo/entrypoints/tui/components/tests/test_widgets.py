@@ -8,14 +8,16 @@ proved that a widget can render correctly and still be unusable by keyboard.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import override
 
 import pytest
+import yaml
 from textual.app import App, ComposeResult
 from textual.widgets import Button, Static
 
 from .....tests.terminal_sizes import SUPPORTED_TERMINAL_SIZE_IDS, SUPPORTED_TERMINAL_SIZES
-from ..theme import BASE_CSS, CADRUMO_CSS_TOKENS
+from ..theme import BASE_CSS, CADRUMO_CSS_TOKENS, tokenised
 from ..widgets import (
     DisclosureGroup,
     RequirementBadge,
@@ -247,3 +249,58 @@ async def test_a_source_card_title_is_separated_from_the_card_above_it() -> None
             f"a source card title carries {(top, bottom)} rather than the "
             f"{(section_gap, stack_gap)} rhythm, so it does not own its own description"
         )
+
+@pytest.mark.asyncio
+async def test_no_declared_action_label_wraps_its_control() -> None:
+    """Every action button is the same height, in every locale.
+
+    A label wider than the control cap wraps, and a wrapped label costs a row,
+    so that one button becomes taller than the others and the action row goes
+    ragged. The token table already argues this for `control-pad-x`; the cap
+    was quietly breaking the same rule from the other side -- at 28 cells only
+    one of the four AEAT actions fitted in ANY language, and two buttons in one
+    column measured 3 and 5 rows tall.
+
+    The consequence was not only visual. The taller neighbour reached far
+    enough to consume a simulated press aimed at the button above it, which
+    surfaced as a failure about a broken in-flight guard.
+
+    Driven from the shipped catalogues rather than a sample string, because the
+    binding constraint is whichever locale translates an action longest -- here
+    Spanish and Catalan tie at 43 cells, and English, the language a developer
+    reads while choosing a number, is nowhere near it.
+    """
+    catalogue_root = Path(__file__).resolve().parents[4] / "locales"
+    labels: list[tuple[str, str, str]] = []
+    for locale in ("es", "en", "ca", "hu"):
+        raw = yaml.safe_load((catalogue_root / locale / "common.yml").read_text(encoding="utf-8"))
+        for key, value in raw["tui"]["aeat_sync"]["action"].items():
+            labels.append((locale, key, value))
+
+    assert labels, "no action labels were read, so this proves nothing"
+
+    class _Probe(App[None]):
+        CSS = BASE_CSS + tokenised(
+            ".aeat-sync-operation { width: 100%; max-width: $cadrumo-control-max-width; }"
+        )
+
+        @override
+        def compose(self) -> ComposeResult:
+            for index, (_locale, _key, text) in enumerate(labels):
+                yield Button(text, id=f"probe-{index}", classes="aeat-sync-operation")
+
+    app = _Probe()
+    async with app.run_test(size=(80, 24 + 3 * len(labels))) as pilot:
+        await pilot.pause()
+        heights = {button.id: button.region.height for button in app.screen.query(Button)}
+        app.exit(None)
+
+    ragged = [
+        f"{locale}:{key} ({len(text)} cells) -> {heights[f'probe-{index}']} rows"
+        for index, (locale, key, text) in enumerate(labels)
+        if heights[f"probe-{index}"] != 3
+    ]
+    assert not ragged, (
+        "these action labels wrap their control, making that button taller than its "
+        "siblings: " + ", ".join(ragged)
+    )
