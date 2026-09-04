@@ -248,6 +248,7 @@ class InstalledWorkbenchFactoryDependenciesV1:
     account: InstalledWorkbenchAccountInputsV1
     profile_admission: WorkbenchDestinationAdmission
     ledger_review_action: ActionReference
+    ledger_evidence_action: ActionReference
     declarations_work_action: ActionReference
     declarations_revisions_action: ActionReference
     declarations_filing_action: ActionReference
@@ -372,9 +373,21 @@ def _ledger_generation_factory(
     from .ledger.routes import ledger_screen_factory
 
     def create(context: TuiScreenContextV1) -> Screen[None]:
+        from ...adapters.persistence.storage.attachment import AttachmentStore
+        from ...application.ledger.attachment_review import list_attachment_review_queue
+
         return ledger_screen_factory(
             _required_projection(current[0].ledger, "Ledger"),
             review_action=dependencies.ledger_review_action,
+            evidence_action=dependencies.ledger_evidence_action,
+            # A TUPLE, including an empty one: the evidence area distinguishes
+            # "read, nothing outstanding" from "never read", and only the
+            # second is an absent door. Read here rather than in the
+            # generation because the queue is per-visit state an operator acts
+            # on, not part of the immutable session snapshot.
+            evidence_items=list_attachment_review_queue(
+                AttachmentStore(bucket_id=dependencies.account.profile_id)
+            ),
         )(context)
 
     return create
