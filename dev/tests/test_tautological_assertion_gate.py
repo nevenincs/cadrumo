@@ -117,3 +117,28 @@ def test_no_tautological_assertion_survives_in_the_repository() -> None:
     assert not findings, "assertions decided without their operands:\n" + "\n".join(
         f"  {finding}" for finding in findings
     )
+
+
+def test_a_skipped_module_is_announced_rather_than_read_as_clean(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The skip is right; its silence was not.
+
+    An empty result reads exactly like a clean module, in the gate whose
+    subject is assertions that prove nothing - so a file could be reported
+    clean without a line of it being read. The sweep still continues, which
+    the sibling case above pins.
+    """
+    assert scan_tautological_assertions(_FIXTURE, "def broken(:" + chr(10)) == ()
+
+    assert "does not parse and was not scanned" in capsys.readouterr().err
+
+
+def test_a_module_that_parses_and_asserts_nothing_tautological_is_silent(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A clean module must not produce the skip notice, or the notice means nothing."""
+    source = "def test_real():" + chr(10) + "    assert compute() == 7" + chr(10)
+
+    assert scan_tautological_assertions(_FIXTURE, source) == ()
+    assert capsys.readouterr().err == ""
