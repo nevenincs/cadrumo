@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:55a9ea48e31562b23313064f202b1ea4230c66b86b51d2a0f84ccee151fc295a'
+body_hash: 'sha256:ab2579d2282850aad1ff522d0ffef369aa48b3543f5f9a2e0f6d4c182d1e1267'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -241,6 +241,26 @@ and has never run, and one of its tests has been failing throughout this campaig
 measurements under the description of inherited baseline. The remedy is one path in one
 recipe, and the Step that names it is deliberately left open.
 
+The same subject turned out to be standing in the contributor tree, in a form nobody had counted.
+Where a symbol is DEFINED is a fact, and nine package initialisers under `dev` restated it for 388
+symbols - defining nothing themselves, existing only to say a second time where something already
+lived. Seventy-seven consumer statements read the copy rather than the original, so the copy is what
+had to be kept correct, which is the same failure mode the registry's agreement validators exist to
+patch over.
+
+It is a cleaner instance than any in the registry, because the original is never in doubt: the
+initialiser's own `from ._x import Thing` lines say exactly where each symbol lives, so the
+restatement can be resolved back to the fact mechanically rather than adjudicated. That is why the
+retirement is tooling and not a reading, and it is why the whole surface could be removed rather than
+merely reconciled: 388 restatements to nil, and a gate that the initialisers carry nothing at all.
+
+What it cost is recorded in the verification section, and the part worth carrying into the registry
+work is that the facades were hiding a second defect rather than merely duplicating a fact. Thirty-three
+of the consumer sites could not be repointed because the symbol had no public home other than the
+facade, and one package's library was living inside its command-line entry point. A restatement that
+has become the only path to a fact is not a duplicate any more, and removing it is blocked on giving
+the fact a home first.
+
 ## Steps
 
 ## Wave `W01` - measurement integrity
@@ -334,6 +354,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S490` - Restore the prose scan the traversal patch nested inside the wrong loop, and correct the test that claimed traversal survives a rename when it survives only a facade retirement; `dev/quality/module_promotion.py,dev/quality/tests/test_module_promotion.py`.
 - [x] `W02.P02.S491` - Widen the initialiser gate from forwarding to full inertness, since a package defining its own class in __init__.py forwards nothing and is still not a namespace marker, with each of the four kinds shown catching a constructed instance; `dev/quality/facade_retirement.py,dev/quality/tests/test_facade_retirement.py`.
 - [ ] `W02.P02.S492` - Apply the dev retirement template to the twelve non-inert package namespaces under src/cadrumo, which are the same defect class the dev campaign cleared and which the src-side scanner already enumerates; `src/cadrumo`.
+- [x] `W02.P02.S493` - Write the initialiser retirement into the plans Description, Parallelization and Verification prose: the restatement it removed, the two ordering constraints discovered by breaking them, and the inertness criterion with its four constructed proofs; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W02.P03` - release predicate relocation
 
@@ -988,6 +1009,35 @@ What remains fully available is the dev-owned surface, which is why every Step o
 lives there. A screen, its dispositions and its gate can be authored, proved
 and left green without touching a file the other campaign holds.
 
+A fourth constraint was discovered by breaking it, and it is the reason the initialiser retirements
+were done one package at a time rather than in a sweep. Within a package the order is forced: promote
+the private modules that are reached from outside, THEN repoint the consumers, THEN empty the
+initialiser. Emptying first leaves thirty-three consumers importing from a module that no longer
+answers; repointing first, before the promotion, writes cross-package imports of private modules,
+which trades one boundary violation for a worse one and would have to be undone. The order is not a
+preference, and the tooling enforces the middle step by refusing to rewrite a site whose target is
+still private.
+
+The measurement that decides the first step comes from the refusals, not from the module list. One
+package forwards forty-nine names out of nine private modules and needed four of them promoted: the
+other five are reached only from inside the package, where a private module is exactly what should be
+reached. Promoting all nine would have made five modules public that had no reason to be.
+
+A fifth constraint is smaller and cost more than it should have. A rename has two halves - the import
+and the body that uses the imported name - and running an autofixing linter between them **deletes the
+import**, because with the body still naming the old symbol the renamed import is genuinely unused.
+The autofixer was right about what it could see and the result was wrong, which is the second time in
+this plan a correct local judgement produced a wrong global one. Both halves land before the formatter
+runs.
+
+Finally, a baseline is taken before the first write, not after the last. Establishing that a package's
+eight failing tests were pre-existing cost three separate probes when the baseline was taken
+afterwards - an import-side-effect experiment and two comparisons against `HEAD` - and one command
+when it was taken first. The second reason is sharper than the first: of twelve files changed in one
+package, only four still differed by the time the comparison ran, because a peer had committed the
+other eight mid-run. A before-and-after comparison in this worktree has a shelf life measured in
+minutes.
+
 ## Verification
 
 The plan is complete when every Step is closed. Beyond that, the criteria below decide whether the
@@ -1335,3 +1385,48 @@ each case the count was the least informative thing about the finding.
 What satisfies the criterion is that each condition names what a member has that a non-member
 lacks, that the boundary is tested from both sides, and that a condition whose members are
 mostly correct is withdrawn rather than kept for the sake of the one that is not.
+
+No package initialiser under `dev` is a declaration surface. Sixty-three of sixty-three carry nothing
+at all: no definitions, no imports beyond a `__future__` directive, no assignments, no code that runs
+at import. The criterion is stated as inertness rather than as "no facade" because forwarding is only
+the loudest violation - a package defining its own class in its initialiser forwards nothing and is
+still not a namespace marker, and a gate checking only forwarding would pass it.
+
+The gate is landable because the work landed, which is worth saying plainly: it could not have been
+written at the start, when nine initialisers forwarded three hundred and eighty-eight names between
+them across seventy-seven consumer statements. Two earlier tests measured that population and each
+carried a "so this proves nothing" guard; both fired the moment the population reached zero. A
+measurement that stops having a subject is finished, and what replaces it is the invariant it served.
+
+Each of the four kinds the gate can report is proven against a constructed instance, because none has
+a live one.
+
+The retirement's evidence is that the failure set never moved. For every package the set was compared
+line by line rather than by total, before the promotions, after them, after the consumers were
+repointed and after the initialiser was emptied - four comparisons each, and identical at every one.
+Counting would not have been enough: one package's totals matched while a new failure had replaced a
+different one.
+
+What the facades were concealing is the more useful finding. Thirty-three of the seventy-five consumer
+sites could not be repointed at all, every one of them because the symbol's only home was a
+leading-underscore module - so the initialiser was not a redundant surface but the sole public path to
+those symbols, and emptying it without giving them a home would have left thirty-three consumers with
+nowhere legitimate to import from. One package went further and forwarded six symbols out of its
+`__main__`, which meant its library lived inside its command-line entry point; that file was 890 lines
+of which 106 were the entry point.
+
+Three tests had to be restated rather than fixed, and one of them was a gate protecting the defect:
+it asserted the package declared a NON-EMPTY `__all__` and answered every name in it, and carried a
+comment explaining it had been hardened against an empty one so the facade could not be emptied
+silently. It was working as designed and could not be satisfied at the same time as the boundary. The
+general form is worth keeping: when a boundary changes, some tests written under the old one do not
+merely go stale, they enforce what is being removed, and nothing distinguishes them from correct tests
+until the change is attempted.
+
+The tooling that did the work is held to the same standard as the registry gates. Its two silent-miss
+defects were found by its own tests rather than in the tree: a resolver that read a module's own dotted
+name as its package reported zero consumers where there were ninety, and a sweep that skipped
+unparseable files reported a clean plan over a tree it had not finished reading. Both now report what
+they could not examine. A third defect - a prose scan nested inside the wrong loop - ran under seven
+live promotions before its test caught it, and a sweep afterwards found nothing lost. That is recorded
+as luck rather than as a clean result, because the difference matters to whoever reads this next.
