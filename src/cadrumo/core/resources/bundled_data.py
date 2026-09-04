@@ -23,13 +23,25 @@ tree first and then the companion namespace, so a full checkout and an installed
 three-wheel cohort read a corpus binary uniformly. A missing companion remains
 a not-present signal (``None``) at this low-level resource boundary; the
 catalogue integrity boundary turns that signal into a hard failure.
+
+Because the split is by file SUFFIX rather than by directory, a corpus
+directory is a single logical tree whose members can materialise under
+different installed roots: a design workbook resolves under ``cadrumo_data``
+while the hand-authored declarations that annotate it stay under ``cadrumo``.
+A reader that reaches a neighbouring file with :meth:`pathlib.Path.with_name`
+therefore sees only the root its starting file happened to come from.
+:func:`bundled_data_roots` and :func:`resolve_data_root_copies` are the seam
+that spans them, so a neighbour is located by its position in the logical tree
+rather than by which distribution happens to carry the file next to it.
 """
 
 from __future__ import annotations
 
 import atexit
-from collections.abc import Generator
+import importlib
+from collections.abc import Generator, Iterable
 from contextlib import ExitStack, contextmanager
+from functools import cache
 from importlib.resources import as_file, files  # nosemgrep
 from importlib.resources.abc import Traversable  # nosemgrep
 from pathlib import Path
@@ -173,3 +185,98 @@ def resolve_corpus_binary(*parts: str) -> Path | None:
     if _traversable_is_file(primary):
         return _RESOURCE_STACK.enter_context(as_file(primary))
     return resolve_companion_binary(*parts)
+
+
+def _companion_data_roots() -> tuple[Path, ...]:
+    """Return the mirrored ``_data`` directory of every installed companion portion.
+
+    Read from the namespace package's ``__path__`` rather than from the
+    ``MultiplexedPath`` :func:`files` returns, because the portions must stay
+    distinguishable: a file present under two portions with different content is
+    a defect a caller has to be able to see, and a multiplexed join answers with
+    the first hit and hides the second.
+
+    Returns:
+        One :class:`pathlib.Path` per installed portion that carries a ``_data``
+        directory, in ``__path__`` order. Empty when the companion namespace is
+        absent, which is the same not-present signal :func:`resolve_companion_binary`
+        reports.
+    """
+    try:
+        module = importlib.import_module(_COMPANION_PACKAGE)
+    except (ImportError, TypeError):
+        return ()
+    portions: object = getattr(module, "__path__", ())
+    if not isinstance(portions, Iterable):
+        return ()
+    roots: list[Path] = []
+    for portion in portions:
+        if not isinstance(portion, str):
+            continue
+        root = Path(portion) / "_data"
+        if root.is_dir():
+            roots.append(root)
+    return tuple(roots)
+
+
+@cache
+def _primary_data_root() -> Path:
+    """Return the ``cadrumo`` tree's ``_data`` root, materialised once per process.
+
+    Cached because :func:`bundled_path` enters an ``as_file`` context on the
+    module-level :class:`~contextlib.ExitStack` on every call, and this root is
+    consulted once per annotation lookup. The underlying Traversable is fixed at
+    import, so one materialisation is the whole answer.
+    """
+    return bundled_path()
+
+
+def bundled_data_roots() -> tuple[Path, ...]:
+    """Return every installed root the bundled ``_data`` tree materialises under.
+
+    The ``cadrumo`` tree comes first and is always present; each installed
+    ``cadrumo_data`` portion follows. Together they are the roots a single
+    logical ``_data``-relative path may resolve under, which is what makes the
+    suffix-partitioned corpus one tree rather than three.
+
+    Returns:
+        The ordered roots, ``cadrumo`` first.
+    """
+    return (_primary_data_root(), *_companion_data_roots())
+
+
+def resolve_data_root_copies(path: Path) -> tuple[Path, ...]:
+    """Return every existing copy of ``path`` across the bundled ``_data`` roots.
+
+    ``path`` is an ordinary filesystem path a caller computed by navigating from
+    some other bundled file -- a sibling annotation, a per-directory declaration.
+    Whichever root ``path`` currently sits under, the same ``_data``-relative
+    position is checked under every other root, so a file and its neighbour are
+    found together even when the distribution split placed them apart.
+
+    A ``path`` under no bundled root is left alone and answered from the
+    filesystem: a temporary fixture or an operator-supplied file has no position
+    in the logical tree, and inventing one for it would be a claim this seam
+    cannot support.
+
+    Args:
+        path: The location to resolve, expressed in any one root's coordinates.
+
+    Returns:
+        Every existing copy, in :func:`bundled_data_roots` order, so the first
+        entry is the ``cadrumo`` tree's copy whenever it has one. Empty when the
+        file exists under no root. More than one entry means the same logical
+        file is published by more than one distribution, which callers that
+        cannot tolerate a silent winner must adjudicate.
+    """
+    roots = bundled_data_roots()
+    relative: Path | None = None
+    for root in roots:
+        try:
+            relative = path.relative_to(root)
+        except ValueError:
+            continue
+        break
+    if relative is None:
+        return (path,) if path.is_file() else ()
+    return tuple(candidate for root in roots if (candidate := root / relative).is_file())

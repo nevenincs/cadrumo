@@ -11,6 +11,7 @@ from typing import Final
 from pydantic import TypeAdapter, ValidationError
 
 from ....core.external_constants import UTF_8_ENCODING
+from ....core.resources.bundled_data import resolve_data_root_copies
 from .errors import RegistryValidationError
 from .record_design_schema import (
     RecordDesignCorrection,
@@ -37,6 +38,59 @@ _JSON_OBJECT_ADAPTER: Final[TypeAdapter[dict[str, object]]] = TypeAdapter(dict[s
 #: the same reason -- an ``isinstance(value, list)`` narrows a bare ``object``
 #: to a still-unparameterised ``list``, and this validates AND types it.
 _JSON_ARRAY_ADAPTER: Final[TypeAdapter[list[object]]] = TypeAdapter(list[object])
+
+
+def _resolve_annotation(path: Path) -> Path | None:
+    """Locate one record-design annotation across every installed data root.
+
+    An annotation here is hand-authored grounding that means nothing on its own:
+    a correction sidecar names a blank cell in ONE binary, and a declared
+    non-record sheet names a tab in ONE modelo's designs. Its position is
+    therefore expressed relative to the binary it annotates -- and that is
+    exactly what a plain sibling read cannot survive, because the distribution
+    split is by file suffix rather than by directory. The binaries ship in the
+    ``cadrumo_data`` companions while these declarations stay in the
+    command-bearing tree, so an installed cohort resolves the binary under one
+    root and the annotation under another. Reading the annotation from the
+    binary's own root alone finds nothing, and finding nothing is
+    indistinguishable from the ordinary case of no annotation being authored --
+    the design then reports a partial read for a packaging reason, with nothing
+    saying so.
+
+    Resolution therefore spans the roots rather than the directory. What it will
+    not do is pick a winner: an annotation published with different content
+    under two roots is a split that has gone wrong in the other direction, and
+    silently preferring either copy would decide a grounding question by
+    installation order.
+
+    Args:
+        path: Where the annotation sits relative to the file it annotates, in
+            whichever root that file resolved under.
+
+    Returns:
+        The readable copy, or ``None`` when no root carries one -- which stays
+        the ordinary "no annotation was authored" answer that leaves the
+        parser's behaviour unchanged.
+
+    Raises:
+        RegistryValidationError: Two or more roots carry the annotation with
+            differing content.
+    """
+    copies = resolve_data_root_copies(path)
+    if not copies:
+        return None
+    chosen, *others = copies
+    payload = chosen.read_bytes()
+    divergent = [other for other in others if other.read_bytes() != payload]
+    if divergent:
+        locations = ", ".join(str(item) for item in divergent)
+        raise RegistryValidationError(
+            f"{path.name}: this record-design annotation is published with differing content under "
+            f"more than one installed data root ({chosen} and {locations}); the annotated design has "
+            "one grounding, so resolve the divergence at the source rather than letting installation "
+            "order choose which correction applies",
+        )
+    return chosen
 
 
 @dataclass(frozen=True)
@@ -85,8 +139,8 @@ def load_corrections(source_path: Path) -> CorrectionIndex:
     -- a field-type correction and a header-cell correction may both appear in
     it, per :data:`RecordDesignCorrection`.
     """
-    sidecar_path = source_path.with_name(source_path.name + _CORRECTION_SUFFIX)
-    if not sidecar_path.is_file():
+    sidecar_path = _resolve_annotation(source_path.with_name(source_path.name + _CORRECTION_SUFFIX))
+    if sidecar_path is None:
         return EMPTY_CORRECTIONS
     try:
         payload = _JSON_OBJECT_ADAPTER.validate_python(json.loads(sidecar_path.read_text(encoding=UTF_8_ENCODING)))
@@ -168,8 +222,8 @@ def load_declared_non_record_sheet_reasons(source_path: Path) -> Mapping[str, st
     body, so that judgement is a registry act, never inferred here.
     """
     modelo_root = source_path.parent.parent
-    declaration_path = modelo_root / _DECLARED_NON_RECORD_SHEETS_FILENAME
-    if not declaration_path.is_file():
+    declaration_path = _resolve_annotation(modelo_root / _DECLARED_NON_RECORD_SHEETS_FILENAME)
+    if declaration_path is None:
         return _EMPTY_DECLARED_NON_RECORD_SHEET_REASONS
     try:
         payload = _JSON_OBJECT_ADAPTER.validate_python(
