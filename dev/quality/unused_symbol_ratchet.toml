@@ -302,7 +302,6 @@
 "cadrumo.entrypoints.cli._ledger" = 2
 "cadrumo.entrypoints.cli._ledger_evidence_consent_cli" = 1
 "cadrumo.entrypoints.cli._ledger_ratios_cli" = 1
-"cadrumo.entrypoints.cli._ledger_read_cli" = 2
 "cadrumo.entrypoints.cli._modelo_aggregate_cli" = 1
 "cadrumo.entrypoints.cli._modelo_behavior_support" = 1
 "cadrumo.entrypoints.cli._modelo_cli_support" = 1

@@ -109,6 +109,16 @@ def _mutate_tui_source(relative: str, mutation: Callable[[bytes], bytes]) -> tup
     return tuple((path, mutation(body) if path == relative else body) for path, body in _tui_source_records())
 
 
+def _replace_installed_return_with_unrelated_screen(body: bytes) -> bytes:
+    mutated = body.replace(b"        return ledger_screen_factory(", b"        dead = ledger_screen_factory(", 1)
+    return mutated.replace(b"        )(context)", b"        )(context)\n        return Screen()", 1)
+
+
+def _alias_installed_screen_return(body: bytes) -> bytes:
+    mutated = body.replace(b"        return ledger_screen_factory(", b"        screen = ledger_screen_factory(", 1)
+    return mutated.replace(b"        )(context)", b"        )(context)\n        return screen", 1)
+
+
 def test_tui_supported_surface_census_recomputes_the_published_live_digest() -> None:
     census = _tui_census()
 
@@ -309,6 +319,76 @@ def test_tui_projection_follows_initial_route_in_the_installed_factory_dataflow(
 
     assert candidate.initial_internal_destination == "ledger.entries"
     assert tuple(row.destination for row in candidate.routes if row.reachability == "installed") == ("ledger.entries",)
+
+
+def test_tui_projection_ignores_dead_overview_resolver_when_actual_return_is_an_entries_screen() -> None:
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/ledger/routes.py",
+        lambda body: body.replace(
+            b"        return resolve_ledger_screen(controller, controller.route_target(LedgerWorkspaceArea.OVERVIEW))",
+            b"        dead = resolve_ledger_screen(controller, "
+            b"controller.route_target(LedgerWorkspaceArea.OVERVIEW))\n"
+            b"        return LedgerEntriesScreen(controller)",
+            1,
+        ),
+    )
+
+    with pytest.raises(ValueError, match="root create return does not resolve one screen"):
+        build_ledger_tui_supported_surface_census(source_records=records)
+
+
+def test_tui_projection_ignores_dead_ledger_factory_when_actual_return_is_unrelated() -> None:
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/launcher.py",
+        _replace_installed_return_with_unrelated_screen,
+    )
+
+    with pytest.raises(ValueError, match="create return does not invoke ledger_screen_factory"):
+        build_ledger_tui_supported_surface_census(source_records=records)
+
+
+def test_tui_projection_accepts_simple_aliases_on_both_return_dataflows() -> None:
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/launcher.py",
+        _alias_installed_screen_return,
+    )
+    records = tuple(
+        (
+            relative,
+            body.replace(
+                b"        return resolve_ledger_screen(controller, "
+                b"controller.route_target(LedgerWorkspaceArea.OVERVIEW))",
+                b"        screen = resolve_ledger_screen(controller, "
+                b"controller.route_target(LedgerWorkspaceArea.OVERVIEW))\n"
+                b"        return screen",
+                1,
+            )
+            if relative == "src/cadrumo/entrypoints/tui/ledger/routes.py"
+            else body,
+        )
+        for relative, body in records
+    )
+
+    candidate = build_ledger_tui_supported_surface_census(source_records=records)
+
+    assert candidate.initial_internal_destination == "ledger.overview"
+    assert tuple(row.destination for row in candidate.routes if row.reachability == "installed") == ("ledger.overview",)
+
+
+def test_tui_projection_refuses_ambiguous_installed_screen_returns() -> None:
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/launcher.py",
+        lambda body: body.replace(
+            b"    def create(context: TuiScreenContextV1) -> Screen[None]:",
+            b"    def create(context: TuiScreenContextV1) -> Screen[None]:\n"
+            b"        if context.destination == 'dead.branch':\n"
+            b"            return Screen()",
+            1,
+        ),
+    )
+
+    with pytest.raises(ValueError, match="exactly one non-null return dataflow"):
+        build_ledger_tui_supported_surface_census(source_records=records)
 
 
 def test_tui_projection_detects_cli_tui_status_change() -> None:

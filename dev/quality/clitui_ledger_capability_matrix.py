@@ -449,6 +449,92 @@ def _call_named(node: ast.AST, name: str) -> tuple[ast.Call, ...]:
     )
 
 
+class _ReturnCollector(ast.NodeVisitor):
+    """Collect returns in one function body without entering nested definitions."""
+
+    def __init__(self) -> None:
+        self.returns: list[ast.Return] = []
+
+    def visit_Return(self, node: ast.Return) -> None:
+        self.returns.append(node)
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        return
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        return
+
+    def visit_Lambda(self, node: ast.Lambda) -> None:
+        return
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        return
+
+
+def _function_returns(function: ast.FunctionDef | ast.AsyncFunctionDef) -> tuple[ast.Return, ...]:
+    collector = _ReturnCollector()
+    for statement in function.body:
+        collector.visit(statement)
+    return tuple(collector.returns)
+
+
+def _simple_assignments(function: ast.FunctionDef | ast.AsyncFunctionDef) -> dict[str, ast.expr]:
+    assignments: dict[str, ast.expr] = {}
+    for statement in function.body:
+        if (
+            isinstance(statement, ast.Assign)
+            and len(statement.targets) == 1
+            and isinstance(statement.targets[0], ast.Name)
+        ):
+            assignments[statement.targets[0].id] = statement.value
+        elif (
+            isinstance(statement, ast.AnnAssign)
+            and isinstance(statement.target, ast.Name)
+            and statement.value is not None
+        ):
+            assignments[statement.target.id] = statement.value
+    return assignments
+
+
+def _resolve_simple_alias(expression: ast.expr, assignments: Mapping[str, ast.expr]) -> ast.expr:
+    seen: set[str] = set()
+    while isinstance(expression, ast.Name) and expression.id in assignments:
+        if expression.id in seen:
+            raise ValueError("Ledger TUI census found a cyclic return alias")
+        seen.add(expression.id)
+        expression = assignments[expression.id]
+    return expression
+
+
+def _single_effective_return(function: ast.FunctionDef | ast.AsyncFunctionDef) -> ast.expr:
+    returns = _function_returns(function)
+    values = tuple(
+        node.value
+        for node in returns
+        if node.value is not None and not (isinstance(node.value, ast.Constant) and node.value.value is None)
+    )
+    if len(values) != 1:
+        raise ValueError(f"{function.name} must have exactly one non-null return dataflow")
+    return _resolve_simple_alias(values[0], _simple_assignments(function))
+
+
+def _returned_nested_function(
+    function: ast.FunctionDef | ast.AsyncFunctionDef,
+    expected_name: str,
+) -> ast.FunctionDef | ast.AsyncFunctionDef:
+    returned = _single_effective_return(function)
+    if not isinstance(returned, ast.Name) or returned.id != expected_name:
+        raise ValueError(f"{function.name} must return its exact nested {expected_name} factory")
+    nested = tuple(
+        node
+        for node in function.body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == expected_name
+    )
+    if len(nested) != 1:
+        raise ValueError(f"{function.name} must define exactly one nested {expected_name} factory")
+    return nested[0]
+
+
 def _installed_action_ids(tree: ast.Module) -> tuple[str, ...]:
     function = _named_function(tree, "compose_authenticated_root_inputs_provider")
     constructors = _call_named(function, "InstalledWorkbenchFactoryDependenciesV1")
@@ -475,10 +561,18 @@ def _installed_action_ids(tree: ast.Module) -> tuple[str, ...]:
 
 def _installed_ledger_factory_call(tree: ast.Module) -> ast.Call:
     function = _named_function(tree, "_ledger_generation_factory")
-    calls = _call_named(function, "ledger_screen_factory")
-    if len(calls) != 1:
-        raise ValueError("installed Ledger screen-factory call is not unique")
-    return calls[0]
+    create = _returned_nested_function(function, "create")
+    returned = _single_effective_return(create)
+    if not isinstance(returned, ast.Call):
+        raise ValueError("installed Ledger create factory must return a screen invocation")
+    factory_expression = _resolve_simple_alias(returned.func, _simple_assignments(create))
+    if (
+        not isinstance(factory_expression, ast.Call)
+        or not isinstance(factory_expression.func, ast.Name)
+        or factory_expression.func.id != "ledger_screen_factory"
+    ):
+        raise ValueError("installed Ledger create return does not invoke ledger_screen_factory")
+    return factory_expression
 
 
 def _installed_outer_destination(tree: ast.Module) -> str:
@@ -506,10 +600,16 @@ def _installed_outer_destination(tree: ast.Module) -> str:
 
 def _initial_route_area(tree: ast.Module) -> str:
     function = _named_function(tree, "ledger_screen_factory")
-    resolver_calls = _call_named(function, "resolve_ledger_screen")
-    if len(resolver_calls) != 1 or len(resolver_calls[0].args) != 2:
-        raise ValueError("Ledger root factory initial resolver call is not unique")
-    target = resolver_calls[0].args[1]
+    create = _returned_nested_function(function, "create")
+    returned = _single_effective_return(create)
+    if (
+        not isinstance(returned, ast.Call)
+        or not isinstance(returned.func, ast.Name)
+        or returned.func.id != "resolve_ledger_screen"
+        or len(returned.args) != 2
+    ):
+        raise ValueError("Ledger root create return does not resolve one screen")
+    target = _resolve_simple_alias(returned.args[1], _simple_assignments(create))
     if (
         not isinstance(target, ast.Call)
         or not isinstance(target.func, ast.Attribute)
