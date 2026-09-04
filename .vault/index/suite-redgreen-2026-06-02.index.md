@@ -4,10 +4,11 @@ tags:
   - '#index'
   - '#suite-redgreen-2026-06-02'
 date: '2026-08-16'
-modified: '2026-08-26'
-body_schema: 'body-v1'
-body_hash: 'sha256:541534e54486286103365f7e8e2f5189333a5ef95bf19f3e518c430f1cb0e512'
+modified: '2026-09-04'
+body_schema: 'body-v2'
+body_hash: 'sha256:e5066985ad03d677a0c23880eddc351cc1300a88a0c1af073799ad31a0b9cbad'
 related:
+  - '[[2026-06-02-suite-redgreen-2026-06-02-ledger]]'
   - '[[2026-06-02-suite-redgreen-2026-06-02-plan]]'
   - '[[2026-06-03-suite-redgreen-2026-06-02-code-review-audit]]'
   - '[[2026-06-04-suite-redgreen-2026-06-02-adr]]'
@@ -30,9 +31,7 @@ Auto-generated index of all documents tagged with `#suite-redgreen-2026-06-02`.
 
 ### exec
 
-- `2026-06-03-suite-redgreen-2026-06-02-P04-S10` - P04.S10 M210 Catalogue Verification Coverage
-- `2026-06-03-suite-redgreen-2026-06-02-P04-S28` - P04.S28 M714 Empty Formula Fragment Load Blocker
-- `2026-06-03-suite-redgreen-2026-06-02-P07-S25` - P07.S25 Modelo 303 Fichero BOE Golden SHA
+- `2026-06-02-suite-redgreen-2026-06-02-ledger` - `suite-redgreen-2026-06-02` ledger
 
 ### plan
 

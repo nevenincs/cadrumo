@@ -4,25 +4,145 @@ tags:
   - '#index'
   - '#semantic-consolidation'
 date: '2026-08-30'
-modified: '2026-08-30'
+modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:984c1b939c5e68bb35ce659f20d91672ca57fae006886f7dfcfad4d8c72ab6f2'
+body_hash: 'sha256:3644a0f62099e0205c144e4dc0b0147c67ed0b558e40116ea261758cfa5d00d0'
 related:
+  - '[[2026-08-28-semantic-consolidation-P01-S06]]'
+  - '[[2026-08-28-semantic-consolidation-P01-S07]]'
+  - '[[2026-08-28-semantic-consolidation-P01-S09]]'
+  - '[[2026-08-28-semantic-consolidation-P01-S170]]'
   - '[[2026-08-28-semantic-consolidation-P02-S01]]'
   - '[[2026-08-28-semantic-consolidation-P02-S02]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S03]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S04]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S102]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S103]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S105]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S109]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S111]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S112]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S113]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S115]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S117]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S119]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S125]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S126]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S127]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S129]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S130]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S131]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S132]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S133]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S134]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S135]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S136]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S144]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S145]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S146]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S147]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S148]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S149]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S150]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S151]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S152]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S153]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S155]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S156]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S162]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S46]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S48]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S59]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S60]]'
+  - '[[2026-08-28-semantic-consolidation-P02-S61]]'
+  - '[[2026-08-28-semantic-consolidation-P03-S137]]'
+  - '[[2026-08-28-semantic-consolidation-P03-S138]]'
+  - '[[2026-08-28-semantic-consolidation-P03-S139]]'
+  - '[[2026-08-28-semantic-consolidation-P03-S140]]'
+  - '[[2026-08-28-semantic-consolidation-P03-S141]]'
+  - '[[2026-08-28-semantic-consolidation-P03-S142]]'
+  - '[[2026-08-28-semantic-consolidation-P03-S143]]'
+  - '[[2026-08-28-semantic-consolidation-P03-S154]]'
   - '[[2026-08-28-semantic-consolidation-P06-S10]]'
+  - '[[2026-08-28-semantic-consolidation-P06-S122]]'
+  - '[[2026-08-28-semantic-consolidation-P06-S123]]'
+  - '[[2026-08-28-semantic-consolidation-P06-S124]]'
+  - '[[2026-08-28-semantic-consolidation-P06-S128]]'
+  - '[[2026-08-28-semantic-consolidation-P07-S104]]'
+  - '[[2026-08-28-semantic-consolidation-P07-S106]]'
+  - '[[2026-08-28-semantic-consolidation-P07-S107]]'
+  - '[[2026-08-28-semantic-consolidation-P07-S110]]'
+  - '[[2026-08-28-semantic-consolidation-P07-S114]]'
+  - '[[2026-08-28-semantic-consolidation-P07-S118]]'
+  - '[[2026-08-28-semantic-consolidation-P07-S158]]'
+  - '[[2026-08-28-semantic-consolidation-P07-S163]]'
+  - '[[2026-08-28-semantic-consolidation-P07-S164]]'
+  - '[[2026-08-28-semantic-consolidation-P07-S165]]'
+  - '[[2026-08-28-semantic-consolidation-P07-S166]]'
+  - '[[2026-08-28-semantic-consolidation-P07-S167]]'
+  - '[[2026-08-28-semantic-consolidation-P07-S168]]'
+  - '[[2026-08-28-semantic-consolidation-P07-S169]]'
+  - '[[2026-08-28-semantic-consolidation-P07-S16]]'
+  - '[[2026-08-28-semantic-consolidation-P07-S171]]'
+  - '[[2026-08-28-semantic-consolidation-P07-S172]]'
+  - '[[2026-08-28-semantic-consolidation-P07-S174]]'
+  - '[[2026-08-28-semantic-consolidation-P07-S17]]'
+  - '[[2026-08-28-semantic-consolidation-P07-S66]]'
+  - '[[2026-08-28-semantic-consolidation-P07-S67]]'
   - '[[2026-08-28-semantic-consolidation-P07-S78]]'
   - '[[2026-08-28-semantic-consolidation-P07-S79]]'
+  - '[[2026-08-28-semantic-consolidation-P07-S84]]'
+  - '[[2026-08-28-semantic-consolidation-P07-S86]]'
+  - '[[2026-08-28-semantic-consolidation-P07-S87]]'
+  - '[[2026-08-28-semantic-consolidation-P07-S91]]'
+  - '[[2026-08-28-semantic-consolidation-P07-S95]]'
+  - '[[2026-08-28-semantic-consolidation-P07-S99]]'
+  - '[[2026-08-28-semantic-consolidation-P08-S100]]'
+  - '[[2026-08-28-semantic-consolidation-P08-S101]]'
+  - '[[2026-08-28-semantic-consolidation-P08-S105]]'
+  - '[[2026-08-28-semantic-consolidation-P08-S108]]'
+  - '[[2026-08-28-semantic-consolidation-P08-S116]]'
+  - '[[2026-08-28-semantic-consolidation-P08-S120]]'
+  - '[[2026-08-28-semantic-consolidation-P08-S121]]'
+  - '[[2026-08-28-semantic-consolidation-P08-S157]]'
+  - '[[2026-08-28-semantic-consolidation-P08-S159]]'
+  - '[[2026-08-28-semantic-consolidation-P08-S160]]'
+  - '[[2026-08-28-semantic-consolidation-P08-S161]]'
+  - '[[2026-08-28-semantic-consolidation-P08-S173]]'
   - '[[2026-08-28-semantic-consolidation-P08-S19]]'
   - '[[2026-08-28-semantic-consolidation-P08-S20]]'
   - '[[2026-08-28-semantic-consolidation-P08-S21]]'
   - '[[2026-08-28-semantic-consolidation-P08-S22]]'
   - '[[2026-08-28-semantic-consolidation-P08-S23]]'
+  - '[[2026-08-28-semantic-consolidation-P08-S24]]'
+  - '[[2026-08-28-semantic-consolidation-P08-S25]]'
+  - '[[2026-08-28-semantic-consolidation-P08-S26]]'
+  - '[[2026-08-28-semantic-consolidation-P08-S30]]'
+  - '[[2026-08-28-semantic-consolidation-P08-S34]]'
+  - '[[2026-08-28-semantic-consolidation-P08-S40]]'
+  - '[[2026-08-28-semantic-consolidation-P08-S51]]'
+  - '[[2026-08-28-semantic-consolidation-P08-S88]]'
+  - '[[2026-08-28-semantic-consolidation-P08-S89]]'
+  - '[[2026-08-28-semantic-consolidation-P08-S90]]'
+  - '[[2026-08-28-semantic-consolidation-P08-S92]]'
+  - '[[2026-08-28-semantic-consolidation-P08-S93]]'
+  - '[[2026-08-28-semantic-consolidation-P08-S94]]'
+  - '[[2026-08-28-semantic-consolidation-P08-S96]]'
+  - '[[2026-08-28-semantic-consolidation-P08-S97]]'
+  - '[[2026-08-28-semantic-consolidation-P08-S98]]'
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
   - '[[2026-08-28-semantic-consolidation-lazy-export-precedent-adr]]'
   - '[[2026-08-28-semantic-consolidation-plan]]'
   - '[[2026-08-28-semantic-consolidation-research]]'
+  - '[[2026-08-30-semantic-consolidation-cif-leader-policy-audit]]'
   - '[[2026-08-30-semantic-consolidation-namespace-census-audit]]'
+  - '[[2026-08-31-semantic-consolidation-core-facade-ruling-conflict-audit]]'
+  - '[[2026-08-31-semantic-consolidation-invisible-bounds-audit]]'
+  - '[[2026-08-31-semantic-consolidation-layering-gate-revived-backlog-audit]]'
+  - '[[2026-08-31-semantic-consolidation-negative-invoice-total-liva-89-audit]]'
+  - '[[2026-08-31-semantic-consolidation-private-module-cross-package-debt-audit]]'
+  - '[[2026-08-31-semantic-consolidation-production-scan-surface-definitions-audit]]'
+  - '[[2026-08-31-semantic-consolidation-zero-base-imponible-audit]]'
 ---
 
 # `semantic-consolidation` feature index
@@ -38,7 +158,15 @@ Auto-generated index of all documents tagged with `#semantic-consolidation`.
 
 ### audit
 
+- `2026-08-30-semantic-consolidation-cif-leader-policy-audit` - `semantic-consolidation` audit: two CIF validators, opposite answers
 - `2026-08-30-semantic-consolidation-namespace-census-audit` - `semantic-consolidation` audit: non-inert package namespaces, censused by construct
+- `2026-08-31-semantic-consolidation-core-facade-ruling-conflict-audit` - `semantic-consolidation` audit: `core facade ruling conflict`
+- `2026-08-31-semantic-consolidation-invisible-bounds-audit` - `semantic-consolidation` audit: `Bounds a field-annotation scan cannot see`
+- `2026-08-31-semantic-consolidation-layering-gate-revived-backlog-audit` - `semantic-consolidation` audit: `layering gate revived backlog`
+- `2026-08-31-semantic-consolidation-negative-invoice-total-liva-89-audit` - `semantic-consolidation` audit: `negative invoice total liva 89`
+- `2026-08-31-semantic-consolidation-private-module-cross-package-debt-audit` - `semantic-consolidation` audit: `private module cross package debt`
+- `2026-08-31-semantic-consolidation-production-scan-surface-definitions-audit` - `semantic-consolidation` audit: `production scan surface definitions`
+- `2026-08-31-semantic-consolidation-zero-base-imponible-audit` - `semantic-consolidation` audit: `zero base imponible`
 
 ### exec
 
@@ -50,8 +178,120 @@ Auto-generated index of all documents tagged with `#semantic-consolidation`.
 - `2026-08-28-semantic-consolidation-P08-S21` - Retire the four independent redeclarations of the dotted namespaced-id grammar in favour of the public canonical constant, and rule on whether its defining module should be public
 - `2026-08-28-semantic-consolidation-P08-S22` - Declare the zero-to-one-hundred percentage scale once, keeping it distinct from the share alias rather than conflating two scales
 - `2026-08-28-semantic-consolidation-P08-S23` - Declare the two-character country code once across the 32 sites that state only its length, and rule on whether a charset check belongs on it
+- `2026-08-28-semantic-consolidation-P02-S102` - Adopt the canonical filing-year bounds in the work-lifecycle CLI, which redeclared FILING_YEAR_MIN and FILING_YEAR_MAX as local literals
+- `2026-08-28-semantic-consolidation-P02-S103` - Derive the binding and casilla length bounds quoted in CLI refusals from the types that enforce them, replacing literals that were only ever printed and so could drift undetected
+- `2026-08-28-semantic-consolidation-P02-S105` - Keep ModeloCode on the review-package manifest and its CLI projection, both of which discarded the validated three-digit type for a hand-rolled one-to-eight string bound
+- `2026-08-28-semantic-consolidation-P02-S109` - Collapse the confidence bound onto the canonical unit-proportion predicate at both the transaction validator and the CLI gate, which restated the same zero-to-one range a third and fourth time
+- `2026-08-28-semantic-consolidation-P02-S111` - Give the Spanish postcode format a domain-level home, since it is enforced only by the setup wizard and no other write path to address_postcode refuses a malformed value
+- `2026-08-28-semantic-consolidation-P02-S113` - Rehome the ledger folder-import fold beside the function that produces the per-file results, asserting the invocation-wide fields agree rather than silently taking the first file's
+- `2026-08-28-semantic-consolidation-P02-S117` - Rehome the Drive object-label derivation beside the hmac half of the same naming scheme, keeping it distinct from the manifest label whose policy differs
+- `2026-08-28-semantic-consolidation-P02-S119` - Adopt ModeloCode on the aggregation contract and result payloads, leaving the operator-input command untyped so its registry-driven refusal can still name the supported set
+- `2026-08-28-semantic-consolidation-P02-S125` - Declare the represented-NIF length bound once and the two password-generation bounds beside the envelope that owns them, closing a result payload that reported a generation the envelope would refuse to store
+- `2026-08-28-semantic-consolidation-P02-S126` - Declare the ISO 4217 currency shape once as a normalising alias and adopt it at the domain model and both CLI payloads, giving the domain the uppercase rule it lacked
+- `2026-08-28-semantic-consolidation-P02-S127` - Adopt the canonical non-negative and positive decimal aliases on the catalogue invoice payload's money and rate fields
+- `2026-08-28-semantic-consolidation-P02-S129` - Publicise the eliding issue-detail annotation and adopt it at four sites, two of which refused an over-length detail where the canonical deliberately elides
+- `2026-08-28-semantic-consolidation-P02-S130` - Route the ledger export amount check through the parser's own signed axis instead of comparing against zero beside the payload
+- `2026-08-28-semantic-consolidation-P06-S122` - Extract the self-verifying custody digest base into a leaf module so every custody record can reach it, the two capsule records having been unable to subclass it where it lived
+- `2026-08-28-semantic-consolidation-P06-S123` - Extend the custody digest base with the digest field validator, the mismatch check and the canonical payload, then subclass the five records that hand-roll them
+- `2026-08-28-semantic-consolidation-P06-S124` - Move the remaining three custody records onto the digest base, each with its digest proved unchanged, the envelope and recovery envelope and capsule commit still hand-rolling the computation
+- `2026-08-28-semantic-consolidation-P07-S104` - Retire the module-level re-export facade in calculation_revision, where thirteen names were imported solely to be listed in its __all__ and reached that way by thirty-two consumers
+- `2026-08-28-semantic-consolidation-P07-S106` - Finish the errors hierarchy split the concurrent session left half-landed, repointing the five stragglers still reaching the namespace
+- `2026-08-28-semantic-consolidation-P07-S107` - Publicise the censo parser and repoint the portals service tests, the last names reached through namespaces already made inert
+- `2026-08-28-semantic-consolidation-P07-S114` - Publicise the secret store's defining module, which the inert namespace left unreachable for its blob-store and storage consumers
 - `2026-08-28-semantic-consolidation-P07-S78` - Retire the llm providers facade, whose lazy AnthropicAdapter arm had no caller because the client already imported that adapter from its own module, and publicise the ProviderAdapter contract four packages depend on
 - `2026-08-28-semantic-consolidation-P07-S79` - Repoint the core-struct anchor map at the portals and transactions modules the earlier retirements made public, which still named the private paths and left the staleness check red
+- `2026-08-28-semantic-consolidation-P07-S86` - Retire the core observability facade: sixty-one names across eleven modules, with the replay canonicity gate's pinned module literal moved in the same change
+- `2026-08-28-semantic-consolidation-P07-S87` - Retire the currency, manuals and fincas facades, one package per commit
+- `2026-08-28-semantic-consolidation-P07-S91` - Retire the censo, attachments, categories, invoices and buckets facades, dissolving the invoices-iva import cycle the invoices namespace made spellable
+- `2026-08-28-semantic-consolidation-P07-S95` - Retire the deadlines, Google outbound and AEAT sede facades, repointing module-object imports and their body uses together
+- `2026-08-28-semantic-consolidation-P07-S99` - Retire the three largest domain facades: iva at 179 names across 26 modules, filing at 43 and iva_compensation at 36
+- `2026-08-28-semantic-consolidation-P08-S100` - Promote the post-retirement checks into a single reusable sweep covering all five stale-reference classes, so each retirement runs a written-down pass rather than ad-hoc checks
+- `2026-08-28-semantic-consolidation-P08-S101` - Repoint the two application/modelo files reading filing contracts off the package object, which the reachability gate caught as an AttributeError that only fires when the path runs
+- `2026-08-28-semantic-consolidation-P08-S105` - Repoint the Exonerado-390 canonical-owner pin at the module that defines those classes rather than the one that had gone on re-exporting them after they moved
+- `2026-08-28-semantic-consolidation-P08-S116` - Refuse a name imported from a namespace that exports nothing, the failure that has landed three times and takes a package down at collection rather than at use
+- `2026-08-28-semantic-consolidation-P08-S120` - Stop the payload gate reading an empty-string presence check as a declared rule, which was flagging a validator that only delegates
+- `2026-08-28-semantic-consolidation-P08-S121` - Repoint the dotted module paths written inside string literals, a class every AST sweep is blind to and which had been failing four custody lock tests in a way that read as flakiness
+- `2026-08-28-semantic-consolidation-P08-S88` - Repoint the thirty-eight gate path pins the campaign's renames left naming deleted files, which made those gates scan an empty set and pass while blind
+- `2026-08-28-semantic-consolidation-P08-S89` - Fix the violations the unblinded gates exposed: a CLI payload re-implementing ISO date parsing, two stale persisted-version exemptions, and one over-granted bool exemption
+- `2026-08-28-semantic-consolidation-P08-S90` - Add a tree-wide relative-import resolver as a standing check, so a repoint that emits the wrong dot depth is caught before it reaches a commit
+- `2026-08-28-semantic-consolidation-P08-S92` - Sweep the second stale-pin class the path sweep could not see: gates naming their canonical module by bare basename, distinguishing those from assertions that a retired module is absent
+- `2026-08-28-semantic-consolidation-P08-S93` - Run both stale-pin sweeps after every namespace retirement rather than once, since each retirement creates new stale pins
+- `2026-08-28-semantic-consolidation-P08-S96` - Sweep the third stale-pin class: ruff per-file ignores in pyproject naming modules the retirements made public, deleting rather than repointing where a narrower inline suppression already covers the site
+- `2026-08-28-semantic-consolidation-P08-S97` - Rehome the censal no-write-surface scan and its anti-tautology guard off the sede facade onto the censal module, so emptying a namespace cannot turn a guard green by emptiness
+- `2026-08-28-semantic-consolidation-P08-S98` - Repoint the setup-answers lazy module accessor at deadlines.models, and move the FiscalResidency reads to the renta-code module that actually defines them
+- `2026-08-28-semantic-consolidation-P01-S06` - Retire the domain/modelos lazy export map, repointing every consumer at the owning defining module
+- `2026-08-28-semantic-consolidation-P01-S07` - Retire the storage lazy export map last of its subtree, repointing its core, custody and crypto facing entries
+- `2026-08-28-semantic-consolidation-P01-S09` - Census and rule on the second population of namespace export maps the mechanism-name search missed, under different identifiers
+- `2026-08-28-semantic-consolidation-P01-S170` - Retire the four storage child namespaces the parent map was blocking, and re-confirm that three previously-reverted namespaces still fail on their own merits
+- `2026-08-28-semantic-consolidation-P02-S03` - Reconcile the modelo payload modules onto canonical aliases and move the imported-evidence match invariant to the filing-record model
+- `2026-08-28-semantic-consolidation-P02-S04` - Reconcile the ledger payload modules onto canonical transaction, invoice, counterparty and rule aliases
+- `2026-08-28-semantic-consolidation-P02-S112` - Rehome the ledger folder-import aggregation and the Drive remote-object label derivation, both of which the CLI computes with no application or adapter counterpart
+- `2026-08-28-semantic-consolidation-P02-S115` - Widen the folder-import fold so a directory import reports every file's validation and verification report, not only the first
+- `2026-08-28-semantic-consolidation-P02-S131` - Merge the two Spanish identity validators onto one AEAT leader policy, keeping the richer refusal payload and correcting the test that asserted the laxer reading
+- `2026-08-28-semantic-consolidation-P02-S132` - Gate the identity algorithm and its policy tables to a single declaration, proved by mutation from outside the repository
+- `2026-08-28-semantic-consolidation-P02-S133` - Declare the apoderamiento and review-package note bounds once each and adopt them at their six sites, retiring the review-package payload module from the outstanding list
+- `2026-08-28-semantic-consolidation-P02-S134` - Make the province-code alternation one declaration and route the postcode, province and INE municipality shapes through it, closing a registry boundary that accepted a nonexistent province
+- `2026-08-28-semantic-consolidation-P02-S135` - Declare the ISO alpha-2 shape once and record at each site whether it folds or refuses a lowercase token, leaving that policy question open rather than settling it by consolidation
+- `2026-08-28-semantic-consolidation-P02-S136` - Declare the calendar-month bound and its predicate once and adopt them at eight sites, two of which stated the same field's rule twice in one module
+- `2026-08-28-semantic-consolidation-P02-S144` - Measure CLI model redefinition by field-set containment rather than searching for it, and retire the third currency declaration the earlier consolidation missed
+- `2026-08-28-semantic-consolidation-P02-S145` - Align the ledger export payload with the row it claims to mirror on all thirty-one fields, and repoint the currency case that my own earlier consolidation had turned into a non-wall
+- `2026-08-28-semantic-consolidation-P02-S146` - Declare the non-negative canonical-decimal predicate once and route both CLI money validators through it, then add the assertion to the three payloads that stringified a bounded amount without re-asserting the bound
+- `2026-08-28-semantic-consolidation-P02-S147` - Type the constraint comparison so it stops reporting stringified decimals as disagreements, then consolidate the currency policies it exposes and gate the field class so the fifth one cannot land
+- `2026-08-28-semantic-consolidation-P02-S148` - Adopt the UTC instant annotation at the three payloads that dropped an aware-timestamp guarantee their record makes
+- `2026-08-28-semantic-consolidation-P02-S149` - Census the rate scales, clear the unbounded evidence-draft rate as taxonomy-bounded rather than unguarded, and make the inventory wire bounds read the scale constants instead of respelling them
+- `2026-08-28-semantic-consolidation-P02-S150` - Gate the country-code field class, and fix the key collision that made both class gates blind to every field name a module declares more than once
+- `2026-08-28-semantic-consolidation-P02-S151` - Close the three currency sites the collision had been hiding, including a patch command that accepted a currency its own create command refuses
+- `2026-08-28-semantic-consolidation-P02-S152` - Hunt the partial-variant class by stripping optionality and comparing what remains, and give the group label one bound both its create and patch models read
+- `2026-08-28-semantic-consolidation-P02-S153` - Bound the purchase-invoice evidence money fields on the record and its patch, after tracing the two that reach a renta deduction
+- `2026-08-28-semantic-consolidation-P02-S155` - Correct the fifteen fixture sites left carrying a CIF the merged leader policy refuses, after re-deriving the checksum I had dismissed them on
+- `2026-08-28-semantic-consolidation-P02-S156` - Elide the rendered finding message instead of refusing it, and state the workflow reason-class bound once, clearing the config and modelo payload modules
+- `2026-08-28-semantic-consolidation-P02-S162` - State the canonical month-set rule once, so the descendant record and the wire payload projecting it stop implementing uniqueness and ordering separately
+- `2026-08-28-semantic-consolidation-P02-S46` - Rule on the currency pattern once for both the invoice and export-row payloads, given the canonical already normalises to uppercase at the parse boundary
+- `2026-08-28-semantic-consolidation-P02-S48` - Migrate the export-row date and non-negative-amount checks the CLI enforces onto the canonical export row, which declares no validators at all
+- `2026-08-28-semantic-consolidation-P02-S59` - Rule on the four free-text note bounds, which carry five hundred, two thousand and four thousand characters for the same operator commentary with no canonical among them
+- `2026-08-28-semantic-consolidation-P02-S60` - Reconcile the actor concept, declared at sixty-four on the filing label and a hundred and twenty-eight on the review package while both are fed by the same operator resolver
+- `2026-08-28-semantic-consolidation-P02-S61` - Publicise the preflight issue detail, whose canonical alias elides at five hundred and twelve where the payload rejects, so the two disagree about what an over-long detail should do
+- `2026-08-28-semantic-consolidation-P03-S137` - Route Cl@ve Movil identity classification through the domain classifier, restoring the prefixed NIF its hand-rolled shape regexes silently excluded
+- `2026-08-28-semantic-consolidation-P03-S138` - Promote the retention-floor erase decision to one domain function both destructive surfaces reach, as the CLI verb's own docstring asked
+- `2026-08-28-semantic-consolidation-P03-S139` - Repoint the crash-recovery trace pin at the module that holds the delete effect, and teach the retirement sweep to read pins inside a subprocess source string
+- `2026-08-28-semantic-consolidation-P03-S140` - State the minimo-descendientes relacion ambiguity once, and correct the reasoning both copies had let go stale when the relacion axis gained a member
+- `2026-08-28-semantic-consolidation-P03-S141` - Give the RETMAR mandatory-filing determination its own function and answer it from the original facts, so the renderer stops repairing a value the incomplete-profile rerun clears
+- `2026-08-28-semantic-consolidation-P03-S142` - Restore the festivos TOML hydration boundary so the AEAT business-day deadline shift can load a calendar at all, and record the engine's unshifted close date for an operator ruling
+- `2026-08-28-semantic-consolidation-P03-S143` - Gate every shipped holiday calendar on actually loading, discovering the years from disk rather than naming them, and prove it by restoring the defect that shipped
+- `2026-08-28-semantic-consolidation-P03-S154` - Trace the fixed-width export rows that feed filed bytes, establish the codec refuses rather than truncates, and record the three bound shapes an annotation scan cannot see
+- `2026-08-28-semantic-consolidation-P06-S128` - Rule on the operator-clave accumulator, whose docstring calls it a mutable accumulator while its config freezes it, so every aggregation write raises
+- `2026-08-28-semantic-consolidation-P07-S110` - Rule on which CIF leader-class policy is authoritative, after grounding it against the official norm, and collapse the two identity validators that currently answer the same input differently
+- `2026-08-28-semantic-consolidation-P07-S118` - Publicise the mirror-manifest module so its remote-naming contracts are reachable without going through the storage namespace
+- `2026-08-28-semantic-consolidation-P07-S158` - Make the retirement sweep survive a peer's concurrent rename, then repoint the two stale gate pins it found and correct the expectation the vacuous one had been hiding
+- `2026-08-28-semantic-consolidation-P07-S16` - Retire the small differently-named export maps in portals, transactions, llm, llm providers, entrypoints and operator_surface, one package per commit
+- `2026-08-28-semantic-consolidation-P07-S163` - Retire the light eager re-export facades on an import resolver that reads every relative form, after a regex census reported twelve namespaces unread that 386 tests were reading
+- `2026-08-28-semantic-consolidation-P07-S164` - Relocate the production code out of the four namespaces that are modules in disguise, and repoint the forwarded names at the modules that define them
+- `2026-08-28-semantic-consolidation-P07-S165` - Relocate the topics catalogue and the AEAT access gate onto public modules, moving the pinned public surface and the error-registry entries with them
+- `2026-08-28-semantic-consolidation-P07-S166` - Relocate the classification policies, external-layout fixture models and borrador extractor selection onto public modules, and repoint the storage lazy map's string module paths
+- `2026-08-28-semantic-consolidation-P07-S167` - Relocate the six remaining clean disguised-module namespaces onto public modules and move their error-registry entries with them
+- `2026-08-28-semantic-consolidation-P07-S168` - Relocate the verify contract, filing validation and fixture provenance onto public modules, repointing the module-object attribute access the AST scan cannot see
+- `2026-08-28-semantic-consolidation-P07-S169` - Correct the restored packaging oracle that asserts the retired cadrumo.entrypoints.cli:main console script instead of the live _cli_main:main, once a built wheel is available to verify against
+- `2026-08-28-semantic-consolidation-P07-S17` - Relocate the production code out of the four namespaces that are modules in disguise before their namespaces can be made inert
+- `2026-08-28-semantic-consolidation-P07-S171` - Guard every rewrite with a parse of the rendered source before writing, and widen the post-write damage scan to the dev root the rewriter was already writing to
+- `2026-08-28-semantic-consolidation-P07-S172` - Guard the retirement sweep against creating cross-package private imports, and encode the three verified-broken exclusions so the sweep stops re-proposing them
+- `2026-08-28-semantic-consolidation-P07-S174` - Relocate the declared error-code tuple out of the errors registry namespace onto a named module, leaving both consumers inside the owning package
+- `2026-08-28-semantic-consolidation-P07-S66` - Retire the transactions, llm and operator_surface namespaces, the last of the low-risk export maps
+- `2026-08-28-semantic-consolidation-P07-S67` - Relocate the production code out of the overview, contribuyente and core errors namespaces, which define it directly and cannot be made inert by deleting a map
+- `2026-08-28-semantic-consolidation-P07-S84` - Rule on the three module-scope registration side effects, whose dependency inversion is sound but whose siting in a package namespace makes touching that package cost 613 modules
+- `2026-08-28-semantic-consolidation-P08-S108` - Detect a name imported from a genuinely inert namespace, distinguishing it from one reached through a live lazy export map
+- `2026-08-28-semantic-consolidation-P08-S157` - Make the two Orden coefficient annotations state the rule that was already reachable, after proving zero was never constructible through either field's only source
+- `2026-08-28-semantic-consolidation-P08-S159` - Align the raw Orden module coefficient with the seasonal sibling beside it and the runtime it compiles into, so a bad extraction refuses at the boundary that can name its source
+- `2026-08-28-semantic-consolidation-P08-S160` - Adjudicate the gross-amount zero disagreement as deliberate and write its reason at the site, since the reason lived only in a test
+- `2026-08-28-semantic-consolidation-P08-S161` - Adopt the positive-count alias at the twelve domain and application sites restating its bound, leaving the wider non-negative sweep to its own precondition
+- `2026-08-28-semantic-consolidation-P08-S173` - Design one shared production-scan-surface definition and adopt it at the walkers that mean the whole surface, leaving the deliberately scoped ones scoped and saying so
+- `2026-08-28-semantic-consolidation-P08-S24` - Adjudicate the nine-character tax-id fields against the identity token, which normalises without enforcing a length and so is not a safe promotion
+- `2026-08-28-semantic-consolidation-P08-S25` - Rule on the float-typed zero-to-one scores and the exclusive gt/lt rate bound: whether each earns its own alias or stays open-coded as a distinct rule
+- `2026-08-28-semantic-consolidation-P08-S26` - Settle the reported divergence between the SHA-256 hex length literals and the named constant that states the same length
+- `2026-08-28-semantic-consolidation-P08-S30` - Rule on the six tax-id fields that pin a length while matching neither the checksum-validating nor the normalising canonical alias
+- `2026-08-28-semantic-consolidation-P08-S34` - Declare the source-locator bound once: the same concept carries no bound, 512 and 1024 at different sites
+- `2026-08-28-semantic-consolidation-P08-S40` - Migrate the secure-object revision id from its delimiter-joined hash convention to the canonical content-hash primitive
+- `2026-08-28-semantic-consolidation-P08-S51` - Extend the non-negative count adoption to the remaining domain, application and adapter sites once the shared tree is quieter
+- `2026-08-28-semantic-consolidation-P08-S94` - Rule on the two application/modelo edit-execution functions that compose a secure-object write without asserting a revision, a pre-existing finding the composing-write gate reports
 
 ### plan
 

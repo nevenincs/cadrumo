@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#test-docstring-dev-metadata'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-09-04'
+body_schema: 'body-v2'
 body_hash: 'sha256:54c83a8909dd0e595d67c80d32bedcb8f6aa2018bb0a2c68e2df573b5b36767e'
 related:
   - '[[2026-07-08-test-docstring-dev-metadata-adr]]'

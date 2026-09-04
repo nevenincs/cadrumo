@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#tributacion-conjunta-individual'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-09-04'
+body_schema: 'body-v2'
 body_hash: 'sha256:35c60f30cc09de163b1ae4c0d8101e4c65a30c3238f1585fbbf07d899c4d2e5d'
 related:
   - '[[2026-06-30-tributacion-conjunta-individual-research]]'
