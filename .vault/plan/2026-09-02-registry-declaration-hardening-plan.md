@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:52a640abbce8572ed656802a5d5b13ca622efa48f0e365e72fdfde3a04ecbede'
+body_hash: 'sha256:eeefcdcb756909634baed6c0095a2ef676c2f60a3ed7aafe1cbc7ea4f9de1d7f'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -452,6 +452,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S570` - Make the ty collector refuse an empty checker stream like its two siblings already did, since a ty that failed to start returned an empty diagnostic list and the type gate reported green over a run that never happened, and share the rule so the three cannot drift apart again; `dev/quality/types.py,dev/quality/tests/test_types_gate.py`.
 - [x] `W02.P02.S571` - Make the distribution smoke check refuse an absent companion corpus through its own FAIL path instead of an unhandled PackageNotFoundError, since a corpus that failed to install is the likeliest packaging failure and the one this gate exists to catch; `dev/smoke/smoke_check.py,dev/smoke/__init__.py,dev/smoke/tests/__init__.py,dev/smoke/tests/test_smoke_check.py`.
 - [x] `W02.P02.S572` - Stop the runner capability probe treating presence as capability, where a gh that resolved on PATH but could not run was reported under an ok marker and the probe exited 0, which is the coin-flip fleet failure the module exists to remove; `dev/containers/runner_capabilities.py,dev/containers/tests/__init__.py,dev/containers/tests/test_runner_capabilities.py`.
+- [x] `W02.P02.S573` - Make the quiet wrapper every gate runs through refuse an absent command by name instead of raising a traceback ending in a bare error number, correct a diagnostic naming a file that does not exist, and take its argv so the primitive is reachable without launching a process; `dev/quality/quiet.py,dev/quality/tests/test_quiet.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
