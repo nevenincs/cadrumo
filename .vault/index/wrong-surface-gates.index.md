@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#wrong-surface-gates'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-09-04'
+body_schema: 'body-v2'
 body_hash: 'sha256:9505a815219f0f5b82af837bb97e713cc0eadbee7b49e727e22d9e747dda1fc3'
 related:
   - '[[2026-08-01-wrong-surface-gates-audit]]'

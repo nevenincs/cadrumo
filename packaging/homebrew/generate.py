@@ -11,7 +11,6 @@ from dataclasses import dataclass
 from email.parser import Parser
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
 
 from packaging.markers import Marker
 from packaging.requirements import Requirement
@@ -196,14 +195,21 @@ def _validate_companion_pins(root: SdistArtifact, companions: tuple[SdistArtifac
             )
 
 
-def _release_base_url(value: str, *, version: str) -> str:
-    parsed = urlparse(value)
-    if parsed.scheme != "https" or not parsed.netloc or parsed.query or parsed.fragment:
-        raise SystemExit(f"release base URL must be immutable HTTPS without query or fragment: {value!r}")
-    normalized = value.rstrip("/")
-    if not normalized.endswith(f"/releases/download/v{version}"):
-        raise SystemExit(f"release base URL must end with '/releases/download/v{version}': {value!r}")
-    return normalized
+#: The index's stable per-project source path. It redirects to the hashed
+#: location the index actually stores a file at, which is unpredictable before
+#: the upload, so this is the only form a generator can emit ahead of one.
+_INDEX_SOURCE_ROOT = "https://files.pythonhosted.org/packages/source"
+
+
+def _index_sdist_url(distribution: str, filename: str) -> str:
+    """Address a source distribution on the index that serves the product.
+
+    The managed channels install what the index serves. Addressing a release
+    asset instead makes the formula depend on a second distribution surface
+    that no workflow populates, so every install through it fails on a URL that
+    was never going to exist.
+    """
+    return f"{_INDEX_SOURCE_ROOT}/{distribution[0]}/{distribution}/{filename}"
 
 
 def _applies(marker: str | None, target: dict[str, str]) -> bool:
@@ -365,11 +371,9 @@ def generate_formula(
     cohort_dir: Path,
     lock_path: Path,
     version: str,
-    release_base_url: str,
 ) -> str:
     """Return one deterministic formula for the exact supplied cohort."""
     load_python_cohort(cohort_dir)
-    base_url = _release_base_url(release_base_url, version=version)
     root = _sdist_artifact(
         cohort_dir,
         f"cadrumo-{version}.tar.gz",
@@ -389,7 +393,7 @@ def generate_formula(
     companion_resources = tuple(
         Resource(
             name=artifact.name,
-            url=f"{base_url}/{artifact.path.name}",
+            url=_index_sdist_url(artifact.name, artifact.path.name),
             sha256=artifact.sha256,
             platforms=frozenset(_TARGETS),
         )
@@ -410,7 +414,7 @@ def generate_formula(
 
   desc "Deterministic Spanish tax calculation CLI"
   homepage "https://github.com/nevenincs/cadrumo"
-  url "{base_url}/{root.path.name}"
+  url "{_index_sdist_url("cadrumo", root.path.name)}"
   sha256 "{root.sha256}"
   license "Apache-2.0"
 
@@ -473,7 +477,6 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--cohort-dir", required=True, type=Path)
     parser.add_argument("--lock", default=Path("uv.lock"), type=Path)
     parser.add_argument("--version", required=True)
-    parser.add_argument("--release-base-url", required=True)
     parser.add_argument("--output-dir", required=True, type=Path)
     return parser
 
@@ -485,7 +488,6 @@ def main() -> int:
         cohort_dir=args.cohort_dir.resolve(strict=True),
         lock_path=args.lock,
         version=args.version,
-        release_base_url=args.release_base_url,
     )
     output = args.output_dir.resolve() / "Formula" / "cadrumo.rb"
     output.parent.mkdir(parents=True, exist_ok=True)

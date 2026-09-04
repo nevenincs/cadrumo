@@ -55,6 +55,10 @@ if TYPE_CHECKING:
 
 
 type InstalledWorkbenchSearchInputsProviderV1 = Callable[[], InstalledWorkbenchSearchInputsV1 | None]
+type InstalledWorkbenchDestinationsV1 = tuple[
+    Mapping[str, WorkbenchDestinationAdmission], Mapping[str, TuiScreenFactoryV1]
+]
+type InstalledWorkbenchDestinationsProviderV1 = Callable[[], InstalledWorkbenchDestinationsV1]
 type InstalledWorkbenchGenerationProviderV1 = Callable[[], WorkbenchGenerationV1]
 
 
@@ -181,6 +185,15 @@ class InstalledWorkbenchRootInputsV1:
     aeat_sync_factory: TuiScreenFactoryV1 | None
     search_inputs: InstalledWorkbenchSearchInputsV1 | None
     refresh_search_inputs: InstalledWorkbenchSearchInputsProviderV1
+    refresh_destinations: InstalledWorkbenchDestinationsProviderV1 | None = None
+    """Re-derive admissions and factories from the CURRENT generation.
+
+    Without this the root would hold admissions from the first generation
+    while every factory resolved its projection from the latest one, so a
+    refresh that legitimately changed availability would leave the two
+    disagreeing -- offering a destination whose projection is gone, or
+    refusing one that has since become readable.
+    """
     action_candidates: Iterable[TuiActionCandidateV1] = ()
 
 
@@ -193,6 +206,7 @@ class InstalledWorkbenchRootCompositionV1:
     refresh_home: Callable[[], HomeProjectionV1]
     search_inputs: InstalledWorkbenchSearchInputsV1 | None
     refresh_search_inputs: InstalledWorkbenchSearchInputsProviderV1
+    refresh_destination_catalogue: Callable[[], TuiDestinationCatalogueV1] | None
     account_factories: AccountFactoriesV1
 
 
@@ -288,36 +302,61 @@ def compose_installed_workbench_generation_provider(
             home_pending[0] = generation
             return _search_inputs(generation)
 
+        def destinations() -> InstalledWorkbenchDestinationsV1:
+            """Read admissions and factories from the generation in hand.
+
+            Both halves come from the same capture, so a destination is
+            offered exactly when its projection exists. Deriving them at
+            different instants is what let the catalogue advertise a route
+            whose factory would raise, and refuse one that had become
+            readable.
+            """
+            generation = current[0]
+            _require_generation_admission(generation.ledger, generation.ledger_admission, "Ledger")
+            _require_generation_admission(
+                generation.declarations,
+                generation.declarations_admission,
+                "Declarations",
+            )
+            _require_generation_admission(generation.aeat_sync, generation.aeat_sync_admission, "AEAT Sync")
+            admissions: dict[str, WorkbenchDestinationAdmission] = {
+                "workbench.home": _available_admission("workbench.home"),
+                "workbench.ledger": generation.ledger_admission,
+                "workbench.declarations": generation.declarations_admission,
+                "workbench.aeat_sync": generation.aeat_sync_admission,
+                "workbench.profile": dependencies.profile_admission,
+            }
+            factories: dict[str, TuiScreenFactoryV1] = {}
+            ledger_factory = _ledger_generation_factory(current, dependencies)
+            if ledger_factory is not None:
+                factories["workbench.ledger"] = ledger_factory
+            declarations_factory = _declarations_generation_factory(current, dependencies)
+            if declarations_factory is not None:
+                factories["workbench.declarations"] = declarations_factory
+            aeat_sync_factory = _aeat_sync_generation_factory(
+                current,
+                dependencies,
+                operation_runtime.public_contracts,
+            )
+            if aeat_sync_factory is not None:
+                factories["workbench.aeat_sync"] = aeat_sync_factory
+            factories["workbench.profile"] = account_factories.profile
+            return admissions, factories
+
+        admissions, factories = destinations()
         generation = current[0]
-        admissions = {
-            "workbench.home": _available_admission("workbench.home"),
-            "workbench.ledger": generation.ledger_admission,
-            "workbench.declarations": generation.declarations_admission,
-            "workbench.aeat_sync": generation.aeat_sync_admission,
-            "workbench.profile": dependencies.profile_admission,
-        }
-        _require_generation_admission(generation.ledger, generation.ledger_admission, "Ledger")
-        _require_generation_admission(
-            generation.declarations,
-            generation.declarations_admission,
-            "Declarations",
-        )
-        _require_generation_admission(generation.aeat_sync, generation.aeat_sync_admission, "AEAT Sync")
 
         return InstalledWorkbenchRootInputsV1(
             home_projection=_required_projection(generation.home, "Home"),
             refresh_home=refresh_home,
             admissions=admissions,
             account_factories=account_factories,
-            ledger_factory=_ledger_generation_factory(current, dependencies),
-            declarations_factory=_declarations_generation_factory(current, dependencies),
-            aeat_sync_factory=_aeat_sync_generation_factory(
-                current,
-                dependencies,
-                operation_runtime.public_contracts,
-            ),
+            ledger_factory=factories.get("workbench.ledger"),
+            declarations_factory=factories.get("workbench.declarations"),
+            aeat_sync_factory=factories.get("workbench.aeat_sync"),
             search_inputs=_search_inputs(generation),
             refresh_search_inputs=refresh_search_inputs,
+            refresh_destinations=destinations,
         )
 
     return provide
@@ -655,6 +694,23 @@ def compose_installed_workbench_root(
         if factory is not None
     }
 
+    refresh_destinations = inputs.refresh_destinations
+
+    def rebuild() -> TuiDestinationCatalogueV1:
+        """Rebuild the catalogue from the generation the factories now read.
+
+        Called on the same authoritative child return that refreshes search,
+        so navigation, search and the mounted projections all describe one
+        capture rather than three instants.
+        """
+        assert refresh_destinations is not None  # noqa: S101 - guarded by the door below
+        refreshed_admissions, refreshed_factories = refresh_destinations()
+        return build_destination_catalogue(
+            admissions={"workbench.home": _available_admission("workbench.home"), **refreshed_admissions},
+            factories={"workbench.home": home_factory, **refreshed_factories},
+            action_candidates=inputs.action_candidates,
+        )
+
     return InstalledWorkbenchRootCompositionV1(
         destination_catalogue=build_destination_catalogue(
             admissions=inputs.admissions,
@@ -665,6 +721,7 @@ def compose_installed_workbench_root(
         refresh_home=inputs.refresh_home,
         search_inputs=inputs.search_inputs,
         refresh_search_inputs=inputs.refresh_search_inputs,
+        refresh_destination_catalogue=rebuild if refresh_destinations is not None else None,
         account_factories=inputs.account_factories,
     )
 
@@ -715,9 +772,18 @@ async def _run_root_session(
             refreshed_inputs = root.refresh_search_inputs()
             if refreshed_inputs is None:
                 raise RuntimeError("installed workbench search is unavailable in the refreshed generation")
+            # Parity is checked against the admissions of the SAME capture the
+            # inputs came from, not against the session's first ones: a refresh
+            # that legitimately changes availability is coherent, and comparing
+            # it to a stale snapshot is what made a supported profile edit kill
+            # search for the rest of the session.
             _require_search_admission_parity(
                 refreshed_inputs,
-                root.admissions,
+                {
+                    "workbench.ledger": refreshed_inputs.ledger_admission,
+                    "workbench.declarations": refreshed_inputs.declarations_admission,
+                    "workbench.aeat_sync": refreshed_inputs.aeat_sync_admission,
+                },
             )
             return compose_installed_workbench_search(refreshed_inputs)
 
@@ -727,6 +793,7 @@ async def _run_root_session(
             refresh_home=root.refresh_home,
             workbench_search_service=service,
             refresh_workbench_search=refresh_search,
+            refresh_destination_catalogue=root.refresh_destination_catalogue,
             account_factories=root.account_factories,
         ).run_async(headless=headless, auto_pilot=auto_pilot)
 

@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#tui-architecture'
 date: '2026-08-25'
-modified: '2026-09-03'
+modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:df13664696a876cd021abe0f80531ebc161d8189ffa763c9d76b7c7c113ec75f'
+body_hash: 'sha256:54d2cf29515b0e909d5f51eb5eeb8858880ffa3b26b8a27e8111a4878fdd1f6b'
 related:
   - '[[2026-08-11-tui-architecture-W02-P19-S124]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S128]]'
@@ -293,6 +293,13 @@ related:
   - '[[2026-08-11-tui-architecture-W08-P29-S387]]'
   - '[[2026-08-11-tui-architecture-W08-P29-S388]]'
   - '[[2026-08-11-tui-architecture-W08-P29-S389]]'
+  - '[[2026-08-11-tui-architecture-W08-P30-S405]]'
+  - '[[2026-08-11-tui-architecture-W08-P30-S406]]'
+  - '[[2026-08-11-tui-architecture-W08-P30-S407]]'
+  - '[[2026-08-11-tui-architecture-W08-P30-S408]]'
+  - '[[2026-08-11-tui-architecture-W08-P30-S409]]'
+  - '[[2026-08-11-tui-architecture-W08-P30-S410]]'
+  - '[[2026-08-11-tui-architecture-W08-P30-S411]]'
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-08-11-tui-architecture-ledger]]'
   - '[[2026-08-11-tui-architecture-plan]]'
@@ -861,6 +868,13 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W08-P29-S387` - Prove keyboard-only navigation, semantic focus restoration, non-colour state pairs, contextual help, and command-palette parity
 - `2026-08-11-tui-architecture-W08-P29-S388` - Prove locked, stale, unavailable, explicit-sync, redaction, secure-storage, and no-implicit-network invariants through real authority paths
 - `2026-08-11-tui-architecture-W08-P29-S389` - Prove the installed aeat --tui process composes the exact admitted destination catalogue and returns from every journey without a CLI-to-TUI import
+- `2026-08-11-tui-architecture-W08-P30-S405` - Give the Ledger workspace the review fixtures every other principal surface already has. MEASURED 2026-09-04: the fixture registry declares 54 specs covering home (5 states), workbench-root (3), declarations-* (17), aeat-sync-* (27) and operation-modal (1), and NOT ONE for Ledger -- the word appears twice in that module, incidentally. Ledger is the one principal workspace whose screens can be reached only through a live installed session, so its overview, entries, review, import, classification, evidence and reconciliation surfaces have no ready, empty, blocked, stale, unavailable, validation, confirmation or failure reading at all. Build them from the same immutable non-sensitive projection shape the sibling fixtures use; do not reach a repository.
+- `2026-08-11-tui-architecture-W08-P30-S406` - Make the coverage table agree with the surfaces the harness can actually drive. The fixture registry is now the authority for review surfaces and the harness lists 60 of them, up from 6, but `python -m dev.tui inventory` still reports '60 interfaces, 52 not rendered' because it reads a coverage map that predates that wiring. An inventory that under-reports coverage is the same defect as one that over-reports it: either way the missing-surface gate cannot be read, which is how 52 surfaces sat unrendered without anyone noticing.
+- `2026-08-11-tui-architecture-W08-P30-S407` - Render the whole registered matrix and prove no surface, state, viewport, theme or locale is silently absent. Every fixture must produce a deterministic raster and text artifact, and a fixture that CRASHES or REFUSES must be reported as such rather than skipped -- a review inventory whose own gaps are invisible proves nothing about the surfaces it claims to cover.
+- `2026-08-11-tui-architecture-W08-P30-S408` - Give AEAT Sync its local row readers, or state per zone why the local authority cannot be read. The installed workspace projects overview rows only: census, filed-declaration, notification, evidence-comparison and reconciliation rows have no installed reader, so LOCAL_PROFILE and LOCAL_FILINGS report observable counts beside zones that carry no rows, while LOCAL_NOTIFICATION_CUSTODY and LOCAL_RECONCILIATION are UNAVAILABLE outright. The refusals are honest today; a workspace whose local side is permanently empty is not the target state.
+- `2026-08-11-tui-architecture-W08-P30-S409` - Give Home's actions, resumable declarations, agenda, evidence and messages zones their installed readers. All five are hard-coded UNAVAILABLE in the secure generation input, so the production Home an operator meets is five refusals and a Ledger summary. The application authorities the accepted due-driven decision names -- next actions, backlog, agenda, calendar evidence, notification snapshots -- exist and nothing yet calls them.
+- `2026-08-11-tui-architecture-W08-P30-S410` - Extend the capture-coherence guard to everything the generation door now reads. It re-reads and compares the profile record, work units, calculation revisions and filing records, which was the whole read set when it was written; the door now also reads transactions, invoices and bucket events for Ledger and projects every work unit for Modelo. A write landing mid-capture yields a generation whose Ledger snapshot is from a different instant than its Declarations, and nothing detects it.
+- `2026-08-11-tui-architecture-W08-P30-S411` - Carry an operator's Ledger selection into the areas that are entered with one. CORRECTED AFTER MEASURING THE REFUSAL RULES, which the first wording got wrong in two ways. It is THREE areas, not four: reconciliation has no door check and is reachable whenever the projection admits it. And of the three, only EVIDENCE was a composition gap -- now closed, the installed factory binds the evidence action and reads the attachment review queue. CLASSIFICATION and IMPORT are not composition gaps at all: classification refuses without a selected transaction and import without a prepared file, and neither is a fact a factory can hold at mount because both are produced by the operator inside the workspace. So what remains is NAVIGATION, not wiring: the entries and review screens must be able to carry a chosen row into the classification area, and the import action must be able to hand a prepared import back to its own area, with the controller re-composed around that state. Until that exists the two areas are correctly refused, and the navigation table should say why rather than listing a destination the session can never open.
 
 ### plan
 

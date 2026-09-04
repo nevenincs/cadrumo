@@ -1259,6 +1259,12 @@ tui:
     work_state:
       borrador: Draft
       descartado: Discarded
+  destination:
+    aeat_sync: AEAT Sync
+    declarations: Declarations
+    home: Home
+    ledger: Ledger
+    profile: Profile
   home:
     account_fallback: Account
     action:
@@ -1478,6 +1484,11 @@ tui:
       ledger: Open Ledger
       profile: Open Profile
       unknown: Open workbench area
+    refusal:
+      not_composed: Not every workbench source could be read yet.
+      refresh_failed: The last refresh could not rebuild the index.
+      unavailable: Search is unavailable in this session
+      unknown: Search could not be prepared.
     result:
       address: Modelo %{modelo} · %{filing_year} · %{period}
       label:

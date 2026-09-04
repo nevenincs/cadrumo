@@ -25,6 +25,7 @@ from dev.packaging.python_cohort import _attest_installed_command_specs
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
+_INDEX_SOURCE = "https://files.pythonhosted.org/packages/source/c"
 _GENERATOR = _REPO_ROOT / "packaging" / "homebrew" / "generate.py"
 _RESOURCE = re.compile(
     r'\s+resource "([^"]+)" do\n'
@@ -43,7 +44,6 @@ class BuiltCohort:
     manuals: Path
     official: Path
     version: str
-    release_base: str
 
 
 @pytest.fixture(scope="module")
@@ -120,11 +120,10 @@ def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
         manuals=copied[1],
         official=copied[2],
         version=version,
-        release_base=f"https://github.com/nevenincs/cadrumo/releases/download/v{version}",
     )
 
 
-def _generate(cohort: BuiltCohort, output: Path, *, release_base: str | None = None) -> Path:
+def _generate(cohort: BuiltCohort, output: Path) -> Path:
     run_checked(
         [
             sys.executable,
@@ -135,8 +134,6 @@ def _generate(cohort: BuiltCohort, output: Path, *, release_base: str | None = N
             str(_REPO_ROOT / "uv.lock"),
             "--version",
             cohort.version,
-            "--release-base-url",
-            cohort.release_base if release_base is None else release_base,
             "--output-dir",
             str(output),
         ],
@@ -157,7 +154,10 @@ def test_formula_is_deterministic_and_binds_the_real_cohort(
 
     assert formula.startswith("class Cadrumo < Formula\n")
     assert "include Language::Python::Virtualenv" in formula
-    assert f'url "{built_cohort.release_base}/{built_cohort.root.name}"' in formula
+    # The formula addresses the index that serves the product. A release asset
+    # would send every install to a surface no workflow populates.
+    assert f'url "{_INDEX_SOURCE}/cadrumo/{built_cohort.root.name}"' in formula
+    assert "releases/download" not in formula
     assert f'sha256 "{sha256_path(built_cohort.root)}"' in formula
     assert 'depends_on "python@3.13"' in formula
     assert 'depends_on "cmake" => :build' in formula
@@ -197,11 +197,11 @@ def test_formula_is_deterministic_and_binds_the_real_cohort(
 
     resources = {name: (url, digest) for name, url, digest in _RESOURCE.findall(formula)}
     assert resources["cadrumo-data-manuals"] == (
-        f"{built_cohort.release_base}/{built_cohort.manuals.name}",
+        f"{_INDEX_SOURCE}/cadrumo-data-manuals/{built_cohort.manuals.name}",
         sha256_path(built_cohort.manuals),
     )
     assert resources["cadrumo-data-official"] == (
-        f"{built_cohort.release_base}/{built_cohort.official.name}",
+        f"{_INDEX_SOURCE}/cadrumo-data-official/{built_cohort.official.name}",
         sha256_path(built_cohort.official),
     )
     # No unrelated workspace dependency may leak into the formula closure.
@@ -290,21 +290,3 @@ def test_generator_rejects_renamed_foreign_companion(
             replace(built_cohort, directory=foreign),
             tmp_path / "tap",
         )
-
-
-@pytest.mark.parametrize(
-    "release_base",
-    (
-        "http://github.com/nevenincs/cadrumo/releases/download/v0.2.1",
-        "https://github.com/nevenincs/cadrumo/releases/latest/download",
-        "https://github.com/nevenincs/cadrumo/releases/download/v0.2.1?mutable=1",
-    ),
-)
-def test_generator_rejects_mutable_release_urls(
-    tmp_path: Path,
-    built_cohort: BuiltCohort,
-    release_base: str,
-) -> None:
-    """The formula cannot be generated against a mutable release endpoint."""
-    with pytest.raises(SystemExit):
-        _generate(built_cohort, tmp_path / "tap", release_base=release_base)

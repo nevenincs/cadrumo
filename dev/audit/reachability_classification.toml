@@ -1,0 +1,507 @@
+# Reachability classification
+#
+# One recorded class per module the reachability audit reports outside the
+# deferred `cadrumo.entrypoints.tui` prefix. The audit establishes that a
+# module is not reached from a declared console script. It cannot establish
+# WHY, and the remedies differ completely: relocating harness code, deleting an
+# orphan, and waiting on a staged capability are three different actions, and
+# applying the wrong one either deletes shipped capability or wires code to
+# nothing.
+#
+# THIS FILE IS A CLASSIFICATION LEDGER, NOT A MUTE. Nothing here changes what
+# the audit reports, what it counts, or whether the ratchet passes. It records
+# what a reviewer found and the evidence that established it.
+#
+# `class` is one of the closed taxonomy:
+#
+#   harness-code          code WRITTEN TO SERVE the harness -- a fixture
+#                         builder, a scratch driver. Belongs beside the dev
+#                         consumer that drives it.
+#   design-time-authority a product DECLARATION that constrains other
+#                         declarations and deliberately has no runtime caller.
+#                         Its only reader being a conformance gate is the
+#                         point, not a defect: that is how a locked design is
+#                         enforced. Never relocate into `dev/` -- the product's
+#                         own design would leave the product.
+#   test-support          reached only by tests and written to serve them;
+#                         belongs under the wheel-excluded test tree.
+#   superseded            a reachable module already discharges the
+#                         responsibility; delete with its tests. Requires a
+#                         named live module found by MEANING, not by name.
+#   staged-capability     built ahead of a dependency, with an accepted
+#                         decision recording what it waits on. Never delete.
+#   orphaned              nothing reaches it and no decision explains it;
+#                         delete with its tests.
+#   should-be-live        a product command needs it and the wiring is the
+#                         defect.
+#   deferred-by-ownership inside, or an exclusive supplier of, a frozen prefix
+#                         owned by another in-flight campaign.
+#
+# `evidence` names what established the class: the consuming module, or the
+# accepted decision. A class asserted without evidence is relabelling.
+
+[meta]
+generated_from = "dev.audit.unreachable_code --json"
+measured = "2026-09-04"
+modules_reported = 43
+tui_deferred = 26
+classified_here = 17
+test_modules_reported = 21
+test_modules_tui_deferred = 2
+test_modules_classified_here = 19
+
+# ---------------------------------------------------------------------------
+# design-time-authority -- declarations whose only reader is a conformance gate
+#
+# Corrected from `harness-code` after attempting the relocation remedy. The
+# distinction is what the code IS, not who reads it: harness code is written to
+# serve the harness, while each of these is a product declaration that
+# constrains other declarations. `cadrumo.core.address_components` already
+# carried exactly this shape in the module ratchet as an [[intentional]]
+# `design_time_authority`, so the class existed before this campaign named it.
+# ---------------------------------------------------------------------------
+
+[[module]]
+name = "cadrumo.application.operator_surface.calculation_workflows"
+class = "design-time-authority"
+evidence = "A pydantic contract over OperatorSurfaceReconciliation declaring the supported calculation workflows; dev/source_connectivity reads it to check the live surface against the declaration."
+
+[[module]]
+name = "cadrumo.application.operator_surface.crud_registry"
+class = "design-time-authority"
+evidence = "The locked CRUD design for the operator CLI. dev/quality/crud_contract_drift.py reads the catalogue to detect drift between shipped Typer subgroups and the declared design; no entrypoints module uses CrudVerb, CANONICAL_CRUD_VERBS or get_builtin_catalogue, which is the contract working as intended."
+
+[[module]]
+name = "cadrumo.application.operator_surface.crud_contract"
+class = "design-time-authority"
+evidence = "Defines the verb vocabulary the registry above instantiates; the types exist to BE the locked design a conformance gate checks, governed by the accepted cli-operator-surface decision."
+
+[[module]]
+name = "cadrumo.domain.calculations.registry.record_spec"
+class = "design-time-authority"
+evidence = "Its docstring names it the single authoritative home for constants governing how registry record declarations are validated and normalised, placed there to avoid a circular import; relocating filing-grade registry constants into dev/ would move them out of the registry authority."
+
+# ---------------------------------------------------------------------------
+# staged-capability -- an accepted decision records what each waits on
+# ---------------------------------------------------------------------------
+
+[[module]]
+name = "cadrumo.domain.fincas"
+class = "staged-capability"
+evidence = "Accepted decision `2026-09-03-unreachable-capability-fincas-titularidad-adr` extends this domain with per-property titularidad and usufructo attribution; the record states the engine currently attributes at 100 per cent, which no-silent-under-declaration forbids."
+
+[[module]]
+name = "cadrumo.adapters.persistence.profile.fincas"
+class = "staged-capability"
+evidence = "Persistence side of the same accepted fincas titularidad decision; the record names the shipped domain record and its persistence row as both changing."
+
+[[module]]
+name = "cadrumo.application.modelo._edit_facade"
+class = "staged-capability"
+evidence = "Accepted decision `2026-08-24-modelo-edit-contract-adr`; the module projects UNMEASURED in V1 and its docstring states the row becomes available once the green financial-operand dependency receipt exists."
+
+[[module]]
+name = "cadrumo.application.modelo.edit_session"
+class = "deferred-by-ownership"
+evidence = "Consumed by cadrumo.entrypoints.tui.modelo.edit controller, fields, review and rows; the ratchet reports it deferred through the exclusive-supplier closure of the frozen TUI prefix. The accepted modelo edit-contract decision governs the capability, but its current consumers are owned by the TUI campaign, so that ownership is the operative class here."
+
+[[module]]
+name = "cadrumo.core.compatibility_lifecycle"
+class = "staged-capability"
+evidence = "Accepted decision `2026-07-09-compatibility-lifecycle-adr` governs the regime-switched policy for persisted formats."
+
+[[module]]
+name = "cadrumo.adapters.outbound.aeat.sede.renta_web_open"
+class = "staged-capability"
+evidence = "A live read-only browser driver for the AEAT electronic office; the ratchet records it and its safety oracle as a cluster that stands or falls together."
+
+[[module]]
+name = "cadrumo.adapters.outbound.aeat.sede._renta_web_open_safety"
+class = "staged-capability"
+evidence = "Click-time safety enforcement for the driver above; deleting it alone would remove the guard while leaving the driver, so the two are one unit."
+
+[[module]]
+name = "cadrumo.adapters.persistence.profile.filing_export_replay"
+class = "staged-capability"
+evidence = "Encrypted custody adapter for source-owned filing export replay proof; its namespace is registered in adapters/persistence/storage/secure_object_namespaces.py."
+
+[[module]]
+name = "cadrumo.core.address_components"
+class = "design-time-authority"
+evidence = "Already carried as an [[intentional]] design_time_authority in the module ratchet: the canonical AEAT address-component vocabulary constrains producer-key declarations and deliberately has no runtime transport caller."
+
+# ---------------------------------------------------------------------------
+# deferred-by-ownership -- the TUI campaign owns these
+# ---------------------------------------------------------------------------
+
+[[module]]
+name = "cadrumo.application.user_profile.status_projection"
+class = "deferred-by-ownership"
+evidence = "Its only non-test consumers are cadrumo.entrypoints.tui.devtools.surfaces and cadrumo.entrypoints.tui.profile.status; the ratchet reports it as deferred through the exclusive-supplier closure of the frozen TUI prefix."
+
+[[module]]
+name = "cadrumo.application.wizard.legal_zone"
+class = "deferred-by-ownership"
+evidence = "Consumed by cadrumo.application.flows copy, definition and line_frontend, which are themselves part of the wizard flow-surface cluster the ratchet names as owned elsewhere."
+
+# ---------------------------------------------------------------------------
+# unresolved -- evidence gathered, remedy needs its owner's decision
+# ---------------------------------------------------------------------------
+
+[[module]]
+name = "cadrumo.application.wizard._registered_values"
+class = "orphaned"
+evidence = "No non-test consumer anywhere in src/cadrumo or dev/. A registered-values projection for the setup flow's review overview whose caller is gone; the ratchet names the wizard flow surfaces among the orphaned-domain cluster."
+remedy_requires_decision = true
+
+[[module]]
+name = "cadrumo.domain.portals.drift"
+class = "should-be-live"
+evidence = "cadrumo.application.preflight.probe_portal_registry_health accepts drift_events and grades a drift by URL stability tier, but no production caller ever passes them: evaluate_portal_drift, the only producer, is reached solely by tests. The portal-registry:health row therefore always takes the offline default and always reports OK, so it cannot distinguish no-drift from drift-never-evaluated. The missing wiring is the defect."
+remedy_requires_decision = true
+
+# ---------------------------------------------------------------------------
+# staged-capability -- new domain packages landing from concurrent work
+# ---------------------------------------------------------------------------
+
+[[module]]
+name = "cadrumo.domain.contabilidad"
+class = "staged-capability"
+evidence = "Added by commit b0305f2c3a, feat(domain): add the contabilidad cuenta and direccion with their tests. Company accounting facts a Modelo 200 filing is built from; its only non-test consumer so far is the error registry at core/errors/registry/_application_part2.py, which registers its error codes. Capability under construction, not an orphan."
+
+[[module]]
+name = "cadrumo.domain.is_compensation"
+class = "staged-capability"
+evidence = "Landed alongside the contabilidad package from the same concurrent work. Impuesto sobre Sociedades compensacion, the stock of losses a company carries forward; its only non-test consumer is the error registry at core/errors/registry/_application_part2.py."
+
+# ---------------------------------------------------------------------------
+# Orphaned test modules
+#
+# A test is reported orphaned when every shipped subject it exercises is itself
+# a finding. Measured against the live audit, the whole non-TUI population is
+# DERIVATIVE: each of the nineteen follows either a module finding already
+# classified above, or an unused symbol in a module that is otherwise reachable.
+# None is an independent problem, and none carries its own remedy.
+#
+# That is why these entries record `follows` rather than a class. A test whose
+# subject is a `staged-capability` module is not dead -- it is the proof that
+# capability still works, and deleting it would leave the staged module
+# unguarded. A test following a symbol finding resolves when that symbol does,
+# which is the symbol wave's work rather than this one's.
+#
+# `follows` is `module` or `symbol`; `anchor` names the finding it depends on.
+# ---------------------------------------------------------------------------
+
+[[test_module]]
+name = "cadrumo.adapters.persistence.storage.sql.tests.test_secure_objects_schema_lineage"
+follows = "symbol"
+anchor = "cadrumo.adapters.persistence.storage.schema_lineage:deregister_secure_object_schema_upgrader"
+subjects = 2
+
+[[test_module]]
+name = "cadrumo.application.aggregation.tests.test_iva_rate_tier_concurrency_guard"
+follows = "symbol"
+anchor = "cadrumo.application.aggregation.iva_ledger:_iva_rate_kind_for"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.application.operator_surface.tests.test_crud_contract"
+follows = "module"
+anchor = "cadrumo.application.operator_surface.crud_contract"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.application.operator_surface.tests.test_crud_registry"
+follows = "module"
+anchor = "cadrumo.application.operator_surface.crud_contract"
+subjects = 2
+
+[[test_module]]
+name = "cadrumo.application.user_profile.tests.test_custody_retryable_codes_are_declared"
+follows = "symbol"
+anchor = "cadrumo.core.errors.error_codes:declared_error_codes"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.core.tests.test_compatibility_lifecycle"
+follows = "module"
+anchor = "cadrumo.core.compatibility_lifecycle"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.core.tests.test_compatibility_lifecycle_gate"
+follows = "module"
+anchor = "cadrumo.core.compatibility_lifecycle"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.core.tests.test_persisted_format_enrolment_binding"
+follows = "module"
+anchor = "cadrumo.core.compatibility_lifecycle"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.core.tests.test_regenerable_persisted_format_floors"
+follows = "module"
+anchor = "cadrumo.core.compatibility_lifecycle"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.domain.contribuyente.tests.test_constants"
+follows = "symbol"
+anchor = "cadrumo.domain.contribuyente.constants:ProfileName"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.domain.fincas.tests.test_amortization_ledger"
+follows = "module"
+anchor = "cadrumo.domain.fincas.amortization_ledger"
+subjects = 5
+
+[[test_module]]
+name = "cadrumo.domain.fincas.tests.test_expense_rollup"
+follows = "module"
+anchor = "cadrumo.domain.fincas.enums"
+subjects = 3
+
+[[test_module]]
+name = "cadrumo.domain.fincas.tests.test_imputacion_regime"
+follows = "module"
+anchor = "cadrumo.domain.fincas.enums"
+subjects = 3
+
+[[test_module]]
+name = "cadrumo.domain.fincas.tests.test_tier_resolver"
+follows = "module"
+anchor = "cadrumo.domain.fincas.enums"
+subjects = 5
+
+[[test_module]]
+name = "cadrumo.entrypoints.cli.tests.test_cli_resolution_cost_budget"
+follows = "symbol"
+anchor = "cadrumo.entrypoints.cli:command_graph"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.entrypoints.cli.tests.test_machine_secret_channels_subprocess"
+follows = "symbol"
+anchor = "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap:bootstrap_interpreter"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.entrypoints.cli.tests.test_overview_explain_verb"
+follows = "symbol"
+anchor = "cadrumo.entrypoints.cli.command_api:command_spec_nodes"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.entrypoints.cli.tests.test_resolution_defers_capabilities"
+follows = "symbol"
+anchor = "cadrumo.entrypoints.cli:command_graph"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.entrypoints.cli.tests.test_state_free_capability_isolation"
+follows = "symbol"
+anchor = "cadrumo.entrypoints.cli:command_graph"
+subjects = 1
+
+# ---------------------------------------------------------------------------
+# Exact-confidence symbol partition
+#
+# 602 of the 1408 symbol findings are `exact` -- resolved through the import
+# graph rather than by attribute-name matching -- and the audit's own guidance
+# is to start a cleanup there. The `name-match` and `name-match-data` tiers are
+# members reached by attribute access the scan cannot bind to a type, so they
+# are candidates for review rather than findings to act on.
+#
+# The exact tier contains only functions, constants and classes. Every
+# enum-member, attribute and method finding sits in the lower tiers, which is
+# why this campaign's symbol work is bounded by the counts below rather than by
+# the headline 1408.
+#
+# The population splits by OUTSIDE USE, exactly as the modules did, and the
+# split is what determines the remedy:
+#
+#   test-only     a symbol only its tests reach. Either the behaviour has no
+#                 production caller and retires with its test, or the test is
+#                 exercising a seam that should be reached and the missing call
+#                 is the defect.
+#   unreferenced  nothing reaches it at all. The sharpest population, and where
+#                 supersession concentrates.
+#   dev-reached   reached from `dev/`; follows its module's harness-code remedy.
+#
+# SUPERSESSION IS DETECTABLE, NOT GUESSED. For a constant, the test is whether
+# its literal VALUE still appears in production outside its defining module: the
+# value moved to a declaration and the name was left behind. Applied to the
+# sixteen unreferenced constants carrying an inspectable string literal, eleven
+# proved superseded, with the live holder named in each case -- the error-code
+# registry, the namespace registry, and the CommandSpec declarations. A name
+# search cannot produce that evidence, which is why the governing decision
+# requires it for this class.
+# ---------------------------------------------------------------------------
+
+[symbol_partition]
+exact_total = 602
+test_only = 350
+unreferenced = 198
+dev_reached = 54
+
+[symbol_partition.by_kind]
+"test-only.function" = 233
+"test-only.constant" = 90
+"test-only.class" = 27
+"unreferenced.function" = 83
+"unreferenced.constant" = 89
+"unreferenced.class" = 26
+"dev-reached.function" = 30
+"dev-reached.constant" = 20
+"dev-reached.class" = 4
+
+[symbol_partition.by_area]
+"domain/calculations" = 106
+"entrypoints/cli" = 77
+"application/modelo" = 60
+"adapters/persistence" = 46
+"entrypoints/tui" = 22
+"application/user_profile" = 21
+"application/filing" = 20
+"adapters/outbound" = 17
+"domain/iva" = 17
+"application/aggregation" = 14
+"domain/transactions" = 11
+"application/workflow" = 10
+
+[symbol_partition.supersession_probe]
+constants_with_inspectable_literal = 16
+superseded_with_named_holder = 11
+method = "the constant's literal value still appears in production outside its defining module"
+
+# ---------------------------------------------------------------------------
+# Symbol clusters
+#
+# Some symbol findings resolve as a group through a mechanism that already
+# exists, and recording the group is more honest than repeating one rationale
+# per symbol. A cluster entry names the mechanism that dispositions it.
+# ---------------------------------------------------------------------------
+
+[[symbol_cluster]]
+name = "deferred-source-kind resolvers"
+class = "staged-capability"
+area = "domain/calculations/registry"
+symbols = [
+  "build_related_party_rows",
+  "resolve_donativo_binding_row_values",
+  "resolve_gasto193_binding_values",
+  "resolve_gasto193_binding_row_values",
+  "resolve_withholding296_binding_values",
+  "resolve_withholding296_binding_row_values",
+]
+evidence = "Each family's source kind is registered in application/aggregation/_source_mesh.py DEFERRED_SOURCE_KINDS -- RELATED_PARTY_OPERATION, REFUND_OPERATION, DONATIVO_DONOR, GASTO193_CONTRIBUTOR, WITHHOLDING296 -- so a calculate-path binding of the source raises a standing advisory instead of a silent blank. The resolver is built and validated but no live mesh resolver is enrolled yet, which is why nothing reaches it."
+mechanism = "DEFERRED_SOURCE_KINDS, with the sibling RESERVED_SOURCE_KINDS and the source-kind enrollment parity gate accounting for every member of the closed taxonomy"
+
+[[symbol_cluster]]
+name = "applicability public alias facade"
+class = "orphaned"
+area = "domain/calculations/registry"
+resolved = true
+symbols = [
+  "INCOMPLETE_LEGAL_REFS",
+  "ATTRIBUTION_PASS_THROUGH_LEGAL_REFS",
+  "INCOMPLETE_UNDECLARED_REASON",
+  "INCOMPLETE_UNRULED_REASON",
+  "INCOMPLETE_UNDETERMINED_REASON",
+]
+evidence = "Five public aliases to private constants, carrying a comment stating consumers import these aliases rather than reaching into private symbols. No consumer existed anywhere in src/cadrumo or dev/, the names were absent from __all__, and each private original remained in use in its own module. An alias layer is forbidden outright by the architecture boundaries, so the aliases were removed and the originals left untouched."
+
+[[symbol_cluster]]
+name = "applicability dead entity-type constants"
+class = "orphaned"
+area = "domain/calculations/registry"
+resolved = true
+symbols = ["_NATURAL_PERSON", "_LEGAL_ENTITY", "_ATTRIBUTION_ENTITY", "_PAYER_FACT_ENTITY_TYPES"]
+evidence = "Each appeared only at its own definition line, with no use anywhere in the module or the tree. _PAYER_FACT_ENTITY_TYPES additionally duplicated _IVA_OBLIGED_ENTITY_TYPES member for member, which is a duplicate definition the architecture boundaries forbid."
+
+# ---------------------------------------------------------------------------
+# Tree-wide alias-facade survey
+#
+# `PUBLIC = _PRIVATE` at module scope is an alias layer the architecture
+# boundaries forbid outright. An AST sweep of the shipped package found 157 of
+# them; 17 are reported unused by the audit. The distinction that matters is
+# whether anything outside the defining module names the alias.
+#
+# The six below carry exactly one reference tree-wide -- the alias assignment
+# itself -- and appear in no `__all__`. Each private original stays in use in
+# its own module, so removing the alias changes no behaviour. They are the same
+# shape as the five already removed from applicability.py.
+#
+# `did_page_required` was found by the same sweep and deliberately EXCLUDED: it
+# is declared in its module's `__all__`, so it is exported public API with no
+# consumer rather than a dead alias, and removing it would change the published
+# surface. That needs its own decision.
+# ---------------------------------------------------------------------------
+
+[[symbol_cluster]]
+name = "application-layer alias facades"
+class = "orphaned"
+area = "application"
+resolved = true
+symbols = [
+  "IVA_LEDGER_EXEMPT_REGIMES",
+  "raise_if_ledger_preflight_blocks_calculation",
+  "M210_UNRESOLVED_RATE_REASONS",
+  "parse_predicate_date",
+  "roll_forward_balance_reconciles",
+  "validated_predicate_casilla_id",
+]
+evidence = "AST sweep for module-level public-to-private aliases, cross-referenced against the live audit. Each carries one reference tree-wide (its own assignment), appears in no __all__, and its private original remains used three or more times inside the defining module."
+
+# ---------------------------------------------------------------------------
+# Test-only symbol triage
+#
+# The rule, and the three conditions it needs. The audit says nothing in
+# production USES these 350 symbols; the question is whether production can
+# still REACH one, because a seam whose missing call is the defect looks
+# identical to behaviour that retires with its test.
+#
+# A production module counts as reaching a symbol only when ALL hold:
+#   1. it contains a from-import binding that name, AND
+#   2. that import's source module is the DEFINING module, AND
+#   3. the name appears in its body.
+#
+# Each condition was added because dropping it produced a wrong answer against
+# this tree. Name-matching alone reported 84, inflated by private names that
+# collide across unrelated modules (several define their own `_ZERO` or
+# `_LISTING_URL`). Requiring an import but not its source reported 18, still
+# counting `csv.py` binding `CSV_EXTENSIONS` from a sibling `_constants` module
+# rather than from the flagged one. All three conditions give 9.
+#
+# RESULT: 341 retire with their tests. 9 are reached only from a module that is
+# itself a finding -- `_edit_facade`, `edit_session`, `_registered_values`,
+# `renta_web_open`, and one inside the `domain.fincas` finding package -- so
+# they are transitively dead and resolve when their importer does.
+#
+# NO live-module seam exists in this population. The `portals.drift` shape --
+# a live surface declaring an input nothing produces -- occurs at module level
+# but not among these symbols. That is why the 341 can be worked as ordinary
+# removals rather than each needing a wiring decision.
+# ---------------------------------------------------------------------------
+
+[test_only_triage]
+population = 350
+retires_with_test = 341
+transitively_dead = 9
+live_seams = 0
+rule = "a production module reaches a symbol only when it from-imports the name, the import source is the defining module, and the name appears in its body"
+
+[[test_module]]
+name = "cadrumo.domain.contabilidad.tests.test_direccion"
+follows = "module"
+anchor = "cadrumo.domain.contabilidad"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.domain.is_compensation.tests.test_bin_carry_forward"
+follows = "module"
+anchor = "cadrumo.domain.is_compensation"
+subjects = 1

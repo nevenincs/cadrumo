@@ -132,9 +132,14 @@ class AeatSyncWorkspaceScreen(Screen[None]):
     CSS = BASE_CSS + tokenised(
         """
         #aeat-sync-page { width: 100%; height: 1fr; overflow-x: hidden; }
-        #aeat-sync-navigation, #aeat-sync-rows { width: 100%; max-width: 78; }
-        #aeat-sync-status { width: 100%; height: auto; padding: 0 1; color: $warning; }
-        .aeat-sync-operation { width: 100%; max-width: 28; }
+        #aeat-sync-navigation, #aeat-sync-rows { width: 100%; }
+        #aeat-sync-status {
+            width: 100%;
+            height: auto;
+            padding: $cadrumo-space-0 $cadrumo-space-1;
+            color: $warning;
+        }
+        .aeat-sync-operation { width: 100%; max-width: $cadrumo-control-max-width; }
         """
     )
 

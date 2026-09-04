@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#suite-redgreen-longtail-discovery'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-09-04'
+body_schema: 'body-v2'
 body_hash: 'sha256:681a354000bcc76ed4333a5407860ba7af4843b6662d45dbc3c7f584e8f14d75'
 related:
   - '[[2026-06-03-suite-redgreen-longtail-discovery-audit]]'

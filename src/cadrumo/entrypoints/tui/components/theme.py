@@ -171,6 +171,7 @@ CADRUMO_CSS_TOKENS: Final[Mapping[str, str]] = MappingProxyType(
         # than the library intends, while the complaint was that they were
         # small.
         "cadrumo-control-min-width": "16",
+        "cadrumo-control-max-width": "28",
         # The gap between sibling action buttons. Nine stylesheets each
         # repeated this as a literal; two bordered boxes one cell apart
         # read as one smeared control, so the role gets a name and a
@@ -266,6 +267,19 @@ BASE_CSS: Final[str] = tokenised("""
         height: auto;
         overflow-y: hidden;
         scrollbar-size-vertical: $cadrumo-space-0;
+    }
+
+    /* A section heading and the content it owns. The two gaps are
+       deliberately asymmetric: the SECTION gap above separates this group from
+       the previous one, the smaller STACK gap below binds the heading to its
+       own rows. A heading equidistant from both reads as floating between
+       them; a heading with no gap below reads as fused to its content, which
+       is how a screen becomes one continuous run of data. */
+    .cadrumo-heading {
+        height: auto;
+        text-style: bold;
+        margin-top: $cadrumo-section;
+        margin-bottom: $cadrumo-stack;
     }
 
     .cadrumo-banner {

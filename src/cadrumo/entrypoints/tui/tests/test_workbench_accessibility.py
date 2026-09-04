@@ -15,12 +15,15 @@ property a colour-blind or monochrome operator depends on.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import cast
 
 import pytest
+from textual.screen import Screen
 from textual.widget import Widget
+from textual.widgets import Static
 
 from ....core.external_constants import OutputLanguage
-from ....core.i18n.render import tr
+from ....core.i18n.render import I18N_STRICT_MISSING_KEYS, MissingTranslationError, tr
 from ....tests.terminal_sizes import TERMINAL_ORDINARY
 from ..components.host import ScreenHostApp
 from ..home import HomeScreen, HomeTarget
@@ -38,26 +41,48 @@ async def test_every_focusable_control_on_a_destination_is_reachable_by_tab(tmp_
             if route.factory is None:
                 continue
             destination = route.descriptor.destination
-            app = ScreenHostApp(route.factory(TuiScreenContextV1(destination=destination)))
-            async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
-                await pilot.pause()
-                focusable = {
-                    widget.id or f"{type(widget).__name__}@{id(widget)}"
-                    for widget in app.screen.query(Widget)
-                    if widget.focusable and widget.display
-                }
-                reached: set[str] = set()
-                for _ in range(len(focusable) * 2 + 2):
-                    await pilot.press("tab")
-                    await pilot.pause()
-                    focused = app.screen.focused
-                    if focused is not None:
-                        reached.add(focused.id or f"{type(focused).__name__}@{id(focused)}")
+            screen = route.factory(TuiScreenContextV1(destination=destination))
+            await _assert_tab_reaches_everything(screen, destination)
 
-                assert focusable <= reached, (
-                    f"{destination} never gives focus to {sorted(focusable - reached)} in a full Tab cycle"
-                )
-                app.exit(None)
+
+async def _assert_tab_reaches_everything(screen: object, label: str) -> None:
+    """Drive a full Tab cycle and require every focusable control to be reached."""
+    app = ScreenHostApp(cast("Screen[None]", screen))
+    async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
+        await pilot.pause()
+        focusable = {
+            widget.id or f"{type(widget).__name__}@{id(widget)}"
+            for widget in app.screen.query(Widget)
+            if widget.focusable and widget.display
+        }
+        reached: set[str] = set()
+        for _ in range(len(focusable) * 2 + 2):
+            await pilot.press("tab")
+            await pilot.pause()
+            focused = app.screen.focused
+            if focused is not None:
+                reached.add(focused.id or f"{type(focused).__name__}@{id(focused)}")
+        app.exit(None)
+
+    assert focusable, f"{label} offers no focusable control at all, so reachability proves nothing"
+    assert focusable <= reached, f"{label} never gives focus to {sorted(focusable - reached)} in a full Tab cycle"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("scenario", ["ready", "blocked"])
+async def test_every_focusable_control_on_a_populated_home_is_reachable_by_tab(scenario: str) -> None:
+    """The empty-profile pass could not see this.
+
+    Home's three tables set display=False when they hold no rows, so over a
+    fresh profile the destination contributes an EMPTY focusable set and the
+    subset assertion holds vacuously -- removing a widget from the focus chain
+    went undetected there. These fixtures populate the tables, so the chain has
+    something to fail on.
+    """
+    from ..devtools.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
+
+    screen = HomeScreen(build_home_projection_fixture(HomeFixtureScenario(scenario)))
+    await _assert_tab_reaches_everything(screen, f"home--{scenario}")
 
 
 @pytest.mark.asyncio
@@ -92,6 +117,43 @@ async def test_home_restores_focus_by_domain_identity_rather_than_row_position()
 
 
 @pytest.mark.asyncio
+async def test_a_home_zone_that_is_refused_says_so_rather_than_reading_as_empty(tmp_path: Path) -> None:
+    """An unavailable zone must be distinguishable from one holding nothing.
+
+    A fresh profile refuses most Home zones for want of an installed reader.
+    That refusal has to reach the operator as words; rendering it as blank
+    would be the under-declaration this product forbids, dressed as layout.
+    """
+    from ....application.overview.home import HomeAvailability
+
+    async with installed_workbench_root(tmp_path) as root:
+        projection = root.refresh_home()
+        refused = [
+            state
+            for state in (
+                projection.actions_state,
+                projection.declarations_state,
+                projection.ledger_state,
+                projection.messages_state,
+            )
+            if state.availability is not HomeAvailability.AVAILABLE
+        ]
+        assert refused, "this profile refuses no Home zone, so the proof would be vacuous"
+
+        screen = HomeScreen(projection)
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
+            await pilot.pause()
+            ledger = str(app.screen.query_one("#home-ledger", Static).render()).strip()
+            messages = str(app.screen.query_one("#home-messages", Static).render()).strip()
+            app.exit(None)
+
+    assert ledger, "the refused Ledger zone renders nothing"
+    assert messages, "the refused Messages zone renders nothing"
+    assert "0" not in ledger.split()[:1], "a refused zone must not open with a count"
+
+
+@pytest.mark.asyncio
 async def test_every_home_zone_states_its_availability_in_words(tmp_path: Path) -> None:
     """Colour is never the only carrier of a zone's state.
 
@@ -115,13 +177,39 @@ async def test_every_home_zone_states_its_availability_in_words(tmp_path: Path) 
 
 
 def test_the_destination_catalogue_names_every_destination_in_every_shipped_locale() -> None:
-    """A destination the palette cannot name in a language is unreachable in it."""
-    for descriptor in TUI_DESTINATION_CATALOGUE:
-        for language in OutputLanguage:
-            rendered = tr(descriptor.label_key, locale=language.value)
-            assert rendered and rendered != descriptor.label_key, (
-                f"{descriptor.destination} has no {language.value} name: {descriptor.label_key}"
-            )
+    """A destination the palette cannot name in a language is unreachable in it.
+
+    Asserted under STRICT resolution. Without it this proves nothing: `tr()`
+    humanises a missing key into a plausible English string rather than
+    returning the key, so a catalogue with no entries at all reports a full
+    pass. Measured 2026-09-04, every one of these keys was absent from all four
+    catalogues while this test was green.
+    """
+    strict_token = I18N_STRICT_MISSING_KEYS.set(True)
+    try:
+        for descriptor in TUI_DESTINATION_CATALOGUE:
+            for language in OutputLanguage:
+                rendered = tr(descriptor.label_key, locale=language.value)
+                assert rendered and rendered != descriptor.label_key, (
+                    f"{descriptor.destination} has no {language.value} name: {descriptor.label_key}"
+                )
+    finally:
+        I18N_STRICT_MISSING_KEYS.reset(strict_token)
+
+
+def test_a_missing_destination_name_is_not_humanised_into_a_false_pass() -> None:
+    """The fallback that made the gate above vacuous, asserted directly.
+
+    If this ever stops raising, `tr()` has regained a silent fallback under
+    strict resolution and every locale-coverage gate in the tree is worth less
+    than it looks.
+    """
+    strict_token = I18N_STRICT_MISSING_KEYS.set(True)
+    try:
+        with pytest.raises(MissingTranslationError):
+            tr("tui.destination.a_key_that_does_not_exist", locale="es")
+    finally:
+        I18N_STRICT_MISSING_KEYS.reset(strict_token)
 
 
 @pytest.mark.asyncio

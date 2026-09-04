@@ -23,12 +23,11 @@ from __future__ import annotations
 
 import pytest
 
+from ....contribuyente.entity_type import EntityType, LegalEntityForm
 from ....deadlines.models import (
-    EntityType,
     FiscalResidency,
     IrpfIncomeCategory,
     IVARegime,
-    LegalEntityForm,
     TaxpayerProfile,
 )
 from ..applicability import ApplicabilityVerdict, derive_modelo_applicability

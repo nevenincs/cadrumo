@@ -1283,6 +1283,12 @@ tui:
     work_state:
       borrador: Piszkozat
       descartado: Elvetve
+  destination:
+    aeat_sync: AEAT-szinkron
+    declarations: Bevallások
+    home: Kezdőlap
+    ledger: Főkönyv
+    profile: Profil
   home:
     account_fallback: Fiók
     action:
@@ -1502,6 +1508,11 @@ tui:
       ledger: Főkönyv megnyitása
       profile: Profil megnyitása
       unknown: Munkafelület megnyitása
+    refusal:
+      not_composed: A munkafelület nem minden forrása volt még olvasható.
+      refresh_failed: A legutóbbi frissítés nem tudta újraépíteni az indexet.
+      unavailable: A keresés nem érhető el ebben a munkamenetben
+      unknown: A keresést nem sikerült előkészíteni.
     result:
       address: Modelo %{modelo} · %{filing_year}. év · %{period} időszak
       label:

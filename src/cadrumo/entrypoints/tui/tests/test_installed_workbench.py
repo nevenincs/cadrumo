@@ -73,11 +73,43 @@ async def test_every_admitted_destination_builds_its_own_screen(tmp_path: Path) 
 
 @pytest.mark.asyncio
 async def test_an_unavailable_destination_never_carries_a_mountable_factory(tmp_path: Path) -> None:
-    """Availability and mountability agree, so nothing can look openable and refuse."""
+    """Availability and mountability agree, so nothing can look openable and refuse.
+
+    Exercised in BOTH directions. Over the default session every destination is
+    available, so the loop only ever proved "available implies a factory" and
+    the reverse half was carried by a construction-time guard rather than by
+    this test. The undeclared-identity session below genuinely refuses AEAT
+    Sync, which is what makes the second direction real.
+    """
     async with installed_workbench_root(tmp_path) as root:
+        available_states = set()
         for route in root.destination_catalogue.routes:
             available = route.admission.state is WorkbenchDestinationAdmissionState.AVAILABLE
+            available_states.add(available)
             assert available == (route.factory is not None), route.descriptor.destination
+
+        assert available_states == {True}, "this session refuses a destination; the other case belongs below"
+
+
+@pytest.mark.asyncio
+async def test_a_refused_destination_is_listed_without_a_factory(tmp_path: Path) -> None:
+    """The reverse direction, on a session that genuinely refuses something.
+
+    A refused destination stays in the closed catalogue -- an operator must be
+    able to see it exists and why -- but must carry no factory, because a route
+    that looks openable and then refuses is the defect this pair exists for.
+    """
+    async with installed_workbench_root(tmp_path, tax_id=None) as root:
+        refused = [
+            route
+            for route in root.destination_catalogue.routes
+            if route.admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE
+        ]
+
+        assert refused, "the undeclared-identity session refuses nothing, so this proves nothing"
+        for route in refused:
+            assert route.factory is None, route.descriptor.destination
+            assert route.admission.reason_code is not None, route.descriptor.destination
 
 
 @pytest.mark.asyncio

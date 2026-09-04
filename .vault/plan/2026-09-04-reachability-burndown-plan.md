@@ -1,0 +1,106 @@
+---
+tags:
+  - '#plan'
+  - '#reachability-burndown'
+date: '2026-09-04'
+tier: L3
+related:
+  - '[[2026-09-04-reachability-burndown-adr]]'
+  - '[[2026-09-04-reachability-burndown-reference]]'
+modified: '2026-09-04'
+body_schema: body-v2
+body_hash: 'sha256:7f3a33e69c6f3e53b38a0518ec6391c465be7465a9b483333124a2dd9c63d8e4'
+---
+
+# `reachability-burndown` plan
+
+## Description
+
+Close the false green in entrypoint reachability. The audit reports 43 modules and 1408 symbols that no declared console script reaches, plus 21 orphaned test modules, while the standing ratchet exits 0 because it adjudicates modules only and defers a frozen prefix. W01 turns one undifferentiated population into evidenced classes, because the remedies differ completely and the wrong remedy either deletes capability or wires code to nothing. W02 relocates code whose callers prove it belongs elsewhere, smallest blast radius first. W03 clears the symbol backlog by owning package. W04 extends the gate to symbols and orphaned tests and proves the joined state.
+
+## Steps
+
+## Wave `W01` - classify the population
+
+Turn one undifferentiated audit population into evidenced classes. Every later wave depends on knowing which remedy a finding needs, and applying the wrong remedy deletes capability or wires code to nothing.
+
+### Phase `W01.P01` - survey and classify
+
+Produce an evidenced classification for every module and orphaned-test finding, and for the symbol population by owning package.
+
+- [x] `W01.P01.S01` - Classify every unreachable and module-exec-only module by outside-use label and semantic uniqueness probe, recording the evidence behind each supersession or staging claim; `dev/audit`.
+- [x] `W01.P01.S02` - Classify the 21 orphaned test modules against whether their shipped subjects are themselves findings; `src/cadrumo`.
+- [x] `W01.P01.S03` - Partition the exact-confidence symbol population by owning package and record the dominant kinds per area; `dev/audit`.
+
+## Wave `W02` - resolve by owning home
+
+Relocate code whose only callers prove it belongs elsewhere, smallest blast radius first. Dev-only harness code precedes test-only support because it leaves the shipped wheel without touching the product surface.
+
+### Phase `W02.P02` - relocate dev-only harness code
+
+Move modules whose only callers are dev/ beside the consumer that drives them.
+
+- [x] `W02.P02.S04` - Relocate dev-only harness modules beside their dev consumers and shrink the ratchet by the entries resolved; `dev`.
+- [x] `W02.P02.S15` - Record the design-time-authority modules as intentional in the module ratchet with their conformance-gate reader named, rather than relocating product declarations into dev; `dev/quality`.
+
+### Phase `W02.P03` - relocate test-only support
+
+Move shared test support into the wheel-excluded test tree and verify the distributed artifact.
+
+- [x] `W02.P03.S05` - Relocate test-only support into the wheel-excluded test tree and prove the distributed artifact no longer carries it; `src/cadrumo/tests`.
+
+### Phase `W02.P04` - adjudicate owner-decision modules
+
+Resolve modules requiring a delete-or-wire decision, each with its authorising record.
+
+- [x] `W02.P04.S06` - Resolve the operator_surface CRUD catalogue cluster against its conformance-test consumer; `src/cadrumo/application/operator_surface`.
+- [x] `W02.P04.S07` - Adjudicate the staged-capability modules against their authorising decisions and classify or wire each; `src/cadrumo/application`.
+
+## Wave `W03` - burn down the symbol backlog
+
+Resolve the 1408 unused symbols by owning package, largest concentration first. Symbols are ungated today, so this wave carries the bulk of the false green.
+
+### Phase `W03.P05` - resolve domain and registry symbols
+
+Clear the largest exact-confidence concentration at its owning boundary.
+
+- [ ] `W03.P05.S08` - Resolve the domain/calculations exact-confidence symbol concentration at its owning boundary; `src/cadrumo/domain/calculations`.
+- [ ] `W03.P05.S13` - Resolve the superseded-constant population detected by literal-value supersession, naming the live holder for each before removal; `src/cadrumo`.
+- [x] `W03.P05.S14` - Triage the test-only symbol population into behaviour that retires with its test and seams whose missing production call is the defect; `dev/audit`.
+
+### Phase `W03.P06` - resolve CLI and application symbols
+
+Clear the entrypoints and application concentrations without disturbing command contracts.
+
+- [ ] `W03.P06.S09` - Resolve the entrypoints/cli symbol concentration without altering command contracts; `src/cadrumo/entrypoints/cli`.
+- [x] `W03.P06.S10` - Resolve the application/modelo and adapters/persistence symbol concentrations; `src/cadrumo/application`.
+
+## Wave `W04` - extend the gate and close
+
+Extend the ratchet to symbols and orphaned test modules once their populations carry classifications, then prove the joined state. Extension is shrink-only from the day it lands.
+
+### Phase `W04.P07` - extend the ratchet
+
+Bring symbols and orphaned test modules under the gate, shrink-only.
+
+- [ ] `W04.P07.S11` - Extend the ratchet to unused symbols and orphaned test modules with detector-teeth proof; `dev/quality`.
+
+### Phase `W04.P08` - prove the joined state
+
+Re-measure every signal from one stable revision and prove no false green remains.
+
+- [ ] `W04.P08.S12` - Re-measure every signal from one stable revision and prove no false green remains; `dev/audit`.
+
+## Parallelization
+
+Waves are ordered: no resolution proceeds before its finding is classified, and the gate extends only after the populations it will cover carry classifications. Within W02 the three phases are independent by ownership and may run in parallel, though P02 precedes P03 in practice because dev-only relocation leaves the shipped wheel untouched. Within W03 the two phases own disjoint packages. The `cadrumo.entrypoints.tui` prefix stays deferred throughout while its owning campaign is in flight, so 26 of the module findings are out of scope here. Executors check the shared worktree before every step and must not modify peer-owned dirty files.
+
+## Verification
+
+- Every module, orphaned-test, and exact-confidence symbol finding carries exactly one class from the ADR's closed taxonomy, and every supersession or staging claim names the evidence that established it.
+- Semantic uniqueness claims are grounded by a recorded `vaultspec-rag` query over production code, not by name similarity; class-level supersession additionally names the live type that discharges the responsibility.
+- Each relocation is proven by the distributed artifact no longer carrying the module, and by the owning tests passing from their new home.
+- Each deletion of shipped capability cites the record authorising it; no capability is removed on the audit's say-so alone.
+- The ratchet's `allowed` list only ever shrinks, and the extended gate demonstrates a representative defect is detected for both symbols and orphaned test modules.
+- No threshold, exclusion, baseline, skip, or allowlist widening appears in any step's diff.
+- Closure requires the audit and the extended ratchet to agree from one stable revision, with the remaining count explained entirely by classified, recorded dispositions.

@@ -172,12 +172,11 @@ the container runners are covered instead by `just runner-image-test`.
 
 What counts as "assumed" is measured, not guessed. Parsing the `run:` blocks of
 every workflow shows `uv`, `just`, and `node` are each installed by a pinned
-setup action, while **`gh` is invoked by eight workflows and installed by none**
-(`publish-release`, `release-orchestrator`, `release-soak-promoter`,
-`packaging-smoke`, `packaging-scoop`, `packaging-claude`, `packaging-homebrew`,
-`packaging-campaign-trigger`). `packaging-scoop` requests the `windows-scoop`
-label that no runner carries, so that lane never schedules and `scoop` is
-deliberately not probed.
+setup action, while **`gh` is invoked by four workflows and installed by none**
+(`packaging-campaign-trigger`, `packaging-homebrew`, `packaging-scoop` and
+`release-please`). `packaging-scoop` requests the `windows-scoop` label that no
+runner carries, so that lane never schedules and `scoop` is deliberately not
+probed.
 
 **`.path` beats `.env`, and that is how `gh` went missing on macOS.** The runner
 root can hold both files. `.env` sets the service environment; `.path` sets the

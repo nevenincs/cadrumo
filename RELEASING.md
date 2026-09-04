@@ -148,9 +148,45 @@ Never add a stable classifier for a prerelease row, and never change
 `.python-version` as part of runtime promotion; the builder identity is an
 independent reproducibility coordinate.
 
+## Release-candidate evidence
+
+The channel descriptors declare distribution evidence rows, and the release-readiness
+gate refuses a release until every declared row is present and passing. Those rows come
+from one place: the `Cadrumo Packaging Smoke` workflow, dispatched by hand. It never runs
+on push, because the three-OS matrix is the most expensive workflow in the repository.
+
+Dispatch it against the release PR's branch, not against `main`.
+
+```console
+gh pr list --repo nevenincs/cadrumo --label "autorelease: pending" --json headRefName
+gh workflow run packaging-smoke.yml --repo nevenincs/cadrumo --ref <RELEASE_BRANCH>
+```
+
+The branch is not a preference. A cohort is sealed only at a version no package index,
+tag or release namespace already owns, and the readiness gate additionally requires the
+cohort's source commit to equal the checked-out commit and its tag to equal `v<VERSION>`.
+Both conditions hold on the release branch, where the bump has landed and nothing has
+been published yet. On `main` between releases the declared version is the one that was
+last published, so the seal is refused and every downstream lane skips. The refusal reads
+like a release collision and is easy to mistake for a publishing fault:
+
+```text
+REFUSED: version <VERSION> is not available to publish:
+  - package index already carries cadrumo <VERSION>
+```
+
+The matrix needs all three self-hosted runner shapes online — Linux x64, Windows x64 and
+macOS ARM64. Confirm before dispatching, or the jobs queue until they are cancelled:
+
+```console
+gh api repos/nevenincs/cadrumo/actions/runners --jq '.runners[] | "\(.status)  \(.name)"'
+```
+
+Merge the release PR once the campaign is green.
+
 ## Release
 
-Merge the open release pull request. Everything else follows from that merge.
+Merge the open release PR. Everything else follows from that merge.
 
 ```console
 gh pr list --repo nevenincs/cadrumo --label "autorelease: pending"
@@ -185,6 +221,21 @@ uv run --isolated --no-project --with "cadrumo==<VERSION>" dev/smoke/smoke_check
 The smoke check proves both console scripts: `aeat` reports the released version and
 lists both root command families, and `cadrumo-mcp` resolves with its server runtime
 present.
+
+## Roll back a released version
+
+An index upload cannot be undone, so a rollback is a forward action: yank the bad
+version and release a corrected one. The recipe prints the procedure and runs nothing
+destructive itself.
+
+```console
+just release-rollback <VERSION>
+```
+
+The conditions that oblige a rollback, the hotfix cycle times they must be answered
+within, and the checks the audit-state gate applies are declared once in
+`docs/_release_checklist.yaml` and consumed by the readiness gate. Change them there
+rather than here.
 
 ## Diagnose and recover
 

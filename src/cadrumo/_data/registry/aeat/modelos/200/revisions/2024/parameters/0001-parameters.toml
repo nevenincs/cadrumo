@@ -383,3 +383,48 @@ required_text = ["tipo de gravamen"]
 value = "10"
 date_axis = "filing_period"
 valid_from = 2024-01-01
+
+# INCN thresholds that SELECT the tipo de gravamen, authored as typed parameters
+# because the rates they select already are. The figures previously existed only
+# as inline `literal` strings inside the cuota-integra formula expression, which
+# is legitimate registry data but carries no data_type, no unit, no dated
+# validity and no legal_refs of its own, and is unreadable from the application
+# layer. A reader could resolve which RATE applied but not which TURNOVER band
+# selected it.
+
+[[revisions."2024".parameters]]
+id = "is.modelo-200.incn-umbral-microempresa"
+data_type = "money"
+unit = "EUR"
+# DT 44a is NOT cited here: it enters with Ley 7/2024 and is outside this
+# revision's 2024 effective window, which the registry refuses. The sibling
+# tipo-gravamen parameters of this revision cite the same pair.
+legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-101"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = ["tipo de gravamen"]
+
+[[revisions."2024".parameters.values]]
+value = "1000000"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions."2024".parameters]]
+id = "is.modelo-200.incn-umbral-erd-art101"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-27-2014:art-101", "ley-27-2014:art-29"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = ["tipo de gravamen"]
+
+[[revisions."2024".parameters.values]]
+value = "10000000"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31

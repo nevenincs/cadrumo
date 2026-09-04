@@ -17,6 +17,7 @@ from ...core.renta_declaracion_type import RentaDeclaracionType
 from ...core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH, SetupAnswers
 from ...core.wizard_catalogue import register_wizard_catalogue
 from ...domain.contribuyente.ccaa import CCAA
+from ...domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ...domain.contribuyente.renta_codes import (
     RentaDisabilityGrade,
     RentaMaritalStatus,
@@ -24,13 +25,11 @@ from ...domain.contribuyente.renta_codes import (
     SituacionFamiliar,
 )
 from ...domain.deadlines.models import (
-    EntityType,
     FiscalResidency,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
     IrpfSpecialRegime,
     IVARegime,
-    LegalEntityForm,
     M303RegimeComposition,
     M303TaxTerritory,
 )

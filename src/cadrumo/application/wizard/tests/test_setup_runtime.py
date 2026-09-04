@@ -15,7 +15,7 @@ import pytest
 
 from ....core.flows import FlowMode
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH, SetupAnswers
-from ....domain.deadlines.models import LegalEntityForm
+from ....domain.contribuyente.entity_type import LegalEntityForm
 from ...flows.errors import FlowAnswerError
 from ...flows.scripted import run_scripted_flow
 from ..catalogue import SETUP_FLOW

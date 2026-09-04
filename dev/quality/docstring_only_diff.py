@@ -57,7 +57,17 @@ def _committed(path: str, ref: str) -> str | None:
 
 
 def check(paths: list[str], ref: str = "HEAD") -> int:
-    """Report any file whose executable code differs from ``ref``."""
+    """Report any file whose executable code differs from ``ref``.
+
+    An empty path list REFUSES. A prover handed nothing to prove reported
+    ``checked 0 file(s); 0 offender(s)`` and exited 0, which is the same
+    result it gives for a clean docstring-only edit - so an invocation whose
+    path expansion silently produced nothing passed as proof that behaviour
+    was unchanged.
+    """
+    if not paths:
+        print("no paths were given, so nothing was proven about any file")
+        return 1
     offenders: list[str] = []
     checked = 0
     for path in paths:
@@ -65,7 +75,15 @@ def check(paths: list[str], ref: str = "HEAD") -> int:
         if before is None:
             offenders.append(f"{path}: not tracked at {ref} (a new file is not a docstring-only change)")
             continue
-        after = Path(path).read_text(encoding="utf-8")
+        try:
+            after = Path(path).read_text(encoding="utf-8")
+        except OSError as error:
+            # Tracked at the ref and unreadable now. A file that was deleted or
+            # replaced by a directory is emphatically not a docstring-only
+            # change, and letting the OSError escape would end the whole run in
+            # a traceback that says nothing about the files still unchecked.
+            offenders.append(f"{path}: tracked at {ref} but unreadable now ({error})")
+            continue
         try:
             if _skeleton(before) != _skeleton(after):
                 offenders.append(f"{path}: executable code changed, not docstrings alone")
@@ -80,4 +98,4 @@ def check(paths: list[str], ref: str = "HEAD") -> int:
 
 if __name__ == "__main__":
     argv = sys.argv[1:]
-    raise SystemExit(check(argv) if argv else 0)
+    raise SystemExit(check(argv))

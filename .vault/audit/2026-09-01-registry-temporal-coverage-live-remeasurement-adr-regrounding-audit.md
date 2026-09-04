@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-temporal-coverage'
 date: '2026-09-01'
-modified: '2026-09-03'
+modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:8dc762da0849d5ae4401cefd813d5e6b981dc2efec81f0000151c54b1a7c3a64'
+body_hash: 'sha256:86fa6c22f58a8e7602854917969a027ea660a3ae33ad8ac0f99b85913e922f1d'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -10488,7 +10488,6 @@ nor a design note. The screen's full breakdown stays available to anyone running
 it directly; what the runner shows is the part that can change without the
 population changing.
 
-
 ## The enrolment gate had the campaign's own blind spot
 
 The gate that caught three unenrolled screens last iteration was itself
@@ -10532,7 +10531,6 @@ message text, which is what gave it away. A script that computes several edits
 and writes once loses all of them when any assertion fails, and the half-applied
 result is harder to see than an outright error.
 
-
 ## The same blind spot was in five gates, and it is now in one declaration
 
 Widening the enrolment gate to notice a corpus screen was the visible half. The
@@ -10572,7 +10570,6 @@ tests writing into a bare temporary directory, which is the guard working: the
 fixtures now build `modelo_999/files/` and are as faithful about where a design
 lives as about what it contains.
 
-
 ## Repeated literals are not a usable signal, and one stated convention is a minority practice
 
 The five-copy entry-point defect prompted a search for the same shape elsewhere.
@@ -10609,7 +10606,6 @@ four test modules, against four analysis modules that followed the convention -
 so the same author was on both sides of it within one campaign, which is a fair
 measure of how much an unenforced convention travels. Those six are corrected;
 the tree now stands at 138 raw sites in 42 modules against 44 named.
-
 
 ## Finishing the audit of which gates see which screens
 
@@ -10648,7 +10644,6 @@ here rather than quietly fixed - the pattern across all nine is one worth naming
 a check written when the world had one shape keeps passing after the world grows
 a second, and passing is exactly how it hides.
 
-
 ## The count of narrow gates was right; the breakdown was not
 
 "Five separate gates carried their own copy" was written into this audit, into
@@ -10686,7 +10681,6 @@ by the whole-corpus gate, and running them twice would double the slowest work
 in the suite to check something already checked. The suite now holds
 thirty-one gates.
 
-
 ## The hundred and forty-nine is retired, and here is what was tried
 
 The rules-authoring step rested on a figure of one hundred and forty-nine newly
@@ -10723,7 +10717,6 @@ be checked. What replaces it is 41, which any reader can reproduce with one
 command, together with the grounding split that actually decides the effort -
 nine fields covered by a convention naming their type and thirty-two by modelo
 200's design-level amounts note.
-
 
 ## The grounding screen never asked what the field itself cites
 
@@ -10774,7 +10767,6 @@ campaign a count in a screen's own opening line went stale in the edit that
 made it wrong, and the second time the gate written for precisely that caught it
 before a reader did.
 
-
 ## The authoring task is eleven readings, and one of them covers twenty-six fields
 
 The grounding join now emits a worklist: the grounded fields grouped by the note
@@ -10808,7 +10800,6 @@ This is the campaign's own target defect appearing in a summary line written
 within the same hour: the same concept expressed twice in different forms, in
 adjacent output, by one author. It was visible only because the second
 expression was built beside the first.
-
 
 ## Reading the eleven notes: twelve fields are settled, not forty-one
 
@@ -10869,7 +10860,6 @@ came from. Modelo 303's note belongs to its 2023 revision and modelo 353's to
 thirty-five and four hundred and fifty-nine characters. The correction cost one
 command and the wrong version never left the session.
 
-
 ## A note is identified by its design as well as its sheet
 
 The near-miss recorded above - looking a note up in the wrong revision and
@@ -10902,7 +10892,6 @@ written from the case in front of me and generalised without checking the other.
 
 Both halves are now tested: two revisions sharing one design produce one work
 item, and one label in two designs produces two.
-
 
 ## Note wording drifts between a modelo's designs, and now that is visible
 
@@ -10942,7 +10931,6 @@ screen would report most of the corpus as drifting. The live assertion holds by
 presence and by the two populations being different sizes, not by the figures,
 which move whenever a design is re-transcribed.
 
-
 ## Four of the thirteen groundings rest on wording that changed
 
 Joining the worklist against the drift screen answers the question the two
@@ -10966,7 +10954,6 @@ several findings already in this audit.
 
 The census carries both figures: four notes and seven fields. Neither is
 derivable from the other, since the items cover different numbers of fields.
-
 
 ## The eligibility correction cannot land honestly, and the reason is structural
 
@@ -11010,7 +10997,6 @@ and what the renderer does when it meets a field nothing settles, which is
 filing-affecting behaviour and belongs to a decision rather than to an execution
 step reasoning from a screen's output.
 
-
 ## Half the provenance population is one omission repeated, not drift
 
 The provenance screen carries by far the largest population in the suite -
@@ -11046,7 +11032,6 @@ and the reference set identical. And a modelo missing from the revision counts
 yields no claim rather than a false one - defaulting an unknown denominator to
 zero would make any single row match and report it as systemic, which is a claim
 built out of ignorance and has its own test.
-
 
 ## Nothing in the provenance population is a dangling reference
 
@@ -11095,7 +11080,6 @@ That is the third time in this campaign one output line has carried two figures
 for what looked like one concept. The previous two were the same concept
 measured twice and were resolved by deleting one; this one is two concepts
 sharing a name and is resolved by naming them.
-
 
 ## Reading the seventeen reverses the hypothesis, and the screen measured half a disagreement
 
@@ -11150,7 +11134,6 @@ other declared-not-cited, and a test asserts they do not intersect. Another
 asserts that revisions in which the surfaces agree exist, so the condition is
 discriminating rather than universal.
 
-
 ## The mirror condition is now a screen, because a condition nobody runs is invisible
 
 The mirror landed last iteration as a function beside the provenance screen and
@@ -11176,7 +11159,6 @@ sibling, and the sibling's CLI now calls the new screen rather than a local
 copy of it. Their populations are asserted disjoint - one cited-not-declared,
 the other declared-not-cited - which is also the check that would fail if either
 started reading the other's surface.
-
 
 ## Two modelos ship published filing bytes while declaring they cannot file
 
@@ -11231,7 +11213,6 @@ be reported as shipping bytes it had never produced. The predicate now tests the
 manifest. The census is unchanged at 67, which is the evidence that the tightening
 altered nothing about the corpus and only about what the code claims.
 
-
 ## Two screens were reporting one fact under two names
 
 The capability screen's second-largest condition, `layout_without_filing_grade`
@@ -11271,7 +11252,6 @@ list.
 That is the third time this gate has caught a stale or broken condition count
 inside the very edit that caused it.
 
-
 ## The duplicate was the only one, and the sweep that proved it is not a gate
 
 Retiring one duplicated condition raised the obvious question: are there others?
@@ -11306,7 +11286,6 @@ on a corpus this size, and a gate asserting they never do would be asserting a
 coincidence. The duplicate that was found was found by reading what two
 conditions MEAN; the set comparison only confirmed it, and confirming is all a
 comparison of populations can do.
-
 
 ## A helper added to widen the gates was narrowing one of them
 
@@ -11348,7 +11327,6 @@ describes it. That the kinds are hidden from the kind-naming gate is a separate
 problem, fixed at the reader rather than by constraining the projections.
 
 The suite now holds thirty-two gates.
-
 
 ## Eleven filing-grade revisions cannot say when a filing is due
 
@@ -11393,7 +11371,6 @@ it and by the screen that narrows it. A test asserts the census agrees with that
 function for every revision, so a future second implementation fails rather than
 drifts.
 
-
 ## Every unscaled monetary field sits in a revision that can be filed
 
 The monetary screen emits 165 findings; the runner shows 33 because its entry
@@ -11429,7 +11406,6 @@ same property of it, which is the pair of deadline conditions and nothing else.
 That is where the test was put. A screen-wide gate would have failed on four
 screens reporting correctly, which is the second methodological guard this
 campaign has declined after measuring rather than after it broke something.
-
 
 ## Which findings a filer would actually meet
 
@@ -11476,7 +11452,6 @@ where nothing was measurable, so the honest split is **three conditions safe to
 defer, eight not asked, twenty-three exposed** - and the eight are visible as a
 gap rather than as a clean result.
 
-
 ## Correction: the exposure report overstated one screen by a factor of five hundred
 
 The previous section reported that filing exposure "is dominated by two
@@ -11520,7 +11495,6 @@ that carry no revision as measured-safe, it counted a census as findings, and
 both were found by reading its output against the thing it claimed to describe
 rather than by the report failing.
 
-
 ## What a screen's entry point returns is now declared rather than inferred
 
 Three instrument errors in one report, all from one root: nothing said what a
@@ -11560,7 +11534,6 @@ revision, what an unnumbered note governs - the inference has been wrong at leas
 once, and the fix has been to declare the thing once and read it. This is the
 same shape at the level of the tooling's own interfaces.
 
-
 ## Five revisions claim a filing grade their prerequisites do not support
 
 Working down the corrected exposure order, the grade screen's `under_supported`
@@ -11593,7 +11566,6 @@ untidinesses and nothing here weighs them. Census screens are excluded, since
 their rows are transitions examined and including them would rank a revision by
 how many fields it has - the same error the entry-point declaration exists to
 prevent, arriving by a second route, and it has its own test.
-
 
 ## The worst revision's nine conditions are seven, and one screen was counted twice
 
@@ -11636,7 +11608,6 @@ difference.
 This is the second undeclared producer contract found by a consumer getting it
 wrong, in two consecutive iterations, in tooling written during this campaign.
 
-
 ## Sweeping for other undeclared derivations found none, and a weak instrument
 
 Having found one screen derived from another by reading, the obvious next move
@@ -11671,7 +11642,6 @@ things. An asymmetry between them is a place where a consumer must know which
 table a screen sits in before it can ask a question about it, which is the shape
 of several defects already in this audit and was worth removing rather than
 working around.
-
 
 ## Thirty-one filings can carry no product identity, and the export path proves it
 
@@ -11708,7 +11678,6 @@ The migration step describes the typed slot as one "twenty others already use".
 Measured: **eighteen** layouts, in eighteen revisions, across seven modelos -
 151, 200, 202, 222, 303, 322 and 353. Not twenty, and the figure matters because
 it is the population a migration would follow as its worked example.
-
 
 ## Modelo 322's newest revision lost the envelope its predecessor carried
 
@@ -11753,7 +11722,6 @@ between revisions is not this screen's unit, and nothing else compares a
 revision's capability with its predecessor's. That is a gap worth naming even
 though this instance was found by hand.
 
-
 ## The gap that hid modelo 322 is now a screen, and it found one more thing
 
 Every other screen judges a revision alone. None compared a revision with the one
@@ -11796,7 +11764,6 @@ The screen reports and does not gate. A modelo may lose a capability because the
 law removed what it served, and nothing here can tell that from an oversight -
 what it can do is stop the difference being invisible, which for modelo 322 it
 was.
-
 
 ## An ordering constraint that no longer protects anything
 
@@ -11842,7 +11809,6 @@ revision and carry real values, so this is a measured absence rather than a
 naming because the same shape - a probe for an attribute that does not exist,
 reporting clean - is a defect this audit has recorded more than once.
 
-
 ## Re-measuring the other two ordering constraints
 
 Finding one constraint spent made the other two worth checking, since all three
@@ -11883,7 +11849,6 @@ That is the same defect this campaign screens the registry for, in the plan that
 directs the screening: a declaration with no link to its authority drifts, and
 nothing reports it.
 
-
 ## The directory's failure figures, re-measured
 
 The last figure in the parallelization section was "twenty-seven of this
@@ -11922,7 +11887,6 @@ measurement piped through `head` or `tail` is not a measurement - reached from a
 different direction, and it cost nothing this time only because the real summary
 arrived a minute later.
 
-
 ## The "single repair" is three repairs, and two of them are not republication
 
 The parallelization constraint attributes most of this directory's failures to one
@@ -11958,7 +11922,6 @@ So the constraint's proportion is right and its unit is wrong. Twenty-three of
 thirty-six failures share one repair; two share a refusal to apply it; one needs
 a different verb. Naming them apart matters because the ledger already exists to
 stop exactly the mistake the merged figure invites.
-
 
 ## Two committed export trees have no reproduction gate
 
@@ -11997,7 +11960,6 @@ It was caught by the numbers disagreeing with the test log measured an hour
 earlier - 27 against 23 - which is the only reason a plausible-looking census
 did not go into this audit as fact.
 
-
 ## The two unenrolled trees now have a gate, and it fails as predicted
 
 `m210-2026-y-siguientes` and `m303-2022` are enrolled in the reproduction test.
@@ -12028,7 +11990,6 @@ a campaign about declaration integrity added two failing tests. A suite that
 reports 38 true failures is in better repair than one reporting 36 while two
 trees go unwatched.
 
-
 ## The enrolment gap is now an invariant
 
 With both trees enrolled the populations reconcile: **28 committed trees, all
@@ -12046,7 +12007,6 @@ The suite holds thirty-four gates. This one exists because the gap it closes was
 found by accident: a report written for another purpose counted the renderable
 population and disagreed with the test's target count by two. Nothing was
 watching for that, and nothing would have been.
-
 
 ## One modelo's authored render content is validated by nothing
 
@@ -12084,7 +12044,6 @@ asserting every authored directory belongs to a modelo declaring a layout would
 fail on landing with no correction available inside this execution's scope,
 which is the shape this campaign has refused twice already.
 
-
 ## Four enrolments cross-checked, and one figure moved because of this work
 
 The independent-count technique applied to every enrolment this package carries:
@@ -12120,7 +12079,6 @@ Recorded rather than silently left, because an audit that reports a figure and
 then changes the thing measured has the same drift problem it screens the
 registry for - and this campaign has now found that shape in a plan's step, its
 verification prose, its parallelization constraints, and here in its own audit.
-
 
 ## Both provenance screens were missing a citing family
 
@@ -12163,7 +12121,6 @@ Both screens now read the eighth family, and each carries a test naming it: one
 asserts no reference a window cites is reported uncited, the other that a
 window's outside citations are reported at all.
 
-
 ## The citing families are declared once
 
 `provenance_consistency.citing_children` is now the one statement of what a
@@ -12188,7 +12145,6 @@ Resolved export fields stay out of the shared declaration and are added by the
 screen that needs them, with its reason attached. Folding them in would have
 made the list shorter and the mirror wrong: a manifest reference cited only by a
 derived field would read as cited when no author ever wrote it.
-
 
 ## A ratio with three answers, written as a bare number in two places
 
@@ -12218,7 +12174,6 @@ Both places now state the definition with the figure. That costs a sentence and
 removes the ambiguity that produced four different numbers for one idea - the
 same remedy this campaign applies to the registry, where a value without its
 units is exactly this defect in a declaration rather than in prose.
-
 
 ## The reference worklist, re-measured, and a second annual series
 
@@ -12255,7 +12210,6 @@ largest contributor. Seventeen single-child references were read and found
 sound; thirty-eight more existed and were invisible because a citing family was
 not walked. The conclusion survived the population more than tripling, which is
 worth more than the original reading was.
-
 
 ## The schema declares nineteen authored families; the provenance walk covers eight
 
@@ -12306,7 +12260,6 @@ rather than the tail of an iteration. It is the largest tooling finding this
 campaign has made, and the four preceding corrections to these two screens were
 each a smaller instance of it.
 
-
 ## The walk now follows the schema, and three more assumptions failed on the way
 
 `citing_children` enumerates the `SCHEMA_FAMILY` annotation instead of naming
@@ -12350,7 +12303,6 @@ argument in this campaign for deriving a walk from its declaration: the hand-lis
 was not merely incomplete, it was uniform in ways the real population is not, and
 the uniformity read as a contract.
 
-
 ## A figure restated three times, now written with its provenance
 
 The provenance repetition ratio has been corrected three times in three
@@ -12374,7 +12326,6 @@ still held from one that had been overtaken. This audit has now recorded that
 same failure in a step, a verification criterion, three parallelization
 constraints, a screen's docstring and its own pages; the remedy has been the
 same every time, and applying it to prose costs a sentence.
-
 
 ## Every filing-grade revision carries a declaration contradiction
 
@@ -12400,7 +12351,6 @@ family the walk had been skipping.
 Both movements say the same thing about the figures this campaign has been
 publishing. They measured what the tooling looked at, not what the registry
 declares, and the gap between those was nine families wide until this week.
-
 
 ## The other hand-written list is complete
 
@@ -12430,7 +12380,6 @@ boundary it draws and why, and deriving it would mean encoding "states which
 years a revision serves" as a rule over field names - which is the heuristic this
 package has refused repeatedly, and which would be less trustworthy than the six
 names it would replace.
-
 
 ## What the nine newly-walked families actually cite
 
@@ -12471,7 +12420,6 @@ top construct citation, `lirpf-cuota-chain-authority`, is a declared authority i
 rather than a law article and resolves like the rest - so even the reference that
 looks least like a legal citation is catalogued.
 
-
 ## The manifest is a summary of its children's citations, not a constraint on them
 
 An earlier section concluded that a manifest and its children's citations "relate
@@ -12511,7 +12459,6 @@ it is wrong for the same reason several figures in this campaign were: the walk
 that produced it saw eight families of nineteen. A conclusion drawn from a
 partial walk is not merely imprecise; this one pointed the opposite way.
 
-
 ## The reference worklist, measured on the complete walk
 
 This worklist has been published three times on three different populations. The
@@ -12544,7 +12491,6 @@ This is the last of the provenance figures to be re-measured on the complete
 walk. Every one of them moved, three of them twice, and none moved because the
 registry changed.
 
-
 ## Reading the misnamed revisions: one name hides a fourteen-year gap
 
 The revision-name screen reports seven findings on filing-grade revisions, and
@@ -12576,7 +12522,6 @@ Three of the seven are modelo 369's `esquema-exterior`, `esquema-importacion` an
 the non-temporal scheme axis sitting in the revision slot, which the plan already
 tracks as its own Step.
 
-
 ## No modelo has a hole in its coverage, and modelo 322's is not one
 
 The previous section came close to calling modelo 322's fourteen unserved years a
@@ -12605,7 +12550,6 @@ The check was proved non-vacuous before its zero was believed: thirty-three
 modelos examined, all multi-revision, 199 served years between them. A continuity
 check that quietly examined nothing would report exactly the same zero.
 
-
 ## Coverage continuity is now a gate
 
 The no-interior-gap result meets the three tests this campaign has been applying
@@ -12630,7 +12574,6 @@ direction produces a plausible answer: close it at the current year and a modelo
 whose newest revision opens in 2026 reports 2027 onwards as unserved; leave it
 open and a real gap beneath an open-ended revision is hidden. The test asserts
 both halves.
-
 
 ## Coverage has a second failure mode, and the corpus does not have it
 
@@ -12664,7 +12607,6 @@ The sixteen revisions inside the five year-overlapping modelos all carry windows
 so the modelos where a clash was most plausible are the ones the finer
 measurement actually covers.
 
-
 ## The two coverage gates say together what neither says alone
 
 The overlap result was gateable, and it is now gate thirty-six:
@@ -12695,7 +12637,6 @@ reader: it refuses to pass on fewer than 500 keys or fewer than 50 speaking
 revisions. And it states what it does not cover - the 27 revisions declaring no
 deadline window claim no period, so they cannot clash, and the gate's silence
 about them is not coverage of them.
-
 
 ## Turning the campaign's own question on its instruments
 
@@ -12747,7 +12688,6 @@ eighteen rows are that fact about its size rather than a relationship. Each row
 carries the density that separates the two, and no threshold is applied - where
 the cutoff sits is a reader's judgement, and one written into the module would
 silently drop the next real pair that fell beneath it.
-
 
 ## Nine forwarding facades under dev, and the instrument that can retire them
 
@@ -12810,7 +12750,6 @@ One pre-existing failure is visible and is not this change:
 `test_every_source_module_has_a_stub` reports 31 `src/cadrumo` modules without a
 `docs/api` stub. It compares two trees that carry no working-tree change.
 
-
 ## What the facades were concealing
 
 Retiring the second facade found the reason the other seven cannot simply be
@@ -12855,7 +12794,6 @@ The rewriter skips its own file when doing that, and the exception is worth
 stating because it is the only one: this module's docstring QUOTES a stale path
 as the example of what goes wrong, and rewriting the quotation into the
 corrected form deletes the explanation while leaving the sentence grammatical.
-
 
 ## Four facades retired, and the residue is all one shape
 
@@ -12908,7 +12846,6 @@ Three sibling tests (`sequences`, `terminology_handbook`, `sanitizer`) are
 written the same way and will need the same correction when their facades come
 down, which is after `S470`.
 
-
 ## The blocker is two blockers, and one of them is a library inside an entry point
 
 `S470` was written as one precondition: give a public home to every symbol the
@@ -12943,7 +12880,6 @@ privacy one does. A private module may legitimately be reached by its own tests;
 an entry point holding library code is wrong for its own package too. Folding
 the two together would have inherited the wrong exemption along with the wrong
 name.
-
 
 ## A test that could not be satisfied at the same time as the boundary
 
@@ -12993,7 +12929,6 @@ of them actively enforce the thing being removed, and they are indistinguishable
 from correct tests until the change is attempted. Nothing detects them in
 advance; they surface as a failure at the moment the work lands, which is why
 the baseline-first discipline matters as much as it does.
-
 
 ## Looking for the defect-protecting tests before touching the packages
 
@@ -13054,7 +12989,6 @@ just not this change's.
 Six of nine facades are retired. Three remain, all under `dev.docs`, holding 195
 bound names and 40 consumer sites.
 
-
 ## The promoter earns its place by failing its own tests
 
 Three packages and fifteen private modules remained, so the throwaway rename
@@ -13109,7 +13043,6 @@ Seven of nine facades are retired. Two remain - `dev.docs.sequences` and
 and `sequences` is blocked behind the 622 library lines still living in its
 `__main__`.
 
-
 ## The eighth facade, and promoting only what is reached
 
 `dev.docs.terminology_handbook` forwards 49 names out of **nine** private
@@ -13144,7 +13077,6 @@ the 388 names the nine initialisers bound, 60 remain, all in `dev.docs.sequences
 - which is blocked behind the 622 library lines still living in its `__main__`,
 not behind anything about facades.
 
-
 ## What the last facade is waiting on, measured
 
 `dev.docs.sequences` is the only facade left, and nothing about it is a facade
@@ -13168,7 +13100,6 @@ Two things it must not do. `_runner.py` already exists in that package, so the
 new public module cannot be called `runner`; and the name must clear the
 standard library, which the promoter now checks mechanically rather than by
 recollection.
-
 
 ## Zero facades, and three things the promoter did not know
 
@@ -13219,7 +13150,6 @@ consumers were repointed, and after the initialiser was emptied. The one new
 failure that appeared was the one predicted at `S475`, the last of the three
 sibling error-ownership tests, now restated like the other two.
 
-
 ## The measurements end, and the invariant replaces them
 
 Retiring the last facade broke four of my own tests, and all four were correct
@@ -13261,7 +13191,6 @@ Both of those defects were introduced by an edit that made the tool more correct
 and were caught only because the tool has tests. The first would have quietly
 degraded every future promotion.
 
-
 ## Sixty-three inert initialisers, and the same defect still standing in src
 
 With the facades gone, the wider question is worth asking: forwarding is the
@@ -13291,7 +13220,6 @@ it: the order that held here was promote what is reached from outside, repoint
 consumers, empty the initialiser, restate the tests that measured the facade -
 and take the baseline first, because the failures that matter are the ones the
 change did not cause.
-
 
 ## The intermittent failure is not a failure
 
@@ -13330,7 +13258,6 @@ decorative and the crash would continue. Adding the exclusion means editing the
 recipe file, which is outside this session's scope. `S483` now says that, so the
 next attempt does not begin by rediscovering that the obvious fix is inert.
 
-
 ## The sweep becomes a command
 
 Establishing that this session's two set comparisons were untainted meant
@@ -13366,7 +13293,6 @@ the exit status through `| tail` reported **zero for a run the tool had just
 exited one on** - the filter's status, not the tool's, which is exactly the
 failure the module's own docstring lists fourth. Re-read unpiped, the statuses
 are 1 for the tainted run and 0 for the two evidence runs.
-
 
 ## Which label disagreements mean something
 
@@ -13423,7 +13349,6 @@ the first full run truncated mid-stream and exited 1, while the same output
 piped through `tail` had looked fine. That is the second time this session that
 a pipe hid a non-zero status.
 
-
 ## Three thousand drifting labels are not one worklist
 
 Knowing that 3,157 casillas carry two renderings of one unchanged Spanish string
@@ -13468,7 +13393,6 @@ passing because nothing compared it against the members it claimed to describe.
 The test that caught it was written to assert the explanation, and the
 explanation was the thing that was wrong.
 
-
 ## An exposure figure that survives its own control, barely
 
 Every one of the 3,157 drifting casillas sits in a revision declaring filing
@@ -13500,7 +13424,6 @@ somebody can finish, and each one is a filer reading text that no longer matches
 the official wording. That is the piece of this measurement worth acting on
 first, and it is two per cent of the number the drift figure leads with.
 
-
 ## The integrity tool catches its second artefact, one iteration after landing
 
 Re-measuring the registry suite meant backgrounding a twelve-minute run. The
@@ -13523,7 +13446,6 @@ Worth separating from the instance: the backgrounding mistake was mine and the
 tool did not prevent it. What it prevented was the mistake AFTER it - reading a
 truncated artefact as a result. An instrument that cannot stop a bad run can
 still stop a bad conclusion, and those are different jobs.
-
 
 ## The registry suite re-measured, and the shape of it has not moved
 
@@ -13558,7 +13480,6 @@ The figure is stated with its date, its command and its verdict because the last
 three attempts to quote a suite total in this campaign were each wrong in a
 different way - a marker deselecting most of a file, a lost worker, and a
 truncated artefact - and none of the three announced itself.
-
 
 ## The five that are not the republication, examined
 
@@ -13602,7 +13523,6 @@ by four and another rising by a hundred and fifty-two as the same kind of event 
 a failed equality. The invariant worth asserting is that a declaration has a map
 owner; the count told us only that something changed.
 
-
 ## The frozen count survived three and a half hours
 
 Whether the jump from two orphaned declarations to a hundred and fifty-four is a
@@ -13629,7 +13549,6 @@ did - opening the history and timing two commits against each other.
 
 An invariant would have said `154 declarations have no map owner` on the day it
 happened, in the failure message, without the archaeology.
-
 
 ## A frozen-count detector, declined on its own evidence
 
@@ -13665,7 +13584,6 @@ The rule against frozen corpus counts stays a rule an author must follow, which
 is a weaker outcome than a gate and the honest one. Writing a detector that
 flagged the correct tests beside the incorrect ones would have made the rule
 harder to follow rather than easier.
-
 
 ## The detector was right to be broad, and I was about to narrow it
 
@@ -13706,7 +13624,6 @@ now three, all of them outside this session's reach and every one a real grammar
 over the outside world's prose. The dev share of a cross-tree inventory is
 complete.
 
-
 ## A wrong attribution I repeated for a dozen iterations
 
 Every health check this session closed with the same sentence: two errors, both
@@ -13735,7 +13652,6 @@ once from an expectation, then relied on rather than re-derived. The corrective
 is the same one applied everywhere else - name the population, and read the
 members rather than the total.
 
-
 ## What the vault total was actually saying
 
 Applying the same corrective to the other half of that health line: 437 warnings
@@ -13757,7 +13673,6 @@ The stamp fixes run under `--feature` throughout, for a reason recorded earlier
 in this campaign: a vault-wide `--fix` once modified a peer's execution records.
 The same flag answers the reporting question, and it was available the whole
 time.
-
 
 ## The citation gate closed one hole and left the next one open
 
@@ -13796,7 +13711,6 @@ The four sites in the gate's own test file are not offenders: they are the
 constructed citations proving each pattern matches, and the gate skips its own
 module for exactly that reason, saying so where it does it.
 
-
 ## A gate that could not see its own module
 
 The vault-citation gate skipped its own test file entirely, with a comment
@@ -13834,7 +13748,6 @@ of the module - because growing the exemption to cover the new test is exactly
 the move the narrowing exists to prevent, and it would have been the easier fix
 each of the three times.
 
-
 ## Two self-exempting gates in dev, and the second exemption was dead
 
 Having narrowed one gate's self-exemption, the question is whether others carry
@@ -13862,7 +13775,6 @@ inert, and neither was wrong when written - each was a reasonable guard against
 a gate reporting itself. What neither carried was a measurement of what it
 actually excluded, and both turned out to exclude something other than what
 their comments described.
-
 
 ## The bigger exclusion, and why it is not the same finding
 
@@ -13895,7 +13807,6 @@ the two-scope docstring describes are gone from the tree - retired in
 since a baseline ratchet is not evidence. So the docstring now describes a file
 that does not exist. That is a consequence of work in progress rather than a
 defect to fix underneath its owner, and it is recorded here rather than acted on.
-
 
 ## The one failure mode the integrity tool cannot verdict on
 
@@ -13933,7 +13844,6 @@ do produced more than extending what it can. The measurement is that the
 parallel runner is silent about deselection, which is a fact about every figure
 this plan quotes from a filtered run, and it was not known before this.
 
-
 ## Every default pytest run in this repository is a filtered one
 
 The deselection finding has an immediate consequence, because the default
@@ -13969,7 +13879,6 @@ the point of finding it:
 The one figure that would have been wrong is the one nobody took: comparing this
 session's 1,227 passing registry tests against a default-filtered count from
 another session would have shown 34 tests vanishing and no reason for it.
-
 
 ## Seventy-eight tests that run only when somebody types the command
 
@@ -14018,7 +13927,6 @@ Recorded rather than acted on. Whether these should run on a schedule, on a
 tagged machine, or on a human's checklist is a project decision with a cost,
 and the useful contribution here is the number and the asymmetry.
 
-
 ## Correction: the putting-back is gated, the gate is right, and it is red
 
 The previous entry named a class - "a gate on the holding-out and none on the
@@ -14062,7 +13970,6 @@ time this session that reading first prevented a redundant build. And a red gate
 is not the same as a missing one: the eighty-four were visible to anyone who ran
 that file, in a repository where the default lane does not run it.
 
-
 ## The conformance closure suite, located exactly
 
 This plan has recorded since early on that the conformance closure suite - the
@@ -14102,7 +14009,6 @@ three - 66 against 181 - and both are correct answers to different questions.
 and a repository that answers only the first can be entirely green while a fifth
 of its declared coverage has never executed.
 
-
 ## Auditing my own closures, and my own reachability
 
 Closing a Step whose work I had not done - and could not do, its scope being the
@@ -14131,7 +14037,6 @@ of it you are on.
 
 The three files outside every lane's path scope are unchanged: the two
 conformance closure modules and one TUI visual-inventory module.
-
 
 ## A docstring describing a mechanism its own function says was retired
 
@@ -14165,7 +14070,6 @@ compares them at. Here the drift was twenty lines wide inside one file, between 
 module docstring and a function docstring that contradicted each other, and both
 were written by people who knew what they meant at the time.
 
-
 ## The classifiers that decide the audit's verdict had no tests
 
 Reconciling the complexity audit's docstring exposed the next question: what
@@ -14197,7 +14101,6 @@ I wrote the round-trip test against guessed field names and it failed on
 `Baseline.cc` where the dataclass says `cyclomatic`. That is the same
 guess-instead-of-read this campaign has recorded before, and it cost one run
 because the names are three lines from the function under test.
-
 
 ## Forty-two untested dev modules, after correcting my own count by thirty per cent
 
@@ -14237,7 +14140,6 @@ Recorded rather than fixed. Writing tests for another campaign's codemods is
 work with an owner, and the useful contribution is the corrected number and the
 two names.
 
-
 ## Putting the rule in a function rather than in each walk's author
 
 Three defects in this campaign came from one rule nobody had written down: an
@@ -14268,7 +14170,6 @@ through the shared function - rather than through a hand-written walk - returns
 **42 of 352**, the corrected figure, where the hand-written walk returned 60.
 The probe that gets it right is now the shorter one to write, which is the only
 durable way this stops happening.
-
 
 ## The untested count, made an instrument and ranked by what it can do
 
@@ -14304,7 +14205,6 @@ exactly that - the module must not appear in its own output.
 Reach comes from `imported_modules` rather than a walk written here, which is
 the only reason this module can be trusted about its own subject: the last
 hand-written version of this exact measurement was wrong by eighteen modules.
-
 
 ## Testing the first module the reach report ranked
 
@@ -14344,7 +14244,6 @@ The instrument built one iteration ago picked the target, the target is done, an
 the number moved because of it - which is the whole case for ranking a list
 rather than counting it.
 
-
 ## A thin wrapper is still worth testing, and testing it cost four seconds
 
 `dev/registry/parity/maintenance.py` was the next writing module in this plan's
@@ -14383,7 +14282,6 @@ wrapper" is a claim about cost, and it was cheaper to measure the cost than to
 argue about it: one probe, four seconds of test runtime, and the objection
 dissolved.
 
-
 ## My own ranking report over-attributed its worst category by a third
 
 Working down the reach report's ranked list, `dev/quality/types.py` appeared
@@ -14416,7 +14314,6 @@ Found by reading the report's own output rather than by trusting it, which is
 the second time this session an instrument I wrote was corrected by looking at
 what it said about a module I happened to know.
 
-
 ## Checking every attribution rather than the ones I happen to recognise
 
 Both false positives in the reach report were found the same way: a module name
@@ -14448,7 +14345,6 @@ between creating, writing and destroying would be more accurate than one
 of nine. That is the sixth guard this campaign has declined after measuring, and
 the reason is the same each time: a distinction with one member ranks nothing.
 
-
 ## The evidence check, asked of all three categories
 
 The check written last iteration covered `writes` and neither of the other two.
@@ -14472,7 +14368,6 @@ That is the difference between the two versions worth keeping. The first
 verified the category I had just found bugs in; the second verifies the
 question, which is the only version that would have caught the bugs before I
 noticed them.
-
 
 ## Six declared conditions never fire, and one had no proof either
 
@@ -14514,7 +14409,6 @@ directions: a rule the author knows is not a rule the code follows, and the
 distance between them is only visible when something asks every member of a
 category rather than the members somebody remembers.
 
-
 ## Gate thirty-nine, and a near-miss inside writing it
 
 The unproven condition was found by a probe. Now that all six emptied conditions
@@ -14542,7 +14436,6 @@ verify a change and the easiest way to miss what it did to its neighbours, and
 this campaign has now recorded that twice from opposite directions: once when a
 suite run hid a regression among 36 pre-existing failures, and once here, when a
 targeted run hid a regression by not running it.
-
 
 ## Sweeping for the neighbours a targeted run cannot see
 
@@ -14572,7 +14465,6 @@ trustworthy way to finish one. The rule this session ends with is narrower than
 "always run everything": run the whole file you edited, because that is where a
 textual replacement can land on the wrong occurrence, and the failure it causes
 is invisible to the test you were writing.
-
 
 ## Three failing gates, one data landing
 
@@ -14609,7 +14501,6 @@ the day it happened. What no instrument does is notice that three of them starte
 failing together - and the connection took a set intersection to see, not a
 better gate.
 
-
 ## A failure correlator, declined because the signal is not in the failures
 
 Having found three gates failing on one landing, the obvious instrument is one
@@ -14640,7 +14531,6 @@ modelo/revision/casilla - and this package already correlates at that level:
 `condition_overlap` compares screen populations by revision, `filing_exposure`
 by grade. Cross-instrument correlation belongs there, at the finding, and not in
 the failure text, which is a rendering of a finding with most of it removed.
-
 
 ## Cross-package correlation, measured and found empty
 
@@ -14673,7 +14563,6 @@ as the seventh: not because the idea is wrong but because the population it
 needs is not in the place it would look. The actionable residue is enrolment
 rather than instrumentation, and enrolment of another campaign's modules is not
 this plan's to do.
-
 
 ## The one fact the conformance manager computes for itself, now asserted
 
@@ -14710,3 +14599,213 @@ correlator and a cross-package finding correlator, both measured empty - and the
 third thing tried was work rather than tooling. Three consecutive declinations
 would have been a signal about the campaign's remaining tooling headroom rather
 than about the ideas.
+
+## The conformance suite's one failure, named exactly
+
+This plan records that one test in the conformance closure suite "has been
+failing throughout this campaign's measurements under the description of
+inherited baseline". Opening it turns that description into a fact.
+
+The failure is
+`test_real_live_filing_success_cannot_invent_a_complete_source_limb`, and it is
+not an assertion at all: `AttributeError: 'LiveFilingExportProofAuthority'
+object has no attribute 'assess_for'`. The shipped code calls a method the
+object does not have.
+
+The contract is unambiguous and lives in `src`:
+`FilingExportProofAuthority` is a Protocol declaring `assess_for`, and
+`filing_export_coverage.py` calls it. In the same dev module, one class
+implements that method and `LiveFilingExportProofAuthority` implements
+`proof_for` instead - so the file holds one class that satisfies the protocol
+and one that does not, thirty lines apart.
+
+That is exactly the state `S109` describes: the single-channel proof authority
+is slated for deletion once an enrolled conformance vector lets the two-channel
+one produce a satisfied outcome, and the modelo 151 test is to be rewritten onto
+it. So the failure is neither inherited debt nor a stale rename to repair; it is
+a transitional object whose replacement is blocked behind the official
+emitted-byte reference.
+
+Recording it this precisely is the contribution. "Inherited baseline" invites
+the next reader to leave it alone; "a caller invoking a method the object does
+not implement, on an object already scheduled for deletion" tells them what they
+are looking at and why fixing the symptom would be wrong - adding `assess_for`
+to a class due to be removed would satisfy the protocol and defeat the Step.
+
+The suite that holds it remains unreachable by any lane, which is why a live
+`AttributeError` has sat there without a signal.
+
+## The codemod that could not be imported
+
+`S526` asked for tests on the two untested modules that rewrite source files
+behind `--apply`. Writing them found that one of them does not run.
+
+`dev/quality/import_centralization_codemod.py` inserted its own directory on
+`sys.path` and imported its sibling by bare name. That loads
+`import_hygiene_scan` as a TOP-LEVEL module, so its own
+`from .._paths import ...` has no parent package and raises. The codemod was
+unimportable by every route including `python -m`, and had been for as long as
+nothing imported it - which is precisely as long as it had no tests.
+
+One line fixes it: `from . import import_hygiene_scan as scan`. It now imports
+and runs, reporting zero rewritable statements in dry run.
+
+Both codemods turn out to be untestable in apply mode, from opposite ends. The
+sweep walks a module-level constant pointing at the real `src` tree with no
+injectable root at all. The codemod takes an explicit path and then rejects
+every path but that tree's, because it derives module names through the hygiene
+scanner. So neither can be exercised destructively without rewriting the
+repository, and no test here does.
+
+What the tests hold instead is what each can prove. For the sweep: that
+importing it does not arm it, since the `--apply` flag is a module-level global
+read from `sys.argv` and five functions write when it is set; that an
+unreadable path yields `None` rather than killing a run partway; and that a pin
+inside embedded Python source is found and anchored to the parent line, which is
+the defect its docstring records a real gate having hidden. For the codemod: the
+relative-prefix arithmetic including the initialiser case that is one level
+different, the style choice that must follow the file, the line-limit wrap, and
+that a path outside the source root is refused BEFORE any write.
+
+That last is asserted because the refusal is incidental rather than designed - it
+falls out of a module-name lookup, not an explicit guard - and it is the only
+thing between this codemod and a mistyped path.
+
+`module_test_reach` now reports **37 unreached, 7 writing, and zero declaring an
+apply flag**. The category that ranked first when the report was built is empty.
+
+## Seventy-seven catalogue keys taken off the deletion path
+
+`test_every_wrapped_key_is_discovered_by_the_scanner` reported thirteen locale
+keys the source writes and the AST scanner cannot see, with the consequence
+stated in its own message: the coverage and parity scanners report them as
+unused catalogue entries, one strip away from deletion.
+
+The cause is a declared table. `_COMMAND_SPEC_KEY_FACTORIES` names the CLI
+helpers that take a translation key POSITIONALLY, and it named five. Four more
+exist - `_boolean_flag_option`, `_repeatable_text_option`,
+`_optional_text_option` and `state_free_group_spec` - and every key they carry
+was invisible.
+
+Each was derived from the keys the gate itself reported rather than guessed,
+and added by name rather than by widening the rule to any positional dotted
+literal. The table's own note rejects that generalisation for a good reason: a
+module path or a dotted identifier would become a phantom catalogue key. Four
+names is the fix the table was designed to take.
+
+The gate is green, and the effect on its neighbour is the measurement worth
+keeping. Parity was A/B'd against `HEAD`'s scanner by restoring it from the git
+object store and running the same test: **520 extra keys before, 443 after**,
+with the missing figure unchanged at 339. So **seventy-seven catalogue entries
+stopped being reported as unused**, which is exactly the population the gate
+said was at risk.
+
+That number is the reason this was worth doing rather than recording. A key the
+scanner cannot see is not a scanner problem in the abstract; it is a translated
+string that a cleanup sweep would delete with a clear conscience, in four
+locales, with nothing to notice it had gone.
+
+## A relocation that left two fixtures behind, and twelve errors
+
+`dev/ci/tests` reported twelve errors at setup. Errors rather than failures,
+which is usually a broken import and was here a broken move.
+
+`test_overview_verbs.py` was relocated from `src/cadrumo/entrypoints/cli/tests`
+to its dev family home by `c0a7feef24`. The fixture it requests through
+`usefixtures` stayed in the CLI package's own `conftest.py`, which pytest cannot
+reach across that boundary, so seven tests failed at setup with
+`fixture 'overview_cli_backend' not found`.
+
+Supplying it exposed the second half. `compose_runtime_ports` is session-scoped
+and AUTOUSE, and an autouse fixture only reaches tests inside its own directory
+tree - so the same move silently took these tests out of the composition that
+binds the real persistence and authentication adapters. The first fixture then
+got as far as opening a profile session and failed on `profile custody
+infrastructure has not been composed`, which is the same message seen earlier in
+`dev/agent_eval` and traced there to nothing.
+
+Both are IMPORTED into a new `dev/ci/tests/conftest.py` rather than
+reimplemented. A second copy of the storage-root, session and profile
+composition would be four shipped helpers restated where nothing notices when
+they change, which is the defect this campaign removes rather than one to
+introduce while fixing an error.
+
+The result is **twelve errors to zero**, and five of them were not in the file
+that motivated the fix: `test_ledger_scale_benchmark.py` was erroring at setup
+for the same reason and now runs. What it says having run is the point -
+**M130 calculate takes 3.031 CPU-s against a 3.0 CPU-s budget at 30,000-row
+ledger scale**. A performance budget has been over for as long as the tests
+guarding it could not start, in a directory no CI lane runs.
+
+That is the difference between an error and a failure, and why errors are worth
+opening first: a failing test tells you something is wrong, and an erroring test
+tells you nothing at all while looking equally red.
+
+## The same gap in agent_eval, and a result worth stating carefully
+
+`dev/agent_eval/tests` had the same absence: no conftest, and thirteen tests
+erroring at setup with `profile custody infrastructure has not been composed`.
+The cause is identical - `compose_runtime_ports` is session-scoped and autouse
+in `src/cadrumo/conftest.py`, so it reaches no test outside that tree - and the
+fix is the same import.
+
+The result is not the same, and saying so plainly matters more than the fix.
+
+**Errors thirteen to zero, passing 108 to 111, failing 8 to 18.** The thirteen
+tests now execute: three pass, ten fail. So the count of red lines went UP, and
+the change is still right.
+
+What the ten now say is why. Every one refuses with `No passphrase channel is
+available. Run this verb at a terminal, or pass --secrets-stdin or
+--secrets-fd` - an environmental precondition a headless runner cannot supply,
+of exactly the class this repository already declares through markers like
+`os_keychain` and `external_tool`. Before the fix they said `custody
+infrastructure has not been composed`, which is true of the harness and says
+nothing about the test.
+
+That is the whole trade: thirteen tests that reported a harness defect now
+report their own precondition, and three that were never broken at all now run
+and pass. A directory with ten honest refusals is in better condition than one
+with thirteen setup errors, even though it looks worse.
+
+The residue is a marker decision belonging to that campaign - these ten need a
+declared precondition, not a composition - and it is recorded rather than
+guessed at from here. What is not in doubt is that the relocation left the
+composition behind in two directories, and both are now attached to it.
+
+## The composition gap swept, and a writer that could actually be tested
+
+Two directories had lost the session-autouse runtime composition, and the
+obvious question is how many more. Swept: ten dev test directories use the
+shipped `cadrumo.tests` helpers, and only `dev/agent_eval/tests` and
+`dev/ci/tests` were failing for want of the composition. Both are now attached
+to it, and the class is closed rather than left to be tripped over again.
+
+The four remaining setup errors in that sweep are a different and well-behaved
+thing: `dev/deploy/tests` refuses with `no built documentation HTML at
+docs/_build/html; this preflight reads a real artefact, so it needs a real
+build to read`. A precondition stated in its own message is not a defect, and
+it is exactly what the composition errors were not.
+
+Then a fix from the ranked list. `dev/audit/size_budget.py` writes to the tree
+and no test reached it, and unlike the two codemods in `dev/quality` its writer
+TAKES its destination - so the write is exercised on a constructed file rather
+than reasoned about. That difference is worth naming, because it is the whole
+reason two modules could only be tested for their refusals and this one can be
+tested for its behaviour.
+
+Eight tests hold it. The reader must stay empty whatever path it is handed,
+since the committed limit table was retired and a reader that quietly resumed
+returning ceilings would restore a ratchet this project removed. The written
+document is sorted JSON with a final newline, because a generated file is read
+as a diff. The scanned counts sit beside the entry counts, so a small tree and
+a scan that stopped early stay distinguishable.
+
+And the notes rule, which is the one that could lose something irrecoverable:
+prose keyed to a surviving module or callable is carried forward verbatim, and
+prose whose subject is gone is dropped. Both key shapes are tested, because a
+rule that kept only path-keyed notes would silently discard every note about a
+function - the half of the table with the finer keys and the shorter prose.
+
+`module_test_reach` is now **36 unreached, 6 writing**, from 42 and 16 when the
+report was built.

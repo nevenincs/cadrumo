@@ -12,7 +12,7 @@ from textual.screen import Screen
 from textual.widgets import Button, Static
 
 from ....application.operations.composition import OperationComposedServices
-from ....application.overview.home import HomeSessionPosture
+from ....application.overview.home import HomeProjectionV1, HomeSessionPosture
 from ....application.search.workbench import WorkbenchDestinationAdmissionState, WorkbenchSearchService
 from ....application.user_profile.login_session import ProfileLoginOutcome
 from ....application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
@@ -183,6 +183,72 @@ async def test_expired_custody_refresh_recomposes_without_rendering_a_stale_root
             _ = app.destination_catalogue
         with pytest.raises(RuntimeError, match="no composed workbench search"):
             _ = app.workbench_search_service
+
+
+@pytest.mark.asyncio
+async def test_a_refused_home_refresh_keeps_the_session_and_reports_a_code() -> None:
+    """A concurrent write must not end the session with a traceback.
+
+    The read door refuses when a sibling process writes the profile between its
+    two reads. That refusal is correct and says nothing about this session's
+    validity, so the operator keeps the Home they are looking at and is told the
+    refresh did not happen. Before this, the RuntimeError escaped into a Textual
+    message handler and terminated the run -- while the sibling search path one
+    method away already handled its own refusal exactly this way.
+    """
+    projections = [build_home_projection_fixture(HomeFixtureScenario.READY)]
+
+    def refresh() -> HomeProjectionV1:
+        if projections:
+            return projections.pop(0)
+        raise RuntimeError("secure workbench generation changed during capture")
+
+    app = CadrumoTuiApp(
+        services=cast(OperationComposedServices, object()),
+        destination_catalogue=_catalogue([]),
+        refresh_home=refresh,
+        workbench_search_service=WorkbenchSearchService(()),
+        account_factories=_account_factories(HandoverScreen()),
+    )
+
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        assert app.home_refresh_refusal_code is None
+
+        app._show_home(None)
+        await pilot.pause()
+
+        assert app.home_refresh_refusal_code == "workbench.home.refresh_unavailable"
+        assert app.return_value is None
+        assert app.is_running
+        app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_a_refused_refresh_never_reports_an_expiry_it_did_not_observe() -> None:
+    """A refusal and an expiry are different outcomes and stay so.
+
+    Widening the expiry branch to catch everything would end the session in the
+    other direction -- discarding a live profile-bound root over a concurrent
+    write -- so the refusal must not be reported as a recomposition.
+    """
+    app = CadrumoTuiApp(
+        services=cast(OperationComposedServices, object()),
+        destination_catalogue=_catalogue([]),
+        refresh_home=lambda: (_ for _ in ()).throw(
+            RuntimeError("secure workbench generation changed during capture")
+        ),
+        workbench_search_service=WorkbenchSearchService(()),
+        account_factories=_account_factories(HandoverScreen()),
+    )
+
+    async with app.run_test() as pilot:
+        await pilot.pause()
+
+        assert app.return_value is None
+        assert app.home_refresh_refusal_code == "workbench.home.refresh_unavailable"
+        assert app._account_factories is not None
+        app.exit(None)
 
 
 class HandoverScreen(Screen[ProfileLoginOutcome | None]):

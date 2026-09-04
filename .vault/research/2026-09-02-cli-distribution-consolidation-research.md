@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#cli-distribution-consolidation'
 date: '2026-09-02'
-modified: '2026-09-03'
+modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:42c189990e160b6f23fc5b16b132c0fbc6df75cd262512e1d254d67878fccc3c'
+body_hash: 'sha256:58d8edd81695b242b632f21777678c9c043908fd8b0b31b19982abda6529de91'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
@@ -810,6 +810,36 @@ rebuild of the same commit. Every one of the three `python-*` rows therefore bel
 CI, alongside the four `homebrew-*` and `scoop-*` rows that need channels nobody has
 published. Zero of the seven are producible on a workstation, and an earlier note in this
 record that one of them was is wrong.
+
+### The managed channels now install what the index serves
+
+Both generators addressed `releases/download/v<version>/...`, and no workflow attaches an
+asset to a release, so every install through Homebrew or Scoop reached a file that was
+never going to exist. The two channels are fixed differently, because the index does not
+offer them the same thing.
+
+The formula addresses the index directly. Its stable per-project source path redirects to
+the hashed location a file actually occupies, which is unpredictable before an upload and
+therefore the only form a generator can emit ahead of one. Checked against the live index
+rather than assumed: the product's own source archive and both companions return 200 at
+that address, and the rendered formula now contains no release URL at all.
+
+Scoop cannot use the same path, because it serves only source distributions and the
+manifest installs wheels. So the manifest no longer downloads anything: the download
+block is gone entirely and the install step asks the index for `cadrumo==<version>` by
+name, with the exported constraints file still pinning the whole transitive closure to
+the tested lock. That trades a per-file digest for the index's own integrity, which is
+the trade the accepted decision already makes by putting those channels downstream of it.
+
+The `--release-base-url` argument is gone from both generators, both packaging workflows
+and both test suites, so nothing can pass one again. A gate asserts the negative and the
+positive together: no generator line addresses a release asset, the formula still
+addresses the index, and the Scoop manifest declares no download block while installing
+by exact version. Asserting only the negative would pass on a generator that addressed
+nothing at all.
+
+The generator suites build a real cohort and time out on this workstation, so they were
+updated statically and are unverified here; the packaging lanes run them.
 
 ### Not investigated
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import struct
 import subprocess
 import zipfile
 from pathlib import Path, PurePosixPath
@@ -12,10 +13,73 @@ from .._paths import UTF_8
 
 _GENERATED_METADATA = frozenset({"INSTALLER", "RECORD", "REQUESTED", "direct_url.json", "uv_cache.json"})
 
+# Portable-executable offsets used to project a Windows console launcher onto
+# the bytes its embedded script cannot influence. Fixed by the PE/COFF format.
+_PE_SIGNATURE_POINTER = 0x3C
+_PE_SIGNATURE = b"PE\0\0"
+_COFF_SECTION_COUNT_OFFSET = 6
+_COFF_OPTIONAL_SIZE_OFFSET = 20
+_COFF_HEADER_SIZE = 24
+_PE32_PLUS_MAGIC = 0x20B
+_PE32_DATA_DIRECTORY_OFFSET = 96
+_PE32_PLUS_DATA_DIRECTORY_OFFSET = 112
+_RESOURCE_DIRECTORY_INDEX = 2
+_DATA_DIRECTORY_ENTRY_SIZE = 8
+_SECTION_HEADER_SIZE = 40
+_SECTION_NAME_SIZE = 8
+_SECTION_VIRTUAL_SIZE_OFFSET = 8
+_SECTION_RAW_SIZE_OFFSET = 16
+_RESOURCE_SECTION_NAME = b".rsrc"
+
 
 def _projection_digest(rows: list[tuple[str, str]]) -> str:
     payload = json.dumps(sorted(rows), ensure_ascii=False, separators=(",", ":")).encode(UTF_8)
     return hashlib.sha256(payload).hexdigest()
+
+
+def _launcher_stub_projection(image: bytes) -> bytes:
+    """Project a Windows console launcher onto bytes its embedded script cannot change.
+
+    A console launcher is one installer-fixed stub carrying the script's zip as
+    a Windows resource, so the resource section and the two header fields that
+    state its size track the compressed script's length. Two genuine launchers
+    installed side by side therefore differ there whenever their scripts differ
+    in length, and comparing the raw stubs compares the payload rather than the
+    stub. The payload is already compared byte-for-byte against the expected
+    script by the caller, so this elides the resource section and those two size
+    fields and leaves every remaining byte - entry point, code, imports, data,
+    relocations, and the whole section layout including the resource section's
+    address and file offset - compared exactly.
+    """
+    signature = struct.unpack_from("<I", image, _PE_SIGNATURE_POINTER)[0]
+    if image[signature : signature + len(_PE_SIGNATURE)] != _PE_SIGNATURE:
+        raise RuntimeError("console entry-point launcher is not a portable executable")
+    section_count = struct.unpack_from("<H", image, signature + _COFF_SECTION_COUNT_OFFSET)[0]
+    optional_size = struct.unpack_from("<H", image, signature + _COFF_OPTIONAL_SIZE_OFFSET)[0]
+    optional = signature + _COFF_HEADER_SIZE
+    magic = struct.unpack_from("<H", image, optional)[0]
+    directories = optional + (
+        _PE32_PLUS_DATA_DIRECTORY_OFFSET if magic == _PE32_PLUS_MAGIC else _PE32_DATA_DIRECTORY_OFFSET
+    )
+    resource_size_field = directories + _RESOURCE_DIRECTORY_INDEX * _DATA_DIRECTORY_ENTRY_SIZE + 4
+    table = optional + optional_size
+    headers = (table + index * _SECTION_HEADER_SIZE for index in range(section_count))
+    resource = next(
+        (
+            header
+            for header in headers
+            if image[header : header + _SECTION_NAME_SIZE].rstrip(b"\0") == _RESOURCE_SECTION_NAME
+        ),
+        None,
+    )
+    if resource is None:
+        raise RuntimeError("console entry-point launcher carries no embedded script resource")
+    raw_size, raw_offset = struct.unpack_from("<II", image, resource + _SECTION_RAW_SIZE_OFFSET)
+    projected = bytearray(image)
+    struct.pack_into("<I", projected, resource_size_field, 0)
+    struct.pack_into("<I", projected, resource + _SECTION_VIRTUAL_SIZE_OFFSET, 0)
+    del projected[raw_offset : raw_offset + raw_size]
+    return bytes(projected)
 
 
 def sealed_wheel_payload_sha256(wheel: Path) -> str:
@@ -27,42 +91,6 @@ def sealed_wheel_payload_sha256(wheel: Path) -> str:
             if info.is_dir() or path.name in _GENERATED_METADATA:
                 continue
             rows.append((path.as_posix(), hashlib.sha256(archive.read(info)).hexdigest()))
-    return _projection_digest(rows)
-
-
-def assert_archive_members_match_extraction(
-    archive_path: Path,
-    extracted_root: Path,
-    *,
-    allowed_generated_roots: frozenset[str] = frozenset(),
-) -> str:
-    """Verify every immutable archive member exists byte-for-byte in its extraction root."""
-    rows: list[tuple[str, str]] = []
-    root = extracted_root.resolve(strict=True)
-    archive_files: set[str] = set()
-    with zipfile.ZipFile(archive_path) as archive:
-        for info in archive.infolist():
-            if info.is_dir():
-                continue
-            member = PurePosixPath(info.filename)
-            archive_files.add(member.as_posix())
-            target = (root / Path(*member.parts)).resolve(strict=True)
-            if not target.is_relative_to(root) or not target.is_file():
-                raise RuntimeError(f"archive member escapes or is absent from extraction: {member}")
-            expected = hashlib.sha256(archive.read(info)).hexdigest()
-            if hashlib.sha256(target.read_bytes()).hexdigest() != expected:
-                raise RuntimeError(f"extracted archive member digest drifted: {member}")
-            rows.append((member.as_posix(), expected))
-    if not rows:
-        raise RuntimeError("sealed archive has no immutable members to bind")
-    extracted_files = {
-        path.relative_to(root).as_posix()
-        for path in root.rglob("*")
-        if path.is_file() and path.relative_to(root).parts[0] not in allowed_generated_roots
-    }
-    extras = extracted_files - archive_files
-    if extras:
-        raise RuntimeError(f"extraction carries unsealed extra members: {sorted(extras)[:10]!r}")
     return _projection_digest(rows)
 
 
@@ -151,13 +179,9 @@ def assert_installed_console_entry_point(
                     raise RuntimeError("console entry-point launcher semantics drifted")
             peer_name = "cadrumo-mcp.exe" if entry_point == "aeat" else "aeat.exe"
             peer = resolved.with_name(peer_name).resolve(strict=True)
-            executable_bytes = resolved.read_bytes()
-            peer_bytes = peer.read_bytes()
-            executable_zip = executable_bytes.find(b"PK\x03\x04")
-            peer_zip = peer_bytes.find(b"PK\x03\x04")
-            if executable_zip < 0 or peer_zip < 0 or executable_bytes[:executable_zip] != peer_bytes[:peer_zip]:
+            if _launcher_stub_projection(resolved.read_bytes()) != _launcher_stub_projection(peer.read_bytes()):
                 raise RuntimeError("console entry-point launcher stub drifted")
-        except (OSError, zipfile.BadZipFile) as exc:
+        except (OSError, struct.error, zipfile.BadZipFile) as exc:
             raise RuntimeError("console entry-point launcher is malformed") from exc
     elif resolved.read_bytes() != expected_script:
         raise RuntimeError("console entry-point launcher semantics drifted")

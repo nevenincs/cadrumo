@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#verification-reconcile-when-present'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-09-04'
+body_schema: 'body-v2'
 body_hash: 'sha256:0efca3eef73707aa524097b176f848706c136b706e0744d3f79fa7ce30eff443'
 related:
   - '[[2026-07-01-verification-reconcile-when-present-adr]]'

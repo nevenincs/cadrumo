@@ -202,6 +202,42 @@ def write_manifest(directory: Path, manifest: Manifest) -> Path:
     return path
 
 
+def stale_artifacts(directory: Path, manifest: Manifest) -> tuple[Path, ...]:
+    """Files in a run directory that this run's manifest does not claim.
+
+    A run writes into a directory it may share with an earlier one, so frames
+    from a previous render survive beside the current set with nothing marking
+    them. A reviewer opening the directory cannot tell which is which, and a
+    surface can be signed off as it looked two code changes ago -- the inverse
+    of the silent absence `unaccounted_frames` catches, and just as misleading.
+    """
+    claimed = {
+        (directory / name).resolve()
+        for frame in manifest.frames
+        for name in (frame.png, frame.svg, frame.text)
+    }
+    found: list[Path] = []
+    for kind in ("png", "svg", "text"):
+        sub = directory / kind
+        if not sub.is_dir():
+            continue
+        found.extend(path for path in sorted(sub.iterdir()) if path.is_file() and path.resolve() not in claimed)
+    return tuple(found)
+
+
+def purge_stale_artifacts(directory: Path, manifest: Manifest) -> tuple[Path, ...]:
+    """Delete the frames this run did not produce, and report what went.
+
+    Deliberately narrow: only regular files under the three frame directories
+    of THIS run, only those the manifest does not name. The manifest, index and
+    log are never touched, and nothing outside the run directory is considered.
+    """
+    removed = stale_artifacts(directory, manifest)
+    for path in removed:
+        path.unlink()
+    return removed
+
+
 def unaccounted_frames(
     manifest: Manifest,
     *,
@@ -331,8 +367,10 @@ __all__ = [
     "digest",
     "known_runs",
     "now",
+    "purge_stale_artifacts",
     "read_manifest",
     "run_directory",
+    "stale_artifacts",
     "unaccounted_frames",
     "write_index",
     "write_manifest",

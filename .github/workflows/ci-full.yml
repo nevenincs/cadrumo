@@ -290,6 +290,28 @@ jobs:
         # site instead of living only in this workflow line.
         run: just test-channel-artifacts
 
+      - name: Packaging serial contracts (distribution evidence, installed oracles)
+        # The `integration and serial` half of `dev/packaging/tests`. Nothing on
+        # CI reached it: the per-push lanes scope to dev/ paths AND exclude
+        # `serial`, the pathless invocations inherit testpaths that cannot reach
+        # packaging/, and `packaging-smoke` runs the campaign driver's smoke
+        # modules rather than pytest. `packaging-smoke-serial` was therefore a
+        # declared lane no workflow invoked, which
+        # `dev/tests/test_lane_reachability.py` reports as CI-unreachable.
+        #
+        # Sized into this lane rather than per-push for the same reason the
+        # channel-artifact step above is: these build a real cohort, install real
+        # wheels into real virtualenvs, and cost minutes of filesystem work the
+        # per-push budget cannot absorb. Routed through the recipe so the
+        # path/marker selection keeps one declaration site.
+        #
+        # Blocking. The distribution-evidence cases now drive the cohort binding
+        # end to end against a real install of the cohort's own wheel rather than
+        # aborting in their fixtures, so this step is minutes of genuine work
+        # rather than seconds of fast failure. A red verdict here is a real
+        # binding or oracle regression.
+        run: just packaging-smoke-serial
+
       - name: Documentation conformance
         # The docs-marked tests (nitpicky warnings-as-errors Sphinx build,
         # module-to-stub correspondence, and CLI reference drift/conformance)

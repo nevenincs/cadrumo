@@ -5,16 +5,11 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:24cbae62339ab2558a1e348c22ec771db8460b29e6a55a7350ee7e01f766c91a'
+body_hash: 'sha256:0e90436881ed18fac733b45817953565d1433187460ad75d7f2dcf4345ccbba0'
 step_id: 'S406'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Make the coverage table agree with the surfaces the harness can actually drive. The fixture registry is now the authority for review surfaces and the harness lists 60 of them, up from 6, but `python -m dev.tui inventory` still reports '60 interfaces, 52 not rendered' because it reads a coverage map that predates that wiring. An inventory that under-reports coverage is the same defect as one that over-reports it: either way the missing-surface gate cannot be read, which is how 52 surfaces sat unrendered without anyone noticing.
 

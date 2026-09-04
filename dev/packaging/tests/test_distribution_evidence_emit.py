@@ -5,6 +5,13 @@ output for the installed-CLI command transcripts, and drive the emitter end to
 end. No mocks: the oracle evidence dataclasses are populated with real captured
 values, and the produced record is validated by the tamper-evident
 :class:`~dev.packaging.evidence.DistributionEvidence` schema itself.
+
+The oracle fixtures attest the launchers of the real venv that
+:func:`~dev.packaging.tests._release_cohort_support.client_venv_template`
+installs the cohort's own wheel into, never the ambient development
+interpreter. The emitter's binding guards compare an installed payload digest
+against the sealed cohort wheel, and an editable checkout install can never
+equal a sealed wheel; only a genuine install of those exact bytes can.
 """
 
 from __future__ import annotations
@@ -13,47 +20,41 @@ import functools
 import hashlib
 import os
 import shutil
-import subprocess
 import sys
-import tempfile
-import zipfile
-from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 
-from .._acquire_common import venv_bin_dir
+from .._acquire_common import venv_bin_dir, venv_executable
 from .._command import CommandResult, run_command
 from .._hashing import sha256_path
 from .._installed_wheel_binding import (
-    assert_archive_members_match_extraction,
     assert_installed_console_entry_point,
     installed_distribution_payload_sha256,
-    installed_wheel_payload_sha256,
 )
 from ..cohort_manifest import LoadedReleaseCohort
 from ..distribution_evidence_emit import (
-    build_client_evidence,
     build_installed_oracle_evidence,
-    emit_client_evidence,
     emit_installed_oracle_evidence,
     main,
 )
 from ..evidence import (
     AcquisitionIdentity,
-    ClientIdentity,
-    CommandTranscript,
     DestinationIdentity,
     DistributionEvidence,
     EvidenceStatus,
 )
 from ..installed_mcp_oracle import InstalledMcpEvidence, McpCallEvidence
 from ..installed_tax_oracle import InstalledTaxEvidence
-from ._release_cohort_support import release_cohort
+from ._release_cohort_support import client_venv_template, release_cohort
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+# Serial and integration, matching the Homebrew and Scoop packaging suites: these
+# cases build a real wheel, install it into a real venv, and hard-link that venv
+# per case, which is filesystem work measured in gigabytes and minutes rather
+# than quick-feedback unit work.
+pytestmark = [pytest.mark.integration, pytest.mark.serial, pytest.mark.hex_core]
 
 _TARGET_CASILLA = "DP200014:00562"
 _TARGET_VALUE = "23000.00"
@@ -75,6 +76,23 @@ def _captured_command(argv: tuple[str, ...], cwd: Path) -> CommandResult:
     return run_command(argv, cwd=cwd)
 
 
+def _installed_launcher(entry_point: str) -> Path:
+    """Resolve one real console launcher the sealed cohort wheel installed."""
+    return venv_executable(client_venv_template(), entry_point).resolve(strict=True)
+
+
+@functools.cache
+def _installed_payload_sha256(executable: Path, distribution: str) -> str:
+    """Attest an installed distribution through its own launcher's interpreter.
+
+    Memoised on the pair, not shortcut: the first call spawns the real confined
+    interpreter and hashes every installed file. The template venv is built once
+    per process and never mutated, so repeating that subprocess for each of the
+    module's cases would re-derive a value that cannot have changed.
+    """
+    return installed_distribution_payload_sha256(executable, distribution)
+
+
 def _tax_evidence(
     cwd: Path,
     cohort: LoadedReleaseCohort,
@@ -92,15 +110,16 @@ def _tax_evidence(
         cwd,
     )
     records = {record.name: record for record in cohort.manifest.artifacts}
+    cli = _installed_launcher("aeat")
     return InstalledTaxEvidence(
-        requested_executable=sys.executable,
-        resolved_executable=sys.executable,
+        requested_executable=str(cli),
+        resolved_executable=str(cli),
         version_output=version_command.stdout.strip(),
         cohort_source_commit=cohort.manifest.source.commit,
         cohort_manifest_sha256=records["python-cohort-manifest"].sha256,
         cohort_root_wheel_sha256=records["cadrumo-wheel"].sha256,
-        executable_sha256=sha256_path(Path(sys.executable)),
-        installed_wheel_payload_sha256=installed_wheel_payload_sha256(Path(sys.executable)),
+        executable_sha256=sha256_path(cli),
+        installed_wheel_payload_sha256=_installed_payload_sha256(cli, "cadrumo"),
         storage_root=str(cwd / "state"),
         work_unit_id="e" * 64,
         calculation_revision_id=_REVISION,
@@ -116,18 +135,15 @@ def _tax_evidence(
     )
 
 
-def _mcp_evidence(cohort: LoadedReleaseCohort, *, client: bool = False) -> InstalledMcpEvidence:
-    """Build installed-MCP oracle evidence with a real cadrumo-mcp exe stand-in."""
-    server = Path(shutil.which("cadrumo-mcp") or "").resolve(strict=True)
-    project_root: Path | None = None
-    if client:
-        project_root = cohort.directory / "client-extraction"
-        project_root.mkdir()
-        with zipfile.ZipFile(cohort.artifact("mcpb")) as archive:
-            archive.extractall(project_root)
-        shutil.copytree(_client_venv_template(server.parents[1]), project_root / ".venv", copy_function=os.link)
-        scripts = venv_bin_dir(project_root / ".venv")
-        server = (scripts / ("cadrumo-mcp.exe" if os.name == "nt" else "cadrumo-mcp")).resolve(strict=True)
+def _mcp_evidence(cohort: LoadedReleaseCohort) -> InstalledMcpEvidence:
+    """Build installed-MCP oracle evidence from the real installed cadrumo-mcp.
+
+    Both the server and the CLI it invokes come from one install of the cohort's
+    own wheel, which is what the binding guard requires: the harness ships inside
+    the ``cadrumo`` distribution, so ``cadrumo-mcp`` and ``aeat`` are siblings
+    attesting the same sealed payload.
+    """
+    server = _installed_launcher("cadrumo-mcp")
     cli = server.with_name("aeat.exe" if server.suffix.lower() == ".exe" else "aeat")
     invoked_cli_sha256 = hashlib.sha256(str(cli).encode("utf-8")).hexdigest()
     records = {record.name: record for record in cohort.manifest.artifacts}
@@ -164,23 +180,15 @@ def _mcp_evidence(cohort: LoadedReleaseCohort, *, client: bool = False) -> Insta
         cohort_source_commit=cohort.manifest.source.commit,
         cohort_manifest_sha256=records["python-cohort-manifest"].sha256,
         cohort_root_wheel_sha256=records["cadrumo-wheel"].sha256,
-        cohort_harness_wheel_sha256=records["cadrumo-harness-wheel"].sha256,
+        cohort_harness_wheel_sha256=records["cadrumo-wheel"].sha256,
         server_executable_sha256=sha256_path(server),
         runtime_server_executable=str(server),
-        runtime_project_root=str(project_root) if project_root is not None else None,
-        installed_cli_payload_sha256=installed_distribution_payload_sha256(cli, "cadrumo"),
-        installed_harness_payload_sha256=installed_distribution_payload_sha256(server, "cadrumo-harness"),
+        runtime_project_root=None,
+        installed_cli_payload_sha256=_installed_payload_sha256(cli, "cadrumo"),
+        installed_harness_payload_sha256=_installed_payload_sha256(server, "cadrumo"),
         checkout_imports_removed=True,
         ambient_product_executables_removed=True,
     )
-
-
-@functools.lru_cache(maxsize=1)
-def _client_venv_template(source: Path) -> Path:
-    """Copy the current real venv once; per-test client roots use hard links."""
-    template = Path(tempfile.mkdtemp(prefix="cadrumo-client-venv-")) / ".venv"
-    shutil.copytree(source, template)
-    return template
 
 
 def _acquisition() -> AcquisitionIdentity:
@@ -195,35 +203,9 @@ def _destination(cohort: LoadedReleaseCohort) -> DestinationIdentity:
     )
 
 
-def test_mcpb_member_binding_rejects_empty_and_tampered_extractions(tmp_path: Path) -> None:
-    """An empty bundle or copied manifest with changed payload bytes cannot attest."""
-    extracted = tmp_path / "extracted"
-    extracted.mkdir()
-    empty = tmp_path / "empty.mcpb"
-    with zipfile.ZipFile(empty, "w"):
-        pass
-    with pytest.raises(RuntimeError, match="no immutable members"):
-        assert_archive_members_match_extraction(empty, extracted)
-
-    bundle = tmp_path / "sealed.mcpb"
-    with zipfile.ZipFile(bundle, "w") as archive:
-        archive.writestr("server/bootstrap.py", "sealed\n")
-    target = extracted / "server" / "bootstrap.py"
-    target.parent.mkdir(parents=True)
-    target.write_bytes(b"sealed\n")
-    assert len(assert_archive_members_match_extraction(bundle, extracted)) == 64
-    target.write_bytes(b"foreign\n")
-    with pytest.raises(RuntimeError, match="digest drifted"):
-        assert_archive_members_match_extraction(bundle, extracted)
-    target.write_bytes(b"sealed\n")
-    (extracted / "foreign.txt").write_text("unsealed\n", encoding="utf-8")
-    with pytest.raises(RuntimeError, match="unsealed extra"):
-        assert_archive_members_match_extraction(bundle, extracted)
-
-
 def test_foreign_launcher_cannot_borrow_an_exact_installed_payload(tmp_path: Path) -> None:
     """A copied launcher cannot attest merely because a sealed payload is alongside it."""
-    server = Path(shutil.which("cadrumo-mcp") or "").resolve(strict=True)
+    server = _installed_launcher("cadrumo-mcp")
     suffix = server.suffix
     foreign = server.with_name(f"{tmp_path.name}-foreign-cadrumo-mcp{suffix}")
     shutil.copy2(server, foreign)
@@ -231,7 +213,7 @@ def test_foreign_launcher_cannot_borrow_an_exact_installed_payload(tmp_path: Pat
         with pytest.raises(RuntimeError, match="not the confined environment launcher"):
             assert_installed_console_entry_point(
                 foreign,
-                distribution="cadrumo-harness",
+                distribution="cadrumo",
                 entry_point="cadrumo-mcp",
                 expected_value="cadrumo_harness.mcp:main",
             )
@@ -241,9 +223,10 @@ def test_foreign_launcher_cannot_borrow_an_exact_installed_payload(tmp_path: Pat
 
 def test_exact_path_foreign_launcher_is_refused(tmp_path: Path) -> None:
     """Replacing the canonical launcher cannot borrow its adjacent sealed payload."""
-    server = Path(shutil.which("cadrumo-mcp") or "").resolve(strict=True)
+    template = client_venv_template()
+    server = venv_executable(template, "cadrumo-mcp").resolve(strict=True)
     copied_venv = tmp_path / ".venv"
-    shutil.copytree(_client_venv_template(server.parents[1]), copied_venv, copy_function=os.link)
+    shutil.copytree(template, copied_venv, copy_function=os.link)
     scripts = venv_bin_dir(copied_venv)
     copied_server = scripts / server.name
     copied_server.unlink()
@@ -265,7 +248,7 @@ def test_exact_path_foreign_launcher_is_refused(tmp_path: Path) -> None:
     with pytest.raises(RuntimeError, match="launcher semantics drifted"):
         assert_installed_console_entry_point(
             copied_server,
-            distribution="cadrumo-harness",
+            distribution="cadrumo",
             entry_point="cadrumo-mcp",
             expected_value="cadrumo_harness.mcp:main",
         )
@@ -304,7 +287,13 @@ def test_build_binds_cohort_and_retains_both_transports(tmp_path: Path) -> None:
 
 
 def test_mcp_capture_with_swapped_harness_cohort_digest_is_refused(tmp_path: Path) -> None:
-    """Copied root fields cannot conceal a foreign harness artifact."""
+    """Truthful root fields cannot carry a forged harness-wheel digest past minting.
+
+    The harness ships inside the root wheel, so the harness binding resolves to
+    the same ``cadrumo-wheel`` record. It is still checked independently: a
+    capture that reports a harness digest the cohort does not contain is not a
+    capture of this cohort, however correct its other fields look.
+    """
     from dataclasses import replace
 
     from ..distribution_evidence_emit import EvidenceCohortBindingError
@@ -319,29 +308,6 @@ def test_mcp_capture_with_swapped_harness_cohort_digest_is_refused(tmp_path: Pat
             mcp_evidence=forged,
             acquisition=_acquisition(),
             destination=_destination(cohort),
-        )
-
-
-def test_client_capture_with_foreign_bundle_root_is_refused(tmp_path: Path) -> None:
-    """A same-version server outside the extracted MCPB root cannot mint client evidence."""
-    from dataclasses import replace
-
-    from ..distribution_evidence_emit import EvidenceCohortBindingError
-
-    cohort = _release_cohort(tmp_path / "cohort")
-    foreign_root = tmp_path / "foreign-root"
-    foreign_root.mkdir()
-    forged = replace(_mcp_evidence(cohort, client=True), runtime_project_root=str(foreign_root))
-    with pytest.raises(EvidenceCohortBindingError, match="escapes the extracted MCPB root"):
-        build_client_evidence(
-            row_id="claude-desktop-mcpb",
-            cohort=cohort,
-            mcp_evidence=forged,
-            launch_transcript=_launch_transcript(tmp_path),
-            client=_client(),
-            acquisition=AcquisitionIdentity(mechanism="mcpb", source="github-release"),
-            destination=_destination(cohort),
-            real_client_session=_real_client_session(),
         )
 
 
@@ -442,178 +408,6 @@ def test_cli_emits_from_oracle_json_a_lane_already_produced(tmp_path: Path) -> N
     # The CLI-only lane's record marks the MCP leg absent and attests one exe.
     assert reloaded.result.observations["mcp_oracle"] is None
     assert {exe.name for exe in reloaded.isolation.installed_executables} == {"aeat"}
-
-
-def _launch_transcript(cwd: Path) -> CommandTranscript:
-    """Capture a real owned subprocess as a client server-launch transcript."""
-    started_at = datetime.now(UTC)
-    argv = (sys.executable, "-c", "print('cadrumo-mcp launched')")
-    completed = subprocess.run(argv, cwd=cwd, capture_output=True, text=True, check=False)  # noqa: S603
-    completed_at = datetime.now(UTC)
-    return CommandTranscript.from_output(
-        argv=argv,
-        cwd=str(cwd),
-        started_at=started_at,
-        completed_at=completed_at,
-        exit_status=completed.returncode,
-        stdout=completed.stdout,
-        stderr=completed.stderr,
-        relevant_output=(completed.stdout.strip() or "launched",),
-    )
-
-
-def _client() -> ClientIdentity:
-    return ClientIdentity(name="claude-desktop", version="1.22209", executable=sys.executable)
-
-
-def _real_client_session() -> dict[str, object]:
-    return {"connected": True, "status": "passed", "tool_called": "cadrumo_modelo_work_calculate", "model": "sonnet"}
-
-
-def _sdk_client() -> ClientIdentity:
-    from ..distribution_evidence_emit import SDK_CLIENT_NAME
-
-    return ClientIdentity(name=SDK_CLIENT_NAME, version="1.26.0", executable=sys.executable)
-
-
-def test_sdk_client_cannot_satisfy_a_required_claude_row(tmp_path: Path) -> None:
-    """The honesty guard refuses an SDK-client record under a real-client row id."""
-    cohort = _release_cohort(tmp_path / "cohort")
-    with pytest.raises(ValueError, match="cannot satisfy the real-client row"):
-        build_client_evidence(
-            row_id="claude-desktop-mcpb",
-            cohort=cohort,
-            mcp_evidence=_mcp_evidence(cohort, client=True),
-            launch_transcript=_launch_transcript(tmp_path),
-            client=_sdk_client(),
-            acquisition=AcquisitionIdentity(mechanism="mcpb", source="github-release"),
-            destination=_destination(cohort),
-        )
-
-
-def test_sdk_client_emits_under_a_distinct_artifact_serves_id(tmp_path: Path) -> None:
-    """The same SDK-client record is allowed under a distinct artifact-serves id."""
-    cohort = _release_cohort(tmp_path / "cohort")
-    evidence = build_client_evidence(
-        row_id="claude-desktop-mcpb-artifact-serves",
-        cohort=cohort,
-        mcp_evidence=_mcp_evidence(cohort, client=True),
-        launch_transcript=_launch_transcript(tmp_path),
-        client=_sdk_client(),
-        acquisition=AcquisitionIdentity(mechanism="mcpb", source="github-release"),
-        destination=_destination(cohort),
-    )
-    assert evidence.row_id == "claude-desktop-mcpb-artifact-serves"
-    assert evidence.result.status is EvidenceStatus.PASSED
-
-
-def test_required_real_client_row_needs_a_real_session(tmp_path: Path) -> None:
-    """A required claude-* row cannot be minted from an owned launch alone."""
-    cohort = _release_cohort(tmp_path / "cohort")
-    with pytest.raises(ValueError, match="requires a real Claude client session"):
-        build_client_evidence(
-            row_id="claude-desktop-mcpb",
-            cohort=cohort,
-            mcp_evidence=_mcp_evidence(cohort, client=True),
-            launch_transcript=_launch_transcript(tmp_path),
-            client=_client(),
-            acquisition=AcquisitionIdentity(mechanism="mcpb", source="github-release"),
-            destination=_destination(cohort),
-            real_client_session=None,
-        )
-
-
-@pytest.mark.parametrize(
-    "session",
-    (
-        {"connected": False, "status": "passed", "tool_called": "cadrumo_modelo_work_calculate"},
-        {"connected": True, "status": "error", "tool_called": "cadrumo_modelo_work_calculate"},
-        {"connected": True, "status": "passed", "tool_called": None},
-    ),
-)
-def test_required_real_client_row_refuses_an_unsuccessful_session(tmp_path: Path, session: dict[str, object]) -> None:
-    """A disconnected, errored, or tool-less real-client record cannot mint PASSED evidence."""
-    cohort = _release_cohort(tmp_path / "cohort")
-
-    with pytest.raises(ValueError, match="connected, passed session"):
-        build_client_evidence(
-            row_id="claude-desktop-mcpb",
-            cohort=cohort,
-            mcp_evidence=_mcp_evidence(cohort, client=True),
-            launch_transcript=_launch_transcript(tmp_path),
-            client=_client(),
-            acquisition=AcquisitionIdentity(mechanism="mcpb", source="github-release"),
-            destination=_destination(cohort),
-            real_client_session=session,
-        )
-
-
-def test_required_real_client_rows_match_readiness() -> None:
-    """The guard's required-row set stays in lock-step with the readiness authority.
-
-    Anchored on ``ALL_DISTRIBUTION_ROWS``, not the claimed subset: the real-client
-    honesty guard governs how a claude-* row may be MINTED, which is independent
-    of whether this release happens to claim that channel. Anchoring it on the
-    claimed set would silently drop the guard for every unclaimed client row.
-    """
-    from ...release.readiness import ALL_DISTRIBUTION_ROWS
-    from ..distribution_evidence_emit import _REQUIRED_REAL_CLIENT_ROW_IDS
-
-    claude_rows = frozenset(row for row in ALL_DISTRIBUTION_ROWS if row.startswith("claude-"))
-    assert claude_rows == _REQUIRED_REAL_CLIENT_ROW_IDS
-
-
-def test_client_row_uses_owned_launch_transcript_and_mcp_proof(tmp_path: Path) -> None:
-    """A pure-client row carries the real launch subprocess + MCP proof, client-bound."""
-    cohort = _release_cohort(tmp_path / "cohort")
-    evidence = build_client_evidence(
-        row_id="claude-desktop-mcpb",
-        cohort=cohort,
-        mcp_evidence=_mcp_evidence(cohort, client=True),
-        launch_transcript=_launch_transcript(tmp_path),
-        client=_client(),
-        acquisition=AcquisitionIdentity(mechanism="mcpb", source="github-release"),
-        destination=_destination(cohort),
-        real_client_session=_real_client_session(),
-    )
-
-    assert evidence.row_id == "claude-desktop-mcpb"
-    assert evidence.result.status is EvidenceStatus.PASSED
-    assert evidence.client is not None
-    assert evidence.client.name == "claude-desktop"
-    # Exactly one command: the real owned server-launch subprocess.
-    assert len(evidence.commands) == 1
-    assert evidence.commands[0].exit_status == 0
-    # One installed executable (the client server); MCP proof in observations.
-    assert [exe.name for exe in evidence.isolation.installed_executables] == ["cadrumo-mcp"]
-    mcp_oracle = evidence.result.observations["mcp_oracle"]
-    assert isinstance(mcp_oracle, dict)
-    assert mcp_oracle["target_value"] == _TARGET_VALUE
-    # The operator's real Claude client session is retained as the real-client proof.
-    session = evidence.result.observations["real_client_session"]
-    assert isinstance(session, dict)
-    assert session["tool_called"] == "cadrumo_modelo_work_calculate"
-
-
-def test_emit_client_evidence_writes_flat_record(tmp_path: Path) -> None:
-    """The client-row record lands flat where both gates read and re-validates."""
-    cohort = _release_cohort(tmp_path / "cohort")
-    evidence_dir = tmp_path / "distribution-install-readiness"
-    path = emit_client_evidence(
-        directory=evidence_dir,
-        row_id="claude-code-plugin",
-        cohort=cohort,
-        mcp_evidence=_mcp_evidence(cohort, client=True),
-        launch_transcript=_launch_transcript(tmp_path),
-        client=_client(),
-        acquisition=AcquisitionIdentity(mechanism="claude-plugin", source="marketplace"),
-        destination=_destination(cohort),
-        real_client_session=_real_client_session(),
-    )
-    assert path.name.startswith("claude-code-plugin-")
-    reloaded = DistributionEvidence.model_validate_json(path.read_text(encoding="utf-8"))
-    assert reloaded.row_id == "claude-code-plugin"
-    assert reloaded.client is not None
 
 
 def test_version_mismatched_capture_against_cohort_is_refused(tmp_path: Path) -> None:

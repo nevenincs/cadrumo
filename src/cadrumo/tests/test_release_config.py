@@ -306,13 +306,18 @@ def test_version_surfaces_agree() -> None:
     )
 
 
-def test_no_release_please_github_actions_workflow() -> None:
-    """GitHub Actions is disabled on this repo — no release-please workflow may exist."""
-    workflow = repo_path(".github/workflows/release-please.yml")
-    assert not workflow.exists(), (
-        f"{workflow} must not exist: release-please runs LOCALLY only on this repo "
-        "(GitHub Actions is permanently disabled)."
-    )
+def test_the_release_path_workflows_exist() -> None:
+    """The release path runs on the forge, and both halves of it must be present.
+
+    A release is cut by merging the release pull request: `release-please.yml`
+    computes the version, writes the changelog, tags, creates the release and
+    dispatches `publish.yml`, which builds the distributions from that tag and
+    uploads them. Neither half is optional, and a missing one does not fail a
+    step — it removes the trigger, so nothing runs and nothing reports.
+    """
+    for relative in (".github/workflows/release-please.yml", ".github/workflows/publish.yml"):
+        workflow = repo_path(relative)
+        assert workflow.is_file(), f"{workflow} is missing; the release path cannot run without it"
 
 
 def test_release_checklist_is_well_formed(release_checklist: ReleaseChecklist) -> None:
@@ -343,15 +348,33 @@ def test_release_notes_template_exists_and_is_referenced(release_checklist: Rele
 
 
 def test_releasing_doc_matches_the_executable_release_entry_and_recovery() -> None:
-    """The operator guide must describe the current orchestrator, not retired ceremony."""
+    """The operator guide must describe the executable path, not retired ceremony.
+
+    Every string below names a surface that exists: a workflow the forge runs, a
+    recipe the justfile defines, or a declaration file the readiness gate reads.
+    The guide is the only place an operator learns the order they run in, so a
+    live surface missing from it is as much a defect as a retired one left in.
+    """
     text = RELEASING_PATH.read_text(encoding="utf-8")
-    assert "gh workflow run release-orchestrator.yml" in text
-    assert "-f dry_run=true" in text
-    assert "-f dry_run=false" in text
-    assert "resume_packaging_run_id=<PACKAGING_RUN_ID>" in text
+
+    # The executable path: merge the release PR, then the two workflows it drives.
+    assert "release PR" in text
+    assert "release-please.yml" in text
+    assert "publish.yml" in text
+
+    # Evidence is minted by a dispatched campaign, and only ever off the release
+    # branch — on the default branch the declared version is already published,
+    # so the cohort seal is refused and every downstream lane skips.
+    assert "packaging-smoke.yml" in text
+
+    # Live local surfaces the guide must still route the operator to.
     assert "## Diagnose and recover" in text
     assert "just release-readiness" in text
     assert "just release-rollback" in text
     assert "docs/_release_checklist.yaml" in text
-    assert "release-candidate soak" not in text.lower()
-    assert "release PR" in text
+
+    # Retired ceremony. The orchestrator workflow, its dry-run flag and its
+    # resume argument were removed with the workflow itself; a guide still
+    # naming them sends an operator to a command that does not exist.
+    for retired in ("release-orchestrator.yml", "dry_run", "resume_packaging_run_id", "release-candidate soak"):
+        assert retired not in text.lower(), f"the guide still describes retired ceremony: {retired}"

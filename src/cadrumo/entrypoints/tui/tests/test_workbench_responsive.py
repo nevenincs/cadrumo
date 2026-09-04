@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 from textual.widget import Widget
 
-from ....tests.terminal_sizes import SUPPORTED_TERMINAL_SIZES
+from ....tests.terminal_sizes import SUPPORTED_TERMINAL_SIZES, TERMINAL_ORDINARY
 from ..components.host import ScreenHostApp
 from ..components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
 from ..home import HomeScreen
@@ -84,7 +84,19 @@ async def test_every_workbench_destination_paints_content_at_every_supported_siz
 async def test_home_keeps_one_scrollable_owner_rather_than_nesting_them(tmp_path: Path) -> None:
     """Two nested scrollers make a keyboard operator guess which one moves.
 
-    Home is the surface this matters most on: it is the return point from
+    Asserted on structure AND capacity, not on how many scrollbars happen to be
+    visible at once. The visibility form was proven weak: an inner scroller
+    absorbs its own overflow, so the outer one never shows a bar at the same
+    time and the count stays at one while a genuine second scroll owner sits
+    inside the first.
+
+    Nesting alone is not the defect. Every Home table is a ContentDataTable,
+    which IS a scrollable container and legitimately sits inside the page
+    scroller -- it sizes its height to its rows so it never competes. What
+    competes is a nested container that can still scroll on its own axis, and
+    that is what this rejects.
+
+    Home is the surface this matters most on -- it is the return point from
     every journey, so a scroll position that lands in the wrong container is
     met again after every child dismissal.
     """
@@ -97,13 +109,21 @@ async def test_home_keeps_one_scrollable_owner_rather_than_nesting_them(tmp_path
             app = ScreenHostApp(home.factory(TuiScreenContextV1(destination="workbench.home")))
             async with app.run_test(size=size) as pilot:
                 await pilot.pause()
-                scrollers = [
+                nested = [
                     widget
                     for widget in app.screen.query(ScrollableContainer)
-                    if widget.display and widget.show_vertical_scrollbar
+                    if widget.max_scroll_y > 0
+                    and any(
+                        isinstance(parent, ScrollableContainer) and parent.max_scroll_y > 0
+                        for parent in widget.ancestors
+                    )
                 ]
-                assert len(scrollers) <= 1, f"Home offers {len(scrollers)} competing scrollable owners at {size}"
                 app.exit(None)
+
+            assert not nested, (
+                f"Home nests {len(nested)} competing scroll owner(s) inside another at {size}: "
+                + ", ".join(f"{type(widget).__name__}(id={widget.id!r})" for widget in nested[:3])
+            )
 
 
 @pytest.mark.asyncio
@@ -157,3 +177,40 @@ async def test_home_keeps_a_gutter_between_its_two_columns(scenario: str, size: 
         app.exit(None)
 
     assert not collisions, "Home paints left-column text against the sidebar:\n" + "\n".join(collisions[:3])
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "surface",
+    ["aeat-sync-overview--ready", "aeat-sync-filed-declarations--ready", "declarations-calendar--ready"],
+)
+async def test_no_table_header_is_clipped_while_the_row_has_width_to_spare(surface: str) -> None:
+    """A clipped header stops the operator knowing what a column is.
+
+    NO OTHER GATE CAN SEE THIS. The overflow check asserts nothing crosses the
+    right edge, and nothing does -- truncation inside a table with room beside
+    it paints exactly like a table that fits. So this reads the painted header
+    row and compares it against the labels the screen actually declared.
+
+    Measured before the fix: `Disponibilidad` painted as `Disponibilid` while
+    the row stopped near column 78 of 120.
+    """
+    from textual.widgets import DataTable
+
+    from ..devtools.frame import screen_text
+    from ..devtools.workbench_fixtures import resolve_workbench_fixture
+
+    width, height = TERMINAL_ORDINARY
+    app = resolve_workbench_fixture(surface).build()
+    async with app.run_test(size=(width, height)) as pilot:
+        await pilot.pause()
+        declared: list[str] = []
+        for table in app.screen.query(DataTable):
+            declared.extend(str(column.label).strip() for column in table.columns.values())
+        painted = screen_text(app, width, height)
+        app.exit(None)
+
+    missing = [label for label in declared if label and label not in painted]
+    assert not missing, (
+        f"{surface} clips these column headers out of the painted frame: {missing}"
+    )

@@ -25,10 +25,9 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core.period import Period
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.models import (
-    EntityType,
     IVARegime,
-    LegalEntityForm,
     M303RegimeComposition,
     M303TaxTerritory,
     ModeloIVAProfile,

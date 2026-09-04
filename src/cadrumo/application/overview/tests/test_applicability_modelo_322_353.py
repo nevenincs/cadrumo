@@ -5,10 +5,9 @@ from __future__ import annotations
 import pytest
 
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
+from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.models import (
-    EntityType,
     IVARegime,
-    LegalEntityForm,
     M303RegimeComposition,
     M303TaxTerritory,
     ModeloIVAProfile,

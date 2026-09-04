@@ -1289,6 +1289,12 @@ tui:
     work_state:
       borrador: Esborrany
       descartado: Descartat
+  destination:
+    aeat_sync: Sincronització AEAT
+    declarations: Declaracions
+    home: Inici
+    ledger: Llibre registre
+    profile: Perfil
   home:
     account_fallback: Compte
     action:
@@ -1509,6 +1515,11 @@ tui:
       ledger: Obre el llibre major
       profile: Obre el perfil
       unknown: Obre l'espai de treball
+    refusal:
+      not_composed: Encara no s'han pogut llegir totes les fonts de l'espai de treball.
+      refresh_failed: La darrera actualització no ha pogut reconstruir l'índex.
+      unavailable: La cerca no està disponible en aquesta sessió
+      unknown: No s'ha pogut preparar la cerca.
     result:
       address: Model %{modelo} · %{filing_year} · %{period}
       label:

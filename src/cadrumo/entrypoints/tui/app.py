@@ -45,6 +45,7 @@ if TYPE_CHECKING:
 
 type HomeRefreshDoorV1 = Callable[[], HomeProjectionV1]
 type WorkbenchSearchRefreshDoorV1 = Callable[[], WorkbenchSearchDoorV1]
+type DestinationCatalogueRefreshDoorV1 = Callable[[], TuiDestinationCatalogueV1]
 
 
 class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
@@ -54,14 +55,14 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         BASE_CSS
         + """
     #root-account-bar { width: 100%; height: auto; }
-    #root-account { width: 1fr; height: auto; padding: 1 2; text-style: bold; }
+    #root-account { width: 1fr; height: auto; padding: $cadrumo-gutter-y $cadrumo-gutter; text-style: bold; }
     #root-account-actions {
         width: 4fr;
         height: auto;
-        grid-gutter: 0 1;
+        grid-gutter: $cadrumo-space-0 $cadrumo-control-gap;
     }
     #root-account-actions Button { width: 1fr; min-width: 0; margin: 0; }
-    #root-account-refusal { height: auto; color: $warning; padding: 0 2; }
+    #root-account-refusal { height: auto; color: $warning; padding: $cadrumo-space-0 $cadrumo-gutter; }
     """
     )
 
@@ -79,6 +80,7 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         refresh_home: HomeRefreshDoorV1 | None = None,
         workbench_search_service: WorkbenchSearchDoorV1 | None = None,
         refresh_workbench_search: WorkbenchSearchRefreshDoorV1 | None = None,
+        refresh_destination_catalogue: DestinationCatalogueRefreshDoorV1 | None = None,
         account_factories: AccountFactoriesV1 | None = None,
     ) -> None:
         """Bind the root to the operation services composed for this session."""
@@ -89,7 +91,10 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         self._refresh_home = refresh_home
         self._workbench_search_service = workbench_search_service
         self._refresh_workbench_search = refresh_workbench_search
+        self._refresh_destination_catalogue = refresh_destination_catalogue
         self._account_factories = account_factories
+        self._home_refresh_refusal_code: str | None = None
+        """Why the last Home refresh was refused, or ``None`` when it succeeded."""
         self._workbench_search_refusal_code: str | None = (
             None if workbench_search_service is not None else "workbench.search.unavailable"
         )
@@ -114,6 +119,11 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         if self._workbench_search_service is None:
             raise RuntimeError("the root has no composed workbench search service")
         return self._workbench_search_service
+
+    @property
+    def home_refresh_refusal_code(self) -> str | None:
+        """Expose only a sanitized refusal code for host presentation."""
+        return self._home_refresh_refusal_code
 
     @property
     def workbench_search_refusal_code(self) -> str | None:
@@ -261,6 +271,18 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         except AccountSessionExpiredError:
             self._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED))
             return
+        except Exception:
+            # A refused refresh is an ordinary outcome, not a crash. The read
+            # door refuses when a sibling process writes the profile mid-capture,
+            # which is correct and says nothing about this session's validity --
+            # the operator keeps the Home they are already looking at and is told
+            # the refresh did not happen. The sibling search path already handles
+            # its own refusal this way; letting this one escape would end the
+            # session with a traceback over a concurrent write.
+            self._home_refresh_refusal_code = "workbench.home.refresh_unavailable"
+            self._refuse_account_action()
+            return
+        self._home_refresh_refusal_code = None
         self.query_one("#root-account", Static).update(
             projection.account.profile_label or tr("tui.root.account.default_profile")
         )
@@ -276,7 +298,28 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
     def _on_destination_dismissed(self, _: None) -> None:
         """Return from a real child dismissal through the projection refresh door."""
         self._rebuild_workbench_search()
+        self._rebuild_destination_catalogue()
         self._show_home(self._home_semantic_focus)
+
+    def _rebuild_destination_catalogue(self) -> None:
+        """Re-admit destinations against the generation the factories now read.
+
+        Availability is a property of the CURRENT capture, not of the first
+        one. A profile that declares its NIF mid-session makes AEAT Sync
+        readable, and one that clears it makes it unreadable again; a frozen
+        catalogue would keep offering a route whose projection is gone, or keep
+        refusing one that has since become available.
+        """
+        refresh = self._refresh_destination_catalogue
+        if refresh is None or self._destination_catalogue is None:
+            return
+        try:
+            refreshed = refresh()
+        except Exception:  # a refused re-admission must not end the session
+            self._workbench_search_refusal_code = "workbench.destinations.refresh_unavailable"
+            return
+        self._destination_catalogue = refreshed
+        self._active_destination_catalogue = refreshed
 
     def _rebuild_workbench_search(self) -> None:
         """Replace search only after the owning child has authoritatively returned."""
@@ -304,9 +347,15 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         self._refresh_home = None
         self._workbench_search_service = None
         self._refresh_workbench_search = None
+        self._refresh_destination_catalogue = None
         self._active_target = None
         self._home_semantic_focus = None
         self.exit(outcome)
 
 
-__all__ = ["CadrumoTuiApp", "HomeRefreshDoorV1", "WorkbenchSearchRefreshDoorV1"]
+__all__ = [
+    "CadrumoTuiApp",
+    "DestinationCatalogueRefreshDoorV1",
+    "HomeRefreshDoorV1",
+    "WorkbenchSearchRefreshDoorV1",
+]

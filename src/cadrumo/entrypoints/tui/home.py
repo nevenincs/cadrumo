@@ -197,7 +197,7 @@ class HomeScreen(Screen[None]):
         HomeScreen.wide #home-layout { layout: horizontal; }
         HomeScreen.wide #home-main { width: 2fr; padding-right: $cadrumo-control-gap; }
         HomeScreen.wide #home-sidebar { width: 1fr; }
-        .home-heading { text-style: bold; margin-top: $cadrumo-stack; }
+        /* Rhythm comes from the shared .cadrumo-heading rule. */
         .home-state { color: $text-muted; height: auto; }
         .home-table { width: 100%; height: auto; }
         """
@@ -239,7 +239,7 @@ class HomeScreen(Screen[None]):
         )
         with ContentScroll(id="home-page", classes="cadrumo-scroll"), Static(id="home-layout"):
             with Static(id="home-main"):
-                yield Static(tr("tui.home.heading.actions"), classes="home-heading", markup=False)
+                yield Static(tr("tui.home.heading.actions"), classes="cadrumo-heading", markup=False)
                 yield Static(
                     _state_copy(
                         projection.actions_state,
@@ -258,7 +258,7 @@ class HomeScreen(Screen[None]):
                     classes="home-table",
                 )
                 yield Static(id="home-action-contexts", classes="home-state", markup=False)
-                yield Static(tr("tui.home.heading.declarations"), classes="home-heading", markup=False)
+                yield Static(tr("tui.home.heading.declarations"), classes="cadrumo-heading", markup=False)
                 yield Static(
                     _state_copy(
                         projection.declarations_state,
@@ -277,7 +277,7 @@ class HomeScreen(Screen[None]):
                     classes="home-table",
                 )
             with Static(id="home-sidebar"):
-                yield Static(tr("tui.home.heading.agenda"), classes="home-heading", markup=False)
+                yield Static(tr("tui.home.heading.agenda"), classes="cadrumo-heading", markup=False)
                 yield Static(
                     _state_copy(
                         projection.agenda_state,
@@ -297,9 +297,9 @@ class HomeScreen(Screen[None]):
                 )
                 yield Static(id="home-agenda-evidence", classes="home-state", markup=False)
                 yield Static(id="home-evidence", classes="home-state", markup=False)
-                yield Static(tr("tui.home.heading.ledger"), classes="home-heading", markup=False)
+                yield Static(tr("tui.home.heading.ledger"), classes="cadrumo-heading", markup=False)
                 yield Static(id="home-ledger", classes="home-state", markup=False)
-                yield Static(tr("tui.home.heading.messages"), classes="home-heading", markup=False)
+                yield Static(tr("tui.home.heading.messages"), classes="cadrumo-heading", markup=False)
                 yield Static(id="home-messages", classes="home-state", markup=False)
 
     def on_resize(self, event: events.Resize) -> None:
@@ -368,6 +368,15 @@ class HomeScreen(Screen[None]):
         if first is not None and not self._restore((actions, declarations, agenda)):
             self.set_focus(first)
             self._highlight(first.ordered_rows[0].key.value)
+        if first is None:
+            # Every zone is empty or refused, so the three tables are hidden and
+            # nothing on the page can take focus. Home is the destination an
+            # operator lands on first, and a keyboard user needs somewhere to
+            # arrive: the page itself takes focus so the zone states can be
+            # read and scrolled, and Escape still returns.
+            page = self.query_one("#home-page", ContentScroll)
+            page.can_focus = True
+            self.set_focus(page)
 
     def _remember(self, kind: HomeTargetKind, identity: str) -> str:
         self._targets[identity] = HomeTarget(kind=kind, identity=identity)

@@ -33,9 +33,19 @@ _DEFAULT_DISTRIBUTION_EVIDENCE_DIR: Final[Path] = Path("var/distribution-install
 
 
 def _resolve_uv(override: Path | None) -> Path:
-    """Resolve the ``uv`` executable, refusing instructively when absent."""
+    """Resolve the ``uv`` executable, refusing instructively when absent.
+
+    An explicit override is resolved strictly, and a path that does not exist
+    raises OSError from pathlib rather than this module's refusal type. That
+    escaped as a traceback from a packaging-smoke leg instead of the
+    fail-closed non-zero exit the refusal renders, so the operator saw a stack
+    for a mistyped flag rather than the flag they mistyped.
+    """
     if override is not None:
-        return override.expanduser().resolve(strict=True)
+        try:
+            return override.expanduser().resolve(strict=True)
+        except OSError as error:
+            raise AcquisitionError(f"--uv does not name an existing executable: {override}") from error
     found = shutil.which("uv")
     if found is None:
         raise AcquisitionError("uv not found on PATH; pass --uv to install the cohort")

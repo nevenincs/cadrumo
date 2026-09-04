@@ -698,8 +698,18 @@ def _source_claims(
             row = fact.row
             if isinstance(row, AeatSyncWorkspaceOverviewRowV1):
                 local_source, aeat_source = _OVERVIEW_SOURCES[row.area]
-                _require(row.local_state is AeatSyncSourceState.NOT_OBSERVED, sources[local_source], "local")
-                _require(row.aeat_state is AeatSyncSourceState.NOT_OBSERVED, sources[aeat_source], "AEAT")
+                _require(
+                    row.local_state is AeatSyncSourceState.NOT_OBSERVED,
+                    sources[local_source],
+                    "local",
+                    absent=row.local_state is AeatSyncSourceState.ABSENT,
+                )
+                _require(
+                    row.aeat_state is AeatSyncSourceState.NOT_OBSERVED,
+                    sources[aeat_source],
+                    "AEAT",
+                    absent=row.aeat_state is AeatSyncSourceState.ABSENT,
+                )
             if isinstance(row, AeatSyncWorkspaceCensusRowV1):
                 _require(False, sources[AeatSyncWorkspaceSource.LOCAL_PROFILE], "local census")
                 _require(False, sources[AeatSyncWorkspaceSource.AEAT_CENSUS], "AEAT census")
@@ -738,8 +748,28 @@ def _source_claims(
                 _require(missing, sources[AeatSyncWorkspaceSource.LOCAL_NOTIFICATION_CUSTODY], "notification custody")
 
 
-def _require(unconfident: bool, source: AeatSyncWorkspaceSourceObservationV1, axis: str) -> None:
-    if not unconfident and (not _observable(source.availability) or source.item_count == 0):
+def _require(
+    unconfident: bool,
+    source: AeatSyncWorkspaceSourceObservationV1,
+    axis: str,
+    *,
+    absent: bool = False,
+) -> None:
+    """Refuse a confident row state its own source cannot support.
+
+    A row asserting something POSITIVE about a side needs a source that was
+    observable and actually contributed items. A row asserting ABSENCE needs
+    only that the source was observable: an observed zero is precisely a
+    readable source with nothing in it, and requiring a non-zero count there
+    would make an observed empty catalogue inexpressible -- forcing it to be
+    reported as never observed, which is the collapse this contract exists to
+    prevent.
+    """
+    if unconfident:
+        return
+    if not _observable(source.availability):
+        raise AeatSyncWorkspaceProjectionError(f"confident {axis} state lacks observable source")
+    if not absent and source.item_count == 0:
         raise AeatSyncWorkspaceProjectionError(f"confident {axis} state lacks observable source")
 
 

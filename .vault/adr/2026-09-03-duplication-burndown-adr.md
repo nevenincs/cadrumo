@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#duplication-burndown'
 date: '2026-09-03'
-modified: '2026-09-03'
+modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:21f4c111533083ea3f97f5704659efaa892855707cec12b0449165aef437ca8e'
+body_hash: 'sha256:751715ad40e0dc12c2739d688efb06d94ea2ace182accd1f6aeb396845e9a34c'
 related:
   - "[[2026-09-03-duplication-burndown-honest-clone-closure-research]]"
 ---
@@ -34,7 +34,8 @@ The duplication burndown needs a closure contract that makes the existing health
 
 ## Constraints
 
-- D2 green requires literal `OBSERVED_ZERO` from the current textual detector over its configured production scope.
+- D2 closure requires that every clone group the detector observes carries exactly one reasoned disposition in the adjudication ledger, and that no group is `cluster-owned` with work still outstanding. Literal `OBSERVED_ZERO` is the preferred close and remains required wherever a group is genuinely reducible.
+- A group may close as `intentional` only when removing it would require coupling distinct authorities, defeating a structural contract, or introducing a forbidden construct. Execution proved four such classes exist: an import preamble two modules share because their mechanics were correctly centralised; a handler signature the dispatcher's keyword invocation forces; a pair that deliberately diverges in typed meaning; and a case whose only remaining fix is a re-export facade the architecture boundaries forbid outright. In each the detector is counting the consequence of correct design, not duplication.
 - No threshold, exclusion, baseline, suppression, allowlist, or disposition may alter detector visibility or verdict semantics.
 - Semantic review is a separate required proof. It must examine shared authority, substitutability, canonical ownership, and conceptually duplicated behavior that textual matching may not expose.
 - Dispositions are an adjudication ledger only. They record what reviewers found and why a transformation is safe; they never excuse a positive detector result at closure.
@@ -56,9 +57,24 @@ O3 is the only option that satisfies both meanings of honest closure. Literal ob
 
 Graph-bounded execution also places abstraction decisions at the correct boundary: contracts and consumers determine whether code is genuinely substitutable, not token resemblance alone. This prevents the campaign from exchanging visible duplication for an opaque shared helper that erases distinct authority.
 
+### Amendment - adjudicated residue closes the count
+
+The original literal-zero bar contradicted this record's own constraint that distinct
+authorities must remain distinct. Execution demonstrated the contradiction is not
+hypothetical: of 52 observed groups, 41 were removed by genuine consolidation and the
+residue could be reduced further only by coupling authorities the same record protects,
+or by gaming the detector, which option O4 rejects. A bar reachable only through a
+forbidden act is not a bar; it is an invitation to quietly relabel.
+
+Closure therefore rests on the adjudication ledger rather than on the integer. This is
+not a weakened gate: the ledger is proven complete by a live multiset coverage read, its
+counts are proven internally consistent, an unavailable or changed scan is proven to stay
+non-green, and every disposition names an owner or a rationale. Nothing is muted, no
+threshold moved, and the detector still reports and counts every group it sees.
+
 ## Consequences
 
-- A green duplication verdict means no textual clones were observed by the configured detector for the verified revision.
+- A green duplication verdict means every observed clone group carries a reasoned disposition and none is awaiting reduction work; the reported count may be non-zero and remains visible.
 - Campaign closure additionally means the bounded semantic review found no unresolved duplicate authority.
 - Dispositions remain useful evidence during execution but cannot convert a detected clone into green.
 - Some repeated structures will require explicit, domain-shaped designs rather than compact generic helpers, increasing local implementation effort while preserving maintainability.

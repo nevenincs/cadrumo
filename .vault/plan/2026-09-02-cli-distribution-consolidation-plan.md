@@ -7,9 +7,9 @@ tier: L2
 related:
   - '[[2026-09-02-cli-distribution-consolidation-adr]]'
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
-modified: '2026-09-02'
+modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:6791a09a4844dc9184789047aa4f0443e3e3946fcd97989d6e83621510a89cc9'
+body_hash: 'sha256:615b042b613e96ad065cdb4ce48cc215aa9a11e1119ae3b436db084935423f37'
 ---
 
 # `cli-distribution-consolidation` plan
@@ -119,8 +119,9 @@ Delete the development and release modules the adopted path no longer invokes, e
 
 - [x] `P10.S38` - Remove the publication-input dispatcher left without a consumer; `dev/packaging/publication_inputs.py`.
 - [ ] `P10.S39` - Remove the container base-image declaration the install proof no longer reads; `dev/packaging/_base_image.py`.
-- [ ] `P10.S40` - Remove the evidence leak sweep left without a caller; `dev/packaging/evidence_leak_sweep.py`.
+- [x] `P10.S40` - Remove the evidence leak sweep left without a caller; `dev/packaging/evidence_leak_sweep.py`.
 - [x] `P10.S41` - Reduce the release module family to what the adopted path invokes; `dev/release/environment_inventory.py`.
+- [x] `P10.S47` - Close the evidence assertions naming cohort artifacts the adopted path no longer builds; `dev/packaging/tests/test_distribution_evidence_emit.py`.
 
 ### Phase `P11` - Restate the operator surface against the adopted path
 
@@ -129,6 +130,8 @@ Bring the runbook, the recipe surface and the workflow family back into agreemen
 - [x] `P11.S42` - Rewrite the release runbook against the adopted workflow pair; `RELEASING.md`.
 - [x] `P11.S43` - Reduce the recipe surface to the commands the adopted path uses; `justfile`.
 - [x] `P11.S44` - Reconcile the packaging workflow family against the sibling shape; `.github/workflows/packaging-quick.yml`.
+- [x] `P11.S45` - Document the release-candidate evidence campaign the runbook omits; `RELEASING.md`.
+- [x] `P11.S46` - Restate the workflow names three surfaces still cite from the retired release path; `docs/_release_checklist.yaml`.
 
 ## Parallelization
 

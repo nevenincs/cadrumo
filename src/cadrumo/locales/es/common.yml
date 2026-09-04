@@ -1301,6 +1301,12 @@ tui:
     work_state:
       borrador: Borrador
       descartado: Descartado
+  destination:
+    aeat_sync: Sincronización AEAT
+    declarations: Declaraciones
+    home: Inicio
+    ledger: Libro registro
+    profile: Perfil
   home:
     account_fallback: Cuenta
     action:
@@ -1523,6 +1529,12 @@ tui:
       ledger: Abrir libro mayor
       profile: Abrir perfil
       unknown: Abrir área de trabajo
+    refusal:
+      not_composed: Todavía no se han podido leer todas las fuentes del espacio de
+        trabajo.
+      refresh_failed: La última actualización no pudo reconstruir el índice.
+      unavailable: La búsqueda no está disponible en esta sesión
+      unknown: No se ha podido preparar la búsqueda.
     result:
       address: Modelo %{modelo} · %{filing_year} · %{period}
       label:

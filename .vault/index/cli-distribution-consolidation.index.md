@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#cli-distribution-consolidation'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:2fb149126f1a7a82306c4418ed585187b72738ace5496a498ea904ea64658cbe'
+body_hash: 'sha256:266d52e5410569516ab964f694385fa452ede319fc9f0275733cc6d5bf8dc6cc'
 related:
   - '[[2026-09-02-cli-distribution-consolidation-P01-S01]]'
   - '[[2026-09-02-cli-distribution-consolidation-P01-S02]]'
@@ -45,13 +45,20 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-P09-S35]]'
   - '[[2026-09-02-cli-distribution-consolidation-P09-S36]]'
   - '[[2026-09-02-cli-distribution-consolidation-P10-S38]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P10-S40]]'
   - '[[2026-09-02-cli-distribution-consolidation-P10-S41]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P10-S47]]'
   - '[[2026-09-02-cli-distribution-consolidation-P11-S42]]'
   - '[[2026-09-02-cli-distribution-consolidation-P11-S43]]'
   - '[[2026-09-02-cli-distribution-consolidation-P11-S44]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P11-S45]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P11-S46]]'
   - '[[2026-09-02-cli-distribution-consolidation-adr]]'
   - '[[2026-09-02-cli-distribution-consolidation-plan]]'
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
+  - '[[2026-09-04-cli-distribution-consolidation-cohort-build-cost-audit]]'
+  - '[[2026-09-04-cli-distribution-consolidation-surface-pruning-audit]]'
+  - '[[2026-09-04-cli-distribution-consolidation-test-suite-cost-audit]]'
 ---
 
 # `cli-distribution-consolidation` feature index
@@ -63,6 +70,12 @@ Auto-generated index of all documents tagged with `#cli-distribution-consolidati
 ### adr
 
 - `2026-09-02-cli-distribution-consolidation-adr` - `cli-distribution-consolidation` adr: `cadrumo ships as one PyPI-first CLI distribution` | (**status:** `accepted`)
+
+### audit
+
+- `2026-09-04-cli-distribution-consolidation-cohort-build-cost-audit` - `cli-distribution-consolidation` audit: `cohort build cost`
+- `2026-09-04-cli-distribution-consolidation-surface-pruning-audit` - `cli-distribution-consolidation` audit: `surface pruning`
+- `2026-09-04-cli-distribution-consolidation-test-suite-cost-audit` - `cli-distribution-consolidation` audit: `test suite cost`
 
 ### exec
 
@@ -107,6 +120,10 @@ Auto-generated index of all documents tagged with `#cli-distribution-consolidati
 - `2026-09-02-cli-distribution-consolidation-P11-S42` - Rewrite the release runbook against the adopted workflow pair
 - `2026-09-02-cli-distribution-consolidation-P11-S43` - Reduce the recipe surface to the commands the adopted path uses
 - `2026-09-02-cli-distribution-consolidation-P11-S44` - Reconcile the packaging workflow family against the sibling shape
+- `2026-09-02-cli-distribution-consolidation-P10-S40` - Remove the evidence leak sweep left without a caller
+- `2026-09-02-cli-distribution-consolidation-P10-S47` - Close the evidence assertions naming cohort artifacts the adopted path no longer builds
+- `2026-09-02-cli-distribution-consolidation-P11-S45` - Document the release-candidate evidence campaign the runbook omits
+- `2026-09-02-cli-distribution-consolidation-P11-S46` - Restate the workflow names three surfaces still cite from the retired release path
 
 ### plan
 

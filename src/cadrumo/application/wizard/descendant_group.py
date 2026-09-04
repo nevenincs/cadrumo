@@ -40,7 +40,7 @@ from ...core.identity import IdentityError, validate_identity
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.text_bounds import CALENDAR_MONTH_MAX, CALENDAR_MONTH_MIN, is_calendar_month
 from ...core.time.clock import today_madrid
-from ...domain.deadlines.models import EntityType
+from ...domain.contribuyente.entity_type import EntityType
 from ..flows.definition import (
     FlowChoice,
     FlowCondition,

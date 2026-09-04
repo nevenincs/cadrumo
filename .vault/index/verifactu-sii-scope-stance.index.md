@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#verifactu-sii-scope-stance'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-09-04'
+body_schema: 'body-v2'
 body_hash: 'sha256:cefc55fb0999b90c9c47316709eaf3be0fd3656024fc8ebe24098551443da4ca'
 related:
   - '[[2026-07-02-verifactu-sii-scope-stance-adr]]'

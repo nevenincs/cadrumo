@@ -288,9 +288,14 @@ def test_no_surface_pins_or_caps_its_content_width() -> None:
     tui_dir = Path(__file__).resolve().parent.parent
     offenders: list[str] = []
     for module in scan_directory(tui_dir, pattern="*.py"):
-        for match in re.finditer(r"(max-)?width:\s*(\d+)\s*;", module.read_text(encoding="utf-8")):
+        source = module.read_text(encoding="utf-8")
+        # The lookbehind matters: without it `min-width: 0` matches as
+        # `width: 0` and is reported as a pinned width, which is the opposite
+        # of what it means -- `min-width: 0` REMOVES a floor rather than
+        # imposing a cap, and the false report buried the real offenders.
+        for match in re.finditer(r"(?<![-\w])(max-)?width:\s*(\d+)\s*;", source):
             offenders.append(f"{module.name}: {match.group(0)}")
-        for match in re.finditer(r"(max-)?width:\s*(\d+)%\s*;", module.read_text(encoding="utf-8")):
+        for match in re.finditer(r"(?<![-\w])(max-)?width:\s*(\d+)%\s*;", source):
             if match.group(2) != "100":
                 offenders.append(f"{module.name}: {match.group(0)}")
     assert not offenders, f"width limits: {offenders}"
@@ -299,12 +304,35 @@ def test_no_surface_pins_or_caps_its_content_width() -> None:
 # ── the design system is the only source of measure ─────────────────────────
 
 _CSS_DECLARATION = re.compile(
-    r"\b(padding|margin|border|border-top|border-bottom|border-left|border-right"
+    r"(?<![-\w])(padding|padding-top|padding-bottom|padding-left|padding-right"
+    r"|margin|margin-top|margin-bottom|margin-left|margin-right"
+    r"|border|border-top|border-bottom|border-left|border-right"
+    r"|grid-gutter|grid-columns|grid-rows"
     r"|height|min-height|max-height|width|min-width|max-width): ([^;\n]+);",
 )
+"""Every declaration that spends a measure the token table should own.
+
+The directional forms are named explicitly. Matching only the shorthands let
+`margin-top: 1` and `margin-bottom: 1` through, which is the exact form the
+heading-spacing drift took -- so this gate stayed green on a defect an operator
+later found by looking at rendered frames. The lookbehind stops `min-width: 0`
+matching as `width: 0`.
+"""
 _TUI_ROOT = Path(__file__).resolve().parents[1]
 
-_STRUCTURAL_VALUES = frozenset({"auto", "100%", "1fr", "none", "hidden", "0"})
+_STRUCTURAL_VALUES = frozenset({"auto", "100%", "none", "hidden", "0"})
+
+_FRACTION = re.compile(r"^\d+fr$")
+"""Any ``Nfr`` is a proportion, not a measure.
+
+Pinning the whitelist to ``1fr`` alone reported ``2fr``/``3fr``/``4fr`` as
+drift and buried the real offenders under false ones.
+"""
+
+
+def _is_structural(word: str) -> bool:
+    """Whether one declaration word is topology rather than a spendable measure."""
+    return word in _STRUCTURAL_VALUES or bool(_FRACTION.match(word)) or word.startswith("$")
 """Values that describe topology rather than measure.
 
 ``auto``/``1fr``/``100%`` say "fill what is there", which is a layout
@@ -372,7 +400,7 @@ def _offending_declarations(body: str) -> list[str]:
     offenders = []
     for match in _CSS_DECLARATION.finditer(body):
         words = match.group(2).strip().split()
-        if not all(word in _STRUCTURAL_VALUES or word.startswith("$") for word in words):
+        if not all(_is_structural(word) for word in words):
             offenders.append(f"{match.group(1)}: {match.group(2).strip()}")
     return offenders
 

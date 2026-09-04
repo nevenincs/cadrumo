@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#aeat-design-relayout-boundary'
 date: '2026-08-18'
-modified: '2026-09-03'
+modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:5a6485e0b1ace92af28f4af9a03201188e9052a96ce8e90ce1f36267c757e83d'
+body_hash: 'sha256:3d9c2eb44103ce4e9efb5ced605f37ddfdaa35d3a3683a4fca0e5f897d561c50'
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
   - '[[2026-08-07-aeat-design-relayout-boundary-research]]'
@@ -35,11 +35,15 @@ related:
   - '[[2026-09-02-aeat-design-relayout-boundary-W03-P05-S09]]'
   - '[[2026-09-02-aeat-design-relayout-boundary-W03-P05-S10]]'
   - '[[2026-09-02-aeat-design-relayout-boundary-W03-P05-S11]]'
+  - '[[2026-09-02-aeat-design-relayout-boundary-W03-P06-S15]]'
+  - '[[2026-09-02-aeat-design-relayout-boundary-W03-P06-summary]]'
   - '[[2026-09-02-aeat-design-relayout-boundary-plan]]'
   - '[[2026-09-02-aeat-design-relayout-boundary-research]]'
+  - '[[2026-09-03-aeat-design-relayout-boundary-m200-qualified-identity-admission-reference]]'
   - '[[2026-09-03-aeat-design-relayout-boundary-w02-p03-source-rebind-review-audit]]'
   - '[[2026-09-03-aeat-design-relayout-boundary-w02-p04-identity-review-audit]]'
   - '[[2026-09-03-aeat-design-relayout-boundary-w03-p05-legal-review-audit]]'
+  - '[[2026-09-03-aeat-design-relayout-boundary-w04-p07-qualified-export-audit]]'
 ---
 
 # `aeat-design-relayout-boundary` feature index
@@ -65,6 +69,7 @@ Auto-generated index of all documents tagged with `#aeat-design-relayout-boundar
 - `2026-09-03-aeat-design-relayout-boundary-w02-p03-source-rebind-review-audit` - `modelo-200-semantic-crosswalk` audit: `W02.P03 source-rebind review`
 - `2026-09-03-aeat-design-relayout-boundary-w02-p04-identity-review-audit` - `modelo-200-semantic-crosswalk` audit: `W02 P04 identity review`
 - `2026-09-03-aeat-design-relayout-boundary-w03-p05-legal-review-audit` - `aeat-design-relayout-boundary` audit: `w03 p05 legal review`
+- `2026-09-03-aeat-design-relayout-boundary-w04-p07-qualified-export-audit` - `aeat-design-relayout-boundary` audit: `W04 P07 qualified identity and export-reference boundary review`
 
 ### exec
 
@@ -83,11 +88,17 @@ Auto-generated index of all documents tagged with `#aeat-design-relayout-boundar
 - `2026-09-02-aeat-design-relayout-boundary-W03-P05-S09` - Derive the source-bound legal worklist with applicability-window and unresolved-reference evidence
 - `2026-09-02-aeat-design-relayout-boundary-W03-P05-S10` - Author reviewed 2024-applicable legal catalogue entries and anchors for the closed worklist
 - `2026-09-02-aeat-design-relayout-boundary-W03-P05-S11` - Enforce legal resolution, target-window coverage, anchor reachability, and rejection of later-year substitution
+- `2026-09-02-aeat-design-relayout-boundary-W03-P06-S15` - Author target-year authority for target fields with no applicable cross-revision candidate
+- `2026-09-02-aeat-design-relayout-boundary-W03-P06-summary` - `aeat-design-relayout-boundary` `W03.P06` summary
 
 ### plan
 
 - `2026-08-08-aeat-design-relayout-boundary-plan` - `aeat-design-relayout-boundary` plan
 - `2026-09-02-aeat-design-relayout-boundary-plan` - `modelo-200-semantic-crosswalk` plan
+
+### reference
+
+- `2026-09-03-aeat-design-relayout-boundary-m200-qualified-identity-admission-reference` - `aeat-design-relayout-boundary` reference: `m200 qualified identity admission`
 
 ### research
 

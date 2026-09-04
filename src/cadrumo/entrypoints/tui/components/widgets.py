@@ -21,11 +21,83 @@ class ContentScroll(VerticalScroll, can_focus=False):
 
 
 class ContentDataTable[CellType](DataTable[CellType]):
-    """A table that expands to its rows inside the shared scroll host."""
+    """A table that expands to its rows, and to the width it is given.
+
+    Textual's own ``add_column`` offers a fixed cell count or shrink-to-fit and
+    nothing between, so a table built from fixed widths keeps them however wide
+    the terminal is: it clips its own headers and identifiers while the rest of
+    the row sits empty. The height side of that problem was already solved here
+    by ``watch_virtual_size``; this is its missing counterpart.
+
+    The surplus goes to ONE column -- ``fill_column``, defaulting to the last --
+    rather than being spread across all of them, because widening an identifier
+    or a state word past its content buys nothing while a truncated description
+    is exactly what the space is for.
+    """
+
+    fill_column: int | None = -1
+    """Index of the column that absorbs surplus width; ``None`` disables it."""
 
     def watch_virtual_size(self, size: Size) -> None:
         """Keep the layout box equal to the current rows and header."""
         self.styles.height = max(1, size.height)
+
+    def on_resize(self) -> None:
+        """Give the surplus width to the fill column."""
+        self._absorb_surplus_width()
+
+    def _absorb_surplus_width(self) -> None:
+        """Give every column its header, then hand the surplus to one of them.
+
+        Two rules, in order, because they answer different failures.
+
+        A column narrower than its own HEADER is unreadable whatever else
+        happens -- `Disponibilidad` clipped to `Disponibilid` stops the operator
+        knowing what the column is -- so the header length is a floor on every
+        column before any surplus is considered.
+
+        The surplus then goes to ONE column rather than being spread, because
+        widening an identifier or a state word past its content buys nothing
+        while a truncated description is exactly what the space is for.
+
+        Deliberately one-way: columns only grow. A table narrower than its
+        container may be a layout choice this cannot see; a column narrower than
+        its own header, or than its content while the container has room to
+        spare, is the defect.
+        """
+        if not self.columns:
+            return
+        available = self.container_size.width - self.scrollbar_size_vertical
+        if available <= 0:
+            return
+
+        widened = False
+        for column in self.columns.values():
+            header = len(str(column.label))
+            if column.width < header:
+                column.width = header
+                widened = True
+
+        if self.fill_column is not None:
+            keys = list(self.columns)
+            try:
+                fill_key = keys[self.fill_column]
+            except IndexError:  # pragma: no cover - a table without that column
+                fill_key = None
+            if fill_key is not None:
+                target = self.columns[fill_key]
+                others = sum(
+                    column.width + self.cell_padding * 2
+                    for key, column in self.columns.items()
+                    if key is not fill_key
+                )
+                surplus = available - others - self.cell_padding * 2
+                if surplus > target.width:
+                    target.width = surplus
+                    widened = True
+
+        if widened:
+            self.refresh()
 
 
 _NOTICE_GLYPH: Final[dict[str, str]] = {
