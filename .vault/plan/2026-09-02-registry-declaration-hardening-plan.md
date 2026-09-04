@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:b0a63c4d9786a56170c03b922d54cc419d93a03ad5925281d53b86ce7be73adc'
+body_hash: 'sha256:6851c415c1f1f0f183eeb16510e7db2a17362564ea9d14af802b504c0b6b2c7e'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -391,6 +391,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [ ] `W02.P02.S508` - Enrol the three genuine src prose parsers in the channel: the borrador modelo 100 summary extractor reading NIF and Ejercicio, the record-design PDF row repairs, and the workbook reader matching entidades desarrolladoras; `src/cadrumo`.
 - [x] `W02.P02.S509` - Remove the stray empty .vault/tmp directory, one of the two standing vault errors this session repeatedly attributed to a peers ADR without reading the detail; the remaining error is the test-reconciliation-sweep ADR carrying no grounding references; `.vault`.
 - [x] `W02.P02.S510` - Decompose the vault health total this session reported opaquely: 353 body-sections, 44 features, 27 exec-mapping and the rest belong to other features, while both features this session writes to report all checks passed; `.vault`.
+- [x] `W02.P02.S511` - Measure what the vault-citation gate does not match: its four patterns are all dotted, so seventeen bare step-prefixed names across three files pass a gate whose docstring says it exists so step identifiers do not; `dev/registry/tests/test_declaration_invariant_gates.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
@@ -803,7 +804,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S303` - Adjudicate the availability_label collision the census surfaced and record the three-fold promoted_candidate_ids restatement; `dev/quality/name_collision_dispositions.toml`.
 - [x] `W06.P13.S304` - Scrub the two operator home paths that reddened the documentation privacy gate and return the quality directory to green; `.vault/audit/2026-08-27-calculation-correctness-campaign-restrictive-default-sweep-audit.md .vault/audit/2026-09-02-object-name-declustering-pilot-rehearsal-audit.md`.
 - [x] `W06.P13.S305` - Name the returned step-id symbol in the marker gate's failure and refuse the cosmetic repair; `dev/tests/test_campaign_marker_patterns.py`.
-- [ ] `W06.P13.S306` - Migrate the M200 2024 cohort vocabulary off its plan step ids across five files, two public function names, five refusal messages, seven docstrings and one test name, with the owning campaign; `dev/registry/analysis/m200_2024_blocker_adjudications.py dev/registry/tests/test_m200_2024_blocker_adjudications.py`.
+- [ ] `W06.P13.S306` - Migrate the M200 2024 cohort vocabulary off its plan step ids and widen the citation gate in the same change: seventeen sites across three files carry S12_MEMBERS, S12_CONFLICT_RECEIPT, S13_EXPECTED_COUNT and S14_S15_EXPECTED_COUNT, which the gates four dotted patterns do not match; `dev/registry/analysis/m200_2024_blocker_adjudications.py,dev/registry/analysis/m200_2024_adjudication_publication.py,dev/registry/tests/test_m200_2024_blocker_adjudications.py,dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W06.P13.S307` - Name the encoding once in the three modules this campaign gave bare UTF-8 literals; `dev/tests/test_campaign_marker_patterns.py dev/registry/tests/test_declaration_invariant_gates.py dev/registry/tests/test_render_check.py`.
 - [x] `W06.P13.S308` - Re-check the held-file constraint against the live worktree and separate it from this execution's scope limit; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S309` - Collapse the modelo-id helper repeated in all ten screen modules into one canonical defining module; `dev/registry/analysis/corpus.py dev/registry/analysis`.

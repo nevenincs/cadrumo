@@ -13757,3 +13757,41 @@ The stamp fixes run under `--feature` throughout, for a reason recorded earlier
 in this campaign: a vault-wide `--fix` once modified a peer's execution records.
 The same flag answers the reporting question, and it was available the whole
 time.
+
+
+## The citation gate closed one hole and left the next one open
+
+`test_no_registry_source_or_declaration_cites_a_vault_record` exists because the
+shipped check for the code-stands-alone mandate matched document STEMS, so a plan
+step identifier passed it silently - and two filing-grade modelo 200 revision
+declarations carried one for weeks while that check reported the registry clean.
+The gate was written to match step identifiers as well.
+
+It matches DOTTED ones. Its four patterns are `W##.P##.S#`, `P##.S##`, a document
+stem, and a `.vault/` path. A bare step number used as a name prefix matches
+none of them.
+
+That is how the modelo 200 2024 cohort actually embeds them. Inside the gate's
+own scope, **three files carry seventeen sites** of four distinct names:
+`S12_MEMBERS`, `S12_CONFLICT_RECEIPT`, `S13_EXPECTED_COUNT` and
+`S14_S15_EXPECTED_COUNT` - thirteen in the blocker adjudications module, three in
+the adjudication publication module, one in a test. Every one passes a gate whose
+docstring says it exists so that step identifiers do not pass.
+
+The shape is exact and it recurred one level down. A check matched stems, so a
+dotted step id slipped through; the replacement matches dotted step ids, so a
+bare-prefixed one slips through. Each was written from the instance in front of
+its author, and each is silent about the form it did not anticipate - which is
+this campaign's most repeated finding, arriving now in the gate that was written
+to fix its previous appearance.
+
+Widening the patterns is one line and cannot land alone: it would turn seventeen
+live sites red. The rename is `S306`, which the plan already records as work to
+do "with the owning campaign", and the two must land together - the gate widened
+in the same change that empties it, or the gate widened first and the suite left
+red for someone else to find. `S306` now carries the gate change so the pairing
+is not rediscovered.
+
+The four sites in the gate's own test file are not offenders: they are the
+constructed citations proving each pattern matches, and the gate skips its own
+module for exactly that reason, saying so where it does it.
