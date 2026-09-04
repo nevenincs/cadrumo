@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
 modified: '2026-09-04'
 body_schema: body-v2
-body_hash: 'sha256:702800b89cde0f3a8184048ccedf849f7d445af54447986cda2ef2f040ad33bc'
+body_hash: 'sha256:75394e0e51e48639f6ff7d8bbf9234bd1de7621a196ec10088162d5548b109dd'
 ---
 
 <!-- RETIRED: S39 -->
@@ -115,7 +115,7 @@ Build every declared distribution and channel artifact from one command and prov
 - [x] `P09.S36` - Render the Homebrew formula and the Scoop manifest from the built cohort; `dev/packaging/cohort_manifest.py`.
 - [ ] `P09.S37` - Produce the distribution evidence rows the three channels declare; `dev/release/readiness.py`.
 - [x] `P09.S48` - Separate the seal check from the publication check and guard the upload with the authority that names it; `dev/release/version_identity.py`.
-- [x] `P09.S49` - Remove the repeated passes the cohort build makes over artifacts it has already produced; `dev/packaging/python_cohort.py`.
+- [ ] `P09.S49` - Remove the repeated passes the cohort build makes over artifacts it has already produced; `dev/packaging/python_cohort.py`.
 - [x] `P09.S52` - Close the review findings on the publication gate, starting with the partial-upload deadlock; `dev/release/version_identity.py`.
 
 ### Phase `P10` - Prune the release and packaging surfaces without consumers

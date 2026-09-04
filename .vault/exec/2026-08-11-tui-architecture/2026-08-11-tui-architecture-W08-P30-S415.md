@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:9763d1fada7665d539af7926f334499ab489a8ef170cc5b5d5aa04c0f4b41d77'
+body_hash: 'sha256:d1817d0926fc82b868c6aee7158b928ad31a67790b539adff4cb7edb7d82ea89'
 step_id: 'S415'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -230,3 +230,30 @@ third is a selector string held in a variable. The remaining 118 pass selector
 strings, which resolve to coordinates the same way; they are not audited here,
 and a layout change that moves one of their targets below the fold would fail
 the same misleading way.
+
+SECOND CORRECTION, to the explanation rather than the fix. The click was NOT
+missing because the button sat below the fold. Instrumented, the failing
+parametrisation reports `landed: True`, one recorded call, and then
+`first.disabled: False` with `second.disabled: True` -- the press was aimed at
+the first button and CONSUMED BY THE SECOND, which sits three rows under it and
+runs past the viewport edge. A one-row difference in where the buttons land
+between the two parametrisations is enough to change which of them takes the
+press. Textual raises `OutOfBounds` only for a fully off-screen target, so this
+case is silent.
+
+The fix stands and is unchanged -- scrolling the control fully into view before
+clicking makes it deterministic, verified across three isolated runs -- but the
+reason recorded above was wrong and the reader deserves the measured one.
+
+A guard was built and then REMOVED rather than kept. It wrapped `Pilot.click`
+in an autouse fixture and failed any click whose return value said it had not
+landed. It passed 74 tests without a false positive, but this defect returns
+`landed: True`, so the guard demonstrably does not catch the class of failure
+that motivated it. Keeping an unproven global patch over a test library because
+it looks protective is the same habit this campaign has spent its time
+removing, so it went.
+
+Measured while investigating: of 123 `pilot.click` sites in the TUI tests, 118
+pass a selector string and 3 pass a widget; all resolve to coordinates, and any
+of them can be consumed by a neighbouring widget after a layout change without
+Textual objecting.
