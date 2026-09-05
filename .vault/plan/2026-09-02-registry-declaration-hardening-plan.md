@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:1512844138a60108bf6359fe0632a4d58c64ecb625ea2900822bc3b4ad8932ac'
+body_hash: 'sha256:035eb053f5ad11c06992dfe16d05b76b8c31f4c466067b4a040770978fc6bb04'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -528,6 +528,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S646` - Guard the release boundary gate with a root check and a corpus floor, since it asserted no dependency edge from the shipped package to its harness over an unguarded walk while its positive sibling already refuses an empty import set; `dev/release/tests/test_external_client_release_boundary.py`.
 - [x] `W02.P02.S647` - Route the five lane gates through one guarded workflow walk that checks its root and refuses a collapsed directory, since each asserts that no workflow does some forbidden thing and an empty directory satisfies every one of them; `dev/ci/tests/test_change_class_tiers.py`.
 - [x] `W02.P02.S648` - Floor the two pattern-matched ledger corpora, since each gate globs modules by a name pinning a leading underscore and this repository promotes public symbols out of underscore modules, so a rename lands the file outside the pattern and an empty failure list reads as compliance; `dev/locales/tests/test_ledger_notice_action_conformance.py`.
+- [x] `W02.P02.S649` - Guard the smoke-lane discovery that parametrises the proof-contract claim gate, since an empty parametrize does not fail the gate but deletes it, so a lane renamed out of the smoke prefix would leave every form free to promise a proof nothing records; `dev/packaging/tests/test_proof_contract.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
