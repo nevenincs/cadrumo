@@ -100,13 +100,23 @@ def _module_symbols(tree: ast.Module) -> set[str]:
 
 
 def _imported_names(tree: ast.Module) -> set[str]:
-    """Return every name a module imports, under whatever alias it binds."""
+    """Return every name a module imports, plus the packages it imports FROM.
+
+    The source package matters as much as the symbol. ``from
+    cryptography.hazmat.primitives import hashes`` makes ``cryptography`` a
+    name this tree demonstrably knows, and a screen that recorded only
+    ``hashes`` reported ``:mod:`cryptography``` as naming nothing while
+    twenty-two modules imported from it.
+    """
     names: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, (ast.Import, ast.ImportFrom)):
             for alias in node.names:
                 names.add(alias.asname or alias.name.split(".")[0])
                 names.add(alias.name.rsplit(".", 1)[-1])
+        if isinstance(node, ast.ImportFrom) and node.module:
+            names.add(node.module.split(".")[0])
+            names.add(node.module.rsplit(".", 1)[-1])
     return names
 
 

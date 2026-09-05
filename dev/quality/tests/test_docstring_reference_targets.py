@@ -114,3 +114,23 @@ def test_a_subscript_reports_only_the_half_that_is_missing(tmp_path: Path) -> No
         prose='"""Returns an :class:`Envelope[GhostPayload]`."""\n',
     )
     assert [item.target for item in dangling_references(root)] == ["GhostPayload"]
+
+
+def test_a_package_the_tree_imports_from_is_known(tmp_path: Path) -> None:
+    """The source package counts, not only the symbols taken from it.
+
+    Twenty-two modules wrote ``from cryptography.hazmat... import ...`` while
+    the screen recorded only the imported symbols, so ``:mod:`cryptography```
+    read as naming nothing.
+    """
+    root = _package(
+        tmp_path,
+        user='"""Uses :mod:`cryptography`."""\n\nfrom cryptography.hazmat.primitives import hashes\n',
+    )
+    assert dangling_references(root) == ()
+
+
+def test_a_package_the_tree_never_imports_is_still_reported(tmp_path: Path) -> None:
+    """Widening to import sources must not blind the screen to real misses."""
+    root = _package(tmp_path, user='"""Uses :mod:`nowhere_at_all`."""\n')
+    assert [item.target for item in dangling_references(root)] == ["nowhere_at_all"]
