@@ -163,12 +163,30 @@ def test_ledger_notices_do_not_redeclare_actions_or_english_fallbacks() -> None:
     assert failures == []
 
 
+#: Floors for the two pattern-matched corpora below. Live: seven payload
+#: modules and twenty-six ledger modules, against 221 .py files in the same
+#: directory. Floors, not pinned counts.
+_MINIMUM_PAYLOAD_MODULES = 3
+_MINIMUM_LEDGER_MODULES = 10
+
+
 def test_ledger_payloads_do_not_redeclare_notice_or_recovery_prose() -> None:
     """Advisories have one typed envelope home, never bespoke payload strings."""
     failures: list[str] = []
     payload_directory = Path(inspect.getfile(_ledger_payloads)).parent
     forbidden_suffixes = ("_notice", "_hint", "_suggestion", "_recovery")
-    for path in scan_directory(payload_directory, pattern="_ledger*payload*.py"):
+    payload_modules = tuple(scan_directory(payload_directory, pattern="_ledger*payload*.py"))
+
+    # The corpus is a GLOB, and the pattern pins a leading underscore. This
+    # repository is actively promoting public symbols out of underscore
+    # modules, so a rename lands the file one character outside the pattern,
+    # the walk returns nothing, and an empty failure list reads as compliance.
+    assert len(payload_modules) >= _MINIMUM_PAYLOAD_MODULES, (
+        f"only {len(payload_modules)} ledger payload module(s) matched; below this the walk "
+        "has stopped finding its subject and an empty failure list proves nothing"
+    )
+
+    for path in payload_modules:
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
             if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
@@ -261,7 +279,14 @@ def test_every_ledger_translation_is_catalogue_owned_without_a_runtime_fallback(
     """Every ledger translation resolves from the authored locale catalogues."""
     ledger_directory = Path(inspect.getfile(_ledger)).parent
     failures: list[str] = []
-    for path in scan_directory(ledger_directory, pattern="_ledger*.py"):
+    ledger_modules = tuple(scan_directory(ledger_directory, pattern="_ledger*.py"))
+
+    assert len(ledger_modules) >= _MINIMUM_LEDGER_MODULES, (
+        f"only {len(ledger_modules)} ledger module(s) matched the pattern; below this the "
+        "walk has stopped finding its subject and an empty failure list proves nothing"
+    )
+
+    for path in ledger_modules:
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for call in ast.walk(tree):
             if not isinstance(call, ast.Call) or not isinstance(call.func, ast.Name) or call.func.id != "tr":

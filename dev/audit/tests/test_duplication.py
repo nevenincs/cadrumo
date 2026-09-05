@@ -211,7 +211,7 @@ def test_only_one_jscpd_invocation_exists_in_the_tree() -> None:
     reintroduced scanner in the justfile, a shell script, ``src/``, or
     ``packaging/`` is caught rather than passing silently. Narrowed to files
     that can actually EXECUTE a command -- Python, the justfile, and
-    shell/PowerShell scripts -- so prose in a ``.vault/`` audit record or the
+    shell/PowerShell scripts -- so prose in a Markdown record or the
     dispositions TOML's provenance string does not trip a gate about
     invocations. Within a Python file, a docstring quoting the invocation for
     documentation (see ``test_duplication_scan``) is excluded from the search
