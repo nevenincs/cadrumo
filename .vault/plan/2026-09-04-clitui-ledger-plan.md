@@ -8,9 +8,9 @@ related:
   - '[[2026-09-04-clitui-ledger-adr]]'
   - '[[2026-09-04-clitui-ledger-research]]'
   - '[[2026-09-04-clitui-ledger-reference]]'
-modified: '2026-09-04'
+modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:c38e53e7ab8ff631516fb4bd0673978c4a8ae65cfe28e5898550cc17fb9911e4'
+body_hash: 'sha256:3d0d6b8cfb4bd92faa539610d5f1a42632dce9d8544f8a01f1a00e513f3ae4d0'
 ---
 
 <!-- RETIRED: S27, S29, S31, S33, S35, S37, S39, S41, S43, S45, S47, S49, S51, S59, S62, S64, S67, S69, S71, S73, S75, S77, S79, S81, S83 -->
@@ -44,7 +44,7 @@ Enumerate commands, backend-only operations, missing products, registry consumer
 - [x] `W01.P02.S04` - Enumerate every invocable Ledger command endpoint, sub-operation, handler, schema, and adapter ownership annotation; `src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py`.
 - [x] `W01.P02.S05` - Enumerate existing application operations, direct behavioral proof, and backend-only Ledger capabilities; `src/cadrumo/application/ledger/`.
 - [x] `W01.P02.S06` - Enumerate the seven binding families, every declared route, calculation consumer, filing consumer, and unresolved proof obligation; `src/cadrumo/domain/calculations/registry/bindings.py`.
-- [ ] `W01.P02.S07` - Enumerate existing Ledger component factories separately from installed navigation reachability; `src/cadrumo/entrypoints/tui/ledger/`.
+- [x] `W01.P02.S07` - Enumerate existing Ledger component factories separately from installed navigation reachability; `src/cadrumo/entrypoints/tui/ledger/`.
 - [ ] `W01.P02.S08` - Adjudicate canonical semantic homes and typed command-result contracts for every denominator row; `.vault/reference/2026-09-04-clitui-ledger-reference.md`.
 
 ### Phase `W01.P03` - record sole plan ownership and the TUI hold
