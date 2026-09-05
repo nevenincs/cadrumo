@@ -5,7 +5,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from ...application.ledger.models import LedgerSourceImportCommand, LedgerSourceImportResult
     from ...core.period import Period
+    from .ledger.models import LedgerImportSubmitterV1
 
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Generator, Iterable, Mapping, Sequence
@@ -152,6 +154,22 @@ def compose_secure_profile_workbench_generation_provider(
         modelo_projection_reader=_modelo_projection_reader(),
     )
     return ApplicationGenerationProviderV1(door)
+
+
+def _ledger_import_submitter() -> LedgerImportSubmitterV1:
+    """Run one already-resolved import command through the application service.
+
+    The command arrives sealed from the prepared import, so this door never
+    sees a path the presentation layer chose -- it forwards what the operator
+    prepared and the application validated.
+    """
+
+    async def submit(command: LedgerSourceImportCommand) -> LedgerSourceImportResult:
+        from ...application.ledger.actions_import import import_ledger_source
+
+        return import_ledger_source(command)
+
+    return submit
 
 
 def _notification_custody_reader(profile_id: str) -> Callable[[], int]:
@@ -320,6 +338,7 @@ class InstalledWorkbenchFactoryDependenciesV1:
     profile_admission: WorkbenchDestinationAdmission
     ledger_review_action: ActionReference
     ledger_evidence_action: ActionReference
+    ledger_classify_action: ActionReference
     declarations_work_action: ActionReference
     declarations_revisions_action: ActionReference
     declarations_filing_action: ActionReference
@@ -482,6 +501,8 @@ def _ledger_generation_factory(
             # generation because the queue is per-visit state an operator acts
             # on, not part of the immutable session snapshot.
             evidence_items=list_attachment_review_queue(AttachmentStore(bucket_id=dependencies.account.profile_id)),
+            classify_action=dependencies.ledger_classify_action,
+            import_submitter=_ledger_import_submitter(),
         )(context)
 
     return create

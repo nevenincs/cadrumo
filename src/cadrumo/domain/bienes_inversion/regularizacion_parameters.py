@@ -35,6 +35,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.errors.hierarchy import CadrumoError as _CadrumoError
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ..calculations.registry.formula_runtime_ops import resolve_dated_value
+from ..calculations.registry.schema_formula import DatedValue
 from ..calculations.registry.schema import ModeloRevision
 from ..calculations.registry.schema_base import ThresholdComparison
 
@@ -122,9 +123,9 @@ class BienesInversionRegularizacionParameters(BaseModel):
 
     ventana_anos_mueble: int = Field(gt=0)
     ventana_anos_inmueble: int = Field(gt=0)
-    divisor_mueble: Decimal = Field(gt=0)
-    divisor_inmueble: Decimal = Field(gt=0)
-    umbral_puntos: Decimal = Field(ge=0)
+    divisor_mueble: Decimal = Field(gt=Decimal(0))
+    divisor_inmueble: Decimal = Field(gt=Decimal(0))
+    umbral_puntos: Decimal = Field(ge=Decimal(0))
     umbral_comparison: ThresholdComparison
     provenance: BienesInversionParameterProvenance
 
@@ -173,7 +174,7 @@ def resolve_bienes_inversion_regularizacion_parameters(
         )
 
     date_context: Mapping[str, date] = {"filing_period": filing_period_date}
-    resolved = {}
+    resolved: dict[str, DatedValue] = {}
     for slug in _REQUIRED_SLUGS:
         parameter = declared[slug]
         try:
