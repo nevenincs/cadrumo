@@ -2491,7 +2491,7 @@ _EXPLICIT_NON_REGISTRY_OBSERVATION_SELECTIONS: Final[Mapping[str, tuple[str, ...
         "supported_surface:ledger.entries:component_only": ("ledger.transaction.list",),
         "supported_surface:ledger.evidence:component_only": ("ledger.evidence.attachment_queue",),
         "supported_surface:ledger.import:component_only": ("ledger.import.source",),
-        "supported_surface:ledger.overview:installed": ("ledger.workspace.read",),
+        "supported_surface:ledger.overview:installed": ("ledger.import.prepare", "ledger.workspace.read"),
         "supported_surface:ledger.reconciliation:component_only": ("ledger.transaction.invoice_link",),
         "supported_surface:ledger.review:component_only": ("ledger.transaction.review_query",),
     }

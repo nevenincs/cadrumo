@@ -23,14 +23,7 @@ from pathlib import Path
 from typing import Final, cast
 
 import pytest
-from pydantic import BaseModel, ValidationError
-
-from cadrumo.core.aggregation import BindingSourceKind
-from cadrumo.core.transport_locus import TransportLocus, TransportRole, TransportShape
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
-from cadrumo.entrypoints.cli._app_ledger_command_specs import LEDGER_COMMAND_SPECS
 from dev.quality import clitui_ledger_capability_matrix as matrix_module
-
 from dev.quality.clitui_ledger_capability_matrix import (
     ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
     LEDGER_REGISTRY_ROUTE_CENSUS_ROOT,
@@ -100,6 +93,12 @@ from dev.quality.clitui_ledger_capability_matrix import (
     reopened_gates_for_denominator_drift,
     validate_ledger_matrix_currentness,
 )
+from pydantic import BaseModel, ValidationError
+
+from cadrumo.core.aggregation import BindingSourceKind
+from cadrumo.core.transport_locus import TransportLocus, TransportRole, TransportShape
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.entrypoints.cli._app_ledger_command_specs import LEDGER_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -113,9 +112,9 @@ _REGISTRY_ROUTE_DIGEST: Final[str] = "sha256:20b2d2df5558b2a3fdbd1eab6e9f781a973
 _REGISTRY_SOURCE_DIGEST: Final[str] = "sha256:194a9f26ddfbae6c5d7f265ffe58f50964fbe2fcd02a5670fa19845dead5cf6d"
 _TUI_CENSUS_DIGEST: Final[str] = "sha256:a52180bb77b70c205c7d31f657a64ad55142035b63dd9d5bf69b79503754c25f"
 _TUI_SOURCE_DIGEST: Final[str] = "sha256:70709a369bece8e06033e56e18bd82425ec9b48767c3466e80f92c901143ff67"
-_UNION_DIGEST: Final[str] = "sha256:8a158b5cc4c8e6c3035dc272999af61ac6cb080af8c208eccc8d28e4105a7575"
-_ROW_REVIEW_DIGEST: Final[str] = "sha256:4e42e5e04ccfd7a8654e629933698e141033b0767d0f94ec5433619400203ff8"
-_ROW_REVIEW_ATTESTATION_DIGEST: Final[str] = "sha256:fc15a433ad145832934cbe894d3d0b875d27e9a54ed1a70ae271c16ff81aedf7"
+_UNION_DIGEST: Final[str] = "sha256:1abe7593edafc15bf1006ac1ab5926936cebf8e379f1bb268f513de64b7121e8"
+_ROW_REVIEW_DIGEST: Final[str] = "sha256:780008bd7f25097b412184e4f19e76a6750313322d735e34ffb81fa627db8ed0"
+_ROW_REVIEW_ATTESTATION_DIGEST: Final[str] = "sha256:a2cd19ae31fe5b2a43a6b394734ad1439a013afa1e8bfc8e4ffe11ffc662be16"
 _UNSET: Final[object] = object()
 _REFERENCE_PATH: Final[Path] = (
     Path(__file__).resolve().parents[3] / ".vault" / "reference" / "2026-09-04-clitui-ledger-reference.md"
@@ -244,20 +243,20 @@ def test_union_denominator_joins_every_raw_observation_without_double_counting()
 
     assert union.root == LEDGER_UNION_DENOMINATOR_ROOT
     assert union.schema_version == 4
-    assert len(union.observations) == 760
-    assert len(union.rows) == 693
+    assert len(union.observations) == 761
+    assert len(union.rows) == 694
     assert union.selection_accounting.model_dump() == {
-        "observation_count": 760,
-        "selected_edges": 769,
-        "one_to_many_observations": 4,
-        "one_to_many_extra_edges": 9,
-        "multi_observation_rows": 59,
-        "duplicate_selection_edges": 76,
-        "final_rows": 693,
+        "observation_count": 761,
+        "selected_edges": 771,
+        "one_to_many_observations": 5,
+        "one_to_many_extra_edges": 10,
+        "multi_observation_rows": 60,
+        "duplicate_selection_edges": 77,
+        "final_rows": 694,
     }
     assert [(item.source.value, item.observation_count) for item in union.source_digests] == [
         ("artifact_product", 6),
-        ("backend_only", 63),
+        ("backend_only", 64),
         ("cli_endpoint", 78),
         ("cli_suboperation", 50),
         ("missing_product", 10),
@@ -265,7 +264,7 @@ def test_union_denominator_joins_every_raw_observation_without_double_counting()
         ("supported_surface", 7),
     ]
     assert union.digest == _UNION_DIGEST
-    assert union.reviewed_row_count == 693
+    assert union.reviewed_row_count == 694
     assert union.row_review_digest == _ROW_REVIEW_DIGEST
     assert union.row_review_attestation.digest == _ROW_REVIEW_ATTESTATION_DIGEST
     assert ledger_union_denominator_digest(union) == _UNION_DIGEST
@@ -288,7 +287,7 @@ def test_union_holds_every_tui_applicable_row_until_g3_without_holding_non_appli
         if decision.applicability is ApplicabilityState.NOT_APPLICABLE
     )
 
-    assert len(applicable) == 680
+    assert len(applicable) == 681
     assert len(not_applicable) == 13
     assert all(
         union.rows[index].tui_hold_until is LEDGER_TUI_HOLD_UNTIL_GATE
@@ -563,6 +562,19 @@ def test_union_denominator_retains_every_registry_route_unit_and_tui_reachabilit
     assert sum("no registry destination" in blocker for row in registry_rows for blocker in row.blockers) == 33
     assert rows["ledger.workspace.read"].tui_routes == ("ledger.overview",)
     assert "reachability" not in {gap.value for gap in rows["ledger.workspace.read"].gap_classes}
+    prepared_import = rows["ledger.import.prepare"]
+    assert prepared_import.sources == {DenominatorSourceKind.BACKEND_ONLY, DenominatorSourceKind.SUPPORTED_SURFACE}
+    assert prepared_import.semantic_home.owner == (
+        "cadrumo.application.ledger.import_preparation:prepare_ledger_import_command"
+    )
+    assert prepared_import.semantic_home_status is SemanticHomeStatus.PLANNED
+    assert prepared_import.effect is LedgerCapabilityEffect.QUERY
+    assert prepared_import.tui_routes == ("ledger.overview",)
+    assert prepared_import.gap_classes == {LedgerGapClass.PRODUCT, LedgerGapClass.PROOF}
+    assert "ledger.import.prepare" not in matrix_module._BACKEND_DIRECT_PROOF_GAPS
+    assert "ledger.import.source" not in {
+        row.capability_id for row in union.rows if row.tui_routes == ("ledger.overview",)
+    }
     assert rows["ledger.transaction.list"].tui_routes == ("ledger.entries",)
     assert "reachability" in {gap.value for gap in rows["ledger.transaction.list"].gap_classes}
 
@@ -591,7 +603,7 @@ def test_union_row_review_is_exhaustive_conservative_and_digest_bound() -> None:
     assert union.row_review_attestation.ruling is LedgerUnionRowReviewRuling.COMPLETE_WITH_OPEN_GAPS
     assert union.row_review_attestation.reviewed_union_basis_digest == union.calculated_review_basis_digest
     assert union.row_review_attestation.row_review_digest == union.calculated_row_review_digest
-    assert union.row_review_attestation.reviewed_row_count == len(union.rows) == 693
+    assert union.row_review_attestation.reviewed_row_count == len(union.rows) == 694
     assert all(row.review_digest == row.calculated_review_digest for row in union.rows)
     assert all(
         decision.proof
@@ -615,18 +627,18 @@ def test_union_row_review_preserves_registry_destination_and_tui_hold_cohorts() 
         for status in LedgerRegistryDestinationStatus
     }
     assert destination_counts == {
-        LedgerRegistryDestinationStatus.NOT_APPLICABLE: 147,
+        LedgerRegistryDestinationStatus.NOT_APPLICABLE: 148,
         LedgerRegistryDestinationStatus.DIRECT: 510,
         LedgerRegistryDestinationStatus.APPLICATION_SIDECAR: 3,
         LedgerRegistryDestinationStatus.DESTINATIONLESS: 33,
     }
     assert sum(row.primary_gap_class is LedgerGapClass.AUTHORITY for row in union.rows) == 112
     assert sum(row.primary_gap_class is LedgerGapClass.REGISTRY for row in union.rows) == 546
-    assert sum(row.primary_gap_class is LedgerGapClass.PRODUCT for row in union.rows) == 34
+    assert sum(row.primary_gap_class is LedgerGapClass.PRODUCT for row in union.rows) == 35
     assert sum(row.primary_gap_class is LedgerGapClass.ARTIFACT for row in union.rows) == 1
     assert sum(row.primary_gap_class is LedgerGapClass.COMPOSITION for row in union.rows) == 0
     assert sum(row.primary_gap_class is LedgerGapClass.PROOF for row in union.rows) == 0
-    assert sum(row.tui_hold_until is LEDGER_TUI_HOLD_UNTIL_GATE for row in union.rows) == 680
+    assert sum(row.tui_hold_until is LEDGER_TUI_HOLD_UNTIL_GATE for row in union.rows) == 681
     assert sum(row.tui_hold_until is None for row in union.rows) == 13
 
 
@@ -764,7 +776,7 @@ def test_tui_route_review_covers_every_applicable_row_and_no_backend_helper() ->
     ]
     not_applicable = [row for row in union.rows if row not in applicable]
 
-    assert len(applicable) == 680
+    assert len(applicable) == 681
     assert all(row.tui_routes for row in applicable)
     assert len(not_applicable) == 13
     assert all(not row.tui_routes for row in not_applicable)
@@ -793,7 +805,7 @@ def test_tui_route_review_covers_every_applicable_row_and_no_backend_helper() ->
         "ledger.entries": 31,
         "ledger.evidence": 21,
         "ledger.import": 13,
-        "ledger.overview": 1,
+        "ledger.overview": 2,
         "ledger.reconciliation": 588,
         "ledger.review": 17,
     }
@@ -802,7 +814,8 @@ def test_tui_route_review_covers_every_applicable_row_and_no_backend_helper() ->
         LedgerGapClass.REACHABILITY in row.gap_classes for row in applicable if row.tui_routes != ("ledger.overview",)
     )
     assert [row.capability_id for row in applicable if row.tui_routes == ("ledger.overview",)] == [
-        "ledger.workspace.read"
+        "ledger.import.prepare",
+        "ledger.workspace.read",
     ]
     assert next(row for row in union.rows if row.capability_id == "ledger.transaction.invoice_link").tui_routes == (
         "ledger.reconciliation",
@@ -1054,6 +1067,39 @@ def test_existing_semantic_home_validation_refuses_signature_drift() -> None:
 
     with pytest.raises(ValueError, match="request signature drifted"):
         matrix_module._validate_existing_semantic_home(declaration, owner_callable=drifted)
+
+
+@pytest.mark.parametrize(
+    "mutation", ["operation", "source"], ids=["omitted-public-operation", "omitted-current-source"]
+)
+def test_backend_census_refuses_an_omitted_public_import_preparation_operation(
+    monkeypatch: pytest.MonkeyPatch, mutation: str
+) -> None:
+    if mutation == "operation":
+        monkeypatch.setattr(
+            matrix_module,
+            "_LEDGER_BACKEND_OPERATION_DECLARATIONS",
+            tuple(
+                declaration
+                for declaration in matrix_module._LEDGER_BACKEND_OPERATION_DECLARATIONS
+                if declaration.capability_id != "ledger.import.prepare"
+            ),
+        )
+        expected = "public backend operation is omitted: ledger.import.prepare"
+    else:
+        monkeypatch.setattr(
+            matrix_module,
+            "_LEDGER_BACKEND_OPERATION_SOURCE_PATHS",
+            tuple(
+                path
+                for path in matrix_module._LEDGER_BACKEND_OPERATION_SOURCE_PATHS
+                if path != "src/cadrumo/application/ledger/import_preparation.py"
+            ),
+        )
+        expected = "public backend operation source is omitted: src/cadrumo/application/ledger/import_preparation.py"
+
+    with pytest.raises(ValueError, match=re.escape(expected)):
+        build_ledger_union_denominator(registry=_registry_census(), tui=_tui_census())
 
 
 @pytest.mark.parametrize(
@@ -4405,7 +4451,7 @@ def test_canonical_matrix_builds_every_reviewed_union_row_deterministically() ->
     second = build_ledger_capability_matrix()
     union = _union_denominator()
 
-    assert len(first.rows) == 693 == union.reviewed_row_count
+    assert len(first.rows) == 694 == union.reviewed_row_count
     assert {row.identity.row_id for row in first.rows} == {row.capability_id for row in union.rows}
     assert first.current_denominator.capability_ids == {row.capability_id for row in union.rows}
     assert first.current_union_review.capability_ids == tuple(row.capability_id for row in union.rows)
@@ -4507,6 +4553,7 @@ def test_canonical_matrix_losslessly_projects_reviewed_gap_and_surface_cohorts()
         row_id for row_id, row in matrix_rows.items() if CapabilityAnnotation.COMPONENT_ONLY in row.annotations
     } == {row_id for row_id, row in union_rows.items() if LedgerGapClass.REACHABILITY in row.gap_classes}
     assert {row_id for row_id, row in matrix_rows.items() if CapabilityAnnotation.INSTALLED in row.annotations} == {
+        "ledger.import.prepare",
         "ledger.workspace.read"
     }
     for row_id, reviewed in union_rows.items():

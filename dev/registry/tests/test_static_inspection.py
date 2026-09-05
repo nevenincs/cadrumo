@@ -159,17 +159,41 @@ def test_m038_inspection_retains_exact_model_law_and_construct_evidence() -> Non
     assert inspection.live_cross_references == ()
 
 
+#: Floors for the corpora the two boundary gates below inspect. Live: 3,699
+#: runtime boundary sources, and five each of non-registry calculation,
+#: handoff and static-consumer sources. Floors, not pinned counts.
+_MINIMUM_RUNTIME_BOUNDARY_SOURCES = 500
+_MINIMUM_SMALL_CORPUS = 2
+
+
 def test_inspection_api_cannot_cross_from_static_authority_into_runtime_boundaries() -> None:
-    """AST references keep inspection authority out of all runtime consumers."""
+    """AST references keep inspection authority out of all runtime consumers.
+
+    Each corpus is floored SEPARATELY. The comprehension unions a 3,699-file
+    runtime boundary with two five-file collections, so a floor on the total
+    would be satisfied by the large member alone while either small one
+    emptied - and an empty corpus contributes no offender, which is exactly
+    what compliance looks like from here.
+    """
+    boundary = tuple(_python_sources(_RUNTIME_BOUNDARY_ROOTS))
+    calculation = tuple(_non_registry_calculation_sources())
+    handoff = tuple(_handoff_sources())
+
+    for label, corpus, floor in (
+        ("runtime boundary", boundary, _MINIMUM_RUNTIME_BOUNDARY_SOURCES),
+        ("non-registry calculation", calculation, _MINIMUM_SMALL_CORPUS),
+        ("handoff", handoff, _MINIMUM_SMALL_CORPUS),
+    ):
+        assert len(corpus) >= floor, (
+            f"the {label} corpus holds only {len(corpus)} source(s); below this it contributes "
+            "no offender and its silence is indistinguishable from compliance"
+        )
+
     offenders = {
         path.relative_to(_REPOSITORY_ROOT): _registry_api_references(
             ast.parse(path.read_text(encoding="utf-8")), _INSPECTION_SYMBOLS
         )
-        for path in (
-            *_python_sources(_RUNTIME_BOUNDARY_ROOTS),
-            *_non_registry_calculation_sources(),
-            *_handoff_sources(),
-        )
+        for path in (*boundary, *calculation, *handoff)
         if _registry_api_references(ast.parse(path.read_text(encoding="utf-8")), _INSPECTION_SYMBOLS)
     }
 
@@ -177,7 +201,16 @@ def test_inspection_api_cannot_cross_from_static_authority_into_runtime_boundari
 
 
 def test_static_map_authority_has_no_snapshot_or_raw_loader_compatibility() -> None:
-    """Static compiler stages admit only inspection authority, never filing state."""
+    """Static compiler stages admit only inspection authority, never filing state.
+
+    Five consumers carry this boundary. Both claims below are absences over
+    that set, so a relocation emptying it reports the boundary intact.
+    """
+    assert len(_STATIC_CONSUMERS) >= _MINIMUM_SMALL_CORPUS, (
+        f"only {len(_STATIC_CONSUMERS)} static consumer(s) were resolved; below this both "
+        "absence claims below hold because there is nothing to inspect"
+    )
+
     imported_legacy = {
         path.relative_to(_REPOSITORY_ROOT): _registry_api_references(
             ast.parse(path.read_text(encoding="utf-8")), _LEGACY_STATIC_SYMBOLS
