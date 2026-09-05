@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import ast
 import hashlib
+import importlib
+import inspect
 import json
 import re
 from collections.abc import Iterable, Mapping
@@ -1358,6 +1360,20 @@ class LedgerUnionSourceDigestV1(BaseModel):
         return self
 
 
+class LedgerUnionSelectionAccountingV1(BaseModel):
+    """Exact observation/selection/join/split arithmetic for the union."""
+
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+
+    observation_count: int = Field(ge=1)
+    selected_edges: int = Field(ge=1)
+    one_to_many_observations: int = Field(ge=0)
+    one_to_many_extra_edges: int = Field(ge=0)
+    multi_observation_rows: int = Field(ge=0)
+    duplicate_selection_edges: int = Field(ge=0)
+    final_rows: int = Field(ge=1)
+
+
 class LedgerUnionDenominatorV1(BaseModel):
     """Reproducible S08 union with every raw observation and semantic decision."""
 
@@ -1368,6 +1384,7 @@ class LedgerUnionDenominatorV1(BaseModel):
     source_digests: tuple[LedgerUnionSourceDigestV1, ...]
     observations: tuple[LedgerUnionSourceObservationV1, ...]
     rows: tuple[LedgerUnionCapabilityRowV1, ...]
+    selection_accounting: LedgerUnionSelectionAccountingV1
     digest: str = Field(min_length=1)
 
     @model_validator(mode="after")
@@ -1409,6 +1426,18 @@ class LedgerUnionDenominatorV1(BaseModel):
                 raise ValueError(f"union row sources drifted from observations: {capability_id}")
             if row.source_observation_ids != tuple(sorted(selecting_observations[capability_id])):
                 raise ValueError(f"union row observations drifted from census: {capability_id}")
+        selected_edges = sum(len(item.capability_ids) for item in self.observations)
+        expected_accounting = LedgerUnionSelectionAccountingV1(
+            observation_count=len(self.observations),
+            selected_edges=selected_edges,
+            one_to_many_observations=sum(len(item.capability_ids) > 1 for item in self.observations),
+            one_to_many_extra_edges=sum(len(item.capability_ids) - 1 for item in self.observations),
+            multi_observation_rows=sum(len(row.source_observation_ids) > 1 for row in self.rows),
+            duplicate_selection_edges=selected_edges - len(self.rows),
+            final_rows=len(self.rows),
+        )
+        if self.selection_accounting != expected_accounting:
+            raise ValueError("union selection accounting drifted from observations and rows")
         _require_digest(self.digest, field_name="digest")
         if self.digest != self.calculated_digest:
             raise ValueError("union denominator digest does not match its adjudicated content")
@@ -1596,14 +1625,12 @@ _LEDGER_BACKEND_OPERATION_DECLARATIONS: Final[tuple[_BackendOperationDeclaration
         "cadrumo.application.ledger.actions_manual:update_manual_transaction",
         "ManualLedgerTransactionCommand",
         "ManualLedgerTransactionResult",
-        existing_command=True,
     ),
     _backend(
         "ledger.transaction.update_fields",
         "cadrumo.application.ledger.actions_manual:update_manual_transaction_fields",
         "ManualLedgerTransactionPatch",
         "ManualLedgerTransactionResult",
-        existing_command=True,
     ),
     _backend(
         "ledger.transaction.split",
@@ -1784,7 +1811,6 @@ _LEDGER_BACKEND_OPERATION_DECLARATIONS: Final[tuple[_BackendOperationDeclaration
         "cadrumo.application.ledger.llm_review_workflow:execute_reviewed_decision",
         "LlmReviewRequest",
         "LlmReviewResult",
-        existing_command=True,
     ),
     _backend(
         "ledger.participation.get",
@@ -2117,83 +2143,132 @@ def _pascal_identity(capability_id: str) -> str:
     return "".join(part.capitalize() for part in re.split(r"[._]", capability_id.removeprefix("ledger.")))
 
 
+_EXPLICIT_QUERY_CAPABILITIES: Final[frozenset[str]] = frozenset(
+    {
+        "ledger.bienes_inversion.list", "ledger.categories", "ledger.check",
+        "ledger.counterparty.resolve", "ledger.evidence.attachment_queue",
+        "ledger.evidence.attachment_view", "ledger.evidence.consent.list",
+        "ledger.evidence.consent_survey", "ledger.evidence.list",
+        "ledger.evidence.review.list", "ledger.evidence.review.view", "ledger.evidence.view",
+        "ledger.export.provenance", "ledger.field_change.provenance", "ledger.fx.provenance",
+        "ledger.history", "ledger.history.direct", "ledger.history.split_siblings",
+        "ledger.import.aggregate_results", "ledger.import.normalization_provenance",
+        "ledger.inventory.list", "ledger.invoice.list", "ledger.invoice.view", "ledger.list",
+        "ledger.list.filter", "ledger.list.group", "ledger.list.page",
+        "ledger.list.rejected_llm_filter", "ledger.list.sort", "ledger.llm.diagnostics",
+        "ledger.manual_override.provenance", "ledger.participation.get",
+        "ledger.preflight.catalogue", "ledger.preflight.readiness", "ledger.prorrata.list",
+        "ledger.ratio.list", "ledger.ratio.validate", "ledger.ratios.eligible",
+        "ledger.rule.list", "ledger.track", "ledger.transaction.get", "ledger.transaction.list",
+        "ledger.transaction.review_query", "ledger.transaction.status_summary",
+        "ledger.workspace.affected_declarations", "ledger.workspace.project", "ledger.workspace.read",
+    }
+)
+
+
+def _annotation_name(annotation: object) -> str:
+    if isinstance(annotation, str):
+        return annotation.strip("'")
+    return getattr(annotation, "__name__", str(annotation))
+
+
+def _validate_existing_semantic_home(
+    declaration: _BackendOperationDeclaration, *, owner_callable: object | None = None
+) -> None:
+    """Prove an existing request/result claim against the live callable boundary."""
+    if declaration.status is not SemanticHomeStatus.EXISTING:
+        return
+    if owner_callable is None:
+        module_name, separator, symbol_name = declaration.owner.partition(":")
+        if not separator:
+            raise ValueError(f"existing semantic home lacks a callable locator: {declaration.capability_id}")
+        owner_callable = getattr(importlib.import_module(module_name), symbol_name)
+    signature = inspect.signature(owner_callable)
+    parameters = tuple(signature.parameters.values())
+    if not parameters or _annotation_name(parameters[0].annotation) != declaration.command_type:
+        raise ValueError(f"existing semantic-home request signature drifted: {declaration.capability_id}")
+    if any(parameter.default is inspect.Parameter.empty for parameter in parameters[1:]):
+        raise ValueError(f"existing semantic home requires loose business parameters: {declaration.capability_id}")
+    if _annotation_name(signature.return_annotation) != declaration.result_type:
+        raise ValueError(f"existing semantic-home result signature drifted: {declaration.capability_id}")
+_EXPLICIT_PROPOSAL_CAPABILITIES: Final[frozenset[str]] = frozenset(
+    {
+        "ledger.inventory.valuation.preview", "ledger.lifecycle.remove.preview",
+        "ledger.lifecycle.reset.preview", "ledger.llm.classify_with_evidence",
+        "ledger.llm.iva_derive", "ledger.llm.saturate", "ledger.llm.suggest",
+        "ledger.llm.suggest_split", "ledger.rule.apply.preview",
+    }
+)
+_EXPLICIT_ARTIFACT_CAPABILITIES: Final[frozenset[str]] = frozenset(
+    {
+        "ledger.export.csv", "ledger.export.flat", "ledger.export.google_transport",
+        "ledger.export.jsonl", "ledger.export.restore_archive", "ledger.export.review_package",
+        "ledger.export.xlsx",
+    }
+)
+_EXPLICIT_ARTIFACT_QUERY_CAPABILITIES: Final[frozenset[str]] = frozenset(
+    {"ledger.evidence.download"}
+)
+_EXPLICIT_MUTATION_CAPABILITIES: Final[frozenset[str]] = frozenset(
+    {
+        "ledger.allocate", "ledger.bienes_inversion.declare", "ledger.classification.bulk_csv",
+        "ledger.classification.rule_add", "ledger.classification.rule_apply", "ledger.classify",
+        "ledger.classify.direct", "ledger.classify.m210", "ledger.counterparty.forget",
+        "ledger.counterparty.record", "ledger.evidence.add", "ledger.evidence.batch",
+        "ledger.evidence.confirm", "ledger.evidence.consent.rederive",
+        "ledger.evidence.consent_rederive", "ledger.evidence.extract", "ledger.evidence.pull",
+        "ledger.evidence.pull.drive", "ledger.evidence.pull.gmail", "ledger.evidence.pull.url",
+        "ledger.evidence.pull_all", "ledger.evidence.remove", "ledger.evidence.replace",
+        "ledger.evidence.update", "ledger.import", "ledger.import.directory", "ledger.import.dry_run",
+        "ledger.import.file", "ledger.import.parsed_rows", "ledger.import.provider_auto",
+        "ledger.import.provider_csv", "ledger.import.provider_n26", "ledger.import.provider_ofx_qfx",
+        "ledger.import.provider_pdf", "ledger.import.provider_pdf_n26",
+        "ledger.import.provider_xlsx_excel", "ledger.import.source", "ledger.import.verify",
+        "ledger.inventory.closing_authority.record", "ledger.inventory.create",
+        "ledger.inventory.movement.add", "ledger.invoice.add", "ledger.invoice.confirm_draft",
+        "ledger.invoice.extract_draft", "ledger.invoice.import", "ledger.invoice.remove",
+        "ledger.invoice.update", "ledger.invoice.wizard", "ledger.lifecycle.archive",
+        "ledger.lifecycle.remove", "ledger.lifecycle.remove.commit", "ledger.lifecycle.reset",
+        "ledger.lifecycle.reset.commit", "ledger.lifecycle.restore", "ledger.lifecycle.reviewed_exclude",
+        "ledger.lifecycle.stash", "ledger.llm.apply", "ledger.llm.apply_evidence_classification",
+        "ledger.llm.apply_saturated", "ledger.llm.apply_split", "ledger.llm.reject",
+        "ledger.llm.review_decision", "ledger.note.append", "ledger.participation.rebuild",
+        "ledger.prorrata.declare_sector", "ledger.prorrata.elect_especial",
+        "ledger.prorrata.elect_general", "ledger.prorrata.revoke_especial", "ledger.prorrata.seed",
+        "ledger.prorrata.seed_sector", "ledger.prorrata.settle_sector", "ledger.ratio.set",
+        "ledger.ratio.unset", "ledger.transaction.attach", "ledger.transaction.batch_patch",
+        "ledger.transaction.create", "ledger.transaction.detach", "ledger.transaction.invoice_link",
+        "ledger.transaction.merge", "ledger.transaction.split", "ledger.transaction.split_classified",
+        "ledger.transaction.update", "ledger.transaction.update_fields",
+    }
+)
+
+_EXPLICIT_EFFECTS: Final[Mapping[str, LedgerCapabilityEffect]] = MappingProxyType(
+    {
+        **{item: LedgerCapabilityEffect.QUERY for item in _EXPLICIT_QUERY_CAPABILITIES},
+        **{item: LedgerCapabilityEffect.PROPOSAL for item in _EXPLICIT_PROPOSAL_CAPABILITIES},
+        **{item: LedgerCapabilityEffect.ARTIFACT for item in _EXPLICIT_ARTIFACT_CAPABILITIES},
+        **{item: LedgerCapabilityEffect.ARTIFACT_QUERY for item in _EXPLICIT_ARTIFACT_QUERY_CAPABILITIES},
+        **{item: LedgerCapabilityEffect.MUTATION for item in _EXPLICIT_MUTATION_CAPABILITIES},
+    }
+)
+
+
 def _effect_for(capability_id: str, sources: frozenset[DenominatorSourceKind]) -> LedgerCapabilityEffect:
     if DenominatorSourceKind.REGISTRY_ROUTE in sources:
+        if not capability_id.startswith("ledger.registry_route."):
+            raise ValueError(f"registry observation selected a non-registry identity: {capability_id}")
         return LedgerCapabilityEffect.REGISTRY_ROUTE
-    if DenominatorSourceKind.ARTIFACT_PRODUCT in sources or capability_id.startswith("ledger.export."):
-        return LedgerCapabilityEffect.ARTIFACT
-    if any(token in capability_id for token in ("llm", "preview", "suggest", "evidence_read")):
-        return LedgerCapabilityEffect.PROPOSAL
-    query_tokens = (
-        ".list",
-        ".view",
-        ".get",
-        ".query",
-        ".status",
-        ".history",
-        ".track",
-        ".check",
-        ".catalogue",
-        ".read",
-        ".diagnostics",
-        ".eligible",
-        ".validate",
-        ".queue",
-        ".filter",
-        ".sort",
-        ".group",
-        ".page",
-    )
-    return (
-        LedgerCapabilityEffect.QUERY
-        if any(token in capability_id for token in query_tokens)
-        else LedgerCapabilityEffect.MUTATION
-    )
+    try:
+        return _EXPLICIT_EFFECTS[capability_id]
+    except KeyError as exc:
+        raise ValueError(f"unadjudicated non-registry capability identity: {capability_id}") from exc
 
 
 def _planned_owner(capability_id: str) -> str:
-    prefix_owners = (
-        ("ledger.registry_route.", "cadrumo.domain.calculations.registry.binding_targets"),
-        ("ledger.allocate", "cadrumo.application.ledger.operator_commands"),
-        ("ledger.bienes_inversion.", "cadrumo.application.ledger.investment_goods_workflows"),
-        ("ledger.classify", "cadrumo.application.ledger.llm_workflows"),
-        ("ledger.classify.", "cadrumo.application.ledger.llm_workflows"),
-        ("ledger.classification.", "cadrumo.application.ledger.actions_classification"),
-        ("ledger.counterparty.", "cadrumo.application.ledger.counterparty_establishment"),
-        ("ledger.evidence.pull", "cadrumo.application.ledger.provider_evidence_workflows"),
-        ("ledger.evidence.review.", "cadrumo.application.ledger.review_workflows"),
-        ("ledger.evidence.consent.", "cadrumo.application.ledger.review_workflows"),
-        ("ledger.evidence.", "cadrumo.application.ledger.evidence_lifecycle"),
-        ("ledger.export.review", "cadrumo.application.ledger.review_exchange"),
-        ("ledger.export.google", "cadrumo.application.ledger.review_exchange"),
-        ("ledger.export.restore", "cadrumo.application.ledger.recovery_archive"),
-        ("ledger.export.", "cadrumo.application.ledger.actions_export"),
-        ("ledger.export", "cadrumo.application.ledger.actions_export"),
-        ("ledger.import.", "cadrumo.application.ledger.import_workflows"),
-        ("ledger.import", "cadrumo.application.ledger.import_workflows"),
-        ("ledger.inventory.", "cadrumo.application.inventory.service:InventoryService"),
-        ("ledger.invoice.", "cadrumo.application.ledger.invoice_workflows"),
-        ("ledger.lifecycle.", "cadrumo.application.ledger.actions_lifecycle"),
-        ("ledger.llm.", "cadrumo.application.ledger.llm_workflows"),
-        ("ledger.participation.", "cadrumo.application.ledger.composite_reader"),
-        ("ledger.prorrata.", "cadrumo.application.ledger.prorrata_workflows"),
-        ("ledger.preflight.", "cadrumo.application.ledger.composite_reader"),
-        ("ledger.ratio.", "cadrumo.application.ledger.ratio_workflows"),
-        ("ledger.ratios.", "cadrumo.application.ledger.ratio_workflows"),
-        ("ledger.rule.", "cadrumo.application.ledger.actions_classification"),
-        ("ledger.split", "cadrumo.application.ledger.llm_workflows"),
-        ("ledger.transaction.", "cadrumo.application.ledger.operator_commands"),
-        ("ledger.workspace.", "cadrumo.application.ledger.workspace_reader"),
-        ("ledger.list", "cadrumo.application.ledger.query_service"),
-        ("ledger.history", "cadrumo.application.ledger.composite_reader"),
-        ("ledger.track", "cadrumo.application.ledger.composite_reader"),
-        ("ledger.check", "cadrumo.application.ledger.composite_reader"),
-        ("ledger.categories", "cadrumo.application.ledger.review_queries"),
-    )
-    for prefix, owner in prefix_owners:
-        if capability_id.startswith(prefix):
-            return owner
-    raise ValueError(f"union capability has no adjudicated semantic owner: {capability_id}")
+    if capability_id not in _EXPLICIT_EFFECTS:
+        raise ValueError(f"union capability has no explicit semantic-home decision: {capability_id}")
+    return "cadrumo.application.ledger.command_contracts"
 
 
 def _semantic_home_for(
@@ -2224,7 +2299,13 @@ def _semantic_home_for(
             SemanticHomeStatus.PLANNED,
         )
     stem = f"Ledger{_pascal_identity(capability_id)}"
-    request_suffix = "Query" if effect is LedgerCapabilityEffect.QUERY else "Command"
+    if capability_id not in _EXPLICIT_EFFECTS:
+        raise ValueError(f"union capability has no explicit planned contract decision: {capability_id}")
+    request_suffix = (
+        "Query"
+        if effect in {LedgerCapabilityEffect.QUERY, LedgerCapabilityEffect.ARTIFACT_QUERY}
+        else "Command"
+    )
     return (
         CanonicalSemanticHomeV1(
             owner=_planned_owner(capability_id),
@@ -2252,9 +2333,11 @@ def _axis_decisions(
             LedgerCapabilityEffect.MUTATION,
             LedgerCapabilityEffect.PROPOSAL,
             LedgerCapabilityEffect.ARTIFACT,
+            LedgerCapabilityEffect.ARTIFACT_QUERY,
             LedgerCapabilityEffect.REGISTRY_ROUTE,
         },
-        LedgerCapabilityAxis.ARTIFACT: effect is LedgerCapabilityEffect.ARTIFACT,
+        LedgerCapabilityAxis.ARTIFACT: effect
+        in {LedgerCapabilityEffect.ARTIFACT, LedgerCapabilityEffect.ARTIFACT_QUERY},
         LedgerCapabilityAxis.PROVENANCE: effect
         in {
             LedgerCapabilityEffect.MUTATION,
@@ -2263,7 +2346,7 @@ def _axis_decisions(
             LedgerCapabilityEffect.REGISTRY_ROUTE,
         },
         LedgerCapabilityAxis.REGISTRY: effect is LedgerCapabilityEffect.REGISTRY_ROUTE
-        or capability_id.startswith(("ledger.participation.", "ledger.workspace.affected_declarations")),
+        or capability_id in {"ledger.participation.get", "ledger.workspace.affected_declarations"},
         LedgerCapabilityAxis.PROOF: True,
     }
     rationales = {
@@ -2456,7 +2539,30 @@ def build_ledger_union_denominator(
     """Join all seven accepted S04--S07 streams into the S08 semantic union."""
     registry = build_ledger_registry_route_census() if registry is None else registry
     tui = build_ledger_tui_supported_surface_census() if tui is None else tui
+    for declaration in _LEDGER_BACKEND_OPERATION_DECLARATIONS:
+        _validate_existing_semantic_home(declaration)
     observations = _union_observations(registry, tui)
+    effect_groups = (
+        _EXPLICIT_QUERY_CAPABILITIES,
+        _EXPLICIT_PROPOSAL_CAPABILITIES,
+        _EXPLICIT_ARTIFACT_CAPABILITIES,
+        _EXPLICIT_ARTIFACT_QUERY_CAPABILITIES,
+        _EXPLICIT_MUTATION_CAPABILITIES,
+    )
+    if sum(map(len, effect_groups)) != len(_EXPLICIT_EFFECTS):
+        raise ValueError("a non-registry capability has conflicting explicit effect decisions")
+    observed_non_registry = {
+        capability_id
+        for observation in observations
+        if observation.source is not DenominatorSourceKind.REGISTRY_ROUTE
+        for capability_id in observation.capability_ids
+    }
+    if observed_non_registry != set(_EXPLICIT_EFFECTS):
+        missing = sorted(observed_non_registry - set(_EXPLICIT_EFFECTS))
+        removed = sorted(set(_EXPLICIT_EFFECTS) - observed_non_registry)
+        raise ValueError(
+            f"non-registry semantic adjudication is stale; unadjudicated={missing}; removed={removed}"
+        )
     observations_by_capability: dict[str, list[LedgerUnionSourceObservationV1]] = {}
     for observation in observations:
         for capability_id in observation.capability_ids:
@@ -2501,11 +2607,27 @@ def build_ledger_union_denominator(
             LedgerCapabilityEffect.REGISTRY_ROUTE,
         }:
             gaps.add(LedgerGapClass.COMPOSITION)
-        if effect is LedgerCapabilityEffect.ARTIFACT:
+        if effect in {LedgerCapabilityEffect.ARTIFACT, LedgerCapabilityEffect.ARTIFACT_QUERY}:
             gaps.add(LedgerGapClass.ARTIFACT)
         if effect is LedgerCapabilityEffect.REGISTRY_ROUTE:
             gaps.add(LedgerGapClass.REGISTRY)
-        if any(token in capability_id for token in ("provenance", "normalization", "llm", "registry_route")):
+        if capability_id in {
+            "ledger.export.provenance",
+            "ledger.field_change.provenance",
+            "ledger.fx.provenance",
+            "ledger.import.normalization_provenance",
+            "ledger.manual_override.provenance",
+            "ledger.llm.apply",
+            "ledger.llm.apply_evidence_classification",
+            "ledger.llm.apply_saturated",
+            "ledger.llm.apply_split",
+            "ledger.llm.classify_with_evidence",
+            "ledger.llm.reject",
+            "ledger.llm.review_decision",
+            "ledger.llm.saturate",
+            "ledger.llm.suggest",
+            "ledger.llm.suggest_split",
+        } or effect is LedgerCapabilityEffect.REGISTRY_ROUTE:
             gaps.add(LedgerGapClass.PROVENANCE)
         component_only_routes = tuple(route for route in tui_routes if tui_reachability[route] == "component_only")
         if component_only_routes:
@@ -2513,7 +2635,7 @@ def build_ledger_union_denominator(
         proof_requirements = ["Direct backend success and typed refusal proof against the canonical owner."]
         if DenominatorSourceKind.CLI_ENDPOINT in sources or DenominatorSourceKind.CLI_SUBOPERATION in sources:
             proof_requirements.append("CLI parser, delegation, result-schema, success, and refusal parity proof.")
-        if effect is LedgerCapabilityEffect.ARTIFACT:
+        if effect in {LedgerCapabilityEffect.ARTIFACT, LedgerCapabilityEffect.ARTIFACT_QUERY}:
             proof_requirements.append("Independent reader, declared-loss, destination, and cleanup proof.")
         if effect is LedgerCapabilityEffect.REGISTRY_ROUTE:
             proof_requirements.append(
@@ -2580,6 +2702,15 @@ def build_ledger_union_denominator(
         source_digests=source_digests,
         observations=observations,
         rows=tuple(rows),
+        selection_accounting=LedgerUnionSelectionAccountingV1(
+            observation_count=len(observations),
+            selected_edges=sum(len(item.capability_ids) for item in observations),
+            one_to_many_observations=sum(len(item.capability_ids) > 1 for item in observations),
+            one_to_many_extra_edges=sum(len(item.capability_ids) - 1 for item in observations),
+            multi_observation_rows=sum(len(row.source_observation_ids) > 1 for row in rows),
+            duplicate_selection_edges=sum(len(item.capability_ids) for item in observations) - len(rows),
+            final_rows=len(rows),
+        ),
         digest="",
     )
     return LedgerUnionDenominatorV1(

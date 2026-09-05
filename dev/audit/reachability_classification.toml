@@ -805,3 +805,19 @@ resolved = false
 symbols = ["unapprove_draft", "reserved_kind_reason"]
 evidence = "Neither is dead code and neither should be deleted: each is the only implementation of a capability the package documents as supported. application/filing/__init__ presents approve_draft and unapprove_draft as the pair that manages local review state, and approve_draft is live in adapters/persistence/profile/usage_ratios, so the approve half is wired and the un-approve half is not. reserved_kind_reason reads the _RESERVED_KINDS table that enums documents as the reserved --kind surface, and ReviewKindReservedError names it as the source of its blocking reason, but that error is raised only inside a test with a hardcoded string and never in production, so a reserved token is currently accepted rather than refused. Resolution is wiring each to its caller, or an owner decision to retire the declared capability along with its error type and table."
 
+[[symbol_cluster]]
+name = "documented filing and submission ports"
+class = "design-time-authority"
+area = "domain"
+resolved = false
+symbols = ["ModeloDraftRepositoryProtocol", "ModeloDraftLoader"]
+evidence = "Both are Protocols, so an implementer satisfies one structurally and never imports it; an import-graph audit therefore cannot see the relationship that makes them live. Each is named as a port by the code that implements it: adapters/persistence/profile/__init__ and filing_drafts both describe themselves as the ModeloDraftRepositoryProtocol port, and domain/submission/__init__ presents ModeloDraftLoader as one of the narrow filing draft surfaces. Deleting either would remove the written contract while leaving the implementations that claim to satisfy it, which is the opposite of what the architecture boundaries require. They stay unresolved because the audit cannot bind structural conformance, not because anything is wrong."
+
+[[symbol_cluster]]
+name = "modelo edit-session wiring behind the frozen TUI cluster"
+class = "deferred-by-ownership"
+area = "application/modelo"
+resolved = false
+symbols = ["wire_detail_row"]
+evidence = "It is called, at application/modelo/edit_session.py lines 65 and 513, so it is not dead. The module ratchet already reports edit_session as reachable only from the frozen cadrumo.entrypoints.tui.modelo.edit cluster, so this symbol is the tail of that deferral rather than a separate finding: it lives exactly as long as its importer does. Resolving it means resolving the TUI cluster, and doing anything to it before then would be acting inside another campaign's scope."
+
