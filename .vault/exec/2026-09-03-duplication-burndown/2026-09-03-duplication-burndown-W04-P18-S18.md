@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:9384c71b43e388d7e298be8df17fd5fa94aa2ff1ea3c416b2c535d1f8ecb62e3'
+body_hash: 'sha256:958dfdf0b065920e5dca8cf3fa553ea03327d21ab49272a891e32dd44cf3689a'
 step_id: 'S18'
 related:
   - "[[2026-09-03-duplication-burndown-plan]]"
@@ -87,3 +87,24 @@ measurement by edits that ran `ruff check` but not `ruff format` afterwards -
 returns the count to the eleven peer-owned files this record already named. The lesson
 is that a campaign auditing drift can introduce it: run the format check over the whole
 tree periodically, not only over the files an iteration touched.
+
+## Blocker trajectory
+
+Watched across several days rather than sampled once, because the direction
+matters more than the number to whoever closes this Step.
+
+`check-format` went 11 files, then 12, then 13, each addition arriving with a
+peer commit that touched `dev/` -- `test_no_unbounded_subprocess_wait.py`, then
+`test_i18n.py` -- and holding steady across commits that touched only docs and
+vault records. Every one of the thirteen is peer-owned: none appears in a
+`## Changes` list in this campaign's execution records.
+
+So this blocker is not a fixed backlog waiting to be cleared; it grows with the
+work landing beside it, which suggests `check-format` is not running in that
+workflow. Left alone it will not converge, and this Step drifts further from
+closable rather than nearer. `just check-format` on the owning branch before
+the next batch lands is what changes that.
+
+`check-types` is unchanged over the same period: 16 diagnostics across
+`domain/bienes_inversion/regularizacion_parameters.py` and
+`application/workbench_generation.py`, neither of which this campaign touched.
