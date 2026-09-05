@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:78e9f78b6fe59759df025610f7c0176d8c0cc330bfed19cf3898fe15c222441a'
+body_hash: 'sha256:8b75370e592a0fa26ec47566e369f2abc444a028e48b326e80bd178c0cd71d84'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -511,6 +511,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S629` - Refuse a committed sidecar the residual-identity gate cannot parse, since the provenance question is asked of the sidecar and an unparseable one takes its fixture out of the scan scope entirely rather than leaving it with unknown provenance, and four fixtures carry that provenance today; `dev/sanitizer/tests/test_residual_identity_absence.py`.
 - [x] `W02.P02.S630` - Announce a module the broad-raise suppression scan could not read, since the lines it returns ARE the violations this gate reports and an unreadable module therefore contributes nothing and reads exactly like a compliant one; `dev/tests/test_no_broad_exception_raises.py`.
 - [x] `W02.P02.S631` - Record the sequences the unasserted-failure golden scan drops and refuse a corpus that has stopped being examined, since a missing golden and a frame-count mismatch each deferred ownership correctly while silently removing the sequence from the one check that looks for a failure nothing declared; `dev/docs/tests/test_golden_records_no_crash.py`.
+- [x] `W02.P02.S632` - Announce the revisions the convention-without-rule join never reaches, since ninety-seven of one hundred and twenty-eight are refused by the two screens and dropped without a count, leaving a bare non-emptiness guard satisfied by the eleven it does assert; `dev/registry/tests/test_rule_grounding_coverage.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
