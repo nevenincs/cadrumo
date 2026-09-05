@@ -40,8 +40,10 @@ import argparse
 import ast
 import builtins
 import collections
+import itertools
 import re
 import sys
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -166,13 +168,36 @@ def docstring_references(root: Path) -> list[tuple[str, str]]:
             continue
         module = path.relative_to(root).as_posix()
         for node in ast.walk(tree):
-            if not isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
-                continue
-            text = ast.get_docstring(node)
-            if not text:
-                continue
-            found.extend((module, match) for match in _ROLE.findall(text))
+            if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+                text = ast.get_docstring(node)
+                if text:
+                    found.extend((module, match) for match in _ROLE.findall(text))
+            for text in _attribute_docstrings(node):
+                found.extend((module, match) for match in _ROLE.findall(text))
     return found
+
+
+def _attribute_docstrings(node: ast.AST) -> Iterator[str]:
+    """Yield the docstring that follows each assignment in a statement body.
+
+    ``ast.get_docstring`` reaches a module, class and function docstring and
+    nothing else, so the bare string beneath an assignment -- the form this
+    codebase uses to document a constant -- was never scanned at all. A planted
+    reference sat in one without the screen noticing, which is what proving a
+    gate end-to-end is for.
+    """
+    body = getattr(node, "body", None)
+    if not isinstance(body, list):
+        return
+    for previous, statement in itertools.pairwise(body):
+        if not isinstance(previous, (ast.Assign, ast.AnnAssign)):
+            continue
+        if (
+            isinstance(statement, ast.Expr)
+            and isinstance(statement.value, ast.Constant)
+            and isinstance(statement.value.value, str)
+        ):
+            yield statement.value.value
 
 
 def _subscript_names(target: str) -> tuple[str, ...]:

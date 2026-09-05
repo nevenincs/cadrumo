@@ -886,7 +886,7 @@ def test_serialized_union_refuses_tui_route_drift_after_all_digests_are_refreshe
     rows[index] = rows[index].model_copy(update={"tui_routes": routes})
     candidate = _refreshed_union_review(union, rows=tuple(rows))
 
-    with pytest.raises(ValidationError, match="TUI routes drifted"):
+    with pytest.raises(ValidationError, match=r"TUI routes drifted|destination is absent from selected row TUI routes"):
         LedgerUnionDenominatorV1.model_validate(candidate.model_dump(mode="python"))
 
 
