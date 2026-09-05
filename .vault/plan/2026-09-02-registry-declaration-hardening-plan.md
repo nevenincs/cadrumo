@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:10de6377dbe19b086e75fb73bc5db516e889a3f92e93dfca050a1aded075f2cc'
+body_hash: 'sha256:ec92f0efcc8119e5baa03e6218cfa442087c3f62aac16160e70dcd23d5ae5a0a'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -546,6 +546,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S664` - Floor the workflow steps the runtime compatibility skip prohibition examines, since the step corpus arrives through a get default and a job that lost its steps contributes nothing while reading exactly like a job whose steps are clean, which the presence claims further down cannot see; `dev/ci/tests/test_python_runtime_compatibility_workflow.py`.
 - [x] `W02.P02.S665` - Pin the footnote-pointer gate's unresolved-sheet claim: DP200020B is absent from the parse entirely, so `.get(..., {})` proved nothing about the sheet it names; `dev/registry/tests/test_footnote_pointer_notes.py`.
 - [x] `W02.P02.S666` - Close the newline gate's third skip and raise its collapsed floor: a tracked-but-absent module reached neither counter, and the floor of 700 sat against 2,976 live; `dev/tests/test_text_writer_newline_pinning.py`.
+- [x] `W02.P02.S667` - Make the unallowlisted-write negative control prove it fired: the escape is planted only on an argv match, so a drifted command shape left the absence claim passing over a defect never introduced; `dev/quality/tests/test_object_name_replay.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
