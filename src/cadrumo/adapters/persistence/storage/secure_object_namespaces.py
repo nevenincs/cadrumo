@@ -32,11 +32,6 @@ SECURE_OBJECT_CATALOGUE_KEY = "catalogue"
 SECURE_OBJECT_DEFAULT_KEY = "default"
 SECURE_OBJECT_WORKFLOW_STATE_KEY = "state"
 
-# The bucket/keystore layout names, the fan-out shape declarations, and
-# StoragePathDefinition itself live in storage_path_definitions.py, which
-# callers import directly. The SQL secure-object namespace keys below are the
-# concern that stays here: logical database keys, not filesystem paths.
-_SECURE_OBJECTS_TABLE_PATH_KEY = "secure_objects_table"
 FORMER_PRODUCT_NAMESPACE_PREFIXES = ("aeat.", "aeat-test.", "aeat-tests.")
 
 

@@ -27,8 +27,6 @@ from .errors import ClassificationRuleError
 
 _logger = get_logger(__name__)
 
-_RULE_ID_LENGTH: int = 64
-
 RuleDescriptionPattern = Annotated[str, StringConstraints(min_length=1)]
 """The regular expression a rule matches a transaction description against."""
 

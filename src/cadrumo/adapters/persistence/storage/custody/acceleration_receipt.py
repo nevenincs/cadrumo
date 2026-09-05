@@ -119,8 +119,6 @@ PROFILE_SESSION_RECORD_MAX_BYTES: Final[int] = 8 * 1024
 _PROFILE_SESSION_RETIREMENT_MAX_BYTES: Final[int] = 24 * 1024
 _PROFILE_SESSION_RETIREMENT_SCHEMA_VERSION: Final[int] = 1
 
-_STORAGE_ENCRYPTION_MESSAGE_KEY: Final[str] = "errors.integrity.integrity_storage_encryption"
-
 
 class _AccelerationReceiptDocument(BaseModel):
     """On-disk JSON envelope for one persisted profile session."""

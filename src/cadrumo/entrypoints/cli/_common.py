@@ -115,6 +115,14 @@ if TYPE_CHECKING:
     from ...domain.user_profile.values import UserProfileRecord
     from ._verb_input_schema import VerbInputSchema
 
+ResolveTransactionId = Callable[["TransactionCatalogueRepository", str], str]
+"""Resolve a caller-supplied transaction lookup id against a repository.
+
+The repository is a forward reference: this module imports its adapters lazily
+so a fast-path command such as ``aeat --version`` does not pay for them.
+"""
+
+
 __all__ = [
     "active_profile_label",
     "bad",

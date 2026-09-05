@@ -704,8 +704,10 @@ def rehearse_object_name_component(
             raise ObjectNameRehearsalError("transformation paths differ from the reviewed allowlist")
         _materialise(temporary_root, result)
 
-        generator_argv = tuple(command for operation in selected for command in operation.generator_commands)
-        gate_argv = tuple(command for operation in selected for command in operation.focused_gates)
+        generator_argv = tuple(
+            dict.fromkeys(command for operation in selected for command in operation.generator_commands)
+        )
+        gate_argv = tuple(dict.fromkeys(command for operation in selected for command in operation.focused_gates))
         command_environment = os.environ.copy()
         command_environment["VIRTUAL_ENV"] = sys.prefix
         command_environment["UV_PROJECT_ENVIRONMENT"] = sys.prefix

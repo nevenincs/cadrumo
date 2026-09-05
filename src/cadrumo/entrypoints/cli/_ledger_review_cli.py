@@ -6,8 +6,6 @@ application review backend.
 
 from __future__ import annotations
 
-from collections.abc import Callable
-
 import typer
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -17,12 +15,10 @@ from ...application.ledger.models import LedgerReviewQuery, LedgerReviewQueryRes
 from ...application.review.errors import FilterParseError
 from ...application.review.filter import LedgerReviewFilterSpec
 from ...core.i18n.render import tr
-from ._common import current_workflow_state, emit_envelope, transaction_catalogue_repo
+from ._common import ResolveTransactionId, current_workflow_state, emit_envelope, transaction_catalogue_repo
 from ._ledger_list import ledger_review_query_for_spec
 from ._ledger_read_cli import resolve_ledger_transaction_id
 from ._ledger_support import ledger_cli_no_recovery
-
-ResolveTransactionId = Callable[[TransactionCatalogueRepository, str], str]
 
 
 def ledger_review(

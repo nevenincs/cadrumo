@@ -867,3 +867,90 @@ def test_generated_owner_runs_and_forged_generated_edge_is_refused(tmp_path: Pat
     assert receipt.generator_outcomes[0].argv == command[0]
     assert receipt.generator_outcomes[0].return_code == 0
     assert (Path(receipt.rehearsal_root) / generated_path).read_bytes() == b"generated Widget\n"
+
+
+def _two_operation_fixture(
+    repo_root: Path,
+    *,
+    gate: tuple[str, ...],
+) -> tuple[ObjectNameAuditResult, ObjectNameRenameManifest, Any]:
+    """Build one component holding two renames that declare the identical gate."""
+    repo_root.mkdir(parents=True, exist_ok=True)
+    _git(repo_root, "init", "-q")
+    _write(repo_root, "src/example/__init__.py", b"")
+    _write(repo_root, "src/example/contracts.py", b"class Placeholder:\n    pass\n")
+    _write(repo_root, "dev/tracked.txt", b"committed\n")
+    _write(repo_root, ".gitignore", b".pytest_cache/\n__pycache__/\n.venv/\n")
+    _git(repo_root, "add", ".gitignore", "src/example/__init__.py", "src/example/contracts.py", "dev/tracked.txt")
+    _git(
+        repo_root,
+        "-c",
+        "user.name=Test",
+        "-c",
+        "user.email=test@example.invalid",
+        "commit",
+        "-qm",
+        "fixture",
+    )
+    _write(repo_root, "src/example/contracts.py", b"class Widgets:\n    pass\n\n\nclass Gadgets:\n    pass\n")
+    inventory = scan((repo_root / "src", repo_root / "dev"), repo_root)
+    operations = []
+    for index, (old, new) in enumerate((("Widgets", "Widget"), ("Gadgets", "Gadget"))):
+        declaration = next(item for item in inventory.declarations if item.name == old)
+        finding = next(item for item in inventory.findings if item.name == old)
+        operations.append(
+            {
+                "operation_id": f"rename-{old.lower()}",
+                "finding_id": finding.id,
+                "operation_kind": "symbol-rename",
+                "disposition": "lexical-singular",
+                "lifecycle": "reviewed",
+                "old_locator": declaration.qualified_locator,
+                "old_path": declaration.path,
+                "new_locator": replace(declaration, name=new).qualified_locator,
+                "new_path": declaration.path,
+                "owner": "dev-quality",
+                "rationale": "Use the exact singular object name.",
+                "preconditions": ({"path": declaration.path, "sha256": declaration.source_hash},),
+                "expected_reference_classes": ("definition",),
+                "moves": (),
+                "changed_paths": (declaration.path,),
+                "generator_commands": (),
+                "focused_gates": (gate,),
+            }
+        )
+        assert index < 2
+    manifest = ObjectNameRenameManifest.model_validate(
+        {
+            "schema_version": 1,
+            "inventory_digest": to_json(inventory)["inventory_digest"],
+            "operations": tuple(sorted(operations, key=lambda entry: entry["operation_id"])),
+        }
+    )
+    component = build_manifest_components(manifest, inventory=inventory)[0]  # ty: ignore[invalid-argument-type]
+    return inventory, manifest, component
+
+
+def test_identical_focused_gates_run_once_for_the_whole_component(tmp_path: Path) -> None:
+    """Two operations declaring the same focused gate must not run it twice."""
+    gate = (
+        sys.executable,
+        "-c",
+        "from pathlib import Path; "
+        "body = Path('src/example/contracts.py').read_bytes(); "
+        "assert b'class Widget:' in body and b'class Gadget:' in body",
+    )
+    inventory, manifest, component = _two_operation_fixture(tmp_path / "repo", gate=gate)
+
+    receipt = rehearse_object_name_component(
+        manifest,
+        inventory=inventory,
+        component=component,
+        repo_root=tmp_path / "repo",
+    )
+
+    assert len(component.operation_ids) == 2
+    focused = [outcome for outcome in receipt.gate_outcomes if outcome.family == "focused"]
+    assert len(focused) == 1
+    assert focused[0].argv == gate
+    assert focused[0].return_code == 0

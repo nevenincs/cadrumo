@@ -102,9 +102,16 @@ def test_only_approved_concepts_render_drafts_excluded() -> None:
     assert isinstance(result, GlossaryResult)
     assert result.drafts_excluded == drafts
     assert drafts > 0  # the Handbook has a draft backlog to exclude
-    # Every rendered entry is an approved concept (minus any fully-deduplicated
-    # collisions, which only reduce the count, never raise it).
-    assert 0 < result.approved_rendered <= approved
+    assert result.deduplicated_terms == (), (
+        "a headword collided during rendering. This field records the terms dropped and "
+        "had no reader anywhere in the tree, which matters because a concept whose every "
+        f"term collides is skipped entirely and appears in NO count: {result.deduplicated_terms}"
+    )
+    assert result.approved_rendered == approved, (
+        "with nothing deduplicated, every approved concept must reach the page. The bound "
+        "here was previously <=, which absorbed a silently dropped concept as a smaller "
+        f"number: {result.approved_rendered} rendered against {approved} approved"
+    )
 
 
 def test_term_lines_are_declared_surfaces_and_aliases_share_one_entry() -> None:

@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, ClassVar, Final, Literal
 
 from pydantic import TypeAdapter
 
-from .text_fold import fold_diacritics
+from .text_fold import ascii_slug
 
 if TYPE_CHECKING:
     from bs4 import BeautifulSoup, Tag
@@ -59,7 +59,6 @@ DIFFICULT_JUSTIFICATION_RE = re.compile(
     re.I,
 )
 _SPACE_RE = re.compile(r"\s+")
-_SLUG_RE = re.compile(r"[^a-z0-9]+")
 
 
 class OrdenAnualHtmlParseError(ValueError):
@@ -210,15 +209,6 @@ def extract_orden_anual_iva_authority(markup: bytes, *, source_label: str) -> Or
         difficult_justification=difficult_justification,
         lorca_2022_reduction=extract_lorca_2022_reduction(soup, source_label=source_label),
     )
-
-
-def extract_orden_anual_iva_tables(
-    markup: bytes,
-    *,
-    source_label: str,
-) -> tuple[OrdenAnualIvaActivityTable, ...]:
-    """Return the non-agricultural activity projection of the aggregate authority."""
-    return extract_orden_anual_iva_authority(markup, source_label=source_label).non_agricultural_activities
 
 
 def orden_anual_iva_authority_units(authority: OrdenAnualIvaAuthority) -> tuple[OrdenAnualIvaAuthorityUnit, ...]:
@@ -582,8 +572,7 @@ def _stable_anchors(base_anchors: tuple[str, ...]) -> tuple[str, ...]:
 
 
 def _semantic_slug(value: str) -> str:
-    decomposed = fold_diacritics(value).encode("ascii", "ignore").decode("ascii").casefold()
-    compact = _SLUG_RE.sub("-", decomposed).strip("-")
+    compact = ascii_slug(value)
     if not compact:
         raise OrdenAnualHtmlParseError("annual Orden activity heading has no semantic identity")
     return compact
@@ -606,7 +595,6 @@ __all__ = [
     "OrdenAnualIvaModule",
     "OrdenAnualIvaSeasonalIndex",
     "extract_orden_anual_iva_authority",
-    "extract_orden_anual_iva_tables",
     "orden_anual_iva_activity_anchors",
     "orden_anual_iva_authority_units",
     "orden_anual_iva_table_text",

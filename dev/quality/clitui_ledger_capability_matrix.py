@@ -8,6 +8,7 @@ when its role and subject snapshot are current.
 
 from __future__ import annotations
 
+import ast
 import hashlib
 import json
 import re
@@ -16,7 +17,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import Final, Literal, cast
+from typing import Final, Literal, cast, override
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
 from pydantic_core import to_jsonable_python
@@ -41,6 +42,23 @@ LEDGER_REGISTRY_ROUTE_CENSUS_ROOT: Final[Literal["cadrumo.ledger_registry_route_
 )
 _LEDGER_REGISTRY_ROUTE_CENSUS_FRAME: Final[bytes] = b"cadrumo:ledger-registry-route-census:v1\x00"
 _LEDGER_REGISTRY_SOURCE_SET_FRAME: Final[bytes] = b"cadrumo:ledger-registry-source-set:v1\x00"
+LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_SCHEMA_VERSION: Final[Literal[1]] = 1
+LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_ROOT: Final[Literal["cadrumo.ledger_tui_supported_surface_census"]] = (
+    "cadrumo.ledger_tui_supported_surface_census"
+)
+_LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_FRAME: Final[bytes] = b"cadrumo:ledger-tui-supported-surface-census:v1\x00"
+_LEDGER_TUI_SUPPORTED_SURFACE_SOURCE_SET_FRAME: Final[bytes] = b"cadrumo:ledger-tui-supported-surface-source-set:v1\x00"
+_LEDGER_MESSAGE_TYPES: Final[tuple[str, ...]] = (
+    "LedgerBackRequested",
+    "LedgerEvidenceReviewRequested",
+    "LedgerReviewRequested",
+    "LedgerRouteRequested",
+)
+_LEDGER_MUTATION_DOORS: Final[tuple[str, ...]] = (
+    "classification_submitter",
+    "import_submitter",
+    "link_submitter",
+)
 
 
 def _length_frame(value: bytes) -> bytes:
@@ -237,6 +255,698 @@ def ledger_registry_route_census_bytes(census: LedgerRegistryRouteCensusV1) -> b
 def ledger_registry_route_census_digest(census: LedgerRegistryRouteCensusV1) -> str:
     """Return the canonical route-census SHA-256 digest."""
     return f"sha256:{hashlib.sha256(ledger_registry_route_census_bytes(census)).hexdigest()}"
+
+
+class LedgerTuiRouteRowV1(BaseModel):
+    """One declared internal Ledger route and its production reachability."""
+
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+    destination: str = Field(pattern=r"^ledger\.[a-z][a-z0-9_]*$")
+    area: str = Field(pattern=r"^[A-Z][A-Z0-9_]*$")
+    screen: str = Field(pattern=r"^Ledger[A-Za-z0-9]+Screen$")
+    reachability: Literal["component_only", "installed"]
+
+
+class LedgerTuiSupportedSurfaceCensusV1(BaseModel):
+    """Canonical projection of live Ledger TUI declarations and composition."""
+
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+    root: Literal["cadrumo.ledger_tui_supported_surface_census"]
+    schema_version: Literal[1]
+    source_set_digest: str
+    routes: tuple[LedgerTuiRouteRowV1, ...]
+    controller: str
+    root_factory: str
+    resolver: str
+    installed_outer_destination: str
+    initial_internal_destination: str
+    message_consumers: tuple[str, ...]
+    injected_read_action_ids: tuple[str, ...]
+    installed_mutation_doors: tuple[str, ...]
+    cli_tui_capabilities: tuple[tuple[str, str], ...]
+    harness_files: tuple[str, ...]
+    harness_test_functions: int = Field(ge=0)
+
+    @model_validator(mode="after")
+    def _canonical_projection(self) -> LedgerTuiSupportedSurfaceCensusV1:
+        _require_digest(self.source_set_digest, field_name="source_set_digest")
+        destinations = tuple(row.destination for row in self.routes)
+        if destinations != tuple(sorted(destinations)) or len(set(destinations)) != len(destinations):
+            raise ValueError("routes must have unique destinations in canonical order")
+        for field_name in (
+            "message_consumers",
+            "injected_read_action_ids",
+            "installed_mutation_doors",
+            "harness_files",
+        ):
+            values = getattr(self, field_name)
+            if values != tuple(sorted(set(values))):
+                raise ValueError(f"{field_name} must be unique and canonically ordered")
+        if self.cli_tui_capabilities != tuple(sorted(set(self.cli_tui_capabilities))):
+            raise ValueError("cli_tui_capabilities must be unique and canonically ordered")
+        installed = tuple(row.destination for row in self.routes if row.reachability == "installed")
+        if installed != (self.initial_internal_destination,):
+            raise ValueError("the initial internal destination must be the sole installed route")
+        return self
+
+    @property
+    def calculated_digest(self) -> str:
+        """Hash the domain-separated, length-framed canonical projection."""
+        return ledger_tui_supported_surface_census_digest(self)
+
+
+def _repository_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def ledger_tui_supported_surface_source_files(repo_root: Path | None = None) -> tuple[Path, ...]:
+    """Return the complete production and focused-harness scope for this census."""
+    root = _repository_root() if repo_root is None else repo_root.resolve()
+    tui_root = root / "src/cadrumo/entrypoints/tui"
+    production = tuple(
+        path
+        for path in tui_root.rglob("*.py")
+        if "tests" not in path.relative_to(tui_root).parts
+        and "devtools" not in path.relative_to(tui_root).parts
+        and "__pycache__" not in path.parts
+    )
+    ledger_tests = tuple((tui_root / "ledger/tests").glob("test_*.py"))
+    composition_tests = tuple(
+        tui_root / "tests" / name
+        for name in (
+            "test_installed_generation_composition.py",
+            "test_installed_workbench.py",
+            "test_launcher_entry_point.py",
+        )
+    )
+    application_sources = tuple(
+        root / relative
+        for relative in (
+            "src/cadrumo/application/ledger/workspace.py",
+            "src/cadrumo/application/ledger/workspace_reader.py",
+            "src/cadrumo/application/search/installed_workbench.py",
+            "src/cadrumo/application/workbench_generation.py",
+        )
+    )
+    cli_sources = tuple((root / "src/cadrumo/entrypoints/cli").glob("_app_ledger*_command_specs.py"))
+    files = tuple(sorted({*production, *ledger_tests, *composition_tests, *application_sources, *cli_sources}))
+    missing = tuple(path for path in files if not path.is_file())
+    if missing:
+        raise FileNotFoundError(f"Ledger TUI census source is unavailable: {missing[0]}")
+    return files
+
+
+def _source_records(
+    files: Iterable[Path],
+    *,
+    repo_root: Path,
+) -> tuple[tuple[str, bytes], ...]:
+    return tuple(
+        sorted((path.resolve().relative_to(repo_root.resolve()).as_posix(), path.read_bytes()) for path in files)
+    )
+
+
+def ledger_tui_supported_surface_source_set_digest(
+    *,
+    repo_root: Path | None = None,
+    source_records: Iterable[tuple[str, bytes]] | None = None,
+) -> str:
+    """Hash sorted repository-relative paths and bodies with unsigned u64 frames."""
+    root = _repository_root() if repo_root is None else repo_root.resolve()
+    records = (
+        tuple(source_records)
+        if source_records is not None
+        else _source_records(ledger_tui_supported_surface_source_files(root), repo_root=root)
+    )
+    ordered = tuple(sorted(records))
+    if len({relative for relative, _body in ordered}) != len(ordered):
+        raise ValueError("Ledger TUI census source paths must be unique")
+    payload = bytearray(_LEDGER_TUI_SUPPORTED_SURFACE_SOURCE_SET_FRAME)
+    for relative, body in ordered:
+        payload.extend(_length_frame(relative.encode("utf-8")))
+        payload.extend(_length_frame(body))
+    return f"sha256:{hashlib.sha256(payload).hexdigest()}"
+
+
+def _parsed_sources(records: Iterable[tuple[str, bytes]]) -> dict[str, ast.Module]:
+    return {relative: ast.parse(body.decode("utf-8"), filename=relative) for relative, body in records}
+
+
+def _named_function(tree: ast.Module, name: str) -> ast.FunctionDef | ast.AsyncFunctionDef:
+    matches = tuple(
+        node for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == name
+    )
+    if len(matches) != 1:
+        raise ValueError(f"Ledger TUI census requires exactly one {name} function")
+    return matches[0]
+
+
+def _ledger_route_rows(tree: ast.Module) -> tuple[tuple[str, str, str], ...]:
+    assignments = tuple(
+        node
+        for node in tree.body
+        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id == "LEDGER_ROUTES"
+    )
+    if len(assignments) != 1 or not isinstance(assignments[0].value, (ast.Tuple, ast.List)):
+        raise ValueError("LEDGER_ROUTES must have one statically readable sequence assignment")
+    rows: list[tuple[str, str, str]] = []
+    for node in assignments[0].value.elts:
+        if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Name) or node.func.id != "LedgerRouteV1":
+            raise ValueError("LEDGER_ROUTES entries must be direct LedgerRouteV1 declarations")
+        if len(node.args) != 3:
+            raise ValueError("LedgerRouteV1 declarations must have three positional arguments")
+        destination, area, screen = node.args
+        if (
+            not isinstance(destination, ast.Constant)
+            or not isinstance(destination.value, str)
+            or not isinstance(area, ast.Attribute)
+            or not isinstance(screen, ast.Name)
+        ):
+            raise ValueError("Ledger route declaration is not statically census-readable")
+        rows.append((destination.value, area.attr, screen.id))
+    return tuple(sorted(rows))
+
+
+def _module_string_constants(tree: ast.Module) -> dict[str, str]:
+    values: dict[str, str] = {}
+    for node in tree.body:
+        if not isinstance(node, (ast.Assign, ast.AnnAssign)):
+            continue
+        targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+        value = node.value
+        if isinstance(value, ast.Constant) and isinstance(value.value, str):
+            for target in targets:
+                if isinstance(target, ast.Name):
+                    values[target.id] = value.value
+    return values
+
+
+def _call_named(node: ast.AST, name: str) -> tuple[ast.Call, ...]:
+    return tuple(
+        candidate
+        for candidate in ast.walk(node)
+        if isinstance(candidate, ast.Call) and isinstance(candidate.func, ast.Name) and candidate.func.id == name
+    )
+
+
+class _ReturnCollector(ast.NodeVisitor):
+    """Collect returns in one function body without entering nested definitions."""
+
+    def __init__(self) -> None:
+        self.returns: list[ast.Return] = []
+
+    @override
+    def visit_Return(self, node: ast.Return) -> None:
+        self.returns.append(node)
+
+    @override
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        return
+
+    @override
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        return
+
+    @override
+    def visit_Lambda(self, node: ast.Lambda) -> None:
+        return
+
+    @override
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        return
+
+
+def _function_returns(function: ast.FunctionDef | ast.AsyncFunctionDef) -> tuple[ast.Return, ...]:
+    collector = _ReturnCollector()
+    for statement in function.body:
+        collector.visit(statement)
+    return tuple(collector.returns)
+
+
+@dataclass(frozen=True)
+class _AliasDefinition:
+    value: ast.expr
+    target: ast.Name
+
+
+class _BindingCollector(ast.NodeVisitor):
+    """Collect same-scope writes without entering nested definitions."""
+
+    def __init__(self) -> None:
+        self.bindings: dict[str, list[ast.AST]] = {}
+
+    def record(self, name: str, node: ast.AST) -> None:
+        self.bindings.setdefault(name, []).append(node)
+
+    def _visit_function_header(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
+        for decorator in node.decorator_list:
+            self.visit(decorator)
+        for default in (*node.args.defaults, *(value for value in node.args.kw_defaults if value is not None)):
+            self.visit(default)
+        annotations = (
+            *(argument.annotation for argument in node.args.posonlyargs if argument.annotation is not None),
+            *(argument.annotation for argument in node.args.args if argument.annotation is not None),
+            *(argument.annotation for argument in node.args.kwonlyargs if argument.annotation is not None),
+        )
+        for annotation in annotations:
+            self.visit(annotation)
+        if node.args.vararg is not None and node.args.vararg.annotation is not None:
+            self.visit(node.args.vararg.annotation)
+        if node.args.kwarg is not None and node.args.kwarg.annotation is not None:
+            self.visit(node.args.kwarg.annotation)
+        if node.returns is not None:
+            self.visit(node.returns)
+        for type_parameter in getattr(node, "type_params", ()):
+            self.visit(type_parameter)
+
+    def _visit_comprehension(self, node: ast.ListComp | ast.SetComp | ast.DictComp | ast.GeneratorExp) -> None:
+        for generator in node.generators:
+            self.visit(generator.iter)
+            for condition in generator.ifs:
+                self.visit(condition)
+        if isinstance(node, ast.DictComp):
+            self.visit(node.key)
+            self.visit(node.value)
+        else:
+            self.visit(node.elt)
+
+    @override
+    def visit_Name(self, node: ast.Name) -> None:
+        if isinstance(node.ctx, (ast.Store, ast.Del)):
+            self.record(node.id, node)
+
+    @override
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        self.record(node.name, node)
+        self._visit_function_header(node)
+
+    @override
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        self.record(node.name, node)
+        self._visit_function_header(node)
+
+    @override
+    def visit_Lambda(self, node: ast.Lambda) -> None:
+        for default in (*node.args.defaults, *(value for value in node.args.kw_defaults if value is not None)):
+            self.visit(default)
+
+    @override
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        self.record(node.name, node)
+        for decorator in node.decorator_list:
+            self.visit(decorator)
+        for base in node.bases:
+            self.visit(base)
+        for keyword in node.keywords:
+            self.visit(keyword.value)
+        for type_parameter in getattr(node, "type_params", ()):
+            self.visit(type_parameter)
+
+    @override
+    def visit_ListComp(self, node: ast.ListComp) -> None:
+        self._visit_comprehension(node)
+
+    @override
+    def visit_SetComp(self, node: ast.SetComp) -> None:
+        self._visit_comprehension(node)
+
+    @override
+    def visit_DictComp(self, node: ast.DictComp) -> None:
+        self._visit_comprehension(node)
+
+    @override
+    def visit_GeneratorExp(self, node: ast.GeneratorExp) -> None:
+        self._visit_comprehension(node)
+
+    @override
+    def visit_Import(self, node: ast.Import) -> None:
+        for alias in node.names:
+            self.record(alias.asname or alias.name.split(".", maxsplit=1)[0], node)
+
+    @override
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
+        for alias in node.names:
+            self.record(alias.asname or alias.name, node)
+
+    @override
+    def visit_Global(self, node: ast.Global) -> None:
+        for name in node.names:
+            self.record(name, node)
+
+    @override
+    def visit_Nonlocal(self, node: ast.Nonlocal) -> None:
+        for name in node.names:
+            self.record(name, node)
+
+    @override
+    def visit_ExceptHandler(self, node: ast.ExceptHandler) -> None:
+        if node.name is not None:
+            self.record(node.name, node)
+        self.generic_visit(node)
+
+    @override
+    def visit_MatchAs(self, node: ast.MatchAs) -> None:
+        if node.name is not None:
+            self.record(node.name, node)
+        self.generic_visit(node)
+
+    @override
+    def visit_MatchStar(self, node: ast.MatchStar) -> None:
+        if node.name is not None:
+            self.record(node.name, node)
+
+    @override
+    def visit_MatchMapping(self, node: ast.MatchMapping) -> None:
+        if node.rest is not None:
+            self.record(node.rest, node)
+        self.generic_visit(node)
+
+
+def _simple_assignments(function: ast.FunctionDef | ast.AsyncFunctionDef) -> dict[str, _AliasDefinition]:
+    assignments: dict[str, _AliasDefinition] = {}
+    for statement in function.body:
+        if (
+            isinstance(statement, ast.Assign)
+            and len(statement.targets) == 1
+            and isinstance(statement.targets[0], ast.Name)
+        ):
+            target = statement.targets[0]
+            assignments[target.id] = _AliasDefinition(value=statement.value, target=target)
+        elif (
+            isinstance(statement, ast.AnnAssign)
+            and isinstance(statement.target, ast.Name)
+            and statement.value is not None
+        ):
+            assignments[statement.target.id] = _AliasDefinition(value=statement.value, target=statement.target)
+    return assignments
+
+
+def _resolve_simple_alias(
+    expression: ast.expr,
+    function: ast.FunctionDef | ast.AsyncFunctionDef,
+) -> ast.expr:
+    assignments = _simple_assignments(function)
+    collector = _BindingCollector()
+    arguments = (*function.args.posonlyargs, *function.args.args, *function.args.kwonlyargs)
+    for argument in arguments:
+        collector.record(argument.arg, argument)
+    if function.args.vararg is not None:
+        collector.record(function.args.vararg.arg, function.args.vararg)
+    if function.args.kwarg is not None:
+        collector.record(function.args.kwarg.arg, function.args.kwarg)
+    for statement in function.body:
+        collector.visit(statement)
+    seen: set[str] = set()
+    while isinstance(expression, ast.Name) and expression.id in assignments:
+        definition = assignments[expression.id]
+        bindings = collector.bindings.get(expression.id, [])
+        if bindings != [definition.target]:
+            raise ValueError(f"Ledger TUI census alias {expression.id!r} is not uniquely and unconditionally defined")
+        if definition.target.lineno >= expression.lineno:
+            raise ValueError(f"Ledger TUI census alias {expression.id!r} is read before its definition")
+        if expression.id in seen:
+            raise ValueError("Ledger TUI census found a cyclic return alias")
+        seen.add(expression.id)
+        expression = definition.value
+    return expression
+
+
+def _single_effective_return(function: ast.FunctionDef | ast.AsyncFunctionDef) -> ast.expr:
+    returns = _function_returns(function)
+    values = tuple(
+        node.value
+        for node in returns
+        if node.value is not None and not (isinstance(node.value, ast.Constant) and node.value.value is None)
+    )
+    if len(values) != 1:
+        raise ValueError(f"{function.name} must have exactly one non-null return dataflow")
+    return _resolve_simple_alias(values[0], function)
+
+
+def _returned_nested_function(
+    function: ast.FunctionDef | ast.AsyncFunctionDef,
+    expected_name: str,
+) -> ast.FunctionDef | ast.AsyncFunctionDef:
+    returned = _single_effective_return(function)
+    if not isinstance(returned, ast.Name) or returned.id != expected_name:
+        raise ValueError(f"{function.name} must return its exact nested {expected_name} factory")
+    nested = tuple(
+        node
+        for node in function.body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == expected_name
+    )
+    if len(nested) != 1:
+        raise ValueError(f"{function.name} must define exactly one nested {expected_name} factory")
+    return nested[0]
+
+
+def _installed_action_ids(tree: ast.Module) -> tuple[str, ...]:
+    function = _named_function(tree, "compose_authenticated_root_inputs_provider")
+    constructors = _call_named(function, "InstalledWorkbenchFactoryDependenciesV1")
+    if len(constructors) != 1:
+        raise ValueError("installed Ledger dependencies constructor is not unique")
+    constants = _module_string_constants(tree)
+    values: list[str] = []
+    for keyword in constructors[0].keywords:
+        if keyword.arg not in {"ledger_review_action", "ledger_evidence_action"}:
+            continue
+        value = keyword.value
+        if (
+            not isinstance(value, ast.Call)
+            or not isinstance(value.func, ast.Name)
+            or value.func.id != "action"
+            or len(value.args) != 1
+            or not isinstance(value.args[0], ast.Name)
+            or value.args[0].id not in constants
+        ):
+            raise ValueError("installed Ledger action reference is not statically census-readable")
+        values.append(constants[value.args[0].id])
+    return tuple(sorted(values))
+
+
+def _installed_ledger_factory_call(tree: ast.Module) -> ast.Call:
+    function = _named_function(tree, "_ledger_generation_factory")
+    create = _returned_nested_function(function, "create")
+    returned = _single_effective_return(create)
+    if not isinstance(returned, ast.Call):
+        raise ValueError("installed Ledger create factory must return a screen invocation")
+    factory_expression = _resolve_simple_alias(returned.func, create)
+    if (
+        not isinstance(factory_expression, ast.Call)
+        or not isinstance(factory_expression.func, ast.Name)
+        or factory_expression.func.id != "ledger_screen_factory"
+    ):
+        raise ValueError("installed Ledger create return does not invoke ledger_screen_factory")
+    return factory_expression
+
+
+def _installed_outer_destination(tree: ast.Module) -> str:
+    function = _named_function(tree, "compose_installed_workbench_generation_provider")
+    enrolled = tuple(
+        node
+        for node in ast.walk(function)
+        if isinstance(node, ast.Assign)
+        and any(
+            isinstance(target, ast.Subscript)
+            and isinstance(target.value, ast.Name)
+            and target.value.id == "factories"
+            and isinstance(target.slice, ast.Constant)
+            and target.slice.value == "workbench.ledger"
+            for target in node.targets
+        )
+        and isinstance(node.value, ast.Name)
+        and node.value.id == "ledger_factory"
+    )
+    destinations_calls = _call_named(function, "destinations")
+    if len(enrolled) != 1 or not destinations_calls:
+        raise ValueError("installed workbench does not enroll the Ledger outer factory")
+    return "workbench.ledger"
+
+
+def _initial_route_area(tree: ast.Module) -> str:
+    function = _named_function(tree, "ledger_screen_factory")
+    create = _returned_nested_function(function, "create")
+    returned = _single_effective_return(create)
+    if (
+        not isinstance(returned, ast.Call)
+        or not isinstance(returned.func, ast.Name)
+        or returned.func.id != "resolve_ledger_screen"
+        or len(returned.args) != 2
+    ):
+        raise ValueError("Ledger root create return does not resolve one screen")
+    target = _resolve_simple_alias(returned.args[1], create)
+    if (
+        not isinstance(target, ast.Call)
+        or not isinstance(target.func, ast.Attribute)
+        or target.func.attr != "route_target"
+        or len(target.args) != 1
+    ):
+        raise ValueError("Ledger root factory initial route is not statically census-readable")
+    area = _resolve_simple_alias(target.args[0], create)
+    if (
+        not isinstance(area, ast.Attribute)
+        or not isinstance(area.value, ast.Name)
+        or area.value.id != "LedgerWorkspaceArea"
+    ):
+        raise ValueError("Ledger root factory initial route is not statically census-readable")
+    return area.attr
+
+
+def _reachable_recipient_classes(
+    production_trees: Mapping[str, ast.Module],
+    route_screens: set[str],
+) -> tuple[ast.ClassDef, ...]:
+    classes = {
+        node.name: node for tree in production_trees.values() for node in tree.body if isinstance(node, ast.ClassDef)
+    }
+    pending = ["CadrumoTuiApp", *sorted(route_screens)]
+    reachable: set[str] = set()
+    while pending:
+        name = pending.pop()
+        if name in reachable:
+            continue
+        node = classes.get(name)
+        if node is None:
+            raise ValueError(f"installed Ledger recipient class is unavailable: {name}")
+        reachable.add(name)
+        pending.extend(base.id for base in node.bases if isinstance(base, ast.Name) and base.id in classes)
+    return tuple(classes[name] for name in sorted(reachable))
+
+
+def _message_consumers(classes: Iterable[ast.ClassDef]) -> tuple[str, ...]:
+    conventional = {
+        f"on_{re.sub(r'(?<!^)(?=[A-Z])', '_', message).lower()}": message for message in _LEDGER_MESSAGE_TYPES
+    }
+    found: set[str] = set()
+    for class_node in classes:
+        for method in class_node.body:
+            if not isinstance(method, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            if method.name in conventional:
+                found.add(conventional[method.name])
+            for decorator in method.decorator_list:
+                if not isinstance(decorator, ast.Call) or not decorator.args:
+                    continue
+                decorator_name = (
+                    decorator.func.id
+                    if isinstance(decorator.func, ast.Name)
+                    else decorator.func.attr
+                    if isinstance(decorator.func, ast.Attribute)
+                    else None
+                )
+                message_arg = decorator.args[0]
+                if (
+                    decorator_name == "on"
+                    and isinstance(message_arg, ast.Name)
+                    and message_arg.id in _LEDGER_MESSAGE_TYPES
+                ):
+                    found.add(message_arg.id)
+    return tuple(sorted(found))
+
+
+def build_ledger_tui_supported_surface_census(
+    *,
+    repo_root: Path | None = None,
+    source_records: Iterable[tuple[str, bytes]] | None = None,
+    cli_tui_capabilities: Iterable[tuple[str, str]] | None = None,
+) -> LedgerTuiSupportedSurfaceCensusV1:
+    """Derive the supported-surface census without importing the product TUI."""
+    root = _repository_root() if repo_root is None else repo_root.resolve()
+    records = (
+        tuple(source_records)
+        if source_records is not None
+        else _source_records(ledger_tui_supported_surface_source_files(root), repo_root=root)
+    )
+    trees = _parsed_sources(records)
+    routes_path = "src/cadrumo/entrypoints/tui/ledger/routes.py"
+    launcher_path = "src/cadrumo/entrypoints/tui/launcher.py"
+    installed_path = "src/cadrumo/entrypoints/tui/installed_session.py"
+    for required in (routes_path, launcher_path, installed_path):
+        if required not in trees:
+            raise ValueError(f"Ledger TUI census source set is missing {required}")
+    route_facts = _ledger_route_rows(trees[routes_path])
+    if not route_facts:
+        raise ValueError("Ledger TUI census found no internal routes")
+
+    outer_destination = _installed_outer_destination(trees[launcher_path])
+    installed_factory_call = _installed_ledger_factory_call(trees[launcher_path])
+    initial_area = _initial_route_area(trees[routes_path])
+    initial_destination = next(
+        (destination for destination, area, _screen in route_facts if area == initial_area),
+        None,
+    )
+    if initial_destination is None:
+        raise ValueError("Ledger root factory initial area is absent from the route table")
+
+    production_trees = {
+        relative: tree
+        for relative, tree in trees.items()
+        if relative.startswith("src/cadrumo/entrypoints/tui/") and "/tests/" not in relative
+    }
+    route_screens = {screen for _destination, _area, screen in route_facts}
+    defined_classes = {
+        node.name for tree in production_trees.values() for node in tree.body if isinstance(node, ast.ClassDef)
+    }
+    if not route_screens <= defined_classes or "LedgerWorkspaceController" not in defined_classes:
+        raise ValueError("Ledger TUI census route/controller class is unavailable")
+    _named_function(trees[routes_path], "resolve_ledger_screen")
+    initial_screen = next(screen for destination, _area, screen in route_facts if destination == initial_destination)
+    recipient_classes = _reachable_recipient_classes(production_trees, {initial_screen})
+    consumers = _message_consumers(recipient_classes)
+    installed_keywords = {keyword.arg for keyword in installed_factory_call.keywords if keyword.arg is not None}
+    installed_doors = tuple(sorted(installed_keywords & set(_LEDGER_MUTATION_DOORS)))
+    read_actions = _installed_action_ids(trees[installed_path])
+
+    if cli_tui_capabilities is None:
+        from cadrumo.entrypoints.cli._app_ledger_command_specs import LEDGER_CLI_COMMAND_CENSUS
+
+        cli_tui_capabilities = ((entry.command_key, entry.tui_capability.value) for entry in LEDGER_CLI_COMMAND_CENSUS)
+    cli_statuses = tuple(sorted(cli_tui_capabilities))
+    test_records = tuple((relative, tree) for relative, tree in trees.items() if "/tests/test_" in relative)
+    harness_files = tuple(sorted(relative for relative, _tree in test_records))
+    harness_test_functions = sum(
+        1
+        for _relative, tree in test_records
+        for node in tree.body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith("test_")
+    )
+    return LedgerTuiSupportedSurfaceCensusV1(
+        root=LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_ROOT,
+        schema_version=LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_SCHEMA_VERSION,
+        source_set_digest=ledger_tui_supported_surface_source_set_digest(source_records=records),
+        routes=tuple(
+            LedgerTuiRouteRowV1(
+                destination=destination,
+                area=area,
+                screen=screen,
+                reachability="installed" if destination == initial_destination else "component_only",
+            )
+            for destination, area, screen in route_facts
+        ),
+        controller="LedgerWorkspaceController",
+        root_factory="ledger_screen_factory",
+        resolver="resolve_ledger_screen",
+        installed_outer_destination=outer_destination,
+        initial_internal_destination=initial_destination,
+        message_consumers=consumers,
+        injected_read_action_ids=read_actions,
+        installed_mutation_doors=installed_doors,
+        cli_tui_capabilities=cli_statuses,
+        harness_files=harness_files,
+        harness_test_functions=harness_test_functions,
+    )
+
+
+def ledger_tui_supported_surface_census_bytes(census: LedgerTuiSupportedSurfaceCensusV1) -> bytes:
+    """Serialize a validated census with explicit domain and payload framing."""
+    canonical = LedgerTuiSupportedSurfaceCensusV1.model_validate(census.model_dump(mode="python"))
+    encoded = _canonical_json_text(canonical).encode("utf-8")
+    return _LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_FRAME + _length_frame(encoded)
+
+
+def ledger_tui_supported_surface_census_digest(census: LedgerTuiSupportedSurfaceCensusV1) -> str:
+    """Return the canonical supported-surface SHA-256 digest."""
+    return f"sha256:{hashlib.sha256(ledger_tui_supported_surface_census_bytes(census)).hexdigest()}"
 
 
 class LedgerCapabilityAxis(StrEnum):
@@ -505,8 +1215,11 @@ class LedgerCapabilityIdentityV1(BaseModel):
 
     @model_validator(mode="after")
     def _check_hierarchy(self) -> LedgerCapabilityIdentityV1:
-        for field_name in ("capability_id", "operation_id", "suboperation_id"):
-            _require_identity(getattr(self, field_name), field_name=field_name, pattern=_CAPABILITY_ID_PATTERN)
+        # Derived from the model for the same reason as the semantic home above.
+        for field_name in type(self).model_fields:
+            value = getattr(self, field_name)
+            if isinstance(value, str):
+                _require_identity(value, field_name=field_name, pattern=_CAPABILITY_ID_PATTERN)
         if self.operation_id == self.capability_id or not self.operation_id.startswith(f"{self.capability_id}."):
             raise ValueError("operation_id must be a child of capability_id")
         if self.suboperation_id != self.operation_id and not self.suboperation_id.startswith(f"{self.operation_id}."):
@@ -530,8 +1243,12 @@ class CanonicalSemanticHomeV1(BaseModel):
 
     @model_validator(mode="after")
     def _check_values(self) -> CanonicalSemanticHomeV1:
-        for field_name in ("owner", "command_type", "result_type"):
-            _require_non_placeholder(getattr(self, field_name), field_name=field_name)
+        # Derived from the model, not listed: a field added here was silently
+        # exempt from the placeholder check while the tuple went on naming three.
+        for field_name in type(self).model_fields:
+            value = getattr(self, field_name)
+            if isinstance(value, str):
+                _require_non_placeholder(value, field_name=field_name)
         return self
 
 
@@ -1603,6 +2320,8 @@ __all__ = [
     "ACCEPTED_LEDGER_PARITY_PLAN_OWNER",
     "LEDGER_REGISTRY_ROUTE_CENSUS_ROOT",
     "LEDGER_REGISTRY_ROUTE_CENSUS_SCHEMA_VERSION",
+    "LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_ROOT",
+    "LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_SCHEMA_VERSION",
     "SCHEMA_VERSION",
     "ApplicabilityState",
     "AuthorityDispositionEntryV1",
@@ -1635,15 +2354,22 @@ __all__ = [
     "LedgerRegistryRouteCensusV1",
     "LedgerRegistryRouteRowV1",
     "LedgerRegistryRouteTargetV1",
+    "LedgerTuiRouteRowV1",
+    "LedgerTuiSupportedSurfaceCensusV1",
     "ReviewRuling",
     "SurfaceCapabilityState",
     "build_ledger_registry_route_census",
+    "build_ledger_tui_supported_surface_census",
     "evaluate_ledger_capability_gate",
     "evaluate_ledger_capability_gates",
     "ledger_registry_route_census_bytes",
     "ledger_registry_route_census_digest",
     "ledger_registry_source_files",
     "ledger_registry_source_set_digest",
+    "ledger_tui_supported_surface_census_bytes",
+    "ledger_tui_supported_surface_census_digest",
+    "ledger_tui_supported_surface_source_files",
+    "ledger_tui_supported_surface_source_set_digest",
     "reopened_gates_for_denominator_drift",
     "validate_ledger_matrix_currentness",
 ]

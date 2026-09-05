@@ -1447,6 +1447,12 @@ def test_a_paired_anchor_keeps_the_home_its_predecessor_gave_it(epoch: _EpochAut
     assert set(after) == set(pairing.paired) | pairing.unpaired_target, (
         "every anchor must be either paired with its predecessor or declared unpaired"
     )
+    assert set(before) == set(pairing.paired.values()) | pairing.unpaired_predecessor, (
+        "every PREDECESSOR anchor must be either paired forward or declared unpaired. "
+        "The pairing computes both directions, and only the target half was ever read: "
+        "the mirror set names the anchors this epoch stopped declaring, which is where a "
+        "silently dropped slot would appear"
+    )
 
     drifted = tuple(
         f"{target} (declared as {source} in {surface.predecessor}): "

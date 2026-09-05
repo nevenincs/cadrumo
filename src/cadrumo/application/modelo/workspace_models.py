@@ -39,7 +39,6 @@ from .work_addressing import ModeloExactWorkUnitTarget, ModeloVisibleFilingTarge
 from .work_review import ModeloWorkReview
 
 _MAX_FACET_PAGE_SIZE = 200
-_MAX_FACET_CURSOR_LENGTH = 256
 _MAX_CONTRIBUTORS = 32
 _MAX_SCHEMA_RECORD_FAMILY_DEPTH = 16
 _MAX_SCHEMA_RELATIONSHIPS = 128

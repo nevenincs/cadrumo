@@ -20,7 +20,6 @@ The derived fact paths exposed here are consumed by registry bindings:
 
 from __future__ import annotations
 
-import re
 from datetime import date
 
 from ...core.errors.hierarchy import ProfileAnswerTypeError
@@ -75,9 +74,6 @@ def marriage_derived_facts(
         facts.append((_MONTH_START_PATH, str(month_start)))
         facts.append((_MONTH_END_PATH, "12"))
     return facts
-
-
-_DATE_RE = re.compile(r"^renta_taxpayer\.(marriage_date|marriage_month_start|marriage_month_end|marriage_full_year)$")
 
 
 def marriage_date_from_facts(facts: dict[str, str]) -> date | None:

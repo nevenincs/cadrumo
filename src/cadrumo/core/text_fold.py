@@ -19,7 +19,7 @@ from __future__ import annotations
 import re
 import unicodedata
 
-__all__ = ["fold_diacritics", "fold_for_matching", "fold_printed_phrase", "unicode_compose"]
+__all__ = ["ascii_slug", "fold_diacritics", "fold_for_matching", "fold_printed_phrase", "unicode_compose"]
 
 #: A run of one or more whitespace characters, collapsed to a single space by
 #: :func:`fold_for_matching`. Distinct from a single-whitespace pattern used to
@@ -133,3 +133,30 @@ def fold_for_matching(text: str) -> str:
         The folded, whitespace-collapsed, casefolded form.
     """
     return _WHITESPACE_RUN_RE.sub(" ", fold_diacritics(text)).strip().casefold()
+
+
+#: A run of characters that cannot appear in an ASCII slug, collapsed to a
+#: single hyphen by :func:`ascii_slug`.
+_SLUG_RUN_RE = re.compile(r"[^a-z0-9]+")
+
+
+def ascii_slug(text: str) -> str:
+    """Return the lowercase ASCII slug of *text*, or ``""`` when it has none.
+
+    Folds accents, discards every remaining non-ASCII codepoint, casefolds,
+    then collapses each run of non-slug characters to a single hyphen and trims
+    the hyphens from both ends.
+
+    Returning the empty string rather than raising is deliberate: the callers
+    that need a slug disagree about what an absent one MEANS -- one is parsing
+    an HTML source and one is compiling a registry declaration, and each owes
+    its own typed error -- so the shared code computes and the caller judges.
+
+    Args:
+        text: Raw text to reduce to a slug.
+
+    Returns:
+        The slug, or the empty string when *text* carries no slug characters.
+    """
+    decomposed = fold_diacritics(text).encode("ascii", "ignore").decode("ascii").casefold()
+    return _SLUG_RUN_RE.sub("-", decomposed).strip("-")

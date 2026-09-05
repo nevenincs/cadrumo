@@ -11,10 +11,12 @@ cannot masquerade as the live campaign census.
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from copy import copy
 from datetime import UTC, datetime
 from decimal import Decimal
 from functools import cache
+from pathlib import Path
 from typing import Final, cast
 
 import pytest
@@ -26,6 +28,7 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from ..clitui_ledger_capability_matrix import (
     ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
     LEDGER_REGISTRY_ROUTE_CENSUS_ROOT,
+    LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_ROOT,
     ApplicabilityState,
     AuthorityDispositionEntryV1,
     AuthorityDispositionSnapshotV1,
@@ -53,14 +56,19 @@ from ..clitui_ledger_capability_matrix import (
     LedgerLiveCensusReportV1,
     LedgerMatrixAcceptanceAttestationV1,
     LedgerRegistryRouteCensusV1,
+    LedgerTuiSupportedSurfaceCensusV1,
     ReviewRuling,
     SurfaceCapabilityState,
     build_ledger_registry_route_census,
+    build_ledger_tui_supported_surface_census,
     evaluate_ledger_capability_gate,
     evaluate_ledger_capability_gates,
     ledger_registry_route_census_bytes,
     ledger_registry_source_files,
     ledger_registry_source_set_digest,
+    ledger_tui_supported_surface_census_bytes,
+    ledger_tui_supported_surface_source_files,
+    ledger_tui_supported_surface_source_set_digest,
     reopened_gates_for_denominator_drift,
     validate_ledger_matrix_currentness,
 )
@@ -75,11 +83,523 @@ _ROW_ID: Final[str] = "ledger.entries.list"
 _SUBJECT_DIGEST: Final[str] = "sha256:" + "a" * 64
 _REGISTRY_ROUTE_DIGEST: Final[str] = "sha256:20b2d2df5558b2a3fdbd1eab6e9f781a973e93c6211e211f8e679cf7b4782aca"
 _REGISTRY_SOURCE_DIGEST: Final[str] = "sha256:194a9f26ddfbae6c5d7f265ffe58f50964fbe2fcd02a5670fa19845dead5cf6d"
+_TUI_CENSUS_DIGEST: Final[str] = "sha256:c136cfe1ae3f82a239476c00e805f8c9a29e010d502e74397963cea7e6f42371"
+_TUI_SOURCE_DIGEST: Final[str] = "sha256:e7337508a02ef2260e0b28205c31bb872b69f59aa51a18391ae209c21b8f9d57"
 
 
 @cache
 def _registry_census() -> LedgerRegistryRouteCensusV1:
     return build_ledger_registry_route_census()
+
+
+@cache
+def _tui_census() -> LedgerTuiSupportedSurfaceCensusV1:
+    return build_ledger_tui_supported_surface_census()
+
+
+def _tui_source_records() -> tuple[tuple[str, bytes], ...]:
+    root = Path(__file__).resolve().parents[3]
+    return tuple(
+        (path.resolve().relative_to(root).as_posix(), path.read_bytes())
+        for path in ledger_tui_supported_surface_source_files(root)
+    )
+
+
+def _mutate_tui_source(relative: str, mutation: Callable[[bytes], bytes]) -> tuple[tuple[str, bytes], ...]:
+    return tuple((path, mutation(body) if path == relative else body) for path, body in _tui_source_records())
+
+
+def _replace_installed_return_with_unrelated_screen(body: bytes) -> bytes:
+    mutated = body.replace(b"        return ledger_screen_factory(", b"        dead = ledger_screen_factory(", 1)
+    return mutated.replace(b"        )(context)", b"        )(context)\n        return Screen()", 1)
+
+
+def _alias_installed_screen_return(body: bytes) -> bytes:
+    mutated = body.replace(b"        return ledger_screen_factory(", b"        screen = ledger_screen_factory(", 1)
+    return mutated.replace(b"        )(context)", b"        )(context)\n        return screen", 1)
+
+
+def test_tui_supported_surface_census_recomputes_the_published_live_digest() -> None:
+    census = _tui_census()
+
+    assert census.root == LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_ROOT
+    assert census.schema_version == 1
+    assert census.source_set_digest == _TUI_SOURCE_DIGEST
+    assert census.calculated_digest == _TUI_CENSUS_DIGEST
+    assert len(census.routes) == 7
+    assert [(row.destination, row.reachability) for row in census.routes] == [
+        ("ledger.classification", "component_only"),
+        ("ledger.entries", "component_only"),
+        ("ledger.evidence", "component_only"),
+        ("ledger.import", "component_only"),
+        ("ledger.overview", "installed"),
+        ("ledger.reconciliation", "component_only"),
+        ("ledger.review", "component_only"),
+    ]
+    assert census.installed_outer_destination == "workbench.ledger"
+    assert census.initial_internal_destination == "ledger.overview"
+    assert census.message_consumers == ()
+    assert census.injected_read_action_ids == (
+        "operator.ledger.evidence.review.list",
+        "operator.ledger.review",
+    )
+    assert census.installed_mutation_doors == ()
+    assert len(census.cli_tui_capabilities) == 78
+    assert {status for _command, status in census.cli_tui_capabilities} == {"not-implemented"}
+    assert len(census.harness_files) == 6
+    assert census.harness_test_functions == 65
+
+
+def test_tui_supported_surface_framing_is_domain_separated_unsigned_u64_big_endian() -> None:
+    encoded = ledger_tui_supported_surface_census_bytes(_tui_census())
+    frame = b"cadrumo:ledger-tui-supported-surface-census:v1\x00"
+
+    assert encoded.startswith(frame)
+    payload = encoded[len(frame) + 8 :]
+    assert int.from_bytes(encoded[len(frame) : len(frame) + 8], byteorder="big", signed=False) == len(payload)
+
+
+def test_tui_source_set_normalizes_irrelevant_record_order() -> None:
+    records = _tui_source_records()
+
+    assert ledger_tui_supported_surface_source_set_digest(source_records=reversed(records)) == _TUI_SOURCE_DIGEST
+
+
+@pytest.mark.parametrize(
+    ("relative", "mutation", "expected"),
+    [
+        pytest.param(
+            "src/cadrumo/entrypoints/tui/app.py",
+            lambda body: body.replace(
+                b"class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):",
+                b"class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):\n"
+                b"    @on(LedgerRouteRequested)\n"
+                b"    def arbitrary_handler_name(self, event):\n"
+                b"        return event\n",
+                1,
+            ),
+            "message",
+            id="new-decorated-message-consumer",
+        ),
+        pytest.param(
+            "src/cadrumo/entrypoints/tui/launcher.py",
+            lambda body: body.replace(
+                b"review_action=dependencies.ledger_review_action,",
+                b"review_action=dependencies.ledger_review_action,\n"
+                b"            classification_submitter=dependencies.ledger_review_action,",
+                1,
+            ),
+            "door",
+            id="new-installed-mutation-door",
+        ),
+        pytest.param(
+            "src/cadrumo/entrypoints/tui/ledger/routes.py",
+            lambda body: body.replace(
+                b'    LedgerRouteV1("ledger.entries", LedgerWorkspaceArea.ENTRIES, LedgerEntriesScreen),',
+                b"",
+                1,
+            ),
+            "missing-route",
+            id="missing-route",
+        ),
+        pytest.param(
+            "src/cadrumo/entrypoints/tui/ledger/routes.py",
+            lambda body: body.replace(
+                b'    LedgerRouteV1("ledger.reconciliation", LedgerWorkspaceArea.RECONCILIATION, '
+                b"LedgerReconciliationScreen),",
+                b'    LedgerRouteV1("ledger.reconciliation", LedgerWorkspaceArea.RECONCILIATION, '
+                b"LedgerReconciliationScreen),\n"
+                b'    LedgerRouteV1("ledger.shadow", LedgerWorkspaceArea.RECONCILIATION, '
+                b"LedgerReconciliationScreen),",
+                1,
+            ),
+            "new-route",
+            id="new-route",
+        ),
+        pytest.param(
+            "src/cadrumo/entrypoints/tui/ledger/entries.py",
+            lambda body: body.replace(b"class LedgerEntriesScreen", b"class RemovedLedgerEntriesScreen", 1),
+            "missing-screen",
+            id="missing-screen",
+        ),
+    ],
+)
+def test_tui_projection_detects_semantic_source_mutations(
+    relative: str,
+    mutation: Callable[[bytes], bytes],
+    expected: str,
+) -> None:
+    records = _mutate_tui_source(relative, mutation)
+
+    if expected == "missing-screen":
+        with pytest.raises(ValueError, match="route/controller class is unavailable"):
+            build_ledger_tui_supported_surface_census(source_records=records)
+        return
+    candidate = build_ledger_tui_supported_surface_census(source_records=records)
+    assert candidate.calculated_digest != _TUI_CENSUS_DIGEST
+    if expected == "message":
+        assert candidate.message_consumers == ("LedgerRouteRequested",)
+    elif expected == "door":
+        assert candidate.installed_mutation_doors == ("classification_submitter",)
+    elif expected == "missing-route":
+        assert len(candidate.routes) == 6
+    else:
+        assert len(candidate.routes) == 8
+
+
+def test_tui_projection_detects_new_scanned_source_file() -> None:
+    records = (
+        *_tui_source_records(),
+        ("src/cadrumo/entrypoints/tui/new_ledger_surface.py", b'"""Synthetic source."""\n'),
+    )
+
+    candidate = build_ledger_tui_supported_surface_census(source_records=records)
+
+    assert candidate.source_set_digest != _TUI_SOURCE_DIGEST
+    assert candidate.calculated_digest != _TUI_CENSUS_DIGEST
+
+
+@pytest.mark.parametrize(
+    ("relative", "mutation"),
+    [
+        pytest.param(
+            "src/cadrumo/entrypoints/tui/app.py",
+            lambda body: body + b"\ndef on_ledger_route_requested(event):\n    return event\n",
+            id="module-level-conventional-handler",
+        ),
+        pytest.param(
+            "src/cadrumo/entrypoints/tui/installed_session.py",
+            lambda body: body + b'\n_LEDGER_UNUSED_ACTION = "operator.ledger.unused"\n',
+            id="unused-ledger-action-constant",
+        ),
+        pytest.param(
+            "src/cadrumo/entrypoints/tui/ledger/routes.py",
+            lambda body: (
+                body + b'\ndef dead_route_helper():\n    return LedgerRouteV1("ledger.shadow", '
+                b"LedgerWorkspaceArea.OVERVIEW, LedgerOverviewScreen)\n"
+            ),
+            id="dead-route-constructor",
+        ),
+        pytest.param(
+            "src/cadrumo/entrypoints/tui/launcher.py",
+            lambda body: (
+                body + b"\ndef dead_ledger_factory_call(projection, action, submitter):\n"
+                b"    return ledger_screen_factory(projection, review_action=action, "
+                b"classification_submitter=submitter)\n"
+            ),
+            id="dead-same-name-factory-call",
+        ),
+    ],
+)
+def test_tui_projection_ignores_matching_syntax_outside_production_dataflow(
+    relative: str,
+    mutation: Callable[[bytes], bytes],
+) -> None:
+    candidate = build_ledger_tui_supported_surface_census(source_records=_mutate_tui_source(relative, mutation))
+    baseline = _tui_census()
+
+    assert candidate.source_set_digest != baseline.source_set_digest
+    assert candidate.routes == baseline.routes
+    assert candidate.message_consumers == baseline.message_consumers
+    assert candidate.injected_read_action_ids == baseline.injected_read_action_ids
+    assert candidate.installed_mutation_doors == baseline.installed_mutation_doors
+
+
+def test_tui_projection_follows_initial_route_in_the_installed_factory_dataflow() -> None:
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/ledger/routes.py",
+        lambda body: body.replace(
+            b"controller.route_target(LedgerWorkspaceArea.OVERVIEW)",
+            b"controller.route_target(LedgerWorkspaceArea.ENTRIES)",
+            1,
+        ),
+    )
+
+    candidate = build_ledger_tui_supported_surface_census(source_records=records)
+
+    assert candidate.initial_internal_destination == "ledger.entries"
+    assert tuple(row.destination for row in candidate.routes if row.reachability == "installed") == ("ledger.entries",)
+
+
+def test_tui_projection_ignores_dead_overview_resolver_when_actual_return_is_an_entries_screen() -> None:
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/ledger/routes.py",
+        lambda body: body.replace(
+            b"        return resolve_ledger_screen(controller, controller.route_target(LedgerWorkspaceArea.OVERVIEW))",
+            b"        dead = resolve_ledger_screen(controller, "
+            b"controller.route_target(LedgerWorkspaceArea.OVERVIEW))\n"
+            b"        return LedgerEntriesScreen(controller)",
+            1,
+        ),
+    )
+
+    with pytest.raises(ValueError, match="root create return does not resolve one screen"):
+        build_ledger_tui_supported_surface_census(source_records=records)
+
+
+def test_tui_projection_ignores_dead_ledger_factory_when_actual_return_is_unrelated() -> None:
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/launcher.py",
+        _replace_installed_return_with_unrelated_screen,
+    )
+
+    with pytest.raises(ValueError, match="create return does not invoke ledger_screen_factory"):
+        build_ledger_tui_supported_surface_census(source_records=records)
+
+
+def test_tui_projection_accepts_simple_aliases_on_both_return_dataflows() -> None:
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/launcher.py",
+        _alias_installed_screen_return,
+    )
+    records = tuple(
+        (
+            relative,
+            body.replace(
+                b"        return resolve_ledger_screen(controller, "
+                b"controller.route_target(LedgerWorkspaceArea.OVERVIEW))",
+                b"        screen = resolve_ledger_screen(controller, "
+                b"controller.route_target(LedgerWorkspaceArea.OVERVIEW))\n"
+                b"        return screen",
+                1,
+            )
+            if relative == "src/cadrumo/entrypoints/tui/ledger/routes.py"
+            else body,
+        )
+        for relative, body in records
+    )
+
+    candidate = build_ledger_tui_supported_surface_census(source_records=records)
+
+    assert candidate.initial_internal_destination == "ledger.overview"
+    assert tuple(row.destination for row in candidate.routes if row.reachability == "installed") == ("ledger.overview",)
+
+
+def test_tui_projection_refuses_conditionally_reassigned_route_target_alias() -> None:
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/ledger/routes.py",
+        lambda body: body.replace(
+            b"        return resolve_ledger_screen(controller, controller.route_target(LedgerWorkspaceArea.OVERVIEW))",
+            b"        target = LedgerWorkspaceArea.OVERVIEW\n"
+            b"        if context.destination == 'dead.branch':\n"
+            b"            target = LedgerWorkspaceArea.ENTRIES\n"
+            b"        return resolve_ledger_screen(controller, controller.route_target(target))",
+            1,
+        ),
+    )
+
+    with pytest.raises(ValueError, match="not uniquely and unconditionally defined"):
+        build_ledger_tui_supported_surface_census(source_records=records)
+
+
+def test_tui_projection_refuses_conditionally_reassigned_installed_screen_alias() -> None:
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/launcher.py",
+        lambda body: _alias_installed_screen_return(body).replace(
+            b"        return screen",
+            b"        if context.destination == 'dead.branch':\n            screen = Screen()\n        return screen",
+            1,
+        ),
+    )
+
+    with pytest.raises(ValueError, match="not uniquely and unconditionally defined"):
+        build_ledger_tui_supported_surface_census(source_records=records)
+
+
+@pytest.mark.parametrize(
+    "replacement, message",
+    [
+        (b"        screen = Screen()\n        return screen", "not uniquely and unconditionally defined"),
+        (b"        del screen\n        return screen", "not uniquely and unconditionally defined"),
+        (b"        screen = screen\n        return screen", "not uniquely and unconditionally defined"),
+    ],
+)
+def test_tui_projection_refuses_non_single_assignment_aliases(replacement: bytes, message: str) -> None:
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/launcher.py",
+        lambda body: _alias_installed_screen_return(body).replace(b"        return screen", replacement, 1),
+    )
+
+    with pytest.raises(ValueError, match=message):
+        build_ledger_tui_supported_surface_census(source_records=records)
+
+
+def test_tui_projection_refuses_alias_read_before_definition() -> None:
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/launcher.py",
+        lambda body: (
+            _alias_installed_screen_return(body)
+            .replace(b"screen = ledger_screen_factory", b"candidate = ledger_screen_factory", 1)
+            .replace(b"return screen", b"screen = screen\n        return screen", 1)
+        ),
+    )
+
+    with pytest.raises(ValueError, match="read before its definition"):
+        build_ledger_tui_supported_surface_census(source_records=records)
+
+
+@pytest.mark.parametrize(
+    "binding",
+    [
+        b"        def screen():\n            return None\n",
+        b"        async def screen():\n            return None\n",
+        b"        class screen:\n            pass\n",
+        b"        import screen\n",
+        b"        import unrelated as screen\n",
+        b"        from unrelated import screen\n",
+        b"        from unrelated import value as screen\n",
+    ],
+)
+def test_tui_projection_refuses_competing_definition_and_import_bindings(binding: bytes) -> None:
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/launcher.py",
+        lambda body: _alias_installed_screen_return(body).replace(
+            b"        return screen",
+            binding + b"        return screen",
+            1,
+        ),
+    )
+
+    with pytest.raises(ValueError, match="not uniquely and unconditionally defined"):
+        build_ledger_tui_supported_surface_census(source_records=records)
+
+
+def test_tui_projection_ignores_differently_named_nested_body_bindings() -> None:
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/launcher.py",
+        lambda body: _alias_installed_screen_return(body).replace(
+            b"        return screen",
+            b"        def unused_nested():\n"
+            b"            screen = Screen()\n"
+            b"            return screen\n"
+            b"        return screen",
+            1,
+        ),
+    )
+
+    candidate = build_ledger_tui_supported_surface_census(source_records=records)
+
+    assert candidate.initial_internal_destination == "ledger.overview"
+
+
+@pytest.mark.parametrize(
+    "definition",
+    [
+        b"        def helper(value=(screen := Screen())):\n            return value\n",
+        b"        async def helper(value=(screen := Screen())):\n            return value\n",
+        b"        helper = lambda value=(screen := Screen()): value\n",
+        b"        @(screen := decorator)\n        def helper():\n            return None\n",
+        b"        class Helper((screen := Base)):\n            pass\n",
+        b"        @(screen := decorator)\n        class Helper:\n            pass\n",
+        b"        class Helper(metaclass=(screen := Meta)):\n            pass\n",
+    ],
+)
+def test_tui_projection_refuses_bindings_in_nested_definition_headers(definition: bytes) -> None:
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/launcher.py",
+        lambda body: _alias_installed_screen_return(body).replace(
+            b"        return screen",
+            definition + b"        return screen",
+            1,
+        ),
+    )
+
+    with pytest.raises(ValueError, match="not uniquely and unconditionally defined"):
+        build_ledger_tui_supported_surface_census(source_records=records)
+
+
+@pytest.mark.parametrize(
+    "comprehension",
+    [
+        b"[screen for screen in ()]",
+        b"{screen for screen in ()}",
+        b"{screen: screen for screen in ()}",
+        b"(screen for screen in ())",
+    ],
+)
+def test_tui_projection_accepts_comprehension_local_target_shadow(comprehension: bytes) -> None:
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/launcher.py",
+        lambda body: _alias_installed_screen_return(body).replace(
+            b"        return screen",
+            b"        ignored = " + comprehension + b"\n        return screen",
+            1,
+        ),
+    )
+
+    candidate = build_ledger_tui_supported_surface_census(source_records=records)
+
+    assert candidate.initial_internal_destination == "ledger.overview"
+
+
+def test_tui_projection_accepts_comprehension_targets_in_postponed_annotations() -> None:
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/launcher.py",
+        lambda body: _alias_installed_screen_return(body).replace(
+            b"        return screen",
+            b"        def helper(\n"
+            b"            value: [screen for screen in ()],\n"
+            b"        ) -> ([screen for screen in ()]):\n"
+            b"            return value\n"
+            b"        return screen",
+            1,
+        ),
+    )
+
+    candidate = build_ledger_tui_supported_surface_census(source_records=records)
+
+    assert candidate.initial_internal_destination == "ledger.overview"
+
+
+def test_tui_projection_refuses_walrus_rebinding_from_comprehension_scope() -> None:
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/launcher.py",
+        lambda body: _alias_installed_screen_return(body).replace(
+            b"        return screen",
+            b"        ignored = [(screen := Screen()) for value in ()]\n        return screen",
+            1,
+        ),
+    )
+
+    with pytest.raises(ValueError, match="not uniquely and unconditionally defined"):
+        build_ledger_tui_supported_surface_census(source_records=records)
+
+
+def test_tui_projection_refuses_ambiguous_installed_screen_returns() -> None:
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/launcher.py",
+        lambda body: body.replace(
+            b"    def create(context: TuiScreenContextV1) -> Screen[None]:",
+            b"    def create(context: TuiScreenContextV1) -> Screen[None]:\n"
+            b"        if context.destination == 'dead.branch':\n"
+            b"            return Screen()",
+            1,
+        ),
+    )
+
+    with pytest.raises(ValueError, match="exactly one non-null return dataflow"):
+        build_ledger_tui_supported_surface_census(source_records=records)
+
+
+def test_tui_projection_detects_cli_tui_status_change() -> None:
+    statuses = list(_tui_census().cli_tui_capabilities)
+    statuses[0] = (statuses[0][0], "implemented")
+
+    candidate = build_ledger_tui_supported_surface_census(cli_tui_capabilities=statuses)
+
+    assert candidate.calculated_digest != _TUI_CENSUS_DIGEST
+    assert {status for _command, status in candidate.cli_tui_capabilities} == {"implemented", "not-implemented"}
+
+
+def test_tui_projection_refuses_reachability_classification_drift() -> None:
+    census = _tui_census()
+    drifted = tuple(
+        row.model_copy(update={"reachability": "installed"}) if row.destination == "ledger.entries" else row
+        for row in census.routes
+    )
+
+    with pytest.raises(ValidationError, match="initial internal destination must be the sole installed route"):
+        LedgerTuiSupportedSurfaceCensusV1.model_validate({**census.model_dump(), "routes": drifted})
 
 
 def _authority_with_first_defaulted_iva_selector(
@@ -97,9 +617,7 @@ def _authority_with_first_defaulted_iva_selector(
                 if binding.source is not BindingSourceKind.LEDGER_IVA_AGGREGATION:
                     continue
                 selector = binding.selector
-                if not isinstance(selector, BaseModel) or not {"fact", "applied_rates"}.isdisjoint(
-                    selector.model_fields_set
-                ):
+                if not isinstance(selector, BaseModel) or "applied_rates" in selector.model_fields_set:
                     continue
                 payload = selector.model_dump(mode="python", exclude_unset=True)
                 if reverse_input_order:
@@ -113,7 +631,7 @@ def _authority_with_first_defaulted_iva_selector(
                 mutated.modelos = tuple(modelos)
                 mutated._modelos_by_id = {item.id: item for item in mutated.modelos}
                 return mutated, (modelo.id, revision.id, binding.id), selector
-    raise AssertionError("no IVA selector with omitted fact and applied_rates defaults")
+    raise AssertionError("no IVA selector with an omitted applied_rates default")
 
 
 def test_registry_route_census_recomputes_the_published_live_authority_digest() -> None:
@@ -140,9 +658,9 @@ def test_registry_projection_retains_every_typed_selector_default_and_null() -> 
     )
     projected = cast(dict[str, object], json.loads(row.selector_json))
 
-    assert "fact" not in selector.model_fields_set
     assert "applied_rates" not in selector.model_fields_set
     assert set(projected) == set(selector.__class__.model_fields) - {"source"}
+    assert selector.__class__.model_fields["fact"].default == selector.fact
     assert projected["fact"] == "iva_amount_sum"
     assert projected["applied_rates"] is None
     assert projected["exemption_articles"] is None

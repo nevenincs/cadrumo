@@ -19,7 +19,6 @@ never sees and that the forbidden-verb source scan deliberately permits.
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine, Mapping
-from re import compile
 from typing import TYPE_CHECKING, Any, Protocol
 from urllib.parse import urlsplit
 
@@ -55,7 +54,6 @@ from .errors import (
 )
 
 _log = get_logger(__name__)
-_WHITESPACE_RE = compile(r"\s+")
 EXTERNAL = Settings.external_constants()
 
 
