@@ -233,6 +233,10 @@ modelo:
             '00066':
               help: null
               label: Entidad patrimonial [00066]
+            '00067':
+              label: Agrup. Interés económico y UTES - B) Datos económicos - 8.- Deducciones
+                generadas en el periodo impositivo - Inversiones en Canarias (Ley
+                20/1991) - Importe de la deducción [00067]
             00068:
               help: null
               label: 'Estados de cuentas de Entidades de Crédito: Entidades que sin

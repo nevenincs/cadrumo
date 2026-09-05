@@ -267,6 +267,10 @@ modelo:
             '00066':
               help: Jelölő vagyonkezelő jellegű szervezet esetén.
               label: Vagyonkezelő jellegű szervezet [00066]
+            '00067':
+              label: Gazdasági érdekcsoportosulás és UTE - B) gazdasági adatok - 8.-
+                az adómegállapítási időszakban keletkezett levonások - Kanári-szigeteki
+                beruházások (20/1991. törvény) - a levonás összege [00067]
             00068:
               help: Jelölő olyan nem hitelintézet szervezetek esetén, amelyek a hitelintézetekre
                 alkalmazandó beszámolókat használják.

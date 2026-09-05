@@ -263,6 +263,10 @@ modelo:
             '00066':
               help: Flag indicating an asset-holding entity.
               label: Asset-holding entity [00066]
+            '00067':
+              label: Economic interest grouping and UTEs - B) financial data - 8.-
+                deductions generated in the tax period - investments in the Canary
+                Islands (Law 20/1991) - deduction amount [00067]
             00068:
               help: Flag indicating entities that are not credit institutions but
                 use account statements applicable to credit institutions.

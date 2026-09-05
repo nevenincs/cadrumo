@@ -265,6 +265,10 @@ modelo:
             '00066':
               help: Indicador d'entitat patrimonial.
               label: Entitat patrimonial [00066]
+            '00067':
+              label: Agrup. d'interès econòmic i UTES - B) dades econòmiques - 8.-
+                deduccions generades en el període impositiu - inversions a Canàries
+                (Llei 20/1991) - import de la deducció [00067]
             00068:
               help: Indicador d'entitats que, sense ser entitats de crèdit, utilitzen
                 els estats de comptes aplicables a les entitats de crèdit.
