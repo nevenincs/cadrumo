@@ -37,7 +37,6 @@ _FINDING_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^finding\.[a-z][a-z0-
 _SUBJECT_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^subject\.[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)*$")
 _CENSUS_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^census\.ledger(?:\.[a-z][a-z0-9_]*)*$")
 _ATTESTATION_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^attestation\.ledger(?:\.[a-z][a-z0-9_]*)*$")
-_GATE_RECEIPT_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^receipt\.ledger(?:\.[a-z][a-z0-9_]*)*$")
 _PLACEHOLDER_TEXT: Final[frozenset[str]] = frozenset({"", "n/a", "na", "none", "tbd", "todo", "unknown", "unmeasured"})
 ACCEPTED_LEDGER_PARITY_PLAN_OWNER: Final[str] = "clitui-ledger"
 LEDGER_REGISTRY_ROUTE_CENSUS_SCHEMA_VERSION: Final[Literal[1]] = 1
@@ -3735,6 +3734,13 @@ class LedgerMatrixAcceptanceAttestationV1(BaseModel):
         return _canonical_digest(self)
 
 
+def ledger_gate_closure_receipt_id(gate: LedgerGate) -> str:
+    """Return the sole accepted receipt identity for one pre-TUI gate."""
+    if gate not in _GATE_ORDER[:-1]:
+        raise ValueError("only G0 through G3 have gate closure receipt identities")
+    return f"receipt.ledger.{gate.value}"
+
+
 class LedgerGateClosureReceiptV1(BaseModel):
     """An independently accepted, current closure of one ordered pre-TUI gate.
 
@@ -3753,12 +3759,89 @@ class LedgerGateClosureReceiptV1(BaseModel):
 
     @model_validator(mode="after")
     def _check_receipt(self) -> LedgerGateClosureReceiptV1:
-        _require_identity(self.receipt_id, field_name="receipt_id", pattern=_GATE_RECEIPT_ID_PATTERN)
         if self.gate not in _GATE_ORDER[:-1]:
             raise ValueError("gate closure receipts are limited to G0 through G3")
+        if self.receipt_id != ledger_gate_closure_receipt_id(self.gate):
+            raise ValueError("gate closure receipt identity must be the exact gate-derived receipt identity")
         _require_digest(self.matrix_closure_basis_digest, field_name="matrix_closure_basis_digest")
         _require_digest(self.acceptance_attestation_digest, field_name="acceptance_attestation_digest")
         return self
+
+
+class LedgerAcceptanceRecordAnchorV1(BaseModel):
+    """An external, current evidence record that freezes one ACCEPT attestation.
+
+    This object is intentionally not a matrix field.  Its coordinate is checked
+    against an independently supplied ``EvidenceSubjectSnapshotV1`` at gate
+    evaluation time, so replacing every digest inside a mutable matrix cannot
+    remint acceptance authority.
+    """
+
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+
+    coordinate: EvidenceCoordinateV1
+    acceptance_attestation_digest: str = Field(min_length=1)
+    attestation_id: str = Field(min_length=1)
+    reviewer: str = Field(min_length=1)
+    attested_at: datetime
+    matrix_basis_digest: str = Field(min_length=1)
+    denominator_digest: str = Field(min_length=1)
+    denominator_revision: str = Field(min_length=1)
+    review_subject_id: str = Field(min_length=1)
+    review_subject_revision: str = Field(min_length=1)
+    review_subject_digest: str = Field(min_length=1)
+    review_subject_observed_at: datetime
+
+    @model_validator(mode="after")
+    def _check_anchor(self) -> LedgerAcceptanceRecordAnchorV1:
+        if self.coordinate.role is not EvidenceRole.INDEPENDENT_ENGINEERING_REVIEW:
+            raise ValueError("acceptance record anchor must use independent_engineering_review evidence")
+        _require_digest(self.acceptance_attestation_digest, field_name="acceptance_attestation_digest")
+        _require_identity(self.attestation_id, field_name="attestation_id", pattern=_ATTESTATION_ID_PATTERN)
+        _require_non_placeholder(self.reviewer, field_name="reviewer")
+        _require_observed_at(self.attested_at, field_name="attested_at")
+        _require_digest(self.matrix_basis_digest, field_name="matrix_basis_digest")
+        _require_digest(self.denominator_digest, field_name="denominator_digest")
+        _require_non_placeholder(self.denominator_revision, field_name="denominator_revision")
+        _require_identity(self.review_subject_id, field_name="review_subject_id", pattern=_SUBJECT_ID_PATTERN)
+        _require_non_placeholder(self.review_subject_revision, field_name="review_subject_revision")
+        _require_digest(self.review_subject_digest, field_name="review_subject_digest")
+        _require_observed_at(self.review_subject_observed_at, field_name="review_subject_observed_at")
+        if self.coordinate.subject_digest != self.calculated_subject_digest:
+            raise ValueError("acceptance record anchor coordinate does not bind its canonical record content")
+        return self
+
+    @property
+    def calculated_subject_digest(self) -> str:
+        """Return the external record content digest without its snapshot binding.
+
+        The coordinate's snapshot fields are deliberately excluded to avoid a
+        self-reference: the independently observed subject supplies those
+        fields and its digest must equal this frozen record content digest.
+        """
+        return _canonical_digest(
+            {
+                "acceptance_attestation_digest": self.acceptance_attestation_digest,
+                "attestation_id": self.attestation_id,
+                "reviewer": self.reviewer,
+                "attested_at": self.attested_at,
+                "matrix_basis_digest": self.matrix_basis_digest,
+                "denominator_digest": self.denominator_digest,
+                "denominator_revision": self.denominator_revision,
+                "review_subject_id": self.review_subject_id,
+                "review_subject_revision": self.review_subject_revision,
+                "review_subject_digest": self.review_subject_digest,
+                "review_subject_observed_at": self.review_subject_observed_at,
+                "coordinate": {
+                    "evidence_id": self.coordinate.evidence_id,
+                    "kind": self.coordinate.kind,
+                    "role": self.coordinate.role,
+                    "axes": self.coordinate.axes,
+                    "locator": self.coordinate.locator,
+                    "claim": self.coordinate.claim,
+                },
+            }
+        )
 
 
 class LedgerCapabilityMatrixV1(BaseModel):
@@ -4239,12 +4322,63 @@ def _canonical_gate_inputs(
     return canonical_matrix, canonical_census, canonical_subjects, blockers
 
 
+def _acceptance_record_anchor_errors(
+    matrix: LedgerCapabilityMatrixV1,
+    acceptance_record_anchor: LedgerAcceptanceRecordAnchorV1 | None,
+    observed_acceptance_subjects: tuple[EvidenceSubjectSnapshotV1, ...],
+) -> list[str]:
+    """Require an immutable, independently observed record for receipt authority."""
+    if acceptance_record_anchor is None:
+        return ["accepted G3 closure requires a current external acceptance record anchor"]
+    try:
+        anchor = LedgerAcceptanceRecordAnchorV1.model_validate(_serialized_python_data(acceptance_record_anchor))
+    except ValidationError as error:
+        return _validation_blockers("acceptance record anchor", error)
+    except (TypeError, ValueError):
+        return ["acceptance record anchor validation failed at <root>: invalid_serialized_data"]
+    try:
+        subjects = TypeAdapter(tuple[EvidenceSubjectSnapshotV1, ...]).validate_python(
+            _serialized_python_data(observed_acceptance_subjects)
+        )
+    except ValidationError as error:
+        return _validation_blockers("observed acceptance subjects", error)
+    except (TypeError, ValueError):
+        return ["observed acceptance subjects validation failed at <root>: invalid_serialized_data"]
+    subject_ids = tuple(subject.subject_id for subject in subjects)
+    if len(set(subject_ids)) != len(subject_ids):
+        return ["observed acceptance subjects contain duplicate identities"]
+    matches = tuple(subject for subject in subjects if subject.subject_id == anchor.coordinate.subject_id)
+    if len(matches) != 1:
+        return ["acceptance record anchor subject is absent from independently observed acceptance subjects"]
+    if not anchor.coordinate.is_current_against(matches[0]):
+        return ["acceptance record anchor coordinate is stale against independently observed acceptance subject"]
+    attestation = matrix.acceptance_attestation
+    expected = {
+        "acceptance_attestation_digest": attestation.calculated_digest,
+        "attestation_id": attestation.attestation_id,
+        "reviewer": attestation.reviewer,
+        "attested_at": attestation.attested_at,
+        "matrix_basis_digest": attestation.matrix_digest,
+        "denominator_digest": attestation.denominator_digest,
+        "denominator_revision": attestation.denominator_revision,
+        "review_subject_id": attestation.review_subject_id,
+        "review_subject_revision": attestation.review_subject_revision,
+        "review_subject_digest": attestation.review_subject_digest,
+        "review_subject_observed_at": attestation.review_subject_observed_at,
+    }
+    if any(getattr(anchor, field_name) != value for field_name, value in expected.items()):
+        return ["acceptance record anchor does not bind the current acceptance attestation"]
+    return []
+
+
 def evaluate_ledger_capability_gate(
     matrix: LedgerCapabilityMatrixV1,
     gate: LedgerGate,
     *,
     observed_census: LedgerLiveCensusReportV1,
     observed_subjects: tuple[EvidenceSubjectSnapshotV1, ...],
+    acceptance_record_anchor: LedgerAcceptanceRecordAnchorV1 | None = None,
+    observed_acceptance_subjects: tuple[EvidenceSubjectSnapshotV1, ...] = (),
 ) -> GateAssessmentV1:
     """Evaluate the exact G0--G4 predicate against typed current evidence."""
     canonical_matrix, canonical_census, canonical_subjects, validation_blockers = _canonical_gate_inputs(
@@ -4357,6 +4491,10 @@ def evaluate_ledger_capability_gate(
             blockers.append("the Ledger TUI implementation hold remains active")
         elif matrix.accepted_gate_closure_receipt(LEDGER_TUI_HOLD_UNTIL_GATE) is None:
             blockers.append("the Ledger TUI implementation hold lacks a current accepted G3 closure receipt")
+        else:
+            blockers.extend(
+                _acceptance_record_anchor_errors(matrix, acceptance_record_anchor, observed_acceptance_subjects)
+            )
         for row in matrix.rows:
             tui = row.assessment(LedgerCapabilityAxis.TUI)
             if tui.applicability is ApplicabilityState.APPLICABLE:
@@ -4382,25 +4520,40 @@ def evaluate_ledger_capability_gates(
     *,
     observed_census: LedgerLiveCensusReportV1,
     observed_subjects: tuple[EvidenceSubjectSnapshotV1, ...],
+    acceptance_record_anchor: LedgerAcceptanceRecordAnchorV1 | None = None,
+    observed_acceptance_subjects: tuple[EvidenceSubjectSnapshotV1, ...] = (),
 ) -> tuple[GateAssessmentV1, ...]:
     """Evaluate ordered gates without allowing a later false closure.
 
-    A current G0 receipt preserves the historical active-hold closure across
-    the one authorized post-G3 hold lift.  It never suppresses census, matrix,
-    or receipt-currentness failures, which are still evaluated on every call.
+    A current externally anchored G0 receipt preserves the historical
+    active-hold closure across the one authorized post-G3 hold lift. It never
+    suppresses census, matrix, receipt, or external-anchor currentness failures.
     """
     assessments: list[GateAssessmentV1] = []
     prior_open = False
     for gate in _GATE_ORDER:
         assessment = evaluate_ledger_capability_gate(
-            matrix, gate, observed_census=observed_census, observed_subjects=observed_subjects
+            matrix,
+            gate,
+            observed_census=observed_census,
+            observed_subjects=observed_subjects,
+            acceptance_record_anchor=acceptance_record_anchor,
+            observed_acceptance_subjects=observed_acceptance_subjects,
         )
         if (
             gate is LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE
             and matrix.accepted_gate_closure_receipt(gate) is not None
+            and not matrix.controls.tui_implementation_hold_active
             and assessment.blockers == ("the Ledger TUI implementation hold is not recorded and active",)
         ):
-            assessment = GateAssessmentV1(gate=gate, closed=True)
+            anchor_errors = _acceptance_record_anchor_errors(
+                matrix, acceptance_record_anchor, observed_acceptance_subjects
+            )
+            assessment = (
+                GateAssessmentV1(gate=gate, closed=True)
+                if not anchor_errors
+                else GateAssessmentV1(gate=gate, closed=False, blockers=tuple(anchor_errors))
+            )
         if prior_open and assessment.closed:
             assessment = GateAssessmentV1(
                 gate=gate, closed=False, blockers=(f"{gate.value} cannot close while an earlier gate remains open",)
@@ -4456,6 +4609,7 @@ __all__ = [
     "InitialCliOwnership",
     "LedgerAxisApplicabilityDecisionV1",
     "LedgerCampaignControlsV1",
+    "LedgerAcceptanceRecordAnchorV1",
     "LedgerCapabilityAxis",
     "LedgerCapabilityEffect",
     "LedgerCapabilityIdentityV1",
@@ -4489,6 +4643,7 @@ __all__ = [
     "ledger_registry_route_census_digest",
     "ledger_registry_source_files",
     "ledger_registry_source_set_digest",
+    "ledger_gate_closure_receipt_id",
     "ledger_tui_supported_surface_census_bytes",
     "ledger_tui_supported_surface_census_digest",
     "ledger_tui_supported_surface_source_files",

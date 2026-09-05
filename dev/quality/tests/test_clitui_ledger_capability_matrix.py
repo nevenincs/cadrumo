@@ -51,6 +51,7 @@ from ..clitui_ledger_capability_matrix import (
     EvidenceSubjectSnapshotV1,
     InitialCliOwnership,
     LedgerCampaignControlsV1,
+    LedgerAcceptanceRecordAnchorV1,
     LedgerCapabilityAxis,
     LedgerCapabilityEffect,
     LedgerCapabilityIdentityV1,
@@ -75,6 +76,7 @@ from ..clitui_ledger_capability_matrix import (
     evaluate_ledger_capability_gate,
     evaluate_ledger_capability_gates,
     ledger_registry_route_census_bytes,
+    ledger_gate_closure_receipt_id,
     ledger_registry_source_files,
     ledger_registry_source_set_digest,
     ledger_tui_supported_surface_census_bytes,
@@ -1707,7 +1709,7 @@ def _accepted_gate_receipts(matrix: LedgerCapabilityMatrixV1) -> tuple[LedgerGat
     attestation = matrix.acceptance_attestation
     return tuple(
         LedgerGateClosureReceiptV1(
-            receipt_id=f"receipt.ledger.{gate.value}",
+            receipt_id=ledger_gate_closure_receipt_id(gate),
             gate=gate,
             matrix_closure_basis_digest=matrix.gate_closure_basis_digest(gate),
             acceptance_attestation_digest=attestation.calculated_digest,
@@ -1718,7 +1720,7 @@ def _accepted_gate_receipts(matrix: LedgerCapabilityMatrixV1) -> tuple[LedgerGat
 
 def _matrix_with_accepted_gate_receipts(matrix: LedgerCapabilityMatrixV1) -> LedgerCapabilityMatrixV1:
     """Record a receipt set that the frozen independent acceptance attestation binds."""
-    receipt_identities = tuple((f"receipt.ledger.{gate.value}", gate) for gate in tuple(LedgerGate)[:-1])
+    receipt_identities = tuple((ledger_gate_closure_receipt_id(gate), gate) for gate in tuple(LedgerGate)[:-1])
     attestation = matrix.acceptance_attestation.model_copy(
         update={
             "closure_receipt_set_digest": LedgerCapabilityMatrixV1.calculate_gate_closure_receipt_set_digest(
@@ -1735,6 +1737,78 @@ def _matrix_with_authorized_hold_lift(matrix: LedgerCapabilityMatrixV1) -> Ledge
     frozen = _matrix_with_accepted_gate_receipts(matrix)
     controls = frozen.controls.model_copy(update={"tui_implementation_hold_active": False})
     return _matrix_with(frozen, controls=controls)
+
+
+def _acceptance_record_anchor(
+    matrix: LedgerCapabilityMatrixV1,
+    *,
+    reviewer: str | None = None,
+    observed_at: datetime = _OBSERVED_AT,
+) -> tuple[LedgerAcceptanceRecordAnchorV1, tuple[EvidenceSubjectSnapshotV1, ...]]:
+    """Build an externally observed acceptance record for one frozen fixture state."""
+    attestation = matrix.acceptance_attestation
+    subject_id = "subject.ledger.acceptance_record"
+    locator = "reference://clitui-ledger/acceptance-record"
+    provisional_subject = _subject(
+        subject_id=subject_id,
+        revision="acceptance-record-rev-1",
+        digest="sha256:" + "0" * 64,
+        observed_at=observed_at,
+        locator=locator,
+    )
+
+    def make_anchor(subject: EvidenceSubjectSnapshotV1) -> LedgerAcceptanceRecordAnchorV1:
+        return LedgerAcceptanceRecordAnchorV1(
+            coordinate=_evidence(
+                "evidence.acceptance_record.independent_review",
+                EvidenceRole.INDEPENDENT_ENGINEERING_REVIEW,
+                frozenset(LedgerCapabilityAxis),
+                subject=subject,
+                claim="The external acceptance record freezes the accepted gate authority.",
+            ),
+            acceptance_attestation_digest=attestation.calculated_digest,
+            attestation_id=attestation.attestation_id,
+            reviewer=attestation.reviewer if reviewer is None else reviewer,
+            attested_at=attestation.attested_at,
+            matrix_basis_digest=attestation.matrix_digest,
+            denominator_digest=attestation.denominator_digest,
+            denominator_revision=attestation.denominator_revision,
+            review_subject_id=attestation.review_subject_id,
+            review_subject_revision=attestation.review_subject_revision,
+            review_subject_digest=attestation.review_subject_digest,
+            review_subject_observed_at=attestation.review_subject_observed_at,
+        )
+
+    # The content digest excludes snapshot fields, so one provisional coordinate
+    # can calculate the immutable external subject which then binds it exactly.
+    draft = LedgerAcceptanceRecordAnchorV1.model_construct(
+        coordinate=_evidence(
+            "evidence.acceptance_record.independent_review",
+            EvidenceRole.INDEPENDENT_ENGINEERING_REVIEW,
+            frozenset(LedgerCapabilityAxis),
+            subject=provisional_subject,
+            claim="The external acceptance record freezes the accepted gate authority.",
+        ),
+        acceptance_attestation_digest=attestation.calculated_digest,
+        attestation_id=attestation.attestation_id,
+        reviewer=attestation.reviewer if reviewer is None else reviewer,
+        attested_at=attestation.attested_at,
+        matrix_basis_digest=attestation.matrix_digest,
+        denominator_digest=attestation.denominator_digest,
+        denominator_revision=attestation.denominator_revision,
+        review_subject_id=attestation.review_subject_id,
+        review_subject_revision=attestation.review_subject_revision,
+        review_subject_digest=attestation.review_subject_digest,
+        review_subject_observed_at=attestation.review_subject_observed_at,
+    )
+    subject = _subject(
+        subject_id=subject_id,
+        revision="acceptance-record-rev-1",
+        digest=draft.calculated_subject_digest,
+        observed_at=observed_at,
+        locator=locator,
+    )
+    return make_anchor(subject), (subject,)
 
 
 def _row_with_assessments(
@@ -1769,14 +1843,20 @@ def _evaluate(
     *,
     report: LedgerLiveCensusReportV1 | None = None,
     subjects: tuple[EvidenceSubjectSnapshotV1, ...] = (_SUBJECT,),
+    acceptance_anchor: LedgerAcceptanceRecordAnchorV1 | None = None,
+    acceptance_subjects: tuple[EvidenceSubjectSnapshotV1, ...] = (),
 ):
     """Evaluate a matrix against a fresh report unless a test supplies one."""
     observed = report if report is not None else _report(tuple(row.identity.row_id for row in matrix.rows))
+    if acceptance_anchor is None and matrix.accepted_gate_closure_receipt(LEDGER_TUI_HOLD_UNTIL_GATE) is not None:
+        acceptance_anchor, acceptance_subjects = _acceptance_record_anchor(matrix)
     return evaluate_ledger_capability_gate(
         matrix,
         gate,
         observed_census=observed,
         observed_subjects=subjects,
+        acceptance_record_anchor=acceptance_anchor,
+        observed_acceptance_subjects=acceptance_subjects,
     )
 
 
