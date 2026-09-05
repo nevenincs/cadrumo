@@ -537,6 +537,20 @@ def test_invalid_receipt_integrity_refuses_before_any_live_write(
     assert (repo / "src/example/contracts.py").read_bytes() == b"class Widgets:\n    pass\n"
 
 
+#: The refusal each drift must produce, so no case can pass on another
+#: check's error. The four regenerated-evidence drifts share one refusal
+#: because production compares regenerated evidence in a single check.
+_DRIFT_REFUSAL = {
+    "manifest": "receipt manifest digest differs from the supplied manifest",
+    "inventory": "reviewed manifest is not current",
+    "component": "receipt component identity differs from the supplied component",
+    "tool": "regenerated transformation or verification differs from the receipt",
+    "generator": "regenerated transformation or verification differs from the receipt",
+    "gate": "regenerated transformation or verification differs from the receipt",
+    "content": "regenerated transformation or verification differs from the receipt",
+}
+
+
 @pytest.mark.parametrize(
     "drift",
     ["manifest", "inventory", "component", "tool", "generator", "gate", "content"],
@@ -573,7 +587,12 @@ def test_authority_and_regenerated_evidence_drift_refuses_before_transaction(
     monkeypatch.setattr(replay_module, "_replace_staged", lambda *_args, **_kwargs: writes.append("replace"))
     monkeypatch.setattr(replay_module, "_unlink_regular", lambda *_args, **_kwargs: writes.append("unlink"))
 
-    with pytest.raises(ObjectNameReplayError):
+    # A bare `raises` here was satisfied by ANY refusal across seven drifts,
+    # so one early guard rejecting everything would have kept all seven green
+    # while six checks did nothing. The four evidence drifts legitimately
+    # share a refusal - production catches them in one comparison - but the
+    # authority checks are distinct and are now held apart.
+    with pytest.raises(ObjectNameReplayError, match=_DRIFT_REFUSAL[drift]):
         replay_object_name_component(
             supplied_manifest,
             inventory=supplied_inventory,

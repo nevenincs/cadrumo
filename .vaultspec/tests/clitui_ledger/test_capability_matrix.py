@@ -235,7 +235,7 @@ def test_tui_supported_surface_census_recomputes_the_published_live_digest() -> 
     assert len(census.cli_tui_capabilities) == 78
     assert {status for _command, status in census.cli_tui_capabilities} == {"not-implemented"}
     assert len(census.harness_files) == 6
-    assert census.harness_test_functions == 65
+    assert census.harness_test_functions == 62
 
 
 def test_union_denominator_joins_every_raw_observation_without_double_counting() -> None:
