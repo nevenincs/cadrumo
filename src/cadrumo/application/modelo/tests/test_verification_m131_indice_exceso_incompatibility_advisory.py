@@ -31,7 +31,7 @@ See Also:
         guards.
     :func:`~application.modelo._verification_actions.evaluate_verification_predicates`
         Application verification entry point that emits the advisory finding.
-    :func:`~application.modelo._verification_actions._evaluate_advisory_predicate_fires`
+    :func:`~application.modelo._verification_actions.evaluate_advisory_predicate_fires`
         Predicate helper exercised directly by the focused firing cases.
     ``src/cadrumo/_data/registry/aeat/modelos/131/revisions/2025/verification_expectations/0002-verification_predicates.toml``
         Registry-authored 2025 advisory predicate declarations under test.
@@ -51,7 +51,8 @@ from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from ..verification_actions import _evaluate_advisory_predicate_fires, evaluate_verification_predicates
+from .._verification_predicates import evaluate_advisory_predicate_fires
+from ..verification_actions import evaluate_advisory_predicate_fires, evaluate_verification_predicates
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -131,7 +132,7 @@ def test_advisory_fires_when_epigrafe_matches_and_indice_exceso_activated() -> N
 
     for expression, epigrafe in _INDICE_EXCESO_CASES:
         text_values: dict[CasillaId, str] = {_CASILLA_EPIGRAFE: epigrafe}
-        assert _evaluate_advisory_predicate_fires(expression, values, text_values) is True, epigrafe
+        assert evaluate_advisory_predicate_fires(expression, values, text_values) is True, epigrafe
 
 
 def test_advisory_does_not_fire_when_indice_exceso_not_activated() -> None:
@@ -143,7 +144,7 @@ def test_advisory_does_not_fire_when_indice_exceso_not_activated() -> None:
 
     for expression, epigrafe in _INDICE_EXCESO_CASES:
         text_values: dict[CasillaId, str] = {_CASILLA_EPIGRAFE: epigrafe}
-        assert _evaluate_advisory_predicate_fires(expression, values, text_values) is False, epigrafe
+        assert evaluate_advisory_predicate_fires(expression, values, text_values) is False, epigrafe
 
 
 def test_advisory_does_not_fire_for_non_especial_epigrafe() -> None:
@@ -155,7 +156,7 @@ def test_advisory_does_not_fire_for_non_especial_epigrafe() -> None:
     text_values: dict[CasillaId, str] = {_CASILLA_EPIGRAFE: "672.1"}
 
     for expression, epigrafe in _INDICE_EXCESO_CASES:
-        assert _evaluate_advisory_predicate_fires(expression, values, text_values) is False, epigrafe
+        assert evaluate_advisory_predicate_fires(expression, values, text_values) is False, epigrafe
 
 
 def test_advisory_does_not_fire_when_epigrafe_absent() -> None:
@@ -166,7 +167,7 @@ def test_advisory_does_not_fire_when_epigrafe_absent() -> None:
     }
 
     for expression, epigrafe in _INDICE_EXCESO_CASES:
-        assert _evaluate_advisory_predicate_fires(expression, values) is False, epigrafe
+        assert evaluate_advisory_predicate_fires(expression, values) is False, epigrafe
 
 
 def test_autotaxi_and_mercancias_predicates_are_mutually_scoped() -> None:
@@ -175,8 +176,8 @@ def test_autotaxi_and_mercancias_predicates_are_mutually_scoped() -> None:
         _CASILLA_MINORADO: Decimal("40000.00"),
         _CASILLA_MODULOS: Decimal("40858.12"),
     }
-    assert _evaluate_advisory_predicate_fires(_AUTOTAXI_EXPRESSION, values, {_CASILLA_EPIGRAFE: "722"}) is False
-    assert _evaluate_advisory_predicate_fires(_MERCANCIAS_EXPRESSION, values, {_CASILLA_EPIGRAFE: "721.2"}) is False
+    assert evaluate_advisory_predicate_fires(_AUTOTAXI_EXPRESSION, values, {_CASILLA_EPIGRAFE: "722"}) is False
+    assert evaluate_advisory_predicate_fires(_MERCANCIAS_EXPRESSION, values, {_CASILLA_EPIGRAFE: "721.2"}) is False
 
 
 def test_emits_single_advisory_warning_finding_when_violated() -> None:

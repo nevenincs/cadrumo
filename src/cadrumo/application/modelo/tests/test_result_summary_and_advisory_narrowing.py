@@ -32,7 +32,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 class TestAdvisoryPredicateDecimalNarrowing:
-    """_evaluate_advisory_predicate_fires only catches InvalidOperation on threshold parse."""
+    """evaluate_advisory_predicate_fires only catches InvalidOperation on threshold parse."""
 
     _VALID_EXPR = 'advisory_when_ratio_ge(["num_id", "den_id", "0.5"])'
     _INVALID_THR_EXPR = 'advisory_when_ratio_ge(["num_id", "den_id", "notadecimal"])'
@@ -66,9 +66,7 @@ class TestAdvisoryPredicateDecimalNarrowing:
         values: dict[str, decimal.Decimal],
         expected: bool,
     ) -> None:
-        from ..verification_actions import _evaluate_advisory_predicate_fires
-
-        result = _evaluate_advisory_predicate_fires(expression, values)
+                result = evaluate_advisory_predicate_fires(expression, values)
         assert result is expected, expression
 
 

@@ -28,7 +28,7 @@ See Also:
         Formula op whose structural incompatibility handling feeds these flags.
     :data:`~domain.calculations.registry._formula_runtime_m131._M131_EPIGRAFES_INDICE_ESPECIAL`
         Epígrafe set that makes the b.1 pequeña-dimensión índice ignored.
-    :func:`~application.modelo._verification_actions._evaluate_advisory_predicate_fires`
+    :func:`~application.modelo._verification_actions.evaluate_advisory_predicate_fires`
         Verification DSL evaluator for the ``advisory_when_positive`` checks.
     :func:`~application.modelo._verification_actions.evaluate_verification_predicates`
         Converts fired advisory predicates into warning findings.
@@ -51,7 +51,8 @@ from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from ..verification_actions import _evaluate_advisory_predicate_fires, evaluate_verification_predicates
+from .._verification_predicates import evaluate_advisory_predicate_fires
+from ..verification_actions import evaluate_advisory_predicate_fires, evaluate_verification_predicates
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -109,26 +110,26 @@ def test_incompatibility_predicates_ship_on_2025_revision() -> None:
 
 def test_pequena_dimension_advisory_fires_when_flag_positive() -> None:
     values: dict[CasillaId, Decimal] = {_CASILLA_PEQUENA_DIMENSION_FLAG: Decimal("1")}
-    assert _evaluate_advisory_predicate_fires(_PEQUENA_DIMENSION_EXPRESSION, values) is True
+    assert evaluate_advisory_predicate_fires(_PEQUENA_DIMENSION_EXPRESSION, values) is True
 
 
 def test_pequena_dimension_advisory_does_not_fire_when_flag_zero() -> None:
     values: dict[CasillaId, Decimal] = {_CASILLA_PEQUENA_DIMENSION_FLAG: Decimal("0")}
-    assert _evaluate_advisory_predicate_fires(_PEQUENA_DIMENSION_EXPRESSION, values) is False
+    assert evaluate_advisory_predicate_fires(_PEQUENA_DIMENSION_EXPRESSION, values) is False
 
 
 def test_pequena_dimension_advisory_does_not_fire_when_flag_absent() -> None:
-    assert _evaluate_advisory_predicate_fires(_PEQUENA_DIMENSION_EXPRESSION, {}) is False
+    assert evaluate_advisory_predicate_fires(_PEQUENA_DIMENSION_EXPRESSION, {}) is False
 
 
 def test_temporada_inicio_advisory_fires_when_flag_positive() -> None:
     values: dict[CasillaId, Decimal] = {_CASILLA_TEMPORADA_INICIO_FLAG: Decimal("1")}
-    assert _evaluate_advisory_predicate_fires(_TEMPORADA_INICIO_EXPRESSION, values) is True
+    assert evaluate_advisory_predicate_fires(_TEMPORADA_INICIO_EXPRESSION, values) is True
 
 
 def test_temporada_inicio_advisory_does_not_fire_when_flag_zero() -> None:
     values: dict[CasillaId, Decimal] = {_CASILLA_TEMPORADA_INICIO_FLAG: Decimal("0")}
-    assert _evaluate_advisory_predicate_fires(_TEMPORADA_INICIO_EXPRESSION, values) is False
+    assert evaluate_advisory_predicate_fires(_TEMPORADA_INICIO_EXPRESSION, values) is False
 
 
 def test_emits_single_advisory_warning_finding_when_pequena_dimension_ignored() -> None:

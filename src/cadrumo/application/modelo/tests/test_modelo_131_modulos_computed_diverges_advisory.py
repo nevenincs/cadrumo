@@ -24,7 +24,8 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind
-from ..verification_actions import _evaluate_advisory_predicate_fires, _evaluate_verification_predicates
+from .._verification_predicates import evaluate_advisory_predicate_fires
+from ..verification_actions import _evaluate_verification_predicates, evaluate_advisory_predicate_fires
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -61,13 +62,13 @@ def test_advisory_fires_when_declared_differs_from_computed_by_more_than_a_cent(
         _CASILLA_01: Decimal("15000.00"),
         _COMPUTED: Decimal("21995.99"),
     }
-    assert _evaluate_advisory_predicate_fires(_EXPRESSION, values) is True
+    assert evaluate_advisory_predicate_fires(_EXPRESSION, values) is True
 
 
 def test_advisory_fires_when_declared_absent_but_computed_positive() -> None:
     """Absent casilla 01 (reads as Decimal(0)) with a positive computed reference fires."""
     values: dict[CasillaId, Decimal] = {_COMPUTED: Decimal("21995.99")}
-    assert _evaluate_advisory_predicate_fires(_EXPRESSION, values) is True
+    assert evaluate_advisory_predicate_fires(_EXPRESSION, values) is True
 
 
 def test_advisory_does_not_fire_when_declared_matches_computed() -> None:
@@ -75,7 +76,7 @@ def test_advisory_does_not_fire_when_declared_matches_computed() -> None:
         _CASILLA_01: Decimal("21995.99"),
         _COMPUTED: Decimal("21995.99"),
     }
-    assert _evaluate_advisory_predicate_fires(_EXPRESSION, values) is False
+    assert evaluate_advisory_predicate_fires(_EXPRESSION, values) is False
 
 
 def test_advisory_does_not_fire_within_one_cent_tolerance() -> None:
@@ -83,7 +84,7 @@ def test_advisory_does_not_fire_within_one_cent_tolerance() -> None:
         _CASILLA_01: Decimal("21995.98"),
         _COMPUTED: Decimal("21995.99"),
     }
-    assert _evaluate_advisory_predicate_fires(_EXPRESSION, values) is False
+    assert evaluate_advisory_predicate_fires(_EXPRESSION, values) is False
 
 
 def test_advisory_does_not_fire_when_computed_is_zero_untabled_activity() -> None:
@@ -97,12 +98,12 @@ def test_advisory_does_not_fire_when_computed_is_zero_untabled_activity() -> Non
         _CASILLA_01: Decimal("8500.00"),
         _COMPUTED: Decimal("0"),
     }
-    assert _evaluate_advisory_predicate_fires(_EXPRESSION, values) is False
+    assert evaluate_advisory_predicate_fires(_EXPRESSION, values) is False
 
 
 def test_advisory_does_not_fire_when_computed_absent() -> None:
     values: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("8500.00")}
-    assert _evaluate_advisory_predicate_fires(_EXPRESSION, values) is False
+    assert evaluate_advisory_predicate_fires(_EXPRESSION, values) is False
 
 
 def test_emits_single_advisory_warning_finding_when_violated() -> None:

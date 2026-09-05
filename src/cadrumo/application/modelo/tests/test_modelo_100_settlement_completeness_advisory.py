@@ -33,7 +33,8 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from ..verification_actions import _evaluate_advisory_predicate_fires, _evaluate_verification_predicates
+from .._verification_predicates import evaluate_advisory_predicate_fires
+from ..verification_actions import _evaluate_verification_predicates, evaluate_advisory_predicate_fires
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -78,13 +79,13 @@ def test_advisory_fires_when_base_positive_and_cuota_zero() -> None:
         _BASE_LIQUIDABLE_GENERAL: Decimal("18000"),
         _CUOTA_RESULTANTE: Decimal("0"),
     }
-    assert _evaluate_advisory_predicate_fires(_EXPRESSION, values) is True
+    assert evaluate_advisory_predicate_fires(_EXPRESSION, values) is True
 
 
 def test_advisory_fires_when_base_positive_and_cuota_absent() -> None:
     """Positive base + absent cuota (reads as Decimal(0)) → advisory fires."""
     values: dict[CasillaId, Decimal] = {_BASE_LIQUIDABLE_GENERAL: Decimal("18000")}
-    assert _evaluate_advisory_predicate_fires(_EXPRESSION, values) is True
+    assert evaluate_advisory_predicate_fires(_EXPRESSION, values) is True
 
 
 def test_advisory_does_not_fire_when_cuota_nonzero() -> None:
@@ -96,7 +97,7 @@ def test_advisory_does_not_fire_when_cuota_nonzero() -> None:
         _BASE_LIQUIDABLE_GENERAL: Decimal("18000"),
         _CUOTA_RESULTANTE: Decimal("2480.50"),
     }
-    assert _evaluate_advisory_predicate_fires(_EXPRESSION, values) is False
+    assert evaluate_advisory_predicate_fires(_EXPRESSION, values) is False
 
 
 def test_advisory_does_not_fire_when_base_zero() -> None:
@@ -109,7 +110,7 @@ def test_advisory_does_not_fire_when_base_zero() -> None:
         _BASE_LIQUIDABLE_GENERAL: Decimal("0"),
         _CUOTA_RESULTANTE: Decimal("0"),
     }
-    assert _evaluate_advisory_predicate_fires(_EXPRESSION, values) is False
+    assert evaluate_advisory_predicate_fires(_EXPRESSION, values) is False
 
 
 def test_advisory_does_not_fire_when_base_negative() -> None:
@@ -121,7 +122,7 @@ def test_advisory_does_not_fire_when_base_negative() -> None:
         _BASE_LIQUIDABLE_GENERAL: Decimal("-3000"),
         _CUOTA_RESULTANTE: Decimal("0"),
     }
-    assert _evaluate_advisory_predicate_fires(_EXPRESSION, values) is False
+    assert evaluate_advisory_predicate_fires(_EXPRESSION, values) is False
 
 
 # ---------------------------------------------------------------------------
