@@ -14,6 +14,17 @@ the copy nothing ran, and reading it would have sent a maintainer to the wrong
 code. Documentation that names a dead symbol is worse than none: it is
 confidently wrong.
 
+A finding is a question, never a patch. Some of these references are accurate
+statements about the PAST: ``core.decimal.formatting`` records that it
+"consolidates the four independent ``_format_decimal`` copies that previously
+lived in :mod:`_censo_live`, :mod:`_reconcile`, :mod:`_projection` and
+:mod:`_translator`" -- four modules that no longer exist, named correctly. An
+automated rewrite to the surviving public spellings was attempted here and
+reverted: it repointed whichever of the four happened to have a public
+namesake, turning a true sentence about history into a false one about the
+present, and leaving the list internally inconsistent. Read each row before
+touching it.
+
 Only names this package could own are checked. A reference rooted at
 ``cadrumo`` must resolve to a module or a symbol the tree defines. A bare name
 is checked only when the tree neither defines nor imports it anywhere, which is
