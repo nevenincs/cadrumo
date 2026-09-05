@@ -142,6 +142,22 @@ def test_the_action_denominator_reports_no_unclassified_candidate() -> None:
     assert not errors, "\n".join(f"  {error}" for error in errors)
 
 
+def _cohort_name(path: Path) -> str:
+    """Name a walked module, repository-relative where it can be.
+
+    Absolute otherwise: a reporting path must never be more fragile than the
+    walk it reports on, and relative_to raises for anything outside the tree.
+    """
+    if path.is_relative_to(_ROOT):
+        return path.relative_to(_ROOT).as_posix()
+    return path.as_posix()
+
+
+#: Below this the cohort walk has stopped covering the shipped surface. A
+#: floor, not a pinned count: twenty-eight modules ship today.
+_MINIMUM_COHORT_MODULES = 10
+
+
 def test_no_shipped_cohort_module_carries_a_transitional_marker() -> None:
     """Transitional rows are process state, and process state does not ship.
 
@@ -149,22 +165,46 @@ def test_no_shipped_cohort_module_carries_a_transitional_marker() -> None:
     to-be-replaced is a plan leaking into production, and it stays true only
     until the plan moves.
     """
+    assert _TUI_MODELO.is_dir(), (
+        f"no cohort tree at {_TUI_MODELO}; a relocated root walks nothing and this gate "
+        "would report every shipped module marker-free"
+    )
+
     markers = ("TODO", "FIXME", "XXX", "TRANSITIONAL", "PROVISIONAL", "for now")
     offenders: list[str] = []
+    undecodable: list[str] = []
+    read = 0
     for path in sorted(_TUI_MODELO.rglob("*.py")):
         if "tests" in path.parts:
             continue
-        text = path.read_text(encoding="utf-8", errors="ignore")
-        offenders.extend(f"{path.relative_to(_ROOT)}: {marker}" for marker in markers if marker in text)
+        try:
+            # Strict. With errors="ignore" a dropped byte takes any marker
+            # straddling it with it, and the module then reads as clean.
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError as refusal:
+            undecodable.append(f"{_cohort_name(path)}: {refusal}")
+            continue
+        read += 1
+        offenders.extend(f"{_cohort_name(path)}: {marker}" for marker in markers if marker in text)
 
+    assert not undecodable, (
+        "these shipped cohort modules could not be decoded, so a transitional marker inside "
+        f"one was never searched for: {undecodable}"
+    )
+    assert read >= _MINIMUM_COHORT_MODULES, (
+        f"only {read} shipped cohort module(s) were read; below this an empty offender list "
+        "says nothing about whether process state is leaking into production"
+    )
     assert not offenders, f"transitional markers in shipped cohort modules: {offenders}"
 
 
 def test_the_transitional_sweep_can_see_a_marker_it_is_given() -> None:
-    """Anti-tautology: prove the scan reads files rather than reporting silence.
+    """Anti-tautology for the MATCHER, which is all an in-memory probe can prove.
 
-    Without this, the sweep above passes identically against a scanner that
-    opens nothing.
+    This case builds its subject as a string, so it shows the marker comparison
+    works and nothing about whether any file was opened - the claim its wording
+    carried before. That half is now the sweep's own corpus floor, which fails
+    when the walk stops reading the shipped modules.
     """
     markers = ("TODO", "TRANSITIONAL")
     probe = "\n".join(("# TRANSITIONAL: a marker planted in memory", "value = 1"))
