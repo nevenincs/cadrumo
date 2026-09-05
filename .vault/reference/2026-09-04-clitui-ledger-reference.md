@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:ec33f77a19ef9ef5b7e78fa7300db81791c1ba866338dc6f2b3d33aed8cb1975'
+body_hash: 'sha256:c567edae584f15211c2f2617c068bd0ae1f3bc6ddbdd2c2d2b8d0b9310906143'
 related:
   - "[[2026-09-04-clitui-ledger-research]]"
   - "[[2026-06-10-ledger-interface-contract-adr]]"
@@ -203,7 +203,7 @@ The dedicated component harness has 38 test functions and 78 collected integrati
 
 S08 assigns TUI applicability to the semantic union without treating component existence as proof. S11 now validates and publishes the row-level partition: 680 TUI-applicable semantic rows are held until G3 and 13 TUI-not-applicable rows are not held. The supported-surface census remains independent and exact: `ledger.overview` is the one installed read-only route, while `ledger.classification`, `ledger.entries`, `ledger.evidence`, `ledger.import`, `ledger.reconciliation`, and `ledger.review` remain `component_only`. S12 still must review every row and S13 must enforce reopening; G0 remains open.
 
-S11 also makes a hold lift fail closed through a strict frozen `G0`--`G3` receipt prefix. Each accepted receipt is ordered and unique, names the sole plan owner and independent acceptance reviewer/subject facts, and binds the current denominator census identity, revision, and digest plus a canonical closure-basis digest over the current matrix. The basis excludes only the active-hold flag and receipt collection, so the one authorized G3-to-G4 hold transition preserves accepted history while any other matrix, denominator, evidence-subject, receipt, or observed-census drift relocks the gates. An individual G4 evaluation requires the current accepted G3 receipt; an inactive hold without it, a non-ACCEPT, forged, stale, duplicate, or out-of-order receipt is refused. The current campaign records no receipt and does not lift the hold. The 680/13 row partition and union schema/digest remain unchanged.
+S11 also makes a hold lift fail closed through a strict frozen `G0`--`G3` receipt prefix. Each receipt carries only its stable identity, ordered gate, full gate-closure basis digest, and canonical independent-attestation digest; it has no mutable reviewer claim. The gate-closure basis excludes only the active-hold flag and receipt collection, and includes the complete canonical acceptance attestation: identity, reviewer, ACCEPT ruling, plan owner, denominator, review-subject coordinates, attestation time, pre-receipt matrix basis, and the attested receipt identity/gate set. The pre-receipt matrix basis omits the attestation itself solely to break the hash cycle; it otherwise has the same normalized controls and all matrix facts. Thus the one authorized G3-to-G4 hold transition preserves accepted history, while reminting an attestation, reviewer, time, identity, matrix basis, receipt identity, receipt order, or any other matrix, denominator, evidence-subject, receipt, or observed-census fact relocks the gates. An individual G4 evaluation requires the current accepted G3 receipt. The current campaign records no receipt and does not lift the hold. The 680/13 row partition and union schema/digest remain unchanged.
 
 ### Live backend operation denominator
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:973d2d1474b2b0ee86e8e8710aaec96f406c24042ac454c745b7d48868de2321'
+body_hash: 'sha256:3654f891b9701191f4fd8608783486bee81d84d5e62d7e4b6ce856bcede8ee45'
 step_id: 'S11'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
@@ -46,3 +46,8 @@ S11 was reopened after the mandatory review found that an inactive hold could cl
 - `verify:` `uv run --no-sync ty check dev/quality/clitui_ledger_capability_matrix.py` -> pass
 - `verify:` `uv run --no-sync basedpyright dev/quality/clitui_ledger_capability_matrix.py` -> pass
 - `verify:` `uv run --no-sync pytest -q -n 0 dev/quality/tests/test_clitui_ledger_capability_matrix.py` -> pass (231 passed)
+
+The receipt remediation was reopened once more because the initial closure basis omitted the full acceptance attestation and left its reviewer/time claim remintable. The final contract has two explicit noncircular domains: the attestation’s pre-receipt matrix basis excludes only the attestation, receipt collection, and active-hold transition needed to avoid a cycle; the receipt’s gate-closure basis excludes only the active hold and receipt collection, and includes the entire canonical attestation. The attestation also binds the exact receipt identity/gate set, while every receipt binds the complete canonical attestation digest. Tests reject reminted attestation time, reviewer, identity, matrix basis, injected receipt reviewer, and changed receipt identity even when a matrix digest or attestation is recomputed.
+
+- `verify:` `uv run --no-sync pytest -q -n 0 dev/quality/tests/test_clitui_ledger_capability_matrix.py -k 'g0 or g4 or ordered_evaluation or active_pre_g3 or matrix_drift or denominator_and_observed or receipt_serialization or reminted or receipt_reviewer or receipt_identity'` -> pass (61 passed)
+- `verify:` `uv run --no-sync pytest -q -n 0 dev/quality/tests/test_clitui_ledger_capability_matrix.py` -> pass (237 passed)
