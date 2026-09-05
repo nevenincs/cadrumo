@@ -6,7 +6,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:03d1deeb289623fc725c83c93e346251d1226bf5c826901bc348b0e27a85fb55'
+body_hash: 'sha256:1ea72be9340c40d3cc8483c569794c910cf5553e19c2f15d609aa34477f22dd4'
 related:
   - '[[2026-09-04-clitui-ledger-W01-P01-S01]]'
   - '[[2026-09-04-clitui-ledger-W01-P01-S02]]'
@@ -37,6 +37,7 @@ related:
   - '[[2026-09-05-clitui-ledger-s09-governance-reconciliation-review-audit]]'
   - '[[2026-09-05-clitui-ledger-s10-index-governance-review-audit]]'
   - '[[2026-09-05-clitui-ledger-s11-row-hold-review-audit]]'
+  - '[[2026-09-05-clitui-ledger-s12-row-review-audit]]'
 ---
 
 # `clitui-ledger` feature index
@@ -63,6 +64,7 @@ Auto-generated index of all documents tagged with `#clitui-ledger`.
 - `2026-09-05-clitui-ledger-s09-governance-reconciliation-review-audit` - `clitui-ledger` audit: `S09 governance reconciliation review`
 - `2026-09-05-clitui-ledger-s10-index-governance-review-audit` - `clitui-ledger` audit: `S10 index governance review`
 - `2026-09-05-clitui-ledger-s11-row-hold-review-audit` - `clitui-ledger` audit: `S11 row-level TUI hold review`
+- `2026-09-05-clitui-ledger-s12-row-review-audit` - `clitui-ledger` audit: `S12 exhaustive row review`
 
 ### exec
 
