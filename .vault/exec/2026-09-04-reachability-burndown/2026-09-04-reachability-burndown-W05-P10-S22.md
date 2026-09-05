@@ -5,16 +5,11 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:64bcd001bf4e543a8c00effa2b37ce19f7e0f9f9392826218bd9c9f735231347'
+body_hash: 'sha256:111815a9d5c07336d1ae88927aef199cb2131a418db99c2452d663ad0743d45b'
 step_id: 'S22'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the remaining unreferenced non-exported findings module by module, following each deletion cascade and lowering the ratchet rather than removing a still-populated entry
 

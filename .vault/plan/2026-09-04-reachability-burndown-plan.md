@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:722976e24104fe3c6d7e39d575f57a7584c52e6207e81f3f316373daa45424ac'
+body_hash: 'sha256:77d45390ead63935a4f775aafc90a2ca017eaa24184374cab81449e09de84b5a'
 ---
 
 # `reachability-burndown` plan
@@ -116,7 +116,7 @@ The 51 findings no module publishes and no caller reaches. Each is removed at it
 
 The 85 exported findings, and the 367 declared exports package-wide that no module imports. Removal changes what the package publishes, so this phase produces the inventory and a proposed disposition per area for an owner to rule on; it does not delete a published name on the executor's own authority.
 
-- [ ] `W05.P11.S23` - Inventory every exported-but-unimported name by owning area and propose a disposition per area for an owner's ruling; `dev/audit`.
+- [x] `W05.P11.S23` - Inventory every exported-but-unimported name by owning area and propose a disposition per area for an owner's ruling; `dev/audit`.
 
 ## Parallelization
 
