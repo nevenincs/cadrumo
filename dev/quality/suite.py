@@ -75,8 +75,17 @@ GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
     (
         "check-unreachable-ratchet",
         (sys.executable, "-m", "dev.quality.unreachable_module_ratchet"),
+    ),
+    (
+        "check-unused-symbol-ratchet",
         (sys.executable, "-m", "dev.quality.unused_symbol_ratchet"),
+    ),
+    (
+        "check-docstring-reference-ratchet",
         (sys.executable, "-m", "dev.quality.docstring_reference_ratchet"),
+    ),
+    (
+        "check-unconsumed-export-ratchet",
         (sys.executable, "-m", "dev.quality.unconsumed_export_ratchet"),
     ),
 )

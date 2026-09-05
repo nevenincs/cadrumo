@@ -21,6 +21,7 @@ tree matters here only once it actually carries Python.
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 import tomllib
 from pathlib import Path
@@ -53,8 +54,10 @@ def _tracked_python_trees(repo_root: Path) -> set[str]:
     in full to prove a negative, and an untracked scratch file in a corpus is
     not something the project's lint scope has any business covering.
     """
+    git = shutil.which("git")
+    assert git is not None, "git is required to establish which trees carry tracked Python"
     listed = subprocess.run(  # noqa: S603
-        ["git", "-C", str(repo_root), "ls-files", "--", *(f"{name}/**/*.py" for name in _SCAFFOLDING_TREES)],
+        [git, "-C", str(repo_root), "ls-files", "--", *(f"{n}/**/*.py" for n in _SCAFFOLDING_TREES)],
         capture_output=True,
         text=True,
         check=False,
