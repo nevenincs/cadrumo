@@ -37,11 +37,11 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from datetime import date, datetime
 
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
 
 from ...core.casilla_id import CasillaId
 from ...core.hashing import sha256_hex
-from ...domain.calculations.registry.ids import LEGAL_REFS_ADAPTER, SOURCE_REFS_ADAPTER, LegalRefId, SourceRefId
+from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevision
 from ...domain.modelos.errors import ModeloValidationError
 from ...domain.modelos.ledger_filing_snapshot import (
@@ -83,6 +83,8 @@ _FINGERPRINT_FIELDS: tuple[tuple[str, str], ...] = (
     ("value_in_eur", "value_in_eur"),
     ("lifecycle_state", "lifecycle_state"),
 )
+_LEGAL_REFS_ADAPTER = TypeAdapter(tuple[LegalRefId, ...])
+_SOURCE_REFS_ADAPTER = TypeAdapter(tuple[SourceRefId, ...])
 
 
 def _normalise(value: object) -> str:
@@ -171,7 +173,7 @@ def _normalised_ref_values(refs: Iterable[object], *, field_name: str) -> tuple[
 def _normalised_legal_refs(refs: Iterable[LegalRefId], *, field_name: str) -> tuple[LegalRefId, ...]:
     normalised = _normalised_ref_values(refs, field_name=field_name)
     try:
-        return LEGAL_REFS_ADAPTER.validate_python(normalised)
+        return _LEGAL_REFS_ADAPTER.validate_python(normalised)
     except ValidationError as exc:
         raise ModeloValidationError(f"ledger filing evidence has invalid {field_name}") from exc
 
@@ -179,7 +181,7 @@ def _normalised_legal_refs(refs: Iterable[LegalRefId], *, field_name: str) -> tu
 def _normalised_source_refs(refs: Iterable[SourceRefId], *, field_name: str) -> tuple[SourceRefId, ...]:
     normalised = _normalised_ref_values(refs, field_name=field_name)
     try:
-        return SOURCE_REFS_ADAPTER.validate_python(normalised)
+        return _SOURCE_REFS_ADAPTER.validate_python(normalised)
     except ValidationError as exc:
         raise ModeloValidationError(f"ledger filing evidence has invalid {field_name}") from exc
 

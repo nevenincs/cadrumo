@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from typing import Annotated
 
-from pydantic import Field, TypeAdapter
+from pydantic import Field
 
 _MODELO_RE = r"^\d{3}$"
 _REF_RE = r"^[a-z0-9][a-z0-9._:-]*[a-z0-9]$|^[a-z0-9]$"
@@ -46,14 +46,3 @@ type OracleId = Annotated[str, Field(min_length=1, max_length=128, pattern=_ORAC
 def is_registry_id(value: str) -> bool:
     """Return whether ``value`` is a stable registry id."""
     return re.fullmatch(_REF_RE, value) is not None
-
-
-LEGAL_REFS_ADAPTER: TypeAdapter[tuple[LegalRefId, ...]] = TypeAdapter(tuple[LegalRefId, ...])
-"""Validate a tuple of legal reference ids, beside the type it validates.
-
-Two modules built this adapter independently. Keeping it with the type
-means a change to LegalRefId cannot leave a copy validating the old shape.
-"""
-
-SOURCE_REFS_ADAPTER: TypeAdapter[tuple[SourceRefId, ...]] = TypeAdapter(tuple[SourceRefId, ...])
-"""Validate a tuple of source reference ids, beside the type it validates."""
