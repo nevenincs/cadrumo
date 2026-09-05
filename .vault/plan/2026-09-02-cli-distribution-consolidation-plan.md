@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:96383f68515211473594a9e51d37b4dce79cfb7f43d57005101fa4fb948a24ab'
+body_hash: 'sha256:ae16c7c8ca7a700bbec9211fdef5a00d4e84cdc8f1da8ae6d71257ee995d7ceb'
 ---
 
 <!-- RETIRED: S39 -->
@@ -125,6 +125,7 @@ Build every declared distribution and channel artifact from one command and prov
 - [x] `P09.S60` - Teach the installed oracle the recovery enrollment the product now requires; `dev/packaging/installed_tax_oracle.py`.
 - [x] `P09.S61` - Stop every packaging lane from re-running the whole packaging suite before it starts; `dev/packaging/campaign.py`.
 - [ ] `P09.S62` - Give the campaign preflight an explicit selection the recipe guard can see; `dev/packaging/campaign.py`.
+- [ ] `P09.S63` - Stop a quality sweep from running a repository rewrite when its test module is imported; `dev/quality/namespace_retirement_sweep.py`.
 
 ### Phase `P10` - Prune the release and packaging surfaces without consumers
 

@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:7c0b99833bc0ab69339c85d0c2201bca92d4a3a0f0b28e6374e64ee641ead499'
+body_hash: 'sha256:d1d68308a995c46c68043d01598179c072c78a17dedffd89045e83865057d88b'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -583,6 +583,9 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S701` - Raise the locale parity denominator floor: > 0 sat against 67,421 codebase keys, and every key must appear in every locale, so a partial collapse would make the parity loop trivially pass for all of them; `dev/locales/tests/test_parity.py`.
 - [x] `W02.P02.S702` - Raise both tracked-data preflight floors through one constant: > 0 sat against 22,598 shipped data files, the denominator the preflight declares ok over, so a narrowed root would report success over a fraction; `dev/packaging/tests/test_source_preflight.py`.
 - [x] `W02.P02.S703` - Floor the modelo action denominator: the set equality catches a one-sided collapse but not both sides shrinking together, and > 0 allowed that down to a single surviving action out of 79; `dev/tests/test_modelo_workspace_action_denominator.py`.
+- [x] `W02.P02.S704` - Floor the vulture citation table: the whitelist-versus-citation equality survives both sides emptying together, which would also reduce the per-mirror parametrize below to zero cases and retire that gate silently; `dev/audit/tests/test_vulture_whitelist_is_not_stale.py`.
+- [x] `W02.P02.S705` - Raise the glossary positive-control floor: > 0 sat against 704 grounded legal permalinks, and this is the success path that keeps the module's refusals from being satisfied by refusing almost everything; `dev/docs/tests/test_glossary_reference.py`.
+- [x] `W02.P02.S706` - Scale the golden-record anti-vacuity control to its live corpus: > 0 characters closed only the historical zero-read, while a reader taking one frame carrier of three or a single golden still passed against 206 goldens and 16 million characters; `dev/docs/tests/test_golden_records_no_crash.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

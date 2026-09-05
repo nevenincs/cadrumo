@@ -5,16 +5,11 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:e6a290cebf3962e1398e19719221268bb49838a3daf37d16d16174316d31121f'
+body_hash: 'sha256:d37794ab71ec95b7c60bf39d54bec8ab4e47bd5f72e9eb9922ce40c421e22dad'
 step_id: 'S31'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Resolve spec-table CLI bindings in the reachability walk: command handlers are bound through DeferredTarget(module, f"work_{name}") so the handler name exists only as an f-string and never as a literal, which reports live commands as unused; aeat app modelo work create, discard, list and status are all live while their handlers are findings
 
