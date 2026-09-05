@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:9bb56b8b905cde3e5acb91a1aea4f1e46094ba7e03d006c7d02635085774a058'
+body_hash: 'sha256:486ba405603dbbbfaff31bc91731266d7d00f255a63eaa5cec8efce28b66158f'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -521,6 +521,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S639` - Guard the bundled normative canonicality gate against a relocated corpus root and a collapsed walk, since it asserted no CRLF endings over a walk with neither check and the cross-platform hash equality it protects would rot invisibly; `dev/tests/test_fetch_boe_normative.py`.
 - [x] `W02.P02.S640` - Route the workflow gates through one guarded walk that checks its root, refuses a collapsed directory and honours both yaml suffixes, since two gates asserted that no workflow does a forbidden thing over a walk an empty directory would satisfy perfectly; `dev/packaging/tests/test_evidence_release_transport.py`.
 - [x] `W02.P02.S641` - Announce the sources the scratch reclamation sweep cannot read, since an unreadable file declares no scratch family and therefore looks exactly like a compliant one, and only five families are examined across six thousand nine hundred sources so one loss removes a fifth of the subject; `dev/ci/tests/test_scratch_prefixes_are_reclaimed.py`.
+- [x] `W02.P02.S642` - Announce the modules the dunder-init import gate cannot parse, since an unparsed module contributes no offence and reads as compliant while its post-swallow floor of one thousand sits against six thousand nine hundred parsing today; `dev/quality/tests/test_no_dunder_init_module_imports.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
