@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:8c63c110f099260498f91222547442f71a3bb5dc37c8133bd420354fa25cf22c'
+body_hash: 'sha256:a472fd69ad1e2ac1fc919b52a08c27e236b51289324d8b102d0746db33354b93'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[clitui-ledger.index]]"
