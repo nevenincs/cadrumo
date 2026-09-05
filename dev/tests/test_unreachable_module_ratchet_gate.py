@@ -516,11 +516,10 @@ def test_the_live_tui_projections_are_deferred_by_their_frozen_consumers() -> No
 def test_every_intentional_rationale_names_a_reader_that_still_reads_it() -> None:
     """A disposition's justification must stay true, or the module is orphaned.
 
-    Four of the five design-time authorities are excused because a specific
-    dev-side file reads them: delete that reader and the module becomes
-    genuinely unreachable while this gate stays green, because the disposition
-    still says otherwise. The rationale is the evidence, so it has to be
-    checkable evidence.
+    A disposition may excuse a module because a specific dev-side file reads
+    it. Delete that reader and the module becomes genuinely unreachable while
+    this gate stays green, because the disposition still says otherwise. The
+    rationale is the evidence, so it has to be checkable evidence.
 
     Only paths a rationale actually names are checked. A disposition that
     claims no reader -- ``core.address_components`` deliberately has none --

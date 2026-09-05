@@ -37,6 +37,7 @@ import pytest
 from cadrumo.tests.collection_storage_root import SETTINGS_STEM, SWEPT_SCRATCH_STEMS
 
 from ..._paths import REPO_ROOT
+from ...quality.unread_inputs import report_unread
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -97,11 +98,18 @@ def _unreclaimed(paths: list[Path]) -> tuple[list[str], int]:
     complies, and the first of those is asserting nothing.
     """
     offenders: list[str] = []
+    unread: list[str] = []
     examined = 0
     for path in paths:
         try:
             source = path.read_text(encoding="utf-8")
-        except (OSError, UnicodeDecodeError):
+        except (OSError, UnicodeDecodeError) as refusal:
+            # A source that will not read declares no scratch family, which is
+            # exactly what a compliant one looks like from here. The counter
+            # below guards vacuity but not partial loss: five families are
+            # examined across 6,911 sources, so one unreadable file carrying
+            # a family removes a fifth of the subject with nothing said.
+            unread.append(f'{path} ({type(refusal).__name__})')
             continue
         prefixes = set(_MKDTEMP.findall(source))
         if not prefixes:
@@ -112,6 +120,12 @@ def _unreclaimed(paths: list[Path]) -> tuple[list[str], int]:
             if prefix.startswith(_SWEPT) or finalized:
                 continue
             offenders.append(f"{_reportable(path)}: {prefix!r}")
+    report_unread(
+        "scratch reclamation sweep",
+        "these sources were not read, so a scratch family declared in one was neither "
+        "examined nor counted below",
+        unread,
+    )
     return offenders, examined
 
 

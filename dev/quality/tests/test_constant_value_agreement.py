@@ -163,9 +163,9 @@ def test_one_module_holding_both_names_is_not_a_cross_module_restatement() -> No
 def test_one_name_bound_to_the_same_call_in_two_modules_is_detected() -> None:
     """The defect: a constant the literal census cannot evaluate, redeclared.
 
-    Three registry modules each bound `_NUMERIC_TUPLE_ADAPTER` to the same
-    TypeAdapter call and two of those copies were dead. No literal-only census
-    could see them, because a call has no value to compare.
+    A module can bind a name to a TypeAdapter call that a sibling binds
+    identically, and a literal-only census cannot see either, because a call
+    has no value to compare.
     """
     findings = unevaluated_collisions(
         {
@@ -179,7 +179,7 @@ def test_one_name_bound_to_the_same_call_in_two_modules_is_detected() -> None:
 
 
 def test_a_per_module_logger_is_not_reported_however_many_modules_hold_it() -> None:
-    """`get_logger(__name__)` is the correct idiom; eighty of them are not a defect."""
+    """`get_logger(__name__)` is the correct idiom, however many modules hold it."""
     assert unevaluated_collisions({"_log": {f"pkg/mod{index}.py": "get_logger(__name__)" for index in range(80)}}) == ()
 
 
@@ -207,7 +207,7 @@ def test_an_evaluable_literal_stays_with_the_literal_census(tmp_path: Path) -> N
 
 
 def test_a_value_built_from_an_imported_authority_cannot_drift() -> None:
-    """The distinction that took the collision backlog from 35 to 3.
+    """The distinction between a duplicate that can drift and one that cannot.
 
     Four sede modules each bind SEDE_BASE to EXTERNAL.aeat.domains.www6. That is
     four local bindings of ONE value: every copy resolves to whatever the
@@ -226,7 +226,7 @@ def test_a_value_built_from_an_imported_authority_cannot_drift() -> None:
 
 
 def test_a_value_retyped_from_literals_is_a_second_source_of_truth() -> None:
-    """Five modules each retyped the hex alphabet; a change to one left four stale."""
+    """A value retyped in several modules leaves the others stale when one changes."""
     findings = unevaluated_collisions(
         {
             "_HEX_DIGITS": {

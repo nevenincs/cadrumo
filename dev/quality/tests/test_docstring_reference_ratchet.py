@@ -33,13 +33,11 @@ def _baseline(tmp_path: Path, **counts: int) -> Path:
 
 
 def test_a_reference_in_an_attribute_docstring_is_counted(tmp_path: Path) -> None:
-    """The blind spot that nearly shipped this gate broken.
+    """Attribute docstrings must be scanned, not only module and function ones.
 
     ``ast.get_docstring`` reaches a module, class and function docstring and
-    nothing else, so the bare string beneath an assignment -- the form this
-    codebase documents its constants with -- was invisible. A reference planted
-    in one did not fail the gate, which is why the end-to-end plant matters and
-    why this direction is pinned here.
+    nothing else, so the bare string beneath an assignment -- a common way to
+    document a constant -- is invisible unless collected separately.
     """
     root = _tree(
         tmp_path,
