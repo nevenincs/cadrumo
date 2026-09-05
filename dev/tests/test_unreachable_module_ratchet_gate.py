@@ -49,7 +49,20 @@ from ..quality.unreachable_module_ratchet import (
     unreachable_modules,
 )
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.timeout(600)]
+"""The 600-second budget is contention, not a slow test.
+
+Four cases here run 136.9s, 135.4s, 128.3s and 122.2s SERIALLY - each well
+inside the repository's 300-second ceiling on its own. Under the default
+`-n auto` they can land on one worker together, and the ceiling is wall
+clock: the first to cross it is killed by pytest-timeout's thread method,
+which takes the worker down and reports every sibling on it as never having
+run. This module produced exactly that - `node down: Not properly
+terminated` at 11% - while passing serially in 8m43s.
+
+The walks themselves stay real: they resolve the live import graph across
+the whole first-party tree, which is what costs the two minutes.
+"""
 
 _EXCLUDES = ("src/pkg/tests", "src/pkg/tests/**", "src/pkg/**/tests", "src/pkg/**/tests/**")
 
