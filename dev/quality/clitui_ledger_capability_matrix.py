@@ -495,18 +495,21 @@ class _BindingCollector(ast.NodeVisitor):
     def __init__(self) -> None:
         self.bindings: dict[str, list[ast.AST]] = {}
 
+    def record(self, name: str, node: ast.AST) -> None:
+        self.bindings.setdefault(name, []).append(node)
+
     @override
     def visit_Name(self, node: ast.Name) -> None:
         if isinstance(node.ctx, (ast.Store, ast.Del)):
-            self.bindings.setdefault(node.id, []).append(node)
+            self.record(node.id, node)
 
     @override
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
-        return
+        self.record(node.name, node)
 
     @override
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
-        return
+        self.record(node.name, node)
 
     @override
     def visit_Lambda(self, node: ast.Lambda) -> None:
@@ -514,29 +517,49 @@ class _BindingCollector(ast.NodeVisitor):
 
     @override
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
-        return
+        self.record(node.name, node)
+
+    @override
+    def visit_Import(self, node: ast.Import) -> None:
+        for alias in node.names:
+            self.record(alias.asname or alias.name.split(".", maxsplit=1)[0], node)
+
+    @override
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
+        for alias in node.names:
+            self.record(alias.asname or alias.name, node)
+
+    @override
+    def visit_Global(self, node: ast.Global) -> None:
+        for name in node.names:
+            self.record(name, node)
+
+    @override
+    def visit_Nonlocal(self, node: ast.Nonlocal) -> None:
+        for name in node.names:
+            self.record(name, node)
 
     @override
     def visit_ExceptHandler(self, node: ast.ExceptHandler) -> None:
         if node.name is not None:
-            self.bindings.setdefault(node.name, []).append(node)
+            self.record(node.name, node)
         self.generic_visit(node)
 
     @override
     def visit_MatchAs(self, node: ast.MatchAs) -> None:
         if node.name is not None:
-            self.bindings.setdefault(node.name, []).append(node)
+            self.record(node.name, node)
         self.generic_visit(node)
 
     @override
     def visit_MatchStar(self, node: ast.MatchStar) -> None:
         if node.name is not None:
-            self.bindings.setdefault(node.name, []).append(node)
+            self.record(node.name, node)
 
     @override
     def visit_MatchMapping(self, node: ast.MatchMapping) -> None:
         if node.rest is not None:
-            self.bindings.setdefault(node.rest, []).append(node)
+            self.record(node.rest, node)
         self.generic_visit(node)
 
 
@@ -565,6 +588,13 @@ def _resolve_simple_alias(
 ) -> ast.expr:
     assignments = _simple_assignments(function)
     collector = _BindingCollector()
+    arguments = (*function.args.posonlyargs, *function.args.args, *function.args.kwonlyargs)
+    for argument in arguments:
+        collector.record(argument.arg, argument)
+    if function.args.vararg is not None:
+        collector.record(function.args.vararg.arg, function.args.vararg)
+    if function.args.kwarg is not None:
+        collector.record(function.args.kwarg.arg, function.args.kwarg)
     for statement in function.body:
         collector.visit(statement)
     seen: set[str] = set()
