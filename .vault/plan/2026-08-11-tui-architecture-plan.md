@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-05'
-body_hash: 'sha256:b8ced49e519dbb9bf08de0bd7c34a3c3e5451514b973d8c9e63d1782bb6e68ba'
+body_hash: 'sha256:3010c436c5c257b25f90e47e4ab2d01e8eb8133adc73d28b39084d6c8a6e9467'
 ---
 
 <!-- RETIRED: S370 -->
@@ -648,6 +648,7 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S432` - Disambiguate the repeated-number M200/2024 casillas by the record page their own id names. The record design is segmented by page headers, and a composite casilla id carries its page, so a number that repeats across pages resolves to exactly one cell without an adjudication choosing it. Validate the page selector against the shipped corpus before trusting it, corroborate each selection against the declaration's section, and hold whatever disagrees.; `src/cadrumo/locales/*/modelo/schema/200.yml`.
 - [x] `W08.P30.S433` - Close the ca and hu label gap behind es for M200/2024, and say what blocks the rest. Three Catalan and one Hungarian label were simply absent for casillas es already carries; two of the Catalan ones are genuine cognates whose Spanish and Catalan forms are the same word, so they take an allowlist justification rather than an invented difference. The remaining 24 Hungarian gaps sit behind an ellipsis-truncated Spanish source and cannot be translated as fragments.; `src/cadrumo/locales/ca/modelo/schema/200.yml, src/cadrumo/locales/hu/modelo/schema/200.yml, src/cadrumo/locales/_intentional_identical.json`.
 - [x] `W08.P30.S434` - Read the casilla label pins from the compiled adjudication authorities instead of their TOML. The unique cohort's ledger does not serialise official_label_sha256 at all -- its compiler derives the digest from the record-design intermediate and the semantic map at compile time -- so a gate parsing raw TOML found nothing to assert for that whole cohort and reported itself green. Reading the compiled authority is what the registry authority flow requires and is what makes the assertion cover those casillas.; `dev/locales/tests/test_casilla_label_matches_pinned_official_text.py`.
+- [x] `W08.P30.S435` - Give the page-resolved M200/2024 casillas their own adjudication cohort and compiler, so the label gate asserts them. The 40 record-qualified casillas grounded in S431 and S432 belong to no existing cohort, so nothing pinned them. Follow the established pattern: a receipt TOML whose every digest the compiler re-derives from the bundled design rather than trusting, refusing a member that does not resolve to exactly one cell on its own page or whose declared section that cell contradicts.; `dev/registry/analysis/m200_2024_page_resolved_adjudications.py, dev/registry/analysis/m200_2024_page_resolved_adjudications.toml, dev/registry/tests/test_m200_2024_page_resolved_adjudications.py, dev/locales/tests/test_casilla_label_matches_pinned_official_text.py`.
 
 ## Parallelization
 
