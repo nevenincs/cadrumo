@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:ec92f0efcc8119e5baa03e6218cfa442087c3f62aac16160e70dcd23d5ae5a0a'
+body_hash: 'sha256:bd5a17e5ab66bfb391b253d6979a507f3aceaf2ae0f3ba5843f6b71db37858ba'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -547,6 +547,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S665` - Pin the footnote-pointer gate's unresolved-sheet claim: DP200020B is absent from the parse entirely, so `.get(..., {})` proved nothing about the sheet it names; `dev/registry/tests/test_footnote_pointer_notes.py`.
 - [x] `W02.P02.S666` - Close the newline gate's third skip and raise its collapsed floor: a tracked-but-absent module reached neither counter, and the floor of 700 sat against 2,976 live; `dev/tests/test_text_writer_newline_pinning.py`.
 - [x] `W02.P02.S667` - Make the unallowlisted-write negative control prove it fired: the escape is planted only on an argv match, so a drifted command shape left the absence claim passing over a defect never introduced; `dev/quality/tests/test_object_name_replay.py`.
+- [x] `W02.P02.S668` - Pin each receipt-integrity case to its own refusal: the bare raises absorbed any error, and the changed-path case had never reached its own check because the identity digest covers that field; `dev/quality/tests/test_object_name_replay.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
