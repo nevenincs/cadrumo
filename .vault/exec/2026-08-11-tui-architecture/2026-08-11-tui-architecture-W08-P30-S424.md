@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:9ac145d3a2ffaa0fde7acd9fe0f1786abc95ef3b27a018f52b749a14111b6af0'
+body_hash: 'sha256:76bd02ffca0e17683fec7279d1f481ceb1bc46a10fa20b6d26fe0810288c50de'
 step_id: 'S424'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -85,3 +85,48 @@ Rendered and checked: modelo 130 shows `No disponible`, which is correct --
 130 declares no result role. Teeth proven by making an uncomputed cell render
 `"0"`: the gate fails with `an uncomputed cell is unknown`. Restored by copy;
 55 passed across generation and declarations, 6 on the resolver.
+
+The sweep found three shapes, and they needed three different answers.
+
+A GATE THAT COULD NOT FAIL. `test_all_six_routes_mount_redacted_...` asserted
+the operator's own NIF stays out of the rendered frame. No fixture in that test
+carries that value, so the assertion could never have failed. It was deleted
+rather than reworded: a check that cannot fail reads as a safety property while
+providing none, and rewording would have preserved exactly that. The gates that
+genuinely prove it -- against an exception message and a status line, where the
+value IS injected -- are elsewhere in the same module and are untouched, because
+absence from a log, an exception or an off-host payload is still required.
+
+A GATE THAT IS A BACKSTOP, now recorded as one. The same test also asserts the
+subject key does not reach the frame. Trying to break it is what established
+what it is worth: the projector strips the coordinate, so no screen can reach
+one to print, and the attempted leak does not even compile against the
+controller. That property is really proven upstream, by the projection gate that
+holds live sentinels. The line stays as cheap cover for the day a coordinate is
+plumbed through, and now says so instead of implying it is the proof.
+
+DOCSTRINGS ASSERTING THE RETIRED POLICY. Seven rows and enums described as
+"safe public" -- a phrase that in this codebase meant withheld from the
+operator. They are re-derived to say what each row IS. The notification handoff
+was the clearest case: "the row intentionally carries no private notification
+identity or document payload" states a redaction, when the actual reason is
+architectural -- a projection holds already-scoped facts, and reaching storage
+for bytes belongs to the host behind the surface that owns progress, failure
+and cancellation. The boundary survives; the justification is now the true one.
+The field-set gate keeps its contract and loses the claim that the field set is
+a safety limit rather than a question about what a pull returns.
+
+Teeth on the property that can fail: an operation handoff fired from `on_mount`,
+so a screen pulls from the AEAT merely because it was navigated to. The gate
+failed. Restored by copy, defect count 0, 158 passed.
+
+## Notes
+
+The Ledger parity slice is displaced to clitui-ledger per this row's own
+disposition and was not touched.
+
+The census value invariant carries a real exemption rather than a rewording:
+`path`, `local_value` and `aeat_value` are free text on a row whose other fields
+are closed enums. That is deliberate -- a comparison that hides what differs is
+not a comparison -- and it is what makes the byte scan beside it load-bearing
+rather than unfailable, which is recorded at the gate.
