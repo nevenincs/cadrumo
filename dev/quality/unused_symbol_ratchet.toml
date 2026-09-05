@@ -131,7 +131,6 @@
 "cadrumo.application.prorrata_register.seed" = 1
 "cadrumo.application.provisioning" = 2
 "cadrumo.application.registry.source_connectivity" = 6
-"cadrumo.application.registry.source_connectivity_coverage" = 1
 "cadrumo.application.repair_integrity" = 4
 "cadrumo.application.review.enums" = 1
 "cadrumo.application.state_projection" = 2
@@ -165,14 +164,13 @@
 "cadrumo.core.amendment_kind_regime" = 1
 "cadrumo.core.atomic_write" = 1
 "cadrumo.core.classification.policies" = 1
-"cadrumo.core.config" = 2
+"cadrumo.core.config" = 1
 "cadrumo.core.corpus_manifest.manifest" = 3
 "cadrumo.core.decimal.formatting" = 1
 "cadrumo.core.document_shape" = 1
 "cadrumo.core.errors.error_codes" = 3
 "cadrumo.core.external_constants" = 9
 "cadrumo.core.file_permissions" = 1
-"cadrumo.core.filing_projection_ref" = 1
 "cadrumo.core.flows" = 1
 "cadrumo.core.i18n._catalogue_cache" = 2
 "cadrumo.core.i18n.render" = 1
@@ -233,9 +231,8 @@
 "cadrumo.domain.calculations.registry.modelo_localization" = 1
 "cadrumo.domain.calculations.registry.quantity_screen_enrolment" = 1
 "cadrumo.domain.calculations.registry.rate_box_partition" = 1
-"cadrumo.domain.calculations.registry.record_design" = 3
+"cadrumo.domain.calculations.registry.record_design" = 2
 "cadrumo.domain.calculations.registry.record_design_coverage" = 5
-"cadrumo.domain.calculations.registry.record_design_pdf_state" = 1
 "cadrumo.domain.calculations.registry.record_design_schema" = 1
 "cadrumo.domain.calculations.registry.remote_state_guard" = 1
 "cadrumo.domain.calculations.registry.renta_web_open_oracle" = 3
@@ -279,7 +276,7 @@
 "cadrumo.domain.submission.models" = 2
 "cadrumo.domain.submission.protocols" = 1
 "cadrumo.domain.transactions.classification_rule" = 1
-"cadrumo.domain.transactions.irpf_categories" = 2
+"cadrumo.domain.transactions.irpf_categories" = 1
 "cadrumo.domain.transactions.llm" = 3
 "cadrumo.domain.transactions.model_tier" = 1
 "cadrumo.domain.transactions.retencion_parameters" = 1
@@ -287,7 +284,7 @@
 "cadrumo.domain.transactions.tipo_actividad_partitions" = 1
 "cadrumo.domain.usage_ratios.service" = 1
 "cadrumo.domain.user_profile.labels" = 1
-"cadrumo.domain.user_profile.values" = 2
+"cadrumo.domain.user_profile.values" = 1
 "cadrumo.entrypoints.cli" = 2
 "cadrumo.entrypoints.cli._app_live" = 1
 "cadrumo.entrypoints.cli._app_live_auth_preflight" = 1
@@ -296,9 +293,7 @@
 "cadrumo.entrypoints.cli._command_schema" = 1
 "cadrumo.entrypoints.cli._common" = 5
 "cadrumo.entrypoints.cli._ledger" = 2
-"cadrumo.entrypoints.cli._ledger_evidence_consent_cli" = 1
 "cadrumo.entrypoints.cli._ledger_ratios_cli" = 1
-"cadrumo.entrypoints.cli._modelo_aggregate_cli" = 1
 "cadrumo.entrypoints.cli._modelo_behavior_support" = 1
 "cadrumo.entrypoints.cli._modelo_cli_support" = 1
 
