@@ -11,6 +11,7 @@ over the real tree lives in ``test_unreachable_code_scan``.
 
 from __future__ import annotations
 
+import ast
 import json
 from pathlib import Path
 
@@ -26,6 +27,7 @@ from ..unreachable_code import (
     SymbolKind,
     UnreachableCodeOutcome,
     UnreachableCodeResult,
+    assembled_reference_names,
     filter_by_confidence,
     forward_reference_names,
     render_console_report,
@@ -403,6 +405,42 @@ def test_a_test_whose_support_module_reaches_live_code_is_not_reported(
     change would trade one blind spot for a false accusation.
     """
     assert "pkg.tests.test_via_live_support" not in {finding.module for finding in result.tests}
+
+
+def test_a_handler_name_assembled_by_f_string_counts_as_a_reference() -> None:
+    """A live CLI command whose handler name is never spelled as a literal.
+
+    The command tables bind through ``DeferredTarget(module, f"work_{name}")``
+    with the leaf token declared in the same table, so the handler name exists
+    only after formatting. Every spec-bound handler read as unused while its
+    command was live.
+    """
+    source = chr(10).join(
+        (
+            "def _leaf(token, module):",
+            '    name = token.replace("-", "_")',
+            '    return Binding(module, f"work_{name}")',
+            "",
+            'TABLE = (_leaf("create", "pkg.cli"), _leaf("amend-wizard", "pkg.cli"))',
+        )
+    )
+    derived = set(assembled_reference_names(ast.parse(source)))
+
+    assert {"work_create", "work_amend_wizard"} <= derived
+
+
+def test_an_f_string_that_names_no_identifier_prefix_contributes_nothing() -> None:
+    """The guard that matters: a looser reader would suppress real findings."""
+    source = chr(10).join(('msg = f"{count} rows"', 'TOKEN = "create"'))
+
+    assert set(assembled_reference_names(ast.parse(source))) == set()
+
+
+def test_a_prefix_only_combines_with_tokens_in_its_own_module() -> None:
+    """A prefix must not reach a token declared somewhere else."""
+    source = chr(10).join(("def build(name):", '    return f"work_{name}"'))
+
+    assert set(assembled_reference_names(ast.parse(source))) == set()
 
 
 def test_a_member_bound_by_its_declared_value_is_cleared(result: UnreachableCodeResult) -> None:

@@ -361,7 +361,7 @@ packaging-smoke-dependencies:
 [doc('Verify the packaging preflight command contracts (dependency surface, source data, Docker/Scoop/Homebrew workflows).')]
 [group('packaging')]
 packaging-smoke-preflight-tests:
-    @uv run --no-sync pytest -q -m "unit or (integration and not serial)" dev/packaging/tests
+    @uv run --no-sync pytest -q -m "(unit or integration) and not serial and not perf" dev/packaging/tests
 
 # Cheap source-data preflight: fail before wheel, venv, or Docker work if a
 # git-tracked shipped data file has been deleted from the worktree.
@@ -518,7 +518,7 @@ packaging-smoke-installed-oracles: packaging-build-python-cohort
 [doc('Run the serial packaging contracts the preflight lane excludes.')]
 [group('packaging')]
 packaging-smoke-serial: packaging-build-python-cohort
-    @uv run --no-sync pytest -q -n0 -m "integration and serial" dev/packaging/tests
+    @uv run --no-sync pytest -q -n0 -m "serial and not perf" dev/packaging/tests
 
 # Local release-artifact smoke gates that do not need host package-manager access.
 # The campaign driver builds the cohort once and runs the flavor lanes

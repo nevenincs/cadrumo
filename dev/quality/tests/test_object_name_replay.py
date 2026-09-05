@@ -370,9 +370,7 @@ def test_unrelated_bytes_written_during_gate_verification_do_not_refuse(
 
     monkeypatch.setattr(replay_module, "_run_command", write_unrelated_concurrently)
 
-    replay_object_name_component(
-        manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
-    )
+    replay_object_name_component(manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo)
 
     assert unrelated.read_bytes() == b"written while the gates ran"
     assert (repo / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"

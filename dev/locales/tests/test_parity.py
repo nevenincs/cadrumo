@@ -1080,7 +1080,15 @@ def test_codebase_to_locale_parity(locales_state, manager):
     only the prefix).
     """
     codebase_keys, locale_keys_map, _ = locales_state
-    assert len(codebase_keys) > 0, "No translation keys found in codebase"
+    # This count is the DENOMINATOR: every key here must appear in every
+    # locale, so a collapse makes the parity loop below trivially pass for all
+    # of them. `> 0` caught only the total case, while a narrowed scan root or
+    # a tightened extractor drops the set partially and silently. A floor,
+    # not a pinned count: live the codebase yields 67,421 keys.
+    assert len(codebase_keys) > 50000, (
+        f"only {len(codebase_keys)} translation keys found in the codebase, so locale "
+        "parity below is measured against a fraction of the real surface"
+    )
 
     namespace_prefixes = tuple(
         marker.rstrip("*").rstrip(".") for marker in manager.get_codebase_namespaces() if marker.rstrip("*").rstrip(".")

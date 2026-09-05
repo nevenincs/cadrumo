@@ -203,6 +203,8 @@ _DATA_SHAPED_KINDS: Final[frozenset[SymbolKind]] = frozenset(
 # a reference to a symbol, and is not read.
 _DATA_GLOBS: Final[tuple[str, ...]] = ("_data/registry/**/*.toml", "_data/registry/**/*.json", "locales/**/*.json")
 _DATA_TOKEN: Final = re.compile(r"[A-Za-z_][A-Za-z0-9_]{2,}")
+# A command leaf token: lowercase words joined by hyphens, as the CLI spells them.
+_COMMAND_TOKEN: Final = re.compile(r"[a-z][a-z0-9]*(?:-[a-z0-9]+)*")
 
 
 @dataclass(frozen=True)
@@ -799,6 +801,49 @@ def string_reference_names(value: str) -> Iterator[str]:
         yield from (part for part in re.split(r"[.:]", value) if part)
 
 
+def assembled_reference_names(tree: ast.Module) -> Iterator[str]:
+    """Identifiers a module BUILDS by f-string rather than spelling.
+
+    The CLI command tables bind a handler through
+    ``DeferredTarget(module, handler_name or f"work_{name}")``, where ``name``
+    comes from the leaf token declared in the same table. The module string is
+    a literal and is read, but the function name exists only after formatting,
+    so every spec-bound command handler read as unused while its command was
+    live: ``aeat app modelo work create`` runs, and ``work_create`` was a
+    finding.
+
+    The reader is deliberately narrow in three ways, because a looser one would
+    SUPPRESS real findings rather than merely over-report. A prefix counts only
+    when the f-string opens with a constant that is a valid identifier fragment
+    ending in ``_``, so ``f"{value} rows"`` contributes nothing. Tokens are
+    taken only from string literals in the SAME module, so a prefix cannot
+    combine with a name declared elsewhere. And a token must look like a
+    command leaf, so prose and dotted paths are excluded.
+    """
+    prefixes: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.JoinedStr) or not node.values:
+            continue
+        head = node.values[0]
+        if not (isinstance(head, ast.Constant) and isinstance(head.value, str)):
+            continue
+        prefix = head.value
+        if prefix.endswith("_") and prefix[:-1].isidentifier():
+            prefixes.add(prefix)
+    if not prefixes:
+        return
+    tokens = {
+        node.value
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Constant)
+        and isinstance(node.value, str)
+        and _COMMAND_TOKEN.fullmatch(node.value)
+    }
+    for prefix in prefixes:
+        for token in tokens:
+            yield f"{prefix}{token.replace('-', '_')}"
+
+
 def forward_reference_names(value: str) -> Iterator[str]:
     """Identifiers a string used in a TYPE position addresses.
 
@@ -1383,6 +1428,7 @@ def _symbol_findings(
         tree = modules[name].tree
         member_names |= _references(tree)
         literal_tokens |= _string_tokens(tree)
+        literal_tokens |= set(assembled_reference_names(tree))
         resolved_uses |= resolved_symbol_uses(modules[name], frozenset(modules))
         self_uses[name] = _references(tree)
         whole_use |= _collection_uses(tree)

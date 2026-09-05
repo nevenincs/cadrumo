@@ -379,28 +379,9 @@ def campaign_pytest_argv(repo_root: Path, test_workers: int | None) -> tuple[tup
     Returns:
         One ``(label, argv)`` pair per declared pass.
     """
-    preflight = [
-        sys.executable,
-        "-m",
-        "pytest",
-        "dev/packaging/tests",
-        "-q",
-        "--timeout=900",
-        f"--basetemp={repo_root / 'var' / 'packaging-smoke' / 'pytest-basetemp'}",
-    ]
-    if test_workers is not None:
-        preflight += ["-n", str(test_workers)]
-    oracles = [
-        sys.executable,
-        "-m",
-        "pytest",
-        "-q",
-        "-n0",
-        "-m",
-        "integration and serial",
-        "dev/packaging/tests/test_installed_oracles.py",
-    ]
-    return (("preflight-tests", preflight), ("installed-oracles", oracles))
+    return tuple(
+        (pytest_pass.label, pytest_pass_argv(pytest_pass, repo_root, test_workers)) for pytest_pass in _PYTEST_PASSES
+    )
 
 
 def _run_step(argv: list[str], repo_root: Path, label: str) -> None:
