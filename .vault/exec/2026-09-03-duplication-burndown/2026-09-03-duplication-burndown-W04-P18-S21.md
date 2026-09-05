@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:57ed14cf45b5e3f90e52c3bf2d1d80f7b7ec54bfa1182d81716fb60bf4373106'
+body_hash: 'sha256:c81cabff660b3fc715ff6952afdd477666ebcef5826e1ec5c2d0f9d5a58d5cd5'
 step_id: 'S21'
 related:
   - "[[2026-09-03-duplication-burndown-plan]]"
@@ -107,4 +107,3 @@ imported symbols while leaving its own package unknown -- each a false positive
 the screen manufactured. Every widening that fixed one carries a paired tooth
 proving it still catches a genuine miss, because widening is the direction that
 silently blinds a screen.
-
