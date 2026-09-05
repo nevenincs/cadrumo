@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:068bc9924af35806e7553a023d2bea3215482b12a822a860191a7bb8723f66bb'
+body_hash: 'sha256:3b241925342b44f487fcaec7a529ad179192e7c7e0d2f17abdd95778d170fd5c'
 related:
   - "[[2026-09-04-clitui-ledger-research]]"
   - "[[2026-06-10-ledger-interface-contract-adr]]"
@@ -26,7 +26,7 @@ This document is the authoritative human-readable publication surface for the `L
 | Contract / schema | `LedgerCapabilityMatrixV1` / `3` |
 | Publication revision | `s08-semantic-union-1` |
 | Observation timestamp | `2026-09-05T03:08:54+02:00` |
-| Source revision | `df3e6a56f85a55cdea3fa18ad52bb579074dc2f4` |
+| Source revision | `bafb4d0e0a0913298b11670cb2046641b2eff6fb` |
 | Contract source digest | `sha256:c2998c8ff958ae820b59fa7055a36d83117bb35282fe2679761032fab7a15a10` |
 | Accepted plan owner | `clitui-ledger` |
 | Denominator revision / digest | `s08-semantic-union-1` / `sha256:5012ceafec5bc9dae942b22f48daa34f66d93008cd48b9f81c0b0f69f4f49b06` |

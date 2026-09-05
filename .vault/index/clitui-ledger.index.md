@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#clitui-ledger'
 date: '2026-09-04'
-modified: '2026-09-04'
+modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:d5700332ac3f61e1e8c2357d7f049c38b1b0867b16b86c7726db0cf0a0397113'
+body_hash: 'sha256:cfc5cc787d0a5b62852f450f1b7f62219ace5db74d1545b26e218ea5f1a246d4'
 related:
   - '[[2026-09-04-clitui-ledger-W01-P01-S01]]'
   - '[[2026-09-04-clitui-ledger-W01-P01-S02]]'
@@ -16,6 +16,7 @@ related:
   - '[[2026-09-04-clitui-ledger-W01-P02-S05]]'
   - '[[2026-09-04-clitui-ledger-W01-P02-S06]]'
   - '[[2026-09-04-clitui-ledger-W01-P02-S07]]'
+  - '[[2026-09-04-clitui-ledger-W01-P02-S08]]'
   - '[[2026-09-04-clitui-ledger-adr]]'
   - '[[2026-09-04-clitui-ledger-plan]]'
   - '[[2026-09-04-clitui-ledger-reference]]'
@@ -61,6 +62,7 @@ Auto-generated index of all documents tagged with `#clitui-ledger`.
 - `2026-09-04-clitui-ledger-W01-P02-S05` - Enumerate existing application operations, direct behavioral proof, and backend-only Ledger capabilities
 - `2026-09-04-clitui-ledger-W01-P02-S06` - Enumerate the seven binding families, every declared route, calculation consumer, filing consumer, and unresolved proof obligation
 - `2026-09-04-clitui-ledger-W01-P02-S07` - Enumerate existing Ledger component factories separately from installed navigation reachability
+- `2026-09-04-clitui-ledger-W01-P02-S08` - Adjudicate canonical semantic homes and typed command-result contracts for every denominator row
 
 ### plan
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:b7f5dde8f775f3abd958c138e40514acd0a00186bd1eae12af189d7c758e5c6b'
+body_hash: 'sha256:711e635c5ff366b2bebb743884f8c85da24bfbe3400154a0abcce6fd8c762a46'
 step_id: 'S08'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
@@ -33,4 +33,4 @@ related:
 
 ## Notes
 
-Shared worktree automation committed the union implementation and detector changes across `9c3d32a2f4`, `421eafcbd7`, `96604c8ee8`, `ede8ec4d29`, and `df3e6a56f8` while S08 remained active. The split is retained rather than rewriting concurrent history.
+Shared worktree automation committed the union implementation and detector changes across `9c3d32a2f4`, `421eafcbd7`, `96604c8ee8`, `ede8ec4d29`, `df3e6a56f8`, and `bafb4d0e0a`, then captured the reference and Step Record in `6355355b90` and `d9feb980ac` while S08 remained active. The split is retained rather than rewriting concurrent history.
