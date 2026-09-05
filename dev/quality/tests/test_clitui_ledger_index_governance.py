@@ -45,7 +45,7 @@ def _record_title(record_text: str) -> str:
 
 def _assert_generated_body_shape(index_text: str) -> None:
     """Reject governance prose that could only have been hand-added to the index."""
-    sections = index_text.split("\n---\n", maxsplit=2)
+    sections = index_text.split("---\n", maxsplit=2)
     if len(sections) != 3:
         raise AssertionError("feature index does not have canonical frontmatter")
     body_lines = sections[2].splitlines()
@@ -122,7 +122,7 @@ def test_live_index_is_generator_owned_and_publishes_campaign_state() -> None:
                 "## Governance\n\nmanual state\n\n## Documents\n",
                 1,
             ),
-            "manual-only body text",
+            "manual governance section",
             id="manual-index-body",
         ),
     ],

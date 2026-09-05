@@ -10,7 +10,7 @@ related:
   - '[[2026-09-04-clitui-ledger-reference]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:8a2f5941e5ca5929deee2312aaa1ebdf2d8450b6986c96c428652db0f6dca6df'
+body_hash: 'sha256:ba9155bc99eddc34663b47eedcd3cfcba148f1f3d4f56d63b8900f433bedf0c7'
 ---
 
 <!-- RETIRED: S27, S29, S31, S33, S35, S37, S39, S41, S43, S45, S47, S49, S51, S59, S62, S64, S67, S69, S71, S73, S75, S77, S79, S81, S83 -->
@@ -52,7 +52,7 @@ Enumerate commands, backend-only operations, missing products, registry consumer
 Reconcile overlapping Ledger work without changing production TUI code and make the hold visible in campaign state.
 
 - [x] `W01.P03.S09` - Record clitui-ledger as sole Ledger parity owner and place unresolved Ledger TUI rows under the implementation hold; `.vault/plan/2026-08-11-tui-architecture-plan.md`.
-- [ ] `W01.P03.S10` - Publish clitui-ledger sole active Ledger parity owner; G0 OPEN; ordered G0→G1→G2→G3→G4; Ledger TUI held until G3 closes; link S09, plan, reference; `.vault/index/clitui-ledger.index.md, dev/quality/tests/test_clitui_ledger_index_governance.py`.
+- [x] `W01.P03.S10` - Publish clitui-ledger sole active Ledger parity owner; G0 OPEN; ordered G0→G1→G2→G3→G4; Ledger TUI held until G3 closes; link S09, plan, reference; `.vault/index/clitui-ledger.index.md, dev/quality/tests/test_clitui_ledger_index_governance.py`.
 - [ ] `W01.P03.S11` - Mark every TUI-applicable matrix row held until G3 and retain component-only versus installed distinctions; `.vault/reference/2026-09-04-clitui-ledger-reference.md`.
 
 ### Phase `W01.P04` - adjudicate and close G0
