@@ -162,8 +162,17 @@ def _invoke_configured_custody(
     custody.persist_secure_replay()
 
 
+@pytest.mark.timeout(600)
 def test_diagnostic_classification_has_no_runtime_authority_or_success_path() -> None:
-    """Diagnostic classification remains static residue, never filing authority."""
+    """Diagnostic classification remains static residue, never filing authority.
+
+    Budgeted at 600s because the call is MEASURED at 297.86s against the
+    repository's 300-second ceiling - about two seconds of margin. Crossing
+    it does not fail this test: pytest-timeout's thread method kills the
+    worker, and with `--dist=loadfile` every sibling in this module is then
+    reported as never having run. A run at 322.77s did exactly that before
+    this budget was set.
+    """
     classification = load_registry_diagnostic_classification(
         bundled_path("registry", "aeat"),
         source_root=bundled_path(),
