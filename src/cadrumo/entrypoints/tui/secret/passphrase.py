@@ -12,7 +12,7 @@ directly must not be able to skip the check").
 See Also:
     :func:`~cadrumo.application.user_profile.passphrase_rotation.rotate_profile_passphrase`
         The application door this screen drives.
-    :class:`~cadrumo.entrypoints.tui.secret.registration.RegistrationApp`
+    :class:`~cadrumo.entrypoints.tui.secret.registration.RegistrationScreen`
         The sibling credential surface this one borrows its live strength
         feedback and attempt shape from.
 """

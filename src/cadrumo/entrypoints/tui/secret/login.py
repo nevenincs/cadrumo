@@ -3,7 +3,7 @@
 See Also:
     :class:`~cadrumo.entrypoints.tui.secret.credentials.CredentialScreen`
         The shared attempt lifecycle and panel layout this screen builds on.
-    :class:`~cadrumo.entrypoints.tui.secret.registration.RegistrationApp`
+    :class:`~cadrumo.entrypoints.tui.secret.registration.RegistrationScreen`
         The other credential surface, sharing the same base.
 """
 
