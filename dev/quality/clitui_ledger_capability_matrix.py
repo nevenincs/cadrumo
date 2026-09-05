@@ -14,7 +14,7 @@ import importlib
 import inspect
 import json
 import re
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date, datetime
 from enum import StrEnum
@@ -2199,11 +2199,12 @@ _EXPLICIT_QUERY_CAPABILITIES: Final[frozenset[str]] = frozenset(
 def _annotation_name(annotation: object) -> str:
     if isinstance(annotation, str):
         return annotation.strip("'")
-    return getattr(annotation, "__name__", str(annotation))
+    name = getattr(annotation, "__name__", None)
+    return name if isinstance(name, str) else str(annotation)
 
 
 def _validate_existing_semantic_home(
-    declaration: _BackendOperationDeclaration, *, owner_callable: object | None = None
+    declaration: _BackendOperationDeclaration, *, owner_callable: Callable[..., object] | None = None
 ) -> None:
     """Prove an existing request/result claim against the live callable boundary."""
     if declaration.status is not SemanticHomeStatus.EXISTING:
@@ -2212,7 +2213,7 @@ def _validate_existing_semantic_home(
         module_name, separator, symbol_name = declaration.owner.partition(":")
         if not separator:
             raise ValueError(f"existing semantic home lacks a callable locator: {declaration.capability_id}")
-        owner_callable = getattr(importlib.import_module(module_name), symbol_name)
+        owner_callable = cast(Callable[..., object], getattr(importlib.import_module(module_name), symbol_name))
     signature = inspect.signature(owner_callable)
     parameters = tuple(signature.parameters.values())
     if not parameters or _annotation_name(parameters[0].annotation) != declaration.command_type:
@@ -2373,6 +2374,21 @@ def _effect_for(capability_id: str, sources: frozenset[DenominatorSourceKind]) -
         return _EXPLICIT_EFFECTS[capability_id]
     except KeyError as exc:
         raise ValueError(f"unadjudicated non-registry capability identity: {capability_id}") from exc
+
+
+def _validate_non_registry_decision_coverage(
+    observations: tuple[LedgerUnionSourceObservationV1, ...],
+) -> None:
+    observed = {
+        capability_id
+        for observation in observations
+        if observation.source is not DenominatorSourceKind.REGISTRY_ROUTE
+        for capability_id in observation.capability_ids
+    }
+    if observed != set(_EXPLICIT_EFFECTS):
+        missing = sorted(observed - set(_EXPLICIT_EFFECTS))
+        removed = sorted(set(_EXPLICIT_EFFECTS) - observed)
+        raise ValueError(f"non-registry semantic adjudication is stale; unadjudicated={missing}; removed={removed}")
 
 
 def _planned_owner(capability_id: str) -> str:
@@ -2663,16 +2679,7 @@ def build_ledger_union_denominator(
     )
     if sum(map(len, effect_groups)) != len(_EXPLICIT_EFFECTS):
         raise ValueError("a non-registry capability has conflicting explicit effect decisions")
-    observed_non_registry = {
-        capability_id
-        for observation in observations
-        if observation.source is not DenominatorSourceKind.REGISTRY_ROUTE
-        for capability_id in observation.capability_ids
-    }
-    if observed_non_registry != set(_EXPLICIT_EFFECTS):
-        missing = sorted(observed_non_registry - set(_EXPLICIT_EFFECTS))
-        removed = sorted(set(_EXPLICIT_EFFECTS) - observed_non_registry)
-        raise ValueError(f"non-registry semantic adjudication is stale; unadjudicated={missing}; removed={removed}")
+    _validate_non_registry_decision_coverage(observations)
     observations_by_capability: dict[str, list[LedgerUnionSourceObservationV1]] = {}
     for observation in observations:
         for capability_id in observation.capability_ids:

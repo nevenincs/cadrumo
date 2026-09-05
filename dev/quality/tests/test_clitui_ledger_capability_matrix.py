@@ -22,6 +22,7 @@ from typing import Final, cast
 
 import pytest
 from pydantic import BaseModel, ValidationError
+
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 from dev.quality import clitui_ledger_capability_matrix as matrix_module
@@ -61,6 +62,7 @@ from ..clitui_ledger_capability_matrix import (
     LedgerRegistryRouteCensusV1,
     LedgerTuiSupportedSurfaceCensusV1,
     LedgerUnionDenominatorV1,
+    LedgerUnionSourceObservationV1,
     ReviewRuling,
     SemanticHomeStatus,
     SurfaceCapabilityState,
@@ -252,6 +254,32 @@ def test_union_refuses_unknown_non_registry_identity_and_effect_collision() -> N
         matrix_module._effect_for("ledger.transaction.future", frozenset({DenominatorSourceKind.CLI_ENDPOINT}))
     overlapping = matrix_module._EXPLICIT_QUERY_CAPABILITIES & matrix_module._EXPLICIT_MUTATION_CAPABILITIES
     assert not overlapping
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        DenominatorSourceKind.CLI_ENDPOINT,
+        DenominatorSourceKind.CLI_SUBOPERATION,
+        DenominatorSourceKind.BACKEND_ONLY,
+        DenominatorSourceKind.MISSING_PRODUCT,
+        DenominatorSourceKind.ARTIFACT_PRODUCT,
+        DenominatorSourceKind.SUPPORTED_SURFACE,
+    ],
+)
+def test_each_non_registry_source_addition_reopens_semantic_adjudication(
+    source: DenominatorSourceKind,
+) -> None:
+    observations = (
+        *_union_denominator().observations,
+        LedgerUnionSourceObservationV1(
+            source=source,
+            observation_id=f"mutation:{source.value}",
+            capability_ids=("ledger.transaction.future",),
+        ),
+    )
+    with pytest.raises(ValueError, match=r"unadjudicated=.*ledger\.transaction\.future"):
+        matrix_module._validate_non_registry_decision_coverage(observations)
 
 
 def test_union_denominator_retains_every_registry_route_unit_and_tui_reachability_split() -> None:
