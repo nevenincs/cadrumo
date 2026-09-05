@@ -131,10 +131,22 @@ def _run_exact_commands(
 
 
 def _run_gates_in_verified_copy(
-    *, root: Path, expected: tuple[ObjectNameGateOutcome, ...]
+    *, root: Path, expected: tuple[ObjectNameGateOutcome, ...], guarded_paths: frozenset[str]
 ) -> tuple[ObjectNameGateOutcome, ...]:
+    """Replay the declared gates against a faithful copy of the post-apply tree.
+
+    The whole tree is copied, because the gates read all of it. Byte-exactness is
+    asserted only over ``guarded_paths`` -- the files this receipt actually
+    governs -- exactly as the rehearsal does when it builds the same copy. A
+    document elsewhere in the repository being rewritten while the copy runs says
+    nothing about whether these gates still pass on this rename, and refusing
+    there makes a replay's success depend on every unrelated file holding still
+    for the minutes the copy takes.
+    """
     paths = _git_snapshot_paths(root)
     files = _snapshot(root, paths)
+    guarded = tuple(sorted(guarded_paths))
+    guarded_baseline = _snapshot(root, guarded)
     temporary_candidate = Path(tempfile.gettempdir())
     if is_link_like(temporary_candidate):
         raise ObjectNameReplayError(f"system temporary root is link-like: {temporary_candidate}")
@@ -151,11 +163,11 @@ def _run_gates_in_verified_copy(
     try:
         if temporary_root.parent != system_temporary_root or is_link_like(temporary_root):
             raise ObjectNameReplayError(f"allocated post-apply verification root is unsafe: {temporary_root}")
-        _copy_snapshot(root, temporary_root, files)
-        if _snapshot(temporary_root, paths) != files:
+        _copy_snapshot(root, temporary_root, files, guarded_paths=guarded_paths)
+        if _snapshot(temporary_root, guarded) != guarded_baseline:
             raise ObjectNameReplayError("post-apply verification copy differs from the live candidate")
         outcomes = _run_exact_commands(expected, root=temporary_root)
-        if _git_snapshot_paths(root) != paths or _snapshot(root, paths) != files:
+        if _snapshot(root, guarded) != guarded_baseline:
             raise ObjectNameReplayError("live tree drifted during post-apply gate verification")
         return outcomes
     finally:
@@ -538,7 +550,9 @@ def replay_object_name_component(
             mutation_intents[relative] = payload
             _replace_staged(root, relative, staged, expected=baseline_payloads[relative])
             stages.pop(relative)
-        gate_outcomes = _run_gates_in_verified_copy(root=root, expected=receipt.gate_outcomes)
+        gate_outcomes = _run_gates_in_verified_copy(
+            root=root, expected=receipt.gate_outcomes, guarded_paths=frozenset(snapshot_paths)
+        )
         after_inventory = scan((root / "src", root / "dev"), root)
         if _finding_delta(inventory, after_inventory) != receipt.finding_delta:
             raise ObjectNameReplayError("post-apply object-name finding delta differs from the receipt")

@@ -977,3 +977,22 @@ area = "application"
 resolved = false
 symbols = ["transaction_missing_deductible_iva_evidence", "transaction_missing_output_iva_evidence"]
 evidence = "Both predicates answer whether a transaction claims deductible or declares output IVA without linked evidence, and both are exported and called by nothing. Under no-silent-under-declaration an unraised advisory is the interesting direction: a transaction missing its evidence produces a total that omits the warning rather than failing loudly, so the operator is not told. The private flow helper they wrap is used by their neighbours, so this is unwired capability rather than superseded code."
+
+# ---------------------------------------------------------------------------
+# Port facades their callers bypass
+#
+# Each is a one-line function delegating through an application port accessor
+# (`some_port().method(...)`), written so the application never touches an
+# adapter type. Their siblings in the same families ARE called, so these are
+# not an abandoned layer; they are the members whose callers either went
+# straight to the adapter or never arrived.
+# ---------------------------------------------------------------------------
+
+[[symbol_cluster]]
+name = "port facades no caller reaches"
+class = "should-be-live"
+area = "application"
+resolved = false
+remedy_requires_decision = true
+symbols = ["create_inventory_ledger", "default_profile_secure_object_inventory", "profile_is_authentication_failure", "profile_advance_session_idle_deadline", "profile_is_persisted_session"]
+evidence = "Five of the eight one-line port-facade wrappers in the shipped tree are called by nothing; the other three are reached from tests or dev. The asymmetry is what makes this a finding rather than a dead layer: `profile_is_keyring_unavailable` sits directly beside `profile_is_authentication_failure` in custody_ports and IS used, so typed authentication refusals are being recognised somewhere WITHOUT the facade -- which means an adapter exception type is leaking into application code, the exact thing the docstring says the wrapper exists to prevent. The same reading applies to the session-receipt and inventory members. The remedy is to route the existing callers through the facade or to withdraw the unused members and record that the boundary is narrower than it looks; both are owner decisions about the application/adapter boundary rather than deletions of dead code."

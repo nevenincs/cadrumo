@@ -349,6 +349,61 @@ def test_zero_generator_replay_tolerates_concurrent_unrelated_bytes(
     assert (repo / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"
 
 
+def test_unrelated_bytes_written_during_gate_verification_do_not_refuse(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Churn outside the receipt's own paths cannot refuse a verified replay.
+
+    The gate copy carries the whole tree because the gates read the whole tree,
+    but a file this receipt does not govern being rewritten mid-copy says
+    nothing about whether these gates still pass on this rename. Refusing there
+    made success depend on every unrelated document in the repository holding
+    still for the minutes the copy takes.
+    """
+    repo, inventory, manifest, component, receipt = _case(tmp_path)
+    unrelated = repo / "dev/unrelated_during_gates.txt"
+    original_run = replay_module._run_command
+
+    def write_unrelated_concurrently(*args: Any, cwd: Path, **kwargs: Any) -> Any:
+        unrelated.write_bytes(b"written while the gates ran")
+        return original_run(*args, cwd=cwd, **kwargs)
+
+    monkeypatch.setattr(replay_module, "_run_command", write_unrelated_concurrently)
+
+    replay_object_name_component(
+        manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
+    )
+
+    assert unrelated.read_bytes() == b"written while the gates ran"
+    assert (repo / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"
+
+
+def test_guarded_path_rewritten_during_gate_verification_still_refuses(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A file the receipt governs must still hold still, or the replay refuses.
+
+    This is the tooth of the narrowing above: exactness was scoped to the
+    receipt's own paths, not abandoned. A concurrent write to a guarded file
+    means the gates just certified bytes that are no longer live.
+    """
+    repo, inventory, manifest, component, receipt = _case(tmp_path)
+    guarded = repo / receipt.baseline_files[0][0]
+    original_run = replay_module._run_command
+
+    def rewrite_guarded_concurrently(*args: Any, cwd: Path, **kwargs: Any) -> Any:
+        outcome = original_run(*args, cwd=cwd, **kwargs)
+        guarded.write_bytes(guarded.read_bytes() + b"\n# concurrent\n")
+        return outcome
+
+    monkeypatch.setattr(replay_module, "_run_command", rewrite_guarded_concurrently)
+
+    with pytest.raises(ObjectNameReplayError, match="live tree drifted during post-apply gate verification"):
+        replay_object_name_component(
+            manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
+        )
+
+
 def test_successful_module_replay_uses_deterministic_mixed_transaction_order(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

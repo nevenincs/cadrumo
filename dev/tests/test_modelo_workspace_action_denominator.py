@@ -11,6 +11,7 @@ double.
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from ..quality.modelo_workspace_action_denominator import (
     MODELO_ACTION_CLASSIFICATIONS,
@@ -110,7 +111,10 @@ def test_drifted_command_key_signature_reds() -> None:
 
 
 def test_placeholder_reason_is_refused_at_construction() -> None:
-    with pytest.raises(Exception, match="real, bounded reason"):
+    # `Exception` accepted a TypeError from a wrong keyword just as readily
+    # as the model's own refusal, so the validation under test could stop
+    # running without this case noticing.
+    with pytest.raises(ValidationError, match="real, bounded reason"):
         ModeloWorkspaceActionClassificationV1(
             action_identity="modelo.work.review",
             disposition=ModeloWorkspaceActionDisposition.C1_BOUNDED_REVIEW,
@@ -126,7 +130,7 @@ def test_placeholder_reason_is_refused_at_construction() -> None:
 
 
 def test_out_of_scope_identity_is_refused_at_construction() -> None:
-    with pytest.raises(Exception, match="outside the Modelo action denominator"):
+    with pytest.raises(ValidationError, match="outside the Modelo action denominator"):
         ModeloWorkspaceActionClassificationV1(
             action_identity="config.auth.login",
             disposition=ModeloWorkspaceActionDisposition.DEFERRED,

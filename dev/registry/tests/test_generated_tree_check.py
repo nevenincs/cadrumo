@@ -318,11 +318,7 @@ def test_check_refuses_linked_candidate_ancestor_before_rendering(m130_inspectio
     # claim below held over a directory the redirect never had - it would
     # have passed even if rendering HAD written through the link.
     redirected_export_root = (
-        redirected_modelos_root
-        / _ISOLATED_TREE.modelo
-        / "revisions"
-        / _ISOLATED_TREE.revision
-        / "export"
+        redirected_modelos_root / _ISOLATED_TREE.modelo / "revisions" / _ISOLATED_TREE.revision / "export"
     )
 
     with pytest.raises(RegistryValidationError, match="candidate revision root must not be a link"):
