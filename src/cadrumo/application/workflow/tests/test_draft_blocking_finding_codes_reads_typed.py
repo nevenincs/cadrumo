@@ -2,7 +2,7 @@
 
 Sibling defect to the one fixed in
 ``test_validating_draft_stage_reads_severity_typed.py``: this helper backs
-``WorkflowDraftNotReadyDetails.blocking_finding_codes``, the diagnostic detail
+``WorkflowDraftNotReadyDetail.blocking_finding_codes``, the diagnostic detail
 an operator reads to learn WHICH findings blocked a draft from reaching a
 ready status. It does not itself decide the abort -- ``_abort_if_draft_not_ready``
 aborts on ``draft.status`` alone -- so a drifted read here does not let an
