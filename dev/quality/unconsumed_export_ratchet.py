@@ -19,9 +19,13 @@ refuses a new one, which is the half that needs no decision. A name added to
 ``__all__`` today is an author's live choice, and the cheapest moment to ask
 "who imports this?" is while they still remember why they exported it.
 
-Consumption is deliberately strict: a name counts as consumed only when another
-module from-imports it FROM the declaring module. Matching the bare name would
-count same-named functions in unrelated packages, and this tree has many.
+Consumption is deliberately strict, and matches the inventory recorded in
+``dev/audit/reachability_classification.toml`` so the two cannot disagree about
+what they count. A name counts as consumed only when another NON-TEST module
+from-imports it FROM the declaring module: matching the bare name would count
+same-named functions in unrelated packages, of which this tree has many, and
+counting a test importer would call a name collected that the product never
+reaches.
 
 It fails in four directions, so paid-down debt is recorded rather than leaving
 headroom:
@@ -68,9 +72,12 @@ def _declared_exports(tree: ast.Module) -> list[str]:
     """Return the string entries of a module-level ``__all__``."""
     for node in tree.body:
         for target in node.targets if isinstance(node, ast.Assign) else []:
-            if isinstance(target, ast.Name) and target.id == "__all__":
-                if isinstance(node.value, (ast.List, ast.Tuple)):
-                    return [e.value for e in node.value.elts if isinstance(e, ast.Constant)]
+            if (
+                isinstance(target, ast.Name)
+                and target.id == "__all__"
+                and isinstance(node.value, (ast.List, ast.Tuple))
+            ):
+                return [e.value for e in node.value.elts if isinstance(e, ast.Constant)]
     return []
 
 
@@ -95,7 +102,11 @@ def count_unconsumed(root: Path = _PACKAGE_ROOT, unused: set[tuple[str, str]] | 
         unused = {(str(finding.path).replace("\\", "/"), finding.name) for finding in result.symbols}
     trees: dict[Path, ast.Module] = {}
     for path in sorted(root.rglob("*.py")):
-        if "__pycache__" in path.parts:
+        # Tests are excluded as publishers AND as consumers, matching the
+        # inventory in dev/audit/reachability_classification.toml: a name whose
+        # only importer is a test is not collected by the product, and the two
+        # records must not disagree about what they are counting.
+        if "__pycache__" in path.parts or "tests" in path.parts or path.name.startswith("test_"):
             continue
         try:
             trees[path] = ast.parse(path.read_text(encoding="utf-8"))
@@ -111,7 +122,7 @@ def count_unconsumed(root: Path = _PACKAGE_ROOT, unused: set[tuple[str, str]] | 
         unconsumed = sum(
             1
             for name in _declared_exports(tree)
-            if (path.stem, name) not in consumed and (path.as_posix(), name) in unused
+            if (path.stem, name) not in consumed and (path.relative_to(REPO_ROOT).as_posix(), name) in unused
         )
         if unconsumed:
             counts[path.relative_to(root).as_posix()] = unconsumed

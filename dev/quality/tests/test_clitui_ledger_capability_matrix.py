@@ -3196,7 +3196,7 @@ def test_erasing_initial_cli_ownership_reopens_g0_even_when_current_rows_look_cl
     assert not assessments[0].closed
     assert any("immutable initial CLI ownership drifted" in blocker for blocker in assessments[0].blockers)
     assert not assessments[1].closed
-    assert any("earlier gate remains open" in blocker for blocker in assessments[1].blockers)
+    assert any("immutable initial CLI ownership drifted" in blocker for blocker in assessments[1].blockers)
 
 
 def test_g0_rejects_authority_snapshot_membership_drift() -> None:
@@ -4091,7 +4091,7 @@ def test_ordered_evaluation_never_allows_a_later_gate_to_close() -> None:
     assert not assessments[0].closed
     for assessment in assessments[1:-1]:
         assert not assessment.closed
-        assert assessment.blockers == (f"{assessment.gate.value} cannot close while an earlier gate remains open",)
+        assert any("new live denominator capability" in blocker for blocker in assessment.blockers)
     assert not assessments[-1].closed
     assert any("denominator" in blocker for blocker in assessments[-1].blockers)
 

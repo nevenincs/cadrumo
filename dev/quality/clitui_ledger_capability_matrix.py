@@ -5092,7 +5092,7 @@ def validate_ledger_matrix_currentness(
 
 
 def _gate_assessment(gate: LedgerGate, blockers: list[str]) -> GateAssessmentV1:
-    return GateAssessmentV1(gate=gate, closed=not blockers, blockers=tuple(blockers))
+    return GateAssessmentV1(gate=gate, closed=not blockers, blockers=tuple(dict.fromkeys(blockers)))
 
 
 def _serialized_python_data(value: object) -> object:
