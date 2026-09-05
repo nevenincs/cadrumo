@@ -6,7 +6,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:3a8a6f2975ac098ea7faa51b5726fd9c0e66de03db591277577c525e4d5e87ce'
+body_hash: 'sha256:70799703cce4b236f141b1b3c4418bf6d4b7fdca6a0445b3549cbdda41203c33'
 related:
   - '[[2026-09-04-clitui-ledger-W01-P01-S01]]'
   - '[[2026-09-04-clitui-ledger-W01-P01-S02]]'
@@ -31,6 +31,7 @@ related:
   - '[[2026-09-04-clitui-ledger-s06-registry-census-review-audit]]'
   - '[[2026-09-05-clitui-ledger-s07-tui-census-review-audit]]'
   - '[[2026-09-05-clitui-ledger-s08-union-adjudication-review-audit]]'
+  - '[[2026-09-05-clitui-ledger-s09-governance-reconciliation-review-audit]]'
 ---
 
 # `clitui-ledger` feature index
@@ -54,6 +55,7 @@ Auto-generated index of all documents tagged with `#clitui-ledger`.
 - `2026-09-04-clitui-ledger-s06-registry-census-review-audit` - `clitui-ledger` audit: `S06 registry and filing census review`
 - `2026-09-05-clitui-ledger-s07-tui-census-review-audit` - `clitui-ledger` audit: `S07 TUI census review`
 - `2026-09-05-clitui-ledger-s08-union-adjudication-review-audit` - `clitui-ledger` audit: `S08 union adjudication review`
+- `2026-09-05-clitui-ledger-s09-governance-reconciliation-review-audit` - `clitui-ledger` audit: `S09 governance reconciliation review`
 
 ### exec
 
