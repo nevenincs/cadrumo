@@ -44,21 +44,14 @@ from __future__ import annotations
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ..aggregation import CalculationSourceDiagnostic
+from .settlement_casilla import SETTLEMENT_SEMANTIC_ROLES
 
 __all__ = ["SETTLEMENT_SEMANTIC_ROLES", "collect_settlement_not_computed_diagnostics"]
 
-# Terminal-liquidación casilla ``semantic_role`` values per settlement-bearing
-# modelo. Grounded in the #39 settlement-completeness audit: Modelo 100 cuota
-# resultante de la autoliquidación (0595, the liability before pagos a cuenta) and
-# resultado de la declaración (0670). The guard fires only for these roles, so it
-# never touches a modelo whose settlement role is absent here (safe false-negative);
-# extend as further settlement chains are modelled.
-SETTLEMENT_SEMANTIC_ROLES = frozenset(
-    {
-        "irpf_cuota_resultante_autoliquidacion",
-        "irpf_resultado_declaracion",
-    },
-)
+# The role set and its grounding now live in `settlement_casilla`, imported
+# above, so the advisory and the result-reader cannot disagree about which
+# casilla settles a revision.
+
 
 
 def collect_settlement_not_computed_diagnostics(
