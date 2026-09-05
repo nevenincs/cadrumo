@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:3654f891b9701191f4fd8608783486bee81d84d5e62d7e4b6ce856bcede8ee45'
+body_hash: 'sha256:39221d5a91224eee93665c6db59d834f0a9ad2b7c7061f8f0067f4a9e3989ee4'
 step_id: 'S11'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
@@ -51,3 +51,7 @@ The receipt remediation was reopened once more because the initial closure basis
 
 - `verify:` `uv run --no-sync pytest -q -n 0 dev/quality/tests/test_clitui_ledger_capability_matrix.py -k 'g0 or g4 or ordered_evaluation or active_pre_g3 or matrix_drift or denominator_and_observed or receipt_serialization or reminted or receipt_reviewer or receipt_identity'` -> pass (61 passed)
 - `verify:` `uv run --no-sync pytest -q -n 0 dev/quality/tests/test_clitui_ledger_capability_matrix.py` -> pass (237 passed)
+
+The subsequent self-consistency review found that fully recomputing the matrix, attestation, receipt bases, and receipt identities could still fabricate authority inside one mutable envelope. S11 therefore now requires an external `LedgerAcceptanceRecordAnchorV1`, passed separately to G4 and ordered evaluation. It reuses `EvidenceCoordinateV1` and `EvidenceSubjectSnapshotV1`; the independently observed subject binds the canonical acceptance record content and exact coordinate location/revision/digest/observation time. The anchor commits the attestation digest, identity, reviewer, time, basis, denominator, and review-subject facts, so an unchanged observed authority refuses any reminted receipt or attestation. Receipt identities are exact gate-derived constants (`receipt.ledger.{gate.value}`), rather than a permissive pattern. The test suite covers missing, stale, rebound, wrong-coordinate, forged-ID, and fully recomputed time-remint attacks; valid post-G3 ordered evaluation still closes only with the current external anchor. The 680 held / 13 unheld row partition and union schema/digest are unchanged.
+
+- `verify:` `uv run pytest dev/quality/tests/test_clitui_ledger_capability_matrix.py -q` -> pass (244 passed)

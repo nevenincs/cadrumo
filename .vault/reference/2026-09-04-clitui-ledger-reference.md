@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:c567edae584f15211c2f2617c068bd0ae1f3bc6ddbdd2c2d2b8d0b9310906143'
+body_hash: 'sha256:4582b5c24122d455ce00b6c6d22000d8f26b71e07bae3584efee1b80a032cf45'
 related:
   - "[[2026-09-04-clitui-ledger-research]]"
   - "[[2026-06-10-ledger-interface-contract-adr]]"
@@ -422,3 +422,11 @@ CLI may own argv syntax, token/date/decimal parsing, confirmations, resolution g
 6. Canonical outcome DTOs, CLI reprojection, removal of direct business orchestration.
 
 This ordering is research evidence, not execution authorization. Backend completion remains the candidate hard gate before CLI completion, and CLI completion before TUI work.
+
+## S11 external acceptance-anchor contract
+
+Accepted G0--G3 closure receipts are historical authority, not mutable matrix status. Each pre-TUI gate has exactly one derived identity: `receipt.ledger.{gate.value}`. The receipt binds its gate closure basis and the canonical acceptance-attestation digest; the receipt collection must be the ordered G0--G3 prefix and the attestation binds that exact identity/gate set.
+
+The two internal digest domains stay deliberately noncircular. The attestation’s pre-receipt matrix basis omits the acceptance attestation, receipt collection, and only the active-hold bit needed for the authorized lift. Each receipt’s closure basis omits only the receipt collection and active-hold bit, while retaining the complete canonical acceptance attestation. Thus union denominator, matrix row/evidence, census, and attestation drift relock affected gates, while the authorized G3-to-G4 hold lift does not erase accepted G0--G3 history.
+
+A receipt alone is insufficient to lift the hold. `LedgerAcceptanceRecordAnchorV1` is supplied outside `LedgerCapabilityMatrixV1` at evaluation time and composes the existing `EvidenceCoordinateV1` / `EvidenceSubjectSnapshotV1` freshness contract. Its independently observed subject must exactly match coordinate identity, locator, revision, content digest, and observation time. The external subject digest canonically commits the attestation digest, identity, reviewer, attested time, pre-receipt basis, denominator revision/digest, review-subject snapshot, and coordinate claim identity. G4 and ordered post-G3 evaluation require this current external anchor. Recomputing matrix, receipt, and attestation digests cannot remint acceptance around an unchanged external subject; stale, absent, rebound, or wrong-coordinate evidence refuses closure.
