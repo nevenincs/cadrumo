@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:10998de0aaba6b412b1dc191eccf9e8ce43d1864d871499417a9a87f42997acc'
+body_hash: 'sha256:651a9707c365b9eb851ffc64c938f00bb2cc210bfe6972a7ffc0521bccc2418c'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -543,6 +543,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S661` - Route the CI lane prohibition gates through one guarded workflow loader that refuses a lane declaring no jobs or no steps, since a missing key already raises loudly but an empty collection satisfies every prohibition while describing a lane that runs nothing; `dev/ci/tests/test_ci_workflow.py`.
 - [x] `W02.P02.S662` - Floor the configured extra files that reach the release annotation check, since the corpus arrives through a get default and a renamed or emptied key yields no entries, which is the same silent success the gate exists to prevent one level up; `dev/ci/tests/test_action_pinning.py`.
 - [x] `W02.P02.S663` - Refuse every route to an empty synthetic pool in the sanitiser round-trip gate and floor its corpus, since a sidecar without its replacements list and a list with no synthetic each skipped the one comparison proving the parsed identity was sanitised, so a fixture carrying a real identity would pass by not being asked; `dev/sanitizer/tests/test_round_trip.py`.
+- [x] `W02.P02.S664` - Floor the workflow steps the runtime compatibility skip prohibition examines, since the step corpus arrives through a get default and a job that lost its steps contributes nothing while reading exactly like a job whose steps are clean, which the presence claims further down cannot see; `dev/ci/tests/test_python_runtime_compatibility_workflow.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
