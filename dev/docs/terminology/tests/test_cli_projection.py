@@ -218,7 +218,4 @@ def test_the_projection_stats_are_read_and_agree_with_the_records(
     assert stats.command_records == len(commands), (
         "the command counter and the records it was computed alongside disagree"
     )
-    assert stats.option_records == len(options), (
-        "the option counter and the records it was computed alongside disagree"
-    )
-
+    assert stats.option_records == len(options), "the option counter and the records it was computed alongside disagree"

@@ -67,10 +67,7 @@ _SOURCE_ROOTS: Final = ("src", "dev", "packaging")
 
 def _python_sources() -> list[Path]:
     return sorted(
-        path
-        for root in _SOURCE_ROOTS
-        for path in (REPO_ROOT / root).rglob("*.py")
-        if "__pycache__" not in path.parts
+        path for root in _SOURCE_ROOTS for path in (REPO_ROOT / root).rglob("*.py") if "__pycache__" not in path.parts
     )
 
 
@@ -109,7 +106,7 @@ def _unreclaimed(paths: list[Path]) -> tuple[list[str], int]:
             # below guards vacuity but not partial loss: five families are
             # examined across 6,911 sources, so one unreadable file carrying
             # a family removes a fifth of the subject with nothing said.
-            unread.append(f'{path} ({type(refusal).__name__})')
+            unread.append(f"{path} ({type(refusal).__name__})")
             continue
         prefixes = set(_MKDTEMP.findall(source))
         if not prefixes:
@@ -122,8 +119,7 @@ def _unreclaimed(paths: list[Path]) -> tuple[list[str], int]:
             offenders.append(f"{_reportable(path)}: {prefix!r}")
     report_unread(
         "scratch reclamation sweep",
-        "these sources were not read, so a scratch family declared in one was neither "
-        "examined nor counted below",
+        "these sources were not read, so a scratch family declared in one was neither examined nor counted below",
         unread,
     )
     return offenders, examined
@@ -188,11 +184,7 @@ def test_the_pattern_reads_a_wrapped_call(tmp_path: Path) -> None:
     """
     wrapped = tmp_path / "wrapped.py"
     wrapped.write_text(
-        "import tempfile\n"
-        "root = tempfile.mkdtemp(\n"
-        '    prefix="cadrumo-brand-new-family-",\n'
-        "    dir=None,\n"
-        ")\n",
+        'import tempfile\nroot = tempfile.mkdtemp(\n    prefix="cadrumo-brand-new-family-",\n    dir=None,\n)\n',
         encoding="utf-8",
     )
 

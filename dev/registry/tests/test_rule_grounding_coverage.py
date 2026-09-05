@@ -235,8 +235,7 @@ def test_a_revision_stating_conventions_but_needing_no_rule_yields_nothing(
 
     report_unread(
         "convention-without-rule join",
-        "these revisions declare nothing the two screens can read, so the property below was "
-        "never asserted over them",
+        "these revisions declare nothing the two screens can read, so the property below was never asserted over them",
         unreadable,
     )
     assert checked, (

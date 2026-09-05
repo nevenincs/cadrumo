@@ -855,5 +855,3 @@ def _sha256(path: Path) -> str:
         raise RegistryValidationError(f"generated export provenance path must be a regular file: {path}")
     digest, _byte_count = hash_file(path)
     return digest
-
-

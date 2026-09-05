@@ -386,8 +386,7 @@ def test_the_scanned_corpus_is_not_empty() -> None:
     """
     docs = _doc_files()
     assert len(docs) >= _MINIMUM_DOC_PAGES, (
-        f"only {len(docs)} user-facing page(s) were scanned; below this the claim gate is "
-        "inert rather than satisfied"
+        f"only {len(docs)} user-facing page(s) were scanned; below this the claim gate is inert rather than satisfied"
     )
     assert _README in docs, "README.md must be part of the scanned acquisition surface"
 

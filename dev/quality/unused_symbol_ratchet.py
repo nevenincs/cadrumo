@@ -39,8 +39,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
-from dev._paths import REPO_ROOT
-from dev.audit.unreachable_code import run_unreachable_code_scan
+from .._paths import REPO_ROOT
+from ..audit.unreachable_code import run_unreachable_code_scan
 
 _BASELINE_PATH: Final[Path] = Path(__file__).with_name("unused_symbol_ratchet.toml")
 

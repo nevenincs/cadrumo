@@ -354,4 +354,3 @@ def test_the_localized_record_count_is_read_and_bounded(
         "more records were counted as localised than were projected, so the counter "
         "and the record set no longer describe the same run"
     )
-

@@ -74,8 +74,7 @@ def _module_asts() -> Iterator[tuple[Path, ast.Module]]:
             # scope and a peer mid-edit must not red a shared gate.
             report_unread(
                 "first-party identity enrolment scan",
-                "this module was not parsed, so an identity spelling inside it would not appear "
-                "in any finding below",
+                "this module was not parsed, so an identity spelling inside it would not appear in any finding below",
                 [f"{path} ({type(refusal).__name__})"],
             )
             continue

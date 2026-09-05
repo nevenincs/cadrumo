@@ -107,4 +107,3 @@ def test_every_declared_file_exclusion_names_a_page_that_exists() -> None:
         "these files are excluded from the localized surface but no longer exist, so the "
         f"exemption is inert and unreviewable: {missing}"
     )
-
