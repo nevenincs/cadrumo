@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:117be9df6ce900c57852cfcd1a45345100ce6d9ea2f59528e83d88532480a6cc'
+body_hash: 'sha256:c54c6be9d9874c88d3f01246f6359805cd8c16a1fe74c5218e995d9df83e1804'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -536,6 +536,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S654` - Floor both absence claims in the ledger import aggregation gate, since the disjointness holds over an empty parse and the CadrumoError claim iterates exactly one except handler, so deleting that handler empties the loop rather than failing the gate; `dev/locales/tests/test_ledger_notice_action_conformance.py`.
 - [x] `W02.P02.S655` - Floor each source corpus the static inspection boundary gates read, separately rather than in aggregate, since the first unions a three thousand six hundred file boundary with two five-file collections and a total floor would be satisfied by the large member while either small one emptied; `dev/registry/tests/test_static_inspection.py`.
 - [x] `W02.P02.S656` - Floor the parsed function surface behind the re-homed digest site gate, since its claim is an absence over the functions a site defines and a module gutted to a shell declares no private digest helper for the same reason it declares nothing at all; `dev/packaging/tests/test_hashing.py`.
+- [x] `W02.P02.S657` - Route the five ledger notice gates through one parsed-tree helper that asserts each module still carries a surface, since every one of their claims is an absence satisfied by a module gutted to a shell and this family is actively being rehomed; `dev/locales/tests/test_ledger_notice_action_conformance.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
