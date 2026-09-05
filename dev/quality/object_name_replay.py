@@ -270,6 +270,18 @@ def _run_generators_in_verified_copy(
             shutil.rmtree(temporary_root)
 
 
+def transaction_root_for(root: Path, receipt_id: str) -> Path:
+    """Return the transaction sibling this replay stages into.
+
+    One owner for the name. Tests assert this directory is ABSENT after a
+    successful replay, and five of them rebuilt the expression by hand - a
+    convention change would have left every one of those claims passing over
+    a path that never exists while a real leftover sat under the new name.
+    """
+    suffix = receipt_id.removeprefix("sha256:")
+    return root.parent / f".{root.name}.object-name-transaction-{suffix}"
+
+
 def _create_transaction_root(path: Path) -> None:
     """Create one owned marker; pre-existing markers are retained and refused."""
     if path.exists() or is_link_like(path):
@@ -443,8 +455,7 @@ def replay_object_name_component(
     created_directories: list[Path] = []
     transaction_may_be_removed = False
     transaction_root_created_by_this_call = False
-    transaction_name = f".{root.name}.object-name-transaction-{receipt.receipt_id.removeprefix('sha256:')}"
-    transaction_root = root.parent / transaction_name
+    transaction_root = transaction_root_for(root, receipt.receipt_id)
     try:
         _create_transaction_root(transaction_root)
         transaction_root_created_by_this_call = True

@@ -45,6 +45,7 @@ See Also:
 
 from __future__ import annotations
 
+import functools
 import re
 import shlex
 import subprocess
@@ -162,8 +163,16 @@ def packaging_pytest_recipes() -> tuple[Recipe, ...]:
     return tuple(recipes)
 
 
+@functools.cache
 def _collect(label: str, arguments: tuple[str, ...]) -> frozenset[str]:
     """Boot a real pytest collection and return the node ids it selected.
+
+    Memoized per ``(label, arguments)``. A collection is a pure function of the
+    committed tree, which no test here mutates, so the per-recipe cases and the
+    union case below were booting the identical subprocess twice for every
+    recipe and asserting the identical thing about it. Re-running a
+    deterministic check is not a second check; caching it drops the duplicate
+    collections without weakening either assertion.
 
     The output is read twice by independent parsers -- the node-id lines and
     the summary count -- and the two readings must agree, so a reader that

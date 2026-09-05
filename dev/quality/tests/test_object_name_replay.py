@@ -181,9 +181,10 @@ def test_successful_symbol_replay_applies_exact_receipt_and_preserves_unrelated_
     assert (repo / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"
     assert (repo / "dev/tracked.txt").read_bytes() == unrelated
     assert result.gate_outcomes == receipt.gate_outcomes
-    assert not (
-        repo.parent / f".{repo.name}.object-name-transaction-{receipt.receipt_id.removeprefix('sha256:')}"
-    ).exists()
+    # Derived from production's own owner, never rebuilt here: a rebuilt name
+    # that drifted would assert the absence of a path that cannot exist,
+    # while a real leftover transaction sat under the current convention.
+    assert not replay_module.transaction_root_for(repo, receipt.receipt_id).exists()
 
 
 def test_successful_symbol_replay_tolerates_unrelated_post_receipt_bytes(tmp_path: Path) -> None:
@@ -666,7 +667,7 @@ def test_component_structural_forgery_reaches_canonical_preflight_and_refuses(
 
 def test_occupied_transaction_is_refused_without_deleting_foreign_evidence(tmp_path: Path) -> None:
     repo, inventory, manifest, component, receipt = _case(tmp_path)
-    transaction = repo.parent / f".{repo.name}.object-name-transaction-{receipt.receipt_id.removeprefix('sha256:')}"
+    transaction = replay_module.transaction_root_for(repo, receipt.receipt_id)
     transaction.mkdir()
     sentinel = transaction / "foreign-evidence"
     sentinel.write_bytes(b"keep\n")
@@ -1003,7 +1004,7 @@ def test_linked_root_and_unsafe_receipt_paths_refuse_without_writes(tmp_path: Pa
 
 def test_cleanup_failure_does_not_mask_primary_apply_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     repo, inventory, manifest, component, receipt = _case(tmp_path)
-    transaction = repo.parent / f".{repo.name}.object-name-transaction-{receipt.receipt_id.removeprefix('sha256:')}"
+    transaction = replay_module.transaction_root_for(repo, receipt.receipt_id)
     original_replace = replay_module._replace_staged
 
     def refuse_after_stage(*_args: Any, **_kwargs: Any) -> None:
@@ -1038,7 +1039,7 @@ def test_cleanup_failure_after_successful_apply_is_reported_and_keeps_transactio
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     repo, inventory, manifest, component, receipt = _case(tmp_path)
-    transaction = repo.parent / f".{repo.name}.object-name-transaction-{receipt.receipt_id.removeprefix('sha256:')}"
+    transaction = replay_module.transaction_root_for(repo, receipt.receipt_id)
     monkeypatch.setattr(
         replay_module,
         "_cleanup",
@@ -1058,7 +1059,7 @@ def test_rollback_failure_precedes_cleanup_failure_and_keeps_transaction_evidenc
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     repo, inventory, manifest, component, receipt = _case(tmp_path)
-    transaction = repo.parent / f".{repo.name}.object-name-transaction-{receipt.receipt_id.removeprefix('sha256:')}"
+    transaction = replay_module.transaction_root_for(repo, receipt.receipt_id)
     monkeypatch.setattr(
         replay_module,
         "_run_gates_in_verified_copy",

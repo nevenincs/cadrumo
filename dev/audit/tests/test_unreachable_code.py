@@ -808,8 +808,16 @@ def test_the_live_reference_walk_read_every_file(capsys: pytest.CaptureFixture[s
     from ..._paths import REPO_ROOT
     from ..unreachable_code import run_unreachable_code_scan
 
-    run_unreachable_code_scan(REPO_ROOT)
+    result = run_unreachable_code_scan(REPO_ROOT)
 
+    # The absence claim below is satisfied by an EMPTY stderr, so a scan that
+    # read nothing at all - a mis-resolved root, a walk that short-circuits -
+    # reports exactly as clean as a healthy one. The result carries how much
+    # was actually walked and was discarded. Floors, not pinned counts: live
+    # the scan sees 2,108 shipped modules across 4 roots.
+    assert result.roots, result
+    assert result.shipped_modules > 1500, result.shipped_modules
+    assert result.reachable_modules > 1500, result.reachable_modules
     assert "were unreadable during the reference walk" not in capsys.readouterr().err
 
 
@@ -848,7 +856,9 @@ def test_the_live_test_walk_read_every_module() -> None:
         walked += 1
         parse_module(path)
 
-    assert walked > 0, "the walk found no test modules, so this would prove nothing"
+    # A floor, not a pinned count. `> 0` let the corpus collapse to a single
+    # module while still reading as a full walk; live it finds 3,334.
+    assert walked > 2500, f"the walk found only {walked} test modules, so it no longer covers the corpus"
 
 
 def test_an_unreadable_data_file_is_announced_as_a_deletion_risk(
