@@ -789,3 +789,19 @@ resolved = false
 symbols = ["BOE_ENCODING_CHOICES", "IVA_BIEN_ESCASO_VALOR_UMBRAL_EUR"]
 evidence = "Both carry a cited authority in the comment block above them: the IVA low-value-goods threshold states its binding provision as Art. 108.Dos.5 LIVA (Ley 37/1992) together with the peseta origin of the 3.005,06 EUR figure, and the encoding tuple records which encodings AEAT treats as equivalent for fichero-BOE purposes. A constant like this is captured legal research rather than code: the value is the provenance, and deleting it discards work that would have to be re-derived from the BOE while the calculation-grounding rule requires that provenance be preserved. Measured against the whole unused-constant population they are the exception, not the rule - 2 of 41 cite an authority - so this classification is narrow and the remaining 39 stay ordinary deletion candidates."
 
+[[symbol_cluster]]
+name = "duplicate read-side lineage resolver in the ledger CLI"
+class = "superseded"
+area = "entrypoints/cli"
+resolved = true
+symbols = ["resolve_read_id"]
+evidence = "Two implementations of read-side transaction id resolution existed. The live one is resolve_ledger_transaction_id in _ledger_read_cli, which ledger history, view and track actually call; resolve_read_id in _ledger had the same body - load the catalogue, delegate to resolve_lineage_transaction_id, translate TransactionIdPrefixError through ledger_cli_no_recovery - plus a fallback for a non-catalogue repository that its own comment states never occurs on the read path. Its only remaining reference was a docstring in _ledger_support directing readers to it as the read-side resolver, so the prose pointed at the copy nothing ran; that sentence now names the function the read verbs use."
+
+[[symbol_cluster]]
+name = "declared review capabilities with no production caller"
+class = "should-be-live"
+area = "application"
+resolved = false
+symbols = ["unapprove_draft", "reserved_kind_reason"]
+evidence = "Neither is dead code and neither should be deleted: each is the only implementation of a capability the package documents as supported. application/filing/__init__ presents approve_draft and unapprove_draft as the pair that manages local review state, and approve_draft is live in adapters/persistence/profile/usage_ratios, so the approve half is wired and the un-approve half is not. reserved_kind_reason reads the _RESERVED_KINDS table that enums documents as the reserved --kind surface, and ReviewKindReservedError names it as the source of its blocking reason, but that error is raised only inside a test with a hardcoded string and never in production, so a reserved token is currently accepted rather than refused. Resolution is wiring each to its caller, or an owner decision to retire the declared capability along with its error type and table."
+
