@@ -54,7 +54,7 @@ modelo:
               label: Entitat de tinença de valors estrangers [00011]
             '00012':
               help: Indicador d'entitat SOCIMI.
-              label: null
+              label: SOCIMI (societat cotitzada d'inversió immobiliària) [00012]
             '00013':
               help: Indicador d'agrupació d'interès econòmic espanyola.
               label: Agrupació d'interès econòmic espanyola [00013]
@@ -73,7 +73,7 @@ modelo:
                 [00016]
             '00017':
               help: Indicador de cooperativa protegida.
-              label: null
+              label: Cooperativa protegida [00017]
             00018:
               help: Indicador de cooperativa especialment protegida.
               label: Cooperativa especialment protegida [00018]
@@ -91,7 +91,7 @@ modelo:
               label: Règim d'entitats navilieres en funció del tonatge [00022]
             '00023':
               help: Indicador de gran empresa.
-              label: null
+              label: Gran empresa [00023]
             '00024':
               help: Indicador d'entitat de crèdit.
               label: Entitat de crèdit [00024]
@@ -14627,12 +14627,129 @@ modelo:
               help: null
               label: Deducció per reversió de mesures temporals (DT 37a. 1 LIS) -
                 2020 - Import generat/pendent a principi de període [2231]
+            DP200013:00417:
+              label: Liquidació II - Detall de correccions del resultat del compte
+                de pèrdues i guanys, correccions al resultat del compte de pèrdues
+                i guanys - Augments [00417]
+            DP200013:00418:
+              label: Liquidació II - Detall de correccions del resultat del compte
+                de pèrdues i guanys, correccions al resultat del compte de pèrdues
+                i guanys - Disminucions [00418]
+            DP200014:00547:
+              label: Liquidació III - Base imposable - Compensació de bases imposables
+                negatives de períodes anteriors [00547]
+            DP200014:00550:
+              label: Liquidació III - Base imposable - Base imposable abans de la
+                compensació de bases imposables negatives [00550]
+            DP200014:00552:
+              label: Liquidació III - Base imposable - Base imposable [00552]
+            DP200014:00558:
+              label: Liquidació III - Base imposable - Tipus de gravamen [00558]
+            DP200014:00562:
+              label: Liquidació III - Base imposable - Quota íntegra [00562]
+            DP200014:00563:
+              label: Liquidació III - Bonificacions/Deduccions doble imposició - Bonificació
+                de rendiments per venda de béns corporals produïts a Canàries [00563]
+            DP200014:00566:
+              label: Liquidació III - Bonificacions/Deduccions doble imposició - Bonificacions
+                de societats cooperatives [00566]
+            DP200014:00567:
+              label: Liquidació III - Bonificacions/Deduccions doble imposició - Bonificació
+                per rendes obtingudes a Ceuta i Melilla (art. 33 LIS) [00567]
+            DP200014:00568:
+              label: Liquidació III - Bonificacions/Deduccions doble imposició - Bonificació
+                per prestació de serveis (art. 34 LIS) [00568]
+            DP200014:00569:
+              label: Liquidació III - Bonificacions/Deduccions doble imposició - Altres
+                bonificacions [00569]
+            DP200014:00570:
+              label: Liquidació III - Bonificacions/Deduccions doble imposició - Deduccions
+                per doble imposició - D.I. interna de períodes anteriors aplicada
+                en l'exercici (art. 30 RDLeg. 4/ 2004) [00570]
+            DP200014:00571:
+              label: Liquidació III - Bonificacions/Deduccions doble imposició - Deduccions
+                per doble imposició - D.I. internacional de períodes anteriors aplicada
+                en l'exercici (art. 31 i 32 LIS) [00571]
+            DP200014:00572:
+              label: Liquidació III - Bonificacions/Deduccions doble imposició - Deduccions
+                per doble imposició - D.I. internacional de períodes anteriors aplicada
+                en l'exercici (art. 31 i 32 RDLeg. 4/ 2004) [00572]
+            DP200014:00575:
+              label: Liquidació III - Bonificacions/Deduccions doble imposició - Deduccions
+                per doble imposició - Transparència fiscal internacional (art. 100.10
+                LIS) [00575]
+            DP200014:00576:
+              label: Liquidació III - Bonificacions/Deduccions doble imposició - Bonificacions
+                d'entitats dedicades a l'arrendament d'habitatges [00576]
+            DP200014:00577:
+              label: Liquidació III - Bonificacions/Deduccions doble imposició - Deduccions
+                per doble imposició - D.I. interna intersocietària al 5/10 % (cooperatives)
+                [00577]
+            DP200014:00581:
+              label: Liquidació III - Bonificacions/Deduccions doble imposició - Bonificacions
+                d'empreses navilieres a Canàries (art. 76 Llei 19/1994) [00581]
+            DP200014:00582:
+              label: Liquidació III - Bonificacions/Deduccions doble imposició - Quota
+                íntegra ajustada positiva [00582]
+            DP200014:01033:
+              label: Liquidació III - Base imposable - Entitats de dimensió reduïda
+                - Reserva de nivellació - Augments [01033]
+            DP200014:01034:
+              label: Liquidació III - Base imposable - Entitats de dimensió reduïda
+                - Reserva de nivellació - Disminucions [01034]
+            DP200014:01330:
+              label: Liquidació III - Base imposable - Base imposable després de la
+                reserva de nivellació [01330]
+            DP200014B:00082:
+              label: Liquidació IV - Altres deduccions - Deduccions excloses del límit
+                I+D [00082]
+            DP200014B:00399:
+              label: Liquidació IV - Altres deduccions - Deduccions específiques de
+                les entitats sotmeses a normativa foral [00399]
+            DP200014B:00565:
+              label: Liquidació IV - Altres deduccions - Deducció per donacions a
+                entitats sense finalitat de lucre [00565]
+            DP200014B:00583:
+              label: Liquidació IV - Altres deduccions - Suport fiscal a la inversió
+                i altres deduccions [00583]
+            DP200014B:00584:
+              label: Liquidació IV - Altres deduccions - Deduccions DT 24.1 LIS [00584]
+            DP200014B:00585:
+              label: Liquidació IV - Altres deduccions - Deducció DT 24.7 LIS, art.
+                42 RDLeg. 4/2004 [00585]
+            DP200014B:00588:
+              label: Liquidació IV - Altres deduccions - Deduccions per incentivar
+                det. activitats (Cap. IV Tít. VI, DT 24a.3 LIS i art. 27.3 primer
+                Llei 49/2002) [00588]
+            DP200014B:00590:
+              label: Liquidació IV - Altres deduccions - Deduccions d'inversió a Canàries
+                (desglossament a les pàgines 16 bis i 17) [00590]
+            DP200014B:00592:
+              label: Liquidació IV - Altres deduccions - Quota líquida [00592]
+            DP200014B:00601:
+              label: Liquidació IV - Pagaments fraccionats/Quota diferencial - Pagaments
+                fraccionats - 1r pagament fraccionat - Estat [00601]
+            DP200014B:00603:
+              label: Liquidació IV - Pagaments fraccionats/Quota diferencial - Pagaments
+                fraccionats - 2n pagament fraccionat - Estat [00603]
+            DP200014B:00605:
+              label: Liquidació IV - Pagaments fraccionats/Quota diferencial - Pagaments
+                fraccionats - 3r pagament fraccionat - Estat [00605]
+            DP200014B:00611:
+              label: Liquidació IV - Pagaments fraccionats/Quota diferencial - Quota
+                diferencial - Estat [00611]
+            DP200014B:00619:
+              label: Liquidació IV - Altres deduccions - Quota líquida mínima (art.
+                30 bis LIS) [00619]
             DP200014B:01766:
               label: Liquidació IV - Quota de l'exercici a ingressar o a retornar
                 - Total retencions i ingressos a compte - Efectuats a l'entitat [DP200014B:01766]
             DP200014B:01784:
               label: Liquidació IV - Quota de l'exercici a ingressar o a retornar
                 - Total retencions i ingressos a compte - Imputats per AIE i UTE [DP200014B:01784]
+            DP200026:00625:
+              label: Tributació conjunta Estat i Adm. forals - Càlcul de percentatges
+                de tributació - Adm. de l'Estat [00625]
             x-8h834c1g60oj6ehg60q32do:
               help: null
               label: Liquidació II - Detall de correccions del resultat del compte

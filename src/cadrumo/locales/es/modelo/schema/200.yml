@@ -14656,6 +14656,126 @@ modelo:
               help: null
               label: Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS)
                 - 2020 - Importe generado/pendiente principio periodo [2231]
+            DP200013:00417:
+              label: Liquidación II - Detalle correcciones resultado cta. pérdidas
+                y ganancias correcciones al resultado cta. pérdidas y ganancias -
+                Aumentos [00417]
+            DP200013:00418:
+              label: Liquidación II - Detalle correcciones resultado cta. pérdidas
+                y ganancias correcciones al resultado cta. pérdidas y ganancias -
+                Disminuciones [00418]
+            DP200014:00547:
+              label: Liquidación III - Base imponible - Compensación de bases imponibles
+                negativas períodos anteriores [00547]
+            DP200014:00550:
+              label: Liquidación III - Base imponible - B.I. antes de la compensación
+                de bases imponibles negativas [00550]
+            DP200014:00552:
+              label: Liquidación III - Base imponible - Base imponible [00552]
+            DP200014:00558:
+              label: Liquidación III - Base imponible - Tipo de gravamen [00558]
+            DP200014:00562:
+              label: Liquidación III - Base imponible - Cuota íntegra [00562]
+            DP200014:00563:
+              label: Liquidación III - Bonificaciones/Deducciones doble imposición
+                - Bonificación rendimientos por venta de bienes corporales producidos
+                en Canarias [00563]
+            DP200014:00566:
+              label: Liquidación III - Bonificaciones/Deducciones doble imposición
+                - Bonificaciones sociedades cooperativas [00566]
+            DP200014:00567:
+              label: Liquidación III - Bonificaciones/Deducciones doble imposición
+                - Bonificación por rentas obtenidas en Ceuta y Melilla (art. 33 LIS)
+                [00567]
+            DP200014:00568:
+              label: Liquidación III - Bonificaciones/Deducciones doble imposición
+                - Bonificación por prestación de servicios (art. 34 LIS) [00568]
+            DP200014:00569:
+              label: Liquidación III - Bonificaciones/Deducciones doble imposición
+                - Otras bonificaciones [00569]
+            DP200014:00570:
+              label: Liquidación III - Bonificaciones/Deducciones doble imposición
+                - Deducciones por doble imposición - D.I. interna de períodos anteriores
+                aplicada en el ejercicio (art. 30 RDLeg. 4/ 2004) [00570]
+            DP200014:00571:
+              label: Liquidación III - Bonificaciones/Deducciones doble imposición
+                - Deducciones por doble imposición - D.I. internacional periodos anteriores
+                aplicada en el ejercicio (art. 31 y 32 LIS) [00571]
+            DP200014:00572:
+              label: Liquidación III - Bonificaciones/Deducciones doble imposición
+                - Deducciones por doble imposición - D.I. internacional de periodos
+                anteriores aplicada en el ejercicio (art. 31 y 32 RDLeg. 4/ 2004)
+                [00572]
+            DP200014:00575:
+              label: Liquidación III - Bonificaciones/Deducciones doble imposición
+                - Deducciones por doble imposición - Transparencia fiscal internacional
+                (art. 100.10 LIS) [00575]
+            DP200014:00576:
+              label: Liquidación III - Bonificaciones/Deducciones doble imposición
+                - Bonificaciones entidades dedicadas al arrendamiento de viviendas
+                [00576]
+            DP200014:00577:
+              label: Liquidación III - Bonificaciones/Deducciones doble imposición
+                - Deducciones por doble imposición - D.I. interna intersocietaria
+                al 5/10 % (cooperativas) [00577]
+            DP200014:00581:
+              label: Liquidación III - Bonificaciones/Deducciones doble imposición
+                - Bonificaciones empresas navieras en Canarias (art. 76 Ley 19/1994)
+                [00581]
+            DP200014:00582:
+              label: Liquidación III - Bonificaciones/Deducciones doble imposición
+                - Cuota íntegra ajustada positiva [00582]
+            DP200014:01033:
+              label: Liquidación III - Base Imponible - Entidades Reducida dimensión
+                - Reserva de nivelación - Aumentos [01033]
+            DP200014:01034:
+              label: Liquidación III - Base Imponible - Entidades Reducida dimensión
+                - Reserva de nivelación - Disminuciones [01034]
+            DP200014:01330:
+              label: Liquidación III - Base Imponible - Base imponible después de
+                la reserva de nivelación [01330]
+            DP200014B:00082:
+              label: Liquidación IV - Otras deducciones - Deducciones excluidas de
+                límite I+D [00082]
+            DP200014B:00399:
+              label: Liquidación IV - Otras deducciones - Deducciones específicas
+                de las entidades sometidas a normativa foral [00399]
+            DP200014B:00565:
+              label: Liquidación IV - Otras deducciones - Deducción donaciones a entidades
+                sin fines de lucro [00565]
+            DP200014B:00583:
+              label: Liquidación IV - Otras deducciones - Apoyo fiscal a la inversión
+                y otras deducciones [00583]
+            DP200014B:00584:
+              label: Liquidación IV - Otras deducciones - Deducciones DT 24.1 LIS
+                [00584]
+            DP200014B:00585:
+              label: Liquidación IV - Otras deducciones - Deducción DT 24.7 L.I.S.
+                art.42 RDLeg. 4/2004 [00585]
+            DP200014B:00588:
+              label: Liquidación IV - Otras deducciones - Deducciones para incentivar
+                det. actividades (Cap. IV Tít. VI, DT 24ª.3 LIS y art. 27.3 primero
+                Ley 49/2002) [00588]
+            DP200014B:00590:
+              label: Liquidación IV - Otras deducciones - Deducciones inversión Canarias
+                (desglose en página 16 bis y 17) [00590]
+            DP200014B:00592:
+              label: Liquidación IV - Otras deducciones - Cuota líquida [00592]
+            DP200014B:00601:
+              label: Liquidación IV - Pagos fraccionados/Cuota diferencial - Pagos
+                fraccionados - 1er. pago fraccionado - Estado [00601]
+            DP200014B:00603:
+              label: Liquidación IV - Pagos fraccionados/Cuota diferencial - Pagos
+                fraccionados - 2er. Pago fraccionado - Estado [00603]
+            DP200014B:00605:
+              label: Liquidación IV - Pagos fraccionados/Cuota diferencial - Pagos
+                fraccionados - 3er. Pago fraccionado - Estado [00605]
+            DP200014B:00611:
+              label: Liquidación IV - Pagos fraccionados/Cuota diferencial - Cuota
+                diferencial - Estado [00611]
+            DP200014B:00619:
+              label: Liquidación IV - Otras deducciones - Cuota líquida mínima (art.
+                30 bis LIS) [00619]
             DP200014B:01766:
               label: Liquidación IV - Cuota del ejercicio a ingresar o a devolver
                 - Total retenciones e ingresos a cuenta - Efectuados a la entidad
@@ -14664,6 +14784,9 @@ modelo:
               label: Liquidación IV - Cuota del ejercicio a ingresar o a devolver
                 - Total retenciones e ingresos a cuenta - Imputados por AIEs y UTEs
                 [01784]
+            DP200026:00625:
+              label: Tributación conjunta Estado y Adm.Forales - Cálculo porcentajes
+                tributación - Admón.del Estado [00625]
             x-8h834c1g60oj6ehg60q32do:
               help: null
               label: Liquidación II - Detalle correcciones resultado cta. pérdidas
