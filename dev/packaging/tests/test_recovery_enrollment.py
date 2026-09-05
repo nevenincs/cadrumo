@@ -11,8 +11,12 @@ a green result here would mean nothing.
 from __future__ import annotations
 
 import json
+import os
 import secrets
 import sys
+import threading
+from collections.abc import Iterator
+from contextlib import contextmanager, suppress
 from pathlib import Path
 
 import pytest
@@ -24,6 +28,7 @@ from .._recovery_enrollment import (
     WINDOWS_BOOTSTRAP_MODULE,
     RecoveryEnrollmentError,
     enrolled_profile_creation,
+    shape_enrollment_invocation,
     windows_bootstrap_interpreter,
 )
 from ..installed_tax_oracle import (
@@ -226,3 +231,77 @@ def test_a_refused_creation_is_raised_rather_than_carried_forward(tmp_path: Path
             passphrase=secrets.token_urlsafe(32),
             timeout_seconds=_TIMEOUT_SECONDS,
         )
+
+
+@contextmanager
+def _fabricated_possession_proof() -> Iterator[tuple[int, int]]:
+    """Yield a channel whose operator returns a phrase it was never handed.
+
+    The defect fixture for the exchange itself. It takes delivery exactly as
+    the honest relay does and then answers with a well-formed document
+    carrying the wrong phrase, which is the shape a caller would produce if it
+    invented a proof instead of proving possession.
+    """
+    handoff_read, handoff_write = os.pipe()
+    verification_read, verification_write = os.pipe()
+
+    def answer_with_the_wrong_phrase() -> None:
+        delivered = bytearray()
+        while not delivered.endswith(b"\n"):
+            chunk = os.read(handoff_read, 4096)
+            if not chunk:
+                break
+            delivered.extend(chunk)
+        fabricated = json.dumps({"recovery_mnemonic": " ".join(["fabricated"] * 24)}).encode()
+        with suppress(OSError):
+            os.write(verification_write, fabricated + b"\n")
+        with suppress(OSError):
+            os.close(verification_write)
+
+    operator = threading.Thread(target=answer_with_the_wrong_phrase, daemon=True)
+    operator.start()
+    try:
+        yield handoff_write, verification_read
+    finally:
+        for descriptor in (handoff_write, verification_read):
+            with suppress(OSError):
+                os.close(descriptor)
+        operator.join(timeout=5.0)
+        for descriptor in (handoff_read, verification_write):
+            with suppress(OSError):
+                os.close(descriptor)
+
+
+@pytest.mark.integration
+def test_a_fabricated_possession_proof_is_refused(tmp_path: Path) -> None:
+    """The teeth on the exchange: only the exact minted phrase publishes a profile.
+
+    Returning a well-formed document with the wrong phrase is the difference
+    between proving possession and asserting it. If this ever passed, the
+    green end-to-end case above would prove only that two pipes were wired,
+    not that the phrase reached the caller.
+    """
+    cli = _development_cli()
+    environment = isolated_product_environment(tmp_path / "state")
+
+    with _fabricated_possession_proof() as (handoff, verification):
+        invocation = shape_enrollment_invocation(
+            cli=cli,
+            arguments=("--format", "json", *profile_create_arguments(), "--secrets-stdin"),
+            handoff=handoff,
+            verification=verification,
+        )
+        refusal = run_command(
+            invocation.argv,
+            cwd=tmp_path,
+            environment=environment,
+            timeout_seconds=_TIMEOUT_SECONDS,
+            input_text=_creation_payload(secrets.token_urlsafe(32)),
+            inherited_descriptors=invocation.inherited_descriptors,
+        )
+
+    assert refusal.returncode != 0
+    envelope = json.loads(refusal.stderr)
+    assert envelope["status"] == "error"
+    assert envelope["error"]["code"] == "REFUSED_CLI_BOUNDARY"
+    assert "no profile was created" in envelope["error"]["message"]

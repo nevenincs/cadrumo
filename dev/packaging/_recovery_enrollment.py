@@ -66,20 +66,26 @@ def windows_bootstrap_interpreter(cli: Path) -> Path:
         ) from error
 
 
-@contextmanager
-def enrolled_profile_creation(*, cli: Path, arguments: Sequence[str]) -> Iterator[RecoveryEnrollmentInvocation]:
-    """Yield a profile-creation invocation whose recovery exchange will complete.
+def shape_enrollment_invocation(
+    *,
+    cli: Path,
+    arguments: Sequence[str],
+    handoff: int,
+    verification: int,
+) -> RecoveryEnrollmentInvocation:
+    """Shape one invocation that tells a child about an existing channel.
 
     ``arguments`` is the ordinary ``aeat`` argument tail, without the
     executable and without either descriptor option: which options carry the
     channel, and which process is spawned to receive it, is exactly what
-    differs by platform and is decided here.
+    differs by platform and is decided here. Who is on the other end of the
+    two descriptors is the caller's business.
     """
-    with scripted_registration_descriptors() as (handoff, verification):
-        if sys.platform == "win32":
-            import msvcrt
+    if sys.platform == "win32":
+        import msvcrt
 
-            argv = (
+        return RecoveryEnrollmentInvocation(
+            argv=(
                 str(windows_bootstrap_interpreter(cli)),
                 "-m",
                 WINDOWS_BOOTSTRAP_MODULE,
@@ -89,17 +95,32 @@ def enrolled_profile_creation(*, cli: Path, arguments: Sequence[str]) -> Iterato
                 str(msvcrt.get_osfhandle(verification)),
                 "--",
                 *arguments,
-            )
-        else:
-            argv = (
-                str(cli),
-                *arguments,
-                "--recovery-handoff-fd",
-                str(handoff),
-                "--recovery-verification-fd",
-                str(verification),
-            )
-        yield RecoveryEnrollmentInvocation(argv=argv, inherited_descriptors=(handoff, verification))
+            ),
+            inherited_descriptors=(handoff, verification),
+        )
+    return RecoveryEnrollmentInvocation(
+        argv=(
+            str(cli),
+            *arguments,
+            "--recovery-handoff-fd",
+            str(handoff),
+            "--recovery-verification-fd",
+            str(verification),
+        ),
+        inherited_descriptors=(handoff, verification),
+    )
+
+
+@contextmanager
+def enrolled_profile_creation(*, cli: Path, arguments: Sequence[str]) -> Iterator[RecoveryEnrollmentInvocation]:
+    """Yield a profile-creation invocation whose recovery exchange will complete."""
+    with scripted_registration_descriptors() as (handoff, verification):
+        yield shape_enrollment_invocation(
+            cli=cli,
+            arguments=arguments,
+            handoff=handoff,
+            verification=verification,
+        )
 
 
 __all__ = [
@@ -107,5 +128,6 @@ __all__ = [
     "RecoveryEnrollmentError",
     "RecoveryEnrollmentInvocation",
     "enrolled_profile_creation",
+    "shape_enrollment_invocation",
     "windows_bootstrap_interpreter",
 ]

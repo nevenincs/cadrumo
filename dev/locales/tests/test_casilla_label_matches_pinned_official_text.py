@@ -96,3 +96,22 @@ def test_the_shipped_spanish_label_is_the_pinned_official_cell() -> None:
 
     assert covered, "no pinned label reached the catalogue, so this proved nothing"
     assert not wrong, "\n".join(wrong)
+
+
+# A SECOND GATE WAS TRIED HERE AND WITHDRAWN, which is worth recording because
+# the idea will occur again. It asserted that where a casilla number appears
+# exactly once in the record design, the shipped label IS that cell -- the rule
+# used to ground the 28 casillas that carry no adjudication.
+#
+# The corpus does not follow that rule. Of 2480 uniquely-occurring labelled
+# casillas: 1779 match the design cell exactly, 67 differ only in whitespace,
+# 381 are ellipsis-truncated, and 253 are deliberately shortened or reworded
+# (00096 ships "Innovacion tecnologica (IT). Deduccion pendiente/generada" where
+# the design reads "Deducc. para incentivar determ.actividades - 2024
+# Innovacion tecnologica (IT) - Deduccion pendiente/generada").
+#
+# So the rule describes labels written under it, not a project invariant, and a
+# gate asserting it would have failed on 701 labels nobody has claimed are
+# wrong. The pin stays the single grounding mechanism: it is an explicit
+# per-casilla commitment rather than a derivation, which is why it can be
+# asserted without contradicting the corpus around it.

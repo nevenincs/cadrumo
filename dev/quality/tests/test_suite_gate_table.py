@@ -18,6 +18,7 @@ way -- so it is asserted here.
 from __future__ import annotations
 
 import re
+import shlex
 from typing import Final
 
 import pytest
@@ -33,6 +34,40 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _NOT_AGGREGATED: Final[frozenset[str]] = frozenset(
     {"check-pre-commit", "check-all", "check-rag", "check-semantic", "check-security", "check-corpus-text"}
 )
+
+
+#: Tokens that name HOW a gate is launched rather than WHAT it checks. The
+#: justfile goes through the quiet wrapper and the suite calls the interpreter
+#: directly, so these differ by construction and are not drift.
+_RUNNER_TOKENS: Final[frozenset[str]] = frozenset(
+    {"@uv", "uv", "run", "--no-sync", "python", "-m", "dev.quality.quiet", "@"}
+)
+
+
+def _significant(tokens: list[str]) -> list[str]:
+    """Strip launcher tokens, leaving the arguments that decide what is checked."""
+    kept = [token for token in tokens if token not in _RUNNER_TOKENS and not token.endswith("python.exe")]
+    # The justfile carries shell quoting the argv list does not; a quoted regex
+    # and its bare twin are the same argument.
+    return [token.strip('"').strip("'") for token in kept]
+
+
+def _recipe_commands() -> dict[str, list[str]]:
+    """Return each static-check recipe's command tokens, keyed by recipe name."""
+    lines = (REPO_ROOT / "justfile").read_text(encoding="utf-8").splitlines()
+    commands: dict[str, list[str]] = {}
+    for index, line in enumerate(lines):
+        match = re.match(r"^([a-z][a-z0-9-]*):", line)
+        if not match:
+            continue
+        body: list[str] = []
+        for candidate in lines[index + 1 :]:
+            if not candidate.startswith((" ", "	")):
+                break
+            body.extend(shlex.split(candidate.strip().lstrip("@"), posix=False))
+        if body:
+            commands[match.group(1)] = _significant(body)
+    return commands
 
 
 def _justfile_static_checks() -> set[str]:
@@ -94,3 +129,33 @@ def test_the_gate_catches_a_malformed_row() -> None:
     """Detector teeth: the exact five-element shape that broke the suite."""
     planted = (("check-a", ("x",), ("y",), ("z",)),)
     assert [row for row in planted if len(row) != 2] == list(planted)
+
+
+def test_each_gate_runs_the_same_command_its_recipe_does() -> None:
+    """A gate defined twice drifts, and the halves disagree in silence.
+
+    ``check-dependencies`` is declared in the justfile and again in the suite's
+    table. The recipe scanned the harness package and the table did not, so
+    ``just check-dependencies`` passed while ``just check-all`` reported the
+    same two dependencies as declared-but-unused -- a scan-scope artefact that
+    reads exactly like real debt. Only the arguments are compared: how each
+    half launches the tool differs by construction.
+    """
+    recipes = _recipe_commands()
+    drifted: list[str] = []
+    for name, command in GATES:
+        recipe = recipes.get(name)
+        if recipe is None:
+            continue
+        if _significant([str(part) for part in command]) != recipe:
+            drifted.append(name)
+    assert not drifted, (
+        "these gates run different arguments in dev.quality.suite than in their "
+        f"justfile recipe, so the two halves can disagree: {drifted}"
+    )
+
+
+def test_the_recipe_command_scan_reads_real_commands() -> None:
+    """A scan returning nothing would make the drift check vacuous."""
+    commands = _recipe_commands()
+    assert commands.get("check-style"), f"check-style recipe not parsed: {commands.get('check-style')!r}"
