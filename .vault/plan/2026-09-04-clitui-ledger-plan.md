@@ -10,7 +10,7 @@ related:
   - '[[2026-09-04-clitui-ledger-reference]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:57122b21f23141c441d73c296b907ee47d7cf5bf1e530fb9850b836eb16ead0e'
+body_hash: 'sha256:904814f642341563976456e01c79abd83577bde6381e32191eea276b79e73596'
 ---
 
 <!-- RETIRED: S27, S29, S31, S33, S35, S37, S39, S41, S43, S45, S47, S49, S51, S59, S62, S64, S67, S69, S71, S73, S75, S77, S79, S81, S83 -->
@@ -60,7 +60,7 @@ Reconcile overlapping Ledger work without changing production TUI code and make 
 Review every denominator row and require evidence or explicit UNPROVEN state before authority work starts.
 
 - [x] `W01.P04.S12` - Review every row for explicit applicability, semantic owner, proof state, gap class, and next closure action; `.vault/reference/2026-09-04-clitui-ledger-reference.md`.
-- [ ] `W01.P04.S13` - Enforce that new capabilities reopen affected gates and that G0 cannot close over an incomplete union denominator; `dev/quality/tests/test_clitui_ledger_capability_matrix.py`.
+- [x] `W01.P04.S13` - Enforce that new capabilities reopen affected gates and that G0 cannot close over an incomplete union denominator; `dev/quality/tests/test_clitui_ledger_capability_matrix.py`.
 - [ ] `W01.P04.S14` - Record G0 closure only after an independent engineering review accepts the frozen matrix; `.vault/reference/2026-09-04-clitui-ledger-reference.md`.
 
 ## Wave `W02` - recover backend semantic authority
