@@ -7332,6 +7332,18 @@ modelo:
               label: A LIS 19. cikke szerinti, az Európai Unió vagy az EGT tagállamaiba
                 történő lakóhely-áthelyezéstől eltérő ügyletek - Csökkenés - Évi korrekciók
                 - Végleges [01682]
+            01683:
+              label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2025(****)
+                egyéb levonások a kiemelt közérdekű eseményeket támogató programokhoz
+                kapcsolódóan - Függőben lévő/keletkezett levonás [01683]
+            01684:
+              label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2025(****)
+                egyéb levonások a kiemelt közérdekű eseményeket támogató programokhoz
+                kapcsolódóan - Ebben az elszámolásban alkalmazva [01684]
+            01685:
+              label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2025(****)
+                egyéb levonások a kiemelt közérdekű eseményeket támogató programokhoz
+                kapcsolódóan - Jövőbeli időszakokban alkalmazandó [01685]
             01686:
               help: null
               label: A LIS 19. cikke szerinti, az Európai Unió vagy az EGT tagállamaiba
@@ -8901,6 +8913,14 @@ modelo:
               label: Kanári-szigeteki beruházási levonások - Tárgyi eszközök La Palma,
                 La Gomera és El Hierro szigetén 2023 - Függőben lévő/keletkezett levonás
                 [02078]
+            02079:
+              label: 'Kiegészítő információ a levonási korlátok kiszámításához - 2024:
+                finanszírozó: az adómegállapítási időszakban keletkezett Kanári-szigeteki
+                spanyol filmes levonás [02079]'
+            02080:
+              label: 'Kiegészítő információ a levonási korlátok kiszámításához - 2024:
+                finanszírozó: az adómegállapítási időszakban keletkezett Kanári-szigeteki
+                élő előadóművészeti és zenei levonás [02080]'
             02081:
               help: null
               label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2015 Nyugat-afrikai
@@ -9877,6 +9897,14 @@ modelo:
               label: 'Egyes tevékenységek ösztönzésére szolgáló levonások - 2024:
                 Manifesta 15 Barcelona biennálé (BM15) - Jövőbeli időszakokban alkalmazandó
                 [02286]'
+            02287:
+              label: 'Kiegészítő információ a levonási korlátok kiszámításához - 2024:
+                az adómegállapítási időszakban keletkezett Kanári-szigeteki kutatás-fejlesztési
+                levonás [02287]'
+            02288:
+              label: 'Kiegészítő információ a levonási korlátok kiszámításához - 2024:
+                az adómegállapítási időszakban keletkezett Kanári-szigeteki technológiai
+                innovációs levonás [02288]'
             02289:
               help: null
               label: XXXVII. America's Cup Barcelona (31/2022. törvény) - Csökkenés
@@ -10824,6 +10852,14 @@ modelo:
                 érvényesíthető követeléssé (LIS 130. cikk) - Helyesbítő bevallás -
                 Halasztott adókövetelés átalakításának eredménye korrekció után: fizetendő
                 - Tartományi adóhatóságok/Navarra (Összesen) [02494]'
+            02495:
+              label: 'Kiegészítő információ a levonási korlátok kiszámításához - 2024:
+                producer: az adómegállapítási időszakban keletkezett Kanári-szigeteki
+                spanyol filmes levonás [02495]'
+            02496:
+              label: 'Kiegészítő információ a levonási korlátok kiszámításához - 2024:
+                producer: az adómegállapítási időszakban keletkezett Kanári-szigeteki
+                élő előadóművészeti és zenei levonás [02496]'
             02497:
               help: null
               label: Kanári-szigeteki beruházási levonások - Tárgyi eszközök La Palma,

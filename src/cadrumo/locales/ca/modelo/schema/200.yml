@@ -7175,6 +7175,18 @@ modelo:
               label: Operacions de l’art. 19 LIS diferents del canvi de residència
                 a Estats membres de la Unió Europea o EEE - Disminució - Correccions
                 de l’exercici - Permanents [01682]
+            01683:
+              label: Deduccions per incentivar determ. activitats - 2025(****) altres
+                deduccions relatives a programes de suport a esdeveniments d'excepcional
+                interès públic - Deducció pendent/generada [01683]
+            01684:
+              label: Deduccions per incentivar determ. activitats - 2025(****) altres
+                deduccions relatives a programes de suport a esdeveniments d'excepcional
+                interès públic - Aplicat en aquesta liquidació [01684]
+            01685:
+              label: Deduccions per incentivar determ. activitats - 2025(****) altres
+                deduccions relatives a programes de suport a esdeveniments d'excepcional
+                interès públic - Pendent d'aplicació en períodes futurs [01685]
             01686:
               help: null
               label: Operacions de l’art. 19 LIS diferents del canvi de residència
@@ -8720,6 +8732,14 @@ modelo:
               help: null
               label: Deduccions per inversió a Canàries - Actius fixos a La Palma,
                 la Gomera i el Ferro 2023 - Deducció pendent/generada [02078]
+            02079:
+              label: 'Informació addicional per al càlcul de límits de deduccions
+                - 2024: finançador: deducció per produccions cinematogràfiques espanyoles
+                a Canàries generada en el període impositiu [02079]'
+            02080:
+              label: 'Informació addicional per al càlcul de límits de deduccions
+                - 2024: finançador: deducció per espectacles en viu d''arts escèniques
+                i musicals a Canàries generada en el període impositiu [02080]'
             02081:
               help: null
               label: Deduccions per incentivar determ. activitats - 2015 Inversions
@@ -9654,6 +9674,14 @@ modelo:
               label: 'Deduccions per incentivar determ. activitats - 2024: Biennal
                 Manifesta 15 Barcelona (BM15) - Pendent d''aplicació en períodes futurs
                 [02286]'
+            02287:
+              label: 'Informació addicional per al càlcul de límits de deduccions
+                - 2024: deducció per recerca i desenvolupament a Canàries generada
+                en el període impositiu [02287]'
+            02288:
+              label: 'Informació addicional per al càlcul de límits de deduccions
+                - 2024: deducció per innovació tecnològica a Canàries generada en
+                el període impositiu [02288]'
             02289:
               help: null
               label: XXXVII Copa Amèrica Barcelona (Llei 31/2022) - Disminució - Saldo
@@ -10578,6 +10606,14 @@ modelo:
                 l''Administració tributària (art. 130 LIS) - Rectificativa - Resultat
                 de conversió d''AID després de regularització: a ingressar - D. Forals/Navarra
                 (Totals) [02494]'
+            02495:
+              label: 'Informació addicional per al càlcul de límits de deduccions
+                - 2024: productor: deducció per produccions cinematogràfiques espanyoles
+                a Canàries generada en el període impositiu [02495]'
+            02496:
+              label: 'Informació addicional per al càlcul de límits de deduccions
+                - 2024: productor: deducció per espectacles en viu d''arts escèniques
+                i musicals a Canàries generada en el període impositiu [02496]'
             02497:
               help: null
               label: Deduccions per inversió a Canàries - Actius fixos a La Palma,

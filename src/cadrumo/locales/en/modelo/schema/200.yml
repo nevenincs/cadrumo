@@ -7207,6 +7207,19 @@ modelo:
               label: Transactions under art. 19 LIS other than change of residence
                 to European Union or EEA Member States - Decrease - Corrections for
                 the year - Permanent [01682]
+            01683:
+              label: Deductions to incentivise certain activities - 2025(****) other
+                deductions relating to support programmes for events of exceptional
+                public interest - Deduction carried forward/generated [01683]
+            01684:
+              label: Deductions to incentivise certain activities - 2025(****) other
+                deductions relating to support programmes for events of exceptional
+                public interest - Applied in this settlement [01684]
+            01685:
+              label: Deductions to incentivise certain activities - 2025(****) other
+                deductions relating to support programmes for events of exceptional
+                public interest - Carried forward for application in future periods
+                [01685]
             01686:
               help: null
               label: Transactions under art. 19 LIS other than change of residence
@@ -8790,6 +8803,14 @@ modelo:
               label: Deductions for investment in the Canary Islands - Fixed assets
                 in La Palma, La Gomera and El Hierro 2023 - Deduction carried forward/generated
                 [02078]
+            02079:
+              label: 'Additional information for calculating deduction limits - 2024:
+                financier: deduction for Spanish film productions in the Canary Islands
+                generated in the tax period [02079]'
+            02080:
+              label: 'Additional information for calculating deduction limits - 2024:
+                financier: deduction for live performing arts and musical shows in
+                the Canary Islands generated in the tax period [02080]'
             02081:
               help: null
               label: Deductions to incentivise certain activities - 2015 Investments
@@ -9764,6 +9785,14 @@ modelo:
               label: 'Deductions to incentivise certain activities - 2024: Manifesta
                 15 Barcelona biennial (BM15) - Carried forward for application in
                 future periods [02286]'
+            02287:
+              label: 'Additional information for calculating deduction limits - 2024:
+                deduction for research and development in the Canary Islands generated
+                in the tax period [02287]'
+            02288:
+              label: 'Additional information for calculating deduction limits - 2024:
+                deduction for technological innovation in the Canary Islands generated
+                in the tax period [02288]'
             02289:
               help: null
               label: 37th America's Cup Barcelona (Law 31/2022) - Decrease - Balance
@@ -10720,6 +10749,14 @@ modelo:
                 the Tax Administration (art. 130 LIS) - Amending return - DTA conversion
                 result after adjustment: payable - Regional (foral) administrations/Navarre
                 (Totals) [02494]'
+            02495:
+              label: 'Additional information for calculating deduction limits - 2024:
+                producer: deduction for Spanish film productions in the Canary Islands
+                generated in the tax period [02495]'
+            02496:
+              label: 'Additional information for calculating deduction limits - 2024:
+                producer: deduction for live performing arts and musical shows in
+                the Canary Islands generated in the tax period [02496]'
             02497:
               help: null
               label: Deductions for investment in the Canary Islands - Fixed assets
