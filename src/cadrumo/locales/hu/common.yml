@@ -1438,6 +1438,10 @@ tui:
     overview:
       affected_declarations: Érintett bevallások
       areas: Főkönyvi területek
+      import_path_placeholder: Bankkivonat útvonala
+      import_prepared: Az importálás előkészült; a terület már elérhető.
+      import_refused: Az importálást nem sikerült előkészíteni.
+      prepare_import: Importálás előkészítése
       quality: Adatminőség és megoldatlan feladatok
       title: Főkönyvi áttekintés
     reconciliation:

@@ -265,6 +265,24 @@ class LedgerWorkspaceController:
             raise ValueError("classification target is absent from the visible Ledger projection")
         self.classification_target = transaction_id
 
+    def accept_prepared_import(self, prepared: LedgerPreparedImportV1) -> None:
+        """Admit one import the operator prepared, making the area enterable.
+
+        The same shape as `select_classification_target`, and for the same
+        reason: the import area is entered WITH something the operator makes
+        inside the workspace, but `prepared_imports` was fixed when the
+        workspace was composed -- before they had prepared anything. So the
+        area was permanently refused while the navigation table listed it.
+
+        Refuses a duplicate choice id rather than shadowing the earlier
+        preparation. Two entries sharing an id would make the import screen's
+        selection ambiguous, and the row an operator picked would not
+        determine the command that runs.
+        """
+        if any(existing.choice_id == prepared.choice_id for existing in self.prepared_imports):
+            raise ValueError("a prepared import already carries that choice id")
+        self.prepared_imports = (*self.prepared_imports, prepared)
+
     def classification_target_coordinate(self) -> tuple[int, int, str]:
         """Return a safe position and redacted identifier from the visible projection."""
         target = self.classification_target

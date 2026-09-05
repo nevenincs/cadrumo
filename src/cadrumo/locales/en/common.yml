@@ -1414,6 +1414,10 @@ tui:
     overview:
       affected_declarations: Affected declarations
       areas: Ledger areas
+      import_path_placeholder: Bank statement path
+      import_prepared: Import prepared; the import area is now reachable.
+      import_refused: The import could not be prepared.
+      prepare_import: Prepare import
       quality: Data quality and unresolved work
       title: Ledger overview
     reconciliation:

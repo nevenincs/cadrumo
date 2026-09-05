@@ -1444,6 +1444,10 @@ tui:
     overview:
       affected_declarations: Declaracions afectades
       areas: Àrees del llibre
+      import_path_placeholder: Ruta de l'extracte bancari
+      import_prepared: Importació preparada; la importació ja és accessible.
+      import_refused: No s'ha pogut preparar la importació.
+      prepare_import: Prepara la importació
       quality: Qualitat de les dades i feina pendent
       title: Resum del llibre comptable
     reconciliation:
