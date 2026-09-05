@@ -49,12 +49,22 @@ def _runtime_entry(runtime: str, filename: str, payload: bytes) -> dict[str, obj
     }
 
 
+#: The wheel names and bytes this fixture seals, shared with the assertions
+#: that read them back. They were transcribed a second time inside the test,
+#: and one of those copies feeds an ABSENCE claim - a drifted name there
+#: would assert the non-existence of a file that could never exist.
+_CP313_WHEEL = "native_dependency-1.0.0-cp313-cp313-win_amd64.whl"
+_CP314_WHEEL = "native_dependency-1.0.0-cp314-cp314-win_amd64.whl"
+_CP313_PAYLOAD = b"sealed cp313 dependency"
+_CP314_PAYLOAD = b"sealed cp314 dependency"
+
+
 def _wheelhouse_fixture(tmp_path: Path) -> Path:
     """Write two runtime closures plus an attributable advisory canary row."""
-    cp313_name = "native_dependency-1.0.0-cp313-cp313-win_amd64.whl"
-    cp314_name = "native_dependency-1.0.0-cp314-cp314-win_amd64.whl"
-    cp313_payload = b"sealed cp313 dependency"
-    cp314_payload = b"sealed cp314 dependency"
+    cp313_name = _CP313_WHEEL
+    cp314_name = _CP314_WHEEL
+    cp313_payload = _CP313_PAYLOAD
+    cp314_payload = _CP314_PAYLOAD
     manifest = {
         "lock_sha256": _LOCK_SHA256,
         "platform_floors": PLATFORM_FLOORS,
@@ -96,10 +106,11 @@ def test_load_and_extract_select_the_observed_runtime_closure(tmp_path: Path) ->
 
     extracted = tmp_path / "extracted-3.14"
     extract_runtime_wheelhouse(archive, extracted, python_version="3.14")
-    assert (extracted / "native_dependency-1.0.0-cp314-cp314-win_amd64.whl").read_bytes() == (
-        b"sealed cp314 dependency"
-    )
-    assert not (extracted / "native_dependency-1.0.0-cp313-cp313-win_amd64.whl").exists()
+    assert (extracted / _CP314_WHEEL).read_bytes() == _CP314_PAYLOAD
+    # The absence claim now names the wheel the fixture actually sealed. As a
+    # second transcription it would have held over a renamed file, proving
+    # nothing about 3.13 bytes leaking into a 3.14 extraction.
+    assert not (extracted / _CP313_WHEEL).exists()
 
 
 def test_advisory_missing_runtime_is_not_presented_as_ready(tmp_path: Path) -> None:

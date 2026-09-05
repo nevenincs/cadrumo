@@ -172,14 +172,27 @@ def test_numeric_ordering_is_used_not_string_ordering() -> None:
         assert_forward_bump(existing="0.2.10", incoming="0.2.9")
 
 
+#: The unparseable value both cases use, shared with the expectation below so
+#: the parametrize and the assertion cannot drift apart.
+_UNPARSEABLE = "not-a-version"
+
+
 @pytest.mark.parametrize(
     ("existing", "incoming"),
-    [("0.2.1", "not-a-version"), ("not-a-version", "0.2.1")],
+    [("0.2.1", _UNPARSEABLE), (_UNPARSEABLE, "0.2.1")],
 )
 def test_an_unparseable_version_refuses_rather_than_comparing(existing: str, incoming: str) -> None:
     """Monotonicity that cannot be established is refused, not assumed."""
-    with pytest.raises(ValueError):
+    # `packaging.version.InvalidVersion` IS a ValueError, so a bare refusal
+    # accepted an unwrapped parse error escaping the guard - which would drop
+    # the context naming WHICH side failed, the only part an operator acts on.
+    # The side is derived from the parameters rather than transcribed.
+    role = "incoming" if incoming == _UNPARSEABLE else "committed pointer"
+    with pytest.raises(ValueError) as refusal:
         assert_forward_bump(existing=existing, incoming=incoming)
+
+    message = str(refusal.value)
+    assert f"{role} version '{_UNPARSEABLE}' is not a valid version" in message, message
 
 
 # ---------------------------------------------------------------------------
