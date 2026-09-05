@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:4462ed02abf6001bbf56c5bba972d74e6aa2e454b4d777c92e5e3c479173d655'
+body_hash: 'sha256:ac8ac97737f8bf91b6c27ef3755730331a966f30c28829f7f38d55a41b92be8a'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -566,6 +566,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S684` - Bind the acquisition parsers to the two options their docstring names: argparse exits for any missing requirement, so a bare SystemExit proved only that something was required; `dev/packaging/tests/test_acquire_tooling.py`.
 - [x] `W02.P02.S685` - Bind the unparseable-version refusals to the side that failed: packaging's InvalidVersion is itself a ValueError, so an unwrapped parse error escaping the guard read as the guard refusing; `dev/packaging/tests/test_release_pointer_guard.py`.
 - [x] `W02.P02.S686` - Give the runtime wheelhouse wheel names one source: the 3.13 filename was transcribed twice and the second copy feeds an absence claim, which a drifted name would satisfy over a file that could never exist; `dev/packaging/tests/test_runtime_wheelhouse.py`.
+- [x] `W02.P02.S687` - Assert the seeding premise the re-scaffold no-op rests on: with no entries seeded every original assertion still held, and the SeedApplyResult carrying that evidence was discarded; `dev/docs/terminology_handbook/tests/test_seed_import.py`.
+- [x] `W02.P02.S688` - Bind the unreachable-code live walks to what they read: a scan that read nothing produced an empty stderr and satisfied the absence claim, and the test-module floor of zero sat against 3,334; `dev/audit/tests/test_unreachable_code.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
