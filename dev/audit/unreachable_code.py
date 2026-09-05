@@ -835,9 +835,7 @@ def assembled_reference_names(tree: ast.Module) -> Iterator[str]:
     tokens = {
         node.value
         for node in ast.walk(tree)
-        if isinstance(node, ast.Constant)
-        and isinstance(node.value, str)
-        and _COMMAND_TOKEN.fullmatch(node.value)
+        if isinstance(node, ast.Constant) and isinstance(node.value, str) and _COMMAND_TOKEN.fullmatch(node.value)
     }
     for prefix in prefixes:
         for token in tokens:

@@ -351,13 +351,13 @@ packaging-smoke-dependencies:
 # packaging-smoke, Scoop, Homebrew, and Docker workflows the campaign runs this
 # preflight ahead of -- and still exited zero.
 # The excluded `serial` tests are not dropped silently: every one of them is
-# owned by `packaging-smoke-serial`, the installed-oracle cohort additionally by
-# the narrower `packaging-smoke-installed-oracles`, and the serving-path
-# benchmark by the `-m perf` lane in `.github/workflows/ci-full.yml`.
+# owned by `packaging-smoke-serial`, and the installed-oracle cohort
+# additionally by the narrower `packaging-smoke-installed-oracles`.
 # `serial` is excluded by MARKER rather than left to the scheduler: an item
 # selected here would be held out of the run by the collection hook behind a
-# warning, which is a green summary over a test that never executed. Guarded by
-# `dev/packaging/tests/test_preflight_recipe_selection.py`.
+# warning, which is a green summary over a test that never executed. `perf` is
+# excluded by its registered policy, which holds it out of every per-push lane.
+# Guarded by `dev/packaging/tests/test_preflight_recipe_selection.py`.
 [doc('Verify the packaging preflight command contracts (dependency surface, source data, Docker/Scoop/Homebrew workflows).')]
 [group('packaging')]
 packaging-smoke-preflight-tests:
@@ -508,17 +508,17 @@ packaging-smoke-installed-oracles: packaging-build-python-cohort
 # gets a green result that never touched them. Depends on the cohort because
 # several of these install the built wheels; the ones that do not are
 # unaffected by having it.
-# The expression keys on `serial` rather than on `integration and serial`: two
-# serial contracts here carry `unit`, and the narrower expression left them
+# The expression keys on `serial` alone rather than on `integration and serial`:
+# two serial contracts here carry `unit`, and the narrower expression left them
 # owned by nothing that runs them -- selected by the preflight lane, held out
-# of it by the scheduler, and outside this one. `not perf` states the
-# registered policy that enrols the benchmark in the ci-full `-m perf` lane
-# instead. Guarded by
+# of it by the scheduler, and outside this one. `perf` is deliberately NOT
+# excluded: this recipe is the serving-path benchmark's only owner, and
+# narrowing it away from that cohort makes those tests unreachable. Guarded by
 # `dev/packaging/tests/test_preflight_recipe_selection.py`.
 [doc('Run the serial packaging contracts the preflight lane excludes.')]
 [group('packaging')]
 packaging-smoke-serial: packaging-build-python-cohort
-    @uv run --no-sync pytest -q -n0 -m "serial and not perf" dev/packaging/tests
+    @uv run --no-sync pytest -q -n0 -m "serial" dev/packaging/tests
 
 # Local release-artifact smoke gates that do not need host package-manager access.
 # The campaign driver builds the cohort once and runs the flavor lanes

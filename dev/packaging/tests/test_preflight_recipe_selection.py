@@ -546,9 +546,14 @@ def test_every_serial_test_here_is_run_by_some_single_process_invocation() -> No
     workers contributes nothing here, because what it contributes is a
     warning; only an invocation that can actually run the test counts as its
     owner.
+
+    The ``perf`` cohort is NOT subtracted here, unlike in the selection
+    assertions. That exclusion is a policy about which lanes ENROL the
+    benchmark, and the whole benchmark cohort is serial: subtracting it would
+    let its only single-process owner narrow away from it and leave seven
+    tests that nothing anywhere runs.
     """
     serial_cohort = _directory_selection("serial")
-    held_out_by_policy = _directory_selection("perf")
 
     assert serial_cohort, "collected no serial tests; this gate would pass vacuously"
 
@@ -561,7 +566,7 @@ def test_every_serial_test_here_is_run_by_some_single_process_invocation() -> No
     for invocation in single_process:
         executed |= _collect(f"'{invocation.name}'", invocation.arguments)
 
-    never_run = serial_cohort - held_out_by_policy - executed
+    never_run = serial_cohort - executed
 
     assert not never_run, (
         f"{len(never_run)} serial-marked test(s) in {_TARGET_DIRECTORY} are run by no {_NO_WORKERS} invocation. "

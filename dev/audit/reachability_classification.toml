@@ -1015,3 +1015,11 @@ resolved = false
 remedy_requires_decision = true
 symbols = ["AttachmentCatalogue", "CertificateSourceNoActiveBucketError", "ModeloEditPermittedSurfacePageRequestV1", "ModeloEditPermittedSurfacePageV1", "ModeloWorkspaceVersionHeader", "ProfileImportResult", "SchemaModuleLoadFailure", "ModeloDraftBuilderAdapter", "ModeloWorkspaceAtomicProjectionPortV1"]
 evidence = "Each is exported and referenced nowhere outside the module that defines it, so nothing constructs, subclasses or annotates with it. Read as behaviour rather than as code, each names something the product does not do: AttachmentCatalogue verifies that every mapping key equals the embedded attachment_id so lookups cannot drift, and no lookup goes through it; SchemaModuleLoadFailure records a module and its error, and no schema load failure is recorded; ProfileImportResult is the declared outcome of importing a portable bundle, and portable import returns no such outcome; CertificateSourceNoActiveBucketError is raised by nothing, so that refusal is not detected. Deleting them would remove the record that the capability was designed, which is the same argument the unapplied threshold cluster records. The remedy is to wire each to the caller it was written for or to withdraw it deliberately, and both are owner decisions."
+
+[[symbol_cluster]]
+name = "ledger command census read only by its conformance gate"
+class = "design-time-authority"
+area = "entrypoints"
+resolved = true
+symbols = ["LEDGER_CLI_COMMAND_CENSUS"]
+evidence = "An immutable projection of every executable Ledger command, built from the CommandSpec facts in its own module and read by dev/quality/clitui_ledger_capability_matrix.py to check the shipped surface against the declaration. Having a conformance gate as its only reader is how a locked design is enforced, and relocating the projection into dev/ would move the product's own declaration out of the product, so this is the design-time-authority shape rather than an unused constant. Recorded resolved: no wiring is missing and nothing is to be deleted."
