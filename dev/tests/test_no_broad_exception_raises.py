@@ -18,6 +18,7 @@ from cadrumo.tests import (
     repo_relative,
 )
 
+from ..quality.unread_inputs import report_unread
 from ._project_inventory import all_test_control_modules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -255,10 +256,23 @@ def _contains_broad_exception_root(node: ast.AST, broad_exception_names: set[str
 
 
 def _b017_suppression_lines(path: Path) -> list[int]:
-    """Return source line numbers carrying a broad-raise lint suppression."""
+    """Return source line numbers carrying a broad-raise lint suppression.
+
+    A file that cannot be read yields no lines, and these lines ARE the
+    violations this gate reports, so an unreadable module contributes nothing
+    and reads exactly like a compliant one. The empty return stays -- a peer
+    deleting a module mid-walk must not red a shared gate -- but the skip is
+    announced so a clean verdict cannot silently cover it.
+    """
     try:
         source = path.read_text(encoding="utf-8", errors="replace")
-    except OSError:
+    except OSError as refusal:
+        report_unread(
+            "broad-raise suppression scan",
+            "this module was not searched, so a broad-raise suppression inside it would not "
+            "appear in the violations below",
+            [f"{path} ({refusal})"],
+        )
         return []
     return [
         token.start[0]

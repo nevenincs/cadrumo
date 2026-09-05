@@ -1,35 +1,21 @@
 """Screen: docstring cross-references that name nothing.
 
-A Sphinx role in a docstring -- ``:func:`resolve_read_id```, ``:class:`Widget```
--- is a claim that the named symbol exists. Nothing checks it, so the claim
+A Sphinx role in a docstring -- ``:func:`widget```, ``:class:`Widget``` -- is a
+claim that the named symbol exists. Nothing else checks it, so the claim
 survives the symbol: a rename updates the code and leaves the prose, and a
-deletion leaves a reference to something gone.
+deletion leaves a reference to something gone. Documentation naming a dead
+symbol is worse than none, because it is confidently wrong.
 
-That is not cosmetic. This project has hit the consequence repeatedly. A
-comment explained what a constant deliberately was NOT, months after that
-constant was deleted. A module docstring told readers that the ledger read
-verbs use ``resolve_read_id``, while the read verbs called a different function
-and ``resolve_read_id`` itself had no caller at all -- so the prose pointed at
-the copy nothing ran, and reading it would have sent a maintainer to the wrong
-code. Documentation that names a dead symbol is worse than none: it is
-confidently wrong.
+A finding is a question, never a patch. Some references are accurate statements
+about the PAST, naming a module or function that correctly no longer exists --
+a sentence about where code used to live, or why two paths were merged.
+Rewriting one turns a true statement about history into a false one about the
+present, so read each row before touching it.
 
-A finding is a question, never a patch. Some of these references are accurate
-statements about the PAST: ``core.decimal.formatting`` records that it
-"consolidates the four independent ``_format_decimal`` copies that previously
-lived in :mod:`_censo_live`, :mod:`_reconcile`, :mod:`_projection` and
-:mod:`_translator`" -- four modules that no longer exist, named correctly. An
-automated rewrite to the surviving public spellings was attempted here and
-reverted: it repointed whichever of the four happened to have a public
-namesake, turning a true sentence about history into a false one about the
-present, and leaving the list internally inconsistent. Read each row before
-touching it.
-
-Only names this package could own are checked. A reference rooted at
-``cadrumo`` must resolve to a module or a symbol the tree defines. A bare name
-is checked only when the tree neither defines nor imports it anywhere, which is
-what keeps ``:class:`Path``` and ``:class:`BaseModel``` out of the report
-without an allowlist to maintain.
+Only names this package could own are checked. A reference rooted at the
+package must resolve to a module or a symbol the tree defines. A bare name is
+checked only when the tree neither defines nor imports it anywhere, which keeps
+third-party names out of the report without an allowlist to maintain.
 
 The screen exits 0 whatever it finds; the gate that refuses is a test.
 """

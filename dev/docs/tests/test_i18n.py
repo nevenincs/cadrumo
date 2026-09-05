@@ -6,7 +6,8 @@ from pathlib import Path, PurePosixPath, PureWindowsPath
 
 import pytest
 
-from ..i18n import prune_orphan_catalogues
+from ..._paths import REPO_ROOT
+from ..i18n import _EXCLUDED_FILES, prune_orphan_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -83,3 +84,27 @@ def test_prune_orphan_catalogues_rejects_language_path_traversal(tmp_path: Path,
         prune_orphan_catalogues(tmp_path, (language,))
 
     assert outside_catalogue.read_text(encoding="utf-8") == "must remain\n"
+
+
+def test_every_declared_file_exclusion_names_a_page_that_exists() -> None:
+    """A suppression that suppresses nothing still reads as a reviewed decision.
+
+    The one entry this set used to hold named a docs-root process brief that was
+    retired in commit 06e03da6a4. The file went; the exemption stayed, excluding
+    nothing. That is precisely the "second registry to fall out of step" the
+    generated-marker rule in the same module is written to avoid, so the entries
+    are checked against the tree rather than trusted.
+
+    Vacuously true while the set is empty, which is the current and correct
+    state; it bites the moment someone adds a name.
+    """
+    docs_root = REPO_ROOT / "docs"
+    assert docs_root.is_dir(), f"no docs tree at {docs_root}; this gate would prove nothing"
+
+    missing = sorted(name for name in _EXCLUDED_FILES if not any(docs_root.rglob(name)))
+
+    assert not missing, (
+        "these files are excluded from the localized surface but no longer exist, so the "
+        f"exemption is inert and unreviewable: {missing}"
+    )
+

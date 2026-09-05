@@ -1,19 +1,12 @@
 # Docstring references that name something absent, by module.
 #
-# FOUR of these are accurate statements about the PAST: a sentence explaining
-# what a module consolidated, or why two read paths were merged, naming code
-# that correctly no longer exists. Rewriting one would turn a true statement
-# about history into a false one about the present.
+# NOT a debt ledger. A reference here can be correct BECAUSE it names something
+# absent: a sentence recording what a module consolidated, or why two read paths
+# were merged, naming code that is properly gone. Rewriting one would turn a
+# true statement about history into a false one about the present.
 #
-# ONE is unresolved debt rather than history. entrypoints/tui/components/theme
-# says its presentation tokens are "delivered through cadrumo_css_variables,
-# which every Cadrumo App returns from get_css_variables" -- and neither that
-# function nor any get_css_variables implementation exists in the tree. It sits
-# inside the deferred TUI cluster, so establishing how the tokens actually
-# reach a surface belongs to that campaign. It became visible only when this
-# screen learned to read attribute docstrings; it is pre-existing, not new.
-#
-# Shrink-only. The gate exists to keep any OTHER kind from joining these.
+# Entries that are NOT of that kind are real debt and should shrink. The gate
+# exists to keep new ones from joining either group. Shrink-only.
 
 [files]
 "adapters/persistence/storage/envelope/secure_bound_repository.py" = 1

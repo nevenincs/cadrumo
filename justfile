@@ -294,25 +294,18 @@ check-unreachable-ratchet:
 check-unused-symbol-ratchet:
     @uv run --no-sync python -m dev.quality.unused_symbol_ratchet
 
-# Verify no shipped module gained a citation of a Vaultspec rule slug. The
-# vault is removable scaffolding, so a docstring naming a rule reads as a
-# reference to nothing once the harness is absent. The baseline in
-# dev/quality/vault_citation_ratchet.toml may only shrink; retiring the
-# existing citations needs an explicit repository-wide migration, but a NEW
-# one fails here.
-[group('static-checks')]
-check-vault-citation-ratchet:
-    @uv run --no-sync python -m dev.quality.vault_citation_ratchet
-
-# Verify no shipped module gained a docstring reference that names nothing.
-# A Sphinx role claims the named symbol exists; nothing checked that, so the
-# claim outlived the symbol 87 times. The baseline in
-# dev/quality/docstring_reference_ratchet.toml holds the four that are
-# CORRECT because they name something absent -- sentences about what a module
-# consolidated, naming code that is properly gone.
 [group('static-checks')]
 check-docstring-reference-ratchet:
     @uv run --no-sync python -m dev.quality.docstring_reference_ratchet
+
+# Verify no module gained a published name that nothing collects. A name in
+# __all__ that no non-test module imports AND the reachability audit reports
+# unused is a promise nothing takes up. Resolving the 368 already recorded is
+# a published-surface decision for an owner; this refuses a NEW one, which is
+# the half needing no decision.
+[group('static-checks')]
+check-unconsumed-export-ratchet:
+    @uv run --no-sync python -m dev.quality.unconsumed_export_ratchet
 
 # Verify every persistence surface a product command READS still has a
 # production writer. The baseline in dev/quality/write_path_backlog.toml may

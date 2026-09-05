@@ -16,6 +16,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 
+from ...quality.unread_inputs import report_unread
 from ..analysis.corpus import bundled_modelo_ids
 from ..analysis.rule_grounding_coverage import KINDS, revision_findings, screen_authority
 from ..analysis.type_convention_notes import revision_findings as type_conventions
@@ -209,19 +210,39 @@ def test_a_revision_stating_conventions_but_needing_no_rule_yields_nothing(
     from ..analysis.footnote_only_wire_facts import revision_findings as fields_needing_rules
 
     checked = 0
+    total = 0
+    unreadable: list[str] = []
     for modelo in bundled_modelo_ids():
         for revision_id in authority.modelo(modelo).revisions:
+            total += 1
             revision = str(revision_id)
             try:
                 needed = fields_needing_rules(authority, modelo=modelo, revision=revision)
                 conventions = type_conventions(authority, modelo=modelo, revision=revision)
-            except (ValueError, KeyError, FileNotFoundError, OSError):
+            except (ValueError, KeyError, FileNotFoundError, OSError) as refusal:
+                # These screens refuse a revision that declares nothing they can
+                # read, which is honest -- but the refusals were dropped here
+                # without a count, so a bare "checked > 0" passed on eleven
+                # revisions while saying nothing about the ninety-seven it never
+                # reached. Announced, not refused: the refusal is the screens'
+                # own correct answer, not a broken input.
+                unreadable.append(f"{modelo}/{revision} ({type(refusal).__name__})")
                 continue
             if needed or not conventions:
                 continue
             assert revision_findings(authority, modelo=modelo, revision=revision) == ()
             checked += 1
-    assert checked, "no revision states a convention without needing a rule, so this proves nothing"
+
+    report_unread(
+        "convention-without-rule join",
+        "these revisions declare nothing the two screens can read, so the property below was "
+        "never asserted over them",
+        unreadable,
+    )
+    assert checked, (
+        f"no revision states a convention without needing a rule, so this proves nothing "
+        f"({checked} asserted of {total} revisions, {len(unreadable)} unreadable by the screens)"
+    )
 
 
 def test_the_worklist_groups_fields_by_the_note_that_grounds_them() -> None:

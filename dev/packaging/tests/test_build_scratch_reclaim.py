@@ -103,7 +103,13 @@ def _foreign_owner_name(family: ScratchFamily, body: str) -> str:
     only way this exercises the probe rather than a guess about it.
     """
     finished = subprocess.Popen([sys.executable, "-c", "pass"])
-    finished.wait()
+    # Bounded: an interpreter that does nothing exits at once, but a bare wait()
+    # is unbounded, and a test blocked in wait() is the one shape the repository's
+    # per-test ceiling cannot interrupt - the thread method cannot unwind it, so
+    # the worker exits uncleanly and --max-worker-restart=0 stops the session
+    # naming a test that was never the defect. TimeoutExpired here is loud and
+    # attributable instead.
+    finished.wait(timeout=60)
     return f"{family.prefix}{finished.pid}-{body}{family.suffix}"
 
 

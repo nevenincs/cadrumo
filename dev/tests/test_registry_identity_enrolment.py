@@ -35,6 +35,7 @@ from cadrumo.domain.calculations.registry.identity import (
 from cadrumo.tests import python_files_under
 
 from .._paths import REPO_ROOT as _REPOSITORY_ROOT
+from ..quality.unread_inputs import report_unread
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -64,7 +65,19 @@ def _module_asts() -> Iterator[tuple[Path, ast.Module]]:
     for path in modules:
         try:
             yield path, ast.parse(path.read_text(encoding="utf-8"), str(path))
-        except (OSError, SyntaxError):  # pragma: no cover - a broken module is another gate's finding
+        except (OSError, SyntaxError) as refusal:  # pragma: no cover - a broken module is another gate's finding
+            # Ownership of the breakage is elsewhere; the CONSEQUENCE is here. A
+            # module that never parses is never searched, so an identity spelling
+            # inside it is not found and every assertion below reads as clean. The
+            # corpus guard above counts LISTED modules, not parsed ones, so it
+            # cannot notice. Announced rather than refused because `dev` is in
+            # scope and a peer mid-edit must not red a shared gate.
+            report_unread(
+                "first-party identity enrolment scan",
+                "this module was not parsed, so an identity spelling inside it would not appear "
+                "in any finding below",
+                [f"{path} ({type(refusal).__name__})"],
+            )
             continue
 
 

@@ -35,9 +35,11 @@ from pathlib import Path
 import pytest
 
 from ..._paths import REPO_ROOT
+from ...quality.unread_inputs import report_unread
 from .._base_image import dockerfile_path, linux_base_image
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
 
 _REPO_ROOT = REPO_ROOT
 
@@ -75,6 +77,10 @@ def test_declared_base_pins_the_distribution() -> None:
 _BARE_LITERAL = re.compile(r"python:3\.13[-\w.]*")
 _SKIPPED_DIRECTORIES = frozenset({".git", ".venv", "var", "dist", "node_modules", "__pycache__", ".vault"})
 
+#: Below this the walk has stopped covering the tree. Live: 7,275 surfaces. A
+#: floor rather than a pinned count, so adding or deleting files never edits it.
+_MINIMUM_WALKED_SURFACES = 1000
+
 
 def _declaring_surfaces() -> list[tuple[Path, Path]]:
     """Every file in the tree that could *declare* a container base image.
@@ -109,7 +115,17 @@ def _base_image_bindings(surface: Path) -> list[tuple[int, str]]:
     """
     try:
         text = surface.read_text(encoding="utf-8")
-    except (UnicodeDecodeError, OSError):
+    except (UnicodeDecodeError, OSError) as refusal:
+        # An unreadable surface yields no bindings, which is indistinguishable
+        # from one that derives the tag properly. The walk covers 7,275 surfaces
+        # and every one reads today, so a failure here is worth naming rather
+        # than absorbing into a clean result.
+        report_unread(
+            "base-image singularity walk",
+            "this surface was not read, so a re-declared base image literal inside it would "
+            "not appear in the offenders below",
+            [f"{surface} ({type(refusal).__name__})"],
+        )
         return []
     if not _BARE_LITERAL.search(text):
         return []
@@ -151,9 +167,16 @@ def test_no_surface_restates_a_bare_python_base_literal() -> None:
     cannot go stale in either direction: a surface added tomorrow is covered
     without editing a list, and one removed simply stops being visited.
     """
+    surfaces = _declaring_surfaces()
+
+    assert len(surfaces) > _MINIMUM_WALKED_SURFACES, (
+        f"the walk found only {len(surfaces)} surface(s); below this it has stopped covering "
+        "the tree and an empty offender list says nothing about whether the literal is restated"
+    )
+
     offenders = [
         f"{relative}:{line_number}: {text}"
-        for surface, relative in _declaring_surfaces()
+        for surface, relative in surfaces
         for line_number, text in _base_image_bindings(surface)
     ]
 

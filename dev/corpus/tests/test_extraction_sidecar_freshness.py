@@ -290,18 +290,36 @@ def test_pdf_corpus_text_sidecars_equal_current_production_extraction() -> None:
     assert not failures, "PDF corpus text differs from production extraction:\n" + "\n".join(failures)
 
 
+#: Below this the record-design walk has stopped covering the corpus.
+_MINIMUM_WORKBOOKS = 50
+
+
 def test_every_record_design_workbook_has_extraction_sidecars() -> None:
     workbook_suffixes = {".xls", ".xlsm", ".xlsx"}
     missing: list[str] = []
     workbook_root = _CORPUS_ROOT / "aeat_official" / "disenos_registro"
 
+    assert workbook_root.is_dir(), (
+        f"the record-design corpus is not at {workbook_root}; a relocated root walks nothing "
+        "and this gate would report every workbook sidecar-complete"
+    )
+
+    examined = 0
     for source in scan_directory(workbook_root, recursive=True, select=DirectoryEntryKind.FILES):
         if source.suffix.lower() not in workbook_suffixes:
             continue
+        examined += 1
         json_sidecars = scan_directory(source.parent, pattern=f"{source.name}*.extracted.json")
         if not json_sidecars or any(not path.with_suffix(".md").is_file() for path in json_sidecars):
             missing.append(source.relative_to(_REPO_ROOT).as_posix())
 
+    # The sibling freshness gates each guard their corpus; this one did not, so
+    # an empty walk read exactly like a complete one. A floor, not a pinned
+    # count: 116 workbooks ship today.
+    assert examined >= _MINIMUM_WORKBOOKS, (
+        f"only {examined} record-design workbook(s) were walked, so an empty finding list "
+        "says nothing about whether the corpus carries its extraction sidecars"
+    )
     assert not missing, "record-design workbooks without extraction sidecars:\n" + "\n".join(missing)
 
 

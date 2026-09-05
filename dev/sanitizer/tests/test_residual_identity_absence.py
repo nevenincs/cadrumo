@@ -137,7 +137,7 @@ _SYNTHETIC_IBAN = "ES6011111111111111111111"
 _SYNTHETIC_NAME = "APELLIDO APELLIDO NOMBRE"
 
 
-def _real_corpus_fixtures() -> list[tuple[Path, Path]]:
+def _real_corpus_fixtures() -> tuple[list[tuple[Path, Path]], list[str]]:
     """Every committed artefact whose sidecar declares real provenance.
 
     Walks the whole package, not one fixture directory. The module docstring
@@ -162,6 +162,7 @@ def _real_corpus_fixtures() -> list[tuple[Path, Path]]:
     its metadata exactly as a PDF can in a content stream.
     """
     pairs: list[tuple[Path, Path]] = []
+    unreadable: list[str] = []
     seen: set[Path] = set()
     for sidecar_path in scan_directory(SRC_CADRUMO, pattern="*.json", recursive=True):
         if "__pycache__" in sidecar_path.parts:
@@ -175,15 +176,22 @@ def _real_corpus_fixtures() -> list[tuple[Path, Path]]:
             continue
         try:
             sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, UnicodeDecodeError):
+        except (json.JSONDecodeError, UnicodeDecodeError) as refusal:
+            # A sidecar that will not parse cannot be asked whether its target is
+            # real corpus, so the pair silently leaves this scan entirely. With
+            # four fixtures in scope, one unreadable sidecar removes a quarter of
+            # the protected corpus and the gate still reports clean. These are
+            # committed files, so a broken one is a defect and is refused below
+            # rather than skipped.
+            unreadable.append(f"{sidecar_path}: {refusal}")
             continue
         if isinstance(sidecar, dict) and sidecar.get("provenance") == "real_corpus":
             seen.add(target)
             pairs.append((target, sidecar_path))
-    return pairs
+    return pairs, unreadable
 
 
-_REAL_CORPUS_FIXTURES = _real_corpus_fixtures()
+_REAL_CORPUS_FIXTURES, _UNREADABLE_SIDECARS = _real_corpus_fixtures()
 
 
 def test_real_corpus_fixture_scope_is_not_empty() -> None:
@@ -196,6 +204,25 @@ def test_real_corpus_fixture_scope_is_not_empty() -> None:
     assert _REAL_CORPUS_FIXTURES, (
         "no committed fixture declares provenance='real_corpus', so the residual-identity "
         "scan has nothing to check and its passing result is vacuous"
+    )
+
+
+def test_every_committed_sidecar_can_be_read() -> None:
+    """A sidecar that will not parse takes its fixture out of this scan silently.
+
+    The provenance question is asked OF the sidecar, so an unparseable one is
+    not a fixture with unknown provenance -- it is a fixture that never enters
+    the scope at all, and the scan then reports clean over a corpus it quietly
+    shrank. Four fixtures carry ``provenance='real_corpus'`` today, so one
+    unreadable sidecar removes a quarter of what this gate protects.
+
+    Refused rather than announced: all 1,142 committed sidecars parse, and a
+    committed file that does not is a broken tracked artefact, not a racing
+    input a peer is mid-write on.
+    """
+    assert not _UNREADABLE_SIDECARS, (
+        "these committed sidecars could not be parsed, so the fixtures beside them were "
+        f"never asked whether they are real corpus and were never scanned: {_UNREADABLE_SIDECARS}"
     )
 
 

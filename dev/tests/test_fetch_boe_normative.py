@@ -310,11 +310,28 @@ def test_canonicalisation_normalises_crlf_and_leaves_legal_text_alone() -> None:
     assert canonical_lf_bytes(b"a lone \r stays") == b"a lone \r stays"
 
 
+#: Below this the normative walk has stopped covering the corpus. A floor
+#: rather than a pinned count: 476 bundled normatives ship today.
+_MINIMUM_BUNDLED_NORMATIVES = 100
+
+
 def test_every_bundled_normative_is_already_canonical() -> None:
     """The corpus the registry pins hashes identically on Windows and Unix."""
+    assert _CORPUS.is_dir(), (
+        f"the bundled normative corpus is not at {_CORPUS}; a relocated root walks nothing "
+        "and this gate would report every normative canonical"
+    )
+
+    walked = tuple(scan_directory(_CORPUS, pattern="*.html"))
+
+    assert len(walked) >= _MINIMUM_BUNDLED_NORMATIVES, (
+        f"only {len(walked)} bundled normative(s) were walked; below this an empty finding "
+        "list says nothing about whether the corpus still hashes identically across platforms"
+    )
+
     noncanonical = [
         path.name
-        for path in scan_directory(_CORPUS, pattern="*.html")
+        for path in walked
         if canonical_lf_bytes(payload := path.read_bytes()) != payload
     ]
 

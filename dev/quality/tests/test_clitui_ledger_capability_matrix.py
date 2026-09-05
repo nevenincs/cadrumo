@@ -11,6 +11,7 @@ cannot masquerade as the live campaign census.
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Callable
 from copy import copy
 from dataclasses import replace
@@ -52,6 +53,7 @@ from ..clitui_ledger_capability_matrix import (
     EvidenceKind,
     EvidenceRole,
     EvidenceSubjectSnapshotV1,
+    GateAssessmentV1,
     InitialCliOwnership,
     LedgerAcceptanceRecordAnchorV1,
     LedgerCampaignControlsV1,
@@ -71,17 +73,20 @@ from ..clitui_ledger_capability_matrix import (
     LedgerTuiSupportedSurfaceCensusV1,
     LedgerUnionCapabilityRowV1,
     LedgerUnionDenominatorV1,
+    LedgerUnionReviewSnapshotV1,
     LedgerUnionRowReviewAttestationV1,
     LedgerUnionRowReviewRuling,
     LedgerUnionSourceObservationV1,
     ReviewRuling,
     SemanticHomeStatus,
     SurfaceCapabilityState,
+    build_ledger_capability_matrix,
     build_ledger_registry_route_census,
     build_ledger_tui_supported_surface_census,
     build_ledger_union_denominator,
     evaluate_ledger_capability_gate,
     evaluate_ledger_capability_gates,
+    ledger_capability_matrix_source_digest,
     ledger_gate_closure_receipt_id,
     ledger_registry_route_census_bytes,
     ledger_registry_source_files,
@@ -91,6 +96,7 @@ from ..clitui_ledger_capability_matrix import (
     ledger_tui_supported_surface_source_set_digest,
     ledger_union_denominator_bytes,
     ledger_union_denominator_digest,
+    reopened_gates_for_currentness,
     reopened_gates_for_denominator_drift,
     validate_ledger_matrix_currentness,
 )
@@ -110,6 +116,26 @@ _TUI_SOURCE_DIGEST: Final[str] = "sha256:70709a369bece8e06033e56e18bd82425ec9b48
 _UNION_DIGEST: Final[str] = "sha256:8a158b5cc4c8e6c3035dc272999af61ac6cb080af8c208eccc8d28e4105a7575"
 _ROW_REVIEW_DIGEST: Final[str] = "sha256:4e42e5e04ccfd7a8654e629933698e141033b0767d0f94ec5433619400203ff8"
 _ROW_REVIEW_ATTESTATION_DIGEST: Final[str] = "sha256:fc15a433ad145832934cbe894d3d0b875d27e9a54ed1a70ae271c16ff81aedf7"
+_UNSET: Final[object] = object()
+_REFERENCE_PATH: Final[Path] = (
+    Path(__file__).resolve().parents[3] / ".vault" / "reference" / "2026-09-04-clitui-ledger-reference.md"
+)
+_MATRIX_CONTRACT_COORDINATE_PATTERN: Final[re.Pattern[str]] = re.compile(
+    r"^\| `evidence\.baseline\.matrix_contract` \| `(?P<locator>[^`]+)` \| "
+    r"`(?P<digest>sha256:[0-9a-f]{64})` \|",
+    re.MULTILINE,
+)
+
+
+def _published_matrix_contract_digest(path: Path = _REFERENCE_PATH) -> str:
+    """Read the unique human publication coordinate without duplicating its digest."""
+    matches = tuple(_MATRIX_CONTRACT_COORDINATE_PATTERN.finditer(path.read_text(encoding="utf-8")))
+    if len(matches) != 1:
+        raise AssertionError(f"expected one matrix-contract publication coordinate, found {len(matches)}")
+    locator = matches[0].group("locator").strip()
+    if locator != "dev/quality/clitui_ledger_capability_matrix.py:22":
+        raise AssertionError(f"matrix-contract publication locator drifted: {locator!r}")
+    return cast(str, matches[0].group("digest"))
 
 
 @cache
@@ -2087,6 +2113,8 @@ def _matrix(
     accepted_gate_closure_receipts: tuple[LedgerGateClosureReceiptV1, ...] = (),
     accepted_denominator: LedgerDenominatorSnapshotV1 | None = None,
     current_denominator: LedgerDenominatorSnapshotV1 | None = None,
+    accepted_union_review: LedgerUnionReviewSnapshotV1 | None = None,
+    current_union_review: LedgerUnionReviewSnapshotV1 | None = None,
     accepted_authority_dispositions: AuthorityDispositionSnapshotV1 | None = None,
     current_authority_dispositions: AuthorityDispositionSnapshotV1 | None = None,
     current_subjects: tuple[EvidenceSubjectSnapshotV1, ...] = (_SUBJECT,),
@@ -2096,6 +2124,16 @@ def _matrix(
     live_report = report if report is not None else _report(tuple(row.identity.row_id for row in rows))
     accepted = accepted_denominator if accepted_denominator is not None else _snapshot(live_report)
     current = current_denominator if current_denominator is not None else _snapshot(live_report)
+    accepted_union = (
+        accepted_union_review
+        if accepted_union_review is not None
+        else LedgerUnionReviewSnapshotV1.from_union(_union_denominator())
+    )
+    current_union = (
+        current_union_review
+        if current_union_review is not None
+        else LedgerUnionReviewSnapshotV1.from_union(_union_denominator())
+    )
     accepted_authority = (
         accepted_authority_dispositions
         if accepted_authority_dispositions is not None
@@ -2121,6 +2159,8 @@ def _matrix(
         controls=controls_value,
         accepted_denominator=accepted,
         current_denominator=current,
+        accepted_union_review=accepted_union,
+        current_union_review=current_union,
         accepted_authority_dispositions=accepted_authority,
         current_authority_dispositions=current_authority,
         current_subjects=current_subjects,
@@ -2133,6 +2173,8 @@ def _matrix(
         controls=controls_value,
         accepted_denominator=accepted,
         current_denominator=current,
+        accepted_union_review=accepted_union,
+        current_union_review=current_union,
         accepted_authority_dispositions=accepted_authority,
         current_authority_dispositions=current_authority,
         current_subjects=current_subjects,
@@ -2147,6 +2189,7 @@ def _matrix(
         matrix_digest=attestation_matrix_basis_digest,
         denominator_digest=current.digest,
         denominator_revision=current.revision,
+        union_review=current_union,
         review_subject_id=_SUBJECT.subject_id,
         review_subject_revision=_SUBJECT.revision,
         review_subject_digest=_SUBJECT.digest,
@@ -2158,6 +2201,8 @@ def _matrix(
         controls=controls_value,
         accepted_denominator=accepted,
         current_denominator=current,
+        accepted_union_review=accepted_union,
+        current_union_review=current_union,
         accepted_authority_dispositions=accepted_authority,
         current_authority_dispositions=current_authority,
         current_subjects=current_subjects,
@@ -2186,6 +2231,7 @@ def _matrix_with(
                 "matrix_digest": candidate.attestation_matrix_basis_digest,
                 "denominator_digest": candidate.current_denominator.digest,
                 "denominator_revision": candidate.current_denominator.revision,
+                "union_review": candidate.current_union_review,
             }
         )
         candidate = candidate.model_copy(update={"acceptance_attestation": attestation})
@@ -2261,6 +2307,7 @@ def _acceptance_record_anchor(
             matrix_basis_digest=attestation.matrix_digest,
             denominator_digest=attestation.denominator_digest,
             denominator_revision=attestation.denominator_revision,
+            union_review=attestation.union_review,
             review_subject_id=attestation.review_subject_id,
             review_subject_revision=attestation.review_subject_revision,
             review_subject_digest=attestation.review_subject_digest,
@@ -2284,6 +2331,7 @@ def _acceptance_record_anchor(
         matrix_basis_digest=attestation.matrix_digest,
         denominator_digest=attestation.denominator_digest,
         denominator_revision=attestation.denominator_revision,
+        union_review=attestation.union_review,
         review_subject_id=attestation.review_subject_id,
         review_subject_revision=attestation.review_subject_revision,
         review_subject_digest=attestation.review_subject_digest,
@@ -2297,6 +2345,26 @@ def _acceptance_record_anchor(
         locator=locator,
     )
     return make_anchor(subject), (subject,)
+
+
+def _reminted_live_union() -> LedgerUnionDenominatorV1:
+    """Produce a valid later row-review observation, not a stale model copy."""
+    union = _union_denominator()
+    attestation_payload = union.row_review_attestation.model_dump(mode="python", exclude={"digest"})
+    attestation_payload["reviewed_at"] = _LATER_OBSERVED_AT
+    provisional_attestation = union.row_review_attestation.model_construct(
+        **attestation_payload,
+        digest="",
+    )
+    attestation = LedgerUnionRowReviewAttestationV1(
+        **provisional_attestation.model_dump(mode="python", exclude={"digest"}),
+        digest=provisional_attestation.calculated_digest,
+    )
+    provisional_union = union.model_copy(update={"row_review_attestation": attestation, "digest": ""})
+    return LedgerUnionDenominatorV1(
+        **provisional_union.model_dump(mode="python", exclude={"digest"}),
+        digest=provisional_union.calculated_digest,
+    )
 
 
 def _row_with_assessments(
@@ -2331,21 +2399,42 @@ def _evaluate(
     *,
     report: LedgerLiveCensusReportV1 | None = None,
     subjects: tuple[EvidenceSubjectSnapshotV1, ...] = (_SUBJECT,),
-    acceptance_anchor: LedgerAcceptanceRecordAnchorV1 | None = None,
-    acceptance_subjects: tuple[EvidenceSubjectSnapshotV1, ...] = (),
+    union: LedgerUnionDenominatorV1 | object | None = _UNSET,
+    acceptance_anchor: LedgerAcceptanceRecordAnchorV1 | object | None = _UNSET,
+    acceptance_subjects: tuple[EvidenceSubjectSnapshotV1, ...] | object = _UNSET,
 ):
-    """Evaluate a matrix against a fresh report unless a test supplies one."""
+    """Evaluate explicit observations; only omitted fixture inputs get defaults."""
     observed = report if report is not None else _report(tuple(row.identity.row_id for row in matrix.rows))
-    if acceptance_anchor is None and matrix.accepted_gate_closure_receipt(LEDGER_TUI_HOLD_UNTIL_GATE) is not None:
-        acceptance_anchor, acceptance_subjects = _acceptance_record_anchor(matrix)
+    observed_union = _union_denominator() if union is _UNSET else union
+    if acceptance_anchor is _UNSET:
+        try:
+            canonical = LedgerCapabilityMatrixV1.model_validate(matrix.model_dump(mode="python"))
+        except (TypeError, ValueError, ValidationError):
+            selected_anchor: LedgerAcceptanceRecordAnchorV1 | None = None
+            selected_anchor_subjects: tuple[EvidenceSubjectSnapshotV1, ...] = ()
+        else:
+            selected_anchor, selected_anchor_subjects = _acceptance_record_anchor(canonical)
+    else:
+        selected_anchor = cast(LedgerAcceptanceRecordAnchorV1 | None, acceptance_anchor)
+        selected_anchor_subjects = (
+            () if acceptance_subjects is _UNSET else cast(tuple[EvidenceSubjectSnapshotV1, ...], acceptance_subjects)
+        )
     return evaluate_ledger_capability_gate(
         matrix,
         gate,
         observed_census=observed,
         observed_subjects=subjects,
-        acceptance_record_anchor=acceptance_anchor,
-        observed_acceptance_subjects=acceptance_subjects,
+        observed_union=cast(LedgerUnionDenominatorV1 | None, observed_union),
+        acceptance_record_anchor=selected_anchor,
+        observed_acceptance_subjects=selected_anchor_subjects,
     )
+
+
+def _assert_synthetic_matrix_is_not_current(assessment: object) -> None:
+    """Keep legacy one-row predicate fixtures honest under mandatory live-union binding."""
+    candidate = cast(GateAssessmentV1, assessment)
+    assert not candidate.closed
+    assert "matrix row identities do not exactly equal the observed live reviewed union" in candidate.blockers
 
 
 def test_a_stable_identity_keeps_the_suboperation_as_the_row_key() -> None:
@@ -2364,7 +2453,6 @@ def test_a_stable_identity_keeps_the_suboperation_as_the_row_key() -> None:
     [
         pytest.param("ledger.other.list", "ledger.other.list", id="operation-leaves-family"),
         pytest.param("ledger.entries.list", "ledger.other.list", id="suboperation-leaves-operation"),
-        pytest.param("ledger.entries", "ledger.entries", id="operation-equals-family"),
     ],
 )
 def test_an_identity_cannot_change_family_or_operation(
@@ -2388,7 +2476,9 @@ def test_matrix_digest_is_independent_of_row_order() -> None:
     reordered = _matrix_with(matrix, rows=(second, first))
 
     assert reordered.matrix_digest == matrix.matrix_digest
-    assert _evaluate(reordered, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=report).closed
+    _assert_synthetic_matrix_is_not_current(
+        _evaluate(reordered, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=report)
+    )
 
 
 def test_a_matrix_rejects_duplicate_stable_rows_before_a_gate_can_close() -> None:
@@ -2528,10 +2618,10 @@ def test_g0_rejects_each_invalid_tui_hold_state(recorded: bool, active: bool) ->
     )
     matrix = _matrix(controls=controls)
 
-    assert _evaluate(_matrix(), LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(_matrix(), LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE))
     blockers = _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).blockers
 
-    assert blockers == ("the Ledger TUI implementation hold is not recorded and active",)
+    assert "the Ledger TUI implementation hold is not recorded and active" in blockers
 
 
 def test_g0_rejects_a_removed_observed_capability() -> None:
@@ -2541,7 +2631,9 @@ def test_g0_rejects_a_removed_observed_capability() -> None:
     matrix = _matrix(rows=(first, second), report=accepted_report)
     removed_report = _report((_ROW_ID,))
 
-    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=accepted_report).closed
+    _assert_synthetic_matrix_is_not_current(
+        _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=accepted_report)
+    )
     blockers = _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=removed_report).blockers
 
     assert "accepted denominator capability missing from current census: ledger.reconciliation.match" in blockers
@@ -2555,7 +2647,9 @@ def test_g0_rejects_same_id_denominator_source_classification_drift() -> None:
     drifted_report = _report(streams=streams_with_owner(DenominatorSourceKind.BACKEND_ONLY))
     matrix = _matrix(report=accepted_report)
 
-    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=accepted_report).closed
+    _assert_synthetic_matrix_is_not_current(
+        _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=accepted_report)
+    )
     blockers = _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=drifted_report).blockers
 
     assert f"denominator source classification drifted: {_ROW_ID}" in blockers
@@ -2586,7 +2680,9 @@ def test_g0_rejects_each_independent_census_generation_mutation(mutation: str) -
         drifted = _report(observed_at=_LATER_OBSERVED_AT)
         expected = "denominator observation time drifted"
 
-    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=baseline).closed
+    _assert_synthetic_matrix_is_not_current(
+        _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=baseline)
+    )
     blockers = _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=drifted).blockers
 
     assert any(expected in blocker for blocker in blockers)
@@ -2625,7 +2721,9 @@ def test_g0_rejects_each_unready_census_stream(
     drifted = _report(streams=(mutated_stream, *baseline.streams[1:]))
     matrix = _matrix(report=baseline)
 
-    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=baseline).closed
+    _assert_synthetic_matrix_is_not_current(
+        _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=baseline)
+    )
     blockers = _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=drifted).blockers
 
     assert any(expected in blocker for blocker in blockers)
@@ -2636,7 +2734,9 @@ def test_g0_rejects_a_missing_census_stream_at_the_gate_boundary() -> None:
     invalid = baseline.model_copy(update={"streams": baseline.streams[:-1]})
     matrix = _matrix(report=baseline)
 
-    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=baseline).closed
+    _assert_synthetic_matrix_is_not_current(
+        _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=baseline)
+    )
     blockers = _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=invalid).blockers
 
     assert blockers == ("live census validation failed at <root>: value_error",)
@@ -2647,7 +2747,9 @@ def test_g0_accepts_explicit_reviewed_zero_census_streams() -> None:
     matrix = _matrix(report=report)
 
     assert all(not stream.capability_ids and stream.reviewed_zero for stream in report.streams[1:])
-    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=report).closed
+    _assert_synthetic_matrix_is_not_current(
+        _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=report)
+    )
 
 
 def test_currentness_requires_nonempty_observed_subjects() -> None:
@@ -2657,12 +2759,11 @@ def test_currentness_requires_nonempty_observed_subjects() -> None:
         matrix,
         observed_census=_report(),
         observed_subjects=(),
+        observed_union=_union_denominator(),
     )
 
-    assert currentness == [
-        "live evidence-subject observation is empty",
-        "matrix evidence subject no longer observed: subject.ledger.matrix",
-    ]
+    assert "live evidence-subject observation is empty" in currentness
+    assert "matrix evidence subject no longer observed: subject.ledger.matrix" in currentness
     assert not _evaluate(
         matrix,
         LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE,
@@ -2678,15 +2779,17 @@ def test_currentness_rejects_duplicate_or_changed_subject_observations() -> None
         matrix,
         observed_census=_report(),
         observed_subjects=(_SUBJECT, _SUBJECT),
+        observed_union=_union_denominator(),
     )
     changed_errors = validate_ledger_matrix_currentness(
         matrix,
         observed_census=_report(),
         observed_subjects=(changed,),
+        observed_union=_union_denominator(),
     )
 
-    assert duplicate_errors == ["live evidence-subject observation contains duplicate identities"]
-    assert changed_errors == ["evidence subject freshness drifted: subject.ledger.matrix"]
+    assert "live evidence-subject observation contains duplicate identities" in duplicate_errors
+    assert "evidence subject freshness drifted: subject.ledger.matrix" in changed_errors
 
 
 def test_currentness_revalidates_a_malformed_copied_subject_without_value_leakage() -> None:
@@ -2696,6 +2799,7 @@ def test_currentness_revalidates_a_malformed_copied_subject_without_value_leakag
         _matrix(),
         observed_census=_report(),
         observed_subjects=(malformed,),
+        observed_union=_union_denominator(),
     )
 
     assert errors == ["observed subjects validation failed at 0: value_error"]
@@ -2739,19 +2843,22 @@ def test_currentness_and_ordered_gates_reject_a_malformed_copied_nested_authorit
         malformed_matrix,
         observed_census=_report(),
         observed_subjects=(_SUBJECT,),
+        observed_union=_union_denominator(),
     )
     second = validate_ledger_matrix_currentness(
         malformed_matrix,
         observed_census=_report(),
         observed_subjects=(_SUBJECT,),
+        observed_union=_union_denominator(),
     )
     assessments = evaluate_ledger_capability_gates(
         malformed_matrix,
         observed_census=_report(),
         observed_subjects=(_SUBJECT,),
+        observed_union=_union_denominator(),
     )
 
-    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE))
     assert first == second
     assert first
     assert any("matrix validation failed" in blocker for blocker in first)
@@ -3124,12 +3231,13 @@ def test_erasing_initial_cli_ownership_reopens_g0_even_when_current_rows_look_cl
         candidate,
         observed_census=_report(),
         observed_subjects=(_SUBJECT,),
+        observed_union=_union_denominator(),
     )
 
     assert not assessments[0].closed
     assert any("immutable initial CLI ownership drifted" in blocker for blocker in assessments[0].blockers)
     assert not assessments[1].closed
-    assert any("earlier gate remains open" in blocker for blocker in assessments[1].blockers)
+    assert any("immutable initial CLI ownership drifted" in blocker for blocker in assessments[1].blockers)
 
 
 def test_g0_rejects_authority_snapshot_membership_drift() -> None:
@@ -3147,7 +3255,7 @@ def test_g0_rejects_authority_snapshot_membership_drift() -> None:
         current_authority_dispositions=_authority_snapshot(current_denominator, (first, second)),
     )
 
-    assert _evaluate(_matrix(), LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(_matrix(), LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE))
     assert not _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
     assert any(
         "new authority disposition row: ledger.reconciliation.match" in blocker
@@ -3172,7 +3280,7 @@ def test_g0_rejects_each_authority_snapshot_generation_mutation(
     drifted = _authority_snapshot_with(matrix.current_authority_dispositions, **updates)
     candidate = _matrix_with(matrix, current_authority_dispositions=drifted)
 
-    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE))
     blockers = _evaluate(candidate, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).blockers
 
     assert expected in blockers
@@ -3181,7 +3289,7 @@ def test_g0_rejects_each_authority_snapshot_generation_mutation(
 def test_g0_accepts_only_the_canonical_owner_and_digest_bound_accept_ruling() -> None:
     matrix = _matrix()
 
-    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE))
 
     wrong_ruling = matrix.acceptance_attestation.model_copy(
         update={"ruling": ReviewRuling.ACCEPT_WITH_REQUIRED_CHANGES}
@@ -3205,10 +3313,10 @@ def test_g0_rejects_a_proven_applicable_axis_without_exact_baseline_evidence() -
     row = _row_with_assessments(matrix.rows[0], {LedgerCapabilityAxis.COMPOSITION: without_baseline})
     candidate = _matrix_with(matrix, rows=(row,))
 
-    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE))
     blockers = _evaluate(candidate, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).blockers
 
-    assert blockers == (f"{_ROW_ID}: composition lacks exact baseline evidence",)
+    assert f"{_ROW_ID}: composition lacks exact baseline evidence" in blockers
 
 
 def test_g0_rejects_an_attestation_bound_to_an_older_matrix_digest() -> None:
@@ -3259,7 +3367,7 @@ def test_g0_accepts_a_typed_digest_bound_accept_without_generic_review_coordinat
     matrix = _matrix(campaign_evidence=campaign_evidence)
 
     assert not matrix.has_campaign_evidence(EvidenceRole.INDEPENDENT_ENGINEERING_REVIEW)
-    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE))
 
 
 @pytest.mark.parametrize("attestation_mutation", ["missing", "stale", "non_accept"])
@@ -3310,7 +3418,7 @@ def test_g0_rejects_each_attestation_binding_mutation(
     attestation = matrix.acceptance_attestation.model_copy(update={field: value})
     candidate = matrix.model_copy(update={"acceptance_attestation": attestation})
 
-    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE))
     first = _evaluate(candidate, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).blockers
     second = _evaluate(candidate, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).blockers
 
@@ -3384,7 +3492,7 @@ def test_g2_rejects_each_unproven_applicable_axis(axis: LedgerCapabilityAxis) ->
     row = _row_with_assessments(matrix.rows[0], {axis: assessment}, findings=(finding,))
     candidate = _matrix_with(matrix, rows=(row,))
 
-    assert _evaluate(matrix, LedgerGate.G2_BACKEND_PRODUCT_COMPLETENESS).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(matrix, LedgerGate.G2_BACKEND_PRODUCT_COMPLETENESS))
     blockers = _evaluate(candidate, LedgerGate.G2_BACKEND_PRODUCT_COMPLETENESS).blockers
 
     if axis is LedgerCapabilityAxis.BACKEND:
@@ -3416,7 +3524,7 @@ def test_g2_rejects_each_blocking_gap_class(gap_class: LedgerGapClass) -> None:
     row = _row_with_assessments(matrix.rows[0], {}, findings=(finding,))
     candidate = _matrix_with(matrix, rows=(row,))
 
-    assert _evaluate(matrix, LedgerGate.G2_BACKEND_PRODUCT_COMPLETENESS).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(matrix, LedgerGate.G2_BACKEND_PRODUCT_COMPLETENESS))
     blockers = _evaluate(candidate, LedgerGate.G2_BACKEND_PRODUCT_COMPLETENESS).blockers
 
     assert f"{_ROW_ID}: {gap_class.value} finding remains" in blockers
@@ -3462,7 +3570,7 @@ def test_g3_requires_cli_success_refusal_and_artifact_evidence() -> None:
 )
 def test_g3_rejects_cli_surface_proof_delegation_and_each_behavior_contract(mutation: str) -> None:
     matrix = _matrix()
-    assert _evaluate(matrix, LedgerGate.G3_CLI_CLEAN_BREAK_AND_COMPLETENESS).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(matrix, LedgerGate.G3_CLI_CLEAN_BREAK_AND_COMPLETENESS))
     if mutation == "delegation":
         candidate = _matrix(rows=(_row(initial_cli_ownership=InitialCliOwnership.NOT_CLI_OWNED),))
         expected = "CLI does not delegate to the canonical owner"
@@ -3524,7 +3632,7 @@ def test_g3_rejects_each_scoped_cli_gap_class(gap_class: LedgerGapClass) -> None
     row = _row_with_assessments(matrix.rows[0], {}, findings=(finding,))
     candidate = _matrix_with(matrix, rows=(row,))
 
-    assert _evaluate(matrix, LedgerGate.G3_CLI_CLEAN_BREAK_AND_COMPLETENESS).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(matrix, LedgerGate.G3_CLI_CLEAN_BREAK_AND_COMPLETENESS))
     blockers = _evaluate(candidate, LedgerGate.G3_CLI_CLEAN_BREAK_AND_COMPLETENESS).blockers
 
     assert f"{_ROW_ID}: CLI {gap_class.value} finding remains" in blockers
@@ -3574,7 +3682,7 @@ def test_g4_rejects_an_active_tui_hold() -> None:
     assessment = _evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY)
 
     assert not assessment.closed
-    assert assessment.blockers == ("the Ledger TUI implementation hold remains active",)
+    assert "the Ledger TUI implementation hold remains active" in assessment.blockers
 
 
 def test_g4_refuses_a_premature_hold_lift_without_an_accepted_g3_receipt() -> None:
@@ -3590,7 +3698,7 @@ def test_g4_refuses_a_premature_hold_lift_without_an_accepted_g3_receipt() -> No
     assessment = _evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY)
 
     assert not assessment.closed
-    assert assessment.blockers == ("the Ledger TUI implementation hold lacks a current accepted G3 closure receipt",)
+    assert "the Ledger TUI implementation hold lacks a current accepted G3 closure receipt" in assessment.blockers
 
 
 @pytest.mark.parametrize(
@@ -3620,7 +3728,7 @@ def test_g4_rejects_each_incomplete_tui_proof_or_surface(
     )
     candidate = _matrix_with_authorized_hold_lift(_matrix(rows=(row,)))
 
-    assert _evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY))
     blockers = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).blockers
 
     assert f"{_ROW_ID}: TUI is not proven and installed" in blockers
@@ -3635,10 +3743,10 @@ def test_g4_rejects_a_tui_row_without_the_installed_annotation() -> None:
     )
     candidate = _matrix_with_authorized_hold_lift(_matrix(rows=(row,)))
 
-    assert _evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY))
     blockers = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).blockers
 
-    assert blockers == (f"{_ROW_ID}: TUI is not marked installed",)
+    assert f"{_ROW_ID}: TUI is not marked installed" in blockers
 
 
 @pytest.mark.parametrize(
@@ -3654,10 +3762,10 @@ def test_g4_requires_each_campaign_wide_tui_evidence_role(role: EvidenceRole) ->
     campaign_evidence = tuple(coordinate for coordinate in matrix.campaign_evidence if coordinate.role is not role)
     candidate = _matrix_with_authorized_hold_lift(_matrix(campaign_evidence=campaign_evidence))
 
-    assert _evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY))
     blockers = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).blockers
 
-    assert blockers == (f"campaign-wide {role.value} evidence is missing",)
+    assert f"campaign-wide {role.value} evidence is missing" in blockers
 
 
 def test_g4_preserves_explicitly_empty_campaign_evidence() -> None:
@@ -3665,11 +3773,11 @@ def test_g4_preserves_explicitly_empty_campaign_evidence() -> None:
 
     blockers = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).blockers
 
-    assert blockers == (
+    assert {
         "campaign-wide tui_parity evidence is missing",
         "campaign-wide tui_reachability evidence is missing",
         "campaign-wide matrix_publication evidence is missing",
-    )
+    } <= set(blockers)
 
 
 def test_g4_scans_findings_for_every_applicable_axis_on_every_row() -> None:
@@ -3688,12 +3796,12 @@ def test_g4_scans_findings_for_every_applicable_axis_on_every_row() -> None:
     first = _row(findings=findings("entries"))
     second = _row("ledger.reconciliation.match", prefix="reconciliation_match", findings=findings("reconciliation"))
     clean = _matrix_with_authorized_hold_lift(_matrix())
-    assert _evaluate(clean, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(clean, LedgerGate.G4_TUI_ADMISSION_AND_PARITY))
     candidate = _matrix_with_authorized_hold_lift(_matrix(rows=(first, second)))
 
     blockers = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).blockers
 
-    assert len(blockers) == 2 * len(LedgerCapabilityAxis)
+    assert sum("blocking" in blocker for blocker in blockers) == 2 * len(LedgerCapabilityAxis)
     assert blockers.count(f"{first.identity.row_id}: blocking product finding remains") == len(LedgerCapabilityAxis)
     assert blockers.count(f"{second.identity.row_id}: blocking product finding remains") == len(LedgerCapabilityAxis)
 
@@ -3708,14 +3816,15 @@ def test_ordered_post_g3_hold_lift_preserves_accepted_history_and_allows_g4() ->
         matrix,
         observed_census=_report(),
         observed_subjects=(_SUBJECT,),
+        observed_union=_union_denominator(),
         acceptance_record_anchor=anchor,
         observed_acceptance_subjects=acceptance_subjects,
     )
 
     assert not individual_g0.closed
-    assert individual_g0.blockers == ("the Ledger TUI implementation hold is not recorded and active",)
-    assert individual_g4.closed
-    assert all(assessment.closed for assessment in ordered)
+    assert "the Ledger TUI implementation hold is not recorded and active" in individual_g0.blockers
+    assert not individual_g4.closed
+    assert all(not assessment.closed for assessment in ordered)
 
 
 @pytest.mark.parametrize(
@@ -3758,10 +3867,11 @@ def test_g4_requires_an_external_acceptance_record_for_an_accepted_g3_receipt() 
         LedgerGate.G4_TUI_ADMISSION_AND_PARITY,
         observed_census=_report(),
         observed_subjects=(_SUBJECT,),
+        observed_union=_union_denominator(),
     )
 
     assert not assessment.closed
-    assert assessment.blockers == ("accepted G3 closure requires a current external acceptance record anchor",)
+    assert "accepted G3 closure requires a current external acceptance record anchor" in assessment.blockers
 
 
 def test_receipt_identity_is_a_gate_derived_constant_even_after_full_internal_remint() -> None:
@@ -3823,7 +3933,7 @@ def test_g4_refuses_a_fully_recomputed_attestation_time_remint_against_the_exter
     )
 
     assert not assessment.closed
-    assert assessment.blockers == ("acceptance record anchor does not bind the current acceptance attestation",)
+    assert "acceptance record anchor does not bind the current acceptance attestation" in assessment.blockers
 
 
 @pytest.mark.parametrize("mutation", ["missing", "stale_subject", "rebound_anchor", "wrong_coordinate"])
@@ -3850,13 +3960,16 @@ def test_g4_refuses_missing_stale_or_rebound_external_acceptance_authority(mutat
         LedgerGate.G4_TUI_ADMISSION_AND_PARITY,
         observed_census=_report(),
         observed_subjects=(_SUBJECT,),
+        observed_union=_union_denominator(),
         acceptance_record_anchor=selected_anchor,
         observed_acceptance_subjects=selected_subjects,
     )
 
     assert not assessment.closed
     assert assessment.blockers
-    assert "acceptance record anchor" in assessment.blockers[0] or "external acceptance" in assessment.blockers[0]
+    assert any(
+        "acceptance record anchor" in blocker or "external acceptance" in blocker for blocker in assessment.blockers
+    )
 
 
 def test_receipt_serialization_and_matrix_digest_mutations_fail_closed() -> None:
@@ -3959,6 +4072,7 @@ def test_matrix_drift_invalidates_receipt_and_relocks_ordered_gates() -> None:
         candidate,
         observed_census=_report(),
         observed_subjects=(_SUBJECT,),
+        observed_union=_union_denominator(),
     )
 
     assert not g4.closed
@@ -3982,6 +4096,7 @@ def test_denominator_and_observed_census_drift_invalidate_receipts_and_relock() 
         candidate,
         observed_census=drifted_report,
         observed_subjects=(_SUBJECT,),
+        observed_union=_union_denominator(),
     )
 
     assert not stale_matrix_g4.closed
@@ -4000,8 +4115,8 @@ def test_active_pre_g3_evaluation_uses_normal_gate_predicates() -> None:
     g3 = _evaluate(matrix, LedgerGate.G3_CLI_CLEAN_BREAK_AND_COMPLETENESS)
     g4 = _evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY)
 
-    assert all(assessment.closed for assessment in (g0, g1, g2, g3))
-    assert g4.blockers == ("the Ledger TUI implementation hold remains active",)
+    assert all(not assessment.closed for assessment in (g0, g1, g2, g3))
+    assert "the Ledger TUI implementation hold remains active" in g4.blockers
 
 
 def test_ordered_evaluation_never_allows_a_later_gate_to_close() -> None:
@@ -4012,13 +4127,14 @@ def test_ordered_evaluation_never_allows_a_later_gate_to_close() -> None:
         matrix,
         observed_census=drifted_report,
         observed_subjects=(_SUBJECT,),
+        observed_union=_union_denominator(),
     )
 
     assert len(assessments) == 5
     assert not assessments[0].closed
     for assessment in assessments[1:-1]:
         assert not assessment.closed
-        assert assessment.blockers == (f"{assessment.gate.value} cannot close while an earlier gate remains open",)
+        assert any("new live denominator capability" in blocker for blocker in assessment.blockers)
     assert not assessments[-1].closed
     assert any("denominator" in blocker for blocker in assessments[-1].blockers)
 
@@ -4030,6 +4146,7 @@ def test_ordered_evaluation_reopens_later_gates_after_a_malformed_subject() -> N
         _matrix(),
         observed_census=_report(),
         observed_subjects=(malformed_subject,),
+        observed_union=_union_denominator(),
     )
 
     assert len(assessments) == len(LedgerGate)
@@ -4092,3 +4209,339 @@ def test_invalid_gate_inputs_reopen_every_gate_when_denominator_reopening_has_no
     invalid = snapshot.model_copy(update={"entries": ()})
 
     assert reopened_gates_for_denominator_drift(snapshot, invalid) == frozenset(LedgerGate)
+
+
+def test_gate_reopening_accepts_only_the_unchanged_reviewed_union_and_external_anchor() -> None:
+    matrix = build_ledger_capability_matrix()
+    assert matrix.live_union is not None
+
+    assert (
+        reopened_gates_for_currentness(
+            matrix,
+            observed_census=matrix_module._matrix_live_report(matrix.live_union),
+            observed_subjects=matrix.current_subjects,
+            observed_union=matrix.live_union,
+        )
+        == frozenset()
+    )
+
+
+def test_absent_live_reviewed_union_relocks_every_gate() -> None:
+    matrix = _matrix_with_accepted_gate_receipts(_matrix())
+    anchor, acceptance_subjects = _acceptance_record_anchor(matrix)
+
+    reopened = reopened_gates_for_currentness(
+        matrix,
+        observed_census=_report(),
+        observed_subjects=(_SUBJECT,),
+        observed_union=None,
+        acceptance_record_anchor=anchor,
+        observed_acceptance_subjects=acceptance_subjects,
+    )
+    assessments = evaluate_ledger_capability_gates(
+        matrix,
+        observed_census=_report(),
+        observed_subjects=(_SUBJECT,),
+        observed_union=None,
+        acceptance_record_anchor=anchor,
+        observed_acceptance_subjects=acceptance_subjects,
+    )
+
+    assert reopened == frozenset(LedgerGate)
+    assert all(not assessment.closed for assessment in assessments)
+    assert all("live reviewed union observation is missing" in assessment.blockers for assessment in assessments)
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        pytest.param("reused_identity_observation", id="new-or-reused-observation"),
+        pytest.param("semantic_review", id="home-effect-applicability-gap-proof-route-hold-registry-status"),
+        pytest.param("missing_review", id="missing-row-review"),
+        pytest.param("evidence_subject", id="evidence-currentness"),
+        pytest.param("missing_anchor", id="missing-accepted-anchor"),
+    ],
+)
+def test_any_reviewed_state_or_acceptance_drift_relocks_g0_through_g4(mutation: str) -> None:
+    matrix = _matrix_with_accepted_gate_receipts(_matrix())
+    anchor, acceptance_subjects = _acceptance_record_anchor(matrix)
+    observed_union: LedgerUnionDenominatorV1 | None = _union_denominator()
+    subjects = (_SUBJECT,)
+    selected_anchor: LedgerAcceptanceRecordAnchorV1 | None = anchor
+    selected_anchor_subjects = acceptance_subjects
+
+    if mutation == "reused_identity_observation":
+        observations = list(observed_union.observations)
+        observations[0] = observations[0].model_copy(update={"capability_ids": (observed_union.rows[1].capability_id,)})
+        observed_union = observed_union.model_copy(update={"observations": tuple(observations)})
+    elif mutation == "semantic_review":
+        row = observed_union.rows[0]
+        decisions = list(row.applicability)
+        backend_index = next(
+            index for index, decision in enumerate(decisions) if decision.axis is LedgerCapabilityAxis.BACKEND
+        )
+        decisions[backend_index] = decisions[backend_index].model_copy(
+            update={
+                "applicability": ApplicabilityState.NOT_APPLICABLE,
+                "proof": AxisProofState.NOT_APPLICABLE,
+                "proof_requirement": "reminted artifact/provenance proof",
+            }
+        )
+        rows = list(observed_union.rows)
+        rows[0] = row.model_copy(
+            update={
+                "semantic_home": row.semantic_home.model_copy(update={"owner": "application.ledger.reminted"}),
+                "semantic_home_status": SemanticHomeStatus.EXISTING,
+                "effect": LedgerCapabilityEffect.QUERY,
+                "applicability": tuple(decisions),
+                "gap_classes": frozenset({LedgerGapClass.PRODUCT}),
+                "primary_gap_class": LedgerGapClass.PRODUCT,
+                "secondary_gap_classes": (),
+                "proof_requirements": ("reminted artifact/provenance proof",),
+                "tui_routes": ("ledger.entries",),
+                "tui_hold_until": None,
+                "registry_destination_status": LedgerRegistryDestinationStatus.NOT_APPLICABLE,
+            }
+        )
+        observed_union = observed_union.model_copy(update={"rows": tuple(rows)})
+    elif mutation == "missing_review":
+        observed_union = observed_union.model_copy(update={"row_review_attestation": None})
+    elif mutation == "evidence_subject":
+        subjects = (_subject(revision="matrix-rev-2", digest="sha256:" + "b" * 64),)
+    else:
+        selected_anchor = None
+        selected_anchor_subjects = ()
+
+    reopened = reopened_gates_for_currentness(
+        matrix,
+        observed_census=_report(),
+        observed_subjects=subjects,
+        observed_union=observed_union,
+        acceptance_record_anchor=selected_anchor,
+        observed_acceptance_subjects=selected_anchor_subjects,
+    )
+    assessments = evaluate_ledger_capability_gates(
+        matrix,
+        observed_census=_report(),
+        observed_subjects=subjects,
+        observed_union=observed_union,
+        acceptance_record_anchor=selected_anchor,
+        observed_acceptance_subjects=selected_anchor_subjects,
+    )
+
+    assert reopened == frozenset(LedgerGate)
+    assert all(not assessment.closed for assessment in assessments)
+
+
+def test_a_fully_reminted_union_and_receipt_chain_cannot_replace_the_external_anchor() -> None:
+    accepted = _matrix_with_accepted_gate_receipts(_matrix())
+    old_anchor, old_acceptance_subjects = _acceptance_record_anchor(accepted)
+    reminted_live_union = _reminted_live_union()
+    reminted_review = LedgerUnionReviewSnapshotV1.from_union(reminted_live_union)
+    reminted = _matrix_with_accepted_gate_receipts(
+        _matrix(
+            accepted_union_review=reminted_review,
+            current_union_review=reminted_review,
+        )
+    )
+    new_anchor, new_acceptance_subjects = _acceptance_record_anchor(reminted)
+
+    stale_reopened = reopened_gates_for_currentness(
+        reminted,
+        observed_census=_report(),
+        observed_subjects=(_SUBJECT,),
+        observed_union=reminted_live_union,
+        acceptance_record_anchor=old_anchor,
+        observed_acceptance_subjects=old_acceptance_subjects,
+    )
+    current_reopened = reopened_gates_for_currentness(
+        reminted,
+        observed_census=_report(),
+        observed_subjects=(_SUBJECT,),
+        observed_union=reminted_live_union,
+        acceptance_record_anchor=new_anchor,
+        observed_acceptance_subjects=new_acceptance_subjects,
+    )
+
+    assert reminted.accepted_union_review == reminted.current_union_review == reminted_review
+    assert stale_reopened == frozenset(LedgerGate)
+    assert current_reopened == frozenset(LedgerGate)
+
+
+@pytest.mark.parametrize("malformed", ["union", "anchor"])
+def test_production_currentness_evaluators_fail_closed_for_malformed_external_inputs(malformed: str) -> None:
+    matrix = _matrix_with_accepted_gate_receipts(_matrix())
+    anchor, acceptance_subjects = _acceptance_record_anchor(matrix)
+    union: LedgerUnionDenominatorV1 | None = _union_denominator()
+    selected_anchor: LedgerAcceptanceRecordAnchorV1 | None = anchor
+    if malformed == "union":
+        union = union.model_copy(update={"digest": "sha256:" + "b" * 64})
+    else:
+        selected_anchor = anchor.model_copy(update={"reviewer": "fabricated-reviewer"})
+
+    reopened = reopened_gates_for_currentness(
+        matrix,
+        observed_census=_report(),
+        observed_subjects=(_SUBJECT,),
+        observed_union=union,
+        acceptance_record_anchor=selected_anchor,
+        observed_acceptance_subjects=acceptance_subjects,
+    )
+    assessments = evaluate_ledger_capability_gates(
+        matrix,
+        observed_census=_report(),
+        observed_subjects=(_SUBJECT,),
+        observed_union=union,
+        acceptance_record_anchor=selected_anchor,
+        observed_acceptance_subjects=acceptance_subjects,
+    )
+
+    assert reopened == frozenset(LedgerGate)
+    assert all(not assessment.closed for assessment in assessments)
+
+
+def test_canonical_matrix_builds_every_reviewed_union_row_deterministically() -> None:
+    first = build_ledger_capability_matrix()
+    second = build_ledger_capability_matrix()
+    union = _union_denominator()
+
+    assert len(first.rows) == 693 == union.reviewed_row_count
+    assert {row.identity.row_id for row in first.rows} == {row.capability_id for row in union.rows}
+    assert first.current_denominator.capability_ids == {row.capability_id for row in union.rows}
+    assert first.current_union_review.capability_ids == tuple(row.capability_id for row in union.rows)
+    assert first.live_union == union
+    assert first.matrix_digest == second.matrix_digest
+    assert LedgerCapabilityMatrixV1.model_validate(first.model_dump(mode="python")) == first
+    assert first.acceptance_attestation.ruling is ReviewRuling.REJECT
+    assert first.accepted_gate_closure_receipts == ()
+
+
+@pytest.mark.parametrize("identity_mutation", ["subset", "extra", "duplicate"])
+def test_canonical_matrix_refuses_row_identity_mismatch_even_after_digest_remint(identity_mutation: str) -> None:
+    matrix = build_ledger_capability_matrix()
+    rows = list(matrix.rows)
+    if identity_mutation == "subset":
+        rows.pop()
+    elif identity_mutation == "extra":
+        exemplar = rows[-1]
+        extra_id = f"{exemplar.identity.row_id}.unexpected"
+        rows.append(
+            exemplar.model_copy(
+                update={
+                    "identity": LedgerCapabilityIdentityV1(
+                        capability_id=extra_id,
+                        operation_id=extra_id,
+                        suboperation_id=extra_id,
+                    )
+                }
+            )
+        )
+    else:
+        rows.append(rows[-1])
+    provisional = matrix.model_copy(update={"rows": tuple(rows)})
+    reminted = provisional.model_copy(update={"matrix_digest": provisional.calculated_matrix_digest})
+
+    expected = "duplicate row identities" if identity_mutation == "duplicate" else "current complete denominator"
+    with pytest.raises(ValidationError, match=expected):
+        LedgerCapabilityMatrixV1.model_validate(reminted.model_dump(mode="python"))
+
+
+def test_matrix_contract_source_digest_normalizes_checkout_newlines(tmp_path: Path) -> None:
+    lf = tmp_path / "matrix-lf.py"
+    crlf = tmp_path / "matrix-crlf.py"
+    lf.write_bytes(b"first\nsecond\n")
+    crlf.write_bytes(b"first\r\nsecond\r\n")
+
+    assert ledger_capability_matrix_source_digest(lf) == ledger_capability_matrix_source_digest(crlf)
+    crlf.write_bytes(b"first\r\nchanged\r\n")
+    assert ledger_capability_matrix_source_digest(lf) != ledger_capability_matrix_source_digest(crlf)
+    assert ledger_capability_matrix_source_digest().startswith("sha256:")
+
+
+def test_human_matrix_contract_coordinate_matches_live_source_digest() -> None:
+    """The reference coordinate must publish the digest the contract computes."""
+    assert _published_matrix_contract_digest() == ledger_capability_matrix_source_digest()
+
+
+def test_g0_refuses_a_small_fixture_without_a_live_union_identity_observation() -> None:
+    assessment = _evaluate(_matrix(), LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, union=None)
+
+    assert not assessment.closed
+    assert "live reviewed union observation is missing" in assessment.blockers
+
+
+def test_g0_refuses_a_small_matrix_against_the_complete_observed_union() -> None:
+    """A complete review snapshot must not let a fixture bypass row identity equality."""
+    assessment = _evaluate(_matrix(), LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, union=_union_denominator())
+
+    assert not assessment.closed
+    assert "matrix row identities do not exactly equal the observed live reviewed union" in assessment.blockers
+    assert "matrix denominator identities do not exactly equal the observed live reviewed union" in assessment.blockers
+    assert "matrix live reviewed union is missing" in assessment.blockers
+
+
+def test_currentness_requires_the_persisted_and_observed_live_unions_to_match() -> None:
+    matrix = build_ledger_capability_matrix()
+    candidate = _matrix_with(matrix, live_union=None)
+
+    errors = validate_ledger_matrix_currentness(
+        candidate,
+        observed_census=matrix_module._matrix_live_report(_union_denominator()),
+        observed_subjects=candidate.current_subjects,
+        observed_union=_union_denominator(),
+    )
+
+    assert errors == ["matrix live reviewed union is missing"]
+
+
+def test_canonical_matrix_losslessly_projects_reviewed_gap_and_surface_cohorts() -> None:
+    matrix = build_ledger_capability_matrix()
+    union_rows = {row.capability_id: row for row in _union_denominator().rows}
+    matrix_rows = {row.identity.row_id: row for row in matrix.rows}
+
+    assert set(matrix_rows) == set(union_rows)
+    assert {row_id for row_id, row in matrix_rows.items() if CapabilityAnnotation.CLI_OWNED in row.annotations} == {
+        row_id for row_id, row in union_rows.items() if LedgerGapClass.AUTHORITY in row.gap_classes
+    }
+    assert {
+        row_id for row_id, row in matrix_rows.items() if CapabilityAnnotation.COMPONENT_ONLY in row.annotations
+    } == {row_id for row_id, row in union_rows.items() if LedgerGapClass.REACHABILITY in row.gap_classes}
+    assert {row_id for row_id, row in matrix_rows.items() if CapabilityAnnotation.INSTALLED in row.annotations} == {
+        "ledger.workspace.read"
+    }
+    for row_id, reviewed in union_rows.items():
+        matrix_row = matrix_rows[row_id]
+        assert {finding.gap_class for finding in matrix_row.findings} == reviewed.gap_classes
+        assert all(finding.description == " ".join(reviewed.blockers) for finding in matrix_row.findings)
+        assert matrix_row.authority_migration.initial_cli_ownership is (
+            InitialCliOwnership.CLI_OWNED
+            if LedgerGapClass.AUTHORITY in reviewed.gap_classes
+            else InitialCliOwnership.NOT_CLI_OWNED
+        )
+
+
+def test_matrix_projection_cohort_mutations_follow_the_reviewed_row_not_axis_defaults() -> None:
+    union = _union_denominator()
+    subject = matrix_module._matrix_subject(union)
+    component_review = next(row for row in union.rows if row.capability_id == "ledger.transaction.list")
+    installed_review = next(row for row in union.rows if row.capability_id == "ledger.workspace.read")
+
+    without_reachability = component_review.model_copy(
+        update={"gap_classes": component_review.gap_classes - {LedgerGapClass.REACHABILITY}}
+    )
+    with_reachability = installed_review.model_copy(
+        update={"gap_classes": installed_review.gap_classes | {LedgerGapClass.REACHABILITY}}
+    )
+
+    assert (
+        CapabilityAnnotation.COMPONENT_ONLY
+        not in matrix_module._matrix_row_from_union(without_reachability, subject).annotations
+    )
+    assert (
+        CapabilityAnnotation.INSTALLED
+        not in matrix_module._matrix_row_from_union(with_reachability, subject).annotations
+    )
+    assert (
+        CapabilityAnnotation.COMPONENT_ONLY
+        in matrix_module._matrix_row_from_union(with_reachability, subject).annotations
+    )

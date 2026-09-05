@@ -54,7 +54,6 @@ from .python_cohort import (  # noqa: E402
 
 _UTF_8: Final[str] = UTF_8
 _ZIP_TIMESTAMP: Final[tuple[int, int, int, int, int, int]] = (1980, 1, 1, 0, 0, 0)
-_RELEASE_BASE: Final[str] = "https://github.com/nevenincs/cadrumo/releases/download"
 _REQUIRED_PYTHON_VERSION: Final[str] = (_REPO_ROOT / ".python-version").read_text(encoding=UTF_8).strip()
 _BUILD_CONSTRAINTS: Final[Path] = Path("packaging/build-system-constraints.txt")
 
@@ -143,7 +142,6 @@ def _generate_channel_artifacts(
     output: Path,
     env: dict[str, str],
 ) -> tuple[Path, Path]:
-    release_base_url = f"{_RELEASE_BASE}/v{cohort.version}"
     scoop = output / "scoop" / "cadrumo.json"
     _run(
         [
@@ -153,8 +151,6 @@ def _generate_channel_artifacts(
             str(cohort.directory),
             "--version",
             cohort.version,
-            "--release-base-url",
-            release_base_url,
             "--output",
             str(scoop),
         ],
@@ -172,8 +168,6 @@ def _generate_channel_artifacts(
             str(clean_root / "uv.lock"),
             "--version",
             cohort.version,
-            "--release-base-url",
-            release_base_url,
             "--output-dir",
             str(homebrew_dir),
         ],

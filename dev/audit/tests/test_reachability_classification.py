@@ -204,3 +204,32 @@ def test_a_test_following_a_module_anchors_to_a_classified_module() -> None:
     )
 
     assert dangling == [], f"module-following test entries whose anchor is not classified: {dangling}"
+
+
+def test_no_unresolved_cluster_names_a_symbol_the_audit_stopped_reporting() -> None:
+    """An unresolved cluster claims work is outstanding; the tree must agree.
+
+    Nothing checked the symbol clusters against the tree, and one drifted: a
+    staged-capability cluster went on naming ``build_related_party_rows`` after
+    that public alias was deleted, so the ledger asserted outstanding work on a
+    symbol that no longer existed. A record whose claim has quietly become
+    false is the failure this whole classification exists to prevent, and it is
+    worse in the ledger than in ordinary prose.
+
+    Matching is by name within the cluster's own area, because a private helper
+    name can legitimately recur in unrelated packages.
+    """
+    reported: dict[str, set[str]] = {}
+    for finding in run_unreachable_code_scan(REPO_ROOT).symbols:
+        reported.setdefault(finding.name, set()).add(finding.module)
+
+    stale: list[str] = []
+    for cluster in _ledger().get("symbol_cluster", ()):
+        if cluster.get("resolved"):
+            continue
+        area = cluster["area"].replace("/", ".")
+        for name in cluster["symbols"]:
+            if not any(area in module for module in reported.get(name, ())):
+                stale.append(f"{cluster['name']}: {name}")
+
+    assert not stale, "unresolved clusters naming symbols the audit no longer reports: " + "; ".join(stale)

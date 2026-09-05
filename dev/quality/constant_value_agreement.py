@@ -188,7 +188,7 @@ def unevaluated_collisions(constants: dict[str, dict[str, str]]) -> tuple[Consta
 
     Two filters keep this honest rather than loud. An expression mentioning
     ``__name__`` is per-module by construction -- a module logger is the
-    correct idiom, and eighty of these were exactly that -- so it is not a
+    correct idiom -- so it is not a
     collision however many modules hold it. And the surviving expressions must
     match textually: ``build_playwright_stage_runner('GROI')`` beside
     ``build_playwright_stage_runner('NIF-IVA')`` is two configured instances of

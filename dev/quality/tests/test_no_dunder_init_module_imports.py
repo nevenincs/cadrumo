@@ -34,6 +34,7 @@ from typing import Final
 import pytest
 
 from ..._paths import REPO_ROOT
+from ..unread_inputs import report_unread
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -57,6 +58,7 @@ def _dunder_init_imports(tree: ast.AST) -> list[int]:
 def _scan() -> tuple[list[str], int]:
     """Return offending locations and the number of modules actually parsed."""
     offences: list[str] = []
+    unparsed: list[str] = []
     parsed = 0
     for root in _ROOTS:
         for path in (REPO_ROOT / root).rglob("*.py"):
@@ -64,12 +66,23 @@ def _scan() -> tuple[list[str], int]:
                 continue
             try:
                 tree = ast.parse(path.read_text(encoding="utf-8"))
-            except SyntaxError:
+            except SyntaxError as refusal:
                 # A peer mid-edit in a shared worktree; their syntax error is
-                # their gate's to report, not a finding of this one.
+                # their gate's to report, not a finding of this one. The loss
+                # still lands here: an unparsed module contributes no offence
+                # and reads as compliant. The floor below is post-swallow, but
+                # 6,906 modules parse against a floor of 1,000, so most of the
+                # tree could vanish before it fires.
+                unparsed.append(f"{path} ({refusal})")
                 continue
             parsed += 1
             offences.extend(f"{path.relative_to(REPO_ROOT).as_posix()}:{line}" for line in _dunder_init_imports(tree))
+    report_unread(
+        "dunder-init import scan",
+        "these modules were not parsed, so a forbidden __init__ import inside one would "
+        "not appear in the offences below",
+        unparsed,
+    )
     return offences, parsed
 
 

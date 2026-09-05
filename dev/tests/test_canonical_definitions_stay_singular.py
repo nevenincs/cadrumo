@@ -57,7 +57,7 @@ _CANONICAL_DEFINITIONS: dict[str, str] = {
 }
 
 
-def _definition_sites(root: pathlib.Path) -> dict[str, list[str]]:
+def _definition_sites(root: pathlib.Path) -> tuple[dict[str, list[str]], list[str]]:
     """Return, per watched symbol, every module that DEFINES it.
 
     A definition is a top-level function, class, or assignment to the bare name.
@@ -66,12 +66,18 @@ def _definition_sites(root: pathlib.Path) -> dict[str, list[str]]:
     regression.
     """
     sites: dict[str, list[str]] = {name: [] for name in _CANONICAL_DEFINITIONS}
+    unparseable: list[str] = []
     for path in sorted(root.rglob("*.py")):
         if "__pycache__" in path.parts or "tests" in path.parts:
             continue
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"))
-        except SyntaxError:
+        except SyntaxError as refusal:
+            # A module that does not parse is searched for nothing, so a SECOND
+            # definition living in it is invisible and this gate still reports
+            # exactly one. All 2,121 production modules parse, so one that does
+            # not is a broken tracked file and is refused rather than skipped.
+            unparseable.append(f"{path.as_posix()}: {refusal}")
             continue
         for node in tree.body:
             defined: str | None = None
@@ -83,13 +89,18 @@ def _definition_sites(root: pathlib.Path) -> dict[str, list[str]]:
                 defined = node.target.id
             if defined in sites:
                 sites[defined].append(path.as_posix())
-    return sites
+    return sites, unparseable
 
 
 def test_every_collapsed_concept_still_has_exactly_one_definition() -> None:
     """A concept collapsed onto one definition has not grown a second."""
     root = pathlib.Path(__file__).resolve().parents[2] / "src" / "cadrumo"
-    sites = _definition_sites(root)
+    sites, unparseable = _definition_sites(root)
+
+    assert not unparseable, (
+        "these production modules could not be parsed, so a second definition inside one "
+        f"would not appear in the sites below: {unparseable}"
+    )
 
     missing = sorted(name for name, found in sites.items() if not found)
     assert not missing, f"canonical definition disappeared: {missing}"

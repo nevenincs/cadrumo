@@ -119,9 +119,9 @@ def test_a_subscript_reports_only_the_half_that_is_missing(tmp_path: Path) -> No
 def test_a_package_the_tree_imports_from_is_known(tmp_path: Path) -> None:
     """The source package counts, not only the symbols taken from it.
 
-    Twenty-two modules wrote ``from cryptography.hazmat... import ...`` while
-    the screen recorded only the imported symbols, so ``:mod:`cryptography```
-    read as naming nothing.
+    A module writing ``from package.sub import name`` makes ``package`` a name
+    this tree demonstrably knows; recording only the imported symbol would let
+    ``:mod:`package``` read as naming nothing.
     """
     root = _package(
         tmp_path,

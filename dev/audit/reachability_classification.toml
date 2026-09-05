@@ -390,14 +390,13 @@ name = "deferred-source-kind resolvers"
 class = "staged-capability"
 area = "domain/calculations/registry"
 symbols = [
-  "build_related_party_rows",
   "resolve_donativo_binding_row_values",
   "resolve_gasto193_binding_values",
   "resolve_gasto193_binding_row_values",
   "resolve_withholding296_binding_values",
   "resolve_withholding296_binding_row_values",
 ]
-evidence = "Each family's source kind is registered in application/aggregation/_source_mesh.py DEFERRED_SOURCE_KINDS -- RELATED_PARTY_OPERATION, REFUND_OPERATION, DONATIVO_DONOR, GASTO193_CONTRIBUTOR, WITHHOLDING296 -- so a calculate-path binding of the source raises a standing advisory instead of a silent blank. The resolver is built and validated but no live mesh resolver is enrolled yet, which is why nothing reaches it."
+evidence = "The public alias build_related_party_rows was retired from this cluster: it re-exported the private _build_related_party_rows, which remains present, called and tested, so the staged resolver itself is intact while the alias was an unused re-export of the kind the architecture boundaries forbid. Its sibling alias build_foreign_asset_rows is kept because a test imports it. Each family's source kind is registered in application/aggregation/_source_mesh.py DEFERRED_SOURCE_KINDS -- RELATED_PARTY_OPERATION, REFUND_OPERATION, DONATIVO_DONOR, GASTO193_CONTRIBUTOR, WITHHOLDING296 -- so a calculate-path binding of the source raises a standing advisory instead of a silent blank. The resolver is built and validated but no live mesh resolver is enrolled yet, which is why nothing reaches it."
 mechanism = "DEFERRED_SOURCE_KINDS, with the sibling RESERVED_SOURCE_KINDS and the source-kind enrollment parity gate accounting for every member of the closed taxonomy"
 
 [[symbol_cluster]]
@@ -639,6 +638,51 @@ different owners.
 Every count below is names / modules. Ordered by size.
 """
 
+[[exported_unused_shape]]
+shape = "pass-through over its own argument"
+names = 1
+of_total = 368
+measured = "a single-return body delegating to a public attribute or method of one of the function's own parameters -- the `find_invoice` shape exactly, where the caller must already hold the object to make the call, so the export names something it could always reach"
+note = """
+This is the sharpest triage available and it comes back essentially empty,
+which is the useful part: the exported-unused population contains no further
+illusions of the kind that made `find_invoice` cheap to retire after weeks of
+being treated as a capability decision.
+
+The single hit is not one either. `describe_impersonation_target` returns
+`config.target_principal` verbatim, and says why in its own docstring: it
+exists as a named accessor so a future CLI show/status verb can surface the
+exact service-account identity before an operator approves an IAM role grant,
+without a live token exchange first. That is a staged accessor with a stated
+reason, not a wrapper nobody chose.
+
+So the 368 are genuinely decisions rather than deferred work. The 72 one-call
+-deep names remain a cheaper starting point for a reviewer, but none of them is
+resolvable by the reasoning that resolved `find_invoice`.
+"""
+
+[[exported_unused_shape]]
+shape = "single-return pass-through"
+names = 72
+of_total = 368
+measured = "a function whose whole body, docstring aside, is one `return` of a single call or attribute access; anything with a branch, a loop, a local or a second statement is counted as substantive whatever its length"
+note = """
+This does not say "delete these". It says the published surface is one call
+deep, which makes each a cheaper decision than the other 296 because a reader
+can see what is behind it without tracing.
+
+The discriminating question is what the call reaches. `find_invoice` was
+`return catalogue.get(invoice_id)` -- a pass-through over an accessor its own
+argument already exposed, so the export published an illusion and retiring it
+cost nothing. `command_spec_for_path` is `return COMMAND_GRAPH.resolve_path(path)`,
+the same shape over an equally public method. But `run_login_tui` takes four
+keyword arguments and returns a typed outcome: its single `return` is a
+deliberate façade giving a name and a signature to an operation, which is a
+surface worth having.
+
+So the split is a triage aid for whoever rules on the 368, not a verdict.
+"""
+
 [[exported_unused_area]]
 area = "domain/calculations"
 names = 53
@@ -790,11 +834,11 @@ evidence = "Three one-line wrappers that loaded the catalogue and delegated to t
 
 [[symbol_cluster]]
 name = "invoice domain lookup left without a production consumer"
-class = "orphaned"
+class = "superseded"
 area = "domain/invoices"
-resolved = false
+resolved = true
 symbols = ["find_invoice"]
-evidence = "Its only production caller was get_invoice_from_repository, itself unreferenced dead code removed in the same step, so the capability was already dead one level down and the deletion only made that visible. It is NOT resolved here, and deletion is not the executor's call: the module publishes no __all__, but application/invoices/__init__.py names domain.invoices the sole canonical source for find_invoice alongside find_unmatched, link_transaction, suggest_reconciliations and verify_link_consistency, and those siblings are live. Its remaining test usage is also incidental rather than subject: test_link_transaction_returns_a_fresh_catalogue reads through find_invoice to assert what link_transaction did, so removing it would force an edit to a test about other behaviour. Resolution is a capability decision by the domain owner: retire the family member, or wire the caller its canonical designation implies."
+evidence = "Carried as an owner decision for a long time and resolved once its body was read: find_invoice was `return catalogue.get(invoice_id)` and nothing more, a pass-through over the accessor InvoiceCatalogue already exposes. Its only production caller had been get_invoice_from_repository, itself unreferenced dead code removed earlier, so what looked like a capability question was the same one-line-wrapper pattern seen throughout this campaign. Deleting it lost no coverage: the catalogue's own get is exercised positively elsewhere, and the wrapper's dedicated missing-id test was kept, renamed to name what it actually asserts. The two incidental reads inside a link_transaction test now call catalogue.get directly, which is more direct rather than less."
 
 [[symbol_cluster]]
 name = "annual Orden registry projections displaced by the authority path"

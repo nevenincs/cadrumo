@@ -36,6 +36,8 @@ from pathlib import Path
 
 import pytest
 
+from ..unread_inputs import report_unread
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
@@ -184,14 +186,21 @@ def _untracked_files(root: Path) -> list[str]:
 def _scan_untracked(root: Path, needles: tuple[str, ...], patterns: tuple[str, ...]) -> list[str]:
     """Return ``path:line`` hits for banned shapes in untracked files."""
     offenders: list[str] = []
+    # Both skips below leave a file unscanned, and an unscanned file is
+    # indistinguishable from a clean one in a gate about leaked private data.
+    # Announced rather than refused: these are UNTRACKED paths, so a peer's
+    # half-written or vanishing file is expected and must not red the gate.
+    unscanned: list[str] = []
     compiled = [re.compile(pattern) for pattern in patterns]
     for relative in _untracked_files(root):
         path = root / relative
         try:
             if path.stat().st_size > _MAX_SCANNED_BYTES:
+                unscanned.append(f"{relative} (larger than {_MAX_SCANNED_BYTES} bytes)")
                 continue
             text = path.read_text(encoding="utf-8", errors="replace")
-        except (OSError, ValueError):
+        except (OSError, ValueError) as refusal:
+            unscanned.append(f"{relative} ({refusal})")
             continue
         for number, line in enumerate(text.splitlines(), start=1):
             for needle in needles:
@@ -200,6 +209,12 @@ def _scan_untracked(root: Path, needles: tuple[str, ...], patterns: tuple[str, .
             for pattern in compiled:
                 if pattern.search(line):
                     offenders.append(f"[/{pattern.pattern}/] {relative}:{number}")
+
+    report_unread(
+        "untracked privacy scan",
+        "these files were not searched, so a banned shape inside one would not appear below",
+        unscanned,
+    )
     return offenders
 
 

@@ -36,6 +36,8 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 
+from ..quality.unread_inputs import report_unread
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
@@ -86,7 +88,19 @@ def _declared_repository_roots() -> tuple[tuple[Path, str, Path | None], ...]:
                 continue
             try:
                 module = ast.parse(path.read_text(encoding="utf-8"))
-            except (SyntaxError, UnicodeDecodeError):  # pragma: no cover - unparseable is another gate's subject
+            except (SyntaxError, UnicodeDecodeError) as refusal:  # pragma: no cover
+                # Unparseability is owned elsewhere; its consequence is owned here.
+                # A module that never parses contributes no root constant, so a
+                # wrong parents[N] inside it is never resolved and never reported.
+                # The floor below counts constants FOUND, and forty-seven are found
+                # against a floor of thirty: seventeen could vanish this way before
+                # anything fired, and nothing would say why.
+                report_unread(
+                    "repository-root constant scan",
+                    "this module was not parsed, so a repository-root constant inside it was "
+                    "not resolved and cannot appear in the findings below",
+                    [f"{path} ({type(refusal).__name__})"],
+                )
                 continue
             for node in module.body:
                 targets = (
