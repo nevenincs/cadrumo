@@ -135,6 +135,26 @@ def docstring_references(root: Path) -> list[tuple[str, str]]:
     return found
 
 
+def _subscript_names(target: str) -> tuple[str, ...]:
+    """Return the base and argument names a subscripted reference addresses.
+
+    ``Envelope[BlobManifest]`` claims both names exist. Splitting on the
+    bracket and checking each is what keeps a legitimate generic from reading
+    as one long name the package does not define.
+    """
+    try:
+        parsed = ast.parse(target, mode="eval")
+    except SyntaxError:
+        return (target.split("[", 1)[0].strip(),)
+    names: list[str] = []
+    for node in ast.walk(parsed):
+        if isinstance(node, ast.Name):
+            names.append(node.id)
+        elif isinstance(node, ast.Attribute):
+            names.append(node.attr)
+    return tuple(dict.fromkeys(names))
+
+
 def dangling_references(root: Path) -> tuple[DanglingReference, ...]:
     """Report each cross-reference naming something the package does not define."""
     defined, imported, modules = collect_defined_names(root)
@@ -147,6 +167,16 @@ def dangling_references(root: Path) -> tuple[DanglingReference, ...]:
     for module, raw in docstring_references(root):
         target = raw.lstrip("~.").split("(")[0].strip()
         if not target:
+            continue
+        if "[" in target:
+            # A subscripted generic names its base AND its arguments, all of
+            # which the package may own: ``Envelope[BlobManifest]`` is two
+            # claims, not one unresolvable string.
+            findings.extend(
+                DanglingReference(module=module, target=part, role_text=raw)
+                for part in _subscript_names(target)
+                if part not in known and part not in modules
+            )
             continue
         rooted = target.startswith("cadrumo.")
         if rooted and (target in modules or any(target.startswith(f"{name}.") for name in modules)):

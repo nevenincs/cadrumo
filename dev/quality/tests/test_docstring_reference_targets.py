@@ -90,3 +90,27 @@ def test_a_defined_name_is_collected_however_it_is_bound(tmp_path: Path) -> None
     )
     defined, _imported, _modules = collect_defined_names(root)
     assert {"Widget", "build", "PLAIN", "ANNOTATED"} <= defined
+
+
+def test_a_subscripted_generic_resolves_through_its_base_and_arguments(tmp_path: Path) -> None:
+    """``Envelope[BlobManifest]`` is two claims, not one unresolvable string.
+
+    Splitting only on the parenthesis left the whole subscript intact, so three
+    legitimate generics were reported as names the package does not define.
+    """
+    root = _package(
+        tmp_path,
+        types="class Envelope:\n    pass\n\n\nclass BlobManifest:\n    pass\n",
+        prose='"""Returns an :class:`Envelope[BlobManifest]` for the caller."""\n',
+    )
+    assert dangling_references(root) == ()
+
+
+def test_a_subscript_reports_only_the_half_that_is_missing(tmp_path: Path) -> None:
+    """A real generic over an unknown argument must still be caught."""
+    root = _package(
+        tmp_path,
+        types="class Envelope:\n    pass\n",
+        prose='"""Returns an :class:`Envelope[GhostPayload]`."""\n',
+    )
+    assert [item.target for item in dangling_references(root)] == ["GhostPayload"]
