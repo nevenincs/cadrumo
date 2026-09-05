@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:08592b378ac27c45c06d0ed23afa04c50af4f60aef579c3f431de13aa446a6d6'
+body_hash: 'sha256:4462ed02abf6001bbf56c5bba972d74e6aa2e454b4d777c92e5e3c479173d655'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -564,6 +564,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S682` - Give the distribution-lane archive and identity checks diagnostics and bind their teeth probes: five bare asserts named nothing on a real wheel, and an empty payload list satisfied the identity probe without planting a divergence; `dev/packaging/tests/test_command_spec_distribution_lanes.py`.
 - [x] `W02.P02.S683` - Bind the frozen-record claims to the fields they name: a frozen pydantic model refuses assignment to any name, so both claims would have survived a rename of the very fields under test; `dev/docs/terminology/tests/test_cli_projection.py`.
 - [x] `W02.P02.S684` - Bind the acquisition parsers to the two options their docstring names: argparse exits for any missing requirement, so a bare SystemExit proved only that something was required; `dev/packaging/tests/test_acquire_tooling.py`.
+- [x] `W02.P02.S685` - Bind the unparseable-version refusals to the side that failed: packaging's InvalidVersion is itself a ValueError, so an unwrapped parse error escaping the guard read as the guard refusing; `dev/packaging/tests/test_release_pointer_guard.py`.
+- [x] `W02.P02.S686` - Give the runtime wheelhouse wheel names one source: the 3.13 filename was transcribed twice and the second copy feeds an absence claim, which a drifted name would satisfy over a file that could never exist; `dev/packaging/tests/test_runtime_wheelhouse.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
