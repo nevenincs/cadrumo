@@ -181,14 +181,22 @@ def profile_create_arguments() -> tuple[str, ...]:
         "--incn-prior-12-months",
         "500000",
         "--no-new-entity-first-two-profit-periods",
+        # Declaring an IVA regime claims the whole IVA block, and a claimed
+        # block obliges every fact below. None of them has a safe default:
+        # each selects a filing obligation, a period, or a deduction
+        # entitlement, so leaving one undeclared would file this taxpayer
+        # into or out of a regime it never spoke about. They are answered
+        # here as the plain general-regime SL this oracle describes.
         "--iva-regime",
         "GENERAL",
-        # Declaring the IVA regime claims the IVA block, and the block requires
-        # its Modelo 303 composition to be stated rather than inferred: a
-        # general-regime taxpayer and a mixed-regime one are different filings,
-        # and the single-regime arm is not a safe default for either.
         "--iva-m303-regime-composition",
         "general",
+        "--no-iva-redeme-enrolled",
+        "--no-iva-cash-accounting-regime-enrolled",
+        "--no-iva-voluntary-sii-enrolled",
+        "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
+        "--tax-residence-jurisdiction-scope",
+        "common_regime",
         "--tax-residence-ccaa",
         "madrid",
     )

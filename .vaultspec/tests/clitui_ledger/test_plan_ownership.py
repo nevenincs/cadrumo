@@ -174,8 +174,8 @@ def _validate_plan_ownership(plan_text: str) -> None:
         raise ValueError("retained Ledger predecessor evidence must remain checked")
     if any(by_id[step_id].checked for step_id in _RETIRED_MARKERS | _HELD):
         raise ValueError("retired-marker and held Ledger rows must remain open")
-    if len(rows) != 426 or sum(row.checked for row in rows) != 408:
-        raise ValueError("predecessor plan completion drifted from 408/426")
+    if len(rows) != 429 or sum(row.checked for row in rows) != 413:
+        raise ValueError("predecessor plan completion drifted from 413/429")
 
     for step_id in _MIXED_HELD:
         if "non-Ledger scope remains owned here" not in by_id[step_id].action:

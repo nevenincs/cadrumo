@@ -439,7 +439,7 @@ def test_test_module_whose_every_shipped_subject_is_dead_is_an_orphaned_test(res
     """
     by_module = {finding.module: finding for finding in result.tests}
 
-    assert set(by_module) == {"pkg.tests.test_things"}
+    assert set(by_module) == {"pkg.tests.test_things", "pkg.tests.test_via_support"}
     orphan = by_module["pkg.tests.test_things"]
     assert orphan.path == "src/pkg/tests/test_things.py"
     assert orphan.subjects == ("pkg.dead.a", "pkg.loner", "pkg.used:orphan_fn")
@@ -597,7 +597,7 @@ def test_console_report_and_json_carry_the_same_findings(result: UnreachableCode
 
     assert report.startswith(
         "unreachable code: 4 unreachable module(s), 3 module-exec-only, 1 type-only module(s), "
-        "8 unused symbol(s) in reachable modules, 1 orphaned test module(s)"
+        "8 unused symbol(s) in reachable modules, 2 orphaned test module(s)"
     )
     assert "roots: pkg.cli:main" in report
     assert "3 data-shaped member(s) cleared" in report
