@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:26a3ed540ccc2cb4dedefd66200e1f2166388b4566a14753557862b217fea908'
+body_hash: 'sha256:24b7de2dc08958defbdb691ba67b6aeab49b89dfeee7e8f56f38c187df029b58'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -503,6 +503,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S621` - Give the M200 reconciliation module a contention-aware budget, since its rebind-refusal case runs 251s alone but measured 305s under the repository's default parallelism against a 300-second wall-clock ceiling it carried no marker for, while the sibling two-channel-proof module already marks its own long case; `dev/registry/tests/test_m200_2024_full_reconciliation.py`.
 - [x] `W02.P02.S622` - Bound the one unbounded child-process wait in a unit-lane test and gate the class, since the per-test ceiling cannot interrupt a thread blocked in wait by the repository's own account, so the worker exits uncleanly and max-worker-restart zero stops the session naming a test that never hung; `dev/packaging/tests/test_build_scratch_reclaim.py dev/tests/test_no_unbounded_subprocess_wait.py`.
 - [x] `W02.P02.S623` - Retire the localized surface's dead file exemption and gate the list against the tree, since its one entry named a docs-root brief that commit 06e03da6a4 deleted and the exemption stayed behind excluding nothing while still reading as a reviewed decision; `dev/docs/i18n.py dev/docs/tests/test_i18n.py`.
+- [x] `W02.P02.S624` - Re-measure the generated export tree failures, which the standing note recorded as three modelos and the full suite shows as twenty-seven revisions across fourteen, twenty-five of them differing only in the generation provenance sidecar and two also in a record fragment, so the committed trees are stale against the current derivation rather than individually broken; `dev/registry/tests/test_generated_export_trees.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
