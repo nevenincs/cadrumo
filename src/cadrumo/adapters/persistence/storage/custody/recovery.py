@@ -123,7 +123,7 @@ class ProfileCustodyRecoveryEnvelope(_RecoveryPayload, CustodyDigestModel):
 
         Pins ``schema_version`` to the current constant, computes ``self_digest``
         from the assembled payload, then re-validates the whole record through
-        :meth:`model_validate_json` rather than constructing the model directly —
+        :meth:`pydantic.BaseModel.model_validate_json` rather than constructing the model directly —
         so a caller can never end up holding an envelope whose digest was never
         actually checked against its own fields.
         """

@@ -431,7 +431,7 @@ class SecretScrubbingFilter(logging.Filter):
 
 
 def _install_run_context_record_factory() -> None:
-    """Install a :class:`LogRecord` factory that stamps ``run_id`` / ``step_id``.
+    """Install a :class:`logging.LogRecord` factory that stamps ``run_id`` / ``step_id``.
 
     The contextvars live in :mod:`cadrumo.core.observability.context`. They are
     imported lazily inside the closure so this function never triggers
