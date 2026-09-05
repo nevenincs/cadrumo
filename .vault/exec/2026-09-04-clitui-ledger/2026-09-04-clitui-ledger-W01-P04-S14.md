@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:371d8d860a14a963d6ee464cd6a9ab08e758b4759f540ba9120e837a2d2744ac'
+body_hash: 'sha256:de3de9c41c0a0286b4cae81d45719d15f7225158ca584fd24c068ff3017baf5f'
 step_id: 'S14'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
@@ -33,3 +33,4 @@ related:
 ## Publication hold
 
 The active candidate records `REJECT`, zero accepted closure receipts, no external acceptance anchor, and G0 `OPEN`. Fresh independent review, receipt, and external anchor work is required before this Step can close. The busy TUI-owned paths were not modified or quarantined.
+

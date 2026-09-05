@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:557e9b97afab2c8ab3106c99ede9d4621233a7c523ada27c33107dc14f614260'
+body_hash: 'sha256:10998de0aaba6b412b1dc191eccf9e8ce43d1864d871499417a9a87f42997acc'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -542,6 +542,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S660` - Budget the four dev/tests modules nearest the per-test ceiling, measured under the default parallelism at 277s, 252s, 218s and 207s against 300s, since loadfile distribution puts a whole module on one worker so the margin is shared and the first case to cross it takes every sibling down as never having run; `dev/tests/test_modelo_workspace_fixed_point.py dev/tests/test_public_authority_cutover.py dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_write_path_coverage_gate.py`.
 - [x] `W02.P02.S661` - Route the CI lane prohibition gates through one guarded workflow loader that refuses a lane declaring no jobs or no steps, since a missing key already raises loudly but an empty collection satisfies every prohibition while describing a lane that runs nothing; `dev/ci/tests/test_ci_workflow.py`.
 - [x] `W02.P02.S662` - Floor the configured extra files that reach the release annotation check, since the corpus arrives through a get default and a renamed or emptied key yields no entries, which is the same silent success the gate exists to prevent one level up; `dev/ci/tests/test_action_pinning.py`.
+- [x] `W02.P02.S663` - Refuse every route to an empty synthetic pool in the sanitiser round-trip gate and floor its corpus, since a sidecar without its replacements list and a list with no synthetic each skipped the one comparison proving the parsed identity was sanitised, so a fixture carrying a real identity would pass by not being asked; `dev/sanitizer/tests/test_round_trip.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
