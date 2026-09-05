@@ -94,11 +94,27 @@ def test_production_package_never_imports_vaultspec_rag() -> None:
     # over a path that does not exist, so the corpus size is the only thing
     # separating "nothing references it" from "nothing was read".
     assert len(files) > 500, f"expected the production package, scanned only {len(files)} module(s)"
-    offenders = [
-        str(path.relative_to(_REPO_ROOT))
-        for path in files
-        if "vaultspec_rag" in path.read_text(encoding="utf-8", errors="ignore")
-    ]
+    offenders: list[str] = []
+    undecodable: list[str] = []
+    for path in files:
+        try:
+            # Read strictly. With errors="ignore" an undecodable byte is dropped
+            # before the search runs, so a reference straddling one is simply not
+            # there and this gate reports the package clean over text it never
+            # saw - on a policy that decides what ships in the wheel. All 5,851
+            # production modules decode strictly, so one that does not is a
+            # broken tracked file and is named.
+            body = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError as refusal:
+            undecodable.append(f"{path.relative_to(_REPO_ROOT)}: {refusal}")
+            continue
+        if "vaultspec_rag" in body:
+            offenders.append(str(path.relative_to(_REPO_ROOT)))
+
+    assert not undecodable, (
+        "these production modules could not be decoded, so the search never ran over their "
+        f"contents and this gate's clean result does not cover them: {undecodable}"
+    )
     assert not offenders, f"src/cadrumo references vaultspec_rag: {offenders}"
 
 
@@ -113,6 +129,6 @@ def test_the_production_scan_detects_a_reference_when_one_exists(tmp_path: Path)
     found = [
         path.name
         for path in scan_directory(tmp_path, pattern="*.py", recursive=True)
-        if "vaultspec_rag" in path.read_text(encoding="utf-8", errors="ignore")
+        if "vaultspec_rag" in path.read_text(encoding="utf-8")
     ]
     assert found == ["offending.py"]
