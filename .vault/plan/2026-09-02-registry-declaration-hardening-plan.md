@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:e6439503c37d258bc98eb133afef9fa34cbc189cfd27951ab3bfb471d8897ec8'
+body_hash: 'sha256:69a80010caf23dfe2dc4ddf1bb07641c5697e4c1838edea4e7ede17e0f2a8adb'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -534,6 +534,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S652` - Floor the parsed surface behind the three generated-tree absence gates, since each asserts a forbidden name is absent from a module it parses and an emptied or stubbed module satisfies every such claim by construction while the boundary it guards no longer exists; `dev/registry/tests/test_export_tree.py dev/registry/tests/test_generated_tree_check.py dev/registry/tests/test_generated_tree_publication.py`.
 - [x] `W02.P02.S653` - Floor the parsed call surface behind the identity CLI write-surface gate, since its three claims are all absences and a stubbed subject satisfies every one of them while the command it describes has stopped existing; `dev/registry/tests/test_m200_semantic_casilla_candidates.py`.
 - [x] `W02.P02.S654` - Floor both absence claims in the ledger import aggregation gate, since the disjointness holds over an empty parse and the CadrumoError claim iterates exactly one except handler, so deleting that handler empties the loop rather than failing the gate; `dev/locales/tests/test_ledger_notice_action_conformance.py`.
+- [x] `W02.P02.S655` - Floor each source corpus the static inspection boundary gates read, separately rather than in aggregate, since the first unions a three thousand six hundred file boundary with two five-file collections and a total floor would be satisfied by the large member while either small one emptied; `dev/registry/tests/test_static_inspection.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
