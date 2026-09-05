@@ -47,6 +47,11 @@ LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_ROOT: Final[Literal["cadrumo.ledger_tui_supp
     "cadrumo.ledger_tui_supported_surface_census"
 )
 _LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_FRAME: Final[bytes] = b"cadrumo:ledger-tui-supported-surface-census:v1\x00"
+LEDGER_UNION_DENOMINATOR_SCHEMA_VERSION: Final[Literal[1]] = 1
+LEDGER_UNION_DENOMINATOR_ROOT: Final[Literal["cadrumo.ledger_union_denominator"]] = (
+    "cadrumo.ledger_union_denominator"
+)
+_LEDGER_UNION_DENOMINATOR_FRAME: Final[bytes] = b"cadrumo:ledger-union-denominator:v1\x00"
 _LEDGER_TUI_SUPPORTED_SURFACE_SOURCE_SET_FRAME: Final[bytes] = b"cadrumo:ledger-tui-supported-surface-source-set:v1\x00"
 _LEDGER_MESSAGE_TYPES: Final[tuple[str, ...]] = (
     "LedgerBackRequested",
@@ -1026,6 +1031,23 @@ class DenominatorSourceKind(StrEnum):
     REGISTRY_ROUTE = "registry_route"
     ARTIFACT_PRODUCT = "artifact_product"
     SUPPORTED_SURFACE = "supported_surface"
+
+
+class SemanticHomeStatus(StrEnum):
+    """Whether an adjudicated canonical contract exists or is plan-owned."""
+
+    EXISTING = "existing"
+    PLANNED = "planned"
+
+
+class LedgerCapabilityEffect(StrEnum):
+    """The behavior distinction that prevents unlike denominator rows merging."""
+
+    QUERY = "query"
+    MUTATION = "mutation"
+    PROPOSAL = "proposal"
+    ARTIFACT = "artifact"
+    REGISTRY_ROUTE = "registry_route"
 
 
 class ReviewRuling(StrEnum):
