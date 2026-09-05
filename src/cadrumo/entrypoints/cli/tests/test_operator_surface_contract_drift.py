@@ -1,7 +1,7 @@
 """Live-tree drift gate for the backend-owned ``OperatorSurfaceContract``.
 
-The companion of :func:`test_every_cli_leaf_has_a_registered_schema`. That gate
-proves every CLI leaf has a registered JSON schema; this one proves the
+Schema registration proves each CLI leaf can emit a declared shape. This
+gate proves the other half: that the
 :class:`~cadrumo.application.operator_surface.OperatorSurfaceContract` — the source
 external command inventories are built from —
 declares *exactly* the mounted command families and their sub-verbs.
