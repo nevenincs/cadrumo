@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:75de49a4297ee47396603672a7a2ae5cd2ddc5654be09130ba62a696eb21cff8'
+body_hash: 'sha256:30d5a27aab4f3416005c51632d078c3913df8223602b035b09a5ce929c5ff231'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -514,6 +514,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S632` - Announce the revisions the convention-without-rule join never reaches, since ninety-seven of one hundred and twenty-eight are refused by the two screens and dropped without a count, leaving a bare non-emptiness guard satisfied by the eleven it does assert; `dev/registry/tests/test_rule_grounding_coverage.py`.
 - [x] `W02.P02.S633` - Report the screens whose docstrings state no count, since the two agreement gates skip them entirely and their non-emptiness guards are satisfied by the nine that do state one, leaving half the screen corpus unverified for conditions and all but one for facts; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W02.P02.S634` - Refuse a production module the canonical-definition gate cannot parse, since a module skipped for a syntax error is searched for nothing and a second definition living in it stays invisible while the gate still reports exactly one; `dev/tests/test_canonical_definitions_stay_singular.py`.
+- [x] `W02.P02.S635` - Announce a first-party module the identity enrolment scan never parses, since an unparsed module is never searched and its corpus guard counts listed modules rather than parsed ones, so a collapsed parse would satisfy the thousand-module floor while the search covered a fraction; `dev/tests/test_registry_identity_enrolment.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
