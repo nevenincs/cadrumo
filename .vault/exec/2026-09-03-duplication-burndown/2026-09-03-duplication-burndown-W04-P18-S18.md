@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#duplication-burndown'
 date: '2026-09-04'
-modified: '2026-09-04'
+modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:9e07eeb9d846f37cb60ca741ec245d1248b0d82bfd34364f3d2ef53365a4c444'
+body_hash: 'sha256:9384c71b43e388d7e298be8df17fd5fa94aa2ff1ea3c416b2c535d1f8ecb62e3'
 step_id: 'S18'
 related:
   - "[[2026-09-03-duplication-burndown-plan]]"
@@ -87,4 +87,3 @@ measurement by edits that ran `ruff check` but not `ruff format` afterwards -
 returns the count to the eleven peer-owned files this record already named. The lesson
 is that a campaign auditing drift can introduce it: run the format check over the whole
 tree periodically, not only over the files an iteration touched.
-
