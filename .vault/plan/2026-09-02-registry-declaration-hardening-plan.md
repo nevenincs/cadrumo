@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:4212d72913f78bd96db5770be160be7d93f7af82190fa797eced17f6494a23ec'
+body_hash: 'sha256:203802ed5038029917eebafac37f96243d248d0146596da5e78244b8e062c161'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -508,6 +508,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S626` - Make the dev-only dependency gate read production sources strictly, since dropping undecodable bytes before the token search means a reference straddling one is absent from the result and the package reports clean on a policy that decides what ships in the wheel; `dev/docs/tests/test_rag_is_dev_only.py`.
 - [x] `W02.P02.S627` - Announce the untracked files the documentation privacy scan does not search, since a size cutoff and a read failure both continued without a record and an unscanned file was indistinguishable from a clean one in a gate about leaked private data; `dev/quality/tests/test_doc_privacy.py`.
 - [x] `W02.P02.S628` - Announce the mapping fragments the valueless-slot gate could not parse, since a fragment that contributes no entries makes every export ref into it read as a hand-authored layout with no map entry to judge, so a malformed fragment silently converts judged routings into unjudged ones; `dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py`.
+- [x] `W02.P02.S629` - Refuse a committed sidecar the residual-identity gate cannot parse, since the provenance question is asked of the sidecar and an unparseable one takes its fixture out of the scan scope entirely rather than leaving it with unknown provenance, and four fixtures carry that provenance today; `dev/sanitizer/tests/test_residual_identity_absence.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
