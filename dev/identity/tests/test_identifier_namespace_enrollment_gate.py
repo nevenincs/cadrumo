@@ -686,13 +686,27 @@ def _production_sources() -> tuple[tuple[str, str], ...]:
 
 
 def _parsed(sources: tuple[tuple[str, str], ...]) -> dict[str, ast.Module]:
-    """Parse each production source in the current snapshot."""
+    """Parse each production source in the current snapshot.
+
+    Refuses rather than skipping. A module that does not parse is absent from
+    the returned trees, so an unenrolled identifier field declared in it is
+    invisible to all three gates that consume this, and each of them reports
+    clean. The population is `src/cadrumo` production sources - 2,122 of them,
+    all parsing - so one that does not is a broken tracked file, not a peer
+    mid-edit in a shared worktree.
+    """
     trees: dict[str, ast.Module] = {}
+    unparsed: list[str] = []
     for path, source in sources:
         try:
             trees[path.replace("\\", "/")] = ast.parse(source)
-        except SyntaxError:
-            continue
+        except SyntaxError as refusal:
+            unparsed.append(f"{path}: {refusal}")
+
+    assert not unparsed, (
+        "these production sources could not be parsed, so an identifier field declared in "
+        f"one would not reach any enrolment gate below: {unparsed}"
+    )
     return trees
 
 
