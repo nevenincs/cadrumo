@@ -55,11 +55,37 @@ _RETIRED_MARKERS: Final[frozenset[str]] = frozenset({"S73"})
 _HELD: Final[frozenset[str]] = frozenset({"S390", "S395", "S396", "S411", "S424"})
 _MIXED_HELD: Final[frozenset[str]] = _HELD - {"S411"}
 _KNOWN_OVERLAP: Final[frozenset[str]] = _RETAINED | _RETIRED_MARKERS | _HELD
+_REVIEWED_INCLUDE: Final[frozenset[str]] = _KNOWN_OVERLAP
 _EXPECTED_TOKEN: Final[dict[str, str]] = {
     **dict.fromkeys(_RETAINED, "RETAINED_PREDECESSOR_EVIDENCE"),
     **dict.fromkeys(_RETIRED_MARKERS, "RETAINED_RETIRED_PREMISE_MARKER"),
     **dict.fromkeys(_HELD, "DISPLACED_AND_HELD_UNTIL_G3"),
 }
+_LEDGER_PATH_PATTERN: Final[re.Pattern[str]] = re.compile(
+    r"(?:^|[\s`'\",])(src/)?cadrumo/(?:entrypoints/tui|application|domain)/ledger"
+    r"(?:/|[_.]|(?=[\s`'\",;]|$))|/ledger/",
+    re.IGNORECASE,
+)
+_LEDGER_IDENTIFIER_PATTERN: Final[re.Pattern[str]] = re.compile(
+    r"(?<![A-Za-z0-9])ledger_[A-Za-z0-9_]+|[A-Za-z0-9_]+_ledger(?:_[A-Za-z0-9_]+)*|"
+    r"(?<![A-Za-z0-9_])ledger\.[a-z0-9_.-]+|[a-z0-9_.-]+\.ledger(?:\.[a-z0-9_.-]+)?",
+    re.IGNORECASE,
+)
+_LEDGER_PRODUCT_SYMBOL_PATTERN: Final[re.Pattern[str]] = re.compile(
+    r"\bLedger[A-Z][A-Za-z0-9]*\b|\b[A-Za-z0-9]+Ledger(?:[A-Z][A-Za-z0-9]*)?\b"
+)
+_LEDGER_DOMAIN_PATTERN: Final[re.Pattern[str]] = re.compile(
+    r"\bledger\s+(?:action|binding|capabilit|classification|entr|evidence|import|issue|module|navigation|parity|"
+    r"preflight|reconciliation|review|route|selection|snapshot|summary|surface|transaction|tui|work|workspace)"
+    r"[A-Za-z-]*\b|"
+    r"\b(?:classification|entr|evidence|import|reconciliation|review|transaction|tui|workspace)[A-Za-z-]*\s+ledger\b",
+    re.IGNORECASE,
+)
+_REVIEWED_PLURAL_PATTERN: Final[re.Pattern[str]] = re.compile(
+    r"\b(?:accounting|financial|tax|transaction)\s+ledgers\b|\bledgers\s+(?:classification|evidence|import|review)\b",
+    re.IGNORECASE,
+)
+_REVIEWED_EXCLUDE_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (re.compile(r"\baudit\s+ledgers?\b", re.IGNORECASE),)
 
 
 @dataclass(frozen=True, slots=True)
@@ -96,6 +122,23 @@ def _parse_rows(plan_text: str) -> tuple[_PlanRow, ...]:
     return parsed
 
 
+def _is_ledger_overlap(row: _PlanRow) -> bool:
+    base_action = row.action.split(" CLITUI_LEDGER_DISPOSITION:", maxsplit=1)[0]
+    candidate = f"{base_action} {row.scope}".replace("\\", "/")
+    for excluded in _REVIEWED_EXCLUDE_PATTERNS:
+        candidate = excluded.sub("", candidate)
+    return row.step_id in _REVIEWED_INCLUDE or any(
+        pattern.search(candidate)
+        for pattern in (
+            _LEDGER_PATH_PATTERN,
+            _LEDGER_IDENTIFIER_PATTERN,
+            _LEDGER_PRODUCT_SYMBOL_PATTERN,
+            _LEDGER_DOMAIN_PATTERN,
+            _REVIEWED_PLURAL_PATTERN,
+        )
+    )
+
+
 def _validate_plan_ownership(plan_text: str) -> None:
     rows = _parse_rows(plan_text)
     by_id = {row.step_id: row for row in rows}
@@ -114,14 +157,13 @@ def _validate_plan_ownership(plan_text: str) -> None:
             raise ValueError(f"Ledger disposition outside known overlap on {row.step_id}")
         annotated[row.step_id] = disposition
 
-    overlaps = {
-        row.step_id
-        for row in rows
-        if row.step_id in _MIXED_HELD or re.search(r"\bledger\b", f"{row.action} {row.scope}", re.IGNORECASE)
-    }
+    overlaps = {row.step_id for row in rows if _is_ledger_overlap(row)}
     unannotated = overlaps - annotated.keys()
     if unannotated:
         raise ValueError(f"unannotated Ledger overlap: {sorted(unannotated)}")
+    undiscovered = annotated.keys() - overlaps
+    if undiscovered:
+        raise ValueError(f"reviewed Ledger overlap is no longer discoverable: {sorted(undiscovered)}")
     if annotated.keys() != _KNOWN_OVERLAP:
         raise ValueError("Ledger overlap disposition identities drifted")
 
@@ -169,6 +211,50 @@ def _replace_once_in_step(source: str, display_path: str, old: str, new: str) ->
 
 def test_live_predecessor_plan_has_the_exact_ledger_ownership_dispositions() -> None:
     _validate_plan_ownership(_plan_text())
+
+
+@pytest.mark.parametrize(
+    "wording",
+    [
+        pytest.param("Retire the ledger_binding_resolution facade", id="ledger-prefix-identifier"),
+        pytest.param("Retire the irnr_ledger_bindings facade", id="ledger-suffix-identifier"),
+        pytest.param("Inspect src/cadrumo/application/ledger/new.py", id="ledger-path-segment"),
+        pytest.param("Render LedgerWorkspaceSummary in AEAT Sync", id="ledger-product-symbol"),
+        pytest.param("Render accounting ledgers in AEAT Sync", id="reviewed-plural-context"),
+    ],
+)
+def test_same_row_unambiguous_ledger_signals_require_adjudication(wording: str) -> None:
+    plan_text = _replace_once_in_step(
+        _plan_text(),
+        "W08.P30.S408",
+        "Give AEAT Sync its local row readers",
+        wording,
+    )
+
+    with pytest.raises(ValueError, match="unannotated Ledger overlap"):
+        _validate_plan_ownership(plan_text)
+
+
+def test_same_row_generic_audit_ledger_is_explicitly_excluded() -> None:
+    plan_text = _replace_once_in_step(
+        _plan_text(),
+        "W08.P30.S408",
+        "Give AEAT Sync its local row readers",
+        "Record the audit ledger for AEAT Sync",
+    )
+
+    _validate_plan_ownership(plan_text)
+
+
+def test_current_overlap_row_remains_discoverable_after_nonsemantic_rewording() -> None:
+    plan_text = _replace_once_in_step(
+        _plan_text(),
+        "W03.P20.S207",
+        "Privatize the ledger_binding_resolution implementation",
+        "Retire the ledger_binding_resolution implementation",
+    )
+
+    _validate_plan_ownership(plan_text)
 
 
 @pytest.mark.parametrize(
