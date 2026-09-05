@@ -72,7 +72,7 @@ _LEDGER_IDENTIFIER_PATTERN: Final[re.Pattern[str]] = re.compile(
     re.IGNORECASE,
 )
 _LEDGER_PRODUCT_SYMBOL_PATTERN: Final[re.Pattern[str]] = re.compile(
-    r"\bLedger[A-Z][A-Za-z0-9]*\b|\b[A-Za-z0-9]+Ledger(?:[A-Z][A-Za-z0-9]*)?\b"
+    r"\bLedger(?:[A-Z][A-Za-z0-9]*)?\b|\b[A-Za-z0-9]+Ledger(?:[A-Z][A-Za-z0-9]*)?\b"
 )
 _LEDGER_DOMAIN_PATTERN: Final[re.Pattern[str]] = re.compile(
     r"\bledger\s+(?:action|binding|capabilit|classification|entr|evidence|import|issue|module|navigation|parity|"
@@ -220,6 +220,10 @@ def test_live_predecessor_plan_has_the_exact_ledger_ownership_dispositions() -> 
         pytest.param("Retire the irnr_ledger_bindings facade", id="ledger-suffix-identifier"),
         pytest.param("Inspect src/cadrumo/application/ledger/new.py", id="ledger-path-segment"),
         pytest.param("Render LedgerWorkspaceSummary in AEAT Sync", id="ledger-product-symbol"),
+        pytest.param("Export Ledger data from AEAT Sync", id="standalone-ledger-export"),
+        pytest.param("Append Ledger notes in AEAT Sync", id="standalone-ledger-notes"),
+        pytest.param("Edit Ledger attachments in AEAT Sync", id="standalone-ledger-attachments"),
+        pytest.param("Edit Ledger fields in AEAT Sync", id="standalone-ledger-fields"),
         pytest.param("Render accounting ledgers in AEAT Sync", id="reviewed-plural-context"),
     ],
 )
@@ -235,12 +239,24 @@ def test_same_row_unambiguous_ledger_signals_require_adjudication(wording: str) 
         _validate_plan_ownership(plan_text)
 
 
-def test_same_row_generic_audit_ledger_is_explicitly_excluded() -> None:
+@pytest.mark.parametrize("wording", ["audit ledger", "audit Ledger"])
+def test_same_row_generic_audit_ledger_is_explicitly_excluded(wording: str) -> None:
     plan_text = _replace_once_in_step(
         _plan_text(),
         "W08.P30.S408",
         "Give AEAT Sync its local row readers",
-        "Record the audit ledger for AEAT Sync",
+        f"Record the {wording} for AEAT Sync",
+    )
+
+    _validate_plan_ownership(plan_text)
+
+
+def test_same_row_lowercase_generic_ledger_is_not_a_product_signal() -> None:
+    plan_text = _replace_once_in_step(
+        _plan_text(),
+        "W08.P30.S408",
+        "Give AEAT Sync its local row readers",
+        "Export ledger data from AEAT Sync",
     )
 
     _validate_plan_ownership(plan_text)

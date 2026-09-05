@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:c26fb79a3502d4536328ee5f05988e476c10e99034d47c5d90ccd0c4cde11321'
+body_hash: 'sha256:9785e3fceeef3e37b0cbde2e696d4d5f8ddedaa659ca36d0a88518da810f3b68'
 step_id: 'S09'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
@@ -25,7 +25,7 @@ related:
 - `M` `.vault/index/tui-architecture.index.md`
 - `A` `.vault/exec/2026-09-04-clitui-ledger/2026-09-04-clitui-ledger-W01-P03-S09.md`
 - `A` `dev/quality/tests/test_clitui_ledger_plan_ownership.py`
-- The ownership detector treats the 33 adjudicated rows as an exact reviewed include set, rejects new unambiguous Ledger paths, identifiers, product symbols, domain phrases, and reviewed plural contexts, and explicitly excludes the ambiguous generic phrase `audit ledger`.
+- The ownership detector treats the 33 adjudicated rows as an exact reviewed include set, rejects new unambiguous Ledger paths, identifiers, capitalized standalone product names, product symbols, domain phrases, and reviewed plural contexts, and explicitly excludes the reviewed ambiguous generic contexts `audit ledger` and `audit Ledger`.
 - `verify:` `uv run --no-sync pytest -q dev/quality/tests/test_clitui_ledger_plan_ownership.py` -> `pass`
 - `verify:` `uv run --no-sync ruff format --check dev/quality/tests/test_clitui_ledger_plan_ownership.py` -> `pass`
 - `verify:` `uv run --no-sync ruff check dev/quality/tests/test_clitui_ledger_plan_ownership.py` -> `pass`
