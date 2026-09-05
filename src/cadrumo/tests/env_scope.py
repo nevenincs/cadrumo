@@ -243,7 +243,7 @@ def _pin_language_on_active_override(language: OutputLanguage | None) -> None:
     flowed through: unsetting has to remove the field, not write a default into
     it, or "unset" would become indistinguishable from "chose the default".
     """
-    override = None  # defect: pin never reaches the override
+    override = settings_override.get()
     if override is None:
         return
     fields = set(override.model_fields_set)
