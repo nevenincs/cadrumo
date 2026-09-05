@@ -192,9 +192,7 @@ def test_diagnostic_classification_has_no_runtime_authority_or_success_path() ->
         "that surface, so an emptied type would make it vacuous"
     )
     leaked = forbidden.intersection(dir(classification))
-    assert not leaked, (
-        f"diagnostic classification carries runtime authority surface: {sorted(leaked)}"
-    )
+    assert not leaked, f"diagnostic classification carries runtime authority surface: {sorted(leaked)}"
     for name in sorted(forbidden):
         with pytest.raises(AttributeError):
             object.__getattribute__(classification, name)

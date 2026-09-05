@@ -45,6 +45,5 @@ def test_no_shipped_casilla_label_is_cut_off(locale: str) -> None:
 
     truncated = sorted(casilla for casilla, label in labels.items() if "..." in label)
     assert not truncated, (
-        f"{locale} ships {len(truncated)} casilla label(s) cut off mid-phrase, "
-        f"first five: {truncated[:5]}"
+        f"{locale} ships {len(truncated)} casilla label(s) cut off mid-phrase, first five: {truncated[:5]}"
     )

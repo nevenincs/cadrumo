@@ -342,9 +342,7 @@ def test_zero_generator_replay_tolerates_concurrent_unrelated_bytes(
 
     monkeypatch.setattr(replay_module, "_stage_bytes", write_live_concurrently)
 
-    replay_object_name_component(
-        manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
-    )
+    replay_object_name_component(manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo)
 
     assert concurrent.read_bytes() == b"third-party bytes"
     assert (repo / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"

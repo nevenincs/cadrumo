@@ -94,4 +94,3 @@ def test_a_design_cell_that_wraps_is_read_whole_and_not_as_fragments() -> None:
         f"01264 resolved to a fragment rather than the whole cell: {label!r}"
     )
     assert "Club Natació Barcelona" in label
-
