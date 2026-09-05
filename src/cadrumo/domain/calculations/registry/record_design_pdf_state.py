@@ -7,6 +7,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Final
 
+from pydantic import ConfigDict, TypeAdapter
+
 from .errors import RegistryValidationError
 from .record_design_pdf_repairs import REVERSED_ROW_TAIL_RE
 from .record_design_pdf_rows import (
@@ -42,6 +44,10 @@ from .record_design_workbook import (
     fold_untagged_desglose_components,
     solve_declared_desglose_holes,
     tiles_exactly,
+)
+
+_NUMERIC_TUPLE_ADAPTER: TypeAdapter[tuple[int | float, ...]] = TypeAdapter(
+    tuple[int | float, ...], config=ConfigDict(strict=True)
 )
 
 

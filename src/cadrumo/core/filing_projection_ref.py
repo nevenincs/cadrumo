@@ -6,11 +6,20 @@ from collections.abc import Mapping
 from enum import StrEnum
 from typing import Annotated, Final, Literal, cast, get_args
 
-from pydantic import BaseModel, Field, TypeAdapter, model_validator
+from pydantic import BaseModel, Field, StringConstraints, TypeAdapter, model_validator
 
 from . import filing_projection_ref_support as _projection_ref_support
 from .casilla_id import CasillaId
 from .models import STRICT_FROZEN_CONFIG
+
+_Identity = Annotated[
+    str,
+    StringConstraints(
+        min_length=1,
+        max_length=160,
+        pattern=r"^[a-z0-9][a-z0-9._:-]*[a-z0-9]$|^[a-z0-9]$",
+    ),
+]
 
 
 class M303ProrrataActivityProjectionField(StrEnum):

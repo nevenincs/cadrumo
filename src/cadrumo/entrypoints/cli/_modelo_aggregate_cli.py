@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 
 import typer
 from pydantic import BaseModel, ValidationError
@@ -27,6 +28,7 @@ from ...core.external_constants import RETENCIONES_MODELOS
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.modelo import Modelo
+from ...core.period import Period
 from ...domain.calculations.registry.withholding_bindings import (
     WithholdingClaveBreakdown,
     aggregate_withholding_by_clave,
@@ -34,6 +36,8 @@ from ...domain.calculations.registry.withholding_bindings import (
 from ._common import emit_envelope, load_invoices
 from ._modelo_behavior_support import resolve_year_period
 from ._modelo_payloads import ModeloAggregateResult
+
+ResolveYearPeriod = Callable[..., Period]
 
 
 def _route_invoice_retenciones_into_command(

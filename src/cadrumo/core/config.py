@@ -101,6 +101,7 @@ _LOGGER = logging.getLogger(__name__)
 # (file → core/ → cadrumo/ → src/ → REPO_ROOT).
 DEV_TEST_DATABASE_PASSWORD = "aeat-dev-test-database-password"
 """Shared development/test password for database-backed secure-storage tests."""
+DEV_TEST_DATABASE_PASSWORD_ENV_VAR = "CADRUMO_DEV_TEST_DATABASE_PASSWORD"
 """Environment variable backing :attr:`Settings.cadrumo_dev_test_database_password`."""
 LIVE_READ_TEST_OPT_IN_SETTINGS_FIELD = _live_test_config.LIVE_READ_TEST_OPT_IN_SETTINGS_FIELD
 LIVE_READ_TEST_OPT_IN_ENV_VAR = _live_test_config.LIVE_READ_TEST_OPT_IN_ENV_VAR
