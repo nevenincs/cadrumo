@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:199c2d2b39c757b8481e483bf9a48f0808453850a714fee8bbf1b98220b765e5'
+body_hash: 'sha256:42a11f4802bebb045c8cbc8da89804b4abdd611f11f999cacb190ec5e7e80556'
 ---
 
 # `reachability-burndown` plan
@@ -118,6 +118,14 @@ The 85 exported findings, and the 367 declared exports package-wide that no modu
 
 - [x] `W05.P11.S23` - Inventory every exported-but-unimported name by owning area and propose a disposition per area for an owner's ruling; `dev/audit`.
 - [x] `W05.P11.S24` - Gate the unconsumed-export population so the owner review is not overtaken by growth, and triage it by area and by shape; `dev/quality/unconsumed_export_ratchet.py`.
+
+### Phase `W05.P12` - residue classification after plan closure
+
+The plan closed at 24/24 while the live audit still reports 58 unreachable modules, 1322 unused symbols and 25 orphaned test modules. The completed steps were genuinely done; they simply did not enumerate the whole backlog. This phase carries the residue that measurement, not planning, identified.
+
+- [ ] `W05.P12.S25` - Establish whether the enum-member tier is dead code or an instrument gap: 204 of 305 enum-member findings carry a literal value present in shipped registry declarations, 174 of them in one module bound by value in the Modelo 200 projection_endpoints declarations, and fix the binding rule tightly enough that it cannot suppress a real finding; `dev/audit/unreachable_code.py`.
+- [ ] `W05.P12.S26` - Classify with their owners the shipped modules that block the ratchet and fit no available disposition, since IntentionalReachabilityKind admits only design_time_authority and the allowed list is shrink-only; `dev/quality/unreachable_module_ratchet.toml`.
+- [ ] `W05.P12.S27` - Re-measure the orphaned test population against its anchors and resolve any test still reported after the module or symbol it covers has been resolved; `dev/audit`.
 
 ## Parallelization
 
