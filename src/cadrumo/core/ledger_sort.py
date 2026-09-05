@@ -10,7 +10,7 @@ than raw strings.
 :class:`LedgerSortOrder` selects the direction. The CLI parser and the
 ledger projection service both use these enum members rather than raw
 string tokens, threading them through
-:data:`cadrumo.entrypoints.cli._app_ledger_command_specs.APP_LEDGER_COMMAND_SPECS`,
+:data:`cadrumo.entrypoints.cli._app_ledger_command_specs.LEDGER_COMMAND_SPECS`,
 :func:`cadrumo.entrypoints.cli._ledger_read_cli.ledger_list`,
 :func:`cadrumo.entrypoints.cli._ledger_list.project_ledger_list`, and the stable
 :func:`cadrumo.entrypoints.cli._ledger_list._sort_results` helper.
