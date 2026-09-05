@@ -38,6 +38,7 @@ import pytest
 from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 
+from ...quality.unread_inputs import report_unread
 from ..analysis.casilla_id_grammar import screen_authority as grammar_screen
 from ..analysis.continuity_integrity import screen_authority as continuity_screen
 from ..analysis.export_ref_symmetry import screen_authority as export_ref_screen
@@ -919,6 +920,7 @@ def test_a_screen_that_counts_its_conditions_states_the_right_number(
     import re
 
     wrong: list[str] = []
+    unstated_conditions: list[str] = []
     checked = 0
     from ..analysis.screens import screen_findings, screen_module_names
 
@@ -932,6 +934,11 @@ def test_a_screen_that_counts_its_conditions_states_the_right_number(
         # count in a synonym and went unchecked.
         claim = re.search(r"\b([A-Za-z]+) [a-z]+ are reported\b", doc)
         if claim is None:
+            # Stating a count is not mandatory, so this is not a failure. But a
+            # screen stating none is not checked here at all, and the guard below
+            # is satisfied by the ones that do: nine of eighteen screens are
+            # silent, leaving half the corpus unverified with nothing said.
+            unstated_conditions.append(screen_name)
             continue
         stated = _NUMBER_WORDS.get(claim.group(1).lower())
         if stated is None:
@@ -954,6 +961,11 @@ def test_a_screen_that_counts_its_conditions_states_the_right_number(
         if emitted > stated:
             wrong.append(f"{screen_name} says {stated} conditions and emits {emitted} distinct kinds live")
 
+    report_unread(
+        "screen condition-count agreement",
+        "these screens state no condition count, so nothing below compares what they document against what they emit",
+        unstated_conditions,
+    )
     assert checked, "no screen stated a condition count, so this gate checked nothing"
     assert not wrong, "\n".join(wrong)
 
@@ -1047,6 +1059,7 @@ def test_a_screen_that_counts_the_facts_it_reads_states_the_right_number() -> No
     import re
 
     wrong: list[str] = []
+    unstated_facts: list[str] = []
     checked = 0
     from ..analysis.screens import screen_module_names
 
@@ -1055,6 +1068,11 @@ def test_a_screen_that_counts_the_facts_it_reads_states_the_right_number() -> No
         doc = module.__doc__ or ""
         claim = re.search(r"\b([A-Za-z]+) facts decide\b", doc)
         if claim is None:
+            # Stating a count is not mandatory, so this is not a failure. But a
+            # screen stating none is not checked here at all, and the guard below
+            # is satisfied by the ones that do: nine of eighteen screens are
+            # silent, leaving half the corpus unverified with nothing said.
+            unstated_facts.append(screen_name)
             continue
         stated = _NUMBER_WORDS.get(claim.group(1).lower())
         if stated is None:
@@ -1074,6 +1092,12 @@ def test_a_screen_that_counts_the_facts_it_reads_states_the_right_number() -> No
         if stated != listed:
             wrong.append(f"{screen_name} says {stated} facts and lists {listed}")
 
+    report_unread(
+        "screen fact-count agreement",
+        "these screens state no fact count, so nothing below compares the facts they claim "
+        "to read against the ones they list",
+        unstated_facts,
+    )
     assert checked, "no screen stated a fact count, so this gate checked nothing"
     assert not wrong, "\n".join(wrong)
 
