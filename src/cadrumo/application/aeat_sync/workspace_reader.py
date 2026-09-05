@@ -188,21 +188,45 @@ _LOCALLY_READ_AREAS: Final[frozenset[AeatSyncOverviewArea]] = frozenset(
         AeatSyncOverviewArea.EVIDENCE_COMPARISON,
     }
 )
-"""Areas whose local authority this session actually reads.
+"""Areas whose local authority this session reads unconditionally.
 
 Census reads the authenticated profile record; filed declarations and evidence
 comparison both declare local.filings as their local source, and the door loads
-that catalogue. Notifications and reconciliation have no local reader here, so
-their local side is genuinely unobserved rather than observed-and-empty.
+that catalogue.
+
+Notifications is NOT here because whether it was read is a fact about this
+session rather than about the area: custody is read when the door composed a
+reader and not read when it did not, and `_locally_read_areas` decides that per
+call. Reconciliation is absent outright -- nothing in the codebase records a
+local reconciliation decision, so there is no authority to read.
 """
 
 
-def _local_area_is_populated(area: AeatSyncOverviewArea, *, filing_count: int) -> bool:
+def _locally_read_areas(*, custody_count: int | None) -> frozenset[AeatSyncOverviewArea]:
+    """Which areas this particular session actually read a local authority for.
+
+    Notifications joins only when custody was read. `None` means the door
+    composed no custody reader, and reporting the area as observed-and-empty
+    would claim a look that never happened.
+    """
+    return _LOCALLY_READ_AREAS | {AeatSyncOverviewArea.NOTIFICATIONS}  # defect: unread custody claimed as observed
+
+
+def _local_area_is_populated(
+    area: AeatSyncOverviewArea,
+    *,
+    filing_count: int,
+    custody_count: int | None,
+) -> bool:
     """Whether the local authority this area reads holds anything."""
     if area is AeatSyncOverviewArea.CENSUS:
         # The profile record exists by construction: the session authenticated
         # against it before any of this ran.
         return True
+    if area is AeatSyncOverviewArea.NOTIFICATIONS:
+        # Reached only when custody was read, so a zero here is a proven zero:
+        # documents are in custody, or genuinely none are.
+        return bool(custody_count)
     return filing_count > 0
 
 
@@ -211,6 +235,7 @@ def _overview_row(
     *,
     observed_at: UtcInstant,
     filing_count: int,
+    custody_count: int | None,
     contracts: OperationPublicContractSetV1,
 ) -> AeatSyncWorkspaceOverviewRowV1:
     """State only what the local side genuinely observed for this area.
@@ -228,10 +253,10 @@ def _overview_row(
     """
     local_state = AeatSyncSourceState.NOT_OBSERVED
     local_observed_at = None
-    if area in _LOCALLY_READ_AREAS:
+    if area in _locally_read_areas(custody_count=custody_count):
         local_state = (
             AeatSyncSourceState.PRESENT
-            if _local_area_is_populated(area, filing_count=filing_count)
+            if _local_area_is_populated(area, filing_count=filing_count, custody_count=custody_count)
             else AeatSyncSourceState.ABSENT
         )
         local_observed_at = observed_at
@@ -302,14 +327,13 @@ def _census_rows(
                 path=path,
                 category=_CENSUS_FIELD_CATEGORIES[path],
                 status=AeatSyncCensusStatus.NOT_COMPARED,
-                local_value=censo_values.get(path),  # defect: blank collapses to unobserved
+                local_value=censo_values.get(path, ""),
                 aeat_value=None,
                 supported_actions=actions,
                 supported_operations=operations,
             ),
         )
         for path in CENSAL_ADOPTABLE_PATHS
-        if path in censo_values  # defect: blank fields dropped
     )
 
 
@@ -412,6 +436,7 @@ def read_local_aeat_sync_workspace_projection(
                     area,
                     observed_at=observed_at,
                     filing_count=len(filings),
+                    custody_count=custody_count,
                     contracts=operation_contracts,
                 ),
             )

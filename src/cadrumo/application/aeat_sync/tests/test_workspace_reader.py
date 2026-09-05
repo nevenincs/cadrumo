@@ -58,6 +58,7 @@ def _projection(
     *,
     contracts: OperationPublicContractSetV1 | None = None,
     censo_values: dict[str, str] | None = None,
+    custody_count: int | None = None,
 ):
     return read_local_aeat_sync_workspace_projection(
         bucket_id=_BUCKET,
@@ -66,6 +67,7 @@ def _projection(
         filings=(),
         operation_contracts=contracts if contracts is not None else _unrelated_contracts(),
         censo_values=censo_values,
+        custody_count=custody_count,
     )
 
 
@@ -258,3 +260,35 @@ def test_a_never_compared_row_cannot_carry_an_aeat_value() -> None:
             local_value="28013",
             aeat_value="28014",
         )
+
+
+def test_an_empty_custody_store_is_an_observed_absence_not_an_unread_one() -> None:
+    """Reading custody and finding nothing is a fact the operator can act on.
+
+    This is the pairing S408 names: a local source reporting an observable
+    count of zero beside an overview row claiming nobody looked. Both cannot be
+    true, and the count is the one backed by an actual read.
+    """
+    row = _overview_row(_projection(custody_count=0), AeatSyncOverviewArea.NOTIFICATIONS)
+
+    assert row.local_state is AeatSyncSourceState.ABSENT
+    assert row.local_observed_at is not None
+
+
+def test_custody_holding_documents_reports_them_present() -> None:
+    """The other side of the same read."""
+    row = _overview_row(_projection(custody_count=3), AeatSyncOverviewArea.NOTIFICATIONS)
+
+    assert row.local_state is AeatSyncSourceState.PRESENT
+
+
+def test_an_uncomposed_custody_reader_leaves_notifications_unobserved() -> None:
+    """A door that composed no reader must not be reported as having looked.
+
+    `None` is the third state, and collapsing it into the observed zero above
+    would claim a look this session never took.
+    """
+    row = _overview_row(_projection(custody_count=None), AeatSyncOverviewArea.NOTIFICATIONS)
+
+    assert row.local_state is AeatSyncSourceState.NOT_OBSERVED
+    assert row.local_observed_at is None
