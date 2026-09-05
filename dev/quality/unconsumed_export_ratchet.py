@@ -41,7 +41,7 @@ import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
-from dev.audit.unreachable_code import run_unreachable_code_scan
+from ..audit.unreachable_code import run_unreachable_code_scan
 
 __all__ = ["ExportVerdict", "count_unconsumed", "evaluate"]
 

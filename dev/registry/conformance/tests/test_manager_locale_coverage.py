@@ -160,4 +160,3 @@ def test_the_axis_summary_carries_help_coverage_and_not_only_labels() -> None:
         "this fixture is built incomplete on purpose; if the two are equal the case no "
         "longer distinguishes a carried help axis from a dropped one"
     )
-

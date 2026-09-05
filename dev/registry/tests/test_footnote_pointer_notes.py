@@ -182,9 +182,28 @@ def test_a_pointer_naming_a_note_its_own_sheet_omits_stays_unresolved() -> None:
         pathlib.Path("src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_200/files")
         / "01-200-ejercicio-2025-10-9-mb-xls.xls.extracted.md"
     )
-    by_sheet = sheet_note_definitions(design.read_text(encoding=_UTF_8))
-    assert "nota 1" not in by_sheet.get("DP200020B", {})
-    assert any("nota 1" in labels for labels in by_sheet.values())
+    text = design.read_text(encoding=_UTF_8)
+    by_sheet = sheet_note_definitions(text)
+
+    assert "DP200020B" in text, (
+        "the design no longer names this sheet, so the pointer this case is about is gone; "
+        "pick a sheet the design still carries"
+    )
+
+    # The claim was written as `not in by_sheet.get("DP200020B", {})`, which
+    # cannot tell a sheet that OMITS the label from one the parser never
+    # emitted - and it is the second: this sheet contributes no note
+    # definitions at all, so the pointer is unresolved for a reason the
+    # assertion never stated. Pinned explicitly, so a parser that starts
+    # emitting the sheet forces this claim to be re-stated against its labels.
+    assert "DP200020B" not in by_sheet, (
+        "this sheet now contributes note definitions; re-state the claim against its "
+        f"labels rather than its absence: {sorted(by_sheet['DP200020B'])}"
+    )
+    assert any("nota 1" in labels for labels in by_sheet.values()), (
+        "no sheet defines nota 1, so the label this pointer names is absent everywhere and "
+        "the scoping this case proves would be untestable"
+    )
 
 
 def _extracted(*lines: str) -> str:

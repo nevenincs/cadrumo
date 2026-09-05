@@ -53,7 +53,6 @@ __all__ = ["SETTLEMENT_SEMANTIC_ROLES", "collect_settlement_not_computed_diagnos
 # casilla settles a revision.
 
 
-
 def collect_settlement_not_computed_diagnostics(
     revision: ModeloRevision,
 ) -> tuple[CalculationSourceDiagnostic, ...]:

@@ -2,6 +2,16 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ...application.ledger.models import ManualLedgerTransactionResult
+    from ...core.period import Period
+    from .ledger.models import (
+        LedgerClassificationSubmissionV1,
+        LedgerClassificationSubmitterV1,
+    )
+
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Generator, Iterable, Mapping, Sequence
 from contextlib import ExitStack, asynccontextmanager, contextmanager
@@ -141,10 +151,79 @@ def compose_secure_profile_workbench_generation_provider(
         invoice_repository=InvoiceCatalogueRepository(bucket_id=profile_id),
         bucket_event_repository=build_bucket_event_history_repository(bucket_id=profile_id),
         verification_repository=VerificationReportCatalogueRepository(bucket_id=profile_id),
+        notification_custody_reader=_notification_custody_reader(profile_id),
+        result_casilla_reader=_declaration_result_casilla_reader(),
         operation_contracts=operation_contracts,
         modelo_projection_reader=_modelo_projection_reader(),
     )
     return ApplicationGenerationProviderV1(door)
+
+
+def _ledger_classification_submitter(profile_id: str) -> LedgerClassificationSubmitterV1:
+    """Apply one authorised classification patch to the operator's own ledger.
+
+    The submission carries the action reference the catalogue admitted, so the
+    door records WHICH authority the operator acted under rather than a bare
+    "tui" label -- an amended classification that cannot say who authorised it
+    is an audit gap in a filing-bound record.
+    """
+
+    async def submit(submission: LedgerClassificationSubmissionV1) -> ManualLedgerTransactionResult:
+        from ...application.ledger.actions_manual import update_manual_transaction_fields
+
+        return update_manual_transaction_fields(
+            bucket_id=profile_id,
+            transaction_id=submission.transaction_id,
+            patch=submission.patch,
+            actor="operator",
+            source_command=str(submission.action.action_id),
+        )
+
+    return submit
+
+
+def _notification_custody_reader(profile_id: str) -> Callable[[], int]:
+    """Count the notification documents this profile already holds locally.
+
+    The repository is the CLI's own -- one canonical factory, so a TUI read and
+    a CLI write cannot disagree about where custody lives. Only the count is
+    taken: AEAT Sync needs to know whether anything is there, not what it says,
+    and reading document bytes to answer that would decrypt payloads for a
+    number.
+    """
+
+    def read() -> int:
+        from ...adapters.persistence.profile.notification_documents import (
+            notification_document_repository,
+        )
+        from ...core.config import load_settings
+
+        return len(notification_document_repository(profile_id, load_settings()).list_snapshots())
+
+    return read
+
+
+def _declaration_result_casilla_reader() -> Callable[[str, int, Period], str | None]:
+    """Name the casilla that settles one modelo revision, from the bundled registry.
+
+    Resolution failures are answered with `None` rather than raised. A modelo
+    or period the registry cannot select is a declaration whose result is
+    UNKNOWN, which is exactly what the surface renders; letting it escape would
+    take down a Home and Declarations read over a figure that is one column of
+    one row.
+    """
+
+    def read(modelo: str, filing_year: int, period: Period) -> str | None:
+        from ...application.modelo.settlement_casilla import declaration_result_casilla_id
+        from ...domain.calculations.registry.authority import bundled_authority
+
+        try:
+            snapshot = bundled_authority().snapshot(str(modelo), filing_year=filing_year, period=period.registry_token)
+        except Exception:
+            return None
+        return declaration_result_casilla_id(snapshot.revision)
+
+    return read
 
 
 def _modelo_projection_reader() -> Callable[[WorkUnit], ModeloWorkspaceProjectionV1]:
@@ -267,6 +346,7 @@ class InstalledWorkbenchFactoryDependenciesV1:
     profile_admission: WorkbenchDestinationAdmission
     ledger_review_action: ActionReference
     ledger_evidence_action: ActionReference
+    ledger_classify_action: ActionReference
     declarations_work_action: ActionReference
     declarations_revisions_action: ActionReference
     declarations_filing_action: ActionReference
@@ -429,6 +509,8 @@ def _ledger_generation_factory(
             # generation because the queue is per-visit state an operator acts
             # on, not part of the immutable session snapshot.
             evidence_items=list_attachment_review_queue(AttachmentStore(bucket_id=dependencies.account.profile_id)),
+            classify_action=dependencies.ledger_classify_action,
+            classification_submitter=_ledger_classification_submitter(dependencies.account.profile_id),
         )(context)
 
     return create

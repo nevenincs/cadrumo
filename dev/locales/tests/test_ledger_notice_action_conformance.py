@@ -125,11 +125,41 @@ def _iter_locale_leaves(node: LocaleNode, prefix: str = "") -> Iterator[tuple[st
         yield prefix, node
 
 
+#: Below this a notice module has stopped carrying a surface to inspect.
+#: Live: seventeen modules, the smallest 489 parsed nodes and the largest
+#: 5,294. A floor, not a pinned count.
+_MINIMUM_NOTICE_MODULE_NODES = 100
+
+
+def _notice_module_trees() -> tuple[tuple[ModuleType, ast.Module], ...]:
+    """Parse every ledger notice module, with each surface asserted non-trivial.
+
+    Five gates below iterate this corpus and assert an ABSENCE in each module -
+    no redeclared action, no command literal outside provenance, no flattened
+    typed refusal. Every one of those claims is satisfied by a module that has
+    been gutted to a shell, and this family is actively being rehomed (one
+    member has already lost its leading underscore), which is exactly how a
+    module keeps its import and loses its body.
+
+    The tuple itself needs no floor: it is a literal of imported modules, so a
+    missing one fails at import rather than shrinking the corpus.
+    """
+    parsed: list[tuple[ModuleType, ast.Module]] = []
+    for module in _LEDGER_NOTICE_MODULES:
+        tree = ast.parse(inspect.getsource(module))
+        size = sum(1 for _ in ast.walk(tree))
+        assert size >= _MINIMUM_NOTICE_MODULE_NODES, (
+            f"{module.__name__} parses to only {size} node(s); below this every absence "
+            "claimed of it holds because the module carries nothing, not because it complies"
+        )
+        parsed.append((module, tree))
+    return tuple(parsed)
+
+
 def test_ledger_notices_do_not_redeclare_actions_or_english_fallbacks() -> None:
     """Notice actions come from resolvers; context and prose cannot shadow them."""
     failures: list[str] = []
-    for module in _LEDGER_NOTICE_MODULES:
-        tree = ast.parse(inspect.getsource(module))
+    for module, tree in _notice_module_trees():
         for call in ast.walk(tree):
             if not isinstance(call, ast.Call) or not isinstance(call.func, ast.Name) or call.func.id != "Notice":
                 continue
@@ -163,12 +193,30 @@ def test_ledger_notices_do_not_redeclare_actions_or_english_fallbacks() -> None:
     assert failures == []
 
 
+#: Floors for the two pattern-matched corpora below. Live: seven payload
+#: modules and twenty-six ledger modules, against 221 .py files in the same
+#: directory. Floors, not pinned counts.
+_MINIMUM_PAYLOAD_MODULES = 3
+_MINIMUM_LEDGER_MODULES = 10
+
+
 def test_ledger_payloads_do_not_redeclare_notice_or_recovery_prose() -> None:
     """Advisories have one typed envelope home, never bespoke payload strings."""
     failures: list[str] = []
     payload_directory = Path(inspect.getfile(_ledger_payloads)).parent
     forbidden_suffixes = ("_notice", "_hint", "_suggestion", "_recovery")
-    for path in scan_directory(payload_directory, pattern="_ledger*payload*.py"):
+    payload_modules = tuple(scan_directory(payload_directory, pattern="_ledger*payload*.py"))
+
+    # The corpus is a GLOB, and the pattern pins a leading underscore. This
+    # repository is actively promoting public symbols out of underscore
+    # modules, so a rename lands the file one character outside the pattern,
+    # the walk returns nothing, and an empty failure list reads as compliance.
+    assert len(payload_modules) >= _MINIMUM_PAYLOAD_MODULES, (
+        f"only {len(payload_modules)} ledger payload module(s) matched; below this the walk "
+        "has stopped finding its subject and an empty failure list proves nothing"
+    )
+
+    for path in payload_modules:
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
             if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
@@ -229,8 +277,7 @@ def test_ledger_locale_values_do_not_redeclare_command_guidance() -> None:
 def test_ledger_runtime_command_literals_are_provenance_only() -> None:
     """Raw command strings are allowed only as explicit source provenance."""
     failures: list[str] = []
-    for module in _LEDGER_NOTICE_MODULES:
-        tree = ast.parse(inspect.getsource(module))
+    for module, tree in _notice_module_trees():
         parents = {child: parent for parent in ast.walk(tree) for child in ast.iter_child_nodes(parent)}
         for literal in (node for node in ast.walk(tree) if isinstance(node, ast.Constant)):
             if not isinstance(literal.value, str) or not _COMMAND_PROSE.search(literal.value):
@@ -261,7 +308,14 @@ def test_every_ledger_translation_is_catalogue_owned_without_a_runtime_fallback(
     """Every ledger translation resolves from the authored locale catalogues."""
     ledger_directory = Path(inspect.getfile(_ledger)).parent
     failures: list[str] = []
-    for path in scan_directory(ledger_directory, pattern="_ledger*.py"):
+    ledger_modules = tuple(scan_directory(ledger_directory, pattern="_ledger*.py"))
+
+    assert len(ledger_modules) >= _MINIMUM_LEDGER_MODULES, (
+        f"only {len(ledger_modules)} ledger module(s) matched the pattern; below this the "
+        "walk has stopped finding its subject and an empty failure list proves nothing"
+    )
+
+    for path in ledger_modules:
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for call in ast.walk(tree):
             if not isinstance(call, ast.Call) or not isinstance(call.func, ast.Name) or call.func.id != "tr":
@@ -274,8 +328,7 @@ def test_every_ledger_translation_is_catalogue_owned_without_a_runtime_fallback(
 def test_translation_helpers_do_not_reintroduce_presentation_defaults() -> None:
     """A translation helper cannot hide fallback prose from the direct ``tr`` gate."""
     failures: list[str] = []
-    for module in _LEDGER_NOTICE_MODULES:
-        tree = ast.parse(inspect.getsource(module))
+    for module, tree in _notice_module_trees():
         failures.extend(
             f"{module.__name__}:{call.lineno}"
             for call in ast.walk(tree)
@@ -287,8 +340,7 @@ def test_translation_helpers_do_not_reintroduce_presentation_defaults() -> None:
 def test_typed_ledger_errors_are_not_flattened_by_local_catches() -> None:
     """Typed exception identity and its verdict must reach the shared boundary."""
     failures: list[str] = []
-    for module in _LEDGER_NOTICE_MODULES:
-        tree = ast.parse(inspect.getsource(module))
+    for module, tree in _notice_module_trees():
         for handler in (node for node in ast.walk(tree) if isinstance(node, ast.ExceptHandler)):
             caught = _caught_names(handler)
             if not caught.intersection(_TYPED_LEDGER_ERROR_NAMES):
@@ -311,8 +363,7 @@ def test_typed_ledger_errors_are_not_flattened_by_local_catches() -> None:
 def test_ledger_bad_parameters_do_not_embed_caught_exception_text() -> None:
     """Raw exception prose cannot become a CLI error message or context field."""
     failures: list[str] = []
-    for module in _LEDGER_NOTICE_MODULES:
-        tree = ast.parse(inspect.getsource(module))
+    for module, tree in _notice_module_trees():
         for handler in (node for node in ast.walk(tree) if isinstance(node, ast.ExceptHandler)):
             if handler.name is None:
                 continue
@@ -332,13 +383,38 @@ def test_ledger_bad_parameters_do_not_embed_caught_exception_text() -> None:
     assert failures == []
 
 
+#: Floors for the parsed surface behind the absence claims below. Live: 89
+#: referenced names and exactly one except handler in the import CLI.
+_MINIMUM_IMPORT_CLI_NAMES = 30
+
+
 def test_ledger_import_does_not_aggregate_typed_refusals_into_prose() -> None:
-    """Per-file typed failures cannot be reduced to refusal strings or one `_bad`."""
+    """Per-file typed failures cannot be reduced to refusal strings or one `_bad`.
+
+    Both claims are absences over a parsed surface, so both are satisfied by a
+    module that does nothing. The handler claim is the tighter of the two: the
+    CLI carries exactly ONE except handler, so deleting it does not fail this
+    gate - it empties the loop and the CadrumoError claim becomes a statement
+    about no handlers at all.
+    """
     tree = ast.parse(inspect.getsource(_ledger_import_cli))
     forbidden_names = {"resolve_error_message", "_all_files_refused"}
     observed_names = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
+
+    assert len(observed_names) >= _MINIMUM_IMPORT_CLI_NAMES, (
+        f"the import CLI parsed to only {len(observed_names)} referenced name(s); below this "
+        "the disjointness below holds because the module is empty, not because it refrains"
+    )
     assert observed_names.isdisjoint(forbidden_names)
-    for handler in (node for node in ast.walk(tree) if isinstance(node, ast.ExceptHandler)):
+
+    handlers = [node for node in ast.walk(tree) if isinstance(node, ast.ExceptHandler)]
+
+    assert handlers, (
+        "the import CLI declares no except handler, so the CadrumoError claim below is "
+        "about nothing; either the typed refusal path was removed or this gate has lost "
+        "its subject"
+    )
+    for handler in handlers:
         caught = _caught_names(handler)
         assert "CadrumoError" not in caught
 

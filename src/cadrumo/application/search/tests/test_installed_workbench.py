@@ -6,9 +6,11 @@ import ast
 import pickle
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import TypedDict
 
 import pytest
 
+from ....core.filing_year import FilingYear
 from ....core.period import Period
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.codes import ModeloCode
@@ -74,6 +76,19 @@ _FILING_ID = "f" * 64
 _WORK_ID = "d" * 64
 
 
+class _DeclarationIdentity(TypedDict):
+    """The modelo/year/period triple every declarations ref repeats.
+
+    Typed rather than a bare dict so the per-key types survive `**` unpacking
+    into the refs; a plain dict widens them to one union and the refs' distinct
+    field types can no longer be checked.
+    """
+
+    modelo: ModeloCode
+    filing_year: FilingYear
+    period: Period
+
+
 def _admission(destination: str) -> WorkbenchDestinationAdmission:
     """Return an admitted destination owned by the installed catalogue."""
     return WorkbenchDestinationAdmission(
@@ -137,7 +152,7 @@ def _declarations() -> DeclarationsWorkspaceProjectionV1:
         )
         for zone in DeclarationsWorkspaceZone
     )
-    common = {"modelo": ModeloCode("130"), "filing_year": 2026, "period": _PERIOD}
+    common: _DeclarationIdentity = {"modelo": ModeloCode("130"), "filing_year": 2026, "period": _PERIOD}
     return DeclarationsWorkspaceProjectionV1(
         bucket_id=_BUCKET,
         zones=zones,

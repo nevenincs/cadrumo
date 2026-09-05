@@ -892,6 +892,10 @@ class _Definition:
     line: int
     kind: SymbolKind
     owner: str = ""
+    #: The string literal the member assigns, when it assigns one. A registry
+    #: declaration addresses a StrEnum member by this VALUE, never by the
+    #: member name, so the data consult cannot see the binding without it.
+    value: str = ""
 
 
 def _decorator_name(node: ast.expr) -> str:
@@ -933,6 +937,21 @@ def _assigned_names(node: ast.stmt) -> Iterator[str]:
             yield from (element.id for element in target.elts if isinstance(element, ast.Name))
 
 
+def _assigned_str_value(statement: ast.stmt) -> str:
+    """Return the string literal a single assignment declares, else ``""``.
+
+    Only a bare ``NAME = "literal"`` counts. A computed value, an f-string or
+    a call is deliberately not followed: the point is to read the exact token
+    a declaration would spell, and anything inferred would widen the data
+    consult into guessing.
+    """
+    if isinstance(statement, ast.Assign | ast.AnnAssign):
+        value = statement.value
+        if isinstance(value, ast.Constant) and isinstance(value.value, str):
+            return value.value
+    return ""
+
+
 def _class_definitions(node: ast.ClassDef) -> Iterator[_Definition]:
     member_kind = SymbolKind.ENUM_MEMBER if _is_enum_class(node) else SymbolKind.ATTRIBUTE
     for statement in node.body:
@@ -946,9 +965,17 @@ def _class_definitions(node: ast.ClassDef) -> Iterator[_Definition]:
                 for inner in _class_definitions(statement)
             )
         else:
+            declared = _assigned_str_value(statement)
             for name in _assigned_names(statement):
                 if not _is_dunder(name) and name != "_ignore_":
-                    yield _Definition(name, f"{node.name}.{name}", statement.lineno, member_kind, owner=node.name)
+                    yield _Definition(
+                        name,
+                        f"{node.name}.{name}",
+                        statement.lineno,
+                        member_kind,
+                        owner=node.name,
+                        value=declared,
+                    )
 
 
 def _definitions(tree: ast.Module) -> Iterator[_Definition]:
@@ -1133,6 +1160,56 @@ def _data_tokens(spec: ShippedTreeSpec) -> frozenset[str]:
     return frozenset(tokens)
 
 
+def _declared_data_values(spec: ShippedTreeSpec) -> frozenset[str]:
+    """Mapping keys and COMPLETE string values in the shipped declarations.
+
+    Deliberately stricter than :func:`_data_tokens`, and separate from it so
+    the name match keeps its existing reach. A StrEnum member's declared value
+    is matched against this set, where a loose match clears a live finding on
+    a coincidence: tokenising the raw text cleared ``flows.BACK`` because a
+    registry sentence reads "created and read back", and ``capabilities.
+    PROCESS`` because another reads "Another process is acquiring AEAT". A key
+    or a whole string value is a reference; a word inside a sentence, or in a
+    comment, is prose about the domain.
+
+    Unparseable files are skipped rather than salvaged by regex: a partial
+    read would reintroduce exactly the prose matching this exists to exclude.
+    """
+    package_root = spec.src_root / spec.package
+    values: set[str] = set()
+    unread: list[str] = []
+
+    def collect(node: object) -> None:
+        if isinstance(node, dict):
+            for key, item in node.items():
+                if isinstance(key, str):
+                    values.add(key)
+                collect(item)
+        elif isinstance(node, list):
+            for item in node:
+                collect(item)
+        elif isinstance(node, str):
+            values.add(node)
+
+    for glob in spec.data_globs:
+        for path in package_root.glob(glob):
+            if not path.is_file():
+                continue
+            try:
+                text = path.read_text(encoding=_UTF_8)
+                parsed = tomllib.loads(text) if path.suffix == ".toml" else json.loads(text)
+            except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError, json.JSONDecodeError) as error:
+                unread.append(f"{path}: {type(error).__name__}: {error}")
+                continue
+            collect(parsed)
+    report_unread(
+        "unreachable-code declared data values",
+        "an enum value addressed only by one of them will look dead and is a deletion candidate",
+        unread,
+    )
+    return frozenset(values)
+
+
 def _outside_module_name(path: Path, spec: ShippedTreeSpec) -> str:
     """The dotted name an outside file really has, so its relative imports resolve.
 
@@ -1293,6 +1370,7 @@ def _symbol_findings(
     full_reach: frozenset[str],
     outside: _OutsideUse,
     data_tokens: frozenset[str],
+    declared_values: frozenset[str],
 ) -> tuple[tuple[SymbolFinding, ...], int]:
     """Return the symbol findings and how many data-shaped members the data corpus cleared."""
     entry_attributes = {entry.attribute for entry in spec.entry_points}
@@ -1328,7 +1406,9 @@ def _symbol_findings(
                 continue
             if definition.kind is SymbolKind.ENUM_MEMBER and definition.owner in whole_use:
                 continue
-            if definition.kind in _DATA_SHAPED_KINDS and definition.name in data_tokens:
+            if definition.kind in _DATA_SHAPED_KINDS and (
+                definition.name in data_tokens or (definition.value and definition.value in declared_values)
+            ):
                 data_cleared += 1
                 continue
             findings.append(
@@ -1458,11 +1538,14 @@ def scan_unreachable_code(spec: ShippedTreeSpec) -> UnreachableCodeResult:
     audited_total = len(audited_names)
     outside = _outside_use(spec, known)
     data_tokens = _data_tokens(spec)
+    declared_values = _declared_data_values(spec)
     shipped_importers = _shipped_importers(full_edges)
     module_findings = _module_findings(
         spec, modules, script_reach, runtime_reach, full_reach, outside, shipped_importers
     )
-    symbol_findings, data_cleared = _symbol_findings(spec, modules, runtime_reach, full_reach, outside, data_tokens)
+    symbol_findings, data_cleared = _symbol_findings(
+        spec, modules, runtime_reach, full_reach, outside, data_tokens, declared_values
+    )
 
     if not module_findings and not symbol_findings:
         return UnreachableCodeResult.clean(

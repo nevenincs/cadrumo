@@ -91,8 +91,7 @@ def test_no_development_test_waits_unbounded_on_a_child_process() -> None:
 
     assert not offenders, (
         "an unbounded wait on a child process cannot be interrupted by the per-test "
-        "ceiling; the worker dies and the session stops naming an unrelated test:\n"
-        + "\n".join(offenders)
+        "ceiling; the worker dies and the session stops naming an unrelated test:\n" + "\n".join(offenders)
     )
     assert not unreadable, (
         "this screen could not read every test module, so its clean result covers less "
@@ -102,19 +101,9 @@ def test_no_development_test_waits_unbounded_on_a_child_process() -> None:
 
 def test_the_screen_detects_a_planted_unbounded_wait() -> None:
     """Teeth: the gate above is worthless if it cannot see the defect it forbids."""
-    planted = ast.parse(
-        "import subprocess\n"
-        "\n"
-        "def helper():\n"
-        "    child = subprocess.Popen(['x'])\n"
-        "    child.wait()\n"
-    )
+    planted = ast.parse("import subprocess\n\ndef helper():\n    child = subprocess.Popen(['x'])\n    child.wait()\n")
     bounded = ast.parse(
-        "import subprocess\n"
-        "\n"
-        "def helper():\n"
-        "    child = subprocess.Popen(['x'])\n"
-        "    child.wait(timeout=60)\n"
+        "import subprocess\n\ndef helper():\n    child = subprocess.Popen(['x'])\n    child.wait(timeout=60)\n"
     )
 
     assert _unbounded_waits(planted) == [(5, "child")]

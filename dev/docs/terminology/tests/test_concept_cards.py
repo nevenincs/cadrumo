@@ -261,4 +261,3 @@ def test_the_legal_link_count_is_read_and_agrees_with_the_cards(
     assert stats.cards_with_legal_links > 0, (
         "not one card carries a legal link; the grounding this projection ships would be empty"
     )
-

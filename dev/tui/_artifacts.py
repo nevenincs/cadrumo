@@ -258,11 +258,7 @@ def stale_artifacts(directory: Path, manifest: Manifest) -> tuple[Path, ...]:
     surface can be signed off as it looked two code changes ago -- the inverse
     of the silent absence `unaccounted_frames` catches, and just as misleading.
     """
-    claimed = {
-        (directory / name).resolve()
-        for frame in manifest.frames
-        for name in (frame.png, frame.svg, frame.text)
-    }
+    claimed = {(directory / name).resolve() for frame in manifest.frames for name in (frame.png, frame.svg, frame.text)}
     found: list[Path] = []
     for kind in ("png", "svg", "text"):
         sub = directory / kind

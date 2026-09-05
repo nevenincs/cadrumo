@@ -14,7 +14,21 @@ from ..quality.import_hygiene_scan import (
     tracked_live_files,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.timeout(600)]
+"""The 600-second budget is contention, not a slow test.
+
+Measured at 251.96s under the repository's default `-n auto`
+parallelism - 84% of the 300-second ceiling - for
+``test_static_authority_census_is_at_the_direct_module_fixed_point``.
+
+The ceiling is wall clock and its expiry does not fail the test: the
+thread method kills the worker, and every sibling scheduled on it is
+reported as never having run. `--dist=loadfile` puts this whole module on
+one worker, so the margin here is shared, not per-case.
+
+The walk itself stays real; resolving the live first-party graph is what
+costs the minutes.
+"""
 
 _TARGETS = {
     "credentials": {

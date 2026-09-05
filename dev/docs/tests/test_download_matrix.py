@@ -213,4 +213,3 @@ def test_the_structured_channel_names_agree_with_the_install_commands() -> None:
         "no channel declared any of the location fields, so this gate proved nothing. "
         "Either the descriptor lost them or the fields are genuinely unused and should go"
     )
-

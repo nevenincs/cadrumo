@@ -33,16 +33,12 @@ from ...adapters.outbound.aeat.sede.notifications import (
     assert_notification_content_readable,
     fetch_notification_document,
 )
+from ...adapters.persistence.profile.notification_documents import notification_document_repository
 from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
 from ...adapters.persistence.storage.attachment import AttachmentStore
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from ...adapters.persistence.storage.secure_object_namespaces import LIVE_NOTIFICATION_DOCUMENT_NAMESPACE
-from ...application.live.errors import LiveApplicationInputError
 from ...application.live.notification_documents import (
-    NotificationDocumentNotFoundError,
     NotificationDocumentRecord,
     NotificationDocumentService,
-    notification_document_object_key,
 )
 from ...application.live.notifications import (
     NotificationsService,
@@ -76,23 +72,7 @@ def _notification_document_service(settings: Settings) -> NotificationDocumentSe
     """Compose the notification-document use case with its real adapters."""
 
     def repository_factory(bucket_id: str) -> SecureSnapshotRepository[NotificationDocumentRecord]:
-        return SecureSnapshotRepository(
-            bucket_id=bucket_id,
-            payload_model=NotificationDocumentRecord,
-            namespace_definition=LIVE_NOTIFICATION_DOCUMENT_NAMESPACE,
-            object_key=notification_document_object_key,
-            not_found_factory=lambda certificado_id: NotificationDocumentNotFoundError(
-                translated_message="application.live.notifications.errors.document_not_found",
-                context={"certificado_id": certificado_id},
-            ),
-            ambiguous_prefix_factory=lambda certificado_id, full_ids: NotificationDocumentNotFoundError(
-                translated_message="application.live.notifications.errors.document_prefix_ambiguous",
-                context={"certificado_id": certificado_id, "match_count": len(full_ids)},
-            ),
-            domain_label="notification-document",
-            input_error_cls=LiveApplicationInputError,
-            objects=secure_object_repository_for_bucket(bucket_id, settings),
-        )
+        return notification_document_repository(bucket_id, settings)
 
     return NotificationDocumentService(
         settings=settings,

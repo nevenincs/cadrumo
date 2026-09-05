@@ -77,6 +77,8 @@ class Modelo(StrEnum):
 
 
 class Config(StrEnum):
+    VALUE_BOUND = "value_bound_key"
+    PROSE_ONLY = "back"
     DECLARED_IN_DATA = "declared_in_data"
     NEVER_ANYWHERE = "never_anywhere"
 
@@ -150,6 +152,8 @@ _DATA = """
 [binding]
 field = "data_field"
 value = "DECLARED_IN_DATA"
+endpoint = "value_bound_key"
+note = "Records can be created and read back later."
 """
 
 
@@ -275,6 +279,7 @@ def test_symbol_layer_reports_only_definitions_shipped_code_never_references(res
         "Color.BLUE",
         "Config",
         "Config.NEVER_ANYWHERE",
+        "Config.PROSE_ONLY",
         "Widget.hidden_field",
         "Widget.hidden",
         "UNUSED_CONST",
@@ -333,7 +338,31 @@ def test_shipped_data_naming_a_member_clears_it_but_never_a_top_level_symbol(
     assert "Config.DECLARED_IN_DATA" not in reported
     assert "Widget.hidden_field" in reported
     assert "Config.NEVER_ANYWHERE" in reported
-    assert result.data_cleared == 2
+    assert result.data_cleared == 3
+
+
+def test_a_member_bound_by_its_declared_value_is_cleared(result: UnreachableCodeResult) -> None:
+    """A declaration addresses a StrEnum member by its VALUE, never by its name.
+
+    ``VALUE_BOUND`` is spelled nowhere in Python and its NAME is absent from
+    the payload; only its value ``value_bound_key`` appears there, as the
+    ``endpoint`` value. Matching the name alone reported the whole tier as
+    dead: on the real tree that was 175 live members, 174 of them in one
+    module whose values resolve into the registry's projection declarations.
+    """
+    assert "Config.VALUE_BOUND" not in {finding.qualname for finding in result.symbols}
+
+
+def test_a_value_appearing_only_inside_a_sentence_does_not_clear(result: UnreachableCodeResult) -> None:
+    """The guard that matters more than the clearing: prose is not a reference.
+
+    ``PROSE_ONLY`` declares the value ``back``, and the payload contains the
+    sentence "Records can be created and read back later." Tokenising the raw
+    text would clear it on that word and a live finding would vanish silently,
+    which is strictly worse than the over-report it fixes. Only a complete key
+    or a complete string value counts, so this member stays reported.
+    """
+    assert "Config.PROSE_ONLY" in {finding.qualname for finding in result.symbols}
 
 
 def test_test_module_whose_every_shipped_subject_is_dead_is_an_orphaned_test(result: UnreachableCodeResult) -> None:
@@ -504,10 +533,10 @@ def test_console_report_and_json_carry_the_same_findings(result: UnreachableCode
 
     assert report.startswith(
         "unreachable code: 4 unreachable module(s), 3 module-exec-only, 1 type-only module(s), "
-        "7 unused symbol(s) in reachable modules, 1 orphaned test module(s)"
+        "8 unused symbol(s) in reachable modules, 1 orphaned test module(s)"
     )
     assert "roots: pkg.cli:main" in report
-    assert "2 data-shaped member(s) cleared" in report
+    assert "3 data-shaped member(s) cleared" in report
     assert "package  src/pkg/dead/  (3 modules)  [used by: dev, tests]" in report
     assert "module   src/pkg/loner.py  [used by: tests]" in report
     assert f"{orphan_line}  [exact]" in report
@@ -515,7 +544,7 @@ def test_console_report_and_json_carry_the_same_findings(result: UnreachableCode
     assert "enum-member Color.BLUE  [no use anywhere]  [name-match-data]" in report
     assert "function    orphan_fn  [used by: tests]  [exact]" in report
     assert payload["outcome"] == "findings"
-    assert payload["data_cleared"] == 2
+    assert payload["data_cleared"] == 3
     assert {entry["module"] for entry in payload["modules"]} == {
         "pkg.dead",
         "pkg.loner",
@@ -535,7 +564,7 @@ def test_console_report_caps_each_section_unless_full(result: UnreachableCodeRes
     capped = render_console_report(result, cap=1)
 
     assert "... 1 more (--full for all)" in capped
-    assert "... 6 more (--full for all)" in capped
+    assert "... 7 more (--full for all)" in capped
     assert "more (--full for all)" not in render_console_report(result, full=True, cap=1)
 
 

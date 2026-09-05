@@ -60,6 +60,7 @@ from .modelo.declarations_calendar import (
     project_declarations_calendar,
 )
 from .modelo.declarations_workspace import (
+    DeclarationResultCasillaReaderV1,
     DeclarationsWorkspaceAvailability,
     DeclarationsWorkspaceProjectionV1,
     DeclarationsWorkspaceZone,
@@ -324,6 +325,21 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None
     verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None
+    notification_custody_reader: Callable[[], int] | None = None
+    """Counts the notification documents this profile already holds locally.
+
+    Unbound means this session did not read the store, which AEAT Sync reports
+    as a composition gap -- distinct from a count of zero, which is a proven
+    zero the operator can act on.
+    """
+    result_casilla_reader: DeclarationResultCasillaReaderV1 | None = None
+    """Names the casilla that settles one modelo revision, or nothing.
+
+    Injected rather than resolved in the door, which holds repositories and no
+    registry access. An unbound reader leaves every declaration's result
+    unknown, which is the same honest absence a modelo with no declared
+    settlement role produces -- not a zero.
+    """
     operation_contracts: OperationPublicContractSetV1 | None = None
     modelo_projection_reader: Callable[[WorkUnit], ModeloWorkspaceProjectionV1] | None = None
     """An absent reader below is a composition fact, not a data fact.
@@ -350,6 +366,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             calculation_revisions=revisions,
             filing_records=filings,
             lifecycle_facts=(),
+            result_casilla_reader=self.result_casilla_reader,
             zone_observations=(
                 _declarations_observation(DeclarationsWorkspaceZone.DECLARATIONS, observed_at),
                 _declarations_observation(DeclarationsWorkspaceZone.CALCULATION_REVISIONS, observed_at),
@@ -408,12 +425,15 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         agenda = build_overview_agenda(taxpayer, as_of=as_of, raw_values=raw_values)
         ledger_sources = self._load_ledger_sources()
         verification = self._load_verification_reports()
+        custody_count = self._load_custody_count()
         ledger = self._read_ledger(revisions.revisions, work_units, sources=ledger_sources)
         modelo = self._read_modelo(work_units)
         aeat_sync = self._read_aeat_sync(
             _declared_tax_id(raw_values),
             observed_at=observed_at,
             filings=tuple(filings.records.values()),
+            custody_count=custody_count,
+            censo_values=raw_values,
         )
         account_session = self.account_session_reader()
         final_record = self.profile_repository.load(self.profile_id)
@@ -427,6 +447,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             or final_filings_revision != filings_revision
             or self._load_ledger_sources() != ledger_sources
             or self._load_verification_reports() != verification
+            or self._load_custody_count() != custody_count
         ):
             raise RuntimeError("secure workbench generation changed during capture")
         return WorkbenchGenerationInputsV1(
@@ -500,6 +521,17 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             ),
         )
 
+    def _load_custody_count(self) -> int | None:
+        """Count documents in local custody, or nothing when no reader is bound.
+
+        Read inside the capture window and re-read at its close like every
+        other source: a document landing mid-capture would otherwise let AEAT
+        Sync publish a count that was never true at any single instant.
+        """
+        if self.notification_custody_reader is None:
+            return None
+        return self.notification_custody_reader()
+
     def _load_verification_reports(self) -> VerificationReportCatalogue | None:
         """Read the verification catalogue, or nothing when no host bound one.
 
@@ -572,6 +604,8 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         *,
         observed_at: UtcInstant,
         filings: tuple[ModeloRecord, ...],
+        custody_count: int | None,
+        censo_values: Mapping[str, object],
     ) -> AeatSyncWorkspaceProjectionV1 | None:
         """Project the pre-pull AEAT Sync workspace against composed contracts.
 
@@ -590,6 +624,8 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             observed_at=observed_at,
             filings=filings,
             operation_contracts=self.operation_contracts,
+            custody_count=custody_count,
+            censo_values={key: value for key, value in censo_values.items() if isinstance(value, str)},
         )
 
 
@@ -862,7 +898,7 @@ def _dependency_blocked_revisions(
     nothing is actually waiting on.
     """
     if verification is None:
-        return frozenset()
+        return frozenset[str]()
     return frozenset(
         report.calculation_revision_id
         for report in verification.reports.values()

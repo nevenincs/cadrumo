@@ -115,11 +115,7 @@ def _workflow_files() -> tuple[Path, ...]:
     )
 
     found = tuple(
-        sorted(
-            path
-            for pattern in ("*.yml", "*.yaml")
-            for path in scan_directory(_WORKFLOWS_DIR, pattern=pattern)
-        )
+        sorted(path for pattern in ("*.yml", "*.yaml") for path in scan_directory(_WORKFLOWS_DIR, pattern=pattern))
     )
 
     assert len(found) >= _MINIMUM_WORKFLOWS, (

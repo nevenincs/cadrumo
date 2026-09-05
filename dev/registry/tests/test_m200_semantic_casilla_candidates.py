@@ -131,7 +131,20 @@ def test_cli_rejects_retired_output_arguments_before_loading_worklist(monkeypatc
         assert error.value.code == 2
 
 
+#: Floor for the parsed surface behind the absence claims below. Live: the
+#: subject module makes 15 attribute calls across 184 referenced names.
+_MINIMUM_SUBJECT_CALLS = 5
+
+
 def test_identity_cli_has_no_filesystem_write_surface() -> None:
+    """The identity CLI reports; it does not write.
+
+    Every claim here is an ABSENCE - a disjoint call set and two missing
+    attributes - and all three are satisfied by a module that does nothing at
+    all. A stubbed or emptied subject would pass this gate while the CLI it
+    describes had stopped existing, so the surface is counted before the
+    absences are believed.
+    """
     tree = ast.parse(inspect.getsource(subject))
     filesystem_writes = {
         "mkdir",
@@ -145,6 +158,11 @@ def test_identity_cli_has_no_filesystem_write_surface() -> None:
         node.func.attr for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
     }
 
+    assert len(called_attributes) >= _MINIMUM_SUBJECT_CALLS, (
+        f"the subject module makes only {len(called_attributes)} attribute call(s); below "
+        "this the absence claims below hold because the module does nothing, not because "
+        "it refrains from writing"
+    )
     assert filesystem_writes.isdisjoint(called_attributes)
     assert not hasattr(subject, "_write_review_output")
     assert not hasattr(subject, "_resolve_review_output_path")

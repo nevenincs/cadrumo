@@ -29,6 +29,7 @@ from textwrap import dedent
 
 import pytest
 
+from ..._paths import REPO_ROOT
 from ..vacuity_screen import screen
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -371,3 +372,39 @@ def test_the_walk_continues_past_an_unreadable_module(tmp_path: Path) -> None:
 
     assert unreadable
     assert scanned == 1, "the readable module after the broken one was never screened"
+
+
+#: Below this the live screen has stopped reaching the repository. A floor,
+#: not a pinned count: 615 modules are screened today.
+_MINIMUM_LIVE_MODULES = 300
+
+
+def test_the_screen_still_reaches_the_live_repository() -> None:
+    """This module was the screen's ONLY consumer, and every case built its own tree.
+
+    So the screen was exercised exclusively against scratch corpora it was
+    handed. Nothing ran it over the repository, nothing gated on its findings,
+    and no report carried them - a detector for unguarded corpus scans that was
+    itself never pointed at the corpus.
+
+    Deliberately NOT a pass/fail gate on the findings: 387 of 615 screened
+    modules are flagged today, and a gate nobody can make pass gets deleted
+    rather than obeyed. What this pins is that the instrument still reads the
+    real tree and still discriminates within it, so the backlog is a decision
+    someone can take rather than a number nobody has seen.
+    """
+    scanned, flagged, unreadable = screen(REPO_ROOT)
+
+    assert scanned >= _MINIMUM_LIVE_MODULES, (
+        f"the screen reached only {scanned} module(s) in the repository; below this it has "
+        "stopped covering the tree and any verdict from it is meaningless"
+    )
+    assert not unreadable, (
+        f"the screen could not read these tracked modules, so they sit in neither the "
+        f"flagged set nor the clean one: {unreadable}"
+    )
+    assert len(flagged) < scanned, (
+        "every screened module is flagged, which means the discriminator has stopped "
+        f"discriminating rather than that the tree is uniformly defective ({len(flagged)} "
+        f"of {scanned})"
+    )

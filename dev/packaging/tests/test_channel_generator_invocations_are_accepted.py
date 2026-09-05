@@ -46,7 +46,7 @@ _GENERATORS: Final = {
 }
 
 #: A long option as it appears in an assembled argument list.
-_FLAG: Final = re.compile(r'^--[a-z][a-z0-9-]*$')
+_FLAG: Final = re.compile(r"^--[a-z][a-z0-9-]*$")
 
 
 def _string_constants(node: ast.AST) -> list[str]:

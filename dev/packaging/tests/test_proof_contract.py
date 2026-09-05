@@ -86,6 +86,32 @@ def _support_claims() -> set[str]:
     return claims
 
 
+#: Below this the smoke-lane discovery has stopped finding its subject. A
+#: floor, not a pinned count: eight lanes ship today.
+_MINIMUM_SMOKE_LANES = 4
+
+
+def test_the_smoke_lane_corpus_is_discovered() -> None:
+    """An empty parametrize does not fail the gate below - it DELETES it.
+
+    The corpus is a glob pinning the ``smoke_`` prefix. A lane renamed out of
+    that shape does not become a failing case; it becomes a case pytest never
+    generates, so the run is quietly one test shorter and no result says which
+    lane stopped being checked. That is worse than an empty walk, which at
+    least reports a passing test.
+
+    The gate it protects is the static half of the proof contract: a form may
+    not promise a proof no assertion records. With the parametrize empty, every
+    form could over-claim freely.
+    """
+    lanes = sorted(path.name for path in iter_directory(_PACKAGING, pattern="smoke_*.py"))
+
+    assert len(lanes) >= _MINIMUM_SMOKE_LANES, (
+        f"only {len(lanes)} smoke lane(s) were discovered under {_PACKAGING}; below this the "
+        "claim gate parametrises over nothing and silently stops existing"
+    )
+
+
 @pytest.mark.parametrize("module", sorted(path.name for path in iter_directory(_PACKAGING, pattern="smoke_*.py")))
 def test_every_declared_claim_has_an_assertion_that_records_it(module: str) -> None:
     """A form may not promise a proof no assertion anywhere can record.

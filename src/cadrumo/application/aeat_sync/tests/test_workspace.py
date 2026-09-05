@@ -6,7 +6,7 @@ import ast
 import pickle
 from datetime import UTC, date, datetime
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, TypedDict, Unpack, cast
 
 import pytest
 from pydantic import ValidationError
@@ -147,7 +147,15 @@ def _overview(
 def _census(
     path: str = "address", category: AeatSyncCensusCategory = AeatSyncCensusCategory.ADDRESS
 ) -> AeatSyncWorkspaceCensusRowV1:
-    return AeatSyncWorkspaceCensusRowV1(path=path, category=category, status=AeatSyncCensusStatus.CONFLICT)
+    # A CONFLICT carries both sides: the row asserts the two disagree, and the
+    # model now refuses to make that claim while withholding either value.
+    return AeatSyncWorkspaceCensusRowV1(
+        path=path,
+        category=category,
+        status=AeatSyncCensusStatus.CONFLICT,
+        local_value="Calle Local 1",
+        aeat_value="Calle AEAT 2",
+    )
 
 
 def _filed(
@@ -348,12 +356,22 @@ def test_output_physically_omits_protected_scope_payload_and_identity() -> None:
     # is a closed enum, a typed address component, an observation state or a
     # bounded identifier, so there is nowhere for a name, a URL or document
     # prose to be carried even by a careless producer.
+    # The exemptions are the census comparison values, which the visibility
+    # decision requires the row to carry: a comparison that hides what differs
+    # is not a comparison. Everything else stays a closed enum, a typed address
+    # component, a state or a bounded identifier.
+    #
+    # Because those two fields exist, the byte scan above is no longer
+    # unfailable -- a producer could put protected prose in `local_value`, and
+    # that scan is now the check which catches it. Bounded at 256 characters so
+    # the exemption is a field, not an open channel.
+    carried_values = {"path", "local_value", "aeat_value"}
     for row_type in (AeatSyncWorkspaceCensusRowV1, AeatSyncWorkspaceFiledDeclarationRowV1):
         for name, field in row_type.model_fields.items():
             annotation = str(field.annotation)
-            assert "str" not in annotation or name in {"path"}, (
+            assert "str" not in annotation or name in carried_values, (
                 f"{row_type.__name__}.{name} is free text ({annotation}), so protected prose "
-                f"could be carried there and the removed sentinels would need reinstating"
+                f"could be carried there without the byte scan above having a sentinel for it"
             )
 
     for value in (
@@ -459,6 +477,8 @@ def test_row_subclass_protected_fields_are_reconstructed_away() -> None:
         path="address",
         category=AeatSyncCensusCategory.ADDRESS,
         status=AeatSyncCensusStatus.CONFLICT,
+        local_value="Calle Local 1",
+        aeat_value="Calle AEAT 2",
         nif="12345678Z",
     )
     projection = _projection(census=(_fact(unsafe),))
@@ -628,3 +648,175 @@ def test_a_refused_local_source_names_whether_the_reader_is_missing_or_uncompose
         "notification custody IS readable today, so calling its refusal a missing reader "
         "sends the next person to write a reader that already exists"
     )
+
+
+@pytest.mark.parametrize(
+    ("custody_count", "expected_refusal", "expected_count"),
+    [
+        (None, "workbench.aeat_sync.local_reader_not_composed", None),
+        (0, None, 0),
+        (3, None, 3),
+    ],
+)
+def test_notification_custody_separates_an_unread_store_from_an_empty_one(
+    custody_count: int | None,
+    expected_refusal: str | None,
+    expected_count: int | None,
+) -> None:
+    """Nothing-in-custody and nobody-looked are different answers.
+
+    Before this reader existed the source was refused outright, and the refusal
+    said no local reader existed -- which was false, since the CLI has read
+    this store all along. Now a bound reader answering ZERO is a proven zero
+    the operator can act on ("no documents are held"), while an unbound one is
+    still a composition gap ("this session did not look"). Collapsing them
+    would tell an operator their custody is empty on the strength of nobody
+    having asked.
+    """
+    from datetime import UTC, datetime
+
+    from ..workspace_reader import read_local_aeat_sync_workspace_projection
+
+    projection = read_local_aeat_sync_workspace_projection(
+        bucket_id="bucket",
+        subject_key="subject",
+        observed_at=datetime(2026, 9, 5, tzinfo=UTC),
+        filings=(),
+        operation_contracts=OperationPublicContractSetV1.build(
+            (build_censal_operation_registration(CENSAL_OPERATION_DEFINITION).contract,)
+        ),
+        custody_count=custody_count,
+    )
+    observation = next(
+        item
+        for state in projection.zones
+        for item in state.sources
+        if item.source is AeatSyncWorkspaceSource.LOCAL_NOTIFICATION_CUSTODY
+    )
+
+    assert observation.refusal == expected_refusal
+    assert observation.item_count == expected_count
+
+
+class _ComparedValues(TypedDict, total=False):
+    """The local/AEAT value pair a comparison row carries.
+
+    Typed rather than a bare dict because both sites below build the pair
+    dynamically and unpack it; a plain dict widens the keys to one union and
+    the row's own `str | None` fields can no longer be checked.
+    """
+
+    local_value: str | None
+    aeat_value: str | None
+
+
+def test_a_census_conflict_must_carry_both_values_it_compares() -> None:
+    """Asserting a difference while hiding one side asks for blind agreement.
+
+    CONFLICT is a claim ABOUT two values. A row making it without carrying them
+    puts the operator in the position of accepting a difference they cannot
+    see, which is the defect the invoice/entry suggestions had before they
+    showed the amounts they compared.
+
+    The non-conflict statuses are deliberately unconstrained: UNSET and
+    UNCHANGED are meaningful before either side has been read, and requiring
+    values there would force a producer to invent them.
+    """
+    missing_cases: tuple[_ComparedValues, ...] = (
+        {"aeat_value": None},
+        {"local_value": None},
+        {"local_value": None, "aeat_value": None},
+    )
+    for missing in missing_cases:
+        with pytest.raises(ValidationError, match="must carry both the local and the AEAT value"):
+            AeatSyncWorkspaceCensusRowV1(
+                path="address",
+                category=AeatSyncCensusCategory.ADDRESS,
+                status=AeatSyncCensusStatus.CONFLICT,
+                **{"local_value": "here", "aeat_value": "there", **missing},
+            )
+
+    unset = AeatSyncWorkspaceCensusRowV1(
+        path="address",
+        category=AeatSyncCensusCategory.ADDRESS,
+        status=AeatSyncCensusStatus.UNSET,
+    )
+    assert unset.local_value is None
+    assert unset.aeat_value is None
+
+
+def test_an_unobserved_census_value_is_not_an_empty_field() -> None:
+    """`None` means nobody looked; the empty string means the field is blank.
+
+    A censo entry the taxpayer genuinely left empty is a fact an operator can
+    act on. Collapsing it into "unobserved" -- or the reverse -- would tell
+    them AEAT holds nothing where in truth nobody has checked, on a comparison
+    whose whole purpose is showing what differs.
+    """
+    blank = AeatSyncWorkspaceCensusRowV1(
+        path="address",
+        category=AeatSyncCensusCategory.ADDRESS,
+        status=AeatSyncCensusStatus.CONFLICT,
+        local_value="Calle Local 1",
+        aeat_value="",
+    )
+    assert blank.aeat_value == ""
+    assert blank.aeat_value is not None
+
+
+def test_a_two_sided_discrepancy_must_carry_the_values_it_compares() -> None:
+    """Only the kinds that assert BOTH sides differ are required to show both.
+
+    STATE_MISMATCH and CONTRADICTORY_SOURCE claim two observed sides disagree,
+    so a row making either claim while hiding a side asks the operator to
+    accept a difference they cannot inspect.
+
+    The one-sided kinds are exempt on purpose, and the exemption is asserted
+    rather than assumed: LOCAL_ONLY says the AEAT side is ABSENT, so there is
+    no second value to carry, and requiring one would force a producer to
+    invent a figure for something that is not there.
+    """
+    from ..workspace import AeatSyncWorkspaceEvidenceComparisonRowV1
+
+    def _row(
+        local: AeatSyncSourceState,
+        aeat: AeatSyncSourceState,
+        kind: AeatSyncDiscrepancyKind,
+        **values: Unpack[_ComparedValues],
+    ) -> AeatSyncWorkspaceEvidenceComparisonRowV1:
+        return AeatSyncWorkspaceEvidenceComparisonRowV1(
+            modelo="303",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "3T"),
+            local_state=local,
+            aeat_state=aeat,
+            local_observed_at=T1,
+            aeat_observed_at=T2,
+            discrepancy_kind=kind,
+            **values,
+        )
+
+    with pytest.raises(ValidationError, match="must carry both the local and the AEAT value"):
+        _row(
+            AeatSyncSourceState.PRESENT,
+            AeatSyncSourceState.CONFLICT,
+            AeatSyncDiscrepancyKind.CONTRADICTORY_SOURCE,
+            local_value="120.00",
+        )
+
+    carried = _row(
+        AeatSyncSourceState.PRESENT,
+        AeatSyncSourceState.CONFLICT,
+        AeatSyncDiscrepancyKind.CONTRADICTORY_SOURCE,
+        local_value="120.00",
+        aeat_value="130.00",
+    )
+    assert (carried.local_value, carried.aeat_value) == ("120.00", "130.00")
+
+    one_sided = _row(
+        AeatSyncSourceState.PRESENT,
+        AeatSyncSourceState.ABSENT,
+        AeatSyncDiscrepancyKind.LOCAL_ONLY,
+        local_value="120.00",
+    )
+    assert one_sided.aeat_value is None, "an absent side has no value to compare"

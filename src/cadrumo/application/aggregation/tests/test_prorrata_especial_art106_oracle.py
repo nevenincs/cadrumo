@@ -80,6 +80,7 @@ def _especial_params_for(year: int) -> ProrrataEspecialMandatoryParameters:
     """
     return _ESPECIAL_PARAMS.model_copy(update={"resolved_on": _esp_date(year, 12, 31)})
 
+
 _BUCKET_ID = "79797979-7979-4979-8979-797979797979"
 _PERIOD = Period.from_year_and_code(2026, "1T")
 _DEDUCIBLE_CUOTA_BINDING: BindingId = "modelo-303-iva-soportado-interiores-cuota"

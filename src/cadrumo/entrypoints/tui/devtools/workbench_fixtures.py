@@ -267,6 +267,8 @@ def _aeat_projection(scenario: WorkbenchFixtureScenario) -> AeatSyncWorkspacePro
         path="Tax address",
         category=AeatSyncCensusCategory.ADDRESS,
         status=AeatSyncCensusStatus.CONFLICT,
+        local_value="Calle Mayor 1, 28013 Madrid",
+        aeat_value="Calle Mayor 3, 28013 Madrid",
     )
     filed = AeatSyncWorkspaceFiledDeclarationRowV1(
         modelo=ModeloCode("130"),

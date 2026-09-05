@@ -73,6 +73,10 @@ from .test_generated_export_trees import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+#: Floor for the parsed surface below. Live: 116 referenced names.
+_MINIMUM_VALIDATION_NAMES = 38
+
+
 def test_generated_casilla_export_refs_replace_a_displaced_field_with_no_stale_reference(tmp_path: Path) -> None:
     """Generator-owned refs are exactly the generated casilla field relation."""
     casillas = tmp_path / "casillas"
@@ -978,6 +982,15 @@ def test_generated_tree_validation_module_has_no_legacy_loader_surface() -> None
 
     module = ast.parse(inspect.getsource(_tree_validation))
     referenced_names = {node.id for node in ast.walk(module) if isinstance(node, ast.Name)}
+
+    # An absence claim over an EMPTY surface is satisfied by construction.
+    # This module carries 116 referenced names today; a gutted or stubbed
+    # one would satisfy every forbidden-name assertion below without the
+    # boundary existing at all. A floor, not a pinned count.
+    assert len(referenced_names) >= _MINIMUM_VALIDATION_NAMES, (
+        f"the validation boundary parsed to only {len(referenced_names)} referenced name(s); below "
+        "this an absence claim proves nothing about the boundary it guards"
+    )
     attribute_names = {node.attr for node in ast.walk(module) if isinstance(node, ast.Attribute)}
     forbidden = {
         "bundled_authority",

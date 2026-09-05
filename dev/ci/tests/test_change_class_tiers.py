@@ -266,9 +266,7 @@ def test_no_workflow_installs_python_dependencies_unfrozen() -> None:
     land hardest.
     """
     offending: list[str] = []
-    for path in sorted(
-        {*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")}
-    ):
+    for path in sorted(_workflow_paths()):
         document = _document(path)
         for job_name, job in (document.get("jobs") or {}).items():
             for step in job.get("steps") or []:
@@ -284,9 +282,7 @@ def test_every_pull_request_workflow_guards_every_job_against_fork_heads() -> No
 
     Fork pull-request head code must never execute on the self-hosted fleet.
     """
-    for path in sorted(
-        {*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")}
-    ):
+    for path in sorted(_workflow_paths()):
         document = _document(path)
         if "pull_request" not in set(_triggers(document)):
             continue
@@ -294,8 +290,35 @@ def test_every_pull_request_workflow_guards_every_job_against_fork_heads() -> No
             assert job.get("if") == _SAME_REPO_GUARD, f"{path.name}:{job_name} lacks the fork guard"
 
 
+#: Below this the workflow walk has stopped covering the lane directory. A
+#: floor, not a pinned count: sixteen workflows ship today.
+_MINIMUM_WORKFLOWS = 8
+
+
 def _workflow_paths() -> list[Path]:
-    return sorted({*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")})
+    """Every committed workflow, with the walk itself asserted.
+
+    Five gates in this module assert that NO workflow does some forbidden
+    thing. An empty directory satisfies every one of them, so the walk is
+    guarded once here rather than trusted five times.
+    """
+    assert _WORKFLOWS_DIR.is_dir(), (
+        f"no workflow directory at {_WORKFLOWS_DIR}; a relocated root walks nothing and "
+        "every lane gate in this module would report the workflows clean"
+    )
+
+    found = sorted(
+        {
+            *scan_directory(_WORKFLOWS_DIR, pattern="*.yml"),
+            *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml"),
+        }
+    )
+
+    assert len(found) >= _MINIMUM_WORKFLOWS, (
+        f"only {len(found)} workflow(s) were walked; below this an empty finding list says "
+        "nothing about what the lanes actually do"
+    )
+    return found
 
 
 def test_no_workflow_downloads_an_artifact_from_another_run() -> None:
@@ -348,17 +371,13 @@ def test_no_workflow_carries_a_schedule_trigger() -> None:
     push-, or pull-request-triggered; a schedule trigger anywhere is creeping standing
     compute this gate refuses.
     """
-    for path in sorted(
-        {*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")}
-    ):
+    for path in sorted(_workflow_paths()):
         assert "schedule" not in set(_triggers(_document(path))), path.name
 
 
 def test_every_workflow_name_carries_the_product_identity() -> None:
     """Naming convention: kebab-case filenames, `name:` contains "Cadrumo"."""
-    for path in sorted(
-        {*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")}
-    ):
+    for path in sorted(_workflow_paths()):
         document = _document(path)
         assert "Cadrumo" in document["name"], path.name
         assert path.stem == path.stem.lower(), path.name

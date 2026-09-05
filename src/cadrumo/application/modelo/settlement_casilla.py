@@ -16,11 +16,11 @@ absence as "not available", not as a blank or a zero.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Final
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, Final, Protocol
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry.schema import ModeloRevision
-    from ...domain.calculations.registry.schema_ids import CasillaId
+    from ...core.casilla_id import CasillaId
 
 SETTLEMENT_SEMANTIC_ROLES: Final = frozenset(
     {
@@ -43,7 +43,7 @@ no authority.
 """
 
 
-DECLARATION_RESULT_SEMANTIC_ROLES: Final = SETTLEMENT_SEMANTIC_ROLES  # defect: conflated
+DECLARATION_RESULT_SEMANTIC_ROLES: Final = frozenset({"irpf_resultado_declaracion"})
 """The roles that name a declaration's FINAL result -- a strict subset of the above.
 
 Both settlement roles are terminal-liquidación cells, and both must be computed
@@ -63,7 +63,34 @@ class AmbiguousDeclarationResultError(ValueError):
     """A revision declares more than one final-result casilla."""
 
 
-def declaration_result_casilla_id(revision: ModeloRevision) -> CasillaId | None:
+class SettlementCasillaV1(Protocol):
+    """The casilla surface :func:`declaration_result_casilla_id` reads."""
+
+    @property
+    def id(self) -> CasillaId: ...
+
+    @property
+    def semantic_role(self) -> str | None: ...
+
+
+class SettlementRevisionV1(Protocol):
+    """The revision surface :func:`declaration_result_casilla_id` reads.
+
+    Structural rather than the whole :class:`ModeloRevision` because the reader
+    consumes only an id and the casillas' roles. A revision declaring two result
+    casillas is the defect this function refuses, and the shipped registry
+    cannot express it, so the refusal is exercised through a value carrying just
+    this surface.
+    """
+
+    @property
+    def id(self) -> str: ...
+
+    @property
+    def casillas(self) -> Sequence[SettlementCasillaV1]: ...
+
+
+def declaration_result_casilla_id(revision: SettlementRevisionV1) -> CasillaId | None:
     """Return the casilla holding this revision's final result, or nothing.
 
     Returns `None` for a revision whose casillas declare no result role. That

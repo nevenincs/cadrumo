@@ -329,10 +329,6 @@ def test_every_bundled_normative_is_already_canonical() -> None:
         "list says nothing about whether the corpus still hashes identically across platforms"
     )
 
-    noncanonical = [
-        path.name
-        for path in walked
-        if canonical_lf_bytes(payload := path.read_bytes()) != payload
-    ]
+    noncanonical = [path.name for path in walked if canonical_lf_bytes(payload := path.read_bytes()) != payload]
 
     assert not noncanonical, f"bundled normatives carry CRLF line endings: {noncanonical!r}"

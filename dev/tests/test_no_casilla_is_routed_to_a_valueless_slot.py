@@ -47,7 +47,21 @@ from cadrumo.domain.calculations.registry.authority import bundled_authority
 from .._paths import REPO_ROOT
 from ..quality.unread_inputs import report_unread
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.timeout(600)]
+"""The 600-second budget is contention, not a slow test.
+
+Measured at 217.65s under the repository's default `-n auto`
+parallelism - 73% of the 300-second ceiling - for
+``test_no_casilla_points_at_a_filler_or_literal_slot``.
+
+The ceiling is wall clock and its expiry does not fail the test: the
+thread method kills the worker, and every sibling scheduled on it is
+reported as never having run. `--dist=loadfile` puts this whole module on
+one worker, so the margin here is shared, not per-case.
+
+The walk itself stays real; resolving the live first-party graph is what
+costs the minutes.
+"""
 
 _MAPPINGS = REPO_ROOT / "dev" / "registry" / "mappings"
 #: Map entry kinds that write no casilla value: padding and constants.

@@ -304,9 +304,9 @@ class TestInertInitialiser:
 
     def test_the_public_symbols_are_importable_from_the_modules_that_define_them(self) -> None:
         """What the retired test was actually protecting, asked of the real homes."""
-        from dev.sanitizer._pipeline import sanitize_pdf
-        from dev.sanitizer.errors import AlreadySanitizedError, SanitizationError
-        from dev.sanitizer.residual_identity import ResidualKind, scan_for_residual_identities
+        from .._pipeline import sanitize_pdf
+        from ..errors import AlreadySanitizedError, SanitizationError
+        from ..residual_identity import ResidualKind, scan_for_residual_identities
 
         for symbol in (
             sanitize_pdf,

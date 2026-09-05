@@ -194,6 +194,10 @@ def _legacy_orphan_journal(
     return path
 
 
+#: Floor for the parsed surface below. Live: 185 referenced names.
+_MINIMUM_PUBLICATION_NAMES = 61
+
+
 def test_recovery_retires_only_a_provably_completed_legacy_cross_volume_orphan(tmp_path) -> None:
     context = _legacy_orphan_context(tmp_path)
     candidate_export = tmp_path / "former-system-temporary" / "export"
@@ -672,6 +676,15 @@ def test_publication_module_has_no_old_tree_read_merge_or_copy_surface() -> None
     """Legacy exports cannot return as readers, mergers, copies, or fallback APIs."""
     module = ast.parse(inspect.getsource(_tree_publication))
     referenced_names = {node.id for node in ast.walk(module) if isinstance(node, ast.Name)}
+
+    # An absence claim over an EMPTY surface is satisfied by construction.
+    # This module carries 185 referenced names today; a gutted or stubbed
+    # one would satisfy every forbidden-name assertion below without the
+    # boundary existing at all. A floor, not a pinned count.
+    assert len(referenced_names) >= _MINIMUM_PUBLICATION_NAMES, (
+        f"the publication limb parsed to only {len(referenced_names)} referenced name(s); below "
+        "this an absence claim proves nothing about the boundary it guards"
+    )
     attribute_names = {node.attr for node in ast.walk(module) if isinstance(node, ast.Attribute)}
 
     assert not {

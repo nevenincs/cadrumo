@@ -56,15 +56,31 @@ def _streams_sha256(function: ast.FunctionDef) -> bool:
     return builds_digest and streams_file
 
 
+#: Floor for the parsed surface behind the absence claim below. Live: the
+#: three re-homed sites define 8, 20 and 21 functions. A floor, not a count.
+_MINIMUM_SITE_FUNCTIONS = 3
+
+
 @pytest.mark.parametrize("relative_path", _REHOMED_STREAMED_DIGEST_SITES)
 def test_rehomed_digest_site_declares_no_private_digest_helper(relative_path: str) -> None:
-    """Every production streamed-file digest resolves through the one owner."""
+    """Every production streamed-file digest resolves through the one owner.
+
+    The claim is an absence over the functions the site defines, so a module
+    gutted to a stub carries no private helper for the same reason it carries
+    nothing at all. These are RE-HOMED sites in a repository actively moving
+    symbols between modules, which is precisely how a file becomes a shell
+    while keeping its path and passing this gate.
+    """
     repository_root = REPO_ROOT
     tree = ast.parse((repository_root / relative_path).read_text(encoding="utf-8"))
+    defined = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
 
-    streaming_helpers = [
-        node.name for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and _streams_sha256(node)
-    ]
+    assert len(defined) >= _MINIMUM_SITE_FUNCTIONS, (
+        f"{relative_path} defines only {len(defined)} function(s); below this it declares no "
+        "private digest helper because it declares almost nothing"
+    )
+
+    streaming_helpers = [node.name for node in defined if _streams_sha256(node)]
 
     assert streaming_helpers == []
 

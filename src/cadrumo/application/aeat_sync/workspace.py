@@ -128,12 +128,34 @@ class AeatSyncCensusCategory(StrEnum):
 
 
 class AeatSyncCensusStatus(StrEnum):
-    """Safe census comparison outcomes."""
+    """Safe census comparison outcomes, plus the state of having none yet.
+
+    The first four are VERDICTS: each claims someone compared the local censo
+    field against the AEAT one and says how they came out. ``NOT_COMPARED``
+    claims the opposite -- that nobody has looked at the AEAT side at all --
+    and exists because before a pull there is no honest verdict to give. Made
+    to reuse one of the four, a pre-pull row would have to assert a comparison
+    that never happened; ``UNSET`` in particular says the field HAS no value,
+    which is a statement about the value rather than about whether anyone
+    checked.
+    """
 
     ADOPTED = "adopted"
     CONFLICT = "conflict"
     UNCHANGED = "unchanged"
     UNSET = "unset"
+    NOT_COMPARED = "not_compared"
+
+
+COMPARED_CENSUS_STATUSES: Final = frozenset(
+    {
+        AeatSyncCensusStatus.ADOPTED,
+        AeatSyncCensusStatus.CONFLICT,
+        AeatSyncCensusStatus.UNCHANGED,
+        AeatSyncCensusStatus.UNSET,
+    }
+)
+"""The census statuses that assert a comparison against the AEAT actually ran."""
 
 
 class AeatSyncLocalFilingState(StrEnum):
@@ -290,6 +312,41 @@ class AeatSyncWorkspaceCensusRowV1(AeatSyncWorkspaceActionRowV1):
     path: str = Field(min_length=1, max_length=256)
     category: AeatSyncCensusCategory
     status: AeatSyncCensusStatus
+    local_value: str | None = Field(default=None, max_length=256)
+    """What the local profile holds for this field, or nothing when unobserved."""
+    aeat_value: str | None = Field(default=None, max_length=256)
+    """What the AEAT censo holds, or nothing when no pull has observed it.
+
+    `None` on either side is UNOBSERVED, never an empty field. A censo entry the
+    taxpayer has genuinely left blank is the empty string, and collapsing the
+    two would tell an operator AEAT holds nothing where in truth nobody has
+    looked -- which is the difference between "correct" and "unchecked" on a
+    comparison whose entire purpose is to show what differs.
+    """
+
+    @model_validator(mode="after")
+    def _the_status_and_the_values_must_agree(self) -> Self:
+        """A verdict must carry what it judged; a non-verdict must not pretend to.
+
+        Both directions are defects, and neither is caught by the other.
+
+        Reporting a CONFLICT while withholding a side asks the operator to
+        accept a difference they cannot see -- the same defect the invoice and
+        entry suggestions carried before they showed the amounts they compared.
+        UNSET and UNCHANGED stay deliberately unconstrained, as they were:
+        both are meaningful before either side has been read, and requiring
+        values there would force a producer to invent them.
+
+        NOT_COMPARED asserts that nobody looked at the AEAT. A row carrying an
+        AEAT value under that status is self-contradicting: someone plainly
+        did look, and the operator would be told the field is unchecked while
+        the evidence sits in the same row.
+        """
+        if self.status is AeatSyncCensusStatus.CONFLICT and (self.local_value is None or self.aeat_value is None):
+            raise ValueError("a census conflict must carry both the local and the AEAT value")
+        if self.status is AeatSyncCensusStatus.NOT_COMPARED and self.aeat_value is not None:
+            raise ValueError("a census row that was never compared cannot carry an AEAT value")
+        return self
 
 
 class AeatSyncWorkspaceFiledDeclarationRowV1(AeatSyncWorkspaceActionRowV1):
@@ -376,6 +433,15 @@ class _DualRow(AeatSyncWorkspaceActionRowV1):
     local_observed_at: UtcInstant | None = None
     aeat_observed_at: UtcInstant | None = None
     discrepancy_kind: AeatSyncDiscrepancyKind
+    local_value: str | None = Field(default=None, max_length=256)
+    """What the local record holds for the compared figure, or nothing.
+
+    `None` is UNOBSERVED, not empty and not zero. A row can legitimately have
+    no value on a side that was never read, and the state axis above already
+    says which side that is.
+    """
+    aeat_value: str | None = Field(default=None, max_length=256)
+    """What AEAT holds for the same figure, or nothing when unobserved."""
 
     @model_validator(mode="after")
     def _coherent(self) -> Self:
@@ -383,6 +449,7 @@ class _DualRow(AeatSyncWorkspaceActionRowV1):
             raise ValueError("period and filing year disagree")
         _dual(self.local_state, self.local_observed_at, self.aeat_state, self.aeat_observed_at)
         _discrepancy(self.local_state, self.aeat_state, self.discrepancy_kind)
+        _compared_values(self.discrepancy_kind, self.local_value, self.aeat_value)
         return self
 
 
@@ -718,8 +785,16 @@ def _source_claims(
                     absent=row.aeat_state is AeatSyncSourceState.ABSENT,
                 )
             if isinstance(row, AeatSyncWorkspaceCensusRowV1):
+                # The local side is required for every census row: the row
+                # exists because the profile was read. The AEAT side is
+                # required only for a row that claims a VERDICT -- a
+                # NOT_COMPARED row's whole content is that no AEAT observation
+                # exists, so demanding one to publish it would make the state
+                # unrepresentable and force a pre-pull census zone to stay
+                # empty beside a local source reporting rows it holds.
                 _require(False, sources[AeatSyncWorkspaceSource.LOCAL_PROFILE], "local census")
-                _require(False, sources[AeatSyncWorkspaceSource.AEAT_CENSUS], "AEAT census")
+                if row.status in COMPARED_CENSUS_STATUSES:
+                    _require(False, sources[AeatSyncWorkspaceSource.AEAT_CENSUS], "AEAT census")
             if isinstance(row, _DualRow):
                 _require(
                     row.local_state is AeatSyncSourceState.NOT_OBSERVED,
@@ -906,6 +981,29 @@ def _dual(
 ) -> None:
     _optional_time(local, local_at, AeatSyncSourceState.NOT_OBSERVED)
     _optional_time(aeat, aeat_at, AeatSyncSourceState.NOT_OBSERVED)
+
+
+def _compared_values(
+    kind: AeatSyncDiscrepancyKind,
+    local_value: str | None,
+    aeat_value: str | None,
+) -> None:
+    """Refuse a difference claim that withholds one of the values it compares.
+
+    STATE_MISMATCH and CONTRADICTORY_SOURCE both assert that two observed sides
+    disagree. Making that claim while hiding a side leaves the operator to
+    accept a difference they cannot inspect -- the same defect the invoice/entry
+    suggestions carried before they showed their amounts.
+
+    The one-sided kinds are deliberately exempt. LOCAL_ONLY and AEAT_ONLY say
+    the other side is ABSENT, so there is no second value to carry; UNOBSERVED
+    says nobody looked; NONE says the sides agree and needs no evidence of
+    difference.
+    """
+    if kind not in {AeatSyncDiscrepancyKind.STATE_MISMATCH, AeatSyncDiscrepancyKind.CONTRADICTORY_SOURCE}:
+        return
+    if local_value is None or aeat_value is None:
+        raise ValueError(f"a {kind.value} row must carry both the local and the AEAT value")
 
 
 def _discrepancy(local: AeatSyncSourceState, aeat: AeatSyncSourceState, kind: AeatSyncDiscrepancyKind) -> None:

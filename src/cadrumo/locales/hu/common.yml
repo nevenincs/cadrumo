@@ -1028,10 +1028,12 @@ tui:
     census_status:
       adopted: Átvéve
       conflict: Konfliktus
+      not_compared: Nincs összehasonlítva
       unchanged: Változatlan
       unset: Nincs beállítva
     column:
       aeat: AEAT
+      aeat_value: AEAT érték
       area: Terület
       availability: Elérhetőség
       category: Kategória
@@ -1042,6 +1044,7 @@ tui:
       issued: Kiállítva
       local: Helyi
       local_filing: Helyi benyújtás
+      local_value: Helyi érték
       read: Olvasottság
       receipt: Igazolás
       resolution: Rendezés
@@ -1132,6 +1135,7 @@ tui:
       joined: '%{entries}'
     value:
       none: —
+      unobserved: Nem megfigyelt
     zone:
       census: Nyilvántartás
       evidence_comparison: Bizonyítékok összehasonlítása
@@ -1230,6 +1234,7 @@ tui:
       filed: Benyújtva
       local_filing: Helyi benyújtási állapot
       local_state: Helyi állapot
+      result: Eredmény
       updated: Frissítve
       when: Dátum
     destination:
@@ -1284,6 +1289,7 @@ tui:
       'no': Nem
       none: Nincs
       not_applicable: Nem alkalmazható
+      result_unknown: Nem érhető el
       'yes': Igen
     work_state:
       borrador: Piszkozat

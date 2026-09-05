@@ -131,6 +131,10 @@ def _profile() -> ExportTreeTransportProfile:
     return transport
 
 
+#: Floor for the parsed surface below. Live: 102 referenced names.
+_MINIMUM_CHECK_NAMES = 34
+
+
 def test_check_regenerates_in_isolation_and_preserves_published_hashes(m130_inspection_snapshot, tmp_path) -> None:
     """A real candidate must match every current target member without target mutation."""
     context, joined, semantic_map, target_export_root = _check_inputs(tmp_path, m130_inspection_snapshot)
@@ -303,6 +307,15 @@ def test_check_module_has_no_migration_reader_or_publisher_surface() -> None:
     """The permanent check API must not regain an obsolete migration or publish route."""
     module = ast.parse(inspect.getsource(_tree_check))
     referenced_names = {node.id for node in ast.walk(module) if isinstance(node, ast.Name)}
+
+    # An absence claim over an EMPTY surface is satisfied by construction.
+    # This module carries 102 referenced names today; a gutted or stubbed
+    # one would satisfy every forbidden-name assertion below without the
+    # boundary existing at all. A floor, not a pinned count.
+    assert len(referenced_names) >= _MINIMUM_CHECK_NAMES, (
+        f"the check API parsed to only {len(referenced_names)} referenced name(s); below "
+        "this an absence claim proves nothing about the boundary it guards"
+    )
     attribute_names = {node.attr for node in ast.walk(module) if isinstance(node, ast.Attribute)}
     imported_modules = {
         node.module for node in ast.walk(module) if isinstance(node, ast.ImportFrom) and node.module is not None

@@ -43,6 +43,7 @@ _PACKAGE = Path(__file__).resolve().parents[1]
 _REVISION = "a" * 64
 """A settled source fingerprint: both ends of a coherent run report it."""
 
+
 def _tui_importers(root: Path) -> list[str]:
     """Every module under ``root`` that imports the TUI entrypoint package."""
     offenders: list[str] = []
@@ -587,7 +588,9 @@ def test_a_manifest_missing_a_field_refuses_at_load(tmp_path: Path) -> None:
     manifest = Manifest(
         source_revision=_REVISION,
         source_revision_at_end=_REVISION,
-        generated_at="2026-01-01T00:00:00+00:00", cell_height=22)
+        generated_at="2026-01-01T00:00:00+00:00",
+        cell_height=22,
+    )
     path = write_manifest(tmp_path, manifest)
     payload = json.loads(path.read_text(encoding=UTF_8))
     del payload["cell_height"]
@@ -886,10 +889,16 @@ def test_repainting_a_run_rewrites_only_the_raster_derived_fields(tmp_path: Path
         elapsed_ms=987.0,
         geometry_findings=("something the harness measured",),
     )
-    write_manifest(run, Manifest(
-        source_revision=_REVISION,
-        source_revision_at_end=_REVISION,
-        generated_at="2026-01-01T00:00:00+00:00", cell_height=22, frames=(original,)))
+    write_manifest(
+        run,
+        Manifest(
+            source_revision=_REVISION,
+            source_revision_at_end=_REVISION,
+            generated_at="2026-01-01T00:00:00+00:00",
+            cell_height=22,
+            frames=(original,),
+        ),
+    )
 
     result = _raster.rasterise(run / original.svg, run / original.png, cell_height=18)
     repainted = original.model_copy(
@@ -1010,6 +1019,7 @@ def test_column_mapping_survives_floating_point_cell_origins() -> None:
         assert round(origin / cell) == column, f"{origin} should map to column {column}"
     assert int(536.8 // cell) == 43, "the floored form is wrong here; that is why rounding is used"
 
+
 def test_a_run_directory_reports_the_frames_its_manifest_does_not_claim(tmp_path: Path) -> None:
     """A frame from an earlier render is indistinguishable from a current one.
 
@@ -1049,6 +1059,7 @@ def test_purging_removes_only_the_unclaimed_frames(tmp_path: Path) -> None:
     assert (tmp_path / "text" / "a.txt").is_file()
     assert (tmp_path / "manifest.json").is_file()
     assert stale_artifacts(tmp_path, manifest) == ()
+
 
 def test_a_manifest_whose_run_spanned_a_source_change_says_so() -> None:
     """A run that straddles an edit must announce it, not average it.

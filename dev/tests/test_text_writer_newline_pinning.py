@@ -36,6 +36,7 @@ from pathlib import Path
 import pytest
 
 from .._paths import REPO_ROOT
+from ..quality.unread_inputs import report_unread
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -43,8 +44,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 SCAN_ROOTS: tuple[str, ...] = ("dev", "src/cadrumo", "packaging")
 
 #: Lowest plausible number of scanned modules. A green result below this floor
-#: would mean "nothing was checked" rather than "nothing is wrong".
-MIN_SCANNED_MODULES = 700
+#: would mean "nothing was checked" rather than "nothing is wrong". Live the
+#: walk scans 2,976 gated modules, so the previous floor of 700 let three
+#: quarters of the corpus disappear while the gate stayed green. A floor,
+#: not a pinned count: it fails only when the corpus SHRINKS past it.
+MIN_SCANNED_MODULES = 2500
 
 #: Writers that legitimately do not pin a terminator, keyed by
 #: ``(repository-relative path, qualified function name)`` with a stated reason.
@@ -187,9 +191,15 @@ def _scan() -> tuple[list[Finding], int, list[str]]:
     findings: list[Finding] = []
     scanned = 0
     unparseable: list[str] = []
+    absent: list[str] = []
     for name in _tracked_python_modules():
         path = REPO_ROOT / name
         if not path.is_file():
+            # Tracked but absent: a peer's deletion, not yet staged. This
+            # skip reached NEITHER counter, so such a file left the corpus
+            # without appearing in the scanned total or the unparseable
+            # list - the one disappearance the gate could not report.
+            absent.append(name)
             continue
         try:
             tree = ast.parse(path.read_bytes().decode("utf-8"))
@@ -200,6 +210,11 @@ def _scan() -> tuple[list[Finding], int, list[str]]:
             continue
         scanned += 1
         findings.extend(unpinned_writers(name, tree))
+    report_unread(
+        "text-writer newline gate",
+        "these tracked modules were not scanned for unpinned writers",
+        absent,
+    )
     return findings, scanned, unparseable
 
 

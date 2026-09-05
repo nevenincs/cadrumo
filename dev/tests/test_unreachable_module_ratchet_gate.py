@@ -49,7 +49,20 @@ from ..quality.unreachable_module_ratchet import (
     unreachable_modules,
 )
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.timeout(600)]
+"""The 600-second budget is contention, not a slow test.
+
+Four cases here run 136.9s, 135.4s, 128.3s and 122.2s SERIALLY - each well
+inside the repository's 300-second ceiling on its own. Under the default
+`-n auto` they can land on one worker together, and the ceiling is wall
+clock: the first to cross it is killed by pytest-timeout's thread method,
+which takes the worker down and reports every sibling on it as never having
+run. This module produced exactly that - `node down: Not properly
+terminated` at 11% - while passing serially in 8m43s.
+
+The walks themselves stay real: they resolve the live import graph across
+the whole first-party tree, which is what costs the two minutes.
+"""
 
 _EXCLUDES = ("src/pkg/tests", "src/pkg/tests/**", "src/pkg/**/tests", "src/pkg/**/tests/**")
 
@@ -513,6 +526,12 @@ def test_the_live_tui_projections_are_deferred_by_their_frozen_consumers() -> No
             assert carried, f"{entry.module} deferred by non-deferred importer {importer}"
 
 
+#: Below this the rationales have stopped naming checkable readers. Live: five
+#: intentional dispositions, four of which name a dev reader, four paths
+#: checked. A floor, not a pinned count.
+_MINIMUM_CHECKED_READERS = 2
+
+
 def test_every_intentional_rationale_names_a_reader_that_still_reads_it() -> None:
     """A disposition's justification must stay true, or the module is orphaned.
 
@@ -529,13 +548,26 @@ def test_every_intentional_rationale_names_a_reader_that_still_reads_it() -> Non
     referenced = re.compile(r"dev/[\w/]+\.py")
 
     unread: list[str] = []
+    checked = 0
     for disposition in UnreachableBaseline.load().intentional:
         leaf = disposition.module.rsplit(".", 1)[-1]
         for claimed in referenced.findall(disposition.rationale):
+            checked += 1
             reader = repo_root / claimed
             if not reader.is_file():
                 unread.append(f"{disposition.module}: {claimed} no longer exists")
             elif leaf not in reader.read_text(encoding="utf-8"):
                 unread.append(f"{disposition.module}: {claimed} no longer mentions {leaf}")
+
+    # The tolerated absence above is exactly why this floor is needed. Because a
+    # disposition MAY legitimately name no reader, zero checks is a shape this
+    # gate already treats as normal - so it cannot tell one silent disposition
+    # apart from a rationale format the regex stopped matching, which would
+    # silence all of them at once. Four reader paths are checked today.
+    assert checked >= _MINIMUM_CHECKED_READERS, (
+        f"only {checked} stated reader(s) were checked across the intentional dispositions; "
+        "below this the rationales have stopped being checkable evidence and this gate is "
+        "inert rather than satisfied"
+    )
 
     assert not unread, "intentional dispositions whose stated reader is gone: " + "; ".join(unread)

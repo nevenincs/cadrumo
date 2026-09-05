@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 import shlex
 from pathlib import Path
+from typing import Any
 
 import pytest
 import yaml
@@ -438,6 +439,39 @@ def test_full_lane_carries_every_slow_conformance_surface() -> None:
     assert _prohibited_aeat_product_forms(_FULL_WORKFLOW.read_text(encoding="utf-8")) == ()
 
 
+#: Below these the lane workflows have stopped carrying a surface to inspect.
+#: Live: ci.yml has 4 jobs and 27 steps, ci-full.yml has 1 job and 25 steps.
+#: Floors, not pinned counts.
+_MINIMUM_LANE_JOBS = 1
+_MINIMUM_LANE_STEPS = 8
+
+
+def _both_lane_workflows() -> tuple[tuple[Path, dict[str, Any]], ...]:
+    """Load both lane workflows, with each one asserted to carry real steps.
+
+    The gates below assert that NO step does some forbidden thing - no artifact
+    upload, no operator dotenv. A workflow parsing to `jobs: {}`, or to jobs
+    whose step lists are empty, satisfies every one of those claims while
+    describing a lane that runs nothing. A missing KEY raises and is already
+    loud; an empty COLLECTION is the silent case, and that is what this floors.
+    """
+    loaded: list[tuple[Path, dict[str, Any]]] = []
+    for path in (_WORKFLOW, _FULL_WORKFLOW):
+        document = yaml.safe_load(path.read_text(encoding="utf-8"))
+        jobs = document["jobs"]
+        assert len(jobs) >= _MINIMUM_LANE_JOBS, (
+            f"{path.name} declares {len(jobs)} job(s); a lane with none satisfies every "
+            "prohibition below without running anything"
+        )
+        steps = sum(len(job.get("steps") or ()) for job in jobs.values())
+        assert steps >= _MINIMUM_LANE_STEPS, (
+            f"{path.name} declares {steps} step(s) across its jobs; below this the "
+            "prohibitions below hold because there is nothing to prohibit"
+        )
+        loaded.append((path, document))
+    return tuple(loaded)
+
+
 def test_ci_lanes_use_no_actions_artifact_storage() -> None:
     """CI enrolls in the repo's zero-Actions-artifact posture.
 
@@ -447,8 +481,7 @@ def test_ci_lanes_use_no_actions_artifact_storage() -> None:
     in the job log, so an `if: always()` junit upload is both a quota risk
     and a policy inconsistency.
     """
-    for path in (_WORKFLOW, _FULL_WORKFLOW):
-        document = yaml.safe_load(path.read_text(encoding="utf-8"))
+    for path, document in _both_lane_workflows():
         offending = [
             str(step.get("uses"))
             for job in document["jobs"].values()
@@ -460,8 +493,7 @@ def test_ci_lanes_use_no_actions_artifact_storage() -> None:
 
 def test_ci_workflow_does_not_materialise_operator_dotenv() -> None:
     """CI stays hermetic instead of loading operator-template overrides."""
-    for path in (_WORKFLOW, _FULL_WORKFLOW):
-        document = yaml.safe_load(path.read_text(encoding="utf-8"))
+    for _path, document in _both_lane_workflows():
         commands = "\n".join(str(step.get("run", "")) for job in document["jobs"].values() for step in job["steps"])
         assert "env-setup" not in commands
         assert "env/.env.example" not in commands
