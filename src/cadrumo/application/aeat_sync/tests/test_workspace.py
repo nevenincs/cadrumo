@@ -6,7 +6,7 @@ import ast
 import pickle
 from datetime import UTC, date, datetime
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, TypedDict, Unpack, cast
 
 import pytest
 from pydantic import ValidationError
@@ -698,6 +698,18 @@ def test_notification_custody_separates_an_unread_store_from_an_empty_one(
     assert observation.item_count == expected_count
 
 
+class _ComparedValues(TypedDict, total=False):
+    """The local/AEAT value pair a comparison row carries.
+
+    Typed rather than a bare dict because both sites below build the pair
+    dynamically and unpack it; a plain dict widens the keys to one union and
+    the row's own `str | None` fields can no longer be checked.
+    """
+
+    local_value: str | None
+    aeat_value: str | None
+
+
 def test_a_census_conflict_must_carry_both_values_it_compares() -> None:
     """Asserting a difference while hiding one side asks for blind agreement.
 
@@ -710,7 +722,12 @@ def test_a_census_conflict_must_carry_both_values_it_compares() -> None:
     UNCHANGED are meaningful before either side has been read, and requiring
     values there would force a producer to invent them.
     """
-    for missing in ({"aeat_value": None}, {"local_value": None}, {"local_value": None, "aeat_value": None}):
+    missing_cases: tuple[_ComparedValues, ...] = (
+        {"aeat_value": None},
+        {"local_value": None},
+        {"local_value": None, "aeat_value": None},
+    )
+    for missing in missing_cases:
         with pytest.raises(ValidationError, match="must carry both the local and the AEAT value"):
             AeatSyncWorkspaceCensusRowV1(
                 path="address",
@@ -765,7 +782,7 @@ def test_a_two_sided_discrepancy_must_carry_the_values_it_compares() -> None:
         local: AeatSyncSourceState,
         aeat: AeatSyncSourceState,
         kind: AeatSyncDiscrepancyKind,
-        **values: str | None,
+        **values: Unpack[_ComparedValues],
     ) -> AeatSyncWorkspaceEvidenceComparisonRowV1:
         return AeatSyncWorkspaceEvidenceComparisonRowV1(
             modelo="303",
