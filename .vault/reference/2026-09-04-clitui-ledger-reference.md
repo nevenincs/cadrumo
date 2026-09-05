@@ -25,12 +25,12 @@ This document is the authoritative human-readable publication surface for the `L
 | --- | --- |
 | Contract / schema | `LedgerCapabilityMatrixV1` / `4`; `LedgerUnionDenominatorV1` / `4` |
 | Publication revision | `s14-694-preacceptance-candidate-1`; preacceptance only |
-| Contract source digest | `sha256:44cc0a4aae3ec03923891dabc752fae9989a8ad1b071481c2876835f6a970dd4` (newline-normalized framed bytes) |
+| Contract source digest | `sha256:9bac7ef60ccf03565e4e2391696ceae19ae97859c04a9b500318c4d4b7ed0ca3` (newline-normalized framed bytes) |
 | TUI census / source set | `sha256:f36c5a00d48729e1678a3fa5ecb5204d223d0087395d3919f14f88c3725913cd` / `sha256:29174310f657c3c0f5267d2581d4493fcbb73b2bdd063eb53e255518cbb738b8` |
 | Union / row review / row attestation | `761` observations / `770` edges / `694` rows; union `sha256:6294c485888e8e01d095789ec317e743d506bb1c5b16044d5cd179f640f5b703`; row review `sha256:953cc5d70c492640bc81a04426a9d5fc5abaa012a21ad65f22197cb8b76a07cf`; attestation `sha256:ff751395e4f088dbb5e417842489d63bc30b7812b6b1147a13eea499e8617437` |
 | Denominator | revision `row-review-v1`; `sha256:674900e3f784b83b0449f6328d7b3d2094adf87a76d9a9f065ddef4da04885e4` |
-| Matrix / pre-receipt basis | `sha256:645529262bb55de13c2ab20bec25c9b160c39bb40f2e17c548eb2bc098808662` / `sha256:cf7e127482ef3953cb2e7ae98232b79e12ac606ba4cddac8408512ffca216c56` |
-| Preacceptance attestation | `sha256:89ff8e7d4f7853a584fa30d535db305540b8d311c93bfe0f66d930fee366959c`; ruling `REJECT` |
+| Matrix / pre-receipt basis | `sha256:d14aae6c17e1d6e3fb6748c3c67fd9998d7a07fe354d092884140bd458fb5e87` / `sha256:293694aec7210c5ee145da1b7a90b7c6579410dc69ef248ba7df4b085e5f29b5` |
+| Preacceptance attestation | `sha256:d1e3641f5fc8c888ce1e3a2497a2b1362a73e0b5a3862993697be8e5c5837700`; ruling `REJECT` |
 | Current G0 state | **OPEN**; preacceptance ruling is `REJECT`, accepted receipt count is `0`, and no external acceptance anchor is present |
 | TUI hold | Active; Overview admits only the workspace-read query |
 
@@ -148,7 +148,7 @@ These coordinates bind the baseline claims to the current observation revision. 
 
 | Coordinate | Locator | Subject digest | Claim boundary |
 | --- | --- | --- | --- |
-| `evidence.baseline.matrix_contract` | `dev/quality/clitui_ledger_capability_matrix.py:22` | `sha256:44cc0a4aae3ec03923891dabc752fae9989a8ad1b071481c2876835f6a970dd4` | Matrix schema 4 plus union schema 4, eight axes, reviewed proof requirements, typed row-level TUI hold, source kinds, gaps, controls, evidence currentness, G0-G4 predicates, and the required public import-preparation census operation |
+| `evidence.baseline.matrix_contract` | `dev/quality/clitui_ledger_capability_matrix.py:22` | `sha256:9bac7ef60ccf03565e4e2391696ceae19ae97859c04a9b500318c4d4b7ed0ca3` | Matrix schema 4 plus union schema 4, eight axes, reviewed proof requirements, typed row-level TUI hold, source kinds, gaps, controls, evidence currentness, G0-G4 predicates, and the required public import-preparation census operation |
 | `evidence.baseline.semantic_union_review` | `build_ledger_union_denominator` in `dev/quality/clitui_ledger_capability_matrix.py` | `sha256:6294c485888e8e01d095789ec317e743d506bb1c5b16044d5cd179f640f5b703` | Schema-v4 domain-separated union: exact 761-source observation graph; all 694 reviewed rows; owner, applicability, proof, gap, action, TUI, and registry dispositions; row-review digest and reviewed-open attestation |
 | `evidence.s04.cli_command_census` | `src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py:51` | `sha256:2cd8e21e2b8602e5e18338c22350301f2bc76f580873af51b1154d5364e6769b` | Exact current CLI stream: 78 invocables, 50 supplemental behavior-distinct sub-operations across ten overloaded endpoints, derived path/handler/schema/TUI facts, and fail-closed ownership annotations |
 | `evidence.s05.backend_operation_census` | `src/cadrumo/application/ledger/` operational modules listed in the backend census | `sha256:4b0d917dd20d155f348958559037695cb5bab356867a1c88305bb42080f3b2f0` | Exact current backend observation: 64 operations, actual request/result contracts, direct-test locators, production compositions, 14 backend-helper-only rows, and the one backend-only product capability |
