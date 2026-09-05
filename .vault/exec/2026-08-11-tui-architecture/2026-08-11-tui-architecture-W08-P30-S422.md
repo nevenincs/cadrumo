@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:37d2721ba7e8213fc74d14dd3c27d22b77263bf9777ff5edd8be427cde4bcbd6'
+body_hash: 'sha256:8b5eeb1ef034f3ad6c9d59da5249fa8735c4833f0f07c4626c030f3ea671132d'
 step_id: 'S422'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -110,3 +110,32 @@ Restored by copy; 97 passed.
 
 STILL OPEN: evidence-comparison and reconciliation rows carry no values, and
 the AEAT side of every census row stays unobserved until a pull.
+
+CLOSED. All three comparison surfaces now carry the values they compare.
+
+`_DualRow` gained `local_value` and `aeat_value`, so evidence-comparison and
+reconciliation rows carry their figures alongside the state axis, and both
+screens render them. The invariant is narrower than the census one and
+deliberately so: only STATE_MISMATCH and CONTRADICTORY_SOURCE must carry both
+sides, because only those claim two OBSERVED sides disagree. LOCAL_ONLY and
+AEAT_ONLY say the other side is ABSENT -- there is no second value, and
+requiring one would force a producer to invent a figure for something that is
+not there. UNOBSERVED and NONE need no evidence of difference at all.
+
+The column fitter is now shared rather than copied into three screens. Each
+takes standalone columns in priority order and the value pair whole or not at
+all, and each ranks its own VERDICT above the raw figures -- census by status,
+reconciliation by resolution -- because the verdict is what tells the operator
+to act while the values are the evidence for it.
+
+The pair gate runs over all three surfaces at four widths. That is what proves
+the sharing held: a screen growing its own copy and splitting the pair fails
+there without touching the others. Teeth proven by splitting the pair inside
+the shared fitter -- two independent surfaces reported it, census and evidence
+comparison, at 100 columns. Restored by copy; 110 passed.
+
+WHAT REMAINS TRUE AND UNCHANGED: the AEAT side of every row is still
+unobserved until a pull happens. The point of this work is that the moment one
+does, the figures have somewhere to arrive and the surfaces already render them
+-- and until then `None` reads as "Not observed" rather than as a blank the
+operator would take for zero.
