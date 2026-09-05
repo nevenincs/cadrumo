@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:732891ddafd51937b574a07a331be51bfb235ba95f5a0904b03b8fce269f3de6'
+body_hash: 'sha256:abbe3b34b1d596752329e9b5f58e0dd5b0fb315d09674f15ef6f6fa2d6155c97'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -523,6 +523,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S641` - Announce the sources the scratch reclamation sweep cannot read, since an unreadable file declares no scratch family and therefore looks exactly like a compliant one, and only five families are examined across six thousand nine hundred sources so one loss removes a fifth of the subject; `dev/ci/tests/test_scratch_prefixes_are_reclaimed.py`.
 - [x] `W02.P02.S642` - Announce the modules the dunder-init import gate cannot parse, since an unparsed module contributes no offence and reads as compliant while its post-swallow floor of one thousand sits against six thousand nine hundred parsing today; `dev/quality/tests/test_no_dunder_init_module_imports.py`.
 - [x] `W02.P02.S643` - Refuse a production source the identifier enrolment gates cannot parse, since an unparsed module is absent from the shared tree map and an unenrolled identifier field declared in it reaches none of the three gates that consume it; `dev/identity/tests/test_identifier_namespace_enrollment_gate.py`.
+- [x] `W02.P02.S644` - Announce the documentation pages the acquisition claim scan cannot read and raise its corpus floor off zero, since an unreadable page contributes no claim and an unbacked acquisition promise inside one is not there to fail on, while fifty-eight of fifty-nine pages could vanish beneath a greater-than-zero guard; `dev/docs/tests/test_distribution_claims.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
