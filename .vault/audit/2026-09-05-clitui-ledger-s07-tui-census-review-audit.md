@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:0025a4f55fd594e4af1f1adf15b7862264d21b204943e0ce84c9c3a5741597ec'
+body_hash: 'sha256:21b4706d235e7306df06b6cdd0e55113de1c9397f015fdc75cbe4820cd21cf4f'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-reference]]"
@@ -488,6 +488,7 @@ and census digest
 are unchanged. No production TUI file changed; G0 remains OPEN and the TUI hold
 remains effective.
 
-The final focused S07 selection passes 47 tests with 135 deselected. Ruff
-format/check, scoped `ty`, basedpyright, and the feature Vault check pass. The
-record, reference, and plan state accurately describe the accepted census.
+The final focused S07 selection passes 47 tests with 135 deselected, and the
+full matrix module passes all 182 tests. Ruff format/check, scoped `ty`,
+basedpyright, and the feature Vault check pass. The record, reference, and plan
+state accurately describe the accepted census.
