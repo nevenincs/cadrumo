@@ -51,13 +51,6 @@ _TERMINAL_DISPOSITIONS = frozenset(
         SourceConnectivityDisposition.NOT_APPLICABLE,
     },
 )
-_BLOCKED_DISPOSITIONS = frozenset(
-    {
-        SourceConnectivityDisposition.GROUNDING_BLOCKED,
-        SourceConnectivityDisposition.INGRESS_BLOCKED,
-        SourceConnectivityDisposition.REGISTRY_BLOCKED,
-    },
-)
 
 
 @dataclass(frozen=True, slots=True)
