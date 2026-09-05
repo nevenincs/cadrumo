@@ -1,5 +1,5 @@
 schema_version = 1
-inventory_digest = "sha256:a6bdcc403fee2d73f49a9a05468753f38de45217c87124c2c9d2c746084c4131"
+inventory_digest = "sha256:c823315d3413558640184906d47f12cc3d8a89ee839acd0fbea32af15bfec174"
 
 [[operations]]
 operation_id = "rename-workflowalreadyfileddetails"
@@ -24,7 +24,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/tests/test_file_flow_filing.py"
-sha256 = "sha256:4944e9a437adca403ff87c9926a37e279573be4cef06a8bdafc522fedfc4eada"
+sha256 = "sha256:f6841d7e324b321eb88dbb91466d99b35426bd19a036178b9982a1f5bca9952e"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/tests/test_file_flow_verify.py"
@@ -32,7 +32,7 @@ sha256 = "sha256:b1de005cd6971d09ac0d9c25736298c3e049a05a9f78652d05f702308261931
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/engine.py"
-sha256 = "sha256:0537de4a8e40a60084fbad08d4e9a7f886b9a09c0f2e4f3befce9dc1166ce813"
+sha256 = "sha256:42d902f4ec0af36942e07fc9135e9d88b4668ef4e522acd60e1d42bcef3b5e73"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/engine_recording.py"
@@ -40,11 +40,11 @@ sha256 = "sha256:492cdd62f30b16e6586fb48491e0a1145725e44954ad9087ceb2dd2382f74ee
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/resume.py"
-sha256 = "sha256:9ff249518814d3bc7921b71a775fc12c2dabda31734d367f0cb34fcf7a64a59f"
+sha256 = "sha256:7cbaa9ee5ff12f6973603920fecaac65d3cdcdeb2518a332099dc9185d414c1c"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/run_models.py"
-sha256 = "sha256:132f87c8ac2343607bc607bd889178567f68c51627c04378beae7a549d6a63e7"
+sha256 = "sha256:68ffa21d62f2d025c8f86a2286797d2e6ef0e4a1d8618c51bdaaac2fc693f7d1"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_models.py"
@@ -52,11 +52,11 @@ sha256 = "sha256:6ff8029cb40aaf3e01df5363a8b4975efca04d572af4c6a83fac6e148baf7a7
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_resume.py"
-sha256 = "sha256:b85dc7e4119e23a3beeebba1b536b4f47fe91b25c179f101fdd2a633a5b52faa"
+sha256 = "sha256:ffd3cea0d4208050eb15fbcca179caa6f516696b8eb6708d3d3fdc5769aa2071"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py"
-sha256 = "sha256:3b60db978f3ea7065dd951b8bdf3bc274d98600afc7914a5237970539af0d7b1"
+sha256 = "sha256:64965ffe4df35ffa9ea01e2d75da2546df469c45541b1f244ab86327b2999cb7"
 
 [[operations.preconditions]]
 path = "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py"
@@ -64,11 +64,11 @@ sha256 = "sha256:6e2110d33720789377b3ff6991818d9df55aa0daa84c75c8d9baa5846d6ece9
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py"
-sha256 = "sha256:e29e385b857b426cfb857602bef03bb3c8e71c09c15cc8fd84000f3ccf78527d"
+sha256 = "sha256:ce47893fee4cfe6b8ca1de1512ddb6fc78d749c17368b7742d10378532e7a332"
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/tests/test_work_resume.py"
-sha256 = "sha256:3b7bb628b08540c9ce0086634e72f1e95adee54ce6d331f2b646d53c45adc9c0"
+sha256 = "sha256:be47e8818dccffd48b7af7c2aebd65daf6ca1a5bbaad8c4ec47336d8c0dcbf59"
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"
@@ -97,7 +97,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/tests/test_file_flow_filing.py"
-sha256 = "sha256:4944e9a437adca403ff87c9926a37e279573be4cef06a8bdafc522fedfc4eada"
+sha256 = "sha256:f6841d7e324b321eb88dbb91466d99b35426bd19a036178b9982a1f5bca9952e"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/tests/test_file_flow_verify.py"
@@ -105,7 +105,7 @@ sha256 = "sha256:b1de005cd6971d09ac0d9c25736298c3e049a05a9f78652d05f702308261931
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/engine.py"
-sha256 = "sha256:0537de4a8e40a60084fbad08d4e9a7f886b9a09c0f2e4f3befce9dc1166ce813"
+sha256 = "sha256:42d902f4ec0af36942e07fc9135e9d88b4668ef4e522acd60e1d42bcef3b5e73"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/engine_recording.py"
@@ -113,11 +113,11 @@ sha256 = "sha256:492cdd62f30b16e6586fb48491e0a1145725e44954ad9087ceb2dd2382f74ee
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/resume.py"
-sha256 = "sha256:9ff249518814d3bc7921b71a775fc12c2dabda31734d367f0cb34fcf7a64a59f"
+sha256 = "sha256:7cbaa9ee5ff12f6973603920fecaac65d3cdcdeb2518a332099dc9185d414c1c"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/run_models.py"
-sha256 = "sha256:132f87c8ac2343607bc607bd889178567f68c51627c04378beae7a549d6a63e7"
+sha256 = "sha256:68ffa21d62f2d025c8f86a2286797d2e6ef0e4a1d8618c51bdaaac2fc693f7d1"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_models.py"
@@ -125,11 +125,11 @@ sha256 = "sha256:6ff8029cb40aaf3e01df5363a8b4975efca04d572af4c6a83fac6e148baf7a7
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_resume.py"
-sha256 = "sha256:b85dc7e4119e23a3beeebba1b536b4f47fe91b25c179f101fdd2a633a5b52faa"
+sha256 = "sha256:ffd3cea0d4208050eb15fbcca179caa6f516696b8eb6708d3d3fdc5769aa2071"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py"
-sha256 = "sha256:3b60db978f3ea7065dd951b8bdf3bc274d98600afc7914a5237970539af0d7b1"
+sha256 = "sha256:64965ffe4df35ffa9ea01e2d75da2546df469c45541b1f244ab86327b2999cb7"
 
 [[operations.preconditions]]
 path = "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py"
@@ -137,11 +137,11 @@ sha256 = "sha256:6e2110d33720789377b3ff6991818d9df55aa0daa84c75c8d9baa5846d6ece9
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py"
-sha256 = "sha256:e29e385b857b426cfb857602bef03bb3c8e71c09c15cc8fd84000f3ccf78527d"
+sha256 = "sha256:ce47893fee4cfe6b8ca1de1512ddb6fc78d749c17368b7742d10378532e7a332"
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/tests/test_work_resume.py"
-sha256 = "sha256:3b7bb628b08540c9ce0086634e72f1e95adee54ce6d331f2b646d53c45adc9c0"
+sha256 = "sha256:be47e8818dccffd48b7af7c2aebd65daf6ca1a5bbaad8c4ec47336d8c0dcbf59"
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"
@@ -170,7 +170,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/tests/test_file_flow_filing.py"
-sha256 = "sha256:4944e9a437adca403ff87c9926a37e279573be4cef06a8bdafc522fedfc4eada"
+sha256 = "sha256:f6841d7e324b321eb88dbb91466d99b35426bd19a036178b9982a1f5bca9952e"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/tests/test_file_flow_verify.py"
@@ -178,7 +178,7 @@ sha256 = "sha256:b1de005cd6971d09ac0d9c25736298c3e049a05a9f78652d05f702308261931
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/engine.py"
-sha256 = "sha256:0537de4a8e40a60084fbad08d4e9a7f886b9a09c0f2e4f3befce9dc1166ce813"
+sha256 = "sha256:42d902f4ec0af36942e07fc9135e9d88b4668ef4e522acd60e1d42bcef3b5e73"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/engine_recording.py"
@@ -186,11 +186,11 @@ sha256 = "sha256:492cdd62f30b16e6586fb48491e0a1145725e44954ad9087ceb2dd2382f74ee
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/resume.py"
-sha256 = "sha256:9ff249518814d3bc7921b71a775fc12c2dabda31734d367f0cb34fcf7a64a59f"
+sha256 = "sha256:7cbaa9ee5ff12f6973603920fecaac65d3cdcdeb2518a332099dc9185d414c1c"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/run_models.py"
-sha256 = "sha256:132f87c8ac2343607bc607bd889178567f68c51627c04378beae7a549d6a63e7"
+sha256 = "sha256:68ffa21d62f2d025c8f86a2286797d2e6ef0e4a1d8618c51bdaaac2fc693f7d1"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_models.py"
@@ -198,11 +198,11 @@ sha256 = "sha256:6ff8029cb40aaf3e01df5363a8b4975efca04d572af4c6a83fac6e148baf7a7
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_resume.py"
-sha256 = "sha256:b85dc7e4119e23a3beeebba1b536b4f47fe91b25c179f101fdd2a633a5b52faa"
+sha256 = "sha256:ffd3cea0d4208050eb15fbcca179caa6f516696b8eb6708d3d3fdc5769aa2071"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py"
-sha256 = "sha256:3b60db978f3ea7065dd951b8bdf3bc274d98600afc7914a5237970539af0d7b1"
+sha256 = "sha256:64965ffe4df35ffa9ea01e2d75da2546df469c45541b1f244ab86327b2999cb7"
 
 [[operations.preconditions]]
 path = "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py"
@@ -210,11 +210,11 @@ sha256 = "sha256:6e2110d33720789377b3ff6991818d9df55aa0daa84c75c8d9baa5846d6ece9
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py"
-sha256 = "sha256:e29e385b857b426cfb857602bef03bb3c8e71c09c15cc8fd84000f3ccf78527d"
+sha256 = "sha256:ce47893fee4cfe6b8ca1de1512ddb6fc78d749c17368b7742d10378532e7a332"
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/tests/test_work_resume.py"
-sha256 = "sha256:3b7bb628b08540c9ce0086634e72f1e95adee54ce6d331f2b646d53c45adc9c0"
+sha256 = "sha256:be47e8818dccffd48b7af7c2aebd65daf6ca1a5bbaad8c4ec47336d8c0dcbf59"
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"
@@ -243,7 +243,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/tests/test_file_flow_filing.py"
-sha256 = "sha256:4944e9a437adca403ff87c9926a37e279573be4cef06a8bdafc522fedfc4eada"
+sha256 = "sha256:f6841d7e324b321eb88dbb91466d99b35426bd19a036178b9982a1f5bca9952e"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/tests/test_file_flow_verify.py"
@@ -251,7 +251,7 @@ sha256 = "sha256:b1de005cd6971d09ac0d9c25736298c3e049a05a9f78652d05f702308261931
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/engine.py"
-sha256 = "sha256:0537de4a8e40a60084fbad08d4e9a7f886b9a09c0f2e4f3befce9dc1166ce813"
+sha256 = "sha256:42d902f4ec0af36942e07fc9135e9d88b4668ef4e522acd60e1d42bcef3b5e73"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/engine_recording.py"
@@ -259,11 +259,11 @@ sha256 = "sha256:492cdd62f30b16e6586fb48491e0a1145725e44954ad9087ceb2dd2382f74ee
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/resume.py"
-sha256 = "sha256:9ff249518814d3bc7921b71a775fc12c2dabda31734d367f0cb34fcf7a64a59f"
+sha256 = "sha256:7cbaa9ee5ff12f6973603920fecaac65d3cdcdeb2518a332099dc9185d414c1c"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/run_models.py"
-sha256 = "sha256:132f87c8ac2343607bc607bd889178567f68c51627c04378beae7a549d6a63e7"
+sha256 = "sha256:68ffa21d62f2d025c8f86a2286797d2e6ef0e4a1d8618c51bdaaac2fc693f7d1"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_models.py"
@@ -271,11 +271,11 @@ sha256 = "sha256:6ff8029cb40aaf3e01df5363a8b4975efca04d572af4c6a83fac6e148baf7a7
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_resume.py"
-sha256 = "sha256:b85dc7e4119e23a3beeebba1b536b4f47fe91b25c179f101fdd2a633a5b52faa"
+sha256 = "sha256:ffd3cea0d4208050eb15fbcca179caa6f516696b8eb6708d3d3fdc5769aa2071"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py"
-sha256 = "sha256:3b60db978f3ea7065dd951b8bdf3bc274d98600afc7914a5237970539af0d7b1"
+sha256 = "sha256:64965ffe4df35ffa9ea01e2d75da2546df469c45541b1f244ab86327b2999cb7"
 
 [[operations.preconditions]]
 path = "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py"
@@ -283,11 +283,11 @@ sha256 = "sha256:6e2110d33720789377b3ff6991818d9df55aa0daa84c75c8d9baa5846d6ece9
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py"
-sha256 = "sha256:e29e385b857b426cfb857602bef03bb3c8e71c09c15cc8fd84000f3ccf78527d"
+sha256 = "sha256:ce47893fee4cfe6b8ca1de1512ddb6fc78d749c17368b7742d10378532e7a332"
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/tests/test_work_resume.py"
-sha256 = "sha256:3b7bb628b08540c9ce0086634e72f1e95adee54ce6d331f2b646d53c45adc9c0"
+sha256 = "sha256:be47e8818dccffd48b7af7c2aebd65daf6ca1a5bbaad8c4ec47336d8c0dcbf59"
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"
@@ -316,7 +316,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/tests/test_file_flow_filing.py"
-sha256 = "sha256:4944e9a437adca403ff87c9926a37e279573be4cef06a8bdafc522fedfc4eada"
+sha256 = "sha256:f6841d7e324b321eb88dbb91466d99b35426bd19a036178b9982a1f5bca9952e"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/tests/test_file_flow_verify.py"
@@ -324,7 +324,7 @@ sha256 = "sha256:b1de005cd6971d09ac0d9c25736298c3e049a05a9f78652d05f702308261931
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/engine.py"
-sha256 = "sha256:0537de4a8e40a60084fbad08d4e9a7f886b9a09c0f2e4f3befce9dc1166ce813"
+sha256 = "sha256:42d902f4ec0af36942e07fc9135e9d88b4668ef4e522acd60e1d42bcef3b5e73"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/engine_recording.py"
@@ -332,11 +332,11 @@ sha256 = "sha256:492cdd62f30b16e6586fb48491e0a1145725e44954ad9087ceb2dd2382f74ee
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/resume.py"
-sha256 = "sha256:9ff249518814d3bc7921b71a775fc12c2dabda31734d367f0cb34fcf7a64a59f"
+sha256 = "sha256:7cbaa9ee5ff12f6973603920fecaac65d3cdcdeb2518a332099dc9185d414c1c"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/run_models.py"
-sha256 = "sha256:132f87c8ac2343607bc607bd889178567f68c51627c04378beae7a549d6a63e7"
+sha256 = "sha256:68ffa21d62f2d025c8f86a2286797d2e6ef0e4a1d8618c51bdaaac2fc693f7d1"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_models.py"
@@ -344,11 +344,11 @@ sha256 = "sha256:6ff8029cb40aaf3e01df5363a8b4975efca04d572af4c6a83fac6e148baf7a7
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_resume.py"
-sha256 = "sha256:b85dc7e4119e23a3beeebba1b536b4f47fe91b25c179f101fdd2a633a5b52faa"
+sha256 = "sha256:ffd3cea0d4208050eb15fbcca179caa6f516696b8eb6708d3d3fdc5769aa2071"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py"
-sha256 = "sha256:3b60db978f3ea7065dd951b8bdf3bc274d98600afc7914a5237970539af0d7b1"
+sha256 = "sha256:64965ffe4df35ffa9ea01e2d75da2546df469c45541b1f244ab86327b2999cb7"
 
 [[operations.preconditions]]
 path = "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py"
@@ -356,11 +356,11 @@ sha256 = "sha256:6e2110d33720789377b3ff6991818d9df55aa0daa84c75c8d9baa5846d6ece9
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py"
-sha256 = "sha256:e29e385b857b426cfb857602bef03bb3c8e71c09c15cc8fd84000f3ccf78527d"
+sha256 = "sha256:ce47893fee4cfe6b8ca1de1512ddb6fc78d749c17368b7742d10378532e7a332"
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/tests/test_work_resume.py"
-sha256 = "sha256:3b7bb628b08540c9ce0086634e72f1e95adee54ce6d331f2b646d53c45adc9c0"
+sha256 = "sha256:be47e8818dccffd48b7af7c2aebd65daf6ca1a5bbaad8c4ec47336d8c0dcbf59"
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"
@@ -389,7 +389,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/tests/test_file_flow_filing.py"
-sha256 = "sha256:4944e9a437adca403ff87c9926a37e279573be4cef06a8bdafc522fedfc4eada"
+sha256 = "sha256:f6841d7e324b321eb88dbb91466d99b35426bd19a036178b9982a1f5bca9952e"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/tests/test_file_flow_verify.py"
@@ -397,7 +397,7 @@ sha256 = "sha256:b1de005cd6971d09ac0d9c25736298c3e049a05a9f78652d05f702308261931
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/engine.py"
-sha256 = "sha256:0537de4a8e40a60084fbad08d4e9a7f886b9a09c0f2e4f3befce9dc1166ce813"
+sha256 = "sha256:42d902f4ec0af36942e07fc9135e9d88b4668ef4e522acd60e1d42bcef3b5e73"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/engine_recording.py"
@@ -405,11 +405,11 @@ sha256 = "sha256:492cdd62f30b16e6586fb48491e0a1145725e44954ad9087ceb2dd2382f74ee
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/resume.py"
-sha256 = "sha256:9ff249518814d3bc7921b71a775fc12c2dabda31734d367f0cb34fcf7a64a59f"
+sha256 = "sha256:7cbaa9ee5ff12f6973603920fecaac65d3cdcdeb2518a332099dc9185d414c1c"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/run_models.py"
-sha256 = "sha256:132f87c8ac2343607bc607bd889178567f68c51627c04378beae7a549d6a63e7"
+sha256 = "sha256:68ffa21d62f2d025c8f86a2286797d2e6ef0e4a1d8618c51bdaaac2fc693f7d1"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_models.py"
@@ -417,11 +417,11 @@ sha256 = "sha256:6ff8029cb40aaf3e01df5363a8b4975efca04d572af4c6a83fac6e148baf7a7
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_resume.py"
-sha256 = "sha256:b85dc7e4119e23a3beeebba1b536b4f47fe91b25c179f101fdd2a633a5b52faa"
+sha256 = "sha256:ffd3cea0d4208050eb15fbcca179caa6f516696b8eb6708d3d3fdc5769aa2071"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py"
-sha256 = "sha256:3b60db978f3ea7065dd951b8bdf3bc274d98600afc7914a5237970539af0d7b1"
+sha256 = "sha256:64965ffe4df35ffa9ea01e2d75da2546df469c45541b1f244ab86327b2999cb7"
 
 [[operations.preconditions]]
 path = "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py"
@@ -429,11 +429,11 @@ sha256 = "sha256:6e2110d33720789377b3ff6991818d9df55aa0daa84c75c8d9baa5846d6ece9
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py"
-sha256 = "sha256:e29e385b857b426cfb857602bef03bb3c8e71c09c15cc8fd84000f3ccf78527d"
+sha256 = "sha256:ce47893fee4cfe6b8ca1de1512ddb6fc78d749c17368b7742d10378532e7a332"
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/tests/test_work_resume.py"
-sha256 = "sha256:3b7bb628b08540c9ce0086634e72f1e95adee54ce6d331f2b646d53c45adc9c0"
+sha256 = "sha256:be47e8818dccffd48b7af7c2aebd65daf6ca1a5bbaad8c4ec47336d8c0dcbf59"
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"
@@ -462,7 +462,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/tests/test_file_flow_filing.py"
-sha256 = "sha256:4944e9a437adca403ff87c9926a37e279573be4cef06a8bdafc522fedfc4eada"
+sha256 = "sha256:f6841d7e324b321eb88dbb91466d99b35426bd19a036178b9982a1f5bca9952e"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/tests/test_file_flow_verify.py"
@@ -470,7 +470,7 @@ sha256 = "sha256:b1de005cd6971d09ac0d9c25736298c3e049a05a9f78652d05f702308261931
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/engine.py"
-sha256 = "sha256:0537de4a8e40a60084fbad08d4e9a7f886b9a09c0f2e4f3befce9dc1166ce813"
+sha256 = "sha256:42d902f4ec0af36942e07fc9135e9d88b4668ef4e522acd60e1d42bcef3b5e73"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/engine_recording.py"
@@ -478,11 +478,11 @@ sha256 = "sha256:492cdd62f30b16e6586fb48491e0a1145725e44954ad9087ceb2dd2382f74ee
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/resume.py"
-sha256 = "sha256:9ff249518814d3bc7921b71a775fc12c2dabda31734d367f0cb34fcf7a64a59f"
+sha256 = "sha256:7cbaa9ee5ff12f6973603920fecaac65d3cdcdeb2518a332099dc9185d414c1c"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/run_models.py"
-sha256 = "sha256:132f87c8ac2343607bc607bd889178567f68c51627c04378beae7a549d6a63e7"
+sha256 = "sha256:68ffa21d62f2d025c8f86a2286797d2e6ef0e4a1d8618c51bdaaac2fc693f7d1"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_models.py"
@@ -490,11 +490,11 @@ sha256 = "sha256:6ff8029cb40aaf3e01df5363a8b4975efca04d572af4c6a83fac6e148baf7a7
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_resume.py"
-sha256 = "sha256:b85dc7e4119e23a3beeebba1b536b4f47fe91b25c179f101fdd2a633a5b52faa"
+sha256 = "sha256:ffd3cea0d4208050eb15fbcca179caa6f516696b8eb6708d3d3fdc5769aa2071"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py"
-sha256 = "sha256:3b60db978f3ea7065dd951b8bdf3bc274d98600afc7914a5237970539af0d7b1"
+sha256 = "sha256:64965ffe4df35ffa9ea01e2d75da2546df469c45541b1f244ab86327b2999cb7"
 
 [[operations.preconditions]]
 path = "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py"
@@ -502,11 +502,11 @@ sha256 = "sha256:6e2110d33720789377b3ff6991818d9df55aa0daa84c75c8d9baa5846d6ece9
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py"
-sha256 = "sha256:e29e385b857b426cfb857602bef03bb3c8e71c09c15cc8fd84000f3ccf78527d"
+sha256 = "sha256:ce47893fee4cfe6b8ca1de1512ddb6fc78d749c17368b7742d10378532e7a332"
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/tests/test_work_resume.py"
-sha256 = "sha256:3b7bb628b08540c9ce0086634e72f1e95adee54ce6d331f2b646d53c45adc9c0"
+sha256 = "sha256:be47e8818dccffd48b7af7c2aebd65daf6ca1a5bbaad8c4ec47336d8c0dcbf59"
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"
@@ -535,7 +535,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/tests/test_file_flow_filing.py"
-sha256 = "sha256:4944e9a437adca403ff87c9926a37e279573be4cef06a8bdafc522fedfc4eada"
+sha256 = "sha256:f6841d7e324b321eb88dbb91466d99b35426bd19a036178b9982a1f5bca9952e"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/tests/test_file_flow_verify.py"
@@ -543,7 +543,7 @@ sha256 = "sha256:b1de005cd6971d09ac0d9c25736298c3e049a05a9f78652d05f702308261931
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/engine.py"
-sha256 = "sha256:0537de4a8e40a60084fbad08d4e9a7f886b9a09c0f2e4f3befce9dc1166ce813"
+sha256 = "sha256:42d902f4ec0af36942e07fc9135e9d88b4668ef4e522acd60e1d42bcef3b5e73"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/engine_recording.py"
@@ -551,11 +551,11 @@ sha256 = "sha256:492cdd62f30b16e6586fb48491e0a1145725e44954ad9087ceb2dd2382f74ee
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/resume.py"
-sha256 = "sha256:9ff249518814d3bc7921b71a775fc12c2dabda31734d367f0cb34fcf7a64a59f"
+sha256 = "sha256:7cbaa9ee5ff12f6973603920fecaac65d3cdcdeb2518a332099dc9185d414c1c"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/run_models.py"
-sha256 = "sha256:132f87c8ac2343607bc607bd889178567f68c51627c04378beae7a549d6a63e7"
+sha256 = "sha256:68ffa21d62f2d025c8f86a2286797d2e6ef0e4a1d8618c51bdaaac2fc693f7d1"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_models.py"
@@ -563,11 +563,11 @@ sha256 = "sha256:6ff8029cb40aaf3e01df5363a8b4975efca04d572af4c6a83fac6e148baf7a7
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_resume.py"
-sha256 = "sha256:b85dc7e4119e23a3beeebba1b536b4f47fe91b25c179f101fdd2a633a5b52faa"
+sha256 = "sha256:ffd3cea0d4208050eb15fbcca179caa6f516696b8eb6708d3d3fdc5769aa2071"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py"
-sha256 = "sha256:3b60db978f3ea7065dd951b8bdf3bc274d98600afc7914a5237970539af0d7b1"
+sha256 = "sha256:64965ffe4df35ffa9ea01e2d75da2546df469c45541b1f244ab86327b2999cb7"
 
 [[operations.preconditions]]
 path = "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py"
@@ -575,11 +575,11 @@ sha256 = "sha256:6e2110d33720789377b3ff6991818d9df55aa0daa84c75c8d9baa5846d6ece9
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py"
-sha256 = "sha256:e29e385b857b426cfb857602bef03bb3c8e71c09c15cc8fd84000f3ccf78527d"
+sha256 = "sha256:ce47893fee4cfe6b8ca1de1512ddb6fc78d749c17368b7742d10378532e7a332"
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/tests/test_work_resume.py"
-sha256 = "sha256:3b7bb628b08540c9ce0086634e72f1e95adee54ce6d331f2b646d53c45adc9c0"
+sha256 = "sha256:be47e8818dccffd48b7af7c2aebd65daf6ca1a5bbaad8c4ec47336d8c0dcbf59"
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"
@@ -608,7 +608,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/tests/test_file_flow_filing.py"
-sha256 = "sha256:4944e9a437adca403ff87c9926a37e279573be4cef06a8bdafc522fedfc4eada"
+sha256 = "sha256:f6841d7e324b321eb88dbb91466d99b35426bd19a036178b9982a1f5bca9952e"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/tests/test_file_flow_verify.py"
@@ -616,7 +616,7 @@ sha256 = "sha256:b1de005cd6971d09ac0d9c25736298c3e049a05a9f78652d05f702308261931
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/engine.py"
-sha256 = "sha256:0537de4a8e40a60084fbad08d4e9a7f886b9a09c0f2e4f3befce9dc1166ce813"
+sha256 = "sha256:42d902f4ec0af36942e07fc9135e9d88b4668ef4e522acd60e1d42bcef3b5e73"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/engine_recording.py"
@@ -624,11 +624,11 @@ sha256 = "sha256:492cdd62f30b16e6586fb48491e0a1145725e44954ad9087ceb2dd2382f74ee
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/resume.py"
-sha256 = "sha256:9ff249518814d3bc7921b71a775fc12c2dabda31734d367f0cb34fcf7a64a59f"
+sha256 = "sha256:7cbaa9ee5ff12f6973603920fecaac65d3cdcdeb2518a332099dc9185d414c1c"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/run_models.py"
-sha256 = "sha256:132f87c8ac2343607bc607bd889178567f68c51627c04378beae7a549d6a63e7"
+sha256 = "sha256:68ffa21d62f2d025c8f86a2286797d2e6ef0e4a1d8618c51bdaaac2fc693f7d1"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_models.py"
@@ -636,11 +636,11 @@ sha256 = "sha256:6ff8029cb40aaf3e01df5363a8b4975efca04d572af4c6a83fac6e148baf7a7
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_resume.py"
-sha256 = "sha256:b85dc7e4119e23a3beeebba1b536b4f47fe91b25c179f101fdd2a633a5b52faa"
+sha256 = "sha256:ffd3cea0d4208050eb15fbcca179caa6f516696b8eb6708d3d3fdc5769aa2071"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py"
-sha256 = "sha256:3b60db978f3ea7065dd951b8bdf3bc274d98600afc7914a5237970539af0d7b1"
+sha256 = "sha256:64965ffe4df35ffa9ea01e2d75da2546df469c45541b1f244ab86327b2999cb7"
 
 [[operations.preconditions]]
 path = "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py"
@@ -648,11 +648,11 @@ sha256 = "sha256:6e2110d33720789377b3ff6991818d9df55aa0daa84c75c8d9baa5846d6ece9
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py"
-sha256 = "sha256:e29e385b857b426cfb857602bef03bb3c8e71c09c15cc8fd84000f3ccf78527d"
+sha256 = "sha256:ce47893fee4cfe6b8ca1de1512ddb6fc78d749c17368b7742d10378532e7a332"
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/tests/test_work_resume.py"
-sha256 = "sha256:3b7bb628b08540c9ce0086634e72f1e95adee54ce6d331f2b646d53c45adc9c0"
+sha256 = "sha256:be47e8818dccffd48b7af7c2aebd65daf6ca1a5bbaad8c4ec47336d8c0dcbf59"
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"
@@ -681,7 +681,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/tests/test_file_flow_filing.py"
-sha256 = "sha256:4944e9a437adca403ff87c9926a37e279573be4cef06a8bdafc522fedfc4eada"
+sha256 = "sha256:f6841d7e324b321eb88dbb91466d99b35426bd19a036178b9982a1f5bca9952e"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/tests/test_file_flow_verify.py"
@@ -689,7 +689,7 @@ sha256 = "sha256:b1de005cd6971d09ac0d9c25736298c3e049a05a9f78652d05f702308261931
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/engine.py"
-sha256 = "sha256:0537de4a8e40a60084fbad08d4e9a7f886b9a09c0f2e4f3befce9dc1166ce813"
+sha256 = "sha256:42d902f4ec0af36942e07fc9135e9d88b4668ef4e522acd60e1d42bcef3b5e73"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/engine_recording.py"
@@ -697,11 +697,11 @@ sha256 = "sha256:492cdd62f30b16e6586fb48491e0a1145725e44954ad9087ceb2dd2382f74ee
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/resume.py"
-sha256 = "sha256:9ff249518814d3bc7921b71a775fc12c2dabda31734d367f0cb34fcf7a64a59f"
+sha256 = "sha256:7cbaa9ee5ff12f6973603920fecaac65d3cdcdeb2518a332099dc9185d414c1c"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/run_models.py"
-sha256 = "sha256:132f87c8ac2343607bc607bd889178567f68c51627c04378beae7a549d6a63e7"
+sha256 = "sha256:68ffa21d62f2d025c8f86a2286797d2e6ef0e4a1d8618c51bdaaac2fc693f7d1"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_models.py"
@@ -709,11 +709,11 @@ sha256 = "sha256:6ff8029cb40aaf3e01df5363a8b4975efca04d572af4c6a83fac6e148baf7a7
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_resume.py"
-sha256 = "sha256:b85dc7e4119e23a3beeebba1b536b4f47fe91b25c179f101fdd2a633a5b52faa"
+sha256 = "sha256:ffd3cea0d4208050eb15fbcca179caa6f516696b8eb6708d3d3fdc5769aa2071"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py"
-sha256 = "sha256:3b60db978f3ea7065dd951b8bdf3bc274d98600afc7914a5237970539af0d7b1"
+sha256 = "sha256:64965ffe4df35ffa9ea01e2d75da2546df469c45541b1f244ab86327b2999cb7"
 
 [[operations.preconditions]]
 path = "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py"
@@ -721,11 +721,11 @@ sha256 = "sha256:6e2110d33720789377b3ff6991818d9df55aa0daa84c75c8d9baa5846d6ece9
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py"
-sha256 = "sha256:e29e385b857b426cfb857602bef03bb3c8e71c09c15cc8fd84000f3ccf78527d"
+sha256 = "sha256:ce47893fee4cfe6b8ca1de1512ddb6fc78d749c17368b7742d10378532e7a332"
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/tests/test_work_resume.py"
-sha256 = "sha256:3b7bb628b08540c9ce0086634e72f1e95adee54ce6d331f2b646d53c45adc9c0"
+sha256 = "sha256:be47e8818dccffd48b7af7c2aebd65daf6ca1a5bbaad8c4ec47336d8c0dcbf59"
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"
@@ -754,7 +754,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/tests/test_file_flow_filing.py"
-sha256 = "sha256:4944e9a437adca403ff87c9926a37e279573be4cef06a8bdafc522fedfc4eada"
+sha256 = "sha256:f6841d7e324b321eb88dbb91466d99b35426bd19a036178b9982a1f5bca9952e"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/tests/test_file_flow_verify.py"
@@ -762,7 +762,7 @@ sha256 = "sha256:b1de005cd6971d09ac0d9c25736298c3e049a05a9f78652d05f702308261931
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/engine.py"
-sha256 = "sha256:0537de4a8e40a60084fbad08d4e9a7f886b9a09c0f2e4f3befce9dc1166ce813"
+sha256 = "sha256:42d902f4ec0af36942e07fc9135e9d88b4668ef4e522acd60e1d42bcef3b5e73"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/engine_recording.py"
@@ -770,11 +770,11 @@ sha256 = "sha256:492cdd62f30b16e6586fb48491e0a1145725e44954ad9087ceb2dd2382f74ee
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/resume.py"
-sha256 = "sha256:9ff249518814d3bc7921b71a775fc12c2dabda31734d367f0cb34fcf7a64a59f"
+sha256 = "sha256:7cbaa9ee5ff12f6973603920fecaac65d3cdcdeb2518a332099dc9185d414c1c"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/run_models.py"
-sha256 = "sha256:132f87c8ac2343607bc607bd889178567f68c51627c04378beae7a549d6a63e7"
+sha256 = "sha256:68ffa21d62f2d025c8f86a2286797d2e6ef0e4a1d8618c51bdaaac2fc693f7d1"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_models.py"
@@ -782,11 +782,11 @@ sha256 = "sha256:6ff8029cb40aaf3e01df5363a8b4975efca04d572af4c6a83fac6e148baf7a7
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_resume.py"
-sha256 = "sha256:b85dc7e4119e23a3beeebba1b536b4f47fe91b25c179f101fdd2a633a5b52faa"
+sha256 = "sha256:ffd3cea0d4208050eb15fbcca179caa6f516696b8eb6708d3d3fdc5769aa2071"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py"
-sha256 = "sha256:3b60db978f3ea7065dd951b8bdf3bc274d98600afc7914a5237970539af0d7b1"
+sha256 = "sha256:64965ffe4df35ffa9ea01e2d75da2546df469c45541b1f244ab86327b2999cb7"
 
 [[operations.preconditions]]
 path = "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py"
@@ -794,11 +794,11 @@ sha256 = "sha256:6e2110d33720789377b3ff6991818d9df55aa0daa84c75c8d9baa5846d6ece9
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py"
-sha256 = "sha256:e29e385b857b426cfb857602bef03bb3c8e71c09c15cc8fd84000f3ccf78527d"
+sha256 = "sha256:ce47893fee4cfe6b8ca1de1512ddb6fc78d749c17368b7742d10378532e7a332"
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/tests/test_work_resume.py"
-sha256 = "sha256:3b7bb628b08540c9ce0086634e72f1e95adee54ce6d331f2b646d53c45adc9c0"
+sha256 = "sha256:be47e8818dccffd48b7af7c2aebd65daf6ca1a5bbaad8c4ec47336d8c0dcbf59"
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"
@@ -827,7 +827,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/tests/test_file_flow_filing.py"
-sha256 = "sha256:4944e9a437adca403ff87c9926a37e279573be4cef06a8bdafc522fedfc4eada"
+sha256 = "sha256:f6841d7e324b321eb88dbb91466d99b35426bd19a036178b9982a1f5bca9952e"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/tests/test_file_flow_verify.py"
@@ -835,7 +835,7 @@ sha256 = "sha256:b1de005cd6971d09ac0d9c25736298c3e049a05a9f78652d05f702308261931
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/engine.py"
-sha256 = "sha256:0537de4a8e40a60084fbad08d4e9a7f886b9a09c0f2e4f3befce9dc1166ce813"
+sha256 = "sha256:42d902f4ec0af36942e07fc9135e9d88b4668ef4e522acd60e1d42bcef3b5e73"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/engine_recording.py"
@@ -843,11 +843,11 @@ sha256 = "sha256:492cdd62f30b16e6586fb48491e0a1145725e44954ad9087ceb2dd2382f74ee
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/resume.py"
-sha256 = "sha256:9ff249518814d3bc7921b71a775fc12c2dabda31734d367f0cb34fcf7a64a59f"
+sha256 = "sha256:7cbaa9ee5ff12f6973603920fecaac65d3cdcdeb2518a332099dc9185d414c1c"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/run_models.py"
-sha256 = "sha256:132f87c8ac2343607bc607bd889178567f68c51627c04378beae7a549d6a63e7"
+sha256 = "sha256:68ffa21d62f2d025c8f86a2286797d2e6ef0e4a1d8618c51bdaaac2fc693f7d1"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_models.py"
@@ -855,11 +855,11 @@ sha256 = "sha256:6ff8029cb40aaf3e01df5363a8b4975efca04d572af4c6a83fac6e148baf7a7
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_resume.py"
-sha256 = "sha256:b85dc7e4119e23a3beeebba1b536b4f47fe91b25c179f101fdd2a633a5b52faa"
+sha256 = "sha256:ffd3cea0d4208050eb15fbcca179caa6f516696b8eb6708d3d3fdc5769aa2071"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py"
-sha256 = "sha256:3b60db978f3ea7065dd951b8bdf3bc274d98600afc7914a5237970539af0d7b1"
+sha256 = "sha256:64965ffe4df35ffa9ea01e2d75da2546df469c45541b1f244ab86327b2999cb7"
 
 [[operations.preconditions]]
 path = "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py"
@@ -867,11 +867,11 @@ sha256 = "sha256:6e2110d33720789377b3ff6991818d9df55aa0daa84c75c8d9baa5846d6ece9
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py"
-sha256 = "sha256:e29e385b857b426cfb857602bef03bb3c8e71c09c15cc8fd84000f3ccf78527d"
+sha256 = "sha256:ce47893fee4cfe6b8ca1de1512ddb6fc78d749c17368b7742d10378532e7a332"
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/tests/test_work_resume.py"
-sha256 = "sha256:3b7bb628b08540c9ce0086634e72f1e95adee54ce6d331f2b646d53c45adc9c0"
+sha256 = "sha256:be47e8818dccffd48b7af7c2aebd65daf6ca1a5bbaad8c4ec47336d8c0dcbf59"
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"
@@ -900,7 +900,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/tests/test_file_flow_filing.py"
-sha256 = "sha256:4944e9a437adca403ff87c9926a37e279573be4cef06a8bdafc522fedfc4eada"
+sha256 = "sha256:f6841d7e324b321eb88dbb91466d99b35426bd19a036178b9982a1f5bca9952e"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/tests/test_file_flow_verify.py"
@@ -908,7 +908,7 @@ sha256 = "sha256:b1de005cd6971d09ac0d9c25736298c3e049a05a9f78652d05f702308261931
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/engine.py"
-sha256 = "sha256:0537de4a8e40a60084fbad08d4e9a7f886b9a09c0f2e4f3befce9dc1166ce813"
+sha256 = "sha256:42d902f4ec0af36942e07fc9135e9d88b4668ef4e522acd60e1d42bcef3b5e73"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/engine_recording.py"
@@ -916,11 +916,11 @@ sha256 = "sha256:492cdd62f30b16e6586fb48491e0a1145725e44954ad9087ceb2dd2382f74ee
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/resume.py"
-sha256 = "sha256:9ff249518814d3bc7921b71a775fc12c2dabda31734d367f0cb34fcf7a64a59f"
+sha256 = "sha256:7cbaa9ee5ff12f6973603920fecaac65d3cdcdeb2518a332099dc9185d414c1c"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/run_models.py"
-sha256 = "sha256:132f87c8ac2343607bc607bd889178567f68c51627c04378beae7a549d6a63e7"
+sha256 = "sha256:68ffa21d62f2d025c8f86a2286797d2e6ef0e4a1d8618c51bdaaac2fc693f7d1"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_models.py"
@@ -928,11 +928,11 @@ sha256 = "sha256:6ff8029cb40aaf3e01df5363a8b4975efca04d572af4c6a83fac6e148baf7a7
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_resume.py"
-sha256 = "sha256:b85dc7e4119e23a3beeebba1b536b4f47fe91b25c179f101fdd2a633a5b52faa"
+sha256 = "sha256:ffd3cea0d4208050eb15fbcca179caa6f516696b8eb6708d3d3fdc5769aa2071"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py"
-sha256 = "sha256:3b60db978f3ea7065dd951b8bdf3bc274d98600afc7914a5237970539af0d7b1"
+sha256 = "sha256:64965ffe4df35ffa9ea01e2d75da2546df469c45541b1f244ab86327b2999cb7"
 
 [[operations.preconditions]]
 path = "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py"
@@ -940,11 +940,11 @@ sha256 = "sha256:6e2110d33720789377b3ff6991818d9df55aa0daa84c75c8d9baa5846d6ece9
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py"
-sha256 = "sha256:e29e385b857b426cfb857602bef03bb3c8e71c09c15cc8fd84000f3ccf78527d"
+sha256 = "sha256:ce47893fee4cfe6b8ca1de1512ddb6fc78d749c17368b7742d10378532e7a332"
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/tests/test_work_resume.py"
-sha256 = "sha256:3b7bb628b08540c9ce0086634e72f1e95adee54ce6d331f2b646d53c45adc9c0"
+sha256 = "sha256:be47e8818dccffd48b7af7c2aebd65daf6ca1a5bbaad8c4ec47336d8c0dcbf59"
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"
@@ -973,7 +973,7 @@ moves = []
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/tests/test_file_flow_filing.py"
-sha256 = "sha256:4944e9a437adca403ff87c9926a37e279573be4cef06a8bdafc522fedfc4eada"
+sha256 = "sha256:f6841d7e324b321eb88dbb91466d99b35426bd19a036178b9982a1f5bca9952e"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/modelo/tests/test_file_flow_verify.py"
@@ -981,7 +981,7 @@ sha256 = "sha256:b1de005cd6971d09ac0d9c25736298c3e049a05a9f78652d05f702308261931
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/engine.py"
-sha256 = "sha256:0537de4a8e40a60084fbad08d4e9a7f886b9a09c0f2e4f3befce9dc1166ce813"
+sha256 = "sha256:42d902f4ec0af36942e07fc9135e9d88b4668ef4e522acd60e1d42bcef3b5e73"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/engine_recording.py"
@@ -989,11 +989,11 @@ sha256 = "sha256:492cdd62f30b16e6586fb48491e0a1145725e44954ad9087ceb2dd2382f74ee
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/resume.py"
-sha256 = "sha256:9ff249518814d3bc7921b71a775fc12c2dabda31734d367f0cb34fcf7a64a59f"
+sha256 = "sha256:7cbaa9ee5ff12f6973603920fecaac65d3cdcdeb2518a332099dc9185d414c1c"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/run_models.py"
-sha256 = "sha256:132f87c8ac2343607bc607bd889178567f68c51627c04378beae7a549d6a63e7"
+sha256 = "sha256:68ffa21d62f2d025c8f86a2286797d2e6ef0e4a1d8618c51bdaaac2fc693f7d1"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_models.py"
@@ -1001,11 +1001,11 @@ sha256 = "sha256:6ff8029cb40aaf3e01df5363a8b4975efca04d572af4c6a83fac6e148baf7a7
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_resume.py"
-sha256 = "sha256:b85dc7e4119e23a3beeebba1b536b4f47fe91b25c179f101fdd2a633a5b52faa"
+sha256 = "sha256:ffd3cea0d4208050eb15fbcca179caa6f516696b8eb6708d3d3fdc5769aa2071"
 
 [[operations.preconditions]]
 path = "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py"
-sha256 = "sha256:3b60db978f3ea7065dd951b8bdf3bc274d98600afc7914a5237970539af0d7b1"
+sha256 = "sha256:64965ffe4df35ffa9ea01e2d75da2546df469c45541b1f244ab86327b2999cb7"
 
 [[operations.preconditions]]
 path = "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py"
@@ -1013,11 +1013,11 @@ sha256 = "sha256:6e2110d33720789377b3ff6991818d9df55aa0daa84c75c8d9baa5846d6ece9
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py"
-sha256 = "sha256:e29e385b857b426cfb857602bef03bb3c8e71c09c15cc8fd84000f3ccf78527d"
+sha256 = "sha256:ce47893fee4cfe6b8ca1de1512ddb6fc78d749c17368b7742d10378532e7a332"
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/tests/test_work_resume.py"
-sha256 = "sha256:3b7bb628b08540c9ce0086634e72f1e95adee54ce6d331f2b646d53c45adc9c0"
+sha256 = "sha256:be47e8818dccffd48b7af7c2aebd65daf6ca1a5bbaad8c4ec47336d8c0dcbf59"
 
 [[operations.preconditions]]
 path = "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"
