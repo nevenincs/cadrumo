@@ -1449,6 +1449,7 @@ def _support_hop_subjects(
     test: ShippedModule,
     known: frozenset[str],
     spec: ShippedTreeSpec,
+    cache: dict[Path, tuple[frozenset[str], frozenset[tuple[str, str]]]],
 ) -> tuple[frozenset[str], frozenset[tuple[str, str]]]:
     """Subjects a test reaches through a support module inside its own test package.
 
@@ -1478,13 +1479,20 @@ def _support_hop_subjects(
                 for target in (path.with_suffix(".py"), path / "__init__.py"):
                     if not target.is_file() or not is_test_path(target, spec.src_root):
                         continue
-                    try:
-                        support = ShippedModule(candidate, target, target.name == "__init__.py", parse_module(target))
-                    except (OSError, SyntaxError, UnicodeDecodeError):
-                        continue
-                    modules, symbols = _test_subjects(support, known)
-                    reached_modules.update(modules)
-                    reached_symbols.update(symbols)
+                    found = cache.get(target)
+                    if found is None:
+                        try:
+                            support = ShippedModule(
+                                candidate, target, target.name == "__init__.py", parse_module(target)
+                            )
+                        except (OSError, SyntaxError, UnicodeDecodeError):
+                            continue
+                        # One support module serves many tests here, so parsing
+                        # it once per importer dominated the walk.
+                        found = _test_subjects(support, known)
+                        cache[target] = found
+                    reached_modules.update(found[0])
+                    reached_symbols.update(found[1])
     return frozenset(reached_modules), frozenset(reached_symbols)
 
 
@@ -1502,6 +1510,7 @@ def _test_findings(
         return any(name == root or name.startswith(root + ".") for root in dead_roots)
 
     findings: list[TestFinding] = []
+    support_cache: dict[Path, tuple[frozenset[str], frozenset[tuple[str, str]]]] = {}
     for path in iter_python_files(spec.src_root / spec.package):
         if not is_test_path(path, spec.src_root) or not path.name.startswith("test_"):
             continue
@@ -1523,7 +1532,7 @@ def _test_findings(
         test = ShippedModule(module_name_for(path, src_root=spec.src_root), path, False, tree)
         modules, symbols = _test_subjects(test, known)
         if not modules and not symbols:
-            modules, symbols = _support_hop_subjects(test, known, spec)
+            modules, symbols = _support_hop_subjects(test, known, spec, support_cache)
         if not modules and not symbols:
             continue
         dead_modules = set(modules) | {m for m, _ in symbols if module_is_dead(m)}
