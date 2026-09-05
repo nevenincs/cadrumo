@@ -186,7 +186,7 @@ def test_check_refuses_drift_without_changing_published_hashes(m130_inspection_s
     """Every authority or membership defect fails while target bytes remain exactly as supplied."""
     context, joined, semantic_map, target_export_root = _check_inputs(tmp_path, m130_inspection_snapshot)
     profile = _profile()
-    render_profile = _wire_profile()
+    render_profile = _isolated_render_profile()[0]
     if defect == "semantic-map":
         semantic_map = semantic_map.model_copy(
             update={

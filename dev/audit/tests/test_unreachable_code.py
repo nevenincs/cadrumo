@@ -136,6 +136,40 @@ from pkg.loner import x
 from pkg.used import run
 """
 
+# A helper inside the tests package. The test importing it names no shipped
+# module of its own, so the subject walk sees nothing without the support hop.
+_SUPPORT = """
+from pkg.loner import x
+
+
+def build():
+    return x
+"""
+
+_TEST_VIA_SUPPORT = """
+from ._support import build
+
+
+def test_build():
+    assert build() is not None
+"""
+
+_LIVE_SUPPORT = """
+from pkg.used import run
+
+
+def run_it():
+    return run
+"""
+
+_TEST_VIA_LIVE_SUPPORT = """
+from ._live_support import run_it
+
+
+def test_run():
+    assert run_it() is not None
+"""
+
 _DEV = """
 import pkg.dead.b
 from pkg.used import UNUSED_CONST

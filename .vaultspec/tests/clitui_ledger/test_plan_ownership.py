@@ -348,7 +348,7 @@ def test_ledger_ownership_detector_rejects_each_plan_mutation(mutation: str, exp
             "remaining scope is unspecified",
         )
     elif mutation == "completion":
-        plan_text = _replace_once(plan_text, "- [ ] `W08.P30.S408`", "- [x] `W08.P30.S408`")
+        plan_text = _replace_once(plan_text, "- [x] `W08.P30.S408`", "- [ ] `W08.P30.S408`")
     else:
         plan_text = _replace_once(plan_text, "W05.P21.S136", "W05.P19.S128")
 

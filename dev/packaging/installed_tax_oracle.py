@@ -183,6 +183,12 @@ def profile_create_arguments() -> tuple[str, ...]:
         "--no-new-entity-first-two-profit-periods",
         "--iva-regime",
         "GENERAL",
+        # Declaring the IVA regime claims the IVA block, and the block requires
+        # its Modelo 303 composition to be stated rather than inferred: a
+        # general-regime taxpayer and a mixed-regime one are different filings,
+        # and the single-regime arm is not a safe default for either.
+        "--iva-m303-regime-composition",
+        "general",
         "--tax-residence-ccaa",
         "madrid",
     )
