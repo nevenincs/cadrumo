@@ -784,7 +784,15 @@ def test_receipt_allowlist_shape_drift_refuses_before_live_write(
     monkeypatch.setattr(replay_module, "_replace_staged", lambda *_args, **_kwargs: writes.append("replace"))
     monkeypatch.setattr(replay_module, "_unlink_regular", lambda *_args, **_kwargs: writes.append("unlink"))
 
-    with pytest.raises(ObjectNameReplayError):
+    # Named for the allowlist branch, but it does not reach it: the
+    # regenerated-evidence comparison upstream already includes
+    # `changed_paths`, so every mutation here trips that check first and the
+    # dedicated allowlist refusal never fires. Pinning the refusal states
+    # which check actually holds the line. The allowlist branch is reachable
+    # only when the rehearsal AGREES with the receipt while the manifest's
+    # reviewed set does not - a shape this parametrize cannot construct, so
+    # that branch remains uncovered rather than falsely claimed.
+    with pytest.raises(ObjectNameReplayError, match="regenerated transformation or verification differs"):
         replay_object_name_component(
             manifest, inventory=inventory, component=component, receipt=candidate, repo_root=repo
         )
@@ -852,7 +860,7 @@ def test_apply_and_postcondition_failures_restore_exact_live_bytes(
         monkeypatch.setattr(replay_module, "_run_gates_in_verified_copy", gates_finished_content)
         monkeypatch.setattr(replay_module, "_snapshot", corrupt_post_snapshot)
 
-    with pytest.raises(ObjectNameReplayError):
+    with pytest.raises(ObjectNameReplayError, match="__harvest__"):
         replay_object_name_component(
             manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
         )
