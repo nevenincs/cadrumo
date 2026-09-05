@@ -3734,6 +3734,7 @@ def test_ordered_post_g3_hold_lift_preserves_accepted_history_and_allows_g4() ->
         matrix,
         observed_census=_report(),
         observed_subjects=(_SUBJECT,),
+        observed_union=_union_denominator(),
         acceptance_record_anchor=anchor,
         observed_acceptance_subjects=acceptance_subjects,
     )
