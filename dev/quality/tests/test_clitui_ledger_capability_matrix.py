@@ -623,7 +623,7 @@ def test_artifact_input_review_covers_the_exact_fifteen_file_and_directory_capab
     )
     rows = {row.capability_id: row for row in _union_denominator().rows}
 
-    assert matrix_module._EXPLICIT_ARTIFACT_INPUT_CAPABILITIES == expected
+    assert expected == matrix_module._EXPLICIT_ARTIFACT_INPUT_CAPABILITIES
     for capability_id in expected:
         row = rows[capability_id]
         artifact = next(item for item in row.applicability if item.axis is LedgerCapabilityAxis.ARTIFACT)
@@ -691,6 +691,26 @@ def test_tui_route_review_covers_every_applicable_row_and_no_backend_helper() ->
         "ledger.reconciliation",
         "ledger.review",
     }
+    assert {
+        route: sum(route in row.tui_routes for row in union.rows)
+        for route in {
+            "ledger.classification",
+            "ledger.entries",
+            "ledger.evidence",
+            "ledger.import",
+            "ledger.overview",
+            "ledger.reconciliation",
+            "ledger.review",
+        }
+    } == {
+        "ledger.classification": 9,
+        "ledger.entries": 32,
+        "ledger.evidence": 21,
+        "ledger.import": 13,
+        "ledger.overview": 1,
+        "ledger.reconciliation": 587,
+        "ledger.review": 17,
+    }
     assert sum(LedgerGapClass.REACHABILITY in row.gap_classes for row in union.rows) == 679
     assert all(
         LedgerGapClass.REACHABILITY in row.gap_classes for row in applicable if row.tui_routes != ("ledger.overview",)
@@ -700,10 +720,13 @@ def test_tui_route_review_covers_every_applicable_row_and_no_backend_helper() ->
     ]
 
 
-@pytest.mark.parametrize("mutation", ["missing", "duplicate", "change", "unknown", "reorder"])
+@pytest.mark.parametrize("mutation", ["add", "remove", "change", "unknown", "reorder", "duplicate"])
 def test_exhaustive_tui_route_authority_refuses_mapping_drift(mutation: str) -> None:
     adjudication = list(matrix_module._EXPLICIT_TUI_ROUTE_ADJUDICATION)
-    if mutation == "missing":
+    if mutation == "add":
+        adjudication.append(("ledger.future", ("ledger.entries",)))
+        adjudication.sort(key=lambda item: item[0])
+    elif mutation == "remove":
         adjudication.pop(0)
     elif mutation == "duplicate":
         adjudication.insert(1, adjudication[0])
@@ -718,6 +741,29 @@ def test_exhaustive_tui_route_authority_refuses_mapping_drift(mutation: str) -> 
 
     with pytest.raises(ValueError, match="TUI route adjudication"):
         matrix_module._validate_tui_route_adjudication(tuple(adjudication))
+
+
+@pytest.mark.parametrize(
+    "routes",
+    [
+        (),
+        ("ledger.review",),
+        ("ledger.future",),
+        ("ledger.overview", "ledger.review"),
+    ],
+    ids=["remove", "change", "unknown", "add"],
+)
+def test_serialized_union_refuses_tui_route_drift_after_all_digests_are_refreshed(
+    routes: tuple[str, ...],
+) -> None:
+    union = _union_denominator()
+    rows = list(union.rows)
+    index = next(index for index, row in enumerate(rows) if row.capability_id == "ledger.workspace.read")
+    rows[index] = rows[index].model_copy(update={"tui_routes": routes})
+    candidate = _refreshed_union_review(union, rows=tuple(rows))
+
+    with pytest.raises(ValidationError, match="TUI routes drifted"):
+        LedgerUnionDenominatorV1.model_validate(candidate.model_dump(mode="python"))
 
 
 def test_installed_overview_route_refuses_non_query_effects() -> None:
