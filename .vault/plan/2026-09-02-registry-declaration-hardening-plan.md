@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:bbaf9c6acfcd3938874d40a2616f964497c7c81f3739799bb96c4ff3e7a6abb9'
+body_hash: 'sha256:5c12787c0a0ce66b92192eaa41835865e77929793b5cc8ab3a77205e3aa270dc'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -554,6 +554,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S672` - Tie the m303 integer-grammar refusals to the content under test: twenty-five cases shared a bare raises, and the expectation is derived from the input rather than transcribed so it cannot go stale with the field; `dev/registry/tests/test_modelo_303_semantic_maps.py`.
 - [x] `W02.P02.S673` - Make the release-pointer gate prove a refusal rather than a crash: json.JSONDecodeError is a ValueError, so the bare raises accepted an unhandled parser error as evidence of the guard working; `dev/packaging/tests/test_release_pointer_guard.py`.
 - [x] `W02.P02.S674` - Derive the forbidden authority surface from the live type and budget the test that carries it: the transcribed set guarded 4 of 43 members and one was dead, making its paired AttributeError refusal a tautology, and the call runs at 298-312s against a 300s ceiling; `dev/registry/tests/test_filing_export_two_channel_proof.py`.
+- [x] `W02.P02.S675` - Bind the sequence-contract traversal refusals to their own input: ten parametrized cases shared a bare raise, so a guard refusing every value on one unrelated ground would have satisfied all of them; `dev/docs/sequences/tests/test_contracts.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
