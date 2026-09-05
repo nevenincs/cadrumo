@@ -92,6 +92,19 @@ def _imported_pairs(tree: ast.Module) -> set[tuple[str, str]]:
     return pairs
 
 
+def _audit_key(path: Path, root: Path) -> str:
+    """Return the path spelling the reachability audit reports findings under.
+
+    The audit keys on paths relative to the repository root. A caller scanning
+    some other tree -- a test fixture, say -- has no repository above it, so the
+    key falls back to the scanned root's parent, which is the same shape.
+    """
+    try:
+        return path.relative_to(REPO_ROOT).as_posix()
+    except ValueError:
+        return path.relative_to(root.parent).as_posix()
+
+
 def count_unconsumed(root: Path = _PACKAGE_ROOT, unused: set[tuple[str, str]] | None = None) -> dict[str, int]:
     """Return how many published names each module carries that nothing collects.
 
