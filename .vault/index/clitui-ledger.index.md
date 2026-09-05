@@ -6,7 +6,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:678b1ac61de124fbc07be5afe96f3d2ee6cccccae5d053a08a055a14ce989ab7'
+body_hash: 'sha256:03d1deeb289623fc725c83c93e346251d1226bf5c826901bc348b0e27a85fb55'
 related:
   - '[[2026-09-04-clitui-ledger-W01-P01-S01]]'
   - '[[2026-09-04-clitui-ledger-W01-P01-S02]]'
@@ -20,6 +20,7 @@ related:
   - '[[2026-09-04-clitui-ledger-W01-P03-S09]]'
   - '[[2026-09-04-clitui-ledger-W01-P03-S10]]'
   - '[[2026-09-04-clitui-ledger-W01-P03-S11]]'
+  - '[[2026-09-04-clitui-ledger-W01-P04-S12]]'
   - '[[2026-09-04-clitui-ledger-adr]]'
   - '[[2026-09-04-clitui-ledger-plan]]'
   - '[[2026-09-04-clitui-ledger-reference]]'
@@ -77,6 +78,7 @@ Auto-generated index of all documents tagged with `#clitui-ledger`.
 - `2026-09-04-clitui-ledger-W01-P03-S09` - Record clitui-ledger as sole Ledger parity owner and place unresolved Ledger TUI rows under the implementation hold
 - `2026-09-04-clitui-ledger-W01-P03-S10` - Publish clitui-ledger sole active Ledger parity owner; G0 OPEN; ordered G0→G1→G2→G3→G4; Ledger TUI held until G3 closes; link S09, plan, reference
 - `2026-09-04-clitui-ledger-W01-P03-S11` - Mark every TUI-applicable union and matrix row held until G3, retain component-only versus installed distinctions, and fail closed on hold drift, additions, or an unauthorized lift
+- `2026-09-04-clitui-ledger-W01-P04-S12` - Review every row for explicit applicability, semantic owner, proof state, gap class, and next closure action
 
 ### plan
 
