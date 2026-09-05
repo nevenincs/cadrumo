@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:f284e71579c225bb6ce5fc109a84ef5aeb499b26e6d645feca3f5d3603b90639'
+body_hash: 'sha256:5018ff571a90fde2871831616e8ee7bd6fbe304d36653784bcf1634601351718'
 ---
 
 <!-- RETIRED: S39 -->
@@ -122,7 +122,7 @@ Build every declared distribution and channel artifact from one command and prov
 - [x] `P09.S57` - Stop the clean-tree build root from carrying files git ignores and the wheel cannot; `dev/packaging/_smoke_common.py`.
 - [x] `P09.S58` - Keep a corpus annotation in the same distribution as the file it annotates; `pyproject.toml`.
 - [ ] `P09.S59` - Give the fleet enough Linux capacity for the lanes its own policy requires; `dev/runners/README.md`.
-- [ ] `P09.S60` - Teach the installed oracle the recovery enrollment the product now requires; `dev/packaging/installed_tax_oracle.py`.
+- [x] `P09.S60` - Teach the installed oracle the recovery enrollment the product now requires; `dev/packaging/installed_tax_oracle.py`.
 - [ ] `P09.S61` - Stop every packaging lane from re-running the whole packaging suite before it starts; `dev/packaging/campaign.py`.
 
 ### Phase `P10` - Prune the release and packaging surfaces without consumers
