@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import re
 from collections.abc import Mapping
 from typing import Literal
-from unicodedata import normalize
 
 from ....core.identity import ContentDigest
+from ....core.text_fold import ascii_slug
 from ....domain.iva.regimen_simplificado_rows import (
     ActividadOrdenAnual,
     AutoridadAgricolaOrdenAnualNoResuelta,
@@ -35,7 +34,6 @@ from .errors import RegistryValidationError
 from .ids import LegalRefId, RevisionId, SourceRefId
 from .m303_orden_projection_models import M303AnnualOrdenProjection
 
-_SLUG_RE = re.compile(r"[^a-z0-9]+")
 _AUXILIARY_INDICATOR_BY_IAE_AND_ACTIVITY: Mapping[tuple[str, str], Literal["1", "2"]] = {
     ("691.9", "reparacion-de-calzado"): "1",
     (
@@ -178,8 +176,7 @@ def _compile_actividad_orden_anual(
 
 
 def _canonical_activity_code(activity_name: str) -> str:
-    decomposed = normalize("NFKD", activity_name).encode("ascii", "ignore").decode("ascii").casefold()
-    compact = _SLUG_RE.sub("-", decomposed).strip("-")
+    compact = ascii_slug(activity_name)
     if not compact:
         raise RegistryValidationError("annual Orden activity heading has no canonical ASCII identity")
     return compact[:160]

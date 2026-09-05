@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, ClassVar, Final, Literal
 
 from pydantic import TypeAdapter
 
-from .text_fold import fold_diacritics
+from .text_fold import ascii_slug
 
 if TYPE_CHECKING:
     from bs4 import BeautifulSoup, Tag
@@ -59,7 +59,6 @@ DIFFICULT_JUSTIFICATION_RE = re.compile(
     re.I,
 )
 _SPACE_RE = re.compile(r"\s+")
-_SLUG_RE = re.compile(r"[^a-z0-9]+")
 
 
 class OrdenAnualHtmlParseError(ValueError):
@@ -573,8 +572,7 @@ def _stable_anchors(base_anchors: tuple[str, ...]) -> tuple[str, ...]:
 
 
 def _semantic_slug(value: str) -> str:
-    decomposed = fold_diacritics(value).encode("ascii", "ignore").decode("ascii").casefold()
-    compact = _SLUG_RE.sub("-", decomposed).strip("-")
+    compact = ascii_slug(value)
     if not compact:
         raise OrdenAnualHtmlParseError("annual Orden activity heading has no semantic identity")
     return compact
