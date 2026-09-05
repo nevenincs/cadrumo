@@ -5239,6 +5239,18 @@ modelo:
               label: Deductions to incentivise certain activities - 2024 200th anniversary
                 of Passeig de Grácia (PG) - Carried forward for application in future
                 periods [01263]
+            '01264':
+              label: Deductions to incentivise certain activities - 2024 reconstruction
+                of the historic covered diving pool of Club Natació Barcelona (CNB)
+                - deduction pending/generated [01264]
+            '01265':
+              label: Deductions to incentivise certain activities - 2024 reconstruction
+                of the historic covered diving pool of Club Natació Barcelona (CNB)
+                - applied in this settlement [01265]
+            '01266':
+              label: Deductions to incentivise certain activities - 2024 reconstruction
+                of the historic covered diving pool of Club Natació Barcelona (CNB)
+                - pending application in future periods [01266]
             '01267':
               label: Deductions to incentivise certain activities - 2024 ALIMENTARIA
                 2022 and HOSTELCO 2022 (AH) - Deduction carried forward/generated
@@ -15184,6 +15196,9 @@ modelo:
               label: Settlement IV - Tax due for the year, payable or refundable -
                 Total withholdings and payments on account - Attributed by economic
                 interest groupings and business consortia [DP200014B:01784]
+            DP200018:00588:
+              label: Deductions to incentivise certain activities - total - applied
+                in this settlement [00588]
             DP200026:00625:
               label: Joint taxation of State and provincial tax administrations -
                 Calculation of taxation percentages - State Administration [00625]

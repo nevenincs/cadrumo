@@ -5309,6 +5309,18 @@ modelo:
               label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2024 A
                 Passeig de Grácia 200. évfordulója (PG) - Jövőbeli időszakokban alkalmazandó
                 [01263]
+            '01264':
+              label: Egyes tevékenységeket ösztönző levonások - a Club Natació Barcelona
+                történelmi fedett műugrómedencéjének 2024. évi újjáépítése (CNB) -
+                függőben lévő/keletkezett levonás [01264]
+            '01265':
+              label: Egyes tevékenységeket ösztönző levonások - a Club Natació Barcelona
+                történelmi fedett műugrómedencéjének 2024. évi újjáépítése (CNB) -
+                ebben az elszámolásban felhasználva [01265]
+            '01266':
+              label: Egyes tevékenységeket ösztönző levonások - a Club Natació Barcelona
+                történelmi fedett műugrómedencéjének 2024. évi újjáépítése (CNB) -
+                jövőbeli időszakokban való alkalmazásra vár [01266]
             '01267':
               label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2024 ALIMENTARIA
                 2022 és HOSTELCO 2022 (AH) - Függőben lévő/keletkezett levonás [01267]
@@ -15169,6 +15181,9 @@ modelo:
               label: Elszámolás IV - Az időszak befizetendő vagy visszatérítendő adója
                 - Forrásadó és részletfizetés összesen - GIE-k és UTE-k által tulajdonított
                 összegek [DP200014B:01784]
+            DP200018:00588:
+              label: Egyes tevékenységeket ösztönző levonások - összesen - ebben az
+                elszámolásban felhasználva [00588]
             DP200026:00625:
               label: Állami és tartományi adóhatóságok együttes adóztatása - Adóztatási
                 százalékok számítása - Állami közigazgatás [00625]

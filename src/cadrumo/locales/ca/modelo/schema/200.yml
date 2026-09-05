@@ -5263,6 +5263,18 @@ modelo:
               label: Deduccions per incentivar determ. activitats - 2024 200è aniversari
                 del Passeig de Grácia (PG) - Pendent d'aplicació en períodes futurs
                 [01263]
+            '01264':
+              label: Deduccions per incentivar determinades activitats - 2024 reconstrucció
+                de la Piscina Històrica coberta de salts del Club Natació Barcelona
+                (CNB) - deducció pendent/generada [01264]
+            '01265':
+              label: Deduccions per incentivar determinades activitats - 2024 reconstrucció
+                de la Piscina Històrica coberta de salts del Club Natació Barcelona
+                (CNB) - aplicat en aquesta liquidació [01265]
+            '01266':
+              label: Deduccions per incentivar determinades activitats - 2024 reconstrucció
+                de la Piscina Històrica coberta de salts del Club Natació Barcelona
+                (CNB) - pendent d'aplicació en períodes futurs [01266]
             '01267':
               label: Deduccions per incentivar determ. activitats - 2024 ALIMENTARIA
                 2022 i HOSTELCO 2022 (AH) - Deducció pendent/generada [01267]
@@ -14984,6 +14996,9 @@ modelo:
             DP200014B:01784:
               label: Liquidació IV - Quota de l'exercici a ingressar o a retornar
                 - Total retencions i ingressos a compte - Imputats per AIE i UTE [DP200014B:01784]
+            DP200018:00588:
+              label: Deduccions per incentivar determinades activitats - total - aplicat
+                en aquesta liquidació [00588]
             DP200026:00625:
               label: Tributació conjunta Estat i Adm. forals - Càlcul de percentatges
                 de tributació - Adm. de l'Estat [00625]
