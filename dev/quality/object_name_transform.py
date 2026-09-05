@@ -368,7 +368,9 @@ class _RenameTransformer(cst.CSTTransformer):
         position = cast("CodeRange", self.get_metadata(PositionProvider, original))  # ty: ignore[redundant-cast]
         line = position.start.line
         for operation in self.operations:
-            if operation.operation_kind != "symbol-rename" or line not in self.definition_lines[operation.operation_id]:
+            if operation.operation_kind != "symbol-rename" or operation.old_path != self.path:
+                continue
+            if line not in self.definition_lines[operation.operation_id]:
                 continue
             _module, old_name, _new_module, new_name = self._operation_names(operation)
             if original.value != old_name:
