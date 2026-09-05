@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:e8e11e748b001dd077dbef3966fa9aab31323278801bc276acc037baa31e8843'
+body_hash: 'sha256:e5420aadf4463b214b5662731a9fcbf6ac871799b05874cffcff980b6678edd2'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -570,6 +570,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S688` - Bind the unreachable-code live walks to what they read: a scan that read nothing produced an empty stderr and satisfied the absence claim, and the test-module floor of zero sat against 3,334; `dev/audit/tests/test_unreachable_code.py`.
 - [x] `W02.P02.S689` - Give the replay transaction path one owner: five tests rebuilt production's naming expression by hand and one of those copies feeds an absence claim that a convention change would satisfy over a path that cannot exist; `dev/quality/object_name_replay.py`.
 - [x] `W02.P02.S690` - Give the M200 unique declaration filename one owner: three tests rebuilt production's casilla-to-filename convention to lay out their fixtures, so a change would have left them writing under the old name; `dev/registry/analysis/m200_2024_unique_adjudications.py`.
+- [x] `W02.P02.S691` - Anchor the retired command-graph absence claims to their parent directories: the two dev/quality entries had no reader holding that tree, so a rename would satisfy their absence over a directory that no longer exists; `dev/tests/test_command_graph_legacy_sources_absent.py`.
+- [x] `W02.P02.S692` - Anchor the public-authority cutover absences to their replacements: the imports below resolve through the installed package, so a relocated core/ left both retired-file claims passing about the wrong directory; `dev/tests/test_public_authority_cutover.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
