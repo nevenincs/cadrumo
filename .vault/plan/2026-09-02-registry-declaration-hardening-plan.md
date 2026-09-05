@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:203802ed5038029917eebafac37f96243d248d0146596da5e78244b8e062c161'
+body_hash: 'sha256:b6b355794af80d88a0610555161cc717dca660a8f5a082cb266dac3fc78e6acd'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -509,6 +509,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S627` - Announce the untracked files the documentation privacy scan does not search, since a size cutoff and a read failure both continued without a record and an unscanned file was indistinguishable from a clean one in a gate about leaked private data; `dev/quality/tests/test_doc_privacy.py`.
 - [x] `W02.P02.S628` - Announce the mapping fragments the valueless-slot gate could not parse, since a fragment that contributes no entries makes every export ref into it read as a hand-authored layout with no map entry to judge, so a malformed fragment silently converts judged routings into unjudged ones; `dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py`.
 - [x] `W02.P02.S629` - Refuse a committed sidecar the residual-identity gate cannot parse, since the provenance question is asked of the sidecar and an unparseable one takes its fixture out of the scan scope entirely rather than leaving it with unknown provenance, and four fixtures carry that provenance today; `dev/sanitizer/tests/test_residual_identity_absence.py`.
+- [x] `W02.P02.S630` - Announce a module the broad-raise suppression scan could not read, since the lines it returns ARE the violations this gate reports and an unreadable module therefore contributes nothing and reads exactly like a compliant one; `dev/tests/test_no_broad_exception_raises.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
