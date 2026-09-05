@@ -55,6 +55,7 @@ LEDGER_UNION_DENOMINATOR_SCHEMA_VERSION: Final[Literal[4]] = 4
 LEDGER_UNION_DENOMINATOR_ROOT: Final[Literal["cadrumo.ledger_union_denominator"]] = "cadrumo.ledger_union_denominator"
 _LEDGER_UNION_DENOMINATOR_FRAME: Final[bytes] = b"cadrumo:ledger-union-denominator:v4\x00"
 _LEDGER_TUI_SUPPORTED_SURFACE_SOURCE_SET_FRAME: Final[bytes] = b"cadrumo:ledger-tui-supported-surface-source-set:v1\x00"
+_LEDGER_UNION_ROW_REVIEWED_AT: Final[datetime] = datetime.fromisoformat("2026-09-05T12:00:00+02:00")
 _LEDGER_MESSAGE_TYPES: Final[tuple[str, ...]] = (
     "LedgerBackRequested",
     "LedgerEvidenceReviewRequested",
@@ -1375,9 +1376,10 @@ class LedgerUnionCapabilityRowV1(BaseModel):
             raise ValueError("union row TUI routes must be sorted and unique")
         if self.secondary_gap_classes != tuple(sorted(set(self.secondary_gap_classes), key=lambda item: item.value)):
             raise ValueError("secondary gap classes must be unique and canonically ordered")
-        if self.primary_gap_class in self.secondary_gap_classes or frozenset(
-            (self.primary_gap_class, *self.secondary_gap_classes)
-        ) != self.gap_classes:
+        if (
+            self.primary_gap_class in self.secondary_gap_classes
+            or frozenset((self.primary_gap_class, *self.secondary_gap_classes)) != self.gap_classes
+        ):
             raise ValueError("primary and secondary gap classes must exactly partition all row gaps")
         if self.review_ruling is not LedgerUnionRowReviewRuling.COMPLETE_WITH_OPEN_GAPS:
             raise ValueError("union rows must retain the reviewed-open ruling until their gaps close")
@@ -1523,6 +1525,17 @@ class LedgerUnionDenominatorV1(BaseModel):
         if len(set(row_ids)) != len(row_ids) or tuple(sorted(row_ids)) != row_ids:
             raise ValueError("union rows must have unique canonically sorted identities")
         rows_by_id = {row.capability_id: row for row in self.rows}
+        tui_reachability = {row.destination: row.reachability for row in self.tui_census.routes}
+        registry_rows_by_capability = {_registry_union_capability_id(row): row for row in self.registry_census.rows}
+        cli_ownership_by_capability: dict[str, set[str]] = {}
+        from cadrumo.entrypoints.cli._app_ledger_command_specs import LEDGER_CLI_COMMAND_CENSUS
+
+        for entry in LEDGER_CLI_COMMAND_CENSUS:
+            for capability_id in _selection_for_observation(f"cli_endpoint:{entry.command_key}"):
+                cli_ownership_by_capability.setdefault(capability_id, set()).add(entry.adapter_ownership.value)
+            for suboperation_id in entry.suboperation_ids:
+                for capability_id in _selection_for_observation(f"cli_suboperation:{suboperation_id}"):
+                    cli_ownership_by_capability.setdefault(capability_id, set()).add(entry.adapter_ownership.value)
         selected: dict[str, set[DenominatorSourceKind]] = {}
         selecting_observations: dict[str, set[str]] = {}
         for observation in self.observations:
@@ -1544,8 +1557,29 @@ class LedgerUnionDenominatorV1(BaseModel):
             expected_home, expected_status = _semantic_home_for(capability_id, expected_effect)
             if row.semantic_home != expected_home or row.semantic_home_status is not expected_status:
                 raise ValueError(f"union row semantic home drifted from explicit adjudication: {capability_id}")
-            if row.applicability != _axis_decisions(capability_id, row.sources, expected_effect):
-                raise ValueError(f"union row applicability drifted from explicit adjudication: {capability_id}")
+            expected_tui_routes = tuple(
+                sorted(
+                    destination
+                    for destination, capability_ids in _LEDGER_TUI_ROUTE_CAPABILITIES.items()
+                    if capability_id in capability_ids
+                )
+            )
+            if row.tui_routes != expected_tui_routes:
+                raise ValueError(f"union row TUI routes drifted from explicit adjudication: {capability_id}")
+            expected_review = _reviewed_union_row_fields(
+                capability_id=capability_id,
+                sources=row.sources,
+                semantic_home=expected_home,
+                home_status=expected_status,
+                effect=expected_effect,
+                tui_routes=expected_tui_routes,
+                tui_reachability=tui_reachability,
+                cli_ownership=frozenset(cli_ownership_by_capability.get(capability_id, set())),
+                registry_row=registry_rows_by_capability.get(capability_id),
+            )
+            for field_name, expected_value in expected_review.items():
+                if getattr(row, field_name) != expected_value:
+                    raise ValueError(f"union row {field_name} drifted from exhaustive review: {capability_id}")
             expected_tui_hold = (
                 LEDGER_TUI_HOLD_UNTIL_GATE
                 if next(
@@ -1557,6 +1591,8 @@ class LedgerUnionDenominatorV1(BaseModel):
             )
             if row.tui_hold_until is not expected_tui_hold:
                 raise ValueError(f"union row TUI hold drifted from explicit adjudication: {capability_id}")
+            if row.review_digest != row.calculated_review_digest:
+                raise ValueError(f"union row review digest is stale: {capability_id}")
         selected_edges = sum(len(item.capability_ids) for item in self.observations)
         expected_accounting = LedgerUnionSelectionAccountingV1(
             observation_count=len(self.observations),
@@ -1569,6 +1605,21 @@ class LedgerUnionDenominatorV1(BaseModel):
         )
         if self.selection_accounting != expected_accounting:
             raise ValueError("union selection accounting drifted from observations and rows")
+        _require_non_placeholder(self.review_revision, field_name="review_revision")
+        if self.review_revision != "row-review-v1":
+            raise ValueError("union row-review revision is unsupported")
+        if self.reviewed_row_count != len(self.rows):
+            raise ValueError("reviewed row coverage does not exactly equal the union denominator")
+        _require_digest(self.row_review_digest, field_name="row_review_digest")
+        if self.row_review_digest != self.calculated_row_review_digest:
+            raise ValueError("aggregate row-review digest does not match every reviewed row")
+        attestation = self.row_review_attestation
+        if (
+            attestation.reviewed_row_count != self.reviewed_row_count
+            or attestation.row_review_digest != self.row_review_digest
+            or attestation.reviewed_union_basis_digest != self.calculated_review_basis_digest
+        ):
+            raise ValueError("row-review attestation does not bind the complete reviewed union")
         _require_digest(self.digest, field_name="digest")
         if self.digest != self.calculated_digest:
             raise ValueError("union denominator digest does not match its adjudicated content")
@@ -1580,10 +1631,33 @@ class LedgerUnionDenominatorV1(BaseModel):
         encoded = _canonical_json_text(_ledger_union_digest_payload(self)).encode("utf-8")
         return f"sha256:{hashlib.sha256(_LEDGER_UNION_DENOMINATOR_FRAME + _length_frame(encoded)).hexdigest()}"
 
+    @property
+    def calculated_row_review_digest(self) -> str:
+        """Bind exact ordered coverage and each row's reviewed assertions."""
+        return _canonical_digest(tuple((row.capability_id, row.review_digest) for row in self.rows))
+
+    @property
+    def calculated_review_basis_digest(self) -> str:
+        """Bind the reviewed union without the self-referential attestation."""
+        return _canonical_digest(_ledger_union_review_basis_payload(self))
+
 
 def _ledger_union_digest_payload(union: LedgerUnionDenominatorV1) -> dict[str, object]:
     """Return JSON data with every set-valued field in canonical order."""
     payload = cast(dict[str, object], union.model_dump(mode="json", exclude={"digest"}))
+    rows = cast(list[dict[str, object]], payload["rows"])
+    for row in rows:
+        row["sources"] = sorted(cast(list[str], row["sources"]))
+        row["gap_classes"] = sorted(cast(list[str], row["gap_classes"]))
+    return payload
+
+
+def _ledger_union_review_basis_payload(union: LedgerUnionDenominatorV1) -> dict[str, object]:
+    """Return canonical reviewed content excluding outer and attestation digests."""
+    payload = cast(
+        dict[str, object],
+        union.model_dump(mode="json", exclude={"digest", "row_review_attestation"}),
+    )
     rows = cast(list[dict[str, object]], payload["rows"])
     for row in rows:
         row["sources"] = sorted(cast(list[str], row["sources"]))
@@ -2911,6 +2985,148 @@ def _axis_decisions(
     )
 
 
+_PRIMARY_GAP_PRIORITY: Final[tuple[LedgerGapClass, ...]] = (
+    LedgerGapClass.AUTHORITY,
+    LedgerGapClass.REGISTRY,
+    LedgerGapClass.PRODUCT,
+    LedgerGapClass.ARTIFACT,
+    LedgerGapClass.PROVENANCE,
+    LedgerGapClass.COMPOSITION,
+    LedgerGapClass.REACHABILITY,
+    LedgerGapClass.PROOF,
+)
+
+
+def _registry_destination_status(
+    effect: LedgerCapabilityEffect,
+    registry_row: LedgerRegistryRouteRowV1 | None,
+) -> LedgerRegistryDestinationStatus:
+    if effect is not LedgerCapabilityEffect.REGISTRY_ROUTE:
+        if registry_row is not None:
+            raise ValueError("a non-registry row cannot carry a registry declaration")
+        return LedgerRegistryDestinationStatus.NOT_APPLICABLE
+    if registry_row is None:
+        raise ValueError("a registry row requires its exact declaration")
+    if registry_row.targets:
+        return LedgerRegistryDestinationStatus.DIRECT
+    if registry_row.modelo_id == "210" or "retenciones" in registry_row.binding_id:
+        return LedgerRegistryDestinationStatus.APPLICATION_SIDECAR
+    return LedgerRegistryDestinationStatus.DESTINATIONLESS
+
+
+def _reviewed_union_row_fields(
+    *,
+    capability_id: str,
+    sources: frozenset[DenominatorSourceKind],
+    semantic_home: CanonicalSemanticHomeV1,
+    home_status: SemanticHomeStatus,
+    effect: LedgerCapabilityEffect,
+    tui_routes: tuple[str, ...],
+    tui_reachability: Mapping[str, str],
+    cli_ownership: frozenset[str],
+    registry_row: LedgerRegistryRouteRowV1 | None,
+) -> dict[str, object]:
+    """Return the complete reproducible result of the exhaustive row review."""
+    gaps = {LedgerGapClass.PROOF}
+    if cli_ownership & {"mixed", "policy-bearing"}:
+        gaps.add(LedgerGapClass.AUTHORITY)
+    if home_status is SemanticHomeStatus.PLANNED:
+        gaps.add(LedgerGapClass.PRODUCT)
+    if effect in {
+        LedgerCapabilityEffect.MUTATION,
+        LedgerCapabilityEffect.PROPOSAL,
+        LedgerCapabilityEffect.REGISTRY_ROUTE,
+    }:
+        gaps.add(LedgerGapClass.COMPOSITION)
+    if effect in {LedgerCapabilityEffect.ARTIFACT, LedgerCapabilityEffect.ARTIFACT_QUERY}:
+        gaps.add(LedgerGapClass.ARTIFACT)
+    if effect is LedgerCapabilityEffect.REGISTRY_ROUTE:
+        gaps.add(LedgerGapClass.REGISTRY)
+    if (
+        capability_id
+        in {
+            "ledger.evidence.download",
+            "ledger.export.provenance",
+            "ledger.field_change.provenance",
+            "ledger.fx.provenance",
+            "ledger.import.normalization_provenance",
+            "ledger.manual_override.provenance",
+            "ledger.llm.apply",
+            "ledger.llm.apply_evidence_classification",
+            "ledger.llm.apply_saturated",
+            "ledger.llm.apply_split",
+            "ledger.llm.classify_with_evidence",
+            "ledger.llm.reject",
+            "ledger.llm.review_decision",
+            "ledger.llm.saturate",
+            "ledger.llm.suggest",
+            "ledger.llm.suggest_split",
+        }
+        or effect is LedgerCapabilityEffect.REGISTRY_ROUTE
+    ):
+        gaps.add(LedgerGapClass.PROVENANCE)
+    component_only_routes = tuple(route for route in tui_routes if tui_reachability[route] == "component_only")
+    if component_only_routes:
+        gaps.add(LedgerGapClass.REACHABILITY)
+
+    applicability = _axis_decisions(capability_id, sources, effect)
+    proof_requirements = tuple(
+        decision.proof_requirement
+        for decision in applicability
+        if decision.applicability is ApplicabilityState.APPLICABLE
+    )
+    blockers = ["Every applicable axis remains explicitly unproven in the reviewed baseline."]
+    if LedgerGapClass.AUTHORITY in gaps:
+        blockers.append("The current CLI observation carries policy-bearing or mixed ownership.")
+    if home_status is SemanticHomeStatus.PLANNED:
+        blockers.append("The named immutable application request/result contract is not yet implemented.")
+    if component_only_routes:
+        blockers.append("A TUI component exists without installed navigation or executable door reachability.")
+    if capability_id in _BACKEND_DIRECT_PROOF_GAPS:
+        blockers.append("No direct symbol-level backend behavior test was located for this public operation.")
+
+    destination_status = _registry_destination_status(effect, registry_row)
+    if destination_status is LedgerRegistryDestinationStatus.DIRECT:
+        blockers.append("The direct registry destination lacks complete calculation and filing/export route proof.")
+    elif destination_status is LedgerRegistryDestinationStatus.APPLICATION_SIDECAR:
+        blockers.append("The application sidecar output identity is not represented by a registry edge.")
+    elif destination_status is LedgerRegistryDestinationStatus.DESTINATIONLESS:
+        blockers.append("The declaration has no registry destination or application output mapping.")
+
+    primary_gap = next(gap for gap in _PRIMARY_GAP_PRIORITY if gap in gaps)
+    secondary_gaps = tuple(sorted(gaps - {primary_gap}, key=lambda item: item.value))
+    if primary_gap is LedgerGapClass.AUTHORITY:
+        next_action = f"Move policy to {semantic_home.owner}, prove direct behavior, and prove thin CLI delegation."
+    elif destination_status is LedgerRegistryDestinationStatus.APPLICATION_SIDECAR:
+        next_action = "Move the sidecar output identity into a validated registry route, then prove the full route."
+    elif destination_status is LedgerRegistryDestinationStatus.DESTINATIONLESS:
+        next_action = (
+            "Assign a typed registry destination or an explicit non-applicable disposition that cannot suppress a fact."
+        )
+    elif destination_status is LedgerRegistryDestinationStatus.DIRECT:
+        next_action = "Prove nonzero calculation, exclusions, missing-versus-zero behavior, and finish-line refusal for this route."
+    elif primary_gap is LedgerGapClass.PRODUCT:
+        next_action = (
+            f"Implement {semantic_home.command_type} and {semantic_home.result_type}, then prove every applicable axis."
+        )
+    elif primary_gap is LedgerGapClass.ARTIFACT:
+        next_action = "Prove the artifact with an independent reader, declared-loss contract, and cleanup behavior."
+    else:
+        next_action = "Attach current role-scoped success and refusal evidence for every applicable axis."
+
+    return {
+        "applicability": applicability,
+        "gap_classes": frozenset(gaps),
+        "primary_gap_class": primary_gap,
+        "secondary_gap_classes": secondary_gaps,
+        "proof_requirements": proof_requirements,
+        "blockers": tuple(blockers),
+        "next_action": next_action,
+        "registry_destination_status": destination_status,
+        "review_ruling": LedgerUnionRowReviewRuling.COMPLETE_WITH_OPEN_GAPS,
+    }
+
+
 def _union_observations(
     registry: LedgerRegistryRouteCensusV1,
     tui: LedgerTuiSupportedSurfaceCensusV1,
@@ -3118,113 +3334,42 @@ def build_ledger_union_denominator(
                 if capability_id in selected
             )
         )
-        gaps = {LedgerGapClass.PROOF}
-        ownership = cli_ownership_by_capability.get(capability_id, set())
-        if ownership & {"mixed", "policy-bearing"}:
-            gaps.add(LedgerGapClass.AUTHORITY)
-        if home_status is SemanticHomeStatus.PLANNED:
-            gaps.add(LedgerGapClass.PRODUCT)
-        if effect in {
-            LedgerCapabilityEffect.MUTATION,
-            LedgerCapabilityEffect.PROPOSAL,
-            LedgerCapabilityEffect.REGISTRY_ROUTE,
-        }:
-            gaps.add(LedgerGapClass.COMPOSITION)
-        if effect in {LedgerCapabilityEffect.ARTIFACT, LedgerCapabilityEffect.ARTIFACT_QUERY}:
-            gaps.add(LedgerGapClass.ARTIFACT)
-        if effect is LedgerCapabilityEffect.REGISTRY_ROUTE:
-            gaps.add(LedgerGapClass.REGISTRY)
-        if (
-            capability_id
-            in {
-                "ledger.evidence.download",
-                "ledger.export.provenance",
-                "ledger.field_change.provenance",
-                "ledger.fx.provenance",
-                "ledger.import.normalization_provenance",
-                "ledger.manual_override.provenance",
-                "ledger.llm.apply",
-                "ledger.llm.apply_evidence_classification",
-                "ledger.llm.apply_saturated",
-                "ledger.llm.apply_split",
-                "ledger.llm.classify_with_evidence",
-                "ledger.llm.reject",
-                "ledger.llm.review_decision",
-                "ledger.llm.saturate",
-                "ledger.llm.suggest",
-                "ledger.llm.suggest_split",
-            }
-            or effect is LedgerCapabilityEffect.REGISTRY_ROUTE
-        ):
-            gaps.add(LedgerGapClass.PROVENANCE)
-        component_only_routes = tuple(route for route in tui_routes if tui_reachability[route] == "component_only")
-        if component_only_routes:
-            gaps.add(LedgerGapClass.REACHABILITY)
-        proof_requirements = ["Direct backend success and typed refusal proof against the canonical owner."]
-        if DenominatorSourceKind.CLI_ENDPOINT in sources or DenominatorSourceKind.CLI_SUBOPERATION in sources:
-            proof_requirements.append("CLI parser, delegation, result-schema, success, and refusal parity proof.")
-        if effect in {LedgerCapabilityEffect.ARTIFACT, LedgerCapabilityEffect.ARTIFACT_QUERY}:
-            proof_requirements.append("Independent reader, declared-loss, destination, and cleanup proof.")
-        if LedgerGapClass.PROVENANCE in gaps:
-            proof_requirements.append("Actor, source, operation, field, normalization, and revision lineage proof.")
-        if effect is LedgerCapabilityEffect.REGISTRY_ROUTE:
-            proof_requirements.append(
-                "Nonzero inclusion, exclusion, missing-versus-zero, and finish-line refusal proof."
-            )
-        if tui_routes:
-            proof_requirements.append("Installed keyboard reachability and canonical result/refusal parity proof.")
-        blockers = ["S12 applicability/evidence review and S14 digest-bound acceptance remain open."]
-        if LedgerGapClass.AUTHORITY in gaps:
-            blockers.append("The current CLI observation carries policy-bearing or mixed ownership.")
-        if home_status is SemanticHomeStatus.PLANNED:
-            blockers.append(
-                "The named immutable application request/result contract is plan-owned and not yet complete."
-            )
-        if component_only_routes:
-            blockers.append("TUI component exists without installed navigation or executable door reachability.")
-        if capability_id in _BACKEND_DIRECT_PROOF_GAPS:
-            blockers.append("S05 found no direct symbol-level backend behavior test for this public operation.")
-        if effect is LedgerCapabilityEffect.REGISTRY_ROUTE:
-            registry_row = registry_rows_by_capability[capability_id]
-            if registry_row.targets:
-                blockers.append(
-                    "The direct registry destination still requires per-route calculation and filing/export proof."
-                )
-            elif registry_row.modelo_id == "210" or "retenciones" in registry_row.binding_id:
-                blockers.append(
-                    "The declaration reaches an application sidecar whose output identity is not a registry edge."
-                )
-            else:
-                blockers.append("The declaration has no registry destination or application output mapping.")
-        next_action = (
-            "Classify and prove the route in S96-S101."
-            if effect is LedgerCapabilityEffect.REGISTRY_ROUTE
-            else "Complete the named G1/G2 owner, then prove CLI and TUI parity in G3/G4."
-        )
         applicability = _axis_decisions(capability_id, sources, effect)
+        reviewed_fields = _reviewed_union_row_fields(
+            capability_id=capability_id,
+            sources=sources,
+            semantic_home=semantic_home,
+            home_status=home_status,
+            effect=effect,
+            tui_routes=tui_routes,
+            tui_reachability=tui_reachability,
+            cli_ownership=frozenset(cli_ownership_by_capability.get(capability_id, set())),
+            registry_row=registry_rows_by_capability.get(capability_id),
+        )
+        provisional_row = LedgerUnionCapabilityRowV1.model_construct(
+            capability_id=capability_id,
+            sources=sources,
+            source_observation_ids=tuple(sorted(item.observation_id for item in selecting)),
+            semantic_home=semantic_home,
+            semantic_home_status=home_status,
+            effect=effect,
+            tui_routes=tui_routes,
+            tui_hold_until=(
+                LEDGER_TUI_HOLD_UNTIL_GATE
+                if next(
+                    decision.applicability is ApplicabilityState.APPLICABLE
+                    for decision in applicability
+                    if decision.axis is LedgerCapabilityAxis.TUI
+                )
+                else None
+            ),
+            review_digest="",
+            **reviewed_fields,
+        )
         rows.append(
             LedgerUnionCapabilityRowV1(
-                capability_id=capability_id,
-                sources=sources,
-                source_observation_ids=tuple(sorted(item.observation_id for item in selecting)),
-                semantic_home=semantic_home,
-                semantic_home_status=home_status,
-                effect=effect,
-                applicability=applicability,
-                gap_classes=frozenset(gaps),
-                proof_requirements=tuple(proof_requirements),
-                blockers=tuple(blockers),
-                next_action=next_action,
-                tui_routes=tui_routes,
-                tui_hold_until=(
-                    LEDGER_TUI_HOLD_UNTIL_GATE
-                    if next(
-                        decision.applicability is ApplicabilityState.APPLICABLE
-                        for decision in applicability
-                        if decision.axis is LedgerCapabilityAxis.TUI
-                    )
-                    else None
-                ),
+                **provisional_row.model_dump(mode="python", exclude={"review_digest"}),
+                review_digest=provisional_row.calculated_review_digest,
             )
         )
     source_digests = tuple(
@@ -3235,6 +3380,18 @@ def build_ledger_union_denominator(
         )
         for source in sorted(DenominatorSourceKind, key=lambda item: item.value)
         if (source_observations := tuple(item for item in observations if item.source is source))
+    )
+    reviewed_row_count = len(rows)
+    row_review_digest = _canonical_digest(tuple((row.capability_id, row.review_digest) for row in rows))
+    placeholder_attestation = LedgerUnionRowReviewAttestationV1.model_construct(
+        review_id="review.ledger.union_rows",
+        reviewer="engineering-row-review",
+        reviewed_at=_LEDGER_UNION_ROW_REVIEWED_AT,
+        ruling=LedgerUnionRowReviewRuling.COMPLETE_WITH_OPEN_GAPS,
+        reviewed_union_basis_digest="sha256:" + "0" * 64,
+        row_review_digest=row_review_digest,
+        reviewed_row_count=reviewed_row_count,
+        digest="sha256:" + "0" * 64,
     )
     provisional = LedgerUnionDenominatorV1.model_construct(
         root=LEDGER_UNION_DENOMINATOR_ROOT,
@@ -3253,8 +3410,27 @@ def build_ledger_union_denominator(
             duplicate_selection_edges=sum(len(item.capability_ids) for item in observations) - len(rows),
             final_rows=len(rows),
         ),
+        review_revision="row-review-v1",
+        reviewed_row_count=reviewed_row_count,
+        row_review_digest=row_review_digest,
+        row_review_attestation=placeholder_attestation,
         digest="",
     )
+    provisional_attestation = LedgerUnionRowReviewAttestationV1.model_construct(
+        review_id="review.ledger.union_rows",
+        reviewer="engineering-row-review",
+        reviewed_at=_LEDGER_UNION_ROW_REVIEWED_AT,
+        ruling=LedgerUnionRowReviewRuling.COMPLETE_WITH_OPEN_GAPS,
+        reviewed_union_basis_digest=provisional.calculated_review_basis_digest,
+        row_review_digest=row_review_digest,
+        reviewed_row_count=reviewed_row_count,
+        digest="",
+    )
+    attestation = LedgerUnionRowReviewAttestationV1(
+        **provisional_attestation.model_dump(mode="python", exclude={"digest"}),
+        digest=provisional_attestation.calculated_digest,
+    )
+    provisional = provisional.model_copy(update={"row_review_attestation": attestation})
     return LedgerUnionDenominatorV1(
         **provisional.model_dump(mode="python", exclude={"digest"}), digest=provisional.calculated_digest
     )
@@ -4726,12 +4902,15 @@ __all__ = [
     "LedgerLiveCensusReportV1",
     "LedgerMatrixAcceptanceAttestationV1",
     "LedgerRegistryRouteCensusV1",
+    "LedgerRegistryDestinationStatus",
     "LedgerRegistryRouteRowV1",
     "LedgerRegistryRouteTargetV1",
     "LedgerTuiRouteRowV1",
     "LedgerTuiSupportedSurfaceCensusV1",
     "LedgerUnionCapabilityRowV1",
     "LedgerUnionDenominatorV1",
+    "LedgerUnionRowReviewAttestationV1",
+    "LedgerUnionRowReviewRuling",
     "LedgerUnionSelectionAccountingV1",
     "LedgerUnionSourceDigestV1",
     "LedgerUnionSourceObservationV1",

@@ -63,9 +63,12 @@ from ..clitui_ledger_capability_matrix import (
     LedgerGateClosureReceiptV1,
     LedgerLiveCensusReportV1,
     LedgerMatrixAcceptanceAttestationV1,
+    LedgerRegistryDestinationStatus,
     LedgerRegistryRouteCensusV1,
     LedgerTuiSupportedSurfaceCensusV1,
     LedgerUnionDenominatorV1,
+    LedgerUnionRowReviewAttestationV1,
+    LedgerUnionRowReviewRuling,
     LedgerUnionSourceObservationV1,
     ReviewRuling,
     SemanticHomeStatus,
@@ -100,7 +103,9 @@ _REGISTRY_ROUTE_DIGEST: Final[str] = "sha256:20b2d2df5558b2a3fdbd1eab6e9f781a973
 _REGISTRY_SOURCE_DIGEST: Final[str] = "sha256:194a9f26ddfbae6c5d7f265ffe58f50964fbe2fcd02a5670fa19845dead5cf6d"
 _TUI_CENSUS_DIGEST: Final[str] = "sha256:c136cfe1ae3f82a239476c00e805f8c9a29e010d502e74397963cea7e6f42371"
 _TUI_SOURCE_DIGEST: Final[str] = "sha256:e7337508a02ef2260e0b28205c31bb872b69f59aa51a18391ae209c21b8f9d57"
-_UNION_DIGEST: Final[str] = "sha256:6d4f8685359271136a8fdba99c84ed238bc3a3daec03b3ca55c2d671d74ab2a4"
+_UNION_DIGEST: Final[str] = "sha256:94d841ba7105202516d5be066a31713b94ef72ca7acf73749630e078cff427ea"
+_ROW_REVIEW_DIGEST: Final[str] = "sha256:43b50491b84cb7e6bc3a69f4688aaa3550e602ce18ed47f0a31fff2f0b7dc871"
+_ROW_REVIEW_ATTESTATION_DIGEST: Final[str] = "sha256:cd55febbb78fcf67b8230e6b0bcb0b44b21d5941070c96d17bece4d6541c4636"
 
 
 @cache
@@ -120,6 +125,37 @@ def _union_denominator() -> LedgerUnionDenominatorV1:
 
 def _refreshed_union_digest(union: LedgerUnionDenominatorV1, **updates: object) -> LedgerUnionDenominatorV1:
     candidate = union.model_copy(update={**updates, "digest": ""})
+    return candidate.model_copy(update={"digest": candidate.calculated_digest})
+
+
+def _refreshed_union_review(
+    union: LedgerUnionDenominatorV1,
+    *,
+    rows: tuple[object, ...],
+) -> LedgerUnionDenominatorV1:
+    reviewed_rows = cast(tuple[matrix_module.LedgerUnionCapabilityRowV1, ...], rows)
+    refreshed_rows = tuple(
+        row.model_copy(update={"review_digest": row.calculated_review_digest}) for row in reviewed_rows
+    )
+    candidate = union.model_copy(
+        update={
+            "rows": refreshed_rows,
+            "reviewed_row_count": len(refreshed_rows),
+            "row_review_digest": "",
+            "digest": "",
+        }
+    )
+    candidate = candidate.model_copy(update={"row_review_digest": candidate.calculated_row_review_digest})
+    attestation = candidate.row_review_attestation.model_copy(
+        update={
+            "reviewed_union_basis_digest": candidate.calculated_review_basis_digest,
+            "row_review_digest": candidate.row_review_digest,
+            "reviewed_row_count": candidate.reviewed_row_count,
+            "digest": "",
+        }
+    )
+    attestation = attestation.model_copy(update={"digest": attestation.calculated_digest})
+    candidate = candidate.model_copy(update={"row_review_attestation": attestation})
     return candidate.model_copy(update={"digest": candidate.calculated_digest})
 
 
@@ -180,7 +216,7 @@ def test_union_denominator_joins_every_raw_observation_without_double_counting()
     union = _union_denominator()
 
     assert union.root == LEDGER_UNION_DENOMINATOR_ROOT
-    assert union.schema_version == 3
+    assert union.schema_version == 4
     assert len(union.observations) == 760
     assert len(union.rows) == 693
     assert union.selection_accounting.model_dump() == {
@@ -202,8 +238,11 @@ def test_union_denominator_joins_every_raw_observation_without_double_counting()
         ("supported_surface", 7),
     ]
     assert union.digest == _UNION_DIGEST
+    assert union.reviewed_row_count == 693
+    assert union.row_review_digest == _ROW_REVIEW_DIGEST
+    assert union.row_review_attestation.digest == _ROW_REVIEW_ATTESTATION_DIGEST
     assert ledger_union_denominator_digest(union) == _UNION_DIGEST
-    assert ledger_union_denominator_bytes(union).startswith(b"cadrumo:ledger-union-denominator:v3\x00")
+    assert ledger_union_denominator_bytes(union).startswith(b"cadrumo:ledger-union-denominator:v4\x00")
 
 
 def test_union_holds_every_tui_applicable_row_until_g3_without_holding_non_applicable_rows() -> None:
@@ -512,6 +551,158 @@ def test_union_denominator_has_explicit_axes_homes_proof_and_open_blockers_for_e
         SemanticHomeStatus.EXISTING,
         SemanticHomeStatus.PLANNED,
     }
+
+
+def test_union_row_review_is_exhaustive_conservative_and_digest_bound() -> None:
+    union = _union_denominator()
+
+    assert isinstance(union.row_review_attestation, LedgerUnionRowReviewAttestationV1)
+    assert union.row_review_attestation.ruling is LedgerUnionRowReviewRuling.COMPLETE_WITH_OPEN_GAPS
+    assert union.row_review_attestation.reviewed_union_basis_digest == union.calculated_review_basis_digest
+    assert union.row_review_attestation.row_review_digest == union.calculated_row_review_digest
+    assert union.row_review_attestation.reviewed_row_count == len(union.rows) == 693
+    assert all(row.review_digest == row.calculated_review_digest for row in union.rows)
+    assert all(
+        decision.proof
+        is (
+            AxisProofState.UNPROVEN
+            if decision.applicability is ApplicabilityState.APPLICABLE
+            else AxisProofState.NOT_APPLICABLE
+        )
+        for row in union.rows
+        for decision in row.applicability
+    )
+    assert all(decision.proof_requirement for row in union.rows for decision in row.applicability)
+    assert all(frozenset((row.primary_gap_class, *row.secondary_gap_classes)) == row.gap_classes for row in union.rows)
+
+
+def test_union_row_review_preserves_registry_destination_and_tui_hold_cohorts() -> None:
+    union = _union_denominator()
+
+    destination_counts = {
+        status: sum(row.registry_destination_status is status for row in union.rows)
+        for status in LedgerRegistryDestinationStatus
+    }
+    assert destination_counts == {
+        LedgerRegistryDestinationStatus.NOT_APPLICABLE: 147,
+        LedgerRegistryDestinationStatus.DIRECT: 510,
+        LedgerRegistryDestinationStatus.APPLICATION_SIDECAR: 3,
+        LedgerRegistryDestinationStatus.DESTINATIONLESS: 33,
+    }
+    assert sum(row.primary_gap_class is LedgerGapClass.AUTHORITY for row in union.rows) == 112
+    assert sum(row.primary_gap_class is LedgerGapClass.REGISTRY for row in union.rows) == 546
+    assert sum(row.primary_gap_class is LedgerGapClass.PRODUCT for row in union.rows) == 31
+    assert sum(row.primary_gap_class is LedgerGapClass.ARTIFACT for row in union.rows) == 1
+    assert sum(row.primary_gap_class is LedgerGapClass.PROOF for row in union.rows) == 3
+    assert sum(row.tui_hold_until is LEDGER_TUI_HOLD_UNTIL_GATE for row in union.rows) == 680
+    assert sum(row.tui_hold_until is None for row in union.rows) == 13
+
+
+@pytest.mark.parametrize(
+    ("mutation", "expected"),
+    [
+        ("owner", "semantic home drifted"),
+        ("home_status", "semantic home drifted"),
+        ("applicability", "applicability drifted"),
+        ("primary_gap", "primary_gap_class drifted"),
+        ("proof", "applicability drifted"),
+        ("next_action", "next_action drifted"),
+        ("registry_status", "registry_destination_status drifted"),
+        ("tui_routes", "TUI routes drifted"),
+    ],
+)
+def test_union_review_refuses_reclassification_even_after_every_review_digest_is_refreshed(
+    mutation: str,
+    expected: str,
+) -> None:
+    union = _union_denominator()
+    rows = list(union.rows)
+    index = next(
+        index
+        for index, row in enumerate(rows)
+        if row.registry_destination_status is LedgerRegistryDestinationStatus.DIRECT and row.tui_routes == ()
+    )
+    row = rows[index]
+    if mutation == "owner":
+        row = row.model_copy(
+            update={"semantic_home": row.semantic_home.model_copy(update={"owner": "cadrumo.example:owner"})}
+        )
+    elif mutation == "home_status":
+        row = row.model_copy(update={"semantic_home_status": SemanticHomeStatus.EXISTING})
+    elif mutation == "applicability":
+        decisions = list(row.applicability)
+        decisions[0] = decisions[0].model_copy(update={"rationale": "A different but non-placeholder rationale."})
+        row = row.model_copy(update={"applicability": tuple(decisions)})
+    elif mutation == "primary_gap":
+        row = row.model_copy(
+            update={
+                "primary_gap_class": LedgerGapClass.PROOF,
+                "secondary_gap_classes": tuple(
+                    sorted(row.gap_classes - {LedgerGapClass.PROOF}, key=lambda item: item.value)
+                ),
+            }
+        )
+    elif mutation == "proof":
+        decisions = list(row.applicability)
+        applicable_index = next(
+            index for index, decision in enumerate(decisions) if decision.applicability is ApplicabilityState.APPLICABLE
+        )
+        decisions[applicable_index] = decisions[applicable_index].model_copy(update={"proof": AxisProofState.PARTIAL})
+        row = row.model_copy(update={"applicability": tuple(decisions)})
+    elif mutation == "next_action":
+        row = row.model_copy(update={"next_action": "Use a different closure action."})
+    elif mutation == "registry_status":
+        row = row.model_copy(
+            update={"registry_destination_status": LedgerRegistryDestinationStatus.APPLICATION_SIDECAR}
+        )
+    else:
+        row = row.model_copy(update={"tui_routes": ("ledger.entries",)})
+    rows[index] = row
+    candidate = _refreshed_union_review(union, rows=tuple(rows))
+
+    with pytest.raises(ValidationError, match=expected):
+        LedgerUnionDenominatorV1.model_validate(candidate.model_dump(mode="python"))
+
+
+@pytest.mark.parametrize(
+    ("field_name", "value", "expected"),
+    [
+        ("reviewed_row_count", 692, "reviewed row coverage"),
+        ("row_review_digest", "sha256:" + "0" * 64, "aggregate row-review digest"),
+    ],
+)
+def test_union_review_refuses_incomplete_or_stale_coverage(
+    field_name: str,
+    value: object,
+    expected: str,
+) -> None:
+    union = _union_denominator()
+    candidate = _refreshed_union_digest(union, **{field_name: value})
+
+    with pytest.raises(ValidationError, match=expected):
+        LedgerUnionDenominatorV1.model_validate(candidate.model_dump(mode="python"))
+
+
+def test_union_review_refuses_stale_row_digest_after_outer_digest_refresh() -> None:
+    union = _union_denominator()
+    rows = list(union.rows)
+    rows[0] = rows[0].model_copy(update={"review_digest": "sha256:" + "0" * 64})
+    candidate = _refreshed_union_digest(union, rows=tuple(rows))
+
+    with pytest.raises(ValidationError, match="row review digest is stale"):
+        LedgerUnionDenominatorV1.model_validate(candidate.model_dump(mode="python"))
+
+
+def test_union_review_refuses_rebound_attestation_after_outer_digest_refresh() -> None:
+    union = _union_denominator()
+    attestation = union.row_review_attestation.model_copy(
+        update={"reviewed_union_basis_digest": "sha256:" + "0" * 64, "digest": ""}
+    )
+    attestation = attestation.model_copy(update={"digest": attestation.calculated_digest})
+    candidate = _refreshed_union_digest(union, row_review_attestation=attestation)
+
+    with pytest.raises(ValidationError, match="attestation does not bind"):
+        LedgerUnionDenominatorV1.model_validate(candidate.model_dump(mode="python"))
 
 
 def test_existing_union_semantic_homes_resolve_exact_live_symbols_and_types() -> None:
