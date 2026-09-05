@@ -3212,6 +3212,7 @@ def test_g4_scans_findings_for_every_applicable_axis_on_every_row() -> None:
 
 def test_ordered_post_g3_hold_lift_preserves_accepted_history_and_allows_g4() -> None:
     matrix = _matrix_with_authorized_hold_lift(_matrix())
+    anchor, acceptance_subjects = _acceptance_record_anchor(matrix)
 
     individual_g0 = _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE)
     individual_g4 = _evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY)
@@ -3219,6 +3220,8 @@ def test_ordered_post_g3_hold_lift_preserves_accepted_history_and_allows_g4() ->
         matrix,
         observed_census=_report(),
         observed_subjects=(_SUBJECT,),
+        acceptance_record_anchor=anchor,
+        observed_acceptance_subjects=acceptance_subjects,
     )
 
     assert not individual_g0.closed
@@ -3259,6 +3262,108 @@ def test_g4_refuses_forged_or_wrong_order_gate_closure_receipts(mutation: str) -
     assert assessment.blockers[0].startswith("matrix validation failed at ")
 
 
+def test_g4_requires_an_external_acceptance_record_for_an_accepted_g3_receipt() -> None:
+    matrix = _matrix_with_authorized_hold_lift(_matrix())
+
+    assessment = evaluate_ledger_capability_gate(
+        matrix,
+        LedgerGate.G4_TUI_ADMISSION_AND_PARITY,
+        observed_census=_report(),
+        observed_subjects=(_SUBJECT,),
+    )
+
+    assert not assessment.closed
+    assert assessment.blockers == ("accepted G3 closure requires a current external acceptance record anchor",)
+
+
+def test_receipt_identity_is_a_gate_derived_constant_even_after_full_internal_remint() -> None:
+    matrix = _matrix_with_authorized_hold_lift(_matrix())
+    anchor, acceptance_subjects = _acceptance_record_anchor(matrix)
+    reminted_id = "receipt.ledger.reminted"
+    identities = tuple(
+        (reminted_id if receipt.gate is LedgerGate.G3_CLI_CLEAN_BREAK_AND_COMPLETENESS else receipt.receipt_id, receipt.gate)
+        for receipt in matrix.accepted_gate_closure_receipts
+    )
+    attestation = matrix.acceptance_attestation.model_copy(
+        update={
+            "closure_receipt_set_digest": LedgerCapabilityMatrixV1.calculate_gate_closure_receipt_set_digest(identities)
+        }
+    )
+    provisional = matrix.model_copy(update={"acceptance_attestation": attestation})
+    receipts = tuple(
+        LedgerGateClosureReceiptV1.model_construct(
+            receipt_id=reminted_id if receipt.gate is LedgerGate.G3_CLI_CLEAN_BREAK_AND_COMPLETENESS else receipt.receipt_id,
+            gate=receipt.gate,
+            matrix_closure_basis_digest=provisional.gate_closure_basis_digest(receipt.gate),
+            acceptance_attestation_digest=attestation.calculated_digest,
+        )
+        for receipt in provisional.accepted_gate_closure_receipts
+    )
+    fully_reminted = provisional.model_copy(update={"accepted_gate_closure_receipts": receipts})
+    fully_reminted = fully_reminted.model_copy(update={"matrix_digest": fully_reminted.calculated_matrix_digest})
+
+    assessment = _evaluate(
+        fully_reminted,
+        LedgerGate.G4_TUI_ADMISSION_AND_PARITY,
+        acceptance_anchor=anchor,
+        acceptance_subjects=acceptance_subjects,
+    )
+
+    assert not assessment.closed
+    assert assessment.blockers == ("matrix validation failed at accepted_gate_closure_receipts.3: value_error",)
+
+
+def test_g4_refuses_a_fully_recomputed_attestation_time_remint_against_the_external_anchor() -> None:
+    matrix = _matrix_with_authorized_hold_lift(_matrix())
+    anchor, acceptance_subjects = _acceptance_record_anchor(matrix)
+    attestation = matrix.acceptance_attestation.model_copy(update={"attested_at": _LATER_OBSERVED_AT})
+    provisional = _matrix_with(matrix, acceptance_attestation=attestation, bind_attestation=False)
+    receipts = _accepted_gate_receipts(provisional)
+    reminted = _matrix_with(provisional, accepted_gate_closure_receipts=receipts, bind_attestation=False)
+
+    assert LedgerCapabilityMatrixV1.model_validate(reminted.model_dump(mode="python")) == reminted
+    assessment = _evaluate(
+        reminted,
+        LedgerGate.G4_TUI_ADMISSION_AND_PARITY,
+        acceptance_anchor=anchor,
+        acceptance_subjects=acceptance_subjects,
+    )
+
+    assert not assessment.closed
+    assert assessment.blockers == ("acceptance record anchor does not bind the current acceptance attestation",)
+
+
+@pytest.mark.parametrize("mutation", ["missing", "stale_subject", "rebound_anchor", "wrong_coordinate"])
+def test_g4_refuses_missing_stale_or_rebound_external_acceptance_authority(mutation: str) -> None:
+    matrix = _matrix_with_authorized_hold_lift(_matrix())
+    anchor, acceptance_subjects = _acceptance_record_anchor(matrix)
+    if mutation == "missing":
+        selected_anchor = None
+        selected_subjects: tuple[EvidenceSubjectSnapshotV1, ...] = ()
+    elif mutation == "stale_subject":
+        selected_anchor = anchor
+        selected_subjects = (acceptance_subjects[0].model_copy(update={"revision": "acceptance-record-rev-2"}),)
+    elif mutation == "rebound_anchor":
+        selected_anchor, _ = _acceptance_record_anchor(matrix, reviewer="fabricated-reviewer")
+        selected_subjects = acceptance_subjects
+    else:
+        selected_anchor = anchor.model_copy(update={"coordinate": anchor.coordinate.model_copy(update={"locator": "reference://wrong"})})
+        selected_subjects = acceptance_subjects
+
+    assessment = evaluate_ledger_capability_gate(
+        matrix,
+        LedgerGate.G4_TUI_ADMISSION_AND_PARITY,
+        observed_census=_report(),
+        observed_subjects=(_SUBJECT,),
+        acceptance_record_anchor=selected_anchor,
+        observed_acceptance_subjects=selected_subjects,
+    )
+
+    assert not assessment.closed
+    assert assessment.blockers
+    assert "acceptance record anchor" in assessment.blockers[0] or "external acceptance" in assessment.blockers[0]
+
+
 def test_receipt_serialization_and_matrix_digest_mutations_fail_closed() -> None:
     base = _matrix()
     frozen = _matrix_with_accepted_gate_receipts(base)
@@ -3272,7 +3377,7 @@ def test_receipt_serialization_and_matrix_digest_mutations_fail_closed() -> None
     assert frozen.matrix_digest != base.matrix_digest
     assert lifted.matrix_digest != frozen.matrix_digest
     assert not assessment.closed
-    assert assessment.blockers == ("matrix validation failed at <root>: value_error",)
+    assert assessment.blockers == ("matrix validation failed at accepted_gate_closure_receipts.3: value_error",)
 
 
 def test_g4_refuses_receipts_when_the_bound_acceptance_attestation_is_not_accepting() -> None:
@@ -3342,7 +3447,7 @@ def test_receipt_identity_change_cannot_be_reminted_by_recomputing_attestation()
     assessment = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY)
 
     assert not assessment.closed
-    assert assessment.blockers == ("matrix validation failed at <root>: value_error",)
+    assert assessment.blockers == ("matrix validation failed at accepted_gate_closure_receipts.3: value_error",)
 
 
 def test_matrix_drift_invalidates_receipt_and_relocks_ordered_gates() -> None:
