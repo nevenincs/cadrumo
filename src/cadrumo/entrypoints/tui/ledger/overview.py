@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import cast, override
 
 from textual.app import ComposeResult
-from textual.widgets import DataTable, Input, Static
+from textual.widgets import DataTable, Static
 
 from ....application.ledger.workspace import LedgerWorkspaceArea
 from ..components.widgets import ContentDataTable, ContentScroll
@@ -17,7 +17,6 @@ from .controller import (
     ledger_copy,
     status_label,
 )
-from .import_preparation import LedgerImportPathRefusedError, prepare_ledger_import
 
 
 class LedgerOverviewScreen(LedgerWorkspaceScreen):
@@ -39,50 +38,7 @@ class LedgerOverviewScreen(LedgerWorkspaceScreen):
             yield ContentDataTable[str](id="ledger-navigation", cursor_type="row", zebra_stripes=True)
             yield Static(ledger_copy("tui.ledger.overview.quality"), classes="cadrumo-heading", markup=False)
             yield ContentDataTable[str](id="ledger-quality", cursor_type="row", zebra_stripes=True)
-            # The path entry lives HERE, not on the import screen: that screen
-            # refuses without a prepared import, so an entry inside it could
-            # never be reached. Preparing one from the overview is what makes
-            # the destination admissible, mirroring how selecting an entry
-            # admits classification.
-            yield Static(
-                ledger_copy("tui.ledger.overview.prepare_import"),
-                classes="cadrumo-heading",
-                markup=False,
-            )
-            yield Input(
-                placeholder=ledger_copy("tui.ledger.overview.import_path_placeholder"),
-                id="ledger-import-path",
-            )
-            yield Static(id="ledger-import-status", classes="ledger-empty", markup=False)
             yield Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
-
-    def on_input_submitted(self, event: Input.Submitted) -> None:
-        """Prepare an import from the entered path, or say why it was refused.
-
-        The status line carries the outcome in words rather than leaving the
-        operator to infer it from whether the navigation table changed. A
-        refusal names the condition -- blank, absent, not a file, unreadable --
-        and never the path, which is the same rule the producer follows so a
-        message cannot leak what the sealed command hides.
-        """
-        if event.input.id != "ledger-import-path":
-            return
-        status = self.query_one("#ledger-import-status", Static)
-        try:
-            prepared = prepare_ledger_import(
-                event.value,
-                bucket_id=self.controller.projection.bucket_id,
-                choice_id=f"prepared.{len(self.controller.prepared_imports) + 1}",
-            )
-            self.controller.accept_prepared_import(prepared)
-        except (LedgerImportPathRefusedError, ValueError):
-            status.update(ledger_copy("tui.ledger.overview.import_refused"))
-            return
-        event.input.value = ""
-        status.update(ledger_copy("tui.ledger.overview.import_prepared"))
-        table = cast("DataTable[str]", self.query_one("#ledger-navigation", DataTable))
-        table.clear(columns=True)
-        self.populate_navigation()
 
     def on_mount(self) -> None:
         """Populate the complete navigation and quality-first summary."""

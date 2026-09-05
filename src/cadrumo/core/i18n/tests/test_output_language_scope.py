@@ -50,11 +50,10 @@ def test_a_mid_block_switch_wins_over_an_installed_settings_override() -> None:
     inside the block rather than at its edge, so it cannot be expressed as a
     scope and has no Token to reset.
     """
-    with override_settings(cadrumo_output_language=OutputLanguage.ES):
-        with output_language_scope(OutputLanguage.EN):
-            assert output_language() == "en"
-            activate_output_language(OutputLanguage.ES)
-            assert output_language() == "es"
+    with override_settings(cadrumo_output_language=OutputLanguage.ES), output_language_scope(OutputLanguage.EN):
+        assert output_language() == "en"
+        activate_output_language(OutputLanguage.ES)
+        assert output_language() == "es"
 
 
 def test_the_override_gets_its_own_language_back_when_the_scope_exits() -> None:

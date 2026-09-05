@@ -746,6 +746,7 @@ def test_an_unobserved_census_value_is_not_an_empty_field() -> None:
     assert blank.aeat_value == ""
     assert blank.aeat_value is not None
 
+
 def test_a_two_sided_discrepancy_must_carry_the_values_it_compares() -> None:
     """Only the kinds that assert BOTH sides differ are required to show both.
 

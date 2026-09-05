@@ -5,16 +5,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ...application.ledger.models import (
-        LedgerSourceImportCommand,
-        LedgerSourceImportResult,
-        ManualLedgerTransactionResult,
-    )
+    from ...application.ledger.models import ManualLedgerTransactionResult
     from ...core.period import Period
     from .ledger.models import (
         LedgerClassificationSubmissionV1,
         LedgerClassificationSubmitterV1,
-        LedgerImportSubmitterV1,
     )
 
 import asyncio
@@ -183,22 +178,6 @@ def _ledger_classification_submitter(profile_id: str) -> LedgerClassificationSub
             actor="operator",
             source_command=str(submission.action.action_id),
         )
-
-    return submit
-
-
-def _ledger_import_submitter() -> LedgerImportSubmitterV1:
-    """Run one already-resolved import command through the application service.
-
-    The command arrives sealed from the prepared import, so this door never
-    sees a path the presentation layer chose -- it forwards what the operator
-    prepared and the application validated.
-    """
-
-    async def submit(command: LedgerSourceImportCommand) -> LedgerSourceImportResult:
-        from ...application.ledger.actions_import import import_ledger_source
-
-        return import_ledger_source(command)
 
     return submit
 
@@ -532,7 +511,6 @@ def _ledger_generation_factory(
             evidence_items=list_attachment_review_queue(AttachmentStore(bucket_id=dependencies.account.profile_id)),
             classify_action=dependencies.ledger_classify_action,
             classification_submitter=_ledger_classification_submitter(dependencies.account.profile_id),
-            import_submitter=_ledger_import_submitter(),
         )(context)
 
     return create

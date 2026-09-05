@@ -274,7 +274,6 @@ def _overview_row(
     )
 
 
-
 _CENSUS_FIELD_CATEGORIES: Final[dict[str, AeatSyncCensusCategory]] = {
     "contact.fiscal_address": AeatSyncCensusCategory.ADDRESS,
     "contact.postcode": AeatSyncCensusCategory.ADDRESS,

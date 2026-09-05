@@ -282,15 +282,6 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             action_id="operator.ledger.classify",
             target_command_key="ledger.classify",
         ),
-        # The import verb the TUI's prepared-import flow submits through. It
-        # takes no arguments here: the source path rides inside the sealed
-        # command the operator prepared, never as a catalogue argument, so a
-        # filesystem path cannot reach an action record or anything that
-        # renders one.
-        ActionCatalogueEntry(
-            action_id="operator.ledger.import",
-            target_command_key="ledger.import",
-        ),
         ActionCatalogueEntry(
             action_id="operator.ledger.review",
             target_command_key="ledger.review",

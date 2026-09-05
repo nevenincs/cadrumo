@@ -11,7 +11,7 @@ from typing import cast, override
 
 import pytest
 from textual.containers import VerticalScroll
-from textual.widgets import DataTable, Input, Static
+from textual.widgets import DataTable, Static
 
 from .....application.ledger.models import (
     LedgerSourceImportCommand,
@@ -28,11 +28,10 @@ from .....domain.transactions.enums import BusinessClassification
 from ....tui.components.host import ScreenHostApp
 from ....tui.devtools.frame import geometry_band
 from ..classification import LedgerClassificationScreen
-from ..controller import LedgerEntrySelected, LedgerWorkspaceController, ledger_copy
+from ..controller import LedgerEntrySelected, LedgerWorkspaceController
 from ..entries import LedgerEntriesScreen
 from ..import_flow import LedgerImportScreen
 from ..models import LedgerClassificationSubmissionV1, LedgerFlowState, LedgerPreparedImportV1
-from ..overview import LedgerOverviewScreen
 from ..routes import ledger_screen_factory, resolve_ledger_screen
 from ..workspace_injection import LedgerWorkspaceInjection
 from .test_ledger_workspace import _context, _projection, _review_action
@@ -548,77 +547,3 @@ def test_a_classification_target_outside_the_visible_projection_is_refused() -> 
         controller.select_classification_target("f" * 64)
 
 
-@pytest.mark.asyncio
-async def test_preparing_an_import_from_a_path_makes_the_import_area_reachable(tmp_path: Path) -> None:
-    """The import area is entered WITH a prepared command, and nothing made one.
-
-    `LedgerPreparedImportV1` was constructed only in tests, so in a live
-    session the area was permanently refused while the navigation table listed
-    it as a destination. The entry lives on the OVERVIEW screen because the
-    import screen itself refuses without a prepared import -- an entry inside
-    it could never be reached.
-
-    The refusal is asserted before and its absence after: a screen that always
-    admits import passes the second, one that never does passes the first.
-    """
-    source = tmp_path / "statement.csv"
-    source.write_text("date,amount\n2026-01-01,10.00\n", encoding="utf-8")
-
-    async def submitter(command: object) -> object:
-        del command
-        raise AssertionError("this test prepares an import; it does not submit one")
-
-    controller = LedgerWorkspaceController(
-        _context(),
-        _projection(),
-        LedgerWorkspaceInjection(review_action=_review_action(), import_submitter=submitter),
-    )
-    screen = LedgerOverviewScreen(controller)
-    app = ScreenHostApp[None](screen)
-    async with app.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
-        assert controller.refusal_for(LedgerWorkspaceArea.IMPORT) is not None, (
-            "import was already reachable, so this cannot show a preparation changed anything"
-        )
-
-        entry = screen.query_one("#ledger-import-path", Input)
-        entry.value = str(source)
-        await entry.action_submit()
-        await pilot.pause()
-
-        assert controller.refusal_for(LedgerWorkspaceArea.IMPORT) is None, (
-            "the operator prepared an import and the area is still refused"
-        )
-        status = str(screen.query_one("#ledger-import-status", Static).render())
-        assert status == ledger_copy("tui.ledger.overview.import_prepared")
-        app.exit(None)
-
-
-@pytest.mark.asyncio
-async def test_an_unusable_import_path_is_refused_without_naming_it(tmp_path: Path) -> None:
-    """A refusal must not print the path the operator typed.
-
-    The whole point of sealing the command is that a filesystem path never
-    reaches a rendered frame; a status line that echoes it back would undo
-    that at the first mistake, which is exactly when an operator is most
-    likely to be sharing their screen or a screenshot.
-    """
-    controller = LedgerWorkspaceController(
-        _context(), _projection(), LedgerWorkspaceInjection(review_action=_review_action())
-    )
-    screen = LedgerOverviewScreen(controller)
-    app = ScreenHostApp[None](screen)
-    async with app.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
-        missing = tmp_path / "absent.csv"
-        entry = screen.query_one("#ledger-import-path", Input)
-        entry.value = str(missing)
-        await entry.action_submit()
-        await pilot.pause()
-
-        status = str(screen.query_one("#ledger-import-status", Static).render())
-        assert status == ledger_copy("tui.ledger.overview.import_refused")
-        assert str(missing) not in status
-        assert str(tmp_path) not in status
-        assert controller.refusal_for(LedgerWorkspaceArea.IMPORT) is not None
-        app.exit(None)

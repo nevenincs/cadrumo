@@ -1052,6 +1052,7 @@ async def test_completing_one_overview_operation_keeps_the_other_action_reachabl
         "operator.live.filed.pull_all",
     )
 
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize("width", [80, 100, 120, 200])
 async def test_the_census_comparison_shows_both_values_or_neither(width: int) -> None:
@@ -1085,6 +1086,7 @@ async def test_the_census_comparison_shows_both_values_or_neither(width: int) ->
     assert ("local_value" in keys) == ("aeat_value" in keys), (
         f"at {width} columns the census shows half a comparison: {sorted(keys)}"
     )
+
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("width", [80, 100, 120, 200])

@@ -13,13 +13,13 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from ...operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
 from ...operations.registry import OperationPublicContractSetV1
-from ...user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
+from ...operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
 from ...user_profile.censal_operation import (
     CENSAL_OPERATION_DEFINITION,
     build_censal_operation_registration,
 )
+from ...user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
 from ..workspace import (
     AeatSyncCensusCategory,
     AeatSyncCensusStatus,
@@ -78,9 +78,7 @@ def _pre_pull_zone_observations() -> tuple[AeatSyncWorkspaceZoneObservationV1, .
     about what may be published pre-pull cannot drift from what pre-pull means.
     """
     projection = _projection(censo_values={})
-    return tuple(
-        AeatSyncWorkspaceZoneObservationV1(zone=zone.zone, sources=zone.sources) for zone in projection.zones
-    )
+    return tuple(AeatSyncWorkspaceZoneObservationV1(zone=zone.zone, sources=zone.sources) for zone in projection.zones)
 
 
 def _overview_row(projection, area: AeatSyncOverviewArea):
