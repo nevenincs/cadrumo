@@ -42,6 +42,7 @@ if TYPE_CHECKING:
     from ...application.user_profile.overview import ProfileOverview
     from ...core.credentials import ProfilePasswordAssessment
     from ...core.external_constants import OutputLanguage
+    from ...core.period import Period
     from ...domain.modelos.work_unit import WorkUnit
     from .account import AccountFactoriesV1
     from .navigation import (
