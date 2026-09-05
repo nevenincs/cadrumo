@@ -1274,6 +1274,282 @@ class CanonicalSemanticHomeV1(BaseModel):
         return self
 
 
+class LedgerAxisApplicabilityDecisionV1(BaseModel):
+    """One explicit S08 applicability decision, pending S12 evidence review."""
+
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+
+    axis: LedgerCapabilityAxis
+    applicability: ApplicabilityState
+    rationale: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _check_decision(self) -> LedgerAxisApplicabilityDecisionV1:
+        _require_non_placeholder(self.rationale, field_name="rationale")
+        return self
+
+
+class LedgerUnionSourceObservationV1(BaseModel):
+    """One raw census observation and the semantic rows it selects."""
+
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+
+    source: DenominatorSourceKind
+    observation_id: str = Field(min_length=1)
+    capability_ids: tuple[str, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _check_observation(self) -> LedgerUnionSourceObservationV1:
+        _require_non_placeholder(self.observation_id, field_name="observation_id")
+        if len(set(self.capability_ids)) != len(self.capability_ids):
+            raise ValueError("a union source observation cannot select the same capability twice")
+        for capability_id in self.capability_ids:
+            _require_identity(capability_id, field_name="capability_id", pattern=_CAPABILITY_ID_PATTERN)
+        return self
+
+
+class LedgerUnionCapabilityRowV1(BaseModel):
+    """One S08-adjudicated semantic row selected by one or more raw observations."""
+
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+
+    capability_id: str = Field(min_length=1)
+    sources: frozenset[DenominatorSourceKind] = Field(min_length=1)
+    source_observation_ids: tuple[str, ...] = Field(min_length=1)
+    semantic_home: CanonicalSemanticHomeV1
+    semantic_home_status: SemanticHomeStatus
+    effect: LedgerCapabilityEffect
+    applicability: tuple[LedgerAxisApplicabilityDecisionV1, ...]
+    gap_classes: frozenset[LedgerGapClass] = Field(min_length=1)
+    proof_requirements: tuple[str, ...] = Field(min_length=1)
+    blockers: tuple[str, ...] = Field(min_length=1)
+    next_action: str = Field(min_length=1)
+    tui_routes: tuple[str, ...] = ()
+
+    @model_validator(mode="after")
+    def _check_row(self) -> LedgerUnionCapabilityRowV1:
+        _require_identity(self.capability_id, field_name="capability_id", pattern=_CAPABILITY_ID_PATTERN)
+        if tuple(sorted(set(self.source_observation_ids))) != self.source_observation_ids:
+            raise ValueError("union row source observation identities must be sorted and unique")
+        axes = tuple(decision.axis for decision in self.applicability)
+        if len(set(axes)) != len(axes) or frozenset(axes) != _ALL_AXES:
+            raise ValueError("a union row must decide applicability for every axis exactly once")
+        if tuple(sorted(self.applicability, key=lambda item: item.axis.value)) != self.applicability:
+            raise ValueError("union row applicability decisions must use canonical axis order")
+        for value in (*self.proof_requirements, *self.blockers, self.next_action, *self.tui_routes):
+            _require_non_placeholder(value, field_name="union row text")
+        if tuple(sorted(set(self.tui_routes))) != self.tui_routes:
+            raise ValueError("union row TUI routes must be sorted and unique")
+        return self
+
+
+class LedgerUnionSourceDigestV1(BaseModel):
+    """One source stream digest bound into the S08 union."""
+
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+
+    source: DenominatorSourceKind
+    observation_count: int = Field(ge=1)
+    digest: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _check_digest(self) -> LedgerUnionSourceDigestV1:
+        _require_digest(self.digest, field_name="digest")
+        return self
+
+
+class LedgerUnionDenominatorV1(BaseModel):
+    """Reproducible S08 union with every raw observation and semantic decision."""
+
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+
+    root: Literal["cadrumo.ledger_union_denominator"]
+    schema_version: Literal[1]
+    source_digests: tuple[LedgerUnionSourceDigestV1, ...]
+    observations: tuple[LedgerUnionSourceObservationV1, ...]
+    rows: tuple[LedgerUnionCapabilityRowV1, ...]
+    digest: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _check_union(self) -> LedgerUnionDenominatorV1:
+        sources = tuple(item.source for item in self.source_digests)
+        if len(set(sources)) != len(sources) or frozenset(sources) != frozenset(DenominatorSourceKind):
+            raise ValueError("the union must bind every mandatory source digest exactly once")
+        if tuple(sorted(self.source_digests, key=lambda item: item.source.value)) != self.source_digests:
+            raise ValueError("union source digests must use canonical source order")
+        observation_ids = tuple(item.observation_id for item in self.observations)
+        if len(set(observation_ids)) != len(observation_ids):
+            raise ValueError("union source observation identities must be unique")
+        if tuple(sorted(self.observations, key=lambda item: (item.source.value, item.observation_id))) != self.observations:
+            raise ValueError("union source observations must use canonical source order")
+        counts = {source: 0 for source in DenominatorSourceKind}
+        for observation in self.observations:
+            counts[observation.source] += 1
+        if any(item.observation_count != counts[item.source] for item in self.source_digests):
+            raise ValueError("union source observation counts do not match their digests")
+        row_ids = tuple(row.capability_id for row in self.rows)
+        if len(set(row_ids)) != len(row_ids) or tuple(sorted(row_ids)) != row_ids:
+            raise ValueError("union rows must have unique canonically sorted identities")
+        rows_by_id = {row.capability_id: row for row in self.rows}
+        selected: dict[str, set[DenominatorSourceKind]] = {}
+        selecting_observations: dict[str, set[str]] = {}
+        for observation in self.observations:
+            for capability_id in observation.capability_ids:
+                if capability_id not in rows_by_id:
+                    raise ValueError(f"union observation selects an unavailable row: {capability_id}")
+                selected.setdefault(capability_id, set()).add(observation.source)
+                selecting_observations.setdefault(capability_id, set()).add(observation.observation_id)
+        if set(selected) != set(rows_by_id):
+            raise ValueError("every union row must be selected by a raw census observation")
+        for capability_id, row in rows_by_id.items():
+            if row.sources != frozenset(selected[capability_id]):
+                raise ValueError(f"union row sources drifted from observations: {capability_id}")
+            if row.source_observation_ids != tuple(sorted(selecting_observations[capability_id])):
+                raise ValueError(f"union row observations drifted from census: {capability_id}")
+        _require_digest(self.digest, field_name="digest")
+        if self.digest != self.calculated_digest:
+            raise ValueError("union denominator digest does not match its adjudicated content")
+        return self
+
+    @property
+    def calculated_digest(self) -> str:
+        """Return the canonical digest excluding the self-referential digest field."""
+        return _canonical_digest(self.model_dump(mode="python", exclude={"digest"}))
+
+
+@dataclass(frozen=True, slots=True)
+class _BackendOperationDeclaration:
+    capability_id: str
+    owner: str
+    command_type: str
+    result_type: str
+    status: SemanticHomeStatus
+
+
+def _backend(
+    capability_id: str,
+    owner: str,
+    command_type: str,
+    result_type: str,
+    *,
+    existing_command: bool = False,
+) -> _BackendOperationDeclaration:
+    return _BackendOperationDeclaration(
+        capability_id,
+        owner,
+        command_type,
+        result_type,
+        SemanticHomeStatus.EXISTING if existing_command else SemanticHomeStatus.PLANNED,
+    )
+
+
+# S05's 63-operation census, retained as typed-home decisions rather than a
+# second implementation registry. ``planned`` means the callable exists but
+# still accepts loose parameters; the named immutable request is the G1 home.
+_LEDGER_BACKEND_OPERATION_DECLARATIONS: Final[tuple[_BackendOperationDeclaration, ...]] = (
+    _backend("ledger.classification.bulk_csv", "cadrumo.application.ledger.actions_classification:bulk_classify_from_csv", "LedgerBulkClassificationCommand", "BulkClassifyResult"),
+    _backend("ledger.classification.rule_add", "cadrumo.application.ledger.actions_classification:add_classification_rule", "LedgerRuleAddCommand", "LedgerClassificationRule"),
+    _backend("ledger.classification.rule_apply", "cadrumo.application.ledger.actions_classification:apply_classification_rules", "LedgerRuleApplyCommand", "ApplyRulesResult"),
+    _backend("ledger.export.flat", "cadrumo.application.ledger.actions_export:export_ledger_transactions", "LedgerExportCommand", "LedgerExportResult", existing_command=True),
+    _backend("ledger.import.parsed_rows", "cadrumo.application.ledger.actions_import:import_ledger_transactions", "LedgerParsedRowsImportCommand", "LedgerImportOperationResult"),
+    _backend("ledger.import.source", "cadrumo.application.ledger.actions_import:import_ledger_source", "LedgerSourceImportCommand", "LedgerSourceImportResult", existing_command=True),
+    _backend("ledger.import.aggregate_results", "cadrumo.application.ledger.actions_import:aggregate_ledger_import_results", "LedgerImportAggregationQuery", "LedgerImportOperationResult"),
+    _backend("ledger.lifecycle.archive", "cadrumo.application.ledger.actions_lifecycle:archive_manual_transaction", "LedgerArchiveCommand", "ManualLedgerTransactionResult"),
+    _backend("ledger.lifecycle.stash", "cadrumo.application.ledger.actions_lifecycle:stash_manual_transaction", "LedgerStashCommand", "ManualLedgerTransactionResult"),
+    _backend("ledger.lifecycle.restore", "cadrumo.application.ledger.actions_lifecycle:restore_manual_transaction", "LedgerRestoreCommand", "ManualLedgerTransactionResult"),
+    _backend("ledger.lifecycle.reviewed_exclude", "cadrumo.application.ledger.actions_lifecycle:mark_transaction_reviewed_excluded", "LedgerReviewedExcludeCommand", "ManualLedgerTransactionResult"),
+    _backend("ledger.lifecycle.remove", "cadrumo.application.ledger.actions_lifecycle:remove_manual_transaction", "LedgerRemoveCommand", "LedgerTransactionRemovalReport"),
+    _backend("ledger.lifecycle.reset", "cadrumo.application.ledger.actions_lifecycle:reset_ledger_catalogue", "LedgerResetCommand", "LedgerCatalogueResetReport"),
+    _backend("ledger.transaction.create", "cadrumo.application.ledger.actions_manual:create_manual_transaction", "ManualLedgerTransactionCommand", "ManualLedgerTransactionResult", existing_command=True),
+    _backend("ledger.transaction.attach", "cadrumo.application.ledger.actions_manual:attach_manual_transaction_evidence", "LedgerEvidenceAttachCommand", "ManualLedgerTransactionResult"),
+    _backend("ledger.transaction.detach", "cadrumo.application.ledger.actions_manual:detach_manual_transaction_attachments", "LedgerEvidenceDetachCommand", "ManualLedgerTransactionResult"),
+    _backend("ledger.transaction.invoice_link", "cadrumo.application.ledger.actions_manual:link_manual_transaction_invoice", "LedgerInvoiceLinkCommand", "InvoiceTransactionLinkResult"),
+    _backend("ledger.transaction.get", "cadrumo.application.ledger.actions_manual:get_manual_transaction", "LedgerTransactionQuery", "Transaction"),
+    _backend("ledger.transaction.list", "cadrumo.application.ledger.actions_manual:list_manual_transactions", "LedgerTransactionListQuery", "tuple[Transaction, ...]"),
+    _backend("ledger.transaction.review_query", "cadrumo.application.ledger.actions_manual:query_ledger_review_rows", "LedgerReviewQuery", "LedgerReviewQueryResult", existing_command=True),
+    _backend("ledger.transaction.status_summary", "cadrumo.application.ledger.actions_manual:summarize_manual_transactions", "LedgerStatusQuery", "LedgerStatusReport"),
+    _backend("ledger.transaction.update", "cadrumo.application.ledger.actions_manual:update_manual_transaction", "ManualLedgerTransactionCommand", "ManualLedgerTransactionResult", existing_command=True),
+    _backend("ledger.transaction.update_fields", "cadrumo.application.ledger.actions_manual:update_manual_transaction_fields", "ManualLedgerTransactionPatch", "ManualLedgerTransactionResult", existing_command=True),
+    _backend("ledger.transaction.split", "cadrumo.application.ledger.actions_split_merge:split_transaction", "LedgerSplitCommand", "SplitTransactionResult"),
+    _backend("ledger.transaction.split_classified", "cadrumo.application.ledger.actions_split_merge:split_transaction_with_classified_children", "LedgerClassifiedSplitCommand", "SplitTransactionResult"),
+    _backend("ledger.transaction.merge", "cadrumo.application.ledger.actions_split_merge:merge_transactions", "LedgerMergeCommand", "MergeTransactionsResult"),
+    _backend("ledger.evidence.attachment_view", "cadrumo.application.ledger.attachment_review:get_attachment_review_item", "LedgerAttachmentViewQuery", "AttachmentReviewItem"),
+    _backend("ledger.evidence.attachment_queue", "cadrumo.application.ledger.attachment_review:list_attachment_review_queue", "LedgerAttachmentQueueQuery", "tuple[AttachmentReviewItem, ...]"),
+    _backend("ledger.evidence.add", "cadrumo.application.ledger.evidence:PurchaseInvoiceEvidenceService.add", "LedgerPurchaseEvidenceAddCommand", "PurchaseInvoiceEvidenceResult"),
+    _backend("ledger.evidence.view", "cadrumo.application.ledger.evidence:PurchaseInvoiceEvidenceService.view", "LedgerPurchaseEvidenceViewQuery", "PurchaseInvoiceEvidence"),
+    _backend("ledger.evidence.list", "cadrumo.application.ledger.evidence:PurchaseInvoiceEvidenceService.list_all", "LedgerPurchaseEvidenceListQuery", "tuple[PurchaseInvoiceEvidence, ...]"),
+    _backend("ledger.evidence.update", "cadrumo.application.ledger.evidence:PurchaseInvoiceEvidenceService.update", "LedgerPurchaseEvidenceUpdateCommand", "PurchaseInvoiceEvidenceResult"),
+    _backend("ledger.evidence.remove", "cadrumo.application.ledger.evidence:PurchaseInvoiceEvidenceService.remove", "LedgerPurchaseEvidenceRemoveCommand", "PurchaseInvoiceEvidenceResult"),
+    _backend("ledger.evidence.batch", "cadrumo.application.ledger.batch_ingest:run_evidence_batch", "LedgerEvidenceBatchCommand", "BatchRunResult"),
+    _backend("ledger.evidence.consent_survey", "cadrumo.application.ledger.consent_withdrawal:survey_cloud_consent", "LedgerConsentSurveyQuery", "ConsentWithdrawalSurvey"),
+    _backend("ledger.evidence.consent_rederive", "cadrumo.application.ledger.consent_withdrawal:rederive_artefact_on_host", "LedgerConsentRederiveCommand", "LocalRederivation"),
+    _backend("ledger.counterparty.record", "cadrumo.application.ledger.counterparty_establishment:record_confirmed_counterparty_facts", "LedgerCounterpartyRecordCommand", "ConfirmedCounterpartyFacts"),
+    _backend("ledger.counterparty.forget", "cadrumo.application.ledger.counterparty_establishment:forget_confirmed_counterparty_facts", "LedgerCounterpartyForgetCommand", "bool"),
+    _backend("ledger.counterparty.resolve", "cadrumo.application.ledger.counterparty_establishment:resolve_confirmed_counterparty_facts", "LedgerCounterpartyQuery", "ConfirmedCounterpartyResolution"),
+    _backend("ledger.invoice.extract_draft", "cadrumo.application.ledger.invoice_draft_extraction:extract_invoice_draft_from_evidence", "LedgerInvoiceExtractCommand", "InvoiceDraft"),
+    _backend("ledger.invoice.confirm_draft", "cadrumo.application.ledger.invoice_confirmation:confirm_invoice_draft_from_evidence", "LedgerInvoiceConfirmCommand", "InvoiceConfirmationResult"),
+    _backend("ledger.llm.classify_with_evidence", "cadrumo.application.ledger.llm_classification:classify_with_evidence", "LedgerLlmEvidenceClassificationCommand", "LedgerClassificationSuggestion"),
+    _backend("ledger.llm.suggest", "cadrumo.application.ledger.llm_classification:suggest_llm_classification", "LedgerLlmSuggestCommand", "LedgerClassificationSuggestion"),
+    _backend("ledger.llm.apply", "cadrumo.application.ledger.llm_classification:apply_llm_classification", "LedgerLlmApplyCommand", "LedgerClassificationApplyResult"),
+    _backend("ledger.llm.saturate", "cadrumo.application.ledger.llm_classification:saturate_llm_classification", "LedgerLlmSaturateCommand", "LedgerSaturationSuggestion"),
+    _backend("ledger.llm.apply_saturated", "cadrumo.application.ledger.llm_classification:apply_saturated_llm_classification", "LedgerLlmSaturatedApplyCommand", "LedgerClassificationApplyResult"),
+    _backend("ledger.llm.iva_derive", "cadrumo.application.ledger.llm_classification:derive_operator_iva_substrate", "LedgerLlmIvaDeriveCommand", "LedgerIvaSuggestion"),
+    _backend("ledger.llm.suggest_split", "cadrumo.application.ledger.llm_classification:suggest_evidence_split", "LedgerLlmSplitSuggestCommand", "LedgerSplitSuggestion"),
+    _backend("ledger.llm.apply_split", "cadrumo.application.ledger.llm_classification:apply_evidence_split", "LedgerLlmSplitApplyCommand", "SplitTransactionResult"),
+    _backend("ledger.llm.apply_evidence_classification", "cadrumo.application.ledger.llm_classification:apply_evidence_classification", "LedgerLlmEvidenceApplyCommand", "LedgerClassificationApplyResult"),
+    _backend("ledger.llm.reject", "cadrumo.application.ledger.llm_classification:reject_llm_suggestion", "LedgerLlmRejectCommand", "LedgerSuggestionRejectionResult"),
+    _backend("ledger.llm.diagnostics", "cadrumo.application.ledger.llm_diagnostics:build_llm_diagnostics_report", "LedgerLlmDiagnosticsQuery", "LedgerLlmDiagnosticsReport"),
+    _backend("ledger.llm.review_decision", "cadrumo.application.ledger.llm_review_workflow:execute_reviewed_decision", "LlmReviewRequest", "LlmReviewResult", existing_command=True),
+    _backend("ledger.participation.get", "cadrumo.application.ledger.participation_read:get_transaction_participation", "LedgerParticipationQuery", "TransactionRevisionParticipationIndex"),
+    _backend("ledger.preflight.readiness", "cadrumo.application.ledger.preflight:preflight_ledger_tax_readiness", "LedgerPreflightQuery", "LedgerPreflightReport"),
+    _backend("ledger.preflight.catalogue", "cadrumo.application.ledger.preflight:preflight_transaction_catalogue", "LedgerCataloguePreflightQuery", "LedgerPreflightReport"),
+    _backend("ledger.ratio.list", "cadrumo.application.ledger.ratios:list_eligible_ratios_for_bucket", "LedgerRatioListQuery", "tuple[UsageRatio, ...]"),
+    _backend("ledger.ratio.validate", "cadrumo.application.ledger.ratios:validate_ratios_for_bucket", "LedgerRatioValidationQuery", "RatiosValidationReport"),
+    _backend("ledger.ratio.set", "cadrumo.application.ledger.ratios:set_usage_ratio", "LedgerRatioSetCommand", "Decimal | None"),
+    _backend("ledger.ratio.unset", "cadrumo.application.ledger.ratios:unset_usage_ratio", "LedgerRatioUnsetCommand", "Decimal | None"),
+    _backend("ledger.workspace.affected_declarations", "cadrumo.application.ledger.workspace:project_affected_declaration_reconciliations", "LedgerAffectedDeclarationsQuery", "tuple[LedgerAffectedDeclarationRefV1, ...]"),
+    _backend("ledger.workspace.project", "cadrumo.application.ledger.workspace:project_ledger_workspace", "LedgerWorkspaceProjectionQuery", "LedgerWorkspaceProjectionV1"),
+    _backend("ledger.workspace.read", "cadrumo.application.ledger.workspace_reader:read_ledger_workspace_projection", "LedgerWorkspaceReadQuery", "LedgerWorkspaceProjectionV1"),
+)
+
+
+_LEDGER_MISSING_PRODUCT_DECLARATIONS: Final[tuple[_BackendOperationDeclaration, ...]] = (
+    _backend("ledger.export.review_package", "cadrumo.application.ledger.review_exchange", "LedgerReviewExchangePlanCommand", "LedgerReviewExchangeResult"),
+    _backend("ledger.export.google_transport", "cadrumo.application.ledger.review_exchange", "LedgerGoogleReviewExchangeCommand", "LedgerGoogleReviewExchangeResult"),
+    _backend("ledger.export.restore_archive", "cadrumo.application.ledger.recovery_archive", "LedgerRecoveryArchiveCommand", "LedgerRecoveryArchiveResult"),
+    _backend("ledger.evidence.download", "cadrumo.application.ledger.evidence_lifecycle", "LedgerEvidenceDownloadQuery", "LedgerEvidenceDownloadResult"),
+    _backend("ledger.evidence.replace", "cadrumo.application.ledger.evidence_lifecycle", "LedgerEvidenceReplaceCommand", "LedgerEvidenceReplaceResult"),
+    _backend("ledger.note.append", "cadrumo.application.ledger.notes", "LedgerNoteAppendCommand", "LedgerNoteAppendResult"),
+    _backend("ledger.field_change.provenance", "cadrumo.domain.transactions.change_provenance", "LedgerFieldChangeQuery", "LedgerFieldChangeProvenance"),
+    _backend("ledger.manual_override.provenance", "cadrumo.domain.transactions.change_provenance", "LedgerManualOverrideQuery", "LedgerManualOverrideProvenance"),
+    _backend("ledger.import.normalization_provenance", "cadrumo.domain.transactions.change_provenance", "LedgerImportNormalizationQuery", "LedgerImportNormalizationProvenance"),
+    _backend("ledger.transaction.batch_patch", "cadrumo.application.ledger.change_sets", "LedgerBatchPatchCommand", "LedgerBatchPatchResult"),
+)
+
+
+_LEDGER_ARTIFACT_OBSERVATIONS: Final[tuple[tuple[str, str], ...]] = (
+    ("flat.csv", "ledger.export.csv"),
+    ("flat.jsonl", "ledger.export.jsonl"),
+    ("flat.xlsx", "ledger.export.xlsx"),
+    ("review.workbook_sidecar", "ledger.export.review_package"),
+    ("review.google", "ledger.export.google_transport"),
+    ("recovery.encrypted_archive", "ledger.export.restore_archive"),
+)
+
+
+_LEDGER_TUI_ROUTE_CAPABILITIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
+    {
+        "ledger.overview": ("ledger.workspace.read",),
+        "ledger.entries": ("ledger.transaction.list",),
+        "ledger.review": ("ledger.transaction.review_query",),
+        "ledger.import": ("ledger.import.source",),
+        "ledger.classification": ("ledger.classify.direct",),
+        "ledger.evidence": ("ledger.evidence.attachment_queue",),
+        "ledger.reconciliation": ("ledger.transaction.invoice_link",),
+    }
+)
+
+
 class EvidenceSubjectSnapshotV1(BaseModel):
     """A current, independently observed subject used to freshness-check evidence."""
 
