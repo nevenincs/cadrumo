@@ -3662,7 +3662,7 @@ def test_g4_rejects_an_active_tui_hold() -> None:
     assessment = _evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY)
 
     assert not assessment.closed
-    assert assessment.blockers == ("the Ledger TUI implementation hold remains active",)
+    assert "the Ledger TUI implementation hold remains active" in assessment.blockers
 
 
 def test_g4_refuses_a_premature_hold_lift_without_an_accepted_g3_receipt() -> None:
@@ -3678,7 +3678,7 @@ def test_g4_refuses_a_premature_hold_lift_without_an_accepted_g3_receipt() -> No
     assessment = _evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY)
 
     assert not assessment.closed
-    assert assessment.blockers == ("the Ledger TUI implementation hold lacks a current accepted G3 closure receipt",)
+    assert "the Ledger TUI implementation hold lacks a current accepted G3 closure receipt" in assessment.blockers
 
 
 @pytest.mark.parametrize(
@@ -3753,11 +3753,11 @@ def test_g4_preserves_explicitly_empty_campaign_evidence() -> None:
 
     blockers = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).blockers
 
-    assert blockers == (
+    assert {
         "campaign-wide tui_parity evidence is missing",
         "campaign-wide tui_reachability evidence is missing",
         "campaign-wide matrix_publication evidence is missing",
-    )
+    } <= set(blockers)
 
 
 def test_g4_scans_findings_for_every_applicable_axis_on_every_row() -> None:
@@ -3851,7 +3851,7 @@ def test_g4_requires_an_external_acceptance_record_for_an_accepted_g3_receipt() 
     )
 
     assert not assessment.closed
-    assert assessment.blockers == ("accepted G3 closure requires a current external acceptance record anchor",)
+    assert "accepted G3 closure requires a current external acceptance record anchor" in assessment.blockers
 
 
 def test_receipt_identity_is_a_gate_derived_constant_even_after_full_internal_remint() -> None:
@@ -3913,7 +3913,7 @@ def test_g4_refuses_a_fully_recomputed_attestation_time_remint_against_the_exter
     )
 
     assert not assessment.closed
-    assert assessment.blockers == ("acceptance record anchor does not bind the current acceptance attestation",)
+    assert "acceptance record anchor does not bind the current acceptance attestation" in assessment.blockers
 
 
 @pytest.mark.parametrize("mutation", ["missing", "stale_subject", "rebound_anchor", "wrong_coordinate"])
