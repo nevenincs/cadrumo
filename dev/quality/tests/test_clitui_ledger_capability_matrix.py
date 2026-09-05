@@ -104,9 +104,9 @@ _REGISTRY_ROUTE_DIGEST: Final[str] = "sha256:20b2d2df5558b2a3fdbd1eab6e9f781a973
 _REGISTRY_SOURCE_DIGEST: Final[str] = "sha256:194a9f26ddfbae6c5d7f265ffe58f50964fbe2fcd02a5670fa19845dead5cf6d"
 _TUI_CENSUS_DIGEST: Final[str] = "sha256:a52180bb77b70c205c7d31f657a64ad55142035b63dd9d5bf69b79503754c25f"
 _TUI_SOURCE_DIGEST: Final[str] = "sha256:70709a369bece8e06033e56e18bd82425ec9b48767c3466e80f92c901143ff67"
-_UNION_DIGEST: Final[str] = "sha256:64c66b465d8c5d13dfbd93b8b55e36c50b15a51a3063964c166b85fe54fbb3de"
-_ROW_REVIEW_DIGEST: Final[str] = "sha256:43b50491b84cb7e6bc3a69f4688aaa3550e602ce18ed47f0a31fff2f0b7dc871"
-_ROW_REVIEW_ATTESTATION_DIGEST: Final[str] = "sha256:73c3b5784e2af9d681ed80bd535272e532d798679fc2235f0081e6c692a3b90d"
+_UNION_DIGEST: Final[str] = "sha256:a8e2854f6fa822824618e428a56c0390343f77b7f0233bd165985f9d0edb9f65"
+_ROW_REVIEW_DIGEST: Final[str] = "sha256:3809546161a2164a50fa442ad5759b104092ccf231627d45f849e5b3023ccfb8"
+_ROW_REVIEW_ATTESTATION_DIGEST: Final[str] = "sha256:60fd297e03e1384d3eca3d56b568a21ea0f6b913cc8c2b7f15dc6aab7e2b0ce4"
 
 
 @cache
@@ -594,11 +594,135 @@ def test_union_row_review_preserves_registry_destination_and_tui_hold_cohorts() 
     assert sum(row.primary_gap_class is LedgerGapClass.AUTHORITY for row in union.rows) == 112
     assert sum(row.primary_gap_class is LedgerGapClass.REGISTRY for row in union.rows) == 546
     assert sum(row.primary_gap_class is LedgerGapClass.PRODUCT for row in union.rows) == 34
-    assert sum(row.primary_gap_class is LedgerGapClass.ARTIFACT for row in union.rows) == 0
-    assert sum(row.primary_gap_class is LedgerGapClass.COMPOSITION for row in union.rows) == 1
+    assert sum(row.primary_gap_class is LedgerGapClass.ARTIFACT for row in union.rows) == 1
+    assert sum(row.primary_gap_class is LedgerGapClass.COMPOSITION for row in union.rows) == 0
     assert sum(row.primary_gap_class is LedgerGapClass.PROOF for row in union.rows) == 0
     assert sum(row.tui_hold_until is LEDGER_TUI_HOLD_UNTIL_GATE for row in union.rows) == 680
     assert sum(row.tui_hold_until is None for row in union.rows) == 13
+
+
+def test_artifact_input_review_covers_the_exact_fifteen_file_and_directory_capabilities() -> None:
+    expected = frozenset(
+        {
+            "ledger.classification.bulk_csv",
+            "ledger.import",
+            "ledger.import.directory",
+            "ledger.import.dry_run",
+            "ledger.import.file",
+            "ledger.import.provider_auto",
+            "ledger.import.provider_csv",
+            "ledger.import.provider_n26",
+            "ledger.import.provider_ofx_qfx",
+            "ledger.import.provider_pdf",
+            "ledger.import.provider_pdf_n26",
+            "ledger.import.provider_xlsx_excel",
+            "ledger.import.source",
+            "ledger.import.verify",
+            "ledger.invoice.import",
+        }
+    )
+    rows = {row.capability_id: row for row in _union_denominator().rows}
+
+    assert matrix_module._EXPLICIT_ARTIFACT_INPUT_CAPABILITIES == expected
+    for capability_id in expected:
+        row = rows[capability_id]
+        artifact = next(item for item in row.applicability if item.axis is LedgerCapabilityAxis.ARTIFACT)
+        assert artifact.applicability is ApplicabilityState.APPLICABLE
+        assert artifact.proof is AxisProofState.UNPROVEN
+        assert "readability" in artifact.proof_requirement
+        assert LedgerGapClass.ARTIFACT in row.gap_classes
+        assert any("artifact input" in blocker for blocker in row.blockers)
+    assert rows["ledger.import.source"].primary_gap_class is LedgerGapClass.ARTIFACT
+
+
+@pytest.mark.parametrize("mutation", ["missing", "added_unknown"])
+def test_artifact_input_authority_refuses_exact_set_drift(mutation: str) -> None:
+    capabilities = set(matrix_module._EXPLICIT_ARTIFACT_INPUT_CAPABILITIES)
+    if mutation == "missing":
+        capabilities.remove("ledger.import.source")
+    else:
+        capabilities.add("ledger.import.future")
+
+    with pytest.raises(ValueError, match="artifact-input capability adjudication drifted"):
+        matrix_module._validate_artifact_input_capabilities(frozenset(capabilities))
+
+
+def test_serialized_union_refuses_suppressed_artifact_input_after_all_digests_are_refreshed() -> None:
+    union = _union_denominator()
+    rows = list(union.rows)
+    index = next(index for index, row in enumerate(rows) if row.capability_id == "ledger.import.source")
+    row = rows[index]
+    decisions = list(row.applicability)
+    artifact_index = next(index for index, item in enumerate(decisions) if item.axis is LedgerCapabilityAxis.ARTIFACT)
+    decisions[artifact_index] = decisions[artifact_index].model_copy(
+        update={
+            "applicability": ApplicabilityState.NOT_APPLICABLE,
+            "proof": AxisProofState.NOT_APPLICABLE,
+            "proof_requirement": "No independent proof obligation applies because this axis is not applicable.",
+        }
+    )
+    rows[index] = row.model_copy(update={"applicability": tuple(decisions)})
+    candidate = _refreshed_union_review(union, rows=tuple(rows))
+
+    with pytest.raises(ValidationError, match="applicability drifted"):
+        LedgerUnionDenominatorV1.model_validate(candidate.model_dump(mode="python"))
+
+
+def test_tui_route_review_covers_every_applicable_row_and_no_backend_helper() -> None:
+    union = _union_denominator()
+    applicable = [
+        row
+        for row in union.rows
+        if next(item for item in row.applicability if item.axis is LedgerCapabilityAxis.TUI).applicability
+        is ApplicabilityState.APPLICABLE
+    ]
+    not_applicable = [row for row in union.rows if row not in applicable]
+
+    assert len(applicable) == 680
+    assert all(row.tui_routes for row in applicable)
+    assert len(not_applicable) == 13
+    assert all(not row.tui_routes for row in not_applicable)
+    assert {route for row in applicable for route in row.tui_routes} == {
+        "ledger.classification",
+        "ledger.entries",
+        "ledger.evidence",
+        "ledger.import",
+        "ledger.overview",
+        "ledger.reconciliation",
+        "ledger.review",
+    }
+    assert sum(LedgerGapClass.REACHABILITY in row.gap_classes for row in union.rows) == 679
+    assert all(
+        LedgerGapClass.REACHABILITY in row.gap_classes for row in applicable if row.tui_routes != ("ledger.overview",)
+    )
+    assert [row.capability_id for row in applicable if row.tui_routes == ("ledger.overview",)] == [
+        "ledger.workspace.read"
+    ]
+
+
+@pytest.mark.parametrize("mutation", ["missing", "duplicate", "change", "unknown", "reorder"])
+def test_exhaustive_tui_route_authority_refuses_mapping_drift(mutation: str) -> None:
+    adjudication = list(matrix_module._EXPLICIT_TUI_ROUTE_ADJUDICATION)
+    if mutation == "missing":
+        adjudication.pop(0)
+    elif mutation == "duplicate":
+        adjudication.insert(1, adjudication[0])
+    elif mutation == "change":
+        capability_id, _routes = adjudication[0]
+        adjudication[0] = (capability_id, ("ledger.review",))
+    elif mutation == "unknown":
+        capability_id, _routes = adjudication[0]
+        adjudication[0] = (capability_id, ("ledger.future",))
+    else:
+        adjudication[0], adjudication[1] = adjudication[1], adjudication[0]
+
+    with pytest.raises(ValueError, match="TUI route adjudication"):
+        matrix_module._validate_tui_route_adjudication(tuple(adjudication))
+
+
+def test_installed_overview_route_refuses_non_query_effects() -> None:
+    with pytest.raises(ValueError, match="Overview route is read-only"):
+        matrix_module._tui_routes_for("ledger.workspace.read", LedgerCapabilityEffect.MUTATION)
 
 
 @pytest.mark.parametrize(
@@ -623,7 +747,7 @@ def test_union_review_refuses_reclassification_even_after_every_review_digest_is
     index = next(
         index
         for index, row in enumerate(rows)
-        if row.registry_destination_status is LedgerRegistryDestinationStatus.DIRECT and row.tui_routes == ()
+        if row.registry_destination_status is LedgerRegistryDestinationStatus.DIRECT
     )
     row = rows[index]
     if mutation == "owner":

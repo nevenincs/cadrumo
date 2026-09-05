@@ -1490,6 +1490,7 @@ class LedgerUnionDenominatorV1(BaseModel):
 
     @model_validator(mode="after")
     def _check_union(self) -> LedgerUnionDenominatorV1:
+        _validate_artifact_input_capabilities(_EXPLICIT_ARTIFACT_INPUT_CAPABILITIES)
         sources = tuple(item.source for item in self.source_digests)
         if len(set(sources)) != len(sources) or frozenset(sources) != frozenset(DenominatorSourceKind):
             raise ValueError("the union must bind every mandatory source digest exactly once")
@@ -1526,6 +1527,10 @@ class LedgerUnionDenominatorV1(BaseModel):
             raise ValueError("union rows must have unique canonically sorted identities")
         rows_by_id = {row.capability_id: row for row in self.rows}
         tui_reachability = {row.destination: row.reachability for row in self.tui_census.routes}
+        _validate_tui_route_adjudication(
+            _EXPLICIT_TUI_ROUTE_ADJUDICATION,
+            known_routes=frozenset(tui_reachability),
+        )
         registry_rows_by_capability = {_registry_union_capability_id(row): row for row in self.registry_census.rows}
         cli_ownership_by_capability: dict[str, set[str]] = {}
         from cadrumo.entrypoints.cli._app_ledger_command_specs import LEDGER_CLI_COMMAND_CENSUS
@@ -1557,13 +1562,7 @@ class LedgerUnionDenominatorV1(BaseModel):
             expected_home, expected_status = _semantic_home_for(capability_id, expected_effect)
             if row.semantic_home != expected_home or row.semantic_home_status is not expected_status:
                 raise ValueError(f"union row semantic home drifted from explicit adjudication: {capability_id}")
-            expected_tui_routes = tuple(
-                sorted(
-                    destination
-                    for destination, capability_ids in _LEDGER_TUI_ROUTE_CAPABILITIES.items()
-                    if capability_id in capability_ids
-                )
-            )
+            expected_tui_routes = _tui_routes_for(capability_id, expected_effect)
             if row.tui_routes != expected_tui_routes:
                 raise ValueError(f"union row TUI routes drifted from explicit adjudication: {capability_id}")
             expected_review = _reviewed_union_row_fields(
@@ -2958,6 +2957,63 @@ _EXPLICIT_TUI_ROUTE_ADJUDICATION: Final[tuple[tuple[str, tuple[str, ...]], ...]]
 )
 
 
+def _validate_artifact_input_capabilities(capability_ids: frozenset[str]) -> None:
+    """Refuse drift from the reviewed local file and directory input cohort."""
+    if capability_ids != _EXPLICIT_ARTIFACT_INPUT_CAPABILITIES:
+        raise ValueError("artifact-input capability adjudication drifted from the exhaustive reviewed set")
+    unknown = capability_ids - set(_EXPLICIT_EFFECTS)
+    if unknown:
+        raise ValueError(f"artifact-input adjudication names unknown capabilities: {sorted(unknown)!r}")
+
+
+def _validate_tui_route_adjudication(
+    adjudication: tuple[tuple[str, tuple[str, ...]], ...],
+    *,
+    known_routes: frozenset[str] | None = None,
+) -> None:
+    """Refuse any drift from the exact reviewed non-registry route table."""
+    if adjudication != tuple(sorted(adjudication, key=lambda item: item[0])):
+        raise ValueError("TUI route adjudication must use canonical capability order")
+    identities = tuple(capability_id for capability_id, _routes in adjudication)
+    if len(set(identities)) != len(identities):
+        raise ValueError("TUI route adjudication contains duplicate capability identities")
+    expected = set(_EXPLICIT_EFFECTS) - set(_EXPLICIT_BACKEND_HELPER_ONLY_CAPABILITIES)
+    actual = set(identities)
+    if actual != expected:
+        raise ValueError(
+            "TUI route adjudication coverage drifted: "
+            f"added={sorted(actual - expected)!r}; removed={sorted(expected - actual)!r}"
+        )
+    route_authority = frozenset(_EXPLICIT_TUI_ROUTE_GROUPS) if known_routes is None else known_routes
+    for capability_id, routes in adjudication:
+        if not routes or routes != tuple(sorted(set(routes))):
+            raise ValueError(f"TUI routes must be nonempty, unique, and canonical: {capability_id}")
+        unknown = set(routes) - set(route_authority)
+        if unknown:
+            raise ValueError(f"TUI route adjudication names unknown routes: {sorted(unknown)!r}")
+    if adjudication != _EXPLICIT_TUI_ROUTE_ADJUDICATION:
+        raise ValueError("TUI route adjudication drifted from the exhaustive reviewed mapping")
+
+
+def _tui_routes_for(
+    capability_id: str,
+    effect: LedgerCapabilityEffect,
+) -> tuple[str, ...]:
+    """Return the exact reviewed route disposition for one semantic row."""
+    if effect is LedgerCapabilityEffect.REGISTRY_ROUTE:
+        return ("ledger.reconciliation",)
+    routes = dict(_EXPLICIT_TUI_ROUTE_ADJUDICATION).get(capability_id)
+    if capability_id in _EXPLICIT_BACKEND_HELPER_ONLY_CAPABILITIES:
+        if routes is not None:
+            raise ValueError(f"backend-helper-only capability cannot have a TUI route: {capability_id}")
+        return ()
+    if routes is None:
+        raise ValueError(f"TUI-applicable capability has no reviewed route: {capability_id}")
+    if "ledger.overview" in routes and effect is not LedgerCapabilityEffect.QUERY:
+        raise ValueError("the installed Overview route is read-only and cannot host a non-query capability")
+    return routes
+
+
 def _effect_for(capability_id: str, sources: frozenset[DenominatorSourceKind]) -> LedgerCapabilityEffect:
     if DenominatorSourceKind.REGISTRY_ROUTE in sources:
         if not capability_id.startswith("ledger.registry_route."):
@@ -3099,7 +3155,8 @@ def _axis_decisions(
             LedgerCapabilityEffect.REGISTRY_ROUTE,
         },
         LedgerCapabilityAxis.ARTIFACT: effect
-        in {LedgerCapabilityEffect.ARTIFACT, LedgerCapabilityEffect.ARTIFACT_QUERY},
+        in {LedgerCapabilityEffect.ARTIFACT, LedgerCapabilityEffect.ARTIFACT_QUERY}
+        or capability_id in _EXPLICIT_ARTIFACT_INPUT_CAPABILITIES,
         LedgerCapabilityAxis.PROVENANCE: effect
         in {
             LedgerCapabilityEffect.MUTATION,
@@ -3151,7 +3208,9 @@ def _axis_decisions(
         LedgerCapabilityAxis.CLI: "Live parser, delegation, result-schema, success, and refusal parity evidence.",
         LedgerCapabilityAxis.TUI: "Installed keyboard reachability plus canonical result and refusal parity evidence.",
         LedgerCapabilityAxis.COMPOSITION: "Real-boundary success, refusal, rollback, and fault behavior evidence.",
-        LedgerCapabilityAxis.ARTIFACT: "Independent reader, declared-loss, destination, and cleanup evidence.",
+        LedgerCapabilityAxis.ARTIFACT: (
+            "Independent readability, format/refusal, digest, destination, and custody/cleanup evidence."
+        ),
         LedgerCapabilityAxis.PROVENANCE: (
             "Actor, source, operation, field, normalization, revision, and custody lineage evidence."
         ),
@@ -3241,7 +3300,10 @@ def _reviewed_union_row_fields(
         LedgerCapabilityEffect.REGISTRY_ROUTE,
     }:
         gaps.add(LedgerGapClass.COMPOSITION)
-    if effect in {LedgerCapabilityEffect.ARTIFACT, LedgerCapabilityEffect.ARTIFACT_QUERY}:
+    if (
+        effect in {LedgerCapabilityEffect.ARTIFACT, LedgerCapabilityEffect.ARTIFACT_QUERY}
+        or capability_id in _EXPLICIT_ARTIFACT_INPUT_CAPABILITIES
+    ):
         gaps.add(LedgerGapClass.ARTIFACT)
     if effect is LedgerCapabilityEffect.REGISTRY_ROUTE:
         gaps.add(LedgerGapClass.REGISTRY)
@@ -3287,6 +3349,8 @@ def _reviewed_union_row_fields(
         blockers.append("A TUI component exists without installed navigation or executable door reachability.")
     if capability_id in _BACKEND_DIRECT_PROOF_GAPS:
         blockers.append("No direct symbol-level backend behavior test was located for this public operation.")
+    if capability_id in _EXPLICIT_ARTIFACT_INPUT_CAPABILITIES:
+        blockers.append("The local artifact input lacks complete readability, refusal, digest, and custody proof.")
 
     destination_status = _registry_destination_status(effect, registry_row)
     if destination_status is LedgerRegistryDestinationStatus.DIRECT:
@@ -3316,7 +3380,11 @@ def _reviewed_union_row_fields(
             f"Implement {semantic_home.command_type} and {semantic_home.result_type}, then prove every applicable axis."
         )
     elif primary_gap is LedgerGapClass.ARTIFACT:
-        next_action = "Prove the artifact with an independent reader, declared-loss contract, and cleanup behavior."
+        next_action = (
+            "Prove artifact readability, format refusal, digest handling, and custody cleanup for the local input."
+            if capability_id in _EXPLICIT_ARTIFACT_INPUT_CAPABILITIES
+            else "Prove the artifact with an independent reader, declared-loss contract, and cleanup behavior."
+        )
     else:
         next_action = "Attach current role-scoped success and refusal evidence for every applicable axis."
 
@@ -3408,9 +3476,9 @@ def _union_observations(
         for observation_id, _capability_id in _LEDGER_ARTIFACT_OBSERVATIONS
     )
     route_rows = {row.destination: row for row in tui.routes}
-    if set(route_rows) != set(_LEDGER_TUI_ROUTE_CAPABILITIES):
+    if set(route_rows) != set(_LEDGER_TUI_ROUTE_OBSERVATION_CAPABILITIES):
         raise ValueError("the TUI route-to-capability adjudication is stale")
-    for destination, capability_ids in _LEDGER_TUI_ROUTE_CAPABILITIES.items():
+    for destination, capability_ids in _LEDGER_TUI_ROUTE_OBSERVATION_CAPABILITIES.items():
         observation_id = f"supported_surface:{destination}:{route_rows[destination].reachability}"
         if _selection_for_observation(observation_id) != capability_ids:
             raise ValueError(f"TUI observation selection drifted: {observation_id}")
@@ -3422,7 +3490,7 @@ def _union_observations(
                 f"supported_surface:{destination}:{route_rows[destination].reachability}"
             ),
         )
-        for destination, _capability_ids in _LEDGER_TUI_ROUTE_CAPABILITIES.items()
+        for destination, _capability_ids in _LEDGER_TUI_ROUTE_OBSERVATION_CAPABILITIES.items()
     )
     canonical = tuple(sorted(observations, key=lambda item: (item.source.value, item.observation_id)))
     _validate_non_registry_observation_adjudication(canonical)
@@ -3499,6 +3567,7 @@ def build_ledger_union_denominator(
     tui = build_ledger_tui_supported_surface_census() if tui is None else tui
     for declaration in _LEDGER_BACKEND_OPERATION_DECLARATIONS:
         _validate_existing_semantic_home(declaration)
+    _validate_artifact_input_capabilities(_EXPLICIT_ARTIFACT_INPUT_CAPABILITIES)
     observations = _union_observations(registry, tui)
     effect_groups = (
         _EXPLICIT_QUERY_CAPABILITIES,
@@ -3514,10 +3583,11 @@ def build_ledger_union_denominator(
     for observation in observations:
         for capability_id in observation.capability_ids:
             observations_by_capability.setdefault(capability_id, []).append(observation)
-    tui_reachability = {
-        destination: next(row.reachability for row in tui.routes if row.destination == destination)
-        for destination in _LEDGER_TUI_ROUTE_CAPABILITIES
-    }
+    tui_reachability = {row.destination: row.reachability for row in tui.routes}
+    _validate_tui_route_adjudication(
+        _EXPLICIT_TUI_ROUTE_ADJUDICATION,
+        known_routes=frozenset(tui_reachability),
+    )
     registry_rows_by_capability = {_registry_union_capability_id(row): row for row in registry.rows}
     cli_ownership_by_capability: dict[str, set[str]] = {}
     from cadrumo.entrypoints.cli._app_ledger_command_specs import LEDGER_CLI_COMMAND_CENSUS
@@ -3533,13 +3603,7 @@ def build_ledger_union_denominator(
         sources = frozenset(item.source for item in selecting)
         effect = _effect_for(capability_id, sources)
         semantic_home, home_status = _semantic_home_for(capability_id, effect)
-        tui_routes = tuple(
-            sorted(
-                destination
-                for destination, selected in _LEDGER_TUI_ROUTE_CAPABILITIES.items()
-                if capability_id in selected
-            )
-        )
+        tui_routes = _tui_routes_for(capability_id, effect)
         applicability = _axis_decisions(capability_id, sources, effect)
         reviewed_fields = _reviewed_union_row_fields(
             capability_id=capability_id,
