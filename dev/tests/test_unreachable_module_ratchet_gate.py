@@ -513,6 +513,12 @@ def test_the_live_tui_projections_are_deferred_by_their_frozen_consumers() -> No
             assert carried, f"{entry.module} deferred by non-deferred importer {importer}"
 
 
+#: Below this the rationales have stopped naming checkable readers. Live: five
+#: intentional dispositions, four of which name a dev reader, four paths
+#: checked. A floor, not a pinned count.
+_MINIMUM_CHECKED_READERS = 2
+
+
 def test_every_intentional_rationale_names_a_reader_that_still_reads_it() -> None:
     """A disposition's justification must stay true, or the module is orphaned.
 
@@ -529,13 +535,26 @@ def test_every_intentional_rationale_names_a_reader_that_still_reads_it() -> Non
     referenced = re.compile(r"dev/[\w/]+\.py")
 
     unread: list[str] = []
+    checked = 0
     for disposition in UnreachableBaseline.load().intentional:
         leaf = disposition.module.rsplit(".", 1)[-1]
         for claimed in referenced.findall(disposition.rationale):
+            checked += 1
             reader = repo_root / claimed
             if not reader.is_file():
                 unread.append(f"{disposition.module}: {claimed} no longer exists")
             elif leaf not in reader.read_text(encoding="utf-8"):
                 unread.append(f"{disposition.module}: {claimed} no longer mentions {leaf}")
+
+    # The tolerated absence above is exactly why this floor is needed. Because a
+    # disposition MAY legitimately name no reader, zero checks is a shape this
+    # gate already treats as normal - so it cannot tell one silent disposition
+    # apart from a rationale format the regex stopped matching, which would
+    # silence all of them at once. Four reader paths are checked today.
+    assert checked >= _MINIMUM_CHECKED_READERS, (
+        f"only {checked} stated reader(s) were checked across the intentional dispositions; "
+        "below this the rationales have stopped being checkable evidence and this gate is "
+        "inert rather than satisfied"
+    )
 
     assert not unread, "intentional dispositions whose stated reader is gone: " + "; ".join(unread)
