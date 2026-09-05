@@ -11,7 +11,7 @@ related:
   - '[[2026-09-03-duplication-burndown-honest-clone-closure-research]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:188920d4f2713cb11d4e483b5fe279cd8d847a0209a0cd28129bd0819a1c7793'
+body_hash: 'sha256:4e1260cf636e21f8d95b146eee3fea6493ec34d592d3e51ac3ac26380e85527e'
 ---
 
 <!-- RETIRED: W05, W06, W07, P02, P03, P04, P06, P09, P12, P14, P16, P17, P19, P20, P21, P22, P23, P24, P25, P26, P27, S03, S06, S07 -->
@@ -101,6 +101,7 @@ Prove detector teeth and run focused, subsystem, and full repository gates.
 - [x] `W04.P18.S17` - Reconcile final dispositions to the live clone set and remove entries for resolved groups; `dev/audit/duplication_dispositions.toml`.
 - [ ] `W04.P18.S18` - Run duplication, import, semantic, architecture, type, lint, focused, and full quality gates without threshold or exclusion changes; `dev/audit/.runs`.
 - [x] `W04.P18.S20` - Adjudicate the 35 identical-expression constant collisions the extended screen surfaces, merging each to a canonical home or recording why an existing decision keeps it local; `dev/quality/constant_value_agreement.py`.
+- [x] `W04.P18.S21` - Build a docstring cross-reference screen and burn down the references naming symbols the tree does not define, separating current drift from accurate statements about the past; `dev/quality/docstring_reference_targets.py`.
 
 ## Parallelization
 
