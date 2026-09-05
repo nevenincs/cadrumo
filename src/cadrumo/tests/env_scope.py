@@ -43,7 +43,7 @@ from pydantic import SecretStr
 from pydantic_settings import SettingsConfigDict
 
 from ..core.auth_provider import AuthProviderKind
-from ..core.config import Settings, reset_settings_cache
+from ..core.config import Settings, reset_settings_cache, settings_override
 from ..core.external_constants import OutputLanguage
 from ..core.i18n.render import OUTPUT_LANGUAGE_ENV_VAR, clear_output_language_cache
 from .collection_storage_root import SETTINGS_STEM
@@ -217,6 +217,65 @@ def scoped_sys_argv(argv: list[str]) -> Generator[None]:
         sys.argv = saved
 
 
+_OUTPUT_LANGUAGE_FIELD = "cadrumo_output_language"
+
+
+def _pin_language_on_active_override(language: OutputLanguage | None) -> None:
+    """Carry ``language`` into the active ``override_settings`` block, if any.
+
+    ``load_settings()`` returns a context-local override IN PREFERENCE to
+    anything the environment says, so while an override is installed a write to
+    ``CADRUMO_OUTPUT_LANGUAGE`` changes nothing at all. That is not a corner
+    case in this suite: ``cadrumo/conftest.py`` opens a session-scoped
+    ``override_settings`` block, so the env write was dead for the whole run and
+    every language pin silently resolved to the configured default instead.
+
+    The override object is mutated IN PLACE rather than replaced. That is the
+    whole point: the object is reached through a ContextVar, and a replacement
+    would need ``ContextVar.set`` -- whose Token cannot be reset from a
+    different asyncio Context, which is exactly the boundary a Textual
+    message-pump callback sits behind. Every context already holds a reference
+    to this same object, so an in-place write is visible across that boundary
+    while needing no Token at all.
+
+    ``model_fields_set`` is updated alongside the value because the resolver
+    distinguishes an explicitly-chosen language from a default that merely
+    flowed through: unsetting has to remove the field, not write a default into
+    it, or "unset" would become indistinguishable from "chose the default".
+    """
+    override = None  # defect: pin never reaches the override
+    if override is None:
+        return
+    fields = set(override.model_fields_set)
+    if language is None:
+        fields.discard(_OUTPUT_LANGUAGE_FIELD)
+    else:
+        object.__setattr__(override, _OUTPUT_LANGUAGE_FIELD, OutputLanguage(language))
+        fields.add(_OUTPUT_LANGUAGE_FIELD)
+    object.__setattr__(override, "__pydantic_fields_set__", fields)
+
+
+@contextmanager
+def _restored_override_language() -> Generator[None]:
+    """Restore the active override's language field on exit."""
+    override = settings_override.get()
+    if override is None:
+        yield
+        return
+    prior_value = getattr(override, _OUTPUT_LANGUAGE_FIELD)
+    prior_explicit = _OUTPUT_LANGUAGE_FIELD in override.model_fields_set
+    try:
+        yield
+    finally:
+        object.__setattr__(override, _OUTPUT_LANGUAGE_FIELD, prior_value)
+        fields = set(override.model_fields_set)
+        if prior_explicit:
+            fields.add(_OUTPUT_LANGUAGE_FIELD)
+        else:
+            fields.discard(_OUTPUT_LANGUAGE_FIELD)
+        object.__setattr__(override, "__pydantic_fields_set__", fields)
+
+
 def activate_output_language(language: OutputLanguage | None) -> None:
     """Set the output language and make the change observable, without restoring it.
 
@@ -242,6 +301,7 @@ def activate_output_language(language: OutputLanguage | None) -> None:
         os.environ.pop(OUTPUT_LANGUAGE_ENV_VAR, None)
     else:
         os.environ[OUTPUT_LANGUAGE_ENV_VAR] = language
+    _pin_language_on_active_override(language)
     reset_settings_cache()
     clear_output_language_cache()
 
@@ -268,7 +328,8 @@ def output_language_scope(language: OutputLanguage | None) -> Generator[None]:
         ...     assert tr("some.key") == "Spanish copy"
     """
     try:
-        with scoped_env_var(OUTPUT_LANGUAGE_ENV_VAR, language):
+        with _restored_override_language(), scoped_env_var(OUTPUT_LANGUAGE_ENV_VAR, language):
+            _pin_language_on_active_override(language)
             reset_settings_cache()
             clear_output_language_cache()
             yield

@@ -19,8 +19,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Final
 
 if TYPE_CHECKING:
+    from ...core.casilla_id import CasillaId
     from ...domain.calculations.registry.schema import ModeloRevision
-    from ...domain.calculations.registry.schema_ids import CasillaId
 
 SETTLEMENT_SEMANTIC_ROLES: Final = frozenset(
     {
