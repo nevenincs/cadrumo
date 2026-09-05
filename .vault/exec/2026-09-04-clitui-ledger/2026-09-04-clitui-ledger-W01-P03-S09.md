@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:bc00fa7371db66ac7833b7c2d4d0b4be6c5c6ad74a108b5887684b66e4acec22'
+body_hash: 'sha256:c26fb79a3502d4536328ee5f05988e476c10e99034d47c5d90ccd0c4cde11321'
 step_id: 'S09'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
@@ -25,6 +25,7 @@ related:
 - `M` `.vault/index/tui-architecture.index.md`
 - `A` `.vault/exec/2026-09-04-clitui-ledger/2026-09-04-clitui-ledger-W01-P03-S09.md`
 - `A` `dev/quality/tests/test_clitui_ledger_plan_ownership.py`
+- The ownership detector treats the 33 adjudicated rows as an exact reviewed include set, rejects new unambiguous Ledger paths, identifiers, product symbols, domain phrases, and reviewed plural contexts, and explicitly excludes the ambiguous generic phrase `audit ledger`.
 - `verify:` `uv run --no-sync pytest -q dev/quality/tests/test_clitui_ledger_plan_ownership.py` -> `pass`
 - `verify:` `uv run --no-sync ruff format --check dev/quality/tests/test_clitui_ledger_plan_ownership.py` -> `pass`
 - `verify:` `uv run --no-sync ruff check dev/quality/tests/test_clitui_ledger_plan_ownership.py` -> `pass`
@@ -32,4 +33,4 @@ related:
 
 ## Notes
 
-Shared-worktree commits `33da0306e3`, `dc42fcfe5c`, `fc14581037`, and `a0c8022450` captured plan and detector mutations before the Step-closing commit.
+Shared-worktree commits `33da0306e3`, `dc42fcfe5c`, `fc14581037`, `a0c8022450`, `92e3507c3c`, and `b1df1eced7` captured plan and detector mutations before the Step-closing commit.
