@@ -124,11 +124,46 @@ def test_casilla_without_export_refs_makes_no_claim() -> None:
     assert unsatisfied_export_refs(revision, modelo_id="000") == ()
 
 
-def test_bundled_registry_export_edge_is_symmetric() -> None:
-    """Every ``export_refs`` claim in the shipped registry is carried by the resolved surface."""
-    authority = bundled_authority()
+#: Floors for the shipped corpus this gate screens. Live: 58 modelo codes and
+#: 11,268 casillas carrying export_refs across 128 revisions. Floors, not
+#: pinned counts, so authoring or retiring a modelo never edits this file.
+_MINIMUM_MODELO_CODES = 20
+_MINIMUM_CASILLAS_WITH_EXPORT_REFS = 2000
 
-    findings = screen_authority(authority, tuple(sorted(registry_modelo_codes())))
+
+def test_bundled_registry_export_edge_is_symmetric() -> None:
+    """Every ``export_refs`` claim in the shipped registry is carried by the resolved surface.
+
+    The subject is counted before the verdict is believed. An empty finding
+    set is the same result whether every claim resolves or the screen was
+    handed nothing to screen, and this walks the whole shipped registry, so
+    the second reading is the one worth ruling out.
+
+    Counted from the authority rather than from the screen: the screen returns
+    findings alone, so its own population is not observable from its result.
+    """
+    authority = bundled_authority()
+    codes = tuple(sorted(registry_modelo_codes()))
+
+    assert len(codes) >= _MINIMUM_MODELO_CODES, (
+        f"only {len(codes)} modelo code(s) were discovered; below this the screen is handed "
+        "almost nothing and an empty finding set says nothing about the shipped registry"
+    )
+
+    claiming = sum(
+        1
+        for modelo in authority.modelos
+        for revision in modelo.revisions.values()
+        for casilla in revision.casillas
+        if tuple(getattr(casilla, "export_refs", ()) or ())
+    )
+
+    assert claiming >= _MINIMUM_CASILLAS_WITH_EXPORT_REFS, (
+        f"only {claiming} casilla(s) carry an export_refs claim; below this there is nearly "
+        "nothing for the symmetry screen to find asymmetric"
+    )
+
+    findings = screen_authority(authority, codes)
 
     assert findings == (), "\n".join(
         f"{f.modelo}/{f.revision} casilla {f.casilla_id} claims {','.join(f.export_refs)} "
