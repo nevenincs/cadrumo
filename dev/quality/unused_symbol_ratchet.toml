@@ -40,7 +40,7 @@
 "cadrumo.adapters.outbound.google.impersonation" = 1
 "cadrumo.adapters.persistence.profile.assets" = 2
 "cadrumo.adapters.persistence.profile.inventory" = 3
-"cadrumo.adapters.persistence.profile.prorrata_register" = 4
+"cadrumo.adapters.persistence.profile.prorrata_register" = 1
 "cadrumo.adapters.persistence.storage.bucket.directory_layout" = 1
 "cadrumo.adapters.persistence.storage.bucket.output_language_hint" = 2
 "cadrumo.adapters.persistence.storage.crypto.encrypted_columns" = 2
@@ -107,7 +107,6 @@
 "cadrumo.application.modelo.review_package_signing" = 1
 "cadrumo.application.modelo.verification_actions" = 1
 "cadrumo.application.modelo.work_addressing" = 2
-"cadrumo.application.modelo.work_create_policy" = 1
 "cadrumo.application.modelo.workspace" = 2
 "cadrumo.application.modelo.workspace_manifest" = 2
 "cadrumo.application.modelo.workspace_models" = 2
