@@ -6,7 +6,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:ec10b845c9abeaa70468004f6022ad22864de2dddbd2ce3c3553056bed023eeb'
+body_hash: 'sha256:2321af8f36dc93710c6e41fa52f42452fa60ca4b826f15eaa41bc9892dc5db9a'
 related:
   - '[[2026-09-04-clitui-ledger-W01-P01-S01]]'
   - '[[2026-09-04-clitui-ledger-W01-P01-S02]]'
@@ -39,6 +39,7 @@ related:
   - '[[2026-09-05-clitui-ledger-s10-index-governance-review-audit]]'
   - '[[2026-09-05-clitui-ledger-s11-row-hold-review-audit]]'
   - '[[2026-09-05-clitui-ledger-s12-row-review-audit]]'
+  - '[[2026-09-05-clitui-ledger-s13-currentness-review-audit]]'
 ---
 
 # `clitui-ledger` feature index
@@ -66,6 +67,7 @@ Auto-generated index of all documents tagged with `#clitui-ledger`.
 - `2026-09-05-clitui-ledger-s10-index-governance-review-audit` - `clitui-ledger` audit: `S10 index governance review`
 - `2026-09-05-clitui-ledger-s11-row-hold-review-audit` - `clitui-ledger` audit: `S11 row-level TUI hold review`
 - `2026-09-05-clitui-ledger-s12-row-review-audit` - `clitui-ledger` audit: `S12 exhaustive row review`
+- `2026-09-05-clitui-ledger-s13-currentness-review-audit` - `clitui-ledger` audit: `S13 fail-closed currentness`
 
 ### exec
 
