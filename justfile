@@ -304,6 +304,16 @@ check-unused-symbol-ratchet:
 check-vault-citation-ratchet:
     @uv run --no-sync python -m dev.quality.vault_citation_ratchet
 
+# Verify no shipped module gained a docstring reference that names nothing.
+# A Sphinx role claims the named symbol exists; nothing checked that, so the
+# claim outlived the symbol 87 times. The baseline in
+# dev/quality/docstring_reference_ratchet.toml holds the four that are
+# CORRECT because they name something absent -- sentences about what a module
+# consolidated, naming code that is properly gone.
+[group('static-checks')]
+check-docstring-reference-ratchet:
+    @uv run --no-sync python -m dev.quality.docstring_reference_ratchet
+
 # Verify every persistence surface a product command READS still has a
 # production writer. The baseline in dev/quality/write_path_backlog.toml may
 # only shrink; a newly writerless store fails rather than being absorbed.
