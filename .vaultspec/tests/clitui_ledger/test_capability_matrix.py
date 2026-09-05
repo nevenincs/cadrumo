@@ -120,6 +120,13 @@ _UNSET: Final[object] = object()
 _REFERENCE_PATH: Final[Path] = (
     Path(__file__).resolve().parents[3] / ".vault" / "reference" / "2026-09-04-clitui-ledger-reference.md"
 )
+_S14_RECORD_PATH: Final[Path] = (
+    Path(__file__).resolve().parents[3]
+    / ".vault"
+    / "exec"
+    / "2026-09-04-clitui-ledger"
+    / "2026-09-04-clitui-ledger-W01-P04-S14.md"
+)
 _MATRIX_CONTRACT_COORDINATE_PATTERN: Final[re.Pattern[str]] = re.compile(
     r"^\| `evidence\.baseline\.matrix_contract` \| `(?P<locator>[^`]+)` \| "
     r"`(?P<digest>sha256:[0-9a-f]{64})` \|",
@@ -165,6 +172,41 @@ def _published_s14_coordinates(path: Path = _REFERENCE_PATH) -> dict[str, str]:
             f"expected {sorted(_S14_PUBLICATION_COORDINATES)}, found {sorted(coordinates)}"
         )
     return {match.group("coordinate"): match.group("value").strip().replace("`", "") for match in matches}
+
+
+_S14_CURRENT_COHORT_RESTATEMENT_PATTERNS: Final[tuple[tuple[str, re.Pattern[str]], ...]] = (
+    ("planned cohort", re.compile(r"(?<![A-Za-z0-9])690(?![A-Za-z0-9])")),
+    ("non-registry cohort", re.compile(r"(?<![A-Za-z0-9])148(?![A-Za-z0-9])")),
+    (
+        "backend-helper/TUI-not-applicable cohort",
+        re.compile(
+            r"(?ix)(?:(?<![A-Za-z0-9])14(?![A-Za-z0-9])[^\n]*(?:backend[- ]helper|tui[- ]not[- ]applicable)|"
+            r"(?:backend[- ]helper|tui[- ]not[- ]applicable)[^\n]*(?<![A-Za-z0-9])14(?![A-Za-z0-9]))"
+        ),
+    ),
+    ("read action reference", re.compile(r"operator\.ledger\.(?:evidence\.review\.list|review)(?![A-Za-z0-9])")),
+    ("classification action reference", re.compile(r"operator\.ledger\.classify(?![A-Za-z0-9])")),
+    (
+        "action-reference count",
+        re.compile(r"(?ix)(?:\b(?:exactly\s+)?two\b[^\n]*(?:actionreferences?|read-action)|\bzero\b[^\n]*mutation[- ]doors)"),
+    ),
+)
+
+
+def _s14_prose_without_coordinate_rows(path: Path) -> str:
+    """Return an S14 surface with its canonical coordinate rows removed."""
+    return "\n".join(
+        line for line in path.read_text(encoding="utf-8").splitlines() if not _S14_PUBLICATION_COORDINATE_PATTERN.match(line)
+    )
+
+
+def _assert_s14_current_facts_have_one_home(*paths: Path) -> None:
+    """Reject current S14 cohort/action facts outside the derived coordinate table."""
+    for path in paths:
+        prose = _s14_prose_without_coordinate_rows(path)
+        for label, pattern in _S14_CURRENT_COHORT_RESTATEMENT_PATTERNS:
+            if pattern.search(prose):
+                raise AssertionError(f"current S14 {label} must live only in the coordinate table: {path}")
 
 
 @cache
@@ -328,6 +370,7 @@ def _assert_s14_publication_matches(path: Path = _REFERENCE_PATH) -> None:
     """Reject a changed S14 value after parsing its unique publication coordinates."""
     if _published_s14_coordinates(path) != _canonical_s14_coordinates():
         raise AssertionError("S14 publication coordinates drifted from canonical projections")
+    _assert_s14_current_facts_have_one_home(path)
 
 
 def _mutate_tui_source(relative: str, mutation: Callable[[bytes], bytes]) -> tuple[tuple[str, bytes], ...]:
@@ -4710,6 +4753,35 @@ def test_human_matrix_contract_coordinate_matches_live_source_digest() -> None:
 def test_s14_publication_coordinates_match_canonical_matrix_and_tui_census() -> None:
     """The S14 prose cannot silently drift from the live denominator or TUI composition."""
     _assert_s14_publication_matches()
+    _assert_s14_current_facts_have_one_home(_S14_RECORD_PATH)
+
+
+@pytest.mark.parametrize(
+    ("surface", "restatement"),
+    [
+        ("reference", "The current planned semantic-home cohort contains 690 rows."),
+        ("reference", "The current registry partition contains 148 non-registry rows."),
+        ("reference", "The current backend-helper/TUI-not-applicable cohort contains 14 rows."),
+        ("reference", "The current planned PRODUCT-gap cohort contains 690 rows."),
+        ("reference", "The current production wiring injects two read ActionReferences."),
+        ("reference", "The current production wiring includes operator.ledger.review."),
+        ("record", "The current planned cohort contains 690 rows."),
+        ("record", "The current production wiring includes operator.ledger.classify."),
+    ],
+)
+def test_s14_single_home_detector_rejects_current_restatements(
+    tmp_path: Path, surface: str, restatement: str
+) -> None:
+    """A current cohort/action fact added outside the coordinate table must fail closed."""
+    source_path = _REFERENCE_PATH if surface == "reference" else _S14_RECORD_PATH
+    candidate = tmp_path / f"{surface}.md"
+    candidate.write_text(source_path.read_text(encoding="utf-8") + f"\n{restatement}\n", encoding="utf-8")
+
+    with pytest.raises(AssertionError, match="current S14"):
+        if surface == "reference":
+            _assert_s14_publication_matches(candidate)
+        else:
+            _assert_s14_current_facts_have_one_home(candidate)
 
 
 @pytest.mark.parametrize("mutation", ["changed", "missing", "duplicate"])

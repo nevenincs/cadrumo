@@ -72,7 +72,6 @@
 "cadrumo.application.filing._export_parity" = 1
 "cadrumo.application.filing.draft_review" = 5
 "cadrumo.application.filing.export_proof" = 2
-"cadrumo.application.filing.record_renderer" = 10
 "cadrumo.application.filing.runtime" = 2
 "cadrumo.application.flows.checkpoint" = 1
 "cadrumo.application.flows.engine" = 1
