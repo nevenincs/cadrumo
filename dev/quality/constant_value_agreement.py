@@ -157,30 +157,30 @@ def collect_unevaluated_constants(root: Path) -> dict[str, dict[str, str]]:
 
 
 def _is_literal_construction(expression: str) -> bool:
-    """Report whether an expression builds its value without reading a name.
+    """Report whether an expression builds its value rather than reading one.
 
     This is the whole difference between a duplicate that can drift and one
-    that cannot. ``frozenset({'.csv', '.txt'})`` retypes the value, so two
-    copies are two independent truths and a change to one leaves the other
-    stale. ``storage_location(StorageCategory.BUCKETS).subpath`` reads a shared
-    authority, so every copy resolves to whatever that authority says and the
-    repetition is a local binding rather than a second source.
+    that cannot, and the test is simply whether any literal appears.
 
-    A name that is only a constructor -- ``frozenset``, ``re.compile`` and the
-    like -- does not count as reading an authority, or every literal set in the
-    tree would be misread as derived.
+    An expression made only of names and attributes reads a value that lives
+    somewhere else -- ``EXTERNAL.aeat.domains.www6``,
+    ``storage_location(StorageCategory.BUCKETS).subpath`` -- so every copy
+    resolves to whatever that source says and no edit can leave one stale.
+
+    The moment a literal appears, the value is written down here:
+    ``frozenset('0123456789abcdef')``, ``re.compile('[^a-z0-9]+')``,
+    ``TypeAdapter(tuple[int | float, ...])``. A second copy is then a second
+    source of truth, and changing one leaves the other behind. That holds for
+    a bare ``...`` or ``True`` as much as for a string, which is why the rule
+    is stated over literals rather than over a list of known constructors -- a
+    list would have to be maintained, and mistaking a constructor for an
+    authority hides real drift.
     """
     try:
         parsed = ast.parse(expression, mode="eval")
     except SyntaxError:
         return False
-    constructors = {"frozenset", "set", "tuple", "list", "dict", "re", "compile", "Decimal", "Path"}
-    for node in ast.walk(parsed):
-        if isinstance(node, ast.Name) and node.id not in constructors:
-            return False
-        if isinstance(node, ast.Attribute) and node.attr not in constructors:
-            return False
-    return True
+    return any(isinstance(node, ast.Constant) for node in ast.walk(parsed))
 
 
 def unevaluated_collisions(constants: dict[str, dict[str, str]]) -> tuple[ConstantFinding, ...]:

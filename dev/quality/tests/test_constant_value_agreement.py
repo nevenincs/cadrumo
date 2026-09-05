@@ -204,3 +204,50 @@ def test_an_evaluable_literal_stays_with_the_literal_census(tmp_path: Path) -> N
     collected = collect_unevaluated_constants(tmp_path)
     assert "_LITERAL" not in collected
     assert collected["_CALLED"] == {"mod.py": "frozenset({'a'})"}
+
+
+def test_a_value_built_from_an_imported_authority_cannot_drift() -> None:
+    """The distinction that took the collision backlog from 35 to 3.
+
+    Four sede modules each bind SEDE_BASE to EXTERNAL.aeat.domains.www6. That is
+    four local bindings of ONE value: every copy resolves to whatever the
+    authority says, so no edit can leave one of them stale. Reporting it beside
+    a retyped literal would bury the three findings that can actually diverge.
+    """
+    findings = unevaluated_collisions(
+        {
+            "SEDE_BASE": {
+                "sede/notifications.py": "EXTERNAL.aeat.domains.www6",
+                "sede/walker.py": "EXTERNAL.aeat.domains.www6",
+            }
+        }
+    )
+    assert [item.kind for item in findings] == ["derived_name_collision"]
+
+
+def test_a_value_retyped_from_literals_is_a_second_source_of_truth() -> None:
+    """Five modules each retyped the hex alphabet; a change to one left four stale."""
+    findings = unevaluated_collisions(
+        {
+            "_HEX_DIGITS": {
+                "storage/_integrity.py": "frozenset('0123456789abcdef')",
+                "attachments/models.py": "frozenset('0123456789abcdef')",
+            }
+        }
+    )
+    assert [item.kind for item in findings] == ["unevaluated_name_collision"]
+
+
+def test_a_constructor_name_does_not_make_a_literal_look_derived() -> None:
+    """``frozenset`` and ``re.compile`` build a value; they do not read one.
+
+    Counting them as authorities would reclassify every literal set and pattern
+    in the tree as safe, which is the failure direction that hides real drift.
+    """
+    for expression in (
+        "frozenset({'.csv', '.txt'})",
+        "re.compile('[^a-z0-9]+')",
+        "Decimal('3005.06')",
+    ):
+        findings = unevaluated_collisions({"_X": {"a.py": expression, "b.py": expression}})
+        assert [item.kind for item in findings] == ["unevaluated_name_collision"], expression
