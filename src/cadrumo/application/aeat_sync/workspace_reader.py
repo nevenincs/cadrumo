@@ -19,20 +19,25 @@ which is what makes the destination worth reaching in a fresh session.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import TYPE_CHECKING, Final
 
 from ..operations.models import OperationDefinitionId
 from ..operations.registry import OperationFrontendProjection
 from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
 from ..operator_actions.models import ActionReference
+from ..user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
 from .workspace import (
     AeatSyncAeatObservationState,
+    AeatSyncCensusCategory,
+    AeatSyncCensusStatus,
     AeatSyncDiscrepancyKind,
     AeatSyncJustificanteState,
     AeatSyncLocalFilingState,
     AeatSyncOverviewArea,
     AeatSyncSourceState,
     AeatSyncWorkspaceAvailability,
+    AeatSyncWorkspaceCensusRowV1,
     AeatSyncWorkspaceFactV1,
     AeatSyncWorkspaceFiledDeclarationRowV1,
     AeatSyncWorkspaceOverviewRowV1,
@@ -242,6 +247,71 @@ def _overview_row(
     )
 
 
+
+_CENSUS_FIELD_CATEGORIES: Final[dict[str, AeatSyncCensusCategory]] = {
+    "contact.fiscal_address": AeatSyncCensusCategory.ADDRESS,
+    "contact.postcode": AeatSyncCensusCategory.ADDRESS,
+    "contact.fiscal_address_cadastral_reference": AeatSyncCensusCategory.ADDRESS,
+}
+"""Which censo field each comparable path belongs to.
+
+Keyed by `CENSAL_ADOPTABLE_PATHS` rather than by a list written here, because
+that tuple is the authority on which profile paths an AEAT censal read can
+speak to at all. Inventing a wider set would produce rows that a real pull
+could never fill, and the module-load check below fails the moment the two
+drift apart -- a path added there and forgotten here is otherwise a row that
+silently disappears from the operator's census.
+"""
+
+if set(_CENSUS_FIELD_CATEGORIES) != set(CENSAL_ADOPTABLE_PATHS):  # pragma: no cover - guarded at import
+    raise RuntimeError("census categories and the censal adoptable paths disagree")
+
+
+def _census_rows(
+    *,
+    bucket_id: str,
+    subject_key: str,
+    censo_values: Mapping[str, str],
+    contracts: OperationPublicContractSetV1,
+) -> tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceCensusRowV1], ...]:
+    """Show what the profile holds for each censo-comparable field, uncompared.
+
+    One row per path in `CENSAL_ADOPTABLE_PATHS`, always -- including the paths
+    the profile leaves empty. A field the operator has not filled in is exactly
+    the field a censo pull is most likely to change, so dropping its row would
+    hide the comparison worth making from the surface whose job is to offer it.
+
+    The local side distinguishes two things the projection would otherwise
+    conflate. A path the record carries is its value. A path the record does
+    not carry is the empty string -- OBSERVED and blank, because the profile
+    was read and genuinely holds nothing there. Neither is `None`, which on
+    this row means nobody looked, and nobody-looked is false of a record this
+    session read to build the row in the first place.
+
+    The AEAT side is `None` on every row and the status is NOT_COMPARED,
+    because no pull has happened. That pairing is enforced on the row itself,
+    so a later producer cannot leave the status behind when it starts filling
+    the AEAT column in.
+    """
+    actions, operations = _admitted_capabilities(AeatSyncOverviewArea.CENSUS, contracts)
+    return tuple(
+        AeatSyncWorkspaceFactV1(
+            bucket_id=bucket_id,
+            subject_key=subject_key,
+            row=AeatSyncWorkspaceCensusRowV1(
+                path=path,
+                category=_CENSUS_FIELD_CATEGORIES[path],
+                status=AeatSyncCensusStatus.NOT_COMPARED,
+                local_value=censo_values.get(path, ""),
+                aeat_value=None,
+                supported_actions=actions,
+                supported_operations=operations,
+            ),
+        )
+        for path in CENSAL_ADOPTABLE_PATHS
+    )
+
+
 def _filed_declaration_rows(
     *,
     bucket_id: str,
@@ -296,6 +366,7 @@ def read_local_aeat_sync_workspace_projection(
     filings: tuple[ModeloRecord, ...],
     operation_contracts: OperationPublicContractSetV1,
     custody_count: int | None = None,
+    censo_values: Mapping[str, str] | None = None,
 ) -> AeatSyncWorkspaceProjectionV1:
     """Project the pre-pull AEAT Sync workspace for one authenticated profile.
 
@@ -303,6 +374,13 @@ def read_local_aeat_sync_workspace_projection(
     holds locally. `None` means this session did not read the store -- distinct
     from `0`, which means it read and found nothing, a proven zero the operator
     can act on.
+
+    `censo_values` is the profile's own censo field values, keyed by schema
+    path. `None` means this session did not read the profile record, and the
+    census zone stays empty; an empty mapping means it read one that declares
+    none of those fields, which still produces a full set of rows carrying
+    observed blanks. The two are different answers and the census zone shows
+    them differently.
     """
     return project_aeat_sync_workspace(
         bucket_id=bucket_id,
@@ -337,6 +415,16 @@ def read_local_aeat_sync_workspace_projection(
                 ),
             )
             for area in AeatSyncOverviewArea
+        ),
+        census=(
+            ()
+            if censo_values is None
+            else _census_rows(
+                bucket_id=bucket_id,
+                subject_key=subject_key,
+                censo_values=censo_values,
+                contracts=operation_contracts,
+            )
         ),
         filed_declarations=_filed_declaration_rows(
             bucket_id=bucket_id,

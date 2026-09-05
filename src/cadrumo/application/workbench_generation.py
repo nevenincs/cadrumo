@@ -433,6 +433,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             observed_at=observed_at,
             filings=tuple(filings.records.values()),
             custody_count=custody_count,
+            censo_values=raw_values,
         )
         account_session = self.account_session_reader()
         final_record = self.profile_repository.load(self.profile_id)
@@ -604,6 +605,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         observed_at: UtcInstant,
         filings: tuple[ModeloRecord, ...],
         custody_count: int | None,
+        censo_values: Mapping[str, object],
     ) -> AeatSyncWorkspaceProjectionV1 | None:
         """Project the pre-pull AEAT Sync workspace against composed contracts.
 
@@ -623,6 +625,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             filings=filings,
             operation_contracts=self.operation_contracts,
             custody_count=custody_count,
+            censo_values={key: value for key, value in censo_values.items() if isinstance(value, str)},
         )
 
 

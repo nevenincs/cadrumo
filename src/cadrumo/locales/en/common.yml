@@ -1004,6 +1004,7 @@ tui:
     census_status:
       adopted: Adopted
       conflict: Conflict
+      not_compared: Not compared
       unchanged: Unchanged
       unset: Unset
     column:

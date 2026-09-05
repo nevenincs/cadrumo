@@ -128,12 +128,34 @@ class AeatSyncCensusCategory(StrEnum):
 
 
 class AeatSyncCensusStatus(StrEnum):
-    """Safe census comparison outcomes."""
+    """Safe census comparison outcomes, plus the state of having none yet.
+
+    The first four are VERDICTS: each claims someone compared the local censo
+    field against the AEAT one and says how they came out. ``NOT_COMPARED``
+    claims the opposite -- that nobody has looked at the AEAT side at all --
+    and exists because before a pull there is no honest verdict to give. Made
+    to reuse one of the four, a pre-pull row would have to assert a comparison
+    that never happened; ``UNSET`` in particular says the field HAS no value,
+    which is a statement about the value rather than about whether anyone
+    checked.
+    """
 
     ADOPTED = "adopted"
     CONFLICT = "conflict"
     UNCHANGED = "unchanged"
     UNSET = "unset"
+    NOT_COMPARED = "not_compared"
+
+
+COMPARED_CENSUS_STATUSES: Final = frozenset(
+    {
+        AeatSyncCensusStatus.ADOPTED,
+        AeatSyncCensusStatus.CONFLICT,
+        AeatSyncCensusStatus.UNCHANGED,
+        AeatSyncCensusStatus.UNSET,
+    }
+)
+"""The census statuses that assert a comparison against the AEAT actually ran."""
 
 
 class AeatSyncLocalFilingState(StrEnum):
@@ -303,16 +325,27 @@ class AeatSyncWorkspaceCensusRowV1(AeatSyncWorkspaceActionRowV1):
     """
 
     @model_validator(mode="after")
-    def _conflict_needs_both_sides(self) -> Self:
-        """A CONFLICT is a claim about two values, so it must carry both.
+    def _the_status_and_the_values_must_agree(self) -> Self:
+        """A verdict must carry what it judged; a non-verdict must not pretend to.
 
-        Reporting a conflict while withholding one side asks the operator to
-        accept a difference they cannot see, which is the same defect the
-        invoice/entry suggestions carried before they showed the amounts they
-        compared.
+        Both directions are defects, and neither is caught by the other.
+
+        Reporting a CONFLICT while withholding a side asks the operator to
+        accept a difference they cannot see -- the same defect the invoice and
+        entry suggestions carried before they showed the amounts they compared.
+        The other three verdicts make the same claim in a quieter voice:
+        ADOPTED, UNCHANGED and UNSET all assert something about how the two
+        sides relate, so all of them need both sides present.
+
+        NOT_COMPARED asserts that nobody looked at the AEAT. A row carrying an
+        AEAT value under that status is self-contradicting: someone plainly
+        did look, and the operator would be told the field is unchecked while
+        the evidence sits in the same row.
         """
-        if self.status is AeatSyncCensusStatus.CONFLICT and (self.local_value is None or self.aeat_value is None):
-            raise ValueError("a census conflict must carry both the local and the AEAT value")
+        if self.status in COMPARED_CENSUS_STATUSES and (self.local_value is None or self.aeat_value is None):
+            raise ValueError(f"a census {self.status.value} verdict must carry both the local and the AEAT value")
+        if self.status is AeatSyncCensusStatus.NOT_COMPARED and self.aeat_value is not None:
+            raise ValueError("a census row that was never compared cannot carry an AEAT value")
         return self
 
 
@@ -752,8 +785,16 @@ def _source_claims(
                     absent=row.aeat_state is AeatSyncSourceState.ABSENT,
                 )
             if isinstance(row, AeatSyncWorkspaceCensusRowV1):
+                # The local side is required for every census row: the row
+                # exists because the profile was read. The AEAT side is
+                # required only for a row that claims a VERDICT -- a
+                # NOT_COMPARED row's whole content is that no AEAT observation
+                # exists, so demanding one to publish it would make the state
+                # unrepresentable and force a pre-pull census zone to stay
+                # empty beside a local source reporting rows it holds.
                 _require(False, sources[AeatSyncWorkspaceSource.LOCAL_PROFILE], "local census")
-                _require(False, sources[AeatSyncWorkspaceSource.AEAT_CENSUS], "AEAT census")
+                if row.status in COMPARED_CENSUS_STATUSES:
+                    _require(False, sources[AeatSyncWorkspaceSource.AEAT_CENSUS], "AEAT census")
             if isinstance(row, _DualRow):
                 _require(
                     row.local_state is AeatSyncSourceState.NOT_OBSERVED,

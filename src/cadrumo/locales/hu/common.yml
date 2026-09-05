@@ -1028,6 +1028,7 @@ tui:
     census_status:
       adopted: Átvéve
       conflict: Konfliktus
+      not_compared: Nincs összehasonlítva
       unchanged: Változatlan
       unset: Nincs beállítva
     column:

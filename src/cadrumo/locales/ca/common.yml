@@ -1033,6 +1033,7 @@ tui:
     census_status:
       adopted: Adoptat
       conflict: Conflicte
+      not_compared: Sense comparar
       unchanged: Sense canvis
       unset: No establert
     column:
