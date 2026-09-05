@@ -71,6 +71,7 @@ from ..clitui_ledger_capability_matrix import (
     LedgerTuiSupportedSurfaceCensusV1,
     LedgerUnionCapabilityRowV1,
     LedgerUnionDenominatorV1,
+    LedgerUnionReviewSnapshotV1,
     LedgerUnionRowReviewAttestationV1,
     LedgerUnionRowReviewRuling,
     LedgerUnionSourceObservationV1,
@@ -2087,6 +2088,8 @@ def _matrix(
     accepted_gate_closure_receipts: tuple[LedgerGateClosureReceiptV1, ...] = (),
     accepted_denominator: LedgerDenominatorSnapshotV1 | None = None,
     current_denominator: LedgerDenominatorSnapshotV1 | None = None,
+    accepted_union_review: LedgerUnionReviewSnapshotV1 | None = None,
+    current_union_review: LedgerUnionReviewSnapshotV1 | None = None,
     accepted_authority_dispositions: AuthorityDispositionSnapshotV1 | None = None,
     current_authority_dispositions: AuthorityDispositionSnapshotV1 | None = None,
     current_subjects: tuple[EvidenceSubjectSnapshotV1, ...] = (_SUBJECT,),
@@ -2096,6 +2099,12 @@ def _matrix(
     live_report = report if report is not None else _report(tuple(row.identity.row_id for row in rows))
     accepted = accepted_denominator if accepted_denominator is not None else _snapshot(live_report)
     current = current_denominator if current_denominator is not None else _snapshot(live_report)
+    accepted_union = accepted_union_review if accepted_union_review is not None else LedgerUnionReviewSnapshotV1.from_union(
+        _union_denominator()
+    )
+    current_union = current_union_review if current_union_review is not None else LedgerUnionReviewSnapshotV1.from_union(
+        _union_denominator()
+    )
     accepted_authority = (
         accepted_authority_dispositions
         if accepted_authority_dispositions is not None
@@ -2121,6 +2130,8 @@ def _matrix(
         controls=controls_value,
         accepted_denominator=accepted,
         current_denominator=current,
+        accepted_union_review=accepted_union,
+        current_union_review=current_union,
         accepted_authority_dispositions=accepted_authority,
         current_authority_dispositions=current_authority,
         current_subjects=current_subjects,
@@ -2133,6 +2144,8 @@ def _matrix(
         controls=controls_value,
         accepted_denominator=accepted,
         current_denominator=current,
+        accepted_union_review=accepted_union,
+        current_union_review=current_union,
         accepted_authority_dispositions=accepted_authority,
         current_authority_dispositions=current_authority,
         current_subjects=current_subjects,
@@ -2147,6 +2160,7 @@ def _matrix(
         matrix_digest=attestation_matrix_basis_digest,
         denominator_digest=current.digest,
         denominator_revision=current.revision,
+        union_review=current_union,
         review_subject_id=_SUBJECT.subject_id,
         review_subject_revision=_SUBJECT.revision,
         review_subject_digest=_SUBJECT.digest,
@@ -2158,6 +2172,8 @@ def _matrix(
         controls=controls_value,
         accepted_denominator=accepted,
         current_denominator=current,
+        accepted_union_review=accepted_union,
+        current_union_review=current_union,
         accepted_authority_dispositions=accepted_authority,
         current_authority_dispositions=current_authority,
         current_subjects=current_subjects,
@@ -2261,6 +2277,7 @@ def _acceptance_record_anchor(
             matrix_basis_digest=attestation.matrix_digest,
             denominator_digest=attestation.denominator_digest,
             denominator_revision=attestation.denominator_revision,
+            union_review=attestation.union_review,
             review_subject_id=attestation.review_subject_id,
             review_subject_revision=attestation.review_subject_revision,
             review_subject_digest=attestation.review_subject_digest,
@@ -2284,6 +2301,7 @@ def _acceptance_record_anchor(
         matrix_basis_digest=attestation.matrix_digest,
         denominator_digest=attestation.denominator_digest,
         denominator_revision=attestation.denominator_revision,
+        union_review=attestation.union_review,
         review_subject_id=attestation.review_subject_id,
         review_subject_revision=attestation.review_subject_revision,
         review_subject_digest=attestation.review_subject_digest,
@@ -2331,18 +2349,20 @@ def _evaluate(
     *,
     report: LedgerLiveCensusReportV1 | None = None,
     subjects: tuple[EvidenceSubjectSnapshotV1, ...] = (_SUBJECT,),
+    union: LedgerUnionDenominatorV1 | None = None,
     acceptance_anchor: LedgerAcceptanceRecordAnchorV1 | None = None,
     acceptance_subjects: tuple[EvidenceSubjectSnapshotV1, ...] = (),
 ):
     """Evaluate a matrix against a fresh report unless a test supplies one."""
     observed = report if report is not None else _report(tuple(row.identity.row_id for row in matrix.rows))
-    if acceptance_anchor is None and matrix.accepted_gate_closure_receipt(LEDGER_TUI_HOLD_UNTIL_GATE) is not None:
+    if acceptance_anchor is None:
         acceptance_anchor, acceptance_subjects = _acceptance_record_anchor(matrix)
     return evaluate_ledger_capability_gate(
         matrix,
         gate,
         observed_census=observed,
         observed_subjects=subjects,
+        observed_union=_union_denominator() if union is None else union,
         acceptance_record_anchor=acceptance_anchor,
         observed_acceptance_subjects=acceptance_subjects,
     )

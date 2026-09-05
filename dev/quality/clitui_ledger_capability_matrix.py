@@ -1645,6 +1645,50 @@ class LedgerUnionDenominatorV1(BaseModel):
         return _canonical_digest(_ledger_union_review_basis_payload(self))
 
 
+class LedgerUnionReviewSnapshotV1(BaseModel):
+    """The complete, independently reviewable union state a gate may freeze.
+
+    This is deliberately a projection of a validated live union, rather than a
+    second mutable review register.  It binds the outer union, exhaustive row
+    coverage, and the reviewed attestation so a receipt cannot treat a fresh
+    digest as proof that every row was actually reviewed.
+    """
+
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+
+    union_digest: str = Field(min_length=1)
+    row_review_digest: str = Field(min_length=1)
+    row_review_attestation_digest: str = Field(min_length=1)
+    reviewed_row_count: int = Field(ge=1)
+    review_revision: str = Field(min_length=1)
+    review_id: str = Field(min_length=1)
+    reviewed_at: datetime
+
+    @model_validator(mode="after")
+    def _check_snapshot(self) -> LedgerUnionReviewSnapshotV1:
+        _require_digest(self.union_digest, field_name="union_digest")
+        _require_digest(self.row_review_digest, field_name="row_review_digest")
+        _require_digest(self.row_review_attestation_digest, field_name="row_review_attestation_digest")
+        _require_non_placeholder(self.review_revision, field_name="review_revision")
+        _require_identity(self.review_id, field_name="review_id", pattern=_REVIEW_ID_PATTERN)
+        _require_observed_at(self.reviewed_at, field_name="reviewed_at")
+        return self
+
+    @classmethod
+    def from_union(cls, union: LedgerUnionDenominatorV1) -> LedgerUnionReviewSnapshotV1:
+        """Project only a canonical, fully validated union into gate state."""
+        canonical = LedgerUnionDenominatorV1.model_validate(_serialized_python_data(union))
+        return cls(
+            union_digest=canonical.digest,
+            row_review_digest=canonical.row_review_digest,
+            row_review_attestation_digest=canonical.row_review_attestation.digest,
+            reviewed_row_count=canonical.reviewed_row_count,
+            review_revision=canonical.review_revision,
+            review_id=canonical.row_review_attestation.review_id,
+            reviewed_at=canonical.row_review_attestation.reviewed_at,
+        )
+
+
 def _ledger_union_digest_payload(union: LedgerUnionDenominatorV1) -> dict[str, object]:
     """Return JSON data with every set-valued field in canonical order."""
     payload = cast(dict[str, object], union.model_dump(mode="json", exclude={"digest"}))
@@ -4436,6 +4480,7 @@ class LedgerMatrixAcceptanceAttestationV1(BaseModel):
     matrix_digest: str = Field(min_length=1)
     denominator_digest: str = Field(min_length=1)
     denominator_revision: str = Field(min_length=1)
+    union_review: LedgerUnionReviewSnapshotV1
     review_subject_id: str = Field(min_length=1)
     review_subject_revision: str = Field(min_length=1)
     review_subject_digest: str = Field(min_length=1)
@@ -4520,6 +4565,7 @@ class LedgerAcceptanceRecordAnchorV1(BaseModel):
     matrix_basis_digest: str = Field(min_length=1)
     denominator_digest: str = Field(min_length=1)
     denominator_revision: str = Field(min_length=1)
+    union_review: LedgerUnionReviewSnapshotV1
     review_subject_id: str = Field(min_length=1)
     review_subject_revision: str = Field(min_length=1)
     review_subject_digest: str = Field(min_length=1)
@@ -4561,6 +4607,7 @@ class LedgerAcceptanceRecordAnchorV1(BaseModel):
                 "matrix_basis_digest": self.matrix_basis_digest,
                 "denominator_digest": self.denominator_digest,
                 "denominator_revision": self.denominator_revision,
+                "union_review": self.union_review,
                 "review_subject_id": self.review_subject_id,
                 "review_subject_revision": self.review_subject_revision,
                 "review_subject_digest": self.review_subject_digest,
@@ -4586,6 +4633,8 @@ class LedgerCapabilityMatrixV1(BaseModel):
     controls: LedgerCampaignControlsV1
     accepted_denominator: LedgerDenominatorSnapshotV1
     current_denominator: LedgerDenominatorSnapshotV1
+    accepted_union_review: LedgerUnionReviewSnapshotV1
+    current_union_review: LedgerUnionReviewSnapshotV1
     accepted_authority_dispositions: AuthorityDispositionSnapshotV1
     current_authority_dispositions: AuthorityDispositionSnapshotV1
     current_subjects: tuple[EvidenceSubjectSnapshotV1, ...]
@@ -4643,6 +4692,8 @@ class LedgerCapabilityMatrixV1(BaseModel):
             or attestation.denominator_revision != self.current_denominator.revision
         ):
             raise ValueError("acceptance attestation is not bound to this exact denominator revision")
+        if attestation.union_review != self.current_union_review:
+            raise ValueError("acceptance attestation is not bound to this exact reviewed union")
         review_subject = subjects.get(attestation.review_subject_id)
         if review_subject is None or (
             attestation.review_subject_revision != review_subject.revision
@@ -4719,6 +4770,8 @@ class LedgerCapabilityMatrixV1(BaseModel):
             controls=self.controls,
             accepted_denominator=self.accepted_denominator,
             current_denominator=self.current_denominator,
+            accepted_union_review=self.accepted_union_review,
+            current_union_review=self.current_union_review,
             accepted_authority_dispositions=self.accepted_authority_dispositions,
             current_authority_dispositions=self.current_authority_dispositions,
             current_subjects=self.current_subjects,
@@ -4734,6 +4787,8 @@ class LedgerCapabilityMatrixV1(BaseModel):
         controls: LedgerCampaignControlsV1,
         accepted_denominator: LedgerDenominatorSnapshotV1,
         current_denominator: LedgerDenominatorSnapshotV1,
+        accepted_union_review: LedgerUnionReviewSnapshotV1,
+        current_union_review: LedgerUnionReviewSnapshotV1,
         accepted_authority_dispositions: AuthorityDispositionSnapshotV1,
         current_authority_dispositions: AuthorityDispositionSnapshotV1,
         current_subjects: tuple[EvidenceSubjectSnapshotV1, ...],
@@ -4751,6 +4806,8 @@ class LedgerCapabilityMatrixV1(BaseModel):
                 "controls": normalized_controls,
                 "accepted_denominator": accepted_denominator,
                 "current_denominator": current_denominator,
+                "accepted_union_review": accepted_union_review,
+                "current_union_review": current_union_review,
                 "accepted_authority_dispositions": accepted_authority_dispositions,
                 "current_authority_dispositions": current_authority_dispositions,
                 "current_subjects": tuple(sorted(current_subjects, key=lambda subject: subject.subject_id)),
@@ -4767,6 +4824,8 @@ class LedgerCapabilityMatrixV1(BaseModel):
             controls=self.controls,
             accepted_denominator=self.accepted_denominator,
             current_denominator=self.current_denominator,
+            accepted_union_review=self.accepted_union_review,
+            current_union_review=self.current_union_review,
             accepted_authority_dispositions=self.accepted_authority_dispositions,
             current_authority_dispositions=self.current_authority_dispositions,
             current_subjects=self.current_subjects,
@@ -4797,6 +4856,8 @@ class LedgerCapabilityMatrixV1(BaseModel):
                 "controls": controls,
                 "accepted_denominator": self.accepted_denominator,
                 "current_denominator": self.current_denominator,
+                "accepted_union_review": self.accepted_union_review,
+                "current_union_review": self.current_union_review,
                 "accepted_authority_dispositions": self.accepted_authority_dispositions,
                 "current_authority_dispositions": self.current_authority_dispositions,
                 "current_subjects": tuple(sorted(self.current_subjects, key=lambda subject: subject.subject_id)),
@@ -4816,6 +4877,8 @@ class LedgerCapabilityMatrixV1(BaseModel):
         controls: LedgerCampaignControlsV1,
         accepted_denominator: LedgerDenominatorSnapshotV1,
         current_denominator: LedgerDenominatorSnapshotV1,
+        accepted_union_review: LedgerUnionReviewSnapshotV1,
+        current_union_review: LedgerUnionReviewSnapshotV1,
         accepted_authority_dispositions: AuthorityDispositionSnapshotV1,
         current_authority_dispositions: AuthorityDispositionSnapshotV1,
         current_subjects: tuple[EvidenceSubjectSnapshotV1, ...],
@@ -4830,6 +4893,8 @@ class LedgerCapabilityMatrixV1(BaseModel):
                 "controls": controls,
                 "accepted_denominator": accepted_denominator,
                 "current_denominator": current_denominator,
+                "accepted_union_review": accepted_union_review,
+                "current_union_review": current_union_review,
                 "accepted_authority_dispositions": accepted_authority_dispositions,
                 "current_authority_dispositions": current_authority_dispositions,
                 "current_subjects": tuple(sorted(current_subjects, key=lambda subject: subject.subject_id)),
@@ -4886,6 +4951,22 @@ def _denominator_drift(accepted: LedgerDenominatorSnapshotV1, current: LedgerDen
     if accepted.digest != current.digest and not drift:
         drift.append("denominator digest drifted without an entry-level explanation")
     return tuple(drift)
+
+
+def _union_review_drift(
+    accepted: LedgerUnionReviewSnapshotV1, current: LedgerUnionReviewSnapshotV1
+) -> tuple[str, ...]:
+    """Name every reviewed-union change that invalidates the G0 freeze."""
+    labels = (
+        ("union_digest", "reviewed union digest drifted"),
+        ("row_review_digest", "union row-review digest drifted"),
+        ("row_review_attestation_digest", "union row-review attestation digest drifted"),
+        ("reviewed_row_count", "union reviewed-row coverage drifted"),
+        ("review_revision", "union review revision drifted"),
+        ("review_id", "union review identity drifted"),
+        ("reviewed_at", "union review observation time drifted"),
+    )
+    return tuple(label for field_name, label in labels if getattr(accepted, field_name) != getattr(current, field_name))
 
 
 def _authority_disposition_drift(
@@ -4953,6 +5034,8 @@ def _matrix_acceptance_errors(matrix: LedgerCapabilityMatrixV1) -> list[str]:
         or attestation.denominator_revision != matrix.current_denominator.revision
     ):
         errors.append("acceptance attestation is not bound to this exact denominator revision")
+    if attestation.union_review != matrix.current_union_review:
+        errors.append("acceptance attestation is not bound to this exact reviewed union")
     subjects = {subject.subject_id: subject for subject in matrix.current_subjects}
     review_subject = subjects.get(attestation.review_subject_id)
     if review_subject is None or (
@@ -4969,6 +5052,7 @@ def validate_ledger_matrix_currentness(
     *,
     observed_census: LedgerLiveCensusReportV1,
     observed_subjects: tuple[EvidenceSubjectSnapshotV1, ...],
+    observed_union: LedgerUnionDenominatorV1 | None = None,
 ) -> list[str]:
     """Compare persisted state to mandatory live census and evidence observations."""
     canonical_matrix, canonical_census, canonical_subjects, validation_blockers = _canonical_gate_inputs(
@@ -4984,6 +5068,17 @@ def validate_ledger_matrix_currentness(
     errors = _live_census_report_errors(observed_census)
     observed_denominator = LedgerDenominatorSnapshotV1.from_live_report(observed_census)
     errors.extend(_denominator_drift(matrix.current_denominator, observed_denominator))
+    if observed_union is None:
+        errors.append("live reviewed union observation is missing")
+    else:
+        try:
+            observed_review = LedgerUnionReviewSnapshotV1.from_union(observed_union)
+        except ValidationError as error:
+            errors.extend(_validation_blockers("live reviewed union", error))
+        except (TypeError, ValueError):
+            errors.append("live reviewed union validation failed at <root>: invalid_serialized_data")
+        else:
+            errors.extend(_union_review_drift(matrix.current_union_review, observed_review))
     if not observed_subjects:
         errors.append("live evidence-subject observation is empty")
     expected = {subject.subject_id: subject for subject in matrix.current_subjects}
@@ -5094,6 +5189,7 @@ def _acceptance_record_anchor_errors(
         "matrix_basis_digest": attestation.matrix_digest,
         "denominator_digest": attestation.denominator_digest,
         "denominator_revision": attestation.denominator_revision,
+        "union_review": attestation.union_review,
         "review_subject_id": attestation.review_subject_id,
         "review_subject_revision": attestation.review_subject_revision,
         "review_subject_digest": attestation.review_subject_digest,
@@ -5110,6 +5206,7 @@ def evaluate_ledger_capability_gate(
     *,
     observed_census: LedgerLiveCensusReportV1,
     observed_subjects: tuple[EvidenceSubjectSnapshotV1, ...],
+    observed_union: LedgerUnionDenominatorV1 | None = None,
     acceptance_record_anchor: LedgerAcceptanceRecordAnchorV1 | None = None,
     observed_acceptance_subjects: tuple[EvidenceSubjectSnapshotV1, ...] = (),
 ) -> GateAssessmentV1:
@@ -5124,22 +5221,24 @@ def evaluate_ledger_capability_gate(
     matrix = canonical_matrix
     observed_census = canonical_census
     observed_subjects = canonical_subjects
-    blockers: list[str] = []
+    blockers = validate_ledger_matrix_currentness(
+        matrix,
+        observed_census=observed_census,
+        observed_subjects=observed_subjects,
+        observed_union=observed_union,
+    )
     if gate is LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE:
         blockers.extend(_denominator_drift(matrix.accepted_denominator, matrix.current_denominator))
+        blockers.extend(_union_review_drift(matrix.accepted_union_review, matrix.current_union_review))
         blockers.extend(
             _authority_disposition_drift(matrix.accepted_authority_dispositions, matrix.current_authority_dispositions)
-        )
-        blockers.extend(
-            validate_ledger_matrix_currentness(
-                matrix, observed_census=observed_census, observed_subjects=observed_subjects
-            )
         )
         blockers.extend(_matrix_acceptance_errors(matrix))
         if not matrix.controls.tui_implementation_hold_recorded or not matrix.controls.tui_implementation_hold_active:
             blockers.append("the Ledger TUI implementation hold is not recorded and active")
         if matrix.acceptance_attestation.ruling is not ReviewRuling.ACCEPT:
             blockers.append("independent review has not issued an ACCEPT attestation for the frozen matrix")
+        blockers.extend(_acceptance_record_anchor_errors(matrix, acceptance_record_anchor, observed_acceptance_subjects))
         for row in matrix.rows:
             for assessment in row.assessments:
                 if (
@@ -5215,11 +5314,6 @@ def evaluate_ledger_capability_gate(
                     blockers.append(f"{row.identity.row_id}: CLI {gap_class.value} finding remains")
         return _gate_assessment(gate, blockers)
     if gate is LedgerGate.G4_TUI_ADMISSION_AND_PARITY:
-        blockers.extend(
-            validate_ledger_matrix_currentness(
-                matrix, observed_census=observed_census, observed_subjects=observed_subjects
-            )
-        )
         if matrix.controls.tui_implementation_hold_active:
             blockers.append("the Ledger TUI implementation hold remains active")
         elif matrix.accepted_gate_closure_receipt(LEDGER_TUI_HOLD_UNTIL_GATE) is None:
@@ -5253,6 +5347,7 @@ def evaluate_ledger_capability_gates(
     *,
     observed_census: LedgerLiveCensusReportV1,
     observed_subjects: tuple[EvidenceSubjectSnapshotV1, ...],
+    observed_union: LedgerUnionDenominatorV1 | None = None,
     acceptance_record_anchor: LedgerAcceptanceRecordAnchorV1 | None = None,
     observed_acceptance_subjects: tuple[EvidenceSubjectSnapshotV1, ...] = (),
 ) -> tuple[GateAssessmentV1, ...]:
@@ -5270,6 +5365,7 @@ def evaluate_ledger_capability_gates(
             gate,
             observed_census=observed_census,
             observed_subjects=observed_subjects,
+            observed_union=observed_union,
             acceptance_record_anchor=acceptance_record_anchor,
             observed_acceptance_subjects=observed_acceptance_subjects,
         )
