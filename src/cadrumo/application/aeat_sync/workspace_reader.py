@@ -209,7 +209,9 @@ def _locally_read_areas(*, custody_count: int | None) -> frozenset[AeatSyncOverv
     composed no custody reader, and reporting the area as observed-and-empty
     would claim a look that never happened.
     """
-    return _LOCALLY_READ_AREAS | {AeatSyncOverviewArea.NOTIFICATIONS}  # defect: unread custody claimed as observed
+    if custody_count is None:
+        return _LOCALLY_READ_AREAS
+    return _LOCALLY_READ_AREAS | {AeatSyncOverviewArea.NOTIFICATIONS}
 
 
 def _local_area_is_populated(
