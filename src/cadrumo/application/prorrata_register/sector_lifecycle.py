@@ -54,7 +54,7 @@ def seed_sector_carried_definitive_from_register(
 
     Returns ``None`` when the prior year holds no settled definitive for the
     sector (the caller surfaces the missing-provisional advisory rather than
-    assuming a percentage — :func:`no-silent-under-declaration`), so a sector's
+    assuming a percentage rather than under-declaring in silence), so a sector's
     first ejercicio, or a gap year, never silently defaults.
 
     Args:
