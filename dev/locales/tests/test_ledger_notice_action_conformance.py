@@ -125,11 +125,41 @@ def _iter_locale_leaves(node: LocaleNode, prefix: str = "") -> Iterator[tuple[st
         yield prefix, node
 
 
+#: Below this a notice module has stopped carrying a surface to inspect.
+#: Live: seventeen modules, the smallest 489 parsed nodes and the largest
+#: 5,294. A floor, not a pinned count.
+_MINIMUM_NOTICE_MODULE_NODES = 100
+
+
+def _notice_module_trees() -> tuple[tuple[ModuleType, ast.Module], ...]:
+    """Parse every ledger notice module, with each surface asserted non-trivial.
+
+    Five gates below iterate this corpus and assert an ABSENCE in each module -
+    no redeclared action, no command literal outside provenance, no flattened
+    typed refusal. Every one of those claims is satisfied by a module that has
+    been gutted to a shell, and this family is actively being rehomed (one
+    member has already lost its leading underscore), which is exactly how a
+    module keeps its import and loses its body.
+
+    The tuple itself needs no floor: it is a literal of imported modules, so a
+    missing one fails at import rather than shrinking the corpus.
+    """
+    parsed: list[tuple[ModuleType, ast.Module]] = []
+    for module in _LEDGER_NOTICE_MODULES:
+        tree = ast.parse(inspect.getsource(module))
+        size = sum(1 for _ in ast.walk(tree))
+        assert size >= _MINIMUM_NOTICE_MODULE_NODES, (
+            f"{module.__name__} parses to only {size} node(s); below this every absence "
+            "claimed of it holds because the module carries nothing, not because it complies"
+        )
+        parsed.append((module, tree))
+    return tuple(parsed)
+
+
 def test_ledger_notices_do_not_redeclare_actions_or_english_fallbacks() -> None:
     """Notice actions come from resolvers; context and prose cannot shadow them."""
     failures: list[str] = []
-    for module in _LEDGER_NOTICE_MODULES:
-        tree = ast.parse(inspect.getsource(module))
+    for module, tree in _notice_module_trees():
         for call in ast.walk(tree):
             if not isinstance(call, ast.Call) or not isinstance(call.func, ast.Name) or call.func.id != "Notice":
                 continue
@@ -247,8 +277,7 @@ def test_ledger_locale_values_do_not_redeclare_command_guidance() -> None:
 def test_ledger_runtime_command_literals_are_provenance_only() -> None:
     """Raw command strings are allowed only as explicit source provenance."""
     failures: list[str] = []
-    for module in _LEDGER_NOTICE_MODULES:
-        tree = ast.parse(inspect.getsource(module))
+    for module, tree in _notice_module_trees():
         parents = {child: parent for parent in ast.walk(tree) for child in ast.iter_child_nodes(parent)}
         for literal in (node for node in ast.walk(tree) if isinstance(node, ast.Constant)):
             if not isinstance(literal.value, str) or not _COMMAND_PROSE.search(literal.value):
@@ -299,8 +328,7 @@ def test_every_ledger_translation_is_catalogue_owned_without_a_runtime_fallback(
 def test_translation_helpers_do_not_reintroduce_presentation_defaults() -> None:
     """A translation helper cannot hide fallback prose from the direct ``tr`` gate."""
     failures: list[str] = []
-    for module in _LEDGER_NOTICE_MODULES:
-        tree = ast.parse(inspect.getsource(module))
+    for module, tree in _notice_module_trees():
         failures.extend(
             f"{module.__name__}:{call.lineno}"
             for call in ast.walk(tree)
@@ -312,8 +340,7 @@ def test_translation_helpers_do_not_reintroduce_presentation_defaults() -> None:
 def test_typed_ledger_errors_are_not_flattened_by_local_catches() -> None:
     """Typed exception identity and its verdict must reach the shared boundary."""
     failures: list[str] = []
-    for module in _LEDGER_NOTICE_MODULES:
-        tree = ast.parse(inspect.getsource(module))
+    for module, tree in _notice_module_trees():
         for handler in (node for node in ast.walk(tree) if isinstance(node, ast.ExceptHandler)):
             caught = _caught_names(handler)
             if not caught.intersection(_TYPED_LEDGER_ERROR_NAMES):
@@ -336,8 +363,7 @@ def test_typed_ledger_errors_are_not_flattened_by_local_catches() -> None:
 def test_ledger_bad_parameters_do_not_embed_caught_exception_text() -> None:
     """Raw exception prose cannot become a CLI error message or context field."""
     failures: list[str] = []
-    for module in _LEDGER_NOTICE_MODULES:
-        tree = ast.parse(inspect.getsource(module))
+    for module, tree in _notice_module_trees():
         for handler in (node for node in ast.walk(tree) if isinstance(node, ast.ExceptHandler)):
             if handler.name is None:
                 continue

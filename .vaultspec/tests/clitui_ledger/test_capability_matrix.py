@@ -4554,7 +4554,7 @@ def test_canonical_matrix_losslessly_projects_reviewed_gap_and_surface_cohorts()
     } == {row_id for row_id, row in union_rows.items() if LedgerGapClass.REACHABILITY in row.gap_classes}
     assert {row_id for row_id, row in matrix_rows.items() if CapabilityAnnotation.INSTALLED in row.annotations} == {
         "ledger.import.prepare",
-        "ledger.workspace.read"
+        "ledger.workspace.read",
     }
     for row_id, reviewed in union_rows.items():
         matrix_row = matrix_rows[row_id]
