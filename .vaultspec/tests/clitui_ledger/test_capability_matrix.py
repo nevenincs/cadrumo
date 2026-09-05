@@ -275,9 +275,7 @@ def _production_classification_action_reference() -> str:
     factories = tuple(
         node
         for node in ast.walk(launcher)
-        if isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Name)
-        and node.func.id == "ledger_screen_factory"
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "ledger_screen_factory"
     )
     if len(factories) != 1:
         raise AssertionError("production Ledger screen factory call is not unique")
@@ -295,9 +293,7 @@ def _canonical_s14_coordinates() -> dict[str, str]:
     rows = matrix.live_union.rows
     tui_census = _tui_census()
     tui_decisions = {
-        row.capability_id: next(
-            decision for decision in row.applicability if decision.axis is LedgerCapabilityAxis.TUI
-        )
+        row.capability_id: next(decision for decision in row.applicability if decision.axis is LedgerCapabilityAxis.TUI)
         for row in rows
     }
     planned = sum(row.semantic_home_status is SemanticHomeStatus.PLANNED for row in rows)
@@ -323,9 +319,7 @@ def _canonical_s14_coordinates() -> dict[str, str]:
         "s14.cohort.backend-helper-tui-not-applicable": str(tui_not_applicable),
         "s14.cohort.planned-product-gap-rows": str(planned_product),
         "s14.tui.production-read-action-references": ", ".join(read_actions),
-        "s14.tui.production-classification-action-reference": (
-            f"{classification_action} (inert: no target/submitter)"
-        ),
+        "s14.tui.production-classification-action-reference": (f"{classification_action} (inert: no target/submitter)"),
         "s14.tui.production-executable-mutation-doors": str(len(tui_census.installed_mutation_doors)),
     }
 
