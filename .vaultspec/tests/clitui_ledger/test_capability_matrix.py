@@ -188,7 +188,10 @@ _S14_CURRENT_COHORT_RESTATEMENT_PATTERNS: Final[tuple[tuple[str, re.Pattern[str]
     ("classification action reference", re.compile(r"operator\.ledger\.classify(?![A-Za-z0-9])")),
     (
         "action-reference count",
-        re.compile(r"(?ix)(?:\b(?:exactly\s+)?two\b[^\n]*(?:actionreferences?|read-action)|\bzero\b[^\n]*mutation[- ]doors)"),
+        re.compile(
+            r"(?ix)(?:\b(?:exactly\s+)?two\b[^\n]*(?:actionreferences?|read-action)|"
+            r"\bzero\b[^\n]*mutation[- ]doors)"
+        ),
     ),
 )
 
@@ -196,7 +199,9 @@ _S14_CURRENT_COHORT_RESTATEMENT_PATTERNS: Final[tuple[tuple[str, re.Pattern[str]
 def _s14_prose_without_coordinate_rows(path: Path) -> str:
     """Return an S14 surface with its canonical coordinate rows removed."""
     return "\n".join(
-        line for line in path.read_text(encoding="utf-8").splitlines() if not _S14_PUBLICATION_COORDINATE_PATTERN.match(line)
+        line
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if not _S14_PUBLICATION_COORDINATE_PATTERN.match(line)
     )
 
 

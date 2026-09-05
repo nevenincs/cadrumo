@@ -379,10 +379,28 @@ def test_homebrew_parser_defaults_to_public_tap() -> None:
         acquire_homebrew._parser,
     ],
 )
-def test_parsers_require_cohort_and_evidence_dirs(parser_factory) -> None:
+def test_parsers_require_cohort_and_evidence_dirs(
+    parser_factory,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     """Every acquisition script requires --cohort-dir and --evidence-dir."""
+    # argparse exits for ANY missing requirement, so a bare SystemExit proved
+    # only that something was required: a parser that had dropped both options
+    # the docstring names, while gaining a third, would have passed unchanged.
+    # The refusal names what it is missing, so both are asserted.
     with pytest.raises(SystemExit):
         parser_factory().parse_args([])
+
+    refusal = capsys.readouterr().err
+    # The REQUIRED line only. argparse also prints a usage line naming every
+    # option, required or not, so searching the whole of stderr would hold
+    # even after a requirement was dropped - measured, not assumed.
+    required_line = next(
+        (line for line in refusal.splitlines() if "the following arguments are required" in line),
+        "",
+    )
+    assert "--cohort-dir" in required_line, refusal
+    assert "--evidence-dir" in required_line, refusal
 
 
 # ---------------------------------------------------------------------------
