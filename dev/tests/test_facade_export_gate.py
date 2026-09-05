@@ -128,8 +128,13 @@ def test_scan_population_is_non_trivial(head_scan: ScanResult) -> None:
     resolves but the listing comes back empty, which would make every assertion
     in this module vacuously true.
     """
-    assert head_scan.module_count > 1000, head_scan.module_count
-    assert head_scan.facade_count > 100, head_scan.facade_count
+    # Floors, not pinned counts, with the live figures recorded: HEAD carries
+    # 5,857 modules and 295 facades. Against the previous 1,000 and 100 more
+    # than four fifths of the corpus could disappear while every clean result
+    # above still read green - the same collapse this test exists to catch,
+    # only partial instead of total.
+    assert head_scan.module_count > 4500, head_scan.module_count
+    assert head_scan.facade_count > 200, head_scan.facade_count
 
 
 def test_scanner_recovers_the_known_historical_breaks() -> None:

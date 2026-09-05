@@ -194,6 +194,120 @@ _PROFILES: Final[dict[str, tuple[str, ...]]] = {
     "quick": ("core/uv-venv",),
 }
 
+#: The mixed-marker tree whose contracts the campaign proves on this OS.
+_PACKAGING_TESTS: Final[str] = "dev/packaging/tests"
+#: The installed-oracle module, owned by its own pass because it builds and
+#: installs a closed-world cohort of its own and must not be paid for twice.
+_INSTALLED_ORACLES_TESTS: Final[str] = f"{_PACKAGING_TESTS}/test_installed_oracles.py"
+#: The one marker-grounded holdout. ``perf``'s registered policy excludes it
+#: from every per-push lane and enrols it in the dispatch-only ``ci-full``
+#: lane, where a quiet machine makes its CPU-time asserts and advisory wall
+#: numbers meaningful; this driver fans flavor lanes across a runner shared by
+#: co-resident jobs, which is the condition that policy names.
+_PERF_HOLDOUT: Final[str] = "not perf"
+#: Wall ceiling for a preflight pass. The dev tree's real install and harness
+#: tests legitimately exceed the product suite's 300 s ini ceiling; 900 s still
+#: kills a genuine wedge in minutes.
+_PREFLIGHT_TIMEOUT_SECONDS: Final[int] = 900
+
+
+@dataclass(frozen=True)
+class PytestPass:
+    """One pytest invocation the campaign runs over the packaging test tree.
+
+    The selection is DECLARED here rather than inherited. ``dev/packaging/tests``
+    is mixed-marker, and an invocation that omits ``-m`` takes the repository
+    default expression, which keeps the ``unit`` cohort and drops every
+    integration contract in the directory while still exiting zero -- the
+    dangerous variant, because a fully deselected run reports the
+    no-tests-collected status a caller notices whereas a partially deselected
+    one reports a green summary.
+
+    ``parallel`` is the marker-to-scheduler binding, not a speed knob.
+    ``serial`` items read and mutate process-global state, and the collection
+    hook DESELECTS them whenever xdist workers are active: a pass that selects
+    any of them and runs with workers drops them from the run behind a warning
+    rather than executing them.
+
+    Attributes:
+        label: The step name printed and used for the pass's basetemp.
+        markers: The ``-m`` expression, always stated.
+        target: The path this pass collects from.
+        parallel: Whether the pass may run across xdist workers.
+        ignore: Paths held out of this pass because another pass owns them.
+        timeout_seconds: Per-test wall ceiling, or ``None`` for the ini default.
+        pinned_basetemp: Whether to pin a repo-local basetemp for the pass.
+    """
+
+    label: str
+    markers: str
+    target: str
+    parallel: bool
+    ignore: tuple[str, ...] = ()
+    timeout_seconds: int | None = None
+    pinned_basetemp: bool = False
+
+    def selection_arguments(self) -> tuple[str, ...]:
+        """Return the arguments that decide WHICH tests this pass runs."""
+        return ("-m", self.markers, self.target, *(f"--ignore={path}" for path in self.ignore))
+
+    def worker_arguments(self, test_workers: int | None) -> tuple[str, ...]:
+        """Return the xdist arguments binding this pass to its scheduler.
+
+        A serial pass pins ``-n0`` unconditionally. A parallel pass takes an
+        explicit width when one was resolved and otherwise leaves the local
+        ``-n auto`` default in place.
+
+        Args:
+            test_workers: The resolved preflight worker count, or ``None``.
+
+        Returns:
+            The worker arguments to append.
+        """
+        if not self.parallel:
+            return ("-n0",)
+        if test_workers is None:
+            return ()
+        return ("-n", str(test_workers))
+
+
+#: The preflight's two passes, in run order.
+#:
+#: Split because the directory holds both cohorts and one invocation cannot
+#: carry both schedulers. Together with the installed-oracle pass below they
+#: own every test in the directory except the ``perf`` holdout, which is the
+#: invariant ``dev/packaging/tests/test_preflight_recipe_selection.py`` proves.
+_PREFLIGHT_PASSES: Final[tuple[PytestPass, ...]] = (
+    PytestPass(
+        label="preflight-tests",
+        markers=f"(unit or integration) and not serial and {_PERF_HOLDOUT}",
+        target=_PACKAGING_TESTS,
+        parallel=True,
+        timeout_seconds=_PREFLIGHT_TIMEOUT_SECONDS,
+        pinned_basetemp=True,
+    ),
+    PytestPass(
+        label="preflight-serial",
+        markers=f"serial and {_PERF_HOLDOUT}",
+        target=_PACKAGING_TESTS,
+        parallel=False,
+        ignore=(_INSTALLED_ORACLES_TESTS,),
+        timeout_seconds=_PREFLIGHT_TIMEOUT_SECONDS,
+        pinned_basetemp=True,
+    ),
+)
+
+#: The post-lane serial pass over the installed-oracle module.
+_INSTALLED_ORACLES_PASS: Final[PytestPass] = PytestPass(
+    label="installed-oracles",
+    markers="integration and serial",
+    target=_INSTALLED_ORACLES_TESTS,
+    parallel=False,
+)
+
+#: Every pytest invocation this driver runs, in campaign order.
+_PYTEST_PASSES: Final[tuple[PytestPass, ...]] = (*_PREFLIGHT_PASSES, _INSTALLED_ORACLES_PASS)
+
 
 def resolve_form(selector: str) -> tuple[Lane, Form]:
     """Resolve a ``lane/form`` selector to its lane and form, refusing anything else."""
@@ -205,6 +319,88 @@ def resolve_form(selector: str) -> tuple[Lane, Form]:
     except KeyError:
         raise KeyError(f"profile entry {selector!r} names unknown lane {lane_name!r}") from None
     return lane, lane.form(form_name)
+
+
+def preflight_basetemp_root(repo_root: Path) -> Path:
+    """Return the repo-local basetemp root the preflight passes write under.
+
+    The self-hosted runners execute as the same OS user as interactive sessions
+    on the same box, so pytest's default per-user root is shared: two concurrent
+    runs fight over the single ``pytest-current`` symlink and one dies in
+    ``cleanup_dead_symlinks`` with a permission error AFTER its tests have all
+    passed. Handing pytest an explicit basetemp skips the numbered-dir rotation
+    and that symlink entirely.
+
+    Args:
+        repo_root: The repository root the campaign runs from.
+
+    Returns:
+        The root each pass takes its own dedicated subdirectory under.
+    """
+    return repo_root / "var" / "packaging-smoke" / "pytest-basetemp"
+
+
+def pytest_pass_argv(pytest_pass: PytestPass, repo_root: Path, test_workers: int | None) -> list[str]:
+    """Build the exact interpreter argv the campaign runs for one pass.
+
+    The single construction site for every pytest invocation this driver makes,
+    so the selection a gate reads is the selection a lane executes; a second
+    hand-built argv is how the driver drifted from its own declared contract
+    before.
+
+    Args:
+        pytest_pass: The declared pass to build.
+        repo_root: The repository root, used to resolve a pinned basetemp.
+        test_workers: The resolved preflight worker count, or ``None``.
+
+    Returns:
+        The argv, ready for :func:`_run_step`.
+    """
+    argv = [sys.executable, "-m", "pytest", "-q"]
+    if pytest_pass.timeout_seconds is not None:
+        argv.append(f"--timeout={pytest_pass.timeout_seconds}")
+    if pytest_pass.pinned_basetemp:
+        # Per-pass, because pytest REMOVES whatever it is pointed at: one shared
+        # directory would have the second pass delete the first pass's retained
+        # failure artifacts before anyone could read them.
+        argv.append(f"--basetemp={preflight_basetemp_root(repo_root) / pytest_pass.label}")
+    argv += pytest_pass.selection_arguments()
+    argv += pytest_pass.worker_arguments(test_workers)
+    return argv
+
+
+def campaign_pytest_argv(repo_root: Path, test_workers: int | None) -> tuple[tuple[str, list[str]], ...]:
+    """Return every pytest invocation this driver makes, labelled, in order.
+
+    Args:
+        repo_root: The repository root the campaign runs from.
+        test_workers: The resolved preflight worker count, or ``None``.
+
+    Returns:
+        One ``(label, argv)`` pair per declared pass.
+    """
+    preflight = [
+        sys.executable,
+        "-m",
+        "pytest",
+        "dev/packaging/tests",
+        "-q",
+        "--timeout=900",
+        f"--basetemp={repo_root / 'var' / 'packaging-smoke' / 'pytest-basetemp'}",
+    ]
+    if test_workers is not None:
+        preflight += ["-n", str(test_workers)]
+    oracles = [
+        sys.executable,
+        "-m",
+        "pytest",
+        "-q",
+        "-n0",
+        "-m",
+        "integration and serial",
+        "dev/packaging/tests/test_installed_oracles.py",
+    ]
+    return (("preflight-tests", preflight), ("installed-oracles", oracles))
 
 
 def _run_step(argv: list[str], repo_root: Path, label: str) -> None:
@@ -306,39 +502,14 @@ def main(argv: list[str] | None = None) -> int:
 
     if not args.skip_preflight:
         _run_step([sys.executable, "-m", "dev.packaging.dependency_surface"], repo_root, "dependency-surface")
-        # Pin a repo-local basetemp. The self-hosted runners execute as the same
-        # OS user as interactive sessions on the same box, so the default
-        # per-user root is shared: two concurrent runs fight over the single
-        # `pytest-current` symlink and one dies in `cleanup_dead_symlinks` with
-        # a permission error AFTER its tests have all passed. Handing pytest an
-        # explicit basetemp skips the numbered-dir rotation and that symlink
-        # entirely. The directory is dedicated to this preflight because pytest
-        # removes whatever it is pointed at.
-        preflight_basetemp = repo_root / "var" / "packaging-smoke" / "pytest-basetemp"
-        # pytest mkdirs the basetemp itself but does NOT create its parents, so a
-        # clean checkout would die with an internal error here: the campaign only
-        # creates `var/packaging-smoke/` later, for the lane logs.
-        preflight_basetemp.parent.mkdir(parents=True, exist_ok=True)
-        preflight_argv = [
-            sys.executable,
-            "-m",
-            "pytest",
-            "dev/packaging/tests",
-            "-q",
-            "--timeout=900",
-            f"--basetemp={preflight_basetemp}",
-        ]
+        # pytest mkdirs each pass's basetemp itself but does NOT create its
+        # parents, so a clean checkout would die with an internal error here:
+        # the campaign only creates `var/packaging-smoke/` later, for the lane
+        # logs.
+        preflight_basetemp_root(repo_root).mkdir(parents=True, exist_ok=True)
         test_workers = _test_worker_count(args.test_workers)
-        if test_workers is not None:
-            preflight_argv += ["-n", str(test_workers)]
-        _run_step(
-            # The dev tree's real install/harness tests legitimately exceed
-            # the product suite's 300 s ini ceiling; 900 s still kills a
-            # genuine wedge in minutes.
-            preflight_argv,
-            repo_root,
-            "preflight-tests",
-        )
+        for pytest_pass in _PREFLIGHT_PASSES:
+            _run_step(pytest_pass_argv(pytest_pass, repo_root, test_workers), repo_root, pytest_pass.label)
 
     # Fail before any wheel or venv work if a git-tracked shipped data file is
     # missing from the worktree (seconds). Runs in every profile that reaches
@@ -382,18 +553,9 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     _run_step(
-        [
-            sys.executable,
-            "-m",
-            "pytest",
-            "-q",
-            "-n0",
-            "-m",
-            "integration and serial",
-            "dev/packaging/tests/test_installed_oracles.py",
-        ],
+        pytest_pass_argv(_INSTALLED_ORACLES_PASS, repo_root, test_workers=None),
         repo_root,
-        "installed-oracles",
+        _INSTALLED_ORACLES_PASS.label,
     )
     return 0
 

@@ -967,8 +967,8 @@ name = "locale-key manifest no scaffold gate reads"
 class = "should-be-live"
 area = "application"
 resolved = false
-symbols = ["APODERADO_FLOW_LOCALE_KEYS"]
-evidence = "Its own comment states the tuple exists 'for the scaffold gate', enumerating every locale key the apoderado flow references. Nothing in src/cadrumo or dev/ reads it, so the gate it was written for either never consumed it or stopped. A key the flow renders can therefore go missing from a catalogue without any gate noticing. The remedy is to wire the manifest into the locale scaffold check or to delete it and accept that the flow keys are covered only by the general catalogue completeness gate."
+symbols = ["APODERADO_FLOW_LOCALE_KEYS", "DESCENDANT_DOOR_LOCALE_KEYS", "DESCENDANT_LOCALE_KEYS"]
+evidence = "Three modules declare a tuple naming every locale key they reference, each carrying the identical comment that it exists 'for the scaffold gate'. Nothing in src/cadrumo or dev/ reads any of them: a search for a dev-side consumer of any *_LOCALE_KEYS manifest returns nothing at all, so the gate the convention was written for either never existed or stopped reading them. The convention is therefore load-bearing in intent and inert in fact - a key one of these flows renders can vanish from a catalogue with no gate noticing, and the manifests give a false impression that it cannot. The remedy is to write the scaffold gate that consumes them or to withdraw the convention from all three modules together; deleting one while the comment convention survives in the others would leave the same illusion."
 
 [[symbol_cluster]]
 name = "IVA evidence advisories nothing raises"
@@ -996,3 +996,22 @@ resolved = false
 remedy_requires_decision = true
 symbols = ["create_inventory_ledger", "default_profile_secure_object_inventory", "profile_is_authentication_failure", "profile_advance_session_idle_deadline", "profile_is_persisted_session"]
 evidence = "Five of the eight one-line port-facade wrappers in the shipped tree are called by nothing; the other three are reached from tests or dev. The asymmetry is what makes this a finding rather than a dead layer: `profile_is_keyring_unavailable` sits directly beside `profile_is_authentication_failure` in custody_ports and IS used, so typed authentication refusals are being recognised somewhere WITHOUT the facade -- which means an adapter exception type is leaking into application code, the exact thing the docstring says the wrapper exists to prevent. The same reading applies to the session-receipt and inventory members. The remedy is to route the existing callers through the facade or to withdraw the unused members and record that the boundary is narrower than it looks; both are owner decisions about the application/adapter boundary rather than deletions of dead code."
+
+# ---------------------------------------------------------------------------
+# Shipped types nothing constructs
+#
+# Eleven of the forty-eight class findings are named nowhere outside their own
+# module: definition, and an __all__ entry. Two are Protocols, which a
+# structural implementer satisfies without naming, so they are excluded from
+# the cluster and left to the protocol question. The remaining nine are
+# concrete result, error and model types.
+# ---------------------------------------------------------------------------
+
+[[symbol_cluster]]
+name = "public types no caller constructs"
+class = "should-be-live"
+area = "application"
+resolved = false
+remedy_requires_decision = true
+symbols = ["AttachmentCatalogue", "CertificateSourceNoActiveBucketError", "ModeloEditPermittedSurfacePageRequestV1", "ModeloEditPermittedSurfacePageV1", "ModeloWorkspaceVersionHeader", "ProfileImportResult", "SchemaModuleLoadFailure", "ModeloDraftBuilderAdapter", "ModeloWorkspaceAtomicProjectionPortV1"]
+evidence = "Each is exported and referenced nowhere outside the module that defines it, so nothing constructs, subclasses or annotates with it. Read as behaviour rather than as code, each names something the product does not do: AttachmentCatalogue verifies that every mapping key equals the embedded attachment_id so lookups cannot drift, and no lookup goes through it; SchemaModuleLoadFailure records a module and its error, and no schema load failure is recorded; ProfileImportResult is the declared outcome of importing a portable bundle, and portable import returns no such outcome; CertificateSourceNoActiveBucketError is raised by nothing, so that refusal is not detected. Deleting them would remove the record that the capability was designed, which is the same argument the unapplied threshold cluster records. The remedy is to wire each to the caller it was written for or to withdraw it deliberately, and both are owner decisions."

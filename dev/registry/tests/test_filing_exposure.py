@@ -137,7 +137,17 @@ def test_a_census_is_not_added_to_the_filing_defect_total() -> None:
     census = [item for item in exposures if item.entry_returns == "census"]
     findings = [item for item in exposures if item.entry_returns == "findings"]
     assert census and findings, "both shapes must occur or this proves nothing"
-    assert sum(item.filing_findings for item in census) > 0
+    # A floor, not a pinned count, with the live figure recorded: the census
+    # rows carry 11,911 filing findings, which is exactly the inflation this
+    # declaration exists to keep out of the honest total (41,488 naive minus
+    # 29,577 honest). `> 0` only caught the total collapse, so the census
+    # could shrink to a single finding and the comparison below would still
+    # read as proof that excluding them mattered.
+    census_findings = sum(item.filing_findings for item in census)
+    assert census_findings > 8000, (
+        f"census rows carry only {census_findings} filing findings, so the exclusion "
+        "this test proves has almost nothing left to exclude"
+    )
     # The defect total excludes them, so it is strictly smaller than the naive sum.
     naive = sum(item.filing_findings for item in exposures)
     honest = sum(item.filing_findings for item in findings)
