@@ -44,7 +44,12 @@ CONTENT_DIGEST_PREFIX: Final[str] = "sha256:"
 """Algorithm tag prefixing a digest wherever the record spells it out."""
 
 _PREFIXED_DIGEST_LENGTH: Final[int] = len(CONTENT_DIGEST_PREFIX) + 64
-_HEX_ALPHABET: Final[frozenset[str]] = frozenset("0123456789abcdef")
+HEX_ALPHABET: Final[frozenset[str]] = frozenset("0123456789abcdef")
+"""The lowercase hexadecimal alphabet, for validating a digest or id.
+
+One home for a value five modules had each retyped: any character not in
+this set makes the string it appears in not a lowercase hex digest.
+"""
 #: BLAKE2b digest width for content discriminators, in bytes.
 _BLAKE2B_DISCRIMINATOR_BYTES: Final[int] = 16
 
@@ -166,7 +171,7 @@ def validate_prefixed_digest(value: str, *, field_name: str) -> str:
     if (
         len(value) != _PREFIXED_DIGEST_LENGTH
         or not value.startswith(CONTENT_DIGEST_PREFIX)
-        or any(character not in _HEX_ALPHABET for character in value[len(CONTENT_DIGEST_PREFIX) :])
+        or any(character not in HEX_ALPHABET for character in value[len(CONTENT_DIGEST_PREFIX) :])
     ):
         raise ValueError(f"{field_name} must be a lowercase sha256 digest")
     return value
@@ -248,6 +253,7 @@ SHA256_HEX_LENGTH: Final = 64
 
 __all__ = [
     "CONTENT_DIGEST_PREFIX",
+    "HEX_ALPHABET",
     "SHA256_HEX_LENGTH",
     "bounded_canonical_json_bytes",
     "canonical_json_bytes",
