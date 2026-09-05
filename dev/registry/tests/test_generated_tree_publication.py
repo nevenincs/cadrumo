@@ -212,6 +212,15 @@ def test_recovery_retires_only_a_provably_completed_legacy_cross_volume_orphan(t
         backup_export=backup_export,
     )
 
+    # The journal must EXIST here, or its absence below proves nothing about
+    # retirement. Measured: this fixture writes the journal but never creates
+    # the target export root, so the second closing assertion was about
+    # something that was never there. Both are now stated for what they can
+    # honestly prove - the journal is retired, and recovery does not
+    # materialise a target export root that was absent going in.
+    assert journal_path.exists(), journal_path
+    assert not context.target_export_root.exists(), context.target_export_root
+
     assert not _tree_publication._recover_interrupted_publication(
         context=context,
         target_export_root=context.target_export_root,
@@ -222,8 +231,10 @@ def test_recovery_retires_only_a_provably_completed_legacy_cross_volume_orphan(t
         render_profile=None,  # type: ignore[arg-type]
         render_profile_source_evidence=None,  # type: ignore[arg-type]
     )
-    assert not journal_path.exists()
-    assert not context.target_export_root.exists()
+    assert not journal_path.exists(), "the completed legacy orphan journal was not retired"
+    assert not context.target_export_root.exists(), (
+        "recovery materialised a target export root that was absent before the call"
+    )
 
 
 #: The refusal each orphan shape must produce. Four share one check because

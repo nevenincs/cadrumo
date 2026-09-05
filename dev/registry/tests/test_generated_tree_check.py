@@ -313,7 +313,17 @@ def test_check_refuses_linked_candidate_ancestor_before_rendering(m130_inspectio
     candidate_modelos_root.rename(redirected_modelos_root)
     candidate_modelos_root.symlink_to(redirected_modelos_root, target_is_directory=True)
     before = _tree_hashes(target_export_root)
-    redirected_export_root = redirected_modelos_root / "130" / "revisions" / _ISOLATED_TREE.revision / "export"
+    # Derived, not transcribed. The modelo was written as 130 while the
+    # isolated tree is 184, so this path could never exist and the absence
+    # claim below held over a directory the redirect never had - it would
+    # have passed even if rendering HAD written through the link.
+    redirected_export_root = (
+        redirected_modelos_root
+        / _ISOLATED_TREE.modelo
+        / "revisions"
+        / _ISOLATED_TREE.revision
+        / "export"
+    )
 
     with pytest.raises(RegistryValidationError, match="candidate revision root must not be a link"):
         check_generated_export_tree(

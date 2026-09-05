@@ -944,3 +944,36 @@ resolved = false
 symbols = ["AttachmentCatalogue"]
 evidence = "The immutable keyed catalogue over Attachment, verifying that every mapping key matches the embedded attachment_id so lookups cannot drift from the manifest. Its element type Attachment is heavily exercised across the storage attachment tests, so the half below it is live while the catalogue itself has no consumer. That asymmetry is what makes it staged rather than dead: the manifest-level invariant it enforces has no other home, and deleting it would leave attachment collections with no type that checks key-to-id agreement."
 
+# ---------------------------------------------------------------------------
+# Published contracts that nothing honours
+#
+# Each symbol below is exported, referenced by nothing, and describes work the
+# product does NOT do. Deleting one would remove the evidence that the
+# behaviour was intended, which is the same argument the unapplied IVA
+# threshold cluster above records.
+# ---------------------------------------------------------------------------
+
+[[symbol_cluster]]
+name = "declared KDF warmup that no measurement performs"
+class = "should-be-live"
+area = "adapters"
+resolved = false
+remedy_requires_decision = true
+symbols = ["PROFILE_CUSTODY_KDF_WARMUP_COUNT"]
+evidence = "Declared as Final = 1 beside the sample count and deadlines it belongs with, exported, and read by nothing. The calibration loop measures `for _ in range(PROFILE_CUSTODY_KDF_SAMPLE_COUNT)` with no warmup pass, while the comment above it states the grid costs one supervised child per warmup AND per sample. So the first sample of every parameter set carries cold-start cost (process spawn, page faults) that a warmup exists to discard, biasing the median slower and selecting WEAKER KDF parameters than the host can afford. The remedy is to perform the warmup the constant declares or to withdraw the constant and correct the comment; both are owner decisions about custody strength."
+
+[[symbol_cluster]]
+name = "locale-key manifest no scaffold gate reads"
+class = "should-be-live"
+area = "application"
+resolved = false
+symbols = ["APODERADO_FLOW_LOCALE_KEYS"]
+evidence = "Its own comment states the tuple exists 'for the scaffold gate', enumerating every locale key the apoderado flow references. Nothing in src/cadrumo or dev/ reads it, so the gate it was written for either never consumed it or stopped. A key the flow renders can therefore go missing from a catalogue without any gate noticing. The remedy is to wire the manifest into the locale scaffold check or to delete it and accept that the flow keys are covered only by the general catalogue completeness gate."
+
+[[symbol_cluster]]
+name = "IVA evidence advisories nothing raises"
+class = "should-be-live"
+area = "application"
+resolved = false
+symbols = ["transaction_missing_deductible_iva_evidence", "transaction_missing_output_iva_evidence"]
+evidence = "Both predicates answer whether a transaction claims deductible or declares output IVA without linked evidence, and both are exported and called by nothing. Under no-silent-under-declaration an unraised advisory is the interesting direction: a transaction missing its evidence produces a total that omits the warning rather than failing loudly, so the operator is not told. The private flow helper they wrap is used by their neighbours, so this is unwired capability rather than superseded code."
