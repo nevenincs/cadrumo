@@ -20,9 +20,7 @@ from decimal import Decimal
 import typer
 from pydantic import ValidationError
 
-from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.ledger.actions_manual import create_manual_transaction, update_manual_transaction_fields
-from ...application.ledger.id_resolution import resolve_lineage_transaction_id
 from ...application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.external_constants import DEFAULT_CURRENCY
@@ -36,7 +34,7 @@ from ...core.prorrata_register import ProrrataRegisterRegime
 from ...domain.iva.prorrata import InputClassification
 from ...domain.iva.schema import EUMemberState, IvaCategory
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, is_classified
-from ...domain.transactions.errors import TransactionIdPrefixError, TransactionValidationError
+from ...domain.transactions.errors import TransactionValidationError
 from ._common import bad, current_workflow_state, emit_envelope, profile_to_taxpayer, transaction_catalogue_repo
 from ._date_parsing import _parse_iso_date
 from ._ledger_classify_cli import ledger_classify_bulk_csv, require_single_ledger_classification_request
@@ -49,10 +47,8 @@ from ._ledger_llm_cli import (
 )
 from ._ledger_m210_classify_cli import M210LedgerClassifyOptions
 from ._ledger_support import (
-    TransactionRepo,
     emit_update_result,
     invoice_link_error_bad_parameter,
-    ledger_cli_no_recovery,
     ledger_transaction_validation_no_recovery,
     ledger_validation_bad,
     parse_amount_magnitude,
@@ -89,38 +85,6 @@ __all__ = [
     "ledger_split",
     "ledger_stash",
 ]
-
-
-def resolve_read_id(transaction_repository: TransactionRepo, prefix: str) -> str:
-    """Resolve a CLI-supplied id for the *read* verbs, following edit lineage.
-
-    This is the D3 stable-lineage-handle resolution path for
-    ``ledger history`` / ``view`` / ``track``. It first resolves ``prefix``
-    against live catalogue ids exactly as :func:`resolve_id` does; when no
-    live row matches, it walks the edit-lineage chain so a superseded
-    (pre-``update``) id written down by the operator still resolves to the
-    current row — see
-    :func:`resolve_lineage_transaction_id`. The
-    content-addressed id stays authoritative; this is a read-side lookup
-    convenience, never a change to how ids are minted.
-    """
-    if not isinstance(transaction_repository, TransactionCatalogueRepository):
-        # Read verbs always receive a real catalogue repository through
-        # transaction_catalogue_repo; the structural Protocol is only used by mutation
-        # helpers. Fall back to the live-id resolver if a non-catalogue
-        # repository is ever supplied so the read path never crashes.
-        return resolve_id(transaction_repository, prefix)
-    catalogue = transaction_repository.load()
-    try:
-        return resolve_lineage_transaction_id(prefix, catalogue)
-    except TransactionIdPrefixError as exc:
-        from ...application.cli_exception_preconditions import CliExceptionPrecondition
-
-        raise ledger_cli_no_recovery(
-            exc,
-            condition=CliExceptionPrecondition.LEDGER_TRANSACTION_ID_RESOLVES,
-            facts={"transaction_id_resolves": False},
-        ) from None
 
 
 def _patch_from_options(**values: object) -> ManualLedgerTransactionPatch:
