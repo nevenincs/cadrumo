@@ -71,13 +71,14 @@ class ExportVerdict:
 def _declared_exports(tree: ast.Module) -> list[str]:
     """Return the string entries of a module-level ``__all__``."""
     for node in tree.body:
-        for target in node.targets if isinstance(node, ast.Assign) else []:
-            if (
-                isinstance(target, ast.Name)
-                and target.id == "__all__"
-                and isinstance(node.value, (ast.List, ast.Tuple))
-            ):
-                return [e.value for e in node.value.elts if isinstance(e, ast.Constant)]
+        if not isinstance(node, ast.Assign) or not isinstance(node.value, (ast.List, ast.Tuple)):
+            continue
+        if any(isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets):
+            return [
+                element.value
+                for element in node.value.elts
+                if isinstance(element, ast.Constant) and isinstance(element.value, str)
+            ]
     return []
 
 
