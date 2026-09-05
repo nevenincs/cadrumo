@@ -42,7 +42,6 @@ _FieldPath = Annotated[
         pattern=r"^[a-z][a-z0-9_]*(?:\.(?:[0-9]+|[a-z][a-z0-9_]*))+$",
     ),
 ]
-_DisplayName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=160)]
 _Source = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=80)]
 
 

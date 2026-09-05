@@ -15,8 +15,6 @@ from io import BytesIO
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pydantic import ConfigDict, TypeAdapter
-
 if TYPE_CHECKING:
     # Annotation-only: ``from __future__ import annotations`` above makes every
     # annotation a string, so these never need to exist at runtime. The parser
@@ -49,9 +47,6 @@ _log = get_logger(__name__)
 
 _OPENPYXL_HEADER_FOOTER_WARNING = "Cannot parse header or footer so it will be ignored"
 _OPENPYXL_PRINT_AREA_WARNING = r"Print area cannot be set to Defined name: .*"
-_NUMERIC_TUPLE_ADAPTER: TypeAdapter[tuple[int | float, ...]] = TypeAdapter(
-    tuple[int | float, ...], config=ConfigDict(strict=True)
-)
 
 
 def extract_record_design(path: Path) -> RecordDesignExtraction:
