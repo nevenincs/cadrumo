@@ -206,7 +206,7 @@ class RentaIncomeObservation(BaseModel):
         this axis carries; refusing a figure beside it would make the default
         unusable rather than make anything safer. The guarantee that matters
         lives on the production path, where
-        :func:`_build_income_observation` always states a marker it derived
+        :func:`_classify_income_transaction` always states a marker it derived
         together with the amount -- pinned by
         ``test_the_builder_never_emits_an_unmarked_withholding``.
         """

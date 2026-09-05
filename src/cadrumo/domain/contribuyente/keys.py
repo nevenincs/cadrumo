@@ -111,10 +111,10 @@ _BY_KEY_CACHE: list[dict[str, ProfileKey]] = []
 def register_profile_keys(keys: tuple[ProfileKey, ...]) -> None:
     """Seed the domain profile-key registry from outside the domain layer.
 
-    The compiled tuple normally lives behind a lazy import inside
-    :func:`_build_profile_keys`. Outer layers (the wizard compiler) can
-    call this function at their own import time to seed the cache
-    directly, so the lazy import is never triggered. Calling this
+    The domain does not compile the tuple itself: reading the registry
+    before it is seeded raises :class:`ProfileKeysRegistrationError`. Outer
+    layers (the wizard compiler) call this function at their own import time
+    to seed the cache, which is what makes the registry readable. Calling this
     function twice with different tuples raises a :class:`RuntimeError`
     so the registration stays single-writer.
     """
