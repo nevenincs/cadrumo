@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:48188088aae249280b643e863ea6b98ac2daff4b1e028b831f62cfc5d7ebe991'
+body_hash: 'sha256:22684098148b7633ff94c6b1b7f6ff95fb0fd517aca01e5bf3c855ea9a0b67bd'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-reference]]"
@@ -275,3 +275,32 @@ selection change, and rename.
 G0 remains OPEN and no production backend, CLI, or TUI implementation was
 introduced by S08. The full matrix module passes all 207 tests. Ruff
 format/check, scoped `ty`, and the feature Vault check pass.
+
+## Schema-v2 remediation review
+
+**Ruling: ACCEPT.** No HIGH or CRITICAL findings remain. The schema-v2 envelope
+embeds the validated registry and TUI projections and validates the canonical
+source together with each observation identity and ordered selection. The
+exact 214 non-registry authorities remain partitioned 78/50/63/10/6/7. The
+546 registry authorities are rederived from the embedded canonical registry
+rows rather than copied into a second business registry.
+
+Independent recomputed-digest challenges now refuse cross-source relabeling;
+registry observation rename, addition, removal, duplication, source change,
+and selection change; row observation membership and row-source drift; and
+source-digest substitution. Validation rederives source counts and source
+digests from the canonical observations and embedded projections before it
+recomputes row membership, row sources, selection accounting, and the
+aggregate digest. Mutable serialized claims are therefore not accepted as
+authority at those boundaries.
+
+The reviewed projection independently reproduces 760 observations, 769
+selected edges, 693 semantic rows, four existing and 689 planned homes, and
+`sha256:8119bedd03babf7b1400bf310cd9e847b1f7f472a671b6ccb482cc583ad9a3bb`.
+The previously accepted effects, joins/splits, and provenance applicability
+remain coherent. G0 remains OPEN, and the remediation changes only the quality
+owner/tests and lifecycle publications, not production backend, CLI, or TUI
+code.
+
+The full matrix module passes all 217 tests. Ruff format/check, scoped `ty`,
+and the feature Vault check pass.
