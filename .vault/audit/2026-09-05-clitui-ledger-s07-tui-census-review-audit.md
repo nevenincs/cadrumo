@@ -459,3 +459,35 @@ The focused S07 detector selection passes 41 tests with 135 deselected, and the
 full matrix module passes all 176 tests. Ruff format/check, scoped `ty`,
 basedpyright, and the feature Vault check pass. The record/reference/plan and G0
 state agree with the accepted current census.
+
+## Comprehension-scope cleanup review
+
+Ruling: **ACCEPT**. No HIGH or CRITICAL finding remains, and the prior
+`comprehension-target-scope` MEDIUM is closed.
+
+The comprehension visitor now excludes generator targets from the enclosing
+function's binding set while continuing to traverse iterable, condition, key,
+value, and element expressions for enclosing-scope assignment expressions.
+Independent positive mutations for list, set, dict, and generator expressions,
+tuple targets, nested comprehension targets, and comprehension targets inside
+postponed annotations all preserve the installed Overview result. Independent
+negative mutations placing `screen := Screen()` in a list element, filter, and
+dict value all fail closed. This agrees with Python 3 comprehension-local
+target scope and assignment-expression binding semantics. Nested function and
+lambda defaults, class headers, imports, branches, repeated writes, dead calls,
+and the earlier route/handler/action controls remain covered by the focused
+suite.
+
+The stable facts remain 126 sources, seven routes with `ledger.overview` solely
+installed, zero consumers, two injected read-action ids, zero mutation doors,
+78 CLI declarations all `not-implemented`, and six harness files with 65 test
+functions. Source digest
+`sha256:e7337508a02ef2260e0b28205c31bb872b69f59aa51a18391ae209c21b8f9d57`
+and census digest
+`sha256:c136cfe1ae3f82a239476c00e805f8c9a29e010d502e74397963cea7e6f42371`
+are unchanged. No production TUI file changed; G0 remains OPEN and the TUI hold
+remains effective.
+
+The final focused S07 selection passes 47 tests with 135 deselected. Ruff
+format/check, scoped `ty`, basedpyright, and the feature Vault check pass. The
+record, reference, and plan state accurately describe the accepted census.
