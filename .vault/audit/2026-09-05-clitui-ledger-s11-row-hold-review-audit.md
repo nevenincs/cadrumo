@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:37585558e193d54965f042a91406118ea16e068b4491bd1398af76759a921b5c'
+body_hash: 'sha256:27cf8066f199b0cf6572f868a60b40264558daaee8f18e248ceed381c261b741'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-reference]]"
@@ -112,3 +112,46 @@ serialization round trips.
 The row-level 680/13 partition and union digest remain unchanged, G0 remains
 OPEN, and no production TUI changes were introduced. Ruff format/check, scoped
 `ty`, and feature Vault checks pass. The full matrix module passes all 231 tests.
+
+## Noncircular-attestation remediation review
+
+**Ruling: NOT ACCEPTED.** The new digest domains remove the mutable receipt
+reviewer and bind receipt-set identities into the attestation, but one HIGH
+self-consistency fabrication path remains.
+
+The attestation digest now covers its id, reviewer, ruling, plan owner,
+pre-receipt matrix basis, denominator, subject coordinates, `attested_at`, and
+receipt identity/gate-set digest. Each receipt binds that full attestation
+digest and a gate-specific closure basis containing the complete attestation.
+The closure basis excludes only the active hold and receipt collection; the
+pre-receipt matrix basis excludes those plus the attestation itself to avoid its
+direct cycle. Extra receipt fields, partial recomputations, non-ACCEPT state,
+wrong order/gate, stale denominator, and stale matrix content refuse.
+
+### self-consistent-attestation-remint-is-still-accepted | high | Recomputing the complete cycle authorizes fabricated identity and time changes
+
+Receipt IDs accept any matching identity rather than the exact gate-derived
+identity. Changing the G3 ID to `receipt.ledger.reminted`, recomputing the
+attestation receipt-set digest and attestation digest, updating every receipt's
+attestation and closure-basis digests, and recomputing the public matrix digest
+produces a valid matrix whose G4 assessment closes. The committed ID mutation
+test stops before updating those dependent receipt digests, so it proves only a
+partial stale mutation.
+
+The same full recomputation after advancing `acceptance_attestation.attested_at`
+by one second also closes G4. Internal hashes prove consistency, not that the
+new attestation was independently issued. No externally current authority pins
+the accepted attestation content.
+
+Require exact gate-derived receipt IDs at minimum. Bind the accepted
+attestation to an external/current reviewed authority such as a separately
+observed immutable acceptance-record subject and evidence coordinate, rather
+than allowing the envelope to mint both the claim and every hash that validates
+it. Add full-cycle mutations for receipt ID and attestation time that recompute
+the receipt-set, attestation, all closure bases, receipt digests, and matrix
+digest and still must refuse.
+
+The authorized post-G3 lifecycle works for the canonical fixture, and the
+680/13 row partition, union digest, G0 OPEN publication, and no-production-TUI
+scope remain unchanged. Static and Vault checks pass; the full suite result is
+237 passed.
