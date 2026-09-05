@@ -639,6 +639,28 @@ different owners.
 Every count below is names / modules. Ordered by size.
 """
 
+[[exported_unused_shape]]
+shape = "single-return pass-through"
+names = 72
+of_total = 368
+measured = "a function whose whole body, docstring aside, is one `return` of a single call or attribute access; anything with a branch, a loop, a local or a second statement is counted as substantive whatever its length"
+note = """
+This does not say "delete these". It says the published surface is one call
+deep, which makes each a cheaper decision than the other 296 because a reader
+can see what is behind it without tracing.
+
+The discriminating question is what the call reaches. `find_invoice` was
+`return catalogue.get(invoice_id)` -- a pass-through over an accessor its own
+argument already exposed, so the export published an illusion and retiring it
+cost nothing. `command_spec_for_path` is `return COMMAND_GRAPH.resolve_path(path)`,
+the same shape over an equally public method. But `run_login_tui` takes four
+keyword arguments and returns a typed outcome: its single `return` is a
+deliberate façade giving a name and a signature to an operation, which is a
+surface worth having.
+
+So the split is a triage aid for whoever rules on the 368, not a verdict.
+"""
+
 [[exported_unused_area]]
 area = "domain/calculations"
 names = 53
