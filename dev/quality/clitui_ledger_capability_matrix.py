@@ -3776,7 +3776,9 @@ class LedgerGateClosureReceiptV1(BaseModel):
             field_name="attestation_review_subject_id",
             pattern=_SUBJECT_ID_PATTERN,
         )
-        _require_non_placeholder(self.attestation_review_subject_revision, field_name="attestation_review_subject_revision")
+        _require_non_placeholder(
+            self.attestation_review_subject_revision, field_name="attestation_review_subject_revision"
+        )
         _require_digest(self.attestation_review_subject_digest, field_name="attestation_review_subject_digest")
         _require_observed_at(
             self.attestation_review_subject_observed_at,
@@ -3952,7 +3954,9 @@ class LedgerCapabilityMatrixV1(BaseModel):
                 "current_authority_dispositions": self.current_authority_dispositions,
                 "current_subjects": tuple(sorted(self.current_subjects, key=lambda subject: subject.subject_id)),
                 "rows": tuple(sorted(self.rows, key=lambda row: row.identity.row_id)),
-                "campaign_evidence": tuple(sorted(self.campaign_evidence, key=lambda coordinate: coordinate.evidence_id)),
+                "campaign_evidence": tuple(
+                    sorted(self.campaign_evidence, key=lambda coordinate: coordinate.evidence_id)
+                ),
             }
         )
 
@@ -4312,6 +4316,11 @@ def evaluate_ledger_capability_gate(
                     blockers.append(f"{row.identity.row_id}: CLI {gap_class.value} finding remains")
         return _gate_assessment(gate, blockers)
     if gate is LedgerGate.G4_TUI_ADMISSION_AND_PARITY:
+        blockers.extend(
+            validate_ledger_matrix_currentness(
+                matrix, observed_census=observed_census, observed_subjects=observed_subjects
+            )
+        )
         if matrix.controls.tui_implementation_hold_active:
             blockers.append("the Ledger TUI implementation hold remains active")
         elif matrix.accepted_gate_closure_receipt(LEDGER_TUI_HOLD_UNTIL_GATE) is None:
@@ -4422,8 +4431,8 @@ __all__ = [
     "LedgerCapabilityRowV1",
     "LedgerDenominatorSnapshotV1",
     "LedgerGapClass",
-    "LedgerGateClosureReceiptV1",
     "LedgerGate",
+    "LedgerGateClosureReceiptV1",
     "LedgerLiveCensusReportV1",
     "LedgerMatrixAcceptanceAttestationV1",
     "LedgerRegistryRouteCensusV1",

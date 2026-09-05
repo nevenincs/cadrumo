@@ -2973,11 +2973,7 @@ def test_g4_scans_findings_on_non_tui_rows_and_other_applicable_axes() -> None:
         findings=(finding,),
         annotations=frozenset({CapabilityAnnotation.DELEGATING}),
     )
-    candidate = _matrix_with(
-        matrix,
-        rows=(mutated,),
-        controls=matrix.controls.model_copy(update={"tui_implementation_hold_active": False}),
-    )
+    candidate = _matrix_with_authorized_hold_lift(_matrix(rows=(mutated,)))
 
     assessment = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY)
 
@@ -3000,6 +2996,22 @@ def test_g4_rejects_an_active_tui_hold() -> None:
     assert assessment.blockers == ("the Ledger TUI implementation hold remains active",)
 
 
+def test_g4_refuses_a_premature_hold_lift_without_an_accepted_g3_receipt() -> None:
+    matrix = _matrix_with(
+        _matrix(),
+        controls=LedgerCampaignControlsV1(
+            sole_ledger_parity_plan_owner=ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
+            tui_implementation_hold_recorded=True,
+            tui_implementation_hold_active=False,
+        ),
+    )
+
+    assessment = _evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY)
+
+    assert not assessment.closed
+    assert assessment.blockers == ("the Ledger TUI implementation hold lacks a current accepted G3 closure receipt",)
+
+
 @pytest.mark.parametrize(
     ("field", "value"),
     [
@@ -3011,13 +3023,7 @@ def test_g4_rejects_each_incomplete_tui_proof_or_surface(
     field: str,
     value: AxisProofState | SurfaceCapabilityState,
 ) -> None:
-    matrix = _matrix(
-        controls=LedgerCampaignControlsV1(
-            sole_ledger_parity_plan_owner=ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
-            tui_implementation_hold_recorded=True,
-            tui_implementation_hold_active=False,
-        )
-    )
+    matrix = _matrix_with_authorized_hold_lift(_matrix())
     tui = matrix.rows[0].assessment(LedgerCapabilityAxis.TUI).model_copy(update={field: value})
     finding = CapabilityFindingV1(
         finding_id=f"finding.entries.g4.tui_{field}",
@@ -3031,7 +3037,7 @@ def test_g4_rejects_each_incomplete_tui_proof_or_surface(
         {LedgerCapabilityAxis.TUI: tui},
         findings=(finding,),
     )
-    candidate = _matrix_with(matrix, rows=(row,))
+    candidate = _matrix_with_authorized_hold_lift(_matrix(rows=(row,)))
 
     assert _evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).closed
     blockers = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).blockers
@@ -3040,19 +3046,13 @@ def test_g4_rejects_each_incomplete_tui_proof_or_surface(
 
 
 def test_g4_rejects_a_tui_row_without_the_installed_annotation() -> None:
-    matrix = _matrix(
-        controls=LedgerCampaignControlsV1(
-            sole_ledger_parity_plan_owner=ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
-            tui_implementation_hold_recorded=True,
-            tui_implementation_hold_active=False,
-        )
-    )
+    matrix = _matrix_with_authorized_hold_lift(_matrix())
     row = _row_with_assessments(
         matrix.rows[0],
         {},
         annotations=frozenset({CapabilityAnnotation.DELEGATING}),
     )
-    candidate = _matrix_with(matrix, rows=(row,))
+    candidate = _matrix_with_authorized_hold_lift(_matrix(rows=(row,)))
 
     assert _evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).closed
     blockers = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).blockers
@@ -3069,14 +3069,9 @@ def test_g4_rejects_a_tui_row_without_the_installed_annotation() -> None:
     ],
 )
 def test_g4_requires_each_campaign_wide_tui_evidence_role(role: EvidenceRole) -> None:
-    controls = LedgerCampaignControlsV1(
-        sole_ledger_parity_plan_owner=ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
-        tui_implementation_hold_recorded=True,
-        tui_implementation_hold_active=False,
-    )
-    matrix = _matrix(controls=controls)
+    matrix = _matrix_with_authorized_hold_lift(_matrix())
     campaign_evidence = tuple(coordinate for coordinate in matrix.campaign_evidence if coordinate.role is not role)
-    candidate = _matrix(campaign_evidence=campaign_evidence, controls=controls)
+    candidate = _matrix_with_authorized_hold_lift(_matrix(campaign_evidence=campaign_evidence))
 
     assert _evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).closed
     blockers = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).blockers
@@ -3085,12 +3080,7 @@ def test_g4_requires_each_campaign_wide_tui_evidence_role(role: EvidenceRole) ->
 
 
 def test_g4_preserves_explicitly_empty_campaign_evidence() -> None:
-    controls = LedgerCampaignControlsV1(
-        sole_ledger_parity_plan_owner=ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
-        tui_implementation_hold_recorded=True,
-        tui_implementation_hold_active=False,
-    )
-    candidate = _matrix(campaign_evidence=(), controls=controls)
+    candidate = _matrix_with_authorized_hold_lift(_matrix(campaign_evidence=()))
 
     blockers = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).blockers
 
@@ -3102,12 +3092,6 @@ def test_g4_preserves_explicitly_empty_campaign_evidence() -> None:
 
 
 def test_g4_scans_findings_for_every_applicable_axis_on_every_row() -> None:
-    controls = LedgerCampaignControlsV1(
-        sole_ledger_parity_plan_owner=ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
-        tui_implementation_hold_recorded=True,
-        tui_implementation_hold_active=False,
-    )
-
     def findings(prefix: str) -> tuple[CapabilityFindingV1, ...]:
         return tuple(
             CapabilityFindingV1(
@@ -3122,9 +3106,9 @@ def test_g4_scans_findings_for_every_applicable_axis_on_every_row() -> None:
 
     first = _row(findings=findings("entries"))
     second = _row("ledger.reconciliation.match", prefix="reconciliation_match", findings=findings("reconciliation"))
-    clean = _matrix(controls=controls)
+    clean = _matrix_with_authorized_hold_lift(_matrix())
     assert _evaluate(clean, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).closed
-    candidate = _matrix(rows=(first, second), controls=controls)
+    candidate = _matrix_with_authorized_hold_lift(_matrix(rows=(first, second)))
 
     blockers = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).blockers
 
@@ -3133,14 +3117,116 @@ def test_g4_scans_findings_for_every_applicable_axis_on_every_row() -> None:
     assert blockers.count(f"{second.identity.row_id}: blocking product finding remains") == len(LedgerCapabilityAxis)
 
 
-def test_valid_controls_close_g0_through_g3_and_lifted_hold_closes_g4() -> None:
-    matrix = _matrix(
-        controls=LedgerCampaignControlsV1(
-            sole_ledger_parity_plan_owner=ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
-            tui_implementation_hold_recorded=True,
-            tui_implementation_hold_active=False,
-        )
+def test_ordered_post_g3_hold_lift_preserves_accepted_history_and_allows_g4() -> None:
+    matrix = _matrix_with_authorized_hold_lift(_matrix())
+
+    individual_g0 = _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE)
+    individual_g4 = _evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY)
+    ordered = evaluate_ledger_capability_gates(
+        matrix,
+        observed_census=_report(),
+        observed_subjects=(_SUBJECT,),
     )
+
+    assert not individual_g0.closed
+    assert individual_g0.blockers == ("the Ledger TUI implementation hold is not recorded and active",)
+    assert individual_g4.closed
+    assert all(assessment.closed for assessment in ordered)
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        pytest.param("forged_basis", id="forged-basis"),
+        pytest.param("non_accept", id="non-accept"),
+        pytest.param("wrong_order", id="wrong-order"),
+    ],
+)
+def test_g4_refuses_forged_or_wrong_order_gate_closure_receipts(mutation: str) -> None:
+    matrix = _matrix_with_authorized_hold_lift(_matrix())
+    receipts = matrix.accepted_gate_closure_receipts
+    if mutation == "forged_basis":
+        receipts = (
+            *receipts[:-1],
+            receipts[-1].model_copy(update={"matrix_closure_basis_digest": "sha256:" + "b" * 64}),
+        )
+    elif mutation == "non_accept":
+        receipts = (*receipts[:-1], receipts[-1].model_copy(update={"ruling": ReviewRuling.REJECT}))
+    else:
+        receipts = tuple(reversed(receipts))
+    candidate = _matrix_with(matrix, accepted_gate_closure_receipts=receipts)
+
+    assessment = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY)
+
+    assert not assessment.closed
+    assert len(assessment.blockers) == 1
+    assert assessment.blockers[0].startswith("matrix validation failed at ")
+
+
+def test_receipt_serialization_and_matrix_digest_mutations_fail_closed() -> None:
+    base = _matrix()
+    frozen = _matrix_with(base, accepted_gate_closure_receipts=_accepted_gate_receipts(base))
+    lifted = _matrix_with_authorized_hold_lift(base)
+    stale_digest = lifted.model_copy(update={"matrix_digest": frozen.matrix_digest})
+
+    serialized = lifted.model_dump(mode="json")
+    assessment = _evaluate(stale_digest, LedgerGate.G4_TUI_ADMISSION_AND_PARITY)
+
+    assert serialized["accepted_gate_closure_receipts"][-1]["gate"] == LedgerGate.G3_CLI_CLEAN_BREAK_AND_COMPLETENESS
+    assert frozen.matrix_digest != base.matrix_digest
+    assert lifted.matrix_digest != frozen.matrix_digest
+    assert not assessment.closed
+    assert assessment.blockers == ("matrix validation failed at <root>: value_error",)
+
+
+def test_matrix_drift_invalidates_receipt_and_relocks_ordered_gates() -> None:
+    matrix = _matrix_with_authorized_hold_lift(_matrix())
+    drift = _evidence(
+        "evidence.campaign.receipt_matrix_drift",
+        EvidenceRole.MATRIX_PUBLICATION,
+        frozenset(LedgerCapabilityAxis),
+    )
+    candidate = _matrix_with(matrix, campaign_evidence=(*matrix.campaign_evidence, drift))
+
+    g4 = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY)
+    ordered = evaluate_ledger_capability_gates(
+        candidate,
+        observed_census=_report(),
+        observed_subjects=(_SUBJECT,),
+    )
+
+    assert not g4.closed
+    assert g4.blockers == ("matrix validation failed at <root>: value_error",)
+    assert all(not assessment.closed for assessment in ordered)
+
+
+def test_denominator_and_observed_census_drift_invalidate_receipts_and_relock() -> None:
+    matrix = _matrix_with_authorized_hold_lift(_matrix())
+    drifted_report = _report(revision="census-rev-2", observed_at=_LATER_OBSERVED_AT)
+    drifted_denominator = _snapshot(drifted_report)
+    candidate = _matrix_with(
+        matrix,
+        current_denominator=drifted_denominator,
+        current_authority_dispositions=_authority_snapshot(drifted_denominator, matrix.rows),
+    )
+
+    stale_matrix_g4 = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY, report=drifted_report)
+    observed_census_g4 = _evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY, report=drifted_report)
+    ordered = evaluate_ledger_capability_gates(
+        candidate,
+        observed_census=drifted_report,
+        observed_subjects=(_SUBJECT,),
+    )
+
+    assert not stale_matrix_g4.closed
+    assert stale_matrix_g4.blockers == ("matrix validation failed at <root>: value_error",)
+    assert not observed_census_g4.closed
+    assert any("denominator" in blocker for blocker in observed_census_g4.blockers)
+    assert all(not assessment.closed for assessment in ordered)
+
+
+def test_active_pre_g3_evaluation_uses_normal_gate_predicates() -> None:
+    matrix = _matrix()
 
     g0 = _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE)
     g1 = _evaluate(matrix, LedgerGate.G1_SEMANTIC_AUTHORITY_RECOVERY)
@@ -3148,22 +3234,12 @@ def test_valid_controls_close_g0_through_g3_and_lifted_hold_closes_g4() -> None:
     g3 = _evaluate(matrix, LedgerGate.G3_CLI_CLEAN_BREAK_AND_COMPLETENESS)
     g4 = _evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY)
 
-    assert not g0.closed
-    assert "hold is not recorded and active" in " ".join(g0.blockers)
-    assert g1.closed
-    assert g2.closed
-    assert g3.closed
-    assert g4.closed
+    assert all(assessment.closed for assessment in (g0, g1, g2, g3))
+    assert g4.blockers == ("the Ledger TUI implementation hold remains active",)
 
 
 def test_ordered_evaluation_never_allows_a_later_gate_to_close() -> None:
-    matrix = _matrix(
-        controls=LedgerCampaignControlsV1(
-            sole_ledger_parity_plan_owner=ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
-            tui_implementation_hold_recorded=True,
-            tui_implementation_hold_active=False,
-        )
-    )
+    matrix = _matrix_with_authorized_hold_lift(_matrix())
     drifted_report = _report((_ROW_ID, "ledger.entries.export"))
 
     assessments = evaluate_ledger_capability_gates(
@@ -3174,9 +3250,11 @@ def test_ordered_evaluation_never_allows_a_later_gate_to_close() -> None:
 
     assert len(assessments) == 5
     assert not assessments[0].closed
-    for assessment in assessments[1:]:
+    for assessment in assessments[1:-1]:
         assert not assessment.closed
         assert assessment.blockers == (f"{assessment.gate.value} cannot close while an earlier gate remains open",)
+    assert not assessments[-1].closed
+    assert any("denominator" in blocker for blocker in assessments[-1].blockers)
 
 
 def test_ordered_evaluation_reopens_later_gates_after_a_malformed_subject() -> None:
