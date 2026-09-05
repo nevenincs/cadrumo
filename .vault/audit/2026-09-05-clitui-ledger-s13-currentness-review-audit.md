@@ -4,7 +4,7 @@ tags:
   - '#clitui-ledger'
 date: '2026-09-05'
 modified: '2026-09-05'
-body_hash: 'sha256:aaa828eb701319213b623d579075e8faf33fd38d128935a8add02ba8836f57b9'
+body_hash: 'sha256:981ba7a58a98a5676e44c4f6cb601101b0281252f832bac64c0a8ec1e8f1b360'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-reference]]"
@@ -121,3 +121,54 @@ not accepted; S14 remains next only after remediation and acceptance. G0
 remains OPEN. The reviewed S13 commits change development quality contracts,
 tests, reachability classification, and Vault records only; they do not modify
 Ledger product or production TUI code.
+
+## Remediation resolution
+
+**Final ruling: ACCEPT.** Both prior HIGH findings are closed; no CRITICAL or
+HIGH finding remains.
+
+The fixture now uses a private sentinel for omitted union, anchor, and anchor-
+subject arguments. Omission supplies the normal valid fixture, while explicit
+`None` reaches the production boundary unchanged. The durable absence test
+proves that `observed_union=None` makes
+`reopened_gates_for_currentness` return all G0--G4 gates and makes every ordered
+assessment remain open with the missing-live-union blocker. Malformed copied
+union and anchor inputs likewise return fail-closed results from reopening and
+ordered evaluation without raising. Invalid matrix fixtures are canonically
+revalidated before the helper attempts to derive an anchor, so missing or
+malformed attestations now exercise the owning production refusal rather than
+failing in fixture construction.
+
+The remint test now creates a genuinely valid later union review: it changes the
+review observation time and recomputes the row-review-attestation and outer
+union digests through validated models. That live union's exact snapshot is
+installed as both accepted and current union review, after which the matrix
+attestation, G0--G3 receipt set and every internal matrix/receipt digest are
+recomputed. Against the old independently observed external anchor all five
+gates reopen. Against a newly observed anchor for the exact reminted state,
+currentness is clean. I independently repeated the same exercise and obtained
+the same old-anchor relock/new-anchor acceptance behavior.
+
+Ordered evaluation now canonicalizes matrix, census, and evidence subjects
+before inspecting the historical G0 receipt exception. A malformed caller-
+owned model therefore cannot raise or influence the exception before
+revalidation. Common currentness blockers remain available at each gate; the
+only intentional duplicate suppression is the already-present external-anchor
+message when G4 also checks the same anchor. The schema-v4 live-union
+validation remains the authority for all seven source streams and every row
+field, while denominator, authority disposition, evidence, acceptance,
+receipt, and anchor drift remain in the shared G0--G4 reopening boundary.
+
+Verification on the final tree:
+
+- focused currentness/remint/absence/malformed lane: 10 passed, 277 deselected;
+- complete matrix module: **287 passed** in 471.08 seconds;
+- Ruff format/check: passed;
+- scoped `ty`: passed;
+- scoped `basedpyright`: zero errors, warnings, or notes;
+- plan check and complete `clitui-ledger` Vault feature check: passed.
+
+S13 is checked and S14 is the next open step. G0 remains OPEN pending S14's
+independent digest-bound acceptance; S13 does not manufacture that acceptance.
+The remediation changes only development quality contracts/tests and Vault
+records, with no Ledger product or production TUI edit.
