@@ -1001,7 +1001,7 @@ def clave_auth_facts_from_profile_values(
     value mapping leaves it unset and is treated as the stricter case.
     """
     return ClaveAuthFacts(
-        tax_id=_normalise_tax_identity(values.get("identity.tax_id")),
+        tax_id=_normalise_tax_identity(values.get(_PROFILE_TAX_ID_PATH)),
         dni_nie=_normalise_tax_identity(values.get("auth.dni_nie")),
         numero_soporte=_normalise_credential(values.get("auth.numero_soporte")),
         fecha_validez=_normalise_credential(values.get("auth.fecha_validez")),
@@ -1045,12 +1045,12 @@ def _active_profile_auth_facts() -> ClaveAuthFacts:
         return ClaveAuthFacts()
 
     path_values = dict(record_to_path_values(record))
-    if not _normalise_tax_identity(path_values.get("identity.tax_id")):
+    if not _normalise_tax_identity(path_values.get(_PROFILE_TAX_ID_PATH)):
         # A record whose tax id reached the projection only through its
         # model selector still owns that identity; fold it onto the
         # canonical path so the shared reader sees one shape.
         selector_values = record_to_values(record)
-        path_values["identity.tax_id"] = str(selector_values.get("tax.id") or "")
+        path_values[_PROFILE_TAX_ID_PATH] = str(selector_values.get("tax.id") or "")
     return clave_auth_facts_from_profile_values(path_values, profile_setup_state=record.setup_state)
 
 
