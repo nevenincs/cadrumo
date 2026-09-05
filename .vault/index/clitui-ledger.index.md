@@ -6,7 +6,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:64b0d4d365cbfdb79c83685669498708e4c195aa52eb40ee2adb9b7772367fb8'
+body_hash: 'sha256:df913a4180bc5a289395aafdd5c5660a19412d3702c1dd5e4add597805df8869'
 related:
   - '[[2026-09-04-clitui-ledger-W01-P01-S01]]'
   - '[[2026-09-04-clitui-ledger-W01-P01-S02]]'
@@ -41,6 +41,7 @@ related:
   - '[[2026-09-05-clitui-ledger-s11-row-hold-review-audit]]'
   - '[[2026-09-05-clitui-ledger-s12-row-review-audit]]'
   - '[[2026-09-05-clitui-ledger-s13-currentness-review-audit]]'
+  - '[[2026-09-05-clitui-ledger-s14-694-candidate-integrity-audit]]'
 ---
 
 # `clitui-ledger` feature index
@@ -69,6 +70,7 @@ Auto-generated index of all documents tagged with `#clitui-ledger`.
 - `2026-09-05-clitui-ledger-s11-row-hold-review-audit` - `clitui-ledger` audit: `S11 row-level TUI hold review`
 - `2026-09-05-clitui-ledger-s12-row-review-audit` - `clitui-ledger` audit: `S12 exhaustive row review`
 - `2026-09-05-clitui-ledger-s13-currentness-review-audit` - `clitui-ledger` audit: `S13 fail-closed currentness`
+- `2026-09-05-clitui-ledger-s14-694-candidate-integrity-audit` - `clitui-ledger` audit: `S14 694-row candidate integrity`
 
 ### exec
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:34d2c3e874c4eb17403bacc9bc27285ec6af3f46eba5fbcc512a59ea693c5afd'
+body_hash: 'sha256:018bbb8cb6ace7e4870afbb122d959348224103ba845ccb5d02de5f8c1186aef'
 related:
   - "[[2026-09-04-clitui-ledger-research]]"
   - "[[2026-06-10-ledger-interface-contract-adr]]"
