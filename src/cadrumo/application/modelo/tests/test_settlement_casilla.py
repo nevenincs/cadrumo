@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from decimal import Decimal
+
 import pytest
 
+from ....core.casilla_id import CasillaId
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.modelos.codes import ModeloCode
 from ..settlement_casilla import (
     DECLARATION_RESULT_SEMANTIC_ROLES,
     SETTLEMENT_SEMANTIC_ROLES,
@@ -73,7 +78,7 @@ def test_two_casillas_claiming_the_result_role_is_refused() -> None:
         casillas = (_Casilla("0670"), _Casilla("0671"))
 
     with pytest.raises(AmbiguousDeclarationResultError, match="cannot have two results"):
-        declaration_result_casilla_id(_Revision())  # type: ignore[arg-type]
+        declaration_result_casilla_id(_Revision())
 
 
 def test_an_unknown_result_never_becomes_a_number_in_the_projection() -> None:
@@ -90,13 +95,13 @@ def test_an_unknown_result_never_becomes_a_number_in_the_projection() -> None:
     from ..declarations_workspace import _settled_result
 
     class _Unit:
-        modelo = "100"
+        modelo = ModeloCode("100")
         filing_year = 2023
         period = Period.from_year_and_code(2023, "0A")
         current_calculation_revision_id: str | None = "a" * 64
 
     class _Revision:
-        casilla_values = {"0670": "1234.56"}
+        casilla_values: Mapping[CasillaId, Decimal] = {"0670": Decimal("1234.56")}
 
     unit = _Unit()
     revisions = {"a" * 64: _Revision()}
