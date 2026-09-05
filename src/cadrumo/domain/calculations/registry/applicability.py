@@ -119,6 +119,7 @@ from .schema_revision_members import ApplicabilityRuleDefinition
 
 type _OperatorReason = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
+
 class ApplicabilityVerdict(StrEnum):
     """Whether a modelo applies to a taxpayer, derived from its model.
 
