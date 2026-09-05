@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:3206dba1c44cbb63245321a7286bf0711eb34a72a53ffa51d2e669619cfe4bea'
+body_hash: 'sha256:b9b8508e283157cadb3dd9614da5e7b64c25ac9d2b5e1cf6bb03ba4b09bcb1c1'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -575,6 +575,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S693` - Anchor the zero-remnant fixed point to the roots its scan consults: alone among its siblings it runs on default roots, so an empty tree returned no remnants while the retired path was absent from a directory that was never there; `dev/tests/test_tui_migration_manifest.py`.
 - [x] `W02.P02.S694` - State what the legacy-orphan retirement can prove: the journal's removal was unbacked by any proof it existed, and the target export root was never created, so asserting its absence afterwards tested nothing; `dev/registry/tests/test_generated_tree_publication.py`.
 - [x] `W02.P02.S695` - Derive the redirected export path from the isolated tree: the modelo was transcribed as 130 against a 184 tree, so the link-redirect absence claim held over a directory that could never exist; `dev/registry/tests/test_generated_tree_check.py`.
+- [x] `W02.P02.S696` - Narrow the three dev-scoped broad refusals the no-broad-raises gate reports: raises(Exception) accepted a TypeError from a changed signature or wrong keyword while the ambiguity and validation checks under test never ran; `dev/registry/tests/test_revision_selection_probe.py`.
+- [x] `W02.P02.S697` - Refuse rather than skip when the status frames stop carrying the untranslatable glyph: frames rendered means the precondition held, so a fall-through skip retired the end-to-end proof while the run read green; `dev/tui/tests/test_tui_visual_inventory.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
