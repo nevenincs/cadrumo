@@ -1247,6 +1247,7 @@ tui:
       filed: Presentada
       local_filing: Estado local de presentación
       local_state: Estado local
+      result: Resultado
       updated: Actualizada
       when: Fecha
     destination:
@@ -1302,6 +1303,7 @@ tui:
       'no': 'No'
       none: Ninguno
       not_applicable: No aplicable
+      result_unknown: No disponible
       'yes': Sí
     work_state:
       borrador: Borrador

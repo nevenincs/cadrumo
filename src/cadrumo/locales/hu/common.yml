@@ -1230,6 +1230,7 @@ tui:
       filed: Benyújtva
       local_filing: Helyi benyújtási állapot
       local_state: Helyi állapot
+      result: Eredmény
       updated: Frissítve
       when: Dátum
     destination:
@@ -1284,6 +1285,7 @@ tui:
       'no': Nem
       none: Nincs
       not_applicable: Nem alkalmazható
+      result_unknown: Nem érhető el
       'yes': Igen
     work_state:
       borrador: Piszkozat

@@ -43,7 +43,7 @@ no authority.
 """
 
 
-DECLARATION_RESULT_SEMANTIC_ROLES: Final = SETTLEMENT_SEMANTIC_ROLES  # defect: conflated
+DECLARATION_RESULT_SEMANTIC_ROLES: Final = frozenset({"irpf_resultado_declaracion"})
 """The roles that name a declaration's FINAL result -- a strict subset of the above.
 
 Both settlement roles are terminal-liquidación cells, and both must be computed

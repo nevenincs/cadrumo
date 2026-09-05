@@ -9,6 +9,7 @@ payloads for serialization.
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 from enum import StrEnum
 from typing import Final, Self
 
@@ -142,6 +143,16 @@ class DeclarationsWorkspaceDeclarationRefV1(BaseModel):
     state: WorkUnitState
     has_current_calculation: bool
     has_current_filing: bool
+    settled_result: str | None = None
+    """The declaration's own settled figure, when the registry grounds one.
+
+    `None` means the answer is UNKNOWN, and a surface must render it that way
+    rather than as a blank or a zero. Three distinct situations reach it, and
+    none of them is "the result is nothing": the modelo's settlement chain is
+    not modelled (303 and 130 today declare no result role at all), no current
+    calculation exists yet, or the calculation exists and has not computed that
+    cell.
+    """
 
     @model_validator(mode="after")
     def _period_matches_year(self) -> Self:
@@ -267,6 +278,7 @@ def project_declarations_workspace(
     filing_records: ModeloRecordCatalogue,
     lifecycle_facts: tuple[DeclarationsSanitizedLifecycleFactV1, ...],
     zone_observations: tuple[DeclarationsWorkspaceZoneObservationV1, ...],
+    result_casilla_reader: DeclarationResultCasillaReaderV1 | None = None,
 ) -> DeclarationsWorkspaceProjectionV1:
     """Validate and safely project already-loaded local authorities."""
     observations = _validate_observations(zone_observations)
@@ -287,7 +299,11 @@ def project_declarations_workspace(
         if observation.availability
         in {DeclarationsWorkspaceAvailability.AVAILABLE, DeclarationsWorkspaceAvailability.STALE}
     }
-    declaration_rows = _declaration_rows(units) if DeclarationsWorkspaceZone.DECLARATIONS in observable else ()
+    declaration_rows = (
+        _declaration_rows(units, revisions, result_casilla_reader)
+        if DeclarationsWorkspaceZone.DECLARATIONS in observable
+        else ()
+    )
     revision_rows = (
         _revision_rows(revisions, {unit.work_unit_id: unit for unit in units})
         if DeclarationsWorkspaceZone.CALCULATION_REVISIONS in observable
@@ -431,7 +447,46 @@ def _validate_catalogue_joins(
         raise DeclarationsWorkspaceProjectionError("lifecycle fact has no declaration")
 
 
-def _declaration_rows(units: tuple[WorkUnit, ...]) -> tuple[DeclarationsWorkspaceDeclarationRefV1, ...]:
+DeclarationResultCasillaReaderV1 = Callable[[ModeloCode, int, Period], str | None]
+"""Names the casilla that settles one modelo revision, or nothing.
+
+Injected rather than resolved here: this module joins already-loaded local
+authorities and holds no registry access, and giving it some would put registry
+loading inside a projection that is meant to be a pure join.
+"""
+
+
+def _settled_result(
+    unit: WorkUnit,
+    revisions_by_id: Mapping[str, CalculationRevision],
+    reader: DeclarationResultCasillaReaderV1 | None,
+) -> str | None:
+    """Read this declaration's settled figure, or nothing when it is not known.
+
+    Every early return is a DIFFERENT unknown, and none of them is a zero: no
+    reader bound, no current calculation, a modelo whose settlement chain the
+    registry does not model, or a calculation that has not computed the cell.
+    They collapse to `None` because the surface renders one "not available" for
+    all of them -- but nothing here may turn any of them into a number.
+    """
+    if reader is None or unit.current_calculation_revision_id is None:
+        return None
+    revision = revisions_by_id.get(unit.current_calculation_revision_id)
+    if revision is None:
+        return None
+    casilla_id = reader(unit.modelo, unit.filing_year, unit.period)
+    if casilla_id is None:
+        return None
+    value = revision.casilla_values.get(casilla_id)
+    return None if value is None else str(value)
+
+
+def _declaration_rows(
+    units: tuple[WorkUnit, ...],
+    revisions: tuple[CalculationRevision, ...] = (),
+    result_casilla_reader: DeclarationResultCasillaReaderV1 | None = None,
+) -> tuple[DeclarationsWorkspaceDeclarationRefV1, ...]:
+    by_id = {revision.calculation_revision_id: revision for revision in revisions}
     return tuple(
         DeclarationsWorkspaceDeclarationRefV1(
             work_unit_id=unit.work_unit_id,
@@ -441,6 +496,7 @@ def _declaration_rows(units: tuple[WorkUnit, ...]) -> tuple[DeclarationsWorkspac
             state=unit.state,
             has_current_calculation=unit.current_calculation_revision_id is not None,
             has_current_filing=unit.current_filing_record_id is not None,
+            settled_result=_settled_result(unit, by_id, result_casilla_reader),
         )
         for unit in sorted(
             units,

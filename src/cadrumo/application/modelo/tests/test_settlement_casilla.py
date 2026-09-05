@@ -74,3 +74,42 @@ def test_two_casillas_claiming_the_result_role_is_refused() -> None:
 
     with pytest.raises(AmbiguousDeclarationResultError, match="cannot have two results"):
         declaration_result_casilla_id(_Revision())  # type: ignore[arg-type]
+
+
+def test_an_unknown_result_never_becomes_a_number_in_the_projection() -> None:
+    """Four distinct unknowns reach `settled_result`, and none of them is a zero.
+
+    `None` is returned when no reader is bound, when the declaration has no
+    current calculation, when the modelo declares no result role, and when the
+    calculation has not computed that cell. They are the same rendering -- "not
+    available" -- but the projection must never turn any of them into a figure,
+    because a zero in a result column is a filing-grade claim that the
+    taxpayer owes nothing.
+    """
+    from ....core.period import Period
+    from ..declarations_workspace import _settled_result
+
+    class _Unit:
+        modelo = "100"
+        filing_year = 2023
+        period = Period.from_year_and_code(2023, "0A")
+        current_calculation_revision_id: str | None = "a" * 64
+
+    class _Revision:
+        casilla_values = {"0670": "1234.56"}
+
+    unit = _Unit()
+    revisions = {"a" * 64: _Revision()}
+
+    assert _settled_result(unit, revisions, None) is None, "no reader bound is unknown"
+    assert _settled_result(unit, revisions, lambda *_: None) is None, "no declared role is unknown"
+    assert _settled_result(unit, {}, lambda *_: "0670") is None, "a missing revision is unknown"
+    assert _settled_result(unit, revisions, lambda *_: "9999") is None, "an uncomputed cell is unknown"
+
+    without_calculation = _Unit()
+    without_calculation.current_calculation_revision_id = None
+    assert _settled_result(without_calculation, revisions, lambda *_: "0670") is None
+
+    assert _settled_result(unit, revisions, lambda *_: "0670") == "1234.56", (
+        "a grounded, computed result must reach the projection"
+    )

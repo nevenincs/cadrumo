@@ -1205,6 +1205,7 @@ tui:
       filed: Filed
       local_filing: Local filing status
       local_state: Local status
+      result: Result
       updated: Updated
       when: Date
     destination:
@@ -1260,6 +1261,7 @@ tui:
       'no': 'No'
       none: None
       not_applicable: Not applicable
+      result_unknown: Not available
       'yes': 'Yes'
     work_state:
       borrador: Draft

@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ...core.period import Period
+
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Generator, Iterable, Mapping, Sequence
 from contextlib import ExitStack, asynccontextmanager, contextmanager
@@ -141,10 +146,36 @@ def compose_secure_profile_workbench_generation_provider(
         invoice_repository=InvoiceCatalogueRepository(bucket_id=profile_id),
         bucket_event_repository=build_bucket_event_history_repository(bucket_id=profile_id),
         verification_repository=VerificationReportCatalogueRepository(bucket_id=profile_id),
+        result_casilla_reader=_declaration_result_casilla_reader(),
         operation_contracts=operation_contracts,
         modelo_projection_reader=_modelo_projection_reader(),
     )
     return ApplicationGenerationProviderV1(door)
+
+
+def _declaration_result_casilla_reader() -> Callable[[str, int, Period], str | None]:
+    """Name the casilla that settles one modelo revision, from the bundled registry.
+
+    Resolution failures are answered with `None` rather than raised. A modelo
+    or period the registry cannot select is a declaration whose result is
+    UNKNOWN, which is exactly what the surface renders; letting it escape would
+    take down a Home and Declarations read over a figure that is one column of
+    one row.
+    """
+
+    def read(modelo: str, filing_year: int, period: Period) -> str | None:
+        from ...application.modelo.settlement_casilla import declaration_result_casilla_id
+        from ...domain.calculations.registry.authority import bundled_authority
+
+        try:
+            snapshot = bundled_authority().snapshot(
+                str(modelo), filing_year=filing_year, period=period.registry_token
+            )
+        except Exception:
+            return None
+        return declaration_result_casilla_id(snapshot.revision)
+
+    return read
 
 
 def _modelo_projection_reader() -> Callable[[WorkUnit], ModeloWorkspaceProjectionV1]:

@@ -60,6 +60,7 @@ from .modelo.declarations_calendar import (
     project_declarations_calendar,
 )
 from .modelo.declarations_workspace import (
+    DeclarationResultCasillaReaderV1,
     DeclarationsWorkspaceAvailability,
     DeclarationsWorkspaceProjectionV1,
     DeclarationsWorkspaceZone,
@@ -324,6 +325,14 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None
     verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None
+    result_casilla_reader: DeclarationResultCasillaReaderV1 | None = None
+    """Names the casilla that settles one modelo revision, or nothing.
+
+    Injected rather than resolved in the door, which holds repositories and no
+    registry access. An unbound reader leaves every declaration's result
+    unknown, which is the same honest absence a modelo with no declared
+    settlement role produces -- not a zero.
+    """
     operation_contracts: OperationPublicContractSetV1 | None = None
     modelo_projection_reader: Callable[[WorkUnit], ModeloWorkspaceProjectionV1] | None = None
     """An absent reader below is a composition fact, not a data fact.
@@ -350,6 +359,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             calculation_revisions=revisions,
             filing_records=filings,
             lifecycle_facts=(),
+            result_casilla_reader=self.result_casilla_reader,
             zone_observations=(
                 _declarations_observation(DeclarationsWorkspaceZone.DECLARATIONS, observed_at),
                 _declarations_observation(DeclarationsWorkspaceZone.CALCULATION_REVISIONS, observed_at),

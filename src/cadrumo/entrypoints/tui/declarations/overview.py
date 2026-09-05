@@ -55,6 +55,7 @@ class DeclarationsOverviewScreen(DeclarationsWorkspaceScreen):
         table.add_column(declarations_copy("tui.declarations.column.declaration"), key="declaration")
         table.add_column(declarations_copy("tui.declarations.column.local_state"), key="state")
         table.add_column(declarations_copy("tui.declarations.column.calculation"), key="calculation")
+        table.add_column(declarations_copy("tui.declarations.column.result"), key="result")
         for row in self.controller.projection.declarations:
             table.add_row(
                 natural_address(row.modelo, row.filing_year, row.period),
@@ -62,6 +63,13 @@ class DeclarationsOverviewScreen(DeclarationsWorkspaceScreen):
                 declarations_copy(
                     "tui.declarations.value.available" if row.has_current_calculation else "tui.declarations.value.none"
                 ),
+                # An unknown result is WORDED, never left blank. A blank cell
+                # in a money column reads as zero, and the projection reaches
+                # `None` from several distinct unknowns -- an unmodelled
+                # settlement chain, no calculation yet, a cell not computed --
+                # none of which is a figure.
+                row.settled_result
+                or declarations_copy("tui.declarations.value.result_unknown"),
                 key=row.work_unit_id,
             )
         if not table.row_count:

@@ -1235,6 +1235,7 @@ tui:
       filed: Presentada
       local_filing: Estat local de presentació
       local_state: Estat local
+      result: Resultat
       updated: Actualitzada
       when: Data
     destination:
@@ -1290,6 +1291,7 @@ tui:
       'no': 'No'
       none: Cap
       not_applicable: No aplicable
+      result_unknown: No disponible
       'yes': Sí
     work_state:
       borrador: Esborrany
