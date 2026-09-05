@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:793a289494e74a9d5bd62174d84894ab621a656e4da44c6438bdeb2bb8f53b5a'
+body_hash: 'sha256:274d645fac5d976820c26da62c16799a7b4c104f672e4954f65797cf73cc43e5'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -84,3 +84,41 @@ Vault documentation commits and that S09's record accurately names the shared
 worktree commits. Feature Vault checks pass, but there is no focused S09
 detector to run; that absence is the first HIGH finding rather than positive
 evidence.
+
+## Remediation review
+
+**Ruling: NOT ACCEPTED.** The new detector closes the fixed-census and S411
+findings, but one HIGH under-declaration path remains.
+
+The detector pins the exact 27 retained IDs, open S73 retired marker, five open
+held IDs, all token and checkbox relationships, unique Step identities, one
+annotation per known row, mixed-scope wording, and predecessor completion at
+408/426. It rejects missing, duplicate, unknown, reclassified, outside-known,
+checkbox, completion, mixed-scope, and exact-word new-overlap mutations. S411
+now correctly names `W05.P21.S136` as the selection-handoff implementation
+owner and `W05.P19.S128` only as the held-row disposition checkpoint.
+
+### overlap-discovery-misses-common-ledger-wording | high | Identifier and plural variants can silently convert an existing row into Ledger scope
+
+Unannotated overlap discovery uses only the natural-word expression
+`\bledger\b`. Exact total-row pinning catches an appended Step, but it does not
+protect an existing non-overlap Step whose scope changes. Independent
+same-count mutations of S408 to `Retire the ledger_binding_resolution facade`
+and `Render accounting ledgers in AEAT Sync` were both accepted. The underscore
+keeps `ledger` inside one regular-expression word and the plural has no trailing
+word boundary. Meanwhile `Record the audit ledger for AEAT Sync` is rejected,
+demonstrating the converse false positive for a generic ledger rather than the
+Ledger product. The exact 33-ID table protects today's rows but does not make
+future semantic overlap discovery complete.
+
+Derive overlap from stable reviewed signals rather than one natural-language
+word: scoped `/ledger/` paths, `ledger_` identifiers, Ledger-prefixed product
+symbols, and explicit reviewed include/exclude decisions for ambiguous generic
+or plural wording. Add same-row mutations for underscore identifiers, paths,
+symbols, plurals, and generic accounting/audit-ledger exclusions. A newly
+Ledger-scoped existing Step must fail until explicitly adjudicated without
+turning unrelated uses of the common noun into campaign ownership.
+
+The focused detector reports 12 passed. Ruff format/check, scoped `ty`, and the
+feature Vault check pass. Commit inspection still shows no production or TUI
+changes attributable to S09; S09 remains checked, S10 next, and G0 OPEN.
