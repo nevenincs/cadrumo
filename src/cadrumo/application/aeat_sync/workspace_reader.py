@@ -129,6 +129,7 @@ def _observation(
     observed_at: UtcInstant,
     profile_count: int,
     filing_count: int,
+    custody_count: int | None,
 ) -> AeatSyncWorkspaceSourceObservationV1:
     if source in _AEAT_SOURCES:
         return AeatSyncWorkspaceSourceObservationV1(
@@ -139,7 +140,7 @@ def _observation(
     counts = {
         AeatSyncWorkspaceSource.LOCAL_PROFILE: profile_count,
         AeatSyncWorkspaceSource.LOCAL_FILINGS: filing_count,
-        AeatSyncWorkspaceSource.LOCAL_NOTIFICATION_CUSTODY: None,
+        AeatSyncWorkspaceSource.LOCAL_NOTIFICATION_CUSTODY: custody_count,
         AeatSyncWorkspaceSource.LOCAL_RECONCILIATION: None,
     }
     return _local_observation(
@@ -294,8 +295,15 @@ def read_local_aeat_sync_workspace_projection(
     observed_at: UtcInstant,
     filings: tuple[ModeloRecord, ...],
     operation_contracts: OperationPublicContractSetV1,
+    custody_count: int | None = None,
 ) -> AeatSyncWorkspaceProjectionV1:
-    """Project the pre-pull AEAT Sync workspace for one authenticated profile."""
+    """Project the pre-pull AEAT Sync workspace for one authenticated profile.
+
+    `custody_count` is how many notification documents this profile already
+    holds locally. `None` means this session did not read the store -- distinct
+    from `0`, which means it read and found nothing, a proven zero the operator
+    can act on.
+    """
     return project_aeat_sync_workspace(
         bucket_id=bucket_id,
         subject_key=subject_key,
@@ -308,6 +316,7 @@ def read_local_aeat_sync_workspace_projection(
                         observed_at=observed_at,
                         profile_count=1,
                         filing_count=len(filings),
+                        custody_count=custody_count,
                     )
                     for source in aeat_sync_workspace_sources(zone)
                 ),

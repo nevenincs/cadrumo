@@ -146,11 +146,33 @@ def compose_secure_profile_workbench_generation_provider(
         invoice_repository=InvoiceCatalogueRepository(bucket_id=profile_id),
         bucket_event_repository=build_bucket_event_history_repository(bucket_id=profile_id),
         verification_repository=VerificationReportCatalogueRepository(bucket_id=profile_id),
+        notification_custody_reader=_notification_custody_reader(profile_id),
         result_casilla_reader=_declaration_result_casilla_reader(),
         operation_contracts=operation_contracts,
         modelo_projection_reader=_modelo_projection_reader(),
     )
     return ApplicationGenerationProviderV1(door)
+
+
+def _notification_custody_reader(profile_id: str) -> Callable[[], int]:
+    """Count the notification documents this profile already holds locally.
+
+    The repository is the CLI's own -- one canonical factory, so a TUI read and
+    a CLI write cannot disagree about where custody lives. Only the count is
+    taken: AEAT Sync needs to know whether anything is there, not what it says,
+    and reading document bytes to answer that would decrypt payloads for a
+    number.
+    """
+
+    def read() -> int:
+        from ...adapters.persistence.profile.notification_documents import (
+            notification_document_repository,
+        )
+        from ...core.config import load_settings
+
+        return len(notification_document_repository(profile_id, load_settings()).list_snapshots())
+
+    return read
 
 
 def _declaration_result_casilla_reader() -> Callable[[str, int, Period], str | None]:
