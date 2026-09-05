@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-05'
-body_hash: 'sha256:024ee81525a2d5ba2b575d6a174457a1a15c6721ad66de9059f7a8779ca2604a'
+body_hash: 'sha256:5bd7c78f9f1eca786cc1df30cdfdb86f3daae20f67e469fa7b5b656921f1b492'
 ---
 
 <!-- RETIRED: S370 -->
@@ -645,6 +645,7 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S429` - Ground the M200/2024 casilla 00067 label in its pinned official cell, and gate that grounding. The label was absent in every locale, not just es, so this is a capture gap rather than a translation gap. Casilla numbers are reused across Modelo 200 record pages, so the text cannot be chosen by searching for the number; the adjudication ledger's official_label_sha256 identifies the exact record-design cell, and matching that digest is what makes the label grounded rather than merely plausible. Add a gate asserting every pinned label ships verbatim.; `src/cadrumo/locales/*/modelo/schema/200.yml, dev/locales/tests/test_casilla_label_matches_pinned_official_text.py`.
 - [x] `W08.P30.S430` - Label every remaining M200/2024 casilla whose official text is pinned by digest. 116 casillas beyond 00067 carry an adjudication whose official_label_sha256 matches a cell in the shipped record design; those are grounded and derivable now, while the 79 with no adjudication and the 3 whose pin matches no cell need adjudication first. Spanish is the pinned cell verbatim; the other locales compose segment-by-segment from a glossary mined out of the label pairs the catalogues already ship, so a phrase translated once reads the same everywhere it recurs.; `src/cadrumo/locales/*/modelo/schema/200.yml`.
 - [x] `W08.P30.S431` - Ground the M200/2024 casillas whose number occurs exactly once in the pinned record design, and hold the ones whose declaration contradicts it. The unlabelled casillas are not cosmetic: the modelo work-review screen resolves a label for every registry casilla and raises MissingTranslationError, so one absent label breaks the whole screen for this revision. Where a number appears once there is nothing to disambiguate, but casilla 00067 showed a declaration can name a section its own design does not put the number in, so accept a unique occurrence only when the declaration corroborates it and hold the rest.; `src/cadrumo/locales/*/modelo/schema/200.yml, dev/locales/tests/test_casilla_label_matches_pinned_official_text.py`.
+- [x] `W08.P30.S432` - Disambiguate the repeated-number M200/2024 casillas by the record page their own id names. The record design is segmented by page headers, and a composite casilla id carries its page, so a number that repeats across pages resolves to exactly one cell without an adjudication choosing it. Validate the page selector against the shipped corpus before trusting it, corroborate each selection against the declaration's section, and hold whatever disagrees.; `src/cadrumo/locales/*/modelo/schema/200.yml`.
 
 ## Parallelization
 
