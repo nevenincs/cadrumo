@@ -314,6 +314,15 @@ check-vault-citation-ratchet:
 check-docstring-reference-ratchet:
     @uv run --no-sync python -m dev.quality.docstring_reference_ratchet
 
+# Verify no module gained a published name that nothing collects. A name in
+# __all__ that no non-test module imports AND the reachability audit reports
+# unused is a promise nothing takes up. Resolving the 368 already recorded is
+# a published-surface decision for an owner; this refuses a NEW one, which is
+# the half needing no decision.
+[group('static-checks')]
+check-unconsumed-export-ratchet:
+    @uv run --no-sync python -m dev.quality.unconsumed_export_ratchet
+
 # Verify every persistence surface a product command READS still has a
 # production writer. The baseline in dev/quality/write_path_backlog.toml may
 # only shrink; a newly writerless store fails rather than being absorbed.
