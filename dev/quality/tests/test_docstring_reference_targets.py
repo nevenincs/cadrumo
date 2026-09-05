@@ -134,3 +134,17 @@ def test_a_package_the_tree_never_imports_is_still_reported(tmp_path: Path) -> N
     """Widening to import sources must not blind the screen to real misses."""
     root = _package(tmp_path, user='"""Uses :mod:`nowhere_at_all`."""\n')
     assert [item.target for item in dangling_references(root)] == ["nowhere_at_all"]
+
+
+def test_only_module_names_cross_in_from_a_sibling_tree() -> None:
+    """A gate may cite its counterpart in `dev/tests`; that module is real.
+
+    Pulling in every SYMBOL those trees define was tried and dropped: it would
+    let a shipped docstring resolve against a dev-only function and stop
+    reporting a reference that crosses out of the package, which is a finding
+    rather than noise. Measured at the time, the wider rule found nothing the
+    narrow one missed.
+    """
+    from ..docstring_reference_targets import _SIBLING_TREES
+
+    assert any(tree.name == "dev" for tree in _SIBLING_TREES)
