@@ -22,7 +22,7 @@ Where the contracts live:
   package.
 - Tax-position helpers -- ``issuer_establishment`` and ``self_counterparty``.
 
-``domain.invoices`` remains the sole canonical source for ``find_invoice``,
+``domain.invoices`` remains the sole canonical source for
 ``find_unmatched``, ``link_transaction``, ``suggest_reconciliations`` and
 ``verify_link_consistency``; this package never re-exported the last three and
 now re-exports nothing at all.
