@@ -147,6 +147,23 @@ def ambient_product_executables_removed(environment: Mapping[str, str]) -> bool:
     return shutil.which("aeat", path=environment.get("PATH", "")) is None
 
 
+def path_without_product_executables(path: str) -> str:
+    """Drop every search-path entry that offers a product executable of its own.
+
+    The oracle is launched from a synced development environment whose own
+    ``aeat`` sits on the inherited search path. That entry has no business
+    reaching the child: this probe exists to characterise ONE installed
+    cohort, and a second product executable within reach of the process under
+    test is precisely the ambiguity the emitted evidence promises is absent.
+    Establishing the fact belongs here beside the import-path stripping, so
+    that :func:`ambient_product_executables_removed` reads back something the
+    environment made true rather than something the invoking shell happened
+    to allow.
+    """
+    entries = [entry for entry in path.split(os.pathsep) if entry]
+    return os.pathsep.join(entry for entry in entries if shutil.which("aeat", path=entry) is None)
+
+
 def isolated_product_environment(storage_root: Path) -> dict[str, str]:
     """Build an isolated product environment without inherited Cadrumo state."""
     resolved_root = storage_root.resolve()
@@ -154,6 +171,7 @@ def isolated_product_environment(storage_root: Path) -> dict[str, str]:
     environment = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
     environment.pop("PYTHONHOME", None)
     environment.pop("PYTHONPATH", None)
+    environment["PATH"] = path_without_product_executables(environment.get("PATH", ""))
     environment.update(
         {
             "CADRUMO_CLI_REVEAL_IDENTIFIERS": "1",

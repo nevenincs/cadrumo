@@ -574,10 +574,7 @@ def test_union_denominator_retains_every_registry_route_unit_and_tui_reachabilit
     assert prepared_import.primary_gap_class is LedgerGapClass.PRODUCT
     assert prepared_import.secondary_gap_classes == (LedgerGapClass.PROOF,)
     assert prepared_import.tui_hold_until is None
-    assert {
-        decision.axis: (decision.applicability, decision.proof)
-        for decision in prepared_import.applicability
-    } == {
+    assert {decision.axis: (decision.applicability, decision.proof) for decision in prepared_import.applicability} == {
         LedgerCapabilityAxis.ARTIFACT: (ApplicabilityState.NOT_APPLICABLE, AxisProofState.NOT_APPLICABLE),
         LedgerCapabilityAxis.BACKEND: (ApplicabilityState.APPLICABLE, AxisProofState.UNPROVEN),
         LedgerCapabilityAxis.CLI: (ApplicabilityState.NOT_APPLICABLE, AxisProofState.NOT_APPLICABLE),
@@ -1170,9 +1167,7 @@ def test_tui_source_set_normalizes_irrelevant_record_order() -> None:
 
 def test_tui_source_selector_excludes_unrelated_tui_sources_and_includes_ledger_dependencies() -> None:
     root = Path(__file__).resolve().parents[3]
-    selected = {
-        path.resolve().relative_to(root).as_posix() for path in ledger_tui_supported_surface_source_files(root)
-    }
+    selected = {path.resolve().relative_to(root).as_posix() for path in ledger_tui_supported_surface_source_files(root)}
 
     assert "src/cadrumo/entrypoints/tui/destination_session.py" not in selected
     assert "src/cadrumo/entrypoints/tui/ledger/routes.py" in selected
@@ -1213,9 +1208,7 @@ def test_tui_shared_source_projection_detects_ledger_structure_change(
     mutation: Callable[[bytes], bytes],
 ) -> None:
     baseline = _tui_census()
-    candidate = build_ledger_tui_supported_surface_census(
-        source_records=_mutate_tui_source(relative, mutation)
-    )
+    candidate = build_ledger_tui_supported_surface_census(source_records=_mutate_tui_source(relative, mutation))
 
     assert candidate.source_set_digest != baseline.source_set_digest
     assert candidate.calculated_digest != baseline.calculated_digest
