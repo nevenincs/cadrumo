@@ -15126,6 +15126,12 @@ modelo:
             DP200014:01330:
               label: Settlement III - Tax base - Tax base after the equalization reserve
                 [01330]
+            DP200014:SAL_RESERVA_DOTACION:
+              label: 'SAL/SLL special reserve: allocation reducing the taxable base
+                (art. 14 Law 44/2015) [SAL_RESERVA_DOTACION]'
+            DP200014:bin-aplicada-maxima:
+              label: Maximum offset of negative taxable bases (art. 26.1 LIS), computed
+                [bin-aplicada-maxima]
             DP200014B:00082:
               label: Settlement IV - Other deductions - Deductions excluded from the
                 R&D limit [00082]
@@ -15153,6 +15159,9 @@ modelo:
                 deductions (breakdown on pages 16 bis and 17) [00590]
             DP200014B:00592:
               label: Settlement IV - Other deductions - Net tax liability [00592]
+            DP200014B:00599:
+              label: Settlement IV - tax due for the year, payable or refundable -
+                tax due for the year, payable or refundable - status [00599]
             DP200014B:00601:
               label: Settlement IV - Instalment payments/Differential tax liability
                 - Instalment payments - 1st instalment payment - State [00601]

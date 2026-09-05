@@ -14928,6 +14928,12 @@ modelo:
             DP200014:01330:
               label: Liquidació III - Base imposable - Base imposable després de la
                 reserva de nivellació [01330]
+            DP200014:SAL_RESERVA_DOTACION:
+              label: 'Reserva especial SAL/SLL: dotació reductora de la base imposable
+                (art. 14 Llei 44/2015) [SAL_RESERVA_DOTACION]'
+            DP200014:bin-aplicada-maxima:
+              label: Límit màxim de compensació de bases imposables negatives (art.
+                26.1 LIS), calculat [bin-aplicada-maxima]
             DP200014B:00082:
               label: Liquidació IV - Altres deduccions - Deduccions excloses del límit
                 I+D [00082]
@@ -14954,6 +14960,9 @@ modelo:
                 (desglossament a les pàgines 16 bis i 17) [00590]
             DP200014B:00592:
               label: Liquidació IV - Altres deduccions - Quota líquida [00592]
+            DP200014B:00599:
+              label: Liquidació IV - quota de l'exercici a ingressar o a retornar
+                - quota de l'exercici a ingressar o a retornar - estat [00599]
             DP200014B:00601:
               label: Liquidació IV - Pagaments fraccionats/Quota diferencial - Pagaments
                 fraccionats - 1r pagament fraccionat - Estat [00601]

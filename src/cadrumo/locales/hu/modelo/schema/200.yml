@@ -15110,6 +15110,12 @@ modelo:
             DP200014:01330:
               label: Elszámolás III - Adóalap - Adóalap a kiegyenlítési tartalék után
                 [01330]
+            DP200014:SAL_RESERVA_DOTACION:
+              label: 'SAL/SLL különleges tartalék: az adóalapot csökkentő előirányzat
+                (44/2015. törvény 14. cikk) [SAL_RESERVA_DOTACION]'
+            DP200014:bin-aplicada-maxima:
+              label: A negatív adóalapok beszámításának felső határa (LIS 26.1 cikk),
+                számított [bin-aplicada-maxima]
             DP200014B:00082:
               label: Elszámolás IV - Egyéb levonások - A K+F korlátból kizárt levonások
                 [00082]
@@ -15137,6 +15143,9 @@ modelo:
                 levonások (részletezés a 16 bis és 17. oldalon) [00590]
             DP200014B:00592:
               label: Elszámolás IV - Egyéb levonások - Nettó adókötelezettség [00592]
+            DP200014B:00599:
+              label: Elszámolás IV - az év fizetendő vagy visszatérítendő adója -
+                az év fizetendő vagy visszatérítendő adója - állapot [00599]
             DP200014B:00601:
               label: Elszámolás IV - Részletfizetések / Differenciál adó - Részletfizetések
                 - 1. részletfizetés - Állam [00601]
