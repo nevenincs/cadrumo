@@ -23,9 +23,9 @@ related:
 - Included `src/cadrumo/application/ledger/import_preparation.py` in the backend census source set and made omission of either source or public operation fail closed.
 - The installed read-only Overview supported-surface observation selects only `ledger.workspace.read`; it does not select preparation, `ledger.import.source`, or any import execution.
 - The TUI source selector hashes full Ledger package, dedicated Ledger test, and Ledger specification bodies. For the five shared composition roots it hashes only deterministic AST/source facts for Ledger imports, named factories, injected actions, and destination enrollment; unrelated TUI helpers cannot reopen G0, while a Ledger dependency, door, route, or enrollment change does.
-- Live union: **761 observations / 770 selected edges / 694 reviewed rows**. Preparation is now one of 14 explicit backend-helper-only rows. The higher-level `ledger.import.source` authority and parity gaps remain unchanged.
+- Live union: **761 observations / 770 selected edges / 694 reviewed rows**. Preparation is now part of the explicit backend-helper-only cohort. The higher-level `ledger.import.source` authority and parity gaps remain unchanged.
 - The predecessor TUI plan ownership check is Ledger-scoped: it requires unique Step identities, exact coverage of 27 retained evidence rows, one retired-premise marker, and five displaced-and-held rows, plus retained-checked, retired/held-open, mixed-scope, and `S411` target clauses. It carries no whole-plan row or checked-count pin, so unrelated predecessor-plan edits do not reopen `clitui-ledger`.
-- The publication now binds its cohorts to the canonical matrix/TUI projections: 690 planned rows, 148 non-registry rows, 14 backend-helper/TUI-not-applicable rows, and 690 planned rows retaining a `PRODUCT` gap. Production has two read `ActionReference`s plus an inert classification `ActionReference` without target/submitter, and zero executable mutation doors.
+- The publication binds its cohort and production-TUI rulings to the derived S14 publication consistency coordinates in the `clitui-ledger` reference. That coordinate table is the single home for the current values; this record records the matrix/TUI binding without repeating them. Production action wiring remains read-oriented, with the unconnected classification path inert.
 
 ## Evidence
 

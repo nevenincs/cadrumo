@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:ca8477cbf615ac310db74b597d296ea97cc3135dbe9b7f199432e8bffe347392'
+body_hash: 'sha256:16050b1689de611e15f5110ac435b008aed65b1a68e73a34ca518bdc93b81c04'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -560,6 +560,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S678` - Pin each staging failure phase to its own error: a two-class refusal with no message let any OSError satisfy all six cases, so a path failing at mkstemp for every input read as six working phases; `dev/quality/tests/test_object_name_replay.py`.
 - [x] `W02.P02.S679` - Pin the sidecar refusals to their own checks: the empty schema_version never reaches the version comparison it is named for, and two distinct tamper corruptions shared one indistinguishable verdict; `dev/docs/preprocess/tests/test_sidecar_contract.py`.
 - [x] `W02.P02.S680` - Correct and expose the temporal-coverage refusal branches: both were dead under a modelo-036 fixture and both named RegistryValidationError, which does not catch the AmbiguousRevisionSelectionError a non-validated row actually raises; `dev/registry/tests/test_temporal_coverage.py`.
+- [x] `W02.P02.S681` - Hold the query-alias authority's two refusals apart: extra-field rejection and frozen-instance immutability shared one bare ValidationError, so a model refusing every payload satisfied both; `dev/docs/terminology/tests/test_query_aliases.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
