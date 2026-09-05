@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:33eddea0638bbf7e7c0f4e38b52fa21611b8831b5e8fdb670da0bfe4e3697a33'
+body_hash: 'sha256:2c478608fd1c48b00bdef919662bf959d49f18ab1fcd387f4cf9a74de313bdf8'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-reference]]"
@@ -150,3 +150,84 @@ matrix module passes all 191 tests. Ruff format/check, scoped `ty`,
 basedpyright, and the feature Vault check pass. Green tests do not cover the
 fail-open source addition, effect truth, live owner signatures, or missing
 semantic joins above.
+
+## Remediation review
+
+**Ruling: NOT ACCEPTED.** The remediation closes the original effect-table,
+typed-home-signature, and named merge/split defects, and it refuses a wholly
+unknown semantic identity. Two HIGH defects remain in the adjudication
+boundary.
+
+The current projection was independently rebuilt as 760 observations and 769
+selection edges, including four one-to-many observations and nine extra edges.
+Fifty-nine final rows contain multiple observations, accounting for 76
+duplicate selection edges and 693 final rows: 147 non-registry plus 546
+registry routes. Stream counts are 78 CLI endpoints, 50 CLI suboperations, 63
+backend operations, 10 missing-product declarations, 546 registry routes, six
+artifacts, and seven TUI surfaces. The independent canonical serialization
+reproduces
+`sha256:77f310d3de86c3a097b5c976a8cdc4b1941b24e3e15d0eb47971985b38764dff`.
+Semantic homes now report exactly four existing and 689 planned rows. Direct
+signature mutations for a wrong request type, wrong result type, and an extra
+required loose parameter are rejected.
+
+The explicit effects correctly distinguish LLM proposals from apply, reject,
+review, and saturation mutations; diagnostics and provenance reads are
+queries; and evidence download is an artifact query. The reviewed joins now
+coalesce rule add/apply/preview, counterparty record/resolve/forget, flat and
+format exports, transaction and LLM split operations, and classify/LLM
+suggest/apply/reject/saturation/evidence operations without crossing effect
+classes.
+
+### observation-adjudication-remains-fail-open | high | A new observation can silently join an existing semantic identity
+
+`_selected_capabilities` still falls back to the observed identity when no
+source-selection decision exists, while
+`_validate_non_registry_decision_coverage` compares only the resulting set of
+distinct semantic capability IDs. An independent mutation appended a unique
+CLI endpoint observation whose result-schema identity was the already-known
+`ledger.transaction.create`. The build accepted 761 observations and 770
+selection edges while retaining 693 rows; only duplicate-selection edges rose
+from 76 to 77. This is an unreviewed merge, not a newly adjudicated
+observation. The pinned aggregate digest would drift, but refreshing that
+digest could preserve the false merge, so source drift alone does not provide
+detector teeth.
+
+Replace the identity fallback with an exhaustive, stable observation-identity
+to capability-tuple decision for every non-registry observation. Added,
+removed, duplicated, or changed observation identities must fail closed until
+their selection is explicitly authored. Add a durable mutation that appends a
+new CLI endpoint with an existing result identity and requires refusal, with
+equivalent coverage for the other non-registry streams whose observations can
+be added independently.
+
+### provenance-applicability-contradicts-the-adjudicated-rows | high | Provenance queries and artifact queries are marked not applicable
+
+`_axis_decisions` derives provenance applicability from effect alone and omits
+both `QUERY` and `ARTIFACT_QUERY`. Consequently
+`ledger.export.provenance`, `ledger.field_change.provenance`,
+`ledger.fx.provenance`, `ledger.import.normalization_provenance`, and
+`ledger.manual_override.provenance` are correctly classified as queries and
+carry a provenance gap, yet serialize the provenance axis as
+`not_applicable`. `ledger.evidence.download` is correctly an artifact query
+but is likewise provenance-not-applicable despite the contract that artifact
+operations require provenance. The serialized validators reproduce this
+derived contradiction rather than detecting it.
+
+Author applicability per semantic row, or at minimum an explicit reviewed set
+of provenance-bearing query identities. Mark the five provenance reads and
+the evidence-download artifact query provenance-applicable, add exact semantic
+assertions for them, and add a mutation proving that an incorrect applicability
+decision is rejected independently of a refreshed aggregate digest.
+
+The eight backend proof gaps, 510 canonical registry-bound plus three sidecar
+plus 33 unresolved registry partition, installed Overview/six component-only
+TUI posture, OPEN G0 gate, and implementation hold remain intact. Review of the
+remediation commit scope found no production backend, CLI, or TUI edits.
+
+## Remediation verification
+
+- `uv run --no-sync pytest -q -n 0 dev/quality/tests/test_clitui_ledger_capability_matrix.py`: 201 passed.
+- `uv run --no-sync ruff format --check ...` and scoped `ruff check`: passed.
+- `uv run --no-sync ty check dev/quality/clitui_ledger_capability_matrix.py`: passed.
+- `uv run --no-sync vaultspec-core vault check all --feature clitui-ledger`: passed before this audit append.
