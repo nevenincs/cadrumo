@@ -628,3 +628,50 @@ def test_a_refused_local_source_names_whether_the_reader_is_missing_or_uncompose
         "notification custody IS readable today, so calling its refusal a missing reader "
         "sends the next person to write a reader that already exists"
     )
+
+@pytest.mark.parametrize(
+    ("custody_count", "expected_refusal", "expected_count"),
+    [
+        (None, "workbench.aeat_sync.local_reader_not_composed", None),
+        (0, None, 0),
+        (3, None, 3),
+    ],
+)
+def test_notification_custody_separates_an_unread_store_from_an_empty_one(
+    custody_count: int | None,
+    expected_refusal: str | None,
+    expected_count: int | None,
+) -> None:
+    """Nothing-in-custody and nobody-looked are different answers.
+
+    Before this reader existed the source was refused outright, and the refusal
+    said no local reader existed -- which was false, since the CLI has read
+    this store all along. Now a bound reader answering ZERO is a proven zero
+    the operator can act on ("no documents are held"), while an unbound one is
+    still a composition gap ("this session did not look"). Collapsing them
+    would tell an operator their custody is empty on the strength of nobody
+    having asked.
+    """
+    from datetime import UTC, datetime
+
+    from ..workspace_reader import read_local_aeat_sync_workspace_projection
+
+    projection = read_local_aeat_sync_workspace_projection(
+        bucket_id="bucket",
+        subject_key="subject",
+        observed_at=datetime(2026, 9, 5, tzinfo=UTC),
+        filings=(),
+        operation_contracts=OperationPublicContractSetV1.build(
+            (build_censal_operation_registration(CENSAL_OPERATION_DEFINITION).contract,)
+        ),
+        custody_count=custody_count,
+    )
+    observation = next(
+        item
+        for state in projection.zones
+        for item in state.sources
+        if item.source is AeatSyncWorkspaceSource.LOCAL_NOTIFICATION_CUSTODY
+    )
+
+    assert observation.refusal == expected_refusal
+    assert observation.item_count == expected_count

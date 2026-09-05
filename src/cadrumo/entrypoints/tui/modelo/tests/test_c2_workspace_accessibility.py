@@ -59,8 +59,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 #: Restated rather than imported because that constant is private to a
 #: different test package, and reaching for it would be the cross-package
 #: private import this cohort has removed twice. The obligation that comes
-#: with restating it is the same one ``dev/tui/_viewports.py`` carries: WHEN
-#: THAT GATE'S MATRIX MOVES, THIS ONE FOLLOWS. Two accessibility matrices
+#: with restating it is the same one every other holder of this matrix carries:
+#: WHEN THE MATRIX MOVES, THIS ONE FOLLOWS. Two accessibility matrices
 #: asserting different definitions of "wide" would let a layout pass one and
 #: fail the other with nothing to say which is authoritative.
 _GEOMETRIES = SUPPORTED_TERMINAL_SIZES
