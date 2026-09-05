@@ -22,9 +22,9 @@ from typing import Final, cast
 
 import pytest
 from pydantic import BaseModel, ValidationError
-
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from dev.quality import clitui_ledger_capability_matrix as matrix_module
 
 from ..clitui_ledger_capability_matrix import (
     ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
@@ -49,6 +49,7 @@ from ..clitui_ledger_capability_matrix import (
     InitialCliOwnership,
     LedgerCampaignControlsV1,
     LedgerCapabilityAxis,
+    LedgerCapabilityEffect,
     LedgerCapabilityIdentityV1,
     LedgerCapabilityMatrixV1,
     LedgerCapabilityRowV1,
@@ -92,7 +93,7 @@ _REGISTRY_ROUTE_DIGEST: Final[str] = "sha256:20b2d2df5558b2a3fdbd1eab6e9f781a973
 _REGISTRY_SOURCE_DIGEST: Final[str] = "sha256:194a9f26ddfbae6c5d7f265ffe58f50964fbe2fcd02a5670fa19845dead5cf6d"
 _TUI_CENSUS_DIGEST: Final[str] = "sha256:c136cfe1ae3f82a239476c00e805f8c9a29e010d502e74397963cea7e6f42371"
 _TUI_SOURCE_DIGEST: Final[str] = "sha256:e7337508a02ef2260e0b28205c31bb872b69f59aa51a18391ae209c21b8f9d57"
-_UNION_DIGEST: Final[str] = "sha256:5012ceafec5bc9dae942b22f48daa34f66d93008cd48b9f81c0b0f69f4f49b06"
+_UNION_DIGEST: Final[str] = "sha256:77f310d3de86c3a097b5c976a8cdc4b1941b24e3e15d0eb47971985b38764dff"
 
 
 @cache
@@ -169,7 +170,16 @@ def test_union_denominator_joins_every_raw_observation_without_double_counting()
     assert union.root == LEDGER_UNION_DENOMINATOR_ROOT
     assert union.schema_version == 1
     assert len(union.observations) == 760
-    assert len(union.rows) == 718
+    assert len(union.rows) == 693
+    assert union.selection_accounting.model_dump() == {
+        "observation_count": 760,
+        "selected_edges": 769,
+        "one_to_many_observations": 4,
+        "one_to_many_extra_edges": 9,
+        "multi_observation_rows": 59,
+        "duplicate_selection_edges": 76,
+        "final_rows": 693,
+    }
     assert [(item.source.value, item.observation_count) for item in union.source_digests] == [
         ("artifact_product", 6),
         ("backend_only", 63),
@@ -197,15 +207,51 @@ def test_union_denominator_merges_equivalent_stream_observations_and_keeps_disti
     }
     assert {source.value for source in rows["ledger.export.csv"].sources} == {
         "artifact_product",
+        "cli_endpoint",
         "cli_suboperation",
     }
-    assert {
-        "ledger.classify.auto_split.reject",
-        "ledger.classify.auto_split.split_preview",
-        "ledger.classify.auto_split.split_apply",
-        "ledger.classify.auto_split.single_preview",
-        "ledger.classify.auto_split.single_apply",
-    } <= rows.keys()
+    assert "ledger.classify.auto_split.reject" not in rows
+    assert {source.value for source in rows["ledger.classification.rule_add"].sources} == {
+        "backend_only",
+        "cli_endpoint",
+    }
+    assert len(rows["ledger.classification.rule_apply"].source_observation_ids) == 3
+    assert len(rows["ledger.counterparty.record"].source_observation_ids) == 2
+    assert len(rows["ledger.export.flat"].source_observation_ids) == 2
+    assert len(rows["ledger.llm.apply_split"].source_observation_ids) == 4
+    assert rows["ledger.rule.apply.preview"].effect is LedgerCapabilityEffect.PROPOSAL
+    assert rows["ledger.classification.rule_apply"].effect is LedgerCapabilityEffect.MUTATION
+
+
+def test_union_effect_decisions_cover_persistent_llm_queries_provenance_and_download() -> None:
+    rows = {row.capability_id: row for row in _union_denominator().rows}
+    for capability_id in (
+        "ledger.llm.apply",
+        "ledger.llm.apply_saturated",
+        "ledger.llm.apply_split",
+        "ledger.llm.apply_evidence_classification",
+        "ledger.llm.reject",
+        "ledger.llm.review_decision",
+    ):
+        assert rows[capability_id].effect is LedgerCapabilityEffect.MUTATION
+    for capability_id in (
+        "ledger.llm.diagnostics",
+        "ledger.field_change.provenance",
+        "ledger.fx.provenance",
+        "ledger.import.normalization_provenance",
+        "ledger.manual_override.provenance",
+        "ledger.transaction.review_query",
+        "ledger.workspace.project",
+    ):
+        assert rows[capability_id].effect is LedgerCapabilityEffect.QUERY
+    assert rows["ledger.evidence.download"].effect is LedgerCapabilityEffect.ARTIFACT_QUERY
+
+
+def test_union_refuses_unknown_non_registry_identity_and_effect_collision() -> None:
+    with pytest.raises(ValueError, match="unadjudicated non-registry"):
+        matrix_module._effect_for("ledger.transaction.future", frozenset({DenominatorSourceKind.CLI_ENDPOINT}))
+    overlapping = matrix_module._EXPLICIT_QUERY_CAPABILITIES & matrix_module._EXPLICIT_MUTATION_CAPABILITIES
+    assert not overlapping
 
 
 def test_union_denominator_retains_every_registry_route_unit_and_tui_reachability_split() -> None:
@@ -246,13 +292,27 @@ def test_existing_union_semantic_homes_resolve_exact_live_symbols_and_types() ->
         row for row in _union_denominator().rows if row.semantic_home_status is SemanticHomeStatus.EXISTING
     ]
 
-    assert len(existing_rows) == 7
+    assert len(existing_rows) == 4
     for row in existing_rows:
         module_name, owner_name = row.semantic_home.owner.split(":", maxsplit=1)
         module = import_module(module_name)
         assert hasattr(module, owner_name)
         assert hasattr(module, row.semantic_home.command_type)
         assert hasattr(module, row.semantic_home.result_type)
+
+
+def test_existing_semantic_home_validation_refuses_signature_drift() -> None:
+    declaration = next(
+        item
+        for item in matrix_module._LEDGER_BACKEND_OPERATION_DECLARATIONS
+        if item.capability_id == "ledger.export.flat"
+    )
+
+    def drifted(command: int) -> str:
+        raise AssertionError
+
+    with pytest.raises(ValueError, match="request signature drifted"):
+        matrix_module._validate_existing_semantic_home(declaration, owner_callable=drifted)
 
 
 @pytest.mark.parametrize("mutation", ["missing_row", "duplicate_observation", "wrong_sources", "stale_digest"])

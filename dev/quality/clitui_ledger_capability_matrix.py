@@ -2136,7 +2136,7 @@ def _registry_union_capability_id(row: LedgerRegistryRouteRowV1) -> str:
 
 def _selected_capabilities(mapping: Mapping[str, tuple[str, ...]], identity: str) -> tuple[str, ...]:
     """Return an exact authored selection or the unchanged observed identity."""
-    return mapping[identity] if identity in mapping else (identity,)
+    return mapping.get(identity, (identity,))
 
 
 def _pascal_identity(capability_id: str) -> str:
@@ -2145,23 +2145,53 @@ def _pascal_identity(capability_id: str) -> str:
 
 _EXPLICIT_QUERY_CAPABILITIES: Final[frozenset[str]] = frozenset(
     {
-        "ledger.bienes_inversion.list", "ledger.categories", "ledger.check",
-        "ledger.counterparty.resolve", "ledger.evidence.attachment_queue",
-        "ledger.evidence.attachment_view", "ledger.evidence.consent.list",
-        "ledger.evidence.consent_survey", "ledger.evidence.list",
-        "ledger.evidence.review.list", "ledger.evidence.review.view", "ledger.evidence.view",
-        "ledger.export.provenance", "ledger.field_change.provenance", "ledger.fx.provenance",
-        "ledger.history", "ledger.history.direct", "ledger.history.split_siblings",
-        "ledger.import.aggregate_results", "ledger.import.normalization_provenance",
-        "ledger.inventory.list", "ledger.invoice.list", "ledger.invoice.view", "ledger.list",
-        "ledger.list.filter", "ledger.list.group", "ledger.list.page",
-        "ledger.list.rejected_llm_filter", "ledger.list.sort", "ledger.llm.diagnostics",
-        "ledger.manual_override.provenance", "ledger.participation.get",
-        "ledger.preflight.catalogue", "ledger.preflight.readiness", "ledger.prorrata.list",
-        "ledger.ratio.list", "ledger.ratio.validate", "ledger.ratios.eligible",
-        "ledger.rule.list", "ledger.track", "ledger.transaction.get", "ledger.transaction.list",
-        "ledger.transaction.review_query", "ledger.transaction.status_summary",
-        "ledger.workspace.affected_declarations", "ledger.workspace.project", "ledger.workspace.read",
+        "ledger.bienes_inversion.list",
+        "ledger.categories",
+        "ledger.check",
+        "ledger.counterparty.resolve",
+        "ledger.evidence.attachment_queue",
+        "ledger.evidence.attachment_view",
+        "ledger.evidence.consent.list",
+        "ledger.evidence.consent_survey",
+        "ledger.evidence.list",
+        "ledger.evidence.review.list",
+        "ledger.evidence.review.view",
+        "ledger.evidence.view",
+        "ledger.export.provenance",
+        "ledger.field_change.provenance",
+        "ledger.fx.provenance",
+        "ledger.history",
+        "ledger.history.direct",
+        "ledger.history.split_siblings",
+        "ledger.import.aggregate_results",
+        "ledger.import.normalization_provenance",
+        "ledger.inventory.list",
+        "ledger.invoice.list",
+        "ledger.invoice.view",
+        "ledger.list",
+        "ledger.list.filter",
+        "ledger.list.group",
+        "ledger.list.page",
+        "ledger.list.rejected_llm_filter",
+        "ledger.list.sort",
+        "ledger.llm.diagnostics",
+        "ledger.manual_override.provenance",
+        "ledger.participation.get",
+        "ledger.preflight.catalogue",
+        "ledger.preflight.readiness",
+        "ledger.prorrata.list",
+        "ledger.ratio.list",
+        "ledger.ratio.validate",
+        "ledger.ratios.eligible",
+        "ledger.rule.list",
+        "ledger.track",
+        "ledger.transaction.get",
+        "ledger.transaction.list",
+        "ledger.transaction.review_query",
+        "ledger.transaction.status_summary",
+        "ledger.workspace.affected_declarations",
+        "ledger.workspace.project",
+        "ledger.workspace.read",
     }
 )
 
@@ -2191,55 +2221,118 @@ def _validate_existing_semantic_home(
         raise ValueError(f"existing semantic home requires loose business parameters: {declaration.capability_id}")
     if _annotation_name(signature.return_annotation) != declaration.result_type:
         raise ValueError(f"existing semantic-home result signature drifted: {declaration.capability_id}")
+
+
 _EXPLICIT_PROPOSAL_CAPABILITIES: Final[frozenset[str]] = frozenset(
     {
-        "ledger.inventory.valuation.preview", "ledger.lifecycle.remove.preview",
-        "ledger.lifecycle.reset.preview", "ledger.llm.classify_with_evidence",
-        "ledger.llm.iva_derive", "ledger.llm.saturate", "ledger.llm.suggest",
-        "ledger.llm.suggest_split", "ledger.rule.apply.preview",
+        "ledger.inventory.valuation.preview",
+        "ledger.lifecycle.remove.preview",
+        "ledger.lifecycle.reset.preview",
+        "ledger.llm.classify_with_evidence",
+        "ledger.llm.iva_derive",
+        "ledger.llm.saturate",
+        "ledger.llm.suggest",
+        "ledger.llm.suggest_split",
+        "ledger.rule.apply.preview",
     }
 )
 _EXPLICIT_ARTIFACT_CAPABILITIES: Final[frozenset[str]] = frozenset(
     {
-        "ledger.export.csv", "ledger.export.flat", "ledger.export.google_transport",
-        "ledger.export.jsonl", "ledger.export.restore_archive", "ledger.export.review_package",
+        "ledger.export.csv",
+        "ledger.export.flat",
+        "ledger.export.google_transport",
+        "ledger.export.jsonl",
+        "ledger.export.restore_archive",
+        "ledger.export.review_package",
         "ledger.export.xlsx",
     }
 )
-_EXPLICIT_ARTIFACT_QUERY_CAPABILITIES: Final[frozenset[str]] = frozenset(
-    {"ledger.evidence.download"}
-)
+_EXPLICIT_ARTIFACT_QUERY_CAPABILITIES: Final[frozenset[str]] = frozenset({"ledger.evidence.download"})
 _EXPLICIT_MUTATION_CAPABILITIES: Final[frozenset[str]] = frozenset(
     {
-        "ledger.allocate", "ledger.bienes_inversion.declare", "ledger.classification.bulk_csv",
-        "ledger.classification.rule_add", "ledger.classification.rule_apply", "ledger.classify",
-        "ledger.classify.direct", "ledger.classify.m210", "ledger.counterparty.forget",
-        "ledger.counterparty.record", "ledger.evidence.add", "ledger.evidence.batch",
-        "ledger.evidence.confirm", "ledger.evidence.consent.rederive",
-        "ledger.evidence.consent_rederive", "ledger.evidence.extract", "ledger.evidence.pull",
-        "ledger.evidence.pull.drive", "ledger.evidence.pull.gmail", "ledger.evidence.pull.url",
-        "ledger.evidence.pull_all", "ledger.evidence.remove", "ledger.evidence.replace",
-        "ledger.evidence.update", "ledger.import", "ledger.import.directory", "ledger.import.dry_run",
-        "ledger.import.file", "ledger.import.parsed_rows", "ledger.import.provider_auto",
-        "ledger.import.provider_csv", "ledger.import.provider_n26", "ledger.import.provider_ofx_qfx",
-        "ledger.import.provider_pdf", "ledger.import.provider_pdf_n26",
-        "ledger.import.provider_xlsx_excel", "ledger.import.source", "ledger.import.verify",
-        "ledger.inventory.closing_authority.record", "ledger.inventory.create",
-        "ledger.inventory.movement.add", "ledger.invoice.add", "ledger.invoice.confirm_draft",
-        "ledger.invoice.extract_draft", "ledger.invoice.import", "ledger.invoice.remove",
-        "ledger.invoice.update", "ledger.invoice.wizard", "ledger.lifecycle.archive",
-        "ledger.lifecycle.remove", "ledger.lifecycle.remove.commit", "ledger.lifecycle.reset",
-        "ledger.lifecycle.reset.commit", "ledger.lifecycle.restore", "ledger.lifecycle.reviewed_exclude",
-        "ledger.lifecycle.stash", "ledger.llm.apply", "ledger.llm.apply_evidence_classification",
-        "ledger.llm.apply_saturated", "ledger.llm.apply_split", "ledger.llm.reject",
-        "ledger.llm.review_decision", "ledger.note.append", "ledger.participation.rebuild",
-        "ledger.prorrata.declare_sector", "ledger.prorrata.elect_especial",
-        "ledger.prorrata.elect_general", "ledger.prorrata.revoke_especial", "ledger.prorrata.seed",
-        "ledger.prorrata.seed_sector", "ledger.prorrata.settle_sector", "ledger.ratio.set",
-        "ledger.ratio.unset", "ledger.transaction.attach", "ledger.transaction.batch_patch",
-        "ledger.transaction.create", "ledger.transaction.detach", "ledger.transaction.invoice_link",
-        "ledger.transaction.merge", "ledger.transaction.split", "ledger.transaction.split_classified",
-        "ledger.transaction.update", "ledger.transaction.update_fields",
+        "ledger.allocate",
+        "ledger.bienes_inversion.declare",
+        "ledger.classification.bulk_csv",
+        "ledger.classification.rule_add",
+        "ledger.classification.rule_apply",
+        "ledger.classify",
+        "ledger.classify.direct",
+        "ledger.classify.m210",
+        "ledger.counterparty.forget",
+        "ledger.counterparty.record",
+        "ledger.evidence.add",
+        "ledger.evidence.batch",
+        "ledger.evidence.confirm",
+        "ledger.evidence.consent.rederive",
+        "ledger.evidence.consent_rederive",
+        "ledger.evidence.extract",
+        "ledger.evidence.pull",
+        "ledger.evidence.pull.drive",
+        "ledger.evidence.pull.gmail",
+        "ledger.evidence.pull.url",
+        "ledger.evidence.pull_all",
+        "ledger.evidence.remove",
+        "ledger.evidence.replace",
+        "ledger.evidence.update",
+        "ledger.import",
+        "ledger.import.directory",
+        "ledger.import.dry_run",
+        "ledger.import.file",
+        "ledger.import.parsed_rows",
+        "ledger.import.provider_auto",
+        "ledger.import.provider_csv",
+        "ledger.import.provider_n26",
+        "ledger.import.provider_ofx_qfx",
+        "ledger.import.provider_pdf",
+        "ledger.import.provider_pdf_n26",
+        "ledger.import.provider_xlsx_excel",
+        "ledger.import.source",
+        "ledger.import.verify",
+        "ledger.inventory.closing_authority.record",
+        "ledger.inventory.create",
+        "ledger.inventory.movement.add",
+        "ledger.invoice.add",
+        "ledger.invoice.confirm_draft",
+        "ledger.invoice.extract_draft",
+        "ledger.invoice.import",
+        "ledger.invoice.remove",
+        "ledger.invoice.update",
+        "ledger.invoice.wizard",
+        "ledger.lifecycle.archive",
+        "ledger.lifecycle.remove",
+        "ledger.lifecycle.remove.commit",
+        "ledger.lifecycle.reset",
+        "ledger.lifecycle.reset.commit",
+        "ledger.lifecycle.restore",
+        "ledger.lifecycle.reviewed_exclude",
+        "ledger.lifecycle.stash",
+        "ledger.llm.apply",
+        "ledger.llm.apply_evidence_classification",
+        "ledger.llm.apply_saturated",
+        "ledger.llm.apply_split",
+        "ledger.llm.reject",
+        "ledger.llm.review_decision",
+        "ledger.note.append",
+        "ledger.participation.rebuild",
+        "ledger.prorrata.declare_sector",
+        "ledger.prorrata.elect_especial",
+        "ledger.prorrata.elect_general",
+        "ledger.prorrata.revoke_especial",
+        "ledger.prorrata.seed",
+        "ledger.prorrata.seed_sector",
+        "ledger.prorrata.settle_sector",
+        "ledger.ratio.set",
+        "ledger.ratio.unset",
+        "ledger.transaction.attach",
+        "ledger.transaction.batch_patch",
+        "ledger.transaction.create",
+        "ledger.transaction.detach",
+        "ledger.transaction.invoice_link",
+        "ledger.transaction.merge",
+        "ledger.transaction.split",
+        "ledger.transaction.split_classified",
+        "ledger.transaction.update",
+        "ledger.transaction.update_fields",
     }
 )
 
@@ -2250,6 +2343,23 @@ _EXPLICIT_EFFECTS: Final[Mapping[str, LedgerCapabilityEffect]] = MappingProxyTyp
         **{item: LedgerCapabilityEffect.ARTIFACT for item in _EXPLICIT_ARTIFACT_CAPABILITIES},
         **{item: LedgerCapabilityEffect.ARTIFACT_QUERY for item in _EXPLICIT_ARTIFACT_QUERY_CAPABILITIES},
         **{item: LedgerCapabilityEffect.MUTATION for item in _EXPLICIT_MUTATION_CAPABILITIES},
+    }
+)
+_EXPLICIT_BACKEND_HELPER_ONLY_CAPABILITIES: Final[frozenset[str]] = frozenset(
+    {
+        "ledger.evidence.consent_rederive",
+        "ledger.evidence.consent_survey",
+        "ledger.import.aggregate_results",
+        "ledger.import.parsed_rows",
+        "ledger.invoice.confirm_draft",
+        "ledger.invoice.extract_draft",
+        "ledger.llm.apply_evidence_classification",
+        "ledger.llm.review_decision",
+        "ledger.preflight.catalogue",
+        "ledger.transaction.split_classified",
+        "ledger.transaction.update",
+        "ledger.workspace.affected_declarations",
+        "ledger.workspace.project",
     }
 )
 
@@ -2302,9 +2412,7 @@ def _semantic_home_for(
     if capability_id not in _EXPLICIT_EFFECTS:
         raise ValueError(f"union capability has no explicit planned contract decision: {capability_id}")
     request_suffix = (
-        "Query"
-        if effect in {LedgerCapabilityEffect.QUERY, LedgerCapabilityEffect.ARTIFACT_QUERY}
-        else "Command"
+        "Query" if effect in {LedgerCapabilityEffect.QUERY, LedgerCapabilityEffect.ARTIFACT_QUERY} else "Command"
     )
     return (
         CanonicalSemanticHomeV1(
@@ -2321,9 +2429,13 @@ def _axis_decisions(
     sources: frozenset[DenominatorSourceKind],
     effect: LedgerCapabilityEffect,
 ) -> tuple[LedgerAxisApplicabilityDecisionV1, ...]:
-    backend_helper_only = sources == frozenset({DenominatorSourceKind.BACKEND_ONLY}) and capability_id not in {
-        "ledger.workspace.read"
-    }
+    if effect is not LedgerCapabilityEffect.REGISTRY_ROUTE and capability_id not in _EXPLICIT_EFFECTS:
+        raise ValueError(f"union capability has no explicit applicability decision: {capability_id}")
+    backend_helper_only = capability_id in _EXPLICIT_BACKEND_HELPER_ONLY_CAPABILITIES
+    if backend_helper_only != (
+        sources == frozenset({DenominatorSourceKind.BACKEND_ONLY}) and capability_id != "ledger.workspace.read"
+    ):
+        raise ValueError(f"explicit backend-helper applicability drifted: {capability_id}")
     applicable = {
         LedgerCapabilityAxis.BACKEND: True,
         LedgerCapabilityAxis.CLI: not backend_helper_only,
@@ -2560,9 +2672,7 @@ def build_ledger_union_denominator(
     if observed_non_registry != set(_EXPLICIT_EFFECTS):
         missing = sorted(observed_non_registry - set(_EXPLICIT_EFFECTS))
         removed = sorted(set(_EXPLICIT_EFFECTS) - observed_non_registry)
-        raise ValueError(
-            f"non-registry semantic adjudication is stale; unadjudicated={missing}; removed={removed}"
-        )
+        raise ValueError(f"non-registry semantic adjudication is stale; unadjudicated={missing}; removed={removed}")
     observations_by_capability: dict[str, list[LedgerUnionSourceObservationV1]] = {}
     for observation in observations:
         for capability_id in observation.capability_ids:
@@ -2611,23 +2721,27 @@ def build_ledger_union_denominator(
             gaps.add(LedgerGapClass.ARTIFACT)
         if effect is LedgerCapabilityEffect.REGISTRY_ROUTE:
             gaps.add(LedgerGapClass.REGISTRY)
-        if capability_id in {
-            "ledger.export.provenance",
-            "ledger.field_change.provenance",
-            "ledger.fx.provenance",
-            "ledger.import.normalization_provenance",
-            "ledger.manual_override.provenance",
-            "ledger.llm.apply",
-            "ledger.llm.apply_evidence_classification",
-            "ledger.llm.apply_saturated",
-            "ledger.llm.apply_split",
-            "ledger.llm.classify_with_evidence",
-            "ledger.llm.reject",
-            "ledger.llm.review_decision",
-            "ledger.llm.saturate",
-            "ledger.llm.suggest",
-            "ledger.llm.suggest_split",
-        } or effect is LedgerCapabilityEffect.REGISTRY_ROUTE:
+        if (
+            capability_id
+            in {
+                "ledger.export.provenance",
+                "ledger.field_change.provenance",
+                "ledger.fx.provenance",
+                "ledger.import.normalization_provenance",
+                "ledger.manual_override.provenance",
+                "ledger.llm.apply",
+                "ledger.llm.apply_evidence_classification",
+                "ledger.llm.apply_saturated",
+                "ledger.llm.apply_split",
+                "ledger.llm.classify_with_evidence",
+                "ledger.llm.reject",
+                "ledger.llm.review_decision",
+                "ledger.llm.saturate",
+                "ledger.llm.suggest",
+                "ledger.llm.suggest_split",
+            }
+            or effect is LedgerCapabilityEffect.REGISTRY_ROUTE
+        ):
             gaps.add(LedgerGapClass.PROVENANCE)
         component_only_routes = tuple(route for route in tui_routes if tui_reachability[route] == "component_only")
         if component_only_routes:
@@ -3840,6 +3954,7 @@ __all__ = [
     "LedgerTuiSupportedSurfaceCensusV1",
     "LedgerUnionCapabilityRowV1",
     "LedgerUnionDenominatorV1",
+    "LedgerUnionSelectionAccountingV1",
     "LedgerUnionSourceDigestV1",
     "LedgerUnionSourceObservationV1",
     "ReviewRuling",
