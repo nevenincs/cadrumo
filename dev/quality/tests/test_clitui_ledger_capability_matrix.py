@@ -2327,9 +2327,10 @@ def _acceptance_record_anchor(
 def _reminted_live_union() -> LedgerUnionDenominatorV1:
     """Produce a valid later row-review observation, not a stale model copy."""
     union = _union_denominator()
+    attestation_payload = union.row_review_attestation.model_dump(mode="python", exclude={"digest"})
+    attestation_payload["reviewed_at"] = _LATER_OBSERVED_AT
     provisional_attestation = union.row_review_attestation.model_construct(
-        **union.row_review_attestation.model_dump(mode="python", exclude={"digest"}),
-        reviewed_at=_LATER_OBSERVED_AT,
+        **attestation_payload,
         digest="",
     )
     attestation = LedgerUnionRowReviewAttestationV1(
@@ -2715,6 +2716,7 @@ def test_currentness_requires_nonempty_observed_subjects() -> None:
         matrix,
         observed_census=_report(),
         observed_subjects=(),
+        observed_union=_union_denominator(),
     )
 
     assert currentness == [
@@ -2736,11 +2738,13 @@ def test_currentness_rejects_duplicate_or_changed_subject_observations() -> None
         matrix,
         observed_census=_report(),
         observed_subjects=(_SUBJECT, _SUBJECT),
+        observed_union=_union_denominator(),
     )
     changed_errors = validate_ledger_matrix_currentness(
         matrix,
         observed_census=_report(),
         observed_subjects=(changed,),
+        observed_union=_union_denominator(),
     )
 
     assert duplicate_errors == ["live evidence-subject observation contains duplicate identities"]
@@ -2754,6 +2758,7 @@ def test_currentness_revalidates_a_malformed_copied_subject_without_value_leakag
         _matrix(),
         observed_census=_report(),
         observed_subjects=(malformed,),
+        observed_union=_union_denominator(),
     )
 
     assert errors == ["observed subjects validation failed at 0: value_error"]
@@ -2797,16 +2802,19 @@ def test_currentness_and_ordered_gates_reject_a_malformed_copied_nested_authorit
         malformed_matrix,
         observed_census=_report(),
         observed_subjects=(_SUBJECT,),
+        observed_union=_union_denominator(),
     )
     second = validate_ledger_matrix_currentness(
         malformed_matrix,
         observed_census=_report(),
         observed_subjects=(_SUBJECT,),
+        observed_union=_union_denominator(),
     )
     assessments = evaluate_ledger_capability_gates(
         malformed_matrix,
         observed_census=_report(),
         observed_subjects=(_SUBJECT,),
+        observed_union=_union_denominator(),
     )
 
     assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
@@ -3182,6 +3190,7 @@ def test_erasing_initial_cli_ownership_reopens_g0_even_when_current_rows_look_cl
         candidate,
         observed_census=_report(),
         observed_subjects=(_SUBJECT,),
+        observed_union=_union_denominator(),
     )
 
     assert not assessments[0].closed
@@ -3817,6 +3826,7 @@ def test_g4_requires_an_external_acceptance_record_for_an_accepted_g3_receipt() 
         LedgerGate.G4_TUI_ADMISSION_AND_PARITY,
         observed_census=_report(),
         observed_subjects=(_SUBJECT,),
+        observed_union=_union_denominator(),
     )
 
     assert not assessment.closed
@@ -3909,6 +3919,7 @@ def test_g4_refuses_missing_stale_or_rebound_external_acceptance_authority(mutat
         LedgerGate.G4_TUI_ADMISSION_AND_PARITY,
         observed_census=_report(),
         observed_subjects=(_SUBJECT,),
+        observed_union=_union_denominator(),
         acceptance_record_anchor=selected_anchor,
         observed_acceptance_subjects=selected_subjects,
     )
@@ -4018,6 +4029,7 @@ def test_matrix_drift_invalidates_receipt_and_relocks_ordered_gates() -> None:
         candidate,
         observed_census=_report(),
         observed_subjects=(_SUBJECT,),
+        observed_union=_union_denominator(),
     )
 
     assert not g4.closed
@@ -4041,6 +4053,7 @@ def test_denominator_and_observed_census_drift_invalidate_receipts_and_relock() 
         candidate,
         observed_census=drifted_report,
         observed_subjects=(_SUBJECT,),
+        observed_union=_union_denominator(),
     )
 
     assert not stale_matrix_g4.closed
@@ -4071,6 +4084,7 @@ def test_ordered_evaluation_never_allows_a_later_gate_to_close() -> None:
         matrix,
         observed_census=drifted_report,
         observed_subjects=(_SUBJECT,),
+        observed_union=_union_denominator(),
     )
 
     assert len(assessments) == 5
@@ -4089,6 +4103,7 @@ def test_ordered_evaluation_reopens_later_gates_after_a_malformed_subject() -> N
         _matrix(),
         observed_census=_report(),
         observed_subjects=(malformed_subject,),
+        observed_union=_union_denominator(),
     )
 
     assert len(assessments) == len(LedgerGate)
