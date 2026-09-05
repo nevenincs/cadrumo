@@ -36,6 +36,9 @@ _CATALOGUE = REPO_ROOT / "src" / "cadrumo" / "locales" / "es" / "modelo" / "sche
 def _pinned_digests() -> dict[str, str]:
     """Compile every M200/2024 adjudication authority and take its pins."""
     from ...registry.analysis.m200_2024_blocker_adjudications import compile_m200_2024_blocker_authority
+    from ...registry.analysis.m200_2024_page_resolved_adjudications import (
+        compile_m200_2024_page_resolved_authority,
+    )
     from ...registry.analysis.m200_2024_template_adjudications import compile_m200_2024_same_template_authority
     from ...registry.analysis.m200_2024_unique_adjudications import compile_m200_2024_unique_authority
 
@@ -44,6 +47,7 @@ def _pinned_digests() -> dict[str, str]:
         compile_m200_2024_blocker_authority,
         compile_m200_2024_same_template_authority,
         compile_m200_2024_unique_authority,
+        compile_m200_2024_page_resolved_authority,
     ):
         for row in compile_authority().adjudications:
             if row.official_label_sha256:

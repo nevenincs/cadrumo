@@ -305,9 +305,7 @@ def test_recovery_refuses_unsafe_legacy_orphan_shapes(
             "backup-survives": backup_export,
             "target-survives": context.target_export_root,
         }[case]
-        assert survivor.is_dir(), (
-            f"{case}: the refusal removed {survivor}, the state this case exists to see preserved"
-        )
+        assert survivor.is_dir(), f"{case}: the refusal removed {survivor}, the state this case exists to see preserved"
 
 
 def test_publication_replaces_only_export_and_removes_opaque_backup(m130_inspection_snapshot, tmp_path) -> None:

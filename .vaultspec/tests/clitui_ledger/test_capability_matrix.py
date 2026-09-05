@@ -164,7 +164,7 @@ def _published_s14_coordinates(path: Path = _REFERENCE_PATH) -> dict[str, str]:
             "S14 publication coordinates drifted: "
             f"expected {sorted(_S14_PUBLICATION_COORDINATES)}, found {sorted(coordinates)}"
         )
-    return {match.group("coordinate"): match.group("value").strip() for match in matches}
+    return {match.group("coordinate"): match.group("value").strip().replace("`", "") for match in matches}
 
 
 @cache
@@ -285,6 +285,55 @@ def _production_classification_action_reference() -> str:
     if "classify_action" not in keyword_names or {"classification_target", "classification_submitter"} & keyword_names:
         raise AssertionError("production classification action is not inert")
     return constants["_LEDGER_CLASSIFY_ACTION"]
+
+
+def _canonical_s14_coordinates() -> dict[str, str]:
+    """Derive the S14 publication values from the canonical matrix and TUI census."""
+    matrix = build_ledger_capability_matrix()
+    if matrix.live_union is None:
+        raise AssertionError("canonical matrix must carry its live union")
+    rows = matrix.live_union.rows
+    tui_census = _tui_census()
+    tui_decisions = {
+        row.capability_id: next(
+            decision for decision in row.applicability if decision.axis is LedgerCapabilityAxis.TUI
+        )
+        for row in rows
+    }
+    planned = sum(row.semantic_home_status is SemanticHomeStatus.PLANNED for row in rows)
+    non_registry = sum(
+        row.registry_destination_status is LedgerRegistryDestinationStatus.NOT_APPLICABLE for row in rows
+    )
+    tui_not_applicable = sum(
+        decision.applicability is ApplicabilityState.NOT_APPLICABLE for decision in tui_decisions.values()
+    )
+    planned_product = sum(
+        row.semantic_home_status is SemanticHomeStatus.PLANNED and LedgerGapClass.PRODUCT in row.gap_classes
+        for row in rows
+    )
+    classification_action = _production_classification_action_reference()
+    read_actions = tuple(tui_census.injected_read_action_ids)
+    if classification_action in read_actions:
+        raise AssertionError("classification action must remain distinct from read actions")
+    if tui_census.installed_mutation_doors:
+        raise AssertionError("production Ledger mutation doors must remain empty")
+    return {
+        "s14.cohort.planned-semantic-homes": str(planned),
+        "s14.cohort.non-registry-rows": str(non_registry),
+        "s14.cohort.backend-helper-tui-not-applicable": str(tui_not_applicable),
+        "s14.cohort.planned-product-gap-rows": str(planned_product),
+        "s14.tui.production-read-action-references": ", ".join(read_actions),
+        "s14.tui.production-classification-action-reference": (
+            f"{classification_action} (inert: no target/submitter)"
+        ),
+        "s14.tui.production-executable-mutation-doors": str(len(tui_census.installed_mutation_doors)),
+    }
+
+
+def _assert_s14_publication_matches(path: Path = _REFERENCE_PATH) -> None:
+    """Reject a changed S14 value after parsing its unique publication coordinates."""
+    if _published_s14_coordinates(path) != _canonical_s14_coordinates():
+        raise AssertionError("S14 publication coordinates drifted from canonical projections")
 
 
 def _mutate_tui_source(relative: str, mutation: Callable[[bytes], bytes]) -> tuple[tuple[str, bytes], ...]:
@@ -4666,44 +4715,28 @@ def test_human_matrix_contract_coordinate_matches_live_source_digest() -> None:
 
 def test_s14_publication_coordinates_match_canonical_matrix_and_tui_census() -> None:
     """The S14 prose cannot silently drift from the live denominator or TUI composition."""
-    matrix = build_ledger_capability_matrix()
-    if matrix.live_union is None:
-        raise AssertionError("canonical matrix must carry its live union")
-    rows = matrix.live_union.rows
-    tui_census = _tui_census()
-    tui_decisions = {
-        row.capability_id: next(
-            decision for decision in row.applicability if decision.axis is LedgerCapabilityAxis.TUI
-        )
-        for row in rows
-    }
-    planned = sum(row.semantic_home_status is SemanticHomeStatus.PLANNED for row in rows)
-    non_registry = sum(
-        row.registry_destination_status is LedgerRegistryDestinationStatus.NOT_APPLICABLE for row in rows
-    )
-    tui_not_applicable = sum(
-        decision.applicability is ApplicabilityState.NOT_APPLICABLE for decision in tui_decisions.values()
-    )
-    planned_product = sum(
-        row.semantic_home_status is SemanticHomeStatus.PLANNED and LedgerGapClass.PRODUCT in row.gap_classes
-        for row in rows
-    )
-    classification_action = _production_classification_action_reference()
-    read_actions = tuple(tui_census.injected_read_action_ids)
-    assert classification_action not in read_actions
-    assert tui_census.installed_mutation_doors == ()
-    expected = {
-        "s14.cohort.planned-semantic-homes": str(planned),
-        "s14.cohort.non-registry-rows": str(non_registry),
-        "s14.cohort.backend-helper-tui-not-applicable": str(tui_not_applicable),
-        "s14.cohort.planned-product-gap-rows": str(planned_product),
-        "s14.tui.production-read-action-references": ", ".join(read_actions),
-        "s14.tui.production-classification-action-reference": (
-            f"{classification_action} (inert: no target/submitter)"
-        ),
-        "s14.tui.production-executable-mutation-doors": str(len(tui_census.installed_mutation_doors)),
-    }
-    assert _published_s14_coordinates() == expected
+    _assert_s14_publication_matches()
+
+
+@pytest.mark.parametrize("mutation", ["changed", "missing", "duplicate"])
+def test_s14_publication_coordinate_detector_rejects_prose_drift(tmp_path: Path, mutation: str) -> None:
+    """The publication gate has detector teeth for changed, missing, and duplicate coordinates."""
+    source = _REFERENCE_PATH.read_text(encoding="utf-8")
+    coordinate_line = "| `s14.cohort.planned-semantic-homes` | `690` |"
+    if mutation == "changed":
+        assert source.count(coordinate_line) == 1
+        source = source.replace(coordinate_line, "| `s14.cohort.planned-semantic-homes` | `691` |", 1)
+    elif mutation == "missing":
+        assert source.count(coordinate_line) == 1
+        source = source.replace(coordinate_line + "\n", "", 1)
+    else:
+        assert source.count(coordinate_line) == 1
+        source = source.replace(coordinate_line, coordinate_line + "\n" + coordinate_line, 1)
+    candidate = tmp_path / "reference.md"
+    candidate.write_text(source, encoding="utf-8")
+
+    with pytest.raises(AssertionError, match="S14 publication coordinates"):
+        _assert_s14_publication_matches(candidate)
 
 
 def test_g0_refuses_a_small_fixture_without_a_live_union_identity_observation() -> None:
