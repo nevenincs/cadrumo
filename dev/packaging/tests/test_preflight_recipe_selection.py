@@ -300,8 +300,17 @@ def test_the_count_reader_refuses_output_carrying_no_collection_outcome(summary:
     silently empty selection, which is the false green this gate exists to
     prevent.
     """
-    with pytest.raises(AssertionError):
+    with pytest.raises(AssertionError) as refusal:
         parse_collected_count(summary)
+
+    # `AssertionError` is the widest possible claim here: it is what EVERY
+    # failed assertion raises, including one from inside the reader for an
+    # unrelated reason. Requiring the guard's own sentence proves the reader
+    # refused deliberately, and the echoed output proves it refused THIS
+    # input rather than carrying a verdict from another case.
+    message = str(refusal.value)
+    assert "no pytest collection summary in output" in message, message
+    assert summary in message, message
 
 
 def test_the_scanned_recipe_corpus_is_non_empty_and_carries_the_known_gates() -> None:

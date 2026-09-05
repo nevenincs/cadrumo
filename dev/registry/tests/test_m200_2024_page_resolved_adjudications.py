@@ -68,3 +68,30 @@ def test_refuses_a_member_whose_declared_section_its_design_cell_contradicts(tmp
 
     with pytest.raises(RegistryValidationError, match=r"no record page|contradicts"):
         subject.compile_m200_2024_page_resolved_authority(target)
+
+
+def test_a_design_cell_that_wraps_is_read_whole_and_not_as_fragments() -> None:
+    """A wrapped row must not become several cells, nor a label starting mid-sentence.
+
+    Casilla 01264's cell in the bundled design is long enough to wrap onto a
+    second line. Read line by line, the tail carries the casilla number and ends
+    in it, so it parses as a valid cell that happens to begin "del Club Natacio
+    Barcelona" -- and the row appears to occur twice, which reads as ambiguity
+    the design does not have.
+
+    Both failures are silent, and they point opposite ways: one writes a
+    truncated label, the other refuses a casilla that is perfectly well
+    determined. 01264 is not a member of this cohort, which is why it is a good
+    probe: the parser is asserted on its own terms rather than through whatever
+    the current membership happens to exercise.
+    """
+    cells = subject._design_cells()
+
+    resolved = {cell for (_page, number), group in cells.items() if number == "01264" for cell in group}
+    assert len(resolved) == 1, f"01264 should name one cell, not {len(resolved)}"
+    label = next(iter(resolved))
+    assert label.startswith("Deducc. para incentivar determ.actividades - 2024 Reconstrucci"), (
+        f"01264 resolved to a fragment rather than the whole cell: {label!r}"
+    )
+    assert "Club Natació Barcelona" in label
+

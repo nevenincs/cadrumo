@@ -41,6 +41,7 @@ _DESIGN_RELATIVE = (
 _PAGE_HEADER = re.compile(r"^#\s+(DP\w+)\s*$")
 _TRAILING_CASILLA = re.compile(r"\[(\d{5})\]$")
 _SEGMENT = re.compile(r" - |: ")
+_ROW_START = re.compile(r"^\d+ \| \d+ \| \d+ \|")
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,22 +68,49 @@ def _slug(text: str) -> str:
 
 
 def _design_cells() -> dict[tuple[str, str], set[str]]:
-    """Map (page, casilla number) to the labelled cells on that page."""
+    """Map (page, casilla number) to the labelled cells on that page.
+
+    Rows are reassembled before matching. A design cell whose text is long
+    enough wraps onto following lines in the extraction, and reading line by
+    line turns one cell into fragments -- the tail fragment still ends in the
+    casilla number, so it parses as a perfectly good cell that happens to begin
+    mid-sentence, and several fragments of one row look like a number occurring
+    several times. Both failures are silent: one writes a label starting
+    "del Club Natacio Barcelona", the other refuses a casilla for ambiguity it
+    does not have. A row is recognised by its leading index/offset/width
+    columns, and everything until the next such line belongs to it.
+    """
     design = bundled_path(_DESIGN_RELATIVE)
     cells: dict[tuple[str, str], set[str]] = {}
     page: str | None = None
+    row: str | None = None
+    row_page: str | None = None
+
+    def _harvest(page_id: str | None, text: str | None) -> None:
+        if page_id is None or text is None:
+            return
+        for part in text.split("|"):
+            cell = re.sub(r"\s+", " ", part).strip()
+            match = _TRAILING_CASILLA.search(cell)
+            if match is not None and cell.endswith("]"):
+                cells.setdefault((page_id, match.group(1)), set()).add(cell)
+
     for line in design.read_text(encoding="utf-8").splitlines():
-        header = _PAGE_HEADER.match(line.strip())
+        stripped = line.strip()
+        header = _PAGE_HEADER.match(stripped)
         if header is not None:
+            _harvest(row_page, row)
+            row = row_page = None
             page = header.group(1).upper()
             continue
         if page is None:
             continue
-        for part in line.split("|"):
-            cell = part.strip()
-            match = _TRAILING_CASILLA.search(cell)
-            if match is not None:
-                cells.setdefault((page, match.group(1)), set()).add(re.sub(r"\s+", " ", cell).strip())
+        if _ROW_START.match(stripped):
+            _harvest(row_page, row)
+            row, row_page = stripped, page
+        elif row is not None and stripped and not stripped.startswith("#"):
+            row = f"{row} {stripped}"
+    _harvest(row_page, row)
     return cells
 
 
