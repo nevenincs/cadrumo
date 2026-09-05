@@ -2252,7 +2252,7 @@ _LEDGER_ARTIFACT_OBSERVATIONS: Final[tuple[tuple[str, str], ...]] = (
 
 _LEDGER_TUI_ROUTE_OBSERVATION_CAPABILITIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
     {
-        "ledger.overview": ("ledger.import.prepare", "ledger.workspace.read"),
+        "ledger.overview": ("ledger.workspace.read",),
         "ledger.entries": ("ledger.transaction.list",),
         "ledger.review": ("ledger.transaction.review_query",),
         "ledger.import": ("ledger.import.source",),
@@ -2491,7 +2491,7 @@ _EXPLICIT_NON_REGISTRY_OBSERVATION_SELECTIONS: Final[Mapping[str, tuple[str, ...
         "supported_surface:ledger.entries:component_only": ("ledger.transaction.list",),
         "supported_surface:ledger.evidence:component_only": ("ledger.evidence.attachment_queue",),
         "supported_surface:ledger.import:component_only": ("ledger.import.source",),
-        "supported_surface:ledger.overview:installed": ("ledger.import.prepare", "ledger.workspace.read"),
+        "supported_surface:ledger.overview:installed": ("ledger.workspace.read",),
         "supported_surface:ledger.reconciliation:component_only": ("ledger.transaction.invoice_link",),
         "supported_surface:ledger.review:component_only": ("ledger.transaction.review_query",),
     }
@@ -2842,6 +2842,7 @@ _EXPLICIT_BACKEND_HELPER_ONLY_CAPABILITIES: Final[frozenset[str]] = frozenset(
         "ledger.evidence.consent_rederive",
         "ledger.evidence.consent_survey",
         "ledger.import.aggregate_results",
+        "ledger.import.prepare",
         "ledger.import.parsed_rows",
         "ledger.invoice.confirm_draft",
         "ledger.invoice.extract_draft",
@@ -2974,7 +2975,7 @@ _REVIEWED_ADDITIONAL_ARTIFACT_INPUT_CAPABILITIES: Final[frozenset[str]] = frozen
 
 _EXPLICIT_TUI_ROUTE_GROUPS: Final[Mapping[str, frozenset[str]]] = MappingProxyType(
     {
-        "ledger.overview": frozenset({"ledger.import.prepare", "ledger.workspace.read"}),
+        "ledger.overview": frozenset({"ledger.workspace.read"}),
         "ledger.classification": frozenset(
             {
                 "ledger.categories",

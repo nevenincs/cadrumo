@@ -201,6 +201,11 @@ def test_release_please_bumps_every_version_surface_the_release_gate_compares() 
 _NATIVELY_UPDATED: Final = frozenset({"src/cadrumo/__init__.py"})
 
 
+#: Below this the extra-files key has moved or emptied. Live: four entries
+#: configured, three of them reaching the annotation check. A floor.
+_MINIMUM_ANNOTATED_EXTRA_FILES: Final = 2
+
+
 def test_every_other_configured_extra_file_carries_the_annotation_that_moves_it() -> None:
     """A path in `extra-files` with no annotation is a surface silently left behind.
 
@@ -211,12 +216,25 @@ def test_every_other_configured_extra_file_carries_the_annotation_that_moves_it(
     """
     config = json.loads((REPO_ROOT / "release-please-config.json").read_text(encoding="utf-8"))
 
+    # The corpus arrives through a `.get` default, so a renamed or emptied
+    # `extra-files` key yields no entries and every claim below holds. That is
+    # the same silent success this gate exists to prevent, one level up: the
+    # release tool would stop bumping these files and the gate would agree.
+    configured = [
+        entry for entry in config["packages"]["."].get("extra-files", []) if isinstance(entry, str)
+    ]
+    checked = [entry for entry in configured if entry not in _NATIVELY_UPDATED]
+
+    assert len(checked) >= _MINIMUM_ANNOTATED_EXTRA_FILES, (
+        f"only {len(checked)} configured extra-file(s) reach the annotation check, from "
+        f"{len(configured)} configured; below this the key has moved or emptied and this "
+        "gate is inert rather than satisfied"
+    )
+
     unmarked = [
         entry
-        for entry in config["packages"]["."].get("extra-files", [])
-        if isinstance(entry, str)
-        and entry not in _NATIVELY_UPDATED
-        and "x-release-please-version" not in (REPO_ROOT / entry).read_text(encoding="utf-8")
+        for entry in checked
+        if "x-release-please-version" not in (REPO_ROOT / entry).read_text(encoding="utf-8")
     ]
 
     assert unmarked == [], f"these files are configured for bumping but carry no version annotation: {unmarked}"

@@ -77,6 +77,8 @@ class Modelo(StrEnum):
 
 
 class Config(StrEnum):
+    VALUE_BOUND = "value_bound_key"
+    PROSE_ONLY = "back"
     DECLARED_IN_DATA = "declared_in_data"
     NEVER_ANYWHERE = "never_anywhere"
 
@@ -150,6 +152,8 @@ _DATA = """
 [binding]
 field = "data_field"
 value = "DECLARED_IN_DATA"
+endpoint = "value_bound_key"
+note = "Records can be created and read back later."
 """
 
 
@@ -333,7 +337,31 @@ def test_shipped_data_naming_a_member_clears_it_but_never_a_top_level_symbol(
     assert "Config.DECLARED_IN_DATA" not in reported
     assert "Widget.hidden_field" in reported
     assert "Config.NEVER_ANYWHERE" in reported
-    assert result.data_cleared == 2
+    assert result.data_cleared == 3
+
+
+def test_a_member_bound_by_its_declared_value_is_cleared(result: UnreachableCodeResult) -> None:
+    """A declaration addresses a StrEnum member by its VALUE, never by its name.
+
+    ``VALUE_BOUND`` is spelled nowhere in Python and its NAME is absent from
+    the payload; only its value ``value_bound_key`` appears there, as the
+    ``endpoint`` value. Matching the name alone reported the whole tier as
+    dead: on the real tree that was 175 live members, 174 of them in one
+    module whose values resolve into the registry's projection declarations.
+    """
+    assert "Config.VALUE_BOUND" not in {finding.qualname for finding in result.symbols}
+
+
+def test_a_value_appearing_only_inside_a_sentence_does_not_clear(result: UnreachableCodeResult) -> None:
+    """The guard that matters more than the clearing: prose is not a reference.
+
+    ``PROSE_ONLY`` declares the value ``back``, and the payload contains the
+    sentence "Records can be created and read back later." Tokenising the raw
+    text would clear it on that word and a live finding would vanish silently,
+    which is strictly worse than the over-report it fixes. Only a complete key
+    or a complete string value counts, so this member stays reported.
+    """
+    assert "Config.PROSE_ONLY" in {finding.qualname for finding in result.symbols}
 
 
 def test_test_module_whose_every_shipped_subject_is_dead_is_an_orphaned_test(result: UnreachableCodeResult) -> None:

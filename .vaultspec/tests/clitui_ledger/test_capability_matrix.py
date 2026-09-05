@@ -247,11 +247,11 @@ def test_union_denominator_joins_every_raw_observation_without_double_counting()
     assert len(union.rows) == 694
     assert union.selection_accounting.model_dump() == {
         "observation_count": 761,
-        "selected_edges": 771,
-        "one_to_many_observations": 5,
-        "one_to_many_extra_edges": 10,
-        "multi_observation_rows": 60,
-        "duplicate_selection_edges": 77,
+        "selected_edges": 770,
+        "one_to_many_observations": 4,
+        "one_to_many_extra_edges": 9,
+        "multi_observation_rows": 59,
+        "duplicate_selection_edges": 76,
         "final_rows": 694,
     }
     assert [(item.source.value, item.observation_count) for item in union.source_digests] == [
@@ -287,8 +287,8 @@ def test_union_holds_every_tui_applicable_row_until_g3_without_holding_non_appli
         if decision.applicability is ApplicabilityState.NOT_APPLICABLE
     )
 
-    assert len(applicable) == 681
-    assert len(not_applicable) == 13
+    assert len(applicable) == 680
+    assert len(not_applicable) == 14
     assert all(
         union.rows[index].tui_hold_until is LEDGER_TUI_HOLD_UNTIL_GATE
         for index in range(len(union.rows))
@@ -563,14 +563,30 @@ def test_union_denominator_retains_every_registry_route_unit_and_tui_reachabilit
     assert rows["ledger.workspace.read"].tui_routes == ("ledger.overview",)
     assert "reachability" not in {gap.value for gap in rows["ledger.workspace.read"].gap_classes}
     prepared_import = rows["ledger.import.prepare"]
-    assert prepared_import.sources == {DenominatorSourceKind.BACKEND_ONLY, DenominatorSourceKind.SUPPORTED_SURFACE}
+    assert prepared_import.sources == {DenominatorSourceKind.BACKEND_ONLY}
     assert prepared_import.semantic_home.owner == (
         "cadrumo.application.ledger.import_preparation:prepare_ledger_import_command"
     )
     assert prepared_import.semantic_home_status is SemanticHomeStatus.PLANNED
     assert prepared_import.effect is LedgerCapabilityEffect.QUERY
-    assert prepared_import.tui_routes == ("ledger.overview",)
+    assert prepared_import.tui_routes == ()
     assert prepared_import.gap_classes == {LedgerGapClass.PRODUCT, LedgerGapClass.PROOF}
+    assert prepared_import.primary_gap_class is LedgerGapClass.PRODUCT
+    assert prepared_import.secondary_gap_classes == (LedgerGapClass.PROOF,)
+    assert prepared_import.tui_hold_until is None
+    assert {
+        decision.axis: (decision.applicability, decision.proof)
+        for decision in prepared_import.applicability
+    } == {
+        LedgerCapabilityAxis.ARTIFACT: (ApplicabilityState.NOT_APPLICABLE, AxisProofState.NOT_APPLICABLE),
+        LedgerCapabilityAxis.BACKEND: (ApplicabilityState.APPLICABLE, AxisProofState.UNPROVEN),
+        LedgerCapabilityAxis.CLI: (ApplicabilityState.NOT_APPLICABLE, AxisProofState.NOT_APPLICABLE),
+        LedgerCapabilityAxis.COMPOSITION: (ApplicabilityState.NOT_APPLICABLE, AxisProofState.NOT_APPLICABLE),
+        LedgerCapabilityAxis.PROOF: (ApplicabilityState.APPLICABLE, AxisProofState.UNPROVEN),
+        LedgerCapabilityAxis.PROVENANCE: (ApplicabilityState.NOT_APPLICABLE, AxisProofState.NOT_APPLICABLE),
+        LedgerCapabilityAxis.REGISTRY: (ApplicabilityState.NOT_APPLICABLE, AxisProofState.NOT_APPLICABLE),
+        LedgerCapabilityAxis.TUI: (ApplicabilityState.NOT_APPLICABLE, AxisProofState.NOT_APPLICABLE),
+    }
     assert "ledger.import.prepare" not in matrix_module._BACKEND_DIRECT_PROOF_GAPS
     assert "ledger.import.source" not in {
         row.capability_id for row in union.rows if row.tui_routes == ("ledger.overview",)
@@ -776,9 +792,9 @@ def test_tui_route_review_covers_every_applicable_row_and_no_backend_helper() ->
     ]
     not_applicable = [row for row in union.rows if row not in applicable]
 
-    assert len(applicable) == 681
+    assert len(applicable) == 680
     assert all(row.tui_routes for row in applicable)
-    assert len(not_applicable) == 13
+    assert len(not_applicable) == 14
     assert all(not row.tui_routes for row in not_applicable)
     assert {route for row in applicable for route in row.tui_routes} == {
         "ledger.classification",
@@ -805,7 +821,7 @@ def test_tui_route_review_covers_every_applicable_row_and_no_backend_helper() ->
         "ledger.entries": 31,
         "ledger.evidence": 21,
         "ledger.import": 13,
-        "ledger.overview": 2,
+        "ledger.overview": 1,
         "ledger.reconciliation": 588,
         "ledger.review": 17,
     }
@@ -814,7 +830,6 @@ def test_tui_route_review_covers_every_applicable_row_and_no_backend_helper() ->
         LedgerGapClass.REACHABILITY in row.gap_classes for row in applicable if row.tui_routes != ("ledger.overview",)
     )
     assert [row.capability_id for row in applicable if row.tui_routes == ("ledger.overview",)] == [
-        "ledger.import.prepare",
         "ledger.workspace.read",
     ]
     assert next(row for row in union.rows if row.capability_id == "ledger.transaction.invoice_link").tui_routes == (
@@ -4553,9 +4568,14 @@ def test_canonical_matrix_losslessly_projects_reviewed_gap_and_surface_cohorts()
         row_id for row_id, row in matrix_rows.items() if CapabilityAnnotation.COMPONENT_ONLY in row.annotations
     } == {row_id for row_id, row in union_rows.items() if LedgerGapClass.REACHABILITY in row.gap_classes}
     assert {row_id for row_id, row in matrix_rows.items() if CapabilityAnnotation.INSTALLED in row.annotations} == {
-        "ledger.import.prepare",
         "ledger.workspace.read",
     }
+    preparation = matrix_rows["ledger.import.prepare"]
+    assert preparation.annotations == frozenset()
+    assert preparation.tui_hold_until is None
+    assert preparation.assessment(LedgerCapabilityAxis.BACKEND).surface_state is SurfaceCapabilityState.ABSENT
+    assert preparation.assessment(LedgerCapabilityAxis.CLI).surface_state is SurfaceCapabilityState.NOT_APPLICABLE
+    assert preparation.assessment(LedgerCapabilityAxis.TUI).surface_state is SurfaceCapabilityState.NOT_APPLICABLE
     for row_id, reviewed in union_rows.items():
         matrix_row = matrix_rows[row_id]
         assert {finding.gap_class for finding in matrix_row.findings} == reviewed.gap_classes
