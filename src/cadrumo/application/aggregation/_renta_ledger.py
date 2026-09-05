@@ -26,7 +26,7 @@ from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Final, overload
+from typing import Final, overload
 
 from pydantic import BaseModel, Field
 
@@ -39,7 +39,7 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period, PeriodKind
 from ...core.prorrata_register import regime_apportions_deduction
-from ...core.prose_elision import ElidedProse
+from ...core.prose_elision import IssueDetail
 from ...core.resources.registry import resources
 from ...domain.categories.profile import CategoryProfile
 from ...domain.categories.spending_category import SpendingCategory
@@ -150,7 +150,6 @@ class RentaLedgerAggregationIssueReason(StrEnum):
 #: length would drop the explanation for the exclusion AND fail the aggregation
 #: that produced it -- a silent under-declaration dressed as a validation error.
 #: Shortening the sentence is strictly the lesser loss.
-_IssueDetail = Annotated[str, ElidedProse(512)]
 
 
 class RentaLedgerAggregationIssue(BaseModel):
@@ -162,7 +161,7 @@ class RentaLedgerAggregationIssue(BaseModel):
     purchase_invoice_evidence_id: str | None = Field(default=None, min_length=1, max_length=128)
     category_id: str | None = Field(default=None, min_length=1, max_length=128)
     reason: RentaLedgerAggregationIssueReason
-    detail: _IssueDetail
+    detail: IssueDetail
 
 
 class _PurchaseInvoiceEvidencePayload(BaseModel):

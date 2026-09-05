@@ -46,7 +46,6 @@ from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated
 
 from pydantic import BaseModel, Field
 
@@ -56,7 +55,7 @@ from ...core.identity import TransactionId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
-from ...core.prose_elision import ElidedProse
+from ...core.prose_elision import IssueDetail
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue
@@ -111,7 +110,6 @@ class RentaGastoLedgerAggregationIssueReason(StrEnum):
 #: length would drop the explanation for the exclusion AND fail the aggregation
 #: that produced it -- a silent under-declaration dressed as a validation error.
 #: Shortening the sentence is strictly the lesser loss.
-_IssueDetail = Annotated[str, ElidedProse(512)]
 
 
 class RentaGastoLedgerAggregationIssue(BaseModel):
@@ -121,7 +119,7 @@ class RentaGastoLedgerAggregationIssue(BaseModel):
 
     transaction_id: TransactionId
     reason: RentaGastoLedgerAggregationIssueReason
-    detail: _IssueDetail
+    detail: IssueDetail
 
 
 class RentaGastoObservation(BaseModel):

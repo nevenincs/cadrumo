@@ -37,7 +37,7 @@ from collections.abc import Callable, Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Final, NamedTuple, Self
+from typing import Final, NamedTuple, Self
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -49,7 +49,7 @@ from ...core.identity import TransactionId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period, PeriodKind
-from ...core.prose_elision import ElidedProse
+from ...core.prose_elision import IssueDetail
 from ...core.tipos_actividad import TipoActividad
 from ...domain.invoices.models import InvoiceCatalogue
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
@@ -112,7 +112,6 @@ class RentaIncomeLedgerAggregationIssueReason(StrEnum):
 #: length would drop the explanation for the exclusion AND fail the aggregation
 #: that produced it -- a silent under-declaration dressed as a validation error.
 #: Shortening the sentence is strictly the lesser loss.
-_IssueDetail = Annotated[str, ElidedProse(512)]
 
 
 class RentaIncomeLedgerAggregationIssue(BaseModel):
@@ -122,7 +121,7 @@ class RentaIncomeLedgerAggregationIssue(BaseModel):
 
     transaction_id: TransactionId
     reason: RentaIncomeLedgerAggregationIssueReason
-    detail: _IssueDetail
+    detail: IssueDetail
 
 
 class RentaIncomeObservation(BaseModel):

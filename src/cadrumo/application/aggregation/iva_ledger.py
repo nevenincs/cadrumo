@@ -59,7 +59,7 @@ from ...core.prorrata_register import (
     ProrrataRegisterRegime,
     regime_apportions_deduction,
 )
-from ...core.prose_elision import ElidedProse
+from ...core.prose_elision import IssueDetail
 from ...domain.bienes_inversion.register import BienesInversionIvaRegister, validate_investment_asset_reciprocity
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.ledger_iva_bindings import (
@@ -207,7 +207,6 @@ class IvaLedgerAggregationIssueReason(StrEnum):
 #: length would drop the explanation for the exclusion AND fail the aggregation
 #: that produced it -- a silent under-declaration dressed as a validation error.
 #: Shortening the sentence is strictly the lesser loss.
-_IssueDetail = Annotated[str, ElidedProse(512)]
 
 
 class IvaLedgerAggregationIssue(BaseModel):
@@ -222,7 +221,7 @@ class IvaLedgerAggregationIssue(BaseModel):
     # 128-char bound below matches _LedgerId's own bound, not TransactionId's.
     transaction_id: str = Field(min_length=1, max_length=128)
     reason: IvaLedgerAggregationIssueReason
-    detail: _IssueDetail
+    detail: IssueDetail
 
 
 class ProrrataLedgerReference(BaseModel):
