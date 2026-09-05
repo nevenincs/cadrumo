@@ -5016,24 +5016,67 @@ def _matrix_authority_snapshot(
     return provisional.model_copy(update={"digest": provisional.calculated_digest})
 
 
+def _matrix_gap_axes(
+    row: LedgerUnionCapabilityRowV1,
+    gap_class: LedgerGapClass,
+    applicable_axes: frozenset[LedgerCapabilityAxis],
+) -> frozenset[LedgerCapabilityAxis]:
+    """Map each authoritative reviewed gap to its owning matrix axis set."""
+    axis_by_gap = {
+        LedgerGapClass.AUTHORITY: frozenset({LedgerCapabilityAxis.CLI}),
+        LedgerGapClass.PRODUCT: frozenset({LedgerCapabilityAxis.BACKEND}),
+        LedgerGapClass.COMPOSITION: frozenset({LedgerCapabilityAxis.COMPOSITION}),
+        LedgerGapClass.ARTIFACT: frozenset({LedgerCapabilityAxis.ARTIFACT}),
+        LedgerGapClass.PROVENANCE: frozenset({LedgerCapabilityAxis.PROVENANCE}),
+        LedgerGapClass.REGISTRY: frozenset({LedgerCapabilityAxis.REGISTRY}),
+        LedgerGapClass.REACHABILITY: frozenset({LedgerCapabilityAxis.TUI}),
+        LedgerGapClass.PROOF: applicable_axes,
+    }
+    axes = axis_by_gap[gap_class] & applicable_axes
+    if not axes:
+        raise ValueError(f"reviewed {gap_class.value} finding has no applicable matrix axis: {row.capability_id}")
+    return axes
+
+
 def _matrix_row_from_union(
     row: LedgerUnionCapabilityRowV1, subject: EvidenceSubjectSnapshotV1
 ) -> LedgerCapabilityRowV1:
+    """Project one reviewed union row without inventing a second baseline.
+
+    The matrix is a gate-oriented projection, not a replacement review
+    register.  Its annotations, surface state and findings therefore preserve
+    the row-review cohorts instead of inferring ownership from mere CLI
+    applicability or reachability from every mapped TUI route.
+    """
     identity = LedgerCapabilityIdentityV1(
         capability_id=row.capability_id,
         operation_id=row.capability_id,
         suboperation_id=row.capability_id,
     )
     assessments: list[AxisAssessmentV1] = []
-    findings: list[CapabilityFindingV1] = []
-    cli_applicable = False
-    tui_applicable = False
+    applicable_axes = frozenset(
+        decision.axis for decision in row.applicability if decision.applicability is ApplicabilityState.APPLICABLE
+    )
+    cli_applicable = LedgerCapabilityAxis.CLI in applicable_axes
+    tui_applicable = LedgerCapabilityAxis.TUI in applicable_axes
+    cli_observed = bool(row.sources & {DenominatorSourceKind.CLI_ENDPOINT, DenominatorSourceKind.CLI_SUBOPERATION})
+    tui_observed = bool(row.tui_routes)
     for decision in row.applicability:
         applicable = decision.applicability is ApplicabilityState.APPLICABLE
-        if decision.axis is LedgerCapabilityAxis.CLI:
-            cli_applicable = applicable
-        if decision.axis is LedgerCapabilityAxis.TUI:
-            tui_applicable = applicable
+        if not applicable:
+            surface_state = SurfaceCapabilityState.NOT_APPLICABLE if decision.axis in _SURFACE_AXES else None
+        elif decision.axis is LedgerCapabilityAxis.BACKEND:
+            surface_state = (
+                SurfaceCapabilityState.ABSENT
+                if row.semantic_home_status is SemanticHomeStatus.PLANNED
+                else SurfaceCapabilityState.PARTIAL
+            )
+        elif decision.axis is LedgerCapabilityAxis.CLI:
+            surface_state = SurfaceCapabilityState.PARTIAL if cli_observed else SurfaceCapabilityState.ABSENT
+        elif decision.axis is LedgerCapabilityAxis.TUI:
+            surface_state = SurfaceCapabilityState.PARTIAL if tui_observed else SurfaceCapabilityState.ABSENT
+        else:
+            surface_state = None
         assessments.append(
             AxisAssessmentV1(
                 axis=decision.axis,
@@ -5048,49 +5091,36 @@ def _matrix_row_from_union(
                     claim="The exhaustive union review records this axis applicability decision.",
                 ),
                 proof=(AxisProofState.UNPROVEN if applicable else AxisProofState.NOT_APPLICABLE),
-                surface_state=(
-                    SurfaceCapabilityState.ABSENT
-                    if applicable and decision.axis in _SURFACE_AXES
-                    else SurfaceCapabilityState.NOT_APPLICABLE
-                    if decision.axis in _SURFACE_AXES
-                    else None
-                ),
+                surface_state=surface_state,
             )
         )
-        if applicable:
-            findings.append(
-                CapabilityFindingV1(
-                    finding_id=f"finding.{row.capability_id.removeprefix('ledger.')}.proof.{decision.axis.value}",
-                    gap_class=LedgerGapClass.PROOF,
-                    affected_axes=frozenset({decision.axis}),
-                    description="The reviewed capability has no production proof in this provisional matrix candidate.",
-                    next_closure_action=decision.proof_requirement,
-                )
-            )
-    annotations = frozenset[CapabilityAnnotation]()
+    findings = [
+        CapabilityFindingV1(
+            finding_id=f"finding.{row.capability_id.removeprefix('ledger.')}.{gap_class.value}",
+            gap_class=gap_class,
+            affected_axes=_matrix_gap_axes(row, gap_class, applicable_axes),
+            description=" ".join(row.blockers),
+            next_closure_action=row.next_action,
+        )
+        for gap_class in sorted(row.gap_classes, key=lambda item: item.value)
+    ]
+    annotations: set[CapabilityAnnotation] = set()
     initial_ownership = InitialCliOwnership.NOT_CLI_OWNED
-    if cli_applicable:
+    if LedgerGapClass.AUTHORITY in row.gap_classes:
+        if not cli_applicable:
+            raise ValueError("an authority review finding requires an applicable CLI axis")
         initial_ownership = InitialCliOwnership.CLI_OWNED
-        annotations = frozenset({CapabilityAnnotation.CLI_OWNED})
-        findings.append(
-            CapabilityFindingV1(
-                finding_id=f"finding.{row.capability_id.removeprefix('ledger.')}.authority.cli",
-                gap_class=LedgerGapClass.AUTHORITY,
-                affected_axes=frozenset({LedgerCapabilityAxis.CLI}),
-                description=(
-                    "The provisional matrix conservatively retains CLI ownership until a typed backend "
-                    "cutover is proven."
-                ),
-                next_closure_action="Establish and prove the canonical backend owner before removing CLI ownership.",
-            )
-        )
-    if tui_applicable and row.tui_routes:
-        annotations = frozenset((*annotations, CapabilityAnnotation.COMPONENT_ONLY))
+        annotations.add(CapabilityAnnotation.CLI_OWNED)
+    if tui_applicable:
+        if LedgerGapClass.REACHABILITY in row.gap_classes:
+            annotations.add(CapabilityAnnotation.COMPONENT_ONLY)
+        elif row.tui_routes == ("ledger.overview",):
+            annotations.add(CapabilityAnnotation.INSTALLED)
     return LedgerCapabilityRowV1(
         identity=identity,
         semantic_home=row.semantic_home,
         assessments=tuple(assessments),
-        annotations=annotations,
+        annotations=frozenset(annotations),
         findings=tuple(findings),
         authority_migration=AuthorityMigrationHistoryV1(
             initial_cli_ownership=initial_ownership,
@@ -5335,7 +5365,14 @@ def validate_ledger_matrix_currentness(
     observed_subjects: tuple[EvidenceSubjectSnapshotV1, ...],
     observed_union: LedgerUnionDenominatorV1 | None = None,
 ) -> list[str]:
-    """Compare persisted state to mandatory live census and evidence observations."""
+    """Compare persisted state to mandatory live census, union, and evidence.
+
+    A matrix can be serialized as a historical review artifact without its
+    live-union payload, but no currentness or gate evaluation may accept that
+    artifact.  The live union is the sole reviewed denominator authority and
+    must agree exactly with the matrix rows, denominator, review snapshot, and
+    independently observed union supplied at the evaluation boundary.
+    """
     canonical_matrix, canonical_census, canonical_subjects, validation_blockers = _canonical_gate_inputs(
         matrix, observed_census, observed_subjects
     )
@@ -5349,15 +5386,47 @@ def validate_ledger_matrix_currentness(
     errors = _live_census_report_errors(observed_census)
     observed_denominator = LedgerDenominatorSnapshotV1.from_live_report(observed_census)
     errors.extend(_denominator_drift(matrix.current_denominator, observed_denominator))
-    if observed_union is not None:
+    if observed_union is None:
+        errors.append("live reviewed union observation is missing")
+    else:
         try:
-            observed_review = LedgerUnionReviewSnapshotV1.from_union(observed_union)
+            canonical_observed_union = LedgerUnionDenominatorV1.model_validate(_serialized_python_data(observed_union))
         except ValidationError as error:
             errors.extend(_validation_blockers("live reviewed union", error))
         except (TypeError, ValueError):
             errors.append("live reviewed union validation failed at <root>: invalid_serialized_data")
         else:
+            observed_review = LedgerUnionReviewSnapshotV1.from_union(canonical_observed_union)
             errors.extend(_union_review_drift(matrix.current_union_review, observed_review))
+            observed_ids = frozenset(row.capability_id for row in canonical_observed_union.rows)
+            matrix_ids = frozenset(row.identity.row_id for row in matrix.rows)
+            if matrix_ids != observed_ids:
+                errors.append("matrix row identities do not exactly equal the observed live reviewed union")
+            if matrix.current_denominator.capability_ids != observed_ids:
+                errors.append("matrix denominator identities do not exactly equal the observed live reviewed union")
+            if frozenset(matrix.current_union_review.capability_ids) != observed_ids:
+                errors.append("matrix reviewed-union identities do not exactly equal the observed live reviewed union")
+            if matrix.live_union is None:
+                errors.append("matrix live reviewed union is missing")
+            else:
+                try:
+                    canonical_matrix_union = LedgerUnionDenominatorV1.model_validate(
+                        _serialized_python_data(matrix.live_union)
+                    )
+                except ValidationError as error:
+                    errors.extend(_validation_blockers("matrix live reviewed union", error))
+                except (TypeError, ValueError):
+                    errors.append("matrix live reviewed union validation failed at <root>: invalid_serialized_data")
+                else:
+                    if canonical_matrix_union != canonical_observed_union:
+                        errors.append("matrix live reviewed union differs from the observed live reviewed union")
+                    matrix_union_ids = frozenset(row.capability_id for row in canonical_matrix_union.rows)
+                    if matrix_ids != matrix_union_ids:
+                        errors.append("matrix row identities do not exactly equal its live reviewed union")
+                    if matrix.current_denominator.capability_ids != matrix_union_ids:
+                        errors.append("matrix denominator identities do not exactly equal its live reviewed union")
+                    if matrix.current_union_review != LedgerUnionReviewSnapshotV1.from_union(canonical_matrix_union):
+                        errors.append("matrix reviewed union snapshot differs from its live reviewed union")
     if not observed_subjects:
         errors.append("live evidence-subject observation is empty")
     expected = {subject.subject_id: subject for subject in matrix.current_subjects}
