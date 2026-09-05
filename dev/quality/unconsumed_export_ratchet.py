@@ -1,25 +1,22 @@
 """Ratchet: no module may publish a new name that nothing imports.
 
 A name in ``__all__`` is a promise. One that no other module imports AND that
-the reachability audit finds unused is a promise nothing collects: it cannot be
-removed as ordinary dead code, because removal changes what the package
-publishes, and it cannot be left silent, because it reads as supported. 368 of
-them exist, which is a review nobody can finish in one sitting -- and while it
-waits, nothing stops the number growing.
+the reachability audit reports unused is a promise nothing collects: it cannot
+be removed as ordinary dead code, because removal changes what the package
+publishes, and it cannot be left silent, because it reads as supported.
 
-Both halves of that test matter. Counting every exported name no other module
-imports yields 2247, most of them ordinary published API whose consumer is a
-test or an external caller; a gate on THAT would fire on any new public
-interface before its first importer landed, which is the wrong moment to argue
-with an author. Intersecting with the audit narrows it to names that are
-published, unimported, AND unreached -- the population actually under review.
+Both halves of that test matter. Unimported alone would flag ordinary published
+API whose only consumer is a test or an external caller, and a gate on that
+would fire on a new public interface before its first importer landed -- the
+wrong moment to argue with an author. Intersecting with the audit narrows it to
+names that are published, unimported AND unreached.
 
-This does not ask anyone to resolve the 368. It records them per module and
-refuses a new one, which is the half that needs no decision. A name added to
-``__all__`` today is an author's live choice, and the cheapest moment to ask
-"who imports this?" is while they still remember why they exported it.
+Resolving the recorded population is a published-surface decision for an owner.
+This enforces only the half needing no decision: that it does not grow. The
+cheapest moment to ask "who imports this?" is while the author still remembers
+exporting it.
 
-Consumption is deliberately strict, and matches the inventory recorded in
+Consumption is deliberately strict, and matches the inventory in
 ``dev/audit/reachability_classification.toml`` so the two cannot disagree about
 what they count. A name counts as consumed only when another NON-TEST module
 from-imports it FROM the declaring module: matching the bare name would count

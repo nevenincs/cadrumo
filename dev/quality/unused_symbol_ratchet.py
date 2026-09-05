@@ -44,15 +44,11 @@ from dev.audit.unreachable_code import run_unreachable_code_scan
 
 _BASELINE_PATH: Final[Path] = Path(__file__).with_name("unused_symbol_ratchet.toml")
 
-#: Findings under this prefix belong to the in-flight TUI campaign, which owns
-#: its own churn. Deferral sets scope; it is not permission.
-#:
-#: Re-verified rather than inherited: the owning plan stood at 13 of 119 steps
-#: with commits landing in the same week, so the 22 symbols and 2 orphaned test
-#: modules under this prefix are inside another campaign's live working set. A
-#: deferral with no recorded basis is how scope quietly becomes permanent, so
-#: whoever reads this next should check that plan's progress again rather than
-#: trusting the line above.
+#: Findings under this prefix are excluded from the comparison because the
+#: subtree is under active restructuring and its churn would otherwise dominate
+#: the baseline. Exclusion sets scope, not permission: the findings stay
+#: visible in the audit and in the run summary. Remove this prefix once the
+#: subtree is stable.
 _DEFERRED_PREFIX: Final[str] = "cadrumo.entrypoints.tui"
 
 
