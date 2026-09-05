@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:5e123dc6470e8989957e6b9f514786331c173f0bf5015f88bc151b948736a48c'
+body_hash: 'sha256:6969669725d81362de39a772413e1433bdf452ac40a075d96dfd4bf7dbe2038d'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -539,6 +539,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S657` - Route the five ledger notice gates through one parsed-tree helper that asserts each module still carries a surface, since every one of their claims is an absence satisfied by a module gutted to a shell and this family is actively being rehomed; `dev/locales/tests/test_ledger_notice_action_conformance.py`.
 - [x] `W02.P02.S658` - Floor the stated readers the intentional rationale gate actually checks, since a disposition may legitimately name none and zero checks is therefore a shape the gate already treats as normal, so it cannot tell one silent disposition from a rationale format that silenced all of them; `dev/tests/test_unreachable_module_ratchet_gate.py`.
 - [x] `W02.P02.S659` - Give the unreachable-module ratchet a contention budget, since four of its cases run between 122 and 137 seconds serially and land together on one worker under the default parallelism, where the wall-clock ceiling kills the first to cross it and takes every sibling on that worker down as never having run; `dev/tests/test_unreachable_module_ratchet_gate.py`.
+- [x] `W02.P02.S660` - Budget the four dev/tests modules nearest the per-test ceiling, measured under the default parallelism at 277s, 252s, 218s and 207s against 300s, since loadfile distribution puts a whole module on one worker so the margin is shared and the first case to cross it takes every sibling down as never having run; `dev/tests/test_modelo_workspace_fixed_point.py dev/tests/test_public_authority_cutover.py dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_write_path_coverage_gate.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
