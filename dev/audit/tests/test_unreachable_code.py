@@ -544,7 +544,7 @@ def test_console_report_and_json_carry_the_same_findings(result: UnreachableCode
     assert "enum-member Color.BLUE  [no use anywhere]  [name-match-data]" in report
     assert "function    orphan_fn  [used by: tests]  [exact]" in report
     assert payload["outcome"] == "findings"
-    assert payload["data_cleared"] == 2
+    assert payload["data_cleared"] == 3
     assert {entry["module"] for entry in payload["modules"]} == {
         "pkg.dead",
         "pkg.loner",
