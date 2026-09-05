@@ -1111,7 +1111,7 @@ class ModeloRequiresResult(OutputSchema):
 
 
 # ---------------------------------------------------------------------------
-# P16 – singleton verb schemas
+# Singleton verb schemas
 # ---------------------------------------------------------------------------
 
 

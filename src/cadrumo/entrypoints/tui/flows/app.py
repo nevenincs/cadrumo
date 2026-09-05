@@ -44,7 +44,12 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
 
 from ....application.flows.checkpoint import checkpoint_available, save_checkpoint
-from ....application.flows.copy import assemble_page_copy, assemble_section_titles, resolve_copy
+from ....application.flows.copy import (
+    PAGE_REQUIREMENT_LOCALE_KEYS,
+    assemble_page_copy,
+    assemble_section_titles,
+    resolve_copy,
+)
 from ....application.flows.definition import FlowPage
 from ....application.flows.engine import (
     answer,
@@ -876,7 +881,7 @@ class QuestionPane(_FlowPane):
 
     def _render_body(self, presenter: FlowPresenter, entry: VisiblePage, copy: PageCopy) -> None:
         self.query_one("#page-prompt", Label).update(copy.prompt)
-        badge_key = "flows.progress.required" if entry.page.required else "flows.progress.optional"
+        badge_key = PAGE_REQUIREMENT_LOCALE_KEYS[entry.page.required]
         self.query_one("#page-badge", Static).update(tr(badge_key))
         self._set_zone("#page-help", copy.help or "")
         self._set_zone(

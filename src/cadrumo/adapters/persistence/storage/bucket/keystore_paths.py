@@ -12,7 +12,7 @@ invariants enforced here are:
   cannot silently violate the invariant.
 
 The pure helpers do not materialise the directory; the cryptographic core
-(P03) owns provisioning when an enrolment first lands.
+owns provisioning when an enrolment first lands.
 """
 
 from __future__ import annotations

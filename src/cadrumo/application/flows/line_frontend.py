@@ -36,6 +36,7 @@ from ...core.tty import stdin_is_tty
 from .capability import NO_CONSOLE_ERRORS as _NO_CONSOLE_ERRORS
 from .checkpoint import CheckpointStore, checkpoint_available, save_checkpoint
 from .copy import (
+    PAGE_REQUIREMENT_LOCALE_KEYS,
     PageCopy,
     assemble_page_copy,
     assemble_section_titles,
@@ -206,7 +207,7 @@ class LineFlowFrontend:
         )
         self._render_page_copy(copy)
         self._render_current_answer(state, entry)
-        requirement_key = "flows.progress.required" if entry.page.required else "flows.progress.optional"
+        requirement_key = PAGE_REQUIREMENT_LOCALE_KEYS[entry.page.required]
         self._emit(tr(requirement_key))
 
     def _render_page_copy(self, copy: PageCopy) -> None:
