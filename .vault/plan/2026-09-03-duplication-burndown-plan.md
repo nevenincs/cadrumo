@@ -9,9 +9,9 @@ related:
   - '[[2026-07-17-duplication-evidence-repair-adr]]'
   - '[[2026-07-17-duplication-evidence-repair-plan]]'
   - '[[2026-09-03-duplication-burndown-honest-clone-closure-research]]'
-modified: '2026-09-04'
+modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:ad9767917c11bbeb3bd80dd30c64958b9efe8900a6b8fc56f105adb333dafd18'
+body_hash: 'sha256:8bd8f25b55d849a446e3c10c5348dc545a243684db389466d01afb0728ca60bf'
 ---
 
 <!-- RETIRED: W05, W06, W07, P02, P03, P04, P06, P09, P12, P14, P16, P17, P19, P20, P21, P22, P23, P24, P25, P26, P27, S03, S06, S07 -->
@@ -100,6 +100,7 @@ Prove detector teeth and run focused, subsystem, and full repository gates.
 
 - [x] `W04.P18.S17` - Reconcile final dispositions to the live clone set and remove entries for resolved groups; `dev/audit/duplication_dispositions.toml`.
 - [ ] `W04.P18.S18` - Run duplication, import, semantic, architecture, type, lint, focused, and full quality gates without threshold or exclusion changes; `dev/audit/.runs`.
+- [ ] `W04.P18.S20` - Adjudicate the 35 identical-expression constant collisions the extended screen surfaces, merging each to a canonical home or recording why an existing decision keeps it local; `dev/quality/constant_value_agreement.py`.
 
 ## Parallelization
 
