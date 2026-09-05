@@ -40,7 +40,6 @@ from .test_export_tree import (
     _ISOLATED_TREE,
     _isolated_render_profile,
     _real_authorities,
-    _wire_profile,
     _write_isolated_generated_authority_tree,
 )
 
@@ -166,6 +165,24 @@ def test_check_regenerates_in_isolation_and_preserves_published_hashes(m130_insp
     assert _tree_hashes(candidate_export_root) == before
 
 
+#: The refusal each injected defect must produce. Pairs that share a message
+#: do so because production catches them in one comparison; the two manifest
+#: authority cases are held apart by the field they disagree on.
+_DEFECT_REFUSAL = {
+    "semantic-map": "joined fields do not attest the supplied semantic map",
+    "source": "transport profile SHA-256 does not match joined official source",
+    "transport-profile": "transport profile SHA-256 does not match joined official source",
+    "render-profile": "render_profile_sha256",
+    "output-byte": "output-file digests do not match generated tree",
+    "manifest-authority": "source_sha256",
+    "manifest-schema": "manifest violates the current contract",
+    "missing-output": "output-file digests do not match generated tree",
+    "extra-output": "cannot load through the directory authority",
+    "obsolete-sibling": "refuses obsolete sibling provenance manifest",
+    "obsolete-direct-modelo": "refuses obsolete direct registry path",
+}
+
+
 @pytest.mark.parametrize(
     "defect",
     (
@@ -230,15 +247,24 @@ def test_check_refuses_drift_without_changing_published_hashes(m130_inspection_s
     elif defect == "obsolete-sibling":
         (target_export_root.parent / "export.provenance.json").write_text("{}\n", encoding="utf-8")
     elif defect == "obsolete-direct-modelo":
-        (context.target_registry_root / "modelos" / "200.toml").write_text(
-            '[modelo]\nid = "130"\n',
+        # Derived, not transcribed: the file was written as modelos/200.toml
+        # declaring id 130 while the isolated tree is 184, so it planted a
+        # modelo the target does not carry and the check had nothing obsolete
+        # to refuse. The case only looked green because a stale render
+        # profile refused the whole run before the injection was reached.
+        (context.target_registry_root / "modelos" / f"{_ISOLATED_TREE.modelo}.toml").write_text(
+            f'[modelo]\nid = \"{_ISOLATED_TREE.modelo}\"\n',
             encoding="utf-8",
         )
     else:
         raise AssertionError(f"unknown test defect: {defect}")
     before = _tree_hashes(target_export_root)
 
-    with pytest.raises(RegistryValidationError, match="__harvest__") as refusal:
+    # Each defect must refuse on ITS OWN terms. A bare refusal let eight of
+    # these eleven cases pass on a stale render-profile identity mismatch
+    # that fired before the injection was ever reached, and hid one defect
+    # the check does not detect at all.
+    with pytest.raises(RegistryValidationError, match=_DEFECT_REFUSAL[defect]) as refusal:
         check_generated_export_tree(
             context=context,
             joined=joined,

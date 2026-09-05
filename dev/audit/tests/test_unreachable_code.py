@@ -618,7 +618,10 @@ def test_console_report_and_json_carry_the_same_findings(result: UnreachableCode
         "pkg.tool.work",
     }
     assert {entry["qualname"] for entry in payload["symbols"]} == {f.qualname for f in result.symbols}
-    assert [entry["id"] for entry in payload["tests"]] == ["test:pkg.tests.test_things"]
+    assert [entry["id"] for entry in payload["tests"]] == [
+        "test:pkg.tests.test_things",
+        "test:pkg.tests.test_via_support",
+    ]
     assert set(payload["exact_finding_ids"]) == {f.id for f in result.exact_findings}
     assert {entry["confidence"] for entry in payload["modules"]} == {"exact"}
 

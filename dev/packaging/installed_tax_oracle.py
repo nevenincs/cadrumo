@@ -458,6 +458,19 @@ def run_installed_tax_oracle(
     profile_document = _json_envelope(profile, expected_command="config.profile.create")
     _assert_no_diagnostic_notices(profile_document, command="config.profile.create")
 
+    # A profile is born incomplete on purpose, and modelo work refuses one that
+    # has never been declared ready to file. The declaration is its own verb, so
+    # the oracle makes it rather than assuming creation implied it.
+    complete_setup = _run(
+        (*authenticated_base, "config", "profile", "complete-setup"),
+        cwd=resolved_work_dir,
+        env=environment,
+        timeout_seconds=timeout_seconds,
+        input_text=profile_authentication,
+    )
+    commands.append(complete_setup)
+    _json_envelope(complete_setup, expected_command="config.profile.complete_setup")
+
     create = _run(
         (*authenticated_base, *work_create_arguments()),
         cwd=resolved_work_dir,
