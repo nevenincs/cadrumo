@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:274d645fac5d976820c26da62c16799a7b4c104f672e4954f65797cf73cc43e5'
+body_hash: 'sha256:6000aae109b35dc2b20b966f79c4010691c8993ed7ea658837b797357cbafd6c'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -122,3 +122,36 @@ turning unrelated uses of the common noun into campaign ownership.
 The focused detector reports 12 passed. Ruff format/check, scoped `ty`, and the
 feature Vault check pass. Commit inspection still shows no production or TUI
 changes attributable to S09; S09 remains checked, S10 next, and G0 OPEN.
+
+## Final classifier review
+
+**Ruling: NOT ACCEPTED.** The final classifier closes the previously reported
+identifier, path, symbol, plural-context, and generic audit-ledger cases, but a
+HIGH semantic underreach remains.
+
+The current 33-row authority is stable at 27 checked retained rows, open S73,
+and five open held rows; tokens, uniqueness, mixed scope, 408/426 completion,
+and S411's S136 implementation plus S128 checkpoint mapping remain correct.
+The requested `ledger_binding_resolution`, `_ledger` suffix, `/ledger/` path,
+`LedgerWorkspace` symbol, accounting-ledgers context, and audit-ledger
+exclusion mutations behave correctly.
+
+### product-ledger-domain-list-remains-incomplete | high | Ordinary capability phrases bypass overlap adjudication
+
+The domain classifier recognizes capitalized product `Ledger` only when its
+neighbor appears in a hand-enumerated noun-stem list. Independent same-row S408
+mutations `Export Ledger data for review`, `Add Ledger notes to the workbench`,
+`Download Ledger attachments`, and `Edit Ledger fields` were all accepted
+without a disposition. These are direct campaign capabilities, not ambiguous
+uses of the common noun. The reviewed include set protects only the current 33
+IDs, so it cannot detect an existing non-overlap Step acquiring this new scope.
+
+Recognize capitalized product `Ledger` as an overlap signal generically, with
+explicit reviewed exclusions for genuine common-noun contexts, or require an
+explicit include/exclude adjudication for every ambiguous occurrence. Add the
+four same-row mutations above so extending the noun vocabulary cannot silently
+escape ownership.
+
+The focused suite passes all 19 committed tests. Ruff format/check, scoped
+`ty`, and feature Vault checks pass. G0 remains OPEN and no S09 production or
+TUI edits were found.
