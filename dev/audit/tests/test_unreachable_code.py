@@ -533,10 +533,10 @@ def test_console_report_and_json_carry_the_same_findings(result: UnreachableCode
 
     assert report.startswith(
         "unreachable code: 4 unreachable module(s), 3 module-exec-only, 1 type-only module(s), "
-        "7 unused symbol(s) in reachable modules, 1 orphaned test module(s)"
+        "8 unused symbol(s) in reachable modules, 1 orphaned test module(s)"
     )
     assert "roots: pkg.cli:main" in report
-    assert "2 data-shaped member(s) cleared" in report
+    assert "3 data-shaped member(s) cleared" in report
     assert "package  src/pkg/dead/  (3 modules)  [used by: dev, tests]" in report
     assert "module   src/pkg/loner.py  [used by: tests]" in report
     assert f"{orphan_line}  [exact]" in report
@@ -564,7 +564,7 @@ def test_console_report_caps_each_section_unless_full(result: UnreachableCodeRes
     capped = render_console_report(result, cap=1)
 
     assert "... 1 more (--full for all)" in capped
-    assert "... 6 more (--full for all)" in capped
+    assert "... 7 more (--full for all)" in capped
     assert "more (--full for all)" not in render_console_report(result, full=True, cap=1)
 
 

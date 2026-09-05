@@ -214,17 +214,33 @@ def test_probe_mode_gate_has_detector_teeth() -> None:
         _assert_probe_contract(source, mode="source")
 
 
+#: Below this the workflow has stopped declaring steps to check. Live: four
+#: jobs carrying 5, 6, 6 and 8 steps. A floor, not a pinned count.
+_MINIMUM_WORKFLOW_STEPS = 10
+
+
 def test_advisory_and_blocking_outcomes_are_explicit_without_workflow_skips() -> None:
     """The next row is visible as evidence; stable failures still fail the job."""
     document = _document()
+    examined = 0
     for job_name in document["jobs"]:
         job = document["jobs"][job_name]
         assert "continue-on-error" not in job, job_name
         for step in job.get("steps", []):
+            examined += 1
             assert isinstance(step, dict)
             assert "continue-on-error" not in step, f"{job_name}:{step.get('name', '')}"
             if "if" in step:
                 assert str(step["if"]) == "always()", f"unexpected conditional step in {job_name}"
+
+    # The step corpus arrives through a `.get` default, so a job that lost its
+    # steps contributes nothing to the per-step absence check above and reads
+    # exactly like a job whose steps are all clean. The presence claims below
+    # cover an empty DOCUMENT; they cannot see one job going quiet.
+    assert examined >= _MINIMUM_WORKFLOW_STEPS, (
+        f"only {examined} step(s) were examined across {len(document['jobs'])} job(s); below "
+        "this the skip prohibition holds because there are no steps to prohibit"
+    )
 
     for mode_job in _MATRIX_JOBS:
         job = document["jobs"][mode_job]

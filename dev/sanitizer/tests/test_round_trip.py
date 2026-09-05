@@ -50,8 +50,21 @@ def _committed_fixture_pairs() -> list[tuple[Path, Path]]:
 _FIXTURE_PAIRS = _committed_fixture_pairs()
 
 
+#: Below this the fixture corpus has stopped being read. Live: 63 committed
+#: PDFs, 60 carrying a sidecar. A floor, not a pinned count.
+_MINIMUM_CHECKED_FIXTURES = 20
+
+
 def test_committed_fixtures_parse_and_match_sidecars() -> None:
-    """Every committed fixture parses and exposes synthetic CSV/NIF values."""
+    """Every committed fixture parses and exposes synthetic CSV/NIF values.
+
+    The synthetic-pool comparison is the half that matters: it proves the
+    parser pulled a SANITISED identity out of the fixture rather than a real
+    one. Every route to an empty pool used to skip that comparison silently -
+    a sidecar without its replacements list, or a list with no synthetic - so
+    a fixture carrying a real identity would have passed by not being asked.
+    """
+    checked = 0
     for pdf_path, sidecar_path in _FIXTURE_PAIRS:
         parsed = parse_committed_justificante_fixture(pdf_path)
         assert parsed.modelo, f"modelo is empty for {pdf_path}"
@@ -61,13 +74,20 @@ def test_committed_fixtures_parse_and_match_sidecars() -> None:
         assert parsed.presented_at, f"presented_at is empty for {pdf_path}"
 
         sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+        assert "replacements_applied" in sidecar, (
+            f"{sidecar_path} carries no replacements list; a committed audit log without one "
+            "cannot prove the identity this parser extracted was ever synthesised"
+        )
         synthetic_pool = {
             synthetic
-            for replacement in sidecar.get("replacements_applied", ())
+            for replacement in sidecar["replacements_applied"]
             if (synthetic := replacement.get("synthetic")) is not None
         }
-        if not synthetic_pool:
-            continue
+        assert synthetic_pool, (
+            f"{sidecar_path} records no synthetic value, so the comparison below would be "
+            "skipped and this fixture never asked whether its identity is real"
+        )
+        checked += 1
 
         # The NIF / CSV the parser extracts must be one of the synthetic
         # values applied during sanitisation. Allows for the parser
@@ -78,3 +98,9 @@ def test_committed_fixtures_parse_and_match_sidecars() -> None:
         assert parsed.csv in synthetic_pool, (
             f"Parsed csv {parsed.csv!r} is not in the synthetic pool {synthetic_pool} for {pdf_path}"
         )
+
+    assert checked >= _MINIMUM_CHECKED_FIXTURES, (
+        f"only {checked} committed fixture(s) reached the synthetic comparison, from "
+        f"{len(_FIXTURE_PAIRS)} paired; below this the corpus has stopped being read and a "
+        "clean result says nothing about whether a real identity survived sanitisation"
+    )

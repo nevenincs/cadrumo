@@ -110,11 +110,11 @@ _ROW_ID: Final[str] = "ledger.entries.list"
 _SUBJECT_DIGEST: Final[str] = "sha256:" + "a" * 64
 _REGISTRY_ROUTE_DIGEST: Final[str] = "sha256:20b2d2df5558b2a3fdbd1eab6e9f781a973e93c6211e211f8e679cf7b4782aca"
 _REGISTRY_SOURCE_DIGEST: Final[str] = "sha256:194a9f26ddfbae6c5d7f265ffe58f50964fbe2fcd02a5670fa19845dead5cf6d"
-_TUI_CENSUS_DIGEST: Final[str] = "sha256:a52180bb77b70c205c7d31f657a64ad55142035b63dd9d5bf69b79503754c25f"
-_TUI_SOURCE_DIGEST: Final[str] = "sha256:70709a369bece8e06033e56e18bd82425ec9b48767c3466e80f92c901143ff67"
-_UNION_DIGEST: Final[str] = "sha256:1abe7593edafc15bf1006ac1ab5926936cebf8e379f1bb268f513de64b7121e8"
-_ROW_REVIEW_DIGEST: Final[str] = "sha256:780008bd7f25097b412184e4f19e76a6750313322d735e34ffb81fa627db8ed0"
-_ROW_REVIEW_ATTESTATION_DIGEST: Final[str] = "sha256:a2cd19ae31fe5b2a43a6b394734ad1439a013afa1e8bfc8e4ffe11ffc662be16"
+_TUI_CENSUS_DIGEST: Final[str] = "sha256:ce8316795e12434b915bca29b29f42e4ac66a1b3a9738e2899643598c3376380"
+_TUI_SOURCE_DIGEST: Final[str] = "sha256:23f6690df3fef9b9a0131f5bdbba1c6daf7ae2c462b3262cf6b2b77b570143e6"
+_UNION_DIGEST: Final[str] = "sha256:2895cbcff0d09c7562c314413984fdb360f3cb7cbffbe0d0cc754fc252ac4ca5"
+_ROW_REVIEW_DIGEST: Final[str] = "sha256:953cc5d70c492640bc81a04426a9d5fc5abaa012a21ad65f22197cb8b76a07cf"
+_ROW_REVIEW_ATTESTATION_DIGEST: Final[str] = "sha256:1df9648852ee481066107ea1d9665b4c364b4616f95679905257ac56445ab148"
 _UNSET: Final[object] = object()
 _REFERENCE_PATH: Final[Path] = (
     Path(__file__).resolve().parents[3] / ".vault" / "reference" / "2026-09-04-clitui-ledger-reference.md"
