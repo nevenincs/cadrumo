@@ -26,4 +26,3 @@ related:
 - `verify:` `uv run --no-sync pytest -q -n 0 dev/quality/tests/test_clitui_ledger_capability_matrix.py -k any_reviewed_state_or_acceptance_drift` -> `pass` (5 selected)
 - `verify:` `uv run --no-sync pytest -q -n 0 dev/quality/tests/test_clitui_ledger_capability_matrix.py -k fully_reminted_union` -> `pass` (1 selected)
 - `verify:` `uv run --no-sync pytest -q -n 0 dev/quality/tests/test_clitui_ledger_capability_matrix.py` -> `pass` (287 passed)
-
