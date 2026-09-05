@@ -691,7 +691,6 @@ ForeignAssetSelector = _ForeignAssetSelector
 RefundSelector = _RefundSelector
 RelatedPartySelector = _RelatedPartySelector
 build_foreign_asset_rows = _build_foreign_asset_rows
-build_related_party_rows = _build_related_party_rows
 
 
 def _validated_refund_selector(binding: DataBindingDefinition) -> _RefundSelector:
