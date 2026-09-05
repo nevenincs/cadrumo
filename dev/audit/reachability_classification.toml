@@ -390,14 +390,13 @@ name = "deferred-source-kind resolvers"
 class = "staged-capability"
 area = "domain/calculations/registry"
 symbols = [
-  "build_related_party_rows",
   "resolve_donativo_binding_row_values",
   "resolve_gasto193_binding_values",
   "resolve_gasto193_binding_row_values",
   "resolve_withholding296_binding_values",
   "resolve_withholding296_binding_row_values",
 ]
-evidence = "Each family's source kind is registered in application/aggregation/_source_mesh.py DEFERRED_SOURCE_KINDS -- RELATED_PARTY_OPERATION, REFUND_OPERATION, DONATIVO_DONOR, GASTO193_CONTRIBUTOR, WITHHOLDING296 -- so a calculate-path binding of the source raises a standing advisory instead of a silent blank. The resolver is built and validated but no live mesh resolver is enrolled yet, which is why nothing reaches it."
+evidence = "The public alias build_related_party_rows was retired from this cluster: it re-exported the private _build_related_party_rows, which remains present, called and tested, so the staged resolver itself is intact while the alias was an unused re-export of the kind the architecture boundaries forbid. Its sibling alias build_foreign_asset_rows is kept because a test imports it. Each family's source kind is registered in application/aggregation/_source_mesh.py DEFERRED_SOURCE_KINDS -- RELATED_PARTY_OPERATION, REFUND_OPERATION, DONATIVO_DONOR, GASTO193_CONTRIBUTOR, WITHHOLDING296 -- so a calculate-path binding of the source raises a standing advisory instead of a silent blank. The resolver is built and validated but no live mesh resolver is enrolled yet, which is why nothing reaches it."
 mechanism = "DEFERRED_SOURCE_KINDS, with the sibling RESERVED_SOURCE_KINDS and the source-kind enrollment parity gate accounting for every member of the closed taxonomy"
 
 [[symbol_cluster]]
