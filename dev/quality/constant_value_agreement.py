@@ -35,6 +35,12 @@ evidence of anything.
 But declining to compare a value is not a reason to ignore the name. A third
 condition covers the constants whose values are unevaluable:
 
+- ``derived_name_collision`` - the same, but every site builds the value from
+  an imported authority rather than from literals. ``SEDE_BASE =
+  EXTERNAL.aeat.domains.www6`` in four sede modules is four local bindings of
+  one canonical value: they read the same source, so they cannot drift, and
+  that is the pattern working rather than failing. Reported separately so it
+  does not crowd out the kind that can.
 - ``unevaluated_name_collision`` - one name defined in several modules, at
   least one of them by a call or comprehension. The screen reports the
   collision and says nothing about agreement, because it cannot know. This is
@@ -150,6 +156,33 @@ def collect_unevaluated_constants(root: Path) -> dict[str, dict[str, str]]:
     return dict(found)
 
 
+def _is_literal_construction(expression: str) -> bool:
+    """Report whether an expression builds its value without reading a name.
+
+    This is the whole difference between a duplicate that can drift and one
+    that cannot. ``frozenset({'.csv', '.txt'})`` retypes the value, so two
+    copies are two independent truths and a change to one leaves the other
+    stale. ``storage_location(StorageCategory.BUCKETS).subpath`` reads a shared
+    authority, so every copy resolves to whatever that authority says and the
+    repetition is a local binding rather than a second source.
+
+    A name that is only a constructor -- ``frozenset``, ``re.compile`` and the
+    like -- does not count as reading an authority, or every literal set in the
+    tree would be misread as derived.
+    """
+    try:
+        parsed = ast.parse(expression, mode="eval")
+    except SyntaxError:
+        return False
+    constructors = {"frozenset", "set", "tuple", "list", "dict", "re", "compile", "Decimal", "Path"}
+    for node in ast.walk(parsed):
+        if isinstance(node, ast.Name) and node.id not in constructors:
+            return False
+        if isinstance(node, ast.Attribute) and node.attr not in constructors:
+            return False
+    return True
+
+
 def unevaluated_collisions(constants: dict[str, dict[str, str]]) -> tuple[ConstantFinding, ...]:
     """Report unevaluable constant names several modules bind IDENTICALLY.
 
@@ -166,10 +199,15 @@ def unevaluated_collisions(constants: dict[str, dict[str, str]]) -> tuple[Consta
         sites = {module: text for module, text in sites.items() if "__name__" not in text}
         if len(sites) < 2 or len(set(sites.values())) != 1:
             continue
+        kind = (
+            "unevaluated_name_collision"
+            if _is_literal_construction(next(iter(sites.values())))
+            else "derived_name_collision"
+        )
         findings.append(
             ConstantFinding(
                 name=name,
-                kind="unevaluated_name_collision",
+                kind=kind,
                 public=not name.startswith("_"),
                 sites=tuple(sorted(sites.items())),
             )
