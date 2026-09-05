@@ -30,7 +30,11 @@ related:
 - `verify:` `uv run --no-sync ruff check dev/quality/clitui_ledger_capability_matrix.py dev/quality/tests/test_clitui_ledger_capability_matrix.py` -> `pass`
 - `verify:` `uv run --no-sync ty check dev/quality/clitui_ledger_capability_matrix.py` -> `pass`
 - `verify:` `uv run --no-sync basedpyright dev/quality/clitui_ledger_capability_matrix.py dev/quality/tests/test_clitui_ledger_capability_matrix.py` -> `pass`
+- `verify:` exact selection accounting -> `760 observations / 769 selected edges / 4 one-to-many observations / 9 split edges / 59 multi-observation rows / 76 duplicate selections / 693 rows`
+- `verify:` union digest -> `sha256:77f310d3de86c3a097b5c976a8cdc4b1941b24e3e15d0eb47971985b38764dff`
 
 ## Notes
 
 Shared worktree automation committed the union implementation and detector changes across `9c3d32a2f4`, `421eafcbd7`, `96604c8ee8`, `ede8ec4d29`, `df3e6a56f8`, and `bafb4d0e0a`, then captured the reference and Step Record in `6355355b90` and `d9feb980ac` while S08 remained active. The split is retained rather than rewriting concurrent history.
+
+The first independent S08 review reopened the step with four HIGH findings. The remediation removes prefix/token/default semantic inference for non-registry rows, requires exact equality between the 147 live non-registry identities and their authored decisions, corrects persistent LLM/provenance/diagnostic/download effects, validates the four remaining existing homes against live callable signatures, and records explicit rule, counterparty, export, split, and classify/LLM joins. G0 remains OPEN; S09-S14 remain required.
