@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:6000aae109b35dc2b20b966f79c4010691c8993ed7ea658837b797357cbafd6c'
+body_hash: 'sha256:f0c34838dc70819536022642ac6379fa698c312c5b286bf25d7d06800be6e8b8'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -155,3 +155,25 @@ escape ownership.
 The focused suite passes all 19 committed tests. Ruff format/check, scoped
 `ty`, and feature Vault checks pass. G0 remains OPEN and no S09 production or
 TUI edits were found.
+
+## Product-signal remediation review
+
+**Ruling: ACCEPT.** No HIGH or CRITICAL findings remain. Capitalized `Ledger`
+is now a generic product signal, while the explicit audit-ledger exclusion and
+lowercase common-noun behavior remain bounded. The four previously escaped
+export, note, attachment, and field mutations now refuse. Independent
+punctuation and possessive variants also refuse, and an excluded audit-ledger
+phrase placed beside a separate `Ledger` product phrase does not mask the
+product overlap.
+
+Existing `ledger_` prefix, `_ledger` suffix, `/ledger/` path,
+`LedgerWorkspace` symbol, domain phrase, and reviewed plural signals continue
+to refuse unannotated overlap. Generic lowercase `ledger data` and audit
+ledger wording do not false-positive. The live plan remains exactly 33
+adjudicated rows: 27 checked retained, one open retired marker, and five open
+held rows, with 408/426 completion, mixed-scope retention, and S411's S136
+implementation owner plus S128 checkpoint intact.
+
+All 25 focused detector tests pass. Ruff format/check, scoped `ty`, and feature
+Vault checks pass. S09 introduces no production or TUI edits; G0 remains OPEN,
+S09 is checked, and S10 remains next.
