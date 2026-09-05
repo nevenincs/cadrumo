@@ -43,42 +43,60 @@ no authority.
 """
 
 
-class AmbiguousSettlementCasillaError(ValueError):
-    """A revision declares more than one terminal-liquidación casilla."""
+DECLARATION_RESULT_SEMANTIC_ROLES: Final = SETTLEMENT_SEMANTIC_ROLES  # defect: conflated
+"""The roles that name a declaration's FINAL result -- a strict subset of the above.
+
+Both settlement roles are terminal-liquidación cells, and both must be computed
+before filing, which is why the advisory watches the whole set. Only one of
+them is the number an operator means by "the result": Modelo 100 declares
+`irpf_cuota_resultante_autoliquidacion` (casilla 0595) for the liability BEFORE
+pagos a cuenta, and `irpf_resultado_declaracion` (0670) for what the
+declaration actually settles.
+
+Reading the registry is what surfaced this. A first version of this resolver
+matched the full settlement set and would have raised ambiguity on M100 -- the
+only modelo it covers -- because that revision legitimately declares both.
+"""
 
 
-def settlement_casilla_id(revision: ModeloRevision) -> CasillaId | None:
-    """Return the casilla that settles this revision, or nothing when undeclared.
+class AmbiguousDeclarationResultError(ValueError):
+    """A revision declares more than one final-result casilla."""
 
-    Returns `None` for a revision whose casillas declare no settlement role.
-    That is the ordinary case today -- most modelos are not yet modelled to
-    this depth -- and it is deliberately indistinguishable from "the registry
-    has not said", because it IS that.
+
+def declaration_result_casilla_id(revision: ModeloRevision) -> CasillaId | None:
+    """Return the casilla holding this revision's final result, or nothing.
+
+    Returns `None` for a revision whose casillas declare no result role. That
+    is the ordinary case today -- most modelos are not yet modelled to this
+    depth -- and it is deliberately indistinguishable from "the registry has
+    not said", because it IS that. A caller renders the absence as unknown,
+    never as a blank or a zero.
 
     Raises:
-        AmbiguousSettlementCasillaError: Two or more casillas claim a terminal
-            role. A revision with two results has no result, and picking the
-            first would publish one of them as the answer with no grounds; the
+        AmbiguousDeclarationResultError: Two or more casillas claim the result
+            role. A declaration with two results has none, and picking the
+            first would publish one of them as the answer on no grounds; the
             registry declaration is wrong and must be fixed rather than
             resolved here.
     """
     settling = [
         casilla.id
         for casilla in revision.casillas
-        if casilla.semantic_role is not None and casilla.semantic_role in SETTLEMENT_SEMANTIC_ROLES
+        if casilla.semantic_role is not None and casilla.semantic_role in DECLARATION_RESULT_SEMANTIC_ROLES
     ]
     if not settling:
         return None
     if len(settling) > 1:
-        raise AmbiguousSettlementCasillaError(
-            f"revision {revision.id!r} declares {len(settling)} terminal-liquidación casillas "
+        raise AmbiguousDeclarationResultError(
+            f"revision {revision.id!r} declares {len(settling)} final-result casillas "
             f"({', '.join(sorted(settling))}); a declaration cannot have two results"
         )
     return settling[0]
 
 
 __all__ = [
+    "DECLARATION_RESULT_SEMANTIC_ROLES",
     "SETTLEMENT_SEMANTIC_ROLES",
-    "AmbiguousSettlementCasillaError",
-    "settlement_casilla_id",
+    "AmbiguousDeclarationResultError",
+    "declaration_result_casilla_id",
 ]
