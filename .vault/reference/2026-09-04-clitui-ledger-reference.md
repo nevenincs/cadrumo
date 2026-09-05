@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:1b6170dd8348d648e3df584f76f874bd968dba89cc73fa433a565c418cf089fa'
+body_hash: 'sha256:37fbcca0f1bb3e8a5cf872c1c6302e43b09eeccd86f1e3202ab804065ae9d000'
 related:
   - "[[2026-09-04-clitui-ledger-research]]"
   - "[[2026-06-10-ledger-interface-contract-adr]]"
@@ -147,7 +147,7 @@ These coordinates bind the baseline claims to the current observation revision. 
 
 | Coordinate | Locator | Subject digest | Claim boundary |
 | --- | --- | --- | --- |
-| `evidence.baseline.matrix_contract` | `dev/quality/clitui_ledger_capability_matrix.py:22` | `sha256:ac4c5bcb9fdc0b8f96714db30bd01842fe4bb910bc6c4dcabb988ddfa669061c` | Matrix schema 4 plus union schema 4, eight axes, reviewed proof requirements, typed row-level TUI hold, source kinds, gaps, controls, evidence currentness, and G0-G4 predicates |
+| `evidence.baseline.matrix_contract` | `dev/quality/clitui_ledger_capability_matrix.py:22` | `sha256:18e201e66d73b883ad015aff966a8255febeffbac7b04e923d278d2b02adce58` | Matrix schema 4 plus union schema 4, eight axes, reviewed proof requirements, typed row-level TUI hold, source kinds, gaps, controls, evidence currentness, and G0-G4 predicates |
 | `evidence.baseline.semantic_union_review` | `build_ledger_union_denominator` in `dev/quality/clitui_ledger_capability_matrix.py` | `sha256:8a158b5cc4c8e6c3035dc272999af61ac6cb080af8c208eccc8d28e4105a7575` | Schema-v4 domain-separated union: exact 760-source observation graph; all 693 reviewed rows; owner, applicability, proof, gap, action, TUI, and registry dispositions; row-review digest and reviewed-open attestation |
 | `evidence.s04.cli_command_census` | `src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py:51` | `sha256:2cd8e21e2b8602e5e18338c22350301f2bc76f580873af51b1154d5364e6769b` | Exact current CLI stream: 78 invocables, 50 supplemental behavior-distinct sub-operations across ten overloaded endpoints, derived path/handler/schema/TUI facts, and fail-closed ownership annotations |
 | `evidence.s05.backend_operation_census` | `src/cadrumo/application/ledger/` operational modules listed in the backend census | `sha256:4b0d917dd20d155f348958559037695cb5bab356867a1c88305bb42080f3b2f0` | Exact current backend observation: 63 operations, actual request/result contracts, direct-test locators, production compositions, and the one backend-only product capability |

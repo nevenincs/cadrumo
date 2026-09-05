@@ -11,6 +11,7 @@ cannot masquerade as the live campaign census.
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Callable
 from copy import copy
 from dataclasses import replace
@@ -116,6 +117,25 @@ _UNION_DIGEST: Final[str] = "sha256:8a158b5cc4c8e6c3035dc272999af61ac6cb080af8c2
 _ROW_REVIEW_DIGEST: Final[str] = "sha256:4e42e5e04ccfd7a8654e629933698e141033b0767d0f94ec5433619400203ff8"
 _ROW_REVIEW_ATTESTATION_DIGEST: Final[str] = "sha256:fc15a433ad145832934cbe894d3d0b875d27e9a54ed1a70ae271c16ff81aedf7"
 _UNSET: Final[object] = object()
+_REFERENCE_PATH: Final[Path] = (
+    Path(__file__).resolve().parents[3] / ".vault" / "reference" / "2026-09-04-clitui-ledger-reference.md"
+)
+_MATRIX_CONTRACT_COORDINATE_PATTERN: Final[re.Pattern[str]] = re.compile(
+    r"^\| `evidence\.baseline\.matrix_contract` \| `(?P<locator>[^`]+)` \| "
+    r"`(?P<digest>sha256:[0-9a-f]{64})` \|",
+    re.MULTILINE,
+)
+
+
+def _published_matrix_contract_digest(path: Path = _REFERENCE_PATH) -> str:
+    """Read the unique human publication coordinate without duplicating its digest."""
+    matches = tuple(_MATRIX_CONTRACT_COORDINATE_PATTERN.finditer(path.read_text(encoding="utf-8")))
+    if len(matches) != 1:
+        raise AssertionError(f"expected one matrix-contract publication coordinate, found {len(matches)}")
+    locator = matches[0].group("locator").strip()
+    if locator != "dev/quality/clitui_ledger_capability_matrix.py:22":
+        raise AssertionError(f"matrix-contract publication locator drifted: {locator!r}")
+    return cast(str, matches[0].group("digest"))
 
 
 @cache
@@ -4436,6 +4456,11 @@ def test_matrix_contract_source_digest_normalizes_checkout_newlines(tmp_path: Pa
     crlf.write_bytes(b"first\r\nchanged\r\n")
     assert ledger_capability_matrix_source_digest(lf) != ledger_capability_matrix_source_digest(crlf)
     assert ledger_capability_matrix_source_digest().startswith("sha256:")
+
+
+def test_human_matrix_contract_coordinate_matches_live_source_digest() -> None:
+    """The reference coordinate must publish the digest the contract computes."""
+    assert _published_matrix_contract_digest() == ledger_capability_matrix_source_digest()
 
 
 def test_g0_refuses_a_small_fixture_without_a_live_union_identity_observation() -> None:
