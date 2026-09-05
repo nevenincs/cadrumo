@@ -72,3 +72,43 @@ The independent projection reproduced the exact count, hold, digest, and TUI
 reachability facts above. The full matrix module passes all 222 tests. Ruff
 format/check, scoped `ty`, and feature Vault checks pass. Green
 hold-serialization tests do not resolve the gate-lifecycle contradiction.
+
+## Gate-receipt remediation review
+
+**Ruling: NOT ACCEPTED.** The ordered G0-through-G3 receipt prefix and
+post-G3 hold transition close the original lifecycle contradiction, but one
+HIGH attestation-binding defect remains.
+
+Receipts are frozen, unique, ordered, ACCEPT-only, plan-owner-bound, and bind
+the current denominator census, revision, and digest plus the current review
+subject coordinates. Missing, forged-basis, non-ACCEPT, reordered, denominator,
+census, matrix, and serialized digest drift refuse. Active pre-G3 evaluation
+uses normal predicates, and the ordered evaluator preserves only the historical
+G0 active-hold predicate after a current G3 receipt authorizes the lift.
+
+### receipt-does-not-freeze-the-acceptance-attestation | high | Attestation time and receipt reviewer can be rewritten while G4 stays closed
+
+The closure-basis digest excludes the entire `acceptance_attestation`, not only
+the justified active-hold control and receipt collection. Receipt validation
+copies several attestation fields but omits `attested_at` and the attestation's
+matrix digest. The receipt's own `reviewer` is checked only for non-placeholder
+text and is not bound to the acceptance reviewer or another reviewer authority.
+
+Independent mutations demonstrate the gap. Advancing the acceptance
+attestation's `attested_at` by one second leaves G4 closed=true. Replacing the G3
+receipt reviewer with `fabricated reviewer`, then recomputing the public matrix
+digest/attestation, also leaves G4 closed=true. The same attestation identity can
+therefore be reminted around changed receipt state, and receipt authorship is a
+mutable claim rather than a frozen reviewed fact.
+
+Make the frozen closure basis exclude only the active hold and self-referential
+receipt collection. Bind canonical acceptance-attestation content, including
+its id, reviewer, ruling, plan owner, denominator, subject coordinates,
+`attested_at`, and a non-circular frozen matrix/closure-basis digest. Bind the
+receipt reviewer to the accepted reviewer authority or remove the independent
+field. Add mutations for attestation time/digest and receipt reviewer, including
+serialization round trips.
+
+The row-level 680/13 partition and union digest remain unchanged, G0 remains
+OPEN, and no production TUI changes were introduced. Ruff format/check, scoped
+`ty`, and feature Vault checks pass; the full suite result follows on completion.
