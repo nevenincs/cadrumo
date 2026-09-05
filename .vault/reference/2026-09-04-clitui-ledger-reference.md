@@ -108,6 +108,13 @@ The following prose coordinates are the human-readable publication of the canoni
 | `s14.tui.production-classification-action-reference` | `operator.ledger.classify` (inert: no target/submitter) |
 | `s14.tui.production-executable-mutation-doors` | `0` |
 
+The predecessor TUI plan ownership check is Ledger-scoped. It requires unique Step
+identities and exact disposition coverage for the 27 retained evidence rows, the one
+retired-premise marker, and the five displaced-and-held rows, plus the relevant
+checkbox, mixed-scope, and S411 target clauses. It deliberately carries no whole-plan
+row or checked-count pin, so unrelated predecessor-plan edits do not reopen
+`clitui-ledger`.
+
 #### Provisional capability rows
 
 These 41 family rows are the S03 orientation keys. S08 has now admitted the exact 694-row semantic union above; this compact table remains a family-level implementation map and does not replace, add to, or summarize away those serialized row identities.
