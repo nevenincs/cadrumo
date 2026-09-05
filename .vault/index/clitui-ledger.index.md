@@ -6,7 +6,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:1da0ac1769a5ddf295bc646319240d75a91342f2675695e0b69989a0a42b45dd'
+body_hash: 'sha256:4d306f28f39486a5826a2464829ebe2ae85ec9184595d514f75bb44f7530734b'
 related:
   - '[[2026-09-04-clitui-ledger-W01-P01-S01]]'
   - '[[2026-09-04-clitui-ledger-W01-P01-S02]]'
@@ -72,7 +72,7 @@ Auto-generated index of all documents tagged with `#clitui-ledger`.
 - `2026-09-04-clitui-ledger-W01-P02-S07` - Enumerate existing Ledger component factories separately from installed navigation reachability
 - `2026-09-04-clitui-ledger-W01-P02-S08` - Adjudicate canonical semantic homes and typed command-result contracts for every denominator row
 - `2026-09-04-clitui-ledger-W01-P03-S09` - Record clitui-ledger as sole Ledger parity owner and place unresolved Ledger TUI rows under the implementation hold
-- `2026-09-04-clitui-ledger-W01-P03-S10` - Publish the active-plan ownership, hold state, and gate dependency chain without duplicating evidence
+- `2026-09-04-clitui-ledger-W01-P03-S10` - Publish clitui-ledger sole active Ledger parity owner; G0 OPEN; ordered G0→G1→G2→G3→G4; Ledger TUI held until G3 closes; link S09, plan, reference
 
 ### plan
 
