@@ -3241,6 +3241,10 @@ modelo:
               label: Elszámolás II - Az eredménykimutatás eredményének korrekciói
                 - Befektetési tartalékok az Illes Balears területén (31/2022. törvény
                 70. kiegészítő rendelkezés) - Csökkentések [00813]
+            00814:
+              label: Korlátból kizárt K+F+i levonások - Kiegészítő információ a levonási
+                korlátok kiszámításához - Az adómegállapítási időszak kutatás-fejlesztési
+                kiadásai [00814]
             00815:
               help: null
               label: Elszámolás III - Kedvezmények/Kettős adóztatás levonásai - Az
@@ -3315,6 +3319,12 @@ modelo:
               label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2025 Levonások
                 halasztása, IV. fejezet VI. cím, 43/95. törvény, RDLeg. 4/2004 és
                 LIS - Jövőbeli időszakokban alkalmazandó [00830]
+            00831:
+              label: Egyes tevékenységek ösztönzésére szolgáló levonások - Összesen
+                - Függőben lévő/keletkezett levonás [00831]
+            00832:
+              label: Egyes tevékenységek ösztönzésére szolgáló levonások - Összesen
+                - Jövőbeli időszakokban alkalmazandó [00832]
             00833:
               help: null
               label: Nonprofit szervezeteknek adott adományok levonása - Általános
@@ -4628,6 +4638,21 @@ modelo:
               label: Halasztott adókövetelések adóhatósággal szemben követelhető hitellé
                 alakítása - Halasztott adókövetelések (AID). LIS 130. cikk - Keletkezési
                 év - 2022 - Jövőbeli időszakokban alkalmazandó AID...
+            '01134':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Pozitív nettó adókötelezettség többlete
+                - Keletkezés éve - 2022 - Az időszak elején fennálló pozitív nettó
+                adótöbblet [01134]
+            '01135':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Pozitív nettó adókötelezettség többlete
+                - Keletkezés éve - 2022 - A 2008-2015 adómegállapítási időszakokban
+                felhasznált pozitív nettó adótöbblet [01135]
+            '01136':
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Pozitív nettó adókötelezettség többlete
+                - Keletkezés éve - 2022 - A 2016-tól kezdődő adómegállapítási időszakokban
+                felhasznált pozitív nettó adótöbblet [01136]
             '01137':
               help: null
               label: Tőkésítési tartalék - Összesen - Időszakban keletkezett/időszak
@@ -6100,6 +6125,11 @@ modelo:
                 kedvezmény összege'
               label: 'Betudott összegek: A betudott kedvezményalapokból keletkezett
                 kedvezmény összege'
+            01469:
+              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé - Pozitív nettó adókötelezettség többlete
+                - Keletkezés éve - 2023 - Jövőbeli időszakokban felhasználandó pozitív
+                nettó adótöbblet [01469]
             '01470':
               help: null
               label: Követelések vagy egyéb eszközök értékvesztési ráfordításai -
@@ -8287,6 +8317,12 @@ modelo:
                 osztalékok és nyereségrészesedések'
               label: 'Betudott összegek: A részesedés megszerzését követő évekből
                 származó osztalékok és nyereségrészesedések'
+            01935:
+              label: Korlátból kizárt K+F+i levonások - Kiegészítő információ a levonási
+                korlátok kiszámításához - Kereskedelmi csoport (csak a nyilatkozat
+                jellemzőinek 00039 kulcsát bejelölő szervezeteknek) - A csoport többi
+                tagja által felhasznált vagy kifizetett kutatás-fejlesztési levonás
+                éves összege [01935]
             01936:
               help: null
               label: Baleár-szigeteki beruházási tartalék különleges rendszere - RIIB
@@ -8406,6 +8442,18 @@ modelo:
               label: Kanári-szigeteki beruházási tartalék különös rendszere - RIC
                 2019 - Ebben az elszámolásban alkalmazva/materializálva - Az adóalapba
                 beépítve a feltételek nem teljesítése miatt [01963]
+            01964:
+              label: Kiegyenlítési tartalék - Tartalékképzés - Keletkezés éve 2019
+                - Képzendő tartalék összege [01964]
+            01965:
+              label: Kiegyenlítési tartalék - Tartalékképzés - Keletkezés éve 2019
+                - Képzett tartalék összege [01965]
+            01966:
+              label: Kiegyenlítési tartalék - Tartalékképzés - Keletkezés éve 2019
+                - Képzésre váró tartalék összege [01966]
+            01967:
+              label: Kiegyenlítési tartalék - Tartalékképzés - Keletkezés éve 2019
+                - Felhasznált tartalék [01967]
             01968:
               help: null
               label: Korlátból kizárt K+F+i levonások - 2018 Kutatás és fejlesztés
@@ -9959,6 +10007,14 @@ modelo:
               help: null
               label: Baleár-szigeteki beruházási tartalék különleges rendszere - Előzetes
                 beruházások 2023 - Az időszak elején képzésre váró RIIB [02362]
+            '02363':
+              label: Baleár-szigeteki beruházási tartalék különleges rendszere - Előzetes
+                beruházások 2024 - A 31/2022. törvény DA 70.4. cikkének a) és b) pontjában
+                előírt beruházások [02363]
+            '02364':
+              label: Baleár-szigeteki beruházási tartalék különleges rendszere - Előzetes
+                beruházások 2024 - A 31/2022. törvény DA 70.4. cikkének c) pontjában
+                előírt beruházások [02364]
             '02365':
               label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2024 Alicante
                 2021. A vitorlás földkerülő verseny rajtja (A21) - Függőben lévő/keletkezett
@@ -10422,6 +10478,10 @@ modelo:
               label: Elszámolás I - Az eredménykimutatás eredményének korrekciói -
                 Hibrid aszimmetriák (LIS 15 bis. cikk, kivéve a LIS 15 bis.12. cikket)
                 - Csökkentések [02470]
+            '02471':
+              label: Nonprofit szervezeteknek adott adományok levonása - Általános
+                adományok - 2024(*) ugyanazon szervezetnek ismételten nem nyújtott
+                adományok- függőben lévő/keletkezett levonás [02471]
             '02472':
               help: null
               label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
@@ -10878,6 +10938,14 @@ modelo:
               help: null
               label: Hibrid aszimmetriák (LIS 15 bis. cikk, kivéve a LIS 15 bis.12.
                 cikket) - Növekedés - Év végén függőben lévő egyenleg [02575]
+            '02576':
+              label: Nonprofit szervezeteknek adott adományok levonása - Általános
+                adományok - 2024(*) ugyanazon szervezetnek ismételten nem nyújtott
+                adományok - Ebben az elszámolásban alkalmazva [02576]
+            '02577':
+              label: Nonprofit szervezeteknek adott adományok levonása - Általános
+                adományok - 2024(*) ugyanazon szervezetnek ismételten nem nyújtott
+                adományok - Jövőbeli időszakokban alkalmazandó [02577]
             02578:
               help: null
               label: A számviteli értékcsökkenési ráfordítás 30%-ának levonása (kisvállalkozások
@@ -11440,11 +11508,53 @@ modelo:
               label: Tőkében vagy saját tőkében való részesedést megtestesítő értékpapírok
                 értékvesztési veszteségének korrekciói (LIS 13.2. b) cikk) - Csökkenés
                 - Év végén függőben lévő egyenleg [02690]
+            02691:
+              label: Nonprofit szervezeteknek adott adományok levonása - Általános
+                adományok - 2024(*) - ugyanazon szervezetnek ismételt adományozással-
+                Függőben lévő/keletkezett levonás [02691]
+            02692:
+              label: Nonprofit szervezeteknek adott adományok levonása - Általános
+                adományok - 2024(*) - Ugyanazon szervezetnek ismételt adományozással
+                - Ebben az elszámolásban alkalmazva [02692]
+            02693:
+              label: Nonprofit szervezeteknek adott adományok levonása - Általános
+                adományok - 2024(*) - Ugyanazon szervezetnek ismételt adományozással
+                - Jövőbeli időszakokban alkalmazandó [02693]
+            02694:
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2024(*)
+                - Ugyanazon szervezetnek ismételten nem nyújtott adományok - Függőben
+                lévő/keletkezett levonás [02694]
+            02695:
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2024(*)
+                - Ugyanazon szervezetnek ismételten nem nyújtott adományok - Ebben
+                az elszámolásban alkalmazva [02695]
+            02696:
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2024(*)
+                - Ugyanazon szervezetnek ismételten nem nyújtott adományok - Jövőbeli
+                időszakokban alkalmazandó [02696]
+            02697:
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2024(*)
+                - Ugyanazon szervezetnek ismételt adományozással - Függőben lévő/keletkezett
+                levonás [02697]
+            02698:
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2024(*)
+                - Ugyanazon szervezetnek ismételt adományozással - Ebben az elszámolásban
+                alkalmazva [02698]
             02699:
               help: null
               label: Belföldi illetőségű jogalanyok osztalékának vagy nyereségrészesedésének
                 mentessége (LIS 21.11. cikk) - Csökkenés - Évi korrekciók - Végleges
                 [02699]
+            '02700':
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2024(*)
+                - Ugyanazon szervezetnek ismételt adományozással - Jövőbeli időszakokban
+                alkalmazandó [02700]
             '02701':
               help: null
               label: Ideiglenes intézkedések visszafordításának levonása (LIS 37.1
@@ -14603,6 +14713,14 @@ modelo:
               label: Ideiglenes intézkedések visszafordításának levonása (LIS 37.1
                 átmeneti rendelkezés) - 2020 - Keletkezett/időszak elején függőben
                 lévő összeg [2231]
+            DP200014B:01766:
+              label: Elszámolás IV - Az időszak befizetendő vagy visszatérítendő adója
+                - Forrásadó és részletfizetés összesen - A jogalany részére teljesítve
+                [DP200014B:01766]
+            DP200014B:01784:
+              label: Elszámolás IV - Az időszak befizetendő vagy visszatérítendő adója
+                - Forrásadó és részletfizetés összesen - GIE-k és UTE-k által tulajdonított
+                összegek [DP200014B:01784]
             x-8h834c1g60oj6ehg60q32do:
               help: null
               label: Elszámolás II - Az eredménykimutatás eredményének korrekciói

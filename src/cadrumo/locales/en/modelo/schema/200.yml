@@ -3193,6 +3193,10 @@ modelo:
               label: Settlement II - Detail of corrections to profit and loss account
                 result - Investment reserves in the Balearic Islands (DA 70 Law 31/2022)
                 - Decreases [00813]
+            00814:
+              label: R&D&i deductions excluded from the limit - Additional information
+                for calculating deduction limits - Research and development expenses
+                for the tax period [00814]
             00815:
               help: null
               label: Settlement III - Tax credits/Double taxation deductions - Tax
@@ -3266,6 +3270,12 @@ modelo:
               label: Deductions to incentivize certain activities - 2025 Deferral
                 of deductions Ch. IV Title VI Law 43/95, RDLeg. 4/2004 and LIS - Pending
                 application in future periods [00830]
+            00831:
+              label: Deductions to incentivise certain activities - Total - Deduction
+                carried forward/generated [00831]
+            00832:
+              label: Deductions to incentivise certain activities - Total - Carried
+                forward for application in future periods [00832]
             00833:
               help: null
               label: Deduction for donations to non-profit entities - General donations
@@ -4576,6 +4586,21 @@ modelo:
               label: Conversion of deferred tax assets into receivable credit against
                 the tax administration - Deferred tax assets (DTA). Art. 130 LIS -
                 Generation year - 2022 - DTA pending application in future peri...
+            '01134':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2022 - Excess positive net tax due outstanding at the start
+                of the period [01134]
+            '01135':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2022 - Excess positive net tax due applied in tax periods 2008
+                to 2015 [01135]
+            '01136':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2022 - Excess positive net tax due applied in tax periods beginning
+                from 2016 [01136]
             '01137':
               help: null
               label: Capitalization reserve - Total - Right to reduce tax base generated
@@ -6028,6 +6053,11 @@ modelo:
                 bases'
               label: 'Amounts attributed: Allowance generated from the attributed
                 allowance bases'
+            01469:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2023 - Excess positive net tax due pending application in future
+                periods [01469]
             '01470':
               help: null
               label: Impairment allowances for receivables or other assets - Generation
@@ -8226,6 +8256,12 @@ modelo:
                 years after the holding was acquired'
               label: 'Amounts attributed: Dividends and profit shares received from
                 years after the holding was acquired'
+            01935:
+              label: R&D&i deductions excluded from the limit - Additional information
+                for calculating deduction limits - Commercial group (only for entities
+                that ticked key 00039 of the declaration characteristics) - Annual
+                amount of the research and development expenses deduction applied
+                or paid by the rest of the group [01935]
             01936:
               help: null
               label: Special regime for the Balearic Islands investment reserve -
@@ -8346,6 +8382,18 @@ modelo:
               label: Special regime for the Canary Islands investment reserve - RIC
                 2019 - Applied/materialised in this return - Reincorporated into the
                 taxable base for failure to meet requirements [01963]
+            01964:
+              label: Equalization reserve - Reserve allocation - Year of generation
+                2019 - Amount of reserve to be allocated [01964]
+            01965:
+              label: Equalization reserve - Reserve allocation - Year of generation
+                2019 - Amount of reserve allocated [01965]
+            01966:
+              label: Equalization reserve - Reserve allocation - Year of generation
+                2019 - Reserve amount pending allocation [01966]
+            01967:
+              label: Equalization reserve - Reserve allocation - Year of generation
+                2019 - Reserve used [01967]
             01968:
               help: null
               label: R&D&i deductions excluded from the limit - 2018 Research and
@@ -9932,6 +9980,14 @@ modelo:
               label: Special regime for the Balearic Islands investment reserve -
                 Advance investments 2023 - Balearic Islands investment reserve pending
                 allocation at start of period [02362]
+            '02363':
+              label: Special regime for the Balearic Islands investment reserve -
+                Advance investments 2024 - Investments provided for in letters A and
+                B, Additional Provision 70.4, Law 31/2022 [02363]
+            '02364':
+              label: Special regime for the Balearic Islands investment reserve -
+                Advance investments 2024 - Investments provided for in letter C, Additional
+                Provision 70.4, Law 31/2022 [02364]
             '02365':
               label: Deductions to incentivise certain activities - 2024 Alicante
                 2021. Start of the round-the-world sailing race (A21) - Deduction
@@ -10404,6 +10460,10 @@ modelo:
               label: Settlement I - Detail of adjustments to the profit and loss account
                 result - Hybrid mismatches (art. 15 bis LIS, except art. 15 bis.12
                 LIS) - Decreases [02470]
+            '02471':
+              label: Deduction for donations to non-profit entities - General donations
+                - 2024(*) without repeated donations to the same entity- deduction
+                pending/generated [02471]
             '02472':
               help: null
               label: Deduction for donations to non-profit entities - Donations for
@@ -10870,6 +10930,14 @@ modelo:
               help: null
               label: Hybrid mismatches (art. 15 bis LIS, except art. 15 bis.12 LIS)
                 - Increase - Balance carried forward at year-end [02575]
+            '02576':
+              label: Deduction for donations to non-profit entities - General donations
+                - 2024(*) without repeated donations to the same entity - Applied
+                in this settlement [02576]
+            '02577':
+              label: Deduction for donations to non-profit entities - General donations
+                - 2024(*) without repeated donations to the same entity - Carried
+                forward for application in future periods [02577]
             02578:
               help: null
               label: 30% deduction on the amount of accounting depreciation expense
@@ -11446,11 +11514,53 @@ modelo:
               label: Adjustments for impairment losses on securities representing
                 a holding in capital or equity (art. 13.2 b) LIS) - Decrease - Balance
                 carried forward at year-end [02690]
+            02691:
+              label: Deduction for donations to non-profit entities - General donations
+                - 2024(*) - with repeated donations to the same entity- Pending/generated
+                deduction [02691]
+            02692:
+              label: Deduction for donations to non-profit entities - General donations
+                - 2024(*) - With repeated donations to the same entity - Applied in
+                this settlement [02692]
+            02693:
+              label: Deduction for donations to non-profit entities - General donations
+                - 2024(*) - With repeated donations to the same entity - Carried forward
+                for application in future periods [02693]
+            02694:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2024(*) - Without repeated donations to the same entity - Deduction
+                carried forward/generated [02694]
+            02695:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2024(*) - Without repeated donations to the same entity - Applied
+                in this settlement [02695]
+            02696:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2024(*) - Without repeated donations to the same entity - Carried
+                forward for application in future periods [02696]
+            02697:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2024(*) - With repeated donations to the same entity - Deduction
+                carried forward/generated [02697]
+            02698:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2024(*) - With repeated donations to the same entity - Applied in
+                this settlement [02698]
             02699:
               help: null
               label: Exemption on dividends or profit-sharing income from resident
                 entities (art. 21.11 LIS) - Decrease - Adjustments for the tax year
                 - Permanent [02699]
+            '02700':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2024(*) - With repeated donations to the same entity - Carried forward
+                for application in future periods [02700]
             '02701':
               help: null
               label: Deduction for reversal of temporary measures (Transitional Provision
@@ -14748,6 +14858,13 @@ modelo:
               label: Deduction for reversal of temporary measures (Transitional Provision
                 37.1 LIS) - 2020 - Amount generated/carried forward at start of period
                 [2231]
+            DP200014B:01766:
+              label: Settlement IV - Tax due for the year, payable or refundable -
+                Total withholdings and payments on account - Made to the entity [DP200014B:01766]
+            DP200014B:01784:
+              label: Settlement IV - Tax due for the year, payable or refundable -
+                Total withholdings and payments on account - Attributed by economic
+                interest groupings and business consortia [DP200014B:01784]
             x-8h834c1g60oj6ehg60q32do:
               help: null
               label: Settlement II - Detail of adjustments to the profit and loss

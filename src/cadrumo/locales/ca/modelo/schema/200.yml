@@ -3225,6 +3225,10 @@ modelo:
               label: Liquidació II - Detall correccions resultat cta. pèrdues i guanys
                 - Reserves inversions a Illes Balears (DA 70a Llei 31/2022 ) - Disminucions
                 [00813]
+            00814:
+              label: Deduccions I+D+i excloses de límit - Informació addicional per
+                al càlcul de límits de deduccions - Despeses de recerca i desenvolupament
+                del període impositiu [00814]
             00815:
               help: null
               label: Liquidació III - Bonificacions/Deduccions doble imposició - Bonificació
@@ -3298,6 +3302,12 @@ modelo:
               label: Deducc. per incentivar determ. activitats - 2025 Diferim. deduccions
                 Cap. IV Tít. VI Llei 43/95, RDLeg. 4/2004 i LIS - Pendent d'aplicació
                 en períodes futurs [00830]
+            00831:
+              label: Deduccions per incentivar determ. activitats - Total - Deducció
+                pendent/generada [00831]
+            00832:
+              label: Deduccions per incentivar determ. activitats - Total - Pendent
+                d'aplicació en períodes futurs [00832]
             00833:
               help: null
               label: Deducció donatius entitats sense fins lucratius - Donacions de
@@ -4607,6 +4617,20 @@ modelo:
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
                 2022 - AID pendents aplicació períodes futu...
+            '01134':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Excés quota líquida positiva - Exercici generació - 2022 - Excés
+                de quota líquida positiva pendent a l'inici del període [01134]
+            '01135':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Excés quota líquida positiva - Exercici generació - 2022 - Excés
+                de quota líquida positiva aplicat en períodes impositius 2008 a 2015
+                [01135]
+            '01136':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Excés quota líquida positiva - Exercici generació - 2022 - Excés
+                de quota líquida positiva aplicat en períodes impositius iniciats
+                a partir de 2016 [01136]
             '01137':
               help: null
               label: Reserva capitalització - Total - Dret a reduir B.I. generat període/pendent
@@ -6049,6 +6073,10 @@ modelo:
                 de bonificació imputades'
               label: 'Imports imputats: Import de bonificació generada de les bases
                 de bonificació imputades'
+            01469:
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Excés quota líquida positiva - Exercici generació - 2023 - Excés
+                de quota líquida positiva pendent d'aplicació en períodes futurs [01469]
             '01470':
               help: null
               label: Dotacions deteriorament crèdits o altres actius - Exercici generació
@@ -8143,6 +8171,12 @@ modelo:
                 d''exercicis posteriors a l''adquisició de la participació'
               label: 'Imports imputats: Dividends i participacions en beneficis percebuts
                 d''exercicis posteriors a l''adquisició de la participació'
+            01935:
+              label: Deduccions I+D+i excloses de límit - Informació addicional per
+                al càlcul de límits de deduccions - Grup mercantil (només per a entitats
+                que hagin marcat la clau 00039 de caràcters de la declaració) - Import
+                anual de la deducció per despeses de recerca i desenvolupament aplicada
+                o abonada per la resta del grup [01935]
             01936:
               help: null
               label: Règ. especial reserva per a inversions a les Illes Balears -
@@ -8260,6 +8294,18 @@ modelo:
               label: Règ. especial reserva per a inversions a Canàries - RIC 2019
                 - Aplicat/materialitzat en aquesta liquidació - Integrat en la BI
                 per incompliment de requisits [01963]
+            01964:
+              label: Reserva de nivellació - Dotació de la reserva - Exercici de generació
+                2019 - Import de la reserva a dotar [01964]
+            01965:
+              label: Reserva de nivellació - Dotació de la reserva - Exercici de generació
+                2019 - Import reserva dotada [01965]
+            01966:
+              label: Reserva de nivellació - Dotació de la reserva - Exercici de generació
+                2019 - Import reserva pendent dotació [01966]
+            01967:
+              label: Reserva de nivellació - Dotació de la reserva - Exercici de generació
+                2019 - Reserva disposada [01967]
             01968:
               help: null
               label: Deduccions I+D+i excloses del límit - 2018 Recerca i desenvolupament
@@ -9796,6 +9842,14 @@ modelo:
               label: Règ. especial reserva per a inversions a les Illes Balears -
                 Inversions anticipades 2023 - Pendent de dotar la RIIB a principi
                 de període [02362]
+            '02363':
+              label: Règ. especial reserva per a inversions a les Illes Balears -
+                Inversions anticipades 2024 - Inversions previstes lletres A i B,
+                DA 70.4 Llei 31/2022 [02363]
+            '02364':
+              label: Règ. especial reserva per a inversions a les Illes Balears -
+                Inversions anticipades 2024 - Inversions previstes lletra C DA 70.4
+                Llei 31/2022 [02364]
             '02365':
               label: Deduccions per incentivar determ. activitats - 2024 Alacant 2021.
                 Sortida de la Volta al Món a Vela (A21) - Deducció pendent/generada
@@ -10255,6 +10309,10 @@ modelo:
               label: Liquidació I - Detall de correccions del resultat del compte
                 de pèrdues i guanys - Asimetries híbrides (art. 15 bis LIS, excepte
                 art. 15 bis.12 LIS) - Disminucions [02470]
+            '02471':
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2024(*) sense reiteració de donacions a una mateixa
+                entitat- deducció pendent/generada [02471]
             '02472':
               help: null
               label: Deducció per donatius a entitats sense fins lucratius - Donacions
@@ -10717,6 +10775,14 @@ modelo:
               help: null
               label: Asimetries híbrides (art. 15 bis LIS, excepte art. 15 bis.12
                 LIS) - Augment - Saldo pendent a fi d'exercici [02575]
+            '02576':
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2024(*) sense reiteració de donacions a una mateixa
+                entitat - Aplicat en aquesta liquidació [02576]
+            '02577':
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2024(*) sense reiteració de donacions a una mateixa
+                entitat - Pendent d'aplicació en períodes futurs [02577]
             02578:
               help: null
               label: Deducció del 30% de l'import de despeses d'amortització comptable
@@ -11269,11 +11335,53 @@ modelo:
               label: Ajustaments per pèrdues per deteriorament de valors representatius
                 de la participació en el capital o fons propis (art. 13.2 b) LIS)
                 - Disminució - Saldo pendent a fi d'exercici [02690]
+            02691:
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2024(*) - Amb reiteració de donacions a una mateixa
+                entitat- Deducció pendent/generada [02691]
+            02692:
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2024(*) - Amb reiteració de donacions a una mateixa
+                entitat - Aplicat en aquesta liquidació [02692]
+            02693:
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2024(*) - Amb reiteració de donacions a una mateixa
+                entitat - Pendent d'aplicació en períodes futurs [02693]
+            02694:
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2024(*) - Sense reiteració de donacions a una mateixa
+                entitat - Deducció pendent/generada [02694]
+            02695:
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2024(*) - Sense reiteració de donacions a una mateixa
+                entitat - Aplicat en aquesta liquidació [02695]
+            02696:
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2024(*) - Sense reiteració de donacions a una mateixa
+                entitat - Pendent d'aplicació en períodes futurs [02696]
+            02697:
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2024(*) - Amb reiteració de donacions a una mateixa
+                entitat - Deducció pendent/generada [02697]
+            02698:
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2024(*) - Amb reiteració de donacions a una mateixa
+                entitat - Aplicat en aquesta liquidació [02698]
             02699:
               help: null
               label: Exempció sobre dividends o participacions en beneficis d'entitats
                 residents (art. 21.11 LIS) - Disminució - Correccions de l'exercici
                 - Permanents [02699]
+            '02700':
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2024(*) - Amb reiteració de donacions a una mateixa
+                entitat - Pendent d'aplicació en períodes futurs [02700]
             '02701':
               help: null
               label: Deducció per reversió de mesures temporals (DT 37a. 1 LIS) -
@@ -14519,6 +14627,12 @@ modelo:
               help: null
               label: Deducció per reversió de mesures temporals (DT 37a. 1 LIS) -
                 2020 - Import generat/pendent a principi de període [2231]
+            DP200014B:01766:
+              label: Liquidació IV - Quota de l'exercici a ingressar o a retornar
+                - Total retencions i ingressos a compte - Efectuats a l'entitat [DP200014B:01766]
+            DP200014B:01784:
+              label: Liquidació IV - Quota de l'exercici a ingressar o a retornar
+                - Total retencions i ingressos a compte - Imputats per AIE i UTE [DP200014B:01784]
             x-8h834c1g60oj6ehg60q32do:
               help: null
               label: Liquidació II - Detall de correccions del resultat del compte
