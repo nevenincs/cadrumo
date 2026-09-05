@@ -45,6 +45,7 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 
 from .._paths import REPO_ROOT
+from ..quality.unread_inputs import report_unread
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -59,13 +60,33 @@ _MINIMUM_RESOLVED = 500
 def _entry_kinds() -> dict[str, str]:
     """Return ``export_field_id -> kind`` across every bundled semantic map."""
     kinds: dict[str, str] = {}
+    unread: list[str] = []
     for fragment in sorted(_MAPPINGS.rglob("*.toml")):
         try:
             data = tomllib.loads(fragment.read_text(encoding="utf-8"))
-        except tomllib.TOMLDecodeError:  # a malformed fragment is another gate's subject
+        except tomllib.TOMLDecodeError as refusal:
+            # Malformedness itself is another gate's subject, but its CONSEQUENCE
+            # lands here: a fragment that does not parse contributes no entries,
+            # so every export ref into it reads as ``kind is None`` below and is
+            # skipped as a hand-authored layout rather than judged. A silent skip
+            # therefore converts judged routings into unjudged ones, which is
+            # indistinguishable from a clean result.
+            # Relative where it can be, absolute otherwise: the announcement must
+            # never be more fragile than the walk it reports on.
+            named = fragment.as_posix()
+            if fragment.is_relative_to(REPO_ROOT):
+                named = fragment.relative_to(REPO_ROOT).as_posix()
+            unread.append(f"{named} ({refusal})")
             continue
         for entry in data.get("entries", []):
             kinds[entry["export_field_id"]] = entry["kind"]
+
+    report_unread(
+        "valueless-slot routing gate",
+        "these mapping fragments contributed no entries, so export refs into them read as "
+        "hand-authored layouts below and were never judged",
+        unread,
+    )
     return kinds
 
 
