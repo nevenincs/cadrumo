@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:e5420aadf4463b214b5662731a9fcbf6ac871799b05874cffcff980b6678edd2'
+body_hash: 'sha256:3206dba1c44cbb63245321a7286bf0711eb34a72a53ffa51d2e669619cfe4bea'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -572,6 +572,9 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S690` - Give the M200 unique declaration filename one owner: three tests rebuilt production's casilla-to-filename convention to lay out their fixtures, so a change would have left them writing under the old name; `dev/registry/analysis/m200_2024_unique_adjudications.py`.
 - [x] `W02.P02.S691` - Anchor the retired command-graph absence claims to their parent directories: the two dev/quality entries had no reader holding that tree, so a rename would satisfy their absence over a directory that no longer exists; `dev/tests/test_command_graph_legacy_sources_absent.py`.
 - [x] `W02.P02.S692` - Anchor the public-authority cutover absences to their replacements: the imports below resolve through the installed package, so a relocated core/ left both retired-file claims passing about the wrong directory; `dev/tests/test_public_authority_cutover.py`.
+- [x] `W02.P02.S693` - Anchor the zero-remnant fixed point to the roots its scan consults: alone among its siblings it runs on default roots, so an empty tree returned no remnants while the retired path was absent from a directory that was never there; `dev/tests/test_tui_migration_manifest.py`.
+- [x] `W02.P02.S694` - State what the legacy-orphan retirement can prove: the journal's removal was unbacked by any proof it existed, and the target export root was never created, so asserting its absence afterwards tested nothing; `dev/registry/tests/test_generated_tree_publication.py`.
+- [x] `W02.P02.S695` - Derive the redirected export path from the isolated tree: the modelo was transcribed as 130 against a 184 tree, so the link-redirect absence claim held over a directory that could never exist; `dev/registry/tests/test_generated_tree_check.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
