@@ -46,6 +46,13 @@ _BASELINE_PATH: Final[Path] = Path(__file__).with_name("unused_symbol_ratchet.to
 
 #: Findings under this prefix belong to the in-flight TUI campaign, which owns
 #: its own churn. Deferral sets scope; it is not permission.
+#:
+#: Re-verified rather than inherited: the owning plan stood at 13 of 119 steps
+#: with commits landing in the same week, so the 22 symbols and 2 orphaned test
+#: modules under this prefix are inside another campaign's live working set. A
+#: deferral with no recorded basis is how scope quietly becomes permanent, so
+#: whoever reads this next should check that plan's progress again rather than
+#: trusting the line above.
 _DEFERRED_PREFIX: Final[str] = "cadrumo.entrypoints.tui"
 
 
