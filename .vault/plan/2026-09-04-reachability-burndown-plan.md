@@ -7,9 +7,9 @@ tier: L3
 related:
   - '[[2026-09-04-reachability-burndown-adr]]'
   - '[[2026-09-04-reachability-burndown-reference]]'
-modified: '2026-09-04'
+modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:0f1ecc3ba374d493cf668855c1370294e7a4912b71222c7f4b24ca740a0f13e2'
+body_hash: 'sha256:722976e24104fe3c6d7e39d575f57a7584c52e6207e81f3f316373daa45424ac'
 ---
 
 # `reachability-burndown` plan
@@ -110,7 +110,7 @@ The 51 findings no module publishes and no caller reaches. Each is removed at it
 
 - [x] `W05.P10.S20` - Retire the constants superseded by the file-backed master-key provider's deletion and merge the storage KDF salt length onto its one canonical home; `src/cadrumo/adapters/persistence/storage`.
 - [x] `W05.P10.S21` - Extend the constant-agreement screen to detect a canonical value restated under a related name, with detector-teeth proof for both noise guards; `dev/quality/constant_value_agreement.py`.
-- [ ] `W05.P10.S22` - Delete the remaining unreferenced non-exported findings module by module, following each deletion cascade and lowering the ratchet rather than removing a still-populated entry; `src/cadrumo`.
+- [x] `W05.P10.S22` - Delete the remaining unreferenced non-exported findings module by module, following each deletion cascade and lowering the ratchet rather than removing a still-populated entry; `src/cadrumo`.
 
 ### Phase `W05.P11` - Rule on the published surface
 
