@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:ac8ac97737f8bf91b6c27ef3755730331a966f30c28829f7f38d55a41b92be8a'
+body_hash: 'sha256:e8e11e748b001dd077dbef3966fa9aab31323278801bc276acc037baa31e8843'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -568,6 +568,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S686` - Give the runtime wheelhouse wheel names one source: the 3.13 filename was transcribed twice and the second copy feeds an absence claim, which a drifted name would satisfy over a file that could never exist; `dev/packaging/tests/test_runtime_wheelhouse.py`.
 - [x] `W02.P02.S687` - Assert the seeding premise the re-scaffold no-op rests on: with no entries seeded every original assertion still held, and the SeedApplyResult carrying that evidence was discarded; `dev/docs/terminology_handbook/tests/test_seed_import.py`.
 - [x] `W02.P02.S688` - Bind the unreachable-code live walks to what they read: a scan that read nothing produced an empty stderr and satisfied the absence claim, and the test-module floor of zero sat against 3,334; `dev/audit/tests/test_unreachable_code.py`.
+- [x] `W02.P02.S689` - Give the replay transaction path one owner: five tests rebuilt production's naming expression by hand and one of those copies feeds an absence claim that a convention change would satisfy over a path that cannot exist; `dev/quality/object_name_replay.py`.
+- [x] `W02.P02.S690` - Give the M200 unique declaration filename one owner: three tests rebuilt production's casilla-to-filename convention to lay out their fixtures, so a change would have left them writing under the old name; `dev/registry/analysis/m200_2024_unique_adjudications.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
