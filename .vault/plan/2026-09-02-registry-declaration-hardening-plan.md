@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:10444bde3a3a3dfd9630d9656873d00c19b3bca62809d955262b836b5d275e21'
+body_hash: 'sha256:b82d0cf7a14d06adac39254eb7b92a03c09b1a894fb737d760a469781de6f44b'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -531,6 +531,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S649` - Guard the smoke-lane discovery that parametrises the proof-contract claim gate, since an empty parametrize does not fail the gate but deletes it, so a lane renamed out of the smoke prefix would leave every form free to promise a proof nothing records; `dev/packaging/tests/test_proof_contract.py`.
 - [x] `W02.P02.S650` - Point the vacuity screen at the live repository, since its only consumer was its own test module and every case handed it a scratch tree, so a detector for unguarded corpus scans had never been run over the corpus and its three hundred and eighty seven findings across six hundred and fifteen modules were a number nobody had seen; `dev/audit/tests/test_vacuity_screen.py`.
 - [x] `W02.P02.S651` - Floor the shipped corpus the export-ref symmetry gate screens, since it asserted an empty finding set over the whole registry with nothing proving the screen was handed anything, and the screen returns findings alone so its own population is not observable from its result; `dev/registry/tests/test_export_ref_symmetry.py`.
+- [x] `W02.P02.S652` - Floor the parsed surface behind the three generated-tree absence gates, since each asserts a forbidden name is absent from a module it parses and an emptied or stubbed module satisfies every such claim by construction while the boundary it guards no longer exists; `dev/registry/tests/test_export_tree.py dev/registry/tests/test_generated_tree_check.py dev/registry/tests/test_generated_tree_publication.py`.
+- [x] `W02.P02.S653` - Floor the parsed call surface behind the identity CLI write-surface gate, since its three claims are all absences and a stubbed subject satisfies every one of them while the command it describes has stopped existing; `dev/registry/tests/test_m200_semantic_casilla_candidates.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
