@@ -654,7 +654,7 @@ def test_union_row_review_preserves_registry_destination_and_tui_hold_cohorts() 
     assert sum(row.primary_gap_class is LedgerGapClass.ARTIFACT for row in union.rows) == 1
     assert sum(row.primary_gap_class is LedgerGapClass.COMPOSITION for row in union.rows) == 0
     assert sum(row.primary_gap_class is LedgerGapClass.PROOF for row in union.rows) == 0
-    assert sum(row.tui_hold_until is LEDGER_TUI_HOLD_UNTIL_GATE for row in union.rows) == 681
+    assert sum(row.tui_hold_until is LEDGER_TUI_HOLD_UNTIL_GATE for row in union.rows) == 680
     assert sum(row.tui_hold_until is None for row in union.rows) == 13
 
 

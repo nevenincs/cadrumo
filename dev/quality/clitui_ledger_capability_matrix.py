@@ -332,15 +332,23 @@ def _repository_root() -> Path:
 
 
 def ledger_tui_supported_surface_source_files(repo_root: Path | None = None) -> tuple[Path, ...]:
-    """Return the complete production and focused-harness scope for this census."""
+    """Return the structural Ledger closure and its installed-composition evidence.
+
+    The census must move when Ledger screens, their concrete production entry
+    points, or the installed workbench path changes.  It deliberately does
+    not hash the unrelated TUI estate: that would reopen this Ledger-only
+    denominator for an AEAT Sync or Modelo change with no selected row.
+    """
     root = _repository_root() if repo_root is None else repo_root.resolve()
     tui_root = root / "src/cadrumo/entrypoints/tui"
-    production = tuple(
+    ledger_production = tuple(
         path
-        for path in tui_root.rglob("*.py")
-        if "tests" not in path.relative_to(tui_root).parts
-        and "devtools" not in path.relative_to(tui_root).parts
+        for path in (tui_root / "ledger").rglob("*.py")
+        if "tests" not in path.relative_to(tui_root / "ledger").parts
         and "__pycache__" not in path.parts
+    )
+    composition_sources = tuple(
+        tui_root / name for name in ("app.py", "installed_session.py", "launcher.py")
     )
     ledger_tests = tuple((tui_root / "ledger/tests").glob("test_*.py"))
     composition_tests = tuple(
@@ -361,7 +369,18 @@ def ledger_tui_supported_surface_source_files(repo_root: Path | None = None) -> 
         )
     )
     cli_sources = tuple((root / "src/cadrumo/entrypoints/cli").glob("_app_ledger*_command_specs.py"))
-    files = tuple(sorted({*production, *ledger_tests, *composition_tests, *application_sources, *cli_sources}))
+    files = tuple(
+        sorted(
+            {
+                *ledger_production,
+                *composition_sources,
+                *ledger_tests,
+                *composition_tests,
+                *application_sources,
+                *cli_sources,
+            }
+        )
+    )
     missing = tuple(path for path in files if not path.is_file())
     if missing:
         raise FileNotFoundError(f"Ledger TUI census source is unavailable: {missing[0]}")
