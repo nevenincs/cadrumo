@@ -253,139 +253,139 @@ modelo:
           casilla:
             vinculada-1-fjo:
               help: null
-              label: 'Related party 1: Foreign national identification'
+              label: 'Operación vinculada 1: F/J/O (física, jurídica u otra)'
             vinculada-1-importe:
               help: null
-              label: 'Related party 1: Amount'
+              label: 'Operación vinculada 1: importe de la operación'
             vinculada-1-ingreso-pago:
               help: null
-              label: 'Related party 1: Income/payment indicator'
+              label: 'Operación vinculada 1: ingreso o pago'
             vinculada-1-metodo-valoracion:
               help: null
-              label: 'Related party 1: Valuation method'
+              label: 'Operación vinculada 1: método de valoración'
             vinculada-1-nif:
               help: null
-              label: 'Related party 1: NIF / NIE / CIF'
+              label: 'Operación vinculada 1: NIF persona o entidad vinculada'
             vinculada-1-provincia-pais:
               help: null
-              label: 'Related party 1: Province or country'
+              label: 'Operación vinculada 1: código de provincia o país'
             vinculada-1-razon-social:
               help: null
-              label: 'Related party 1: Business name'
+              label: 'Operación vinculada 1: apellidos y nombre o razón social'
             vinculada-1-tipo-operacion:
               help: null
-              label: 'Related party 1: Type of transaction'
+              label: 'Operación vinculada 1: tipo de operación'
             vinculada-1-tipo-vinculacion:
               help: null
-              label: 'Related party 1: Type of relationship'
+              label: 'Operación vinculada 1: tipo de vinculación'
             vinculada-2-fjo:
               help: null
-              label: 'Related party 2: Foreign national identification'
+              label: 'Operación vinculada 2: F/J/O (física, jurídica u otra)'
             vinculada-2-importe:
               help: null
-              label: 'Related party 2: Amount'
+              label: 'Operación vinculada 2: importe de la operación'
             vinculada-2-ingreso-pago:
               help: null
-              label: 'Related party 2: Income/payment indicator'
+              label: 'Operación vinculada 2: ingreso o pago'
             vinculada-2-metodo-valoracion:
               help: null
-              label: 'Related party 2: Valuation method'
+              label: 'Operación vinculada 2: método de valoración'
             vinculada-2-nif:
               help: null
-              label: 'Related party 2: NIF / NIE / CIF'
+              label: 'Operación vinculada 2: NIF persona o entidad vinculada'
             vinculada-2-provincia-pais:
               help: null
-              label: 'Related party 2: Province or country'
+              label: 'Operación vinculada 2: código de provincia o país'
             vinculada-2-razon-social:
               help: null
-              label: 'Related party 2: Business name'
+              label: 'Operación vinculada 2: apellidos y nombre o razón social'
             vinculada-2-tipo-operacion:
               help: null
-              label: 'Related party 2: Type of transaction'
+              label: 'Operación vinculada 2: tipo de operación'
             vinculada-2-tipo-vinculacion:
               help: null
-              label: 'Related party 2: Type of relationship'
+              label: 'Operación vinculada 2: tipo de vinculación'
             vinculada-3-fjo:
               help: null
-              label: 'Related party 3: Foreign national identification'
+              label: 'Operación vinculada 3: F/J/O (física, jurídica u otra)'
             vinculada-3-importe:
               help: null
-              label: 'Related party 3: Amount'
+              label: 'Operación vinculada 3: importe de la operación'
             vinculada-3-ingreso-pago:
               help: null
-              label: 'Related party 3: Income/payment indicator'
+              label: 'Operación vinculada 3: ingreso o pago'
             vinculada-3-metodo-valoracion:
               help: null
-              label: 'Related party 3: Valuation method'
+              label: 'Operación vinculada 3: método de valoración'
             vinculada-3-nif:
               help: null
-              label: 'Related party 3: NIF / NIE / CIF'
+              label: 'Operación vinculada 3: NIF persona o entidad vinculada'
             vinculada-3-provincia-pais:
               help: null
-              label: 'Related party 3: Province or country'
+              label: 'Operación vinculada 3: código de provincia o país'
             vinculada-3-razon-social:
               help: null
-              label: 'Related party 3: Business name'
+              label: 'Operación vinculada 3: apellidos y nombre o razón social'
             vinculada-3-tipo-operacion:
               help: null
-              label: 'Related party 3: Type of transaction'
+              label: 'Operación vinculada 3: tipo de operación'
             vinculada-3-tipo-vinculacion:
               help: null
-              label: 'Related party 3: Type of relationship'
+              label: 'Operación vinculada 3: tipo de vinculación'
             vinculada-4-fjo:
               help: null
-              label: 'Related party 4: Foreign national identification'
+              label: 'Operación vinculada 4: F/J/O (física, jurídica u otra)'
             vinculada-4-importe:
               help: null
-              label: 'Related party 4: Amount'
+              label: 'Operación vinculada 4: importe de la operación'
             vinculada-4-ingreso-pago:
               help: null
-              label: 'Related party 4: Income/payment indicator'
+              label: 'Operación vinculada 4: ingreso o pago'
             vinculada-4-metodo-valoracion:
               help: null
-              label: 'Related party 4: Valuation method'
+              label: 'Operación vinculada 4: método de valoración'
             vinculada-4-nif:
               help: null
-              label: 'Related party 4: NIF / NIE / CIF'
+              label: 'Operación vinculada 4: NIF persona o entidad vinculada'
             vinculada-4-provincia-pais:
               help: null
-              label: 'Related party 4: Province or country'
+              label: 'Operación vinculada 4: código de provincia o país'
             vinculada-4-razon-social:
               help: null
-              label: 'Related party 4: Business name'
+              label: 'Operación vinculada 4: apellidos y nombre o razón social'
             vinculada-4-tipo-operacion:
               help: null
-              label: 'Related party 4: Type of transaction'
+              label: 'Operación vinculada 4: tipo de operación'
             vinculada-4-tipo-vinculacion:
               help: null
-              label: 'Related party 4: Type of relationship'
+              label: 'Operación vinculada 4: tipo de vinculación'
             vinculada-5-fjo:
               help: null
-              label: 'Related party 5: Foreign national identification'
+              label: 'Operación vinculada 5: F/J/O (física, jurídica u otra)'
             vinculada-5-importe:
               help: null
-              label: 'Related party 5: Amount'
+              label: 'Operación vinculada 5: importe de la operación'
             vinculada-5-ingreso-pago:
               help: null
-              label: 'Related party 5: Income/payment indicator'
+              label: 'Operación vinculada 5: ingreso o pago'
             vinculada-5-metodo-valoracion:
               help: null
-              label: 'Related party 5: Valuation method'
+              label: 'Operación vinculada 5: método de valoración'
             vinculada-5-nif:
               help: null
-              label: 'Related party 5: NIF / NIE / CIF'
+              label: 'Operación vinculada 5: NIF persona o entidad vinculada'
             vinculada-5-provincia-pais:
               help: null
-              label: 'Related party 5: Province or country'
+              label: 'Operación vinculada 5: código de provincia o país'
             vinculada-5-razon-social:
               help: null
-              label: 'Related party 5: Business name'
+              label: 'Operación vinculada 5: apellidos y nombre o razón social'
             vinculada-5-tipo-operacion:
               help: null
-              label: 'Related party 5: Type of transaction'
+              label: 'Operación vinculada 5: tipo de operación'
             vinculada-5-tipo-vinculacion:
               help: null
-              label: 'Related party 5: Type of relationship'
+              label: 'Operación vinculada 5: tipo de vinculación'
             x-chim6r1ecdn62p8:
               help: null
               label: C.N.A.E. de la actividad principal

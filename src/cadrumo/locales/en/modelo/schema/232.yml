@@ -240,7 +240,7 @@ modelo:
           casilla:
             vinculada-1-fjo:
               help: null
-              label: 'Related party 1: Foreign national identification'
+              label: 'Related party 1: F/J/O (individual, legal entity or other)'
             vinculada-1-importe:
               help: null
               label: 'Related party 1: Amount'
@@ -267,7 +267,7 @@ modelo:
               label: 'Related party 1: Type of relationship'
             vinculada-2-fjo:
               help: null
-              label: 'Related party 2: Foreign national identification'
+              label: 'Related party 2: F/J/O (individual, legal entity or other)'
             vinculada-2-importe:
               help: null
               label: 'Related party 2: Amount'
@@ -294,7 +294,7 @@ modelo:
               label: 'Related party 2: Type of relationship'
             vinculada-3-fjo:
               help: null
-              label: 'Related party 3: Foreign national identification'
+              label: 'Related party 3: F/J/O (individual, legal entity or other)'
             vinculada-3-importe:
               help: null
               label: 'Related party 3: Amount'
@@ -321,7 +321,7 @@ modelo:
               label: 'Related party 3: Type of relationship'
             vinculada-4-fjo:
               help: null
-              label: 'Related party 4: Foreign national identification'
+              label: 'Related party 4: F/J/O (individual, legal entity or other)'
             vinculada-4-importe:
               help: null
               label: 'Related party 4: Amount'
@@ -348,7 +348,7 @@ modelo:
               label: 'Related party 4: Type of relationship'
             vinculada-5-fjo:
               help: null
-              label: 'Related party 5: Foreign national identification'
+              label: 'Related party 5: F/J/O (individual, legal entity or other)'
             vinculada-5-importe:
               help: null
               label: 'Related party 5: Amount'
