@@ -819,8 +819,17 @@ def forward_reference_names(value: str) -> Iterator[str]:
     except SyntaxError:
         return
     allowed = (
-        ast.Expression, ast.Name, ast.Attribute, ast.Subscript, ast.Tuple,
-        ast.List, ast.Load, ast.Constant, ast.BinOp, ast.BitOr, ast.Index,
+        ast.Expression,
+        ast.Name,
+        ast.Attribute,
+        ast.Subscript,
+        ast.Tuple,
+        ast.List,
+        ast.Load,
+        ast.Constant,
+        ast.BinOp,
+        ast.BitOr,
+        ast.Index,
     )
     if any(not isinstance(node, allowed) for node in ast.walk(parsed)):
         return

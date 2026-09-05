@@ -180,28 +180,27 @@ def test_one_name_bound_to_the_same_call_in_two_modules_is_detected() -> None:
 
 def test_a_per_module_logger_is_not_reported_however_many_modules_hold_it() -> None:
     """`get_logger(__name__)` is the correct idiom; eighty of them are not a defect."""
-    assert unevaluated_collisions(
-        {"_log": {f"pkg/mod{index}.py": "get_logger(__name__)" for index in range(80)}}
-    ) == ()
+    assert unevaluated_collisions({"_log": {f"pkg/mod{index}.py": "get_logger(__name__)" for index in range(80)}}) == ()
 
 
 def test_two_configured_instances_of_one_helper_are_not_a_redeclaration() -> None:
     """Differing arguments mean reuse is working, not that a concept was copied."""
-    assert unevaluated_collisions(
-        {
-            "_playwright_stage": {
-                "sede/groi_check.py": "build_playwright_stage_runner(surface_label='GROI')",
-                "sede/nif_iva_check.py": "build_playwright_stage_runner(surface_label='NIF-IVA')",
+    assert (
+        unevaluated_collisions(
+            {
+                "_playwright_stage": {
+                    "sede/groi_check.py": "build_playwright_stage_runner(surface_label='GROI')",
+                    "sede/nif_iva_check.py": "build_playwright_stage_runner(surface_label='NIF-IVA')",
+                }
             }
-        }
-    ) == ()
+        )
+        == ()
+    )
 
 
 def test_an_evaluable_literal_stays_with_the_literal_census(tmp_path: Path) -> None:
     """The unevaluated collector must not double-report what the census reads."""
-    (tmp_path / "mod.py").write_text(
-        "_LITERAL = 16\n_CALLED = frozenset({'a'})\n", encoding="utf-8"
-    )
+    (tmp_path / "mod.py").write_text("_LITERAL = 16\n_CALLED = frozenset({'a'})\n", encoding="utf-8")
     collected = collect_unevaluated_constants(tmp_path)
     assert "_LITERAL" not in collected
     assert collected["_CALLED"] == {"mod.py": "frozenset({'a'})"}

@@ -77,10 +77,7 @@ def test_every_role_that_names_code_is_collected(tmp_path: Path) -> None:
     """A role the extractor skips is a defect it can never report."""
     root = _package(
         tmp_path,
-        mod=(
-            '"""Names :func:`a`, :class:`b`, :data:`c`, :meth:`d`, :attr:`e`, '
-            ':mod:`f`, :obj:`g` and :exc:`h`."""\n'
-        ),
+        mod=('"""Names :func:`a`, :class:`b`, :data:`c`, :meth:`d`, :attr:`e`, :mod:`f`, :obj:`g` and :exc:`h`."""\n'),
     )
     assert {target for _, target in docstring_references(root)} == set("abcdefgh")
 
@@ -89,11 +86,7 @@ def test_a_defined_name_is_collected_however_it_is_bound(tmp_path: Path) -> None
     """Classes, functions and both assignment forms all define a name."""
     root = _package(
         tmp_path,
-        mod=(
-            "class Widget:\n    pass\n\n\n"
-            "def build() -> None:\n    pass\n\n\n"
-            "PLAIN = 1\nANNOTATED: int = 2\n"
-        ),
+        mod=("class Widget:\n    pass\n\n\ndef build() -> None:\n    pass\n\n\nPLAIN = 1\nANNOTATED: int = 2\n"),
     )
     defined, _imported, _modules = collect_defined_names(root)
     assert {"Widget", "build", "PLAIN", "ANNOTATED"} <= defined
