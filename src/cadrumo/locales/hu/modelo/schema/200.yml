@@ -15216,43 +15216,63 @@ modelo:
               label: Elszámolás III - Adóalap - Számított adó [00562]
             x-8h834c1g60oj8ehg60qjcco:
               help: null
-              label: null
+              label: Elszámolás III - Kedvezmények/Kettős adóztatás levonásai - A
+                Kanári-szigeteken előállított tárgyi javak értékesítéséből származó
+                jövedelem kedvezménye [00563]
             x-8h834c1g60oj8ehg60qjcdg:
               help: null
-              label: null
+              label: Elszámolás III - Kedvezmények/Kettős adóztatás levonásai - Szövetkezeti
+                társaságok kedvezményei [00566]
             x-8h834c1g60oj8ehg60qjcdo:
               help: null
-              label: null
+              label: Elszámolás III - Kedvezmények/Kettős adóztatás levonásai - Ceutában
+                és Melillában szerzett jövedelem kedvezménye (LIS 33. cikk) [00567]
             x-8h834c1g60oj8ehg60qjce0:
               help: null
-              label: null
+              label: Elszámolás III - Kedvezmények/Kettős adóztatás levonásai - Szolgáltatásnyújtás
+                kedvezménye (LIS 34. cikk) [00568]
             x-8h834c1g60oj8ehg60qjce8:
               help: null
-              label: null
+              label: Elszámolás III - Kedvezmények/Kettős adóztatás levonásai - Egyéb
+                kedvezmények [00569]
             x-8h834c1g60oj8ehg60qjec0:
               help: null
-              label: null
+              label: Elszámolás III - Kedvezmények/Kettős adóztatás levonásai - Kettős
+                adóztatás levonásai - Korábbi időszakok belföldi kettős adóztatási
+                kedvezménye az évben felhasználva (4/2004. RDLeg. 30. cikk) [00570]
             x-8h834c1g60oj8ehg60qjec8:
               help: null
-              label: null
+              label: Elszámolás III - Kedvezmények/Kettős adóztatás levonásai - Kettős
+                adóztatás levonásai - Korábbi időszakok nemzetközi kettős adóztatási
+                kedvezménye az évben felhasználva (LIS 31. és 32. cikk) [00571]
             x-8h834c1g60oj8ehg60qjecg:
               help: null
-              label: null
+              label: Elszámolás III - Kedvezmények/Kettős adóztatás levonásai - Kettős
+                adóztatás levonásai - Korábbi időszakok nemzetközi kettős adóztatási
+                kedvezménye az évben felhasználva (4/2004. RDLeg. 31. és 32. cikk)
+                [00572]
             x-8h834c1g60oj8ehg60qjed8:
               help: null
-              label: null
+              label: Elszámolás III - Kedvezmények/Kettős adóztatás levonásai - Kettős
+                adóztatás levonásai - Nemzetközi adóátláthatóság (LIS 100.10 cikk)
+                [00575]
             x-8h834c1g60oj8ehg60qjedg:
               help: null
-              label: null
+              label: Elszámolás III - Kedvezmények/Kettős adóztatás levonásai - Lakásbérbeadással
+                foglalkozó szervezetek kedvezményei [00576]
             x-8h834c1g60oj8ehg60qjedo:
               help: null
-              label: null
+              label: Elszámolás III - Kedvezmények/Kettős adóztatás levonásai - Kettős
+                adóztatás levonásai - Társaságközi belföldi kettős adóztatási kedvezmény
+                5/10 %-on (szövetkezetek) [00577]
             x-8h834c1g60oj8ehg60qjgc8:
               help: null
-              label: null
+              label: Elszámolás III - Kedvezmények/Kettős adóztatás levonásai - Kanári-szigeteki
+                hajózási társaságok kedvezményei (19/1994. törvény 76. cikk) [00581]
             x-8h834c1g60oj8ehg60qjgcg:
               help: null
-              label: null
+              label: Elszámolás III - Kedvezmények/Kettős adóztatás levonásai - Kiigazított
+                pozitív bruttó adó [00582]
             x-8h834c1g60oj8ehg64o36co:
               help: null
               label: Elszámolás III - Adóalap - Kis méretű vállalkozások - Kiegyenlítési
@@ -15275,28 +15295,37 @@ modelo:
                 (LIS 26.1. cikk szerinti korlát) [interno]
             x-8h834c1g60oj8ghq60o30e1i:
               help: null
-              label: null
+              label: Elszámolás IV - Egyéb levonások - A K+F korlátból kizárt levonások
+                [00082]
             x-8h834c1g60oj8ghq60o36e9p:
               help: null
-              label: null
+              label: Elszámolás IV - Egyéb levonások - A foral szabályozás hatálya
+                alá tartozó szervezetek egyedi levonásai [00399]
             x-8h834c1g60oj8ghq60o3adhl:
               help: null
-              label: null
+              label: Elszámolás IV - Egyéb levonások - Nonprofit szervezeteknek nyújtott
+                adományok levonása [00565]
             x-8h834c1g60oj8ghq60o3ae1j:
               help: null
-              label: null
+              label: Elszámolás IV - Egyéb levonások - Beruházás adótámogatása és
+                egyéb levonások [00583]
             x-8h834c1g60oj8ghq60o3ae1k:
               help: null
-              label: null
+              label: Elszámolás IV - Egyéb levonások - Levonások a LIS 24.1 átmeneti
+                rendelkezése szerint [00584]
             x-8h834c1g60oj8ghq60o3ae1l:
               help: null
-              label: null
+              label: Elszámolás IV - Egyéb levonások - Levonás a LIS 24.7 átmeneti
+                rendelkezése és a 4/2004. RDLeg. 42. cikke szerint [00585]
             x-8h834c1g60oj8ghq60o3ae1o:
               help: null
-              label: null
+              label: Elszámolás IV - Egyéb levonások - Egyes tevékenységeket ösztönző
+                levonások (LIS VI. cím IV. fejezet, 24.3 átmeneti rendelkezés és 49/2002.
+                törvény 27.3 cikk első bekezdése) [00588]
             x-8h834c1g60oj8ghq60o3ae9g:
               help: null
-              label: null
+              label: Elszámolás IV - Egyéb levonások - Kanári-szigeteki beruházási
+                levonások (részletezés a 16 bis és 17. oldalon) [00590]
             x-8h834c1g60oj8ghq60o3ae9i:
               help: null
               label: Elszámolás IV - Egyéb levonások - Nettó adókötelezettség [00592]
@@ -15322,7 +15351,8 @@ modelo:
                 adókötelezettség - Állam [00611]
             x-8h834c1g60oj8ghq60o3cc9p:
               help: null
-              label: null
+              label: Elszámolás IV - Egyéb levonások - Minimális nettó adó (LIS 30
+                bis cikk) [00619]
             x-8h834c1g60oj8ghq60ojedhm:
               help: null
               label: Elszámolás IV - Az időszak befizetendő vagy visszatérítendő adója
@@ -15333,6 +15363,9 @@ modelo:
               label: Elszámolás IV - Az időszak befizetendő vagy visszatérítendő adója
                 - Forrásadó és részletfizetés összesen - GIE-k és UTE-k által tulajdonított
                 összegek [01784]
+            x-8h834c1g60ojgehg60qjge0:
+              label: Egyes tevékenységeket ösztönző levonások - összesen - ebben az
+                elszámolásban felhasználva [00588]
             x-8h834c1g60p3cehg60r34d8:
               help: null
               label: Állami és tartományi adóhatóságok együttes adóztatása - Adóztatási

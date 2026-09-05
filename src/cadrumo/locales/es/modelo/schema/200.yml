@@ -15018,10 +15018,6 @@ modelo:
               help: null
               label: Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS)
                 - 2020 - Importe generado/pendiente principio periodo [2231]
-            DP200013:00417:
-              label: Liquidación II - Detalle correcciones resultado cta. pérdidas
-                y ganancias correcciones al resultado cta. pérdidas y ganancias -
-                Aumentos [00417]
             DP200013:00418:
               label: Liquidación II - Detalle correcciones resultado cta. pérdidas
                 y ganancias correcciones al resultado cta. pérdidas y ganancias -
@@ -15337,6 +15333,9 @@ modelo:
               label: Liquidación IV - Cuota del ejercicio a ingresar o a devolver
                 - Total retenciones e ingresos a cuenta - Imputados por AIEs y UTEs
                 [01784]
+            x-8h834c1g60ojgehg60qjge0:
+              label: Deducc. para incentivar determ.actividades - Total - Aplicado
+                en esta liquidación [00588]
             x-8h834c1g60p3cehg60r34d8:
               help: null
               label: Tributación conjunta Estado y Adm.Forales - Cálculo porcentajes

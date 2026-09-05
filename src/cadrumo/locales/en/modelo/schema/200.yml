@@ -15231,43 +15231,63 @@ modelo:
               label: Settlement III - Taxable base - Gross tax liability [00562]
             x-8h834c1g60oj8ehg60qjcco:
               help: null
-              label: null
+              label: Settlement III - Tax credits/Double taxation deductions - Rebate
+                on income from the sale of tangible goods produced in the Canary Islands
+                [00563]
             x-8h834c1g60oj8ehg60qjcdg:
               help: null
-              label: null
+              label: Settlement III - Tax credits/Double taxation deductions - Rebates
+                for cooperative societies [00566]
             x-8h834c1g60oj8ehg60qjcdo:
               help: null
-              label: null
+              label: Settlement III - Tax credits/Double taxation deductions - Rebate
+                for income obtained in Ceuta and Melilla (art. 33 LIS) [00567]
             x-8h834c1g60oj8ehg60qjce0:
               help: null
-              label: null
+              label: Settlement III - Tax credits/Double taxation deductions - Rebate
+                for the provision of services (art. 34 LIS) [00568]
             x-8h834c1g60oj8ehg60qjce8:
               help: null
-              label: null
+              label: Settlement III - Tax credits/Double taxation deductions - Other
+                rebates [00569]
             x-8h834c1g60oj8ehg60qjec0:
               help: null
-              label: null
+              label: Settlement III - Tax credits/Double taxation deductions - Double
+                taxation deductions - Domestic double-taxation relief from earlier
+                periods applied in the year (art. 30 RDLeg. 4/ 2004) [00570]
             x-8h834c1g60oj8ehg60qjec8:
               help: null
-              label: null
+              label: Settlement III - Tax credits/Double taxation deductions - Double
+                taxation deductions - International double-taxation relief from earlier
+                periods applied in the year (art. 31 and 32 LIS) [00571]
             x-8h834c1g60oj8ehg60qjecg:
               help: null
-              label: null
+              label: Settlement III - Tax credits/Double taxation deductions - Double
+                taxation deductions - International double-taxation relief from earlier
+                periods applied in the year (art. 31 and 32 RDLeg. 4/ 2004) [00572]
             x-8h834c1g60oj8ehg60qjed8:
               help: null
-              label: null
+              label: Settlement III - Tax credits/Double taxation deductions - Double
+                taxation deductions - International tax transparency (art. 100.10
+                LIS) [00575]
             x-8h834c1g60oj8ehg60qjedg:
               help: null
-              label: null
+              label: Settlement III - Tax credits/Double taxation deductions - Rebates
+                for entities engaged in residential letting [00576]
             x-8h834c1g60oj8ehg60qjedo:
               help: null
-              label: null
+              label: Settlement III - Tax credits/Double taxation deductions - Double
+                taxation deductions - Intercompany domestic double-taxation relief
+                at 5/10 % (cooperatives) [00577]
             x-8h834c1g60oj8ehg60qjgc8:
               help: null
-              label: null
+              label: Settlement III - Tax credits/Double taxation deductions - Rebates
+                for shipping companies in the Canary Islands (art. 76 Law 19/1994)
+                [00581]
             x-8h834c1g60oj8ehg60qjgcg:
               help: null
-              label: null
+              label: Settlement III - Tax credits/Double taxation deductions - Adjusted
+                positive gross tax due [00582]
             x-8h834c1g60oj8ehg64o36co:
               help: null
               label: Settlement III - Tax base - Reduced-size entities - Equalization
@@ -15290,28 +15310,37 @@ modelo:
                 negative taxable bases (limit under art. 26.1 LIS) [internal]
             x-8h834c1g60oj8ghq60o30e1i:
               help: null
-              label: null
+              label: Settlement IV - Other deductions - Deductions excluded from the
+                R&D limit [00082]
             x-8h834c1g60oj8ghq60o36e9p:
               help: null
-              label: null
+              label: Settlement IV - Other deductions - Deductions specific to entities
+                subject to regional chartered rules [00399]
             x-8h834c1g60oj8ghq60o3adhl:
               help: null
-              label: null
+              label: Settlement IV - Other deductions - Deduction for donations to
+                non-profit entities [00565]
             x-8h834c1g60oj8ghq60o3ae1j:
               help: null
-              label: null
+              label: Settlement IV - Other deductions - Tax support for investment
+                and other deductions [00583]
             x-8h834c1g60oj8ghq60o3ae1k:
               help: null
-              label: null
+              label: Settlement IV - Other deductions - Deductions under TP 24.1 LIS
+                [00584]
             x-8h834c1g60oj8ghq60o3ae1l:
               help: null
-              label: null
+              label: Settlement IV - Other deductions - Deduction under TP 24.7 LIS,
+                art. 42 RDLeg. 4/2004 [00585]
             x-8h834c1g60oj8ghq60o3ae1o:
               help: null
-              label: null
+              label: Settlement IV - Other deductions - Deductions to incentivise
+                certain activities (Ch. IV Tit. VI, TP 24.3 LIS and art. 27.3 first
+                Law 49/2002) [00588]
             x-8h834c1g60oj8ghq60o3ae9g:
               help: null
-              label: null
+              label: Settlement IV - Other deductions - Canary Islands investment
+                deductions (breakdown on pages 16 bis and 17) [00590]
             x-8h834c1g60oj8ghq60o3ae9i:
               help: null
               label: Settlement IV - Other deductions - Net tax liability [00592]
@@ -15337,7 +15366,8 @@ modelo:
                 - Differential tax liability - State [00611]
             x-8h834c1g60oj8ghq60o3cc9p:
               help: null
-              label: null
+              label: Settlement IV - Other deductions - Minimum net tax due (art.
+                30 bis LIS) [00619]
             x-8h834c1g60oj8ghq60ojedhm:
               help: null
               label: Settlement IV - Tax due for the year, payable or refundable -
@@ -15347,6 +15377,9 @@ modelo:
               label: Settlement IV - Tax due for the year, payable or refundable -
                 Total withholdings and payments on account - Attributed by economic
                 interest groupings and business consortia [01784]
+            x-8h834c1g60ojgehg60qjge0:
+              label: Deductions to incentivise certain activities - total - applied
+                in this settlement [00588]
             x-8h834c1g60p3cehg60r34d8:
               help: null
               label: Joint taxation, State and regional (foral) administrations -

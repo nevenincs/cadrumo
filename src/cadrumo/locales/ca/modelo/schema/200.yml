@@ -15031,43 +15031,61 @@ modelo:
               label: Liquidació III - Base imposable - Quota íntegra [00562]
             x-8h834c1g60oj8ehg60qjcco:
               help: null
-              label: null
+              label: Liquidació III - Bonificacions/Deduccions doble imposició - Bonificació
+                de rendiments per venda de béns corporals produïts a Canàries [00563]
             x-8h834c1g60oj8ehg60qjcdg:
               help: null
-              label: null
+              label: Liquidació III - Bonificacions/Deduccions doble imposició - Bonificacions
+                de societats cooperatives [00566]
             x-8h834c1g60oj8ehg60qjcdo:
               help: null
-              label: null
+              label: Liquidació III - Bonificacions/Deduccions doble imposició - Bonificació
+                per rendes obtingudes a Ceuta i Melilla (art. 33 LIS) [00567]
             x-8h834c1g60oj8ehg60qjce0:
               help: null
-              label: null
+              label: Liquidació III - Bonificacions/Deduccions doble imposició - Bonificació
+                per prestació de serveis (art. 34 LIS) [00568]
             x-8h834c1g60oj8ehg60qjce8:
               help: null
-              label: null
+              label: Liquidació III - Bonificacions/Deduccions doble imposició - Altres
+                bonificacions [00569]
             x-8h834c1g60oj8ehg60qjec0:
               help: null
-              label: null
+              label: Liquidació III - Bonificacions/Deduccions doble imposició - Deduccions
+                per doble imposició - D.I. interna de períodes anteriors aplicada
+                en l'exercici (art. 30 RDLeg. 4/ 2004) [00570]
             x-8h834c1g60oj8ehg60qjec8:
               help: null
-              label: null
+              label: Liquidació III - Bonificacions/Deduccions doble imposició - Deduccions
+                per doble imposició - D.I. internacional de períodes anteriors aplicada
+                en l'exercici (art. 31 i 32 LIS) [00571]
             x-8h834c1g60oj8ehg60qjecg:
               help: null
-              label: null
+              label: Liquidació III - Bonificacions/Deduccions doble imposició - Deduccions
+                per doble imposició - D.I. internacional de períodes anteriors aplicada
+                en l'exercici (art. 31 i 32 RDLeg. 4/ 2004) [00572]
             x-8h834c1g60oj8ehg60qjed8:
               help: null
-              label: null
+              label: Liquidació III - Bonificacions/Deduccions doble imposició - Deduccions
+                per doble imposició - Transparència fiscal internacional (art. 100.10
+                LIS) [00575]
             x-8h834c1g60oj8ehg60qjedg:
               help: null
-              label: null
+              label: Liquidació III - Bonificacions/Deduccions doble imposició - Bonificacions
+                d'entitats dedicades a l'arrendament d'habitatges [00576]
             x-8h834c1g60oj8ehg60qjedo:
               help: null
-              label: null
+              label: Liquidació III - Bonificacions/Deduccions doble imposició - Deduccions
+                per doble imposició - D.I. interna intersocietària al 5/10 % (cooperatives)
+                [00577]
             x-8h834c1g60oj8ehg60qjgc8:
               help: null
-              label: null
+              label: Liquidació III - Bonificacions/Deduccions doble imposició - Bonificacions
+                d'empreses navilieres a Canàries (art. 76 Llei 19/1994) [00581]
             x-8h834c1g60oj8ehg60qjgcg:
               help: null
-              label: null
+              label: Liquidació III - Bonificacions/Deduccions doble imposició - Quota
+                íntegra ajustada positiva [00582]
             x-8h834c1g60oj8ehg64o36co:
               help: null
               label: Liquidació III - Base imposable - Entitats de dimensió reduïda
@@ -15090,28 +15108,36 @@ modelo:
                 (límit art. 26.1 LIS) [intern]
             x-8h834c1g60oj8ghq60o30e1i:
               help: null
-              label: null
+              label: Liquidació IV - Altres deduccions - Deduccions excloses del límit
+                I+D [00082]
             x-8h834c1g60oj8ghq60o36e9p:
               help: null
-              label: null
+              label: Liquidació IV - Altres deduccions - Deduccions específiques de
+                les entitats sotmeses a normativa foral [00399]
             x-8h834c1g60oj8ghq60o3adhl:
               help: null
-              label: null
+              label: Liquidació IV - Altres deduccions - Deducció per donacions a
+                entitats sense finalitat de lucre [00565]
             x-8h834c1g60oj8ghq60o3ae1j:
               help: null
-              label: null
+              label: Liquidació IV - Altres deduccions - Suport fiscal a la inversió
+                i altres deduccions [00583]
             x-8h834c1g60oj8ghq60o3ae1k:
               help: null
-              label: null
+              label: Liquidació IV - Altres deduccions - Deduccions DT 24.1 LIS [00584]
             x-8h834c1g60oj8ghq60o3ae1l:
               help: null
-              label: null
+              label: Liquidació IV - Altres deduccions - Deducció DT 24.7 LIS, art.
+                42 RDLeg. 4/2004 [00585]
             x-8h834c1g60oj8ghq60o3ae1o:
               help: null
-              label: null
+              label: Liquidació IV - Altres deduccions - Deduccions per incentivar
+                det. activitats (Cap. IV Tít. VI, DT 24a.3 LIS i art. 27.3 primer
+                Llei 49/2002) [00588]
             x-8h834c1g60oj8ghq60o3ae9g:
               help: null
-              label: null
+              label: Liquidació IV - Altres deduccions - Deduccions d'inversió a Canàries
+                (desglossament a les pàgines 16 bis i 17) [00590]
             x-8h834c1g60oj8ghq60o3ae9i:
               help: null
               label: Liquidació IV - Altres deduccions - Quota líquida [00592]
@@ -15137,7 +15163,8 @@ modelo:
                 diferencial - Estat [00611]
             x-8h834c1g60oj8ghq60o3cc9p:
               help: null
-              label: null
+              label: Liquidació IV - Altres deduccions - Quota líquida mínima (art.
+                30 bis LIS) [00619]
             x-8h834c1g60oj8ghq60ojedhm:
               help: null
               label: Liquidació IV - Quota de l'exercici a ingressar o a retornar
@@ -15146,6 +15173,9 @@ modelo:
               help: null
               label: Liquidació IV - Quota de l'exercici a ingressar o a retornar
                 - Total retencions i ingressos a compte - Imputats per AIE i UTE [01784]
+            x-8h834c1g60ojgehg60qjge0:
+              label: Deduccions per incentivar determinades activitats - total - aplicat
+                en aquesta liquidació [00588]
             x-8h834c1g60p3cehg60r34d8:
               help: null
               label: Tributació conjunta Estat i Adm. Forals - Càlcul de percentatges
