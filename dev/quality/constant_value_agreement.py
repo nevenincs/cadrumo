@@ -27,10 +27,20 @@ private name are two local facts that never meet. A *public* name carrying two
 values is a different matter, because a consumer choosing an import has no
 signal that the choice changes the value.
 
-Only literals are read. A constant built by a call or a comprehension has no
-value this screen can compare, and guessing at one would be worse than
+Only literals are COMPARED. A constant built by a call or a comprehension has
+no value this screen can compare, and guessing at one would be worse than
 declining. Booleans are skipped: ``True`` under one name in two modules is not
 evidence of anything.
+
+But declining to compare a value is not a reason to ignore the name. A third
+condition covers the constants whose values are unevaluable:
+
+- ``unevaluated_name_collision`` - one name defined in several modules, at
+  least one of them by a call or comprehension. The screen reports the
+  collision and says nothing about agreement, because it cannot know. This is
+  where the quiet duplicates live: three registry modules each defined
+  ``_NUMERIC_TUPLE_ADAPTER`` as a ``TypeAdapter(...)`` call, two of those
+  copies were dead, and no literal-only census could see any of them.
 
 The screen exits 0 whatever it finds. The public-visibility invariant it
 protects is gated separately.
@@ -48,8 +58,10 @@ from pathlib import Path
 __all__ = [
     "ConstantFinding",
     "collect_constants",
+    "collect_unevaluated_constants",
     "constant_census",
     "stem_restatements",
+    "unevaluated_collisions",
 ]
 
 _PACKAGE_ROOT = Path(__file__).resolve().parent.parent.parent / "src" / "cadrumo"
@@ -103,6 +115,66 @@ def collect_constants(root: Path) -> dict[str, dict[str, str]]:
                 continue
             found[name][module] = repr(value)
     return dict(found)
+
+
+def collect_unevaluated_constants(root: Path) -> dict[str, dict[str, str]]:
+    """Return module-level constants whose value the screen cannot evaluate.
+
+    Keyed by name then module, with the unparsed source expression as the
+    value. The expression is recorded for the reader, never compared: two
+    ``TypeAdapter(...)`` calls that differ textually may still mean the same
+    thing, and two that match textually may resolve differently.
+    """
+    found: dict[str, dict[str, str]] = collections.defaultdict(dict)
+    for path in sorted(root.rglob("*.py")):
+        if "__pycache__" in path.parts or "tests" in path.parts:
+            continue
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+        except (SyntaxError, UnicodeDecodeError):
+            continue
+        module = path.relative_to(root).as_posix()
+        for node in tree.body:
+            name = _assigned_name(node)
+            if name is None or (not name.lstrip("_").isupper() and not name.startswith("_")):
+                continue
+            if not name.lstrip("_")[:1].isalpha():
+                continue
+            value = getattr(node, "value", None)
+            if value is None:
+                continue
+            try:
+                ast.literal_eval(value)
+            except (ValueError, TypeError, SyntaxError):
+                found[name][module] = ast.unparse(value).splitlines()[0][:60]
+    return dict(found)
+
+
+def unevaluated_collisions(constants: dict[str, dict[str, str]]) -> tuple[ConstantFinding, ...]:
+    """Report unevaluable constant names several modules bind IDENTICALLY.
+
+    Two filters keep this honest rather than loud. An expression mentioning
+    ``__name__`` is per-module by construction -- a module logger is the
+    correct idiom, and eighty of these were exactly that -- so it is not a
+    collision however many modules hold it. And the surviving expressions must
+    match textually: ``build_playwright_stage_runner('GROI')`` beside
+    ``build_playwright_stage_runner('NIF-IVA')`` is two configured instances of
+    one helper, which is reuse working, not a redeclaration.
+    """
+    findings: list[ConstantFinding] = []
+    for name, sites in sorted(constants.items()):
+        sites = {module: text for module, text in sites.items() if "__name__" not in text}
+        if len(sites) < 2 or len(set(sites.values())) != 1:
+            continue
+        findings.append(
+            ConstantFinding(
+                name=name,
+                kind="unevaluated_name_collision",
+                public=not name.startswith("_"),
+                sites=tuple(sorted(sites.items())),
+            )
+        )
+    return tuple(findings)
 
 
 def constant_census(constants: dict[str, dict[str, str]]) -> tuple[ConstantFinding, ...]:
@@ -185,7 +257,11 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     constants = collect_constants(_PACKAGE_ROOT)
-    findings = constant_census(constants) + stem_restatements(constants)
+    findings = (
+        constant_census(constants)
+        + stem_restatements(constants)
+        + unevaluated_collisions(collect_unevaluated_constants(_PACKAGE_ROOT))
+    )
     wanted = set(args.kind) if args.kind else None
     tally: collections.Counter[str] = collections.Counter(item.kind for item in findings)
     public_conflicts = sum(1 for item in findings if item.kind == "value_conflict" and item.public)

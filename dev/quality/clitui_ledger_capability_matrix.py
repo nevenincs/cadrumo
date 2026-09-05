@@ -498,6 +498,27 @@ class _BindingCollector(ast.NodeVisitor):
     def record(self, name: str, node: ast.AST) -> None:
         self.bindings.setdefault(name, []).append(node)
 
+    def _visit_function_header(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
+        for decorator in node.decorator_list:
+            self.visit(decorator)
+        for default in (*node.args.defaults, *(value for value in node.args.kw_defaults if value is not None)):
+            self.visit(default)
+        annotations = (
+            *(argument.annotation for argument in node.args.posonlyargs if argument.annotation is not None),
+            *(argument.annotation for argument in node.args.args if argument.annotation is not None),
+            *(argument.annotation for argument in node.args.kwonlyargs if argument.annotation is not None),
+        )
+        for annotation in annotations:
+            self.visit(annotation)
+        if node.args.vararg is not None and node.args.vararg.annotation is not None:
+            self.visit(node.args.vararg.annotation)
+        if node.args.kwarg is not None and node.args.kwarg.annotation is not None:
+            self.visit(node.args.kwarg.annotation)
+        if node.returns is not None:
+            self.visit(node.returns)
+        for type_parameter in getattr(node, "type_params", ()):
+            self.visit(type_parameter)
+
     @override
     def visit_Name(self, node: ast.Name) -> None:
         if isinstance(node.ctx, (ast.Store, ast.Del)):
@@ -506,18 +527,29 @@ class _BindingCollector(ast.NodeVisitor):
     @override
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         self.record(node.name, node)
+        self._visit_function_header(node)
 
     @override
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
         self.record(node.name, node)
+        self._visit_function_header(node)
 
     @override
     def visit_Lambda(self, node: ast.Lambda) -> None:
-        return
+        for default in (*node.args.defaults, *(value for value in node.args.kw_defaults if value is not None)):
+            self.visit(default)
 
     @override
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         self.record(node.name, node)
+        for decorator in node.decorator_list:
+            self.visit(decorator)
+        for base in node.bases:
+            self.visit(base)
+        for keyword in node.keywords:
+            self.visit(keyword.value)
+        for type_parameter in getattr(node, "type_params", ()):
+            self.visit(type_parameter)
 
     @override
     def visit_Import(self, node: ast.Import) -> None:

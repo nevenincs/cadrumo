@@ -482,6 +482,32 @@ def test_tui_projection_ignores_differently_named_nested_body_bindings() -> None
     assert candidate.initial_internal_destination == "ledger.overview"
 
 
+@pytest.mark.parametrize(
+    "definition",
+    [
+        b"        def helper(value=(screen := Screen())):\n            return value\n",
+        b"        async def helper(value=(screen := Screen())):\n            return value\n",
+        b"        helper = lambda value=(screen := Screen()): value\n",
+        b"        @(screen := decorator)\n        def helper():\n            return None\n",
+        b"        class Helper((screen := Base)):\n            pass\n",
+        b"        @(screen := decorator)\n        class Helper:\n            pass\n",
+        b"        class Helper(metaclass=(screen := Meta)):\n            pass\n",
+    ],
+)
+def test_tui_projection_refuses_bindings_in_nested_definition_headers(definition: bytes) -> None:
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/launcher.py",
+        lambda body: _alias_installed_screen_return(body).replace(
+            b"        return screen",
+            definition + b"        return screen",
+            1,
+        ),
+    )
+
+    with pytest.raises(ValueError, match="not uniquely and unconditionally defined"):
+        build_ledger_tui_supported_surface_census(source_records=records)
+
+
 def test_tui_projection_refuses_ambiguous_installed_screen_returns() -> None:
     records = _mutate_tui_source(
         "src/cadrumo/entrypoints/tui/launcher.py",
