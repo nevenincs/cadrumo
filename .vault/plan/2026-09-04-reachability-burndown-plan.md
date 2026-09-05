@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:814551038631725de78a79d0dd719e6505ca30559d21a0f41ab61d6bccddac10'
+body_hash: 'sha256:c12539459c20a76f79bc79298a28c9b7844a28e3c422f6548e700366c13ffe8d'
 ---
 
 # `reachability-burndown` plan
@@ -124,8 +124,9 @@ The 85 exported findings, and the 367 declared exports package-wide that no modu
 The plan closed at 24/24 while the live audit still reports 58 unreachable modules, 1322 unused symbols and 25 orphaned test modules. The completed steps were genuinely done; they simply did not enumerate the whole backlog. This phase carries the residue that measurement, not planning, identified.
 
 - [x] `W05.P12.S25` - Establish whether the enum-member tier is dead code or an instrument gap: 204 of 305 enum-member findings carry a literal value present in shipped registry declarations, 174 of them in one module bound by value in the Modelo 200 projection_endpoints declarations, and fix the binding rule tightly enough that it cannot suppress a real finding; `dev/audit/unreachable_code.py`.
-- [ ] `W05.P12.S26` - Classify with their owners the shipped modules that block the ratchet and fit no available disposition, since IntentionalReachabilityKind admits only design_time_authority and the allowed list is shrink-only; `dev/quality/unreachable_module_ratchet.toml`.
+- [x] `W05.P12.S26` - Classify with their owners the shipped modules that block the ratchet and fit no available disposition, since IntentionalReachabilityKind admits only design_time_authority and the allowed list is shrink-only; `dev/quality/unreachable_module_ratchet.toml`.
 - [ ] `W05.P12.S27` - Re-measure the orphaned test population against its anchors and resolve any test still reported after the module or symbol it covers has been resolved; `dev/audit`.
+- [ ] `W05.P12.S28` - Obtain the owner decisions the three blocked modules need, since classification is evidenced and none can be recorded without them: re-wire or withdraw the ledger import-preparation capability its contract still requires, and either record the decision the two staged domain packages are waiting on or withdraw them; `src/cadrumo/application/ledger/import_preparation.py`.
 
 ## Parallelization
 
