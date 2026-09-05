@@ -818,6 +818,7 @@ def test_no_registry_source_or_declaration_cites_a_vault_record() -> None:
         bundled_path("registry", "aeat"),
     )
     offenders: dict[str, list[str]] = {}
+    undecodable: list[str] = []
     scanned = 0
     for root in roots:
         for path in sorted(root.rglob("*")):
@@ -826,7 +827,17 @@ def test_no_registry_source_or_declaration_cites_a_vault_record() -> None:
             if "__pycache__" in path.parts:
                 continue
             scanned += 1
-            body = path.read_text(encoding=_UTF_8, errors="ignore")
+            try:
+                body = path.read_text(encoding=_UTF_8)
+            except UnicodeDecodeError as refusal:
+                # Formerly errors="ignore". Dropping undecodable bytes before the
+                # citation regex runs is the one failure this gate cannot survive:
+                # a citation straddling a dropped byte simply is not there, and
+                # the registry reports clean over text nobody read. All 20,507
+                # files this walks decode strictly, so a file that does not is a
+                # broken tracked file and is named rather than silently thinned.
+                undecodable.append(f"{path}: {refusal}")
+                continue
             if path.name == pathlib.Path(__file__).name:
                 # This module necessarily contains example citations in two
                 # places: the pattern table names the vault path prefix as one
@@ -842,6 +853,10 @@ def test_no_registry_source_or_declaration_cites_a_vault_record() -> None:
                 offenders[str(path)] = sorted(set(citations))
 
     assert scanned > 100, f"only {scanned} files scanned, so this gate proves little"
+    assert not undecodable, (
+        "these registry files could not be decoded, so the citation search never ran over "
+        f"their contents and this gate's clean result does not cover them: {undecodable}"
+    )
     assert not offenders, f"registry files citing vault records: {offenders}"
 
 
