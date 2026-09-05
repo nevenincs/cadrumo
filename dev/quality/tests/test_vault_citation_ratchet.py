@@ -99,3 +99,27 @@ def test_a_tree_matching_its_baseline_passes(tmp_path: Path) -> None:
     """The normal case, so the gate is not merely always-red."""
     root = _tree(tmp_path, known='"""Cites ``aeat-architecture-boundaries``."""\n')
     assert evaluate(root, _baseline(tmp_path, known=1)).ok
+
+
+def test_a_slug_wrapped_in_a_sphinx_role_is_counted(tmp_path: Path) -> None:
+    """A citation wearing symbol syntax is still a citation.
+
+    The first pattern looked only for the literal ``slug`` form, so
+    ``:func:`no-silent-under-declaration``` sat uncounted in shipped code --
+    doubly wrong, because it also dresses a rule name as a Python function.
+    """
+    root = _tree(
+        tmp_path,
+        role='"""Required by :ref:`aeat-architecture-boundaries` for this path."""\n',
+        func='"""Surfaces the advisory (:func:`no-silent-under-declaration`)."""\n',
+    )
+    assert count_citations(root, _SLUGS) == {"pkg/role.py": 1, "pkg/func.py": 1}
+
+
+def test_a_slug_in_plain_prose_stays_uncounted_under_either_spelling(tmp_path: Path) -> None:
+    """Widening to roles must not widen to bare words as well."""
+    root = _tree(
+        tmp_path,
+        prose='"""Follows aeat-architecture-boundaries in spirit, said plainly."""\n',
+    )
+    assert count_citations(root, _SLUGS) == {}

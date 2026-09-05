@@ -72,15 +72,21 @@ def rule_slugs(source: Path = _RULE_SOURCES) -> frozenset[str]:
 def count_citations(root: Path = _SHIPPED, slugs: frozenset[str] | None = None) -> dict[str, int]:
     """Return the number of rule-slug citations in each shipped Python file.
 
-    A slug is counted only inside backticks. The bare words also read as domain
-    vocabulary in ordinary prose -- "the per-period no-silent-under-declaration
-    warning" is a sentence about behaviour, not a citation -- and counting those
-    would make the ratchet argue with English.
+    A slug is counted only inside backticks, either as a literal ``slug`` or
+    wrapped in a Sphinx role. The bare words also read as domain vocabulary in
+    ordinary prose -- "the per-period no-silent-under-declaration warning" is a
+    sentence about behaviour, not a citation -- and counting those would make
+    the ratchet argue with English.
     """
     names = slugs if slugs is not None else rule_slugs()
     if not names:
         return {}
-    pattern = re.compile(r"``(" + "|".join(sorted(map(re.escape, names))) + r")``")
+    alternation = "|".join(sorted(map(re.escape, names)))
+    # Two spellings carry a citation. The literal ``slug`` form, and a Sphinx
+    # role around it -- :func:`no-silent-under-declaration` -- which is a
+    # citation wearing the syntax for a Python symbol, and was invisible to a
+    # pattern that only looked for double backticks.
+    pattern = re.compile(rf"``(?:{alternation})``|:[a-z]+:`(?:{alternation})`")
     counts: dict[str, int] = {}
     for path in sorted(root.rglob("*.py")):
         if "__pycache__" in path.parts:
