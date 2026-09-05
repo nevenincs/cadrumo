@@ -1858,6 +1858,12 @@ _LEDGER_MISSING_PRODUCT_DECLARATIONS: Final[tuple[_BackendOperationDeclaration, 
         "LedgerRecoveryArchiveResult",
     ),
     _backend(
+        "ledger.export.provenance",
+        "cadrumo.application.ledger.actions_export",
+        "LedgerExportProvenanceQuery",
+        "LedgerExportProvenanceResult",
+    ),
+    _backend(
         "ledger.evidence.download",
         "cadrumo.application.ledger.evidence_lifecycle",
         "LedgerEvidenceDownloadQuery",
@@ -1891,11 +1897,44 @@ _LEDGER_MISSING_PRODUCT_DECLARATIONS: Final[tuple[_BackendOperationDeclaration, 
         "LedgerImportNormalizationProvenance",
     ),
     _backend(
+        "ledger.fx.provenance",
+        "cadrumo.domain.transactions.models",
+        "LedgerFxProvenanceQuery",
+        "LedgerFxProvenance",
+    ),
+    _backend(
         "ledger.transaction.batch_patch",
         "cadrumo.application.ledger.change_sets",
         "LedgerBatchPatchCommand",
         "LedgerBatchPatchResult",
     ),
+    _backend(
+        "ledger.list.page",
+        "cadrumo.application.ledger.query_service",
+        "LedgerPageQuery",
+        "LedgerPageResult",
+    ),
+)
+
+_LEDGER_MISSING_PRODUCT_OBSERVATIONS: Final[tuple[tuple[str, tuple[str, ...]], ...]] = (
+    ("review_grade_workbook", ("ledger.export.review_package",)),
+    ("restore_archive", ("ledger.export.restore_archive",)),
+    ("google_ledger_export", ("ledger.export.google_transport",)),
+    (
+        "complete_export_provenance",
+        (
+            "ledger.export.provenance",
+            "ledger.fx.provenance",
+            "ledger.import.normalization_provenance",
+            "ledger.manual_override.provenance",
+        ),
+    ),
+    ("evidence_download", ("ledger.evidence.download",)),
+    ("atomic_evidence_replace", ("ledger.evidence.replace",)),
+    ("append_only_notes", ("ledger.note.append",)),
+    ("changed_field_provenance", ("ledger.field_change.provenance",)),
+    ("generic_batch_patch", ("ledger.transaction.batch_patch",)),
+    ("application_paging", ("ledger.list.page",)),
 )
 
 
@@ -2186,6 +2225,14 @@ def _union_observations(
 ) -> tuple[LedgerUnionSourceObservationV1, ...]:
     from cadrumo.entrypoints.cli._app_ledger_command_specs import LEDGER_CLI_COMMAND_CENSUS
 
+    declared_missing = {item.capability_id for item in _LEDGER_MISSING_PRODUCT_DECLARATIONS}
+    observed_missing = {
+        capability_id
+        for _observation_id, capability_ids in _LEDGER_MISSING_PRODUCT_OBSERVATIONS
+        for capability_id in capability_ids
+    }
+    if declared_missing != observed_missing:
+        raise ValueError("missing-product observations and semantic declarations disagree")
     observations: list[LedgerUnionSourceObservationV1] = []
     for entry in LEDGER_CLI_COMMAND_CENSUS:
         schema_id = entry.result_schema_identity.replace("-", "_")
@@ -2216,10 +2263,10 @@ def _union_observations(
     observations.extend(
         LedgerUnionSourceObservationV1(
             source=DenominatorSourceKind.MISSING_PRODUCT,
-            observation_id=f"missing_product:{item.capability_id}",
-            capability_ids=(item.capability_id,),
+            observation_id=f"missing_product:{observation_id}",
+            capability_ids=capability_ids,
         )
-        for item in _LEDGER_MISSING_PRODUCT_DECLARATIONS
+        for observation_id, capability_ids in _LEDGER_MISSING_PRODUCT_OBSERVATIONS
     )
     observations.extend(
         LedgerUnionSourceObservationV1(

@@ -11,6 +11,7 @@ cannot masquerade as the live campaign census.
 from __future__ import annotations
 
 import json
+from importlib import import_module
 from collections.abc import Callable
 from copy import copy
 from datetime import UTC, datetime
@@ -29,6 +30,7 @@ from ..clitui_ledger_capability_matrix import (
     ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
     LEDGER_REGISTRY_ROUTE_CENSUS_ROOT,
     LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_ROOT,
+    LEDGER_UNION_DENOMINATOR_ROOT,
     ApplicabilityState,
     AuthorityDispositionEntryV1,
     AuthorityDispositionSnapshotV1,
@@ -57,10 +59,13 @@ from ..clitui_ledger_capability_matrix import (
     LedgerMatrixAcceptanceAttestationV1,
     LedgerRegistryRouteCensusV1,
     LedgerTuiSupportedSurfaceCensusV1,
+    LedgerUnionDenominatorV1,
     ReviewRuling,
+    SemanticHomeStatus,
     SurfaceCapabilityState,
     build_ledger_registry_route_census,
     build_ledger_tui_supported_surface_census,
+    build_ledger_union_denominator,
     evaluate_ledger_capability_gate,
     evaluate_ledger_capability_gates,
     ledger_registry_route_census_bytes,
@@ -69,6 +74,8 @@ from ..clitui_ledger_capability_matrix import (
     ledger_tui_supported_surface_census_bytes,
     ledger_tui_supported_surface_source_files,
     ledger_tui_supported_surface_source_set_digest,
+    ledger_union_denominator_bytes,
+    ledger_union_denominator_digest,
     reopened_gates_for_denominator_drift,
     validate_ledger_matrix_currentness,
 )
@@ -85,6 +92,7 @@ _REGISTRY_ROUTE_DIGEST: Final[str] = "sha256:20b2d2df5558b2a3fdbd1eab6e9f781a973
 _REGISTRY_SOURCE_DIGEST: Final[str] = "sha256:194a9f26ddfbae6c5d7f265ffe58f50964fbe2fcd02a5670fa19845dead5cf6d"
 _TUI_CENSUS_DIGEST: Final[str] = "sha256:c136cfe1ae3f82a239476c00e805f8c9a29e010d502e74397963cea7e6f42371"
 _TUI_SOURCE_DIGEST: Final[str] = "sha256:e7337508a02ef2260e0b28205c31bb872b69f59aa51a18391ae209c21b8f9d57"
+_UNION_DIGEST: Final[str] = "sha256:b694743c9edfe8c40fd7e6309b519cab353dd074dc75cd87688f144992561a7b"
 
 
 @cache
@@ -95,6 +103,11 @@ def _registry_census() -> LedgerRegistryRouteCensusV1:
 @cache
 def _tui_census() -> LedgerTuiSupportedSurfaceCensusV1:
     return build_ledger_tui_supported_surface_census()
+
+
+@cache
+def _union_denominator() -> LedgerUnionDenominatorV1:
+    return build_ledger_union_denominator(registry=_registry_census(), tui=_tui_census())
 
 
 def _tui_source_records() -> tuple[tuple[str, bytes], ...]:
@@ -148,6 +161,118 @@ def test_tui_supported_surface_census_recomputes_the_published_live_digest() -> 
     assert {status for _command, status in census.cli_tui_capabilities} == {"not-implemented"}
     assert len(census.harness_files) == 6
     assert census.harness_test_functions == 65
+
+
+def test_union_denominator_joins_every_raw_observation_without_double_counting() -> None:
+    union = _union_denominator()
+
+    assert union.root == LEDGER_UNION_DENOMINATOR_ROOT
+    assert union.schema_version == 1
+    assert len(union.observations) == 760
+    assert len(union.rows) == 718
+    assert [(item.source.value, item.observation_count) for item in union.source_digests] == [
+        ("artifact_product", 6),
+        ("backend_only", 63),
+        ("cli_endpoint", 78),
+        ("cli_suboperation", 50),
+        ("missing_product", 10),
+        ("registry_route", 546),
+        ("supported_surface", 7),
+    ]
+    assert union.digest == _UNION_DIGEST
+    assert ledger_union_denominator_digest(union) == _UNION_DIGEST
+    assert ledger_union_denominator_bytes(union).startswith(b"cadrumo:ledger-union-denominator:v1\x00")
+
+
+def test_union_denominator_merges_equivalent_stream_observations_and_keeps_distinct_effects() -> None:
+    rows = {row.capability_id: row for row in _union_denominator().rows}
+
+    assert {source.value for source in rows["ledger.transaction.create"].sources} == {
+        "backend_only",
+        "cli_endpoint",
+    }
+    assert {source.value for source in rows["ledger.classification.bulk_csv"].sources} == {
+        "backend_only",
+        "cli_suboperation",
+    }
+    assert {source.value for source in rows["ledger.export.csv"].sources} == {
+        "artifact_product",
+        "cli_suboperation",
+    }
+    assert {
+        "ledger.classify.auto_split.reject",
+        "ledger.classify.auto_split.split_preview",
+        "ledger.classify.auto_split.split_apply",
+        "ledger.classify.auto_split.single_preview",
+        "ledger.classify.auto_split.single_apply",
+    } <= rows.keys()
+
+
+def test_union_denominator_retains_every_registry_route_unit_and_tui_reachability_split() -> None:
+    union = _union_denominator()
+    registry_rows = [row for row in union.rows if "registry_route" in {source.value for source in row.sources}]
+    rows = {row.capability_id: row for row in union.rows}
+
+    assert len(registry_rows) == 546
+    assert len({row.capability_id for row in registry_rows}) == 546
+    assert rows["ledger.workspace.read"].tui_routes == ("ledger.overview",)
+    assert "reachability" not in {gap.value for gap in rows["ledger.workspace.read"].gap_classes}
+    assert rows["ledger.transaction.list"].tui_routes == ("ledger.entries",)
+    assert "reachability" in {gap.value for gap in rows["ledger.transaction.list"].gap_classes}
+
+
+def test_union_denominator_has_explicit_axes_homes_proof_and_open_blockers_for_every_row() -> None:
+    union = _union_denominator()
+
+    assert all(len(row.applicability) == 8 for row in union.rows)
+    assert all({decision.axis for decision in row.applicability} == set(LedgerCapabilityAxis) for row in union.rows)
+    assert all(
+        row.semantic_home.owner and row.semantic_home.command_type and row.semantic_home.result_type
+        for row in union.rows
+    )
+    assert all(row.proof_requirements and row.blockers and row.next_action for row in union.rows)
+    assert all(LedgerGapClass.PROOF in row.gap_classes for row in union.rows)
+    assert {row.semantic_home_status for row in union.rows} == {
+        SemanticHomeStatus.EXISTING,
+        SemanticHomeStatus.PLANNED,
+    }
+
+
+def test_existing_union_semantic_homes_resolve_exact_live_symbols_and_types() -> None:
+    existing_rows = [
+        row for row in _union_denominator().rows if row.semantic_home_status is SemanticHomeStatus.EXISTING
+    ]
+
+    assert len(existing_rows) == 7
+    for row in existing_rows:
+        module_name, owner_name = row.semantic_home.owner.split(":", maxsplit=1)
+        module = import_module(module_name)
+        assert hasattr(module, owner_name)
+        assert hasattr(module, row.semantic_home.command_type)
+        assert hasattr(module, row.semantic_home.result_type)
+
+
+@pytest.mark.parametrize("mutation", ["missing_row", "duplicate_observation", "wrong_sources", "stale_digest"])
+def test_union_denominator_refuses_incomplete_or_stale_serialized_adjudication(mutation: str) -> None:
+    union = _union_denominator()
+    payload = union.model_dump(mode="python")
+    if mutation == "missing_row":
+        payload["rows"] = payload["rows"][:-1]
+        expected = "unavailable row"
+    elif mutation == "duplicate_observation":
+        payload["observations"] = (*payload["observations"], payload["observations"][0])
+        expected = "identities must be unique"
+    elif mutation == "wrong_sources":
+        first = dict(payload["rows"][0])
+        first["sources"] = frozenset({DenominatorSourceKind.CLI_ENDPOINT})
+        payload["rows"] = (first, *payload["rows"][1:])
+        expected = "sources drifted"
+    else:
+        payload["digest"] = "sha256:" + "0" * 64
+        expected = "digest does not match"
+
+    with pytest.raises(ValidationError, match=expected):
+        LedgerUnionDenominatorV1.model_validate(payload)
 
 
 def test_tui_supported_surface_framing_is_domain_separated_unsigned_u64_big_endian() -> None:

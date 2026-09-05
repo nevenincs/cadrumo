@@ -799,6 +799,61 @@ def string_reference_names(value: str) -> Iterator[str]:
         yield from (part for part in re.split(r"[.:]", value) if part)
 
 
+def forward_reference_names(value: str) -> Iterator[str]:
+    """Identifiers a string used in a TYPE position addresses.
+
+    A forward reference is a type expression carried in a string, so
+    ``"_AttachmentFileReader | None"`` names a class exactly as an unquoted
+    annotation would. The dotted-spec form cannot reach it: a union is not a
+    dotted path, so every quoted annotation carrying one read as no reference
+    at all and its target was reported unused.
+
+    Only strings the caller has already established sit in a type position are
+    passed here, and the value must parse as an expression built solely from
+    type syntax. Both guards matter in the same direction: a looser reader that
+    treated any prose word as a reference would SUPPRESS real findings, which
+    is the failure this audit must never have.
+    """
+    try:
+        parsed = ast.parse(value, mode="eval")
+    except SyntaxError:
+        return
+    allowed = (
+        ast.Expression, ast.Name, ast.Attribute, ast.Subscript, ast.Tuple,
+        ast.List, ast.Load, ast.Constant, ast.BinOp, ast.BitOr, ast.Index,
+    )
+    if any(not isinstance(node, allowed) for node in ast.walk(parsed)):
+        return
+    for node in ast.walk(parsed):
+        if isinstance(node, ast.Name):
+            yield node.id
+        elif isinstance(node, ast.Attribute):
+            yield node.attr
+
+
+def _type_position_strings(tree: ast.Module) -> Iterator[str]:
+    """Yield every string literal the module places in a type position.
+
+    Two positions are unambiguous: the first argument of a ``cast`` call, and
+    an annotation written as a string literal.
+    """
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call) and node.args:
+            func = node.func
+            name = func.attr if isinstance(func, ast.Attribute) else getattr(func, "id", None)
+            first = node.args[0]
+            if name == "cast" and isinstance(first, ast.Constant) and isinstance(first.value, str):
+                yield first.value
+        annotations = []
+        if isinstance(node, (ast.AnnAssign, ast.arg)):
+            annotations.append(node.annotation)
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            annotations.append(node.returns)
+        for annotation in annotations:
+            if isinstance(annotation, ast.Constant) and isinstance(annotation.value, str):
+                yield annotation.value
+
+
 def _references(tree: ast.Module) -> set[str]:
     """Every bare identifier the module loads, accesses, keywords, imports, or spells."""
     skipped = non_reference_nodes(tree)
@@ -816,6 +871,8 @@ def _references(tree: ast.Module) -> set[str]:
             names.update(alias.name for alias in node.names)
         elif isinstance(node, ast.Constant) and isinstance(node.value, str):
             names.update(string_reference_names(node.value))
+    for value in _type_position_strings(tree):
+        names.update(forward_reference_names(value))
     return names
 
 
