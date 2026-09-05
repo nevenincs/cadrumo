@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:02e1dcaae620398218936ebedb62db55cfdfc8f3e29f753ee8e2c27df5ed8878'
+body_hash: 'sha256:1fb04ac9c45188fe1d8423f1dd8d72c7a41ed4561ac09e2d0469d6a5d81b4a09'
 ---
 
 <!-- RETIRED: S39 -->
@@ -121,7 +121,7 @@ Build every declared distribution and channel artifact from one command and prov
 - [x] `P09.S56` - Close the generator assertions the wheelhouse refusal was hiding; `packaging/scoop/tests/test_scoop_generate.py`.
 - [x] `P09.S57` - Stop the clean-tree build root from carrying files git ignores and the wheel cannot; `dev/packaging/_smoke_common.py`.
 - [x] `P09.S58` - Keep a corpus annotation in the same distribution as the file it annotates; `pyproject.toml`.
-- [ ] `P09.S59` - Stop the queue watchdog from occupying the only runner its own lanes need; `.github/workflows/packaging-smoke.yml`.
+- [ ] `P09.S59` - Give the fleet enough Linux capacity for the lanes its own policy requires; `dev/runners/README.md`.
 
 ### Phase `P10` - Prune the release and packaging surfaces without consumers
 
