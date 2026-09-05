@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 from collections.abc import Callable
 from copy import copy
+from dataclasses import replace
 from datetime import UTC, datetime
 from decimal import Decimal
 from functools import cache
@@ -24,7 +25,9 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from cadrumo.core.aggregation import BindingSourceKind
+from cadrumo.core.transport_locus import TransportLocus, TransportRole, TransportShape
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.entrypoints.cli._app_ledger_command_specs import LEDGER_COMMAND_SPECS
 from dev.quality import clitui_ledger_capability_matrix as matrix_module
 
 from ..clitui_ledger_capability_matrix import (
@@ -104,9 +107,9 @@ _REGISTRY_ROUTE_DIGEST: Final[str] = "sha256:20b2d2df5558b2a3fdbd1eab6e9f781a973
 _REGISTRY_SOURCE_DIGEST: Final[str] = "sha256:194a9f26ddfbae6c5d7f265ffe58f50964fbe2fcd02a5670fa19845dead5cf6d"
 _TUI_CENSUS_DIGEST: Final[str] = "sha256:a52180bb77b70c205c7d31f657a64ad55142035b63dd9d5bf69b79503754c25f"
 _TUI_SOURCE_DIGEST: Final[str] = "sha256:70709a369bece8e06033e56e18bd82425ec9b48767c3466e80f92c901143ff67"
-_UNION_DIGEST: Final[str] = "sha256:a8e2854f6fa822824618e428a56c0390343f77b7f0233bd165985f9d0edb9f65"
-_ROW_REVIEW_DIGEST: Final[str] = "sha256:3809546161a2164a50fa442ad5759b104092ccf231627d45f849e5b3023ccfb8"
-_ROW_REVIEW_ATTESTATION_DIGEST: Final[str] = "sha256:60fd297e03e1384d3eca3d56b568a21ea0f6b913cc8c2b7f15dc6aab7e2b0ce4"
+_UNION_DIGEST: Final[str] = "sha256:8a158b5cc4c8e6c3035dc272999af61ac6cb080af8c208eccc8d28e4105a7575"
+_ROW_REVIEW_DIGEST: Final[str] = "sha256:4e42e5e04ccfd7a8654e629933698e141033b0767d0f94ec5433619400203ff8"
+_ROW_REVIEW_ATTESTATION_DIGEST: Final[str] = "sha256:fc15a433ad145832934cbe894d3d0b875d27e9a54ed1a70ae271c16ff81aedf7"
 
 
 @cache
@@ -601,29 +604,45 @@ def test_union_row_review_preserves_registry_destination_and_tui_hold_cohorts() 
     assert sum(row.tui_hold_until is None for row in union.rows) == 13
 
 
-def test_artifact_input_review_covers_the_exact_fifteen_file_and_directory_capabilities() -> None:
-    expected = frozenset(
-        {
-            "ledger.classification.bulk_csv",
-            "ledger.import",
-            "ledger.import.directory",
-            "ledger.import.dry_run",
-            "ledger.import.file",
-            "ledger.import.provider_auto",
-            "ledger.import.provider_csv",
-            "ledger.import.provider_n26",
-            "ledger.import.provider_ofx_qfx",
-            "ledger.import.provider_pdf",
-            "ledger.import.provider_pdf_n26",
-            "ledger.import.provider_xlsx_excel",
-            "ledger.import.source",
-            "ledger.import.verify",
-            "ledger.invoice.import",
-        }
+def test_artifact_input_review_is_derived_from_every_live_local_file_or_directory_parameter() -> None:
+    observations = matrix_module._derive_ledger_cli_artifact_input_observations()
+    cli_derived = frozenset(
+        capability_id for observation in observations for capability_id in observation.capability_ids
     )
+    expected = matrix_module._artifact_input_capabilities()
     rows = {row.capability_id: row for row in _union_denominator().rows}
 
-    assert expected == matrix_module._EXPLICIT_ARTIFACT_INPUT_CAPABILITIES
+    assert observations == matrix_module._EXPECTED_LEDGER_CLI_ARTIFACT_INPUT_OBSERVATIONS
+    assert len(observations) == 8
+    assert len(cli_derived) == 29
+    assert len(expected) == 31
+    assert (
+        frozenset({"ledger.evidence.replace", "ledger.import.source"})
+        == matrix_module._REVIEWED_ADDITIONAL_ARTIFACT_INPUT_CAPABILITIES
+    )
+    assert {
+        "ledger.evidence.add",
+        "ledger.evidence.batch",
+        "ledger.evidence.replace",
+        "ledger.inventory.closing_authority.record",
+    } <= expected
+    assert {
+        "ledger.classification.bulk_csv",
+        "ledger.import",
+        "ledger.import.directory",
+        "ledger.import.dry_run",
+        "ledger.import.file",
+        "ledger.import.provider_auto",
+        "ledger.import.provider_csv",
+        "ledger.import.provider_n26",
+        "ledger.import.provider_ofx_qfx",
+        "ledger.import.provider_pdf",
+        "ledger.import.provider_pdf_n26",
+        "ledger.import.provider_xlsx_excel",
+        "ledger.import.source",
+        "ledger.import.verify",
+        "ledger.invoice.import",
+    } <= expected
     for capability_id in expected:
         row = rows[capability_id]
         artifact = next(item for item in row.applicability if item.axis is LedgerCapabilityAxis.ARTIFACT)
@@ -635,16 +654,57 @@ def test_artifact_input_review_covers_the_exact_fifteen_file_and_directory_capab
     assert rows["ledger.import.source"].primary_gap_class is LedgerGapClass.ARTIFACT
 
 
-@pytest.mark.parametrize("mutation", ["missing", "added_unknown"])
-def test_artifact_input_authority_refuses_exact_set_drift(mutation: str) -> None:
-    capabilities = set(matrix_module._EXPLICIT_ARTIFACT_INPUT_CAPABILITIES)
-    if mutation == "missing":
-        capabilities.remove("ledger.import.source")
+@pytest.mark.parametrize("mutation", ["removed", "added", "changed"])
+def test_artifact_input_authority_refuses_commandspec_metadata_drift(mutation: str) -> None:
+    specs = list(LEDGER_COMMAND_SPECS)
+    if mutation in {"removed", "changed"}:
+        spec_index = next(index for index, spec in enumerate(specs) if spec.key == "app_ledger_evidence_add")
+        spec = specs[spec_index]
+        parameter_index = next(
+            index for index, parameter in enumerate(spec.parameters) if parameter.name == "source_path"
+        )
+        parameters = list(spec.parameters)
+        parameters[parameter_index] = (
+            replace(
+                parameters[parameter_index],
+                transport_locus=TransportLocus.NONE,
+                transport_shape=TransportShape.NOT_APPLICABLE,
+                transport_role=TransportRole.NOT_APPLICABLE,
+            )
+            if mutation == "removed"
+            else replace(parameters[parameter_index], transport_shape=TransportShape.DIRECTORY)
+        )
+        specs[spec_index] = replace(spec, parameters=tuple(parameters))
     else:
-        capabilities.add("ledger.import.future")
+        spec_index = next(index for index, spec in enumerate(specs) if spec.key == "app_ledger_add")
+        spec = specs[spec_index]
+        parameters = list(spec.parameters)
+        parameters[0] = replace(
+            parameters[0],
+            transport_locus=TransportLocus.LOCAL_IN,
+            transport_shape=TransportShape.FILE,
+            transport_role=TransportRole.PRIMARY,
+        )
+        specs[spec_index] = replace(spec, parameters=tuple(parameters))
 
-    with pytest.raises(ValueError, match="artifact-input capability adjudication drifted"):
-        matrix_module._validate_artifact_input_capabilities(frozenset(capabilities))
+    observations = matrix_module._derive_ledger_cli_artifact_input_observations(tuple(specs))
+
+    with pytest.raises(ValueError, match="CommandSpec metadata or semantic mapping drifted"):
+        matrix_module._validate_artifact_input_capabilities(observations)
+
+
+def test_artifact_input_authority_refuses_semantic_selection_mapping_drift() -> None:
+    def changed_selection(observation_id: str) -> tuple[str, ...]:
+        if observation_id == "cli_endpoint:app_ledger_evidence_add":
+            return ("ledger.evidence.batch",)
+        return matrix_module._selection_for_observation(observation_id)
+
+    observations = matrix_module._derive_ledger_cli_artifact_input_observations(
+        selection_for_observation=changed_selection
+    )
+
+    with pytest.raises(ValueError, match="CommandSpec metadata or semantic mapping drifted"):
+        matrix_module._validate_artifact_input_capabilities(observations)
 
 
 def test_serialized_union_refuses_suppressed_artifact_input_after_all_digests_are_refreshed() -> None:
@@ -704,11 +764,11 @@ def test_tui_route_review_covers_every_applicable_row_and_no_backend_helper() ->
         }
     } == {
         "ledger.classification": 9,
-        "ledger.entries": 32,
+        "ledger.entries": 31,
         "ledger.evidence": 21,
         "ledger.import": 13,
         "ledger.overview": 1,
-        "ledger.reconciliation": 587,
+        "ledger.reconciliation": 588,
         "ledger.review": 17,
     }
     assert sum(LedgerGapClass.REACHABILITY in row.gap_classes for row in union.rows) == 679
@@ -718,6 +778,70 @@ def test_tui_route_review_covers_every_applicable_row_and_no_backend_helper() ->
     assert [row.capability_id for row in applicable if row.tui_routes == ("ledger.overview",)] == [
         "ledger.workspace.read"
     ]
+    assert next(row for row in union.rows if row.capability_id == "ledger.transaction.invoice_link").tui_routes == (
+        "ledger.reconciliation",
+    )
+
+
+def test_serialized_union_refuses_supported_surface_selection_outside_its_destination_route_after_remint() -> None:
+    union = _union_denominator()
+    observations = list(union.observations)
+    observation_index = next(
+        index
+        for index, observation in enumerate(observations)
+        if observation.observation_id == "supported_surface:ledger.reconciliation:component_only"
+    )
+    supported_observation = observations[observation_index]
+    observations[observation_index] = supported_observation.model_copy(
+        update={"capability_ids": ("ledger.transaction.list",)}
+    )
+    rows = list(union.rows)
+    for capability_id in ("ledger.transaction.invoice_link", "ledger.transaction.list"):
+        row_index = next(index for index, row in enumerate(rows) if row.capability_id == capability_id)
+        row = rows[row_index]
+        source_observation_ids = set(row.source_observation_ids)
+        if capability_id == "ledger.transaction.invoice_link":
+            source_observation_ids.remove(supported_observation.observation_id)
+            sources = row.sources - {DenominatorSourceKind.SUPPORTED_SURFACE}
+        else:
+            source_observation_ids.add(supported_observation.observation_id)
+            sources = row.sources
+        rows[row_index] = row.model_copy(
+            update={
+                "source_observation_ids": tuple(sorted(source_observation_ids)),
+                "sources": sources,
+            }
+        )
+    source_digests = list(union.source_digests)
+    source_index = next(
+        index for index, item in enumerate(source_digests) if item.source is DenominatorSourceKind.SUPPORTED_SURFACE
+    )
+    supported_observations = tuple(
+        observation for observation in observations if observation.source is DenominatorSourceKind.SUPPORTED_SURFACE
+    )
+    source_digests[source_index] = source_digests[source_index].model_copy(
+        update={
+            "digest": matrix_module._union_source_digest(
+                DenominatorSourceKind.SUPPORTED_SURFACE,
+                supported_observations,
+                union.registry_census,
+                union.tui_census,
+            )
+        }
+    )
+    candidate_basis = union.model_copy(
+        update={
+            "observations": tuple(observations),
+            "source_digests": tuple(source_digests),
+        }
+    )
+    candidate = _refreshed_union_review(candidate_basis, rows=tuple(rows))
+
+    assert candidate.digest == candidate.calculated_digest
+    assert candidate.row_review_digest == candidate.calculated_row_review_digest
+    assert candidate.row_review_attestation.digest == candidate.row_review_attestation.calculated_digest
+    with pytest.raises(ValidationError, match="destination is absent from selected row TUI routes"):
+        LedgerUnionDenominatorV1.model_validate(candidate.model_dump(mode="python"))
 
 
 @pytest.mark.parametrize("mutation", ["add", "remove", "change", "unknown", "reorder", "duplicate"])

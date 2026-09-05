@@ -1494,6 +1494,7 @@ class LedgerUnionDenominatorV1(BaseModel):
     @model_validator(mode="after")
     def _check_union(self) -> LedgerUnionDenominatorV1:
         _artifact_input_capabilities()
+        _validate_supported_surface_route_selections(self.observations, self.rows)
         sources = tuple(item.source for item in self.source_digests)
         if len(set(sources)) != len(sources) or frozenset(sources) != frozenset(DenominatorSourceKind):
             raise ValueError("the union must bind every mandatory source digest exactly once")
@@ -2768,6 +2769,7 @@ _EXPLICIT_BACKEND_HELPER_ONLY_CAPABILITIES: Final[frozenset[str]] = frozenset(
     }
 )
 
+
 @dataclass(frozen=True, slots=True)
 class LedgerCliArtifactInputObservation:
     """One live local-input declaration and every semantic row selected by its command."""
@@ -2991,7 +2993,6 @@ _EXPLICIT_TUI_ROUTE_GROUPS: Final[Mapping[str, frozenset[str]]] = MappingProxyTy
                 "ledger.transaction.create",
                 "ledger.transaction.detach",
                 "ledger.transaction.get",
-                "ledger.transaction.invoice_link",
                 "ledger.transaction.list",
                 "ledger.transaction.merge",
                 "ledger.transaction.split",
@@ -3042,6 +3043,7 @@ _EXPLICIT_TUI_ROUTE_GROUPS: Final[Mapping[str, frozenset[str]]] = MappingProxyTy
                 "ledger.ratio.unset",
                 "ledger.ratio.validate",
                 "ledger.ratios.eligible",
+                "ledger.transaction.invoice_link",
             }
         ),
     }
@@ -3150,6 +3152,30 @@ def _validate_tui_route_adjudication(
             raise ValueError(f"TUI route adjudication names unknown routes: {sorted(unknown)!r}")
     if adjudication != _EXPLICIT_TUI_ROUTE_ADJUDICATION:
         raise ValueError("TUI route adjudication drifted from the exhaustive reviewed mapping")
+
+
+def _validate_supported_surface_route_selections(
+    observations: tuple[LedgerUnionSourceObservationV1, ...],
+    rows: tuple[LedgerUnionCapabilityRowV1, ...],
+) -> None:
+    """Require every supported-surface selection to name a row routed through that surface."""
+    rows_by_id = {row.capability_id: row for row in rows}
+    for observation in observations:
+        if observation.source is not DenominatorSourceKind.SUPPORTED_SURFACE:
+            continue
+        parts = observation.observation_id.split(":")
+        if len(parts) != 3 or parts[0] != "supported_surface":
+            raise ValueError(f"supported-surface observation has an invalid identity: {observation.observation_id}")
+        destination = parts[1]
+        for capability_id in observation.capability_ids:
+            row = rows_by_id.get(capability_id)
+            if row is None:
+                raise ValueError(f"supported-surface observation selects an unavailable row: {capability_id}")
+            if destination not in row.tui_routes:
+                raise ValueError(
+                    "supported-surface observation destination is absent from selected row TUI routes: "
+                    f"{observation.observation_id} -> {capability_id}"
+                )
 
 
 def _tui_routes_for(
