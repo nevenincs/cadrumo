@@ -2,14 +2,19 @@
 tags:
   - '#exec'
   - '#tui-architecture'
-date: '2026-09-04'
-modified: '2026-09-04'
+date: '2026-09-05'
+modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:c8155d77d6db2814bf78d8a1f3f18ace2fe48fd50a9303629abc6019b90b1e64'
+body_hash: 'sha256:a4e1ad012f1582b4181fcffcf088170801051cc40b47034d5261526ac231b698'
 step_id: 'S408'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
+
+<!-- Machine-owned: the filename, the frontmatter, the title heading and the
+     Scope list are all filled by `vaultspec-core vault add exec` from the
+     originating Step row; never hand-edit them. Add no frontmatter fields.
+     Wiki-links belong in `related:` only, never in the body. -->
 
 # Give AEAT Sync its local row readers, or state per zone why the local authority cannot be read. The installed workspace projects overview rows only: census, filed-declaration, notification, evidence-comparison and reconciliation rows have no installed reader, so LOCAL_PROFILE and LOCAL_FILINGS report observable counts beside zones that carry no rows, while LOCAL_NOTIFICATION_CUSTODY and LOCAL_RECONCILIATION are UNAVAILABLE outright. The refusals are honest today; a workspace whose local side is permanently empty is not the target state.
 
@@ -19,71 +24,47 @@ related:
 
 ## Changes
 
+- `A` `src/cadrumo/adapters/persistence/profile/notification_documents.py`
+- `M` `src/cadrumo/entrypoints/cli/_app_live_notifications_cli.py`
 - `M` `src/cadrumo/application/aeat_sync/workspace_reader.py`
+- `M` `src/cadrumo/application/workbench_generation.py`
+- `M` `src/cadrumo/entrypoints/tui/launcher.py`
 - `M` `src/cadrumo/application/aeat_sync/tests/test_workspace.py`
-- `verify:` `pytest -n0 -m '' application/aeat_sync/tests` -> `pass` (26)
+- `verify:` `pytest -n0 -m '' application/aeat_sync/tests application/tests/test_workbench_generation.py tui/aeat_sync/tests` -> `pass` (112)
 
 ## Notes
 
-Step left OPEN: no new row reader is composed. What changed is that the
-refusals now name their real condition, which is a prerequisite for composing
-them and was actively misleading before.
+The notification-document repository was composed inline in the CLI entrypoint
+-- namespace, object key and two error factories -- so a TUI read could only
+have duplicated it. It now has one canonical home,
+`adapters/persistence/profile/notification_documents.py`, and the CLI imports
+it: a TUI read and a CLI write cannot end up pointed at different stores.
 
-One constant, `local_row_reader_unavailable`, covered two opposite situations.
-For LOCAL_RECONCILIATION it is exactly right: nothing in the codebase records
-local reconciliation decisions, so the work is to write an authority. For
-LOCAL_NOTIFICATION_CUSTODY it is false.
-`NotificationDocumentService.list_documents` reads local custody today and
-answers before any pull -- with an empty tuple when custody is empty, which is
-a proven zero rather than an absence. Calling that a missing reader sends
-whoever picks the step up to write something already written. The gap there is
-composition, and `local_reader_not_composed` says so.
+AEAT Sync's LOCAL_NOTIFICATION_CUSTODY source now reports a real count, read
+through that same factory. The reader takes only the count -- AEAT Sync needs
+to know whether anything is held, not what it says, and decrypting document
+payloads to answer that would be a disproportionate read.
 
-The distinction is invisible on screen: both render as a refused source, so
-nothing but the reason code carries it and nothing but a gate keeps the two
-from collapsing back into one convenient constant. Teeth proven by emptying the
-per-source table so both fall back to the generic refusal -- `notification
-custody IS readable today, so calling its refusal a missing reader sends the
-next person to write a reader that already exists`. Restored by copy and
-verified.
+Three states stay distinct where there were two. An UNBOUND reader is a
+composition gap (`local_reader_not_composed`); a bound reader answering ZERO is
+a proven zero the operator can act on; a positive count is what is held.
+Collapsing the first two would tell an operator their custody is empty on the
+strength of nobody having asked.
 
-Still true and unchanged: the AEAT half of every zone is NEVER_CAPTURED until a
-pull, and census, evidence-comparison and reconciliation rows have no producer.
-The next actionable slice is composing `list_documents` into the reader, which
-also requires extending the capture-coherence guard to cover the new read --
-deliberately not started here rather than left half-wired.
+The count is read inside the capture window and re-read at its close, joining
+the other sources under the coherence guard: a document landing mid-capture
+would otherwise let AEAT Sync publish a count that was never true at any single
+instant.
 
-Pre-existing and NOT caused by this change:
-`test_completing_one_overview_operation_keeps_the_other_action_reachable` fails
-in both parametrisations. It was confirmed failing against a HEAD copy of the
-module earlier in this campaign, passed once in an intervening run, and is
-failing again; this change touches only local-source refusals and that test
-builds its own all-AVAILABLE observations.
+Teeth proven by coercing an unread store to zero (`custody_count or 0`): the
+gate fails with `assert None == 'workbench.aeat_sync.local_reader_not_composed'`.
+Restored by copy.
 
-CORRECTION to the next-slice estimate. This record, and the report that
-followed it, called composing `list_documents` into the reader the one
-remaining mechanical item. It is not mechanical, and the shape is worth
-recording so the estimate is not made a third time.
+One pre-existing failure is NOT mine and not a regression:
+`test_live_notifications_pull_persists_a_grounded_snapshot_and_no_remote_write`
+refuses with `selected live test requires CADRUMO_LIVE_TESTS_ENABLED=1`. It is
+an environment gate, not an assertion; 95 of 96 notification tests pass.
 
-`NotificationDocumentService` cannot be what the door composes: its constructor
-takes six ports including a `document_fetcher`, and a read-only pre-pull
-generation door must not acquire network capability to count local records.
-`list_documents` in fact needs only `repository_factory(bucket_id).list_snapshots()`,
-so the door needs the REPOSITORY, which matches how it takes every other
-dependency.
-
-That repository is not composable from here today. Its construction is roughly
-eighteen lines of adapter configuration -- namespace definition, object key,
-two error factories, domain label -- and it lives inside
-`entrypoints/cli/_app_live_notifications_cli.py`. Duplicating it in the TUI
-launcher would create a second definition of the same thing, which
-`aeat-architecture-boundaries` forbids; the correct move is to promote it to a
-canonical public module and have both entrypoints import it.
-
-So the work is: promote the factory, inject it as a narrow reader callable
-matching `account_session_reader`'s existing shape, thread the count through
-the reader, extend the capture-coherence guard to cover the new read, and gate
-all of it. That is an architecture change touching a CLI entrypoint another
-writer is actively committing in, not a call added to an existing composition.
-Deliberately not started rather than begun and left half-applied, which would
-leave the coherence guard inconsistent.
+STILL OPEN: census, evidence-comparison and reconciliation rows carry no values
+(item 4), and LOCAL_RECONCILIATION still has no authority anywhere -- its
+`local_row_reader_unavailable` refusal remains correct.
