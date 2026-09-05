@@ -20,7 +20,7 @@ from datetime import date, datetime
 from enum import StrEnum
 from pathlib import Path
 from types import MappingProxyType
-from typing import Final, Literal, cast, override
+from typing import Final, Literal, TypedDict, cast, override
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
 from pydantic_core import to_jsonable_python
@@ -2997,6 +2997,18 @@ _PRIMARY_GAP_PRIORITY: Final[tuple[LedgerGapClass, ...]] = (
 )
 
 
+class _ReviewedUnionRowFields(TypedDict):
+    applicability: tuple[LedgerAxisApplicabilityDecisionV1, ...]
+    gap_classes: frozenset[LedgerGapClass]
+    primary_gap_class: LedgerGapClass
+    secondary_gap_classes: tuple[LedgerGapClass, ...]
+    proof_requirements: tuple[str, ...]
+    blockers: tuple[str, ...]
+    next_action: str
+    registry_destination_status: LedgerRegistryDestinationStatus
+    review_ruling: LedgerUnionRowReviewRuling
+
+
 def _registry_destination_status(
     effect: LedgerCapabilityEffect,
     registry_row: LedgerRegistryRouteRowV1 | None,
@@ -3025,7 +3037,7 @@ def _reviewed_union_row_fields(
     tui_reachability: Mapping[str, str],
     cli_ownership: frozenset[str],
     registry_row: LedgerRegistryRouteRowV1 | None,
-) -> dict[str, object]:
+) -> _ReviewedUnionRowFields:
     """Return the complete reproducible result of the exhaustive row review."""
     gaps = {LedgerGapClass.PROOF}
     if cli_ownership & {"mixed", "policy-bearing"}:
@@ -3104,7 +3116,10 @@ def _reviewed_union_row_fields(
             "Assign a typed registry destination or an explicit non-applicable disposition that cannot suppress a fact."
         )
     elif destination_status is LedgerRegistryDestinationStatus.DIRECT:
-        next_action = "Prove nonzero calculation, exclusions, missing-versus-zero behavior, and finish-line refusal for this route."
+        next_action = (
+            "Prove nonzero calculation, exclusions, missing-versus-zero behavior, "
+            "and finish-line refusal for this route."
+        )
     elif primary_gap is LedgerGapClass.PRODUCT:
         next_action = (
             f"Implement {semantic_home.command_type} and {semantic_home.result_type}, then prove every applicable axis."
@@ -4901,8 +4916,8 @@ __all__ = [
     "LedgerGateClosureReceiptV1",
     "LedgerLiveCensusReportV1",
     "LedgerMatrixAcceptanceAttestationV1",
-    "LedgerRegistryRouteCensusV1",
     "LedgerRegistryDestinationStatus",
+    "LedgerRegistryRouteCensusV1",
     "LedgerRegistryRouteRowV1",
     "LedgerRegistryRouteTargetV1",
     "LedgerTuiRouteRowV1",

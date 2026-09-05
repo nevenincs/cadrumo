@@ -66,6 +66,7 @@ from ..clitui_ledger_capability_matrix import (
     LedgerRegistryDestinationStatus,
     LedgerRegistryRouteCensusV1,
     LedgerTuiSupportedSurfaceCensusV1,
+    LedgerUnionCapabilityRowV1,
     LedgerUnionDenominatorV1,
     LedgerUnionRowReviewAttestationV1,
     LedgerUnionRowReviewRuling,
@@ -131,12 +132,9 @@ def _refreshed_union_digest(union: LedgerUnionDenominatorV1, **updates: object) 
 def _refreshed_union_review(
     union: LedgerUnionDenominatorV1,
     *,
-    rows: tuple[object, ...],
+    rows: tuple[LedgerUnionCapabilityRowV1, ...],
 ) -> LedgerUnionDenominatorV1:
-    reviewed_rows = cast(tuple[matrix_module.LedgerUnionCapabilityRowV1, ...], rows)
-    refreshed_rows = tuple(
-        row.model_copy(update={"review_digest": row.calculated_review_digest}) for row in reviewed_rows
-    )
+    refreshed_rows = tuple(row.model_copy(update={"review_digest": row.calculated_review_digest}) for row in rows)
     candidate = union.model_copy(
         update={
             "rows": refreshed_rows,
@@ -512,6 +510,10 @@ def test_serialized_union_refuses_provenance_applicability_contradiction() -> No
     provenance_index = next(i for i, item in enumerate(decisions) if item["axis"] is LedgerCapabilityAxis.PROVENANCE)
     changed_decision = dict(decisions[provenance_index])
     changed_decision["applicability"] = ApplicabilityState.NOT_APPLICABLE
+    changed_decision["proof"] = AxisProofState.NOT_APPLICABLE
+    changed_decision["proof_requirement"] = (
+        "No independent proof obligation applies because this axis is not applicable."
+    )
     decisions[provenance_index] = changed_decision
     changed_row["applicability"] = tuple(decisions)
     rows[index] = changed_row
@@ -591,9 +593,9 @@ def test_union_row_review_preserves_registry_destination_and_tui_hold_cohorts() 
     }
     assert sum(row.primary_gap_class is LedgerGapClass.AUTHORITY for row in union.rows) == 112
     assert sum(row.primary_gap_class is LedgerGapClass.REGISTRY for row in union.rows) == 546
-    assert sum(row.primary_gap_class is LedgerGapClass.PRODUCT for row in union.rows) == 31
+    assert sum(row.primary_gap_class is LedgerGapClass.PRODUCT for row in union.rows) == 34
     assert sum(row.primary_gap_class is LedgerGapClass.ARTIFACT for row in union.rows) == 1
-    assert sum(row.primary_gap_class is LedgerGapClass.PROOF for row in union.rows) == 3
+    assert sum(row.primary_gap_class is LedgerGapClass.PROOF for row in union.rows) == 0
     assert sum(row.tui_hold_until is LEDGER_TUI_HOLD_UNTIL_GATE for row in union.rows) == 680
     assert sum(row.tui_hold_until is None for row in union.rows) == 13
 
