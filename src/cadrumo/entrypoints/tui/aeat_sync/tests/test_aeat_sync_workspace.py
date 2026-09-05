@@ -1094,9 +1094,7 @@ async def test_the_census_comparison_shows_both_values_or_neither(width: int) ->
     "screen_type",
     [AeatSyncCensusScreen, AeatSyncEvidenceComparisonScreen, AeatSyncReconciliationScreen],
 )
-async def test_every_comparison_surface_shows_both_values_or_neither(
-    screen_type: _ScreenFactory, width: int
-) -> None:
+async def test_every_comparison_surface_shows_both_values_or_neither(screen_type: _ScreenFactory, width: int) -> None:
     """One rule, asserted on all three surfaces that compare two sides.
 
     The column fitter is shared precisely so the rule cannot drift between

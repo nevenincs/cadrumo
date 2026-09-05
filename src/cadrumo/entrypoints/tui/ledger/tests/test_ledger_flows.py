@@ -545,5 +545,3 @@ def test_a_classification_target_outside_the_visible_projection_is_refused() -> 
     )
     with pytest.raises(ValueError, match="absent from the visible Ledger projection"):
         controller.select_classification_target("f" * 64)
-
-
