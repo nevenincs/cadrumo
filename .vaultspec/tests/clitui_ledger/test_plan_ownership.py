@@ -86,8 +86,8 @@ _REVIEWED_PLURAL_PATTERN: Final[re.Pattern[str]] = re.compile(
     re.IGNORECASE,
 )
 _REVIEWED_EXCLUDE_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (re.compile(r"\baudit\s+ledgers?\b", re.IGNORECASE),)
-_EXPECTED_PLAN_ROW_COUNT: Final[int] = 433
-_EXPECTED_PLAN_CHECKED_COUNT: Final[int] = 417
+_EXPECTED_PLAN_ROW_COUNT: Final[int] = 434
+_EXPECTED_PLAN_CHECKED_COUNT: Final[int] = 418
 
 
 @dataclass(frozen=True, slots=True)
