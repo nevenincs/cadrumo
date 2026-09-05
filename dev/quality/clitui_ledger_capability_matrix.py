@@ -2190,7 +2190,7 @@ _LEDGER_ARTIFACT_OBSERVATIONS: Final[tuple[tuple[str, str], ...]] = (
 )
 
 
-_LEDGER_TUI_ROUTE_CAPABILITIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
+_LEDGER_TUI_ROUTE_OBSERVATION_CAPABILITIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
     {
         "ledger.overview": ("ledger.workspace.read",),
         "ledger.entries": ("ledger.transaction.list",),
@@ -2764,6 +2764,197 @@ _EXPLICIT_BACKEND_HELPER_ONLY_CAPABILITIES: Final[frozenset[str]] = frozenset(
         "ledger.workspace.affected_declarations",
         "ledger.workspace.project",
     }
+)
+
+_EXPLICIT_ARTIFACT_INPUT_CAPABILITIES: Final[frozenset[str]] = frozenset(
+    {
+        "ledger.classification.bulk_csv",
+        "ledger.import",
+        "ledger.import.directory",
+        "ledger.import.dry_run",
+        "ledger.import.file",
+        "ledger.import.provider_auto",
+        "ledger.import.provider_csv",
+        "ledger.import.provider_n26",
+        "ledger.import.provider_ofx_qfx",
+        "ledger.import.provider_pdf",
+        "ledger.import.provider_pdf_n26",
+        "ledger.import.provider_xlsx_excel",
+        "ledger.import.source",
+        "ledger.import.verify",
+        "ledger.invoice.import",
+    }
+)
+
+_EXPLICIT_TUI_ROUTE_GROUPS: Final[Mapping[str, frozenset[str]]] = MappingProxyType(
+    {
+        "ledger.overview": frozenset({"ledger.workspace.read"}),
+        "ledger.classification": frozenset(
+            {
+                "ledger.categories",
+                "ledger.classification.bulk_csv",
+                "ledger.classification.rule_add",
+                "ledger.classification.rule_apply",
+                "ledger.classify",
+                "ledger.classify.direct",
+                "ledger.classify.m210",
+                "ledger.rule.apply.preview",
+                "ledger.rule.list",
+            }
+        ),
+        "ledger.evidence": frozenset(
+            {
+                "ledger.evidence.add",
+                "ledger.evidence.attachment_queue",
+                "ledger.evidence.attachment_view",
+                "ledger.evidence.batch",
+                "ledger.evidence.confirm",
+                "ledger.evidence.consent.list",
+                "ledger.evidence.consent.rederive",
+                "ledger.evidence.download",
+                "ledger.evidence.extract",
+                "ledger.evidence.list",
+                "ledger.evidence.pull",
+                "ledger.evidence.pull.drive",
+                "ledger.evidence.pull.gmail",
+                "ledger.evidence.pull.url",
+                "ledger.evidence.pull_all",
+                "ledger.evidence.remove",
+                "ledger.evidence.replace",
+                "ledger.evidence.review.list",
+                "ledger.evidence.review.view",
+                "ledger.evidence.update",
+                "ledger.evidence.view",
+            }
+        ),
+        "ledger.import": frozenset(
+            {
+                "ledger.import",
+                "ledger.import.directory",
+                "ledger.import.dry_run",
+                "ledger.import.file",
+                "ledger.import.provider_auto",
+                "ledger.import.provider_csv",
+                "ledger.import.provider_n26",
+                "ledger.import.provider_ofx_qfx",
+                "ledger.import.provider_pdf",
+                "ledger.import.provider_pdf_n26",
+                "ledger.import.provider_xlsx_excel",
+                "ledger.import.source",
+                "ledger.import.verify",
+            }
+        ),
+        "ledger.review": frozenset(
+            {
+                "ledger.field_change.provenance",
+                "ledger.fx.provenance",
+                "ledger.import.normalization_provenance",
+                "ledger.list.rejected_llm_filter",
+                "ledger.llm.apply",
+                "ledger.llm.apply_saturated",
+                "ledger.llm.apply_split",
+                "ledger.llm.classify_with_evidence",
+                "ledger.llm.diagnostics",
+                "ledger.llm.iva_derive",
+                "ledger.llm.reject",
+                "ledger.llm.saturate",
+                "ledger.llm.suggest",
+                "ledger.llm.suggest_split",
+                "ledger.manual_override.provenance",
+                "ledger.note.append",
+                "ledger.transaction.review_query",
+            }
+        ),
+        "ledger.entries": frozenset(
+            {
+                "ledger.allocate",
+                "ledger.check",
+                "ledger.history",
+                "ledger.history.direct",
+                "ledger.history.split_siblings",
+                "ledger.lifecycle.archive",
+                "ledger.lifecycle.remove",
+                "ledger.lifecycle.remove.commit",
+                "ledger.lifecycle.remove.preview",
+                "ledger.lifecycle.reset",
+                "ledger.lifecycle.reset.commit",
+                "ledger.lifecycle.reset.preview",
+                "ledger.lifecycle.restore",
+                "ledger.lifecycle.reviewed_exclude",
+                "ledger.lifecycle.stash",
+                "ledger.list",
+                "ledger.list.filter",
+                "ledger.list.group",
+                "ledger.list.page",
+                "ledger.list.sort",
+                "ledger.track",
+                "ledger.transaction.attach",
+                "ledger.transaction.batch_patch",
+                "ledger.transaction.create",
+                "ledger.transaction.detach",
+                "ledger.transaction.get",
+                "ledger.transaction.invoice_link",
+                "ledger.transaction.list",
+                "ledger.transaction.merge",
+                "ledger.transaction.split",
+                "ledger.transaction.status_summary",
+                "ledger.transaction.update_fields",
+            }
+        ),
+        "ledger.reconciliation": frozenset(
+            {
+                "ledger.bienes_inversion.declare",
+                "ledger.bienes_inversion.list",
+                "ledger.counterparty.forget",
+                "ledger.counterparty.record",
+                "ledger.counterparty.resolve",
+                "ledger.export.csv",
+                "ledger.export.flat",
+                "ledger.export.google_transport",
+                "ledger.export.jsonl",
+                "ledger.export.provenance",
+                "ledger.export.restore_archive",
+                "ledger.export.review_package",
+                "ledger.export.xlsx",
+                "ledger.inventory.closing_authority.record",
+                "ledger.inventory.create",
+                "ledger.inventory.list",
+                "ledger.inventory.movement.add",
+                "ledger.inventory.valuation.preview",
+                "ledger.invoice.add",
+                "ledger.invoice.import",
+                "ledger.invoice.list",
+                "ledger.invoice.remove",
+                "ledger.invoice.update",
+                "ledger.invoice.view",
+                "ledger.invoice.wizard",
+                "ledger.participation.get",
+                "ledger.participation.rebuild",
+                "ledger.preflight.readiness",
+                "ledger.prorrata.declare_sector",
+                "ledger.prorrata.elect_especial",
+                "ledger.prorrata.elect_general",
+                "ledger.prorrata.list",
+                "ledger.prorrata.revoke_especial",
+                "ledger.prorrata.seed",
+                "ledger.prorrata.seed_sector",
+                "ledger.prorrata.settle_sector",
+                "ledger.ratio.list",
+                "ledger.ratio.set",
+                "ledger.ratio.unset",
+                "ledger.ratio.validate",
+                "ledger.ratios.eligible",
+            }
+        ),
+    }
+)
+
+_EXPLICIT_TUI_ROUTE_ADJUDICATION: Final[tuple[tuple[str, tuple[str, ...]], ...]] = tuple(
+    sorted(
+        (capability_id, (route,))
+        for route, capability_ids in _EXPLICIT_TUI_ROUTE_GROUPS.items()
+        for capability_id in capability_ids
+    )
 )
 
 
