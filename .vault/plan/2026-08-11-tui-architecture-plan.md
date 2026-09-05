@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-05'
-body_hash: 'sha256:ecf11d87b05592dc458c00df2cbbf1e970c4a39f444b461560a699c8e1b0b150'
+body_hash: 'sha256:4a38822181185f61c1ac4a547b97c799eeb14bbc581f749204aebafd550167ad'
 ---
 
 <!-- RETIRED: S370 -->
@@ -650,6 +650,7 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S434` - Read the casilla label pins from the compiled adjudication authorities instead of their TOML. The unique cohort's ledger does not serialise official_label_sha256 at all -- its compiler derives the digest from the record-design intermediate and the semantic map at compile time -- so a gate parsing raw TOML found nothing to assert for that whole cohort and reported itself green. Reading the compiled authority is what the registry authority flow requires and is what makes the assertion cover those casillas.; `dev/locales/tests/test_casilla_label_matches_pinned_official_text.py`.
 - [x] `W08.P30.S435` - Give the page-resolved M200/2024 casillas their own adjudication cohort and compiler, so the label gate asserts them. The 40 record-qualified casillas grounded in S431 and S432 belong to no existing cohort, so nothing pinned them. Follow the established pattern: a receipt TOML whose every digest the compiler re-derives from the bundled design rather than trusting, refusing a member that does not resolve to exactly one cell on its own page or whose declared section that cell contradicts.; `dev/registry/analysis/m200_2024_page_resolved_adjudications.py, dev/registry/analysis/m200_2024_page_resolved_adjudications.toml, dev/registry/tests/test_m200_2024_page_resolved_adjudications.py, dev/locales/tests/test_casilla_label_matches_pinned_official_text.py`.
 - [x] `W08.P30.S436` - Repair the 412 ellipsis-truncated M200/2024 labels from the design their declarations actually cite, and gate the defect class. The truncated casillas cite aeat-dr-200-2025, not the 2024 design every other cohort resolves against, so repairing from 2024 would have silently reauthored 412 filing-bound labels while looking correct. Resolve each against the 2025 design by the exact prefix the truncated label still carries, corroborate against the declared section, then translate the recovered tails and close the Hungarian gaps that sat behind them.; `src/cadrumo/locales/*/modelo/schema/200.yml, dev/locales/tests/test_casilla_labels_are_not_truncated.py`.
+- [x] `W08.P30.S437` - Adjudicate the 16 M200/2024 casillas whose declaration appeared to contradict its own authority. Nine are not contradictions at all: their declared section carries a year prefix that does not name the label's cohort year, and each already carries a pin that settles the text. Three are genuine, their number appearing in neither design under the section they declare. Four are structural: two symbolic identifiers that name no design row, and two whose number repeats on their own page.; `src/cadrumo/locales/*/modelo/schema/200.yml`.
 
 ## Parallelization
 
