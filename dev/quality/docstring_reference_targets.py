@@ -52,7 +52,14 @@ __all__ = [
     "docstring_references",
 ]
 
-_PACKAGE_ROOT = Path(__file__).resolve().parent.parent.parent / "src" / "cadrumo"
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+_PACKAGE_ROOT = _REPO_ROOT / "src" / "cadrumo"
+
+#: Trees that are not scanned for findings but whose module names a docstring
+#: may legitimately reference. A gate in `src` naming its counterpart in
+#: `dev/tests` is citing something real; reporting it would be an artefact of
+#: where this screen happens to look.
+_SIBLING_TREES: tuple[Path, ...] = (_REPO_ROOT / "dev", _REPO_ROOT / "src" / "cadrumo_harness")
 
 #: Sphinx roles that name a code object. ``:ref:`` and ``:doc:`` name document
 #: anchors instead and are not this screen's business.
@@ -186,6 +193,14 @@ def _subscript_names(target: str) -> tuple[str, ...]:
 def dangling_references(root: Path) -> tuple[DanglingReference, ...]:
     """Report each cross-reference naming something the package does not define."""
     defined, imported, modules = collect_defined_names(root)
+    for sibling in _SIBLING_TREES:
+        if sibling.exists():
+            # MODULE names only. Pulling in every symbol these trees define
+            # would let a shipped docstring resolve against a dev-only function
+            # and quietly stop reporting a reference that crosses out of the
+            # package -- which is a finding, not noise.
+            _sibling_defined, _sibling_imported, sibling_modules = collect_defined_names(sibling)
+            modules |= sibling_modules
     # A `:mod:` role is habitually written relatively -- ``:mod:`_ledger``` for
     # ``cadrumo.entrypoints.cli._ledger`` -- so a bare last segment names a real
     # module and must not be reported as dangling.
