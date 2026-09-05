@@ -863,3 +863,35 @@ def test_unrelated_string_matching_the_old_name_is_still_refused(tmp_path: Path)
 
     with pytest.raises(ObjectNameTransformError, match="unsupported string reference"):
         plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
+
+
+def test_consumer_definition_sharing_the_defining_line_is_not_mistaken_for_the_target(tmp_path: Path) -> None:
+    """A consumer's own definition at the target's line number must not refuse the plan."""
+    consumer = "\n".join(
+        [
+            "from .contracts import Widgets",
+            "",
+            "",
+            "def unrelated_helper() -> Widgets:",
+            "    return Widgets()",
+            "",
+        ]
+    )
+    sources = {
+        # `Widgets` is defined on line 4 here, and the consumer defines a function on its line 4.
+        "src/example/contracts.py": "\n".join(["import os", "", "", "class Widgets:", "    pass", ""]),
+        "src/example/consumer.py": consumer,
+    }
+    inventory = _inventory(tmp_path, sources)
+    declaration = _declaration(inventory, path="src/example/contracts.py", name="Widgets")
+    assert declaration.line == 4
+    payloads = _tree_bytes(tmp_path)
+    operation = _operation(declaration, target_name="Widget", sources=payloads)
+    manifest = _manifest(inventory, operation)
+
+    result = plan_object_name_transformation(manifest, repo_root=tmp_path)
+
+    rendered = {path: payload.decode("utf-8") for path, payload in result.content_by_path().items()}
+    assert "class Widget:" in rendered["src/example/contracts.py"]
+    assert "def unrelated_helper() -> Widget:" in rendered["src/example/consumer.py"]
+    assert "unrelated_helper" in rendered["src/example/consumer.py"]
