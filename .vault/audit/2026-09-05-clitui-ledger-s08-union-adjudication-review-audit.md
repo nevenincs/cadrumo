@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:2c478608fd1c48b00bdef919662bf959d49f18ab1fcd387f4cf9a74de313bdf8'
+body_hash: 'sha256:48188088aae249280b643e863ea6b98ac2daff4b1e028b831f62cfc5d7ebe991'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-reference]]"
@@ -231,3 +231,47 @@ remediation commit scope found no production backend, CLI, or TUI edits.
 - `uv run --no-sync ruff format --check ...` and scoped `ruff check`: passed.
 - `uv run --no-sync ty check dev/quality/clitui_ledger_capability_matrix.py`: passed.
 - `uv run --no-sync vaultspec-core vault check all --feature clitui-ledger`: passed before this audit append.
+
+## Second remediation review
+
+**Ruling: NOT ACCEPTED.** The 214-entry non-registry map has the exact
+78/50/63/10/6/7 stream partition, no selection fallback, and ordered tuple
+checks. Added observations reusing existing identities, removals, duplicates,
+and changed or reordered selections are refused. The five provenance queries
+and `ledger.evidence.download` are now provenance-applicable, retain coherent
+provenance gaps and lineage proof requirements, and the serialized
+applicability contradiction is rejected. The 760 observations, 769 edges, 693
+rows, four existing/689 planned homes, joins/effects, and
+`sha256:46b2292f43821f5d120e71ddff6a7bc2a46a9ed75ebb974f641481b794ddf0a9`
+were independently reproduced.
+
+### serialized-observation-authority-is-incomplete | high | Source identities and registry selections can be rewritten after projection
+
+The model validator applies the non-registry map as
+`observation_id -> ordered selections`, but does not bind the expected source
+kind. Relabeling `cli_endpoint:app_ledger_allocate` from `CLI_ENDPOINT` to
+`MISSING_PRODUCT`, updating the two source counts and row source, and
+recomputing the public aggregate digest is accepted by
+`LedgerUnionDenominatorV1.model_validate`.
+
+Registry authority is checked only by the build-time
+`_validate_registry_observation_projection` call. The serialized validator
+does not invoke an equivalent exact 546-entry authority. Renaming one
+`registry_route:*` observation, updating its row observation membership, and
+recomputing the aggregate digest is also accepted. Its unchanged source digest
+is not cross-checked against embedded observations. Thus a refreshed baseline
+can preserve source relabeling or a fabricated registry identity despite the
+reference claim that all registry observation identities, selections, and
+source drift are mechanically checked.
+
+Bind and validate the complete canonical `(source, observation_id) -> ordered
+selection tuple` authority for all 760 observations, including the 546 live
+registry projections. Serialized validation must verify exact membership,
+per-source counts, row membership, source digests against their governed
+material, and the aggregate digest. Add recomputed-digest mutations for
+cross-source relabeling and registry ID removal, addition, duplication,
+selection change, and rename.
+
+G0 remains OPEN and no production backend, CLI, or TUI implementation was
+introduced by S08. The full matrix module passes all 207 tests. Ruff
+format/check, scoped `ty`, and the feature Vault check pass.
