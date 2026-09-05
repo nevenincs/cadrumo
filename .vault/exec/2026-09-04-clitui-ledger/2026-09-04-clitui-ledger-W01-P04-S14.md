@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:2ed694c467739d413db86acfa996eb22cddf521a3fa5ab631b2cd3c9519f8722'
+body_hash: 'sha256:9f23f6c0c7471a052b71d97cedbbd8ae0c52dce7721a74b4cb2d9394ee863651'
 step_id: 'S14'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
@@ -24,7 +24,7 @@ related:
 - The installed read-only Overview supported-surface observation selects only `ledger.workspace.read`; it does not select preparation, `ledger.import.source`, or any import execution.
 - The TUI source selector hashes full Ledger package, dedicated Ledger test, and Ledger specification bodies. For the five shared composition roots it hashes only deterministic AST/source facts for Ledger imports, named factories, injected actions, and destination enrollment; unrelated TUI helpers cannot reopen G0, while a Ledger dependency, door, route, or enrollment change does.
 - Live union: **761 observations / 770 selected edges / 694 reviewed rows**. Preparation is now one of 14 explicit backend-helper-only rows. The higher-level `ledger.import.source` authority and parity gaps remain unchanged.
-- The predecessor TUI plan was independently parsed at its current concurrent baseline of **432 rows / 415 checked**. Its exact Ledger overlap remains 27 retained evidence rows, one retired-premise marker, and five displaced-and-held rows; `S411` and mixed-scope `S424` remain open and held so their checkboxes agree with their dispositions.
+- The predecessor TUI plan was independently parsed at its current concurrent baseline of **433 rows / 417 checked**. Its exact Ledger overlap remains 27 retained evidence rows, one retired-premise marker, and five displaced-and-held rows; `S411` and mixed-scope `S424` remain open and held so their checkboxes agree with their dispositions.
 - The publication now binds its cohorts to the canonical matrix/TUI projections: 690 planned rows, 148 non-registry rows, 14 backend-helper/TUI-not-applicable rows, and 690 planned rows retaining a `PRODUCT` gap. Production has two read `ActionReference`s plus an inert classification `ActionReference` without target/submitter, and zero executable mutation doors.
 
 ## Evidence
