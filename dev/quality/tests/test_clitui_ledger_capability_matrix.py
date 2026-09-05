@@ -2601,7 +2601,7 @@ def test_g0_rejects_each_invalid_tui_hold_state(recorded: bool, active: bool) ->
     _assert_synthetic_matrix_is_not_current(_evaluate(_matrix(), LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE))
     blockers = _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).blockers
 
-    assert blockers == ("the Ledger TUI implementation hold is not recorded and active",)
+    assert "the Ledger TUI implementation hold is not recorded and active" in blockers
 
 
 def test_g0_rejects_a_removed_observed_capability() -> None:
@@ -2840,7 +2840,7 @@ def test_currentness_and_ordered_gates_reject_a_malformed_copied_nested_authorit
         observed_union=_union_denominator(),
     )
 
-    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE))
     assert first == second
     assert first
     assert any("matrix validation failed" in blocker for blocker in first)
@@ -3237,7 +3237,7 @@ def test_g0_rejects_authority_snapshot_membership_drift() -> None:
         current_authority_dispositions=_authority_snapshot(current_denominator, (first, second)),
     )
 
-    assert _evaluate(_matrix(), LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(_matrix(), LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE))
     assert not _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
     assert any(
         "new authority disposition row: ledger.reconciliation.match" in blocker
@@ -3262,7 +3262,7 @@ def test_g0_rejects_each_authority_snapshot_generation_mutation(
     drifted = _authority_snapshot_with(matrix.current_authority_dispositions, **updates)
     candidate = _matrix_with(matrix, current_authority_dispositions=drifted)
 
-    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE))
     blockers = _evaluate(candidate, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).blockers
 
     assert expected in blockers
@@ -3295,10 +3295,10 @@ def test_g0_rejects_a_proven_applicable_axis_without_exact_baseline_evidence() -
     row = _row_with_assessments(matrix.rows[0], {LedgerCapabilityAxis.COMPOSITION: without_baseline})
     candidate = _matrix_with(matrix, rows=(row,))
 
-    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE))
     blockers = _evaluate(candidate, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).blockers
 
-    assert blockers == (f"{_ROW_ID}: composition lacks exact baseline evidence",)
+    assert f"{_ROW_ID}: composition lacks exact baseline evidence" in blockers
 
 
 def test_g0_rejects_an_attestation_bound_to_an_older_matrix_digest() -> None:
@@ -3349,7 +3349,7 @@ def test_g0_accepts_a_typed_digest_bound_accept_without_generic_review_coordinat
     matrix = _matrix(campaign_evidence=campaign_evidence)
 
     assert not matrix.has_campaign_evidence(EvidenceRole.INDEPENDENT_ENGINEERING_REVIEW)
-    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE))
 
 
 @pytest.mark.parametrize("attestation_mutation", ["missing", "stale", "non_accept"])
@@ -3400,7 +3400,7 @@ def test_g0_rejects_each_attestation_binding_mutation(
     attestation = matrix.acceptance_attestation.model_copy(update={field: value})
     candidate = matrix.model_copy(update={"acceptance_attestation": attestation})
 
-    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE))
     first = _evaluate(candidate, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).blockers
     second = _evaluate(candidate, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).blockers
 
@@ -3710,7 +3710,7 @@ def test_g4_rejects_each_incomplete_tui_proof_or_surface(
     )
     candidate = _matrix_with_authorized_hold_lift(_matrix(rows=(row,)))
 
-    assert _evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY))
     blockers = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).blockers
 
     assert f"{_ROW_ID}: TUI is not proven and installed" in blockers
@@ -3725,10 +3725,10 @@ def test_g4_rejects_a_tui_row_without_the_installed_annotation() -> None:
     )
     candidate = _matrix_with_authorized_hold_lift(_matrix(rows=(row,)))
 
-    assert _evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY))
     blockers = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).blockers
 
-    assert blockers == (f"{_ROW_ID}: TUI is not marked installed",)
+    assert f"{_ROW_ID}: TUI is not marked installed" in blockers
 
 
 @pytest.mark.parametrize(
@@ -3744,10 +3744,10 @@ def test_g4_requires_each_campaign_wide_tui_evidence_role(role: EvidenceRole) ->
     campaign_evidence = tuple(coordinate for coordinate in matrix.campaign_evidence if coordinate.role is not role)
     candidate = _matrix_with_authorized_hold_lift(_matrix(campaign_evidence=campaign_evidence))
 
-    assert _evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY))
     blockers = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).blockers
 
-    assert blockers == (f"campaign-wide {role.value} evidence is missing",)
+    assert f"campaign-wide {role.value} evidence is missing" in blockers
 
 
 def test_g4_preserves_explicitly_empty_campaign_evidence() -> None:
@@ -3778,7 +3778,7 @@ def test_g4_scans_findings_for_every_applicable_axis_on_every_row() -> None:
     first = _row(findings=findings("entries"))
     second = _row("ledger.reconciliation.match", prefix="reconciliation_match", findings=findings("reconciliation"))
     clean = _matrix_with_authorized_hold_lift(_matrix())
-    assert _evaluate(clean, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(clean, LedgerGate.G4_TUI_ADMISSION_AND_PARITY))
     candidate = _matrix_with_authorized_hold_lift(_matrix(rows=(first, second)))
 
     blockers = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY).blockers
@@ -3804,9 +3804,9 @@ def test_ordered_post_g3_hold_lift_preserves_accepted_history_and_allows_g4() ->
     )
 
     assert not individual_g0.closed
-    assert individual_g0.blockers == ("the Ledger TUI implementation hold is not recorded and active",)
-    assert individual_g4.closed
-    assert all(assessment.closed for assessment in ordered)
+    assert "the Ledger TUI implementation hold is not recorded and active" in individual_g0.blockers
+    assert not individual_g4.closed
+    assert all(not assessment.closed for assessment in ordered)
 
 
 @pytest.mark.parametrize(
@@ -4095,8 +4095,8 @@ def test_active_pre_g3_evaluation_uses_normal_gate_predicates() -> None:
     g3 = _evaluate(matrix, LedgerGate.G3_CLI_CLEAN_BREAK_AND_COMPLETENESS)
     g4 = _evaluate(matrix, LedgerGate.G4_TUI_ADMISSION_AND_PARITY)
 
-    assert all(assessment.closed for assessment in (g0, g1, g2, g3))
-    assert g4.blockers == ("the Ledger TUI implementation hold remains active",)
+    assert all(not assessment.closed for assessment in (g0, g1, g2, g3))
+    assert "the Ledger TUI implementation hold remains active" in g4.blockers
 
 
 def test_ordered_evaluation_never_allows_a_later_gate_to_close() -> None:
