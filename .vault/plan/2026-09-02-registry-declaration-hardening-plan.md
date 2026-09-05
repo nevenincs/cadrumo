@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:32d1eded48e5da48ac555ebae61f233054074d206bc9e8f76cb863e883fcd14c'
+body_hash: 'sha256:75f5a593dc171e6c4a1c264f8e0af07a3ad822164c4d2e908285baba6ccefee9'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -505,6 +505,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S623` - Retire the localized surface's dead file exemption and gate the list against the tree, since its one entry named a docs-root brief that commit 06e03da6a4 deleted and the exemption stayed behind excluding nothing while still reading as a reviewed decision; `dev/docs/i18n.py dev/docs/tests/test_i18n.py`.
 - [x] `W02.P02.S624` - Re-measure the generated export tree failures, which the standing note recorded as three modelos and the full suite shows as twenty-seven revisions across fourteen, twenty-five of them differing only in the generation provenance sidecar and two also in a record fragment, so the committed trees are stale against the current derivation rather than individually broken; `dev/registry/tests/test_generated_export_trees.py`.
 - [x] `W02.P02.S625` - Make the vault-citation gate refuse a declaration it cannot decode instead of dropping the offending bytes, since a citation straddling a dropped byte is simply absent from the search and the registry then reports clean over text nobody read; `dev/registry/tests/test_declaration_invariant_gates.py`.
+- [x] `W02.P02.S626` - Make the dev-only dependency gate read production sources strictly, since dropping undecodable bytes before the token search means a reference straddling one is absent from the result and the package reports clean on a policy that decides what ships in the wheel; `dev/docs/tests/test_rag_is_dev_only.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
