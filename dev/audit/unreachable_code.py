@@ -892,6 +892,10 @@ class _Definition:
     line: int
     kind: SymbolKind
     owner: str = ""
+    #: The string literal the member assigns, when it assigns one. A registry
+    #: declaration addresses a StrEnum member by this VALUE, never by the
+    #: member name, so the data consult cannot see the binding without it.
+    value: str = ""
 
 
 def _decorator_name(node: ast.expr) -> str:
@@ -933,6 +937,21 @@ def _assigned_names(node: ast.stmt) -> Iterator[str]:
             yield from (element.id for element in target.elts if isinstance(element, ast.Name))
 
 
+def _assigned_str_value(statement: ast.stmt) -> str:
+    """Return the string literal a single assignment declares, else ``""``.
+
+    Only a bare ``NAME = "literal"`` counts. A computed value, an f-string or
+    a call is deliberately not followed: the point is to read the exact token
+    a declaration would spell, and anything inferred would widen the data
+    consult into guessing.
+    """
+    if isinstance(statement, ast.Assign | ast.AnnAssign):
+        value = statement.value
+        if isinstance(value, ast.Constant) and isinstance(value.value, str):
+            return value.value
+    return ""
+
+
 def _class_definitions(node: ast.ClassDef) -> Iterator[_Definition]:
     member_kind = SymbolKind.ENUM_MEMBER if _is_enum_class(node) else SymbolKind.ATTRIBUTE
     for statement in node.body:
@@ -946,9 +965,17 @@ def _class_definitions(node: ast.ClassDef) -> Iterator[_Definition]:
                 for inner in _class_definitions(statement)
             )
         else:
+            declared = _assigned_str_value(statement)
             for name in _assigned_names(statement):
                 if not _is_dunder(name) and name != "_ignore_":
-                    yield _Definition(name, f"{node.name}.{name}", statement.lineno, member_kind, owner=node.name)
+                    yield _Definition(
+                        name,
+                        f"{node.name}.{name}",
+                        statement.lineno,
+                        member_kind,
+                        owner=node.name,
+                        value=declared,
+                    )
 
 
 def _definitions(tree: ast.Module) -> Iterator[_Definition]:
@@ -1328,7 +1355,9 @@ def _symbol_findings(
                 continue
             if definition.kind is SymbolKind.ENUM_MEMBER and definition.owner in whole_use:
                 continue
-            if definition.kind in _DATA_SHAPED_KINDS and definition.name in data_tokens:
+            if definition.kind in _DATA_SHAPED_KINDS and (
+                definition.name in data_tokens or (definition.value and definition.value in data_tokens)
+            ):
                 data_cleared += 1
                 continue
             findings.append(
