@@ -78,11 +78,13 @@ from ..clitui_ledger_capability_matrix import (
     ReviewRuling,
     SemanticHomeStatus,
     SurfaceCapabilityState,
+    build_ledger_capability_matrix,
     build_ledger_registry_route_census,
     build_ledger_tui_supported_surface_census,
     build_ledger_union_denominator,
     evaluate_ledger_capability_gate,
     evaluate_ledger_capability_gates,
+    ledger_capability_matrix_source_digest,
     ledger_gate_closure_receipt_id,
     ledger_registry_route_census_bytes,
     ledger_registry_source_files,
@@ -4357,3 +4359,40 @@ def test_production_currentness_evaluators_fail_closed_for_malformed_external_in
 
     assert reopened == frozenset(LedgerGate)
     assert all(not assessment.closed for assessment in assessments)
+
+
+def test_canonical_matrix_builds_every_reviewed_union_row_deterministically() -> None:
+    first = build_ledger_capability_matrix()
+    second = build_ledger_capability_matrix()
+    union = _union_denominator()
+
+    assert len(first.rows) == 693 == union.reviewed_row_count
+    assert {row.identity.row_id for row in first.rows} == {row.capability_id for row in union.rows}
+    assert first.current_denominator.capability_ids == {row.capability_id for row in union.rows}
+    assert first.current_union_review.capability_ids == tuple(row.capability_id for row in union.rows)
+    assert first.live_union == union
+    assert first.matrix_digest == second.matrix_digest
+    assert LedgerCapabilityMatrixV1.model_validate(first.model_dump(mode="python")) == first
+    assert first.acceptance_attestation.ruling is ReviewRuling.REJECT
+    assert first.accepted_gate_closure_receipts == ()
+
+
+def test_canonical_matrix_refuses_missing_union_identity_even_after_digest_remint() -> None:
+    matrix = build_ledger_capability_matrix()
+    payload = matrix.model_dump(mode="python")
+    payload["rows"] = payload["rows"][:-1]
+    provisional = LedgerCapabilityMatrixV1.model_construct(**payload)
+    payload["matrix_digest"] = provisional.calculated_matrix_digest
+
+    with pytest.raises(ValidationError, match="live union identities"):
+        LedgerCapabilityMatrixV1.model_validate(payload)
+
+
+def test_matrix_contract_source_digest_normalizes_checkout_newlines(tmp_path: Path) -> None:
+    lf = tmp_path / "matrix-lf.py"
+    crlf = tmp_path / "matrix-crlf.py"
+    lf.write_bytes(b"first\nsecond\n")
+    crlf.write_bytes(b"first\r\nsecond\r\n")
+
+    assert ledger_capability_matrix_source_digest(lf) == ledger_capability_matrix_source_digest(crlf)
+    assert ledger_capability_matrix_source_digest().startswith("sha256:")

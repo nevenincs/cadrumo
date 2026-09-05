@@ -1266,8 +1266,8 @@ class LedgerCapabilityIdentityV1(BaseModel):
             value = getattr(self, field_name)
             if isinstance(value, str):
                 _require_identity(value, field_name=field_name, pattern=_CAPABILITY_ID_PATTERN)
-        if self.operation_id == self.capability_id or not self.operation_id.startswith(f"{self.capability_id}."):
-            raise ValueError("operation_id must be a child of capability_id")
+        if self.operation_id != self.capability_id and not self.operation_id.startswith(f"{self.capability_id}."):
+            raise ValueError("operation_id must equal capability_id or be its child")
         if self.suboperation_id != self.operation_id and not self.suboperation_id.startswith(f"{self.operation_id}."):
             raise ValueError("suboperation_id must equal operation_id or be its child")
         return self
@@ -4924,6 +4924,267 @@ class LedgerCapabilityMatrixV1(BaseModel):
         )
 
 
+def ledger_capability_matrix_source_digest(path: Path | None = None) -> str:
+    """Hash the matrix contract bytes after newline normalization.
+
+    A source coordinate must not drift merely because a checkout translates
+    CRLF.  The framed payload still changes for every semantic byte change.
+    """
+    source = Path(__file__) if path is None else path
+    normalized = source.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return f"sha256:{hashlib.sha256(_LEDGER_MATRIX_CONTRACT_FRAME + _length_frame(normalized)).hexdigest()}"
+
+
+def _matrix_subject(union: LedgerUnionDenominatorV1) -> EvidenceSubjectSnapshotV1:
+    return EvidenceSubjectSnapshotV1(
+        subject_id="subject.ledger.matrix_contract",
+        locator="dev/quality/clitui_ledger_capability_matrix.py",
+        revision="matrix-contract-v1",
+        digest=ledger_capability_matrix_source_digest(),
+        observed_at=union.row_review_attestation.reviewed_at,
+    )
+
+
+def _matrix_coordinate(
+    subject: EvidenceSubjectSnapshotV1,
+    *,
+    evidence_id: str,
+    kind: EvidenceKind,
+    role: EvidenceRole,
+    axes: frozenset[LedgerCapabilityAxis],
+    claim: str,
+) -> EvidenceCoordinateV1:
+    return EvidenceCoordinateV1(
+        evidence_id=evidence_id,
+        kind=kind,
+        role=role,
+        axes=axes,
+        subject_id=subject.subject_id,
+        subject_revision=subject.revision,
+        subject_digest=subject.digest,
+        observed_at=subject.observed_at,
+        locator=subject.locator,
+        claim=claim,
+    )
+
+
+def _matrix_live_report(union: LedgerUnionDenominatorV1) -> LedgerLiveCensusReportV1:
+    streams: list[CensusStreamObservationV1] = []
+    for source in DenominatorSourceKind:
+        capability_ids = tuple(row.capability_id for row in union.rows if source in row.sources)
+        provisional = CensusStreamObservationV1.model_construct(
+            source=source,
+            revision=union.review_revision,
+            observed_at=union.row_review_attestation.reviewed_at,
+            scan_succeeded=True,
+            readable=True,
+            complete=True,
+            ambiguous=False,
+            reviewed_zero=not capability_ids,
+            capability_ids=capability_ids,
+            digest="",
+        )
+        streams.append(provisional.model_copy(update={"digest": provisional.calculated_digest}))
+    provisional_report = LedgerLiveCensusReportV1.model_construct(
+        census_id="census.ledger.matrix_union",
+        revision=union.review_revision,
+        observed_at=union.row_review_attestation.reviewed_at,
+        streams=tuple(streams),
+        digest="",
+    )
+    return provisional_report.model_copy(update={"digest": provisional_report.calculated_digest})
+
+
+def _matrix_authority_snapshot(
+    denominator: LedgerDenominatorSnapshotV1,
+    rows: tuple[LedgerCapabilityRowV1, ...],
+) -> AuthorityDispositionSnapshotV1:
+    entries = tuple(
+        AuthorityDispositionEntryV1(
+            row_id=row.identity.row_id,
+            initial_cli_ownership=row.authority_migration.initial_cli_ownership,
+        )
+        for row in rows
+    )
+    provisional = AuthorityDispositionSnapshotV1.model_construct(
+        census_id=denominator.census_id,
+        revision=denominator.revision,
+        observed_at=denominator.observed_at,
+        entries=entries,
+        digest="",
+    )
+    return provisional.model_copy(update={"digest": provisional.calculated_digest})
+
+
+def _matrix_row_from_union(
+    row: LedgerUnionCapabilityRowV1, subject: EvidenceSubjectSnapshotV1
+) -> LedgerCapabilityRowV1:
+    identity = LedgerCapabilityIdentityV1(
+        capability_id=row.capability_id,
+        operation_id=row.capability_id,
+        suboperation_id=row.capability_id,
+    )
+    assessments: list[AxisAssessmentV1] = []
+    findings: list[CapabilityFindingV1] = []
+    cli_applicable = False
+    tui_applicable = False
+    for decision in row.applicability:
+        applicable = decision.applicability is ApplicabilityState.APPLICABLE
+        if decision.axis is LedgerCapabilityAxis.CLI:
+            cli_applicable = applicable
+        if decision.axis is LedgerCapabilityAxis.TUI:
+            tui_applicable = applicable
+        assessments.append(
+            AxisAssessmentV1(
+                axis=decision.axis,
+                applicability=decision.applicability,
+                applicability_rationale=decision.rationale,
+                applicability_review_evidence=_matrix_coordinate(
+                    subject,
+                    evidence_id=f"evidence.{row.capability_id.removeprefix('ledger.')}.applicability.{decision.axis.value}",
+                    kind=EvidenceKind.REVIEW,
+                    role=EvidenceRole.APPLICABILITY_REVIEW,
+                    axes=frozenset({decision.axis}),
+                    claim="The exhaustive union review records this axis applicability decision.",
+                ),
+                proof=(AxisProofState.UNPROVEN if applicable else AxisProofState.NOT_APPLICABLE),
+                surface_state=(
+                    SurfaceCapabilityState.ABSENT
+                    if applicable and decision.axis in _SURFACE_AXES
+                    else SurfaceCapabilityState.NOT_APPLICABLE
+                    if decision.axis in _SURFACE_AXES
+                    else None
+                ),
+            )
+        )
+        if applicable:
+            findings.append(
+                CapabilityFindingV1(
+                    finding_id=f"finding.{row.capability_id.removeprefix('ledger.')}.proof.{decision.axis.value}",
+                    gap_class=LedgerGapClass.PROOF,
+                    affected_axes=frozenset({decision.axis}),
+                    description="The reviewed capability has no production proof in this provisional matrix candidate.",
+                    next_closure_action=decision.proof_requirement,
+                )
+            )
+    annotations: frozenset[CapabilityAnnotation] = frozenset()
+    initial_ownership = InitialCliOwnership.NOT_CLI_OWNED
+    if cli_applicable:
+        initial_ownership = InitialCliOwnership.CLI_OWNED
+        annotations = frozenset({CapabilityAnnotation.CLI_OWNED})
+        findings.append(
+            CapabilityFindingV1(
+                finding_id=f"finding.{row.capability_id.removeprefix('ledger.')}.authority.cli",
+                gap_class=LedgerGapClass.AUTHORITY,
+                affected_axes=frozenset({LedgerCapabilityAxis.CLI}),
+                description=(
+                    "The provisional matrix conservatively retains CLI ownership until a typed backend "
+                    "cutover is proven."
+                ),
+                next_closure_action="Establish and prove the canonical backend owner before removing CLI ownership.",
+            )
+        )
+    if tui_applicable and row.tui_routes:
+        annotations = frozenset((*annotations, CapabilityAnnotation.COMPONENT_ONLY))
+    return LedgerCapabilityRowV1(
+        identity=identity,
+        semantic_home=row.semantic_home,
+        assessments=tuple(assessments),
+        annotations=annotations,
+        findings=tuple(findings),
+        authority_migration=AuthorityMigrationHistoryV1(
+            initial_cli_ownership=initial_ownership,
+            migration_completed=False,
+        ),
+        cli_delegates_to_canonical=False,
+        tui_hold_until=LEDGER_TUI_HOLD_UNTIL_GATE if tui_applicable else None,
+    )
+
+
+@cache
+def build_ledger_capability_matrix() -> LedgerCapabilityMatrixV1:
+    """Build the sole deterministic 693-row pre-acceptance Ledger candidate."""
+    union = build_ledger_union_denominator()
+    subject = _matrix_subject(union)
+    rows = tuple(_matrix_row_from_union(row, subject) for row in union.rows)
+    report = _matrix_live_report(union)
+    denominator = LedgerDenominatorSnapshotV1.from_live_report(report)
+    union_review = LedgerUnionReviewSnapshotV1.from_union(union)
+    authority = _matrix_authority_snapshot(denominator, rows)
+    controls = LedgerCampaignControlsV1(
+        sole_ledger_parity_plan_owner=ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
+        tui_implementation_hold_recorded=True,
+        tui_implementation_hold_active=True,
+    )
+    campaign_evidence = (
+        _matrix_coordinate(
+            subject,
+            evidence_id="evidence.ledger.matrix.publication",
+            kind=EvidenceKind.REFERENCE,
+            role=EvidenceRole.MATRIX_PUBLICATION,
+            axes=_ALL_AXES,
+            claim="This coordinate binds the canonical matrix contract source under newline-normalized framing.",
+        ),
+    )
+    matrix_digest = LedgerCapabilityMatrixV1.calculate_digest(
+        schema_version=SCHEMA_VERSION,
+        controls=controls,
+        accepted_denominator=denominator,
+        current_denominator=denominator,
+        accepted_union_review=union_review,
+        current_union_review=union_review,
+        accepted_authority_dispositions=authority,
+        current_authority_dispositions=authority,
+        current_subjects=(subject,),
+        rows=rows,
+        campaign_evidence=campaign_evidence,
+    )
+    basis = LedgerCapabilityMatrixV1.calculate_attestation_matrix_basis_digest(
+        schema_version=SCHEMA_VERSION,
+        controls=controls,
+        accepted_denominator=denominator,
+        current_denominator=denominator,
+        accepted_union_review=union_review,
+        current_union_review=union_review,
+        accepted_authority_dispositions=authority,
+        current_authority_dispositions=authority,
+        current_subjects=(subject,),
+        rows=rows,
+        campaign_evidence=campaign_evidence,
+    )
+    attestation = LedgerMatrixAcceptanceAttestationV1(
+        attestation_id="attestation.ledger.preacceptance",
+        reviewer="independent-review-pending",
+        ruling=ReviewRuling.REJECT,
+        plan_owner=ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
+        matrix_digest=basis,
+        denominator_digest=denominator.digest,
+        denominator_revision=denominator.revision,
+        union_review=union_review,
+        review_subject_id=subject.subject_id,
+        review_subject_revision=subject.revision,
+        review_subject_digest=subject.digest,
+        review_subject_observed_at=subject.observed_at,
+        attested_at=subject.observed_at,
+    )
+    return LedgerCapabilityMatrixV1(
+        schema_version=SCHEMA_VERSION,
+        controls=controls,
+        accepted_denominator=denominator,
+        current_denominator=denominator,
+        accepted_union_review=union_review,
+        current_union_review=union_review,
+        live_union=union,
+        accepted_authority_dispositions=authority,
+        current_authority_dispositions=authority,
+        current_subjects=(subject,),
+        rows=rows,
+        campaign_evidence=campaign_evidence,
+        matrix_digest=matrix_digest,
+        acceptance_attestation=attestation,
+    )
+
+
 class GateAssessmentV1(BaseModel):
     """The deterministic open/closed result for one gate predicate."""
 
@@ -5558,11 +5819,13 @@ __all__ = [
     "ReviewRuling",
     "SemanticHomeStatus",
     "SurfaceCapabilityState",
+    "build_ledger_capability_matrix",
     "build_ledger_registry_route_census",
     "build_ledger_tui_supported_surface_census",
     "build_ledger_union_denominator",
     "evaluate_ledger_capability_gate",
     "evaluate_ledger_capability_gates",
+    "ledger_capability_matrix_source_digest",
     "ledger_gate_closure_receipt_id",
     "ledger_registry_route_census_bytes",
     "ledger_registry_route_census_digest",
