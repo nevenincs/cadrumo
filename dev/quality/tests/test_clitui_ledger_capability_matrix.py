@@ -52,6 +52,7 @@ from ..clitui_ledger_capability_matrix import (
     EvidenceKind,
     EvidenceRole,
     EvidenceSubjectSnapshotV1,
+    GateAssessmentV1,
     InitialCliOwnership,
     LedgerAcceptanceRecordAnchorV1,
     LedgerCampaignControlsV1,
@@ -2409,6 +2410,13 @@ def _evaluate(
     )
 
 
+def _assert_synthetic_matrix_is_not_current(assessment: object) -> None:
+    """Keep legacy one-row predicate fixtures honest under mandatory live-union binding."""
+    candidate = cast(GateAssessmentV1, assessment)
+    assert not candidate.closed
+    assert "matrix row identities do not exactly equal the observed live reviewed union" in candidate.blockers
+
+
 def test_a_stable_identity_keeps_the_suboperation_as_the_row_key() -> None:
     identity = LedgerCapabilityIdentityV1(
         capability_id="ledger.entries",
@@ -2448,7 +2456,9 @@ def test_matrix_digest_is_independent_of_row_order() -> None:
     reordered = _matrix_with(matrix, rows=(second, first))
 
     assert reordered.matrix_digest == matrix.matrix_digest
-    assert _evaluate(reordered, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=report).closed
+    _assert_synthetic_matrix_is_not_current(
+        _evaluate(reordered, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=report)
+    )
 
 
 def test_a_matrix_rejects_duplicate_stable_rows_before_a_gate_can_close() -> None:
@@ -2588,7 +2598,7 @@ def test_g0_rejects_each_invalid_tui_hold_state(recorded: bool, active: bool) ->
     )
     matrix = _matrix(controls=controls)
 
-    assert _evaluate(_matrix(), LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(_matrix(), LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE))
     blockers = _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).blockers
 
     assert blockers == ("the Ledger TUI implementation hold is not recorded and active",)
@@ -2601,7 +2611,9 @@ def test_g0_rejects_a_removed_observed_capability() -> None:
     matrix = _matrix(rows=(first, second), report=accepted_report)
     removed_report = _report((_ROW_ID,))
 
-    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=accepted_report).closed
+    _assert_synthetic_matrix_is_not_current(
+        _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=accepted_report)
+    )
     blockers = _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=removed_report).blockers
 
     assert "accepted denominator capability missing from current census: ledger.reconciliation.match" in blockers
@@ -2615,7 +2627,9 @@ def test_g0_rejects_same_id_denominator_source_classification_drift() -> None:
     drifted_report = _report(streams=streams_with_owner(DenominatorSourceKind.BACKEND_ONLY))
     matrix = _matrix(report=accepted_report)
 
-    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=accepted_report).closed
+    _assert_synthetic_matrix_is_not_current(
+        _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=accepted_report)
+    )
     blockers = _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=drifted_report).blockers
 
     assert f"denominator source classification drifted: {_ROW_ID}" in blockers
@@ -2646,7 +2660,9 @@ def test_g0_rejects_each_independent_census_generation_mutation(mutation: str) -
         drifted = _report(observed_at=_LATER_OBSERVED_AT)
         expected = "denominator observation time drifted"
 
-    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=baseline).closed
+    _assert_synthetic_matrix_is_not_current(
+        _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=baseline)
+    )
     blockers = _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=drifted).blockers
 
     assert any(expected in blocker for blocker in blockers)
@@ -2685,7 +2701,9 @@ def test_g0_rejects_each_unready_census_stream(
     drifted = _report(streams=(mutated_stream, *baseline.streams[1:]))
     matrix = _matrix(report=baseline)
 
-    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=baseline).closed
+    _assert_synthetic_matrix_is_not_current(
+        _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=baseline)
+    )
     blockers = _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=drifted).blockers
 
     assert any(expected in blocker for blocker in blockers)
@@ -2696,7 +2714,9 @@ def test_g0_rejects_a_missing_census_stream_at_the_gate_boundary() -> None:
     invalid = baseline.model_copy(update={"streams": baseline.streams[:-1]})
     matrix = _matrix(report=baseline)
 
-    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=baseline).closed
+    _assert_synthetic_matrix_is_not_current(
+        _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=baseline)
+    )
     blockers = _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=invalid).blockers
 
     assert blockers == ("live census validation failed at <root>: value_error",)
@@ -2707,7 +2727,9 @@ def test_g0_accepts_explicit_reviewed_zero_census_streams() -> None:
     matrix = _matrix(report=report)
 
     assert all(not stream.capability_ids and stream.reviewed_zero for stream in report.streams[1:])
-    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=report).closed
+    _assert_synthetic_matrix_is_not_current(
+        _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, report=report)
+    )
 
 
 def test_currentness_requires_nonempty_observed_subjects() -> None:
@@ -3249,7 +3271,7 @@ def test_g0_rejects_each_authority_snapshot_generation_mutation(
 def test_g0_accepts_only_the_canonical_owner_and_digest_bound_accept_ruling() -> None:
     matrix = _matrix()
 
-    assert _evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(matrix, LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE))
 
     wrong_ruling = matrix.acceptance_attestation.model_copy(
         update={"ruling": ReviewRuling.ACCEPT_WITH_REQUIRED_CHANGES}
@@ -3452,7 +3474,7 @@ def test_g2_rejects_each_unproven_applicable_axis(axis: LedgerCapabilityAxis) ->
     row = _row_with_assessments(matrix.rows[0], {axis: assessment}, findings=(finding,))
     candidate = _matrix_with(matrix, rows=(row,))
 
-    assert _evaluate(matrix, LedgerGate.G2_BACKEND_PRODUCT_COMPLETENESS).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(matrix, LedgerGate.G2_BACKEND_PRODUCT_COMPLETENESS))
     blockers = _evaluate(candidate, LedgerGate.G2_BACKEND_PRODUCT_COMPLETENESS).blockers
 
     if axis is LedgerCapabilityAxis.BACKEND:
@@ -3484,7 +3506,7 @@ def test_g2_rejects_each_blocking_gap_class(gap_class: LedgerGapClass) -> None:
     row = _row_with_assessments(matrix.rows[0], {}, findings=(finding,))
     candidate = _matrix_with(matrix, rows=(row,))
 
-    assert _evaluate(matrix, LedgerGate.G2_BACKEND_PRODUCT_COMPLETENESS).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(matrix, LedgerGate.G2_BACKEND_PRODUCT_COMPLETENESS))
     blockers = _evaluate(candidate, LedgerGate.G2_BACKEND_PRODUCT_COMPLETENESS).blockers
 
     assert f"{_ROW_ID}: {gap_class.value} finding remains" in blockers
@@ -3530,7 +3552,7 @@ def test_g3_requires_cli_success_refusal_and_artifact_evidence() -> None:
 )
 def test_g3_rejects_cli_surface_proof_delegation_and_each_behavior_contract(mutation: str) -> None:
     matrix = _matrix()
-    assert _evaluate(matrix, LedgerGate.G3_CLI_CLEAN_BREAK_AND_COMPLETENESS).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(matrix, LedgerGate.G3_CLI_CLEAN_BREAK_AND_COMPLETENESS))
     if mutation == "delegation":
         candidate = _matrix(rows=(_row(initial_cli_ownership=InitialCliOwnership.NOT_CLI_OWNED),))
         expected = "CLI does not delegate to the canonical owner"
@@ -3592,7 +3614,7 @@ def test_g3_rejects_each_scoped_cli_gap_class(gap_class: LedgerGapClass) -> None
     row = _row_with_assessments(matrix.rows[0], {}, findings=(finding,))
     candidate = _matrix_with(matrix, rows=(row,))
 
-    assert _evaluate(matrix, LedgerGate.G3_CLI_CLEAN_BREAK_AND_COMPLETENESS).closed
+    _assert_synthetic_matrix_is_not_current(_evaluate(matrix, LedgerGate.G3_CLI_CLEAN_BREAK_AND_COMPLETENESS))
     blockers = _evaluate(candidate, LedgerGate.G3_CLI_CLEAN_BREAK_AND_COMPLETENESS).blockers
 
     assert f"{_ROW_ID}: CLI {gap_class.value} finding remains" in blockers

@@ -18,7 +18,18 @@ from cadrumo.domain.calculations.registry.loader import load_catalogue_file
 
 from ..analysis import m200_2024_full_reconciliation as subject
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.timeout(600)]
+"""The 600-second budget is contention, not a slow test.
+
+The rebind-refusal case runs 251.48s alone but measured 305.46s under the
+repository's DEFAULT `-n auto` parallelism, which is how it actually runs. The
+300-second ceiling is wall clock, so a loaded box crosses it on a test that is
+doing exactly what it should; the sibling two-channel-proof module already
+carries a 600-second marker on its own long case for the same reason.
+
+Two more cases here stand at 176.28s and 137.63s, so the margin is the
+contention this suite meets in a full run, not headroom for a defect.
+"""
 
 
 @pytest.fixture(scope="module")
