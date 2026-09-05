@@ -29,7 +29,7 @@ from cadrumo.core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingSourceK
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 from cadrumo.domain.calculations.registry.binding_targets import casillas_by_binding
 
-SCHEMA_VERSION: Final[int] = 3
+SCHEMA_VERSION: Final[int] = 4
 _DIGEST_PATTERN: Final[re.Pattern[str]] = re.compile(r"^sha256:[0-9a-f]{64}$")
 _CAPABILITY_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^ledger(?:\.[a-z][a-z0-9_]*)(?:\.[a-z][a-z0-9_]*)*$")
 _EVIDENCE_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^evidence\.[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)*$")
@@ -50,9 +50,9 @@ LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_ROOT: Final[Literal["cadrumo.ledger_tui_supp
     "cadrumo.ledger_tui_supported_surface_census"
 )
 _LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_FRAME: Final[bytes] = b"cadrumo:ledger-tui-supported-surface-census:v1\x00"
-LEDGER_UNION_DENOMINATOR_SCHEMA_VERSION: Final[Literal[2]] = 2
+LEDGER_UNION_DENOMINATOR_SCHEMA_VERSION: Final[Literal[3]] = 3
 LEDGER_UNION_DENOMINATOR_ROOT: Final[Literal["cadrumo.ledger_union_denominator"]] = "cadrumo.ledger_union_denominator"
-_LEDGER_UNION_DENOMINATOR_FRAME: Final[bytes] = b"cadrumo:ledger-union-denominator:v2\x00"
+_LEDGER_UNION_DENOMINATOR_FRAME: Final[bytes] = b"cadrumo:ledger-union-denominator:v3\x00"
 _LEDGER_TUI_SUPPORTED_SURFACE_SOURCE_SET_FRAME: Final[bytes] = b"cadrumo:ledger-tui-supported-surface-source-set:v1\x00"
 _LEDGER_MESSAGE_TYPES: Final[tuple[str, ...]] = (
     "LedgerBackRequested",
@@ -1097,6 +1097,7 @@ class LedgerGate(StrEnum):
     G4_TUI_ADMISSION_AND_PARITY = "g4_tui_admission_and_parity"
 
 
+LEDGER_TUI_HOLD_UNTIL_GATE: Final[LedgerGate] = LedgerGate.G3_CLI_CLEAN_BREAK_AND_COMPLETENESS
 _GATE_ORDER: Final[tuple[LedgerGate, ...]] = tuple(LedgerGate)
 _ALL_AXES: Final[frozenset[LedgerCapabilityAxis]] = frozenset(LedgerCapabilityAxis)
 _SURFACE_AXES: Final[frozenset[LedgerCapabilityAxis]] = frozenset(
@@ -1327,6 +1328,7 @@ class LedgerUnionCapabilityRowV1(BaseModel):
     blockers: tuple[str, ...] = Field(min_length=1)
     next_action: str = Field(min_length=1)
     tui_routes: tuple[str, ...] = ()
+    tui_hold_until: LedgerGate | None = None
 
     @model_validator(mode="after")
     def _check_row(self) -> LedgerUnionCapabilityRowV1:
@@ -1342,6 +1344,17 @@ class LedgerUnionCapabilityRowV1(BaseModel):
             _require_non_placeholder(value, field_name="union row text")
         if tuple(sorted(set(self.tui_routes))) != self.tui_routes:
             raise ValueError("union row TUI routes must be sorted and unique")
+        tui_applicable = next(
+            decision.applicability is ApplicabilityState.APPLICABLE
+            for decision in self.applicability
+            if decision.axis is LedgerCapabilityAxis.TUI
+        )
+        expected_hold = LEDGER_TUI_HOLD_UNTIL_GATE if tui_applicable else None
+        if self.tui_hold_until is not expected_hold:
+            state = "applicable" if tui_applicable else "not_applicable"
+            raise ValueError(
+                f"union row TUI hold must be {LEDGER_TUI_HOLD_UNTIL_GATE.value} for {state} TUI and absent otherwise"
+            )
         return self
 
 
@@ -1380,7 +1393,7 @@ class LedgerUnionDenominatorV1(BaseModel):
     model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
 
     root: Literal["cadrumo.ledger_union_denominator"]
-    schema_version: Literal[2]
+    schema_version: Literal[3]
     registry_census: LedgerRegistryRouteCensusV1
     tui_census: LedgerTuiSupportedSurfaceCensusV1
     source_digests: tuple[LedgerUnionSourceDigestV1, ...]
@@ -1449,6 +1462,17 @@ class LedgerUnionDenominatorV1(BaseModel):
                 raise ValueError(f"union row semantic home drifted from explicit adjudication: {capability_id}")
             if row.applicability != _axis_decisions(capability_id, row.sources, expected_effect):
                 raise ValueError(f"union row applicability drifted from explicit adjudication: {capability_id}")
+            expected_tui_hold = (
+                LEDGER_TUI_HOLD_UNTIL_GATE
+                if next(
+                    decision.applicability is ApplicabilityState.APPLICABLE
+                    for decision in row.applicability
+                    if decision.axis is LedgerCapabilityAxis.TUI
+                )
+                else None
+            )
+            if row.tui_hold_until is not expected_tui_hold:
+                raise ValueError(f"union row TUI hold drifted from explicit adjudication: {capability_id}")
         selected_edges = sum(len(item.capability_ids) for item in self.observations)
         expected_accounting = LedgerUnionSelectionAccountingV1(
             observation_count=len(self.observations),
@@ -3073,6 +3097,7 @@ def build_ledger_union_denominator(
             if effect is LedgerCapabilityEffect.REGISTRY_ROUTE
             else "Complete the named G1/G2 owner, then prove CLI and TUI parity in G3/G4."
         )
+        applicability = _axis_decisions(capability_id, sources, effect)
         rows.append(
             LedgerUnionCapabilityRowV1(
                 capability_id=capability_id,
@@ -3081,12 +3106,21 @@ def build_ledger_union_denominator(
                 semantic_home=semantic_home,
                 semantic_home_status=home_status,
                 effect=effect,
-                applicability=_axis_decisions(capability_id, sources, effect),
+                applicability=applicability,
                 gap_classes=frozenset(gaps),
                 proof_requirements=tuple(proof_requirements),
                 blockers=tuple(blockers),
                 next_action=next_action,
                 tui_routes=tui_routes,
+                tui_hold_until=(
+                    LEDGER_TUI_HOLD_UNTIL_GATE
+                    if next(
+                        decision.applicability is ApplicabilityState.APPLICABLE
+                        for decision in applicability
+                        if decision.axis is LedgerCapabilityAxis.TUI
+                    )
+                    else None
+                ),
             )
         )
     source_digests = tuple(
@@ -3560,6 +3594,7 @@ class LedgerCapabilityRowV1(BaseModel):
     findings: tuple[CapabilityFindingV1, ...] = ()
     authority_migration: AuthorityMigrationHistoryV1
     cli_delegates_to_canonical: bool
+    tui_hold_until: LedgerGate | None = None
 
     @model_validator(mode="after")
     def _check_complete_row(self) -> LedgerCapabilityRowV1:
@@ -3615,6 +3650,12 @@ class LedgerCapabilityRowV1(BaseModel):
             and CapabilityAnnotation.INSTALLED in self.annotations
         ):
             raise ValueError("a TUI capability cannot be component_only and installed")
+        expected_tui_hold = LEDGER_TUI_HOLD_UNTIL_GATE if tui.applicability is ApplicabilityState.APPLICABLE else None
+        if self.tui_hold_until is not expected_tui_hold:
+            state = "applicable" if tui.applicability is ApplicabilityState.APPLICABLE else "not_applicable"
+            raise ValueError(
+                f"matrix row TUI hold must be {LEDGER_TUI_HOLD_UNTIL_GATE.value} for {state} TUI and absent otherwise"
+            )
         return self
 
     def assessment(self, axis: LedgerCapabilityAxis) -> AxisAssessmentV1:
@@ -4202,6 +4243,7 @@ __all__ = [
     "ACCEPTED_LEDGER_PARITY_PLAN_OWNER",
     "LEDGER_REGISTRY_ROUTE_CENSUS_ROOT",
     "LEDGER_REGISTRY_ROUTE_CENSUS_SCHEMA_VERSION",
+    "LEDGER_TUI_HOLD_UNTIL_GATE",
     "LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_ROOT",
     "LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_SCHEMA_VERSION",
     "LEDGER_UNION_DENOMINATOR_ROOT",

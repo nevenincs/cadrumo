@@ -30,8 +30,10 @@ from dev.quality import clitui_ledger_capability_matrix as matrix_module
 from ..clitui_ledger_capability_matrix import (
     ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
     LEDGER_REGISTRY_ROUTE_CENSUS_ROOT,
+    LEDGER_TUI_HOLD_UNTIL_GATE,
     LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_ROOT,
     LEDGER_UNION_DENOMINATOR_ROOT,
+    SCHEMA_VERSION,
     ApplicabilityState,
     AuthorityDispositionEntryV1,
     AuthorityDispositionSnapshotV1,
@@ -95,7 +97,7 @@ _REGISTRY_ROUTE_DIGEST: Final[str] = "sha256:20b2d2df5558b2a3fdbd1eab6e9f781a973
 _REGISTRY_SOURCE_DIGEST: Final[str] = "sha256:194a9f26ddfbae6c5d7f265ffe58f50964fbe2fcd02a5670fa19845dead5cf6d"
 _TUI_CENSUS_DIGEST: Final[str] = "sha256:c136cfe1ae3f82a239476c00e805f8c9a29e010d502e74397963cea7e6f42371"
 _TUI_SOURCE_DIGEST: Final[str] = "sha256:e7337508a02ef2260e0b28205c31bb872b69f59aa51a18391ae209c21b8f9d57"
-_UNION_DIGEST: Final[str] = "sha256:8119bedd03babf7b1400bf310cd9e847b1f7f472a671b6ccb482cc583ad9a3bb"
+_UNION_DIGEST: Final[str] = "sha256:6d4f8685359271136a8fdba99c84ed238bc3a3daec03b3ca55c2d671d74ab2a4"
 
 
 @cache
@@ -175,7 +177,7 @@ def test_union_denominator_joins_every_raw_observation_without_double_counting()
     union = _union_denominator()
 
     assert union.root == LEDGER_UNION_DENOMINATOR_ROOT
-    assert union.schema_version == 2
+    assert union.schema_version == 3
     assert len(union.observations) == 760
     assert len(union.rows) == 693
     assert union.selection_accounting.model_dump() == {
@@ -198,7 +200,76 @@ def test_union_denominator_joins_every_raw_observation_without_double_counting()
     ]
     assert union.digest == _UNION_DIGEST
     assert ledger_union_denominator_digest(union) == _UNION_DIGEST
-    assert ledger_union_denominator_bytes(union).startswith(b"cadrumo:ledger-union-denominator:v2\x00")
+    assert ledger_union_denominator_bytes(union).startswith(b"cadrumo:ledger-union-denominator:v3\x00")
+
+
+def test_union_holds_every_tui_applicable_row_until_g3_without_holding_non_applicable_rows() -> None:
+    union = _union_denominator()
+
+    tui_decisions = {
+        row.capability_id: next(decision for decision in row.applicability if decision.axis is LedgerCapabilityAxis.TUI)
+        for row in union.rows
+    }
+    applicable = tuple(
+        row_id for row_id, decision in tui_decisions.items() if decision.applicability is ApplicabilityState.APPLICABLE
+    )
+    not_applicable = tuple(
+        row_id
+        for row_id, decision in tui_decisions.items()
+        if decision.applicability is ApplicabilityState.NOT_APPLICABLE
+    )
+
+    assert len(applicable) == 680
+    assert len(not_applicable) == 13
+    assert all(
+        union.rows[index].tui_hold_until is LEDGER_TUI_HOLD_UNTIL_GATE
+        for index in range(len(union.rows))
+        if union.rows[index].capability_id in applicable
+    )
+    assert all(
+        union.rows[index].tui_hold_until is None
+        for index in range(len(union.rows))
+        if union.rows[index].capability_id in not_applicable
+    )
+    assert [(route.destination, route.reachability) for route in union.tui_census.routes] == [
+        ("ledger.classification", "component_only"),
+        ("ledger.entries", "component_only"),
+        ("ledger.evidence", "component_only"),
+        ("ledger.import", "component_only"),
+        ("ledger.overview", "installed"),
+        ("ledger.reconciliation", "component_only"),
+        ("ledger.review", "component_only"),
+    ]
+
+
+@pytest.mark.parametrize("mutation", ["missing_applicable", "held_not_applicable"])
+def test_union_hold_validation_rejects_row_drift_even_with_a_refreshed_digest(mutation: str) -> None:
+    union = _union_denominator()
+    rows = list(union.rows)
+    if mutation == "missing_applicable":
+        index = next(
+            index
+            for index, row in enumerate(rows)
+            if next(
+                decision for decision in row.applicability if decision.axis is LedgerCapabilityAxis.TUI
+            ).applicability
+            is ApplicabilityState.APPLICABLE
+        )
+        rows[index] = rows[index].model_copy(update={"tui_hold_until": None})
+    else:
+        index = next(
+            index
+            for index, row in enumerate(rows)
+            if next(
+                decision for decision in row.applicability if decision.axis is LedgerCapabilityAxis.TUI
+            ).applicability
+            is ApplicabilityState.NOT_APPLICABLE
+        )
+        rows[index] = rows[index].model_copy(update={"tui_hold_until": LEDGER_TUI_HOLD_UNTIL_GATE})
+    candidate = _refreshed_union_digest(union, rows=tuple(rows))
+
+    with pytest.raises(ValidationError, match="TUI hold"):
+        LedgerUnionDenominatorV1.model_validate(candidate.model_dump(mode="python"))
 
 
 def test_union_denominator_merges_equivalent_stream_observations_and_keeps_distinct_effects() -> None:
@@ -1480,6 +1551,7 @@ def _row(
             migration_completed=migration_completed,
         ),
         cli_delegates_to_canonical=delegates,
+        tui_hold_until=LEDGER_TUI_HOLD_UNTIL_GATE if tui_applicable else None,
     )
 
 
@@ -1553,7 +1625,7 @@ def _matrix(
     )
     evidence = campaign_evidence if campaign_evidence is not None else _campaign_evidence()
     matrix_digest = LedgerCapabilityMatrixV1.calculate_digest(
-        schema_version=3,
+        schema_version=SCHEMA_VERSION,
         controls=controls_value,
         accepted_denominator=accepted,
         current_denominator=current,
@@ -1578,7 +1650,7 @@ def _matrix(
         attested_at=_OBSERVED_AT,
     )
     return LedgerCapabilityMatrixV1(
-        schema_version=3,
+        schema_version=SCHEMA_VERSION,
         controls=controls_value,
         accepted_denominator=accepted,
         current_denominator=current,
@@ -2076,6 +2148,27 @@ def test_each_axis_has_a_reviewed_rationale_and_single_axis_applicability_proof(
         assert assessment.applicability_rationale
         assert assessment.applicability_review_evidence.role is EvidenceRole.APPLICABILITY_REVIEW
         assert assessment.applicability_review_evidence.axes == frozenset({assessment.axis})
+
+
+def test_matrix_rows_require_the_same_fail_closed_tui_hold_partition_as_the_union() -> None:
+    applicable = _row()
+    not_applicable = _row("ledger.entries.projection", tui_applicable=False, prefix="entries_projection")
+
+    assert applicable.tui_hold_until is LEDGER_TUI_HOLD_UNTIL_GATE
+    assert not_applicable.tui_hold_until is None
+
+    missing = applicable.model_copy(update={"tui_hold_until": None})
+    held = not_applicable.model_copy(update={"tui_hold_until": LEDGER_TUI_HOLD_UNTIL_GATE})
+    for candidate in (missing, held):
+        with pytest.raises(ValidationError, match="TUI hold"):
+            LedgerCapabilityRowV1.model_validate(candidate.model_dump(mode="python"))
+
+
+def test_matrix_rows_reject_a_hold_that_targets_any_gate_other_than_g3() -> None:
+    candidate = _row().model_copy(update={"tui_hold_until": LedgerGate.G2_BACKEND_PRODUCT_COMPLETENESS})
+
+    with pytest.raises(ValidationError, match="TUI hold"):
+        LedgerCapabilityRowV1.model_validate(candidate.model_dump(mode="python"))
 
 
 def test_an_axis_cannot_hide_a_blank_rationale_or_wrong_review_axis() -> None:
