@@ -43,6 +43,7 @@ from cadrumo.core.directory_scan import scan_directory
 
 from ..._paths import REPO_ROOT
 from ...packaging.evidence import DistributionEvidence, EvidenceStatus
+from ...quality.unread_inputs import report_unread
 from ...release.readiness import ALL_DISTRIBUTION_ROWS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
@@ -111,6 +112,12 @@ _CLAIM_PATTERNS: Final[tuple[tuple[str, re.Pattern[str], tuple[str, ...]], ...]]
 
 # Pre-built label → row_ids lookup derived from the pattern table above.
 _CLAIM_TO_ROWS: Final[dict[str, tuple[str, ...]]] = {label: row_ids for label, _pattern, row_ids in _CLAIM_PATTERNS}
+
+
+#: Below this the documentation walk has stopped covering the user-facing
+#: surface. A floor, not a pinned count: fifty-nine pages ship today, and the
+#: previous guard was `> 0`, which fifty-eight of them could vanish beneath.
+_MINIMUM_DOC_PAGES: Final[int] = 20
 
 
 def _is_internal_path(path: Path) -> bool:
@@ -209,10 +216,17 @@ def _scan_claims() -> list[tuple[Path, str]]:
     for more than one channel.
     """
     found: list[tuple[Path, str]] = []
+    unread: list[str] = []
     for doc in _doc_files():
         try:
             text = doc.read_text(encoding="utf-8")
-        except OSError:
+        except OSError as refusal:
+            # A doc that will not read contributes no claim, and a claim is what
+            # must be backed by passing evidence - so an unbacked acquisition
+            # promise in an unreadable page is simply not there to fail on.
+            # The sibling evidence reader below skips in the SAFE direction
+            # (an invalid record stops counting as passing); this one does not.
+            unread.append(f"{doc} ({refusal})")
             continue
         seen: set[str] = set()
         for line in _hand_authored_lines(text):
@@ -220,6 +234,13 @@ def _scan_claims() -> list[tuple[Path, str]]:
                 if label not in seen:
                     seen.add(label)
                     found.append((doc, label))
+
+    report_unread(
+        "acquisition claim scan",
+        "these pages were not read, so an acquisition claim made in one was never checked "
+        "against distribution evidence",
+        unread,
+    )
     return found
 
 
@@ -364,7 +385,10 @@ def test_the_scanned_corpus_is_not_empty() -> None:
     failure mode this module already had once.
     """
     docs = _doc_files()
-    assert len(docs) > 0, "no user-facing documentation was scanned; the claim gate would pass vacuously"
+    assert len(docs) >= _MINIMUM_DOC_PAGES, (
+        f"only {len(docs)} user-facing page(s) were scanned; below this the claim gate is "
+        "inert rather than satisfied"
+    )
     assert _README in docs, "README.md must be part of the scanned acquisition surface"
 
 
