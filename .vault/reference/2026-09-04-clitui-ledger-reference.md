@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:6098e9ae7b65ada2b75ab4d92d12fb924457c0e1cebc655bb6759ae353046fcf'
+body_hash: 'sha256:77321109de32867a519b59a57ca93d9ef51aa028890e7af987f16066b19197cf'
 related:
   - "[[2026-09-04-clitui-ledger-research]]"
   - "[[2026-06-10-ledger-interface-contract-adr]]"
@@ -24,7 +24,7 @@ This document is the authoritative human-readable publication surface for the `L
 | Publication field | Current value |
 | --- | --- |
 | Contract / schema | `LedgerCapabilityMatrixV1` / `4`; `LedgerUnionDenominatorV1` / `4` |
-| Publication revision | `s14-694-preacceptance-candidate-1`; preacceptance only |
+| Publication revision | `s14-694-preacceptance-candidate-2`; preacceptance only |
 | Contract source digest | `sha256:9bac7ef60ccf03565e4e2391696ceae19ae97859c04a9b500318c4d4b7ed0ca3` (newline-normalized framed bytes) |
 | TUI census / source set | `sha256:f36c5a00d48729e1678a3fa5ecb5204d223d0087395d3919f14f88c3725913cd` / `sha256:29174310f657c3c0f5267d2581d4493fcbb73b2bdd063eb53e255518cbb738b8` |
 | Union / row review / row attestation | `761` observations / `770` edges / `694` rows; union `sha256:6294c485888e8e01d095789ec317e743d506bb1c5b16044d5cd179f640f5b703`; row review `sha256:953cc5d70c492640bc81a04426a9d5fc5abaa012a21ad65f22197cb8b76a07cf`; attestation `sha256:ff751395e4f088dbb5e417842489d63bc30b7812b6b1147a13eea499e8617437` |
