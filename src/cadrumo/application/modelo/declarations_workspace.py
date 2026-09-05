@@ -10,11 +10,13 @@ payloads for serialization.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from decimal import Decimal
 from enum import StrEnum
-from typing import Final, Self
+from typing import Final, Protocol, Self
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
+from ...core.casilla_id import CasillaId
 from ...core.filing_year import FilingYear
 from ...core.identifier_grammar import NamespacedId
 from ...core.identity import BucketId, CalculationRevisionId, FilingRecordId, WorkUnitId
@@ -456,9 +458,38 @@ loading inside a projection that is meant to be a pure join.
 """
 
 
+class SettledResultUnitV1(Protocol):
+    """The work-unit surface :func:`_settled_result` actually reads.
+
+    Declared structurally so the reader's contract is the four attributes it
+    consumes rather than the whole :class:`WorkUnit` aggregate. A caller that
+    can supply a modelo, year, period and current calculation id is a valid
+    argument, which is what the settlement tests exercise.
+    """
+
+    @property
+    def modelo(self) -> ModeloCode: ...
+
+    @property
+    def filing_year(self) -> FilingYear: ...
+
+    @property
+    def period(self) -> Period: ...
+
+    @property
+    def current_calculation_revision_id(self) -> str | None: ...
+
+
+class SettledResultRevisionV1(Protocol):
+    """The calculation-revision surface :func:`_settled_result` actually reads."""
+
+    @property
+    def casilla_values(self) -> Mapping[CasillaId, Decimal]: ...
+
+
 def _settled_result(
-    unit: WorkUnit,
-    revisions_by_id: Mapping[str, CalculationRevision],
+    unit: SettledResultUnitV1,
+    revisions_by_id: Mapping[str, SettledResultRevisionV1],
     reader: DeclarationResultCasillaReaderV1 | None,
 ) -> str | None:
     """Read this declaration's settled figure, or nothing when it is not known.
