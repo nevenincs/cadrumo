@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:f203777de03c868d22a58942859ab86d5507a8f10a028cf9d72f7fe12e2bfa66'
+body_hash: 'sha256:2ad53aa9ba006b7e1b34110a819e43c4eeb522689696c4e771c073b5ddaf2f17'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -516,6 +516,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S634` - Refuse a production module the canonical-definition gate cannot parse, since a module skipped for a syntax error is searched for nothing and a second definition living in it stays invisible while the gate still reports exactly one; `dev/tests/test_canonical_definitions_stay_singular.py`.
 - [x] `W02.P02.S635` - Announce a first-party module the identity enrolment scan never parses, since an unparsed module is never searched and its corpus guard counts listed modules rather than parsed ones, so a collapsed parse would satisfy the thousand-module floor while the search covered a fraction; `dev/tests/test_registry_identity_enrolment.py`.
 - [x] `W02.P02.S636` - Announce a module the repository-root constant scan cannot parse, since an unparsed module contributes no constant and a wrong parent depth inside it is never resolved, while the floor counts constants found and forty-seven are found against a floor of thirty; `dev/tests/test_repository_root_constants_resolve.py`.
+- [x] `W02.P02.S637` - Give the base-image singularity gate a floor on the surfaces it walks and announce one it cannot read, since the gate asserted an empty offender list over a walk with no minimum and an unreadable surface contributed no bindings, which reads exactly like one that derives the tag properly; `dev/packaging/tests/test_container_base_image_singularity.py`.
+- [x] `W02.P02.S638` - Guard the record-design sidecar gate against a relocated corpus root and an empty walk, since it asserted no missing sidecars over a walk with neither a root check nor a minimum while every sibling freshness gate guards its own corpus; `dev/corpus/tests/test_extraction_sidecar_freshness.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
