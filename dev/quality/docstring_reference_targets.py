@@ -69,15 +69,33 @@ class DanglingReference:
 
 
 def _module_symbols(tree: ast.Module) -> set[str]:
-    """Return every name a module binds at module level, plus its class members."""
+    """Return every name a module binds: module level, class members, attributes.
+
+    Instance attributes count. An ``:attr:`accepted_period_tokens``` reference
+    names something assigned as ``self.accepted_period_tokens`` in ``__init__``
+    and nowhere else, so a collector that only saw module-level bindings
+    reported a live attribute as naming nothing.
+
+    Function PARAMETERS are deliberately not collected. They would swell the
+    known set with every argument name in the tree and start suppressing real
+    findings, and a docstring names a parameter with ``:param:``, which is not
+    a role this screen reads.
+    """
     names: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
             names.add(node.name)
         elif isinstance(node, ast.Assign):
-            names.update(t.id for t in node.targets if isinstance(t, ast.Name))
-        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
-            names.add(node.target.id)
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    names.add(target.id)
+                elif isinstance(target, ast.Attribute):
+                    names.add(target.attr)
+        elif isinstance(node, ast.AnnAssign):
+            if isinstance(node.target, ast.Name):
+                names.add(node.target.id)
+            elif isinstance(node.target, ast.Attribute):
+                names.add(node.target.attr)
     return names
 
 

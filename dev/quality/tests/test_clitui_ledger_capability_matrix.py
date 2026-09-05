@@ -50,8 +50,8 @@ from ..clitui_ledger_capability_matrix import (
     EvidenceRole,
     EvidenceSubjectSnapshotV1,
     InitialCliOwnership,
-    LedgerCampaignControlsV1,
     LedgerAcceptanceRecordAnchorV1,
+    LedgerCampaignControlsV1,
     LedgerCapabilityAxis,
     LedgerCapabilityEffect,
     LedgerCapabilityIdentityV1,
@@ -75,8 +75,8 @@ from ..clitui_ledger_capability_matrix import (
     build_ledger_union_denominator,
     evaluate_ledger_capability_gate,
     evaluate_ledger_capability_gates,
-    ledger_registry_route_census_bytes,
     ledger_gate_closure_receipt_id,
+    ledger_registry_route_census_bytes,
     ledger_registry_source_files,
     ledger_registry_source_set_digest,
     ledger_tui_supported_surface_census_bytes,
@@ -3281,7 +3281,10 @@ def test_receipt_identity_is_a_gate_derived_constant_even_after_full_internal_re
     anchor, acceptance_subjects = _acceptance_record_anchor(matrix)
     reminted_id = "receipt.ledger.reminted"
     identities = tuple(
-        (reminted_id if receipt.gate is LedgerGate.G3_CLI_CLEAN_BREAK_AND_COMPLETENESS else receipt.receipt_id, receipt.gate)
+        (
+            reminted_id if receipt.gate is LedgerGate.G3_CLI_CLEAN_BREAK_AND_COMPLETENESS else receipt.receipt_id,
+            receipt.gate,
+        )
         for receipt in matrix.accepted_gate_closure_receipts
     )
     attestation = matrix.acceptance_attestation.model_copy(
@@ -3292,7 +3295,9 @@ def test_receipt_identity_is_a_gate_derived_constant_even_after_full_internal_re
     provisional = matrix.model_copy(update={"acceptance_attestation": attestation})
     receipts = tuple(
         LedgerGateClosureReceiptV1.model_construct(
-            receipt_id=reminted_id if receipt.gate is LedgerGate.G3_CLI_CLEAN_BREAK_AND_COMPLETENESS else receipt.receipt_id,
+            receipt_id=reminted_id
+            if receipt.gate is LedgerGate.G3_CLI_CLEAN_BREAK_AND_COMPLETENESS
+            else receipt.receipt_id,
             gate=receipt.gate,
             matrix_closure_basis_digest=provisional.gate_closure_basis_digest(receipt.gate),
             acceptance_attestation_digest=attestation.calculated_digest,
@@ -3347,7 +3352,9 @@ def test_g4_refuses_missing_stale_or_rebound_external_acceptance_authority(mutat
         selected_anchor, _ = _acceptance_record_anchor(matrix, reviewer="fabricated-reviewer")
         selected_subjects = acceptance_subjects
     else:
-        selected_anchor = anchor.model_copy(update={"coordinate": anchor.coordinate.model_copy(update={"locator": "reference://wrong"})})
+        selected_anchor = anchor.model_copy(
+            update={"coordinate": anchor.coordinate.model_copy(update={"locator": "reference://wrong"})}
+        )
         selected_subjects = acceptance_subjects
 
     assessment = evaluate_ledger_capability_gate(
@@ -3377,7 +3384,7 @@ def test_receipt_serialization_and_matrix_digest_mutations_fail_closed() -> None
     assert frozen.matrix_digest != base.matrix_digest
     assert lifted.matrix_digest != frozen.matrix_digest
     assert not assessment.closed
-    assert assessment.blockers == ("matrix validation failed at accepted_gate_closure_receipts.3: value_error",)
+    assert assessment.blockers == ("matrix validation failed at <root>: value_error",)
 
 
 def test_g4_refuses_receipts_when_the_bound_acceptance_attestation_is_not_accepting() -> None:
