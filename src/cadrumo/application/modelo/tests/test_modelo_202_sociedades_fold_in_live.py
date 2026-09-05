@@ -216,7 +216,7 @@ def _seed_m200_sociedad_profile() -> None:
     ``sal-capital-social``. For a standard SL (not a SAL), the SAL facts are
     absent / zero, which the formulas treat as no dotacion. The profile resolver
     fills all six from the persisted record via
-    :class:`cadrumo.application.modelo.profile_binding.ModeloProfileBindingResolver`;
+    :mod:`cadrumo.application.modelo.profile_binding`;
     no profile binding is hand-fed through the caller channel. ``display_name``
     matches the ``isolated_runtime_profile`` manifest label.
     """

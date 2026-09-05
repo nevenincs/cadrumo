@@ -13,7 +13,7 @@ and both callers treated the raise as an ordinary degraded state: the sandbox
 indicator silently stopped appearing, and the profile-health probe silently
 answered ``manifest_unreadable`` instead of reaching the profile record its test
 was actually about. Neither failed loudly, and neither would have drifted had it
-read :data:`BUCKET_MANIFEST_SCHEMA_VERSION`.
+read a shared bucket-manifest schema-version constant instead of a literal.
 
 This gate closes that family rather than those two instances. It scans the test
 surface for constructions of an enrolled record that pass an integer literal for

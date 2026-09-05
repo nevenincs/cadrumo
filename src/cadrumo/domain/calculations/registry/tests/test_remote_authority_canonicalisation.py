@@ -103,7 +103,8 @@ def test_pydantic_preserves_the_user_info_the_guard_must_reject() -> None:
     """``AnyUrl`` carries user-info through, so the guard is what refuses it.
 
     Control, not a proof of the fix: it asserts the *precondition* that makes
-    :func:`test_guard_blocks_user_info_on_an_otherwise_allowed_host` meaningful.
+    the guard's rejection of this URL shape meaningful -- pydantic preserves the
+    user-info, so the guard is what must refuse it.
     """
     parsed = AnyUrl(f"https://evil:secret@{_WWW6_HOST}{_READ_PATH}")
 
