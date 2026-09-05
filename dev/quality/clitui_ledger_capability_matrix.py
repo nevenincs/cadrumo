@@ -5092,7 +5092,7 @@ def validate_ledger_matrix_currentness(
 
 
 def _gate_assessment(gate: LedgerGate, blockers: list[str]) -> GateAssessmentV1:
-    return GateAssessmentV1(gate=gate, closed=not blockers, blockers=tuple(dict.fromkeys(blockers)))
+    return GateAssessmentV1(gate=gate, closed=not blockers, blockers=tuple(blockers))
 
 
 def _serialized_python_data(value: object) -> object:
@@ -5376,9 +5376,11 @@ def evaluate_ledger_capability_gate(
         elif matrix.accepted_gate_closure_receipt(LEDGER_TUI_HOLD_UNTIL_GATE) is None:
             blockers.append("the Ledger TUI implementation hold lacks a current accepted G3 closure receipt")
         else:
-            blockers.extend(
-                _acceptance_record_anchor_errors(matrix, acceptance_record_anchor, observed_acceptance_subjects)
-            )
+            for anchor_error in _acceptance_record_anchor_errors(
+                matrix, acceptance_record_anchor, observed_acceptance_subjects
+            ):
+                if anchor_error not in blockers:
+                    blockers.append(anchor_error)
         for row in matrix.rows:
             tui = row.assessment(LedgerCapabilityAxis.TUI)
             if tui.applicability is ApplicabilityState.APPLICABLE:
