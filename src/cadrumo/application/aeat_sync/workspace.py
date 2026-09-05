@@ -400,6 +400,15 @@ class _DualRow(AeatSyncWorkspaceActionRowV1):
     local_observed_at: UtcInstant | None = None
     aeat_observed_at: UtcInstant | None = None
     discrepancy_kind: AeatSyncDiscrepancyKind
+    local_value: str | None = Field(default=None, max_length=256)
+    """What the local record holds for the compared figure, or nothing.
+
+    `None` is UNOBSERVED, not empty and not zero. A row can legitimately have
+    no value on a side that was never read, and the state axis above already
+    says which side that is.
+    """
+    aeat_value: str | None = Field(default=None, max_length=256)
+    """What AEAT holds for the same figure, or nothing when unobserved."""
 
     @model_validator(mode="after")
     def _coherent(self) -> Self:
@@ -407,6 +416,7 @@ class _DualRow(AeatSyncWorkspaceActionRowV1):
             raise ValueError("period and filing year disagree")
         _dual(self.local_state, self.local_observed_at, self.aeat_state, self.aeat_observed_at)
         _discrepancy(self.local_state, self.aeat_state, self.discrepancy_kind)
+        _compared_values(self.discrepancy_kind, self.local_value, self.aeat_value)
         return self
 
 
@@ -930,6 +940,29 @@ def _dual(
 ) -> None:
     _optional_time(local, local_at, AeatSyncSourceState.NOT_OBSERVED)
     _optional_time(aeat, aeat_at, AeatSyncSourceState.NOT_OBSERVED)
+
+
+def _compared_values(
+    kind: AeatSyncDiscrepancyKind,
+    local_value: str | None,
+    aeat_value: str | None,
+) -> None:
+    """Refuse a difference claim that withholds one of the values it compares.
+
+    STATE_MISMATCH and CONTRADICTORY_SOURCE both assert that two observed sides
+    disagree. Making that claim while hiding a side leaves the operator to
+    accept a difference they cannot inspect -- the same defect the invoice/entry
+    suggestions carried before they showed their amounts.
+
+    The one-sided kinds are deliberately exempt. LOCAL_ONLY and AEAT_ONLY say
+    the other side is ABSENT, so there is no second value to carry; UNOBSERVED
+    says nobody looked; NONE says the sides agree and needs no evidence of
+    difference.
+    """
+    if kind not in {AeatSyncDiscrepancyKind.STATE_MISMATCH, AeatSyncDiscrepancyKind.CONTRADICTORY_SOURCE}:
+        return
+    if local_value is None or aeat_value is None:
+        raise ValueError(f"a {kind.value} row must carry both the local and the AEAT value")
 
 
 def _discrepancy(local: AeatSyncSourceState, aeat: AeatSyncSourceState, kind: AeatSyncDiscrepancyKind) -> None:

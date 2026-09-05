@@ -128,6 +128,7 @@ def _params_for(year: int) -> BienesInversionRegularizacionParameters:
         update={"provenance": _PARAMS.provenance.model_copy(update={"resolved_on": _prov_date(year, 12, 31)})}
     )
 
+
 _SOURCE_REF = "aeat-dr-303-2026"
 _SOURCE_SHA256 = "0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6b9b8489b"
 _REVISION_ID = "2026-y-siguientes"

@@ -649,6 +649,7 @@ def test_a_refused_local_source_names_whether_the_reader_is_missing_or_uncompose
         "sends the next person to write a reader that already exists"
     )
 
+
 @pytest.mark.parametrize(
     ("custody_count", "expected_refusal", "expected_count"),
     [
@@ -695,6 +696,7 @@ def test_notification_custody_separates_an_unread_store_from_an_empty_one(
 
     assert observation.refusal == expected_refusal
     assert observation.item_count == expected_count
+
 
 def test_a_census_conflict_must_carry_both_values_it_compares() -> None:
     """Asserting a difference while hiding one side asks for blind agreement.
@@ -743,3 +745,60 @@ def test_an_unobserved_census_value_is_not_an_empty_field() -> None:
     )
     assert blank.aeat_value == ""
     assert blank.aeat_value is not None
+
+def test_a_two_sided_discrepancy_must_carry_the_values_it_compares() -> None:
+    """Only the kinds that assert BOTH sides differ are required to show both.
+
+    STATE_MISMATCH and CONTRADICTORY_SOURCE claim two observed sides disagree,
+    so a row making either claim while hiding a side asks the operator to
+    accept a difference they cannot inspect.
+
+    The one-sided kinds are exempt on purpose, and the exemption is asserted
+    rather than assumed: LOCAL_ONLY says the AEAT side is ABSENT, so there is
+    no second value to carry, and requiring one would force a producer to
+    invent a figure for something that is not there.
+    """
+    from ..workspace import AeatSyncWorkspaceEvidenceComparisonRowV1
+
+    def _row(
+        local: AeatSyncSourceState,
+        aeat: AeatSyncSourceState,
+        kind: AeatSyncDiscrepancyKind,
+        **values: str | None,
+    ) -> AeatSyncWorkspaceEvidenceComparisonRowV1:
+        return AeatSyncWorkspaceEvidenceComparisonRowV1(
+            modelo="303",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "3T"),
+            local_state=local,
+            aeat_state=aeat,
+            local_observed_at=T1,
+            aeat_observed_at=T2,
+            discrepancy_kind=kind,
+            **values,
+        )
+
+    with pytest.raises(ValidationError, match="must carry both the local and the AEAT value"):
+        _row(
+            AeatSyncSourceState.PRESENT,
+            AeatSyncSourceState.CONFLICT,
+            AeatSyncDiscrepancyKind.CONTRADICTORY_SOURCE,
+            local_value="120.00",
+        )
+
+    carried = _row(
+        AeatSyncSourceState.PRESENT,
+        AeatSyncSourceState.CONFLICT,
+        AeatSyncDiscrepancyKind.CONTRADICTORY_SOURCE,
+        local_value="120.00",
+        aeat_value="130.00",
+    )
+    assert (carried.local_value, carried.aeat_value) == ("120.00", "130.00")
+
+    one_sided = _row(
+        AeatSyncSourceState.PRESENT,
+        AeatSyncSourceState.ABSENT,
+        AeatSyncDiscrepancyKind.LOCAL_ONLY,
+        local_value="120.00",
+    )
+    assert one_sided.aeat_value is None, "an absent side has no value to compare"

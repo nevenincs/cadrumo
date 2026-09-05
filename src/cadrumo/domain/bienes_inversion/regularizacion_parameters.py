@@ -35,9 +35,9 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.errors.hierarchy import CadrumoError as _CadrumoError
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ..calculations.registry.formula_runtime_ops import resolve_dated_value
-from ..calculations.registry.schema_formula import DatedValue
 from ..calculations.registry.schema import ModeloRevision
 from ..calculations.registry.schema_base import ThresholdComparison
+from ..calculations.registry.schema_formula import DatedValue
 
 
 class BienesInversionParameterResolutionError(_CadrumoError):
