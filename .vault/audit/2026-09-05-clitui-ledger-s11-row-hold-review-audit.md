@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:3f0788eed964557ba9b7d1765d6400782908b14a87c388a6da5df76811c8f7b4'
+body_hash: 'sha256:37585558e193d54965f042a91406118ea16e068b4491bd1398af76759a921b5c'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-reference]]"
@@ -111,4 +111,4 @@ serialization round trips.
 
 The row-level 680/13 partition and union digest remain unchanged, G0 remains
 OPEN, and no production TUI changes were introduced. Ruff format/check, scoped
-`ty`, and feature Vault checks pass; the full suite result follows on completion.
+`ty`, and feature Vault checks pass. The full matrix module passes all 231 tests.
