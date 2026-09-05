@@ -519,6 +519,17 @@ class _BindingCollector(ast.NodeVisitor):
         for type_parameter in getattr(node, "type_params", ()):
             self.visit(type_parameter)
 
+    def _visit_comprehension(self, node: ast.ListComp | ast.SetComp | ast.DictComp | ast.GeneratorExp) -> None:
+        for generator in node.generators:
+            self.visit(generator.iter)
+            for condition in generator.ifs:
+                self.visit(condition)
+        if isinstance(node, ast.DictComp):
+            self.visit(node.key)
+            self.visit(node.value)
+        else:
+            self.visit(node.elt)
+
     @override
     def visit_Name(self, node: ast.Name) -> None:
         if isinstance(node.ctx, (ast.Store, ast.Del)):
@@ -550,6 +561,22 @@ class _BindingCollector(ast.NodeVisitor):
             self.visit(keyword.value)
         for type_parameter in getattr(node, "type_params", ()):
             self.visit(type_parameter)
+
+    @override
+    def visit_ListComp(self, node: ast.ListComp) -> None:
+        self._visit_comprehension(node)
+
+    @override
+    def visit_SetComp(self, node: ast.SetComp) -> None:
+        self._visit_comprehension(node)
+
+    @override
+    def visit_DictComp(self, node: ast.DictComp) -> None:
+        self._visit_comprehension(node)
+
+    @override
+    def visit_GeneratorExp(self, node: ast.GeneratorExp) -> None:
+        self._visit_comprehension(node)
 
     @override
     def visit_Import(self, node: ast.Import) -> None:

@@ -508,6 +508,63 @@ def test_tui_projection_refuses_bindings_in_nested_definition_headers(definition
         build_ledger_tui_supported_surface_census(source_records=records)
 
 
+@pytest.mark.parametrize(
+    "comprehension",
+    [
+        b"[screen for screen in ()]",
+        b"{screen for screen in ()}",
+        b"{screen: screen for screen in ()}",
+        b"(screen for screen in ())",
+    ],
+)
+def test_tui_projection_accepts_comprehension_local_target_shadow(comprehension: bytes) -> None:
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/launcher.py",
+        lambda body: _alias_installed_screen_return(body).replace(
+            b"        return screen",
+            b"        ignored = " + comprehension + b"\n        return screen",
+            1,
+        ),
+    )
+
+    candidate = build_ledger_tui_supported_surface_census(source_records=records)
+
+    assert candidate.initial_internal_destination == "ledger.overview"
+
+
+def test_tui_projection_accepts_comprehension_targets_in_postponed_annotations() -> None:
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/launcher.py",
+        lambda body: _alias_installed_screen_return(body).replace(
+            b"        return screen",
+            b"        def helper(\n"
+            b"            value: [screen for screen in ()],\n"
+            b"        ) -> ([screen for screen in ()]):\n"
+            b"            return value\n"
+            b"        return screen",
+            1,
+        ),
+    )
+
+    candidate = build_ledger_tui_supported_surface_census(source_records=records)
+
+    assert candidate.initial_internal_destination == "ledger.overview"
+
+
+def test_tui_projection_refuses_walrus_rebinding_from_comprehension_scope() -> None:
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/launcher.py",
+        lambda body: _alias_installed_screen_return(body).replace(
+            b"        return screen",
+            b"        ignored = [(screen := Screen()) for value in ()]\n        return screen",
+            1,
+        ),
+    )
+
+    with pytest.raises(ValueError, match="not uniquely and unconditionally defined"):
+        build_ledger_tui_supported_surface_census(source_records=records)
+
+
 def test_tui_projection_refuses_ambiguous_installed_screen_returns() -> None:
     records = _mutate_tui_source(
         "src/cadrumo/entrypoints/tui/launcher.py",
