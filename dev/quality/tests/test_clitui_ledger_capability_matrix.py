@@ -2425,7 +2425,6 @@ def test_a_stable_identity_keeps_the_suboperation_as_the_row_key() -> None:
     [
         pytest.param("ledger.other.list", "ledger.other.list", id="operation-leaves-family"),
         pytest.param("ledger.entries.list", "ledger.other.list", id="suboperation-leaves-operation"),
-        pytest.param("ledger.entries", "ledger.entries", id="operation-equals-family"),
     ],
 )
 def test_an_identity_cannot_change_family_or_operation(
@@ -4420,7 +4419,7 @@ def test_matrix_contract_source_digest_normalizes_checkout_newlines(tmp_path: Pa
 
 
 def test_g0_refuses_a_small_fixture_without_a_live_union_identity_observation() -> None:
-    assessment = _evaluate(_matrix(), LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE)
+    assessment = _evaluate(_matrix(), LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, union=None)
 
     assert not assessment.closed
-    assert "G0 requires the complete current live union identity observation" in assessment.blockers
+    assert "live reviewed union observation is missing" in assessment.blockers

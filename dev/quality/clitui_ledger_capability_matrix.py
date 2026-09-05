@@ -5571,8 +5571,6 @@ def evaluate_ledger_capability_gate(
         observed_acceptance_subjects=observed_acceptance_subjects,
     )
     if gate is LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE:
-        if matrix.live_union is None:
-            blockers.append("G0 requires the complete current live union identity observation")
         if not matrix.controls.tui_implementation_hold_recorded or not matrix.controls.tui_implementation_hold_active:
             blockers.append("the Ledger TUI implementation hold is not recorded and active")
         if matrix.acceptance_attestation.ruling is not ReviewRuling.ACCEPT:
