@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:6c0864d9995d634c600360ddf2c32aef755f9b12cd1aab9f8d9410c53dc63f97'
+body_hash: 'sha256:5dbcff3379ff98755de2f06210604bc2ff1fba7054084ce2c706544ce30d48ca'
 related:
   - "[[2026-09-04-clitui-ledger-research]]"
   - "[[2026-06-10-ledger-interface-contract-adr]]"
@@ -19,21 +19,24 @@ This reference maps the first semantic-search-led census of Ledger behavior owne
 
 ### Campaign matrix publication
 
-This document is the authoritative human-readable publication surface for the `LedgerCapabilityMatrixV1` campaign contract in `dev/quality/clitui_ledger_capability_matrix.py`. The exact union contains 760 raw observations, 769 observation-to-row selections, and 693 semantic rows. Singular ownership and the active campaign hold are recorded, every TUI-applicable row carries the hold, and the exhaustive row review now binds all eight applicability and proof decisions plus every open disposition. The publication remains a **provisional baseline** rather than an accepted campaign matrix: S13 fail-closed reopening enforcement is now active; independent acceptance remains open, so the contract continues to refuse a matrix acceptance attestation or G0 closure.
+This document is the authoritative human-readable publication surface for the `LedgerCapabilityMatrixV1` campaign contract in `dev/quality/clitui_ledger_capability_matrix.py`. The exact union contains 760 raw observations, 769 observation-to-row selections, and 693 semantic rows. Singular ownership and the active campaign hold are recorded, every TUI-applicable row carries the hold, and the exhaustive row review binds all eight applicability and proof decisions plus every open disposition. The canonical 693-row **pre-acceptance candidate** is now deterministic and digest-bound, but it is not an accepted campaign matrix: two fresh independent rulings, an `ACCEPT` attestation, its external acceptance-record anchor, and G0 closure are all still absent.
 
 | Publication field | Current value |
 | --- | --- |
 | Contract / schema | `LedgerCapabilityMatrixV1` / `4`; `LedgerUnionDenominatorV1` / `4` |
-| Publication revision | `s13-gate-reopening-1` |
+| Publication revision | `s14-preacceptance-candidate-1` |
 | Observation timestamp | `2026-09-05T12:00:00+02:00` |
-| Source revision | `4fa7649ae4` |
-| Contract source digest | `sha256:ac4c5bcb9fdc0b8f96714db30bd01842fe4bb910bc6c4dcabb988ddfa669061c` |
+| Candidate implementation base | `bd2f61103d`, `55b47b660a`; final candidate commit is the review subject |
+| Contract source digest | `sha256:d58918930a1e18f9e9b65636d09998e21a60f3a9f35d00cf0084a17359ab9248` |
 | Accepted plan owner | `clitui-ledger` |
 | Denominator revision / digest | `s12-row-review-3` / `sha256:8a158b5cc4c8e6c3035dc272999af61ac6cb080af8c208eccc8d28e4105a7575` |
 | Row-review coverage / digest | `693 / 693` / `sha256:4e42e5e04ccfd7a8654e629933698e141033b0767d0f94ec5433619400203ff8` |
 | Row-review attestation | `complete_with_open_gaps`; `sha256:fc15a433ad145832934cbe894d3d0b875d27e9a54ed1a70ae271c16ff81aedf7` |
-| Matrix digest | Not issued for this provisional publication; S14 alone may bind a reviewed matrix state and external acceptance anchor |
-| Acceptance attestation | Absent by design: only S14 may record an independent `ACCEPT` ruling bound to the frozen digest |
+| Matrix denominator snapshot | `693` identities; `sha256:48c2c800faa2c9932811678fc16c8caff2cae89bcdaf81512e7ae7aa29d5d140` |
+| Matrix digest / pre-receipt review basis | `sha256:ac5d5ab8cbfa9aa3233c858c2693a143a6436e4131ece7fc6652d4341b51e284` / `sha256:9462e6d32faa67c7d45f08d30d0c4b6c15622479d1fdec8385b3fa95ed1b9750` |
+| Candidate identity equality | matrix rows = current denominator = row-review identities = live union identities = `693` |
+| Acceptance attestation | No accepted attestation: candidate carries the deterministic `independent-review-pending` / `REJECT` state only |
+| Acceptance-record anchor / G0 | Absent / **OPEN**; neither is minted by candidate preparation |
 | TUI hold | Campaign sequencing bars Ledger TUI implementation; global ownership/hold is recorded and every TUI-applicable row is typed as held until G3 |
 
 #### Mandatory source-stream landscape

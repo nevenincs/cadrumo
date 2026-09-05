@@ -6,7 +6,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:2321af8f36dc93710c6e41fa52f42452fa60ca4b826f15eaa41bc9892dc5db9a'
+body_hash: 'sha256:8d81acb620c21003834877f65ec0f2b8ab3dc6893cf0c9c07931bee66793d6ce'
 related:
   - '[[2026-09-04-clitui-ledger-W01-P01-S01]]'
   - '[[2026-09-04-clitui-ledger-W01-P01-S02]]'
@@ -22,6 +22,7 @@ related:
   - '[[2026-09-04-clitui-ledger-W01-P03-S11]]'
   - '[[2026-09-04-clitui-ledger-W01-P04-S12]]'
   - '[[2026-09-04-clitui-ledger-W01-P04-S13]]'
+  - '[[2026-09-04-clitui-ledger-W01-P04-S14]]'
   - '[[2026-09-04-clitui-ledger-adr]]'
   - '[[2026-09-04-clitui-ledger-plan]]'
   - '[[2026-09-04-clitui-ledger-reference]]'
@@ -85,6 +86,7 @@ Auto-generated index of all documents tagged with `#clitui-ledger`.
 - `2026-09-04-clitui-ledger-W01-P03-S11` - Mark every TUI-applicable union and matrix row held until G3, retain component-only versus installed distinctions, and fail closed on hold drift, additions, or an unauthorized lift
 - `2026-09-04-clitui-ledger-W01-P04-S12` - Review every row for explicit applicability, semantic owner, proof state, gap class, and next closure action
 - `2026-09-04-clitui-ledger-W01-P04-S13` - 2026-09-04-clitui-ledger-W01-P04-S13
+- `2026-09-04-clitui-ledger-W01-P04-S14` - Record G0 closure only after an independent engineering review accepts the frozen matrix
 
 ### plan
 
