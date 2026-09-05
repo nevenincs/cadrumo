@@ -21,7 +21,7 @@ from ....application.operator_actions.models import (
 from ....application.workflow.abort import WorkflowAbortReason
 from ....application.workflow.persistence import list_runs, load_run, save_run
 from ....application.workflow.run_models import (
-    WorkflowFailureDetails,
+    WorkflowFailureDetail,
     WorkflowObligationFacts,
     WorkflowResult,
     WorkflowStage,
@@ -115,7 +115,7 @@ def _aborted_run(run_id: str, *, reason: WorkflowAbortReason) -> WorkflowResult:
         ended_at=_T,
         success=False,
         summary_locale_key="application.workflow.steps.site_unavailable",
-        details=WorkflowFailureDetails(
+        details=WorkflowFailureDetail(
             kind="workflow_failure",
             error_code="workflow.site.unavailable",
         ),
@@ -174,7 +174,7 @@ def _builder_refused_run(run_id: str) -> WorkflowResult:
         ended_at=_T,
         success=False,
         summary_locale_key="application.workflow.steps.draft_build_failed",
-        details=WorkflowFailureDetails(
+        details=WorkflowFailureDetail(
             kind="workflow_failure",
             error_code="workflow.draft.build_failure",
         ),
@@ -293,7 +293,7 @@ def test_work_runs_projects_a_typed_builder_refusal_without_reconstructing_a_com
     assert stored_before == run
     terminal = stored_before.steps[-1]
     assert terminal.summary_locale_key == "application.workflow.steps.draft_build_failed"
-    assert terminal.details == WorkflowFailureDetails(
+    assert terminal.details == WorkflowFailureDetail(
         kind="workflow_failure",
         error_code="workflow.draft.build_failure",
     )

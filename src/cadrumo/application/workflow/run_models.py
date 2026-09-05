@@ -281,7 +281,7 @@ class _WorkflowStepDetail(BaseModel):
     model_config = _STRICT_FROZEN
 
 
-class WorkflowDeadlineContextDetails(_WorkflowStepDetail):
+class WorkflowDeadlineContextDetail(_WorkflowStepDetail):
     """The one of the closed deadline contexts a workflow step can carry."""
 
     kind: Literal["deadline_context"]
@@ -295,7 +295,7 @@ class WorkflowDeadlineContextDetails(_WorkflowStepDetail):
     extemporanea: bool | None = None
 
     @model_validator(mode="after")
-    def _validate_context(self) -> WorkflowDeadlineContextDetails:
+    def _validate_context(self) -> WorkflowDeadlineContextDetail:
         """Keep deadline metadata internally coherent rather than loosely optional.
 
         A context carries exactly one of three mutually exclusive shapes — an
@@ -350,14 +350,14 @@ class WorkflowDeadlineContextDetails(_WorkflowStepDetail):
             raise ValueError("dated informational windows require opens_on and closes_on")
 
 
-class WorkflowInboxSkippedDetails(_WorkflowStepDetail):
+class WorkflowInboxSkippedDetail(_WorkflowStepDetail):
     """An inbox step intentionally skipped because its adapter is not wired."""
 
     kind: Literal["inbox_skipped"]
     skip_reason: Literal[WorkflowDiagnosticSkipReason.NOT_WIRED]
 
 
-class WorkflowInboxBlockedDetails(_WorkflowStepDetail):
+class WorkflowInboxBlockedDetail(_WorkflowStepDetail):
     """A workflow inbox failure with a bounded, machine-readable first item."""
 
     kind: Literal["inbox_blocked"]
@@ -365,14 +365,14 @@ class WorkflowInboxBlockedDetails(_WorkflowStepDetail):
     first_notificacion_id: str = Field(min_length=1, max_length=256)
 
 
-class WorkflowDraftBuiltDetails(_WorkflowStepDetail):
+class WorkflowDraftBuiltDetail(_WorkflowStepDetail):
     """The durable identity of a successfully built draft."""
 
     kind: Literal["draft_built"]
     draft_id: str = Field(min_length=1, max_length=256)
 
 
-class WorkflowAlreadyFiledDetails(_WorkflowStepDetail):
+class WorkflowAlreadyFiledDetail(_WorkflowStepDetail):
     """The model and period already evidenced as filed."""
 
     kind: Literal["already_filed"]
@@ -381,7 +381,7 @@ class WorkflowAlreadyFiledDetails(_WorkflowStepDetail):
     expediente_count: PositiveCount
 
 
-class WorkflowDraftNotReadyDetails(_WorkflowStepDetail):
+class WorkflowDraftNotReadyDetail(_WorkflowStepDetail):
     """A built draft whose lifecycle status does not permit filing."""
 
     kind: Literal["draft_not_ready"]
@@ -400,7 +400,7 @@ class WorkflowDraftNotReadyDetails(_WorkflowStepDetail):
         return tuple(sorted(value))
 
 
-class WorkflowDraftMismatchDetails(_WorkflowStepDetail):
+class WorkflowDraftMismatchDetail(_WorkflowStepDetail):
     """A draft that cannot be used for the target obligation.
 
     The mismatching facts themselves are condition evidence on the paired
@@ -411,14 +411,14 @@ class WorkflowDraftMismatchDetails(_WorkflowStepDetail):
     draft_id: str = Field(min_length=1, max_length=256)
 
 
-class WorkflowValidationFailedDetails(_WorkflowStepDetail):
+class WorkflowValidationFailedDetail(_WorkflowStepDetail):
     """The number of blocking validation findings on one draft."""
 
     kind: Literal["validation_failed"]
     error_count: PositiveCount
 
 
-class WorkflowAuthCheckDetails(_WorkflowStepDetail):
+class WorkflowAuthCheckDetail(_WorkflowStepDetail):
     """Closed certificate/provider readiness facts for preflight."""
 
     kind: Literal["auth_check"]
@@ -430,7 +430,7 @@ class WorkflowAuthCheckDetails(_WorkflowStepDetail):
     cert_days_until_expiry: int | None = None
 
     @model_validator(mode="after")
-    def _validate_provider_shape(self) -> WorkflowAuthCheckDetails:
+    def _validate_provider_shape(self) -> WorkflowAuthCheckDetail:
         """Make configured and skipped provider observations disjoint shapes."""
         if self.provider_check_skipped:
             self._validate_skipped_shape()
@@ -460,15 +460,15 @@ class WorkflowAuthCheckDetails(_WorkflowStepDetail):
             raise ValueError("skipped provider checks cannot carry certificate facts")
 
 
-class WorkflowPreflightFailedDetails(_WorkflowStepDetail):
+class WorkflowPreflightFailedDetail(_WorkflowStepDetail):
     """A preflight failure identified by a stable application error code."""
 
     kind: Literal["preflight_failed"]
     error_code: NamespacedId
-    auth_check: WorkflowAuthCheckDetails | None = None
+    auth_check: WorkflowAuthCheckDetail | None = None
 
 
-class WorkflowFailureDetails(_WorkflowStepDetail):
+class WorkflowFailureDetail(_WorkflowStepDetail):
     """A non-precondition workflow failure represented without exception prose."""
 
     kind: Literal["workflow_failure"]
@@ -476,26 +476,26 @@ class WorkflowFailureDetails(_WorkflowStepDetail):
 
 
 type WorkflowStepDetails = Annotated[
-    WorkflowDeadlineContextDetails
-    | WorkflowInboxSkippedDetails
-    | WorkflowInboxBlockedDetails
-    | WorkflowDraftBuiltDetails
-    | WorkflowAlreadyFiledDetails
-    | WorkflowDraftNotReadyDetails
-    | WorkflowDraftMismatchDetails
-    | WorkflowValidationFailedDetails
-    | WorkflowAuthCheckDetails
-    | WorkflowPreflightFailedDetails
-    | WorkflowFailureDetails,
+    WorkflowDeadlineContextDetail
+    | WorkflowInboxSkippedDetail
+    | WorkflowInboxBlockedDetail
+    | WorkflowDraftBuiltDetail
+    | WorkflowAlreadyFiledDetail
+    | WorkflowDraftNotReadyDetail
+    | WorkflowDraftMismatchDetail
+    | WorkflowValidationFailedDetail
+    | WorkflowAuthCheckDetail
+    | WorkflowPreflightFailedDetail
+    | WorkflowFailureDetail,
     Field(discriminator="kind"),
 ]
 
 _PRECONDITION_DETAIL_TYPES = (
-    WorkflowInboxBlockedDetails,
-    WorkflowAlreadyFiledDetails,
-    WorkflowDraftNotReadyDetails,
-    WorkflowDraftMismatchDetails,
-    WorkflowValidationFailedDetails,
+    WorkflowInboxBlockedDetail,
+    WorkflowAlreadyFiledDetail,
+    WorkflowDraftNotReadyDetail,
+    WorkflowDraftMismatchDetail,
+    WorkflowValidationFailedDetail,
 )
 
 
@@ -659,26 +659,26 @@ def compute_run_id(
 __all__ = [
     "WORKFLOW_SUMMARY_LOCALE_KEYS",
     "SiteHealthAlert",
-    "WorkflowAlreadyFiledDetails",
-    "WorkflowAuthCheckDetails",
-    "WorkflowDeadlineContextDetails",
+    "WorkflowAlreadyFiledDetail",
+    "WorkflowAuthCheckDetail",
+    "WorkflowDeadlineContextDetail",
     "WorkflowDeadlineRecoveryFacts",
     "WorkflowDiagnosticSkipReason",
-    "WorkflowDraftBuiltDetails",
-    "WorkflowDraftMismatchDetails",
-    "WorkflowDraftNotReadyDetails",
-    "WorkflowFailureDetails",
-    "WorkflowInboxBlockedDetails",
-    "WorkflowInboxSkippedDetails",
+    "WorkflowDraftBuiltDetail",
+    "WorkflowDraftMismatchDetail",
+    "WorkflowDraftNotReadyDetail",
+    "WorkflowFailureDetail",
+    "WorkflowInboxBlockedDetail",
+    "WorkflowInboxSkippedDetail",
     "WorkflowLocaleKey",
     "WorkflowObligationFacts",
-    "WorkflowPreflightFailedDetails",
+    "WorkflowPreflightFailedDetail",
     "WorkflowPurpose",
     "WorkflowResult",
     "WorkflowSiteHealthFacts",
     "WorkflowStage",
     "WorkflowStep",
     "WorkflowStepDetails",
-    "WorkflowValidationFailedDetails",
+    "WorkflowValidationFailedDetail",
     "compute_run_id",
 ]

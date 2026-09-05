@@ -7,7 +7,7 @@ import pytest
 from ....core.period import Period
 from ...calculations.observations_repository import CalculationObservationRepository
 from ...workflow.persistence import WorkflowRunRepository
-from ...workflow.run_models import WorkflowDeadlineContextDetails
+from ...workflow.run_models import WorkflowDeadlineContextDetail
 from ..filed_revision_observation import APP_FILING_SOURCE_KIND
 from ._file_flow_support import (
     DEFAULT_130_BASELINE_INPUTS,
@@ -228,7 +228,7 @@ def test_file_records_verified_modelo_130_2024_as_late_non_official_local_filing
     assert target_run.final_stage is WorkflowStage.DONE
     computing = next(step for step in target_run.steps if step.stage is WorkflowStage.COMPUTING_DEADLINES)
     assert computing.success is True
-    assert isinstance(computing.details, WorkflowDeadlineContextDetails)
+    assert isinstance(computing.details, WorkflowDeadlineContextDetail)
     assert computing.details.overdue is True
     assert computing.details.extemporanea is True
 
@@ -278,7 +278,7 @@ def test_file_refuses_future_period_before_filing_window_opens(repos: Repos) -> 
     assert gate_error.value.result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION
     terminal_step = gate_error.value.result.steps[-1]
     assert terminal_step.summary_locale_key == "application.workflow.steps.deadline_future"
-    assert isinstance(terminal_step.details, WorkflowDeadlineContextDetails)
+    assert isinstance(terminal_step.details, WorkflowDeadlineContextDetail)
     assert terminal_step.details.filing_window is not None
     assert terminal_step.details.filing_window.value == "future"
     assert terminal_step.precondition_verdict is not None

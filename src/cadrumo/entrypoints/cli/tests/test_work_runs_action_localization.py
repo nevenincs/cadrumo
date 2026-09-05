@@ -22,7 +22,7 @@ from ....application.workflow.abort import WorkflowAbortReason
 from ....application.workflow.persistence import save_run
 from ....application.workflow.run_models import (
     SiteHealthAlert,
-    WorkflowFailureDetails,
+    WorkflowFailureDetail,
     WorkflowObligationFacts,
     WorkflowResult,
     WorkflowSiteHealthFacts,
@@ -133,7 +133,7 @@ def _actionable_run() -> WorkflowResult:
         ended_at=_T,
         success=False,
         summary_locale_key="application.workflow.steps.draft_build_failed",
-        details=WorkflowFailureDetails(
+        details=WorkflowFailureDetail(
             kind="workflow_failure",
             error_code="workflow.draft.build_failure",
         ),
@@ -172,7 +172,7 @@ def _site_health_run() -> WorkflowResult:
         ended_at=_T,
         success=False,
         summary_locale_key="application.workflow.steps.site_unavailable",
-        details=WorkflowFailureDetails(
+        details=WorkflowFailureDetail(
             kind="workflow_failure",
             error_code="workflow.site.unavailable",
         ),

@@ -37,13 +37,13 @@ from ..abort import WorkflowAbortReason
 from ..engine_helpers import DeadlineRole
 from ..run_models import (
     SiteHealthAlert,
-    WorkflowDeadlineContextDetails,
+    WorkflowDeadlineContextDetail,
     WorkflowObligationFacts,
     WorkflowResult,
     WorkflowSiteHealthFacts,
     WorkflowStage,
     WorkflowStep,
-    WorkflowValidationFailedDetails,
+    WorkflowValidationFailedDetail,
     compute_run_id,
 )
 
@@ -100,7 +100,7 @@ class TestWorkflowStepValidation:
             ended_at=now,
             success=True,
             summary_locale_key="application.workflow.steps.deadline_open",
-            details=WorkflowDeadlineContextDetails(
+            details=WorkflowDeadlineContextDetail(
                 kind="deadline_context",
                 modelo=Modelo.M303,
                 period=_period(),
@@ -108,7 +108,7 @@ class TestWorkflowStepValidation:
                 closes_on=datetime(2026, 4, 20, tzinfo=UTC).date(),
             ),
         )
-        assert isinstance(step.details, WorkflowDeadlineContextDetails)
+        assert isinstance(step.details, WorkflowDeadlineContextDetail)
         assert step.details.modelo is Modelo.M303
         assert step.details.period == _period()
         assert step.details.kind == "deadline_context"
@@ -202,7 +202,7 @@ class TestWorkflowStepValidation:
             ended_at=now,
             success=False,
             summary_locale_key="application.workflow.steps.draft_not_ready",
-            details=WorkflowValidationFailedDetails(
+            details=WorkflowValidationFailedDetail(
                 kind="validation_failed",
                 error_count=1,
             ),
@@ -261,7 +261,7 @@ class TestWorkflowStepValidation:
                 ended_at=now,
                 success=False,
                 summary_locale_key="application.workflow.steps.validation_failed",
-                details=WorkflowValidationFailedDetails(
+                details=WorkflowValidationFailedDetail(
                     kind="validation_failed",
                     error_count=1,
                 ),
