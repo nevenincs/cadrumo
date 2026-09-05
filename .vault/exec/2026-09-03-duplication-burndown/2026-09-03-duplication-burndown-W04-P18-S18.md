@@ -67,3 +67,24 @@ This Step's stated bar is that the type, lint, format and repository gates pass 
 stable revision. Lint now does; type and format do not. The Step is therefore recorded and
 left OPEN rather than closed against a bar it does not meet, because closing it would assert
 a joined green state that does not exist.
+
+## Re-measurement
+
+Re-run against the current tree. The verdict is unchanged and the Step stays open.
+
+Green: duplication, dead code, `ruff check` over `src` and `dev`, all eleven import
+contracts, `dev.audit.semantic`, and the four architecture gates (32 tests).
+
+Still failing, still peer-owned: `check-types` on
+`domain/bienes_inversion/regularizacion_parameters.py`, and `check-format` on eleven
+files.
+
+One correction to the count above. `ruff format --check` reported fifteen files, not
+eleven: four had become this campaign's own drift, introduced after the original
+measurement by edits that ran `ruff check` but not `ruff format` afterwards -
+`dev/audit/unreachable_code.py`, the two new screen test modules, and
+`domain/calculations/registry/applicability.py`. Those four are now formatted, which
+returns the count to the eleven peer-owned files this record already named. The lesson
+is that a campaign auditing drift can introduce it: run the format check over the whole
+tree periodically, not only over the files an iteration touched.
+
