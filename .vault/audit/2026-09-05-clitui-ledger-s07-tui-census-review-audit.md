@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:c7e7dd4a71d9c9894a2a765ecacc32f587035478beac299d61645247d8ace792'
+body_hash: 'sha256:0025a4f55fd594e4af1f1adf15b7862264d21b204943e0ce84c9c3a5741597ec'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-reference]]"
@@ -405,3 +405,57 @@ full matrix module passes all 169 tests. Ruff format/check, scoped `ty`,
 basedpyright, and the feature Vault check pass. The record/reference/plan remain
 accurate about the current code, but S07 does not meet detector teeth until
 enclosing-scope definition expressions are covered.
+
+## Definition-expression remediation review
+
+Ruling: **ACCEPT**. No HIGH or CRITICAL finding remains. The prior
+`definition-expression-binding` HIGH is closed. One MEDIUM false-positive is
+retained below; it fails closed and cannot silently overstate installed
+capability.
+
+The live result remains stable: 126 selected sources; seven routes with
+`ledger.overview` solely installed; zero message consumers; two injected
+read-action ids; zero mutation doors; 78 CLI declarations all
+`not-implemented`; six governed harness files and 65 functions. Independent
+framing reproduces source digest
+`sha256:e7337508a02ef2260e0b28205c31bb872b69f59aa51a18391ae209c21b8f9d57`
+and census digest
+`sha256:c136cfe1ae3f82a239476c00e805f8c9a29e010d502e74397963cea7e6f42371`.
+No production TUI file changed. G0 remains OPEN and the TUI hold remains in
+force.
+
+Independent function-default, async keyword-default, lambda-default,
+function-decorator, class-base, class-decorator, and class-metaclass walrus
+mutations all fail closed. Nested function/class/import names continue to count
+as enclosing-scope bindings without visiting their bodies. Nested parameter
+shadowing and differently named nested-body writes do not contaminate the
+outer alias. The previous branch, duplicate, delete, read-before-definition,
+dead-call, syntax-only, real-route, and changed-initial-route controls also
+retain their required outcomes. Type-parameter and annotation traversal is
+conservative; assignment expressions in annotations are syntactically
+prohibited by the supported interpreter.
+
+### comprehension-target-scope | medium | Implicit comprehension-local targets are treated as enclosing-function writes
+
+`_BindingCollector` generically descends comprehensions. On Python 3,
+comprehension generator targets bind in the comprehension's implicit nested
+scope, not the containing function. An independent positive mutation inserts
+`unused = [screen for screen in ()]` after the supported outer `screen` alias;
+the outer alias remains unchanged at runtime, but the detector rejects it as a
+competing binding. The same issue can appear inside an annotation even though
+this source uses postponed annotations.
+
+This is MEDIUM because it creates a conservative false alarm rather than a
+false installed-capability statement: any such source change blocks evidence
+refresh instead of silently under-declaring a consumer or door. A follow-up
+should add scope-aware visitors for list/set/dict comprehensions and generator
+expressions. It should visit outer-evaluated iterable expressions and record
+assignment-expression targets that bind in the containing scope while excluding
+generator targets and ordinary comprehension-local bodies. Add positive
+comprehension-shadow and postponed-annotation controls before broadening this
+extractor.
+
+The focused S07 detector selection passes 41 tests with 135 deselected, and the
+full matrix module passes all 176 tests. Ruff format/check, scoped `ty`,
+basedpyright, and the feature Vault check pass. The record/reference/plan and G0
+state agree with the accepted current census.
