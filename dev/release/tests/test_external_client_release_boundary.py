@@ -32,11 +32,34 @@ def _import_targets(path: Path) -> tuple[str, ...]:
     return tuple(targets)
 
 
+#: Below this the base-package walk has stopped covering the shipped surface.
+#: A floor, not a pinned count: 5,854 modules ship today.
+_MINIMUM_BASE_MODULES = 500
+
+
 def test_base_cli_never_imports_the_harness() -> None:
-    """The shipped base package has no dependency edge to its harness client."""
+    """The shipped base package has no dependency edge to its harness client.
+
+    Guarded like its positive sibling below, which already refuses when the
+    harness imports nothing. A negative claim needs the same protection more,
+    not less: an empty walk produces no crossings and reads exactly like a
+    clean boundary.
+    """
+    assert _BASE_PACKAGE.is_dir(), (
+        f"no base package at {_BASE_PACKAGE}; a relocated root walks nothing and this gate "
+        "would report the release boundary intact"
+    )
+
+    walked = tuple(_BASE_PACKAGE.rglob("*.py"))
+
+    assert len(walked) >= _MINIMUM_BASE_MODULES, (
+        f"only {len(walked)} base module(s) were walked; below this an empty crossing set "
+        "says nothing about whether the shipped package reaches its harness"
+    )
+
     crossings = {
         path.relative_to(REPO_ROOT): target
-        for path in _BASE_PACKAGE.rglob("*.py")
+        for path in walked
         for target in _import_targets(path)
         if target == "cadrumo_harness" or target.startswith("cadrumo_harness.")
     }
