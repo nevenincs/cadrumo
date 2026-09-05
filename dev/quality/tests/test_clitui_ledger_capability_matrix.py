@@ -3179,6 +3179,17 @@ def test_receipt_serialization_and_matrix_digest_mutations_fail_closed() -> None
     assert assessment.blockers == ("matrix validation failed at <root>: value_error",)
 
 
+def test_g4_refuses_receipts_when_the_bound_acceptance_attestation_is_not_accepting() -> None:
+    matrix = _matrix_with_authorized_hold_lift(_matrix())
+    attestation = matrix.acceptance_attestation.model_copy(update={"ruling": ReviewRuling.REJECT})
+    candidate = _matrix_with(matrix, acceptance_attestation=attestation)
+
+    assessment = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY)
+
+    assert not assessment.closed
+    assert assessment.blockers == ("matrix validation failed at <root>: value_error",)
+
+
 def test_matrix_drift_invalidates_receipt_and_relocks_ordered_gates() -> None:
     matrix = _matrix_with_authorized_hold_lift(_matrix())
     drift = _evidence(

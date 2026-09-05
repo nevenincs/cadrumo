@@ -3887,7 +3887,9 @@ class LedgerCapabilityMatrixV1(BaseModel):
                 raise ValueError("gate closure receipt is stale or not bound to the current denominator")
             attestation = self.acceptance_attestation
             if (
-                receipt.attestation_id != attestation.attestation_id
+                attestation.ruling is not ReviewRuling.ACCEPT
+                or receipt.ruling is not ReviewRuling.ACCEPT
+                or receipt.attestation_id != attestation.attestation_id
                 or receipt.attestation_reviewer != attestation.reviewer
                 or receipt.attestation_review_subject_id != attestation.review_subject_id
                 or receipt.attestation_review_subject_revision != attestation.review_subject_revision
