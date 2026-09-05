@@ -6,7 +6,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:c89fae66189aaeb9c21e8a895cfd094e7bc8799a93f62c2dd3db48849a235eb1'
+body_hash: 'sha256:678b1ac61de124fbc07be5afe96f3d2ee6cccccae5d053a08a055a14ce989ab7'
 related:
   - '[[2026-09-04-clitui-ledger-W01-P01-S01]]'
   - '[[2026-09-04-clitui-ledger-W01-P01-S02]]'
@@ -35,6 +35,7 @@ related:
   - '[[2026-09-05-clitui-ledger-s08-union-adjudication-review-audit]]'
   - '[[2026-09-05-clitui-ledger-s09-governance-reconciliation-review-audit]]'
   - '[[2026-09-05-clitui-ledger-s10-index-governance-review-audit]]'
+  - '[[2026-09-05-clitui-ledger-s11-row-hold-review-audit]]'
 ---
 
 # `clitui-ledger` feature index
@@ -60,6 +61,7 @@ Auto-generated index of all documents tagged with `#clitui-ledger`.
 - `2026-09-05-clitui-ledger-s08-union-adjudication-review-audit` - `clitui-ledger` audit: `S08 union adjudication review`
 - `2026-09-05-clitui-ledger-s09-governance-reconciliation-review-audit` - `clitui-ledger` audit: `S09 governance reconciliation review`
 - `2026-09-05-clitui-ledger-s10-index-governance-review-audit` - `clitui-ledger` audit: `S10 index governance review`
+- `2026-09-05-clitui-ledger-s11-row-hold-review-audit` - `clitui-ledger` audit: `S11 row-level TUI hold review`
 
 ### exec
 
@@ -74,7 +76,7 @@ Auto-generated index of all documents tagged with `#clitui-ledger`.
 - `2026-09-04-clitui-ledger-W01-P02-S08` - Adjudicate canonical semantic homes and typed command-result contracts for every denominator row
 - `2026-09-04-clitui-ledger-W01-P03-S09` - Record clitui-ledger as sole Ledger parity owner and place unresolved Ledger TUI rows under the implementation hold
 - `2026-09-04-clitui-ledger-W01-P03-S10` - Publish clitui-ledger sole active Ledger parity owner; G0 OPEN; ordered G0→G1→G2→G3→G4; Ledger TUI held until G3 closes; link S09, plan, reference
-- `2026-09-04-clitui-ledger-W01-P03-S11` - Mark every TUI-applicable union and matrix row held until G3, retain component-only versus installed distinctions, and fail closed on hold drift or additions
+- `2026-09-04-clitui-ledger-W01-P03-S11` - Mark every TUI-applicable union and matrix row held until G3, retain component-only versus installed distinctions, and fail closed on hold drift, additions, or an unauthorized lift
 
 ### plan
 

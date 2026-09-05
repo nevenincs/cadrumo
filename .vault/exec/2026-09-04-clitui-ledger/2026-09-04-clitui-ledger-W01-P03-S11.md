@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:8f5efe5e9974995ab63b34a5d79ce91bd1479fa2aa9936f2af946843aebcdef0'
+body_hash: 'sha256:973d2d1474b2b0ee86e8e8710aaec96f406c24042ac454c745b7d48868de2321'
 step_id: 'S11'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
@@ -45,3 +45,4 @@ S11 was reopened after the mandatory review found that an inactive hold could cl
 - `verify:` `uv run --no-sync ruff check dev/quality/clitui_ledger_capability_matrix.py dev/quality/tests/test_clitui_ledger_capability_matrix.py` -> pass
 - `verify:` `uv run --no-sync ty check dev/quality/clitui_ledger_capability_matrix.py` -> pass
 - `verify:` `uv run --no-sync basedpyright dev/quality/clitui_ledger_capability_matrix.py` -> pass
+- `verify:` `uv run --no-sync pytest -q -n 0 dev/quality/tests/test_clitui_ledger_capability_matrix.py` -> pass (231 passed)
