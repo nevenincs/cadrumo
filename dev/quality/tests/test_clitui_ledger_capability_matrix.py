@@ -95,7 +95,7 @@ _REGISTRY_ROUTE_DIGEST: Final[str] = "sha256:20b2d2df5558b2a3fdbd1eab6e9f781a973
 _REGISTRY_SOURCE_DIGEST: Final[str] = "sha256:194a9f26ddfbae6c5d7f265ffe58f50964fbe2fcd02a5670fa19845dead5cf6d"
 _TUI_CENSUS_DIGEST: Final[str] = "sha256:c136cfe1ae3f82a239476c00e805f8c9a29e010d502e74397963cea7e6f42371"
 _TUI_SOURCE_DIGEST: Final[str] = "sha256:e7337508a02ef2260e0b28205c31bb872b69f59aa51a18391ae209c21b8f9d57"
-_UNION_DIGEST: Final[str] = "sha256:46b2292f43821f5d120e71ddff6a7bc2a46a9ed75ebb974f641481b794ddf0a9"
+_UNION_DIGEST: Final[str] = "sha256:8119bedd03babf7b1400bf310cd9e847b1f7f472a671b6ccb482cc583ad9a3bb"
 
 
 @cache
@@ -111,6 +111,11 @@ def _tui_census() -> LedgerTuiSupportedSurfaceCensusV1:
 @cache
 def _union_denominator() -> LedgerUnionDenominatorV1:
     return build_ledger_union_denominator(registry=_registry_census(), tui=_tui_census())
+
+
+def _refreshed_union_digest(union: LedgerUnionDenominatorV1, **updates: object) -> LedgerUnionDenominatorV1:
+    candidate = union.model_copy(update={**updates, "digest": ""})
+    return candidate.model_copy(update={"digest": candidate.calculated_digest})
 
 
 def _tui_source_records() -> tuple[tuple[str, bytes], ...]:
@@ -170,7 +175,7 @@ def test_union_denominator_joins_every_raw_observation_without_double_counting()
     union = _union_denominator()
 
     assert union.root == LEDGER_UNION_DENOMINATOR_ROOT
-    assert union.schema_version == 1
+    assert union.schema_version == 2
     assert len(union.observations) == 760
     assert len(union.rows) == 693
     assert union.selection_accounting.model_dump() == {
@@ -193,7 +198,7 @@ def test_union_denominator_joins_every_raw_observation_without_double_counting()
     ]
     assert union.digest == _UNION_DIGEST
     assert ledger_union_denominator_digest(union) == _UNION_DIGEST
-    assert ledger_union_denominator_bytes(union).startswith(b"cadrumo:ledger-union-denominator:v1\x00")
+    assert ledger_union_denominator_bytes(union).startswith(b"cadrumo:ledger-union-denominator:v2\x00")
 
 
 def test_union_denominator_merges_equivalent_stream_observations_and_keeps_distinct_effects() -> None:
@@ -305,6 +310,67 @@ def test_observation_adjudication_refuses_identity_and_selection_drift(mutation:
         expected = "changed_selections"
     with pytest.raises(ValueError, match=expected):
         matrix_module._validate_non_registry_observation_adjudication(tuple(observations))
+
+
+def test_serialized_union_refuses_cross_source_relabel_with_refreshed_aggregate_digest() -> None:
+    union = _union_denominator()
+    observations = list(union.observations)
+    index = next(i for i, item in enumerate(observations) if item.observation_id == "cli_endpoint:app_ledger_add")
+    observations[index] = observations[index].model_copy(update={"source": DenominatorSourceKind.MISSING_PRODUCT})
+    observations.sort(key=lambda item: (item.source.value, item.observation_id))
+    candidate = _refreshed_union_digest(union, observations=tuple(observations))
+    with pytest.raises(ValidationError, match="observation adjudication drifted"):
+        LedgerUnionDenominatorV1.model_validate(candidate.model_dump(mode="python"))
+
+
+@pytest.mark.parametrize("mutation", ["rename", "add", "remove", "duplicate", "source", "selection"])
+def test_serialized_union_refuses_registry_observation_drift_with_refreshed_digest(mutation: str) -> None:
+    union = _union_denominator()
+    observations = list(union.observations)
+    index = next(i for i, item in enumerate(observations) if item.source is DenominatorSourceKind.REGISTRY_ROUTE)
+    original = observations[index]
+    if mutation == "rename":
+        observations[index] = original.model_copy(update={"observation_id": original.observation_id + "_renamed"})
+    elif mutation == "add":
+        observations.append(original.model_copy(update={"observation_id": original.observation_id + "_added"}))
+    elif mutation == "remove":
+        observations.pop(index)
+    elif mutation == "duplicate":
+        observations.append(original)
+    elif mutation == "source":
+        observations[index] = original.model_copy(update={"source": DenominatorSourceKind.CLI_ENDPOINT})
+    else:
+        observations[index] = original.model_copy(update={"capability_ids": ("ledger.transaction.create",)})
+    observations.sort(key=lambda item: (item.source.value, item.observation_id))
+    candidate = _refreshed_union_digest(union, observations=tuple(observations))
+    with pytest.raises(ValidationError):
+        LedgerUnionDenominatorV1.model_validate(candidate.model_dump(mode="python"))
+
+
+@pytest.mark.parametrize("mutation", ["membership", "sources"])
+def test_serialized_union_recomputes_row_observation_authority(mutation: str) -> None:
+    union = _union_denominator()
+    rows = list(union.rows)
+    index = next(i for i, row in enumerate(rows) if row.capability_id == "ledger.transaction.create")
+    row = rows[index]
+    if mutation == "membership":
+        rows[index] = row.model_copy(update={"source_observation_ids": row.source_observation_ids[1:]})
+        expected = "observations drifted"
+    else:
+        rows[index] = row.model_copy(update={"sources": frozenset({DenominatorSourceKind.CLI_ENDPOINT})})
+        expected = "sources drifted"
+    candidate = _refreshed_union_digest(union, rows=tuple(rows))
+    with pytest.raises(ValidationError, match=expected):
+        LedgerUnionDenominatorV1.model_validate(candidate.model_dump(mode="python"))
+
+
+def test_serialized_union_recomputes_source_digest_after_aggregate_digest_refresh() -> None:
+    union = _union_denominator()
+    source_digests = list(union.source_digests)
+    source_digests[0] = source_digests[0].model_copy(update={"digest": "sha256:" + "0" * 64})
+    candidate = _refreshed_union_digest(union, source_digests=tuple(source_digests))
+    with pytest.raises(ValidationError, match="source counts or digests drifted"):
+        LedgerUnionDenominatorV1.model_validate(candidate.model_dump(mode="python"))
 
 
 def test_provenance_queries_and_evidence_download_require_provenance_applicability() -> None:

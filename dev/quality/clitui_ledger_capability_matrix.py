@@ -50,9 +50,9 @@ LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_ROOT: Final[Literal["cadrumo.ledger_tui_supp
     "cadrumo.ledger_tui_supported_surface_census"
 )
 _LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_FRAME: Final[bytes] = b"cadrumo:ledger-tui-supported-surface-census:v1\x00"
-LEDGER_UNION_DENOMINATOR_SCHEMA_VERSION: Final[Literal[1]] = 1
+LEDGER_UNION_DENOMINATOR_SCHEMA_VERSION: Final[Literal[2]] = 2
 LEDGER_UNION_DENOMINATOR_ROOT: Final[Literal["cadrumo.ledger_union_denominator"]] = "cadrumo.ledger_union_denominator"
-_LEDGER_UNION_DENOMINATOR_FRAME: Final[bytes] = b"cadrumo:ledger-union-denominator:v1\x00"
+_LEDGER_UNION_DENOMINATOR_FRAME: Final[bytes] = b"cadrumo:ledger-union-denominator:v2\x00"
 _LEDGER_TUI_SUPPORTED_SURFACE_SOURCE_SET_FRAME: Final[bytes] = b"cadrumo:ledger-tui-supported-surface-source-set:v1\x00"
 _LEDGER_MESSAGE_TYPES: Final[tuple[str, ...]] = (
     "LedgerBackRequested",
@@ -1380,7 +1380,9 @@ class LedgerUnionDenominatorV1(BaseModel):
     model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
 
     root: Literal["cadrumo.ledger_union_denominator"]
-    schema_version: Literal[1]
+    schema_version: Literal[2]
+    registry_census: LedgerRegistryRouteCensusV1
+    tui_census: LedgerTuiSupportedSurfaceCensusV1
     source_digests: tuple[LedgerUnionSourceDigestV1, ...]
     observations: tuple[LedgerUnionSourceObservationV1, ...]
     rows: tuple[LedgerUnionCapabilityRowV1, ...]
@@ -1398,6 +1400,7 @@ class LedgerUnionDenominatorV1(BaseModel):
         if len(set(observation_ids)) != len(observation_ids):
             raise ValueError("union source observation identities must be unique")
         _validate_non_registry_observation_adjudication(self.observations)
+        _validate_registry_observation_projection(self.registry_census, self.observations)
         if (
             tuple(sorted(self.observations, key=lambda item: (item.source.value, item.observation_id)))
             != self.observations
@@ -1408,6 +1411,17 @@ class LedgerUnionDenominatorV1(BaseModel):
             counts[observation.source] += 1
         if any(item.observation_count != counts[item.source] for item in self.source_digests):
             raise ValueError("union source observation counts do not match their digests")
+        expected_source_digests = tuple(
+            LedgerUnionSourceDigestV1(
+                source=source,
+                observation_count=len(source_observations),
+                digest=_union_source_digest(source, source_observations, self.registry_census, self.tui_census),
+            )
+            for source in sorted(DenominatorSourceKind, key=lambda item: item.value)
+            if (source_observations := tuple(item for item in self.observations if item.source is source))
+        )
+        if self.source_digests != expected_source_digests:
+            raise ValueError("union source counts or digests drifted from canonical projections")
         row_ids = tuple(row.capability_id for row in self.rows)
         if len(set(row_ids)) != len(row_ids) or tuple(sorted(row_ids)) != row_ids:
             raise ValueError("union rows must have unique canonically sorted identities")
@@ -2240,6 +2254,35 @@ _EXPLICIT_NON_REGISTRY_OBSERVATION_SELECTIONS: Final[Mapping[str, tuple[str, ...
     }
 )
 
+_NON_REGISTRY_OBSERVATION_SOURCE_PREFIXES: Final[tuple[tuple[str, DenominatorSourceKind], ...]] = (
+    ("artifact_product:", DenominatorSourceKind.ARTIFACT_PRODUCT),
+    ("backend_operation:", DenominatorSourceKind.BACKEND_ONLY),
+    ("cli_endpoint:", DenominatorSourceKind.CLI_ENDPOINT),
+    ("cli_suboperation:", DenominatorSourceKind.CLI_SUBOPERATION),
+    ("missing_product:", DenominatorSourceKind.MISSING_PRODUCT),
+    ("supported_surface:", DenominatorSourceKind.SUPPORTED_SURFACE),
+)
+
+
+def _canonical_non_registry_observation_source(observation_id: str) -> DenominatorSourceKind:
+    matches = tuple(
+        source for prefix, source in _NON_REGISTRY_OBSERVATION_SOURCE_PREFIXES if observation_id.startswith(prefix)
+    )
+    if len(matches) != 1:
+        raise ValueError(f"non-registry observation identity has no unique source authority: {observation_id}")
+    return matches[0]
+
+
+_EXPLICIT_NON_REGISTRY_OBSERVATION_AUTHORITIES: Final[Mapping[tuple[DenominatorSourceKind, str], tuple[str, ...]]] = (
+    MappingProxyType(
+        {
+            (_canonical_non_registry_observation_source(observation_id), observation_id): capability_ids
+            for observation_id, capability_ids in _EXPLICIT_NON_REGISTRY_OBSERVATION_SELECTIONS.items()
+        }
+    )
+)
+
+
 _BACKEND_DIRECT_PROOF_GAPS: Final[frozenset[str]] = frozenset(
     {
         "ledger.classification.rule_add",
@@ -2577,8 +2620,10 @@ def _validate_non_registry_observation_adjudication(
     identities = tuple(observation.observation_id for observation in non_registry)
     if len(set(identities)) != len(identities):
         raise ValueError("non-registry observation identities must be unique")
-    actual = {observation.observation_id: observation.capability_ids for observation in non_registry}
-    expected = dict(_EXPLICIT_NON_REGISTRY_OBSERVATION_SELECTIONS)
+    actual = {
+        (observation.source, observation.observation_id): observation.capability_ids for observation in non_registry
+    }
+    expected = dict(_EXPLICIT_NON_REGISTRY_OBSERVATION_AUTHORITIES)
     if actual != expected:
         added = sorted(set(actual) - set(expected))
         removed = sorted(set(expected) - set(actual))
@@ -3056,6 +3101,8 @@ def build_ledger_union_denominator(
     provisional = LedgerUnionDenominatorV1.model_construct(
         root=LEDGER_UNION_DENOMINATOR_ROOT,
         schema_version=LEDGER_UNION_DENOMINATOR_SCHEMA_VERSION,
+        registry_census=registry,
+        tui_census=tui,
         source_digests=source_digests,
         observations=observations,
         rows=tuple(rows),
