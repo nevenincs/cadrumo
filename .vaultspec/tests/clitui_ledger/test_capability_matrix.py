@@ -1168,6 +1168,59 @@ def test_tui_source_set_normalizes_irrelevant_record_order() -> None:
     assert ledger_tui_supported_surface_source_set_digest(source_records=reversed(records)) == _TUI_SOURCE_DIGEST
 
 
+def test_tui_source_selector_excludes_unrelated_tui_sources_and_includes_ledger_dependencies() -> None:
+    root = Path(__file__).resolve().parents[3]
+    selected = {
+        path.resolve().relative_to(root).as_posix() for path in ledger_tui_supported_surface_source_files(root)
+    }
+
+    assert "src/cadrumo/entrypoints/tui/destination_session.py" not in selected
+    assert "src/cadrumo/entrypoints/tui/ledger/routes.py" in selected
+    assert "src/cadrumo/application/ledger/workspace.py" in selected
+    assert "src/cadrumo/application/workbench_generation.py" in selected
+
+
+def test_tui_shared_source_projection_ignores_unrelated_composition_edit() -> None:
+    baseline = _tui_census()
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/app.py",
+        lambda body: body + b"\ndef unrelated_modelo_helper():\n    return 'modelo.only'\n",
+    )
+
+    candidate = build_ledger_tui_supported_surface_census(source_records=records)
+
+    assert candidate.source_set_digest == baseline.source_set_digest
+    assert candidate.calculated_digest == baseline.calculated_digest
+
+
+@pytest.mark.parametrize(
+    ("relative", "mutation"),
+    [
+        pytest.param(
+            "src/cadrumo/entrypoints/tui/app.py",
+            lambda body: body + b"\nfrom .ledger.routes import LedgerRouteV1\n",
+            id="ledger-import",
+        ),
+        pytest.param(
+            "src/cadrumo/application/search/installed_workbench.py",
+            lambda body: body.replace(b"def _ledger_status(", b"def _ledger_status_v2(", 1),
+            id="ledger-workbench-dependency",
+        ),
+    ],
+)
+def test_tui_shared_source_projection_detects_ledger_structure_change(
+    relative: str,
+    mutation: Callable[[bytes], bytes],
+) -> None:
+    baseline = _tui_census()
+    candidate = build_ledger_tui_supported_surface_census(
+        source_records=_mutate_tui_source(relative, mutation)
+    )
+
+    assert candidate.source_set_digest != baseline.source_set_digest
+    assert candidate.calculated_digest != baseline.calculated_digest
+
+
 @pytest.mark.parametrize(
     ("relative", "mutation", "expected"),
     [
