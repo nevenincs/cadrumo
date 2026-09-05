@@ -37,6 +37,7 @@ _FINDING_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^finding\.[a-z][a-z0-
 _SUBJECT_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^subject\.[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)*$")
 _CENSUS_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^census\.ledger(?:\.[a-z][a-z0-9_]*)*$")
 _ATTESTATION_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^attestation\.ledger(?:\.[a-z][a-z0-9_]*)*$")
+_REVIEW_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^review\.ledger(?:\.[a-z][a-z0-9_]*)*$")
 _PLACEHOLDER_TEXT: Final[frozenset[str]] = frozenset({"", "n/a", "na", "none", "tbd", "todo", "unknown", "unmeasured"})
 ACCEPTED_LEDGER_PARITY_PLAN_OWNER: Final[str] = "clitui-ledger"
 LEDGER_REGISTRY_ROUTE_CENSUS_SCHEMA_VERSION: Final[Literal[1]] = 1
@@ -50,9 +51,9 @@ LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_ROOT: Final[Literal["cadrumo.ledger_tui_supp
     "cadrumo.ledger_tui_supported_surface_census"
 )
 _LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_FRAME: Final[bytes] = b"cadrumo:ledger-tui-supported-surface-census:v1\x00"
-LEDGER_UNION_DENOMINATOR_SCHEMA_VERSION: Final[Literal[3]] = 3
+LEDGER_UNION_DENOMINATOR_SCHEMA_VERSION: Final[Literal[4]] = 4
 LEDGER_UNION_DENOMINATOR_ROOT: Final[Literal["cadrumo.ledger_union_denominator"]] = "cadrumo.ledger_union_denominator"
-_LEDGER_UNION_DENOMINATOR_FRAME: Final[bytes] = b"cadrumo:ledger-union-denominator:v3\x00"
+_LEDGER_UNION_DENOMINATOR_FRAME: Final[bytes] = b"cadrumo:ledger-union-denominator:v4\x00"
 _LEDGER_TUI_SUPPORTED_SURFACE_SOURCE_SET_FRAME: Final[bytes] = b"cadrumo:ledger-tui-supported-surface-source-set:v1\x00"
 _LEDGER_MESSAGE_TYPES: Final[tuple[str, ...]] = (
     "LedgerBackRequested",
@@ -1052,6 +1053,21 @@ class LedgerCapabilityEffect(StrEnum):
     REGISTRY_ROUTE = "registry_route"
 
 
+class LedgerRegistryDestinationStatus(StrEnum):
+    """How one reviewed row reaches the validated calculation registry."""
+
+    NOT_APPLICABLE = "not_applicable"
+    DIRECT = "direct"
+    APPLICATION_SIDECAR = "application_sidecar"
+    DESTINATIONLESS = "destinationless"
+
+
+class LedgerUnionRowReviewRuling(StrEnum):
+    """The bounded conclusion of the exhaustive denominator-row review."""
+
+    COMPLETE_WITH_OPEN_GAPS = "complete_with_open_gaps"
+
+
 class ReviewRuling(StrEnum):
     """The closed independent-review decision vocabulary."""
 
@@ -1278,17 +1294,25 @@ class CanonicalSemanticHomeV1(BaseModel):
 
 
 class LedgerAxisApplicabilityDecisionV1(BaseModel):
-    """One explicit S08 applicability decision, pending S12 evidence review."""
+    """One reviewed axis decision with an explicit current proof state."""
 
     model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
 
     axis: LedgerCapabilityAxis
     applicability: ApplicabilityState
     rationale: str = Field(min_length=1)
+    proof: AxisProofState
+    proof_requirement: str = Field(min_length=1)
 
     @model_validator(mode="after")
     def _check_decision(self) -> LedgerAxisApplicabilityDecisionV1:
         _require_non_placeholder(self.rationale, field_name="rationale")
+        _require_non_placeholder(self.proof_requirement, field_name="proof_requirement")
+        if self.applicability is ApplicabilityState.NOT_APPLICABLE:
+            if self.proof is not AxisProofState.NOT_APPLICABLE:
+                raise ValueError("a non-applicable reviewed union axis must have not_applicable proof")
+        elif self.proof is AxisProofState.NOT_APPLICABLE:
+            raise ValueError("an applicable reviewed union axis requires an operational proof state")
         return self
 
 
@@ -1312,7 +1336,7 @@ class LedgerUnionSourceObservationV1(BaseModel):
 
 
 class LedgerUnionCapabilityRowV1(BaseModel):
-    """One S08-adjudicated semantic row selected by one or more raw observations."""
+    """One exhaustively reviewed semantic row selected by raw observations."""
 
     model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
 
@@ -1324,11 +1348,16 @@ class LedgerUnionCapabilityRowV1(BaseModel):
     effect: LedgerCapabilityEffect
     applicability: tuple[LedgerAxisApplicabilityDecisionV1, ...]
     gap_classes: frozenset[LedgerGapClass] = Field(min_length=1)
+    primary_gap_class: LedgerGapClass
+    secondary_gap_classes: tuple[LedgerGapClass, ...]
     proof_requirements: tuple[str, ...] = Field(min_length=1)
     blockers: tuple[str, ...] = Field(min_length=1)
     next_action: str = Field(min_length=1)
     tui_routes: tuple[str, ...] = ()
     tui_hold_until: LedgerGate | None = None
+    registry_destination_status: LedgerRegistryDestinationStatus
+    review_ruling: LedgerUnionRowReviewRuling
+    review_digest: str = Field(min_length=1)
 
     @model_validator(mode="after")
     def _check_row(self) -> LedgerUnionCapabilityRowV1:
@@ -1344,6 +1373,15 @@ class LedgerUnionCapabilityRowV1(BaseModel):
             _require_non_placeholder(value, field_name="union row text")
         if tuple(sorted(set(self.tui_routes))) != self.tui_routes:
             raise ValueError("union row TUI routes must be sorted and unique")
+        if self.secondary_gap_classes != tuple(sorted(set(self.secondary_gap_classes), key=lambda item: item.value)):
+            raise ValueError("secondary gap classes must be unique and canonically ordered")
+        if self.primary_gap_class in self.secondary_gap_classes or frozenset(
+            (self.primary_gap_class, *self.secondary_gap_classes)
+        ) != self.gap_classes:
+            raise ValueError("primary and secondary gap classes must exactly partition all row gaps")
+        if self.review_ruling is not LedgerUnionRowReviewRuling.COMPLETE_WITH_OPEN_GAPS:
+            raise ValueError("union rows must retain the reviewed-open ruling until their gaps close")
+        _require_digest(self.review_digest, field_name="review_digest")
         tui_applicable = next(
             decision.applicability is ApplicabilityState.APPLICABLE
             for decision in self.applicability
@@ -1356,6 +1394,14 @@ class LedgerUnionCapabilityRowV1(BaseModel):
                 f"union row TUI hold must be {LEDGER_TUI_HOLD_UNTIL_GATE.value} for {state} TUI and absent otherwise"
             )
         return self
+
+    @property
+    def calculated_review_digest(self) -> str:
+        """Bind every reviewed assertion without a self-reference."""
+        payload = cast(dict[str, object], self.model_dump(mode="json", exclude={"review_digest"}))
+        payload["sources"] = sorted(cast(list[str], payload["sources"]))
+        payload["gap_classes"] = sorted(cast(list[str], payload["gap_classes"]))
+        return _canonical_digest(payload)
 
 
 class LedgerUnionSourceDigestV1(BaseModel):
@@ -1387,19 +1433,57 @@ class LedgerUnionSelectionAccountingV1(BaseModel):
     final_rows: int = Field(ge=1)
 
 
+class LedgerUnionRowReviewAttestationV1(BaseModel):
+    """Digest-bound evidence that every denominator row received a bounded review."""
+
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+
+    review_id: str = Field(min_length=1)
+    reviewer: str = Field(min_length=1)
+    reviewed_at: datetime
+    ruling: LedgerUnionRowReviewRuling
+    reviewed_union_basis_digest: str = Field(min_length=1)
+    row_review_digest: str = Field(min_length=1)
+    reviewed_row_count: int = Field(ge=1)
+    digest: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _check_attestation(self) -> LedgerUnionRowReviewAttestationV1:
+        _require_identity(self.review_id, field_name="review_id", pattern=_REVIEW_ID_PATTERN)
+        _require_non_placeholder(self.reviewer, field_name="reviewer")
+        _require_observed_at(self.reviewed_at, field_name="reviewed_at")
+        if self.ruling is not LedgerUnionRowReviewRuling.COMPLETE_WITH_OPEN_GAPS:
+            raise ValueError("row-review attestation must retain open gaps")
+        _require_digest(self.reviewed_union_basis_digest, field_name="reviewed_union_basis_digest")
+        _require_digest(self.row_review_digest, field_name="row_review_digest")
+        _require_digest(self.digest, field_name="digest")
+        if self.digest != self.calculated_digest:
+            raise ValueError("row-review attestation digest does not match its reviewed assertions")
+        return self
+
+    @property
+    def calculated_digest(self) -> str:
+        """Hash the complete row-review attestation without its digest field."""
+        return _canonical_digest(self.model_dump(mode="json", exclude={"digest"}))
+
+
 class LedgerUnionDenominatorV1(BaseModel):
-    """Reproducible S08 union with every raw observation and semantic decision."""
+    """Reproducible union with every raw observation and reviewed row decision."""
 
     model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
 
     root: Literal["cadrumo.ledger_union_denominator"]
-    schema_version: Literal[3]
+    schema_version: Literal[4]
     registry_census: LedgerRegistryRouteCensusV1
     tui_census: LedgerTuiSupportedSurfaceCensusV1
     source_digests: tuple[LedgerUnionSourceDigestV1, ...]
     observations: tuple[LedgerUnionSourceObservationV1, ...]
     rows: tuple[LedgerUnionCapabilityRowV1, ...]
     selection_accounting: LedgerUnionSelectionAccountingV1
+    review_revision: str = Field(min_length=1)
+    reviewed_row_count: int = Field(ge=1)
+    row_review_digest: str = Field(min_length=1)
+    row_review_attestation: LedgerUnionRowReviewAttestationV1
     digest: str = Field(min_length=1)
 
     @model_validator(mode="after")
@@ -2797,11 +2881,31 @@ def _axis_decisions(
         ),
         LedgerCapabilityAxis.PROOF: "Every admitted denominator row requires direct outcome and refusal evidence.",
     }
+    proof_requirements = {
+        LedgerCapabilityAxis.BACKEND: "Direct canonical-owner success and typed-refusal behavior evidence.",
+        LedgerCapabilityAxis.CLI: "Live parser, delegation, result-schema, success, and refusal parity evidence.",
+        LedgerCapabilityAxis.TUI: "Installed keyboard reachability plus canonical result and refusal parity evidence.",
+        LedgerCapabilityAxis.COMPOSITION: "Real-boundary success, refusal, rollback, and fault behavior evidence.",
+        LedgerCapabilityAxis.ARTIFACT: "Independent reader, declared-loss, destination, and cleanup evidence.",
+        LedgerCapabilityAxis.PROVENANCE: (
+            "Actor, source, operation, field, normalization, revision, and custody lineage evidence."
+        ),
+        LedgerCapabilityAxis.REGISTRY: (
+            "Nonzero inclusion, exclusion, missing-versus-zero, and finish-line refusal evidence."
+        ),
+        LedgerCapabilityAxis.PROOF: "Current role-scoped evidence for every applicable operational claim.",
+    }
     return tuple(
         LedgerAxisApplicabilityDecisionV1(
             axis=axis,
             applicability=ApplicabilityState.APPLICABLE if applicable[axis] else ApplicabilityState.NOT_APPLICABLE,
             rationale=rationales[axis],
+            proof=AxisProofState.UNPROVEN if applicable[axis] else AxisProofState.NOT_APPLICABLE,
+            proof_requirement=(
+                proof_requirements[axis]
+                if applicable[axis]
+                else "No independent proof obligation applies because this axis is not applicable."
+            ),
         )
         for axis in sorted(LedgerCapabilityAxis, key=lambda item: item.value)
     )
