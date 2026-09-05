@@ -625,10 +625,49 @@ evidence = "Seven private aliases to public imports, carrying the comment 'Kept 
 # ---------------------------------------------------------------------------
 
 [exported_unused]
-declared_exports = 8524
-exported_and_unconsumed = 367
+declared_exports = 8534
+exported_and_unconsumed = 368
 method = "a name counts as consumed only when another module from-imports it FROM the declaring module; bare-name matching would count same-named symbols in unrelated packages"
 remedy_requires_decision = true
+note = """
+The population is 4.3% of the declared surface and is CONCENTRATED, not
+scattered: three areas hold 135 of the 368. That shape is what makes a
+per-area ruling tractable, and it is why no blanket disposition is proposed
+here - the reason a name went unconsumed differs by area, and the areas have
+different owners.
+
+Every count below is names / modules. Ordered by size.
+"""
+
+[[exported_unused_area]]
+area = "domain/calculations"
+names = 53
+modules = 31
+shape = "Registry binding and schema families. The withholding296 family cluster in this ledger is the worked example: a family can carry an enrolled validator and an exported-but-unreached resolver at the same time, so a name here is more often half-wired than abandoned. Rule per family, not per name."
+
+[[exported_unused_area]]
+area = "entrypoints/cli"
+names = 44
+modules = 21
+shape = "Command-spec and payload modules. The MODELO_CODE_CHOICE_ALL cluster shows the trap: wiring an exported constant into the surface it was written for broke the live-subtree demand-loading contract. A CLI export may be unconsumed because consuming it is structurally blocked, so check the loading contract before treating one as unwanted."
+
+[[exported_unused_area]]
+area = "application/modelo"
+names = 38
+modules = 21
+shape = "Projection and operation-definition surfaces, already partly recorded above as should-be-live. Several are result projections whose consumer is the TUI cluster this ledger defers, so a share of this area resolves with that cluster rather than independently."
+
+[[exported_unused_area]]
+area = "adapters/persistence"
+names = 27
+modules = 13
+shape = "Storage and profile repositories. Deletion risk is highest here: a row type or namespace constant may be the only declaration of a persisted shape, as the finca ORM rows are, so removing one can change the schema rather than the API."
+
+[[exported_unused_area]]
+area = "entrypoints/tui"
+names = 20
+modules = 11
+shape = "Inside the deferred TUI prefix. Not this campaign's to rule on; listed so the total reconciles."
 
 [[symbol_cluster]]
 name = "modelo operation definitions exported projections"
