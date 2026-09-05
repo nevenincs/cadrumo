@@ -179,7 +179,11 @@ def test_live_predecessor_plan_has_the_exact_ledger_ownership_dispositions() -> 
         pytest.param("unknown", "unknown Ledger disposition", id="unknown"),
         pytest.param("reclassified", "Ledger disposition reclassified", id="reclassified"),
         pytest.param("wrong-checkbox", "retained Ledger predecessor evidence", id="wrong-checkbox"),
+        pytest.param("held-checkbox", "retired-marker and held Ledger rows", id="held-checkbox"),
         pytest.param("new-overlap", "unannotated Ledger overlap", id="new-unannotated-overlap"),
+        pytest.param("outside-overlap", "Ledger disposition outside known overlap", id="outside-known-overlap"),
+        pytest.param("lost-mixed-scope", "mixed Ledger scope retention", id="lost-mixed-scope"),
+        pytest.param("completion", "predecessor plan completion drifted", id="completion"),
         pytest.param("wrong-s411-target", "S411 Ledger navigation implementation target", id="wrong-s411-target"),
     ],
 )
@@ -216,6 +220,8 @@ def test_ledger_ownership_detector_rejects_each_plan_mutation(mutation: str, exp
         )
     elif mutation == "wrong-checkbox":
         plan_text = _replace_once(plan_text, "- [x] `W03.P20.S169`", "- [ ] `W03.P20.S169`")
+    elif mutation == "held-checkbox":
+        plan_text = _replace_once(plan_text, "- [ ] `W08.P30.S411`", "- [x] `W08.P30.S411`")
     elif mutation == "new-overlap":
         plan_text = _replace_once(
             plan_text,
@@ -225,6 +231,22 @@ def test_ledger_ownership_detector_rejects_each_plan_mutation(mutation: str, exp
                 "`src/cadrumo/entrypoints/tui/ledger/new.py`.\n\n## Parallelization\n"
             ),
         )
+    elif mutation == "outside-overlap":
+        plan_text = _replace_once_in_step(
+            plan_text,
+            "W08.P30.S408",
+            "Give AEAT Sync its local row readers",
+            "Give AEAT Sync its local row readers CLITUI_LEDGER_DISPOSITION: RETAINED_PREDECESSOR_EVIDENCE",
+        )
+    elif mutation == "lost-mixed-scope":
+        plan_text = _replace_once_in_step(
+            plan_text,
+            "W08.P28.S395",
+            "non-Ledger scope remains owned here",
+            "remaining scope is unspecified",
+        )
+    elif mutation == "completion":
+        plan_text = _replace_once(plan_text, "- [ ] `W08.P30.S408`", "- [x] `W08.P30.S408`")
     else:
         plan_text = _replace_once(plan_text, "W05.P21.S136", "W05.P19.S128")
 
