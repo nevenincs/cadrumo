@@ -1699,6 +1699,9 @@ def _row_with_assessments(
     """Mutate nested axis models while keeping the model-copy attack explicit."""
     assessments = tuple(replacements.get(assessment.axis, assessment) for assessment in row.assessments)
     updates: dict[str, object] = {"assessments": assessments}
+    if LedgerCapabilityAxis.TUI in replacements:
+        tui_applicable = replacements[LedgerCapabilityAxis.TUI].applicability is ApplicabilityState.APPLICABLE
+        updates["tui_hold_until"] = LEDGER_TUI_HOLD_UNTIL_GATE if tui_applicable else None
     if findings is not None:
         updates["findings"] = findings
     if annotations is not None:
