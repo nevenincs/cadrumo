@@ -171,9 +171,24 @@ def test_diagnostic_classification_has_no_runtime_authority_or_success_path() ->
     )
 
     assert not isinstance(classification, ValidatedRegistryAuthority)
-    assert not {"_authority", "snapshot", "modelo", "catalogues", "validate_modelo"}.intersection(dir(classification))
-    with pytest.raises(AttributeError):
-        object.__getattribute__(classification, "_authority")
+    # Derived from the authority type, never transcribed. The list here named
+    # five members, and `_authority` no longer exists on the authority at
+    # all - so that member guarded nothing and the paired __getattribute__
+    # refusal below could not fail for ANY object, tautology rather than
+    # proof. Four of the type's forty-three members were listed; the rest,
+    # `_cached_snapshot` and `_modelos_by_id` among them, were unguarded.
+    forbidden = {name for name in dir(ValidatedRegistryAuthority) if not name.startswith("__")}
+    assert len(forbidden) > 20, (
+        f"the authority type exposes only {len(forbidden)} members; this claim is derived from "
+        "that surface, so an emptied type would make it vacuous"
+    )
+    leaked = forbidden.intersection(dir(classification))
+    assert not leaked, (
+        f"diagnostic classification carries runtime authority surface: {sorted(leaked)}"
+    )
+    for name in sorted(forbidden):
+        with pytest.raises(AttributeError):
+            object.__getattribute__(classification, name)
     projection_values = tuple(_static_data_graph(classification))
     assert not any(isinstance(value, ValidatedRegistryAuthority) for value in projection_values)
     assert not any(callable(value) for value in projection_values)
