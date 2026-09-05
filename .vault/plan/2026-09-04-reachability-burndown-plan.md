@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:3c7bb702653636d30e433afeec2e3a1b14c6b76513d5b137c7fc9d03fdeffbf7'
+body_hash: 'sha256:fd663f1e104064df4471c1f8553b575230390bac94fcd511065e14898adcff20'
 ---
 
 # `reachability-burndown` plan
@@ -127,7 +127,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S26` - Classify with their owners the shipped modules that block the ratchet and fit no available disposition, since IntentionalReachabilityKind admits only design_time_authority and the allowed list is shrink-only; `dev/quality/unreachable_module_ratchet.toml`.
 - [x] `W05.P12.S27` - Re-measure the orphaned test population against its anchors and resolve any test still reported after the module or symbol it covers has been resolved; `dev/audit`.
 - [ ] `W05.P12.S28` - Obtain the owner decisions the three blocked modules need, since classification is evidenced and none can be recorded without them: re-wire or withdraw the ledger import-preparation capability its contract still requires, and either record the decision the two staged domain packages are waiting on or withdraw them; `src/cadrumo/application/ledger/import_preparation.py`.
-- [ ] `W05.P12.S29` - Close the orphan-walk blind spot in which 239 of 3334 test modules name no shipped subject because they reach their code through a support module inside their own test package, so a dead test behind that hop can never be reported; traverse the hop without letting a live subject reached that way suppress an existing finding; `dev/audit/unreachable_code.py`.
+- [x] `W05.P12.S29` - Close the orphan-walk blind spot in which 239 of 3334 test modules name no shipped subject because they reach their code through a support module inside their own test package, so a dead test behind that hop can never be reported; traverse the hop without letting a live subject reached that way suppress an existing finding; `dev/audit/unreachable_code.py`.
 
 ## Parallelization
 
