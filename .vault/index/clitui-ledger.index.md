@@ -6,7 +6,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:cfc5cc787d0a5b62852f450f1b7f62219ace5db74d1545b26e218ea5f1a246d4'
+body_hash: 'sha256:a1cc9f72efd12484e39648d919e9d4662c32293aaa05d7673a5b4eee83557f59'
 related:
   - '[[2026-09-04-clitui-ledger-W01-P01-S01]]'
   - '[[2026-09-04-clitui-ledger-W01-P01-S02]]'
@@ -29,6 +29,7 @@ related:
   - '[[2026-09-04-clitui-ledger-s05-backend-census-review-audit]]'
   - '[[2026-09-04-clitui-ledger-s06-registry-census-review-audit]]'
   - '[[2026-09-05-clitui-ledger-s07-tui-census-review-audit]]'
+  - '[[2026-09-05-clitui-ledger-s08-union-adjudication-review-audit]]'
 ---
 
 # `clitui-ledger` feature index
@@ -51,6 +52,7 @@ Auto-generated index of all documents tagged with `#clitui-ledger`.
 - `2026-09-04-clitui-ledger-s05-backend-census-review-audit` - `clitui-ledger` audit: `S05 backend census review`
 - `2026-09-04-clitui-ledger-s06-registry-census-review-audit` - `clitui-ledger` audit: `S06 registry and filing census review`
 - `2026-09-05-clitui-ledger-s07-tui-census-review-audit` - `clitui-ledger` audit: `S07 TUI census review`
+- `2026-09-05-clitui-ledger-s08-union-adjudication-review-audit` - `clitui-ledger` audit: `S08 union adjudication review`
 
 ### exec
 
