@@ -6,7 +6,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:80a28c443c9c1eaf00a085f5a21c7cfc535053450887056c4abf70e3881b1898'
+body_hash: 'sha256:1da0ac1769a5ddf295bc646319240d75a91342f2675695e0b69989a0a42b45dd'
 related:
   - '[[2026-09-04-clitui-ledger-W01-P01-S01]]'
   - '[[2026-09-04-clitui-ledger-W01-P01-S02]]'
@@ -33,6 +33,7 @@ related:
   - '[[2026-09-05-clitui-ledger-s07-tui-census-review-audit]]'
   - '[[2026-09-05-clitui-ledger-s08-union-adjudication-review-audit]]'
   - '[[2026-09-05-clitui-ledger-s09-governance-reconciliation-review-audit]]'
+  - '[[2026-09-05-clitui-ledger-s10-index-governance-review-audit]]'
 ---
 
 # `clitui-ledger` feature index
@@ -57,6 +58,7 @@ Auto-generated index of all documents tagged with `#clitui-ledger`.
 - `2026-09-05-clitui-ledger-s07-tui-census-review-audit` - `clitui-ledger` audit: `S07 TUI census review`
 - `2026-09-05-clitui-ledger-s08-union-adjudication-review-audit` - `clitui-ledger` audit: `S08 union adjudication review`
 - `2026-09-05-clitui-ledger-s09-governance-reconciliation-review-audit` - `clitui-ledger` audit: `S09 governance reconciliation review`
+- `2026-09-05-clitui-ledger-s10-index-governance-review-audit` - `clitui-ledger` audit: `S10 index governance review`
 
 ### exec
 
