@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:486ba405603dbbbfaff31bc91731266d7d00f255a63eaa5cec8efce28b66158f'
+body_hash: 'sha256:732891ddafd51937b574a07a331be51bfb235ba95f5a0904b03b8fce269f3de6'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -522,6 +522,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S640` - Route the workflow gates through one guarded walk that checks its root, refuses a collapsed directory and honours both yaml suffixes, since two gates asserted that no workflow does a forbidden thing over a walk an empty directory would satisfy perfectly; `dev/packaging/tests/test_evidence_release_transport.py`.
 - [x] `W02.P02.S641` - Announce the sources the scratch reclamation sweep cannot read, since an unreadable file declares no scratch family and therefore looks exactly like a compliant one, and only five families are examined across six thousand nine hundred sources so one loss removes a fifth of the subject; `dev/ci/tests/test_scratch_prefixes_are_reclaimed.py`.
 - [x] `W02.P02.S642` - Announce the modules the dunder-init import gate cannot parse, since an unparsed module contributes no offence and reads as compliant while its post-swallow floor of one thousand sits against six thousand nine hundred parsing today; `dev/quality/tests/test_no_dunder_init_module_imports.py`.
+- [x] `W02.P02.S643` - Refuse a production source the identifier enrolment gates cannot parse, since an unparsed module is absent from the shared tree map and an unenrolled identifier field declared in it reaches none of the three gates that consume it; `dev/identity/tests/test_identifier_namespace_enrollment_gate.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
