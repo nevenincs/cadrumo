@@ -4423,3 +4423,80 @@ def test_g0_refuses_a_small_fixture_without_a_live_union_identity_observation() 
 
     assert not assessment.closed
     assert "live reviewed union observation is missing" in assessment.blockers
+
+
+def test_g0_refuses_a_small_matrix_against_the_complete_observed_union() -> None:
+    """A complete review snapshot must not let a fixture bypass row identity equality."""
+    assessment = _evaluate(_matrix(), LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE, union=_union_denominator())
+
+    assert not assessment.closed
+    assert "matrix row identities do not exactly equal the observed live reviewed union" in assessment.blockers
+    assert "matrix denominator identities do not exactly equal the observed live reviewed union" in assessment.blockers
+    assert "matrix live reviewed union is missing" in assessment.blockers
+
+
+def test_currentness_requires_the_persisted_and_observed_live_unions_to_match() -> None:
+    matrix = build_ledger_capability_matrix()
+    candidate = _matrix_with(matrix, live_union=None)
+
+    errors = validate_ledger_matrix_currentness(
+        candidate,
+        observed_census=matrix_module._matrix_live_report(_union_denominator()),
+        observed_subjects=candidate.current_subjects,
+        observed_union=_union_denominator(),
+    )
+
+    assert errors == ["matrix live reviewed union is missing"]
+
+
+def test_canonical_matrix_losslessly_projects_reviewed_gap_and_surface_cohorts() -> None:
+    matrix = build_ledger_capability_matrix()
+    union_rows = {row.capability_id: row for row in _union_denominator().rows}
+    matrix_rows = {row.identity.row_id: row for row in matrix.rows}
+
+    assert set(matrix_rows) == set(union_rows)
+    assert {row_id for row_id, row in matrix_rows.items() if CapabilityAnnotation.CLI_OWNED in row.annotations} == {
+        row_id for row_id, row in union_rows.items() if LedgerGapClass.AUTHORITY in row.gap_classes
+    }
+    assert {
+        row_id for row_id, row in matrix_rows.items() if CapabilityAnnotation.COMPONENT_ONLY in row.annotations
+    } == {row_id for row_id, row in union_rows.items() if LedgerGapClass.REACHABILITY in row.gap_classes}
+    assert {row_id for row_id, row in matrix_rows.items() if CapabilityAnnotation.INSTALLED in row.annotations} == {
+        "ledger.workspace.read"
+    }
+    for row_id, reviewed in union_rows.items():
+        matrix_row = matrix_rows[row_id]
+        assert {finding.gap_class for finding in matrix_row.findings} == reviewed.gap_classes
+        assert all(finding.description == " ".join(reviewed.blockers) for finding in matrix_row.findings)
+        assert matrix_row.authority_migration.initial_cli_ownership is (
+            InitialCliOwnership.CLI_OWNED
+            if LedgerGapClass.AUTHORITY in reviewed.gap_classes
+            else InitialCliOwnership.NOT_CLI_OWNED
+        )
+
+
+def test_matrix_projection_cohort_mutations_follow_the_reviewed_row_not_axis_defaults() -> None:
+    union = _union_denominator()
+    subject = matrix_module._matrix_subject(union)
+    component_review = next(row for row in union.rows if row.capability_id == "ledger.transaction.list")
+    installed_review = next(row for row in union.rows if row.capability_id == "ledger.workspace.read")
+
+    without_reachability = component_review.model_copy(
+        update={"gap_classes": component_review.gap_classes - {LedgerGapClass.REACHABILITY}}
+    )
+    with_reachability = installed_review.model_copy(
+        update={"gap_classes": installed_review.gap_classes | {LedgerGapClass.REACHABILITY}}
+    )
+
+    assert (
+        CapabilityAnnotation.COMPONENT_ONLY
+        not in matrix_module._matrix_row_from_union(without_reachability, subject).annotations
+    )
+    assert (
+        CapabilityAnnotation.INSTALLED
+        not in matrix_module._matrix_row_from_union(with_reachability, subject).annotations
+    )
+    assert (
+        CapabilityAnnotation.COMPONENT_ONLY
+        in matrix_module._matrix_row_from_union(with_reachability, subject).annotations
+    )
