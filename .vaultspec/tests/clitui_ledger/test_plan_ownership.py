@@ -86,6 +86,8 @@ _REVIEWED_PLURAL_PATTERN: Final[re.Pattern[str]] = re.compile(
     re.IGNORECASE,
 )
 _REVIEWED_EXCLUDE_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (re.compile(r"\baudit\s+ledgers?\b", re.IGNORECASE),)
+_EXPECTED_PLAN_ROW_COUNT: Final[int] = 432
+_EXPECTED_PLAN_CHECKED_COUNT: Final[int] = 415
 
 
 @dataclass(frozen=True, slots=True)
@@ -174,8 +176,11 @@ def _validate_plan_ownership(plan_text: str) -> None:
         raise ValueError("retained Ledger predecessor evidence must remain checked")
     if any(by_id[step_id].checked for step_id in _RETIRED_MARKERS | _HELD):
         raise ValueError("retired-marker and held Ledger rows must remain open")
-    if len(rows) != 429 or sum(row.checked for row in rows) != 413:
-        raise ValueError("predecessor plan completion drifted from 413/429")
+    if len(rows) != _EXPECTED_PLAN_ROW_COUNT or sum(row.checked for row in rows) != _EXPECTED_PLAN_CHECKED_COUNT:
+        raise ValueError(
+            "predecessor plan completion drifted from "
+            f"{_EXPECTED_PLAN_CHECKED_COUNT}/{_EXPECTED_PLAN_ROW_COUNT}"
+        )
 
     for step_id in _MIXED_HELD:
         if "non-Ledger scope remains owned here" not in by_id[step_id].action:

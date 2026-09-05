@@ -10,6 +10,7 @@ cannot masquerade as the live campaign census.
 
 from __future__ import annotations
 
+import ast
 import json
 import re
 from collections.abc import Callable
@@ -124,6 +125,21 @@ _MATRIX_CONTRACT_COORDINATE_PATTERN: Final[re.Pattern[str]] = re.compile(
     r"`(?P<digest>sha256:[0-9a-f]{64})` \|",
     re.MULTILINE,
 )
+_S14_PUBLICATION_COORDINATE_PATTERN: Final[re.Pattern[str]] = re.compile(
+    r"^\| `(?P<coordinate>s14\.[a-z0-9-]+(?:\.[a-z0-9-]+)*)` \| (?P<value>[^|]+) \|$",
+    re.MULTILINE,
+)
+_S14_PUBLICATION_COORDINATES: Final[frozenset[str]] = frozenset(
+    {
+        "s14.cohort.planned-semantic-homes",
+        "s14.cohort.non-registry-rows",
+        "s14.cohort.backend-helper-tui-not-applicable",
+        "s14.cohort.planned-product-gap-rows",
+        "s14.tui.production-read-action-references",
+        "s14.tui.production-classification-action-reference",
+        "s14.tui.production-executable-mutation-doors",
+    }
+)
 
 
 def _published_matrix_contract_digest(path: Path = _REFERENCE_PATH) -> str:
@@ -135,6 +151,20 @@ def _published_matrix_contract_digest(path: Path = _REFERENCE_PATH) -> str:
     if locator != "dev/quality/clitui_ledger_capability_matrix.py:22":
         raise AssertionError(f"matrix-contract publication locator drifted: {locator!r}")
     return cast(str, matches[0].group("digest"))
+
+
+def _published_s14_coordinates(path: Path = _REFERENCE_PATH) -> dict[str, str]:
+    """Read unique S14 prose coordinates and reject publication-shape drift."""
+    matches = tuple(_S14_PUBLICATION_COORDINATE_PATTERN.finditer(path.read_text(encoding="utf-8")))
+    coordinates = tuple(match.group("coordinate") for match in matches)
+    if len(coordinates) != len(set(coordinates)):
+        raise AssertionError("S14 publication coordinates must be unique")
+    if frozenset(coordinates) != _S14_PUBLICATION_COORDINATES:
+        raise AssertionError(
+            "S14 publication coordinates drifted: "
+            f"expected {sorted(_S14_PUBLICATION_COORDINATES)}, found {sorted(coordinates)}"
+        )
+    return {match.group("coordinate"): match.group("value").strip() for match in matches}
 
 
 @cache
@@ -191,6 +221,70 @@ def _tui_source_records() -> tuple[tuple[str, bytes], ...]:
         (path.resolve().relative_to(root).as_posix(), path.read_bytes())
         for path in ledger_tui_supported_surface_source_files(root)
     )
+
+
+def _production_classification_action_reference() -> str:
+    """Derive the production classification reference and prove its inert wiring."""
+    records = dict(_tui_source_records())
+    installed_session = ast.parse(
+        records["src/cadrumo/entrypoints/tui/installed_session.py"].decode("utf-8"),
+        filename="installed_session.py",
+    )
+    constants: dict[str, str] = {}
+    for node in installed_session.body:
+        if not isinstance(node, ast.Assign):
+            continue
+        value = node.value
+        if not isinstance(value, ast.Constant) or not isinstance(value.value, str):
+            continue
+        for target in node.targets:
+            if isinstance(target, ast.Name) and target.id == "_LEDGER_CLASSIFY_ACTION":
+                constants[target.id] = value.value
+    if len(constants) != 1:
+        raise AssertionError("production classification action constant is not unique")
+
+    constructors = tuple(
+        node
+        for node in ast.walk(installed_session)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "InstalledWorkbenchFactoryDependenciesV1"
+    )
+    if len(constructors) != 1:
+        raise AssertionError("installed workbench dependency construction is not unique")
+    classify_keywords = tuple(
+        keyword for keyword in constructors[0].keywords if keyword.arg == "ledger_classify_action"
+    )
+    if len(classify_keywords) != 1:
+        raise AssertionError("production classification action reference is not unique")
+    classify_value = classify_keywords[0].value
+    if (
+        not isinstance(classify_value, ast.Call)
+        or not isinstance(classify_value.func, ast.Name)
+        or classify_value.func.id != "action"
+        or len(classify_value.args) != 1
+        or not isinstance(classify_value.args[0], ast.Name)
+        or classify_value.args[0].id not in constants
+    ):
+        raise AssertionError("production classification action reference is not statically readable")
+
+    launcher = ast.parse(
+        records["src/cadrumo/entrypoints/tui/launcher.py"].decode("utf-8"),
+        filename="launcher.py",
+    )
+    factories = tuple(
+        node
+        for node in ast.walk(launcher)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "ledger_screen_factory"
+    )
+    if len(factories) != 1:
+        raise AssertionError("production Ledger screen factory call is not unique")
+    keyword_names = {keyword.arg for keyword in factories[0].keywords if keyword.arg is not None}
+    if "classify_action" not in keyword_names or {"classification_target", "classification_submitter"} & keyword_names:
+        raise AssertionError("production classification action is not inert")
+    return constants["_LEDGER_CLASSIFY_ACTION"]
 
 
 def _mutate_tui_source(relative: str, mutation: Callable[[bytes], bytes]) -> tuple[tuple[str, bytes], ...]:
@@ -4568,6 +4662,48 @@ def test_matrix_contract_source_digest_normalizes_checkout_newlines(tmp_path: Pa
 def test_human_matrix_contract_coordinate_matches_live_source_digest() -> None:
     """The reference coordinate must publish the digest the contract computes."""
     assert _published_matrix_contract_digest() == ledger_capability_matrix_source_digest()
+
+
+def test_s14_publication_coordinates_match_canonical_matrix_and_tui_census() -> None:
+    """The S14 prose cannot silently drift from the live denominator or TUI composition."""
+    matrix = build_ledger_capability_matrix()
+    if matrix.live_union is None:
+        raise AssertionError("canonical matrix must carry its live union")
+    rows = matrix.live_union.rows
+    tui_census = _tui_census()
+    tui_decisions = {
+        row.capability_id: next(
+            decision for decision in row.applicability if decision.axis is LedgerCapabilityAxis.TUI
+        )
+        for row in rows
+    }
+    planned = sum(row.semantic_home_status is SemanticHomeStatus.PLANNED for row in rows)
+    non_registry = sum(
+        row.registry_destination_status is LedgerRegistryDestinationStatus.NOT_APPLICABLE for row in rows
+    )
+    tui_not_applicable = sum(
+        decision.applicability is ApplicabilityState.NOT_APPLICABLE for decision in tui_decisions.values()
+    )
+    planned_product = sum(
+        row.semantic_home_status is SemanticHomeStatus.PLANNED and LedgerGapClass.PRODUCT in row.gap_classes
+        for row in rows
+    )
+    classification_action = _production_classification_action_reference()
+    read_actions = tuple(tui_census.injected_read_action_ids)
+    assert classification_action not in read_actions
+    assert tui_census.installed_mutation_doors == ()
+    expected = {
+        "s14.cohort.planned-semantic-homes": str(planned),
+        "s14.cohort.non-registry-rows": str(non_registry),
+        "s14.cohort.backend-helper-tui-not-applicable": str(tui_not_applicable),
+        "s14.cohort.planned-product-gap-rows": str(planned_product),
+        "s14.tui.production-read-action-references": ", ".join(read_actions),
+        "s14.tui.production-classification-action-reference": (
+            f"{classification_action} (inert: no target/submitter)"
+        ),
+        "s14.tui.production-executable-mutation-doors": str(len(tui_census.installed_mutation_doors)),
+    }
+    assert _published_s14_coordinates() == expected
 
 
 def test_g0_refuses_a_small_fixture_without_a_live_union_identity_observation() -> None:

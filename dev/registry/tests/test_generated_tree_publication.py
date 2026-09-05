@@ -226,6 +226,21 @@ def test_recovery_retires_only_a_provably_completed_legacy_cross_volume_orphan(t
     assert not context.target_export_root.exists()
 
 
+#: The refusal each orphan shape must produce. Four share one check because
+#: a legacy candidate outside the staging sibling is refused before the
+#: shape-specific comparisons; only the escaping backup reaches its own.
+_ORPHAN_REFUSAL = {
+    "candidate-survives": "candidate is not a target-revision staging sibling",
+    "backup-survives": "candidate is not a target-revision staging sibling",
+    "target-survives": "candidate is not a target-revision staging sibling",
+    "outside-backup": "backup escapes the target registry root",
+    "non-intent": "candidate is not a target-revision staging sibling",
+}
+
+#: The cases whose names promise a directory outlives the refusal.
+_SURVIVOR_BY_CASE = frozenset({"candidate-survives", "backup-survives", "target-survives"})
+
+
 @pytest.mark.parametrize(
     ("case", "state"),
     (
@@ -265,7 +280,10 @@ def test_recovery_refuses_unsafe_legacy_orphan_shapes(
         state=state,
     )
 
-    with pytest.raises(RegistryValidationError):
+    # Four of these five refuse on the same check - the legacy candidate is
+    # not a staging sibling - which is correct, but a bare refusal could not
+    # show that, and the fifth reaches a different check entirely.
+    with pytest.raises(RegistryValidationError, match=_ORPHAN_REFUSAL[case]):
         _tree_publication._recover_interrupted_publication(
             context=context,
             target_export_root=context.target_export_root,
@@ -277,6 +295,19 @@ def test_recovery_refuses_unsafe_legacy_orphan_shapes(
             render_profile_source_evidence=None,  # type: ignore[arg-type]
         )
     assert journal_path.exists()
+    # Three cases are NAMED for something surviving the refusal, created it,
+    # and then asserted only that the journal remained. A recovery that
+    # refused and deleted the very directory the case is about would have
+    # passed unchanged.
+    if case in _SURVIVOR_BY_CASE:
+        survivor = {
+            "candidate-survives": candidate_export,
+            "backup-survives": backup_export,
+            "target-survives": context.target_export_root,
+        }[case]
+        assert survivor.is_dir(), (
+            f"{case}: the refusal removed {survivor}, the state this case exists to see preserved"
+        )
 
 
 def test_publication_replaces_only_export_and_removes_opaque_backup(m130_inspection_snapshot, tmp_path) -> None:
