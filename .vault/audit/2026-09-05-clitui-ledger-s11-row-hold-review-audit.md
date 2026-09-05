@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:27cf8066f199b0cf6572f868a60b40264558daaee8f18e248ceed381c261b741'
+body_hash: 'sha256:4ce5d2957a41b4d3c437c02226d35a4f275cbb38b7f63dd25d710d69799c070c'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-reference]]"
@@ -155,3 +155,52 @@ The authorized post-G3 lifecycle works for the canonical fixture, and the
 680/13 row partition, union digest, G0 OPEN publication, and no-production-TUI
 scope remain unchanged. Static and Vault checks pass; the full suite result is
 237 passed.
+
+## External-acceptance-anchor remediation review
+
+**Ruling: ACCEPT.** The prior HIGH self-consistency fabrication path is closed,
+and no HIGH or CRITICAL finding remains.
+
+`LedgerAcceptanceRecordAnchorV1` is deliberately outside
+`LedgerCapabilityMatrixV1` and is revalidated from serialized data at gate
+evaluation. Its existing `EvidenceCoordinateV1` is required to match exactly
+one independently supplied `EvidenceSubjectSnapshotV1` on subject identity,
+revision, digest, observation time, and locator. The subject digest is
+recomputed from the canonical external record content: acceptance-attestation
+digest and identity, reviewer and attestation time, pre-receipt matrix basis,
+denominator digest and revision, review-subject identity/revision/digest/time,
+and the non-self-referential coordinate evidence identity, kind, role, axes,
+locator, and claim. The anchor is then compared field-for-field with the current
+matrix attestation. The matrix cannot embed or replace this observed authority.
+
+Receipt identities are now exact gate-derived constants for G0 through G3,
+`receipt.ledger.{gate.value}`. A changed identity therefore fails canonical
+receipt validation even if the receipt-set, attestation, closure bases, receipt
+attestation digests, and public matrix digest are all recomputed.
+
+Independent full-cycle counterexamples additionally changed the attestation
+reviewer, advanced `attested_at`, and changed a campaign evidence claim to
+produce a different pre-receipt matrix basis. For each case I recomputed the
+attestation, all four receipt bindings, the matrix digest, and a matching new
+anchor; each resulting matrix passed a serialization/revalidation round trip.
+Evaluation against the unchanged independently observed acceptance subject
+still refused every candidate as a stale anchor coordinate. The committed
+tests separately refuse absent, stale, rebound, wrong-locator, and wrong-ID
+authority, while the current anchor permits the valid ordered post-G3 hold
+transition. Active pre-G3 evaluation continues through the ordinary predicates,
+and matrix, denominator, census, subject, or receipt drift relocks the ordered
+chain.
+
+The independent union projection remains 760 observations, 769 selected
+edges, and 693 semantic rows at
+`sha256:6d4f8685359271136a8fdba99c84ed238bc3a3daec03b3ca55c2d671d74ab2a4`.
+Exactly 680 TUI-applicable rows carry the G3 hold and 13 non-applicable rows
+carry none. The embedded TUI census remains one installed Overview plus six
+component-only routes. G0 remains OPEN, S11 is checked with S12 next, and the
+remediation commits contain no production TUI changes.
+
+Verification passed: the full matrix suite (244 tests), Ruff format/check,
+scoped `ty`, scoped `basedpyright`, plan check, and feature Vault checks. The
+initial Vaultspec-RAG query was attempted first; the local code index remained
+empty, so the ruling is grounded in whole-file reads, exact source searches,
+independent projection execution, and the adversarial recomputations above.
