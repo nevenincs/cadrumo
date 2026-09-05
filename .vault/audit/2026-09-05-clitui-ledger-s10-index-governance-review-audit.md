@@ -62,3 +62,27 @@ publication S10 claims.
 object. The feature-scoped full Vault check passes. Those checks verify
 generator consistency and Vault structure, but do not require the missing
 governance facts.
+
+## Remediation review
+
+**Ruling: ACCEPT.** No HIGH or CRITICAL findings remain. The canonical S10
+record title now visibly states `clitui-ledger` as the sole active Ledger parity
+owner, G0 OPEN, the ordered G0 -> G1 -> G2 -> G3 -> G4 chain, and the Ledger
+TUI hold until G3 closes. The generator projects that exact title into the S10
+index entry and retains canonical links to the ADR, plan, reference, and S09
+record. It publishes governance facts only; it does not duplicate matrix or
+behavioral evidence.
+
+The detector binds the live record title to the exact generated S10 entry,
+requires all four facts and canonical links, rejects missing/wrong owner,
+current gate, reordered or incomplete chain, wrong hold gate, missing link, and
+manual-only body prose, and requires a dry-run regeneration to report no
+change. The exact-entry check prevents satisfying the contract by scattering
+facts through unrelated titles, while the generator dry-run rejects hand-only
+index edits.
+
+Independent regeneration reproduced the identical index Git object
+`1e6612914863a230917c49c8af9759329338bf9f`. All eight focused tests pass.
+Ruff format/check, scoped `ty`, and feature Vault checks pass. S10 remains
+checked, S11 is next, G0 remains OPEN, and the remediation introduces no
+product or TUI implementation.

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:bed31c82a42e9d42e497a42f9d1bcfe83404dd6b14a1ea09dab34453fb46bd02'
+body_hash: 'sha256:7a9820a37136118ab006b1abe82dc34531291297703b6033a79eafe4a75de979'
 step_id: 'S20'
 related:
   - "[[2026-09-03-duplication-burndown-plan]]"
@@ -54,3 +54,34 @@ importers.
 are an inbound financial provider and a modelo observation spreadsheet reader,
 whose accepted extensions agree today by coincidence rather than by a shared
 rule, so consolidating them would invent a coupling the code does not claim.
+
+## Continuation
+
+The discriminator this Step introduced was wrong on its first form and was
+replaced. It used an allowlist of known constructors, which misclassified
+`TypeAdapter(tuple[int | float, ...])` as safe - and the Step's own earlier test
+failed on exactly that case. The rule is now simply whether the expression
+contains any literal: names and attributes alone read a value that lives
+elsewhere, while a string, a number, `True` or a bare `...` means the value was
+written down at that site. The honest effect was to RAISE the actionable count
+from 3 to 5, because two findings had been wrongly marked safe. A maintained
+allowlist would have kept hiding them.
+
+Three further merges followed. `LEGAL_REFS_ADAPTER` and `SOURCE_REFS_ADAPTER`
+now live in `domain/calculations/registry/ids.py` beside the types they
+validate, so a change to `LegalRefId` cannot leave a copy validating the old
+shape. And four aggregation ledgers each declared
+`_IssueDetail = Annotated[str, ElidedProse(512)]` while two of their siblings
+already imported the canonical `core.prose_elision.IssueDetail`; the four now
+read it too. The canonical carries the reasoning for the 512 bound - refusing a
+longer sentence would drop the explanation for a ledger exclusion, a silent
+under-declaration dressed as a validation error - and none of the four copies
+carried that.
+
+Two collisions remain and neither is merged, for stated reasons rather than
+fatigue. `CSV_EXTENSIONS` is coincidental agreement between an inbound provider
+and a spreadsheet reader. `_AT` is a devtools fixture timestamp inside the
+deferred `entrypoints.tui` prefix. Two same-shaped aliases were also
+deliberately left alone: `_IssueMessage` and `_GroundingDetail` carry the same
+`ElidedProse(512)` constraint but name different concepts, and merging on shape
+would have made the names lie.
