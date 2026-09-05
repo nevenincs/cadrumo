@@ -25,7 +25,7 @@ from ....domain.calculations.registry.schema_verification import VerificationPre
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from .._verification_predicates import evaluate_advisory_predicate_fires
-from ..verification_actions import _evaluate_verification_predicates, evaluate_advisory_predicate_fires
+from ..verification_actions import _evaluate_verification_predicates
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

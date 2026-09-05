@@ -22,6 +22,7 @@ from ....domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from .._verification_predicates import evaluate_advisory_predicate_fires
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -66,7 +67,7 @@ class TestAdvisoryPredicateDecimalNarrowing:
         values: dict[str, decimal.Decimal],
         expected: bool,
     ) -> None:
-                result = evaluate_advisory_predicate_fires(expression, values)
+        result = evaluate_advisory_predicate_fires(expression, values)
         assert result is expected, expression
 
 
