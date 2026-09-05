@@ -5,16 +5,11 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:8bfdbb897c1662c2f51fd81813109636d653b35e657e50ea7f45d13d291120c6'
+body_hash: 'sha256:793a2dd8a964e6f98eb41f289e3fe770d4f86f58d52c034a95327ecd9778d564'
 step_id: 'S428'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Make the test suite's output-language pin actually pin the language. The flow-TUI locale gates fail on their FIRST assertion, before any switch: under output_language_scope(EN) the screen renders Spanish. The pump boundary is not the cause. load_settings() returns a context-local override in preference to the environment, and cadrumo/conftest.py opens a session-scoped override_settings block, so the helper's CADRUMO_OUTPUT_LANGUAGE write was inert for the entire suite and every pinned language silently resolved to the configured default. Carry the language into the active override in place -- in place because the object is reached through a ContextVar and a replacement would need a Token that cannot be reset from a message-pump callback's asyncio Context.
 
@@ -24,23 +19,6 @@ related:
 - `src/cadrumo/core/i18n/tests/test_output_language_scope.py`
 
 ## Changes
-
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
-
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
-
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->
 
 The two flow-TUI locale gates were reported as a message-pump problem. They
 are not. Both fail on their FIRST assertion, before any switch happens: under
@@ -93,4 +71,3 @@ this change -- `test_no_new_bare_str_language_fields`, `test_no_surplus_kwargs`
 and `test_translatable_instances_use_only_tr_alias_without_shadowing` (155
 files binding `tr` from a non-i18n import). They scan committed source this
 change does not touch. 124 passed alongside them.
-
