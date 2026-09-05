@@ -92,7 +92,7 @@ _REGISTRY_ROUTE_DIGEST: Final[str] = "sha256:20b2d2df5558b2a3fdbd1eab6e9f781a973
 _REGISTRY_SOURCE_DIGEST: Final[str] = "sha256:194a9f26ddfbae6c5d7f265ffe58f50964fbe2fcd02a5670fa19845dead5cf6d"
 _TUI_CENSUS_DIGEST: Final[str] = "sha256:c136cfe1ae3f82a239476c00e805f8c9a29e010d502e74397963cea7e6f42371"
 _TUI_SOURCE_DIGEST: Final[str] = "sha256:e7337508a02ef2260e0b28205c31bb872b69f59aa51a18391ae209c21b8f9d57"
-_UNION_DIGEST: Final[str] = "sha256:b694743c9edfe8c40fd7e6309b519cab353dd074dc75cd87688f144992561a7b"
+_UNION_DIGEST: Final[str] = "sha256:5012ceafec5bc9dae942b22f48daa34f66d93008cd48b9f81c0b0f69f4f49b06"
 
 
 @cache
@@ -215,6 +215,9 @@ def test_union_denominator_retains_every_registry_route_unit_and_tui_reachabilit
 
     assert len(registry_rows) == 546
     assert len({row.capability_id for row in registry_rows}) == 546
+    assert sum("direct registry destination" in blocker for row in registry_rows for blocker in row.blockers) == 510
+    assert sum("application sidecar" in blocker for row in registry_rows for blocker in row.blockers) == 3
+    assert sum("no registry destination" in blocker for row in registry_rows for blocker in row.blockers) == 33
     assert rows["ledger.workspace.read"].tui_routes == ("ledger.overview",)
     assert "reachability" not in {gap.value for gap in rows["ledger.workspace.read"].gap_classes}
     assert rows["ledger.transaction.list"].tui_routes == ("ledger.entries",)
@@ -263,9 +266,12 @@ def test_union_denominator_refuses_incomplete_or_stale_serialized_adjudication(m
         payload["observations"] = (*payload["observations"], payload["observations"][0])
         expected = "identities must be unique"
     elif mutation == "wrong_sources":
-        first = dict(payload["rows"][0])
-        first["sources"] = frozenset({DenominatorSourceKind.CLI_ENDPOINT})
-        payload["rows"] = (first, *payload["rows"][1:])
+        rows = list(payload["rows"])
+        index = next(index for index, row in enumerate(rows) if row["capability_id"] == "ledger.transaction.create")
+        changed = dict(rows[index])
+        changed["sources"] = frozenset({DenominatorSourceKind.CLI_ENDPOINT})
+        rows[index] = changed
+        payload["rows"] = tuple(rows)
         expected = "sources drifted"
     else:
         payload["digest"] = "sha256:" + "0" * 64

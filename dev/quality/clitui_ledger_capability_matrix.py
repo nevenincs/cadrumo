@@ -1416,8 +1416,18 @@ class LedgerUnionDenominatorV1(BaseModel):
     @property
     def calculated_digest(self) -> str:
         """Return the canonical digest excluding the self-referential digest field."""
-        encoded = _canonical_json_text(self.model_dump(mode="python", exclude={"digest"})).encode("utf-8")
+        encoded = _canonical_json_text(_ledger_union_digest_payload(self)).encode("utf-8")
         return f"sha256:{hashlib.sha256(_LEDGER_UNION_DENOMINATOR_FRAME + _length_frame(encoded)).hexdigest()}"
+
+
+def _ledger_union_digest_payload(union: LedgerUnionDenominatorV1) -> dict[str, object]:
+    """Return JSON data with every set-valued field in canonical order."""
+    payload = union.model_dump(mode="json", exclude={"digest"})
+    rows = cast(list[dict[str, object]], payload["rows"])
+    for row in rows:
+        row["sources"] = sorted(cast(list[str], row["sources"]))
+        row["gap_classes"] = sorted(cast(list[str], row["gap_classes"]))
+    return payload
 
 
 @dataclass(frozen=True, slots=True)
@@ -1960,6 +1970,43 @@ _LEDGER_TUI_ROUTE_CAPABILITIES: Final[Mapping[str, tuple[str, ...]]] = MappingPr
     }
 )
 
+_BACKEND_DIRECT_PROOF_GAPS: Final[frozenset[str]] = frozenset(
+    {
+        "ledger.classification.rule_add",
+        "ledger.classification.rule_apply",
+        "ledger.import.aggregate_results",
+        "ledger.evidence.attachment_view",
+        "ledger.evidence.attachment_queue",
+        "ledger.llm.diagnostics",
+        "ledger.participation.get",
+        "ledger.workspace.read",
+    }
+)
+
+_LEDGER_BACKEND_OPERATION_SOURCE_PATHS: Final[tuple[str, ...]] = (
+    "src/cadrumo/application/ledger/actions_classification.py",
+    "src/cadrumo/application/ledger/actions_export.py",
+    "src/cadrumo/application/ledger/actions_import.py",
+    "src/cadrumo/application/ledger/actions_lifecycle.py",
+    "src/cadrumo/application/ledger/actions_manual.py",
+    "src/cadrumo/application/ledger/actions_split_merge.py",
+    "src/cadrumo/application/ledger/attachment_review.py",
+    "src/cadrumo/application/ledger/batch_ingest.py",
+    "src/cadrumo/application/ledger/consent_withdrawal.py",
+    "src/cadrumo/application/ledger/counterparty_establishment.py",
+    "src/cadrumo/application/ledger/evidence.py",
+    "src/cadrumo/application/ledger/invoice_confirmation.py",
+    "src/cadrumo/application/ledger/invoice_draft_extraction.py",
+    "src/cadrumo/application/ledger/llm_classification.py",
+    "src/cadrumo/application/ledger/llm_diagnostics.py",
+    "src/cadrumo/application/ledger/llm_review_workflow.py",
+    "src/cadrumo/application/ledger/participation_read.py",
+    "src/cadrumo/application/ledger/preflight.py",
+    "src/cadrumo/application/ledger/ratios.py",
+    "src/cadrumo/application/ledger/workspace.py",
+    "src/cadrumo/application/ledger/workspace_reader.py",
+)
+
 
 _CLI_CAPABILITY_REMAP: Final[Mapping[str, str]] = MappingProxyType(
     {
@@ -2298,6 +2345,65 @@ def _union_observations(
     return tuple(sorted(observations, key=lambda item: (item.source.value, item.observation_id)))
 
 
+def _backend_operation_source_set_digest() -> str:
+    root = Path(__file__).resolve().parents[2]
+    payload = bytearray(b"cadrumo:ledger-backend-operation-source-set:v1\x00")
+    for relative in _LEDGER_BACKEND_OPERATION_SOURCE_PATHS:
+        path = root / relative
+        if not path.is_file():
+            raise FileNotFoundError(f"Ledger backend census source is unavailable: {relative}")
+        payload.extend(_length_frame(relative.encode("utf-8")))
+        payload.extend(_length_frame(path.read_bytes()))
+    return f"sha256:{hashlib.sha256(payload).hexdigest()}"
+
+
+def _union_source_digest(
+    source: DenominatorSourceKind,
+    observations: tuple[LedgerUnionSourceObservationV1, ...],
+    registry: LedgerRegistryRouteCensusV1,
+    tui: LedgerTuiSupportedSurfaceCensusV1,
+) -> str:
+    from cadrumo.entrypoints.cli._app_ledger_command_specs import LEDGER_CLI_COMMAND_CENSUS
+
+    material: object = observations
+    if source in {DenominatorSourceKind.CLI_ENDPOINT, DenominatorSourceKind.CLI_SUBOPERATION}:
+        material = {
+            "observations": observations,
+            "command_census": tuple(
+                {
+                    "command_key": entry.command_key,
+                    "path": entry.path,
+                    "handler_identity": entry.handler_identity,
+                    "result_schema_identity": entry.result_schema_identity,
+                    "tui_capability": entry.tui_capability.value,
+                    "adapter_ownership": entry.adapter_ownership.value,
+                    "suboperation_ids": entry.suboperation_ids,
+                }
+                for entry in LEDGER_CLI_COMMAND_CENSUS
+            ),
+        }
+    elif source is DenominatorSourceKind.BACKEND_ONLY:
+        material = {
+            "observations": observations,
+            "declarations": tuple(
+                {
+                    "capability_id": item.capability_id,
+                    "owner": item.owner,
+                    "command_type": item.command_type,
+                    "result_type": item.result_type,
+                    "status": item.status.value,
+                }
+                for item in _LEDGER_BACKEND_OPERATION_DECLARATIONS
+            ),
+            "source_set_digest": _backend_operation_source_set_digest(),
+        }
+    elif source is DenominatorSourceKind.REGISTRY_ROUTE:
+        material = {"observations": observations, "route_census_digest": registry.calculated_digest}
+    elif source is DenominatorSourceKind.SUPPORTED_SURFACE:
+        material = {"observations": observations, "surface_census_digest": tui.calculated_digest}
+    return _canonical_digest(material)
+
+
 def build_ledger_union_denominator(
     *,
     registry: LedgerRegistryRouteCensusV1 | None = None,
@@ -2315,6 +2421,7 @@ def build_ledger_union_denominator(
         destination: next(row.reachability for row in tui.routes if row.destination == destination)
         for destination in _LEDGER_TUI_ROUTE_CAPABILITIES
     }
+    registry_rows_by_capability = {_registry_union_capability_id(row): row for row in registry.rows}
     cli_ownership_by_capability: dict[str, set[str]] = {}
     from cadrumo.entrypoints.cli._app_ledger_command_specs import LEDGER_CLI_COMMAND_CENSUS
 
@@ -2378,8 +2485,20 @@ def build_ledger_union_denominator(
             )
         if component_only_routes:
             blockers.append("TUI component exists without installed navigation or executable door reachability.")
+        if capability_id in _BACKEND_DIRECT_PROOF_GAPS:
+            blockers.append("S05 found no direct symbol-level backend behavior test for this public operation.")
         if effect is LedgerCapabilityEffect.REGISTRY_ROUTE:
-            blockers.append("The declaration still requires per-route calculation and filing/export adjudication.")
+            registry_row = registry_rows_by_capability[capability_id]
+            if registry_row.targets:
+                blockers.append(
+                    "The direct registry destination still requires per-route calculation and filing/export proof."
+                )
+            elif registry_row.modelo_id == "210" or "retenciones" in registry_row.binding_id:
+                blockers.append(
+                    "The declaration reaches an application sidecar whose output identity is not a registry edge."
+                )
+            else:
+                blockers.append("The declaration has no registry destination or application output mapping.")
         next_action = (
             "Classify and prove the route in S96-S101."
             if effect is LedgerCapabilityEffect.REGISTRY_ROUTE
@@ -2405,7 +2524,7 @@ def build_ledger_union_denominator(
         LedgerUnionSourceDigestV1(
             source=source,
             observation_count=len(source_observations),
-            digest=_canonical_digest(source_observations),
+            digest=_union_source_digest(source, source_observations, registry, tui),
         )
         for source in sorted(DenominatorSourceKind, key=lambda item: item.value)
         if (source_observations := tuple(item for item in observations if item.source is source))
@@ -2426,7 +2545,7 @@ def build_ledger_union_denominator(
 def ledger_union_denominator_bytes(union: LedgerUnionDenominatorV1) -> bytes:
     """Serialize the canonical S08 union with domain and length framing."""
     canonical = LedgerUnionDenominatorV1.model_validate(union.model_dump(mode="python"))
-    encoded = _canonical_json_text(canonical.model_dump(mode="python", exclude={"digest"})).encode("utf-8")
+    encoded = _canonical_json_text(_ledger_union_digest_payload(canonical)).encode("utf-8")
     return _LEDGER_UNION_DENOMINATOR_FRAME + _length_frame(encoded)
 
 
@@ -3505,6 +3624,8 @@ __all__ = [
     "LEDGER_REGISTRY_ROUTE_CENSUS_SCHEMA_VERSION",
     "LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_ROOT",
     "LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_SCHEMA_VERSION",
+    "LEDGER_UNION_DENOMINATOR_ROOT",
+    "LEDGER_UNION_DENOMINATOR_SCHEMA_VERSION",
     "SCHEMA_VERSION",
     "ApplicabilityState",
     "AuthorityDispositionEntryV1",
@@ -3525,7 +3646,9 @@ __all__ = [
     "GateAssessmentV1",
     "InitialCliOwnership",
     "LedgerCampaignControlsV1",
+    "LedgerAxisApplicabilityDecisionV1",
     "LedgerCapabilityAxis",
+    "LedgerCapabilityEffect",
     "LedgerCapabilityIdentityV1",
     "LedgerCapabilityMatrixV1",
     "LedgerCapabilityRowV1",
@@ -3539,10 +3662,16 @@ __all__ = [
     "LedgerRegistryRouteTargetV1",
     "LedgerTuiRouteRowV1",
     "LedgerTuiSupportedSurfaceCensusV1",
+    "LedgerUnionCapabilityRowV1",
+    "LedgerUnionDenominatorV1",
+    "LedgerUnionSourceDigestV1",
+    "LedgerUnionSourceObservationV1",
     "ReviewRuling",
+    "SemanticHomeStatus",
     "SurfaceCapabilityState",
     "build_ledger_registry_route_census",
     "build_ledger_tui_supported_surface_census",
+    "build_ledger_union_denominator",
     "evaluate_ledger_capability_gate",
     "evaluate_ledger_capability_gates",
     "ledger_registry_route_census_bytes",
@@ -3553,6 +3682,8 @@ __all__ = [
     "ledger_tui_supported_surface_census_digest",
     "ledger_tui_supported_surface_source_files",
     "ledger_tui_supported_surface_source_set_digest",
+    "ledger_union_denominator_bytes",
+    "ledger_union_denominator_digest",
     "reopened_gates_for_denominator_drift",
     "validate_ledger_matrix_currentness",
 ]

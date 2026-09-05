@@ -27,6 +27,7 @@ from ..unreachable_code import (
     UnreachableCodeOutcome,
     UnreachableCodeResult,
     filter_by_confidence,
+    forward_reference_names,
     render_console_report,
     result_as_json,
     scan_unreachable_code,
@@ -823,3 +824,35 @@ def test_a_single_file_root_is_still_enumerated(tmp_path: Path) -> None:
     module.write_text("VALUE = 1" + chr(10), encoding="utf-8")
 
     assert list(iter_python_files(module)) == [module]
+
+
+def test_a_forward_reference_in_a_union_names_its_target() -> None:
+    """The false positive this reader exists for.
+
+    A quoted annotation carrying a union is not a dotted path, so the
+    dotted-spec reader yielded nothing and every class named only that way was
+    reported unused. Two Protocols in the tree were reported exactly so.
+    """
+    assert set(forward_reference_names("_AttachmentFileReader | None")) == {"_AttachmentFileReader"}
+    assert set(forward_reference_names("Mapping[str, Widget]")) == {"Mapping", "str", "Widget"}
+    # Both halves, matching how an UNQUOTED `mod.Thing` is already read:
+    # the module name loads and the attribute is accessed.
+    assert set(forward_reference_names("mod.Thing")) == {"mod", "Thing"}
+
+
+def test_prose_is_never_read_as_a_reference() -> None:
+    """The dangerous direction: a loose reader would SUPPRESS real findings.
+
+    An audit that counted any word in any string as a use would silently stop
+    reporting dead code, which is worse than the over-report it fixes. Prose
+    that does not parse as a type expression must yield nothing.
+    """
+    assert list(forward_reference_names("the attachment file reader")) == []
+    assert list(forward_reference_names("returns a Widget when present")) == []
+    assert list(forward_reference_names("")) == []
+
+
+def test_a_call_in_a_type_string_is_declined_rather_than_mined() -> None:
+    """Only type syntax is read; anything else is not a type position's business."""
+    assert list(forward_reference_names("build_widget()")) == []
+    assert list(forward_reference_names("[Widget for _ in range(3)]")) == []
