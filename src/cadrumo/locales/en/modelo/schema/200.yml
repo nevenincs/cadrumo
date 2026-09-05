@@ -364,6 +364,10 @@ modelo:
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of offsetting negative tax bases - Offset of tax
                 base for other activities year 2024 - Pending applic...'
+            00093:
+              label: Settlement I - Detail of corrections to profit and loss account
+                result - Correction for the temporary energy levy (Art. 1 Law 38/2022)
+                - Increases [00093]
             00094:
               help: null
               label: Reserve for investments in the Balearic Islands (DA 70 Law 31/2022)
@@ -3214,6 +3218,10 @@ modelo:
               label: Deduction for donations to non-profit entities - General donations
                 - 2015 - With repeated donations to the same entity - Applied in this
                 settlement [00819]
+            00820:
+              label: Deduction for donations to non-profit entities - General donations
+                - 2015 - With repeated donations to the same entity -pending application
+                in future periods [00820]
             00821:
               help: null
               label: Deduction for donations to non-profit entities - General donations
@@ -3565,6 +3573,10 @@ modelo:
               help: null
               label: Deduction for reversal of temporary measures (D.T.37th. 1 LIS)
                 - 2025(*) - Amount generated/pending at beginning of period [00901]
+            00902:
+              label: Deductions to incentivise certain activities - 2024 2030 Plan
+                for the support of grassroots sport (P30) - Deduction carried forward/generated
+                [00902]
             00904:
               help: null
               label: Deduction for reversal of temporary measures (D.T.37th. 1 LIS)
@@ -3573,6 +3585,10 @@ modelo:
               help: null
               label: Deduction for reversal of temporary measures (D.T.37th. 1 LIS)
                 - 2025(*) - Pending amount [00905]
+            00906:
+              label: Deductions to incentivise certain activities - 2024 2030 Plan
+                for the support of grassroots sport (P30) - Applied in this settlement
+                [00906]
             00907:
               help: null
               label: Cooperative regime - Tax liability compensation detail. 2013
@@ -3630,6 +3646,18 @@ modelo:
               help: null
               label: International double taxation deductions RDLeg. 4/2004 - International
                 D.T. 2013 - Tax rate for generation period [00921]
+            00922:
+              label: Special regime for the Canary Islands investment reserve - RIC
+                2019 - Canary Islands investment reserve pending materialisation at
+                start of period [00922]
+            00923:
+              label: Special regime for the Canary Islands investment reserve - RIC
+                2019 - Applied/materialised in this return - Investments under letters
+                A and B, art. 27.4 Law 19/1994 [00923]
+            00924:
+              label: Special regime for the Canary Islands investment reserve - RIC
+                2019 - Applied/materialised in this return - Investments under letters
+                B bis, C and D art. 27.4 Law 19/1994 [00924]
             00925:
               help: null
               label: Settlement III - Tax base - Income that does not limit offsetting
@@ -3652,6 +3680,14 @@ modelo:
               help: null
               label: Deduction for reversal of temporary measures (D.T.37th. 2 LIS)
                 - 2025(*) - Deduction base [00929]
+            00930:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2014 - Deduction carried forward/generated [00930]
+            00931:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2014 - Applied in this settlement [00931]
             00932:
               help: null
               label: Settlement III - Tax base - Only cooperative companies - Income
@@ -3684,10 +3720,21 @@ modelo:
               label: Special Canary Islands investment reserve regime - RIC 2020 -
                 Applied/materialized in this settlement - Investments under letters
                 B bis, C and D art. 27.4 Law 19/1994 [00938]
+            00939:
+              label: Deductions for investment in the Canary Islands - Canary Islands
+                investments 2006 - Deduction carried forward/generated [00939]
+            00940:
+              label: Deductions for investment in the Canary Islands - Canary Islands
+                investments 2006 - Applied in this settlement [00940]
             00941:
               help: null
               label: Reversal for impairment of representative securities - Allocations
                 pending integration at the beginning of the period [00941]
+            00942:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2015 without repeated donations to the same entity - Carried forward
+                for application in future periods [00942]
             00943:
               help: null
               label: Deduction for donations to non-profit entities - Donations for
@@ -3710,6 +3757,11 @@ modelo:
               help: null
               label: Deductions to incentivize certain activities - 2010 Sum of deductions
                 - Pending application in future periods [00947]
+            00948:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2015 - With repeated donations to the same entity - Carried forward
+                for application in future periods [00948]
             00949:
               help: null
               label: Deduction for donations to non-profit entities - Donations for
@@ -3740,6 +3792,17 @@ modelo:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
                 - 2016 - With repeated donations to the same...
+            00955:
+              label: Deductions to incentivise certain activities - 2024 Universo
+                Mujer III (UM3) - Applied in this settlement [00955]
+            00956:
+              label: Deductions to incentivise certain activities - 2024 Universo
+                Mujer III (UM3) - Carried forward for application in future periods
+                [00956]
+            00957:
+              label: Deductions to incentivise certain activities - 2024 Preparation
+                programme for Spanish athletes at the Paris 2024 Games (P24) - Deduction
+                carried forward/generated [00957]
             00958:
               help: null
               label: Deduction for donations to non-profit entities - Donations for
@@ -3917,6 +3980,16 @@ modelo:
               label: Deduction for donations to non-profit entities - General donations
                 - 2016 without repeated donations to the same entity - Pending application
                 in future periods [00995]
+            00996:
+              label: Special regime for the Canary Islands investment reserve - RIC
+                2020 - Canary Islands investment reserve pending materialisation at
+                period-end [00996]
+            00997:
+              label: Deduction for donations to non-profit entities - General donations
+                - 2014 - Deduction carried forward/generated [00997]
+            00998:
+              label: Deduction for donations to non-profit entities - General donations
+                - 2014 - Applied in this settlement [00998]
             00999:
               help: '6.- Double taxation relief: deduction base - B) Datos económicos'
               label: 'B) Datos económicos. 6.- Double taxation relief: deduction base'
@@ -4303,6 +4376,18 @@ modelo:
               help: null
               label: Deduction for reversal of temporary measures (D.T.37th. 2 LIS)
                 - 2022 - Deduction base [01086]
+            01087:
+              label: Deductions to incentivise certain activities - 2024 Preparation
+                programme for Spanish athletes at the Paris 2024 Games (P24) - Applied
+                in this settlement [01087]
+            01088:
+              label: Deductions to incentivise certain activities - 2024 Preparation
+                programme for Spanish athletes at the Paris 2024 Games (P24) - Carried
+                forward for application in future periods [01088]
+            01089:
+              label: Deductions to incentivise certain activities - 2024 100th anniversary
+                of the death of Joaquín Sorolla (JS) - Deduction carried forward/generated
+                [01089]
             01090:
               help: null
               label: R&D&I deductions excluded from limit - 2021 Research and development
@@ -4372,6 +4457,11 @@ modelo:
               help: null
               label: Pending addition for unapplied operating profit limit - Generation
                 year 2022 - Pending application in future periods [01105]
+            '01106':
+              label: Capitalization reserve - 2022 - Right to reduce tax base generated
+                in period/pending application at start of period [01106]
+            '01107':
+              label: Capitalization reserve - 2022 - Tax base reduction applied [01107]
             01108:
               help: '6.- Double taxation relief: deduction amount - B) Datos económicos'
               label: 'B) Datos económicos. 6.- Double taxation relief: deduction amount'
@@ -4380,6 +4470,10 @@ modelo:
               label: Equalization reserve - Tax base reduction - Generation year 2021
                 - Amount reducing tax base for period/pending addition at start of
                 period [01109]
+            '01110':
+              label: Deductions to incentivise certain activities - 2024 100th anniversary
+                of the death of Joaquín Sorolla (JS) - Applied in this settlement
+                [01110]
             '01111':
               help: null
               label: Equalization reserve - Tax base reduction - Generation year 2021
@@ -4497,11 +4591,29 @@ modelo:
               help: null
               label: Capitalization reserve - Capitalization reserve allocated in
                 the year [01140]
+            '01141':
+              label: Deductions to incentivise certain activities - 2024 100th anniversary
+                of the death of Joaquín Sorolla (JS) - Carried forward for application
+                in future periods [01141]
+            '01142':
+              label: Deductions to incentivise certain activities - 2024 20th anniversary
+                of Primavera Sound (PS) - Deduction carried forward/generated [01142]
             '01143':
               help: null
               label: Allowances for impairment of receivables or other assets - Generation
                 year - 2021 - Allowances pending integration at beginning of period
                 - That have met tax deductibility conditions [01143]
+            '01144':
+              label: Deductions to incentivise certain activities - 2024 20th anniversary
+                of Primavera Sound (PS) - Applied in this settlement [01144]
+            '01145':
+              label: Deductions to incentivise certain activities - 2024 20th anniversary
+                of Primavera Sound (PS) - Carried forward for application in future
+                periods [01145]
+            '01146':
+              label: Deductions to incentivise certain activities - 2024 Centenary
+                of the birth of Victoria de los Ángeles (VA) - Deduction carried forward/generated
+                [01146]
             '01147':
               help: null
               label: Equalization reserve - Tax base reduction - Total - Amount reducing
@@ -4514,6 +4626,35 @@ modelo:
               help: null
               label: Equalization reserve - Tax base reduction - Total - Amount pending
                 addition in future periods [01149]
+            '01150':
+              label: Deductions to incentivise certain activities - 2024 Centenary
+                of the birth of Victoria de los Ángeles (VA) - Applied in this settlement
+                [01150]
+            '01151':
+              label: Deductions to incentivise certain activities - 2024 Centenary
+                of the birth of Victoria de los Ángeles (VA) - Carried forward for
+                application in future periods [01151]
+            '01152':
+              label: Deductions to incentivise certain activities - 2024 Commemoration
+                of the 50th anniversary of the death of the Spanish artist Pablo Picasso
+                (50P) - Deduction carried forward/generated [01152]
+            '01153':
+              label: Deductions to incentivise certain activities - 2024 Commemoration
+                of the 50th anniversary of the death of the Spanish artist Pablo Picasso
+                (50P) - Applied in this settlement [01153]
+            '01154':
+              label: Deductions to incentivise certain activities - 2024 Commemoration
+                of the 50th anniversary of the death of the Spanish artist Pablo Picasso
+                (50P) - Carried forward for application in future periods [01154]
+            '01155':
+              label: Deductions to incentivise certain activities - 2024 All against
+                cancer (TC) - Deduction carried forward/generated [01155]
+            '01156':
+              label: Deductions to incentivise certain activities - 2024 All against
+                cancer (TC) - Applied in this settlement [01156]
+            '01157':
+              label: Deductions to incentivise certain activities - 2024 All against
+                cancer (TC) - Carried forward for application in future periods [01157]
             01158:
               help: null
               label: Equalization reserve - Reserve allocation - Total - Reserve amount
@@ -4791,6 +4932,18 @@ modelo:
               label: Allowances for impairment of receivables or other assets - Generation
                 year - 2024 - Allowances pending integration in future periods - That
                 have met tax deductibility conditions [01219]
+            '01220':
+              label: Deductions to incentivise certain activities - 2024 7th UNWTO
+                Global Conference on Wine Tourism 2023 (7TE) - Deduction carried forward/generated
+                [01220]
+            '01221':
+              label: Deductions to incentivise certain activities - 2024 7th UNWTO
+                Global Conference on Wine Tourism 2023 (7TE) - Applied in this settlement
+                [01221]
+            '01222':
+              label: Deductions to incentivise certain activities - 2024 7th UNWTO
+                Global Conference on Wine Tourism 2023 (7TE) - Carried forward for
+                application in future periods [01222]
             '01223':
               help: Deduction pending or generated - Caravaca de la Cruz 2024. Año
                 Jubilar (C24)
@@ -4835,10 +4988,33 @@ modelo:
                 Año Jubilar (C24)
               label: Caravaca de la Cruz 2024. Año Jubilar (C24). Pending application
                 in future periods
+            '01233':
+              label: Deductions to incentivise certain activities - 2024 Bicentenary
+                of the Ateneo de Madrid (BA) - Deduction carried forward/generated
+                [01233]
             '01234':
               help: null
               label: Settlement IV - Self-assessment result - Payment of R&D&I deductions
                 due to insufficient tax liability - Total [01234]
+            '01235':
+              label: Deductions to incentivise certain activities - 2024 Bicentenary
+                of the Ateneo de Madrid (BA) - Applied in this settlement [01235]
+            '01236':
+              label: Deductions to incentivise certain activities - 2024 Bicentenary
+                of the Ateneo de Madrid (BA) - Carried forward for application in
+                future periods [01236]
+            '01237':
+              label: Deductions to incentivise certain activities - 2024 Barcelona
+                Equestrian Challenge (4th edition) (BE4) - Deduction carried forward/generated
+                [01237]
+            01238:
+              label: Deductions to incentivise certain activities - 2024 Barcelona
+                Equestrian Challenge (4th edition) (BE4) - Applied in this settlement
+                [01238]
+            01239:
+              label: Deductions to incentivise certain activities - 2024 Barcelona
+                Equestrian Challenge (4th edition) (BE4) - Carried forward for application
+                in future periods [01239]
             '01240':
               help: null
               label: Limitation on deductibility of financial expenses - Limit art.
@@ -4946,6 +5122,27 @@ modelo:
               label: Limitation on deductibility of financial expenses - Limit art.
                 16.1 and 16.2 LIS - Total non-deductible financial expenses of the
                 tax period (= [c2+l2]) [01260]
+            '01261':
+              label: Deductions to incentivise certain activities - 2024 200th anniversary
+                of Passeig de Grácia (PG) - Deduction carried forward/generated [01261]
+            '01262':
+              label: Deductions to incentivise certain activities - 2024 200th anniversary
+                of Passeig de Grácia (PG) - Applied in this settlement [01262]
+            '01263':
+              label: Deductions to incentivise certain activities - 2024 200th anniversary
+                of Passeig de Grácia (PG) - Carried forward for application in future
+                periods [01263]
+            '01267':
+              label: Deductions to incentivise certain activities - 2024 ALIMENTARIA
+                2022 and HOSTELCO 2022 (AH) - Deduction carried forward/generated
+                [01267]
+            01268:
+              label: Deductions to incentivise certain activities - 2024 ALIMENTARIA
+                2022 and HOSTELCO 2022 (AH) - Applied in this settlement [01268]
+            01269:
+              label: Deductions to incentivise certain activities - 2024 ALIMENTARIA
+                2022 and HOSTELCO 2022 (AH) - Carried forward for application in future
+                periods [01269]
             '01270':
               help: null
               label: Internal double taxation deductions (DT 23.1 LIS) - Internal
@@ -4954,6 +5151,17 @@ modelo:
               help: null
               label: Internal double taxation deductions (DT 23.1 LIS) - Internal
                 D.T. 2023 - Tax rate for generation period [01271]
+            '01272':
+              label: Deductions to incentivise certain activities - 2024 Barcelona
+                Music Lab. The future of music (ML) - Deduction carried forward/generated
+                [01272]
+            '01273':
+              label: Deductions to incentivise certain activities - 2024 Barcelona
+                Music Lab. The future of music (ML) - Applied in this settlement [01273]
+            '01274':
+              label: Deductions to incentivise certain activities - 2024 Barcelona
+                Music Lab. The future of music (ML) - Carried forward for application
+                in future periods [01274]
             '01275':
               help: null
               label: Settlement II - Detail of corrections to profit and loss account
@@ -4983,6 +5191,16 @@ modelo:
               label: Settlement III - Allowances/Double taxation deductions - Double
                 taxation deductions - Internal D.T. generated and applied in the year
                 (DT 23.1 LIS) [01280]
+            01281:
+              label: Deductions to incentivise certain activities - 2024 South Summit
+                2022-2024 (SS) - Deduction carried forward/generated [01281]
+            01282:
+              label: Deductions to incentivise certain activities - 2024 South Summit
+                2022-2024 (SS) - Applied in this settlement [01282]
+            01283:
+              label: Deductions to incentivise certain activities - 2024 South Summit
+                2022-2024 (SS) - Carried forward for application in future periods
+                [01283]
             01284:
               help: null
               label: Deduction for investments and expenses made by port authorities
@@ -5313,6 +5531,9 @@ modelo:
               help: null
               label: Transitory Provision 24.7 LIS deductions - D.T. 24.7 LIS 2017
                 deductions - Pending application in future periods [01355]
+            '01356':
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                2010 - Carried forward for application in future periods [01356]
             '01357':
               help: null
               label: Canary Islands investment deductions - Fixed assets 2016 - Pending/generated
@@ -5510,6 +5731,9 @@ modelo:
             '01402':
               help: null
               label: Capitalization reserve - 2023 - Tax base reduction applied [01402]
+            '01403':
+              label: Capitalization reserve - 2023 - Taxable-base reduction carried
+                forward for application in future periods [01403]
             '01404':
               help: null
               label: Equalization reserve - Tax base reduction - Generation year 2022
@@ -6446,6 +6670,10 @@ modelo:
               label: Adjustments for impairment of securities representing holdings
                 in capital or equity (Transitional Provision 16.3 LIS) - Increase
                 - Corrections for the year - Temporary (originating in the year) [01602]
+            '01603':
+              label: Equalization reserve - Tax base reduction - Year of generation
+                2019 - Amount included in the return due to non-compliance with requirements
+                [01603]
             '01604':
               help: null
               label: Equalization reserve - Tax base reduction - Exercici generació
@@ -6851,6 +7079,12 @@ modelo:
               label: Transactions under art. 19 LIS other than change of residence
                 to European Union or EEA Member States - Decrease - Balance pending
                 at end of year [01688]
+            01689:
+              label: Deduction for donations to non-profit entities - General donations
+                - Donations subtotal 2014 - Deduction carried forward/generated [01689]
+            01690:
+              label: Deduction for donations to non-profit entities - General donations
+                - Donations subtotal 2014 - Applied in this settlement [01690]
             01692:
               help: null
               label: Deduction for donations to non-profit entities - General donations
@@ -6893,6 +7127,14 @@ modelo:
               help: null
               label: Deduction for donations to non-profit entities - General donations
                 - Total - Pending application in future periods [01700]
+            '01701':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - Donations subtotal 2014 - Deduction carried forward/generated [01701]
+            '01702':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - Donations subtotal 2014 - Applied in this settlement [01702]
             '01704':
               help: null
               label: Deduction for donations to non-profit entities - Donations for
@@ -6915,6 +7157,10 @@ modelo:
               help: null
               label: Special regime for Balearic Islands investment reserve - BIIR
                 2023 - BIIR pending materialization at start of period [01707]
+            01708:
+              label: Special regime for the Balearic Islands investment reserve -
+                BIIR 2024 - Applied/materialised in this return - Advance investments
+                treated as materialising the RIIB in this settlement [01708]
             01709:
               help: null
               label: Special regime for Balearic Islands investment reserve - BIIR
@@ -7655,6 +7901,10 @@ modelo:
               label: Adjustments for impairment of securities representing holdings
                 in capital or equity (Transitional Provision 16.1 and 2 LIS) - Decrease
                 - Balance carried forward at year-end [01869]
+            01870:
+              label: Deductions to incentivise certain activities - 2024 2030 Plan
+                for the support of grassroots sport (P30) - Carried forward for application
+                in future periods [01870]
             01871:
               help: Deduction pending or generated - Año de Investigación Santiago
                 Ramón y Cajal 2022 (RC)
@@ -7819,6 +8069,12 @@ modelo:
                 de las Colecciones Reales (GC)
               label: Inauguración de la Galería de las Colecciones Reales (GC). Pending
                 application in future periods
+            01903:
+              label: 'Deductions to incentivise certain activities - 2024: Centenary
+                of hockey 1923-2023 (CH) - Deduction carried forward/generated [01903]'
+            01904:
+              label: 'Deductions to incentivise certain activities - 2024: Centenary
+                of hockey 1923-2023 (CH) - Applied in this settlement [01904]'
             01905:
               help: null
               label: Settlement II - Detail of adjustments to the profit and loss
@@ -7859,6 +8115,9 @@ modelo:
               label: Deductions for investment in the Canary Islands - Fixed assets
                 in La Palma, La Gomera and El Hierro 2023 - Applied in this return
                 [01913]
+            01914:
+              label: Deductions to incentivise certain activities - 2024 Universo
+                Mujer III (UM3) - Deduction carried forward/generated [01914]
             01915:
               help: null
               label: Provisions for impairment of receivables or other assets - Year
@@ -8083,6 +8342,10 @@ modelo:
               label: Free depreciation of certain vehicles and new charging infrastructure
                 (Additional Provision 18 LIS, RDL 4/2024) - Decrease - Adjustments
                 for the tax year - Temporary (with origen en tax years...
+            01963:
+              label: Special regime for the Canary Islands investment reserve - RIC
+                2019 - Applied/materialised in this return - Reincorporated into the
+                taxable base for failure to meet requirements [01963]
             01968:
               help: null
               label: R&D&i deductions excluded from the limit - 2018 Research and
@@ -8115,6 +8378,10 @@ modelo:
               help: null
               label: R&D&i deductions excluded from the limit - 2018 Technological
                 innovation - Amount paid due to insufficient tax liability [01975]
+            01976:
+              label: 'Deductions to incentivise certain activities - 2024: Centenary
+                of hockey 1923-2023 (CH) - Carried forward for application in future
+                periods [01976]'
             01977:
               help: null
               label: Limitation on the deductibility of finance costs. Finance costs
@@ -8140,6 +8407,13 @@ modelo:
               label: Limitation on the deductibility of finance costs. Finance costs
                 carried forward - Year of generation 2019 - Carried forward for application
                 in future periods - Remainder [01981]
+            01982:
+              label: Carried forward for addition due to unapplied operating-profit
+                limit - Year of generation 2019 - Carried forward at the start of
+                the period [01982]
+            01983:
+              label: Carried forward for addition due to unapplied operating-profit
+                limit - Year of generation 2019 - Applied in this settlement [01983]
             01984:
               help: null
               label: Free depreciation of certain vehicles and new charging infrastructure
@@ -9085,6 +9359,13 @@ modelo:
               help: null
               label: Deduction for reversal of temporary measures (Transitional Provision
                 37.2 LIS) - 2020 - Amount carried forward [02237]
+            02238:
+              label: Equalization reserve - Tax base reduction - Year of generation
+                2019 - Amount reducing tax base for period/pending addition at start
+                of period [02238]
+            02239:
+              label: Equalization reserve - Tax base reduction - Year of generation
+                2019 - Amount added to tax base in the period [02239]
             '02240':
               help: null
               label: Adjustments for impairment of securities representing holdings
@@ -9173,6 +9454,10 @@ modelo:
               help: null
               label: Carried forward for addition due to unapplied operating-profit
                 limit - Year of generation 2020 - Applied in this return [02259]
+            '02260':
+              label: Carried forward for addition due to unapplied operating-profit
+                limit - Year of generation 2020 - Carried forward for application
+                in future periods [02260]
             '02261':
               help: null
               label: Provisions for impairment of receivables or other assets - Year
@@ -9295,6 +9580,17 @@ modelo:
               help: null
               label: Cooperatives regime - Detail of offset of tax liabilities. 2019
                 Carried forward for application in future periods [02283]
+            02284:
+              label: 'Deductions to incentivise certain activities - 2024: Manifesta
+                15 Barcelona biennial (BM15) - Deduction carried forward/generated
+                [02284]'
+            02285:
+              label: 'Deductions to incentivise certain activities - 2024: Manifesta
+                15 Barcelona biennial (BM15) - Applied in this settlement [02285]'
+            02286:
+              label: 'Deductions to incentivise certain activities - 2024: Manifesta
+                15 Barcelona biennial (BM15) - Carried forward for application in
+                future periods [02286]'
             02289:
               help: null
               label: 37th America's Cup Barcelona (Law 31/2022) - Decrease - Balance
@@ -9636,6 +9932,18 @@ modelo:
               label: Special regime for the Balearic Islands investment reserve -
                 Advance investments 2023 - Balearic Islands investment reserve pending
                 allocation at start of period [02362]
+            '02365':
+              label: Deductions to incentivise certain activities - 2024 Alicante
+                2021. Start of the round-the-world sailing race (A21) - Deduction
+                carried forward/generated [02365]
+            '02366':
+              label: Deductions to incentivise certain activities - 2024 Alicante
+                2021. Start of the round-the-world sailing race (A21) - Applied in
+                this settlement [02366]
+            '02367':
+              label: Deductions to incentivise certain activities - 2024 Alicante
+                2021. Start of the round-the-world sailing race (A21) - Carried forward
+                for application in future periods [02367]
             02368:
               help: null
               label: Limitation on the deductibility of finance costs - Limit under
@@ -9840,6 +10148,9 @@ modelo:
               help: null
               label: Levelling reserve - Reduction of the taxable base - Year of generation
                 2020 - Amount added to the taxable base in the period [02411]
+            '02412':
+              label: Equalization reserve - Tax base reduction - Year of generation
+                2020 - Amount pending addition in future periods [02412]
             '02413':
               help: null
               label: Levelling reserve - Reserve allocation - Year of generation 2021
@@ -10031,6 +10342,18 @@ modelo:
                 en vivo artes escénicas y musicales (FEV)'
               label: 'Financiador: espectáculos en vivo artes escénicas y musicales
                 (FEV). Pending application in future periods'
+            02458:
+              label: Deductions to incentivise certain activities - 2024 Andalucía
+                Valderrama Masters 2022/2024 (AVM22) - Deduction carried forward/generated
+                [02458]
+            02459:
+              label: Deductions to incentivise certain activities - 2024 Andalucía
+                Valderrama Masters 2022/2024 (AVM22) - Applied in this settlement
+                [02459]
+            '02460':
+              label: Deductions to incentivise certain activities - 2024 Andalucía
+                Valderrama Masters 2022/2024 (AVM22) - Carried forward for application
+                in future periods [02460]
             '02461':
               help: null
               label: Deductions to incentivise certain activities - 2025(*) Sum of
@@ -12249,15 +12572,31 @@ modelo:
             02942:
               help: Allowance base - B) Datos económicos
               label: B) Datos económicos. Allowance base
+            02943:
+              label: Economic interest grouping and UTEs - B) financial data - 7.-
+                rebates - Rebate on income from sales of tangible goods produced in
+                the Canary Islands (art. 26 Law 19/1994) - Rebate amount [02943]
             02944:
               help: Allowance base - B) Datos económicos
               label: B) Datos económicos. Allowance base
+            02945:
+              label: Economic interest grouping and UTEs - B) financial data - 7.-
+                rebates - Rebate on income from sales of tangible goods produced in
+                the Balearic Islands (AP 70.Five Law 31/2022) - Rebate amount [02945]
             02946:
               help: Allowance base - B) Datos económicos
               label: B) Datos económicos. Allowance base
+            02947:
+              label: Economic interest grouping and UTEs - B) financial data - 7.-
+                rebates - Rebate for cooperative societies (Law 20/1990) - Rebate
+                amount [02947]
             02948:
               help: Allowance base - B) Datos económicos
               label: B) Datos económicos. Allowance base
+            02949:
+              label: Economic interest grouping and UTEs - B) financial data - 7.-
+                rebates - Rebates for entities engaged in residential letting (Chapter
+                III Title VII LIS) - Rebate amount [02949]
             02950:
               help: Allowance base - B) Datos económicos
               label: B) Datos económicos. Allowance base
@@ -12309,12 +12648,23 @@ modelo:
               help: null
               label: Effects of an accounting valuation different from the tax valuation
                 (art. 20 LIS) - Decrease - Balance carried forward at year-end [02960]
+            02961:
+              label: Economic interest grouping and UTEs - B) financial data - 7.-
+                rebates - Rebates for shipping companies in the Canary Islands (art.
+                76 Law 19/1994) - Rebate amount [02961]
             02962:
               help: Allowance base - B) Datos económicos
               label: B) Datos económicos. Allowance base
+            02963:
+              label: Economic interest grouping and UTEs - B) financial data - 7.-
+                rebates - Other rebates - Rebate amount [02963]
             02964:
               help: Deduction base - B) Datos económicos
               label: B) Datos económicos. Deduction base
+            02965:
+              label: Economic interest grouping and UTEs - B) financial data - 8.-
+                deductions generated in the tax period - Research and development
+                (CT) - deduction amount [02965]
             02966:
               help: null
               label: Exemption on dividends or profit-sharing income from resident
@@ -12323,9 +12673,22 @@ modelo:
             02967:
               help: Deduction base - B) Datos económicos
               label: B) Datos económicos. Deduction base
+            02968:
+              label: Economic interest grouping and UTEs - B) financial data - 8.-
+                deductions generated in the tax period - Technological innovation
+                (IT) - deduction amount [02968]
             02969:
               help: Deduction base - B) Datos económicos
               label: B) Datos económicos. Deduction base
+            02970:
+              label: 'Economic interest grouping and UTEs - B) financial data - 8.-
+                deductions generated in the tax period - Producer: Spanish film productions
+                (PC) - deduction amount [02970]'
+            02971:
+              label: Settlement I - Detail of corrections to profit and loss account
+                result - Correction for the temporary levy on credit institutions
+                and financial credit establishments (Art. 2 Law 38/2022) - Increases
+                [02971]
             02972:
               help: null
               label: Carried forward for addition due to unapplied operating-profit
@@ -12334,6 +12697,10 @@ modelo:
             02973:
               help: Deduction base - B) Datos económicos
               label: B) Datos económicos. Deduction base
+            02974:
+              label: 'Economic interest grouping and UTEs - B) financial data - 8.-
+                deductions generated in the tax period - Producer: live performing
+                arts and musical shows (EV) - deduction amount [02974]'
             02975:
               help: null
               label: Special regime for the Canary Islands investment reserve - Canary
@@ -12353,6 +12720,10 @@ modelo:
             02978:
               help: Deduction base - B) Datos económicos
               label: B) Datos económicos. Deduction base
+            02979:
+              label: Economic interest grouping and UTEs - B) financial data - 8.-
+                deductions generated in the tax period - Deduction for creating employment
+                for workers with disabilities (CE) - deduction amount [02979]
             02980:
               help: Deduction base - B) Datos económicos
               label: B) Datos económicos. Deduction base
@@ -12772,18 +13143,41 @@ modelo:
               label: Foreign tax on the profits from which the dividends subject to
                 the international double-taxation deduction are paid (art. 32.1 LIS)
                 - Increase - Adjustments for the tax year...
+            '03062':
+              label: Economic interest grouping and UTEs - B) financial data - 8.-
+                deductions generated in the tax period - Employer contributions to
+                occupational pension schemes attributed to employees (CPS) - deduction
+                amount [03062]
             '03063':
               help: Deduction base - B) Datos económicos
               label: B) Datos económicos. Deduction base
+            '03064':
+              label: Economic interest grouping and UTEs - B) financial data - 8.-
+                deductions generated in the tax period - Deduction for reinvestment
+                of profits (IB) - deduction amount [03064]
             '03065':
               help: Deduction base - B) Datos económicos
               label: B) Datos económicos. Deduction base
+            '03066':
+              label: Economic interest grouping and UTEs - B) financial data - 8.-
+                deductions generated in the tax period - Expenses and investments
+                of forestry companies (SF) - deduction amount [03066]
             '03067':
               help: Deduction base - B) Datos económicos
               label: B) Datos económicos. Deduction base
+            03068:
+              label: Economic interest grouping and UTEs - B) financial data - 8.-
+                deductions generated in the tax period - Investments in West African
+                territories and advertising and publicity expenses (art. 27 bis Law
+                19/1994) (TAP) - deduction amount [03068]
             03069:
               help: Deduction base - B) Datos económicos
               label: B) Datos económicos. Deduction base
+            '03070':
+              label: Economic interest grouping and UTEs - B) financial data - 8.-
+                deductions generated in the tax period - Deductions relating to support
+                programmes for events of exceptional public interest - deduction amount
+                [03070]
             '03071':
               help: null
               label: Economic interest grouping (Chapter II of Title VII LIS) - Increase
@@ -13624,9 +14018,18 @@ modelo:
             '03247':
               help: Deduction base - B) Datos económicos
               label: B) Datos económicos. Deduction base
+            03248:
+              label: Economic interest grouping and UTEs - B) financial data - 8.-
+                deductions generated in the tax period - Deductions for foreign film
+                productions (art. 36.2 LIS) - deduction amount [03248]
             03249:
               help: Deduction base - B) Datos económicos
               label: B) Datos económicos. Deduction base
+            '03250':
+              label: Economic interest grouping and UTEs - B) financial data - 8.-
+                deductions generated in the tax period - Deductions for foreign film
+                productions in the Canary Islands (art. 36.2 LIS and 14th Additional
+                Provision, Law 19/1994) - deduction amount [03250]
             '03251':
               help: null
               label: Tonnage-based regime for shipping entities (chapter XVI of title
@@ -13762,9 +14165,18 @@ modelo:
             03281:
               help: Deduction base - B) Datos económicos
               label: B) Datos económicos. Deduction base
+            03282:
+              label: Economic interest grouping and UTEs - B) financial data - 8.-
+                deductions generated in the tax period - Deduction for investments
+                and expenses made by port authorities (art. 38 bis LIS) - deduction
+                amount [03282]
             03283:
               help: Deduction base - B) Datos económicos
               label: B) Datos económicos. Deduction base
+            03284:
+              label: Economic interest grouping and UTEs - B) financial data - 8.-
+                deductions generated in the tax period - Deduction for donations to
+                non-profit entities (Law 49/2002) - deduction amount [03284]
             03285:
               help: Deduction base - B) Datos económicos
               label: B) Datos económicos. Deduction base
@@ -13772,9 +14184,17 @@ modelo:
               help: null
               label: 'Cooperatives: mandatory reserve fund (Law 20/1990) - Decrease
                 - Adjustments for the tax year - Permanent [03286]'
+            03287:
+              label: Economic interest grouping and UTEs - B) financial data - 8.-
+                deductions generated in the tax period - Deduction for research and
+                development in the Canary Islands - deduction amount [03287]
             03288:
               help: Deduction base - B) Datos económicos
               label: B) Datos económicos. Deduction base
+            03289:
+              label: Economic interest grouping and UTEs - B) financial data - 8.-
+                deductions generated in the tax period - Deduction for technological
+                innovation in the Canary Islands - deduction amount [03289]
             03290:
               help: Deduction base - B) Datos económicos
               label: B) Datos económicos. Deduction base
@@ -13866,6 +14286,15 @@ modelo:
               help: null
               label: Exemption for the transfer of real property (Additional Provision
                 6 LIS) - Decrease - Balance carried forward at year-end [03310]
+            '03311':
+              label: 'Economic interest grouping and UTEs - B) financial data - 8.-
+                deductions generated in the tax period - Producer: deduction for Spanish
+                film productions in the Canary Islands - deduction amount [03311]'
+            '03312':
+              label: Special regime for the Canary Islands investment reserve - Canary
+                Islands investment reserve 2024 - Applied/materialised in this return
+                - Advance investments treated as materialising the RIC in this settlement
+                [03312]
             '03313':
               help: null
               label: Special regime for the Canary Islands investment reserve - Canary
@@ -13874,6 +14303,11 @@ modelo:
             '03314':
               help: Deduction base - B) Datos económicos
               label: B) Datos económicos. Deduction base
+            '03315':
+              label: 'Economic interest grouping and UTEs - B) financial data - 8.-
+                deductions generated in the tax period - Producer: deduction for live
+                performing arts and musical shows in the Canary Islands - deduction
+                amount [03315]'
             '03316':
               help: null
               label: Income from the transfer of fixed assets obtained by Port Authorities
@@ -14048,6 +14482,10 @@ modelo:
             '03355':
               help: Deduction base - B) Datos económicos
               label: B) Datos económicos. Deduction base
+            '03356':
+              label: Economic interest grouping and UTEs - B) financial data - 8.-
+                deductions generated in the tax period - Deductions specific to entities
+                subject to regional chartered rules - deduction amount [03356]
             '03357':
               help: null
               label: Cooperatives regime - Detail of offset of tax liabilities. 2024
@@ -14059,6 +14497,10 @@ modelo:
             03359:
               help: Deduction base - B) Datos económicos
               label: B) Datos económicos. Deduction base
+            '03360':
+              label: Economic interest grouping and UTEs - B) financial data - 8.-
+                deductions generated in the tax period - Other deductions - deduction
+                amount [03360]
             '03361':
               help: null
               label: Entities under the income-attribution regime incorporated abroad
