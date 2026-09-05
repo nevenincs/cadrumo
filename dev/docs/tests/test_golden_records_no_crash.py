@@ -33,6 +33,7 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 
+from ...quality.unread_inputs import report_unread
 from ..sequences.checks import default_docs_root, discover_sequences
 from ..sequences.golden_store import read_golden
 from ..sequences.schema import FrameKind
@@ -157,6 +158,12 @@ def test_no_golden_records_a_crash_as_expected_output() -> None:
 #: An error-envelope shape in a frame's recorded output. Unlike the crash markers,
 #: these are LEGITIMATE when the frame declares them — a documented refusal is
 #: valuable golden content, not a defect.
+#: Below this the scan has stopped covering the corpus. Live: 206 of 277
+#: discovered sequences reach the per-frame check, the other 71 being static
+#: with no executed frame to judge. A floor rather than a pinned count, so
+#: authoring or retiring a sequence does not touch this file.
+_MINIMUM_EXAMINED_SEQUENCES: int = 150
+
 _ERROR_OUTCOME = re.compile(r'"status"\s*:\s*"error"|"error"\s*:\s*\{')
 
 
@@ -182,17 +189,27 @@ def test_a_recorded_error_outcome_is_declared_by_the_frame() -> None:
     assert not problems, "sequence discovery reported problems:\n  " + "\n  ".join(problems)
 
     undeclared: list[str] = []
+    # Both deferrals below are correct about OWNERSHIP and silent about
+    # CONSEQUENCE: a sequence dropped for either reason is never examined for an
+    # unasserted failure, which is the one thing this gate exists to find. With
+    # no record, a corpus that lost every golden would still report clean.
+    unchecked: list[str] = []
+    examined = 0
     for item in discovered:
         executed = [frame for frame in item.sequence.frames if frame.kind is not FrameKind.STATIC]
         if not executed:
             continue
         try:
             golden = read_golden(item.page, item.sequence_id)
-        except Exception:  # noqa: S112 - a missing/unreadable golden is another gate's finding
+        except Exception as refusal:
+            unchecked.append(f"{item.sequence_id}: golden unreadable ({type(refusal).__name__})")
             continue
         recorded = list(golden.frames)
         if len(recorded) != len(executed):
-            continue  # frame-count alignment is the golden store's own contract
+            # frame-count alignment is the golden store's own contract
+            unchecked.append(f"{item.sequence_id}: {len(recorded)} recorded frames against {len(executed)} executed")
+            continue
+        examined += 1
         for index, (parsed, frame) in enumerate(zip(executed, recorded, strict=True)):
             payload = frame.model_dump() if hasattr(frame, "model_dump") else dict(frame)
             text = _captured_text({"frames": [payload]})
@@ -207,6 +224,17 @@ def test_a_recorded_error_outcome_is_declared_by_the_frame() -> None:
                     f"{item.page}/{item.sequence_id} frame {index} "
                     f"(exit {payload.get('exit_code')}): {' '.join(parsed.argv)[:80]}"
                 )
+    report_unread(
+        "unasserted-failure golden scan",
+        "these sequences were not examined, so a failing outcome recorded in one and declared "
+        "by nothing would not appear below",
+        unchecked,
+    )
+    assert examined >= _MINIMUM_EXAMINED_SEQUENCES, (
+        f"only {examined} sequence(s) reached the per-frame check, against {len(discovered)} "
+        "discovered. Below this the corpus has effectively stopped being read and a clean "
+        "result says nothing about whether a failure went undeclared"
+    )
     assert undeclared == [], (
         "these goldens record a failing outcome that their frame never declared, so the "
         "broken state has become the expectation. Either assert it deliberately "
