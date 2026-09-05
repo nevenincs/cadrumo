@@ -136,16 +136,25 @@ def count_unconsumed(root: Path = _PACKAGE_ROOT, unused: set[tuple[str, str]] | 
         unconsumed = sum(
             1
             for name in _declared_exports(tree)
-            if (path.stem, name) not in consumed and (path.relative_to(REPO_ROOT).as_posix(), name) in unused
+            if (path.stem, name) not in consumed and (_audit_key(path, root), name) in unused
         )
         if unconsumed:
             counts[path.relative_to(root).as_posix()] = unconsumed
     return counts
 
 
-def evaluate(root: Path = _PACKAGE_ROOT, baseline_path: Path = _BASELINE) -> ExportVerdict:
-    """Compare the live unconsumed-export counts against the recorded baseline."""
-    live = count_unconsumed(root)
+def evaluate(
+    root: Path = _PACKAGE_ROOT,
+    baseline_path: Path = _BASELINE,
+    unused: set[tuple[str, str]] | None = None,
+) -> ExportVerdict:
+    """Compare the live unconsumed-export counts against the recorded baseline.
+
+    ``unused`` is threaded through rather than always derived, so a caller
+    scanning a fixture tree does not trigger a scan of the real repository --
+    which would key its findings against the wrong root and take minutes.
+    """
+    live = count_unconsumed(root, unused)
     recorded: dict[str, int] = {}
     if baseline_path.exists():
         loaded = tomllib.loads(baseline_path.read_text(encoding="utf-8")).get("files", {})

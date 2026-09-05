@@ -73,13 +73,13 @@ def test_a_test_module_neither_publishes_nor_consumes(tmp_path: Path) -> None:
 def test_a_module_that_newly_publishes_one_is_refused(tmp_path: Path) -> None:
     """The direction the gate exists for."""
     root = _tree(tmp_path, fresh=_ALL)
-    verdict = evaluate(root, _baseline(tmp_path))
+    verdict = evaluate(root, _baseline(tmp_path), _unused(root, "fresh:widget"))
     assert not verdict.ok
 
 
 def test_paid_down_debt_must_be_written_down(tmp_path: Path) -> None:
     """A baseline holding headroom lets an export come back unnoticed."""
     root = _tree(tmp_path, known=_ALL, user="from .known import widget\n")
-    verdict = evaluate(root, _baseline(tmp_path, known=1))
+    verdict = evaluate(root, _baseline(tmp_path, known=1), _unused(root, "known:widget"))
     assert not verdict.ok
     assert verdict.spent == ("known.py",)
