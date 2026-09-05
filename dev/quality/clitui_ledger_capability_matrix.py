@@ -393,9 +393,7 @@ _LEDGER_TUI_SHARED_COMPOSITION_PATHS: Final[frozenset[str]] = frozenset(
         "src/cadrumo/entrypoints/tui/launcher.py",
     }
 )
-_LEDGER_TUI_SHARED_SOURCE_PROJECTION_FRAME: Final[bytes] = (
-    b"cadrumo:ledger-tui-shared-source-projection:v1\x00"
-)
+_LEDGER_TUI_SHARED_SOURCE_PROJECTION_FRAME: Final[bytes] = b"cadrumo:ledger-tui-shared-source-projection:v1\x00"
 
 
 def _ledger_token(value: str) -> bool:
@@ -426,15 +424,13 @@ def _ledger_relevant_shared_source_facts(tree: ast.Module) -> tuple[str, ...]:
                         include_attributes=False,
                     )
                 )
-        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and _ledger_token(node.name):
-            facts.add(ast.dump(node, annotate_fields=True, include_attributes=False))
-        elif isinstance(node, ast.Name) and _ledger_token(node.id):
-            facts.add(ast.dump(node, annotate_fields=True, include_attributes=False))
-        elif isinstance(node, ast.Attribute) and _ledger_token(node.attr):
-            facts.add(ast.dump(node, annotate_fields=True, include_attributes=False))
-        elif isinstance(node, ast.keyword) and node.arg is not None and _ledger_token(node.arg):
-            facts.add(ast.dump(node, annotate_fields=True, include_attributes=False))
-        elif isinstance(node, ast.Constant) and isinstance(node.value, str) and _ledger_token(node.value):
+        elif (
+            (isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and _ledger_token(node.name))
+            or (isinstance(node, ast.Name) and _ledger_token(node.id))
+            or (isinstance(node, ast.Attribute) and _ledger_token(node.attr))
+            or (isinstance(node, ast.keyword) and node.arg is not None and _ledger_token(node.arg))
+            or (isinstance(node, ast.Constant) and isinstance(node.value, str) and _ledger_token(node.value))
+        ):
             facts.add(ast.dump(node, annotate_fields=True, include_attributes=False))
     return tuple(sorted(facts))
 
