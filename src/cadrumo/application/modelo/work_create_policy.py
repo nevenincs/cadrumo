@@ -61,8 +61,6 @@ CEDED_AUTONOMIC_MODELO_LOCALE_KEYS: dict[str, str] = {
     "660": "cli.app.modelo.work.create_stub_modelo_660_refused",
 }
 
-CEDED_AUTONOMIC_MODELOS: frozenset[str] = frozenset(CEDED_AUTONOMIC_MODELO_LOCALE_KEYS)
-
 
 def ceded_autonomic_modelo_locale_key(modelo: str) -> str | None:
     """Return the instructive autonomic-redirect locale key for a ceded modelo.
@@ -182,7 +180,6 @@ def guard_active_profile_foral_ccaa() -> None:
 
 
 __all__ = [
-    "CEDED_AUTONOMIC_MODELOS",
     "CEDED_AUTONOMIC_MODELO_LOCALE_KEYS",
     "STUB_MODELO_LOCALE_KEYS",
     "STUB_ONLY_MODELOS",
