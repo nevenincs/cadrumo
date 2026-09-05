@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:7a030a037981bb381368fd4194f2575f20ba46a11beae32c914067caca9253e2'
+body_hash: 'sha256:be953ad48a8052190013c8137aa9268581c2686533e8ea69acfcfefe567e20a5'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-reference]]"
@@ -188,3 +188,80 @@ authority and evidence replace, with every digest recomputed.
 G0 remains OPEN and the remediation contains no Ledger product or TUI
 implementation changes. Green tests encode both remaining contradictions and
 therefore cannot support acceptance.
+
+## Final remediation review
+
+**Ruling: ACCEPT.** Both remaining HIGH findings are closed. No CRITICAL or
+HIGH finding remains; one MEDIUM publication-currentness finding is recorded
+below.
+
+The live Ledger `CommandSpec` projection independently reproduces exactly eight
+`LOCAL_IN` file/directory parameter observations: classify `file`; evidence-add
+`source_path`; evidence-batch `directory` and `file`; import `file` and
+auxiliary `verify_source`; inventory closing-authority `file`; and invoice
+import `file`. Their endpoint and sub-operation selections expand to 29 unique
+semantic rows. The separately reviewed current `ledger.import.source` input
+makes 30, and planned `ledger.evidence.replace` makes 31. The matrix has exactly
+39 artifact-applicable rows after the eight output/query products are added:
+`ledger.evidence.download` plus the seven export identities. All 31 inputs are
+`APPLICABLE`/`UNPROVEN` on the artifact axis, retain artifact gaps and explicit
+readability/refusal/digest/custody proof, and `ledger.import.source` remains the
+sole artifact-primary row. Removal, addition, shape/role drift, and semantic
+selection drift in the live observation contract refuse against the exact
+committed eight-observation authority; independent removal and selection
+reassignment counterexamples also refused.
+
+The supported-surface join now checks the destination encoded by every live
+supported-surface observation against every semantic row it selects.
+`ledger.transaction.invoice_link` is routed to `ledger.reconciliation`, in
+agreement with the live component observation. Independent wrong-selection and
+destination-remint counterexamples refused at that join. The durable serialized
+test additionally changes the selection, moves observation membership, refreshes
+the supported-surface source digest, every row digest, aggregate review digest,
+attestation and outer union digest, and is still refused. Exact non-registry
+observation authority supplies the second boundary against destination/identity
+remints.
+
+Current route totals reproduce as Classification 9, Entries 31, Evidence 21,
+Import 13, Overview 1, Reconciliation 588 and Review 17. TUI disposition remains
+680 applicable/held and 13 not applicable/unheld, with 679 component-only rows
+retaining the reachability gap. Primary gaps reproduce as 112 AUTHORITY, 546
+REGISTRY, 34 PRODUCT, one ARTIFACT and zero COMPOSITION/proof-only. Selection
+accounting remains 760 observations, 769 edges and 693 rows. Every applicable
+axis remains `UNPROVEN`; no operational `PROVEN` or complete row is asserted.
+G0 remains OPEN.
+
+The independently reproduced current digests are:
+
+- row review:
+  `sha256:4e42e5e04ccfd7a8654e629933698e141033b0767d0f94ec5433619400203ff8`;
+- row-review attestation:
+  `sha256:fc15a433ad145832934cbe894d3d0b875d27e9a54ed1a70ae271c16ff81aedf7`;
+- union:
+  `sha256:8a158b5cc4c8e6c3035dc272999af61ac6cb080af8c208eccc8d28e4105a7575`.
+
+### stale-s07-tui-digest-publication | medium | Historical digests are still described as current
+
+The reference's S07 supported-surface paragraph still says the current
+126-file source-set and census digests are
+`sha256:e7337508a02ef2260e0b28205c31bb872b69f59aa51a18391ae209c21b8f9d57`
+and
+`sha256:c136cfe1ae3f82a239476c00e805f8c9a29e010d502e74397963cea7e6f42371`.
+The live projection now reproduces
+`sha256:70709a369bece8e06033e56e18bd82425ec9b48767c3466e80f92c901143ff67`
+and
+`sha256:a52180bb77b70c205c7d31f657a64ad55142035b63dd9d5bf69b79503754c25f`.
+The schema-v4 union embeds and validates the latter current census, its route
+facts are unchanged, and the correct current census is already bound by the
+accepted union digest, so this is stale human-readable evidence publication
+rather than a silent denominator or routing defect. Update the S07 paragraph
+and evidence coordinate through the canonical publication workflow, or label
+those hashes explicitly as the historical S07 snapshot.
+
+Verification on the final candidate: the focused artifact/TUI-route/review lane
+passed 24 tests with 253 deselected; the full matrix file passed 277 tests.
+Ruff format and check, scoped `ty`, scoped `basedpyright`, plan checking and the
+complete `clitui-ledger` Vault feature check all passed. The reviewed S12 commits
+change only the quality contract/tests and Vault documents; they contain no
+Ledger product or production TUI edit. The unrelated modified duplication-
+burndown execution record was preserved and excluded from this review.
