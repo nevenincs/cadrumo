@@ -15,6 +15,7 @@ human-armed publication gate — and it creates the one real ``v<version>``.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any, Final
 
 import pytest
@@ -91,6 +92,43 @@ def test_packaging_payloads_ride_artifacts(workflow: str) -> None:
         assert "@" in entry and len(entry.split("@")[1]) == 40, f"{workflow} pins {entry} to a tag, not a SHA"
 
 
+#: Below this the workflow walk has stopped covering the directory. A floor,
+#: not a pinned count: sixteen workflows ship today.
+_MINIMUM_WORKFLOWS = 8
+
+
+def _workflow_files() -> tuple[Path, ...]:
+    """Every committed workflow, with the walk itself asserted.
+
+    Both suffixes, because GitHub honours each and a workflow added as
+    ``.yaml`` would otherwise sit outside every gate in this module without
+    changing a single result. Sixteen ship today and none uses ``.yaml``, so
+    this is closing the door rather than reporting a breach.
+
+    The guards matter more than the widening: these gates assert that no
+    workflow does a forbidden thing, and an empty walk satisfies that
+    perfectly while proving nothing at all.
+    """
+    assert _WORKFLOWS_DIR.is_dir(), (
+        f"no workflow directory at {_WORKFLOWS_DIR}; a relocated root walks nothing and "
+        "every gate in this module would report the workflows clean"
+    )
+
+    found = tuple(
+        sorted(
+            path
+            for pattern in ("*.yml", "*.yaml")
+            for path in scan_directory(_WORKFLOWS_DIR, pattern=pattern)
+        )
+    )
+
+    assert len(found) >= _MINIMUM_WORKFLOWS, (
+        f"only {len(found)} workflow(s) were walked; below this an empty finding list says "
+        "nothing about what the workflows actually do"
+    )
+    return found
+
+
 def test_no_workflow_creates_a_release_by_hand() -> None:
     """The release is cut by the versioning action, never by a shell step.
 
@@ -98,7 +136,7 @@ def test_no_workflow_creates_a_release_by_hand() -> None:
     second release for the same version or one the publish path never proved.
     """
     creators: list[tuple[str, str]] = []
-    for path in scan_directory(_WORKFLOWS_DIR, pattern="*.yml"):
+    for path in _workflow_files():
         document = yaml.safe_load(path.read_text(encoding="utf-8"))
         for job_name, job in (document.get("jobs") or {}).items():
             surface = "\n".join(str(step.get("run", "")) for step in (job.get("steps") or []))
@@ -109,7 +147,7 @@ def test_no_workflow_creates_a_release_by_hand() -> None:
 
 def test_no_workflow_creates_a_draft_release() -> None:
     """The reserved evidence-* draft namespace is retired, not merely emptied."""
-    for path in scan_directory(_WORKFLOWS_DIR, pattern="*.yml"):
+    for path in _workflow_files():
         surface = path.read_text(encoding="utf-8")
         assert "--draft" not in surface, f"{path.name} still creates a draft release"
         assert "evidence-smoke-" not in surface, f"{path.name} still names an evidence draft tag"
