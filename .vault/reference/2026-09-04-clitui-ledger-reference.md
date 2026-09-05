@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:ec87b52297e8f7da8dd9d7143db218cd648bc56c940118c9db2df8452b61dfe1'
+body_hash: 'sha256:6c0864d9995d634c600360ddf2c32aef755f9b12cd1aab9f8d9410c53dc63f97'
 related:
   - "[[2026-09-04-clitui-ledger-research]]"
   - "[[2026-06-10-ledger-interface-contract-adr]]"
@@ -161,7 +161,7 @@ These coordinates bind the baseline claims to the current observation revision. 
 
 | Gate | State at S03 | Blocking facts |
 | --- | --- | --- |
-| G0 denominator and ownership freeze | **OPEN** | Current source observations, singular ownership, serialized semantic union, row-level TUI hold, and exhaustive 693-row review are complete, but reopening enforcement and digest-bound independent `ACCEPT` remain outstanding |
+| G0 denominator and ownership freeze | **OPEN** | Current source observations, singular ownership, serialized semantic union, row-level TUI hold, and exhaustive 693-row review are complete; reopening enforcement is active, but digest-bound independent `ACCEPT` remains outstanding |
 | G1 semantic authority recovery | **LOCKED by G0** | `AUTHORITY` rows retain CLI-owned or missing application authority; no cohort may claim closure before its backend behavior and adapter detector evidence exists |
 | G2 backend product completeness | **LOCKED by G0/G1** | Missing products, composition, artifacts, provenance, registry routes, and direct proof remain open |
 | G3 CLI clean break and completeness | **LOCKED by G0-G2** | CLI delegation, success/refusal behavior, and artifact proof are not complete across the admitted denominator |
@@ -207,7 +207,7 @@ The installed projection path is real and backend-owned. `SecureProfileWorkbench
 
 The dedicated component harness has 38 test functions and 78 collected integration cases across three files. It covers all seven screens with synthetic fully populated injection, flow refusal and submission, semantic focus, four locales, safe evidence metadata, responsive geometry, and import-boundary checks. The installed-composition tests prove the outer `workbench.ledger` catalogue enrollment and projection/factory parity, but no test drives a production root from Overview through an internal Ledger route or executes a Ledger request message. Harness coverage is therefore `partial` for installed reachability and executable-operation enrollment even though component coverage is broad.
 
-TUI applicability is reviewed without treating component existence as proof. The row-level partition remains exact: 680 TUI-applicable semantic rows are held until G3 and 13 TUI-not-applicable rows are unheld. The supported-surface census remains independent and exact: `ledger.overview` is the one installed read-only route, while `ledger.classification`, `ledger.entries`, `ledger.evidence`, `ledger.import`, `ledger.reconciliation`, and `ledger.review` remain `component_only`. Reopening enforcement and independent acceptance remain outstanding; G0 remains open.
+TUI applicability is reviewed without treating component existence as proof. The row-level partition remains exact: 680 TUI-applicable semantic rows are held until G3 and 13 TUI-not-applicable rows are unheld. The supported-surface census remains independent and exact: `ledger.overview` is the one installed read-only route, while `ledger.classification`, `ledger.entries`, `ledger.evidence`, `ledger.import`, `ledger.reconciliation`, and `ledger.review` remain `component_only`. Reopening enforcement is active; independent acceptance remains outstanding; G0 remains open.
 
 S11 also makes a hold lift fail closed through a strict frozen `G0`--`G3` receipt prefix. Each receipt carries only its stable identity, ordered gate, full gate-closure basis digest, and canonical independent-attestation digest; it has no mutable reviewer claim. The gate-closure basis excludes only the active-hold flag and receipt collection, and includes the complete canonical acceptance attestation: identity, reviewer, ACCEPT ruling, plan owner, denominator, review-subject coordinates, attestation time, pre-receipt matrix basis, and the attested receipt identity/gate set. The pre-receipt matrix basis omits the attestation itself solely to break the hash cycle; it otherwise has the same normalized controls and all matrix facts. Thus the one authorized G3-to-G4 hold transition preserves accepted history, while reminting an attestation, reviewer, time, identity, matrix basis, receipt identity, receipt order, or any other matrix, denominator, evidence-subject, receipt, or observed-census fact relocks the gates. An individual G4 evaluation requires the current accepted G3 receipt. The current campaign records no receipt and does not lift the hold. The 680/13 row partition and union schema/digest remain unchanged.
 
