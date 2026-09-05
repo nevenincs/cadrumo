@@ -136,6 +136,40 @@ from pkg.loner import x
 from pkg.used import run
 """
 
+# A helper inside the tests package. The test importing it names no shipped
+# module of its own, so the subject walk sees nothing without the support hop.
+_SUPPORT = """
+from pkg.loner import x
+
+
+def build():
+    return x
+"""
+
+_TEST_VIA_SUPPORT = """
+from ._support import build
+
+
+def test_build():
+    assert build() is not None
+"""
+
+_LIVE_SUPPORT = """
+from pkg.used import run
+
+
+def run_it():
+    return run
+"""
+
+_TEST_VIA_LIVE_SUPPORT = """
+from ._live_support import run_it
+
+
+def test_run():
+    assert run_it() is not None
+"""
+
 _DEV = """
 import pkg.dead.b
 from pkg.used import UNUSED_CONST
@@ -183,6 +217,10 @@ def _build_tree(root: Path) -> ShippedTreeSpec:
     _write(root, "src/pkg/tests/test_things.py", _TESTS)
     _write(root, "src/pkg/tests/test_live.py", _LIVE_TESTS)
     _write(root, "src/pkg/tests/test_harness_only.py", "import pytest\n")
+    _write(root, "src/pkg/tests/_support.py", _SUPPORT)
+    _write(root, "src/pkg/tests/test_via_support.py", _TEST_VIA_SUPPORT)
+    _write(root, "src/pkg/tests/_live_support.py", _LIVE_SUPPORT)
+    _write(root, "src/pkg/tests/test_via_live_support.py", _TEST_VIA_LIVE_SUPPORT)
     _write(root, "dev/tool.py", _DEV)
     return ShippedTreeSpec(
         repo_root=root,
@@ -341,6 +379,32 @@ def test_shipped_data_naming_a_member_clears_it_but_never_a_top_level_symbol(
     assert result.data_cleared == 3
 
 
+def test_a_test_reaching_dead_code_only_through_a_support_module_is_reported(
+    result: UnreachableCodeResult,
+) -> None:
+    """The hop the walk was blind to: a test whose subjects come via a helper.
+
+    ``test_via_support`` imports nothing from the shipped tree itself; its only
+    import is ``._support``, which imports the dead ``pkg.loner``. Test modules
+    are excluded from the shipped population, so that relative import resolves
+    to nothing and the test looked subjectless. On the real tree 239 of 3334
+    test modules were skipped that way.
+    """
+    assert "pkg.tests.test_via_support" in {finding.module for finding in result.tests}
+
+
+def test_a_test_whose_support_module_reaches_live_code_is_not_reported(
+    result: UnreachableCodeResult,
+) -> None:
+    """The hop must not manufacture an orphan out of a live test.
+
+    ``test_via_live_support`` reaches ``pkg.used:run`` through its helper, which
+    is live, so following the hop has to leave it unreported. Without this the
+    change would trade one blind spot for a false accusation.
+    """
+    assert "pkg.tests.test_via_live_support" not in {finding.module for finding in result.tests}
+
+
 def test_a_member_bound_by_its_declared_value_is_cleared(result: UnreachableCodeResult) -> None:
     """A declaration addresses a StrEnum member by its VALUE, never by its name.
 
@@ -375,7 +439,7 @@ def test_test_module_whose_every_shipped_subject_is_dead_is_an_orphaned_test(res
     """
     by_module = {finding.module: finding for finding in result.tests}
 
-    assert set(by_module) == {"pkg.tests.test_things"}
+    assert set(by_module) == {"pkg.tests.test_things", "pkg.tests.test_via_support"}
     orphan = by_module["pkg.tests.test_things"]
     assert orphan.path == "src/pkg/tests/test_things.py"
     assert orphan.subjects == ("pkg.dead.a", "pkg.loner", "pkg.used:orphan_fn")
@@ -533,7 +597,7 @@ def test_console_report_and_json_carry_the_same_findings(result: UnreachableCode
 
     assert report.startswith(
         "unreachable code: 4 unreachable module(s), 3 module-exec-only, 1 type-only module(s), "
-        "8 unused symbol(s) in reachable modules, 1 orphaned test module(s)"
+        "8 unused symbol(s) in reachable modules, 2 orphaned test module(s)"
     )
     assert "roots: pkg.cli:main" in report
     assert "3 data-shaped member(s) cleared" in report
@@ -554,7 +618,10 @@ def test_console_report_and_json_carry_the_same_findings(result: UnreachableCode
         "pkg.tool.work",
     }
     assert {entry["qualname"] for entry in payload["symbols"]} == {f.qualname for f in result.symbols}
-    assert [entry["id"] for entry in payload["tests"]] == ["test:pkg.tests.test_things"]
+    assert [entry["id"] for entry in payload["tests"]] == [
+        "test:pkg.tests.test_things",
+        "test:pkg.tests.test_via_support",
+    ]
     assert set(payload["exact_finding_ids"]) == {f.id for f in result.exact_findings}
     assert {entry["confidence"] for entry in payload["modules"]} == {"exact"}
 
@@ -741,8 +808,16 @@ def test_the_live_reference_walk_read_every_file(capsys: pytest.CaptureFixture[s
     from ..._paths import REPO_ROOT
     from ..unreachable_code import run_unreachable_code_scan
 
-    run_unreachable_code_scan(REPO_ROOT)
+    result = run_unreachable_code_scan(REPO_ROOT)
 
+    # The absence claim below is satisfied by an EMPTY stderr, so a scan that
+    # read nothing at all - a mis-resolved root, a walk that short-circuits -
+    # reports exactly as clean as a healthy one. The result carries how much
+    # was actually walked and was discarded. Floors, not pinned counts: live
+    # the scan sees 2,108 shipped modules across 4 roots.
+    assert result.roots, result
+    assert result.shipped_modules > 1500, result.shipped_modules
+    assert result.reachable_modules > 1500, result.reachable_modules
     assert "were unreadable during the reference walk" not in capsys.readouterr().err
 
 
@@ -781,7 +856,9 @@ def test_the_live_test_walk_read_every_module() -> None:
         walked += 1
         parse_module(path)
 
-    assert walked > 0, "the walk found no test modules, so this would prove nothing"
+    # A floor, not a pinned count. `> 0` let the corpus collapse to a single
+    # module while still reading as a full walk; live it finds 3,334.
+    assert walked > 2500, f"the walk found only {walked} test modules, so it no longer covers the corpus"
 
 
 def test_an_unreadable_data_file_is_announced_as_a_deletion_risk(

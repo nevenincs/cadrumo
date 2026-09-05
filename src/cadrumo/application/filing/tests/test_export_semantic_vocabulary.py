@@ -19,8 +19,8 @@ from ....domain.calculations.registry.schema_exports import (
     FilingEnvelopePrefixRole,
 )
 from .. import export as export_module
-from .. import record_renderer as record_renderer_module
 from .._producer_ownership import filing_producer_ownership
+from .._record_field_renderer import COMPUTED_VALUE_PRODUCERS, DRAFT_VALUE_PRODUCERS
 from ..export import export_draft, render_filing_envelope
 from ..export_envelope import FilingEnvelopeOccurrence, FilingEnvelopeRenderRequest, FilingEnvelopeRenderResult
 from ..export_producer import _SHARED_SNAPSHOT_PRODUCER_KEYS
@@ -64,8 +64,8 @@ def test_historical_header_spellings_are_not_enum_members_or_values(legacy_token
 
 
 def test_draft_vocabulary_has_no_profile_or_taxpayer_identity_fallback() -> None:
-    assert set(record_renderer_module._DRAFT_VALUE_PRODUCERS) == set(ExportDraftAttribute)
-    assert set(record_renderer_module._COMPUTED_VALUE_PRODUCERS) == set(ExportComputedKey)
+    assert set(DRAFT_VALUE_PRODUCERS) == set(ExportDraftAttribute)
+    assert set(COMPUTED_VALUE_PRODUCERS) == set(ExportComputedKey)
     assert "profile_tax_id" not in {member.value for member in ExportDraftAttribute}
 
 

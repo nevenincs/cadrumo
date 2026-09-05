@@ -172,9 +172,17 @@ def _authored_spec_modules(checkout: Path) -> set[str]:
 
 def _assert_archive(members: set[str], *, expected_modules: set[str], prefix: str = "") -> None:
     normalized = {member.removeprefix(prefix) for member in members if member.startswith(prefix)}
-    assert expected_modules <= normalized
-    assert not {Path(member).name for member in members} & _FORBIDDEN_NAMES
-    assert not any("dev/quality/" in member for member in members)
+    # Each check names what it found. These run over real built wheels and
+    # sdists, where a bare `assert` leaves the operator an AssertionError
+    # with no indication of which module went missing or which forbidden
+    # file shipped - and left the teeth probes below unable to show they
+    # fired for the reason they plant.
+    missing = sorted(expected_modules - normalized)
+    assert not missing, f"archive is missing spec modules: {missing}"
+    forbidden = sorted({Path(member).name for member in members} & _FORBIDDEN_NAMES)
+    assert not forbidden, f"archive carries forbidden files: {forbidden}"
+    development = sorted(member for member in members if "dev/quality/" in member)
+    assert not development, f"archive ships development-only paths: {development}"
 
 
 def _install_and_probe(*, uv: str, artifact: Path, target: Path, checkout: Path) -> dict[str, object]:
@@ -211,9 +219,10 @@ def _assert_probe(payload: dict[str, object]) -> None:
 
 
 def _assert_same_identity_projection(payloads: list[dict[str, object]]) -> None:
-    assert payloads
+    assert payloads, "no lane payloads to compare, so identity parity would hold vacuously"
     expected = payloads[0]["identities"]
-    assert all(payload["identities"] == expected for payload in payloads[1:])
+    divergent = [index for index, payload in enumerate(payloads[1:], start=1) if payload["identities"] != expected]
+    assert not divergent, f"lane identity projections differ at payload(s) {divergent}"
 
 
 @pytest.mark.timeout(900)
@@ -224,9 +233,9 @@ def test_wheel_sdist_and_sdist_wheel_preserve_command_spec_authority(tmp_path: P
     expected_modules = _authored_spec_modules(checkout)
     assert _is_spec_export_name("COMMAND_SPEC")
     assert _is_spec_export_name("COMMAND_SPECS")
-    with pytest.raises(AssertionError):
+    with pytest.raises(AssertionError, match="missing spec modules"):
         _assert_archive(set(), expected_modules={"cadrumo/entrypoints/cli/_planted_command_specs.py"})
-    with pytest.raises(AssertionError):
+    with pytest.raises(AssertionError, match="identity projections differ"):
         _assert_same_identity_projection(
             [{"identities": [["a", ["aeat", "a"]]]}, {"identities": [["b", ["aeat", "b"]]]}]
         )

@@ -28,7 +28,6 @@ import re
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Final
-from urllib.parse import urlsplit
 
 from pydantic import AnyHttpUrl
 
@@ -104,7 +103,6 @@ log = get_logger(__name__)
 
 
 EXTERNAL = Settings.external_constants()
-_SEDE_HOST = urlsplit(SEDE_BASE).netloc
 _LISTING_URL = f"{SEDE_BASE}{EXTERNAL.aeat.sede_paths.declarations_listing}"
 
 

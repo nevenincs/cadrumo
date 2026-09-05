@@ -321,7 +321,15 @@ def test_re_scaffold_after_seeding_is_a_no_op(tmp_path: Path) -> None:
     """
     concepts_dir = _write_tree(tmp_path, ("prorrata", _PRORRATA_ES_ONLY))
     entries = parse_iate_tbx(_FIXTURES / "iate-sample.tbx", min_reliability=3, domains=frozenset({"finance"}))
-    apply_seed_entries(entries, concepts_dir=concepts_dir, today=_TODAY)
+    seeded = apply_seed_entries(entries, concepts_dir=concepts_dir, today=_TODAY)
+
+    # The PRESERVE claim below is only meaningful if seeding actually added
+    # something. With an empty entry set - a renamed fixture, a domain filter
+    # that stops matching - apply_seed_entries is a no-op, and re-scaffolding
+    # an unseeded tree preserves it trivially while every assertion still
+    # holds. The result carries that evidence and was discarded.
+    assert seeded.matched_concepts == ("prorrata",), seeded
+    assert seeded.languages_added > 0, seeded
 
     before = (concepts_dir / "prorrata.toml").read_text(encoding="utf-8")
     candidates = {

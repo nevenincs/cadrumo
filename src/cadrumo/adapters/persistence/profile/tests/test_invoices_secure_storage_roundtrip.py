@@ -20,7 +20,8 @@ from .....domain.invoices.enums import IvaRate, PaymentStatus
 from .....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from .....domain.iva.classification import InvoiceKind
 from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
-from ..invoices import _INVOICE_NAMESPACE, InvoiceCatalogueRepository
+from ...storage.secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
+from ..invoices import InvoiceCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -157,7 +158,7 @@ def test_invoice_catalogue_tampered_identity_field_surfaces_at_load(tmp_path: Pa
         repo.save(catalogue)
 
         stmt = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == _INVOICE_NAMESPACE,
+            SecureObjectRow.namespace == INVOICE_CATALOGUE_NAMESPACE.namespace,
         )
 
         def mutate(envelope):

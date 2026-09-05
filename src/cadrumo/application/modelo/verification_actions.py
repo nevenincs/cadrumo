@@ -149,10 +149,6 @@ from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )
 from ._verification_cross_period import (
-    CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS,
-    CROSS_PERIOD_DEPENDENCY_LEGAL_REFS,
-)
-from ._verification_cross_period import (
     IVA_COMPENSATION_CARRY_LEGAL_REF as _IVA_COMPENSATION_CARRY_LEGAL_REF,
 )
 from ._verification_cross_period import (
@@ -215,7 +211,6 @@ from ._verification_predicates import (
 from ._verification_predicates import (
     evaluate_advisory_predicate_fires as evaluate_advisory_predicate_fires,
 )
-from ._verification_predicates import evaluate_applicability_filter
 from ._verification_predicates import (
     evaluate_predicate_expression as evaluate_predicate_expression,
 )
@@ -231,11 +226,6 @@ from ._verification_predicates import (
 from .m303_regimen_simplificado_scope import m303_regimen_simplificado_annual_summary_applies
 
 # Retain pinned verification-actions test imports while consuming public helper contracts.
-_CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS = CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS
-_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS = CROSS_PERIOD_DEPENDENCY_LEGAL_REFS
-_evaluate_advisory_predicate_fires = evaluate_advisory_predicate_fires
-_evaluate_applicability_filter = evaluate_applicability_filter
-_evaluate_predicate_expression = evaluate_predicate_expression
 
 
 def _normalised_observation_refs(observations: Iterable[CasillaObservation | None], field_name: str) -> tuple[str, ...]:

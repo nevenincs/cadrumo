@@ -220,9 +220,7 @@ def test_every_other_configured_extra_file_carries_the_annotation_that_moves_it(
     # `extra-files` key yields no entries and every claim below holds. That is
     # the same silent success this gate exists to prevent, one level up: the
     # release tool would stop bumping these files and the gate would agree.
-    configured = [
-        entry for entry in config["packages"]["."].get("extra-files", []) if isinstance(entry, str)
-    ]
+    configured = [entry for entry in config["packages"]["."].get("extra-files", []) if isinstance(entry, str)]
     checked = [entry for entry in configured if entry not in _NATIVELY_UPDATED]
 
     assert len(checked) >= _MINIMUM_ANNOTATED_EXTRA_FILES, (
@@ -232,9 +230,7 @@ def test_every_other_configured_extra_file_carries_the_annotation_that_moves_it(
     )
 
     unmarked = [
-        entry
-        for entry in checked
-        if "x-release-please-version" not in (REPO_ROOT / entry).read_text(encoding="utf-8")
+        entry for entry in checked if "x-release-please-version" not in (REPO_ROOT / entry).read_text(encoding="utf-8")
     ]
 
     assert unmarked == [], f"these files are configured for bumping but carry no version annotation: {unmarked}"

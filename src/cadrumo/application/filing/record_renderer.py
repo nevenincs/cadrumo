@@ -23,8 +23,6 @@ from ...domain.filing.errors import FilingExportValidationError
 from ...domain.filing.schema import ModeloDraft
 from ._export_parity import did_page_suppressed
 from ._record_field_renderer import (
-    COMPUTED_VALUE_PRODUCERS,
-    DRAFT_VALUE_PRODUCERS,
     complementaria_page_marker,
     format_field,
     m303_complementaria_marker,
@@ -35,17 +33,6 @@ from ._record_field_renderer import (
 from .producer_snapshot import FilingProducerSnapshot
 from .projection import FilingProjectionPlan, FilingRecordRenderContext
 from .record_types import ProjectionAddress, RecordRenderRow, RenderedRecordOccurrence
-
-_COMPUTED_VALUE_PRODUCERS = COMPUTED_VALUE_PRODUCERS
-_DRAFT_VALUE_PRODUCERS = DRAFT_VALUE_PRODUCERS
-_RecordRenderRow = RecordRenderRow
-_RenderedRecordOccurrence = RenderedRecordOccurrence
-_format_field = format_field
-_m303_complementaria_marker = m303_complementaria_marker
-_complementaria_page_marker = complementaria_page_marker
-_m303_no_activity_marker = m303_no_activity_marker
-_projection_field_value = projection_field_value
-_render_record = render_record
 
 
 def render_layout_records(
@@ -374,18 +361,8 @@ def _guard_record_export(record: ExportRecordDefinition, *, casilla_values: dict
 
 
 __all__ = [
-    "_COMPUTED_VALUE_PRODUCERS",
-    "_DRAFT_VALUE_PRODUCERS",
     "RecordRenderRow",
     "RenderedRecordOccurrence",
-    "_RecordRenderRow",
-    "_RenderedRecordOccurrence",
-    "_complementaria_page_marker",
-    "_format_field",
-    "_m303_complementaria_marker",
-    "_m303_no_activity_marker",
-    "_projection_field_value",
-    "_render_record",
     "complementaria_page_marker",
     "format_field",
     "m303_complementaria_marker",

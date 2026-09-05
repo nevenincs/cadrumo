@@ -13,14 +13,10 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.profile.invoices import (
-    _INVOICE_CATALOGUE_VERSION,
-    _INVOICE_NAMESPACE,
-    _INVOICE_OBJECT_KEY,
-    InvoiceCatalogueRepository,
-)
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ....adapters.persistence.storage.secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.classification.policies import SensitivityClass
 from ....core.config import Settings
@@ -391,10 +387,10 @@ def test_invoices_pending_load_failure_context_omits_raw_storage_error(tmp_path:
     with open_test_profile_session(_PROFILE_ID):
         _seed_active_profile(_PROFILE_ID)
         secure_object_repository_for_active_bucket().save(
-            namespace=_INVOICE_NAMESPACE,
-            object_key=_INVOICE_OBJECT_KEY,
+            namespace=INVOICE_CATALOGUE_NAMESPACE.namespace,
+            object_key=INVOICE_CATALOGUE_NAMESPACE.require_default_object_key(),
             classification=SensitivityClass.FINANCIAL,
-            schema_version=_INVOICE_CATALOGUE_VERSION,
+            schema_version=INVOICE_CATALOGUE_NAMESPACE.schema_version,
             written_at=_CORRUPT_ROW_WRITTEN_AT,
             payload=b"{not-json",
         )

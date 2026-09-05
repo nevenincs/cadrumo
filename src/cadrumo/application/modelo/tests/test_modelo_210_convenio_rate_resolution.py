@@ -40,10 +40,9 @@ from ....domain.calculations.registry.schema_verification import VerificationPre
 from ....domain.deadlines.models import FiscalResidency, IVARegime, TaxpayerProfile
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from .._m210_rate import resolve_m210_rate as _resolve_m210_rate
+from .._verification_predicates import evaluate_applicability_filter, evaluate_predicate_expression
 from ..action_errors import ModeloApplicabilityFilterError
 from ..verification_actions import (
-    _evaluate_applicability_filter,
-    _evaluate_predicate_expression,
     _evaluate_verification_predicates,
     _m210_unresolved_outcome_findings,
 )
@@ -424,7 +423,7 @@ def test_representante_predicate_holds_for_eea_resident_without_representante() 
     profile = _irnr_profile_without_representante("FR")
     assert profile.ue_eee_status is True
 
-    assert _evaluate_predicate_expression(_REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile) is True
+    assert evaluate_predicate_expression(_REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile) is True
 
 
 def test_representante_predicate_holds_for_eea_resident_with_representante() -> None:
@@ -433,7 +432,7 @@ def test_representante_predicate_holds_for_eea_resident_with_representante() -> 
     profile = _irnr_profile("FR")  # carries representante_fiscal_nif
     assert profile.ue_eee_status is True
 
-    assert _evaluate_predicate_expression(_REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile) is True
+    assert evaluate_predicate_expression(_REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile) is True
 
 
 def test_representante_predicate_violated_for_non_eea_resident_without_representante() -> None:
@@ -448,7 +447,7 @@ def test_representante_predicate_violated_for_non_eea_resident_without_represent
     )
     assert profile.ue_eee_status is False
 
-    assert _evaluate_predicate_expression(_REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile) is False
+    assert evaluate_predicate_expression(_REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile) is False
 
 
 def test_representante_predicate_holds_for_non_eea_resident_with_representante() -> None:
@@ -458,7 +457,7 @@ def test_representante_predicate_holds_for_non_eea_resident_with_representante()
     assert profile.ue_eee_status is False
     assert profile.representante_fiscal_nif == "12345678Z"
 
-    assert _evaluate_predicate_expression(_REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile) is True
+    assert evaluate_predicate_expression(_REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile) is True
 
 
 def test_representante_predicate_emits_blocking_finding_via_evaluator() -> None:
@@ -500,4 +499,4 @@ def test_applicability_filter_unknown_name_raises_value_error() -> None:
 
     profile = _irnr_profile("AR")
     with pytest.raises(ModeloApplicabilityFilterError, match="Unknown applicability filter"):
-        _evaluate_applicability_filter("non_resident_irnr_eea_only", profile)
+        evaluate_applicability_filter("non_resident_irnr_eea_only", profile)

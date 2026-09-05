@@ -59,8 +59,17 @@ def test_an_explicit_contracts_root_wins_over_the_docs_root(tmp_path: pathlib.Pa
 )
 def test_a_traversing_posix_docname_is_refused(page: str, tmp_path: pathlib.Path) -> None:
     """A docname is a page key, not a path expression."""
-    with pytest.raises(SequenceEngineError):
+    with pytest.raises(SequenceEngineError) as refusal:
         sequence_contract_path(page, "seq", docs_root=tmp_path)
+
+    # Bound to the INPUT, derived rather than transcribed: a guard that
+    # refused every docname on one unrelated ground would satisfy a bare
+    # raise for all five cases at once. Production echoes the offending
+    # value, so each case proves the refusal was about ITS OWN page, and
+    # the family word proves the docname guard fired rather than the id one.
+    message = str(refusal.value)
+    assert repr(page) in message, message
+    assert "docname" in message, message
 
 
 def test_a_backslash_docname_is_refused(tmp_path: pathlib.Path) -> None:
@@ -96,8 +105,12 @@ def test_a_drive_qualified_docname_is_refused(tmp_path: pathlib.Path) -> None:
 @pytest.mark.parametrize("sequence_id", ["../escape", "Upper", "with space", "", "-leading"])
 def test_an_invalid_sequence_id_is_refused(sequence_id: str, tmp_path: pathlib.Path) -> None:
     """The id names a file, so it is the other half of the same guard."""
-    with pytest.raises(SequenceEngineError):
+    with pytest.raises(SequenceEngineError) as refusal:
         sequence_contract_path("guide", sequence_id, docs_root=tmp_path)
+
+    message = str(refusal.value)
+    assert repr(sequence_id) in message, message
+    assert "sequence id" in message, message
 
 
 def _write(docs_root: pathlib.Path, page: str, sequence_id: str, text: str) -> None:

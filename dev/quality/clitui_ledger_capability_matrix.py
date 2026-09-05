@@ -332,16 +332,21 @@ def _repository_root() -> Path:
 
 
 def ledger_tui_supported_surface_source_files(repo_root: Path | None = None) -> tuple[Path, ...]:
-    """Return the complete production and focused-harness scope for this census."""
+    """Return the structural Ledger closure and its installed-composition evidence.
+
+    The census must move when Ledger screens, their concrete production entry
+    points, or the installed workbench path changes.  It deliberately does
+    not hash the unrelated TUI estate: that would reopen this Ledger-only
+    denominator for an AEAT Sync or Modelo change with no selected row.
+    """
     root = _repository_root() if repo_root is None else repo_root.resolve()
     tui_root = root / "src/cadrumo/entrypoints/tui"
-    production = tuple(
+    ledger_production = tuple(
         path
-        for path in tui_root.rglob("*.py")
-        if "tests" not in path.relative_to(tui_root).parts
-        and "devtools" not in path.relative_to(tui_root).parts
-        and "__pycache__" not in path.parts
+        for path in (tui_root / "ledger").rglob("*.py")
+        if "tests" not in path.relative_to(tui_root / "ledger").parts and "__pycache__" not in path.parts
     )
+    composition_sources = tuple(tui_root / name for name in ("app.py", "installed_session.py", "launcher.py"))
     ledger_tests = tuple((tui_root / "ledger/tests").glob("test_*.py"))
     composition_tests = tuple(
         tui_root / "tests" / name
@@ -361,11 +366,88 @@ def ledger_tui_supported_surface_source_files(repo_root: Path | None = None) -> 
         )
     )
     cli_sources = tuple((root / "src/cadrumo/entrypoints/cli").glob("_app_ledger*_command_specs.py"))
-    files = tuple(sorted({*production, *ledger_tests, *composition_tests, *application_sources, *cli_sources}))
+    files = tuple(
+        sorted(
+            {
+                *ledger_production,
+                *composition_sources,
+                *ledger_tests,
+                *composition_tests,
+                *application_sources,
+                *cli_sources,
+            }
+        )
+    )
     missing = tuple(path for path in files if not path.is_file())
     if missing:
         raise FileNotFoundError(f"Ledger TUI census source is unavailable: {missing[0]}")
     return files
+
+
+_LEDGER_TUI_SHARED_COMPOSITION_PATHS: Final[frozenset[str]] = frozenset(
+    {
+        "src/cadrumo/application/search/installed_workbench.py",
+        "src/cadrumo/application/workbench_generation.py",
+        "src/cadrumo/entrypoints/tui/app.py",
+        "src/cadrumo/entrypoints/tui/installed_session.py",
+        "src/cadrumo/entrypoints/tui/launcher.py",
+    }
+)
+_LEDGER_TUI_SHARED_SOURCE_PROJECTION_FRAME: Final[bytes] = b"cadrumo:ledger-tui-shared-source-projection:v1\x00"
+
+
+def _ledger_token(value: str) -> bool:
+    return "ledger" in value.casefold()
+
+
+def _ledger_relevant_shared_source_facts(tree: ast.Module) -> tuple[str, ...]:
+    """Project only Ledger-bearing structure from a shared composition module."""
+    facts: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                if _ledger_token(alias.name) or (alias.asname is not None and _ledger_token(alias.asname)):
+                    facts.add(ast.dump(ast.Import(names=[alias]), annotate_fields=True, include_attributes=False))
+        elif isinstance(node, ast.ImportFrom):
+            relevant = [
+                alias
+                for alias in node.names
+                if _ledger_token(node.module or "")
+                or _ledger_token(alias.name)
+                or (alias.asname is not None and _ledger_token(alias.asname))
+            ]
+            if relevant:
+                facts.add(
+                    ast.dump(
+                        ast.ImportFrom(module=node.module, names=relevant, level=node.level),
+                        annotate_fields=True,
+                        include_attributes=False,
+                    )
+                )
+        elif (
+            (isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and _ledger_token(node.name))
+            or (isinstance(node, ast.Name) and _ledger_token(node.id))
+            or (isinstance(node, ast.Attribute) and _ledger_token(node.attr))
+            or (isinstance(node, ast.keyword) and node.arg is not None and _ledger_token(node.arg))
+            or (isinstance(node, ast.Constant) and isinstance(node.value, str) and _ledger_token(node.value))
+        ):
+            facts.add(ast.dump(node, annotate_fields=True, include_attributes=False))
+    return tuple(sorted(facts))
+
+
+def _ledger_tui_digest_source_records(
+    records: Iterable[tuple[str, bytes]],
+) -> tuple[tuple[str, bytes], ...]:
+    projected: list[tuple[str, bytes]] = []
+    for relative, body in records:
+        if relative not in _LEDGER_TUI_SHARED_COMPOSITION_PATHS:
+            projected.append((relative, body))
+            continue
+        tree = ast.parse(body.decode("utf-8"), filename=relative)
+        facts = _ledger_relevant_shared_source_facts(tree)
+        payload = _LEDGER_TUI_SHARED_SOURCE_PROJECTION_FRAME + _canonical_json_text(facts).encode("utf-8")
+        projected.append((relative, payload))
+    return tuple(projected)
 
 
 def _source_records(
@@ -390,7 +472,7 @@ def ledger_tui_supported_surface_source_set_digest(
         if source_records is not None
         else _source_records(ledger_tui_supported_surface_source_files(root), repo_root=root)
     )
-    ordered = tuple(sorted(records))
+    ordered = tuple(sorted(_ledger_tui_digest_source_records(records)))
     if len({relative for relative, _body in ordered}) != len(ordered):
         raise ValueError("Ledger TUI census source paths must be unique")
     payload = bytearray(_LEDGER_TUI_SUPPORTED_SURFACE_SOURCE_SET_FRAME)
@@ -5170,7 +5252,7 @@ def _matrix_row_from_union(
 
 @cache
 def build_ledger_capability_matrix() -> LedgerCapabilityMatrixV1:
-    """Build the sole deterministic 693-row pre-acceptance Ledger candidate."""
+    """Build the sole deterministic 694-row pre-acceptance Ledger candidate."""
     union = build_ledger_union_denominator()
     subject = _matrix_subject(union)
     rows = tuple(_matrix_row_from_union(row, subject) for row in union.rows)

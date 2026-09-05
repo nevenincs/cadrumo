@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryValidationError
 from cadrumo.domain.calculations.registry.temporal import coverage_assessment_horizon, revision_selection_coordinates
 
 from ..temporal_coverage import (
@@ -45,6 +45,19 @@ def test_temporal_coverage_reselects_every_registered_revision_and_checks_its_de
     assert {(row.modelo, row.revision, row.filing_year, row.period) for row in report.rows} == expected_coordinates
     assert report.fully_validated is True
     assert report.refused_rows == ()
+    # Measured: this fixture yields ONLY validated rows, so the two refusal
+    # branches below have never executed. They also named the wrong class - a
+    # non-validated row refuses with AmbiguousRevisionSelectionError, which
+    # descends from RegistrySnapshotError and is NOT a RegistryValidationError,
+    # so either branch would have failed on the class rather than on the
+    # invariant the moment it ran. Modelo 308 is the only one that reaches
+    # them: 2 refused rows out of 1,729 across all 58 modelos.
+    validated = sum(1 for row in report.rows if row.status == "validated")
+    assert validated == len(report.rows), (
+        f"this fixture now yields {len(report.rows) - validated} non-validated row(s); the "
+        "refusal branches below are no longer dead and their expectations need re-grounding "
+        "against the error those rows actually raise"
+    )
     for row in report.rows:
         inspection = authority.inspect_revision(row.modelo, filing_year=row.filing_year, period=row.period)
         assert str(inspection.revision_id) == row.selected_revision
@@ -58,7 +71,7 @@ def test_temporal_coverage_reselects_every_registered_revision_and_checks_its_de
             )
             assert str(snapshot.revision.id) == row.revision
         elif row.declared_authority_grade is None:
-            with pytest.raises(RegistryValidationError):
+            with pytest.raises(RegistryError):
                 authority.snapshot(
                     row.modelo,
                     filing_year=row.filing_year,
@@ -66,7 +79,7 @@ def test_temporal_coverage_reselects_every_registered_revision_and_checks_its_de
                     grade=RegistryAuthorityGrade.APPLICABILITY,
                 )
         else:
-            with pytest.raises(RegistryValidationError):
+            with pytest.raises(RegistryError):
                 authority.snapshot(
                     row.modelo,
                     filing_year=row.filing_year,

@@ -186,9 +186,20 @@ def test_records_are_frozen(
     from pydantic import ValidationError
 
     commands, options, _stats = projection
-    with pytest.raises(ValidationError):
+    # A frozen pydantic model refuses assignment to ANY name, present or not:
+    # measured, setting `a_field_that_does_not_exist` raises exactly the same
+    # ValidationError as setting `family`. Naming a field below therefore
+    # proved nothing about that field, and a rename would leave both claims
+    # passing over a name the model no longer carries. Checked against the
+    # live model so a rename fails here rather than going quiet.
+    assert "family" in CliSurfaceRecord.model_fields, sorted(CliSurfaceRecord.model_fields)
+    assert "required" in CliOptionRecord.model_fields, sorted(CliOptionRecord.model_fields)
+
+    # Pinned to pydantic's stable error TYPE: `frozen_instance` proves the
+    # immutability contract held, not merely that some validation refused.
+    with pytest.raises(ValidationError, match="frozen_instance"):
         commands[0].family = "mutated"  # type: ignore[attr-defined,misc]
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match="frozen_instance"):
         options[0].required = True  # type: ignore[attr-defined,misc]
 
 

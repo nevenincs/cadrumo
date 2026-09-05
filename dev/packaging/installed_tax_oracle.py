@@ -15,7 +15,7 @@ import re
 import secrets
 import shutil
 import sys
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Collection, Mapping
 from dataclasses import asdict, dataclass
 from decimal import Decimal
 from pathlib import Path
@@ -29,8 +29,10 @@ if not __package__:
 
 from ._command import CommandResult, run_command  # noqa: E402
 from ._installed_wheel_binding import installed_wheel_payload_sha256  # noqa: E402
+from ._recovery_enrollment import enrolled_profile_creation  # noqa: E402
 
 _UTF_8: Final[str] = "utf-8"
+_JSON_FORMAT: Final[tuple[str, ...]] = ("--format", "json")
 
 PROFILE_LABEL = "installed-oracle"
 PROFILE_TAX_ID = "B66012345"
@@ -44,6 +46,16 @@ EXPECTED_FORMULA = "modelo-200-cuota-integra"
 EXPECTED_LEGAL_REF = "ley-27-2014:art-29"
 EXPECTED_SOURCE_REF = "aeat-modelo-200-manual-2024"
 EXPECTED_NOTICE_CODES = {"modelo.work.calculate.plazo_vencido_unassessed_preview"}
+#: The one warning this oracle's own execution posture guarantees.
+#:
+#: The oracle selects the non-keychain secret backend deliberately: it runs on
+#: hosts with no unlocked login keychain and must never write product keys into
+#: a real one. That posture cannot persist a login session, so every command
+#: authenticating over the bounded stdin channel truthfully reports that it
+#: authenticated only its own process. The notice describes the oracle's own
+#: isolation, not the installed build's tax behaviour, and it is the only code
+#: excused anywhere here; every other diagnostic still fails the oracle.
+ISOLATION_NOTICE_CODES: Final[frozenset[str]] = frozenset({"config.login.session_not_persisted"})
 _REVISION_ID = re.compile(r"^[0-9a-f]{64}$")
 
 CASILLAS = (
@@ -135,6 +147,23 @@ def ambient_product_executables_removed(environment: Mapping[str, str]) -> bool:
     return shutil.which("aeat", path=environment.get("PATH", "")) is None
 
 
+def path_without_product_executables(path: str) -> str:
+    """Drop every search-path entry that offers a product executable of its own.
+
+    The oracle is launched from a synced development environment whose own
+    ``aeat`` sits on the inherited search path. That entry has no business
+    reaching the child: this probe exists to characterise ONE installed
+    cohort, and a second product executable within reach of the process under
+    test is precisely the ambiguity the emitted evidence promises is absent.
+    Establishing the fact belongs here beside the import-path stripping, so
+    that :func:`ambient_product_executables_removed` reads back something the
+    environment made true rather than something the invoking shell happened
+    to allow.
+    """
+    entries = [entry for entry in path.split(os.pathsep) if entry]
+    return os.pathsep.join(entry for entry in entries if shutil.which("aeat", path=entry) is None)
+
+
 def isolated_product_environment(storage_root: Path) -> dict[str, str]:
     """Build an isolated product environment without inherited Cadrumo state."""
     resolved_root = storage_root.resolve()
@@ -142,6 +171,7 @@ def isolated_product_environment(storage_root: Path) -> dict[str, str]:
     environment = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
     environment.pop("PYTHONHOME", None)
     environment.pop("PYTHONPATH", None)
+    environment["PATH"] = path_without_product_executables(environment.get("PATH", ""))
     environment.update(
         {
             "CADRUMO_CLI_REVEAL_IDENTIFIERS": "1",
@@ -179,8 +209,22 @@ def profile_create_arguments() -> tuple[str, ...]:
         "--incn-prior-12-months",
         "500000",
         "--no-new-entity-first-two-profit-periods",
+        # Declaring an IVA regime claims the whole IVA block, and a claimed
+        # block obliges every fact below. None of them has a safe default:
+        # each selects a filing obligation, a period, or a deduction
+        # entitlement, so leaving one undeclared would file this taxpayer
+        # into or out of a regime it never spoke about. They are answered
+        # here as the plain general-regime SL this oracle describes.
         "--iva-regime",
         "GENERAL",
+        "--iva-m303-regime-composition",
+        "general",
+        "--no-iva-redeme-enrolled",
+        "--no-iva-cash-accounting-regime-enrolled",
+        "--no-iva-voluntary-sii-enrolled",
+        "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
+        "--tax-residence-jurisdiction-scope",
+        "common_regime",
         "--tax-residence-ccaa",
         "madrid",
     )
@@ -234,6 +278,7 @@ def _run(
     env: dict[str, str],
     timeout_seconds: float,
     input_text: str | None = None,
+    inherited_descriptors: tuple[int, ...] = (),
 ) -> CommandResult:
     result = run_command(
         argv,
@@ -241,6 +286,7 @@ def _run(
         environment=env,
         timeout_seconds=timeout_seconds,
         input_text=input_text,
+        inherited_descriptors=inherited_descriptors,
     )
     if result.returncode != 0:
         raise InstalledTaxOracleError(
@@ -284,17 +330,26 @@ def assert_no_diagnostic_notices(
     *,
     command: str,
     error: Callable[[str], Exception],
+    excused_codes: Collection[str] = (),
 ) -> None:
-    """Assert a delivered command reported plain success and raised no diagnostic notice."""
-    if envelope.get("status") != "success":
-        raise error(f"{command} expected success status: {envelope!r}")
+    """Assert a delivered command raised no diagnostic notice it was not excused.
+
+    ``excused_codes`` names notice codes the caller's own execution posture
+    guarantees and which say nothing about the behaviour under test. An
+    excused notice is still a real warning, so an envelope carrying one
+    reports ``warning`` rather than ``success``; with nothing excused the
+    assertion is the stricter plain-success one.
+    """
     diagnostics = [
         notice
         for notice in envelope["notices"]
         if isinstance(notice, dict) and notice.get("severity") in {"warning", "error"}
     ]
-    if diagnostics:
-        raise error(f"{command} emitted unexpected diagnostic notices: {diagnostics!r}")
+    unexcused = [notice for notice in diagnostics if notice.get("code") not in excused_codes]
+    if unexcused:
+        raise error(f"{command} emitted unexpected diagnostic notices: {unexcused!r}")
+    if not diagnostics and envelope.get("status") != "success":
+        raise error(f"{command} expected success status: {envelope!r}")
 
 
 def _json_envelope(evidence: CommandResult, *, expected_command: str) -> dict[str, Any]:
@@ -310,8 +365,46 @@ def _json_envelope(evidence: CommandResult, *, expected_command: str) -> dict[st
     return document
 
 
-def _assert_no_diagnostic_notices(document: dict[str, Any], *, command: str) -> None:
-    assert_no_diagnostic_notices(document, command=command, error=InstalledTaxOracleError)
+def _assert_no_diagnostic_notices(document: dict[str, Any], *, command: str, authenticated: bool = False) -> None:
+    assert_no_diagnostic_notices(
+        document,
+        command=command,
+        error=InstalledTaxOracleError,
+        excused_codes=ISOLATION_NOTICE_CODES if authenticated else (),
+    )
+
+
+def create_installed_profile(
+    cli: Path,
+    *,
+    cwd: Path,
+    environment: dict[str, str],
+    passphrase: str,
+    timeout_seconds: float,
+) -> CommandResult:
+    """Create the oracle's profile, completing the mandatory recovery enrollment.
+
+    Creation refuses outright without a channel to hand the recovery phrase
+    over and read the exact phrase back, so the oracle plays the operator's
+    part rather than asking the product to skip a possession proof. Everything
+    the oracle asserts afterwards depends on this profile existing, so a
+    refusal here is raised, never carried forward.
+    """
+    with enrolled_profile_creation(
+        cli=cli,
+        arguments=(*_JSON_FORMAT, *profile_create_arguments(), "--secrets-stdin"),
+    ) as invocation:
+        return _run(
+            invocation.argv,
+            cwd=cwd,
+            env=environment,
+            timeout_seconds=timeout_seconds,
+            input_text=json.dumps(
+                {"passphrase": passphrase, "passphrase_confirmation": passphrase},
+                separators=(",", ":"),
+            ),
+            inherited_descriptors=invocation.inherited_descriptors,
+        )
 
 
 def assert_grounded_observations(
@@ -382,7 +475,7 @@ def run_installed_tax_oracle(
     resolved_work_dir = work_dir.resolve()
     resolved_work_dir.mkdir(parents=True, exist_ok=True)
     environment = isolated_product_environment(storage_root)
-    base = (str(resolved_cli), "--format", "json")
+    base = (str(resolved_cli), *_JSON_FORMAT)
     authenticated_base = (*base, "--profile-secrets-stdin")
     passphrase = secrets.token_urlsafe(32)
     profile_authentication = json.dumps({"profile_passphrase": passphrase}, separators=(",", ":"))
@@ -396,19 +489,34 @@ def run_installed_tax_oracle(
     )
     commands.append(version)
 
-    profile = _run(
-        (*base, *profile_create_arguments(), "--secrets-stdin"),
+    profile = create_installed_profile(
+        resolved_cli,
         cwd=resolved_work_dir,
-        env=environment,
+        environment=environment,
+        passphrase=passphrase,
         timeout_seconds=timeout_seconds,
-        input_text=json.dumps(
-            {"passphrase": passphrase, "passphrase_confirmation": passphrase},
-            separators=(",", ":"),
-        ),
     )
     commands.append(profile)
     profile_document = _json_envelope(profile, expected_command="config.profile.create")
     _assert_no_diagnostic_notices(profile_document, command="config.profile.create")
+
+    # A profile is born incomplete on purpose, and modelo work refuses one that
+    # has never been declared ready to file. The declaration is its own verb, so
+    # the oracle makes it rather than assuming creation implied it.
+    complete_setup = _run(
+        (*authenticated_base, "config", "profile", "complete-setup"),
+        cwd=resolved_work_dir,
+        env=environment,
+        timeout_seconds=timeout_seconds,
+        input_text=profile_authentication,
+    )
+    commands.append(complete_setup)
+    complete_setup_document = _json_envelope(complete_setup, expected_command="config.profile.complete_setup")
+    _assert_no_diagnostic_notices(
+        complete_setup_document,
+        command="config.profile.complete_setup",
+        authenticated=True,
+    )
 
     create = _run(
         (*authenticated_base, *work_create_arguments()),
@@ -419,7 +527,7 @@ def run_installed_tax_oracle(
     )
     commands.append(create)
     create_document = _json_envelope(create, expected_command="modelo.work.create")
-    _assert_no_diagnostic_notices(create_document, command="modelo.work.create")
+    _assert_no_diagnostic_notices(create_document, command="modelo.work.create", authenticated=True)
     work_unit_id = str(create_document["result"].get("work_unit_id", ""))
     if not _REVISION_ID.fullmatch(work_unit_id):
         raise InstalledTaxOracleError(f"work creation returned an invalid work unit id: {work_unit_id!r}")
@@ -448,7 +556,7 @@ def run_installed_tax_oracle(
         )
     notices = calculate_document["notices"]
     notice_codes = {str(notice.get("code")) for notice in notices}
-    if notice_codes != EXPECTED_NOTICE_CODES:
+    if notice_codes - ISOLATION_NOTICE_CODES != EXPECTED_NOTICE_CODES:
         raise InstalledTaxOracleError(
             f"calculation notices expected {sorted(EXPECTED_NOTICE_CODES)!r}, got {sorted(notice_codes)!r}",
         )
@@ -471,7 +579,11 @@ def run_installed_tax_oracle(
     )
     commands.append(observations)
     observations_document = _json_envelope(observations, expected_command="modelo.work.observations")
-    _assert_no_diagnostic_notices(observations_document, command="modelo.work.observations")
+    _assert_no_diagnostic_notices(
+        observations_document,
+        command="modelo.work.observations",
+        authenticated=True,
+    )
     target = assert_grounded_observations(
         observations_document["result"],
         calculation_revision_id=calculation_revision_id,

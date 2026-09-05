@@ -314,8 +314,12 @@ class RatchetVerdict:
                 f"that the baseline does not name.",
             )
             lines.append(
-                "Each is harness code to relocate beside its consumer, or capability that lost "
-                "its caller and should be deleted. Do not baseline it to make this pass:",
+                "Each is harness code to relocate beside its consumer, capability whose caller "
+                "was retired and must be re-wired or withdrawn with its owner's agreement, or a "
+                "declaration earning an intentional entry with its rationale. Check what still "
+                "DECLARES the module before deleting it: a capability contract can require a "
+                "module that no runtime caller reaches, and deleting that breaks the contract. "
+                "Do not baseline it to make this pass:",
             )
             lines.extend(f"  + {name}" for name in self.regressions)
         if self.stale:

@@ -45,6 +45,7 @@ See Also:
 
 from __future__ import annotations
 
+import functools
 import re
 import shlex
 import subprocess
@@ -162,8 +163,16 @@ def packaging_pytest_recipes() -> tuple[Recipe, ...]:
     return tuple(recipes)
 
 
+@functools.cache
 def _collect(label: str, arguments: tuple[str, ...]) -> frozenset[str]:
     """Boot a real pytest collection and return the node ids it selected.
+
+    Memoized per ``(label, arguments)``. A collection is a pure function of the
+    committed tree, which no test here mutates, so the per-recipe cases and the
+    union case below were booting the identical subprocess twice for every
+    recipe and asserting the identical thing about it. Re-running a
+    deterministic check is not a second check; caching it drops the duplicate
+    collections without weakening either assertion.
 
     The output is read twice by independent parsers -- the node-id lines and
     the summary count -- and the two readings must agree, so a reader that
@@ -300,8 +309,17 @@ def test_the_count_reader_refuses_output_carrying_no_collection_outcome(summary:
     silently empty selection, which is the false green this gate exists to
     prevent.
     """
-    with pytest.raises(AssertionError):
+    with pytest.raises(AssertionError) as refusal:
         parse_collected_count(summary)
+
+    # `AssertionError` is the widest possible claim here: it is what EVERY
+    # failed assertion raises, including one from inside the reader for an
+    # unrelated reason. Requiring the guard's own sentence proves the reader
+    # refused deliberately, and the echoed output proves it refused THIS
+    # input rather than carrying a verdict from another case.
+    message = str(refusal.value)
+    assert "no pytest collection summary in output" in message, message
+    assert summary in message, message
 
 
 def test_the_scanned_recipe_corpus_is_non_empty_and_carries_the_known_gates() -> None:

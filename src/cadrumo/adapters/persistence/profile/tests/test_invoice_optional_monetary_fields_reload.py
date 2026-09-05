@@ -40,7 +40,8 @@ from .....domain.invoices.enums import IvaRate, PaymentStatus
 from .....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from .....domain.iva.classification import InvoiceKind
 from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
-from ..invoices import _INVOICE_NAMESPACE, InvoiceCatalogueRepository
+from ...storage.secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
+from ..invoices import InvoiceCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -186,7 +187,7 @@ def test_deleting_a_populated_optional_field_from_disk_surfaces_as_refusal(tmp_p
         repo = InvoiceCatalogueRepository()
         repo.save(original)
 
-        stmt = select(SecureObjectRow).where(SecureObjectRow.namespace == _INVOICE_NAMESPACE)
+        stmt = select(SecureObjectRow).where(SecureObjectRow.namespace == INVOICE_CATALOGUE_NAMESPACE.namespace)
 
         def mutate(envelope):
             invoice_dict = envelope["payload"]["invoices"][invoice.invoice_id]
@@ -222,7 +223,7 @@ def test_a_genuinely_unparseable_optional_field_still_refuses(tmp_path: Path) ->
         repo = InvoiceCatalogueRepository()
         repo.save(original)
 
-        stmt = select(SecureObjectRow).where(SecureObjectRow.namespace == _INVOICE_NAMESPACE)
+        stmt = select(SecureObjectRow).where(SecureObjectRow.namespace == INVOICE_CATALOGUE_NAMESPACE.namespace)
 
         def mutate(envelope):
             invoice_dict = envelope["payload"]["invoices"][invoice.invoice_id]

@@ -20,7 +20,7 @@ one.
 So these tests are defence in depth over a gate that already holds, not the
 only warning. What they add is the direction the loader cannot express: that
 the ordinary rates must keep CLASSIFYING, which is a property of
-``_iva_rate_kind_for`` rather than of the table's shape. Whoever settles the
+``iva_rate_kind_for`` rather than of the table's shape. Whoever settles the
 concurrency question will change how rates are represented, and the loader's
 overlap rule may move or go with it; these assertions outlive that, because
 they name the outcome rather than the mechanism.
@@ -33,7 +33,7 @@ from decimal import Decimal
 
 import pytest
 
-from ..iva_ledger import _iva_rate_kind_for
+from ..iva_ledger import iva_rate_kind_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -66,7 +66,7 @@ def test_a_standard_rate_still_classifies_inside_the_temporary_windows(
     at 4 % is the common case, not an edge case, and it must not become
     unclassifiable as a side effect of teaching the table about 2 %.
     """
-    resolved = _iva_rate_kind_for(rate, on_date=on_date)
+    resolved = iva_rate_kind_for(rate, on_date=on_date)
 
     assert resolved is not None, f"{rate} on {on_date} must classify -- it is an ordinary Spanish rate"
     assert resolved.value == expected_tier
@@ -85,7 +85,7 @@ def test_the_temporary_rates_now_classify_in_their_own_window(rate: Decimal, exp
     with their tier's ordinary rate rather than replacing it -- rather than a
     test quietly relaxed to match new behaviour.
     """
-    resolved = _iva_rate_kind_for(rate, on_date=_IN_WINDOW)
+    resolved = iva_rate_kind_for(rate, on_date=_IN_WINDOW)
 
     assert resolved is not None
     assert resolved.value == expected_tier
@@ -109,7 +109,7 @@ def test_a_temporary_rate_does_not_leak_outside_its_window(rate: Decimal, on_dat
     test above would still pass, because they only ever ask inside the windows.
     A 2 % sale dated June 2025 is not a legitimate Spanish rate and must refuse.
     """
-    assert _iva_rate_kind_for(rate, on_date=on_date) is None
+    assert iva_rate_kind_for(rate, on_date=on_date) is None
 
 
 def test_zero_is_already_representable_so_the_gap_is_three_rates_not_four() -> None:
@@ -119,4 +119,4 @@ def test_zero_is_already_representable_so_the_gap_is_three_rates_not_four() -> N
     2024 classifies correctly today. Stating it here keeps a later reader from
     scoping the remediation one rate wider than it is.
     """
-    assert _iva_rate_kind_for(Decimal("0"), on_date=_IN_WINDOW) is not None
+    assert iva_rate_kind_for(Decimal("0"), on_date=_IN_WINDOW) is not None

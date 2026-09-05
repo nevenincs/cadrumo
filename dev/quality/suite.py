@@ -45,9 +45,16 @@ GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
         (
             "deptry",
             "src/cadrumo",
+            # The harness package ships its own console script and is where the
+            # MCP and anyio dependencies are actually imported. Leaving it out
+            # reported both as declared-but-unused: a scan-scope artefact, not
+            # a real unused dependency.
+            "src/cadrumo_harness",
             "dev/registry",
             "--known-first-party",
             "cadrumo",
+            "--known-first-party",
+            "cadrumo_harness",
             "--known-first-party",
             "dev",
             "--non-dev-dependency-groups",
@@ -68,6 +75,8 @@ GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
             "pytest",
             "-q",
             "-n0",
+            "dev/tests/test_cross_package_private_imports.py",
+            "dev/tests/test_closed_vocabulary_canonicalization.py",
             "dev/tests/test_import_edge_integrity_gate.py",
             "dev/tests/test_facade_export_gate.py",
         ),

@@ -36,7 +36,7 @@ from ....core.casilla_id import validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
-from .._verification_predicates import _evaluate_predicate_expression
+from .._verification_predicates import evaluate_predicate_expression
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -78,7 +78,7 @@ def _predicate(year: int):
 
 def _holds(year: int, gross: str, retencion: str) -> bool:
     predicate = _predicate(year)
-    return _evaluate_predicate_expression(
+    return evaluate_predicate_expression(
         predicate.expression,
         {_GROSS_CAPITAL_MOBILIARIO_AHORRO_INCOME: Decimal(gross), _RETENCION_CAPITAL_MOBILIARIO: Decimal(retencion)},
         _profile(),

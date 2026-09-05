@@ -1,0 +1,175 @@
+schema_version = 1
+modelo = "200"
+revision = "2024"
+source_ref = "aeat-dr-200-2024"
+source_sha256 = "ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218"
+review_status = "agent_reviewed"
+reviewed_at = "2026-09-05"
+reviewed_by = "agent-prepared by resolving each record-qualified casilla on the page its own identifier names, in the pinned 2024 design; pending independent review"
+
+# Every member is a RECORD-QUALIFIED casilla: its identifier carries the page
+# ("DP200013:00417" is casilla 00417 on page DP200013), and the design is
+# segmented by page, so the number resolves to exactly one cell without an
+# adjudication choosing among its occurrences. The compiler re-derives each
+# digest from the bundled design rather than trusting the value below, so this
+# file is a receipt of what was resolved, never the authority for it.
+
+[[adjudications]]
+casilla_id = "DP200013:00417"
+official_label_sha256 = "c6328183a57c06610fe01e931161eb36a226710bf79695b0c732fd20993df9e0"
+
+[[adjudications]]
+casilla_id = "DP200013:00418"
+official_label_sha256 = "1f3a4ac96309bc23df10bc94fa2179b61ebb878c2389e717106aa84499c7cd18"
+
+[[adjudications]]
+casilla_id = "DP200014:00547"
+official_label_sha256 = "49ec1e9ebcff2a56818c0cf7d8719513e035687691f8b31db9513d1afca93781"
+
+[[adjudications]]
+casilla_id = "DP200014:00550"
+official_label_sha256 = "3a667af64ec941dfa34d3cfbbbeeae26d26f37c7425880f73b51026cde1a0acd"
+
+[[adjudications]]
+casilla_id = "DP200014:00552"
+official_label_sha256 = "cba5120419155fa57c9357d23cb331c7c5338eb4b3ccecd4b9c07f8a13b379dc"
+
+[[adjudications]]
+casilla_id = "DP200014:00558"
+official_label_sha256 = "3ebfe6225ad32cd60093fedf08ea477d760f4c715349a87b7d6e07ef2c54ec51"
+
+[[adjudications]]
+casilla_id = "DP200014:00562"
+official_label_sha256 = "1ae06e74410c45d91ae9d85a486931a5ea5dabbd5a8892a9b576ea00001079b6"
+
+[[adjudications]]
+casilla_id = "DP200014:00563"
+official_label_sha256 = "d697c9e5a7f086dcc422ad116fd58bc7524a82272b9741e2cddec16ebce3ea45"
+
+[[adjudications]]
+casilla_id = "DP200014:00566"
+official_label_sha256 = "02d7ae336c33c6143029f33d4d6e4238cbdcd6ddaea1fac634ece1a712defe50"
+
+[[adjudications]]
+casilla_id = "DP200014:00567"
+official_label_sha256 = "b0afc82f33df73b52336196afb830db2c57d19578623a7a33e1938bae3dc982d"
+
+[[adjudications]]
+casilla_id = "DP200014:00568"
+official_label_sha256 = "d8f14dc039178bf3ba57cce039bfd2c3aaedb435deb5879fb0944b66ee45d12c"
+
+[[adjudications]]
+casilla_id = "DP200014:00569"
+official_label_sha256 = "bff03ce86f975ed40603db509c9e081d8a9cc2e6b84c7aeaf12316ea0159963e"
+
+[[adjudications]]
+casilla_id = "DP200014:00570"
+official_label_sha256 = "b90b76fd07ad4df9658e0959d999ba2125208df39b17c7fe4f42236bbb7f9c11"
+
+[[adjudications]]
+casilla_id = "DP200014:00571"
+official_label_sha256 = "123da9b12b646f754ca97f62cf6970221ad0fb2d83e00e0c4981639b68558d3a"
+
+[[adjudications]]
+casilla_id = "DP200014:00572"
+official_label_sha256 = "73ee41410ae72a411d33743a5d5d84b09a7059419470eec9ee17705e799f7c34"
+
+[[adjudications]]
+casilla_id = "DP200014:00575"
+official_label_sha256 = "87c388b50588ce4ed097d9c62a50ae63bae7485edd87fce004938ea7209d7c35"
+
+[[adjudications]]
+casilla_id = "DP200014:00576"
+official_label_sha256 = "4b33f742860dbde4f22ea3693a669c90e0bc29120b53782be253d882f8775371"
+
+[[adjudications]]
+casilla_id = "DP200014:00577"
+official_label_sha256 = "fe550cbc57ecf8051e8d217dc6f4f4bf3c3d20d44dac3be5af0dbef25ab140f3"
+
+[[adjudications]]
+casilla_id = "DP200014:00581"
+official_label_sha256 = "7808baf369fc29a001f4c375e190aa88f343828f7d0c38ef031131ad9ed8b74e"
+
+[[adjudications]]
+casilla_id = "DP200014:00582"
+official_label_sha256 = "0ddc5555240bccf56c917cdd6b51c81207f0af760a3bd435515ff032312331fb"
+
+[[adjudications]]
+casilla_id = "DP200014:01033"
+official_label_sha256 = "54303a2cb010054dfdaada374dfee27e9b823b95669e52957bd1c48a70f5a9ae"
+
+[[adjudications]]
+casilla_id = "DP200014:01034"
+official_label_sha256 = "a0e097b7df391d70be0c5ba33f566e19e536dff9acb3003faf31c975b71e7756"
+
+[[adjudications]]
+casilla_id = "DP200014:01330"
+official_label_sha256 = "884a00ab4ca7ef07337e5857f4bc79493a9c3a3d75e4b1c0344276c07ae6bddf"
+
+[[adjudications]]
+casilla_id = "DP200014B:00082"
+official_label_sha256 = "ec313f82cd12383b900e58ae6e3323b70d7b57be814022bc81dad1d08d1348a3"
+
+[[adjudications]]
+casilla_id = "DP200014B:00399"
+official_label_sha256 = "8bce66d057a0ac5e5eb808b5e2aa528de13fccde2a450e005a85702986be7a8c"
+
+[[adjudications]]
+casilla_id = "DP200014B:00565"
+official_label_sha256 = "90853b5750fe2001c33ee8fb351edb98bf3ba59c7ba57d18eb873d0b04c3d5c5"
+
+[[adjudications]]
+casilla_id = "DP200014B:00583"
+official_label_sha256 = "b49cdaf692117557639aea1c85a8f890a472397763c2b5852497036a298d6940"
+
+[[adjudications]]
+casilla_id = "DP200014B:00584"
+official_label_sha256 = "7c7e83bde19d48137b7298751824b8a3355ed2453076726aa95c7dddacbcae8c"
+
+[[adjudications]]
+casilla_id = "DP200014B:00585"
+official_label_sha256 = "067cffc88c9c4e1c5e95612119844a3a5a211dc1c84e4ebd2f27af1119dd431d"
+
+[[adjudications]]
+casilla_id = "DP200014B:00588"
+official_label_sha256 = "d2ef31ed698d26f505f8a57b33e8ceb0335bd6ce16bd34743869201b5e6686be"
+
+[[adjudications]]
+casilla_id = "DP200014B:00590"
+official_label_sha256 = "02b5aa7a20bfc7597355d5eb677bb1401e26903f941d30163c1ed3d481e49c93"
+
+[[adjudications]]
+casilla_id = "DP200014B:00592"
+official_label_sha256 = "eacbce509bca609002ff06e05885411fffa76d13c6f799e94a614575d909357c"
+
+[[adjudications]]
+casilla_id = "DP200014B:00601"
+official_label_sha256 = "86993c686e008b4df905c027790cd3c418e6331cd77ff7db98361b4313711199"
+
+[[adjudications]]
+casilla_id = "DP200014B:00603"
+official_label_sha256 = "086ffb8f99e5328bcb749939be18be9c82a97093376eca5e61229fcfca368aac"
+
+[[adjudications]]
+casilla_id = "DP200014B:00605"
+official_label_sha256 = "44eea42afb2a7ec820dcd9958ff4b19d58892d5a755f41ee76b5adf66e8bbda8"
+
+[[adjudications]]
+casilla_id = "DP200014B:00611"
+official_label_sha256 = "e896cb7a841b86f770a0621ef0b0a9e82408ab683e5230bc19af85167f1a6439"
+
+[[adjudications]]
+casilla_id = "DP200014B:00619"
+official_label_sha256 = "5f66413d6354860b8a8bd39fbd143666cffa5734e32d643515c85ca01137bf78"
+
+[[adjudications]]
+casilla_id = "DP200014B:01766"
+official_label_sha256 = "df0a6893bc3faf8c81695b3d98d7ac4338d9b1fe9165cabbab7a695ff432c73a"
+
+[[adjudications]]
+casilla_id = "DP200014B:01784"
+official_label_sha256 = "f4d4fc73a7700be1594dc6910b414a65da0dcfc29f906215110208ac0c60a2f4"
+
+[[adjudications]]
+casilla_id = "DP200026:00625"
+official_label_sha256 = "5fc6c342c5f5e384c0e8b7152a24858239959489e44642eb1c1d87580f3c7527"

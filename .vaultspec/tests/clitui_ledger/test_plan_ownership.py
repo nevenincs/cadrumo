@@ -116,8 +116,9 @@ def _parse_rows(plan_text: str) -> tuple[_PlanRow, ...]:
     row_lines = tuple(line for line in plan_text.splitlines() if line.startswith("- ["))
     if len(parsed) != len(row_lines):
         raise ValueError("unsupported predecessor plan Step-row structure")
+    display_paths = tuple(row.display_path for row in parsed)
     step_ids = tuple(row.step_id for row in parsed)
-    if len(step_ids) != len(set(step_ids)):
+    if len(display_paths) != len(set(display_paths)) or len(step_ids) != len(set(step_ids)):
         raise ValueError("predecessor plan Step identities are not unique")
     return parsed
 
@@ -174,8 +175,6 @@ def _validate_plan_ownership(plan_text: str) -> None:
         raise ValueError("retained Ledger predecessor evidence must remain checked")
     if any(by_id[step_id].checked for step_id in _RETIRED_MARKERS | _HELD):
         raise ValueError("retired-marker and held Ledger rows must remain open")
-    if len(rows) != 426 or sum(row.checked for row in rows) != 408:
-        raise ValueError("predecessor plan completion drifted from 408/426")
 
     for step_id in _MIXED_HELD:
         if "non-Ledger scope remains owned here" not in by_id[step_id].action:
@@ -273,6 +272,12 @@ def test_current_overlap_row_remains_discoverable_after_nonsemantic_rewording() 
     _validate_plan_ownership(plan_text)
 
 
+def test_unrelated_plan_completion_drift_does_not_reopen_ledger_ownership() -> None:
+    plan_text = _replace_once(_plan_text(), "- [x] `W08.P30.S408`", "- [ ] `W08.P30.S408`")
+
+    _validate_plan_ownership(plan_text)
+
+
 @pytest.mark.parametrize(
     ("mutation", "expected"),
     [
@@ -280,12 +285,11 @@ def test_current_overlap_row_remains_discoverable_after_nonsemantic_rewording() 
         pytest.param("duplicate", "duplicate Ledger disposition", id="duplicate"),
         pytest.param("unknown", "unknown Ledger disposition", id="unknown"),
         pytest.param("reclassified", "Ledger disposition reclassified", id="reclassified"),
-        pytest.param("wrong-checkbox", "retained Ledger predecessor evidence", id="wrong-checkbox"),
+        pytest.param("retained-checkbox", "retained Ledger predecessor evidence", id="retained-checkbox"),
         pytest.param("held-checkbox", "retired-marker and held Ledger rows", id="held-checkbox"),
         pytest.param("new-overlap", "unannotated Ledger overlap", id="new-unannotated-overlap"),
         pytest.param("outside-overlap", "Ledger disposition outside known overlap", id="outside-known-overlap"),
         pytest.param("lost-mixed-scope", "mixed Ledger scope retention", id="lost-mixed-scope"),
-        pytest.param("completion", "predecessor plan completion drifted", id="completion"),
         pytest.param("wrong-s411-target", "S411 Ledger navigation implementation target", id="wrong-s411-target"),
     ],
 )
@@ -320,7 +324,7 @@ def test_ledger_ownership_detector_rejects_each_plan_mutation(mutation: str, exp
             "CLITUI_LEDGER_DISPOSITION: RETAINED_PREDECESSOR_EVIDENCE",
             "CLITUI_LEDGER_DISPOSITION: DISPLACED_AND_HELD_UNTIL_G3",
         )
-    elif mutation == "wrong-checkbox":
+    elif mutation == "retained-checkbox":
         plan_text = _replace_once(plan_text, "- [x] `W03.P20.S169`", "- [ ] `W03.P20.S169`")
     elif mutation == "held-checkbox":
         plan_text = _replace_once(plan_text, "- [ ] `W08.P30.S411`", "- [x] `W08.P30.S411`")
@@ -347,8 +351,6 @@ def test_ledger_ownership_detector_rejects_each_plan_mutation(mutation: str, exp
             "non-Ledger scope remains owned here",
             "remaining scope is unspecified",
         )
-    elif mutation == "completion":
-        plan_text = _replace_once(plan_text, "- [ ] `W08.P30.S408`", "- [x] `W08.P30.S408`")
     else:
         plan_text = _replace_once(plan_text, "W05.P21.S136", "W05.P19.S128")
 

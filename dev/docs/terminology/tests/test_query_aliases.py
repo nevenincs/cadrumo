@@ -188,7 +188,11 @@ def test_authority_rejects_held_out_aliases_and_surface_collisions() -> None:
 
 
 def test_authority_rejects_extra_fields_and_mutation() -> None:
-    with pytest.raises(ValidationError):
+    # Two unrelated claims shared one bare refusal, so a model that rejected
+    # every payload would have satisfied both. Pinned to pydantic's stable
+    # error TYPE rather than its prose: `extra_forbidden` proves the extra
+    # key was refused and not, say, the empty entries list supplied with it.
+    with pytest.raises(ValidationError, match="extra_forbidden"):
         QueryAliasAuthority.model_validate(
             {
                 "schema_version": QUERY_ALIAS_AUTHORITY_SCHEMA_VERSION,
@@ -199,7 +203,9 @@ def test_authority_rejects_extra_fields_and_mutation() -> None:
         )
 
     authority = _authority()
-    with pytest.raises(ValidationError):
+    # `frozen_instance` proves immutability held, not merely that assignment
+    # raised - a field whose type rejected the value 2 would look identical.
+    with pytest.raises(ValidationError, match="frozen_instance"):
         authority.authority_version = 2  # type: ignore[misc]
 
 

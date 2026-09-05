@@ -38,11 +38,11 @@ from ..certificate_source_operations import (
 )
 from ..models import AuthCleanupOperationKind, CertificateSecretMutationEventKind
 from ..operator import (
-    _build_auth_cleanup_intent,
     configure_operator_auth,
     logout_operator_auth,
     reset_operator_auth,
 )
+from ..operator_cleanup import build_auth_cleanup_intent
 from ..operator_results import AuthCleanupInProgressError, CertificateSecretMutationInProgressError
 from ..operator_scope import auth_mutation_span
 from ..sessions import ensure_authenticated_aeat_session, storage_state_paths
@@ -66,7 +66,7 @@ def _seed_cleanup_intent(*, operation_kind: AuthCleanupOperationKind) -> None:
     repository = workflow_state_repository()
 
     def prepare(state: WorkflowState) -> WorkflowState:
-        intent = _build_auth_cleanup_intent(
+        intent = build_auth_cleanup_intent(
             settings=settings,
             bucket_id=_BUCKET_ID,
             auth=state.auth,

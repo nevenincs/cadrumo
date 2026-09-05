@@ -1730,11 +1730,6 @@ def iva_rate_kind_for(rate: Decimal, *, on_date: date) -> IvaRateKind | None:
     return matched[0] if matched else None
 
 
-# One local test-facing name. Seven siblings carried the same comment while no
-# test referenced any of them, so the claim was true only of this one.
-_iva_rate_kind_for = iva_rate_kind_for
-
-
 __all__ = [
     "AnnualDeducibleTotalsByRegime",
     "IvaLedgerAggregation",

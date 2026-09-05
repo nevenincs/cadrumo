@@ -10,6 +10,7 @@ cannot masquerade as the live campaign census.
 
 from __future__ import annotations
 
+import ast
 import json
 import re
 from collections.abc import Callable
@@ -110,19 +111,41 @@ _ROW_ID: Final[str] = "ledger.entries.list"
 _SUBJECT_DIGEST: Final[str] = "sha256:" + "a" * 64
 _REGISTRY_ROUTE_DIGEST: Final[str] = "sha256:20b2d2df5558b2a3fdbd1eab6e9f781a973e93c6211e211f8e679cf7b4782aca"
 _REGISTRY_SOURCE_DIGEST: Final[str] = "sha256:194a9f26ddfbae6c5d7f265ffe58f50964fbe2fcd02a5670fa19845dead5cf6d"
-_TUI_CENSUS_DIGEST: Final[str] = "sha256:ce8316795e12434b915bca29b29f42e4ac66a1b3a9738e2899643598c3376380"
-_TUI_SOURCE_DIGEST: Final[str] = "sha256:23f6690df3fef9b9a0131f5bdbba1c6daf7ae2c462b3262cf6b2b77b570143e6"
-_UNION_DIGEST: Final[str] = "sha256:2895cbcff0d09c7562c314413984fdb360f3cb7cbffbe0d0cc754fc252ac4ca5"
+_TUI_CENSUS_DIGEST: Final[str] = "sha256:f36c5a00d48729e1678a3fa5ecb5204d223d0087395d3919f14f88c3725913cd"
+_TUI_SOURCE_DIGEST: Final[str] = "sha256:29174310f657c3c0f5267d2581d4493fcbb73b2bdd063eb53e255518cbb738b8"
+_UNION_DIGEST: Final[str] = "sha256:6294c485888e8e01d095789ec317e743d506bb1c5b16044d5cd179f640f5b703"
 _ROW_REVIEW_DIGEST: Final[str] = "sha256:953cc5d70c492640bc81a04426a9d5fc5abaa012a21ad65f22197cb8b76a07cf"
-_ROW_REVIEW_ATTESTATION_DIGEST: Final[str] = "sha256:1df9648852ee481066107ea1d9665b4c364b4616f95679905257ac56445ab148"
+_ROW_REVIEW_ATTESTATION_DIGEST: Final[str] = "sha256:ff751395e4f088dbb5e417842489d63bc30b7812b6b1147a13eea499e8617437"
 _UNSET: Final[object] = object()
 _REFERENCE_PATH: Final[Path] = (
     Path(__file__).resolve().parents[3] / ".vault" / "reference" / "2026-09-04-clitui-ledger-reference.md"
+)
+_S14_RECORD_PATH: Final[Path] = (
+    Path(__file__).resolve().parents[3]
+    / ".vault"
+    / "exec"
+    / "2026-09-04-clitui-ledger"
+    / "2026-09-04-clitui-ledger-W01-P04-S14.md"
 )
 _MATRIX_CONTRACT_COORDINATE_PATTERN: Final[re.Pattern[str]] = re.compile(
     r"^\| `evidence\.baseline\.matrix_contract` \| `(?P<locator>[^`]+)` \| "
     r"`(?P<digest>sha256:[0-9a-f]{64})` \|",
     re.MULTILINE,
+)
+_S14_PUBLICATION_COORDINATE_PATTERN: Final[re.Pattern[str]] = re.compile(
+    r"^\| `(?P<coordinate>s14\.[a-z0-9-]+(?:\.[a-z0-9-]+)*)` \| (?P<value>[^|]+) \|$",
+    re.MULTILINE,
+)
+_S14_PUBLICATION_COORDINATES: Final[frozenset[str]] = frozenset(
+    {
+        "s14.cohort.planned-semantic-homes",
+        "s14.cohort.non-registry-rows",
+        "s14.cohort.backend-helper-tui-not-applicable",
+        "s14.cohort.planned-product-gap-rows",
+        "s14.tui.production-read-action-references",
+        "s14.tui.production-classification-action-reference",
+        "s14.tui.production-executable-mutation-doors",
+    }
 )
 
 
@@ -135,6 +158,60 @@ def _published_matrix_contract_digest(path: Path = _REFERENCE_PATH) -> str:
     if locator != "dev/quality/clitui_ledger_capability_matrix.py:22":
         raise AssertionError(f"matrix-contract publication locator drifted: {locator!r}")
     return cast(str, matches[0].group("digest"))
+
+
+def _published_s14_coordinates(path: Path = _REFERENCE_PATH) -> dict[str, str]:
+    """Read unique S14 prose coordinates and reject publication-shape drift."""
+    matches = tuple(_S14_PUBLICATION_COORDINATE_PATTERN.finditer(path.read_text(encoding="utf-8")))
+    coordinates = tuple(match.group("coordinate") for match in matches)
+    if len(coordinates) != len(set(coordinates)):
+        raise AssertionError("S14 publication coordinates must be unique")
+    if frozenset(coordinates) != _S14_PUBLICATION_COORDINATES:
+        raise AssertionError(
+            "S14 publication coordinates drifted: "
+            f"expected {sorted(_S14_PUBLICATION_COORDINATES)}, found {sorted(coordinates)}"
+        )
+    return {match.group("coordinate"): match.group("value").strip().replace("`", "") for match in matches}
+
+
+_S14_CURRENT_COHORT_RESTATEMENT_PATTERNS: Final[tuple[tuple[str, re.Pattern[str]], ...]] = (
+    ("planned cohort", re.compile(r"(?<![A-Za-z0-9])690(?![A-Za-z0-9])")),
+    ("non-registry cohort", re.compile(r"(?<![A-Za-z0-9])148(?![A-Za-z0-9])")),
+    (
+        "backend-helper/TUI-not-applicable cohort",
+        re.compile(
+            r"(?ix)(?:(?<![A-Za-z0-9])14(?![A-Za-z0-9])[^\n]*(?:backend[- ]helper|tui[- ]not[- ]applicable)|"
+            r"(?:backend[- ]helper|tui[- ]not[- ]applicable)[^\n]*(?<![A-Za-z0-9])14(?![A-Za-z0-9]))"
+        ),
+    ),
+    ("read action reference", re.compile(r"operator\.ledger\.(?:evidence\.review\.list|review)(?![A-Za-z0-9])")),
+    ("classification action reference", re.compile(r"operator\.ledger\.classify(?![A-Za-z0-9])")),
+    (
+        "action-reference count",
+        re.compile(
+            r"(?ix)(?:\b(?:exactly\s+)?two\b[^\n]*(?:actionreferences?|read-action)|"
+            r"\bzero\b[^\n]*mutation[- ]doors)"
+        ),
+    ),
+)
+
+
+def _s14_prose_without_coordinate_rows(path: Path) -> str:
+    """Return an S14 surface with its canonical coordinate rows removed."""
+    return "\n".join(
+        line
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if not _S14_PUBLICATION_COORDINATE_PATTERN.match(line)
+    )
+
+
+def _assert_s14_current_facts_have_one_home(*paths: Path) -> None:
+    """Reject current S14 cohort/action facts outside the derived coordinate table."""
+    for path in paths:
+        prose = _s14_prose_without_coordinate_rows(path)
+        for label, pattern in _S14_CURRENT_COHORT_RESTATEMENT_PATTERNS:
+            if pattern.search(prose):
+                raise AssertionError(f"current S14 {label} must live only in the coordinate table: {path}")
 
 
 @cache
@@ -193,6 +270,114 @@ def _tui_source_records() -> tuple[tuple[str, bytes], ...]:
     )
 
 
+def _production_classification_action_reference() -> str:
+    """Derive the production classification reference and prove its inert wiring."""
+    records = dict(_tui_source_records())
+    installed_session = ast.parse(
+        records["src/cadrumo/entrypoints/tui/installed_session.py"].decode("utf-8"),
+        filename="installed_session.py",
+    )
+    constants: dict[str, str] = {}
+    for node in installed_session.body:
+        if not isinstance(node, ast.Assign):
+            continue
+        value = node.value
+        if not isinstance(value, ast.Constant) or not isinstance(value.value, str):
+            continue
+        for target in node.targets:
+            if isinstance(target, ast.Name) and target.id == "_LEDGER_CLASSIFY_ACTION":
+                constants[target.id] = value.value
+    if len(constants) != 1:
+        raise AssertionError("production classification action constant is not unique")
+
+    constructors = tuple(
+        node
+        for node in ast.walk(installed_session)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "InstalledWorkbenchFactoryDependenciesV1"
+    )
+    if len(constructors) != 1:
+        raise AssertionError("installed workbench dependency construction is not unique")
+    classify_keywords = tuple(
+        keyword for keyword in constructors[0].keywords if keyword.arg == "ledger_classify_action"
+    )
+    if len(classify_keywords) != 1:
+        raise AssertionError("production classification action reference is not unique")
+    classify_value = classify_keywords[0].value
+    if (
+        not isinstance(classify_value, ast.Call)
+        or not isinstance(classify_value.func, ast.Name)
+        or classify_value.func.id != "action"
+        or len(classify_value.args) != 1
+        or not isinstance(classify_value.args[0], ast.Name)
+        or classify_value.args[0].id not in constants
+    ):
+        raise AssertionError("production classification action reference is not statically readable")
+
+    launcher = ast.parse(
+        records["src/cadrumo/entrypoints/tui/launcher.py"].decode("utf-8"),
+        filename="launcher.py",
+    )
+    factories = tuple(
+        node
+        for node in ast.walk(launcher)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "ledger_screen_factory"
+    )
+    if len(factories) != 1:
+        raise AssertionError("production Ledger screen factory call is not unique")
+    keyword_names = {keyword.arg for keyword in factories[0].keywords if keyword.arg is not None}
+    if "classify_action" not in keyword_names or {"classification_target", "classification_submitter"} & keyword_names:
+        raise AssertionError("production classification action is not inert")
+    return constants["_LEDGER_CLASSIFY_ACTION"]
+
+
+def _canonical_s14_coordinates() -> dict[str, str]:
+    """Derive the S14 publication values from the canonical matrix and TUI census."""
+    matrix = build_ledger_capability_matrix()
+    if matrix.live_union is None:
+        raise AssertionError("canonical matrix must carry its live union")
+    rows = matrix.live_union.rows
+    tui_census = _tui_census()
+    tui_decisions = {
+        row.capability_id: next(decision for decision in row.applicability if decision.axis is LedgerCapabilityAxis.TUI)
+        for row in rows
+    }
+    planned = sum(row.semantic_home_status is SemanticHomeStatus.PLANNED for row in rows)
+    non_registry = sum(
+        row.registry_destination_status is LedgerRegistryDestinationStatus.NOT_APPLICABLE for row in rows
+    )
+    tui_not_applicable = sum(
+        decision.applicability is ApplicabilityState.NOT_APPLICABLE for decision in tui_decisions.values()
+    )
+    planned_product = sum(
+        row.semantic_home_status is SemanticHomeStatus.PLANNED and LedgerGapClass.PRODUCT in row.gap_classes
+        for row in rows
+    )
+    classification_action = _production_classification_action_reference()
+    read_actions = tuple(tui_census.injected_read_action_ids)
+    if classification_action in read_actions:
+        raise AssertionError("classification action must remain distinct from read actions")
+    if tui_census.installed_mutation_doors:
+        raise AssertionError("production Ledger mutation doors must remain empty")
+    return {
+        "s14.cohort.planned-semantic-homes": str(planned),
+        "s14.cohort.non-registry-rows": str(non_registry),
+        "s14.cohort.backend-helper-tui-not-applicable": str(tui_not_applicable),
+        "s14.cohort.planned-product-gap-rows": str(planned_product),
+        "s14.tui.production-read-action-references": ", ".join(read_actions),
+        "s14.tui.production-classification-action-reference": (f"{classification_action} (inert: no target/submitter)"),
+        "s14.tui.production-executable-mutation-doors": str(len(tui_census.installed_mutation_doors)),
+    }
+
+
+def _assert_s14_publication_matches(path: Path = _REFERENCE_PATH) -> None:
+    """Reject a changed S14 value after parsing its unique publication coordinates."""
+    if _published_s14_coordinates(path) != _canonical_s14_coordinates():
+        raise AssertionError("S14 publication coordinates drifted from canonical projections")
+    _assert_s14_current_facts_have_one_home(path)
+
+
 def _mutate_tui_source(relative: str, mutation: Callable[[bytes], bytes]) -> tuple[tuple[str, bytes], ...]:
     return tuple((path, mutation(body) if path == relative else body) for path, body in _tui_source_records())
 
@@ -235,7 +420,7 @@ def test_tui_supported_surface_census_recomputes_the_published_live_digest() -> 
     assert len(census.cli_tui_capabilities) == 78
     assert {status for _command, status in census.cli_tui_capabilities} == {"not-implemented"}
     assert len(census.harness_files) == 6
-    assert census.harness_test_functions == 65
+    assert census.harness_test_functions == 62
 
 
 def test_union_denominator_joins_every_raw_observation_without_double_counting() -> None:
@@ -574,10 +759,7 @@ def test_union_denominator_retains_every_registry_route_unit_and_tui_reachabilit
     assert prepared_import.primary_gap_class is LedgerGapClass.PRODUCT
     assert prepared_import.secondary_gap_classes == (LedgerGapClass.PROOF,)
     assert prepared_import.tui_hold_until is None
-    assert {
-        decision.axis: (decision.applicability, decision.proof)
-        for decision in prepared_import.applicability
-    } == {
+    assert {decision.axis: (decision.applicability, decision.proof) for decision in prepared_import.applicability} == {
         LedgerCapabilityAxis.ARTIFACT: (ApplicabilityState.NOT_APPLICABLE, AxisProofState.NOT_APPLICABLE),
         LedgerCapabilityAxis.BACKEND: (ApplicabilityState.APPLICABLE, AxisProofState.UNPROVEN),
         LedgerCapabilityAxis.CLI: (ApplicabilityState.NOT_APPLICABLE, AxisProofState.NOT_APPLICABLE),
@@ -654,8 +836,8 @@ def test_union_row_review_preserves_registry_destination_and_tui_hold_cohorts() 
     assert sum(row.primary_gap_class is LedgerGapClass.ARTIFACT for row in union.rows) == 1
     assert sum(row.primary_gap_class is LedgerGapClass.COMPOSITION for row in union.rows) == 0
     assert sum(row.primary_gap_class is LedgerGapClass.PROOF for row in union.rows) == 0
-    assert sum(row.tui_hold_until is LEDGER_TUI_HOLD_UNTIL_GATE for row in union.rows) == 681
-    assert sum(row.tui_hold_until is None for row in union.rows) == 13
+    assert sum(row.tui_hold_until is LEDGER_TUI_HOLD_UNTIL_GATE for row in union.rows) == 680
+    assert sum(row.tui_hold_until is None for row in union.rows) == 14
 
 
 def test_artifact_input_review_is_derived_from_every_live_local_file_or_directory_parameter() -> None:
@@ -1166,6 +1348,55 @@ def test_tui_source_set_normalizes_irrelevant_record_order() -> None:
     records = _tui_source_records()
 
     assert ledger_tui_supported_surface_source_set_digest(source_records=reversed(records)) == _TUI_SOURCE_DIGEST
+
+
+def test_tui_source_selector_excludes_unrelated_tui_sources_and_includes_ledger_dependencies() -> None:
+    root = Path(__file__).resolve().parents[3]
+    selected = {path.resolve().relative_to(root).as_posix() for path in ledger_tui_supported_surface_source_files(root)}
+
+    assert "src/cadrumo/entrypoints/tui/destination_session.py" not in selected
+    assert "src/cadrumo/entrypoints/tui/ledger/routes.py" in selected
+    assert "src/cadrumo/application/ledger/workspace.py" in selected
+    assert "src/cadrumo/application/workbench_generation.py" in selected
+
+
+def test_tui_shared_source_projection_ignores_unrelated_composition_edit() -> None:
+    baseline = _tui_census()
+    records = _mutate_tui_source(
+        "src/cadrumo/entrypoints/tui/app.py",
+        lambda body: body + b"\ndef unrelated_modelo_helper():\n    return 'modelo.only'\n",
+    )
+
+    candidate = build_ledger_tui_supported_surface_census(source_records=records)
+
+    assert candidate.source_set_digest == baseline.source_set_digest
+    assert candidate.calculated_digest == baseline.calculated_digest
+
+
+@pytest.mark.parametrize(
+    ("relative", "mutation"),
+    [
+        pytest.param(
+            "src/cadrumo/entrypoints/tui/app.py",
+            lambda body: body + b"\nfrom .ledger.routes import LedgerRouteV1\n",
+            id="ledger-import",
+        ),
+        pytest.param(
+            "src/cadrumo/application/search/installed_workbench.py",
+            lambda body: body.replace(b"def _ledger_status(", b"def _ledger_status_v2(", 1),
+            id="ledger-workbench-dependency",
+        ),
+    ],
+)
+def test_tui_shared_source_projection_detects_ledger_structure_change(
+    relative: str,
+    mutation: Callable[[bytes], bytes],
+) -> None:
+    baseline = _tui_census()
+    candidate = build_ledger_tui_supported_surface_census(source_records=_mutate_tui_source(relative, mutation))
+
+    assert candidate.source_set_digest != baseline.source_set_digest
+    assert candidate.calculated_digest != baseline.calculated_digest
 
 
 @pytest.mark.parametrize(
@@ -4522,6 +4753,61 @@ def test_matrix_contract_source_digest_normalizes_checkout_newlines(tmp_path: Pa
 def test_human_matrix_contract_coordinate_matches_live_source_digest() -> None:
     """The reference coordinate must publish the digest the contract computes."""
     assert _published_matrix_contract_digest() == ledger_capability_matrix_source_digest()
+
+
+def test_s14_publication_coordinates_match_canonical_matrix_and_tui_census() -> None:
+    """The S14 prose cannot silently drift from the live denominator or TUI composition."""
+    _assert_s14_publication_matches()
+    _assert_s14_current_facts_have_one_home(_S14_RECORD_PATH)
+
+
+@pytest.mark.parametrize(
+    ("surface", "restatement"),
+    [
+        ("reference", "The current planned semantic-home cohort contains 690 rows."),
+        ("reference", "The current registry partition contains 148 non-registry rows."),
+        ("reference", "The current backend-helper/TUI-not-applicable cohort contains 14 rows."),
+        ("reference", "The current planned PRODUCT-gap cohort contains 690 rows."),
+        ("reference", "The current production wiring injects two read ActionReferences."),
+        ("reference", "The current production wiring includes operator.ledger.review."),
+        ("record", "The current planned cohort contains 690 rows."),
+        ("record", "The current production wiring includes operator.ledger.classify."),
+    ],
+)
+def test_s14_single_home_detector_rejects_current_restatements(
+    tmp_path: Path, surface: str, restatement: str
+) -> None:
+    """A current cohort/action fact added outside the coordinate table must fail closed."""
+    source_path = _REFERENCE_PATH if surface == "reference" else _S14_RECORD_PATH
+    candidate = tmp_path / f"{surface}.md"
+    candidate.write_text(source_path.read_text(encoding="utf-8") + f"\n{restatement}\n", encoding="utf-8")
+
+    with pytest.raises(AssertionError, match="current S14"):
+        if surface == "reference":
+            _assert_s14_publication_matches(candidate)
+        else:
+            _assert_s14_current_facts_have_one_home(candidate)
+
+
+@pytest.mark.parametrize("mutation", ["changed", "missing", "duplicate"])
+def test_s14_publication_coordinate_detector_rejects_prose_drift(tmp_path: Path, mutation: str) -> None:
+    """The publication gate has detector teeth for changed, missing, and duplicate coordinates."""
+    source = _REFERENCE_PATH.read_text(encoding="utf-8")
+    coordinate_line = "| `s14.cohort.planned-semantic-homes` | `690` |"
+    if mutation == "changed":
+        assert source.count(coordinate_line) == 1
+        source = source.replace(coordinate_line, "| `s14.cohort.planned-semantic-homes` | `691` |", 1)
+    elif mutation == "missing":
+        assert source.count(coordinate_line) == 1
+        source = source.replace(coordinate_line + "\n", "", 1)
+    else:
+        assert source.count(coordinate_line) == 1
+        source = source.replace(coordinate_line, coordinate_line + "\n" + coordinate_line, 1)
+    candidate = tmp_path / "reference.md"
+    candidate.write_text(source, encoding="utf-8")
+
+    with pytest.raises(AssertionError, match="S14 publication coordinates"):
+        _assert_s14_publication_matches(candidate)
 
 
 def test_g0_refuses_a_small_fixture_without_a_live_union_identity_observation() -> None:

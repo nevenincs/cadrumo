@@ -42,7 +42,7 @@ from ....domain.calculations.registry.temporal import select_revision
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....tests.registry_tree import bundled_registry_tree
-from .._verification_predicates import _evaluate_predicate_expression, evaluate_advisory_predicate_fires
+from .._verification_predicates import evaluate_advisory_predicate_fires, evaluate_predicate_expression
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -80,7 +80,7 @@ def _predicate(year: int):
 
 
 def _holds(year: int, rendimientos: str, pago_previo: str) -> bool:
-    return _evaluate_predicate_expression(
+    return evaluate_predicate_expression(
         _predicate(year).expression,
         {
             _SUMA_RENDIMIENTOS_NETOS: Decimal(rendimientos),
@@ -149,7 +149,7 @@ def test_an_absent_casilla_01_is_read_as_zero_and_still_fires(year: int) -> None
     keeps a future change to that default from silently reopening the gap.
     """
     assert (
-        _evaluate_predicate_expression(
+        evaluate_predicate_expression(
             _predicate(year).expression,
             {_PAGO_FRACCIONADO_PREVIO_DATOS_BASE: Decimal("450.00")},
             _profile(),
@@ -163,7 +163,7 @@ def test_the_calculate_path_advisory_agrees_with_the_verify_path(year: int) -> N
     """The two surfaces read one predicate, so a divergence would be a real defect.
 
     ``evaluate_advisory_predicate_fires`` drives the calculate-path diagnostic
-    and ``_evaluate_predicate_expression`` the verify-path finding. For this
+    and ``evaluate_predicate_expression`` the verify-path finding. For this
     operator they are exact complements, and pinning that here is what stops
     one surface from reporting the under-declaration while the other stays
     quiet.
@@ -175,5 +175,5 @@ def test_the_calculate_path_advisory_agrees_with_the_verify_path(year: int) -> N
             _PAGO_FRACCIONADO_PREVIO_DATOS_BASE: Decimal(pago_previo),
         }
         fires = evaluate_advisory_predicate_fires(expression, values)
-        holds = _evaluate_predicate_expression(expression, values, _profile())
+        holds = evaluate_predicate_expression(expression, values, _profile())
         assert fires is not holds, f"calculate/verify disagree at 01={rendimientos}, 02={pago_previo}"
