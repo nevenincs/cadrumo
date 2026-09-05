@@ -302,13 +302,14 @@ def _census_rows(
                 path=path,
                 category=_CENSUS_FIELD_CATEGORIES[path],
                 status=AeatSyncCensusStatus.NOT_COMPARED,
-                local_value=censo_values.get(path, ""),
+                local_value=censo_values.get(path),  # defect: blank collapses to unobserved
                 aeat_value=None,
                 supported_actions=actions,
                 supported_operations=operations,
             ),
         )
         for path in CENSAL_ADOPTABLE_PATHS
+        if path in censo_values  # defect: blank fields dropped
     )
 
 

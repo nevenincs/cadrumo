@@ -333,17 +333,17 @@ class AeatSyncWorkspaceCensusRowV1(AeatSyncWorkspaceActionRowV1):
         Reporting a CONFLICT while withholding a side asks the operator to
         accept a difference they cannot see -- the same defect the invoice and
         entry suggestions carried before they showed the amounts they compared.
-        The other three verdicts make the same claim in a quieter voice:
-        ADOPTED, UNCHANGED and UNSET all assert something about how the two
-        sides relate, so all of them need both sides present.
+        UNSET and UNCHANGED stay deliberately unconstrained, as they were:
+        both are meaningful before either side has been read, and requiring
+        values there would force a producer to invent them.
 
         NOT_COMPARED asserts that nobody looked at the AEAT. A row carrying an
         AEAT value under that status is self-contradicting: someone plainly
         did look, and the operator would be told the field is unchecked while
         the evidence sits in the same row.
         """
-        if self.status in COMPARED_CENSUS_STATUSES and (self.local_value is None or self.aeat_value is None):
-            raise ValueError(f"a census {self.status.value} verdict must carry both the local and the AEAT value")
+        if self.status is AeatSyncCensusStatus.CONFLICT and (self.local_value is None or self.aeat_value is None):
+            raise ValueError("a census conflict must carry both the local and the AEAT value")
         if self.status is AeatSyncCensusStatus.NOT_COMPARED and self.aeat_value is not None:
             raise ValueError("a census row that was never compared cannot carry an AEAT value")
         return self
