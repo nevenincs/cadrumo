@@ -1445,6 +1445,49 @@ def _test_subjects(test: ShippedModule, known: frozenset[str]) -> tuple[frozense
     return frozenset(modules), frozenset(symbols)
 
 
+def _support_hop_subjects(
+    test: ShippedModule,
+    known: frozenset[str],
+    spec: ShippedTreeSpec,
+) -> tuple[frozenset[str], frozenset[tuple[str, str]]]:
+    """Subjects a test reaches through a support module inside its own test package.
+
+    Test modules are excluded from the shipped population, so a relative import
+    of a sibling helper resolves to nothing and the test looks subjectless. On
+    this tree 239 of 3334 test modules were skipped that way: they are not
+    subjectless, they import a support module in their own tests package and
+    THAT module imports the real code.
+
+    The hop is applied ONLY to a test that resolved no shipped subject of its
+    own, and it is one hop deep. That direction matters: it can only give a
+    subjectless test some subjects, so the walk can newly REPORT a test whose
+    support reaches nothing but dead code. It can never add a live subject to a
+    test that is already reported and thereby silence an existing finding.
+    """
+    reached_modules: set[str] = set()
+    reached_symbols: set[tuple[str, str]] = set()
+    for node in ast.walk(test.tree):
+        if not isinstance(node, ast.ImportFrom):
+            continue
+        base = resolve_relative_import(test.name, test.is_package, node.level, node.module)
+        if base is None or base in known:
+            continue
+        for alias in node.names:
+            for candidate in (f"{base}.{alias.name}", base):
+                path = spec.src_root / Path(*candidate.split("."))
+                for target in (path.with_suffix(".py"), path / "__init__.py"):
+                    if not target.is_file() or not is_test_path(target, spec.src_root):
+                        continue
+                    try:
+                        support = ShippedModule(candidate, target, target.name == "__init__.py", parse_module(target))
+                    except (OSError, SyntaxError, UnicodeDecodeError):
+                        continue
+                    modules, symbols = _test_subjects(support, known)
+                    reached_modules.update(modules)
+                    reached_symbols.update(symbols)
+    return frozenset(reached_modules), frozenset(reached_symbols)
+
+
 def _test_findings(
     spec: ShippedTreeSpec,
     known: frozenset[str],
@@ -1479,6 +1522,8 @@ def _test_findings(
             continue
         test = ShippedModule(module_name_for(path, src_root=spec.src_root), path, False, tree)
         modules, symbols = _test_subjects(test, known)
+        if not modules and not symbols:
+            modules, symbols = _support_hop_subjects(test, known, spec)
         if not modules and not symbols:
             continue
         dead_modules = set(modules) | {m for m, _ in symbols if module_is_dead(m)}
