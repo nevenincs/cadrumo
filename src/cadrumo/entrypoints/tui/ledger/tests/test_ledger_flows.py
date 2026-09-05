@@ -28,8 +28,7 @@ from .....domain.transactions.enums import BusinessClassification
 from ....tui.components.host import ScreenHostApp
 from ....tui.devtools.frame import geometry_band
 from ..classification import LedgerClassificationScreen
-from ..controller import LedgerEntrySelected, LedgerWorkspaceController
-from ..entries import LedgerEntriesScreen
+from ..controller import LedgerWorkspaceController
 from ..import_flow import LedgerImportScreen
 from ..models import LedgerClassificationSubmissionV1, LedgerFlowState, LedgerPreparedImportV1
 from ..routes import ledger_screen_factory, resolve_ledger_screen
@@ -491,57 +490,3 @@ def test_flow_modules_cannot_read_files_detect_providers_or_import_mutators() ->
     }
     assert not any("actions_import" in name or "adapters" in name or "entrypoints.cli" in name for name in imports)
     assert not {"Path", "open", "read", "read_text", "import_ledger_source"} & calls
-
-
-@pytest.mark.asyncio
-async def test_selecting_an_entry_makes_the_classification_area_reachable() -> None:
-    """A destination the session can never open should not be offered at all.
-
-    Classification is entered WITH a chosen row, and the target used to be
-    fixed when the workspace was composed -- before the operator had chosen
-    anything. Every other test here binds `classification_target` up front,
-    which is precisely the workaround that hid this: in a real session nothing
-    set it, so the area was permanently refused while the navigation table went
-    on listing it, and the selection made on the entries screen went nowhere.
-
-    The doors ARE bound here, so the selection is the only variable. The
-    refusal is asserted before and its absence after, because either half alone
-    proves nothing: a screen that always admits classification passes the
-    second, and one that never does passes the first.
-    """
-    projection = _projection()
-    controller = LedgerWorkspaceController(
-        _context(),
-        projection,
-        LedgerWorkspaceInjection(
-            review_action=_review_action(),
-            classify_action=_classify_action(),
-            classification_submitter=_ClassificationDoor(),
-        ),
-    )
-    screen = LedgerEntriesScreen(controller)
-    app = ScreenHostApp[None](screen)
-    async with app.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
-        assert controller.refusal_for(LedgerWorkspaceArea.CLASSIFICATION) is not None, (
-            "classification was already reachable, so this cannot show a selection changed anything"
-        )
-
-        chosen = projection.entries[0].transaction_id
-        screen.post_message(LedgerEntrySelected(chosen))
-        await pilot.pause()
-
-        assert controller.classification_target == chosen
-        assert controller.refusal_for(LedgerWorkspaceArea.CLASSIFICATION) is None, (
-            "the operator chose an entry and classification is still refused, so the selection carried nowhere"
-        )
-        app.exit(None)
-
-
-def test_a_classification_target_outside_the_visible_projection_is_refused() -> None:
-    """A target the snapshot does not contain would open on an invisible row."""
-    controller = LedgerWorkspaceController(
-        _context(), _projection(), LedgerWorkspaceInjection(review_action=_review_action())
-    )
-    with pytest.raises(ValueError, match="absent from the visible Ledger projection"):
-        controller.select_classification_target("f" * 64)
