@@ -57,6 +57,7 @@ _LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_FRAME: Final[bytes] = b"cadrumo:ledger-tui-
 LEDGER_UNION_DENOMINATOR_SCHEMA_VERSION: Final[Literal[4]] = 4
 LEDGER_UNION_DENOMINATOR_ROOT: Final[Literal["cadrumo.ledger_union_denominator"]] = "cadrumo.ledger_union_denominator"
 _LEDGER_UNION_DENOMINATOR_FRAME: Final[bytes] = b"cadrumo:ledger-union-denominator:v4\x00"
+_LEDGER_MATRIX_CONTRACT_FRAME: Final[bytes] = b"cadrumo:ledger-capability-matrix-contract:v1\x00"
 _LEDGER_TUI_SUPPORTED_SURFACE_SOURCE_SET_FRAME: Final[bytes] = b"cadrumo:ledger-tui-supported-surface-source-set:v1\x00"
 _LEDGER_UNION_ROW_REVIEWED_AT: Final[datetime] = datetime.fromisoformat("2026-09-05T12:00:00+02:00")
 _LEDGER_MESSAGE_TYPES: Final[tuple[str, ...]] = (
@@ -1663,6 +1664,7 @@ class LedgerUnionReviewSnapshotV1(BaseModel):
     review_revision: str = Field(min_length=1)
     review_id: str = Field(min_length=1)
     reviewed_at: datetime
+    capability_ids: tuple[str, ...]
 
     @model_validator(mode="after")
     def _check_snapshot(self) -> LedgerUnionReviewSnapshotV1:
@@ -1672,6 +1674,10 @@ class LedgerUnionReviewSnapshotV1(BaseModel):
         _require_non_placeholder(self.review_revision, field_name="review_revision")
         _require_identity(self.review_id, field_name="review_id", pattern=_REVIEW_ID_PATTERN)
         _require_observed_at(self.reviewed_at, field_name="reviewed_at")
+        if not self.capability_ids or tuple(sorted(set(self.capability_ids))) != self.capability_ids:
+            raise ValueError("reviewed union capability identities must be nonempty, sorted, and unique")
+        for capability_id in self.capability_ids:
+            _require_identity(capability_id, field_name="capability_id", pattern=_CAPABILITY_ID_PATTERN)
         return self
 
     @classmethod
@@ -1686,6 +1692,7 @@ class LedgerUnionReviewSnapshotV1(BaseModel):
             review_revision=canonical.review_revision,
             review_id=canonical.row_review_attestation.review_id,
             reviewed_at=canonical.row_review_attestation.reviewed_at,
+            capability_ids=tuple(row.capability_id for row in canonical.rows),
         )
 
 
@@ -4635,6 +4642,7 @@ class LedgerCapabilityMatrixV1(BaseModel):
     current_denominator: LedgerDenominatorSnapshotV1
     accepted_union_review: LedgerUnionReviewSnapshotV1
     current_union_review: LedgerUnionReviewSnapshotV1
+    live_union: LedgerUnionDenominatorV1 | None = None
     accepted_authority_dispositions: AuthorityDispositionSnapshotV1
     current_authority_dispositions: AuthorityDispositionSnapshotV1
     current_subjects: tuple[EvidenceSubjectSnapshotV1, ...]
@@ -4658,6 +4666,15 @@ class LedgerCapabilityMatrixV1(BaseModel):
             raise ValueError("matrix contains duplicate row identities")
         if frozenset(row_ids) != self.current_denominator.capability_ids:
             raise ValueError("matrix rows must exactly equal current complete denominator")
+        if self.live_union is not None:
+            canonical_union = LedgerUnionDenominatorV1.model_validate(_serialized_python_data(self.live_union))
+            if LedgerUnionReviewSnapshotV1.from_union(canonical_union) != self.current_union_review:
+                raise ValueError("matrix reviewed union snapshot is stale against the supplied live union")
+            live_union_ids = frozenset(row.capability_id for row in canonical_union.rows)
+            if frozenset(row_ids) != live_union_ids:
+                raise ValueError("matrix rows must exactly equal supplied live union identities")
+            if self.current_denominator.capability_ids != live_union_ids:
+                raise ValueError("current denominator must exactly equal supplied live union identities")
         if frozenset(self.accepted_authority_dispositions.dispositions) != self.accepted_denominator.capability_ids:
             raise ValueError("accepted authority dispositions must exactly equal the accepted denominator")
         if self.accepted_authority_dispositions.census_id != self.accepted_denominator.census_id:
