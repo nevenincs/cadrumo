@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:a97b1cace7532b1ac28d79b4a8772f2f97ffc6d00c903cb59d675a2e72b76cbc'
+body_hash: 'sha256:cb1caa8bb27c51b85f069a0ae6f81250b49fef5d1cdf589ab41f7c7549f45885'
 step_id: 'S13'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
@@ -25,3 +25,5 @@ related:
 - `verify:` `uv run --no-sync pytest -q -n 0 dev/quality/tests/test_clitui_ledger_capability_matrix.py -k gate_reopening_accepts_only` -> `pass` (1 selected)
 - `verify:` `uv run --no-sync pytest -q -n 0 dev/quality/tests/test_clitui_ledger_capability_matrix.py -k any_reviewed_state_or_acceptance_drift` -> `pass` (5 selected)
 - `verify:` `uv run --no-sync pytest -q -n 0 dev/quality/tests/test_clitui_ledger_capability_matrix.py -k fully_reminted_union` -> `pass` (1 selected)
+- `verify:` `uv run --no-sync pytest -q -n 0 dev/quality/tests/test_clitui_ledger_capability_matrix.py` -> `pass` (287 passed)
+
