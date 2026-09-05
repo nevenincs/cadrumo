@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:f567b8d8a2ad5dfb9bb11db1cdc4603de4d66930e59feb12a802fa40f4d6a79e'
+body_hash: 'sha256:5e123dc6470e8989957e6b9f514786331c173f0bf5015f88bc151b948736a48c'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -538,6 +538,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S656` - Floor the parsed function surface behind the re-homed digest site gate, since its claim is an absence over the functions a site defines and a module gutted to a shell declares no private digest helper for the same reason it declares nothing at all; `dev/packaging/tests/test_hashing.py`.
 - [x] `W02.P02.S657` - Route the five ledger notice gates through one parsed-tree helper that asserts each module still carries a surface, since every one of their claims is an absence satisfied by a module gutted to a shell and this family is actively being rehomed; `dev/locales/tests/test_ledger_notice_action_conformance.py`.
 - [x] `W02.P02.S658` - Floor the stated readers the intentional rationale gate actually checks, since a disposition may legitimately name none and zero checks is therefore a shape the gate already treats as normal, so it cannot tell one silent disposition from a rationale format that silenced all of them; `dev/tests/test_unreachable_module_ratchet_gate.py`.
+- [x] `W02.P02.S659` - Give the unreachable-module ratchet a contention budget, since four of its cases run between 122 and 137 seconds serially and land together on one worker under the default parallelism, where the wall-clock ceiling kills the first to cross it and takes every sibling on that worker down as never having run; `dev/tests/test_unreachable_module_ratchet_gate.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

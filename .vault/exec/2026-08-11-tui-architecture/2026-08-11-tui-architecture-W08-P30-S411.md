@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:9fb7fdfa6bc063531aafe6ea8bd3316326b1acda0b90320c1d0a4a2cc250defa'
+body_hash: 'sha256:dc740cccf47ee1685f4724b0181eeb8f9ecd5c1a2dd66054d0b2a4b5ec300dce'
 step_id: 'S411'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -13,6 +13,9 @@ related:
 
 # Carry an operator's Ledger selection into the areas that are entered with one. CORRECTED AFTER MEASURING THE REFUSAL RULES, which the first wording got wrong in two ways. It is THREE areas, not four: reconciliation has no door check and is reachable whenever the projection admits it. And of the three, only EVIDENCE was a composition gap -- now closed, the installed factory binds the evidence action and reads the attachment review queue. CLASSIFICATION and IMPORT are not composition gaps at all: classification refuses without a selected transaction and import without a prepared file, and neither is a fact a factory can hold at mount because both are produced by the operator inside the workspace. So what remains is NAVIGATION, not wiring: the entries and review screens must be able to carry a chosen row into the classification area, and the import action must be able to hand a prepared import back to its own area, with the controller re-composed around that state. Until that exists the two areas are correctly refused, and the navigation table should say why rather than listing a destination the session can never open.
 
+## S14 corrective quarantine (2026-09-05)
+
+The import-preparation operator reachability work recorded below was removed from production because this row remains `DISPLACED_AND_HELD_UNTIL_G3`. The prior IMPORT `CLOSED` claim is therefore superseded: there is no Overview path-entry route, controller admission, installed import submitter, import operator action, or TUI-only producer/coverage. The canonical application validator at `application/ledger/import_preparation.py` and its direct application tests remain backend-only. This record does not authorize reimplementation; clitui-ledger remains the sole owner through W05.P21.S136, with W05.P19.S128 as the disposition checkpoint.
 ## Scope
 
 - `src/cadrumo/entrypoints/tui/ledger/controller.py and src/cadrumo/entrypoints/tui/ledger/routes.py`
@@ -150,3 +153,4 @@ to make a call site read symmetrically would have been invented API. The
 dependency was dropped with it.
 
 91 passed across the ledger and installed-entrypoint suites.
+
