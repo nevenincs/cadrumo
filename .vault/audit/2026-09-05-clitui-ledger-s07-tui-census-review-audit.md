@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:c6cac07a6aa1142f28c119de28c295446e6935d0b5220a2fa7ba654e1bb3dbc5'
+body_hash: 'sha256:c7e7dd4a71d9c9894a2a765ecacc32f587035478beac299d61645247d8ace792'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-reference]]"
@@ -349,3 +349,59 @@ full matrix module passes all 161 tests. Ruff format/check, scoped `ty`,
 basedpyright, and the feature Vault check pass. The record/reference/plan
 preserve the accurate current live observations, but S07 cannot pass the
 detector-teeth gate while this same-scope rebinding is silent.
+
+## Comprehensive binder remediation review
+
+Ruling: **NOT ACCEPTED**. Direct nested-definition and import bindings are now
+counted, but expressions evaluated in the enclosing scope while constructing a
+nested definition remain skipped. One HIGH remains.
+
+The stable live census again contains 126 sources, seven routes with Overview
+solely installed, zero consumers, two injected read-action ids, zero mutation
+doors, 78 CLI declarations all `not-implemented`, and six harness files with
+65 test functions. Independent framing retains source digest
+`sha256:e7337508a02ef2260e0b28205c31bb872b69f59aa51a18391ae209c21b8f9d57`
+and census digest
+`sha256:c136cfe1ae3f82a239476c00e805f8c9a29e010d502e74397963cea7e6f42371`.
+No production TUI file changed; G0 remains OPEN and the TUI hold remains in
+force.
+
+Same-name nested function, async-function, class, import, and import-from
+bindings now reject. Parameters, global/nonlocal declarations, exception and
+pattern captures, `Name(Store/Del)` targets, conditional and repeated writes,
+and read-before-definition are included. Simple aliases pass, and writes in a
+differently named nested body remain correctly isolated. All earlier branch,
+dead-call, free/decorated-handler, unused-constant, dead-route/factory, real
+route, and changed-initial-route controls retain their expected behavior.
+
+### definition-expression-binding | high | Nested definitions skip enclosing-scope expressions that can rebind a followed alias
+
+The collector's `visit_FunctionDef`, `visit_AsyncFunctionDef`, `visit_ClassDef`,
+and `visit_Lambda` correctly avoid their nested bodies, but they also avoid
+defaults, decorators, bases, and keywords that Python evaluates in the
+enclosing scope. Those expressions can contain assignment expressions and
+rebind a followed alias before the effective return.
+
+Two independently executed, type-valid mutations demonstrate the silent
+misclassification. After assigning
+`screen = ledger_screen_factory(...)(context)`, a differently named nested
+function with default `value=(screen := Screen())` replaces the enclosing
+`screen`; returning `screen` therefore returns the generic screen, but the
+census still reports Ledger/Overview. The equivalent lambda default mutation
+also returns a generic screen while the census reports Ledger/Overview.
+
+The collector must record the nested definition's name without entering its
+body, while separately visiting every expression evaluated in the current
+scope: function/async-function decorators and parameter defaults/keyword
+defaults, lambda defaults, and class decorators, bases, and keyword values.
+Annotations and type-parameter expressions must follow the repository's Python
+version and `from __future__ import annotations` evaluation rules, or be
+conservatively rejected when they write a followed name. Add durable function-
+default and lambda-default walrus mutations, plus class-base/decorator controls,
+while retaining the nested-body isolation positive.
+
+The focused S07 detector selection passes 34 tests with 135 deselected, and the
+full matrix module passes all 169 tests. Ruff format/check, scoped `ty`,
+basedpyright, and the feature Vault check pass. The record/reference/plan remain
+accurate about the current code, but S07 does not meet detector teeth until
+enclosing-scope definition expressions are covered.
