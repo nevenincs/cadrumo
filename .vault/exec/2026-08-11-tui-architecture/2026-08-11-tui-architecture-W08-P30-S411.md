@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:bc709d7bbb4df26d24625d208e5a6119dfde21d9f283b89e62cd9d477a621a05'
+body_hash: 'sha256:9fb7fdfa6bc063531aafe6ea8bd3316326b1acda0b90320c1d0a4a2cc250defa'
 step_id: 'S411'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -128,3 +128,25 @@ back to its area" becomes a meaningful sentence. Unlike the four labels in this
 campaign that dissolved on measurement, this one was verified in three
 independent ways -- no catalogue entry, no production constructor, and an
 underlying service requiring an input the TUI cannot obtain.
+
+CLOSED. The doors are bound, which was the last gap and one the earlier passes
+had not noticed: navigation admitted classification and import, but the
+INSTALLED factory bound only the review and evidence doors, so a live session
+still refused both with `submission_unavailable`. Two areas can be reached only
+because all three of action, target and submitter are now present.
+
+`operator.ledger.classify` and `operator.ledger.import` join the session's
+action set. The import submitter forwards an already-sealed command to
+`import_ledger_source`, so the door never sees a path the presentation layer
+chose. The classification submitter applies the patch through
+`update_manual_transaction_fields` and passes the CATALOGUE action id as the
+source command rather than a bare "tui" label -- an amended classification that
+cannot say which authority it was made under is an audit gap in a filing-bound
+record.
+
+One kwarg was written and removed rather than left: `import_action` is not part
+of `ledger_screen_factory`'s surface, and adding a parameter nothing consumes
+to make a call site read symmetrically would have been invented API. The
+dependency was dropped with it.
+
+91 passed across the ledger and installed-entrypoint suites.
