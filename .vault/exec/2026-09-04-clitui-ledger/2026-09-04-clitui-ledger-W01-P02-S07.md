@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:f75965165d223bacd82cdab30317437b0466cbc63f5a279821b9265a47bf3241'
+body_hash: 'sha256:57f33fc2edfc5d747148f675ace8b288fe46cd822b5479422ac4fb9b424825ec'
 step_id: 'S07'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
@@ -25,7 +25,7 @@ related:
 - `M` `.vault/index/clitui-ledger.index.md`
 - `M` `dev/quality/clitui_ledger_capability_matrix.py`
 - `M` `dev/quality/tests/test_clitui_ledger_capability_matrix.py`
-- `verify:` `uv run --no-sync pytest -q -n 0 dev/quality/tests/test_clitui_ledger_capability_matrix.py` -> `pass` (169 passed)
+- `verify:` `uv run --no-sync pytest -q -n 0 dev/quality/tests/test_clitui_ledger_capability_matrix.py` -> `pass` (176 passed)
 - `verify:` `uv run --no-sync ruff format --check dev/quality/clitui_ledger_capability_matrix.py dev/quality/tests/test_clitui_ledger_capability_matrix.py` -> `pass`
 - `verify:` `uv run --no-sync ruff check dev/quality/clitui_ledger_capability_matrix.py dev/quality/tests/test_clitui_ledger_capability_matrix.py` -> `pass`
 - `verify:` `uv run --no-sync basedpyright dev/quality/clitui_ledger_capability_matrix.py dev/quality/tests/test_clitui_ledger_capability_matrix.py` -> `pass`
