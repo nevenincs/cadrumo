@@ -5,16 +5,11 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:6d5fbaf497faf3403b10a9607fab8da4c8056c7f38917cb5b8ffe684eeb861ce'
+body_hash: 'sha256:8f5efe5e9974995ab63b34a5d79ce91bd1479fa2aa9936f2af946843aebcdef0'
 step_id: 'S11'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Mark every TUI-applicable union and matrix row held until G3, retain component-only versus installed distinctions, and fail closed on hold drift or additions
 
@@ -25,23 +20,6 @@ related:
 - `.vault/reference/2026-09-04-clitui-ledger-reference.md`
 
 ## Changes
-
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
-
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
-
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->
 
 - `M` `dev/quality/clitui_ledger_capability_matrix.py`
 - `M` `dev/quality/tests/test_clitui_ledger_capability_matrix.py`
@@ -54,3 +32,6 @@ related:
 - `verify:` `uv run --no-sync ruff check dev/quality/clitui_ledger_capability_matrix.py dev/quality/tests/test_clitui_ledger_capability_matrix.py` -> pass
 - `verify:` `uv run --no-sync ty check dev/quality/clitui_ledger_capability_matrix.py` -> pass
 - `verify:` `uv run --no-sync basedpyright dev/quality/clitui_ledger_capability_matrix.py dev/quality/tests/test_clitui_ledger_capability_matrix.py` -> pass
+- `verify:` `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-09-04-clitui-ledger-plan.md --json` -> pass
+- `verify:` `uv run --no-sync vaultspec-core vault feature index --feature clitui-ledger --json` -> pass
+- `verify:` `uv run --no-sync vaultspec-core vault check all --feature clitui-ledger --no-hints` -> pass
