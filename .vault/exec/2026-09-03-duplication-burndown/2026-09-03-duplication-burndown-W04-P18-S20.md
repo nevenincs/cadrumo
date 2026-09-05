@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:7a9820a37136118ab006b1abe82dc34531291297703b6033a79eafe4a75de979'
+body_hash: 'sha256:a56706d828b34b6193d34eb57b9fcc256472074072c0e47fd2badc82ea91563f'
 step_id: 'S20'
 related:
   - "[[2026-09-03-duplication-burndown-plan]]"
@@ -85,3 +85,33 @@ deferred `entrypoints.tui` prefix. Two same-shaped aliases were also
 deliberately left alone: `_IssueMessage` and `_GroundingDetail` carry the same
 `ElidedProse(512)` constraint but name different concepts, and merging on shape
 would have made the names lie.
+
+## Stem restatements adjudicated
+
+The thirteen `stem_restatement` rows were read individually, and most are NOT
+defects. Value plus a shared name stem still pairs constants that were chosen
+independently:
+
+* `KEY_SIZE` is AES-256's key length; `_RECOVERY_KEY_SIZE` sits beside
+  `_MNEMONIC_WORD_COUNT = 24` and is mnemonic entropy, 24 words being 256 bits.
+  Both are 32 for unrelated reasons, and merging them would couple the recovery
+  format to the cipher.
+* `_HASH_CHUNK_SIZE` buffers a local file into `hashlib`; `_CHUNK_SIZE` in the
+  manuals fetcher buffers an HTTP response. Both are the conventional 64 KiB,
+  independently chosen.
+
+That is the kind's honest limitation: it reports a candidate, and a
+conventional value under a related name is its false-positive shape.
+
+One row is a real defect and is fixed here. `application/auth/sessions.py`
+declared `_PROFILE_TAX_ID_PATH = "identity.tax_id"` and then used the raw
+literal three more times IN THE SAME FILE, so the constant carried none of the
+weight it was written for. The three uses now route through it.
+
+The wider fact is larger than this Step and is left for an owner. The path
+string `"identity.tax_id"` appears as a bare literal across 23 production
+modules and 261 test modules with no canonical declaration anywhere: the user
+profile has no fact-path vocabulary, so a rename of that path would drift
+silently across the tree. Naming that vocabulary is a design decision about
+where profile fact paths live, not a consolidation this campaign can make on
+its own authority.
