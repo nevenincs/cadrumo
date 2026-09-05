@@ -19,44 +19,18 @@ This reference maps the first semantic-search-led census of Ledger behavior owne
 
 ### Campaign matrix publication
 
-This document is the authoritative human-readable publication surface for the `LedgerCapabilityMatrixV1` campaign contract in `dev/quality/clitui_ledger_capability_matrix.py`. The live reconciliation adds `ledger.import.prepare`: it validates and normalizes an entered local path into an auto-provider `LedgerSourceImportCommand`; it does not execute an import. The exact live union is 761 raw observations, 771 observation-to-row selections, and 694 semantic rows. The installed read-only Overview surface selects `ledger.workspace.read` and this preparation query only; it does not install `ledger.import.source` or any import execution. This denominator and matrix-source change invalidates the earlier S14 attestation, G0 receipt, and external acceptance anchor. No replacement attestation, receipt, or anchor has been issued: G0 is open, G1 through G4 remain locked, and the Ledger TUI implementation hold remains active.
+This document is the authoritative human-readable publication surface for the `LedgerCapabilityMatrixV1` campaign contract in `dev/quality/clitui_ledger_capability_matrix.py`. The live reconciliation admits `ledger.import.prepare` only through its public frontend-neutral operation: it validates and normalizes an entered local path into an auto-provider `LedgerSourceImportCommand`; it does not execute an import. The exact live union is 761 raw observations, 770 observation-to-row selections, and 694 semantic rows. The installed read-only Overview surface selects only `ledger.workspace.read`; it neither selects preparation nor installs `ledger.import.source` or any import execution. Preparation is explicitly backend-helper-only: its planned `LedgerImportPreparationRequest` to `LedgerSourceImportCommand` `QUERY` row has backend `ABSENT`/`UNPROVEN`, CLI and TUI not applicable, and `PRODUCT` primary plus `PROOF` secondary gaps. Composition, artifact, provenance, and registry are not applicable. This correction preserves the separate higher-level `ledger.import.source` authority and parity gaps.
 
 | Publication field | Current value |
 | --- | --- |
 | Contract / schema | `LedgerCapabilityMatrixV1` / `4`; `LedgerUnionDenominatorV1` / `4` |
-| Publication revision | `s14-import-prepare-reconciliation-1`; not accepted |
-| Contract source digest | `sha256:e92be258d4801cfdcf8b6096d9105d05c2f31345df91a36287244a9490977aec` (newline-normalized framed bytes) |
-| Union / row review | `761` observations / `771` edges / `694` rows; union `sha256:1abe7593edafc15bf1006ac1ab5926936cebf8e379f1bb268f513de64b7121e8`; row review `sha256:780008bd7f25097b412184e4f19e76a6750313322d735e34ffb81fa627db8ed0` |
-| Current G0 state | **OPEN**; previous attestation, receipt, and external anchor are stale and invalidated |
-| TUI hold | Active; Overview admits preparation and workspace-read queries only, never import execution |
-#### Superseded G0 acceptance record (historical)
+| Publication revision | `s14-import-prepare-backend-helper-reconciliation-2`; preacceptance only |
+| Contract source digest | `sha256:00c2e083744dfb8ddd7d9039a281233e15d5088d2f3bcb4eab353505bee68b30` (newline-normalized framed bytes) |
+| Union / row review | `761` observations / `770` edges / `694` rows; digests refreshed from the stable candidate tree |
+| Current G0 state | **OPEN**; preacceptance ruling is `REJECT`, accepted receipt count is `0`, and no external acceptance anchor is present |
+| TUI hold | Active; Overview admits only the workspace-read query |
 
-The following acceptance material is historical only. It is invalid for the current 694-row union and must not be reused; a future G0 closure requires fresh independent review, a fresh receipt, and a fresh external anchor. The labels below are durable review roles only; no agent identity or team topology is recorded. Both rulings carry the observed date `2026-09-05`. Because no event time was supplied, the typed attestation and external subject use the explicit date-normalized value `2026-09-05T00:00:00+02:00`; it denotes date granularity, not a claimed review time.
-
-| Receipt | Ruling | Bound evidence | Receipt digest |
-| --- | --- | --- | --- |
-| `primary-independent-review` | `ACCEPT`; zero blockers | Exact 693-row identity equality; hostile one-row/full-union refusal; lossless gap cohorts `AUTHORITY=112`, `REGISTRY=546`, `PRODUCT=689`, `ARTIFACT=39`, `REACHABILITY=679`, `COMPOSITION=638`, `PROVENANCE=562`, `PROOF=693`; annotations `CLI_OWNED=112`, `COMPONENT_ONLY=679`, `INSTALLED=1` with `ledger.workspace.read` sole installed row; source-coordinate detector; focused 11 plus mutation, static, and Vault checks | Supplied ruling-envelope digest `sha256:e862e5183d3755932386d65f991bab2a0b508952d1648b6e49d915e803263ca1` |
-| `second-independent-review` | `ACCEPT`; zero blockers | Source, union, review, row-attestation, denominator, candidate-matrix, pre-receipt-basis, and pending-attestation digests below; `760` observations, `769` selections, `693` unique identities; hostile mutation refusal; lossless cohorts; `ledger.workspace.read` sole installed row; 297 matrix tests plus static, compile, and Vault checks | Locally computed canonical-envelope digest `sha256:1d6090de2b908208e6c3cd1934ca18e64a12eeb8d0982ab67abea79854631d17` |
-
-The second reviewer supplied no envelope digest. Its receipt digest is therefore explicitly local derivation, computed by the contract's `_canonical_digest` serializer over this complete payload; it is not represented as reviewer-supplied:
-
-```json
-{"blockers":[],"candidate_commit":"f9580577ffcb1d730c6459c73ff209e3ea3412bc","candidate_matrix_digest":"sha256:c4a210bbd5410a3b6f7630262277b0cfc780d278815cc7a58da66dccd265c30a","candidate_tree":"4db16a09813d8f41702b8779881f3996e9f8de39","denominator_digest":"sha256:48c2c800faa2c9932811678fc16c8caff2cae89bcdaf81512e7ae7aa29d5d140","denominator_revision":"row-review-v1","observations":{"identities":693,"raw":760,"selections":769},"pending_attestation_digest":"sha256:01eee26b8be50f485801e15271361cc1bcd76de562cc8aa4c2e7066f6fc75d7","pre_receipt_basis_digest":"sha256:a8cd7cb17aea3d508459423c708b596d8931c76660fee6abf987c2c6fe21d7bd","receipt_id":"receipt.ledger.independent_review.second","reviewer":"second-independent-review","row_attestation_digest":"sha256:fc15a433ad145832934cbe894d3d0b875d27e9a54ed1a70ae271c16ff81aedf7","row_review_digest":"sha256:4e42e5e04ccfd7a8654e629933698e141033b0767d0f94ec5433619400203ff8","ruling":"accept","ruling_date":"2026-09-05","schema_version":1,"source_digest":"sha256:18e201e66d73b883ad015aff966a8255febeffbac7b04e923d278d2b02adce58","union_digest":"sha256:8a158b5cc4c8e6c3035dc272999af61ac6cb080af8c208eccc8d28e4105a7575","union_review_basis_digest":"sha256:f1fb6a15d1d93188ae50abc0ff76f6846723e71450f01173d76ea03be946212a","verification":{"matrix_tests_passed":297,"static_checks":"pass","vault_checks":"pass"}}
-```
-
-The accepted typed state binds the unchanged pre-receipt basis to `attestation.ledger.g0`, the exact one-element receipt identity set, and the external acceptance record:
-
-| Acceptance field | Bound value |
-| --- | --- |
-| Attestation / digest | `attestation.ledger.g0` / `sha256:d0b8630c9e137efb3e308ed7f185623745ee4f15c573f9cbd154264ee33e34d7` |
-| Reviewer / ruling | `primary-independent-review` / `ACCEPT` |
-| Receipt-set digest | `sha256:c8db11ec579df4b3b0632d3fbc12d872c6d626523c32b317cb8bc7fdc3574eb4` |
-| G0 receipt | `receipt.ledger.g0_denominator_and_ownership_freeze`; closure basis `sha256:dc2a1aa901e96941fdad4dbd4dbb1e770412681433203927f51d7361e068d815`; attestation digest `sha256:d0b8630c9e137efb3e308ed7f185623745ee4f15c573f9cbd154264ee33e34d7` |
-| Accepted matrix digest | `sha256:6f4dcc03bbf6c8780affefb35546aaa47c3f883e83e6150ff5bb30aed6151f50` |
-| External subject | `subject.ledger.acceptance_record.g0`; revision `g0-acceptance-2026-09-05`; locator `reference://clitui-ledger/g0-acceptance-record`; digest `sha256:0c3807c8c53259c97b4bd4ac923c3de5f216684910d9f0674f5ee526ffb9f64a` |
-| External coordinate | `evidence.acceptance_record.g0_independent_review`; `review` / `independent_engineering_review`; all eight axes |
-
-Live evaluation against the exact 693-row union, current census and source subject, and the exact external subject/anchor returns G0 `closed=true` with zero blockers. Omitting the anchor returns `closed=false`; changing the independently observed subject revision returns `closed=false` as stale. No G1, G2, G3, or G4 receipt is present. The active global and row-level TUI hold remains unchanged until accepted G3 closure.
+Earlier acceptance material is historical only and is not represented in the active matrix state. A future G0 closure requires a fresh independent `ACCEPT` attestation, receipt, and external acceptance anchor bound to this exact candidate.
 
 #### Mandatory source-stream landscape
 

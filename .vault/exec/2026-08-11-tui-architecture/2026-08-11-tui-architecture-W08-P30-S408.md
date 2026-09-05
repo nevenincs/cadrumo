@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:bd03cac8e2a29c956a7c84df88c7d1333f7d703281379ea50e0f36bb5c980bc2'
+body_hash: 'sha256:b4670723c028a4cc56a6a22a7416df6b7341b32a7f268d5a143235f2394029a8'
 step_id: 'S408'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -63,3 +63,64 @@ an environment gate, not an assertion; 95 of 96 notification tests pass.
 STILL OPEN: census, evidence-comparison and reconciliation rows carry no values
 (item 4), and LOCAL_RECONCILIATION still has no authority anywhere -- its
 `local_row_reader_unavailable` refusal remains correct.
+
+Two zones gained their local reader. Two remain refused, and the refusals now
+say something the previous ones did not.
+
+CENSUS. The projection contract made pre-pull census rows UNPUBLISHABLE: every
+census row required both LOCAL_PROFILE and AEAT_CENSUS to be observed, and the
+AEAT side is never captured before a pull. So the zone could only ever be empty
+beside a local source reporting a profile it had read -- exactly the pairing
+this Step opens with.
+
+The four census statuses are all VERDICTS: each claims someone compared the two
+sides. Reusing one would have told the operator their address matches, or
+conflicts, on the strength of an observation nobody made. UNSET is the closest
+trap -- it reads like "nothing here" but says the FIELD has no value, not that
+nobody checked. NOT_COMPARED is the missing state, and with it the AEAT-source
+requirement narrows to rows that actually claim a verdict.
+
+Rows come from CENSAL_ADOPTABLE_PATHS, the authority on which profile paths an
+AEAT censal read can speak to at all. A path list written here instead would
+produce rows a real pull could never fill; an import-time check fails if the
+two ever drift. One row per path INCLUDING the paths the profile leaves blank,
+because the blank field is the one a pull is most likely to change. A path the
+record does not carry is the empty string -- observed and blank -- never None,
+which on this row means nobody looked and is false of a record this session
+read to build the row at all.
+
+NOTIFICATIONS. Custody is read now (the count reader composed earlier), but the
+overview row still reported the local side as never observed, so an observable
+count of zero sat beside a row claiming nobody looked. Both cannot be true and
+the count is the one backed by a read. Whether custody was read is a fact about
+the SESSION rather than about the area, so it is decided per call rather than by
+the static area set: no reader composed stays NOT_OBSERVED, zero documents is
+ABSENT, documents present is PRESENT.
+
+STILL REFUSED, with reasons that are now specific. Notification ROWS need
+issued_on, read_state and category; the custody record carries certificado_id,
+attachment digest, byte size, source URL and fetch time, and none of the three.
+That is a genuine absence of local authority for the row shape, not an
+uncomposed reader. LOCAL_RECONCILIATION has no authority anywhere in the
+codebase; nothing records a local reconciliation decision, so there is nothing
+to read.
+
+Teeth, four defects each caught by its own gate: local_value falling back to
+None (blank collapses to unobserved), dropping rows for absent paths, publishing
+a verdict without the AEAT observation, and allowing a NOT_COMPARED row to carry
+an AEAT value. The custody defect -- claiming an unread store as observed --
+failed 15 tests. All restored by copy, defect count 0. 140 passed.
+
+## Notes
+
+REGRESSION FOUND AND FIXED, mine. The census value invariant added under S422
+rejected the devtools workbench fixture, which built a CONFLICT row carrying
+neither value. Every aeat-sync workbench fixture surface raised ValidationError
+on build. The fixture now carries the two addresses it claims to be comparing,
+which is what a conflict row is for. Nine responsive checks pass.
+
+Ten dev/locales failures are pre-existing and not from this change: none names
+the added key, and the two inspected closely fail on production files this
+change does not touch -- a new unsanctioned language-override site at
+entrypoints/tui/destination_session.py::run_requested_destination, and a
+scanner regression on flows.progress.required. 646 passed alongside them.

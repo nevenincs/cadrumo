@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:6969669725d81362de39a772413e1433bdf452ac40a075d96dfd4bf7dbe2038d'
+body_hash: 'sha256:557e9b97afab2c8ab3106c99ede9d4621233a7c523ada27c33107dc14f614260'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -540,6 +540,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S658` - Floor the stated readers the intentional rationale gate actually checks, since a disposition may legitimately name none and zero checks is therefore a shape the gate already treats as normal, so it cannot tell one silent disposition from a rationale format that silenced all of them; `dev/tests/test_unreachable_module_ratchet_gate.py`.
 - [x] `W02.P02.S659` - Give the unreachable-module ratchet a contention budget, since four of its cases run between 122 and 137 seconds serially and land together on one worker under the default parallelism, where the wall-clock ceiling kills the first to cross it and takes every sibling on that worker down as never having run; `dev/tests/test_unreachable_module_ratchet_gate.py`.
 - [x] `W02.P02.S660` - Budget the four dev/tests modules nearest the per-test ceiling, measured under the default parallelism at 277s, 252s, 218s and 207s against 300s, since loadfile distribution puts a whole module on one worker so the margin is shared and the first case to cross it takes every sibling down as never having run; `dev/tests/test_modelo_workspace_fixed_point.py dev/tests/test_public_authority_cutover.py dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_write_path_coverage_gate.py`.
+- [x] `W02.P02.S661` - Route the CI lane prohibition gates through one guarded workflow loader that refuses a lane declaring no jobs or no steps, since a missing key already raises loudly but an empty collection satisfies every prohibition while describing a lane that runs nothing; `dev/ci/tests/test_ci_workflow.py`.
+- [x] `W02.P02.S662` - Floor the configured extra files that reach the release annotation check, since the corpus arrives through a get default and a renamed or emptied key yields no entries, which is the same silent success the gate exists to prevent one level up; `dev/ci/tests/test_action_pinning.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
