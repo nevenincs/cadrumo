@@ -1397,6 +1397,7 @@ class LedgerUnionDenominatorV1(BaseModel):
         observation_ids = tuple(item.observation_id for item in self.observations)
         if len(set(observation_ids)) != len(observation_ids):
             raise ValueError("union source observation identities must be unique")
+        _validate_non_registry_observation_adjudication(self.observations)
         if (
             tuple(sorted(self.observations, key=lambda item: (item.source.value, item.observation_id)))
             != self.observations
@@ -2005,6 +2006,240 @@ _LEDGER_TUI_ROUTE_CAPABILITIES: Final[Mapping[str, tuple[str, ...]]] = MappingPr
     }
 )
 
+
+_EXPLICIT_NON_REGISTRY_OBSERVATION_SELECTIONS: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
+    {
+        "artifact_product:flat.csv": ("ledger.export.csv",),
+        "artifact_product:flat.jsonl": ("ledger.export.jsonl",),
+        "artifact_product:flat.xlsx": ("ledger.export.xlsx",),
+        "artifact_product:recovery.encrypted_archive": ("ledger.export.restore_archive",),
+        "artifact_product:review.google": ("ledger.export.google_transport",),
+        "artifact_product:review.workbook_sidecar": ("ledger.export.review_package",),
+        "backend_operation:ledger.classification.bulk_csv": ("ledger.classification.bulk_csv",),
+        "backend_operation:ledger.classification.rule_add": ("ledger.classification.rule_add",),
+        "backend_operation:ledger.classification.rule_apply": ("ledger.classification.rule_apply",),
+        "backend_operation:ledger.counterparty.forget": ("ledger.counterparty.forget",),
+        "backend_operation:ledger.counterparty.record": ("ledger.counterparty.record",),
+        "backend_operation:ledger.counterparty.resolve": ("ledger.counterparty.resolve",),
+        "backend_operation:ledger.evidence.add": ("ledger.evidence.add",),
+        "backend_operation:ledger.evidence.attachment_queue": ("ledger.evidence.attachment_queue",),
+        "backend_operation:ledger.evidence.attachment_view": ("ledger.evidence.attachment_view",),
+        "backend_operation:ledger.evidence.batch": ("ledger.evidence.batch",),
+        "backend_operation:ledger.evidence.consent_rederive": ("ledger.evidence.consent_rederive",),
+        "backend_operation:ledger.evidence.consent_survey": ("ledger.evidence.consent_survey",),
+        "backend_operation:ledger.evidence.list": ("ledger.evidence.list",),
+        "backend_operation:ledger.evidence.remove": ("ledger.evidence.remove",),
+        "backend_operation:ledger.evidence.update": ("ledger.evidence.update",),
+        "backend_operation:ledger.evidence.view": ("ledger.evidence.view",),
+        "backend_operation:ledger.export.flat": ("ledger.export.flat",),
+        "backend_operation:ledger.import.aggregate_results": ("ledger.import.aggregate_results",),
+        "backend_operation:ledger.import.parsed_rows": ("ledger.import.parsed_rows",),
+        "backend_operation:ledger.import.source": ("ledger.import.source",),
+        "backend_operation:ledger.invoice.confirm_draft": ("ledger.invoice.confirm_draft",),
+        "backend_operation:ledger.invoice.extract_draft": ("ledger.invoice.extract_draft",),
+        "backend_operation:ledger.lifecycle.archive": ("ledger.lifecycle.archive",),
+        "backend_operation:ledger.lifecycle.remove": ("ledger.lifecycle.remove",),
+        "backend_operation:ledger.lifecycle.reset": ("ledger.lifecycle.reset",),
+        "backend_operation:ledger.lifecycle.restore": ("ledger.lifecycle.restore",),
+        "backend_operation:ledger.lifecycle.reviewed_exclude": ("ledger.lifecycle.reviewed_exclude",),
+        "backend_operation:ledger.lifecycle.stash": ("ledger.lifecycle.stash",),
+        "backend_operation:ledger.llm.apply": ("ledger.llm.apply",),
+        "backend_operation:ledger.llm.apply_evidence_classification": ("ledger.llm.apply_evidence_classification",),
+        "backend_operation:ledger.llm.apply_saturated": ("ledger.llm.apply_saturated",),
+        "backend_operation:ledger.llm.apply_split": ("ledger.llm.apply_split",),
+        "backend_operation:ledger.llm.classify_with_evidence": ("ledger.llm.classify_with_evidence",),
+        "backend_operation:ledger.llm.diagnostics": ("ledger.llm.diagnostics",),
+        "backend_operation:ledger.llm.iva_derive": ("ledger.llm.iva_derive",),
+        "backend_operation:ledger.llm.reject": ("ledger.llm.reject",),
+        "backend_operation:ledger.llm.review_decision": ("ledger.llm.review_decision",),
+        "backend_operation:ledger.llm.saturate": ("ledger.llm.saturate",),
+        "backend_operation:ledger.llm.suggest": ("ledger.llm.suggest",),
+        "backend_operation:ledger.llm.suggest_split": ("ledger.llm.suggest_split",),
+        "backend_operation:ledger.participation.get": ("ledger.participation.get",),
+        "backend_operation:ledger.preflight.catalogue": ("ledger.preflight.catalogue",),
+        "backend_operation:ledger.preflight.readiness": ("ledger.preflight.readiness",),
+        "backend_operation:ledger.ratio.list": ("ledger.ratio.list",),
+        "backend_operation:ledger.ratio.set": ("ledger.ratio.set",),
+        "backend_operation:ledger.ratio.unset": ("ledger.ratio.unset",),
+        "backend_operation:ledger.ratio.validate": ("ledger.ratio.validate",),
+        "backend_operation:ledger.transaction.attach": ("ledger.transaction.attach",),
+        "backend_operation:ledger.transaction.create": ("ledger.transaction.create",),
+        "backend_operation:ledger.transaction.detach": ("ledger.transaction.detach",),
+        "backend_operation:ledger.transaction.get": ("ledger.transaction.get",),
+        "backend_operation:ledger.transaction.invoice_link": ("ledger.transaction.invoice_link",),
+        "backend_operation:ledger.transaction.list": ("ledger.transaction.list",),
+        "backend_operation:ledger.transaction.merge": ("ledger.transaction.merge",),
+        "backend_operation:ledger.transaction.review_query": ("ledger.transaction.review_query",),
+        "backend_operation:ledger.transaction.split": ("ledger.transaction.split",),
+        "backend_operation:ledger.transaction.split_classified": ("ledger.transaction.split_classified",),
+        "backend_operation:ledger.transaction.status_summary": ("ledger.transaction.status_summary",),
+        "backend_operation:ledger.transaction.update": ("ledger.transaction.update",),
+        "backend_operation:ledger.transaction.update_fields": ("ledger.transaction.update_fields",),
+        "backend_operation:ledger.workspace.affected_declarations": ("ledger.workspace.affected_declarations",),
+        "backend_operation:ledger.workspace.project": ("ledger.workspace.project",),
+        "backend_operation:ledger.workspace.read": ("ledger.workspace.read",),
+        "cli_endpoint:app_ledger_add": ("ledger.transaction.create",),
+        "cli_endpoint:app_ledger_allocate": ("ledger.allocate",),
+        "cli_endpoint:app_ledger_archive": ("ledger.lifecycle.archive",),
+        "cli_endpoint:app_ledger_attach": ("ledger.transaction.attach",),
+        "cli_endpoint:app_ledger_bienes_inversion_declare": ("ledger.bienes_inversion.declare",),
+        "cli_endpoint:app_ledger_bienes_inversion_list": ("ledger.bienes_inversion.list",),
+        "cli_endpoint:app_ledger_categories": ("ledger.categories",),
+        "cli_endpoint:app_ledger_check": ("ledger.check",),
+        "cli_endpoint:app_ledger_classify": ("ledger.classify",),
+        "cli_endpoint:app_ledger_counterparty_confirm": ("ledger.counterparty.record",),
+        "cli_endpoint:app_ledger_counterparty_view": ("ledger.counterparty.resolve",),
+        "cli_endpoint:app_ledger_counterparty_withdraw": ("ledger.counterparty.forget",),
+        "cli_endpoint:app_ledger_detach": ("ledger.transaction.detach",),
+        "cli_endpoint:app_ledger_evidence_add": ("ledger.evidence.add",),
+        "cli_endpoint:app_ledger_evidence_attachment_queue": ("ledger.evidence.attachment_queue",),
+        "cli_endpoint:app_ledger_evidence_attachment_view": ("ledger.evidence.attachment_view",),
+        "cli_endpoint:app_ledger_evidence_batch": ("ledger.evidence.batch",),
+        "cli_endpoint:app_ledger_evidence_confirm": ("ledger.evidence.confirm",),
+        "cli_endpoint:app_ledger_evidence_consent_list": ("ledger.evidence.consent.list",),
+        "cli_endpoint:app_ledger_evidence_consent_rederive": ("ledger.evidence.consent.rederive",),
+        "cli_endpoint:app_ledger_evidence_extract": ("ledger.evidence.extract",),
+        "cli_endpoint:app_ledger_evidence_list": ("ledger.evidence.list",),
+        "cli_endpoint:app_ledger_evidence_pull": ("ledger.evidence.pull",),
+        "cli_endpoint:app_ledger_evidence_pull_all": ("ledger.evidence.pull_all",),
+        "cli_endpoint:app_ledger_evidence_remove": ("ledger.evidence.remove",),
+        "cli_endpoint:app_ledger_evidence_review_list": ("ledger.evidence.review.list",),
+        "cli_endpoint:app_ledger_evidence_review_view": ("ledger.evidence.review.view",),
+        "cli_endpoint:app_ledger_evidence_update": ("ledger.evidence.update",),
+        "cli_endpoint:app_ledger_evidence_view": ("ledger.evidence.view",),
+        "cli_endpoint:app_ledger_exclude": ("ledger.lifecycle.reviewed_exclude",),
+        "cli_endpoint:app_ledger_export": (
+            "ledger.export.flat",
+            "ledger.export.csv",
+            "ledger.export.jsonl",
+            "ledger.export.xlsx",
+        ),
+        "cli_endpoint:app_ledger_history": ("ledger.history",),
+        "cli_endpoint:app_ledger_import": ("ledger.import",),
+        "cli_endpoint:app_ledger_inventory_closing_authority_record": ("ledger.inventory.closing_authority.record",),
+        "cli_endpoint:app_ledger_inventory_create": ("ledger.inventory.create",),
+        "cli_endpoint:app_ledger_inventory_list": ("ledger.inventory.list",),
+        "cli_endpoint:app_ledger_inventory_movement_add": ("ledger.inventory.movement.add",),
+        "cli_endpoint:app_ledger_inventory_valuation_preview": ("ledger.inventory.valuation.preview",),
+        "cli_endpoint:app_ledger_invoice_add": ("ledger.invoice.add",),
+        "cli_endpoint:app_ledger_invoice_import": ("ledger.invoice.import",),
+        "cli_endpoint:app_ledger_invoice_list": ("ledger.invoice.list",),
+        "cli_endpoint:app_ledger_invoice_remove": ("ledger.invoice.remove",),
+        "cli_endpoint:app_ledger_invoice_update": ("ledger.invoice.update",),
+        "cli_endpoint:app_ledger_invoice_view": ("ledger.invoice.view",),
+        "cli_endpoint:app_ledger_invoice_wizard": ("ledger.invoice.wizard",),
+        "cli_endpoint:app_ledger_link": ("ledger.transaction.invoice_link",),
+        "cli_endpoint:app_ledger_list": ("ledger.list",),
+        "cli_endpoint:app_ledger_llm_diagnostics": ("ledger.llm.diagnostics",),
+        "cli_endpoint:app_ledger_merge": ("ledger.transaction.merge",),
+        "cli_endpoint:app_ledger_participation": ("ledger.participation.get",),
+        "cli_endpoint:app_ledger_participation_rebuild": ("ledger.participation.rebuild",),
+        "cli_endpoint:app_ledger_preflight": ("ledger.preflight.readiness",),
+        "cli_endpoint:app_ledger_prorrata_declare_sector": ("ledger.prorrata.declare_sector",),
+        "cli_endpoint:app_ledger_prorrata_elect_especial": ("ledger.prorrata.elect_especial",),
+        "cli_endpoint:app_ledger_prorrata_elect_general": ("ledger.prorrata.elect_general",),
+        "cli_endpoint:app_ledger_prorrata_list": ("ledger.prorrata.list",),
+        "cli_endpoint:app_ledger_prorrata_revoke_especial": ("ledger.prorrata.revoke_especial",),
+        "cli_endpoint:app_ledger_prorrata_seed": ("ledger.prorrata.seed",),
+        "cli_endpoint:app_ledger_prorrata_seed_sector": ("ledger.prorrata.seed_sector",),
+        "cli_endpoint:app_ledger_prorrata_settle_sector": ("ledger.prorrata.settle_sector",),
+        "cli_endpoint:app_ledger_ratios_eligible": ("ledger.ratios.eligible",),
+        "cli_endpoint:app_ledger_ratios_list": ("ledger.ratio.list",),
+        "cli_endpoint:app_ledger_ratios_set": ("ledger.ratio.set",),
+        "cli_endpoint:app_ledger_ratios_unset": ("ledger.ratio.unset",),
+        "cli_endpoint:app_ledger_ratios_validate": ("ledger.ratio.validate",),
+        "cli_endpoint:app_ledger_remove": ("ledger.lifecycle.remove",),
+        "cli_endpoint:app_ledger_reset": ("ledger.lifecycle.reset",),
+        "cli_endpoint:app_ledger_restore": ("ledger.lifecycle.restore",),
+        "cli_endpoint:app_ledger_review": ("ledger.transaction.review_query",),
+        "cli_endpoint:app_ledger_rule_add": ("ledger.classification.rule_add",),
+        "cli_endpoint:app_ledger_rule_apply": ("ledger.rule.apply.preview", "ledger.classification.rule_apply"),
+        "cli_endpoint:app_ledger_rule_list": ("ledger.rule.list",),
+        "cli_endpoint:app_ledger_split": (
+            "ledger.transaction.split",
+            "ledger.llm.suggest_split",
+            "ledger.llm.apply_split",
+        ),
+        "cli_endpoint:app_ledger_stash": ("ledger.lifecycle.stash",),
+        "cli_endpoint:app_ledger_status": ("ledger.transaction.status_summary",),
+        "cli_endpoint:app_ledger_track": ("ledger.track",),
+        "cli_endpoint:app_ledger_update": ("ledger.transaction.update_fields",),
+        "cli_endpoint:app_ledger_view": ("ledger.transaction.get",),
+        "cli_suboperation:ledger.classify.auto_split.reject": ("ledger.llm.reject",),
+        "cli_suboperation:ledger.classify.auto_split.single_apply": ("ledger.llm.apply",),
+        "cli_suboperation:ledger.classify.auto_split.single_preview": ("ledger.llm.suggest",),
+        "cli_suboperation:ledger.classify.auto_split.split_apply": ("ledger.llm.apply_split",),
+        "cli_suboperation:ledger.classify.auto_split.split_preview": ("ledger.llm.suggest_split",),
+        "cli_suboperation:ledger.classify.bulk_csv": ("ledger.classification.bulk_csv",),
+        "cli_suboperation:ledger.classify.direct": ("ledger.classify.direct",),
+        "cli_suboperation:ledger.classify.evidence_read": ("ledger.llm.classify_with_evidence",),
+        "cli_suboperation:ledger.classify.iva_derive": ("ledger.llm.iva_derive",),
+        "cli_suboperation:ledger.classify.llm_apply": ("ledger.llm.apply",),
+        "cli_suboperation:ledger.classify.llm_preview": ("ledger.llm.suggest",),
+        "cli_suboperation:ledger.classify.llm_reject": ("ledger.llm.reject",),
+        "cli_suboperation:ledger.classify.llm_saturate_apply": ("ledger.llm.apply_saturated",),
+        "cli_suboperation:ledger.classify.llm_saturate_preview": ("ledger.llm.saturate",),
+        "cli_suboperation:ledger.classify.llm_saturate_reject": ("ledger.llm.reject",),
+        "cli_suboperation:ledger.classify.m210": ("ledger.classify.m210",),
+        "cli_suboperation:ledger.evidence.pull.drive": ("ledger.evidence.pull.drive",),
+        "cli_suboperation:ledger.evidence.pull.gmail": ("ledger.evidence.pull.gmail",),
+        "cli_suboperation:ledger.evidence.pull.url": ("ledger.evidence.pull.url",),
+        "cli_suboperation:ledger.export.csv": ("ledger.export.csv",),
+        "cli_suboperation:ledger.export.jsonl": ("ledger.export.jsonl",),
+        "cli_suboperation:ledger.export.xlsx": ("ledger.export.xlsx",),
+        "cli_suboperation:ledger.history.direct": ("ledger.history.direct",),
+        "cli_suboperation:ledger.history.split_siblings": ("ledger.history.split_siblings",),
+        "cli_suboperation:ledger.import.directory": ("ledger.import.directory",),
+        "cli_suboperation:ledger.import.dry_run": ("ledger.import.dry_run",),
+        "cli_suboperation:ledger.import.file": ("ledger.import.file",),
+        "cli_suboperation:ledger.import.provider_auto": ("ledger.import.provider_auto",),
+        "cli_suboperation:ledger.import.provider_csv": ("ledger.import.provider_csv",),
+        "cli_suboperation:ledger.import.provider_n26": ("ledger.import.provider_n26",),
+        "cli_suboperation:ledger.import.provider_ofx_qfx": ("ledger.import.provider_ofx_qfx",),
+        "cli_suboperation:ledger.import.provider_pdf": ("ledger.import.provider_pdf",),
+        "cli_suboperation:ledger.import.provider_pdf_n26": ("ledger.import.provider_pdf_n26",),
+        "cli_suboperation:ledger.import.provider_xlsx_excel": ("ledger.import.provider_xlsx_excel",),
+        "cli_suboperation:ledger.import.verify": ("ledger.import.verify",),
+        "cli_suboperation:ledger.list.filter": ("ledger.list.filter",),
+        "cli_suboperation:ledger.list.group": ("ledger.list.group",),
+        "cli_suboperation:ledger.list.page": ("ledger.list.page",),
+        "cli_suboperation:ledger.list.rejected_llm_filter": ("ledger.list.rejected_llm_filter",),
+        "cli_suboperation:ledger.list.sort": ("ledger.list.sort",),
+        "cli_suboperation:ledger.remove.commit": ("ledger.lifecycle.remove.commit",),
+        "cli_suboperation:ledger.remove.preview": ("ledger.lifecycle.remove.preview",),
+        "cli_suboperation:ledger.reset.commit": ("ledger.lifecycle.reset.commit",),
+        "cli_suboperation:ledger.reset.preview": ("ledger.lifecycle.reset.preview",),
+        "cli_suboperation:ledger.rule.apply.commit": ("ledger.classification.rule_apply",),
+        "cli_suboperation:ledger.rule.apply.preview": ("ledger.rule.apply.preview",),
+        "cli_suboperation:ledger.split.evidence_read": ("ledger.llm.classify_with_evidence",),
+        "cli_suboperation:ledger.split.llm_apply": ("ledger.llm.apply_split",),
+        "cli_suboperation:ledger.split.llm_preview": ("ledger.llm.suggest_split",),
+        "cli_suboperation:ledger.split.manual": ("ledger.transaction.split",),
+        "missing_product:append_only_notes": ("ledger.note.append",),
+        "missing_product:application_paging": ("ledger.list.page",),
+        "missing_product:atomic_evidence_replace": ("ledger.evidence.replace",),
+        "missing_product:changed_field_provenance": ("ledger.field_change.provenance",),
+        "missing_product:complete_export_provenance": (
+            "ledger.export.provenance",
+            "ledger.fx.provenance",
+            "ledger.import.normalization_provenance",
+            "ledger.manual_override.provenance",
+        ),
+        "missing_product:evidence_download": ("ledger.evidence.download",),
+        "missing_product:generic_batch_patch": ("ledger.transaction.batch_patch",),
+        "missing_product:google_ledger_export": ("ledger.export.google_transport",),
+        "missing_product:restore_archive": ("ledger.export.restore_archive",),
+        "missing_product:review_grade_workbook": ("ledger.export.review_package",),
+        "supported_surface:ledger.classification:component_only": ("ledger.classify.direct",),
+        "supported_surface:ledger.entries:component_only": ("ledger.transaction.list",),
+        "supported_surface:ledger.evidence:component_only": ("ledger.evidence.attachment_queue",),
+        "supported_surface:ledger.import:component_only": ("ledger.import.source",),
+        "supported_surface:ledger.overview:installed": ("ledger.workspace.read",),
+        "supported_surface:ledger.reconciliation:component_only": ("ledger.transaction.invoice_link",),
+        "supported_surface:ledger.review:component_only": ("ledger.transaction.review_query",),
+    }
+)
+
 _BACKEND_DIRECT_PROOF_GAPS: Final[frozenset[str]] = frozenset(
     {
         "ledger.classification.rule_add",
@@ -2043,85 +2278,6 @@ _LEDGER_BACKEND_OPERATION_SOURCE_PATHS: Final[tuple[str, ...]] = (
 )
 
 
-_CLI_CAPABILITY_REMAP: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
-    {
-        "ledger.add": ("ledger.transaction.create",),
-        "ledger.archive": ("ledger.lifecycle.archive",),
-        "ledger.attach": ("ledger.transaction.attach",),
-        "ledger.detach": ("ledger.transaction.detach",),
-        "ledger.exclude": ("ledger.lifecycle.reviewed_exclude",),
-        "ledger.link": ("ledger.transaction.invoice_link",),
-        "ledger.llm_diagnostics": ("ledger.llm.diagnostics",),
-        "ledger.merge": ("ledger.transaction.merge",),
-        "ledger.participation": ("ledger.participation.get",),
-        "ledger.preflight": ("ledger.preflight.readiness",),
-        "ledger.ratios.list": ("ledger.ratio.list",),
-        "ledger.ratios.validate": ("ledger.ratio.validate",),
-        "ledger.ratios.set": ("ledger.ratio.set",),
-        "ledger.ratios.unset": ("ledger.ratio.unset",),
-        "ledger.remove": ("ledger.lifecycle.remove",),
-        "ledger.reset": ("ledger.lifecycle.reset",),
-        "ledger.restore": ("ledger.lifecycle.restore",),
-        "ledger.review": ("ledger.transaction.review_query",),
-        "ledger.stash": ("ledger.lifecycle.stash",),
-        "ledger.status": ("ledger.transaction.status_summary",),
-        "ledger.update": ("ledger.transaction.update_fields",),
-        "ledger.view": ("ledger.transaction.get",),
-        "ledger.counterparty.confirm": ("ledger.counterparty.record",),
-        "ledger.counterparty.view": ("ledger.counterparty.resolve",),
-        "ledger.counterparty.withdraw": ("ledger.counterparty.forget",),
-        "ledger.export": (
-            "ledger.export.flat",
-            "ledger.export.csv",
-            "ledger.export.jsonl",
-            "ledger.export.xlsx",
-        ),
-        "ledger.rule.add": ("ledger.classification.rule_add",),
-        "ledger.rule.apply": (
-            "ledger.rule.apply.preview",
-            "ledger.classification.rule_apply",
-        ),
-        "ledger.split": (
-            "ledger.transaction.split",
-            "ledger.llm.suggest_split",
-            "ledger.llm.apply_split",
-        ),
-    }
-)
-
-_SUBOPERATION_CAPABILITY_REMAP: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
-    {
-        "ledger.classify.bulk_csv": ("ledger.classification.bulk_csv",),
-        "ledger.classify.evidence_read": ("ledger.llm.classify_with_evidence",),
-        "ledger.classify.iva_derive": ("ledger.llm.iva_derive",),
-        "ledger.classify.llm_apply": ("ledger.llm.apply",),
-        "ledger.classify.llm_preview": ("ledger.llm.suggest",),
-        "ledger.classify.llm_reject": ("ledger.llm.reject",),
-        "ledger.classify.llm_saturate_apply": ("ledger.llm.apply_saturated",),
-        "ledger.classify.llm_saturate_preview": ("ledger.llm.saturate",),
-        "ledger.classify.llm_saturate_reject": ("ledger.llm.reject",),
-        "ledger.classify.auto_split.reject": ("ledger.llm.reject",),
-        "ledger.classify.auto_split.single_apply": ("ledger.llm.apply",),
-        "ledger.classify.auto_split.single_preview": ("ledger.llm.suggest",),
-        "ledger.classify.auto_split.split_apply": ("ledger.llm.apply_split",),
-        "ledger.classify.auto_split.split_preview": ("ledger.llm.suggest_split",),
-        "ledger.export.csv": ("ledger.export.csv",),
-        "ledger.export.jsonl": ("ledger.export.jsonl",),
-        "ledger.export.xlsx": ("ledger.export.xlsx",),
-        "ledger.remove.commit": ("ledger.lifecycle.remove.commit",),
-        "ledger.remove.preview": ("ledger.lifecycle.remove.preview",),
-        "ledger.reset.commit": ("ledger.lifecycle.reset.commit",),
-        "ledger.reset.preview": ("ledger.lifecycle.reset.preview",),
-        "ledger.rule.apply.commit": ("ledger.classification.rule_apply",),
-        "ledger.rule.apply.preview": ("ledger.rule.apply.preview",),
-        "ledger.split.evidence_read": ("ledger.llm.classify_with_evidence",),
-        "ledger.split.llm_apply": ("ledger.llm.apply_split",),
-        "ledger.split.llm_preview": ("ledger.llm.suggest_split",),
-        "ledger.split.manual": ("ledger.transaction.split",),
-    }
-)
-
-
 def _stable_segment(value: str) -> str:
     segment = re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_") or "value"
     return f"x_{segment}" if segment[0].isdigit() else segment
@@ -2142,9 +2298,12 @@ def _registry_union_capability_id(row: LedgerRegistryRouteRowV1) -> str:
     )
 
 
-def _selected_capabilities(mapping: Mapping[str, tuple[str, ...]], identity: str) -> tuple[str, ...]:
-    """Return an exact authored selection or the unchanged observed identity."""
-    return mapping.get(identity, (identity,))
+def _selection_for_observation(observation_id: str) -> tuple[str, ...]:
+    """Return the exact authored selection; new observations never self-admit."""
+    try:
+        return _EXPLICIT_NON_REGISTRY_OBSERVATION_SELECTIONS[observation_id]
+    except KeyError as exc:
+        raise ValueError(f"non-registry observation has no explicit adjudication: {observation_id}") from exc
 
 
 def _pascal_identity(capability_id: str) -> str:
@@ -2257,6 +2416,16 @@ _EXPLICIT_ARTIFACT_CAPABILITIES: Final[frozenset[str]] = frozenset(
     }
 )
 _EXPLICIT_ARTIFACT_QUERY_CAPABILITIES: Final[frozenset[str]] = frozenset({"ledger.evidence.download"})
+_EXPLICIT_PROVENANCE_QUERY_CAPABILITIES: Final[frozenset[str]] = frozenset(
+    {
+        "ledger.evidence.download",
+        "ledger.export.provenance",
+        "ledger.field_change.provenance",
+        "ledger.fx.provenance",
+        "ledger.import.normalization_provenance",
+        "ledger.manual_override.provenance",
+    }
+)
 _EXPLICIT_MUTATION_CAPABILITIES: Final[frozenset[str]] = frozenset(
     {
         "ledger.allocate",
@@ -2399,6 +2568,45 @@ def _validate_non_registry_decision_coverage(
         raise ValueError(f"non-registry semantic adjudication is stale; unadjudicated={missing}; removed={removed}")
 
 
+def _validate_non_registry_observation_adjudication(
+    observations: tuple[LedgerUnionSourceObservationV1, ...],
+) -> None:
+    non_registry = tuple(
+        observation for observation in observations if observation.source is not DenominatorSourceKind.REGISTRY_ROUTE
+    )
+    identities = tuple(observation.observation_id for observation in non_registry)
+    if len(set(identities)) != len(identities):
+        raise ValueError("non-registry observation identities must be unique")
+    actual = {observation.observation_id: observation.capability_ids for observation in non_registry}
+    expected = dict(_EXPLICIT_NON_REGISTRY_OBSERVATION_SELECTIONS)
+    if actual != expected:
+        added = sorted(set(actual) - set(expected))
+        removed = sorted(set(expected) - set(actual))
+        changed = sorted(identity for identity in set(actual) & set(expected) if actual[identity] != expected[identity])
+        raise ValueError(
+            "non-registry observation adjudication drifted; "
+            f"added={added}; removed={removed}; changed_selections={changed}"
+        )
+    _validate_non_registry_decision_coverage(non_registry)
+
+
+def _validate_registry_observation_projection(
+    registry: LedgerRegistryRouteCensusV1,
+    observations: tuple[LedgerUnionSourceObservationV1, ...],
+) -> None:
+    actual = {
+        observation.observation_id: observation.capability_ids
+        for observation in observations
+        if observation.source is DenominatorSourceKind.REGISTRY_ROUTE
+    }
+    expected = {
+        "registry_route:" + "|".join(map(str, row.sort_key)): (_registry_union_capability_id(row),)
+        for row in registry.rows
+    }
+    if len(actual) != len(registry.rows) or actual != expected:
+        raise ValueError("registry observation identities, count, or route selections drifted")
+
+
 def _planned_owner(capability_id: str) -> str:
     if capability_id not in _EXPLICIT_EFFECTS:
         raise ValueError(f"union capability has no explicit semantic-home decision: {capability_id}")
@@ -2480,7 +2688,8 @@ def _axis_decisions(
             LedgerCapabilityEffect.PROPOSAL,
             LedgerCapabilityEffect.ARTIFACT,
             LedgerCapabilityEffect.REGISTRY_ROUTE,
-        },
+        }
+        or capability_id in _EXPLICIT_PROVENANCE_QUERY_CAPABILITIES,
         LedgerCapabilityAxis.REGISTRY: effect is LedgerCapabilityEffect.REGISTRY_ROUTE
         or capability_id in {"ledger.participation.get", "ledger.workspace.affected_declarations"},
         LedgerCapabilityAxis.PROOF: True,
@@ -2545,20 +2754,19 @@ def _union_observations(
         raise ValueError("missing-product observations and semantic declarations disagree")
     observations: list[LedgerUnionSourceObservationV1] = []
     for entry in LEDGER_CLI_COMMAND_CENSUS:
-        schema_id = entry.result_schema_identity.replace("-", "_")
-        capability_ids = _selected_capabilities(_CLI_CAPABILITY_REMAP, schema_id)
+        observation_id = f"cli_endpoint:{entry.command_key}"
         observations.append(
             LedgerUnionSourceObservationV1(
                 source=DenominatorSourceKind.CLI_ENDPOINT,
-                observation_id=f"cli_endpoint:{entry.command_key}",
-                capability_ids=capability_ids,
+                observation_id=observation_id,
+                capability_ids=_selection_for_observation(observation_id),
             )
         )
         observations.extend(
             LedgerUnionSourceObservationV1(
                 source=DenominatorSourceKind.CLI_SUBOPERATION,
                 observation_id=f"cli_suboperation:{suboperation_id}",
-                capability_ids=_selected_capabilities(_SUBOPERATION_CAPABILITY_REMAP, suboperation_id),
+                capability_ids=_selection_for_observation(f"cli_suboperation:{suboperation_id}"),
             )
             for suboperation_id in entry.suboperation_ids
         )
@@ -2566,7 +2774,7 @@ def _union_observations(
         LedgerUnionSourceObservationV1(
             source=DenominatorSourceKind.BACKEND_ONLY,
             observation_id=f"backend_operation:{item.capability_id}",
-            capability_ids=(item.capability_id,),
+            capability_ids=_selection_for_observation(f"backend_operation:{item.capability_id}"),
         )
         for item in _LEDGER_BACKEND_OPERATION_DECLARATIONS
     )
@@ -2574,7 +2782,7 @@ def _union_observations(
         LedgerUnionSourceObservationV1(
             source=DenominatorSourceKind.MISSING_PRODUCT,
             observation_id=f"missing_product:{observation_id}",
-            capability_ids=capability_ids,
+            capability_ids=_selection_for_observation(f"missing_product:{observation_id}"),
         )
         for observation_id, capability_ids in _LEDGER_MISSING_PRODUCT_OBSERVATIONS
     )
@@ -2590,7 +2798,7 @@ def _union_observations(
         LedgerUnionSourceObservationV1(
             source=DenominatorSourceKind.ARTIFACT_PRODUCT,
             observation_id=f"artifact_product:{observation_id}",
-            capability_ids=(capability_id,),
+            capability_ids=_selection_for_observation(f"artifact_product:{observation_id}"),
         )
         for observation_id, capability_id in _LEDGER_ARTIFACT_OBSERVATIONS
     )
@@ -2601,11 +2809,16 @@ def _union_observations(
         LedgerUnionSourceObservationV1(
             source=DenominatorSourceKind.SUPPORTED_SURFACE,
             observation_id=f"supported_surface:{destination}:{route_rows[destination].reachability}",
-            capability_ids=capability_ids,
+            capability_ids=_selection_for_observation(
+                f"supported_surface:{destination}:{route_rows[destination].reachability}"
+            ),
         )
         for destination, capability_ids in _LEDGER_TUI_ROUTE_CAPABILITIES.items()
     )
-    return tuple(sorted(observations, key=lambda item: (item.source.value, item.observation_id)))
+    canonical = tuple(sorted(observations, key=lambda item: (item.source.value, item.observation_id)))
+    _validate_non_registry_observation_adjudication(canonical)
+    _validate_registry_observation_projection(registry, canonical)
+    return canonical
 
 
 def _backend_operation_source_set_digest() -> str:
@@ -2701,12 +2914,10 @@ def build_ledger_union_denominator(
     from cadrumo.entrypoints.cli._app_ledger_command_specs import LEDGER_CLI_COMMAND_CENSUS
 
     for entry in LEDGER_CLI_COMMAND_CENSUS:
-        schema_id = entry.result_schema_identity.replace("-", "_")
-        capability_ids = _selected_capabilities(_CLI_CAPABILITY_REMAP, schema_id)
-        for capability_id in capability_ids:
+        for capability_id in _selection_for_observation(f"cli_endpoint:{entry.command_key}"):
             cli_ownership_by_capability.setdefault(capability_id, set()).add(entry.adapter_ownership.value)
         for suboperation_id in entry.suboperation_ids:
-            for mapped in _selected_capabilities(_SUBOPERATION_CAPABILITY_REMAP, suboperation_id):
+            for mapped in _selection_for_observation(f"cli_suboperation:{suboperation_id}"):
                 cli_ownership_by_capability.setdefault(mapped, set()).add(entry.adapter_ownership.value)
     rows: list[LedgerUnionCapabilityRowV1] = []
     for capability_id, selecting in sorted(observations_by_capability.items()):
@@ -2739,6 +2950,7 @@ def build_ledger_union_denominator(
         if (
             capability_id
             in {
+                "ledger.evidence.download",
                 "ledger.export.provenance",
                 "ledger.field_change.provenance",
                 "ledger.fx.provenance",
@@ -2766,6 +2978,8 @@ def build_ledger_union_denominator(
             proof_requirements.append("CLI parser, delegation, result-schema, success, and refusal parity proof.")
         if effect in {LedgerCapabilityEffect.ARTIFACT, LedgerCapabilityEffect.ARTIFACT_QUERY}:
             proof_requirements.append("Independent reader, declared-loss, destination, and cleanup proof.")
+        if LedgerGapClass.PROVENANCE in gaps:
+            proof_requirements.append("Actor, source, operation, field, normalization, and revision lineage proof.")
         if effect is LedgerCapabilityEffect.REGISTRY_ROUTE:
             proof_requirements.append(
                 "Nonzero inclusion, exclusion, missing-versus-zero, and finish-line refusal proof."

@@ -95,7 +95,7 @@ _REGISTRY_ROUTE_DIGEST: Final[str] = "sha256:20b2d2df5558b2a3fdbd1eab6e9f781a973
 _REGISTRY_SOURCE_DIGEST: Final[str] = "sha256:194a9f26ddfbae6c5d7f265ffe58f50964fbe2fcd02a5670fa19845dead5cf6d"
 _TUI_CENSUS_DIGEST: Final[str] = "sha256:c136cfe1ae3f82a239476c00e805f8c9a29e010d502e74397963cea7e6f42371"
 _TUI_SOURCE_DIGEST: Final[str] = "sha256:e7337508a02ef2260e0b28205c31bb872b69f59aa51a18391ae209c21b8f9d57"
-_UNION_DIGEST: Final[str] = "sha256:77f310d3de86c3a097b5c976a8cdc4b1941b24e3e15d0eb47971985b38764dff"
+_UNION_DIGEST: Final[str] = "sha256:46b2292f43821f5d120e71ddff6a7bc2a46a9ed75ebb974f641481b794ddf0a9"
 
 
 @cache
@@ -275,11 +275,70 @@ def test_each_non_registry_source_addition_reopens_semantic_adjudication(
         LedgerUnionSourceObservationV1(
             source=source,
             observation_id=f"mutation:{source.value}",
-            capability_ids=("ledger.transaction.future",),
+            capability_ids=("ledger.transaction.create",),
         ),
     )
-    with pytest.raises(ValueError, match=r"unadjudicated=.*ledger\.transaction\.future"):
-        matrix_module._validate_non_registry_decision_coverage(observations)
+    with pytest.raises(ValueError, match=r"added=.*mutation"):
+        matrix_module._validate_non_registry_observation_adjudication(observations)
+
+
+@pytest.mark.parametrize("mutation", ["duplicate", "removed", "changed", "reordered"])
+def test_observation_adjudication_refuses_identity_and_selection_drift(mutation: str) -> None:
+    observations = list(_union_denominator().observations)
+    if mutation == "duplicate":
+        observations.append(observations[0])
+        expected = "identities must be unique"
+    elif mutation == "removed":
+        observations.pop(
+            next(i for i, item in enumerate(observations) if item.source is not DenominatorSourceKind.REGISTRY_ROUTE)
+        )
+        expected = "removed="
+    else:
+        index = next(
+            i for i, item in enumerate(observations) if item.observation_id == "cli_endpoint:app_ledger_export"
+        )
+        original = observations[index]
+        capability_ids = (
+            ("ledger.transaction.create",) if mutation == "changed" else tuple(reversed(original.capability_ids))
+        )
+        observations[index] = original.model_copy(update={"capability_ids": capability_ids})
+        expected = "changed_selections"
+    with pytest.raises(ValueError, match=expected):
+        matrix_module._validate_non_registry_observation_adjudication(tuple(observations))
+
+
+def test_provenance_queries_and_evidence_download_require_provenance_applicability() -> None:
+    rows = {row.capability_id: row for row in _union_denominator().rows}
+    for capability_id in (
+        "ledger.evidence.download",
+        "ledger.export.provenance",
+        "ledger.field_change.provenance",
+        "ledger.fx.provenance",
+        "ledger.import.normalization_provenance",
+        "ledger.manual_override.provenance",
+    ):
+        row = rows[capability_id]
+        provenance = next(item for item in row.applicability if item.axis is LedgerCapabilityAxis.PROVENANCE)
+        assert provenance.applicability is ApplicabilityState.APPLICABLE
+        assert LedgerGapClass.PROVENANCE in row.gap_classes
+        assert any("normalization" in proof and "lineage" in proof for proof in row.proof_requirements)
+
+
+def test_serialized_union_refuses_provenance_applicability_contradiction() -> None:
+    payload = _union_denominator().model_dump(mode="python")
+    rows = list(payload["rows"])
+    index = next(i for i, row in enumerate(rows) if row["capability_id"] == "ledger.export.provenance")
+    changed_row = dict(rows[index])
+    decisions = list(changed_row["applicability"])
+    provenance_index = next(i for i, item in enumerate(decisions) if item["axis"] is LedgerCapabilityAxis.PROVENANCE)
+    changed_decision = dict(decisions[provenance_index])
+    changed_decision["applicability"] = ApplicabilityState.NOT_APPLICABLE
+    decisions[provenance_index] = changed_decision
+    changed_row["applicability"] = tuple(decisions)
+    rows[index] = changed_row
+    payload["rows"] = tuple(rows)
+    with pytest.raises(ValidationError, match="applicability drifted"):
+        LedgerUnionDenominatorV1.model_validate(payload)
 
 
 def test_union_denominator_retains_every_registry_route_unit_and_tui_reachability_split() -> None:

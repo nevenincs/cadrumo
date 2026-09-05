@@ -837,3 +837,27 @@ resolved = true
 symbols = ["_SEED_COVERAGE_NOTICE"]
 evidence = "An English module-level string documenting that the applicability seed table is deliberately narrow. The behaviour it described is genuinely implemented and does not depend on it: a modelo with no seed rule is reported INCOMPLETE carrying an emitted Spanish rationale that states the deferral to the operator, and that constant's own docstring already carries the explanation. The marker was read by no code and cross-referenced from three places, so removing it required repointing the module docstring, the seed-table banner comment and the table docstring to state the deferral directly rather than name a constant that no longer exists."
 
+[[symbol_cluster]]
+name = "full-taxonomy modelo choice the demand-loading contract keeps unwired"
+class = "should-be-live"
+area = "entrypoints/cli"
+resolved = false
+symbols = ["MODELO_CODE_CHOICE_ALL"]
+evidence = "It exists for one stated purpose: the portal catalogue ships an entry for the suppressed Modelo 037, so a portal filter pinned to MODELO_CODE_CHOICE would refuse a code the application deliberately supports. A harness gate asserts that pinning is in place. It is not - the portal --modelo option is declared as DeferredTarget(builtins, str), so the option accepts any string and performs no validation at all, which the CLI contract requires at the boundary. Wiring it was attempted and reverted: pointing the option at _common pulls that module eagerly and breaks the live-subtree demand-loading contract, so app.live.portals.list exited 6 instead of 0 and two spec-compilation gates failed. So this is not an oversight anyone can close by adding an import; resolution needs a way to supply the Choice without eagerly loading _common, and until then both the gate's claim and the option's validation are wrong."
+
+[[symbol_cluster]]
+name = "manual fetch capability with no CLI verb"
+class = "should-be-live"
+area = "domain/manuals"
+resolved = false
+symbols = ["fetch_manual_part"]
+evidence = "Its result type FetchResult is documented as the thin wrapper it returns TO THE CLI, and core/storage_taxonomy names domain.manuals.fetch as a module that demonstrably writes to the operator's storage area, so the capability is known to the surrounding design. No CLI verb reaches it: the only manual-shaped commands in entrypoints/cli are the ledger manual-transaction verbs, an unrelated sense of the word. Deleting it would remove the whole downloading-and-sha256-verifying path rather than tidy a helper, so resolution is wiring the verb the docstring assumes or retiring the capability with its manifest types."
+
+[[symbol_cluster]]
+name = "attachment catalogue model without a consumer"
+class = "staged-capability"
+area = "domain/attachments"
+resolved = false
+symbols = ["AttachmentCatalogue"]
+evidence = "The immutable keyed catalogue over Attachment, verifying that every mapping key matches the embedded attachment_id so lookups cannot drift from the manifest. Its element type Attachment is heavily exercised across the storage attachment tests, so the half below it is live while the catalogue itself has no consumer. That asymmetry is what makes it staged rather than dead: the manifest-level invariant it enforces has no other home, and deleting it would leave attachment collections with no type that checks key-to-id agreement."
+
