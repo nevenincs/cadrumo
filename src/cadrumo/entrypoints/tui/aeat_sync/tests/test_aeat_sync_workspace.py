@@ -177,7 +177,14 @@ def _projection(
                 _BUCKET_ID,
                 _SUBJECT_KEY,
                 AeatSyncWorkspaceCensusRowV1(
-                    path="tax address", category=AeatSyncCensusCategory.ADDRESS, status=census_status
+                    path="tax address",
+                    category=AeatSyncCensusCategory.ADDRESS,
+                    status=census_status,
+                    # Both sides, because a CONFLICT row now has to carry the
+                    # values it claims differ. Supplied for every status so the
+                    # fixture stays parametrisable.
+                    local_value="Calle Local 1",
+                    aeat_value="Calle AEAT 2",
                 ),
             ),
         ),

@@ -290,9 +290,9 @@ class AeatSyncWorkspaceCensusRowV1(AeatSyncWorkspaceActionRowV1):
     path: str = Field(min_length=1, max_length=256)
     category: AeatSyncCensusCategory
     status: AeatSyncCensusStatus
-    local_value: str | None = None
+    local_value: str | None = Field(default=None, max_length=256)
     """What the local profile holds for this field, or nothing when unobserved."""
-    aeat_value: str | None = None
+    aeat_value: str | None = Field(default=None, max_length=256)
     """What the AEAT censo holds, or nothing when no pull has observed it.
 
     `None` on either side is UNOBSERVED, never an empty field. A censo entry the

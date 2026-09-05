@@ -356,12 +356,22 @@ def test_output_physically_omits_protected_scope_payload_and_identity() -> None:
     # is a closed enum, a typed address component, an observation state or a
     # bounded identifier, so there is nowhere for a name, a URL or document
     # prose to be carried even by a careless producer.
+    # The exemptions are the census comparison values, which the visibility
+    # decision requires the row to carry: a comparison that hides what differs
+    # is not a comparison. Everything else stays a closed enum, a typed address
+    # component, a state or a bounded identifier.
+    #
+    # Because those two fields exist, the byte scan above is no longer
+    # unfailable -- a producer could put protected prose in `local_value`, and
+    # that scan is now the check which catches it. Bounded at 256 characters so
+    # the exemption is a field, not an open channel.
+    carried_values = {"path", "local_value", "aeat_value"}
     for row_type in (AeatSyncWorkspaceCensusRowV1, AeatSyncWorkspaceFiledDeclarationRowV1):
         for name, field in row_type.model_fields.items():
             annotation = str(field.annotation)
-            assert "str" not in annotation or name in {"path"}, (
+            assert "str" not in annotation or name in carried_values, (
                 f"{row_type.__name__}.{name} is free text ({annotation}), so protected prose "
-                f"could be carried there and the removed sentinels would need reinstating"
+                f"could be carried there without the byte scan above having a sentinel for it"
             )
 
     for value in (
@@ -467,6 +477,8 @@ def test_row_subclass_protected_fields_are_reconstructed_away() -> None:
         path="address",
         category=AeatSyncCensusCategory.ADDRESS,
         status=AeatSyncCensusStatus.CONFLICT,
+        local_value="Calle Local 1",
+        aeat_value="Calle AEAT 2",
         nif="12345678Z",
     )
     projection = _projection(census=(_fact(unsafe),))
@@ -683,3 +695,51 @@ def test_notification_custody_separates_an_unread_store_from_an_empty_one(
 
     assert observation.refusal == expected_refusal
     assert observation.item_count == expected_count
+
+def test_a_census_conflict_must_carry_both_values_it_compares() -> None:
+    """Asserting a difference while hiding one side asks for blind agreement.
+
+    CONFLICT is a claim ABOUT two values. A row making it without carrying them
+    puts the operator in the position of accepting a difference they cannot
+    see, which is the defect the invoice/entry suggestions had before they
+    showed the amounts they compared.
+
+    The non-conflict statuses are deliberately unconstrained: UNSET and
+    UNCHANGED are meaningful before either side has been read, and requiring
+    values there would force a producer to invent them.
+    """
+    for missing in ({"aeat_value": None}, {"local_value": None}, {"local_value": None, "aeat_value": None}):
+        with pytest.raises(ValidationError, match="must carry both the local and the AEAT value"):
+            AeatSyncWorkspaceCensusRowV1(
+                path="address",
+                category=AeatSyncCensusCategory.ADDRESS,
+                status=AeatSyncCensusStatus.CONFLICT,
+                **{"local_value": "here", "aeat_value": "there", **missing},
+            )
+
+    unset = AeatSyncWorkspaceCensusRowV1(
+        path="address",
+        category=AeatSyncCensusCategory.ADDRESS,
+        status=AeatSyncCensusStatus.UNSET,
+    )
+    assert unset.local_value is None
+    assert unset.aeat_value is None
+
+
+def test_an_unobserved_census_value_is_not_an_empty_field() -> None:
+    """`None` means nobody looked; the empty string means the field is blank.
+
+    A censo entry the taxpayer genuinely left empty is a fact an operator can
+    act on. Collapsing it into "unobserved" -- or the reverse -- would tell
+    them AEAT holds nothing where in truth nobody has checked, on a comparison
+    whose whole purpose is showing what differs.
+    """
+    blank = AeatSyncWorkspaceCensusRowV1(
+        path="address",
+        category=AeatSyncCensusCategory.ADDRESS,
+        status=AeatSyncCensusStatus.CONFLICT,
+        local_value="Calle Local 1",
+        aeat_value="",
+    )
+    assert blank.aeat_value == ""
+    assert blank.aeat_value is not None
