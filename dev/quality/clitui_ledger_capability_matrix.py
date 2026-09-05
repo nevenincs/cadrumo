@@ -5256,7 +5256,7 @@ def _matrix_row_from_union(
 
 @cache
 def build_ledger_capability_matrix() -> LedgerCapabilityMatrixV1:
-    """Build the sole deterministic 693-row pre-acceptance Ledger candidate."""
+    """Build the sole deterministic 694-row pre-acceptance Ledger candidate."""
     union = build_ledger_union_denominator()
     subject = _matrix_subject(union)
     rows = tuple(_matrix_row_from_union(row, subject) for row in union.rows)
