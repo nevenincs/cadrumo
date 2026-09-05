@@ -451,7 +451,7 @@ class ModeloRevisionPick:
     """Command-specific calculation-revision pick under a resolved work target.
 
     ``default_for`` applies the command policy owned by
-    :mod:`~cadrumo.application.modelo._selectors`: verify selects a draft, file
+    :mod:`~cadrumo.application.modelo.selectors`: verify selects a draft, file
     selects a verified-complete revision, and export prefers the current filed
     revision before falling back to an unambiguous verified revision.
     """

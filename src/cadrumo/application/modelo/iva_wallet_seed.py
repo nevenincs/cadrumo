@@ -20,7 +20,7 @@ See Also:
     :mod:`cadrumo.application.calculations.iva_compensation_history`
     Single-writer seed and correction primitives for local IVA compensation
     history.
-    :mod:`cadrumo.application.calculations._iva_wallet_reconciliation`
+    :mod:`cadrumo.application.calculations.iva_wallet_reconciliation`
     Reconciliation service that turns wallet/local/override evidence into a
     persisted Modelo 303 prior-compensation decision.
     :mod:`cadrumo.application.modelo.iva_wallet_gate`
