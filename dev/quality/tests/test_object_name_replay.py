@@ -262,6 +262,7 @@ def test_generator_unallowlisted_entries_never_enter_the_live_tree(
 ) -> None:
     repo, inventory, manifest, component, receipt = _generated_case(tmp_path)
     original_run = replay_module._run_command
+    planted: list[str] = []
 
     def escape_allowlist(*args: Any, cwd: Path, **kwargs: Any) -> Any:
         outcome = original_run(*args, cwd=cwd, **kwargs)
@@ -273,12 +274,22 @@ def test_generator_unallowlisted_entries_never_enter_the_live_tree(
         else:
             escaped.parent.mkdir(parents=True, exist_ok=True)
             escaped.write_bytes(b"escaped")
+        planted.append(escaped_relative)
         return outcome
 
     monkeypatch.setattr(replay_module, "_run_command", escape_allowlist)
 
     replay_object_name_component(manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo)
 
+    # The escape is planted only when the intercepted argv MATCHES the
+    # receipt's. If that match stops holding - a changed generator command
+    # shape, a reordered receipt - nothing is ever written outside the
+    # allowlist and the absence claim below passes over a defect that was
+    # never introduced. A negative control has to prove it fired.
+    assert planted == [escaped_relative], (
+        "the unallowlisted write was never planted, so the claim below holds because "
+        "nothing escaped rather than because the replay contained it"
+    )
     assert not (repo / escaped_relative).exists()
     assert (repo / "dev/generated.txt").read_bytes() == b"generated Widget\n"
     assert (repo / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"
