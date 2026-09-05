@@ -116,9 +116,6 @@ if TYPE_CHECKING:
     from ..workflow.state_models import WorkflowState
 
 
-_build_auth_cleanup_intent = build_auth_cleanup_intent
-
-
 def list_operator_auth_providers() -> AuthProvidersReport:
     """Return the :class:`AuthProvidersReport` enumerating implemented and reserved auth provider slots."""
     return AuthProvidersReport(providers=list_auth_providers())
