@@ -293,3 +293,58 @@ full matrix module passes all 155 tests. Ruff format/check, scoped `ty`,
 basedpyright, and the feature Vault check pass. The record/reference/plan repeat
 the unchanged live facts, but their completed S07 state cannot satisfy the
 quality gate while this branch false-negative remains.
+
+## Branch-safe alias remediation review
+
+Ruling: **NOT ACCEPTED**. Conditional and repeated alias writes now fail
+closed, but one same-scope binding form remains invisible to the resolver. One
+HIGH therefore remains.
+
+The live facts and framing remain unchanged: 126 sources; seven routes with
+Overview solely installed; zero message consumers; two injected read-action
+ids; zero mutation doors; 78 CLI declarations all `not-implemented`; six
+harness files and 65 test functions; source digest
+`sha256:e7337508a02ef2260e0b28205c31bb872b69f59aa51a18391ae209c21b8f9d57`;
+and census digest
+`sha256:c136cfe1ae3f82a239476c00e805f8c9a29e010d502e74397963cea7e6f42371`.
+No production TUI file changed, G0 remains OPEN, and the TUI hold remains in
+force.
+
+Independent mutations confirm that conditional route-target and installed
+screen writes, duplicate assignment, deletion, read-before-definition, and
+writes inside loop, `try`, `with`, and `match` constructs are rejected. Simple
+unconditional alias chains pass. Writes inside a differently named nested
+function are correctly ignored because they are in another local scope. The
+prior dead-call, free-handler, decorated-handler, unused-constant, dead-route,
+dead-factory, real-route, and changed-initial-route controls remain correctly
+classified.
+
+### nested-definition-name-binding | high | A nested definition rebinds a followed alias without entering the write set
+
+`_BindingCollector.visit_FunctionDef`, `visit_AsyncFunctionDef`, and
+`visit_ClassDef` return without descending, which correctly excludes writes in
+the nested body but incorrectly excludes the definition name itself. Python
+binds that name in the enclosing function scope.
+
+An independent mutation assigns
+`factory = ledger_screen_factory(...)`, then declares a same-scope nested
+`def factory(context): return Screen()`, and returns `factory(context)`. The
+runtime return is the generic screen from the nested function, but the census
+silently resolves the earlier assignment and continues to report
+`workbench.ledger` and Overview as installed. This is a type-compatible
+installed-return counterexample and violates the requirement that every
+followed alias have exactly one enclosing-scope binding.
+
+The binding collector must record each nested function, async-function, and
+class name as a write in the enclosing scope while continuing not to visit its
+body. The same completeness audit must cover `import`/`from ... import` aliases,
+which also bind names without producing `ast.Name(Store)` nodes, and any other
+Python binding node not reached through `Name(Store/Del)`. Add durable negative
+tests for a same-name nested callable factory and import alias; retain the
+positive test proving that a differently named nested body's local writes do
+not contaminate the enclosing scope.
+
+The focused S07 detector selection passes 26 tests with 135 deselected. Ruff
+format/check, scoped `ty`, basedpyright, and the feature Vault check pass. The
+record/reference/plan preserve the accurate current live observations, but S07
+cannot pass the detector-teeth gate while this same-scope rebinding is silent.
