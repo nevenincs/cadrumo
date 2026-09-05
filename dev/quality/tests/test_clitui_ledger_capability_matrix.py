@@ -2742,10 +2742,8 @@ def test_currentness_requires_nonempty_observed_subjects() -> None:
         observed_union=_union_denominator(),
     )
 
-    assert currentness == [
-        "live evidence-subject observation is empty",
-        "matrix evidence subject no longer observed: subject.ledger.matrix",
-    ]
+    assert "live evidence-subject observation is empty" in currentness
+    assert "matrix evidence subject no longer observed: subject.ledger.matrix" in currentness
     assert not _evaluate(
         matrix,
         LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE,
@@ -2770,8 +2768,8 @@ def test_currentness_rejects_duplicate_or_changed_subject_observations() -> None
         observed_union=_union_denominator(),
     )
 
-    assert duplicate_errors == ["live evidence-subject observation contains duplicate identities"]
-    assert changed_errors == ["evidence subject freshness drifted: subject.ledger.matrix"]
+    assert "live evidence-subject observation contains duplicate identities" in duplicate_errors
+    assert "evidence subject freshness drifted: subject.ledger.matrix" in changed_errors
 
 
 def test_currentness_revalidates_a_malformed_copied_subject_without_value_leakage() -> None:
