@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:329949e30ba15602cba34f2bd378624ba868cc06af4d4e128583013f782f77f6'
+body_hash: 'sha256:1512844138a60108bf6359fe0632a4d58c64ecb625ea2900822bc3b4ad8932ac'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -527,6 +527,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S645` - Guard the shipped cohort transitional-marker sweep with a root check, a corpus floor and a strict read, and correct its anti-tautology case which proved the matcher against an in-memory string while claiming to prove the scan reads files; `dev/tests/test_modelo_workspace_fixed_point.py`.
 - [x] `W02.P02.S646` - Guard the release boundary gate with a root check and a corpus floor, since it asserted no dependency edge from the shipped package to its harness over an unguarded walk while its positive sibling already refuses an empty import set; `dev/release/tests/test_external_client_release_boundary.py`.
 - [x] `W02.P02.S647` - Route the five lane gates through one guarded workflow walk that checks its root and refuses a collapsed directory, since each asserts that no workflow does some forbidden thing and an empty directory satisfies every one of them; `dev/ci/tests/test_change_class_tiers.py`.
+- [x] `W02.P02.S648` - Floor the two pattern-matched ledger corpora, since each gate globs modules by a name pinning a leading underscore and this repository promotes public symbols out of underscore modules, so a rename lands the file outside the pattern and an empty failure list reads as compliance; `dev/locales/tests/test_ledger_notice_action_conformance.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

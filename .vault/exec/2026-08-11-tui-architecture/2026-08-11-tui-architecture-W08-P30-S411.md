@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:42eb8590b085177b1c0ff15f214c17f8e2d851bd9bee19c744be4d7ffb536458'
+body_hash: 'sha256:bc709d7bbb4df26d24625d208e5a6119dfde21d9f283b89e62cd9d477a621a05'
 step_id: 'S411'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -82,9 +82,29 @@ refusal cannot leak what a success hides.
 Teeth proven by naming the path in a refusal; the gate fails on the message
 text. 6 passed on the producer, 49 on the operator-action catalogue.
 
-STILL MISSING: the path-entry surface itself. Nothing in the TUI yet asks the
-operator for a path and calls this producer, so the import area remains
-refused in a live session.
+The path-entry surface exists too, and the import area is now enterable. It
+lives on the Ledger OVERVIEW screen, not on the import screen: that screen
+refuses without a prepared import, so an entry inside it could never be
+reached. Preparing one from the overview is what makes the destination
+admissible -- the same shape as selecting an entry to admit classification --
+and `accept_prepared_import` refuses a duplicate choice id rather than
+shadowing an earlier preparation, since two rows sharing an id would leave the
+selected row not determining the command that runs.
+
+AN ARCHITECTURE GATE CAUGHT A REAL VIOLATION AND I MOVED THE CODE RATHER THAN
+THE GATE. `test_ledger_tui_has_no_io_adapter_cli_calculation_or_mutation_imports`
+failed on the first draft: the path validation used `exists`, `is_file` and
+`open` INSIDE the TUI package, which is adapter work in a presentation layer.
+The validation now lives in `application/ledger/import_preparation.py`, where
+filesystem access belongs and where it mirrors `import_ledger_source`'s own
+pre-provider guard; the TUI module only seals the resulting command behind its
+display identities. The split is not bookkeeping -- the gate exists precisely
+to stop presentation code touching the disk.
+
+Teeth proven twice on the surface: dropping the acceptance leaves the area
+refused (`the operator prepared an import and the area is still refused`), and
+echoing the entry into the status line fails the path-free assertion. 96 passed
+across the ledger suites.
 
 The original measurement, kept because it scoped this work:
 from the classification one -- which is worth stating, because the step's
