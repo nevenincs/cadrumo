@@ -66,5 +66,5 @@ def test_refuses_a_member_whose_declared_section_its_design_cell_contradicts(tmp
         encoding="utf-8",
     )
 
-    with pytest.raises(RegistryValidationError, match="no record page|contradicts"):
+    with pytest.raises(RegistryValidationError, match=r"no record page|contradicts"):
         subject.compile_m200_2024_page_resolved_authority(target)

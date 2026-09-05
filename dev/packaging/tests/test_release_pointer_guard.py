@@ -109,8 +109,20 @@ def test_an_unreadable_pointer_refuses_rather_than_reading_as_absent(text: str, 
     pointer as absent would turn the guard off exactly when the repository state
     is unexpected — the case it exists for.
     """
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as refusal:
         extract_pointer_version(text, pointer_format)
+
+    # `ValueError` alone is not evidence of a refusal: `json.JSONDecodeError`
+    # IS a ValueError, so an unhandled parser crash escaping the guard would
+    # satisfy this test while being the opposite of what it claims. Requiring
+    # the handler's own prefix proves the guard refused deliberately, and it
+    # is derived from the enum so a renamed format cannot leave a stale
+    # literal asserting nothing.
+    message = str(refusal.value)
+    assert message.startswith(f"{pointer_format.value} "), (
+        f"the refusal did not come from the {pointer_format.value} handler, so this "
+        f"case proves a crash rather than a refusal: {message!r}"
+    )
 
 
 # ---------------------------------------------------------------------------

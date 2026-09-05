@@ -1155,7 +1155,18 @@ def test_integer_source_grammar_refuses_malformed_or_mismatched_content(
     """A numberless, trailing-prose, non-numeric or width-mismatched form still fails closed."""
     epoch = _authorities(design_epoch)
     field_id = _integer_field_of_width(epoch, 4)
-    with pytest.raises(RegistryValidationError):
+    # A bare refusal was satisfied by ANY grammar error, so a parser that
+    # rejected every content on one unrelated ground would keep all
+    # twenty-five cases green. Both expectations are derived, not
+    # transcribed: production echoes the offending text, and the width
+    # branch is identified by the decimals it declares rather than by a
+    # copied byte count that would go stale with the field.
+    expected = (
+        "bytes, but content declares"
+        if "decimales" in content
+        else f"ambiguous content '{content}'"
+    )
+    with pytest.raises(RegistryValidationError, match=re.escape(expected)):
         _render_with_integer_content(epoch, field_id=field_id, content=content)
 
 
