@@ -6,7 +6,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:70799703cce4b236f141b1b3c4418bf6d4b7fdca6a0445b3549cbdda41203c33'
+body_hash: 'sha256:80a28c443c9c1eaf00a085f5a21c7cfc535053450887056c4abf70e3881b1898'
 related:
   - '[[2026-09-04-clitui-ledger-W01-P01-S01]]'
   - '[[2026-09-04-clitui-ledger-W01-P01-S02]]'
@@ -18,6 +18,7 @@ related:
   - '[[2026-09-04-clitui-ledger-W01-P02-S07]]'
   - '[[2026-09-04-clitui-ledger-W01-P02-S08]]'
   - '[[2026-09-04-clitui-ledger-W01-P03-S09]]'
+  - '[[2026-09-04-clitui-ledger-W01-P03-S10]]'
   - '[[2026-09-04-clitui-ledger-adr]]'
   - '[[2026-09-04-clitui-ledger-plan]]'
   - '[[2026-09-04-clitui-ledger-reference]]'
@@ -69,6 +70,7 @@ Auto-generated index of all documents tagged with `#clitui-ledger`.
 - `2026-09-04-clitui-ledger-W01-P02-S07` - Enumerate existing Ledger component factories separately from installed navigation reachability
 - `2026-09-04-clitui-ledger-W01-P02-S08` - Adjudicate canonical semantic homes and typed command-result contracts for every denominator row
 - `2026-09-04-clitui-ledger-W01-P03-S09` - Record clitui-ledger as sole Ledger parity owner and place unresolved Ledger TUI rows under the implementation hold
+- `2026-09-04-clitui-ledger-W01-P03-S10` - Publish the active-plan ownership, hold state, and gate dependency chain without duplicating evidence
 
 ### plan
 
