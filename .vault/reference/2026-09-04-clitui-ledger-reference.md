@@ -19,20 +19,20 @@ This reference maps the first semantic-search-led census of Ledger behavior owne
 
 ### Campaign matrix publication
 
-This document is the authoritative human-readable publication surface for the `LedgerCapabilityMatrixV1` campaign contract in `dev/quality/clitui_ledger_capability_matrix.py`. The S04 CLI, S05 backend-operation, S06 registry-route, and S07 supported-surface streams are now exact current observations, but the publication remains a **provisional baseline** rather than a serialized accepted matrix: S08 has not adjudicated the live union census, S09 has not recorded the cross-plan hold control, and S12-S14 have not reviewed and accepted the frozen denominator. The contract therefore requires the publication to fail closed instead of inventing a denominator digest, matrix digest, evidence attestation, or G0 closure.
+This document is the authoritative human-readable publication surface for the `LedgerCapabilityMatrixV1` campaign contract in `dev/quality/clitui_ledger_capability_matrix.py`. S08 now serializes the exact S04-S07 union as `LedgerUnionDenominatorV1`: 760 raw observations select 718 semantic rows after 42 cross-stream joins. The publication remains a **provisional baseline** rather than an accepted campaign matrix: S09 has not recorded the cross-plan hold control, S11-S13 have not completed row-level hold and review enforcement, and S14 has not accepted the frozen denominator. The contract therefore publishes the S08 union digest while continuing to refuse a matrix digest, acceptance attestation, or G0 closure.
 
 | Publication field | Current value |
 | --- | --- |
 | Contract / schema | `LedgerCapabilityMatrixV1` / `3` |
-| Publication revision | `s07-tui-census-4` |
-| Observation timestamp | `2026-09-05T01:43:28+02:00` |
-| Source revision | `c2f46cfe47442e8c32c8a756cbe1ce922e087f10` |
+| Publication revision | `s08-semantic-union-1` |
+| Observation timestamp | `2026-09-05T03:08:54+02:00` |
+| Source revision | `df3e6a56f85a55cdea3fa18ad52bb579074dc2f4` |
 | Contract source digest | `sha256:c2998c8ff958ae820b59fa7055a36d83117bb35282fe2679761032fab7a15a10` |
 | Accepted plan owner | `clitui-ledger` |
-| Denominator revision / digest | Not issued: mandatory S08 union adjudication remains open |
+| Denominator revision / digest | `s08-semantic-union-1` / `sha256:5012ceafec5bc9dae942b22f48daa34f66d93008cd48b9f81c0b0f69f4f49b06` |
 | Matrix digest | Not issued: a digest-bound `LedgerCapabilityMatrixV1` cannot exist before the complete denominator and current evidence subjects exist |
 | Acceptance attestation | Absent by design: only S14 may record an independent `ACCEPT` ruling bound to the frozen digest |
-| TUI hold | Campaign sequencing bars Ledger TUI implementation; the cross-plan recorded control remains open until S09 and row-level applicability/hold classification remains open until S08 and S11 |
+| TUI hold | Campaign sequencing bars Ledger TUI implementation; the cross-plan recorded control remains open until S09 and row-level hold classification remains open until S11 |
 
 #### Mandatory source-stream landscape
 
@@ -42,15 +42,15 @@ Every stream below must become one complete, readable, unambiguous, digest-bound
 | --- | --- | --- | --- |
 | `cli_endpoint` | 78 invocable endpoints: 77 leaves and executable `participation`; each has an exact path, handler, schema, TUI declaration, and ownership annotation | Complete current CLI stream; not a union-denominator attestation | S04 complete |
 | `cli_suboperation` | 50 explicit behavior-distinct sub-operations across ten overloaded endpoints | Complete current CLI stream; not a union-denominator attestation | S04 complete |
-| `backend_only` | 63 public frontend-neutral operations are catalogued below; the installed workspace read/projection is the one backend-only product capability absent from the CLI census | Complete current backend-operation stream; product-row admission remains open | S05 complete; S08 adjudication |
-| `missing_product` | Ten baseline product/provenance families are confirmed absent or incomplete below | Complete current S05 product-gap observation; union review and canonical row admission remain open | S05 complete; S08 adjudication |
+| `backend_only` | 63 public frontend-neutral operations are catalogued below; the installed workspace read/projection is the one backend-only product capability absent from the CLI census | Complete current backend-operation stream; all observations have S08 semantic rows | S05 and S08 complete |
+| `missing_product` | Ten baseline product/provenance observations select 13 explicit semantic requirements after the complete-provenance family is split | Complete current product-gap stream; all observations have S08 semantic rows | S05 and S08 complete |
 | `registry_route` | Seven families, 546 declarations, 35 family/revision sites, 510 registry-bound destinations, three application-sidecar destinations, and 33 destinationless declarations are enumerated below | Complete current registry stream; not a union-denominator attestation | S06 complete; S08 adjudication |
-| `artifact_product` | Flat CSV/JSONL/XLSX exists; M369 has a successful Modelo export path, while observed M100/M303/M390 routes refuse unavailable layouts; review package, Google transport, and recovery archive remain distinct missing products | Complete current S05/S06 application-product observation; row admission remains open | S08 adjudication |
-| `supported_surface` | Seven internal routes and seven concrete route screens exist; Overview is installed read-only through the outer Ledger destination, the other six remain component-only, no installed consumer handles internal Ledger route/action messages, and no mutation door is installed | Complete current supported-surface stream with committed drift detector; capability-row applicability remains open | S07 complete; S08 adjudication |
+| `artifact_product` | Six artifact observations select flat CSV/JSONL/XLSX, review workbook/sidecar, Google review transport, and encrypted recovery rows | Complete current application-product stream; all observations have S08 semantic rows | S05-S06 and S08 complete |
+| `supported_surface` | Seven internal routes and seven concrete route screens exist; Overview is installed read-only through the outer Ledger destination, the other six remain component-only, no installed consumer handles internal Ledger route/action messages, and no mutation door is installed | Complete current supported-surface stream; each route selects an S08 semantic row without inflating the business denominator | S07 and S08 complete |
 
 #### Axis contract and publication notation
 
-The eight independent axes are `backend`, `cli`, `tui`, `composition`, `artifact`, `provenance`, `registry`, and `proof`. A reviewed row will carry `applicable` or `not_applicable` plus `unproven`, `partial`, or `proven`; backend/CLI/TUI additionally carry `absent`, `partial`, or `proven`. Ownership and reachability use the independent annotations `cli_owned`, `delegating`, `component_only`, and `installed`. In the provisional tables, `REVIEW` means the S07/S08 applicability decision has not happened and therefore no contract state is asserted.
+The eight independent axes are `backend`, `cli`, `tui`, `composition`, `artifact`, `provenance`, `registry`, and `proof`. S08 assigns `applicable` or `not_applicable` to every serialized row; S12 must still review those decisions and attach current evidence before they become accepted matrix assessments. Backend/CLI/TUI matrix assessments additionally carry `absent`, `partial`, or `proven`, while ownership and reachability use `cli_owned`, `delegating`, `component_only`, and `installed`. `REVIEW` in the older family-level table below means that table remains orientation rather than a second source of S08 applicability truth.
 
 | Profile | Backend | CLI | TUI | Composition | Artifact | Provenance | Registry | Proof |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -59,9 +59,34 @@ The eight independent axes are `backend`, `cli`, `tui`, `composition`, `artifact
 | `PRODUCT` | `applicable`; `absent`; `unproven` | Surface applicability remains for S08 | `REVIEW` | `applicable`; `unproven` | `applicable`; `unproven` where artifact-bearing | `applicable`; `unproven` | `REVIEW` | `applicable`; `unproven` |
 | `REGISTRY` | `applicable`; `partial` | `REVIEW` | `REVIEW` | `applicable`; `partial` | `REVIEW` | `applicable`; `partial` | `applicable`; `partial` | `applicable`; `partial` or `unproven` per the registry table below |
 
+#### S08 serialized union adjudication
+
+`build_ledger_union_denominator` is the reproducible S08 projection. It consumes the live command census, the authored 63-operation S05 register plus its 21-file source set, the ten missing-product observations, the validated 546-row registry census, six artifact-product observations, and the live seven-route TUI census. `LedgerUnionDenominatorV1` rejects a missing or duplicate raw observation, an unavailable selected row, row/source disagreement, incomplete eight-axis applicability, an absent semantic home, unordered identities, or a stale digest. Serialization uses the domain `cadrumo:ledger-union-denominator:v1`, a NUL terminator, unsigned-eight-byte-big-endian payload length, canonical ASCII JSON, and SHA-256.
+
+| Stream | Raw observations | S08 stream digest |
+| --- | ---: | --- |
+| `cli_endpoint` | 78 | `sha256:33b8384c36017d09aee5a26f55cd7e1189fecc34e57a7ba8ec317f2d533d0da2` |
+| `cli_suboperation` | 50 | `sha256:09da4e160070ccf28f5d7b16fc6b60d2005f0d1c48e6dcd49f4b8c9646b067bc` |
+| `backend_only` | 63 | `sha256:c8c10818be0f37f7d629a4110b61d538cbe79ed61da6224eecd6c2a7255433f6` |
+| `missing_product` | 10 | `sha256:af560098e6f85b8e80981f38b80eadd45bcfe6c9a173a609906c60af2d3aaa3d` |
+| `registry_route` | 546 | `sha256:76b05fa59223ef5d11da50d0d108720f644fb7c2dfe4361cf11854f5aff397e2` |
+| `artifact_product` | 6 | `sha256:3b0c161490b1a885c894758b8cfda68a4b79c346d6d03ca8ab3fa7949e378685` |
+| `supported_surface` | 7 | `sha256:57220a5ecc682cadcf36492a7d30013f1a154c41cc4576f153c5c548fac55f1d` |
+| **Union** | **760 observations / 718 semantic rows** | `sha256:5012ceafec5bc9dae942b22f48daa34f66d93008cd48b9f81c0b0f69f4f49b06` |
+
+The 42-row reduction is cross-stream identity joining, not capability loss. CLI `add` and backend `ledger.transaction.create` select one row; CLI bulk-CSV classification and the backend bulk classifier select one row; CLI CSV/JSONL/XLSX modes and their artifact observations select one row per format; and the installed Overview route selects `ledger.workspace.read`. A backend helper that is not independently invocable remains a row but is explicitly not applicable to CLI and TUI. The seven TUI observations select existing semantic rows and retain their route and `installed`/`component_only` distinction; they do not create duplicate business behaviors.
+
+The overloaded CLI endpoints remain discriminated routers, while the 50 sub-operations remain separate whenever effect, result, refusal, artifact, or persistence differs. Automatic split retains reject, split-preview, split-apply, single-preview, and single-apply rows. Parser aliases with the same effect remain one row. Registry declarations are never collapsed to seven families: each source/modelo/revision/binding/selector/applicability unit receives a stable `ledger.registry_route.*` identity whose final segment binds the canonical declaration, leaving all 546 route obligations independently reviewable.
+
+Every row carries one canonical owner, immutable command or query type, result type, existing-versus-planned disposition, effect class, eight applicability decisions, gap classes, proof requirements, current blockers, next action, and any TUI route. Seven rows name exact existing typed requests and live owner symbols: flat export, one-source import, reviewed LLM decision, transaction create, review query, full update, and field patch. The remaining 711 rows name explicit planned immutable contracts at the application or registry boundary; this is a closure target, not a completeness claim. Grouped homes are `query_service` and `composite_reader` for scalable and joined reads, `operator_commands` for operator mutations, `review_workflows`/`llm_workflows` for proposal and consent paths, dedicated invoice/ratio/prorrata/investment-goods workflows for adjacent registers, `review_exchange` and `recovery_archive` for distinct artifact products, and the canonical registry target boundary for route units. Exact per-row names live in the serialized projection so a newly unmatched CLI identity fails rather than receiving a default owner.
+
+Applicability is explicit but remains subject to S12 evidence review. Direct backend authority and proof apply to every row. CLI and TUI are not applicable only for lower-level backend compositions consumed through a higher operator contract; registry-route visibility remains applicable through participation/reconciliation projections. Artifact applicability is limited to independently readable files or archives; provenance applies to mutations, proposals, artifacts, and registry routes; composition applies where state, provider, artifact, or registry boundaries are crossed. Every row retains a `PROOF` gap, 711 planned-contract rows retain a `PRODUCT` gap, and current CLI policy observations retain `AUTHORITY`; no row is declared complete.
+
+Open adjudicated blockers remain concrete: eight public backend operations lack direct symbol-level tests; 510 registry declarations have direct destinations but still need route proof, three use application sidecars without registry output identities, and 33 have no located destination; six TUI routes remain component-only; artifact readers, provenance, refusal, and finish-line compositions remain unproved. These are resolved by their named G1-G4 steps. S08 issues the provisional union digest only. G0 remains open pending singular ownership/hold records, reviewed row evidence and reopening enforcement, and the S14 independent digest-bound acceptance.
+
 #### Provisional capability rows
 
-These 41 family rows are the S03 baseline keys. They are not yet admitted `LedgerCapabilityRowV1` instances: S04-S07 may split them into endpoint/sub-operation rows or add rows from another stream, and S08 must adjudicate their canonical identity, applicability, exact command type, and exact result type. The table names the candidate semantic owner and the planned step that must turn that candidate into an exact typed contract.
+These 41 family rows are the S03 orientation keys. S08 has now admitted the exact 718-row semantic union above; this compact table remains a family-level implementation map and does not replace, add to, or summarize away those serialized row identities.
 
 | Baseline row key | Profile | Candidate semantic owner and typed-contract closure | Open gap / next evidence |
 | --- | --- | --- | --- |
@@ -114,6 +139,7 @@ These coordinates bind the S03 claims to the current observation revision. They 
 | Coordinate | Locator | Subject digest | Claim boundary |
 | --- | --- | --- | --- |
 | `evidence.baseline.matrix_contract` | `dev/quality/clitui_ledger_capability_matrix.py:22` | `sha256:c2998c8ff958ae820b59fa7055a36d83117bb35282fe2679761032fab7a15a10` | Schema 3, eight axes, source kinds, gaps, controls, evidence currentness, and G0-G4 predicates |
+| `evidence.s08.semantic_union` | `build_ledger_union_denominator` in `dev/quality/clitui_ledger_capability_matrix.py` | `sha256:5012ceafec5bc9dae942b22f48daa34f66d93008cd48b9f81c0b0f69f4f49b06` | Domain-separated serialized union: 760 raw observations, 718 semantic rows, every source selector, canonical typed home, applicability decision, gap, proof requirement, blocker, next action, and TUI route |
 | `evidence.s04.cli_command_census` | `src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py:51` | `sha256:2cd8e21e2b8602e5e18338c22350301f2bc76f580873af51b1154d5364e6769b` | Exact current CLI stream: 78 invocables, 50 supplemental behavior-distinct sub-operations across ten overloaded endpoints, derived path/handler/schema/TUI facts, and fail-closed ownership annotations |
 | `evidence.s05.backend_operation_census` | `src/cadrumo/application/ledger/` operational modules listed in the backend census | `sha256:4b0d917dd20d155f348958559037695cb5bab356867a1c88305bb42080f3b2f0` | Exact current backend observation: 63 operations, actual request/result contracts, direct-test locators, production compositions, and the one backend-only product capability |
 | `evidence.baseline.cli_authority` | `2026-09-04-clitui-ledger-reference`, CLI-to-backend disposition matrix | Bound by this document's CLI-maintained `body_hash` after publication | Initial authority families and candidate application homes |
@@ -129,7 +155,7 @@ These coordinates bind the S03 claims to the current observation revision. They 
 
 | Gate | State at S03 | Blocking facts |
 | --- | --- | --- |
-| G0 denominator and ownership freeze | **OPEN** | S04-S07 current source observations are complete, but S08 union adjudication, S09/S11 hold records, S12 row review, S13 reopening detector, and S14 digest-bound independent `ACCEPT` remain outstanding |
+| G0 denominator and ownership freeze | **OPEN** | S04-S08 current source observations and serialized semantic union are complete, but S09/S11 hold records, S12 row review, S13 reopening detector, and S14 digest-bound independent `ACCEPT` remain outstanding |
 | G1 semantic authority recovery | **LOCKED by G0** | `AUTHORITY` rows retain CLI-owned or missing application authority; no cohort may claim closure before its backend behavior and adapter detector evidence exists |
 | G2 backend product completeness | **LOCKED by G0/G1** | Missing products, composition, artifacts, provenance, registry routes, and direct proof remain open |
 | G3 CLI clean break and completeness | **LOCKED by G0-G2** | CLI delegation, success/refusal behavior, and artifact proof are not complete across the admitted denominator |
@@ -175,7 +201,7 @@ The installed projection path is real and backend-owned. `SecureProfileWorkbench
 
 The dedicated component harness has 38 test functions and 78 collected integration cases across three files. It covers all seven screens with synthetic fully populated injection, flow refusal and submission, semantic focus, four locales, safe evidence metadata, responsive geometry, and import-boundary checks. The installed-composition tests prove the outer `workbench.ledger` catalogue enrollment and projection/factory parity, but no test drives a production root from Overview through an internal Ledger route or executes a Ledger request message. Harness coverage is therefore `partial` for installed reachability and executable-operation enrollment even though component coverage is broad.
 
-S07 assigns no final TUI applicability or row state. Every candidate TUI-applicable capability remains under the campaign hold and requires S08 semantic adjudication followed by S11 row-level hold marking. G0 remains open.
+S08 assigns TUI applicability to the semantic union without treating component existence as proof. Every TUI-applicable capability remains under the campaign hold and requires S11 row-level hold marking plus S12 review. G0 remains open.
 
 ### Live backend operation denominator
 
