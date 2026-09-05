@@ -15,7 +15,7 @@ import re
 import secrets
 import shutil
 import sys
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Collection, Mapping
 from dataclasses import asdict, dataclass
 from decimal import Decimal
 from pathlib import Path
@@ -46,6 +46,16 @@ EXPECTED_FORMULA = "modelo-200-cuota-integra"
 EXPECTED_LEGAL_REF = "ley-27-2014:art-29"
 EXPECTED_SOURCE_REF = "aeat-modelo-200-manual-2024"
 EXPECTED_NOTICE_CODES = {"modelo.work.calculate.plazo_vencido_unassessed_preview"}
+#: The one warning this oracle's own execution posture guarantees.
+#:
+#: The oracle selects the non-keychain secret backend deliberately: it runs on
+#: hosts with no unlocked login keychain and must never write product keys into
+#: a real one. That posture cannot persist a login session, so every command
+#: authenticating over the bounded stdin channel truthfully reports that it
+#: authenticated only its own process. The notice describes the oracle's own
+#: isolation, not the installed build's tax behaviour, and it is the only code
+#: excused anywhere here; every other diagnostic still fails the oracle.
+ISOLATION_NOTICE_CODES: Final[frozenset[str]] = frozenset({"config.login.session_not_persisted"})
 _REVISION_ID = re.compile(r"^[0-9a-f]{64}$")
 
 CASILLAS = (
@@ -302,17 +312,26 @@ def assert_no_diagnostic_notices(
     *,
     command: str,
     error: Callable[[str], Exception],
+    excused_codes: Collection[str] = (),
 ) -> None:
-    """Assert a delivered command reported plain success and raised no diagnostic notice."""
-    if envelope.get("status") != "success":
-        raise error(f"{command} expected success status: {envelope!r}")
+    """Assert a delivered command raised no diagnostic notice it was not excused.
+
+    ``excused_codes`` names notice codes the caller's own execution posture
+    guarantees and which say nothing about the behaviour under test. An
+    excused notice is still a real warning, so an envelope carrying one
+    reports ``warning`` rather than ``success``; with nothing excused the
+    assertion is the stricter plain-success one.
+    """
     diagnostics = [
         notice
         for notice in envelope["notices"]
         if isinstance(notice, dict) and notice.get("severity") in {"warning", "error"}
     ]
-    if diagnostics:
-        raise error(f"{command} emitted unexpected diagnostic notices: {diagnostics!r}")
+    unexcused = [notice for notice in diagnostics if notice.get("code") not in excused_codes]
+    if unexcused:
+        raise error(f"{command} emitted unexpected diagnostic notices: {unexcused!r}")
+    if not diagnostics and envelope.get("status") != "success":
+        raise error(f"{command} expected success status: {envelope!r}")
 
 
 def _json_envelope(evidence: CommandResult, *, expected_command: str) -> dict[str, Any]:
@@ -328,8 +347,13 @@ def _json_envelope(evidence: CommandResult, *, expected_command: str) -> dict[st
     return document
 
 
-def _assert_no_diagnostic_notices(document: dict[str, Any], *, command: str) -> None:
-    assert_no_diagnostic_notices(document, command=command, error=InstalledTaxOracleError)
+def _assert_no_diagnostic_notices(document: dict[str, Any], *, command: str, authenticated: bool = False) -> None:
+    assert_no_diagnostic_notices(
+        document,
+        command=command,
+        error=InstalledTaxOracleError,
+        excused_codes=ISOLATION_NOTICE_CODES if authenticated else (),
+    )
 
 
 def create_installed_profile(
@@ -469,7 +493,12 @@ def run_installed_tax_oracle(
         input_text=profile_authentication,
     )
     commands.append(complete_setup)
-    _json_envelope(complete_setup, expected_command="config.profile.complete_setup")
+    complete_setup_document = _json_envelope(complete_setup, expected_command="config.profile.complete_setup")
+    _assert_no_diagnostic_notices(
+        complete_setup_document,
+        command="config.profile.complete_setup",
+        authenticated=True,
+    )
 
     create = _run(
         (*authenticated_base, *work_create_arguments()),
@@ -480,7 +509,7 @@ def run_installed_tax_oracle(
     )
     commands.append(create)
     create_document = _json_envelope(create, expected_command="modelo.work.create")
-    _assert_no_diagnostic_notices(create_document, command="modelo.work.create")
+    _assert_no_diagnostic_notices(create_document, command="modelo.work.create", authenticated=True)
     work_unit_id = str(create_document["result"].get("work_unit_id", ""))
     if not _REVISION_ID.fullmatch(work_unit_id):
         raise InstalledTaxOracleError(f"work creation returned an invalid work unit id: {work_unit_id!r}")
@@ -509,7 +538,7 @@ def run_installed_tax_oracle(
         )
     notices = calculate_document["notices"]
     notice_codes = {str(notice.get("code")) for notice in notices}
-    if notice_codes != EXPECTED_NOTICE_CODES:
+    if notice_codes - ISOLATION_NOTICE_CODES != EXPECTED_NOTICE_CODES:
         raise InstalledTaxOracleError(
             f"calculation notices expected {sorted(EXPECTED_NOTICE_CODES)!r}, got {sorted(notice_codes)!r}",
         )
@@ -532,7 +561,11 @@ def run_installed_tax_oracle(
     )
     commands.append(observations)
     observations_document = _json_envelope(observations, expected_command="modelo.work.observations")
-    _assert_no_diagnostic_notices(observations_document, command="modelo.work.observations")
+    _assert_no_diagnostic_notices(
+        observations_document,
+        command="modelo.work.observations",
+        authenticated=True,
+    )
     target = assert_grounded_observations(
         observations_document["result"],
         calculation_revision_id=calculation_revision_id,

@@ -253,7 +253,7 @@ def test_check_refuses_drift_without_changing_published_hashes(m130_inspection_s
         # to refuse. The case only looked green because a stale render
         # profile refused the whole run before the injection was reached.
         (context.target_registry_root / "modelos" / f"{_ISOLATED_TREE.modelo}.toml").write_text(
-            f'[modelo]\nid = \"{_ISOLATED_TREE.modelo}\"\n',
+            f'[modelo]\nid = "{_ISOLATED_TREE.modelo}"\n',
             encoding="utf-8",
         )
     else:
