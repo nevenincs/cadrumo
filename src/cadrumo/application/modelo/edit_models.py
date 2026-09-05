@@ -101,9 +101,9 @@ class ModeloEditDetailRowIntentKind(StrEnum):
     ``_build_foreign_asset_rows``, and their siblings) sorts its rows by a
     content key -- ``(country_code, tax_id)`` or equivalent -- BEFORE
     ``enumerate(..., 1)`` assigns row indices, so two calls supplying the
-    same rows in different orders render byte-identical ficheros (proven in
-    :func:`~cadrumo.application.filing.tests.test_m184_socio_repeat_wiring.
-    test_occurrence_order_is_a_pure_function_of_content_not_of_supply_order`).
+    same rows in different orders render byte-identical ficheros (each builder's
+    sort is proven in
+    :mod:`~cadrumo.domain.calculations.registry.tests.test_detail_record_row_builders`).
     The AEAT diseno de registro for these record families identifies each
     repeated record by its declared content (member/counterparty NIF, asset
     identifier, clave/subclave) rather than by a required sequence -- there
