@@ -36,12 +36,12 @@ corruption report ever arrives.
 from __future__ import annotations
 
 from ....application.operator_actions.preconditions import no_action_precondition_verdict
+from ....core.hashing import HEX_ALPHABET
 from ....core.hashing import SHA256_HEX_LENGTH as _SHA256_HEX_LENGTH
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from .errors import OutboundStorageIntegrityError
 
 _SHA256_PREFIX = "sha256-"
-_HEX_DIGITS = frozenset("0123456789abcdef")
 
 
 def strip_sha256_prefix(stored_hash: str) -> str:
@@ -104,7 +104,7 @@ def require_full_sha256_content_hash(
 ) -> str:
     """Return a canonical SHA-256 digest or refuse unverified provider metadata."""
     digest = strip_sha256_prefix(stored_hash)
-    if len(digest) != _SHA256_HEX_LENGTH or not all(character in _HEX_DIGITS for character in digest):
+    if len(digest) != _SHA256_HEX_LENGTH or not all(character in HEX_ALPHABET for character in digest):
         raise OutboundStorageIntegrityError(
             message,
             context={**context, "stored_hash": stored_hash},
