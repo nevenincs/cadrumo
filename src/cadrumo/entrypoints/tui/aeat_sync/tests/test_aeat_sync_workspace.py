@@ -507,7 +507,33 @@ def test_six_routes_are_total_and_locked_projection_refuses_body() -> None:
 
 
 @pytest.mark.asyncio
-async def test_all_six_routes_mount_redacted_without_mount_time_callbacks() -> None:
+async def test_all_six_routes_mount_without_firing_a_host_handoff_or_leaking_scope() -> None:
+    """Mounting a route is not an operator action, and never prints a coordinate.
+
+    Two properties, and neither is about hiding the operator's own data from
+    them -- that policy is retired, and the values these screens carry are the
+    operator's to read.
+
+    The first is that mounting fires no host handoff. A screen that pulled from
+    the AEAT, or opened a document, merely because it was navigated to would
+    take an action the operator never asked for.
+
+    The second is a BACKSTOP, and is recorded as one rather than claimed as a
+    proof: the subject key does not reach the frame. Trying to break it showed
+    why it cannot currently fail -- the projector strips the coordinate, so no
+    screen can reach one to print, and an attempt to leak it does not compile
+    against the controller. The property is genuinely proven upstream, in
+    test_output_physically_omits_protected_scope_payload_and_identity, which
+    holds real sentinels and does fail when they survive. This line stays as
+    cheap cover for the day a coordinate is plumbed through.
+
+    An assertion that the operator's own NIF stays out of the frame stood here
+    too. It was REMOVED rather than reworded: no fixture in this test carried
+    that value, so it could never have failed, and a check that cannot fail
+    reads as a safety property while providing none. The gates that do prove it
+    -- against an exception message and against a status line, where the value
+    is genuinely injected -- are further down this module and stay required.
+    """
     calls: list[object] = []
 
     async def operation(request: AeatSyncOperationRequestV1) -> None:
@@ -524,8 +550,7 @@ async def test_all_six_routes_mount_redacted_without_mount_time_callbacks() -> N
             assert screen.query_one("#aeat-sync-navigation", DataTable).row_count == 6
             assert screen.query_one("#aeat-sync-rows", DataTable).row_count == 1
             rendered = "\n".join(str(widget.render()) for widget in screen.query(Static))
-            assert "private-subject" not in rendered
-            assert "12345678Z" not in rendered
+            assert _SUBJECT_KEY not in rendered
     assert calls == []
 
 

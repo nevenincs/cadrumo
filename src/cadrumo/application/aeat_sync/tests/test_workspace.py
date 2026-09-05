@@ -1,4 +1,15 @@
-"""Adversarial contract tests for the safe AEAT Sync workspace."""
+"""Adversarial contract tests for the AEAT Sync workspace projection.
+
+"Safe" is deliberately not the word any more. What these tests defend is not
+the operator against their own data -- that policy is retired -- but the
+projection contract: scope coordinates stay out of published rows, capabilities
+appear only where something admitted them, a comparison carries the values it
+compares, and a subclass cannot smuggle a field past the projector.
+
+The distinction matters when reading a failure here. A row exposing more of the
+operator's own figures is not a defect; a row exposing the bucket it was scoped
+by, or claiming an action nothing granted, is.
+"""
 
 from __future__ import annotations
 
@@ -452,7 +463,20 @@ def test_actions_require_catalogue_admission_and_area_state_closure() -> None:
         assert "supported_operations" in row.model_dump()
 
 
-def test_notification_rows_have_exact_safe_fields_and_no_capabilities() -> None:
+def test_notification_rows_carry_exactly_their_declared_fields_and_no_capabilities() -> None:
+    """The field set is a CONTRACT, not a redaction, and the row offers no actions.
+
+    Freezing the field set catches a producer quietly widening the row, which
+    matters because consumers key off exactly these names. It is not a claim
+    that the operator may not see more than this; what a notification row ought
+    to carry is a question about the AEAT metadata a pull returns, not about
+    what is safe to show someone their own notifications.
+
+    The capability half is the sharper property. A notification row declares no
+    supported actions or operations, so the projector must not grow them onto
+    it: an action offered on a row nothing admitted is an action with no
+    authority behind it.
+    """
     assert set(AeatSyncWorkspaceNotificationRowV1.model_fields) == {
         "issued_on",
         "read_on",

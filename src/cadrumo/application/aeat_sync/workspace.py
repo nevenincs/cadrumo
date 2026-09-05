@@ -118,7 +118,7 @@ class AeatSyncOverviewArea(StrEnum):
 
 
 class AeatSyncCensusCategory(StrEnum):
-    """Safe census field categories."""
+    """The censo field families a census row is grouped under."""
 
     ADDRESS = "address"
     ACTIVITY = "activity"
@@ -128,7 +128,7 @@ class AeatSyncCensusCategory(StrEnum):
 
 
 class AeatSyncCensusStatus(StrEnum):
-    """Safe census comparison outcomes, plus the state of having none yet.
+    """The census comparison verdicts, plus the state of having none yet.
 
     The first four are VERDICTS: each claims someone compared the local censo
     field against the AEAT one and says how they came out. ``NOT_COMPARED``
@@ -186,7 +186,7 @@ class AeatSyncJustificanteState(StrEnum):
 
 
 class AeatSyncNotificationCategory(StrEnum):
-    """Safe notification categories."""
+    """The notification families the AEAT distinguishes."""
 
     FORMAL = "formal"
     COMMUNICATION = "communication"
@@ -283,7 +283,7 @@ class AeatSyncWorkspaceActionRowV1(BaseModel):
 
 
 class AeatSyncWorkspaceOverviewRowV1(AeatSyncWorkspaceActionRowV1):
-    """Safe public overview row."""
+    """One area's local-versus-AEAT standing, with the actions it admits."""
 
     area: AeatSyncOverviewArea
     local_state: AeatSyncSourceState
@@ -350,7 +350,7 @@ class AeatSyncWorkspaceCensusRowV1(AeatSyncWorkspaceActionRowV1):
 
 
 class AeatSyncWorkspaceFiledDeclarationRowV1(AeatSyncWorkspaceActionRowV1):
-    """Safe public filed-declaration comparison."""
+    """One declaration this profile filed, against what the AEAT shows for it."""
 
     modelo: ModeloCode
     filing_year: FilingYear
@@ -383,7 +383,7 @@ class AeatSyncWorkspaceFiledDeclarationRowV1(AeatSyncWorkspaceActionRowV1):
 
 
 class AeatSyncWorkspaceNotificationRowV1(BaseModel):
-    """Safe public notification metadata.
+    """One notification's metadata, and the coordinate that opens its document.
 
     ``selection_key`` is populated only by :func:`project_aeat_sync_workspace`.
     An admission row may leave it absent; the projector always replaces it
@@ -454,13 +454,13 @@ class _DualRow(AeatSyncWorkspaceActionRowV1):
 
 
 class AeatSyncWorkspaceEvidenceComparisonRowV1(_DualRow):
-    """Safe public local-versus-AEAT evidence comparison."""
+    """One declaration figure as the local record holds it and as the AEAT shows it."""
 
     pass
 
 
 class AeatSyncWorkspaceReconciliationRowV1(_DualRow):
-    """Safe public reconciliation row."""
+    """One reconciliation item, its two sides and how it was resolved."""
 
     reconciliation_state: AeatSyncReconciliationState
 

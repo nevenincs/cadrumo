@@ -58,12 +58,17 @@ class AeatSyncOperationHandoffV1(Protocol):
 
 
 class AeatSyncNotificationDocumentHandoffV1(Protocol):
-    """Host-owned door for one already-read, safe notification row.
+    """Host-owned door for one already-read notification row.
 
-    The row intentionally carries no private notification identity or document
-    payload.  A host may use its own already-admitted context to open the
-    existing operation surface, but this workspace never retrieves or renders
-    a document itself.
+    The row carries a selection coordinate rather than the document, and that
+    is a BOUNDARY, not a redaction. This workspace is a projection: it holds
+    facts already loaded and scoped, and reaching storage or the AEAT for bytes
+    is the host's job, behind the operation surface that owns progress, failure
+    and cancellation. Retrieving a document here would put I/O inside a
+    projection and bypass all three.
+
+    Nothing is being withheld from the operator, whose document it is. The
+    handoff exists so the host opens it through the surface built for that.
     """
 
     async def __call__(self, row: AeatSyncWorkspaceNotificationRowV1, /) -> None:
