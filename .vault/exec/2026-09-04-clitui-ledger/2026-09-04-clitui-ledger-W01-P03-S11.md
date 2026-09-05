@@ -47,4 +47,10 @@ related:
 - `M` `dev/quality/tests/test_clitui_ledger_capability_matrix.py`
 - `M` `.vault/reference/2026-09-04-clitui-ledger-reference.md`
 - `M` `.vault/plan/2026-09-04-clitui-ledger-plan.md`
+- `M` `.vault/index/clitui-ledger.index.md`
 - `A` `.vault/exec/2026-09-04-clitui-ledger/2026-09-04-clitui-ledger-W01-P03-S11.md`
+- `verify:` `uv run --no-sync pytest -q -n 0 dev/quality/tests/test_clitui_ledger_capability_matrix.py` -> pass (222 passed)
+- `verify:` `uv run --no-sync ruff format --check dev/quality/clitui_ledger_capability_matrix.py dev/quality/tests/test_clitui_ledger_capability_matrix.py` -> pass
+- `verify:` `uv run --no-sync ruff check dev/quality/clitui_ledger_capability_matrix.py dev/quality/tests/test_clitui_ledger_capability_matrix.py` -> pass
+- `verify:` `uv run --no-sync ty check dev/quality/clitui_ledger_capability_matrix.py` -> pass
+- `verify:` `uv run --no-sync basedpyright dev/quality/clitui_ledger_capability_matrix.py dev/quality/tests/test_clitui_ledger_capability_matrix.py` -> pass
