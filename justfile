@@ -294,6 +294,16 @@ check-unreachable-ratchet:
 check-unused-symbol-ratchet:
     @uv run --no-sync python -m dev.quality.unused_symbol_ratchet
 
+# Verify no shipped module gained a citation of a Vaultspec rule slug. The
+# vault is removable scaffolding, so a docstring naming a rule reads as a
+# reference to nothing once the harness is absent. The baseline in
+# dev/quality/vault_citation_ratchet.toml may only shrink; retiring the
+# existing citations needs an explicit repository-wide migration, but a NEW
+# one fails here.
+[group('static-checks')]
+check-vault-citation-ratchet:
+    @uv run --no-sync python -m dev.quality.vault_citation_ratchet
+
 # Verify every persistence surface a product command READS still has a
 # production writer. The baseline in dev/quality/write_path_backlog.toml may
 # only shrink; a newly writerless store fails rather than being absorbed.
