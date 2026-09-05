@@ -790,11 +790,11 @@ evidence = "Three one-line wrappers that loaded the catalogue and delegated to t
 
 [[symbol_cluster]]
 name = "invoice domain lookup left without a production consumer"
-class = "orphaned"
+class = "superseded"
 area = "domain/invoices"
-resolved = false
+resolved = true
 symbols = ["find_invoice"]
-evidence = "Its only production caller was get_invoice_from_repository, itself unreferenced dead code removed in the same step, so the capability was already dead one level down and the deletion only made that visible. It is NOT resolved here, and deletion is not the executor's call: the module publishes no __all__, but application/invoices/__init__.py names domain.invoices the sole canonical source for find_invoice alongside find_unmatched, link_transaction, suggest_reconciliations and verify_link_consistency, and those siblings are live. Its remaining test usage is also incidental rather than subject: test_link_transaction_returns_a_fresh_catalogue reads through find_invoice to assert what link_transaction did, so removing it would force an edit to a test about other behaviour. Resolution is a capability decision by the domain owner: retire the family member, or wire the caller its canonical designation implies."
+evidence = "Carried as an owner decision for a long time and resolved once its body was read: find_invoice was `return catalogue.get(invoice_id)` and nothing more, a pass-through over the accessor InvoiceCatalogue already exposes. Its only production caller had been get_invoice_from_repository, itself unreferenced dead code removed earlier, so what looked like a capability question was the same one-line-wrapper pattern seen throughout this campaign. Deleting it lost no coverage: the catalogue's own get is exercised positively elsewhere, and the wrapper's dedicated missing-id test was kept, renamed to name what it actually asserts. The two incidental reads inside a link_transaction test now call catalogue.get directly, which is more direct rather than less."
 
 [[symbol_cluster]]
 name = "annual Orden registry projections displaced by the authority path"

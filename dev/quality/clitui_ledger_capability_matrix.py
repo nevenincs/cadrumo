@@ -4953,9 +4953,7 @@ def _denominator_drift(accepted: LedgerDenominatorSnapshotV1, current: LedgerDen
     return tuple(drift)
 
 
-def _union_review_drift(
-    accepted: LedgerUnionReviewSnapshotV1, current: LedgerUnionReviewSnapshotV1
-) -> tuple[str, ...]:
+def _union_review_drift(accepted: LedgerUnionReviewSnapshotV1, current: LedgerUnionReviewSnapshotV1) -> tuple[str, ...]:
     """Name every reviewed-union change that invalidates the G0 freeze."""
     labels = (
         ("union_digest", "reviewed union digest drifted"),
@@ -5068,9 +5066,7 @@ def validate_ledger_matrix_currentness(
     errors = _live_census_report_errors(observed_census)
     observed_denominator = LedgerDenominatorSnapshotV1.from_live_report(observed_census)
     errors.extend(_denominator_drift(matrix.current_denominator, observed_denominator))
-    if observed_union is None:
-        errors.append("live reviewed union observation is missing")
-    else:
+    if observed_union is not None:
         try:
             observed_review = LedgerUnionReviewSnapshotV1.from_union(observed_union)
         except ValidationError as error:
@@ -5200,6 +5196,68 @@ def _acceptance_record_anchor_errors(
     return []
 
 
+def _gate_reopening_blockers(
+    matrix: LedgerCapabilityMatrixV1,
+    *,
+    observed_census: LedgerLiveCensusReportV1,
+    observed_subjects: tuple[EvidenceSubjectSnapshotV1, ...],
+    observed_union: LedgerUnionDenominatorV1 | None,
+    acceptance_record_anchor: LedgerAcceptanceRecordAnchorV1 | None,
+    observed_acceptance_subjects: tuple[EvidenceSubjectSnapshotV1, ...],
+) -> list[str]:
+    """Return currentness defects that relock every accepted gate dependency.
+
+    The union, matrix acceptance, and receipt anchor are separate inputs.  No
+    digest inside the mutable matrix can substitute for a fresh union review or
+    its independently observed acceptance record.
+    """
+    blockers = validate_ledger_matrix_currentness(
+        matrix,
+        observed_census=observed_census,
+        observed_subjects=observed_subjects,
+        observed_union=observed_union,
+    )
+    if observed_union is None:
+        blockers.append("live reviewed union observation is missing")
+    blockers.extend(_denominator_drift(matrix.accepted_denominator, matrix.current_denominator))
+    blockers.extend(_union_review_drift(matrix.accepted_union_review, matrix.current_union_review))
+    blockers.extend(
+        _authority_disposition_drift(matrix.accepted_authority_dispositions, matrix.current_authority_dispositions)
+    )
+    blockers.extend(_matrix_acceptance_errors(matrix))
+    if matrix.accepted_gate_closure_receipts:
+        blockers.extend(
+            _acceptance_record_anchor_errors(matrix, acceptance_record_anchor, observed_acceptance_subjects)
+        )
+    return list(dict.fromkeys(blockers))
+
+
+def reopened_gates_for_currentness(
+    matrix: LedgerCapabilityMatrixV1,
+    *,
+    observed_census: LedgerLiveCensusReportV1,
+    observed_subjects: tuple[EvidenceSubjectSnapshotV1, ...],
+    observed_union: LedgerUnionDenominatorV1 | None,
+    acceptance_record_anchor: LedgerAcceptanceRecordAnchorV1 | None = None,
+    observed_acceptance_subjects: tuple[EvidenceSubjectSnapshotV1, ...] = (),
+) -> frozenset[LedgerGate]:
+    """Fail closed: any reviewed-state drift relocks G0 and every later gate."""
+    canonical_matrix, canonical_census, canonical_subjects, validation_blockers = _canonical_gate_inputs(
+        matrix, observed_census, observed_subjects
+    )
+    if validation_blockers or canonical_matrix is None or canonical_census is None or canonical_subjects is None:
+        return frozenset(_GATE_ORDER)
+    blockers = _gate_reopening_blockers(
+        canonical_matrix,
+        observed_census=canonical_census,
+        observed_subjects=canonical_subjects,
+        observed_union=observed_union,
+        acceptance_record_anchor=acceptance_record_anchor,
+        observed_acceptance_subjects=observed_acceptance_subjects,
+    )
+    return frozenset(_GATE_ORDER) if blockers else frozenset[LedgerGate]()
+
+
 def evaluate_ledger_capability_gate(
     matrix: LedgerCapabilityMatrixV1,
     gate: LedgerGate,
@@ -5221,24 +5279,23 @@ def evaluate_ledger_capability_gate(
     matrix = canonical_matrix
     observed_census = canonical_census
     observed_subjects = canonical_subjects
-    blockers = validate_ledger_matrix_currentness(
+    blockers = _gate_reopening_blockers(
         matrix,
         observed_census=observed_census,
         observed_subjects=observed_subjects,
         observed_union=observed_union,
+        acceptance_record_anchor=acceptance_record_anchor,
+        observed_acceptance_subjects=observed_acceptance_subjects,
     )
     if gate is LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE:
-        blockers.extend(_denominator_drift(matrix.accepted_denominator, matrix.current_denominator))
-        blockers.extend(_union_review_drift(matrix.accepted_union_review, matrix.current_union_review))
-        blockers.extend(
-            _authority_disposition_drift(matrix.accepted_authority_dispositions, matrix.current_authority_dispositions)
-        )
-        blockers.extend(_matrix_acceptance_errors(matrix))
         if not matrix.controls.tui_implementation_hold_recorded or not matrix.controls.tui_implementation_hold_active:
             blockers.append("the Ledger TUI implementation hold is not recorded and active")
         if matrix.acceptance_attestation.ruling is not ReviewRuling.ACCEPT:
             blockers.append("independent review has not issued an ACCEPT attestation for the frozen matrix")
-        blockers.extend(_acceptance_record_anchor_errors(matrix, acceptance_record_anchor, observed_acceptance_subjects))
+        if not matrix.accepted_gate_closure_receipts:
+            blockers.extend(
+                _acceptance_record_anchor_errors(matrix, acceptance_record_anchor, observed_acceptance_subjects)
+            )
         for row in matrix.rows:
             for assessment in row.assessments:
                 if (
@@ -5458,6 +5515,7 @@ __all__ = [
     "LedgerTuiSupportedSurfaceCensusV1",
     "LedgerUnionCapabilityRowV1",
     "LedgerUnionDenominatorV1",
+    "LedgerUnionReviewSnapshotV1",
     "LedgerUnionRowReviewAttestationV1",
     "LedgerUnionRowReviewRuling",
     "LedgerUnionSelectionAccountingV1",
@@ -5482,6 +5540,7 @@ __all__ = [
     "ledger_tui_supported_surface_source_set_digest",
     "ledger_union_denominator_bytes",
     "ledger_union_denominator_digest",
+    "reopened_gates_for_currentness",
     "reopened_gates_for_denominator_drift",
     "validate_ledger_matrix_currentness",
 ]

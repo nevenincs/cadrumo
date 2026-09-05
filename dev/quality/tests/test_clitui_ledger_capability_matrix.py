@@ -92,6 +92,7 @@ from ..clitui_ledger_capability_matrix import (
     ledger_tui_supported_surface_source_set_digest,
     ledger_union_denominator_bytes,
     ledger_union_denominator_digest,
+    reopened_gates_for_currentness,
     reopened_gates_for_denominator_drift,
     validate_ledger_matrix_currentness,
 )
@@ -2099,11 +2100,15 @@ def _matrix(
     live_report = report if report is not None else _report(tuple(row.identity.row_id for row in rows))
     accepted = accepted_denominator if accepted_denominator is not None else _snapshot(live_report)
     current = current_denominator if current_denominator is not None else _snapshot(live_report)
-    accepted_union = accepted_union_review if accepted_union_review is not None else LedgerUnionReviewSnapshotV1.from_union(
-        _union_denominator()
+    accepted_union = (
+        accepted_union_review
+        if accepted_union_review is not None
+        else LedgerUnionReviewSnapshotV1.from_union(_union_denominator())
     )
-    current_union = current_union_review if current_union_review is not None else LedgerUnionReviewSnapshotV1.from_union(
-        _union_denominator()
+    current_union = (
+        current_union_review
+        if current_union_review is not None
+        else LedgerUnionReviewSnapshotV1.from_union(_union_denominator())
     )
     accepted_authority = (
         accepted_authority_dispositions
@@ -2202,6 +2207,7 @@ def _matrix_with(
                 "matrix_digest": candidate.attestation_matrix_basis_digest,
                 "denominator_digest": candidate.current_denominator.digest,
                 "denominator_revision": candidate.current_denominator.revision,
+                "union_review": candidate.current_union_review,
             }
         )
         candidate = candidate.model_copy(update={"acceptance_attestation": attestation})
@@ -4112,3 +4118,119 @@ def test_invalid_gate_inputs_reopen_every_gate_when_denominator_reopening_has_no
     invalid = snapshot.model_copy(update={"entries": ()})
 
     assert reopened_gates_for_denominator_drift(snapshot, invalid) == frozenset(LedgerGate)
+
+
+def test_gate_reopening_accepts_only_the_unchanged_reviewed_union_and_external_anchor() -> None:
+    matrix = _matrix_with_accepted_gate_receipts(_matrix())
+    anchor, acceptance_subjects = _acceptance_record_anchor(matrix)
+
+    assert (
+        reopened_gates_for_currentness(
+            matrix,
+            observed_census=_report(),
+            observed_subjects=(_SUBJECT,),
+            observed_union=_union_denominator(),
+            acceptance_record_anchor=anchor,
+            observed_acceptance_subjects=acceptance_subjects,
+        )
+        == frozenset()
+    )
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        pytest.param("reused_identity_observation", id="new-or-reused-observation"),
+        pytest.param("semantic_review", id="home-effect-applicability-gap-proof-route-hold-registry-status"),
+        pytest.param("missing_review", id="missing-row-review"),
+        pytest.param("evidence_subject", id="evidence-currentness"),
+        pytest.param("missing_anchor", id="missing-accepted-anchor"),
+    ],
+)
+def test_any_reviewed_state_or_acceptance_drift_relocks_g0_through_g4(mutation: str) -> None:
+    matrix = _matrix_with_accepted_gate_receipts(_matrix())
+    anchor, acceptance_subjects = _acceptance_record_anchor(matrix)
+    observed_union: LedgerUnionDenominatorV1 | None = _union_denominator()
+    subjects = (_SUBJECT,)
+    selected_anchor: LedgerAcceptanceRecordAnchorV1 | None = anchor
+    selected_anchor_subjects = acceptance_subjects
+
+    if mutation == "reused_identity_observation":
+        observations = list(observed_union.observations)
+        observations[0] = observations[0].model_copy(update={"capability_ids": (observed_union.rows[1].capability_id,)})
+        observed_union = observed_union.model_copy(update={"observations": tuple(observations)})
+    elif mutation == "semantic_review":
+        row = observed_union.rows[0]
+        decisions = list(row.applicability)
+        backend_index = next(
+            index for index, decision in enumerate(decisions) if decision.axis is LedgerCapabilityAxis.BACKEND
+        )
+        decisions[backend_index] = decisions[backend_index].model_copy(
+            update={
+                "applicability": ApplicabilityState.NOT_APPLICABLE,
+                "proof": AxisProofState.NOT_APPLICABLE,
+                "proof_requirement": "reminted artifact/provenance proof",
+            }
+        )
+        rows = list(observed_union.rows)
+        rows[0] = row.model_copy(
+            update={
+                "semantic_home": row.semantic_home.model_copy(update={"owner": "application.ledger.reminted"}),
+                "semantic_home_status": SemanticHomeStatus.EXISTING,
+                "effect": LedgerCapabilityEffect.QUERY,
+                "applicability": tuple(decisions),
+                "gap_classes": frozenset({LedgerGapClass.PRODUCT}),
+                "primary_gap_class": LedgerGapClass.PRODUCT,
+                "secondary_gap_classes": (),
+                "proof_requirements": ("reminted artifact/provenance proof",),
+                "tui_routes": ("ledger.entries",),
+                "tui_hold_until": None,
+                "registry_destination_status": LedgerRegistryDestinationStatus.NOT_APPLICABLE,
+            }
+        )
+        observed_union = observed_union.model_copy(update={"rows": tuple(rows)})
+    elif mutation == "missing_review":
+        observed_union = observed_union.model_copy(update={"row_review_attestation": None})
+    elif mutation == "evidence_subject":
+        subjects = (_subject(revision="matrix-rev-2", digest="sha256:" + "b" * 64),)
+    else:
+        selected_anchor = None
+        selected_anchor_subjects = ()
+
+    reopened = reopened_gates_for_currentness(
+        matrix,
+        observed_census=_report(),
+        observed_subjects=subjects,
+        observed_union=observed_union,
+        acceptance_record_anchor=selected_anchor,
+        observed_acceptance_subjects=selected_anchor_subjects,
+    )
+    assessments = evaluate_ledger_capability_gates(
+        matrix,
+        observed_census=_report(),
+        observed_subjects=subjects,
+        observed_union=observed_union,
+        acceptance_record_anchor=selected_anchor,
+        observed_acceptance_subjects=selected_anchor_subjects,
+    )
+
+    assert reopened == frozenset(LedgerGate)
+    assert all(not assessment.closed for assessment in assessments)
+
+
+def test_a_fully_reminted_union_and_receipt_chain_cannot_replace_the_external_anchor() -> None:
+    accepted = _matrix_with_accepted_gate_receipts(_matrix())
+    anchor, acceptance_subjects = _acceptance_record_anchor(accepted)
+    reminted_union = accepted.current_union_review.model_copy(update={"union_digest": "sha256:" + "b" * 64})
+    reminted = _matrix_with_accepted_gate_receipts(_matrix(current_union_review=reminted_union))
+
+    reopened = reopened_gates_for_currentness(
+        reminted,
+        observed_census=_report(),
+        observed_subjects=(_SUBJECT,),
+        observed_union=_union_denominator(),
+        acceptance_record_anchor=anchor,
+        observed_acceptance_subjects=acceptance_subjects,
+    )
+
+    assert reopened == frozenset(LedgerGate)
