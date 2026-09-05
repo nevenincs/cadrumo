@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from enum import StrEnum
 from pathlib import Path
+from types import MappingProxyType
 from typing import Final, Literal, cast, override
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
@@ -48,9 +49,7 @@ LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_ROOT: Final[Literal["cadrumo.ledger_tui_supp
 )
 _LEDGER_TUI_SUPPORTED_SURFACE_CENSUS_FRAME: Final[bytes] = b"cadrumo:ledger-tui-supported-surface-census:v1\x00"
 LEDGER_UNION_DENOMINATOR_SCHEMA_VERSION: Final[Literal[1]] = 1
-LEDGER_UNION_DENOMINATOR_ROOT: Final[Literal["cadrumo.ledger_union_denominator"]] = (
-    "cadrumo.ledger_union_denominator"
-)
+LEDGER_UNION_DENOMINATOR_ROOT: Final[Literal["cadrumo.ledger_union_denominator"]] = "cadrumo.ledger_union_denominator"
 _LEDGER_UNION_DENOMINATOR_FRAME: Final[bytes] = b"cadrumo:ledger-union-denominator:v1\x00"
 _LEDGER_TUI_SUPPORTED_SURFACE_SOURCE_SET_FRAME: Final[bytes] = b"cadrumo:ledger-tui-supported-surface-source-set:v1\x00"
 _LEDGER_MESSAGE_TYPES: Final[tuple[str, ...]] = (
@@ -1380,7 +1379,10 @@ class LedgerUnionDenominatorV1(BaseModel):
         observation_ids = tuple(item.observation_id for item in self.observations)
         if len(set(observation_ids)) != len(observation_ids):
             raise ValueError("union source observation identities must be unique")
-        if tuple(sorted(self.observations, key=lambda item: (item.source.value, item.observation_id))) != self.observations:
+        if (
+            tuple(sorted(self.observations, key=lambda item: (item.source.value, item.observation_id)))
+            != self.observations
+        ):
             raise ValueError("union source observations must use canonical source order")
         counts = {source: 0 for source in DenominatorSourceKind}
         for observation in self.observations:
@@ -1414,7 +1416,8 @@ class LedgerUnionDenominatorV1(BaseModel):
     @property
     def calculated_digest(self) -> str:
         """Return the canonical digest excluding the self-referential digest field."""
-        return _canonical_digest(self.model_dump(mode="python", exclude={"digest"}))
+        encoded = _canonical_json_text(self.model_dump(mode="python", exclude={"digest"})).encode("utf-8")
+        return f"sha256:{hashlib.sha256(_LEDGER_UNION_DENOMINATOR_FRAME + _length_frame(encoded)).hexdigest()}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -1447,83 +1450,452 @@ def _backend(
 # second implementation registry. ``planned`` means the callable exists but
 # still accepts loose parameters; the named immutable request is the G1 home.
 _LEDGER_BACKEND_OPERATION_DECLARATIONS: Final[tuple[_BackendOperationDeclaration, ...]] = (
-    _backend("ledger.classification.bulk_csv", "cadrumo.application.ledger.actions_classification:bulk_classify_from_csv", "LedgerBulkClassificationCommand", "BulkClassifyResult"),
-    _backend("ledger.classification.rule_add", "cadrumo.application.ledger.actions_classification:add_classification_rule", "LedgerRuleAddCommand", "LedgerClassificationRule"),
-    _backend("ledger.classification.rule_apply", "cadrumo.application.ledger.actions_classification:apply_classification_rules", "LedgerRuleApplyCommand", "ApplyRulesResult"),
-    _backend("ledger.export.flat", "cadrumo.application.ledger.actions_export:export_ledger_transactions", "LedgerExportCommand", "LedgerExportResult", existing_command=True),
-    _backend("ledger.import.parsed_rows", "cadrumo.application.ledger.actions_import:import_ledger_transactions", "LedgerParsedRowsImportCommand", "LedgerImportOperationResult"),
-    _backend("ledger.import.source", "cadrumo.application.ledger.actions_import:import_ledger_source", "LedgerSourceImportCommand", "LedgerSourceImportResult", existing_command=True),
-    _backend("ledger.import.aggregate_results", "cadrumo.application.ledger.actions_import:aggregate_ledger_import_results", "LedgerImportAggregationQuery", "LedgerImportOperationResult"),
-    _backend("ledger.lifecycle.archive", "cadrumo.application.ledger.actions_lifecycle:archive_manual_transaction", "LedgerArchiveCommand", "ManualLedgerTransactionResult"),
-    _backend("ledger.lifecycle.stash", "cadrumo.application.ledger.actions_lifecycle:stash_manual_transaction", "LedgerStashCommand", "ManualLedgerTransactionResult"),
-    _backend("ledger.lifecycle.restore", "cadrumo.application.ledger.actions_lifecycle:restore_manual_transaction", "LedgerRestoreCommand", "ManualLedgerTransactionResult"),
-    _backend("ledger.lifecycle.reviewed_exclude", "cadrumo.application.ledger.actions_lifecycle:mark_transaction_reviewed_excluded", "LedgerReviewedExcludeCommand", "ManualLedgerTransactionResult"),
-    _backend("ledger.lifecycle.remove", "cadrumo.application.ledger.actions_lifecycle:remove_manual_transaction", "LedgerRemoveCommand", "LedgerTransactionRemovalReport"),
-    _backend("ledger.lifecycle.reset", "cadrumo.application.ledger.actions_lifecycle:reset_ledger_catalogue", "LedgerResetCommand", "LedgerCatalogueResetReport"),
-    _backend("ledger.transaction.create", "cadrumo.application.ledger.actions_manual:create_manual_transaction", "ManualLedgerTransactionCommand", "ManualLedgerTransactionResult", existing_command=True),
-    _backend("ledger.transaction.attach", "cadrumo.application.ledger.actions_manual:attach_manual_transaction_evidence", "LedgerEvidenceAttachCommand", "ManualLedgerTransactionResult"),
-    _backend("ledger.transaction.detach", "cadrumo.application.ledger.actions_manual:detach_manual_transaction_attachments", "LedgerEvidenceDetachCommand", "ManualLedgerTransactionResult"),
-    _backend("ledger.transaction.invoice_link", "cadrumo.application.ledger.actions_manual:link_manual_transaction_invoice", "LedgerInvoiceLinkCommand", "InvoiceTransactionLinkResult"),
-    _backend("ledger.transaction.get", "cadrumo.application.ledger.actions_manual:get_manual_transaction", "LedgerTransactionQuery", "Transaction"),
-    _backend("ledger.transaction.list", "cadrumo.application.ledger.actions_manual:list_manual_transactions", "LedgerTransactionListQuery", "tuple[Transaction, ...]"),
-    _backend("ledger.transaction.review_query", "cadrumo.application.ledger.actions_manual:query_ledger_review_rows", "LedgerReviewQuery", "LedgerReviewQueryResult", existing_command=True),
-    _backend("ledger.transaction.status_summary", "cadrumo.application.ledger.actions_manual:summarize_manual_transactions", "LedgerStatusQuery", "LedgerStatusReport"),
-    _backend("ledger.transaction.update", "cadrumo.application.ledger.actions_manual:update_manual_transaction", "ManualLedgerTransactionCommand", "ManualLedgerTransactionResult", existing_command=True),
-    _backend("ledger.transaction.update_fields", "cadrumo.application.ledger.actions_manual:update_manual_transaction_fields", "ManualLedgerTransactionPatch", "ManualLedgerTransactionResult", existing_command=True),
-    _backend("ledger.transaction.split", "cadrumo.application.ledger.actions_split_merge:split_transaction", "LedgerSplitCommand", "SplitTransactionResult"),
-    _backend("ledger.transaction.split_classified", "cadrumo.application.ledger.actions_split_merge:split_transaction_with_classified_children", "LedgerClassifiedSplitCommand", "SplitTransactionResult"),
-    _backend("ledger.transaction.merge", "cadrumo.application.ledger.actions_split_merge:merge_transactions", "LedgerMergeCommand", "MergeTransactionsResult"),
-    _backend("ledger.evidence.attachment_view", "cadrumo.application.ledger.attachment_review:get_attachment_review_item", "LedgerAttachmentViewQuery", "AttachmentReviewItem"),
-    _backend("ledger.evidence.attachment_queue", "cadrumo.application.ledger.attachment_review:list_attachment_review_queue", "LedgerAttachmentQueueQuery", "tuple[AttachmentReviewItem, ...]"),
-    _backend("ledger.evidence.add", "cadrumo.application.ledger.evidence:PurchaseInvoiceEvidenceService.add", "LedgerPurchaseEvidenceAddCommand", "PurchaseInvoiceEvidenceResult"),
-    _backend("ledger.evidence.view", "cadrumo.application.ledger.evidence:PurchaseInvoiceEvidenceService.view", "LedgerPurchaseEvidenceViewQuery", "PurchaseInvoiceEvidence"),
-    _backend("ledger.evidence.list", "cadrumo.application.ledger.evidence:PurchaseInvoiceEvidenceService.list_all", "LedgerPurchaseEvidenceListQuery", "tuple[PurchaseInvoiceEvidence, ...]"),
-    _backend("ledger.evidence.update", "cadrumo.application.ledger.evidence:PurchaseInvoiceEvidenceService.update", "LedgerPurchaseEvidenceUpdateCommand", "PurchaseInvoiceEvidenceResult"),
-    _backend("ledger.evidence.remove", "cadrumo.application.ledger.evidence:PurchaseInvoiceEvidenceService.remove", "LedgerPurchaseEvidenceRemoveCommand", "PurchaseInvoiceEvidenceResult"),
-    _backend("ledger.evidence.batch", "cadrumo.application.ledger.batch_ingest:run_evidence_batch", "LedgerEvidenceBatchCommand", "BatchRunResult"),
-    _backend("ledger.evidence.consent_survey", "cadrumo.application.ledger.consent_withdrawal:survey_cloud_consent", "LedgerConsentSurveyQuery", "ConsentWithdrawalSurvey"),
-    _backend("ledger.evidence.consent_rederive", "cadrumo.application.ledger.consent_withdrawal:rederive_artefact_on_host", "LedgerConsentRederiveCommand", "LocalRederivation"),
-    _backend("ledger.counterparty.record", "cadrumo.application.ledger.counterparty_establishment:record_confirmed_counterparty_facts", "LedgerCounterpartyRecordCommand", "ConfirmedCounterpartyFacts"),
-    _backend("ledger.counterparty.forget", "cadrumo.application.ledger.counterparty_establishment:forget_confirmed_counterparty_facts", "LedgerCounterpartyForgetCommand", "bool"),
-    _backend("ledger.counterparty.resolve", "cadrumo.application.ledger.counterparty_establishment:resolve_confirmed_counterparty_facts", "LedgerCounterpartyQuery", "ConfirmedCounterpartyResolution"),
-    _backend("ledger.invoice.extract_draft", "cadrumo.application.ledger.invoice_draft_extraction:extract_invoice_draft_from_evidence", "LedgerInvoiceExtractCommand", "InvoiceDraft"),
-    _backend("ledger.invoice.confirm_draft", "cadrumo.application.ledger.invoice_confirmation:confirm_invoice_draft_from_evidence", "LedgerInvoiceConfirmCommand", "InvoiceConfirmationResult"),
-    _backend("ledger.llm.classify_with_evidence", "cadrumo.application.ledger.llm_classification:classify_with_evidence", "LedgerLlmEvidenceClassificationCommand", "LedgerClassificationSuggestion"),
-    _backend("ledger.llm.suggest", "cadrumo.application.ledger.llm_classification:suggest_llm_classification", "LedgerLlmSuggestCommand", "LedgerClassificationSuggestion"),
-    _backend("ledger.llm.apply", "cadrumo.application.ledger.llm_classification:apply_llm_classification", "LedgerLlmApplyCommand", "LedgerClassificationApplyResult"),
-    _backend("ledger.llm.saturate", "cadrumo.application.ledger.llm_classification:saturate_llm_classification", "LedgerLlmSaturateCommand", "LedgerSaturationSuggestion"),
-    _backend("ledger.llm.apply_saturated", "cadrumo.application.ledger.llm_classification:apply_saturated_llm_classification", "LedgerLlmSaturatedApplyCommand", "LedgerClassificationApplyResult"),
-    _backend("ledger.llm.iva_derive", "cadrumo.application.ledger.llm_classification:derive_operator_iva_substrate", "LedgerLlmIvaDeriveCommand", "LedgerIvaSuggestion"),
-    _backend("ledger.llm.suggest_split", "cadrumo.application.ledger.llm_classification:suggest_evidence_split", "LedgerLlmSplitSuggestCommand", "LedgerSplitSuggestion"),
-    _backend("ledger.llm.apply_split", "cadrumo.application.ledger.llm_classification:apply_evidence_split", "LedgerLlmSplitApplyCommand", "SplitTransactionResult"),
-    _backend("ledger.llm.apply_evidence_classification", "cadrumo.application.ledger.llm_classification:apply_evidence_classification", "LedgerLlmEvidenceApplyCommand", "LedgerClassificationApplyResult"),
-    _backend("ledger.llm.reject", "cadrumo.application.ledger.llm_classification:reject_llm_suggestion", "LedgerLlmRejectCommand", "LedgerSuggestionRejectionResult"),
-    _backend("ledger.llm.diagnostics", "cadrumo.application.ledger.llm_diagnostics:build_llm_diagnostics_report", "LedgerLlmDiagnosticsQuery", "LedgerLlmDiagnosticsReport"),
-    _backend("ledger.llm.review_decision", "cadrumo.application.ledger.llm_review_workflow:execute_reviewed_decision", "LlmReviewRequest", "LlmReviewResult", existing_command=True),
-    _backend("ledger.participation.get", "cadrumo.application.ledger.participation_read:get_transaction_participation", "LedgerParticipationQuery", "TransactionRevisionParticipationIndex"),
-    _backend("ledger.preflight.readiness", "cadrumo.application.ledger.preflight:preflight_ledger_tax_readiness", "LedgerPreflightQuery", "LedgerPreflightReport"),
-    _backend("ledger.preflight.catalogue", "cadrumo.application.ledger.preflight:preflight_transaction_catalogue", "LedgerCataloguePreflightQuery", "LedgerPreflightReport"),
-    _backend("ledger.ratio.list", "cadrumo.application.ledger.ratios:list_eligible_ratios_for_bucket", "LedgerRatioListQuery", "tuple[UsageRatio, ...]"),
-    _backend("ledger.ratio.validate", "cadrumo.application.ledger.ratios:validate_ratios_for_bucket", "LedgerRatioValidationQuery", "RatiosValidationReport"),
-    _backend("ledger.ratio.set", "cadrumo.application.ledger.ratios:set_usage_ratio", "LedgerRatioSetCommand", "Decimal | None"),
-    _backend("ledger.ratio.unset", "cadrumo.application.ledger.ratios:unset_usage_ratio", "LedgerRatioUnsetCommand", "Decimal | None"),
-    _backend("ledger.workspace.affected_declarations", "cadrumo.application.ledger.workspace:project_affected_declaration_reconciliations", "LedgerAffectedDeclarationsQuery", "tuple[LedgerAffectedDeclarationRefV1, ...]"),
-    _backend("ledger.workspace.project", "cadrumo.application.ledger.workspace:project_ledger_workspace", "LedgerWorkspaceProjectionQuery", "LedgerWorkspaceProjectionV1"),
-    _backend("ledger.workspace.read", "cadrumo.application.ledger.workspace_reader:read_ledger_workspace_projection", "LedgerWorkspaceReadQuery", "LedgerWorkspaceProjectionV1"),
+    _backend(
+        "ledger.classification.bulk_csv",
+        "cadrumo.application.ledger.actions_classification:bulk_classify_from_csv",
+        "LedgerBulkClassificationCommand",
+        "BulkClassifyResult",
+    ),
+    _backend(
+        "ledger.classification.rule_add",
+        "cadrumo.application.ledger.actions_classification:add_classification_rule",
+        "LedgerRuleAddCommand",
+        "LedgerClassificationRule",
+    ),
+    _backend(
+        "ledger.classification.rule_apply",
+        "cadrumo.application.ledger.actions_classification:apply_classification_rules",
+        "LedgerRuleApplyCommand",
+        "ApplyRulesResult",
+    ),
+    _backend(
+        "ledger.export.flat",
+        "cadrumo.application.ledger.actions_export:export_ledger_transactions",
+        "LedgerExportCommand",
+        "LedgerExportResult",
+        existing_command=True,
+    ),
+    _backend(
+        "ledger.import.parsed_rows",
+        "cadrumo.application.ledger.actions_import:import_ledger_transactions",
+        "LedgerParsedRowsImportCommand",
+        "LedgerImportOperationResult",
+    ),
+    _backend(
+        "ledger.import.source",
+        "cadrumo.application.ledger.actions_import:import_ledger_source",
+        "LedgerSourceImportCommand",
+        "LedgerSourceImportResult",
+        existing_command=True,
+    ),
+    _backend(
+        "ledger.import.aggregate_results",
+        "cadrumo.application.ledger.actions_import:aggregate_ledger_import_results",
+        "LedgerImportAggregationQuery",
+        "LedgerImportOperationResult",
+    ),
+    _backend(
+        "ledger.lifecycle.archive",
+        "cadrumo.application.ledger.actions_lifecycle:archive_manual_transaction",
+        "LedgerArchiveCommand",
+        "ManualLedgerTransactionResult",
+    ),
+    _backend(
+        "ledger.lifecycle.stash",
+        "cadrumo.application.ledger.actions_lifecycle:stash_manual_transaction",
+        "LedgerStashCommand",
+        "ManualLedgerTransactionResult",
+    ),
+    _backend(
+        "ledger.lifecycle.restore",
+        "cadrumo.application.ledger.actions_lifecycle:restore_manual_transaction",
+        "LedgerRestoreCommand",
+        "ManualLedgerTransactionResult",
+    ),
+    _backend(
+        "ledger.lifecycle.reviewed_exclude",
+        "cadrumo.application.ledger.actions_lifecycle:mark_transaction_reviewed_excluded",
+        "LedgerReviewedExcludeCommand",
+        "ManualLedgerTransactionResult",
+    ),
+    _backend(
+        "ledger.lifecycle.remove",
+        "cadrumo.application.ledger.actions_lifecycle:remove_manual_transaction",
+        "LedgerRemoveCommand",
+        "LedgerTransactionRemovalReport",
+    ),
+    _backend(
+        "ledger.lifecycle.reset",
+        "cadrumo.application.ledger.actions_lifecycle:reset_ledger_catalogue",
+        "LedgerResetCommand",
+        "LedgerCatalogueResetReport",
+    ),
+    _backend(
+        "ledger.transaction.create",
+        "cadrumo.application.ledger.actions_manual:create_manual_transaction",
+        "ManualLedgerTransactionCommand",
+        "ManualLedgerTransactionResult",
+        existing_command=True,
+    ),
+    _backend(
+        "ledger.transaction.attach",
+        "cadrumo.application.ledger.actions_manual:attach_manual_transaction_evidence",
+        "LedgerEvidenceAttachCommand",
+        "ManualLedgerTransactionResult",
+    ),
+    _backend(
+        "ledger.transaction.detach",
+        "cadrumo.application.ledger.actions_manual:detach_manual_transaction_attachments",
+        "LedgerEvidenceDetachCommand",
+        "ManualLedgerTransactionResult",
+    ),
+    _backend(
+        "ledger.transaction.invoice_link",
+        "cadrumo.application.ledger.actions_manual:link_manual_transaction_invoice",
+        "LedgerInvoiceLinkCommand",
+        "InvoiceTransactionLinkResult",
+    ),
+    _backend(
+        "ledger.transaction.get",
+        "cadrumo.application.ledger.actions_manual:get_manual_transaction",
+        "LedgerTransactionQuery",
+        "Transaction",
+    ),
+    _backend(
+        "ledger.transaction.list",
+        "cadrumo.application.ledger.actions_manual:list_manual_transactions",
+        "LedgerTransactionListQuery",
+        "tuple[Transaction, ...]",
+    ),
+    _backend(
+        "ledger.transaction.review_query",
+        "cadrumo.application.ledger.actions_manual:query_ledger_review_rows",
+        "LedgerReviewQuery",
+        "LedgerReviewQueryResult",
+        existing_command=True,
+    ),
+    _backend(
+        "ledger.transaction.status_summary",
+        "cadrumo.application.ledger.actions_manual:summarize_manual_transactions",
+        "LedgerStatusQuery",
+        "LedgerStatusReport",
+    ),
+    _backend(
+        "ledger.transaction.update",
+        "cadrumo.application.ledger.actions_manual:update_manual_transaction",
+        "ManualLedgerTransactionCommand",
+        "ManualLedgerTransactionResult",
+        existing_command=True,
+    ),
+    _backend(
+        "ledger.transaction.update_fields",
+        "cadrumo.application.ledger.actions_manual:update_manual_transaction_fields",
+        "ManualLedgerTransactionPatch",
+        "ManualLedgerTransactionResult",
+        existing_command=True,
+    ),
+    _backend(
+        "ledger.transaction.split",
+        "cadrumo.application.ledger.actions_split_merge:split_transaction",
+        "LedgerSplitCommand",
+        "SplitTransactionResult",
+    ),
+    _backend(
+        "ledger.transaction.split_classified",
+        "cadrumo.application.ledger.actions_split_merge:split_transaction_with_classified_children",
+        "LedgerClassifiedSplitCommand",
+        "SplitTransactionResult",
+    ),
+    _backend(
+        "ledger.transaction.merge",
+        "cadrumo.application.ledger.actions_split_merge:merge_transactions",
+        "LedgerMergeCommand",
+        "MergeTransactionsResult",
+    ),
+    _backend(
+        "ledger.evidence.attachment_view",
+        "cadrumo.application.ledger.attachment_review:get_attachment_review_item",
+        "LedgerAttachmentViewQuery",
+        "AttachmentReviewItem",
+    ),
+    _backend(
+        "ledger.evidence.attachment_queue",
+        "cadrumo.application.ledger.attachment_review:list_attachment_review_queue",
+        "LedgerAttachmentQueueQuery",
+        "tuple[AttachmentReviewItem, ...]",
+    ),
+    _backend(
+        "ledger.evidence.add",
+        "cadrumo.application.ledger.evidence:PurchaseInvoiceEvidenceService.add",
+        "LedgerPurchaseEvidenceAddCommand",
+        "PurchaseInvoiceEvidenceResult",
+    ),
+    _backend(
+        "ledger.evidence.view",
+        "cadrumo.application.ledger.evidence:PurchaseInvoiceEvidenceService.view",
+        "LedgerPurchaseEvidenceViewQuery",
+        "PurchaseInvoiceEvidence",
+    ),
+    _backend(
+        "ledger.evidence.list",
+        "cadrumo.application.ledger.evidence:PurchaseInvoiceEvidenceService.list_all",
+        "LedgerPurchaseEvidenceListQuery",
+        "tuple[PurchaseInvoiceEvidence, ...]",
+    ),
+    _backend(
+        "ledger.evidence.update",
+        "cadrumo.application.ledger.evidence:PurchaseInvoiceEvidenceService.update",
+        "LedgerPurchaseEvidenceUpdateCommand",
+        "PurchaseInvoiceEvidenceResult",
+    ),
+    _backend(
+        "ledger.evidence.remove",
+        "cadrumo.application.ledger.evidence:PurchaseInvoiceEvidenceService.remove",
+        "LedgerPurchaseEvidenceRemoveCommand",
+        "PurchaseInvoiceEvidenceResult",
+    ),
+    _backend(
+        "ledger.evidence.batch",
+        "cadrumo.application.ledger.batch_ingest:run_evidence_batch",
+        "LedgerEvidenceBatchCommand",
+        "BatchRunResult",
+    ),
+    _backend(
+        "ledger.evidence.consent_survey",
+        "cadrumo.application.ledger.consent_withdrawal:survey_cloud_consent",
+        "LedgerConsentSurveyQuery",
+        "ConsentWithdrawalSurvey",
+    ),
+    _backend(
+        "ledger.evidence.consent_rederive",
+        "cadrumo.application.ledger.consent_withdrawal:rederive_artefact_on_host",
+        "LedgerConsentRederiveCommand",
+        "LocalRederivation",
+    ),
+    _backend(
+        "ledger.counterparty.record",
+        "cadrumo.application.ledger.counterparty_establishment:record_confirmed_counterparty_facts",
+        "LedgerCounterpartyRecordCommand",
+        "ConfirmedCounterpartyFacts",
+    ),
+    _backend(
+        "ledger.counterparty.forget",
+        "cadrumo.application.ledger.counterparty_establishment:forget_confirmed_counterparty_facts",
+        "LedgerCounterpartyForgetCommand",
+        "bool",
+    ),
+    _backend(
+        "ledger.counterparty.resolve",
+        "cadrumo.application.ledger.counterparty_establishment:resolve_confirmed_counterparty_facts",
+        "LedgerCounterpartyQuery",
+        "ConfirmedCounterpartyResolution",
+    ),
+    _backend(
+        "ledger.invoice.extract_draft",
+        "cadrumo.application.ledger.invoice_draft_extraction:extract_invoice_draft_from_evidence",
+        "LedgerInvoiceExtractCommand",
+        "InvoiceDraft",
+    ),
+    _backend(
+        "ledger.invoice.confirm_draft",
+        "cadrumo.application.ledger.invoice_confirmation:confirm_invoice_draft_from_evidence",
+        "LedgerInvoiceConfirmCommand",
+        "InvoiceConfirmationResult",
+    ),
+    _backend(
+        "ledger.llm.classify_with_evidence",
+        "cadrumo.application.ledger.llm_classification:classify_with_evidence",
+        "LedgerLlmEvidenceClassificationCommand",
+        "LedgerClassificationSuggestion",
+    ),
+    _backend(
+        "ledger.llm.suggest",
+        "cadrumo.application.ledger.llm_classification:suggest_llm_classification",
+        "LedgerLlmSuggestCommand",
+        "LedgerClassificationSuggestion",
+    ),
+    _backend(
+        "ledger.llm.apply",
+        "cadrumo.application.ledger.llm_classification:apply_llm_classification",
+        "LedgerLlmApplyCommand",
+        "LedgerClassificationApplyResult",
+    ),
+    _backend(
+        "ledger.llm.saturate",
+        "cadrumo.application.ledger.llm_classification:saturate_llm_classification",
+        "LedgerLlmSaturateCommand",
+        "LedgerSaturationSuggestion",
+    ),
+    _backend(
+        "ledger.llm.apply_saturated",
+        "cadrumo.application.ledger.llm_classification:apply_saturated_llm_classification",
+        "LedgerLlmSaturatedApplyCommand",
+        "LedgerClassificationApplyResult",
+    ),
+    _backend(
+        "ledger.llm.iva_derive",
+        "cadrumo.application.ledger.llm_classification:derive_operator_iva_substrate",
+        "LedgerLlmIvaDeriveCommand",
+        "LedgerIvaSuggestion",
+    ),
+    _backend(
+        "ledger.llm.suggest_split",
+        "cadrumo.application.ledger.llm_classification:suggest_evidence_split",
+        "LedgerLlmSplitSuggestCommand",
+        "LedgerSplitSuggestion",
+    ),
+    _backend(
+        "ledger.llm.apply_split",
+        "cadrumo.application.ledger.llm_classification:apply_evidence_split",
+        "LedgerLlmSplitApplyCommand",
+        "SplitTransactionResult",
+    ),
+    _backend(
+        "ledger.llm.apply_evidence_classification",
+        "cadrumo.application.ledger.llm_classification:apply_evidence_classification",
+        "LedgerLlmEvidenceApplyCommand",
+        "LedgerClassificationApplyResult",
+    ),
+    _backend(
+        "ledger.llm.reject",
+        "cadrumo.application.ledger.llm_classification:reject_llm_suggestion",
+        "LedgerLlmRejectCommand",
+        "LedgerSuggestionRejectionResult",
+    ),
+    _backend(
+        "ledger.llm.diagnostics",
+        "cadrumo.application.ledger.llm_diagnostics:build_llm_diagnostics_report",
+        "LedgerLlmDiagnosticsQuery",
+        "LedgerLlmDiagnosticsReport",
+    ),
+    _backend(
+        "ledger.llm.review_decision",
+        "cadrumo.application.ledger.llm_review_workflow:execute_reviewed_decision",
+        "LlmReviewRequest",
+        "LlmReviewResult",
+        existing_command=True,
+    ),
+    _backend(
+        "ledger.participation.get",
+        "cadrumo.application.ledger.participation_read:get_transaction_participation",
+        "LedgerParticipationQuery",
+        "TransactionRevisionParticipationIndex",
+    ),
+    _backend(
+        "ledger.preflight.readiness",
+        "cadrumo.application.ledger.preflight:preflight_ledger_tax_readiness",
+        "LedgerPreflightQuery",
+        "LedgerPreflightReport",
+    ),
+    _backend(
+        "ledger.preflight.catalogue",
+        "cadrumo.application.ledger.preflight:preflight_transaction_catalogue",
+        "LedgerCataloguePreflightQuery",
+        "LedgerPreflightReport",
+    ),
+    _backend(
+        "ledger.ratio.list",
+        "cadrumo.application.ledger.ratios:list_eligible_ratios_for_bucket",
+        "LedgerRatioListQuery",
+        "tuple[UsageRatio, ...]",
+    ),
+    _backend(
+        "ledger.ratio.validate",
+        "cadrumo.application.ledger.ratios:validate_ratios_for_bucket",
+        "LedgerRatioValidationQuery",
+        "RatiosValidationReport",
+    ),
+    _backend(
+        "ledger.ratio.set",
+        "cadrumo.application.ledger.ratios:set_usage_ratio",
+        "LedgerRatioSetCommand",
+        "Decimal | None",
+    ),
+    _backend(
+        "ledger.ratio.unset",
+        "cadrumo.application.ledger.ratios:unset_usage_ratio",
+        "LedgerRatioUnsetCommand",
+        "Decimal | None",
+    ),
+    _backend(
+        "ledger.workspace.affected_declarations",
+        "cadrumo.application.ledger.workspace:project_affected_declaration_reconciliations",
+        "LedgerAffectedDeclarationsQuery",
+        "tuple[LedgerAffectedDeclarationRefV1, ...]",
+    ),
+    _backend(
+        "ledger.workspace.project",
+        "cadrumo.application.ledger.workspace:project_ledger_workspace",
+        "LedgerWorkspaceProjectionQuery",
+        "LedgerWorkspaceProjectionV1",
+    ),
+    _backend(
+        "ledger.workspace.read",
+        "cadrumo.application.ledger.workspace_reader:read_ledger_workspace_projection",
+        "LedgerWorkspaceReadQuery",
+        "LedgerWorkspaceProjectionV1",
+    ),
 )
 
 
 _LEDGER_MISSING_PRODUCT_DECLARATIONS: Final[tuple[_BackendOperationDeclaration, ...]] = (
-    _backend("ledger.export.review_package", "cadrumo.application.ledger.review_exchange", "LedgerReviewExchangePlanCommand", "LedgerReviewExchangeResult"),
-    _backend("ledger.export.google_transport", "cadrumo.application.ledger.review_exchange", "LedgerGoogleReviewExchangeCommand", "LedgerGoogleReviewExchangeResult"),
-    _backend("ledger.export.restore_archive", "cadrumo.application.ledger.recovery_archive", "LedgerRecoveryArchiveCommand", "LedgerRecoveryArchiveResult"),
-    _backend("ledger.evidence.download", "cadrumo.application.ledger.evidence_lifecycle", "LedgerEvidenceDownloadQuery", "LedgerEvidenceDownloadResult"),
-    _backend("ledger.evidence.replace", "cadrumo.application.ledger.evidence_lifecycle", "LedgerEvidenceReplaceCommand", "LedgerEvidenceReplaceResult"),
-    _backend("ledger.note.append", "cadrumo.application.ledger.notes", "LedgerNoteAppendCommand", "LedgerNoteAppendResult"),
-    _backend("ledger.field_change.provenance", "cadrumo.domain.transactions.change_provenance", "LedgerFieldChangeQuery", "LedgerFieldChangeProvenance"),
-    _backend("ledger.manual_override.provenance", "cadrumo.domain.transactions.change_provenance", "LedgerManualOverrideQuery", "LedgerManualOverrideProvenance"),
-    _backend("ledger.import.normalization_provenance", "cadrumo.domain.transactions.change_provenance", "LedgerImportNormalizationQuery", "LedgerImportNormalizationProvenance"),
-    _backend("ledger.transaction.batch_patch", "cadrumo.application.ledger.change_sets", "LedgerBatchPatchCommand", "LedgerBatchPatchResult"),
+    _backend(
+        "ledger.export.review_package",
+        "cadrumo.application.ledger.review_exchange",
+        "LedgerReviewExchangePlanCommand",
+        "LedgerReviewExchangeResult",
+    ),
+    _backend(
+        "ledger.export.google_transport",
+        "cadrumo.application.ledger.review_exchange",
+        "LedgerGoogleReviewExchangeCommand",
+        "LedgerGoogleReviewExchangeResult",
+    ),
+    _backend(
+        "ledger.export.restore_archive",
+        "cadrumo.application.ledger.recovery_archive",
+        "LedgerRecoveryArchiveCommand",
+        "LedgerRecoveryArchiveResult",
+    ),
+    _backend(
+        "ledger.evidence.download",
+        "cadrumo.application.ledger.evidence_lifecycle",
+        "LedgerEvidenceDownloadQuery",
+        "LedgerEvidenceDownloadResult",
+    ),
+    _backend(
+        "ledger.evidence.replace",
+        "cadrumo.application.ledger.evidence_lifecycle",
+        "LedgerEvidenceReplaceCommand",
+        "LedgerEvidenceReplaceResult",
+    ),
+    _backend(
+        "ledger.note.append", "cadrumo.application.ledger.notes", "LedgerNoteAppendCommand", "LedgerNoteAppendResult"
+    ),
+    _backend(
+        "ledger.field_change.provenance",
+        "cadrumo.domain.transactions.change_provenance",
+        "LedgerFieldChangeQuery",
+        "LedgerFieldChangeProvenance",
+    ),
+    _backend(
+        "ledger.manual_override.provenance",
+        "cadrumo.domain.transactions.change_provenance",
+        "LedgerManualOverrideQuery",
+        "LedgerManualOverrideProvenance",
+    ),
+    _backend(
+        "ledger.import.normalization_provenance",
+        "cadrumo.domain.transactions.change_provenance",
+        "LedgerImportNormalizationQuery",
+        "LedgerImportNormalizationProvenance",
+    ),
+    _backend(
+        "ledger.transaction.batch_patch",
+        "cadrumo.application.ledger.change_sets",
+        "LedgerBatchPatchCommand",
+        "LedgerBatchPatchResult",
+    ),
 )
 
 
@@ -1548,6 +1920,472 @@ _LEDGER_TUI_ROUTE_CAPABILITIES: Final[Mapping[str, tuple[str, ...]]] = MappingPr
         "ledger.reconciliation": ("ledger.transaction.invoice_link",),
     }
 )
+
+
+_CLI_CAPABILITY_REMAP: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "ledger.add": "ledger.transaction.create",
+        "ledger.archive": "ledger.lifecycle.archive",
+        "ledger.attach": "ledger.transaction.attach",
+        "ledger.detach": "ledger.transaction.detach",
+        "ledger.exclude": "ledger.lifecycle.reviewed_exclude",
+        "ledger.link": "ledger.transaction.invoice_link",
+        "ledger.llm_diagnostics": "ledger.llm.diagnostics",
+        "ledger.merge": "ledger.transaction.merge",
+        "ledger.participation": "ledger.participation.get",
+        "ledger.preflight": "ledger.preflight.readiness",
+        "ledger.ratios.list": "ledger.ratio.list",
+        "ledger.ratios.validate": "ledger.ratio.validate",
+        "ledger.ratios.set": "ledger.ratio.set",
+        "ledger.ratios.unset": "ledger.ratio.unset",
+        "ledger.remove": "ledger.lifecycle.remove",
+        "ledger.reset": "ledger.lifecycle.reset",
+        "ledger.restore": "ledger.lifecycle.restore",
+        "ledger.review": "ledger.transaction.review_query",
+        "ledger.stash": "ledger.lifecycle.stash",
+        "ledger.status": "ledger.transaction.status_summary",
+        "ledger.update": "ledger.transaction.update_fields",
+        "ledger.view": "ledger.transaction.get",
+    }
+)
+
+_SUBOPERATION_CAPABILITY_REMAP: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "ledger.classify.bulk_csv": "ledger.classification.bulk_csv",
+        "ledger.export.csv": "ledger.export.csv",
+        "ledger.export.jsonl": "ledger.export.jsonl",
+        "ledger.export.xlsx": "ledger.export.xlsx",
+        "ledger.remove.commit": "ledger.lifecycle.remove.commit",
+        "ledger.remove.preview": "ledger.lifecycle.remove.preview",
+        "ledger.reset.commit": "ledger.lifecycle.reset.commit",
+        "ledger.reset.preview": "ledger.lifecycle.reset.preview",
+    }
+)
+
+
+def _stable_segment(value: str) -> str:
+    segment = re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_") or "value"
+    return f"x_{segment}" if segment[0].isdigit() else segment
+
+
+def _registry_union_capability_id(row: LedgerRegistryRouteRowV1) -> str:
+    family = row.source.value.removeprefix("ledger_").removesuffix("_aggregation")
+    identity_digest = hashlib.sha256(_canonical_json_text(row).encode("utf-8")).hexdigest()[:16]
+    return ".".join(
+        (
+            "ledger",
+            "registry_route",
+            _stable_segment(family),
+            _stable_segment(row.modelo_id),
+            _stable_segment(row.revision_id),
+            f"route_{identity_digest}",
+        )
+    )
+
+
+def _pascal_identity(capability_id: str) -> str:
+    return "".join(part.capitalize() for part in re.split(r"[._]", capability_id.removeprefix("ledger.")))
+
+
+def _effect_for(capability_id: str, sources: frozenset[DenominatorSourceKind]) -> LedgerCapabilityEffect:
+    if DenominatorSourceKind.REGISTRY_ROUTE in sources:
+        return LedgerCapabilityEffect.REGISTRY_ROUTE
+    if DenominatorSourceKind.ARTIFACT_PRODUCT in sources or capability_id.startswith("ledger.export."):
+        return LedgerCapabilityEffect.ARTIFACT
+    if any(token in capability_id for token in ("llm", "preview", "suggest", "evidence_read")):
+        return LedgerCapabilityEffect.PROPOSAL
+    query_tokens = (
+        ".list",
+        ".view",
+        ".get",
+        ".query",
+        ".status",
+        ".history",
+        ".track",
+        ".check",
+        ".catalogue",
+        ".read",
+        ".diagnostics",
+        ".eligible",
+        ".validate",
+        ".queue",
+        ".filter",
+        ".sort",
+        ".group",
+        ".page",
+    )
+    return (
+        LedgerCapabilityEffect.QUERY
+        if any(token in capability_id for token in query_tokens)
+        else LedgerCapabilityEffect.MUTATION
+    )
+
+
+def _planned_owner(capability_id: str) -> str:
+    prefix_owners = (
+        ("ledger.registry_route.", "cadrumo.domain.calculations.registry.binding_targets"),
+        ("ledger.allocate", "cadrumo.application.ledger.operator_commands"),
+        ("ledger.bienes_inversion.", "cadrumo.application.ledger.investment_goods_workflows"),
+        ("ledger.classify", "cadrumo.application.ledger.llm_workflows"),
+        ("ledger.classify.", "cadrumo.application.ledger.llm_workflows"),
+        ("ledger.classification.", "cadrumo.application.ledger.actions_classification"),
+        ("ledger.counterparty.", "cadrumo.application.ledger.counterparty_establishment"),
+        ("ledger.evidence.pull", "cadrumo.application.ledger.provider_evidence_workflows"),
+        ("ledger.evidence.review.", "cadrumo.application.ledger.review_workflows"),
+        ("ledger.evidence.consent.", "cadrumo.application.ledger.review_workflows"),
+        ("ledger.evidence.", "cadrumo.application.ledger.evidence_lifecycle"),
+        ("ledger.export.review", "cadrumo.application.ledger.review_exchange"),
+        ("ledger.export.google", "cadrumo.application.ledger.review_exchange"),
+        ("ledger.export.restore", "cadrumo.application.ledger.recovery_archive"),
+        ("ledger.export.", "cadrumo.application.ledger.actions_export"),
+        ("ledger.export", "cadrumo.application.ledger.actions_export"),
+        ("ledger.import.", "cadrumo.application.ledger.import_workflows"),
+        ("ledger.import", "cadrumo.application.ledger.import_workflows"),
+        ("ledger.inventory.", "cadrumo.application.inventory.service:InventoryService"),
+        ("ledger.invoice.", "cadrumo.application.ledger.invoice_workflows"),
+        ("ledger.lifecycle.", "cadrumo.application.ledger.actions_lifecycle"),
+        ("ledger.llm.", "cadrumo.application.ledger.llm_workflows"),
+        ("ledger.participation.", "cadrumo.application.ledger.composite_reader"),
+        ("ledger.prorrata.", "cadrumo.application.ledger.prorrata_workflows"),
+        ("ledger.preflight.", "cadrumo.application.ledger.composite_reader"),
+        ("ledger.ratio.", "cadrumo.application.ledger.ratio_workflows"),
+        ("ledger.ratios.", "cadrumo.application.ledger.ratio_workflows"),
+        ("ledger.rule.", "cadrumo.application.ledger.actions_classification"),
+        ("ledger.split", "cadrumo.application.ledger.llm_workflows"),
+        ("ledger.transaction.", "cadrumo.application.ledger.operator_commands"),
+        ("ledger.workspace.", "cadrumo.application.ledger.workspace_reader"),
+        ("ledger.list", "cadrumo.application.ledger.query_service"),
+        ("ledger.history", "cadrumo.application.ledger.composite_reader"),
+        ("ledger.track", "cadrumo.application.ledger.composite_reader"),
+        ("ledger.check", "cadrumo.application.ledger.composite_reader"),
+        ("ledger.categories", "cadrumo.application.ledger.review_queries"),
+    )
+    for prefix, owner in prefix_owners:
+        if capability_id.startswith(prefix):
+            return owner
+    raise ValueError(f"union capability has no adjudicated semantic owner: {capability_id}")
+
+
+def _semantic_home_for(
+    capability_id: str,
+    effect: LedgerCapabilityEffect,
+) -> tuple[CanonicalSemanticHomeV1, SemanticHomeStatus]:
+    declarations = {
+        item.capability_id: item
+        for item in (*_LEDGER_BACKEND_OPERATION_DECLARATIONS, *_LEDGER_MISSING_PRODUCT_DECLARATIONS)
+    }
+    declaration = declarations.get(capability_id)
+    if declaration is not None:
+        return (
+            CanonicalSemanticHomeV1(
+                owner=declaration.owner,
+                command_type=declaration.command_type,
+                result_type=declaration.result_type,
+            ),
+            declaration.status,
+        )
+    if effect is LedgerCapabilityEffect.REGISTRY_ROUTE:
+        return (
+            CanonicalSemanticHomeV1(
+                owner="cadrumo.domain.calculations.registry.binding_targets:casillas_by_binding",
+                command_type="LedgerBindingRouteQuery",
+                result_type="LedgerBindingRouteResult",
+            ),
+            SemanticHomeStatus.PLANNED,
+        )
+    stem = f"Ledger{_pascal_identity(capability_id)}"
+    request_suffix = "Query" if effect is LedgerCapabilityEffect.QUERY else "Command"
+    return (
+        CanonicalSemanticHomeV1(
+            owner=_planned_owner(capability_id),
+            command_type=f"{stem}{request_suffix}",
+            result_type=f"{stem}Result",
+        ),
+        SemanticHomeStatus.PLANNED,
+    )
+
+
+def _axis_decisions(
+    capability_id: str,
+    sources: frozenset[DenominatorSourceKind],
+    effect: LedgerCapabilityEffect,
+) -> tuple[LedgerAxisApplicabilityDecisionV1, ...]:
+    backend_helper_only = sources == frozenset({DenominatorSourceKind.BACKEND_ONLY}) and capability_id not in {
+        "ledger.workspace.read"
+    }
+    applicable = {
+        LedgerCapabilityAxis.BACKEND: True,
+        LedgerCapabilityAxis.CLI: not backend_helper_only,
+        LedgerCapabilityAxis.TUI: not backend_helper_only,
+        LedgerCapabilityAxis.COMPOSITION: effect
+        in {
+            LedgerCapabilityEffect.MUTATION,
+            LedgerCapabilityEffect.PROPOSAL,
+            LedgerCapabilityEffect.ARTIFACT,
+            LedgerCapabilityEffect.REGISTRY_ROUTE,
+        },
+        LedgerCapabilityAxis.ARTIFACT: effect is LedgerCapabilityEffect.ARTIFACT,
+        LedgerCapabilityAxis.PROVENANCE: effect
+        in {
+            LedgerCapabilityEffect.MUTATION,
+            LedgerCapabilityEffect.PROPOSAL,
+            LedgerCapabilityEffect.ARTIFACT,
+            LedgerCapabilityEffect.REGISTRY_ROUTE,
+        },
+        LedgerCapabilityAxis.REGISTRY: effect is LedgerCapabilityEffect.REGISTRY_ROUTE
+        or capability_id.startswith(("ledger.participation.", "ledger.workspace.affected_declarations")),
+        LedgerCapabilityAxis.PROOF: True,
+    }
+    rationales = {
+        LedgerCapabilityAxis.BACKEND: "Every admitted behavior requires one frontend-neutral canonical owner.",
+        LedgerCapabilityAxis.CLI: (
+            "Operator or filing-route visibility is part of CLI parity."
+            if applicable[LedgerCapabilityAxis.CLI]
+            else "This is an internal backend composition, not a separately invocable CLI product."
+        ),
+        LedgerCapabilityAxis.TUI: (
+            "The Ledger workbench must expose or faithfully summarize this operator capability."
+            if applicable[LedgerCapabilityAxis.TUI]
+            else "This internal backend composition is consumed through a higher-level TUI capability."
+        ),
+        LedgerCapabilityAxis.COMPOSITION: (
+            "The behavior crosses state, provider, artifact, or registry boundaries."
+            if applicable[LedgerCapabilityAxis.COMPOSITION]
+            else "The query has no independent cross-boundary effect beyond its canonical read."
+        ),
+        LedgerCapabilityAxis.ARTIFACT: (
+            "The capability emits or consumes an independently readable artifact."
+            if applicable[LedgerCapabilityAxis.ARTIFACT]
+            else "The capability has no independent file or archive product."
+        ),
+        LedgerCapabilityAxis.PROVENANCE: (
+            "The effect must retain actor, source, revision, or route lineage."
+            if applicable[LedgerCapabilityAxis.PROVENANCE]
+            else "The read-only projection does not author independent provenance."
+        ),
+        LedgerCapabilityAxis.REGISTRY: (
+            "The behavior resolves or presents a validated registry route."
+            if applicable[LedgerCapabilityAxis.REGISTRY]
+            else "The behavior does not consume a calculation-registry relationship directly."
+        ),
+        LedgerCapabilityAxis.PROOF: "Every admitted denominator row requires direct outcome and refusal evidence.",
+    }
+    return tuple(
+        LedgerAxisApplicabilityDecisionV1(
+            axis=axis,
+            applicability=ApplicabilityState.APPLICABLE if applicable[axis] else ApplicabilityState.NOT_APPLICABLE,
+            rationale=rationales[axis],
+        )
+        for axis in sorted(LedgerCapabilityAxis, key=lambda item: item.value)
+    )
+
+
+def _union_observations(
+    registry: LedgerRegistryRouteCensusV1,
+    tui: LedgerTuiSupportedSurfaceCensusV1,
+) -> tuple[LedgerUnionSourceObservationV1, ...]:
+    from cadrumo.entrypoints.cli._app_ledger_command_specs import LEDGER_CLI_COMMAND_CENSUS
+
+    observations: list[LedgerUnionSourceObservationV1] = []
+    for entry in LEDGER_CLI_COMMAND_CENSUS:
+        schema_id = entry.result_schema_identity.replace("-", "_")
+        capability_id = _CLI_CAPABILITY_REMAP.get(schema_id, schema_id)
+        observations.append(
+            LedgerUnionSourceObservationV1(
+                source=DenominatorSourceKind.CLI_ENDPOINT,
+                observation_id=f"cli_endpoint:{entry.command_key}",
+                capability_ids=(capability_id,),
+            )
+        )
+        observations.extend(
+            LedgerUnionSourceObservationV1(
+                source=DenominatorSourceKind.CLI_SUBOPERATION,
+                observation_id=f"cli_suboperation:{suboperation_id}",
+                capability_ids=(_SUBOPERATION_CAPABILITY_REMAP.get(suboperation_id, suboperation_id),),
+            )
+            for suboperation_id in entry.suboperation_ids
+        )
+    observations.extend(
+        LedgerUnionSourceObservationV1(
+            source=DenominatorSourceKind.BACKEND_ONLY,
+            observation_id=f"backend_operation:{item.capability_id}",
+            capability_ids=(item.capability_id,),
+        )
+        for item in _LEDGER_BACKEND_OPERATION_DECLARATIONS
+    )
+    observations.extend(
+        LedgerUnionSourceObservationV1(
+            source=DenominatorSourceKind.MISSING_PRODUCT,
+            observation_id=f"missing_product:{item.capability_id}",
+            capability_ids=(item.capability_id,),
+        )
+        for item in _LEDGER_MISSING_PRODUCT_DECLARATIONS
+    )
+    observations.extend(
+        LedgerUnionSourceObservationV1(
+            source=DenominatorSourceKind.REGISTRY_ROUTE,
+            observation_id="registry_route:" + "|".join(map(str, row.sort_key)),
+            capability_ids=(_registry_union_capability_id(row),),
+        )
+        for row in registry.rows
+    )
+    observations.extend(
+        LedgerUnionSourceObservationV1(
+            source=DenominatorSourceKind.ARTIFACT_PRODUCT,
+            observation_id=f"artifact_product:{observation_id}",
+            capability_ids=(capability_id,),
+        )
+        for observation_id, capability_id in _LEDGER_ARTIFACT_OBSERVATIONS
+    )
+    route_rows = {row.destination: row for row in tui.routes}
+    if set(route_rows) != set(_LEDGER_TUI_ROUTE_CAPABILITIES):
+        raise ValueError("the TUI route-to-capability adjudication is stale")
+    observations.extend(
+        LedgerUnionSourceObservationV1(
+            source=DenominatorSourceKind.SUPPORTED_SURFACE,
+            observation_id=f"supported_surface:{destination}:{route_rows[destination].reachability}",
+            capability_ids=capability_ids,
+        )
+        for destination, capability_ids in _LEDGER_TUI_ROUTE_CAPABILITIES.items()
+    )
+    return tuple(sorted(observations, key=lambda item: (item.source.value, item.observation_id)))
+
+
+def build_ledger_union_denominator(
+    *,
+    registry: LedgerRegistryRouteCensusV1 | None = None,
+    tui: LedgerTuiSupportedSurfaceCensusV1 | None = None,
+) -> LedgerUnionDenominatorV1:
+    """Join all seven accepted S04--S07 streams into the S08 semantic union."""
+    registry = build_ledger_registry_route_census() if registry is None else registry
+    tui = build_ledger_tui_supported_surface_census() if tui is None else tui
+    observations = _union_observations(registry, tui)
+    observations_by_capability: dict[str, list[LedgerUnionSourceObservationV1]] = {}
+    for observation in observations:
+        for capability_id in observation.capability_ids:
+            observations_by_capability.setdefault(capability_id, []).append(observation)
+    tui_reachability = {
+        destination: next(row.reachability for row in tui.routes if row.destination == destination)
+        for destination in _LEDGER_TUI_ROUTE_CAPABILITIES
+    }
+    cli_ownership_by_capability: dict[str, set[str]] = {}
+    from cadrumo.entrypoints.cli._app_ledger_command_specs import LEDGER_CLI_COMMAND_CENSUS
+
+    for entry in LEDGER_CLI_COMMAND_CENSUS:
+        schema_id = entry.result_schema_identity.replace("-", "_")
+        capability_id = _CLI_CAPABILITY_REMAP.get(schema_id, schema_id)
+        cli_ownership_by_capability.setdefault(capability_id, set()).add(entry.adapter_ownership.value)
+        for suboperation_id in entry.suboperation_ids:
+            mapped = _SUBOPERATION_CAPABILITY_REMAP.get(suboperation_id, suboperation_id)
+            cli_ownership_by_capability.setdefault(mapped, set()).add(entry.adapter_ownership.value)
+    rows: list[LedgerUnionCapabilityRowV1] = []
+    for capability_id, selecting in sorted(observations_by_capability.items()):
+        sources = frozenset(item.source for item in selecting)
+        effect = _effect_for(capability_id, sources)
+        semantic_home, home_status = _semantic_home_for(capability_id, effect)
+        tui_routes = tuple(
+            sorted(
+                destination
+                for destination, selected in _LEDGER_TUI_ROUTE_CAPABILITIES.items()
+                if capability_id in selected
+            )
+        )
+        gaps = {LedgerGapClass.PROOF}
+        ownership = cli_ownership_by_capability.get(capability_id, set())
+        if ownership & {"mixed", "policy-bearing"}:
+            gaps.add(LedgerGapClass.AUTHORITY)
+        if home_status is SemanticHomeStatus.PLANNED:
+            gaps.add(LedgerGapClass.PRODUCT)
+        if effect in {
+            LedgerCapabilityEffect.MUTATION,
+            LedgerCapabilityEffect.PROPOSAL,
+            LedgerCapabilityEffect.REGISTRY_ROUTE,
+        }:
+            gaps.add(LedgerGapClass.COMPOSITION)
+        if effect is LedgerCapabilityEffect.ARTIFACT:
+            gaps.add(LedgerGapClass.ARTIFACT)
+        if effect is LedgerCapabilityEffect.REGISTRY_ROUTE:
+            gaps.add(LedgerGapClass.REGISTRY)
+        if any(token in capability_id for token in ("provenance", "normalization", "llm", "registry_route")):
+            gaps.add(LedgerGapClass.PROVENANCE)
+        component_only_routes = tuple(route for route in tui_routes if tui_reachability[route] == "component_only")
+        if component_only_routes:
+            gaps.add(LedgerGapClass.REACHABILITY)
+        proof_requirements = ["Direct backend success and typed refusal proof against the canonical owner."]
+        if DenominatorSourceKind.CLI_ENDPOINT in sources or DenominatorSourceKind.CLI_SUBOPERATION in sources:
+            proof_requirements.append("CLI parser, delegation, result-schema, success, and refusal parity proof.")
+        if effect is LedgerCapabilityEffect.ARTIFACT:
+            proof_requirements.append("Independent reader, declared-loss, destination, and cleanup proof.")
+        if effect is LedgerCapabilityEffect.REGISTRY_ROUTE:
+            proof_requirements.append(
+                "Nonzero inclusion, exclusion, missing-versus-zero, and finish-line refusal proof."
+            )
+        if tui_routes:
+            proof_requirements.append("Installed keyboard reachability and canonical result/refusal parity proof.")
+        blockers = ["S12 applicability/evidence review and S14 digest-bound acceptance remain open."]
+        if LedgerGapClass.AUTHORITY in gaps:
+            blockers.append("The current CLI observation carries policy-bearing or mixed ownership.")
+        if home_status is SemanticHomeStatus.PLANNED:
+            blockers.append(
+                "The named immutable application request/result contract is plan-owned and not yet complete."
+            )
+        if component_only_routes:
+            blockers.append("TUI component exists without installed navigation or executable door reachability.")
+        if effect is LedgerCapabilityEffect.REGISTRY_ROUTE:
+            blockers.append("The declaration still requires per-route calculation and filing/export adjudication.")
+        next_action = (
+            "Classify and prove the route in S96-S101."
+            if effect is LedgerCapabilityEffect.REGISTRY_ROUTE
+            else "Complete the named G1/G2 owner, then prove CLI and TUI parity in G3/G4."
+        )
+        rows.append(
+            LedgerUnionCapabilityRowV1(
+                capability_id=capability_id,
+                sources=sources,
+                source_observation_ids=tuple(sorted(item.observation_id for item in selecting)),
+                semantic_home=semantic_home,
+                semantic_home_status=home_status,
+                effect=effect,
+                applicability=_axis_decisions(capability_id, sources, effect),
+                gap_classes=frozenset(gaps),
+                proof_requirements=tuple(proof_requirements),
+                blockers=tuple(blockers),
+                next_action=next_action,
+                tui_routes=tui_routes,
+            )
+        )
+    source_digests = tuple(
+        LedgerUnionSourceDigestV1(
+            source=source,
+            observation_count=len(source_observations),
+            digest=_canonical_digest(source_observations),
+        )
+        for source in sorted(DenominatorSourceKind, key=lambda item: item.value)
+        if (source_observations := tuple(item for item in observations if item.source is source))
+    )
+    provisional = LedgerUnionDenominatorV1.model_construct(
+        root=LEDGER_UNION_DENOMINATOR_ROOT,
+        schema_version=LEDGER_UNION_DENOMINATOR_SCHEMA_VERSION,
+        source_digests=source_digests,
+        observations=observations,
+        rows=tuple(rows),
+        digest="",
+    )
+    return LedgerUnionDenominatorV1(
+        **provisional.model_dump(mode="python", exclude={"digest"}), digest=provisional.calculated_digest
+    )
+
+
+def ledger_union_denominator_bytes(union: LedgerUnionDenominatorV1) -> bytes:
+    """Serialize the canonical S08 union with domain and length framing."""
+    canonical = LedgerUnionDenominatorV1.model_validate(union.model_dump(mode="python"))
+    encoded = _canonical_json_text(canonical.model_dump(mode="python", exclude={"digest"})).encode("utf-8")
+    return _LEDGER_UNION_DENOMINATOR_FRAME + _length_frame(encoded)
+
+
+def ledger_union_denominator_digest(union: LedgerUnionDenominatorV1) -> str:
+    """Return the framed serialized S08 union digest."""
+    return f"sha256:{hashlib.sha256(ledger_union_denominator_bytes(union)).hexdigest()}"
 
 
 class EvidenceSubjectSnapshotV1(BaseModel):

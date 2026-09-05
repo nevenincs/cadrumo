@@ -64,7 +64,7 @@
 "cadrumo.application.aggregation._evidence_advisory" = 2
 "cadrumo.application.aggregation._retenciones" = 1
 "cadrumo.application.aggregation._source_mesh" = 1
-"cadrumo.application.aggregation.iva_ledger" = 2
+"cadrumo.application.aggregation.iva_ledger" = 1
 "cadrumo.application.aggregation.ledger_filing_snapshot" = 1
 "cadrumo.application.auth.apoderado_flow" = 1
 "cadrumo.application.auth.catalogue" = 1
@@ -287,7 +287,6 @@
 "cadrumo.domain.user_profile.values" = 1
 "cadrumo.entrypoints.cli" = 2
 "cadrumo.entrypoints.cli._app_live" = 1
-"cadrumo.entrypoints.cli._app_live_auth_preflight" = 1
 "cadrumo.entrypoints.cli._bootstrap_exempt" = 1
 "cadrumo.entrypoints.cli._command_runtime" = 1
 "cadrumo.entrypoints.cli._command_schema" = 1
@@ -298,11 +297,11 @@
 "cadrumo.entrypoints.cli._modelo_cli_support" = 1
 
 "cadrumo.entrypoints.cli._modelo_work_calculate_cli" = 1
-"cadrumo.entrypoints.cli._modelo_work_lifecycle_cli" = 6
+"cadrumo.entrypoints.cli._modelo_work_lifecycle_cli" = 5
 "cadrumo.entrypoints.cli._modelo_work_revision_cli" = 3
 "cadrumo.entrypoints.cli._modelo_work_runs_cli" = 4
 "cadrumo.entrypoints.cli._modelo_work_select_cli" = 1
-"cadrumo.entrypoints.cli._modelo_work_verification_cli" = 4
+"cadrumo.entrypoints.cli._modelo_work_verification_cli" = 3
 "cadrumo.entrypoints.cli._modelo_work_wizard_cli" = 1
 "cadrumo.entrypoints.cli._overview" = 2
 "cadrumo.entrypoints.cli._profile_session_gate" = 2
@@ -311,7 +310,6 @@
 "cadrumo.entrypoints.cli.command_api" = 2
 "cadrumo.entrypoints.cli.command_suggestions" = 3
 "cadrumo.entrypoints.cli.config._censo_transport" = 1
-"cadrumo.entrypoints.cli.config._profile_support" = 1
 "cadrumo.entrypoints.cli.config._spec_policies" = 6
 "cadrumo.entrypoints.cli.config.google" = 1
 "cadrumo.entrypoints.cli.config_payloads" = 1
