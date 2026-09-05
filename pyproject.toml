@@ -514,12 +514,16 @@ target-version = "py313"
 line-length = 120
 src = ["src"]
 extend-exclude = [
-  # Ruff 0.16 formats Python blocks embedded in Markdown. The `.vault/` corpus
-  # and `.agents/` handovers are removable development scaffolding whose code
-  # blocks are historical records of what a decision looked like when it was
-  # taken; reformatting them rewrites the record and is barred by the vaultspec
-  # hand-edit rules. Narrative docs under `docs/` stay in scope.
+  # Ruff 0.16 formats Python blocks embedded in Markdown. The `.vault/` corpus,
+  # the `.vaultspec/` harness and `.agents/` handovers are removable
+  # development scaffolding external to the codebase: their code blocks are
+  # historical records of what a decision looked like when it was taken, and
+  # reformatting them rewrites the record and is barred by the vaultspec
+  # hand-edit rules. The harness owns its own gates and their style; linting
+  # them with the product's rules judges one tree by another's standard.
+  # Narrative docs under `docs/` stay in scope.
   ".vault",
+  ".vaultspec",
   ".agents",
 ]
 
