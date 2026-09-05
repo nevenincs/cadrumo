@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:5c12787c0a0ce66b92192eaa41835865e77929793b5cc8ab3a77205e3aa270dc'
+body_hash: 'sha256:9fc6e9f52d52f6c899f11d2526e93b6f727267ac133a9236a23743cde74126e7'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -555,6 +555,10 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S673` - Make the release-pointer gate prove a refusal rather than a crash: json.JSONDecodeError is a ValueError, so the bare raises accepted an unhandled parser error as evidence of the guard working; `dev/packaging/tests/test_release_pointer_guard.py`.
 - [x] `W02.P02.S674` - Derive the forbidden authority surface from the live type and budget the test that carries it: the transcribed set guarded 4 of 43 members and one was dead, making its paired AttributeError refusal a tautology, and the call runs at 298-312s against a 300s ceiling; `dev/registry/tests/test_filing_export_two_channel_proof.py`.
 - [x] `W02.P02.S675` - Bind the sequence-contract traversal refusals to their own input: ten parametrized cases shared a bare raise, so a guard refusing every value on one unrelated ground would have satisfied all of them; `dev/docs/sequences/tests/test_contracts.py`.
+- [x] `W02.P02.S676` - Bind the collection-count negative control to its own refusal: raises(AssertionError) is satisfied by every failed assert, including one raised inside the reader for an unrelated reason; `dev/packaging/tests/test_preflight_recipe_selection.py`.
+- [x] `W02.P02.S677` - Pair each malformed receipt payload with the refusal it must produce: five distinct malformations shared one verdict, so a loader rejecting everything at the decode step would still read as three working checks; `dev/quality/tests/test_object_name_declustering.py`.
+- [x] `W02.P02.S678` - Pin each staging failure phase to its own error: a two-class refusal with no message let any OSError satisfy all six cases, so a path failing at mkstemp for every input read as six working phases; `dev/quality/tests/test_object_name_replay.py`.
+- [x] `W02.P02.S679` - Pin the sidecar refusals to their own checks: the empty schema_version never reaches the version comparison it is named for, and two distinct tamper corruptions shared one indistinguishable verdict; `dev/docs/preprocess/tests/test_sidecar_contract.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
