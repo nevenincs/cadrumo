@@ -15,14 +15,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ...core.logging import get_logger
 from .calculation_revision import CalculationRevision, CalculationRevisionCatalogue
 from .errors import ModeloError
 
 if TYPE_CHECKING:
     from .calculation_revision_aggregate import CalculationRevisionAggregateContext
-
-_LOGGER = get_logger(__name__)
 
 
 class CalculationRevisionPersistenceError(ModeloError):

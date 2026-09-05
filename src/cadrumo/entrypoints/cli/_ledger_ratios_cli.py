@@ -11,7 +11,6 @@ import typer
 from ...application.ledger.ratios import RatiosCensoOverrideWarning
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
-from ...core.logging import get_logger
 from ...core.time.clock import now
 from ...domain.buckets.event import BucketEventType
 from ...domain.categories.spending_category import SpendingCategory
@@ -20,8 +19,6 @@ from ._common import active_bucket_id_or_refuse as _ratios_bucket_id
 from ._common import bad, emit_envelope
 from ._decimal_parsing import parse_decimal_amount
 from ._ledger_support import ledger_cli_no_recovery
-
-_log = get_logger(__name__)
 
 
 def _ratios_bucket_and_profile() -> tuple[str, str | None]:

@@ -36,7 +36,6 @@ from datetime import date
 
 from ...core.config import Settings, load_settings
 from ...core.identity import SubjectTaxId
-from ...core.logging import get_logger
 from ...core.period import Period
 from ...domain.deadlines.engine import DeadlineEngine
 from ...domain.deadlines.models import Schedule, TaxpayerProfile
@@ -56,8 +55,6 @@ from .protocols import (
     RegistryModeloDraftProtocol,
     SubmissionEngineProtocol,
 )
-
-_logger = get_logger(__name__)
 
 
 @dataclass(frozen=True, slots=True)

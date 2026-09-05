@@ -17,7 +17,6 @@ URLs or active-profile pointers independently.
 from __future__ import annotations
 
 import contextvars
-import logging
 from collections.abc import Generator, Mapping
 from contextlib import contextmanager
 from functools import lru_cache
@@ -92,9 +91,6 @@ from .telemetry.tier import TelemetryTier
 if TYPE_CHECKING:
     from .bucket_pointer import BucketPointer
     from .external_constants import ExternalConstants
-
-
-_LOGGER = logging.getLogger(__name__)
 
 
 # Project root: four levels up from src/cadrumo/core/config.py

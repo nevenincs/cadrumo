@@ -37,7 +37,6 @@ from ...core.auth_provider import AuthProviderKind
 from ...core.errors.hierarchy import SiteHealthState, SiteHealthStatusLike
 from ...core.hashing import sha256_hex
 from ...core.identifier_grammar import NamespacedId
-from ...core.logging import get_logger
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
@@ -48,8 +47,6 @@ from ..operator_actions.models import ConditionEvidence, PreconditionVerdict
 from ._identity import period_identity_segment
 from .abort import WorkflowAbortReason
 from .engine_helpers import CertificateSeverityValue, DeadlineRole, FilingWindowState
-
-_log = get_logger(__name__)
 
 _WORKFLOW_PROSE_EVIDENCE_KEY_TOKENS = frozenset(
     {

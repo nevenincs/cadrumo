@@ -38,7 +38,6 @@ if TYPE_CHECKING:
     from .bucket_session import BucketSession
 
 from .....core.bucket_pointer import resolve_active_bucket_id
-from .....core.logging import get_logger
 from .....core.storage_taxonomy import StorageCategory
 from ..crypto.aead import KEY_SIZE
 from ..errors import (
@@ -51,8 +50,6 @@ from ._master_key_records import (
 )
 from ._master_key_tax_id import looks_like_real_tax_id as looks_like_real_tax_id
 from ._provider_session import exit_provider_session
-
-_log = get_logger(__name__)
 
 
 @runtime_checkable

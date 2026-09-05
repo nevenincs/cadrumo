@@ -35,7 +35,6 @@ from ...core.errors.hierarchy import CoreValidationError
 from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, SnapshotId, WorkUnitId
 from ...core.irnr import M210GrossIncomeSourceMode
-from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
@@ -90,8 +89,6 @@ class SourceMeshError(CoreValidationError):
     def __init__(self, message_key: str) -> None:
         super().__init__(message_key, translated_message=message_key)
 
-
-_log = get_logger(__name__)
 
 CalculationSourceDiagnosticReason = Literal[
     "duplicate_binding_owner",

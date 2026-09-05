@@ -18,14 +18,11 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator
 
 from ...core.hashing import sha256_hex
 from ...core.identity import ContentDigest
-from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now
 from ...core.time.utc import UtcInstant
 from .enums import BusinessClassification
 from .errors import ClassificationRuleError
-
-_logger = get_logger(__name__)
 
 RuleDescriptionPattern = Annotated[str, StringConstraints(min_length=1)]
 """The regular expression a rule matches a transaction description against."""

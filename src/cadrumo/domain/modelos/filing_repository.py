@@ -13,11 +13,8 @@ domain package depends only on the structural port.
 
 from __future__ import annotations
 
-from ...core.logging import get_logger
 from .errors import ModeloError
 from .filing_record import ModeloRecord, ModeloRecordCatalogue
-
-_LOGGER = get_logger(__name__)
 
 
 class ModeloRecordPersistenceError(ModeloError):

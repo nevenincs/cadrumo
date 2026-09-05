@@ -14867,50 +14867,6 @@ modelo:
               help: null
               label: Deducció per reversió de mesures temporals (DT 37a. 1 LIS) -
                 2020 - Import generat/pendent a principi de període [2231]
-            DP200014B:00584:
-              label: Liquidació IV - Altres deduccions - Deduccions DT 24.1 LIS [00584]
-            DP200014B:00585:
-              label: Liquidació IV - Altres deduccions - Deducció DT 24.7 LIS, art.
-                42 RDLeg. 4/2004 [00585]
-            DP200014B:00588:
-              label: Liquidació IV - Altres deduccions - Deduccions per incentivar
-                det. activitats (Cap. IV Tít. VI, DT 24a.3 LIS i art. 27.3 primer
-                Llei 49/2002) [00588]
-            DP200014B:00590:
-              label: Liquidació IV - Altres deduccions - Deduccions d'inversió a Canàries
-                (desglossament a les pàgines 16 bis i 17) [00590]
-            DP200014B:00592:
-              label: Liquidació IV - Altres deduccions - Quota líquida [00592]
-            DP200014B:00599:
-              label: Liquidació IV - quota de l'exercici a ingressar o a retornar
-                - quota de l'exercici a ingressar o a retornar - estat [00599]
-            DP200014B:00601:
-              label: Liquidació IV - Pagaments fraccionats/Quota diferencial - Pagaments
-                fraccionats - 1r pagament fraccionat - Estat [00601]
-            DP200014B:00603:
-              label: Liquidació IV - Pagaments fraccionats/Quota diferencial - Pagaments
-                fraccionats - 2n pagament fraccionat - Estat [00603]
-            DP200014B:00605:
-              label: Liquidació IV - Pagaments fraccionats/Quota diferencial - Pagaments
-                fraccionats - 3r pagament fraccionat - Estat [00605]
-            DP200014B:00611:
-              label: Liquidació IV - Pagaments fraccionats/Quota diferencial - Quota
-                diferencial - Estat [00611]
-            DP200014B:00619:
-              label: Liquidació IV - Altres deduccions - Quota líquida mínima (art.
-                30 bis LIS) [00619]
-            DP200014B:01766:
-              label: Liquidació IV - Quota de l'exercici a ingressar o a retornar
-                - Total retencions i ingressos a compte - Efectuats a l'entitat [DP200014B:01766]
-            DP200014B:01784:
-              label: Liquidació IV - Quota de l'exercici a ingressar o a retornar
-                - Total retencions i ingressos a compte - Imputats per AIE i UTE [DP200014B:01784]
-            DP200018:00588:
-              label: Deduccions per incentivar determinades activitats - total - aplicat
-                en aquesta liquidació [00588]
-            DP200026:00625:
-              label: Tributació conjunta Estat i Adm. forals - Càlcul de percentatges
-                de tributació - Adm. de l'Estat [00625]
             x-8h834c1g60oj6ehg60q32do:
               help: null
               label: Liquidació II - Detall de correccions del resultat del compte
