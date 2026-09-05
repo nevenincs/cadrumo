@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:9fc6e9f52d52f6c899f11d2526e93b6f727267ac133a9236a23743cde74126e7'
+body_hash: 'sha256:ca8477cbf615ac310db74b597d296ea97cc3135dbe9b7f199432e8bffe347392'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -559,6 +559,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S677` - Pair each malformed receipt payload with the refusal it must produce: five distinct malformations shared one verdict, so a loader rejecting everything at the decode step would still read as three working checks; `dev/quality/tests/test_object_name_declustering.py`.
 - [x] `W02.P02.S678` - Pin each staging failure phase to its own error: a two-class refusal with no message let any OSError satisfy all six cases, so a path failing at mkstemp for every input read as six working phases; `dev/quality/tests/test_object_name_replay.py`.
 - [x] `W02.P02.S679` - Pin the sidecar refusals to their own checks: the empty schema_version never reaches the version comparison it is named for, and two distinct tamper corruptions shared one indistinguishable verdict; `dev/docs/preprocess/tests/test_sidecar_contract.py`.
+- [x] `W02.P02.S680` - Correct and expose the temporal-coverage refusal branches: both were dead under a modelo-036 fixture and both named RegistryValidationError, which does not catch the AmbiguousRevisionSelectionError a non-validated row actually raises; `dev/registry/tests/test_temporal_coverage.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
