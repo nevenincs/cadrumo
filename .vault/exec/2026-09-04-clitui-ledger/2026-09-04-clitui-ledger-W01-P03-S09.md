@@ -11,7 +11,6 @@ related:
   - "[[2026-09-04-clitui-ledger-plan]]"
 ---
 
-
 # Record clitui-ledger as sole Ledger parity owner and place unresolved Ledger TUI rows under the implementation hold
 
 ## Scope
