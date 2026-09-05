@@ -30,7 +30,21 @@ from ..quality.import_hygiene_scan import (
 )
 from ..quality.modelo_workspace_action_denominator import validate_modelo_workspace_action_denominator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.timeout(600)]
+"""The 600-second budget is contention, not a slow test.
+
+Measured at 276.85s under the repository's default `-n auto`
+parallelism - 92% of the 300-second ceiling - for
+``test_each_cohort_authority_is_defined_in_exactly_one_module``.
+
+The ceiling is wall clock and its expiry does not fail the test: the
+thread method kills the worker, and every sibling scheduled on it is
+reported as never having run. `--dist=loadfile` puts this whole module on
+one worker, so the margin here is shared, not per-case.
+
+The walk itself stays real; resolving the live first-party graph is what
+costs the minutes.
+"""
 
 _ROOT = Path(__file__).resolve().parents[2]
 _CADRUMO = _ROOT / "src/cadrumo"

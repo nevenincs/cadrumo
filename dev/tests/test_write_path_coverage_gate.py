@@ -38,7 +38,21 @@ from ..audit.write_path_coverage import (
 )
 from ..quality.write_path_backlog import WritePathBaseline, evaluate, run_gate
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.timeout(600)]
+"""The 600-second budget is contention, not a slow test.
+
+Measured at 207.31s under the repository's default `-n auto`
+parallelism - 69% of the 300-second ceiling - for
+``test_the_live_shipped_tree_write_path_backlog_is_reported_truthfully``.
+
+The ceiling is wall clock and its expiry does not fail the test: the
+thread method kills the worker, and every sibling scheduled on it is
+reported as never having run. `--dist=loadfile` puts this whole module on
+one worker, so the margin here is shared, not per-case.
+
+The walk itself stays real; resolving the live first-party graph is what
+costs the minutes.
+"""
 
 _EXCLUDES = ("src/pkg/tests", "src/pkg/tests/**", "src/pkg/**/tests", "src/pkg/**/tests/**")
 

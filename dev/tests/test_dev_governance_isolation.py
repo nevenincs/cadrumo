@@ -55,6 +55,7 @@ _EXEMPT: Final[dict[str, str]] = {
     "packaging/tests/test_packaging_quick_workflow.py": "excludes: the trees are not packaged",
     "quality/governance_corpus_scan.py": "detects: the shared boundary detector itself",
     "quality/import_hygiene_scan.py": "excludes: the tree is skipped when walking the repository",
+    "quality/tests/test_lint_scope_covers_scaffolding.py": "excludes: keeps the trees out of the product lint scope",
     "quality/tests/test_doc_privacy.py": "excludes: the privacy lint scans committed text without them",
     "registry/tests/test_declaration_invariant_gates.py": "detects: refuses a vault citation in a declaration",
     "tests/_marker_metadata_patterns.py": "detects: the citation patterns the marker gate matches on",
