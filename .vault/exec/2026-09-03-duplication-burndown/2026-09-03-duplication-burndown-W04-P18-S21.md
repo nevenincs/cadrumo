@@ -73,3 +73,38 @@ appears in the tree.
 Two findings were not documentation defects at all. A rule slug in production
 prose led to the vault-citation ratchet, and a second slug wearing a `:func:`
 role showed that ratchet's own pattern was blind to role form.
+
+## Closure
+
+The count reached 4 correct references plus 1 unresolved, and a ratchet now
+holds that floor: `dev/quality/docstring_reference_ratchet.py`, wired into the
+static-check group and the suite, refusing in four directions like its
+siblings.
+
+The baseline is not a debt ledger. Four of its five entries are accurate
+statements about the PAST -- what a module consolidated, why two read paths
+were merged -- naming code that correctly no longer exists, and rewriting one
+would make a true sentence false. The fifth is real: `tui/components/theme`
+says its presentation tokens are delivered through `cadrumo_css_variables`,
+which every Cadrumo App returns from `get_css_variables`, and neither exists.
+That sits inside the deferred TUI cluster and is recorded separately so the
+distinction is not lost.
+
+Two things this Step is worth remembering for.
+
+The end-to-end plant found a blind spot the unit tests would not have. The
+gate was built, wired, and passing; planting a dangling reference in an
+attribute docstring -- `X = ...` followed by a bare string, the form this
+codebase documents constants with -- did NOT fail it, because
+`ast.get_docstring` reaches only module, class and function docstrings. The
+screen had never scanned that form at all. Fixing it surfaced the theme finding
+above, which was pre-existing rather than new.
+
+And roughly a third of the 87 was never tree drift. Subscripted generics read
+as one unresolvable name, instance attributes never collected, relative `:mod:`
+roles, roles wrapped across lines, and a from-import registering only the
+imported symbols while leaving its own package unknown -- each a false positive
+the screen manufactured. Every widening that fixed one carries a paired tooth
+proving it still catches a genuine miss, because widening is the direction that
+silently blinds a screen.
+
