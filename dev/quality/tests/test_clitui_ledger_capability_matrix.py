@@ -112,6 +112,7 @@ _TUI_SOURCE_DIGEST: Final[str] = "sha256:70709a369bece8e06033e56e18bd82425ec9b48
 _UNION_DIGEST: Final[str] = "sha256:8a158b5cc4c8e6c3035dc272999af61ac6cb080af8c208eccc8d28e4105a7575"
 _ROW_REVIEW_DIGEST: Final[str] = "sha256:4e42e5e04ccfd7a8654e629933698e141033b0767d0f94ec5433619400203ff8"
 _ROW_REVIEW_ATTESTATION_DIGEST: Final[str] = "sha256:fc15a433ad145832934cbe894d3d0b875d27e9a54ed1a70ae271c16ff81aedf7"
+_UNSET: Final[object] = object()
 
 
 @cache
@@ -2323,6 +2324,25 @@ def _acceptance_record_anchor(
     return make_anchor(subject), (subject,)
 
 
+def _reminted_live_union() -> LedgerUnionDenominatorV1:
+    """Produce a valid later row-review observation, not a stale model copy."""
+    union = _union_denominator()
+    provisional_attestation = union.row_review_attestation.model_construct(
+        **union.row_review_attestation.model_dump(mode="python", exclude={"digest"}),
+        reviewed_at=_LATER_OBSERVED_AT,
+        digest="",
+    )
+    attestation = LedgerUnionRowReviewAttestationV1(
+        **provisional_attestation.model_dump(mode="python", exclude={"digest"}),
+        digest=provisional_attestation.calculated_digest,
+    )
+    provisional_union = union.model_copy(update={"row_review_attestation": attestation, "digest": ""})
+    return LedgerUnionDenominatorV1(
+        **provisional_union.model_dump(mode="python", exclude={"digest"}),
+        digest=provisional_union.calculated_digest,
+    )
+
+
 def _row_with_assessments(
     row: LedgerCapabilityRowV1,
     replacements: dict[LedgerCapabilityAxis, AxisAssessmentV1],
@@ -2355,22 +2375,34 @@ def _evaluate(
     *,
     report: LedgerLiveCensusReportV1 | None = None,
     subjects: tuple[EvidenceSubjectSnapshotV1, ...] = (_SUBJECT,),
-    union: LedgerUnionDenominatorV1 | None = None,
-    acceptance_anchor: LedgerAcceptanceRecordAnchorV1 | None = None,
-    acceptance_subjects: tuple[EvidenceSubjectSnapshotV1, ...] = (),
+    union: LedgerUnionDenominatorV1 | object | None = _UNSET,
+    acceptance_anchor: LedgerAcceptanceRecordAnchorV1 | object | None = _UNSET,
+    acceptance_subjects: tuple[EvidenceSubjectSnapshotV1, ...] | object = _UNSET,
 ):
-    """Evaluate a matrix against a fresh report unless a test supplies one."""
+    """Evaluate explicit observations; only omitted fixture inputs get defaults."""
     observed = report if report is not None else _report(tuple(row.identity.row_id for row in matrix.rows))
-    if acceptance_anchor is None:
-        acceptance_anchor, acceptance_subjects = _acceptance_record_anchor(matrix)
+    observed_union = _union_denominator() if union is _UNSET else union
+    if acceptance_anchor is _UNSET:
+        try:
+            canonical = LedgerCapabilityMatrixV1.model_validate(matrix.model_dump(mode="python"))
+        except (TypeError, ValueError, ValidationError):
+            selected_anchor: LedgerAcceptanceRecordAnchorV1 | None = None
+            selected_anchor_subjects: tuple[EvidenceSubjectSnapshotV1, ...] = ()
+        else:
+            selected_anchor, selected_anchor_subjects = _acceptance_record_anchor(canonical)
+    else:
+        selected_anchor = cast(LedgerAcceptanceRecordAnchorV1 | None, acceptance_anchor)
+        selected_anchor_subjects = (
+            () if acceptance_subjects is _UNSET else cast(tuple[EvidenceSubjectSnapshotV1, ...], acceptance_subjects)
+        )
     return evaluate_ledger_capability_gate(
         matrix,
         gate,
         observed_census=observed,
         observed_subjects=subjects,
-        observed_union=_union_denominator() if union is None else union,
-        acceptance_record_anchor=acceptance_anchor,
-        observed_acceptance_subjects=acceptance_subjects,
+        observed_union=cast(LedgerUnionDenominatorV1 | None, observed_union),
+        acceptance_record_anchor=selected_anchor,
+        observed_acceptance_subjects=selected_anchor_subjects,
     )
 
 
@@ -4138,6 +4170,32 @@ def test_gate_reopening_accepts_only_the_unchanged_reviewed_union_and_external_a
     )
 
 
+def test_absent_live_reviewed_union_relocks_every_gate() -> None:
+    matrix = _matrix_with_accepted_gate_receipts(_matrix())
+    anchor, acceptance_subjects = _acceptance_record_anchor(matrix)
+
+    reopened = reopened_gates_for_currentness(
+        matrix,
+        observed_census=_report(),
+        observed_subjects=(_SUBJECT,),
+        observed_union=None,
+        acceptance_record_anchor=anchor,
+        observed_acceptance_subjects=acceptance_subjects,
+    )
+    assessments = evaluate_ledger_capability_gates(
+        matrix,
+        observed_census=_report(),
+        observed_subjects=(_SUBJECT,),
+        observed_union=None,
+        acceptance_record_anchor=anchor,
+        observed_acceptance_subjects=acceptance_subjects,
+    )
+
+    assert reopened == frozenset(LedgerGate)
+    assert all(not assessment.closed for assessment in assessments)
+    assert all("live reviewed union observation is missing" in assessment.blockers for assessment in assessments)
+
+
 @pytest.mark.parametrize(
     "mutation",
     [
@@ -4221,17 +4279,66 @@ def test_any_reviewed_state_or_acceptance_drift_relocks_g0_through_g4(mutation: 
 
 def test_a_fully_reminted_union_and_receipt_chain_cannot_replace_the_external_anchor() -> None:
     accepted = _matrix_with_accepted_gate_receipts(_matrix())
-    anchor, acceptance_subjects = _acceptance_record_anchor(accepted)
-    reminted_union = accepted.current_union_review.model_copy(update={"union_digest": "sha256:" + "b" * 64})
-    reminted = _matrix_with_accepted_gate_receipts(_matrix(current_union_review=reminted_union))
+    old_anchor, old_acceptance_subjects = _acceptance_record_anchor(accepted)
+    reminted_live_union = _reminted_live_union()
+    reminted_review = LedgerUnionReviewSnapshotV1.from_union(reminted_live_union)
+    reminted = _matrix_with_accepted_gate_receipts(
+        _matrix(
+            accepted_union_review=reminted_review,
+            current_union_review=reminted_review,
+        )
+    )
+    new_anchor, new_acceptance_subjects = _acceptance_record_anchor(reminted)
 
-    reopened = reopened_gates_for_currentness(
+    stale_reopened = reopened_gates_for_currentness(
         reminted,
         observed_census=_report(),
         observed_subjects=(_SUBJECT,),
-        observed_union=_union_denominator(),
-        acceptance_record_anchor=anchor,
+        observed_union=reminted_live_union,
+        acceptance_record_anchor=old_anchor,
+        observed_acceptance_subjects=old_acceptance_subjects,
+    )
+    current_reopened = reopened_gates_for_currentness(
+        reminted,
+        observed_census=_report(),
+        observed_subjects=(_SUBJECT,),
+        observed_union=reminted_live_union,
+        acceptance_record_anchor=new_anchor,
+        observed_acceptance_subjects=new_acceptance_subjects,
+    )
+
+    assert reminted.accepted_union_review == reminted.current_union_review == reminted_review
+    assert stale_reopened == frozenset(LedgerGate)
+    assert current_reopened == frozenset()
+
+
+@pytest.mark.parametrize("malformed", ["union", "anchor"])
+def test_production_currentness_evaluators_fail_closed_for_malformed_external_inputs(malformed: str) -> None:
+    matrix = _matrix_with_accepted_gate_receipts(_matrix())
+    anchor, acceptance_subjects = _acceptance_record_anchor(matrix)
+    union: LedgerUnionDenominatorV1 | None = _union_denominator()
+    selected_anchor: LedgerAcceptanceRecordAnchorV1 | None = anchor
+    if malformed == "union":
+        union = union.model_copy(update={"digest": "sha256:" + "b" * 64})
+    else:
+        selected_anchor = anchor.model_copy(update={"reviewer": "fabricated-reviewer"})
+
+    reopened = reopened_gates_for_currentness(
+        matrix,
+        observed_census=_report(),
+        observed_subjects=(_SUBJECT,),
+        observed_union=union,
+        acceptance_record_anchor=selected_anchor,
+        observed_acceptance_subjects=acceptance_subjects,
+    )
+    assessments = evaluate_ledger_capability_gates(
+        matrix,
+        observed_census=_report(),
+        observed_subjects=(_SUBJECT,),
+        observed_union=union,
+        acceptance_record_anchor=selected_anchor,
         observed_acceptance_subjects=acceptance_subjects,
     )
 
     assert reopened == frozenset(LedgerGate)
+    assert all(not assessment.closed for assessment in assessments)

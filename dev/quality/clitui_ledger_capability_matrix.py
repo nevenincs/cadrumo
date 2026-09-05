@@ -5414,6 +5414,21 @@ def evaluate_ledger_capability_gates(
     active-hold closure across the one authorized post-G3 hold lift. It never
     suppresses census, matrix, receipt, or external-anchor currentness failures.
     """
+    canonical_matrix, canonical_census, canonical_subjects, validation_blockers = _canonical_gate_inputs(
+        matrix, observed_census, observed_subjects
+    )
+    if validation_blockers:
+        return tuple(_gate_assessment(gate, validation_blockers) for gate in _GATE_ORDER)
+    if canonical_matrix is None or canonical_census is None or canonical_subjects is None:
+        incomplete = ["gate input validation failed at <root>: incomplete_canonical_result"]
+        return tuple(_gate_assessment(gate, incomplete) for gate in _GATE_ORDER)
+
+    # Ordered evaluation must not inspect an unvalidated caller-owned model for
+    # the post-G3 historical-receipt exception.  A model_copy/model_construct
+    # mutation can otherwise make this evaluator raise before it can relock.
+    matrix = canonical_matrix
+    observed_census = canonical_census
+    observed_subjects = canonical_subjects
     assessments: list[GateAssessmentV1] = []
     prior_open = False
     for gate in _GATE_ORDER:

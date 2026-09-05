@@ -640,6 +640,29 @@ Every count below is names / modules. Ordered by size.
 """
 
 [[exported_unused_shape]]
+shape = "pass-through over its own argument"
+names = 1
+of_total = 368
+measured = "a single-return body delegating to a public attribute or method of one of the function's own parameters -- the `find_invoice` shape exactly, where the caller must already hold the object to make the call, so the export names something it could always reach"
+note = """
+This is the sharpest triage available and it comes back essentially empty,
+which is the useful part: the exported-unused population contains no further
+illusions of the kind that made `find_invoice` cheap to retire after weeks of
+being treated as a capability decision.
+
+The single hit is not one either. `describe_impersonation_target` returns
+`config.target_principal` verbatim, and says why in its own docstring: it
+exists as a named accessor so a future CLI show/status verb can surface the
+exact service-account identity before an operator approves an IAM role grant,
+without a live token exchange first. That is a staged accessor with a stated
+reason, not a wrapper nobody chose.
+
+So the 368 are genuinely decisions rather than deferred work. The 72 one-call
+-deep names remain a cheaper starting point for a reviewer, but none of them is
+resolvable by the reasoning that resolved `find_invoice`.
+"""
+
+[[exported_unused_shape]]
 shape = "single-return pass-through"
 names = 72
 of_total = 368
