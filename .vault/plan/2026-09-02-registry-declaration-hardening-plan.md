@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:9497bed1853a76f7dd88b692b60f1752cff6fb7c1bec577e164901d06f4daaf0'
+body_hash: 'sha256:26a3ed540ccc2cb4dedefd66200e1f2166388b4566a14753557862b217fea908'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -502,6 +502,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S620` - Derive the capability matrix's placeholder and identity checks from the model rather than a hardcoded tuple of field names, since a field added to either declaration would have been silently exempt while the validator went on naming three; `dev/quality/clitui_ledger_capability_matrix.py`.
 - [x] `W02.P02.S621` - Give the M200 reconciliation module a contention-aware budget, since its rebind-refusal case runs 251s alone but measured 305s under the repository's default parallelism against a 300-second wall-clock ceiling it carried no marker for, while the sibling two-channel-proof module already marks its own long case; `dev/registry/tests/test_m200_2024_full_reconciliation.py`.
 - [x] `W02.P02.S622` - Bound the one unbounded child-process wait in a unit-lane test and gate the class, since the per-test ceiling cannot interrupt a thread blocked in wait by the repository's own account, so the worker exits uncleanly and max-worker-restart zero stops the session naming a test that never hung; `dev/packaging/tests/test_build_scratch_reclaim.py dev/tests/test_no_unbounded_subprocess_wait.py`.
+- [x] `W02.P02.S623` - Retire the localized surface's dead file exemption and gate the list against the tree, since its one entry named a docs-root brief that commit 06e03da6a4 deleted and the exemption stayed behind excluding nothing while still reading as a reviewed decision; `dev/docs/i18n.py dev/docs/tests/test_i18n.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
