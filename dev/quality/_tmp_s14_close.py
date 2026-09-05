@@ -170,4 +170,17 @@ output = {
     "g0_missing_anchor": missing.model_dump(mode="json"),
     "g0_stale_anchor_subject": stale.model_dump(mode="json"),
 }
-print(json.dumps(output, indent=2, sort_keys=True))
+summary = {
+    "candidate_matrix_digest": output["candidate_matrix_digest"],
+    "pre_receipt_basis_digest": output["pre_receipt_basis_digest"],
+    "acceptance_attestation_digest": output["acceptance_attestation_digest"],
+    "closure_receipt_set_digest": attestation.closure_receipt_set_digest,
+    "g0_closure_basis_digest": receipt.matrix_closure_basis_digest,
+    "accepted_matrix_digest": output["accepted_matrix_digest"],
+    "external_anchor_subject_digest": output["external_anchor_subject_digest"],
+    "second_review_receipt_digest": output["second_review_receipt_digest"],
+    "g0_exact": output["g0_exact"],
+    "g0_missing_anchor": output["g0_missing_anchor"],
+    "g0_stale_anchor_subject": output["g0_stale_anchor_subject"],
+}
+print(json.dumps(summary, indent=2, sort_keys=True))
