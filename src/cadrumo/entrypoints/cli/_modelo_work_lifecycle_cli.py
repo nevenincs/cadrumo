@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass
-
 import typer
 
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -67,18 +64,6 @@ from ._modelo_cli_support import (
 )
 from ._modelo_payloads import WorkCreateResult, WorkDiscardResult, WorkListResult, WorkRenameResult, WorkStatusResult
 from ._modelo_rendering import advisory_notice, work_unit_lines, work_unit_list_lines, work_unit_payload
-
-
-@dataclass(frozen=True, slots=True)
-class LifecycleDeps:
-    activate_output_language: Callable[[typer.Context, OutputLanguage | None], None]
-    require_active_profile: Callable[[], None]
-    guard_foral_profile_ccaa: Callable[[], None]
-    resolve_year_period: Callable[..., Period]
-    resolve_work_unit_for_cli: Callable[..., WorkUnit]
-    resolve_default_actor: Callable[[], str]
-    bad_parameter_from_error: Callable[[BaseException], typer.BadParameter]
-    selector_bad_parameter: Callable[[BaseException], typer.BadParameter]
 
 
 def _validate_filing_year(year: int) -> None:

@@ -76,7 +76,7 @@ from ...domain.iva.establishment import (
     stated_country_code_status,
     territorial_scope_for_country,
 )
-from ...domain.iva.flow import IvaFlowDirection, flow_direction_for_invoice_kind, is_deducible_flow
+from ...domain.iva.flow import IvaFlowDirection, is_deducible_flow
 from ...domain.iva.lookup import rate_kinds_for_declared_rate
 from ...domain.iva.prorrata import (
     InputClassification,
@@ -94,12 +94,11 @@ from ...domain.iva.schema import (
 )
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.prorrata_register.register import ProrrataRegister
-from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ...domain.transactions.enums import BusinessClassification, TransactionLifecycleState
 from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
-from ._invoice_kind import invoice_kind_for_direction
 from .errors import AggregationValidationError, t
 
 _LedgerId = Annotated[
@@ -1625,23 +1624,6 @@ def validate_iva_ledger_counterparty_category(transaction: Transaction) -> IvaLe
         eu_member_state=transaction.counterparty_eu_member_state,
         identification_state=transaction.counterparty_identification_state,
     )
-
-
-def flow_direction_for(direction: TransactionDirection) -> IvaFlowDirection | None:
-    """Return the direction-only IVA flow, used as the settlement-flow gate.
-
-    This screens the bank direction before the IVA category is known
-    (an ``UNKNOWN``/``UNRESOLVED`` direction is not an IVA settlement
-    flow). The final flow that lands on the observation is recomputed
-    once the effective :class:`IvaCategory` is resolved via
-    :func:`derive_flow_for_classification`, which routes reverse-charge
-    categories to :attr:`~domain.iva.IvaFlowDirection.INVERSION_SUJETO_PASIVO` while
-    preserving ``REPERCUTIDO``/``SOPORTADO`` for every other category.
-    """
-    invoice_kind = invoice_kind_for_direction(direction)
-    if invoice_kind is None:
-        return None
-    return flow_direction_for_invoice_kind(invoice_kind)
 
 
 def business_proportionality_for(transaction: Transaction) -> Decimal | None:
