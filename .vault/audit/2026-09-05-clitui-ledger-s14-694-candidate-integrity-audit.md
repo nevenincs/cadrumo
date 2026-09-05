@@ -35,7 +35,9 @@ digest; the 761-observation / 770-edge / 694-row accounting and 680-held / 14-un
 TUI partition; and the exact `ledger.import.prepare` semantic disposition. It also
 checked the one installed read-only Overview route, six component-only routes, zero
 internal message consumers, zero installed mutation doors, and the six-file,
-62-function governed TUI harness.
+62-function governed TUI harness. The review additionally checked the explicit S14
+publication coordinates against the canonical matrix and TUI census, including the
+inert production classification action reference.
 
 Plan ownership remains singular: 27 retained predecessor-evidence rows and one
 retired-premise marker are distinct from the five open displaced-and-held rows.
@@ -62,11 +64,23 @@ the repaired values agree with `761 - 546 = 215`, the live backend census, and t
 never-accepted 771-edge interim projection now appear only in the explicitly
 non-authoritative historical subsection.
 
+### stale-cohort-and-action-reference-publication | medium | resolved stale S14 publication coordinates
+
+The candidate publication retained pre-preparation cohort arithmetic: 689 planned
+rows instead of the current 690, 147 non-registry rows instead of 148, 13
+backend-helper/TUI-not-applicable rows instead of 14, and 689 planned rows retaining
+the `PRODUCT` gap instead of 690. Its composition prose also called the two read
+references the complete production action-reference set, omitting the separately
+inert `operator.ledger.classify` reference that has no target or submitter. The
+canonical matrix/TUI consistency gate now derives these values, requires unique
+publication coordinates, and preserves the zero executable mutation-door ruling.
+
 ## Recommendations
 
 No further code or governance repair is recommended for the resolved
-`current-census-publication` finding. Preserve the corrected 64/22/215 narrative and
-its currentness tests when regenerating the candidate.
+`current-census-publication` or `stale-cohort-and-action-reference-publication`
+findings. Preserve the corrected 64/22/215 narrative, S14 cohort coordinates, and
+their currentness tests when regenerating the candidate.
 
 Do not treat this audit as S14 acceptance. Keep the candidate at `REJECT`, G0
 `OPEN`, with zero receipts, no anchor, and S14 unchecked until a separate independent

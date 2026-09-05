@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:057359e2cc97e476436ec8fb54f73af4c2bc141cc95bafa31035334f15465a90'
+body_hash: 'sha256:b6fe7fff84a56a4220ca11cff2a58bac2d340401e04ed95a9f66cf717b396f6c'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -549,6 +549,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S667` - Make the unallowlisted-write negative control prove it fired: the escape is planted only on an argv match, so a drifted command shape left the absence claim passing over a defect never introduced; `dev/quality/tests/test_object_name_replay.py`.
 - [x] `W02.P02.S668` - Pin each receipt-integrity case to its own refusal: the bare raises absorbed any error, and the changed-path case had never reached its own check because the identity digest covers that field; `dev/quality/tests/test_object_name_replay.py`.
 - [x] `W02.P02.S669` - Hold the remaining replay refusal claims apart: fifteen cases across three gates shared bare raises, and the allowlist gate never reaches the branch it is named for because an upstream check already covers changed_paths; `dev/quality/tests/test_object_name_replay.py`.
+- [x] `W02.P02.S670` - Make the generated-tree drift gate reach its injected defects: a synthetic render profile refused eight of eleven cases on an identity mismatch, and a transcribed modelo injection meant one defect went undetected; `dev/registry/tests/test_generated_tree_check.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

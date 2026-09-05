@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-05'
-body_hash: 'sha256:5bd7c78f9f1eca786cc1df30cdfdb86f3daae20f67e469fa7b5b656921f1b492'
+body_hash: 'sha256:a661b725e8d481ef217942d6fc139a3003ccb4c9a3b8bad949ed0970d67b5a32'
 ---
 
 <!-- RETIRED: S370 -->
@@ -646,6 +646,7 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S430` - Label every remaining M200/2024 casilla whose official text is pinned by digest. 116 casillas beyond 00067 carry an adjudication whose official_label_sha256 matches a cell in the shipped record design; those are grounded and derivable now, while the 79 with no adjudication and the 3 whose pin matches no cell need adjudication first. Spanish is the pinned cell verbatim; the other locales compose segment-by-segment from a glossary mined out of the label pairs the catalogues already ship, so a phrase translated once reads the same everywhere it recurs.; `src/cadrumo/locales/*/modelo/schema/200.yml`.
 - [x] `W08.P30.S431` - Ground the M200/2024 casillas whose number occurs exactly once in the pinned record design, and hold the ones whose declaration contradicts it. The unlabelled casillas are not cosmetic: the modelo work-review screen resolves a label for every registry casilla and raises MissingTranslationError, so one absent label breaks the whole screen for this revision. Where a number appears once there is nothing to disambiguate, but casilla 00067 showed a declaration can name a section its own design does not put the number in, so accept a unique occurrence only when the declaration corroborates it and hold the rest.; `src/cadrumo/locales/*/modelo/schema/200.yml, dev/locales/tests/test_casilla_label_matches_pinned_official_text.py`.
 - [x] `W08.P30.S432` - Disambiguate the repeated-number M200/2024 casillas by the record page their own id names. The record design is segmented by page headers, and a composite casilla id carries its page, so a number that repeats across pages resolves to exactly one cell without an adjudication choosing it. Validate the page selector against the shipped corpus before trusting it, corroborate each selection against the declaration's section, and hold whatever disagrees.; `src/cadrumo/locales/*/modelo/schema/200.yml`.
+- [x] `W08.P30.S433` - Close the ca and hu label gap behind es for M200/2024, and say what blocks the rest. Three Catalan and one Hungarian label were simply absent for casillas es already carries; two of the Catalan ones are genuine cognates whose Spanish and Catalan forms are the same word, so they take an allowlist justification rather than an invented difference. The remaining 24 Hungarian gaps sit behind an ellipsis-truncated Spanish source and cannot be translated as fragments.; `src/cadrumo/locales/ca/modelo/schema/200.yml, src/cadrumo/locales/hu/modelo/schema/200.yml, src/cadrumo/locales/_intentional_identical.json`.
 
 ## Parallelization
 

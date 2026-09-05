@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:69e44891152a5df474f4f67d5c354a5b7400a1452cc9bfbc2072e5df98fa06f3'
+body_hash: 'sha256:46d026aff12be8c4be86290e564d6175ef02bd7ad21097e57b008633c64168f0'
 step_id: 'S18'
 related:
   - "[[2026-09-03-duplication-burndown-plan]]"
@@ -19,94 +19,50 @@ related:
 
 ## Changes
 
-- `M` `src/cadrumo/application/filing/producer_snapshot.py`
+- `M` `dev/quality/suite.py`
+- `M` `dev/quality/tests/test_suite_gate_table.py`
 - `verify:` `uv run --no-sync python -m dev.audit.duplication` -> `pass`
 - `verify:` `uv run --no-sync python -m dev.audit.dead_code` -> `pass`
-- `verify:` `uv run --no-sync python -m dev.quality.unused_symbol_ratchet` -> `pass`
-- `verify:` `uv run --no-sync ruff check src/cadrumo dev` -> `pass`
+- `verify:` `uv run --no-sync just check-semantic` -> `pass`
+- `verify:` `uv run --no-sync ruff check .` -> `pass`
+- `verify:` `uv run --no-sync ruff format --check .` -> `pass`
+- `verify:` `uv run --no-sync python -m dev.quality.types` -> `pass`
 - `verify:` `uv run --no-sync lint-imports` -> `pass`
+- `verify:` `uv run --no-sync python -m dev.quality.relative_imports` -> `pass`
+- `verify:` `uv run --no-sync python -m dev.quality.suite` -> `fail, 2 of 12 gates, both peer-owned`
 - `verify:` `uv run --no-sync python -m dev.quality.unreachable_module_ratchet` -> `fail, peer-owned`
-- `verify:` `uv run --no-sync ty check src/cadrumo/domain src/cadrumo/application src/cadrumo/core src/cadrumo/llm` -> `fail, peer-owned`
-- `verify:` `uv run --no-sync ruff format --check src/cadrumo dev` -> `fail, peer-owned`
+- `verify:` `uv run --no-sync python -m dev.quality.unused_symbol_ratchet` -> `fail, peer-owned`
 
 ## Notes
 
-Measured at revision 96b58acd4b. No threshold, exclusion, baseline, skip or allowlist was
-changed to reach any of these results.
+Re-measured against the current tree; the earlier record for this Step was
+taken at a revision whose results have since inverted in both directions, so it
+is replaced rather than appended to.
 
-Green: the duplication runner, the dead-code audit, the unused-symbol ratchet, the
-repository lint, and all eleven import contracts. The clone count stands at 10 with every
-group carrying exactly one disposition and zero uncovered, which is the closure the amended
-governing decision defines.
+Green: the duplication runner at 10 clones and 0.05 percent with every group
+carrying exactly one disposition and zero uncovered, which is the closure the
+amended governing decision defines; the dead-code audit; the semantic leak
+screen; whole-tree lint and format; types; both import gates; and the docstring,
+unconsumed-export and write-path ratchets. The aggregate suite reports 10 of 12.
 
-One repair was needed to get lint green, and it was not this campaign's breakage.
-`application/filing/producer_snapshot.py` carried six `__all__` entries -- `FilingElectionFactSet`,
-`GeneralFilingProfileFactSet`, `M303FilingFactSet`, `Modelo111ProfileFactSet`,
-`Modelo202ActivityFactSet` and `TaxpayerIdentityFactSet` -- naming types that exist nowhere
-in the tree. The file was committed and clean, so this was landed breakage rather than
-in-flight work, and it failed the repository-wide lint gate for everyone. The six entries
-were removed; nothing defines or imports those names, so no import could have depended on
-them, and the module's declared surface now matches what it actually exports. Proven by A/B
-that the edit changes nothing else: one type diagnostic before and after.
+Red, both peer-owned and both already classified: the module ratchet on three
+modules that fit no available disposition, and the symbol ratchet on two
+symbols. The owner decisions those need are tracked in the reachability plan and
+are not resolvable from here.
 
-## Notes on what is not green, and why it is not closed here
+Two gates were found running different arguments in the aggregate suite than in
+their own justfile recipe, which is how a gate defined twice fails: the recipe
+and the table disagree in silence. The dependency gate scanned the harness
+package in the recipe but not in the table, so the table reported two
+dependencies as declared-but-unused when both are imported there; widening the
+table's scan to match removed both findings and surfaced no new ones. The
+architecture gate ran four test files in the recipe and two in the table, so two
+architecture gates never ran in the aggregate at all. Both were aligned to their
+recipe, and a gate now compares each table entry's arguments against its recipe.
 
-Three gates fail, all from one concurrent refactor that is adding a `parameters` argument
-across the bienes inversion surface:
+One transient was observed and is not a finding: the suite recorded a syntax
+error in a locale test that a peer was rewriting during the run. The file parses
+and the gate exits 0 on re-measurement.
 
-* the module ratchet, on `cadrumo.domain.contabilidad` and `cadrumo.domain.is_compensation`;
-* `ty`, on call sites in `producer_snapshot` missing the new `parameters` argument, and on a
-  malformed import in a registry test whose path repeats a package segment;
-* `ruff format`, on eleven files including `dev/ci/tests`.
-
-None is this campaign's, and none is a false green: each is an instrument correctly
-reporting a real defect in landed or in-flight peer work. Fixing a peer's mid-refactor call
-sites would mean guessing the argument they intend to thread, which is their decision.
-
-This Step's stated bar is that the type, lint, format and repository gates pass from one
-stable revision. Lint now does; type and format do not. The Step is therefore recorded and
-left OPEN rather than closed against a bar it does not meet, because closing it would assert
-a joined green state that does not exist.
-
-## Re-measurement
-
-Re-run against the current tree. The verdict is unchanged and the Step stays open.
-
-Green: duplication, dead code, `ruff check` over `src` and `dev`, all eleven import
-contracts, `dev.audit.semantic`, and the four architecture gates (32 tests).
-
-Still failing, still peer-owned: `check-types` on
-`domain/bienes_inversion/regularizacion_parameters.py`, and `check-format` on eleven
-files.
-
-One correction to the count above. `ruff format --check` reported fifteen files, not
-eleven: four had become this campaign's own drift, introduced after the original
-measurement by edits that ran `ruff check` but not `ruff format` afterwards -
-`dev/audit/unreachable_code.py`, the two new screen test modules, and
-`domain/calculations/registry/applicability.py`. Those four are now formatted, which
-returns the count to the eleven peer-owned files this record already named. The lesson
-is that a campaign auditing drift can introduce it: run the format check over the whole
-tree periodically, not only over the files an iteration touched.
-
-## Blocker trajectory
-
-Watched across several days rather than sampled once, because the direction
-matters more than the number to whoever closes this Step.
-
-`check-format` went 11, 12, 13, 14, 15 over six days. Every addition arrived
-with a peer commit adding a `dev/` test, and the count held across commits that
-touched only docs and vault records. The converse does not hold, and the record
-said so too strongly before this correction: at least one `dev/` test commit
-landed already formatted and added nothing. So the mechanism is a tendency, not
-a rule -- some of that work runs the formatter and some does not. Every one of the thirteen is peer-owned: none appears in a
-`## Changes` list in this campaign's execution records.
-
-So this blocker is not a fixed backlog waiting to be cleared; it grows with the
-work landing beside it, which suggests `check-format` is not running in that
-workflow. Left alone it will not converge, and this Step drifts further from
-closable rather than nearer. `just check-format` on the owning branch before
-the next batch lands is what changes that.
-
-`check-types` is unchanged over the same period: 16 diagnostics across
-`domain/bienes_inversion/regularizacion_parameters.py` and
-`application/workbench_generation.py`, neither of which this campaign touched.
+No threshold, exclusion, baseline, skip or allowlist was changed. The dependency
+scan was widened, which makes the gate see more rather than tolerate more.
