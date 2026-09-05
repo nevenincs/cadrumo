@@ -294,6 +294,49 @@ class _RenameTransformer(cst.CSTTransformer):
     def _is_authorized_module_literal(self, node: cst.SimpleString) -> bool:
         return self._is_form_module_literal(node) or self._is_campaign_execution_oracle_literal(node)
 
+    def _is_export_list_entry(self, node: cst.SimpleString) -> bool:
+        """Report whether ``node`` is a string element of an ``__all__`` binding.
+
+        An export entry names a symbol the module owns, so a symbol rename has to
+        rewrite it in the same pass that renames the definition. Both the plain
+        (``__all__ = [...]``) and annotated (``__all__: list[str] = [...]``) forms
+        bind the export surface, and the sequence may be a list, tuple, or set.
+        """
+        element = self.get_metadata(ParentNodeProvider, node, None)
+        if not isinstance(element, cst.Element):
+            return False
+        sequence = self.get_metadata(ParentNodeProvider, element, None)
+        if not isinstance(sequence, cst.List | cst.Tuple | cst.Set):
+            return False
+        binding = self.get_metadata(ParentNodeProvider, sequence, None)
+        if isinstance(binding, cst.Assign):
+            return any(
+                isinstance(target.target, cst.Name) and target.target.value == "__all__" for target in binding.targets
+            )
+        if isinstance(binding, cst.AnnAssign):
+            return (
+                sequence is binding.value and isinstance(binding.target, cst.Name) and binding.target.value == "__all__"
+            )
+        return False
+
+    def _renamed_export_entry(self, node: cst.SimpleString) -> cst.SimpleString | None:
+        """Return the rewritten export entry for ``node``, or ``None`` when it is not one."""
+        value = node.evaluated_value
+        if not isinstance(value, str) or not self._is_export_list_entry(node):
+            return None
+        for operation in self.operations:
+            if operation.operation_kind != "symbol-rename":
+                continue
+            _old_module, old_name, _new_module, new_name = self._operation_names(operation)
+            if value != old_name:
+                continue
+            self.evidence[operation.operation_id].add("export")
+            # Keep the entry's own prefix and quote characters: an export name is an
+            # identifier, so only the spelling changes and the surrounding literal
+            # style stays exactly as the module authored it.
+            return node.with_changes(value=f"{node.prefix}{node.quote}{new_name}{node.quote}")
+        return None
+
     @override
     def visit_ClassDef(self, node: cst.ClassDef) -> bool | None:
         self._declaration_name_nodes.add(id(node.name))
@@ -317,6 +360,11 @@ class _RenameTransformer(cst.CSTTransformer):
             for operation in self.operations
         ):
             return True
+        if self._is_export_list_entry(node) and any(
+            operation.operation_kind == "symbol-rename" and value == self._operation_names(operation)[1]
+            for operation in self.operations
+        ):
+            return True
         self._refuse_opaque_spelling(value)
         return True
 
@@ -325,6 +373,9 @@ class _RenameTransformer(cst.CSTTransformer):
         value = original_node.evaluated_value
         if not isinstance(value, str):
             return updated_node
+        renamed_export = self._renamed_export_entry(original_node)
+        if renamed_export is not None:
+            return renamed_export
         for operation in self.operations:
             old_module, _old_name, new_module, _new_name = self._operation_names(operation)
             if (

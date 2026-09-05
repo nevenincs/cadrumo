@@ -796,3 +796,70 @@ def test_output_original_digest_and_mutation_method_canary(tmp_path: Path, monke
 
     assert result.outputs[0].original_sha256 == _digest(original)
     assert _digest(result.outputs[0].content or b"") == _digest(b"class Widget:\n    pass\n")
+
+
+def test_symbol_proposal_rewrites_export_entries_in_the_same_pass(tmp_path: Path) -> None:
+    inventory = _inventory(
+        tmp_path,
+        {
+            "src/cadrumo/widget_contract.py": (
+                '__all__ = ["Widgets", "build"]\n\n\nclass Widgets:\n    pass\n\n\ndef build() -> Widgets:\n'
+                "    return Widgets()\n"
+            ),
+        },
+    )
+    sources = _tree_bytes(tmp_path)
+    declaration = _declaration(inventory, path="src/cadrumo/widget_contract.py", name="Widgets")
+    operation = _operation(
+        declaration,
+        target_name="Widget",
+        sources=sources,
+        expected_reference_classes=("definition", "export"),
+    )
+
+    result = plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
+
+    assert result.content_by_path() == {
+        "src/cadrumo/widget_contract.py": (
+            b'__all__ = ["Widget", "build"]\n\n\nclass Widget:\n    pass\n\n\ndef build() -> Widget:\n'
+            b"    return Widget()\n"
+        ),
+    }
+
+
+def test_annotated_export_entry_is_rewritten_with_the_definition(tmp_path: Path) -> None:
+    inventory = _inventory(
+        tmp_path,
+        {
+            "src/cadrumo/widget_contract.py": ('__all__: list[str] = ["Widgets"]\n\n\nclass Widgets:\n    pass\n'),
+        },
+    )
+    sources = _tree_bytes(tmp_path)
+    declaration = _declaration(inventory, path="src/cadrumo/widget_contract.py", name="Widgets")
+    operation = _operation(
+        declaration,
+        target_name="Widget",
+        sources=sources,
+        expected_reference_classes=("definition", "export"),
+    )
+
+    result = plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
+
+    assert result.content_by_path() == {
+        "src/cadrumo/widget_contract.py": (b'__all__: list[str] = ["Widget"]\n\n\nclass Widget:\n    pass\n'),
+    }
+
+
+def test_unrelated_string_matching_the_old_name_is_still_refused(tmp_path: Path) -> None:
+    inventory = _inventory(
+        tmp_path,
+        {
+            "src/cadrumo/widget_contract.py": ("class Widgets:\n    pass\n"),
+            "dev/consumer.py": ('label = "Widgets"\n'),
+        },
+    )
+    declaration = _declaration(inventory, path="src/cadrumo/widget_contract.py", name="Widgets")
+    operation = _operation(declaration, target_name="Widget", sources=_tree_bytes(tmp_path))
+
+    with pytest.raises(ObjectNameTransformError, match="unsupported string reference"):
+        plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
