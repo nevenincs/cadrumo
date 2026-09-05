@@ -136,6 +136,8 @@ _S14_PUBLICATION_COORDINATE_PATTERN: Final[re.Pattern[str]] = re.compile(
     r"^\| `(?P<coordinate>s14\.[a-z0-9-]+(?:\.[a-z0-9-]+)*)` \| (?P<value>[^|]+) \|$",
     re.MULTILINE,
 )
+_S14_PUBLICATION_SECTION_HEADING: Final[str] = "#### S14 publication consistency coordinates"
+_S14_PUBLICATION_TABLE_HEADER: Final[str] = "| Coordinate | Current value |"
 _S14_PUBLICATION_COORDINATES: Final[frozenset[str]] = frozenset(
     {
         "s14.cohort.planned-semantic-homes",
@@ -147,6 +149,51 @@ _S14_PUBLICATION_COORDINATES: Final[frozenset[str]] = frozenset(
         "s14.tui.production-executable-mutation-doors",
     }
 )
+
+
+def _s14_coordinate_table(
+    path: Path,
+) -> tuple[tuple[re.Match[str], ...], frozenset[int]] | None:
+    """Return only the canonical S14 coordinate rows, rejecting a malformed table."""
+    lines = path.read_text(encoding="utf-8").splitlines()
+    section_starts = tuple(
+        index for index, line in enumerate(lines) if line.strip() == _S14_PUBLICATION_SECTION_HEADING
+    )
+    if not section_starts:
+        return None
+    if len(section_starts) != 1:
+        raise AssertionError("S14 publication coordinate section must be unique")
+
+    section_start = section_starts[0]
+    section_end = next(
+        (index for index in range(section_start + 1, len(lines)) if lines[index].startswith("#### ")),
+        len(lines),
+    )
+    table_starts = tuple(
+        index
+        for index in range(section_start + 1, section_end)
+        if lines[index].strip() == _S14_PUBLICATION_TABLE_HEADER
+    )
+    if len(table_starts) != 1:
+        raise AssertionError("S14 publication coordinate table must be unique")
+
+    table_start = table_starts[0]
+    separator_index = table_start + 1
+    if separator_index >= section_end or lines[separator_index].strip() != "| --- | --- |":
+        raise AssertionError("S14 publication coordinate table separator drifted")
+
+    matches: list[re.Match[str]] = []
+    row_indices: set[int] = set()
+    for index in range(separator_index + 1, section_end):
+        line = lines[index]
+        if not line.strip() or not line.startswith("|"):
+            break
+        coordinate = _S14_PUBLICATION_COORDINATE_PATTERN.match(line)
+        if coordinate is None:
+            raise AssertionError("S14 publication coordinate table row drifted")
+        matches.append(coordinate)
+        row_indices.add(index)
+    return tuple(matches), frozenset(row_indices)
 
 
 def _published_matrix_contract_digest(path: Path = _REFERENCE_PATH) -> str:
@@ -162,7 +209,13 @@ def _published_matrix_contract_digest(path: Path = _REFERENCE_PATH) -> str:
 
 def _published_s14_coordinates(path: Path = _REFERENCE_PATH) -> dict[str, str]:
     """Read unique S14 prose coordinates and reject publication-shape drift."""
-    matches = tuple(_S14_PUBLICATION_COORDINATE_PATTERN.finditer(path.read_text(encoding="utf-8")))
+    table = _s14_coordinate_table(path)
+    if table is None:
+        raise AssertionError("S14 publication coordinate table is missing")
+    matches, _ = table
+    all_matches = tuple(_S14_PUBLICATION_COORDINATE_PATTERN.finditer(path.read_text(encoding="utf-8")))
+    if len(all_matches) != len(matches):
+        raise AssertionError("S14 publication coordinates must live in the canonical coordinate table")
     coordinates = tuple(match.group("coordinate") for match in matches)
     if len(coordinates) != len(set(coordinates)):
         raise AssertionError("S14 publication coordinates must be unique")
@@ -175,22 +228,64 @@ def _published_s14_coordinates(path: Path = _REFERENCE_PATH) -> dict[str, str]:
 
 
 _S14_CURRENT_COHORT_RESTATEMENT_PATTERNS: Final[tuple[tuple[str, re.Pattern[str]], ...]] = (
-    ("planned cohort", re.compile(r"(?<![A-Za-z0-9])690(?![A-Za-z0-9])")),
-    ("non-registry cohort", re.compile(r"(?<![A-Za-z0-9])148(?![A-Za-z0-9])")),
+    (
+        "planned cohort",
+        re.compile(
+            r"(?ix)(?:\b690\b[^.!?\r\n]{0,120}\bplanned\b|"
+            r"\bplanned\b[^.!?\r\n]{0,120}\b690\b)"
+        ),
+    ),
+    (
+        "non-registry cohort",
+        re.compile(
+            r"(?ix)(?:\b148\b[^.!?\r\n]{0,120}\bnon[- ]registry\b|"
+            r"\bnon[- ]registry\b[^.!?\r\n]{0,120}\b148\b)"
+        ),
+    ),
     (
         "backend-helper/TUI-not-applicable cohort",
         re.compile(
-            r"(?ix)(?:(?<![A-Za-z0-9])14(?![A-Za-z0-9])[^\n]*(?:backend[- ]helper|tui[- ]not[- ]applicable)|"
-            r"(?:backend[- ]helper|tui[- ]not[- ]applicable)[^\n]*(?<![A-Za-z0-9])14(?![A-Za-z0-9]))"
+            r"(?ix)(?:\b(?:exactly[ \t]+)?(?:14|fourteen)\b[^.!?\r\n]{0,120}"
+            r"(?:backend[ \t-]+helper(?:[ \t-]+only)?|"
+            r"tui[ \t/-]+(?:not[ \t-]+applicable|n[ \t/-]*a))|"
+            r"(?:backend[ \t-]+helper(?:[ \t-]+only)?|"
+            r"tui[ \t/-]+(?:not[ \t-]+applicable|n[ \t/-]*a))"
+            r"[^.!?\r\n]{0,120}\b(?:exactly[ \t]+)?(?:14|fourteen)\b)"
         ),
     ),
-    ("read action reference", re.compile(r"operator\.ledger\.(?:evidence\.review\.list|review)(?![A-Za-z0-9])")),
-    ("classification action reference", re.compile(r"operator\.ledger\.classify(?![A-Za-z0-9])")),
+    (
+        "TUI applicability partition",
+        re.compile(r"(?ix)\b680[ \t]*/[ \t]*(?:14|fourteen)\b"),
+    ),
+    (
+        "read action reference",
+        re.compile(
+            r"(?ix)\boperator(?:[ \t]*\.[ \t]*|[ \t]*-[ \t]*|[ \t]+)ledger"
+            r"(?:[ \t]*\.[ \t]*|[ \t]*-[ \t]*|[ \t]+)"
+            r"(?:evidence(?:[ \t]*\.[ \t]*|[ \t]*-[ \t]*|[ \t]+)review"
+            r"(?:[ \t]*\.[ \t]*|[ \t]*-[ \t]*|[ \t]+)list|review)(?![A-Za-z0-9])"
+        ),
+    ),
+    (
+        "classification action reference",
+        re.compile(
+            r"(?ix)\boperator(?:[ \t]*\.[ \t]*|[ \t]*-[ \t]*|[ \t]+)ledger"
+            r"(?:[ \t]*\.[ \t]*|[ \t]*-[ \t]*|[ \t]+)classify(?![A-Za-z0-9])"
+        ),
+    ),
     (
         "action-reference count",
         re.compile(
-            r"(?ix)(?:\b(?:exactly\s+)?two\b[^\n]*(?:actionreferences?|read-action)|"
-            r"\bzero\b[^\n]*mutation[- ]doors)"
+            r"(?ix)\b(?:exactly[ \t]+)?(?:2|two)\b[ \t]+(?:ledger[ \t]+)?"
+            r"(?:read[ \t-]+)?action[ \t-]*(?:references?|refs?|ids?)\b"
+        ),
+    ),
+    (
+        "mutation-door count",
+        re.compile(
+            r"(?ix)(?:\b(?:exactly[ \t]+)?(?:0|zero)\b[^.!?\r\n]{0,120}"
+            r"\bmutation[ \t-]+doors?\b|\bmutation[ \t-]+doors?\b"
+            r"[^.!?\r\n]{0,120}\b(?:exactly[ \t]+)?(?:0|zero)\b)"
         ),
     ),
 )
@@ -198,17 +293,19 @@ _S14_CURRENT_COHORT_RESTATEMENT_PATTERNS: Final[tuple[tuple[str, re.Pattern[str]
 
 def _s14_prose_without_coordinate_rows(path: Path) -> str:
     """Return an S14 surface with its canonical coordinate rows removed."""
-    return "\n".join(
-        line
-        for line in path.read_text(encoding="utf-8").splitlines()
-        if not _S14_PUBLICATION_COORDINATE_PATTERN.match(line)
-    )
+    lines = path.read_text(encoding="utf-8").splitlines()
+    table = _s14_coordinate_table(path)
+    if table is None:
+        return "\n".join(lines)
+    _, coordinate_row_indices = table
+
+    return "\n".join(line for index, line in enumerate(lines) if index not in coordinate_row_indices)
 
 
 def _assert_s14_current_facts_have_one_home(*paths: Path) -> None:
     """Reject current S14 cohort/action facts outside the derived coordinate table."""
     for path in paths:
-        prose = _s14_prose_without_coordinate_rows(path)
+        prose = _s14_prose_without_coordinate_rows(path).replace("`", "")
         for label, pattern in _S14_CURRENT_COHORT_RESTATEMENT_PATTERNS:
             if pattern.search(prose):
                 raise AssertionError(f"current S14 {label} must live only in the coordinate table: {path}")
@@ -4769,14 +4866,26 @@ def test_s14_publication_coordinates_match_canonical_matrix_and_tui_census() -> 
         ("reference", "The current backend-helper/TUI-not-applicable cohort contains 14 rows."),
         ("reference", "The current planned PRODUCT-gap cohort contains 690 rows."),
         ("reference", "The current production wiring injects two read ActionReferences."),
+        ("reference", "The 680/14 row partition remains currentness-bound."),
+        ("reference", "The 680 / `fourteen` row partition remains currentness-bound."),
+        ("reference", "Production composition injects exactly two Ledger action references."),
+        ("reference", "Production composition injects 2 read action references."),
+        ("reference", "Production composition injects exactly `two` Ledger action-references."),
+        ("reference", "Production composition injects exactly 2 Ledger action`references`."),
+        ("reference", "Production composition includes operator-ledger-review."),
+        ("reference", "Production composition includes operator . ledger . review."),
+        ("reference", "Production composition includes `operator`-`ledger`-`evidence`-`review`-`list`."),
+        ("reference", "Production composition includes `operator` . `ledger` . `classify`."),
+        ("reference", "Production composition exposes exactly 0 mutation doors."),
+        ("reference", "Production composition exposes zero mutation-doors."),
+        ("reference", "The TUI excludes exactly fourteen backend-helper-only capabilities."),
+        ("reference", "The TUI excludes 14 TUI/N/A capabilities."),
         ("reference", "The current production wiring includes operator.ledger.review."),
         ("record", "The current planned cohort contains 690 rows."),
         ("record", "The current production wiring includes operator.ledger.classify."),
     ],
 )
-def test_s14_single_home_detector_rejects_current_restatements(
-    tmp_path: Path, surface: str, restatement: str
-) -> None:
+def test_s14_single_home_detector_rejects_current_restatements(tmp_path: Path, surface: str, restatement: str) -> None:
     """A current cohort/action fact added outside the coordinate table must fail closed."""
     source_path = _REFERENCE_PATH if surface == "reference" else _S14_RECORD_PATH
     candidate = tmp_path / f"{surface}.md"
@@ -4789,7 +4898,7 @@ def test_s14_single_home_detector_rejects_current_restatements(
             _assert_s14_current_facts_have_one_home(candidate)
 
 
-@pytest.mark.parametrize("mutation", ["changed", "missing", "duplicate"])
+@pytest.mark.parametrize("mutation", ["changed", "missing", "duplicate", "outside"])
 def test_s14_publication_coordinate_detector_rejects_prose_drift(tmp_path: Path, mutation: str) -> None:
     """The publication gate has detector teeth for changed, missing, and duplicate coordinates."""
     source = _REFERENCE_PATH.read_text(encoding="utf-8")
@@ -4800,9 +4909,11 @@ def test_s14_publication_coordinate_detector_rejects_prose_drift(tmp_path: Path,
     elif mutation == "missing":
         assert source.count(coordinate_line) == 1
         source = source.replace(coordinate_line + "\n", "", 1)
-    else:
+    elif mutation == "duplicate":
         assert source.count(coordinate_line) == 1
         source = source.replace(coordinate_line, coordinate_line + "\n" + coordinate_line, 1)
+    else:
+        source = source + "\n" + coordinate_line + "\n"
     candidate = tmp_path / "reference.md"
     candidate.write_text(source, encoding="utf-8")
 

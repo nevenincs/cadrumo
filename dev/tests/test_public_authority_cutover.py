@@ -78,6 +78,17 @@ def _production_and_docs_corpus() -> tuple[Path, ...]:
 def test_each_relocated_symbol_has_one_public_definition() -> None:
     """The move leaves one definition in the public module and no old files."""
     core_root = _REPOSITORY_ROOT / "src" / "cadrumo" / "core"
+    # The absences below prove the retirement only while this directory is
+    # the one the cutover moved things INTO. The imports further down resolve
+    # through the installed package, not this path, so a relocated core/ would
+    # leave them passing while both files were 'absent' from a directory that
+    # no longer holds the public modules. Anchored on the replacements,
+    # derived from the same _TARGETS the assertions below walk.
+    for module_name in _TARGETS:
+        assert (core_root / f"{module_name}.py").is_file(), (
+            f"{core_root} does not hold {module_name}.py, so the retired-file absences "
+            "below are claims about the wrong directory"
+        )
     assert not (core_root / "_credentials.py").exists()
     assert not (core_root / "_directory_scan.py").exists()
 

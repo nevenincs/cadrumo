@@ -7,6 +7,8 @@ from pathlib import Path
 import pytest
 
 from ..quality.import_hygiene_scan import (
+    PKG_ROOT,
+    REPO_ROOT,
     RETIRED_TUI_PACKAGE,
     RETIRED_TUI_ROOT,
     TuiRetirementRemnant,
@@ -43,6 +45,22 @@ def _remnants(
 
 def test_live_tree_is_the_zero_remnant_fixed_point() -> None:
     """The retired path is physically absent, with no source import or string reach."""
+    # Both claims are satisfied by a scan that reached nothing. Unlike every
+    # sibling here, this one runs on the scanner's DEFAULT roots, and if those
+    # resolve to a tree that does not exist the walk returns () without
+    # inspecting a single file, while the absence below holds over a directory
+    # that was never there. Anchored on the roots the scan actually consults.
+    assert RETIRED_TUI_ROOT.parent.is_dir(), (
+        f"{RETIRED_TUI_ROOT.parent} is gone, so the retired path's absence proves nothing"
+    )
+    assert (REPO_ROOT / "dev").is_dir(), "the development root the scan consults is gone"
+    package_modules = sum(1 for _ in PKG_ROOT.rglob("*.py"))
+    # A floor, not a pinned count: live the package holds 5,857 modules.
+    assert package_modules > 3000, (
+        f"the scan's package root holds only {package_modules} modules, so an empty "
+        "remnant result would mean it read almost nothing"
+    )
+
     assert not RETIRED_TUI_ROOT.exists()
     assert find_retired_tui_remnants() == ()
 

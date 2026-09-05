@@ -105,7 +105,7 @@
 "cadrumo.application.modelo.review_package_collab_audit" = 6
 "cadrumo.application.modelo.review_package_recipient_encryption" = 2
 "cadrumo.application.modelo.review_package_signing" = 1
-"cadrumo.application.modelo.verification_actions" = 6
+"cadrumo.application.modelo.verification_actions" = 1
 "cadrumo.application.modelo.work_addressing" = 2
 "cadrumo.application.modelo.work_create_policy" = 1
 "cadrumo.application.modelo.workspace" = 2
