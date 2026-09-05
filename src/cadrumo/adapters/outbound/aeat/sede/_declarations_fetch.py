@@ -93,7 +93,6 @@ EXTERNAL = Settings.external_constants()
 SEDE_BASE = EXTERNAL.aeat.domains.www6
 _SEDE_HOST = urlsplit(SEDE_BASE).netloc
 _AEAT_HOST_SUFFIX = EXTERNAL.aeat.domains.host_suffix
-_LISTING_URL = f"{SEDE_BASE}{EXTERNAL.aeat.sede_paths.declarations_listing}"
 _LISTING_PATH = EXTERNAL.aeat.sede_paths.declarations_listing
 _COTEJO_QUERY_PATH = EXTERNAL.aeat.sede_paths.cotejo_query
 _COTEJO_DOCUMENT_PATH = EXTERNAL.aeat.sede_paths.cotejo_document
