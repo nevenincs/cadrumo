@@ -266,6 +266,7 @@ modelo:
               help: Indicador d'entitat patrimonial.
               label: Entitat patrimonial [00066]
             '00067':
+              help: null
               label: Agrup. d'interès econòmic i UTES - B) dades econòmiques - 8.-
                 deduccions generades en el període impositiu - inversions a Canàries
                 (Llei 20/1991) - import de la deducció [00067]
@@ -368,6 +369,7 @@ modelo:
                 de base imposable de la resta d''activitats any 2024 - Pendent d''aplicació
                 a principi del període/generada en el període [00092]'
             00093:
+              help: null
               label: Liquidació I - Detall de correccions del resultat del compte
                 de pèrdues i guanys - Correcció pel Gravamen temporal energètic (Art.
                 1 Llei 38/2022) - Augments [00093]
@@ -3230,6 +3232,7 @@ modelo:
                 - Reserves inversions a Illes Balears (DA 70a Llei 31/2022 ) - Disminucions
                 [00813]
             00814:
+              help: null
               label: Deduccions I+D+i excloses de límit - Informació addicional per
                 al càlcul de límits de deduccions - Despeses de recerca i desenvolupament
                 del període impositiu [00814]
@@ -3260,6 +3263,7 @@ modelo:
                 caràcter general - 2015 - Amb reiteració de donacions a una mateixa
                 entitat - Aplicat en aquesta liquidació [00819]
             00820:
+              help: null
               label: Deducció donatius entitats sense fins lucratius - Donacions de
                 caràcter general - 2015 - Amb reiteració de donacions a una mateixa
                 entitat -pendent d'aplicació en períodes futurs [00820]
@@ -3308,9 +3312,11 @@ modelo:
                 Cap. IV Tít. VI Llei 43/95, RDLeg. 4/2004 i LIS - Pendent d'aplicació
                 en períodes futurs [00830]
             00831:
+              help: null
               label: Deduccions per incentivar determ. activitats - Total - Deducció
                 pendent/generada [00831]
             00832:
+              help: null
               label: Deduccions per incentivar determ. activitats - Total - Pendent
                 d'aplicació en períodes futurs [00832]
             00833:
@@ -3622,6 +3628,7 @@ modelo:
               label: Deducció per reversió de mesures temporals (D.T.37a. 1 LIS) -
                 2025(*) - Import generat/pendent a principi del període [00901]
             00902:
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Pla 2030
                 de Suport a l'Esport de Base (P30) - Deducció pendent/generada [00902]
             00904:
@@ -3633,6 +3640,7 @@ modelo:
               label: Deducció per reversió de mesures temporals (D.T.37a. 1 LIS) -
                 2025(*) - Import pendent [00905]
             00906:
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Pla 2030
                 de Suport a l'Esport de Base (P30) - Aplicat en aquesta liquidació
                 [00906]
@@ -3693,13 +3701,16 @@ modelo:
               label: Deduccions doble imposició internacional RDLeg. 4/2004 - DI internacional
                 2013 - Tipus de gravamen període de generació [00921]
             00922:
+              help: null
               label: Règ. especial reserva per a inversions a Canàries - RIC 2019
                 - Pendent de materialitzar RIC a principi de període [00922]
             00923:
+              help: null
               label: Règ. especial reserva per a inversions a Canàries - RIC 2019
                 - Aplicat/materialitzat en aquesta liquidació - Inversions previstes
                 lletres A i B, art. 27.4 Llei 19/1994 [00923]
             00924:
+              help: null
               label: Règ. especial reserva per a inversions a Canàries - RIC 2019
                 - Aplicat/materialitzat en aquesta liquidació - Inversions previstes
                 lletres B bis, C i D art. 27.4 Llei 19/1994 [00924]
@@ -3727,10 +3738,12 @@ modelo:
               label: Deducció per reversió de mesures temporals (D.T.37a. 2 LIS) -
                 2025(*) - Base de deducció [00929]
             00930:
+              help: null
               label: Deducció donatius entitats sense fins lucratius - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - 2014 - Deducció pendent/generada [00930]
             00931:
+              help: null
               label: Deducció donatius entitats sense fins lucratius - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - 2014 - Aplicat en aquesta liquidació [00931]
@@ -3771,9 +3784,11 @@ modelo:
                 en aquesta liquidació - Inversions previstes lletres B bis, C i D
                 art. 27.4 Llei 19/1994 [00938]
             00939:
+              help: null
               label: Deduccions per inversió a Canàries - Inversions a Canàries 2006
                 - Deducció pendent/generada [00939]
             00940:
+              help: null
               label: Deduccions per inversió a Canàries - Inversions a Canàries 2006
                 - Aplicat en aquesta liquidació [00940]
             00941:
@@ -3781,6 +3796,7 @@ modelo:
               label: Reversió per deteriorament de valors representatius - Dotacions
                 pendents d'integració a principi del període [00941]
             00942:
+              help: null
               label: Deducció donatius entitats sense fins lucratius - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - 2015 sense reiteració de donacions a una mateixa entitat
@@ -3810,6 +3826,7 @@ modelo:
               label: Deducc. per incentivar determ. activitats - 2010 Suma deduccions
                 - Pendent d'aplicació en períodes futurs [00947]
             00948:
+              help: null
               label: Deducció donatius entitats sense fins lucratius - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - 2015 - Amb reiteració de donacions a una mateixa entitat
@@ -3851,12 +3868,15 @@ modelo:
                 incrementada - 2016 - Amb reiteració de donacions a una mateixa entitat
                 - Pendent d'aplicació en períodes futurs [00954]
             00955:
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Universo
                 Mujer III (UM3) - Aplicat en aquesta liquidació [00955]
             00956:
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Universo
                 Mujer III (UM3) - Pendent d'aplicació en períodes futurs [00956]
             00957:
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Programa
                 de preparació dels esportistes espanyols dels Jocs de París 2024 (P24)
                 - Deducció pendent/generada [00957]
@@ -4060,12 +4080,15 @@ modelo:
                 caràcter general - 2016 Sense reiteració de donacions a una mateixa
                 entitat - Pendent d'aplicació en períodes futurs [00995]
             00996:
+              help: null
               label: Règ. especial reserva per a inversions a Canàries - RIC 2020
                 - Pendent de materialitzar la RIC al final del període [00996]
             00997:
+              help: null
               label: Deducció donatius entitats sense fins lucratius - Donacions de
                 caràcter general - 2014 - Deducció pendent/generada [00997]
             00998:
+              help: null
               label: Deducció donatius entitats sense fins lucratius - Donacions de
                 caràcter general - 2014 - Aplicat en aquesta liquidació [00998]
             00999:
@@ -4480,14 +4503,17 @@ modelo:
               label: Deducció per reversió de mesures temporals (D.T.37a. 2 LIS) -
                 2022 - Base deducció [01086]
             01087:
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Programa
                 de preparació dels esportistes espanyols dels Jocs de París 2024 (P24)
                 - Aplicat en aquesta liquidació [01087]
             01088:
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Programa
                 de preparació dels esportistes espanyols dels Jocs de París 2024 (P24)
                 - Pendent d'aplicació en períodes futurs [01088]
             01089:
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 100 anys
                 de la mort de Joaquín Sorolla (JS) - Deducció pendent/generada [01089]
             01090:
@@ -4560,9 +4586,11 @@ modelo:
               label: Pendent d'addició per límit benefici operatiu no aplicat - Exercici
                 generació 2022 - Pendent d'aplicació períodes futurs [01105]
             '01106':
+              help: null
               label: Reserva capitalització - 2022 - Dret a reduir B.I. generat període/pendent
                 aplicar inici període [01106]
             '01107':
+              help: null
               label: Reserva capitalització - 2022 - Reducció B.I. aplicada [01107]
             01108:
               help: '6.- Deduc. evitar doble imposició: import de la deducció - B)
@@ -4575,6 +4603,7 @@ modelo:
                 2021 - Import minoració B.I. període/pendent d'afegir inici període
                 [01109]
             '01110':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 100 anys
                 de la mort de Joaquín Sorolla (JS) - Aplicat en aquesta liquidació
                 [01110]
@@ -4688,15 +4717,18 @@ modelo:
                 2022 - AID pendents d'aplicació en períodes futurs - Sense dret de
                 conversió en crèdit exigible [01133]
             '01134':
+              help: null
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Excés quota líquida positiva - Exercici generació - 2022 - Excés
                 de quota líquida positiva pendent a l'inici del període [01134]
             '01135':
+              help: null
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Excés quota líquida positiva - Exercici generació - 2022 - Excés
                 de quota líquida positiva aplicat en períodes impositius 2008 a 2015
                 [01135]
             '01136':
+              help: null
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Excés quota líquida positiva - Exercici generació - 2022 - Excés
                 de quota líquida positiva aplicat en períodes impositius iniciats
@@ -4719,10 +4751,12 @@ modelo:
               label: Reserva capitalització - Reserva capitalització dotada en l'exercici
                 [01140]
             '01141':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 100 anys
                 de la mort de Joaquín Sorolla (JS) - Pendent d'aplicació en períodes
                 futurs [01141]
             '01142':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 20è aniversari
                 del Primavera Sound (PS) - Deducció pendent/generada [01142]
             '01143':
@@ -4731,13 +4765,16 @@ modelo:
                 - 2021 - Dotacions pendents integració a principi període - Que han
                 complert condicions deduïbilitat fiscal [01143]
             '01144':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 20è aniversari
                 del Primavera Sound (PS) - Aplicat en aquesta liquidació [01144]
             '01145':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 20è aniversari
                 del Primavera Sound (PS) - Pendent d'aplicació en períodes futurs
                 [01145]
             '01146':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Centenari
                 del naixement de Victoria de los Ángeles (VA) - Deducció pendent/generada
                 [01146]
@@ -4754,32 +4791,40 @@ modelo:
               label: Reserva de nivellació - Reducció base imposable - Total - Import
                 pendent d'afegir en períodes futurs [01149]
             '01150':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Centenari
                 del naixement de Victoria de los Ángeles (VA) - Aplicat en aquesta
                 liquidació [01150]
             '01151':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Centenari
                 del naixement de Victoria de los Ángeles (VA) - Pendent d'aplicació
                 en períodes futurs [01151]
             '01152':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Commemoració
                 del 50è aniversari de la mort de l'artista espanyol Pablo Picasso
                 (50P) - Deducció pendent/generada [01152]
             '01153':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Commemoració
                 del 50è aniversari de la mort de l'artista espanyol Pablo Picasso
                 (50P) - Aplicat en aquesta liquidació [01153]
             '01154':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Commemoració
                 del 50è aniversari de la mort de l'artista espanyol Pablo Picasso
                 (50P) - Pendent d'aplicació en períodes futurs [01154]
             '01155':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Tots contra
                 el càncer (TC) - Deducció pendent/generada [01155]
             '01156':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Tots contra
                 el càncer (TC) - Aplicat en aquesta liquidació [01156]
             '01157':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Tots contra
                 el càncer (TC) - Pendent d'aplicació en períodes futurs [01157]
             01158:
@@ -5063,14 +5108,17 @@ modelo:
                 - 2024 - Dotacions pendents integració períodes futurs - Que han complert
                 condicions deduïbilitat fiscal [01219]
             '01220':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 7a Conferència
                 Mundial sobre Turisme Enològic de l'OMT 2023 (7TE) - Deducció pendent/generada
                 [01220]
             '01221':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 7a Conferència
                 Mundial sobre Turisme Enològic de l'OMT 2023 (7TE) - Aplicat en aquesta
                 liquidació [01221]
             '01222':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 7a Conferència
                 Mundial sobre Turisme Enològic de l'OMT 2023 (7TE) - Pendent d'aplicació
                 en períodes futurs [01222]
@@ -5119,6 +5167,7 @@ modelo:
               label: Caravaca de la Cruz 2024. Año Jubilar (C24). Pendent d'aplicació
                 en períodes futurs
             '01233':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Bicentenari
                 de l'Ateneu de Madrid (BA) - Deducció pendent/generada [01233]
             '01234':
@@ -5126,21 +5175,26 @@ modelo:
               label: Liquidació IV - Resultat de l'autoliquidació - Abonament deduccions
                 I+D+i per insuficiència de quota - Total [01234]
             '01235':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Bicentenari
                 de l'Ateneu de Madrid (BA) - Aplicat en aquesta liquidació [01235]
             '01236':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Bicentenari
                 de l'Ateneu de Madrid (BA) - Pendent d'aplicació en períodes futurs
                 [01236]
             '01237':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Barcelona
                 Equestrian Challenge (4a edició) (BE4) - Deducció pendent/generada
                 [01237]
             01238:
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Barcelona
                 Equestrian Challenge (4a edició) (BE4) - Aplicat en aquesta liquidació
                 [01238]
             01239:
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Barcelona
                 Equestrian Challenge (4a edició) (BE4) - Pendent d'aplicació en períodes
                 futurs [01239]
@@ -5254,34 +5308,43 @@ modelo:
                 i 16.2 LIS - Total despeses financeres del període impositiu no deduïbles
                 (= [c2+l2]) [01260]
             '01261':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 200è aniversari
                 del Passeig de Grácia (PG) - Deducció pendent/generada [01261]
             '01262':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 200è aniversari
                 del Passeig de Grácia (PG) - Aplicat en aquesta liquidació [01262]
             '01263':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 200è aniversari
                 del Passeig de Grácia (PG) - Pendent d'aplicació en períodes futurs
                 [01263]
             '01264':
+              help: null
               label: Deduccions per incentivar determinades activitats - 2024 reconstrucció
                 de la Piscina Històrica coberta de salts del Club Natació Barcelona
                 (CNB) - deducció pendent/generada [01264]
             '01265':
+              help: null
               label: Deduccions per incentivar determinades activitats - 2024 reconstrucció
                 de la Piscina Històrica coberta de salts del Club Natació Barcelona
                 (CNB) - aplicat en aquesta liquidació [01265]
             '01266':
+              help: null
               label: Deduccions per incentivar determinades activitats - 2024 reconstrucció
                 de la Piscina Històrica coberta de salts del Club Natació Barcelona
                 (CNB) - pendent d'aplicació en períodes futurs [01266]
             '01267':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 ALIMENTARIA
                 2022 i HOSTELCO 2022 (AH) - Deducció pendent/generada [01267]
             01268:
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 ALIMENTARIA
                 2022 i HOSTELCO 2022 (AH) - Aplicat en aquesta liquidació [01268]
             01269:
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 ALIMENTARIA
                 2022 i HOSTELCO 2022 (AH) - Pendent d'aplicació en períodes futurs
                 [01269]
@@ -5294,14 +5357,17 @@ modelo:
               label: Deduccions doble imposició interna (DT 23.1 LIS) - DI interna
                 2023 - Tipus gravamen període generació [01271]
             '01272':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Barcelona
                 Music Lab. El futur de la música (ML) - Deducció pendent/generada
                 [01272]
             '01273':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Barcelona
                 Music Lab. El futur de la música (ML) - Aplicat en aquesta liquidació
                 [01273]
             '01274':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Barcelona
                 Music Lab. El futur de la música (ML) - Pendent d'aplicació en períodes
                 futurs [01274]
@@ -5336,12 +5402,15 @@ modelo:
                 per doble imposició - D.I. interna generada i aplicada en l’exercici
                 (DT 23.1 LIS) [01280]
             01281:
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 South Summit
                 2022-2024 (SS) - Deducció pendent/generada [01281]
             01282:
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 South Summit
                 2022-2024 (SS) - Aplicat en aquesta liquidació [01282]
             01283:
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 South Summit
                 2022-2024 (SS) - Pendent d'aplicació en períodes futurs [01283]
             01284:
@@ -5672,6 +5741,7 @@ modelo:
               label: Deducc. Disposic. Transit. 24a.7 LIS - Deducc. DT 24a.7 LIS 2017
                 - Pendent aplicació en períodes futurs [01355]
             '01356':
+              help: null
               label: Deduccions per inversió a Canàries - Actius fixos 2010 - Pendent
                 d'aplicació en períodes futurs [01356]
             '01357':
@@ -5876,6 +5946,7 @@ modelo:
               help: null
               label: Reserva Capitalització - 2023 - Reducció B.I. aplicada [01402]
             '01403':
+              help: null
               label: Reserva capitalització - 2023 - Reducció de la B.I. pdt. d'aplicar
                 en períodes futurs [01403]
             '01404':
@@ -6173,6 +6244,7 @@ modelo:
               label: 'Imports imputats: Import de bonificació generada de les bases
                 de bonificació imputades'
             01469:
+              help: null
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Excés quota líquida positiva - Exercici generació - 2023 - Excés
                 de quota líquida positiva pendent d'aplicació en períodes futurs [01469]
@@ -6808,6 +6880,7 @@ modelo:
                 o fons propis (DT 16a.3 LIS) - Augment - Correccions de l’exercici
                 - Temporàries (amb origen en l’exercici) [01602]
             '01603':
+              help: null
               label: Reserva de nivellació - Reducció base imposable - Exercici de
                 generació 2019 - Import integrat en la declaració per incompliment
                 de requisits [01603]
@@ -7188,14 +7261,17 @@ modelo:
                 a Estats membres de la Unió Europea o EEE - Disminució - Correccions
                 de l’exercici - Permanents [01682]
             01683:
+              help: null
               label: Deduccions per incentivar determ. activitats - 2025(****) altres
                 deduccions relatives a programes de suport a esdeveniments d'excepcional
                 interès públic - Deducció pendent/generada [01683]
             01684:
+              help: null
               label: Deduccions per incentivar determ. activitats - 2025(****) altres
                 deduccions relatives a programes de suport a esdeveniments d'excepcional
                 interès públic - Aplicat en aquesta liquidació [01684]
             01685:
+              help: null
               label: Deduccions per incentivar determ. activitats - 2025(****) altres
                 deduccions relatives a programes de suport a esdeveniments d'excepcional
                 interès públic - Pendent d'aplicació en períodes futurs [01685]
@@ -7215,10 +7291,12 @@ modelo:
                 a Estats membres de la Unió Europea o EEE - Disminució - Saldo pendent
                 a fi d’exercici [01688]
             01689:
+              help: null
               label: Deducció donatius entitats sense fins lucratius - Donacions de
                 caràcter general - Subtotal de donacions 2014 - Deducció pendent/generada
                 [01689]
             01690:
+              help: null
               label: Deducció donatius entitats sense fins lucratius - Donacions de
                 caràcter general - Subtotal de donacions 2014 - Aplicat en aquesta
                 liquidació [01690]
@@ -7269,11 +7347,13 @@ modelo:
               label: Deducció donatius entitats sense ànim de lucre - Donacions de
                 caràcter general - Total - Pendent aplicació en períodes futurs [01700]
             '01701':
+              help: null
               label: Deducció donatius entitats sense fins lucratius - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - Subtotal de donacions 2014 - Deducció pendent/generada
                 [01701]
             '01702':
+              help: null
               label: Deducció donatius entitats sense fins lucratius - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - Subtotal de donacions 2014 - Aplicat en aquesta liquidació
@@ -7303,6 +7383,7 @@ modelo:
               label: Règ. especial reserva inversions Illes Balears - RIIB 2023 -
                 Pendent de materialitzar RIIB a principi del període [01707]
             01708:
+              help: null
               label: Règ. especial reserva per a inversions a les Illes Balears -
                 RIIB 2024 - Aplicat/materialitzat en aquesta liquidació - Inversions
                 anticipades considerades materialització de la RIIB en aquesta liquidació
@@ -8032,6 +8113,7 @@ modelo:
                 en el capital o fons propis (DT 16a.1 i 2 LIS) - Disminució - Saldo
                 pendent a fi d'exercici [01869]
             01870:
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Pla 2030
                 de Suport a l'Esport de Base (P30) - Pendent d'aplicació en períodes
                 futurs [01870]
@@ -8190,9 +8272,11 @@ modelo:
               label: Inauguración de la Galería de las Colecciones Reales (GC). Pendent
                 d'aplicació en períodes futurs
             01903:
+              help: null
               label: 'Deduccions per incentivar determ. activitats - 2024: Centenari
                 de l''hoquei 1923-2023 (CH) - Deducció pendent/generada [01903]'
             01904:
+              help: null
               label: 'Deduccions per incentivar determ. activitats - 2024: Centenari
                 de l''hoquei 1923-2023 (CH) - Aplicat en aquesta liquidació [01904]'
             01905:
@@ -8234,6 +8318,7 @@ modelo:
               label: Deduccions per inversió a Canàries - Actius fixos a La Palma,
                 la Gomera i el Ferro 2023 - Aplicat en aquesta liquidació [01913]
             01914:
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Universo
                 Mujer III (UM3) - Deducció pendent/generada [01914]
             01915:
@@ -8339,6 +8424,7 @@ modelo:
               label: 'Imports imputats: Dividends i participacions en beneficis percebuts
                 d''exercicis posteriors a l''adquisició de la participació'
             01935:
+              help: null
               label: Deduccions I+D+i excloses de límit - Informació addicional per
                 al càlcul de límits de deduccions - Grup mercantil (només per a entitats
                 que hagin marcat la clau 00039 de caràcters de la declaració) - Import
@@ -8458,19 +8544,24 @@ modelo:
                 de recàrrega (DA 18a LIS RDL 4/2024) - Disminució - Correccions de
                 l'exercici - Temporànies (amb origen en exercicis anteriors) [01962]
             01963:
+              help: null
               label: Règ. especial reserva per a inversions a Canàries - RIC 2019
                 - Aplicat/materialitzat en aquesta liquidació - Integrat en la BI
                 per incompliment de requisits [01963]
             01964:
+              help: null
               label: Reserva de nivellació - Dotació de la reserva - Exercici de generació
                 2019 - Import de la reserva a dotar [01964]
             01965:
+              help: null
               label: Reserva de nivellació - Dotació de la reserva - Exercici de generació
                 2019 - Import reserva dotada [01965]
             01966:
+              help: null
               label: Reserva de nivellació - Dotació de la reserva - Exercici de generació
                 2019 - Import reserva pendent dotació [01966]
             01967:
+              help: null
               label: Reserva de nivellació - Dotació de la reserva - Exercici de generació
                 2019 - Reserva disposada [01967]
             01968:
@@ -8506,6 +8597,7 @@ modelo:
               label: Deduccions I+D+i excloses del límit - 2018 Innovació tecnològica
                 - Import abonat per insuficiència de quota [01975]
             01976:
+              help: null
               label: 'Deduccions per incentivar determ. activitats - 2024: Centenari
                 de l''hoquei 1923-2023 (CH) - Pendent d''aplicació en períodes futurs
                 [01976]'
@@ -8535,10 +8627,12 @@ modelo:
                 financeres pendents de deduir - Exercici de generació 2019 - Pendent
                 d'aplicació en períodes futurs - Resta [01981]
             01982:
+              help: null
               label: Pendent d'addició per límit de benefici operatiu no aplicat -
                 Exercici de generació 2019 - Pendent d'aplicació a principi del període
                 [01982]
             01983:
+              help: null
               label: Pendent d'addició per límit de benefici operatiu no aplicat -
                 Exercici de generació 2019 - Aplicat en aquesta liquidació [01983]
             01984:
@@ -8745,10 +8839,12 @@ modelo:
               label: Deduccions per inversió a Canàries - Actius fixos a La Palma,
                 la Gomera i el Ferro 2023 - Deducció pendent/generada [02078]
             02079:
+              help: null
               label: 'Informació addicional per al càlcul de límits de deduccions
                 - 2024: finançador: deducció per produccions cinematogràfiques espanyoles
                 a Canàries generada en el període impositiu [02079]'
             02080:
+              help: null
               label: 'Informació addicional per al càlcul de límits de deduccions
                 - 2024: finançador: deducció per espectacles en viu d''arts escèniques
                 i musicals a Canàries generada en el període impositiu [02080]'
@@ -9460,10 +9556,12 @@ modelo:
               label: Deducció per reversió de mesures temporals (DT 37a. 2 LIS) -
                 2020 - Import pendent [02237]
             02238:
+              help: null
               label: Reserva de nivellació - Reducció base imposable - Exercici de
                 generació 2019 - Import de minoració de la B.I. del període/pendent
                 d'addicionar a l'inici del període [02238]
             02239:
+              help: null
               label: Reserva de nivellació - Reducció base imposable - Exercici de
                 generació 2019 - Import addicionat base imposable en període [02239]
             '02240':
@@ -9554,6 +9652,7 @@ modelo:
               label: Pendent d'addició per límit de benefici operatiu no aplicat -
                 Exercici de generació 2020 - Aplicat en aquesta liquidació [02259]
             '02260':
+              help: null
               label: Pendent d'addició per límit de benefici operatiu no aplicat -
                 Exercici de generació 2020 - Pendent d'aplicació en períodes futurs
                 [02260]
@@ -9677,20 +9776,25 @@ modelo:
               label: Règ. cooperatives - Detall de compensació de quotes. 2019 Pendent
                 d'aplicació en períodes futurs [02283]
             02284:
+              help: null
               label: 'Deduccions per incentivar determ. activitats - 2024: Biennal
                 Manifesta 15 Barcelona (BM15) - Deducció pendent/generada [02284]'
             02285:
+              help: null
               label: 'Deduccions per incentivar determ. activitats - 2024: Biennal
                 Manifesta 15 Barcelona (BM15) - Aplicat en aquesta liquidació [02285]'
             02286:
+              help: null
               label: 'Deduccions per incentivar determ. activitats - 2024: Biennal
                 Manifesta 15 Barcelona (BM15) - Pendent d''aplicació en períodes futurs
                 [02286]'
             02287:
+              help: null
               label: 'Informació addicional per al càlcul de límits de deduccions
                 - 2024: deducció per recerca i desenvolupament a Canàries generada
                 en el període impositiu [02287]'
             02288:
+              help: null
               label: 'Informació addicional per al càlcul de límits de deduccions
                 - 2024: deducció per innovació tecnològica a Canàries generada en
                 el període impositiu [02288]'
@@ -10021,22 +10125,27 @@ modelo:
                 Inversions anticipades 2023 - Pendent de dotar la RIIB a principi
                 de període [02362]
             '02363':
+              help: null
               label: Règ. especial reserva per a inversions a les Illes Balears -
                 Inversions anticipades 2024 - Inversions previstes lletres A i B,
                 DA 70.4 Llei 31/2022 [02363]
             '02364':
+              help: null
               label: Règ. especial reserva per a inversions a les Illes Balears -
                 Inversions anticipades 2024 - Inversions previstes lletra C DA 70.4
                 Llei 31/2022 [02364]
             '02365':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Alacant 2021.
                 Sortida de la Volta al Món a Vela (A21) - Deducció pendent/generada
                 [02365]
             '02366':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Alacant 2021.
                 Sortida de la Volta al Món a Vela (A21) - Aplicat en aquesta liquidació
                 [02366]
             '02367':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Alacant 2021.
                 Sortida de la Volta al Món a Vela (A21) - Pendent d'aplicació en períodes
                 futurs [02367]
@@ -10241,6 +10350,7 @@ modelo:
                 de generació 2020 - Import addicionat a la base imposable en el període
                 [02411]
             '02412':
+              help: null
               label: Reserva de nivellació - Reducció base imposable - Exercici de
                 generació 2020 - Import pendent d'afegir en períodes futurs [02412]
             '02413':
@@ -10429,13 +10539,16 @@ modelo:
               label: 'Financiador: espectáculos en vivo artes escénicas y musicales
                 (FEV). Pendent d''aplicació en períodes futurs'
             02458:
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Andalusia
                 Valderrama Masters 2022/2024 (AVM22) - Deducció pendent/generada [02458]
             02459:
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Andalusia
                 Valderrama Masters 2022/2024 (AVM22) - Aplicat en aquesta liquidació
                 [02459]
             '02460':
+              help: null
               label: Deduccions per incentivar determ. activitats - 2024 Andalusia
                 Valderrama Masters 2022/2024 (AVM22) - Pendent d'aplicació en períodes
                 futurs [02460]
@@ -10489,6 +10602,7 @@ modelo:
                 de pèrdues i guanys - Asimetries híbrides (art. 15 bis LIS, excepte
                 art. 15 bis.12 LIS) - Disminucions [02470]
             '02471':
+              help: null
               label: Deducció donatius entitats sense fins lucratius - Donacions de
                 caràcter general - 2024(*) sense reiteració de donacions a una mateixa
                 entitat- deducció pendent/generada [02471]
@@ -10619,10 +10733,12 @@ modelo:
                 de conversió d''AID després de regularització: a ingressar - D. Forals/Navarra
                 (Totals) [02494]'
             02495:
+              help: null
               label: 'Informació addicional per al càlcul de límits de deduccions
                 - 2024: productor: deducció per produccions cinematogràfiques espanyoles
                 a Canàries generada en el període impositiu [02495]'
             02496:
+              help: null
               label: 'Informació addicional per al càlcul de límits de deduccions
                 - 2024: productor: deducció per espectacles en viu d''arts escèniques
                 i musicals a Canàries generada en el període impositiu [02496]'
@@ -10978,10 +11094,12 @@ modelo:
               label: Asimetries híbrides (art. 15 bis LIS, excepte art. 15 bis.12
                 LIS) - Augment - Saldo pendent a fi d'exercici [02575]
             '02576':
+              help: null
               label: Deducció donatius entitats sense fins lucratius - Donacions de
                 caràcter general - 2024(*) sense reiteració de donacions a una mateixa
                 entitat - Aplicat en aquesta liquidació [02576]
             '02577':
+              help: null
               label: Deducció donatius entitats sense fins lucratius - Donacions de
                 caràcter general - 2024(*) sense reiteració de donacions a una mateixa
                 entitat - Pendent d'aplicació en períodes futurs [02577]
@@ -11548,38 +11666,46 @@ modelo:
                 de la participació en el capital o fons propis (art. 13.2 b) LIS)
                 - Disminució - Saldo pendent a fi d'exercici [02690]
             02691:
+              help: null
               label: Deducció donatius entitats sense fins lucratius - Donacions de
                 caràcter general - 2024(*) - Amb reiteració de donacions a una mateixa
                 entitat- Deducció pendent/generada [02691]
             02692:
+              help: null
               label: Deducció donatius entitats sense fins lucratius - Donacions de
                 caràcter general - 2024(*) - Amb reiteració de donacions a una mateixa
                 entitat - Aplicat en aquesta liquidació [02692]
             02693:
+              help: null
               label: Deducció donatius entitats sense fins lucratius - Donacions de
                 caràcter general - 2024(*) - Amb reiteració de donacions a una mateixa
                 entitat - Pendent d'aplicació en períodes futurs [02693]
             02694:
+              help: null
               label: Deducció donatius entitats sense fins lucratius - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - 2024(*) - Sense reiteració de donacions a una mateixa
                 entitat - Deducció pendent/generada [02694]
             02695:
+              help: null
               label: Deducció donatius entitats sense fins lucratius - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - 2024(*) - Sense reiteració de donacions a una mateixa
                 entitat - Aplicat en aquesta liquidació [02695]
             02696:
+              help: null
               label: Deducció donatius entitats sense fins lucratius - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - 2024(*) - Sense reiteració de donacions a una mateixa
                 entitat - Pendent d'aplicació en períodes futurs [02696]
             02697:
+              help: null
               label: Deducció donatius entitats sense fins lucratius - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - 2024(*) - Amb reiteració de donacions a una mateixa
                 entitat - Deducció pendent/generada [02697]
             02698:
+              help: null
               label: Deducció donatius entitats sense fins lucratius - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - 2024(*) - Amb reiteració de donacions a una mateixa
@@ -11590,6 +11716,7 @@ modelo:
                 residents (art. 21.11 LIS) - Disminució - Correccions de l'exercici
                 - Permanents [02699]
             '02700':
+              help: null
               label: Deducció donatius entitats sense fins lucratius - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - 2024(*) - Amb reiteració de donacions a una mateixa
@@ -12697,6 +12824,7 @@ modelo:
               help: Base de la bonificació - B) Datos económicos
               label: B) Datos económicos. Base de la bonificació
             02943:
+              help: null
               label: Agrup. d'interès econòmic i UTES - B) dades econòmiques - 7.-
                 bonificacions - Bonificació de rendiments per vendes de béns corporals
                 produïts a Canàries (art. 26 Llei 19/1994) - Import de la bonificació
@@ -12705,6 +12833,7 @@ modelo:
               help: Base de la bonificació - B) Datos económicos
               label: B) Datos económicos. Base de la bonificació
             02945:
+              help: null
               label: Agrup. d'interès econòmic i UTES - B) dades econòmiques - 7.-
                 bonificacions - Bonificació de rendiments per vendes de béns corporals
                 produïts a les Illes Balears (DA 70.Cinc Llei 31/2022) - Import de
@@ -12713,6 +12842,7 @@ modelo:
               help: Base de la bonificació - B) Datos económicos
               label: B) Datos económicos. Base de la bonificació
             02947:
+              help: null
               label: Agrup. d'interès econòmic i UTES - B) dades econòmiques - 7.-
                 bonificacions - Bonificació de societats cooperatives (Llei 20/1990)
                 - Import de la bonificació [02947]
@@ -12720,6 +12850,7 @@ modelo:
               help: Base de la bonificació - B) Datos económicos
               label: B) Datos económicos. Base de la bonificació
             02949:
+              help: null
               label: Agrup. d'interès econòmic i UTES - B) dades econòmiques - 7.-
                 bonificacions - Bonificacions d'entitats dedicades a l'arrendament
                 d'habitatges (Capítol III Títol VII LIS) - Import de la bonificació
@@ -12772,6 +12903,7 @@ modelo:
               label: Efectes de la valoració comptable diferent de la fiscal (art.
                 20 LIS) - Disminució - Saldo pendent a fi d'exercici [02960]
             02961:
+              help: null
               label: Agrup. d'interès econòmic i UTES - B) dades econòmiques - 7.-
                 bonificacions - Bonificacions d'empreses navilieres a Canàries (art.
                 76 Llei 19/1994) - Import de la bonificació [02961]
@@ -12779,6 +12911,7 @@ modelo:
               help: Base de la bonificació - B) Datos económicos
               label: B) Datos económicos. Base de la bonificació
             02963:
+              help: null
               label: Agrup. d'interès econòmic i UTES - B) dades econòmiques - 7.-
                 bonificacions - Resta de bonificacions - Import de la bonificació
                 [02963]
@@ -12786,6 +12919,7 @@ modelo:
               help: Base de la deducció - B) Datos económicos
               label: B) Datos económicos. Base de la deducció
             02965:
+              help: null
               label: Agrup. d'interès econòmic i UTES - B) dades econòmiques - 8.-
                 deduccions generades en el període impositiu - Recerca i desenvolupament
                 (CT) - import de la deducció [02965]
@@ -12798,6 +12932,7 @@ modelo:
               help: Base de la deducció - B) Datos económicos
               label: B) Datos económicos. Base de la deducció
             02968:
+              help: null
               label: Agrup. d'interès econòmic i UTES - B) dades econòmiques - 8.-
                 deduccions generades en el període impositiu - Innovació tecnològica
                 (IT) - import de la deducció [02968]
@@ -12805,10 +12940,12 @@ modelo:
               help: Base de la deducció - B) Datos económicos
               label: B) Datos económicos. Base de la deducció
             02970:
+              help: null
               label: 'Agrup. d''interès econòmic i UTES - B) dades econòmiques - 8.-
                 deduccions generades en el període impositiu - Productor: produccions
                 cinematogràfiques espanyoles (PC) - import de la deducció [02970]'
             02971:
+              help: null
               label: Liquidació I - Detall de correccions del resultat del compte
                 de pèrdues i guanys - Correcció pel Gravamen temporal d'entitats de
                 crèdit i establiments financers de crèdit (Art. 2 Llei 38/2022) -
@@ -12822,6 +12959,7 @@ modelo:
               help: Base de la deducció - B) Datos económicos
               label: B) Datos económicos. Base de la deducció
             02974:
+              help: null
               label: 'Agrup. d''interès econòmic i UTES - B) dades econòmiques - 8.-
                 deduccions generades en el període impositiu - Productor: espectacles
                 en viu d''arts escèniques i musicals (EV) - import de la deducció
@@ -12844,6 +12982,7 @@ modelo:
               help: Base de la deducció - B) Datos económicos
               label: B) Datos económicos. Base de la deducció
             02979:
+              help: null
               label: Agrup. d'interès econòmic i UTES - B) dades econòmiques - 8.-
                 deduccions generades en el període impositiu - Deducció per creació
                 d'ocupació de treballadors amb discapacitat (CE) - import de la deducció
@@ -13259,6 +13398,7 @@ modelo:
                 (art. 32.1 LIS) - Augment - Correccions de l'exercici - Permanents
                 [03061]
             '03062':
+              help: null
               label: Agrup. d'interès econòmic i UTES - B) dades econòmiques - 8.-
                 deduccions generades en el període impositiu - Contribucions empresarials
                 a sistemes de previsió social empresarial imputades a favor dels treballadors
@@ -13267,6 +13407,7 @@ modelo:
               help: Base de la deducció - B) Datos económicos
               label: B) Datos económicos. Base de la deducció
             '03064':
+              help: null
               label: Agrup. d'interès econòmic i UTES - B) dades econòmiques - 8.-
                 deduccions generades en el període impositiu - Deducció per inversió
                 de beneficis (IB) - import de la deducció [03064]
@@ -13274,6 +13415,7 @@ modelo:
               help: Base de la deducció - B) Datos económicos
               label: B) Datos económicos. Base de la deducció
             '03066':
+              help: null
               label: Agrup. d'interès econòmic i UTES - B) dades econòmiques - 8.-
                 deduccions generades en el període impositiu - Despeses i inversions
                 de societats forestals (SF) - import de la deducció [03066]
@@ -13281,6 +13423,7 @@ modelo:
               help: Base de la deducció - B) Datos económicos
               label: B) Datos económicos. Base de la deducció
             03068:
+              help: null
               label: Agrup. d'interès econòmic i UTES - B) dades econòmiques - 8.-
                 deduccions generades en el període impositiu - Inversions en territoris
                 de l'Àfrica Occidental i despeses de propaganda i publicitat (art.
@@ -13289,6 +13432,7 @@ modelo:
               help: Base de la deducció - B) Datos económicos
               label: B) Datos económicos. Base de la deducció
             '03070':
+              help: null
               label: Agrup. d'interès econòmic i UTES - B) dades econòmiques - 8.-
                 deduccions generades en el període impositiu - Deduccions relatives
                 a programes de suport a esdeveniments d'excepcional interès públic
@@ -14143,6 +14287,7 @@ modelo:
               help: Base de la deducció - B) Datos económicos
               label: B) Datos económicos. Base de la deducció
             03248:
+              help: null
               label: Agrup. d'interès econòmic i UTES - B) dades econòmiques - 8.-
                 deduccions generades en el període impositiu - Deduccions per produccions
                 cinematogràfiques estrangeres (art. 36.2 LIS) - import de la deducció
@@ -14151,6 +14296,7 @@ modelo:
               help: Base de la deducció - B) Datos económicos
               label: B) Datos económicos. Base de la deducció
             '03250':
+              help: null
               label: Agrup. d'interès econòmic i UTES - B) dades econòmiques - 8.-
                 deduccions generades en el període impositiu - Deduccions per produccions
                 cinematogràfiques estrangeres a Canàries (art. 36.2 LIS i DA 14a Llei
@@ -14295,6 +14441,7 @@ modelo:
               help: Base de la deducció - B) Datos económicos
               label: B) Datos económicos. Base de la deducció
             03282:
+              help: null
               label: Agrup. d'interès econòmic i UTES - B) dades econòmiques - 8.-
                 deduccions generades en el període impositiu - Deducció per inversions
                 i despeses realitzades per les autoritats portuàries (art. 38 bis
@@ -14303,6 +14450,7 @@ modelo:
               help: Base de la deducció - B) Datos económicos
               label: B) Datos económicos. Base de la deducció
             03284:
+              help: null
               label: Agrup. d'interès econòmic i UTES - B) dades econòmiques - 8.-
                 deduccions generades en el període impositiu - Deducció per donacions
                 a entitats sense finalitat de lucre (Llei 49/2002) - import de la
@@ -14315,6 +14463,7 @@ modelo:
               label: 'Cooperatives: Fons de reserva obligatori (Llei 20/1990) - Disminució
                 - Correccions de l''exercici - Permanents [03286]'
             03287:
+              help: null
               label: Agrup. d'interès econòmic i UTES - B) dades econòmiques - 8.-
                 deduccions generades en el període impositiu - Deducció per recerca
                 i desenvolupament a Canàries - import de la deducció [03287]
@@ -14322,6 +14471,7 @@ modelo:
               help: Base de la deducció - B) Datos económicos
               label: B) Datos económicos. Base de la deducció
             03289:
+              help: null
               label: Agrup. d'interès econòmic i UTES - B) dades econòmiques - 8.-
                 deduccions generades en el període impositiu - Deducció per innovació
                 tecnològica a Canàries - import de la deducció [03289]
@@ -14417,11 +14567,13 @@ modelo:
               label: Exempció transmissió de béns immobles (DA 6a LIS) - Disminució
                 - Saldo pendent a fi d'exercici [03310]
             '03311':
+              help: null
               label: 'Agrup. d''interès econòmic i UTES - B) dades econòmiques - 8.-
                 deduccions generades en el període impositiu - Productor: deducció
                 per produccions cinematogràfiques espanyoles a Canàries - import de
                 la deducció [03311]'
             '03312':
+              help: null
               label: Règ. especial reserva per a inversions a Canàries - RIC 2024
                 - Aplicat/materialitzat en aquesta liquidació - Inversions anticipades
                 considerades materialització de la RIC en aquesta liquidació [03312]
@@ -14433,6 +14585,7 @@ modelo:
               help: Base de la deducció - B) Datos económicos
               label: B) Datos económicos. Base de la deducció
             '03315':
+              help: null
               label: 'Agrup. d''interès econòmic i UTES - B) dades econòmiques - 8.-
                 deduccions generades en el període impositiu - Productor: deducció
                 per espectacles en viu d''arts escèniques i musicals a Canàries -
@@ -14600,6 +14753,7 @@ modelo:
               help: Base de la deducció - B) Datos económicos
               label: B) Datos económicos. Base de la deducció
             '03356':
+              help: null
               label: Agrup. d'interès econòmic i UTES - B) dades econòmiques - 8.-
                 deduccions generades en el període impositiu - Deduccions específiques
                 de les entitats sotmeses a normativa foral - import de la deducció
@@ -14616,6 +14770,7 @@ modelo:
               help: Base de la deducció - B) Datos económicos
               label: B) Datos económicos. Base de la deducció
             '03360':
+              help: null
               label: Agrup. d'interès econòmic i UTES - B) dades econòmiques - 8.-
                 deduccions generades en el període impositiu - Altres deduccions -
                 import de la deducció [03360]
@@ -15039,6 +15194,7 @@ modelo:
               label: Liquidació IV - Quota de l'exercici a ingressar o a retornar
                 - Total retencions i ingressos a compte - Imputats per AIE i UTE [01784]
             x-8h834c1g60ojgehg60qjge0:
+              help: null
               label: Deduccions per incentivar determinades activitats - total - aplicat
                 en aquesta liquidació [00588]
             x-8h834c1g60p3cehg60r34d8:
