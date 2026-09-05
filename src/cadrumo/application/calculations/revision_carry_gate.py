@@ -1,7 +1,7 @@
 """Single shared revision-carry gate.
 
-Used by :mod:`~._binding_prefill`, :mod:`~._cross_period_clean_state`, and
-:mod:`~._relation_prefill`: every cross-period or cross-year carry read shares
+Used by :mod:`~.binding_prefill`, :mod:`~.cross_period_clean_state`, and
+:mod:`~.relation_prefill`: every cross-period or cross-year carry read shares
 this gate.
 
 The carry path is the one place a revision error compounds across years: a

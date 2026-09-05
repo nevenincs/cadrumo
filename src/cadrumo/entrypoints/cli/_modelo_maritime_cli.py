@@ -10,7 +10,7 @@ then serialise the returned observations into
 :class:`WorkPreviewMaritimeExemptionResult`.
 
 See Also:
-    :mod:`_maritime_preview`:
+    :mod:`maritime_preview`:
         Active-profile application service consumed by this CLI adapter.
     :class:`CasillaObservationPayload`:
         JSON payload row carrying the legal/source references emitted by the

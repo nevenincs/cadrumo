@@ -1,6 +1,6 @@
 """Modelo-agnostic live parity oracle backend.
 
-This module sits one level above :mod:`_remote_state_guard` and ties the
+This module sits one level above :mod:`remote_state_guard` and ties the
 existing fail-closed remote-state policy to a uniform contract for *read-only*
 verification of registry-rendered payloads against AEAT live surfaces.
 

@@ -2,7 +2,7 @@
 
 This surface verifies other-EU IVA identifiers through AEAT's VIES-proxy
 form.  Its executable checker behavior, observation model, driver contract,
-and deterministic replay all live in :mod:`._checker_oracle_flow`.
+and deterministic replay all live in :mod:`.checker_oracle_flow`.
 """
 
 from __future__ import annotations

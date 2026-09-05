@@ -2,7 +2,7 @@
 
 Every graph-declared class is a strict :class:`OutputSchema` transport shape for a
 config command result. Field sets match the production emit sites in
-:mod:`_config` and its submodules; sequence fields use ``list`` so JSON-mode
+:mod:`config` and its submodules; sequence fields use ``list`` so JSON-mode
 pydantic dumps stay arrays. Application services remain authoritative for
 profile, auth, apoderado, repair, diagnostics, and workflow semantics.
 

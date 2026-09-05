@@ -26,7 +26,7 @@ scope - one is a claim somebody made, the other is the absence of one, and a
 later corpus-completeness check needs to tell them apart.
 
 This enum is deliberately distinct from the review vocabulary in
-:mod:`._revision_review`, which is easy to confuse with it: ``RevisionReviewStatus``
+:mod:`.revision_review`, which is easy to confuse with it: ``RevisionReviewStatus``
 records *who has signed off* on a revision, and this enum records *how far the
 revision's authority reaches*. A revision can be operator-reviewed and still only
 carry applicability data; a revision can carry a complete calculation closure and

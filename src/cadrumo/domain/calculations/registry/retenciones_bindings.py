@@ -4,7 +4,7 @@ The per-family module for the ``retenciones_aggregation`` binding source — the
 calc-mesh source that materialises retenciones-family scalars from the dedicated
 per-perceptor retención store.
 Extracted as its own family module per ``aeat-architecture-boundaries``;
-the cross-family validator dispatch in :mod:`._bindings` registers this family's
+the cross-family validator dispatch in :mod:`.bindings` registers this family's
 ``validate(binding) -> list[str]`` entry.
 
 The materialisation depends on a :class:`_RetencionesAggregationProtocol` rather

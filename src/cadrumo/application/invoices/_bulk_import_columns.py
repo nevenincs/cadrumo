@@ -20,7 +20,7 @@ which columns were not used instead of being handed a rejected file.
 See Also:
     :class:`~core.FieldRole`
         The closed vocabulary the mapping lane selects from.
-    :mod:`._bulk_import`
+    :mod:`.bulk_import`
         Reads the file and applies this resolution to each row.
 """
 

@@ -20,7 +20,7 @@ owned by :mod:`google`, Drive mirror state by
 :mod:`calc_sheets`.
 
 See Also:
-    :mod:`_google`
+    :mod:`google`
         Google OAuth, status, and Drive mirror emit sites.
     :mod:`_google_folder`
         Drive root-folder configuration emit sites.

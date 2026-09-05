@@ -27,7 +27,7 @@ surfaces that split out of this module keep their own transport schemas in
 :mod:`_ledger_rule_payloads`,
 :mod:`_ledger_llm_payloads`,
 :mod:`_ledger_catalogue_invoice_payloads`, and
-:mod:`_ledger_business_payloads` (the invoice / inventory / evidence
+:mod:`ledger_business_payloads` (the invoice / inventory / evidence
 sub-app payload families).
 """
 

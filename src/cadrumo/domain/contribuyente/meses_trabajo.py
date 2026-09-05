@@ -9,7 +9,7 @@ while a count-based ``min(4, 6)`` yields four and 333,33 — an over-grant of th
 deducción, which under-declares tax.
 
 This module is why the months are now carried rather than counted. It shares the
-month-specification grammar with :mod:`._guarderia_mensual` rather than
+month-specification grammar with :mod:`.guarderia_mensual` rather than
 restating it, so the two descendant month surfaces cannot drift into accepting
 different forms through different doors.
 

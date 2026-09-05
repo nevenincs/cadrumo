@@ -72,7 +72,7 @@ CommandExecutionPolicy = _CommandExecutionPolicy
 # ``aeat --version`` and ``aeat --help`` pay that cost even though they
 # never dispatch into a subcommand. Modules are imported by their
 # :class:`_LazySubcommand` loader only when an operator actually invokes
-# something in the owning subtree (see :mod:`._command_suggestions`).
+# something in the owning subtree (see :mod:`.command_suggestions`).
 # ``--version`` / ``--help`` / the bare landing surface short-circuit
 # in the callbacks below before any subcommand is resolved.
 
@@ -151,7 +151,7 @@ def main() -> None:
     An explicit ``--language`` / ``--lang`` flag is promoted to
     ``CADRUMO_OUTPUT_LANGUAGE`` here, before the lazily imported subcommand modules
     render their ``tr(...)``-bound help, so the flag genuinely localises help
-    text (see :mod:`._language_argv`).
+    text (see :mod:`.language_argv`).
     The Rich ``--help`` section headers are then rebound to the same resolved
     locale (see :func:`_localise_help_section_headers`).
     """

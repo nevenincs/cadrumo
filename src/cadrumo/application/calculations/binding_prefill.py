@@ -12,7 +12,7 @@ pre-fill tier (the registry ``aeat_prefilled`` flag, an AEAT-live source). They
 share only the word "prefill"; each routes a different source through a
 different mechanism.
 
-Sister module to :mod:`~._relation_prefill`. The runtime distinguishes
+Sister module to :mod:`~.relation_prefill`. The runtime distinguishes
 ``relation`` leaves (cross-revision aggregations declared as
 :class:`~domain.calculations.registry.RelationDefinition` records) from
 ``previous_filing`` bindings (declared as
