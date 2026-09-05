@@ -41,7 +41,7 @@ def test_column_distinctions_are_part_of_the_target_receipt() -> None:
 def test_receipt_refuses_tampered_canonical_bytes(tmp_path) -> None:
     authority = subject.compile_m200_2024_unique_authority()
     for row in authority.adjudications:
-        path = tmp_path / f"c{row.casilla_id.replace(':', '+')}.toml"
+        path = subject.unique_declaration_path(tmp_path, row.casilla_id)
         path.write_text(subject.render_canonical_declaration(authority, row.casilla_id), encoding="utf-8")
     subject.verify_canonical_declarations(authority, casillas_root=tmp_path)
     target = tmp_path / "c01134.toml"
