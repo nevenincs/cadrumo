@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:c54c6be9d9874c88d3f01246f6359805cd8c16a1fe74c5218e995d9df83e1804'
+body_hash: 'sha256:f567b8d8a2ad5dfb9bb11db1cdc4603de4d66930e59feb12a802fa40f4d6a79e'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -537,6 +537,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S655` - Floor each source corpus the static inspection boundary gates read, separately rather than in aggregate, since the first unions a three thousand six hundred file boundary with two five-file collections and a total floor would be satisfied by the large member while either small one emptied; `dev/registry/tests/test_static_inspection.py`.
 - [x] `W02.P02.S656` - Floor the parsed function surface behind the re-homed digest site gate, since its claim is an absence over the functions a site defines and a module gutted to a shell declares no private digest helper for the same reason it declares nothing at all; `dev/packaging/tests/test_hashing.py`.
 - [x] `W02.P02.S657` - Route the five ledger notice gates through one parsed-tree helper that asserts each module still carries a surface, since every one of their claims is an absence satisfied by a module gutted to a shell and this family is actively being rehomed; `dev/locales/tests/test_ledger_notice_action_conformance.py`.
+- [x] `W02.P02.S658` - Floor the stated readers the intentional rationale gate actually checks, since a disposition may legitimately name none and zero checks is therefore a shape the gate already treats as normal, so it cannot tell one silent disposition from a rationale format that silenced all of them; `dev/tests/test_unreachable_module_ratchet_gate.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
