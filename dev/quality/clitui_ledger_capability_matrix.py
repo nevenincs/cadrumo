@@ -1426,6 +1426,14 @@ class LedgerUnionDenominatorV1(BaseModel):
                 raise ValueError(f"union row sources drifted from observations: {capability_id}")
             if row.source_observation_ids != tuple(sorted(selecting_observations[capability_id])):
                 raise ValueError(f"union row observations drifted from census: {capability_id}")
+            expected_effect = _effect_for(capability_id, row.sources)
+            if row.effect is not expected_effect:
+                raise ValueError(f"union row effect drifted from explicit adjudication: {capability_id}")
+            expected_home, expected_status = _semantic_home_for(capability_id, expected_effect)
+            if row.semantic_home != expected_home or row.semantic_home_status is not expected_status:
+                raise ValueError(f"union row semantic home drifted from explicit adjudication: {capability_id}")
+            if row.applicability != _axis_decisions(capability_id, row.sources, expected_effect):
+                raise ValueError(f"union row applicability drifted from explicit adjudication: {capability_id}")
         selected_edges = sum(len(item.capability_ids) for item in self.observations)
         expected_accounting = LedgerUnionSelectionAccountingV1(
             observation_count=len(self.observations),

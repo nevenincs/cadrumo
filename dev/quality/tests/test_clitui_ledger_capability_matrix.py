@@ -343,7 +343,9 @@ def test_existing_semantic_home_validation_refuses_signature_drift() -> None:
         matrix_module._validate_existing_semantic_home(declaration, owner_callable=drifted)
 
 
-@pytest.mark.parametrize("mutation", ["missing_row", "duplicate_observation", "wrong_sources", "stale_digest"])
+@pytest.mark.parametrize(
+    "mutation", ["missing_row", "duplicate_observation", "wrong_sources", "wrong_effect", "stale_digest"]
+)
 def test_union_denominator_refuses_incomplete_or_stale_serialized_adjudication(mutation: str) -> None:
     union = _union_denominator()
     payload = union.model_dump(mode="python")
@@ -361,6 +363,14 @@ def test_union_denominator_refuses_incomplete_or_stale_serialized_adjudication(m
         rows[index] = changed
         payload["rows"] = tuple(rows)
         expected = "sources drifted"
+    elif mutation == "wrong_effect":
+        rows = list(payload["rows"])
+        index = next(index for index, row in enumerate(rows) if row["capability_id"] == "ledger.llm.apply")
+        changed = dict(rows[index])
+        changed["effect"] = LedgerCapabilityEffect.PROPOSAL
+        rows[index] = changed
+        payload["rows"] = tuple(rows)
+        expected = "effect drifted"
     else:
         payload["digest"] = "sha256:" + "0" * 64
         expected = "digest does not match"
