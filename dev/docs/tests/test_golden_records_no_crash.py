@@ -119,11 +119,20 @@ def test_golden_scan_actually_reads_captured_output() -> None:
     while having read zero characters.
     """
     corpus = _read_corpus()
-    assert corpus, "no goldens were discovered; the gate below would pass vacuously"
+    # The historical defect was 189 goldens and ZERO characters, so `> 0`
+    # closed exactly that. It does not close the partial case: a reader
+    # taking one frame carrier of three, or only the first golden, still
+    # returns millions of characters and passes. Floors, not pinned counts:
+    # live the corpus holds 206 goldens and 16,043,894 captured characters,
+    # a mean of about 78,000 each.
+    assert len(corpus) > 150, (
+        f"only {len(corpus)} goldens were discovered; the gate below is measured over a "
+        "fraction of the recorded corpus"
+    )
     total = sum(len(text) for _, text in corpus)
-    assert total > 0, (
-        f"read {len(corpus)} goldens but zero characters of captured output; "
-        "the frame carriers ('text', 'stderr_text', 'envelope') are not being read"
+    assert total > 5_000_000, (
+        f"read {len(corpus)} goldens but only {total} characters of captured output; "
+        "the frame carriers ('text', 'stderr_text', 'envelope') are not all being read"
     )
     found = {token: sum(1 for _, text in corpus if token in text) for token in _CONTROL_TOKENS}
     assert any(found.values()), (

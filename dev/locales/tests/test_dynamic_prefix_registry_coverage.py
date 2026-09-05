@@ -364,6 +364,14 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         ("entrypoints/cli/_root_cli.py", "root_command"),
         ("entrypoints/cli/_common.py", "activate_subcommand_output_language"),
         ("entrypoints/cli/config/custody.py", "_pin_render_language_to_target_bucket"),
+        # Scope-closed before return, with nothing rendering afterwards: the
+        # override is entered on an ExitStack that unwinds at the end of the
+        # function body, and the only work after it is render_outcome(), which
+        # is json.dumps over prose the session already produced INSIDE the
+        # scope. There is no ctx here to hang the override on -- this is a
+        # full-screen session subprocess entrypoint, not a Typer callback -- so
+        # the ctx-scoped requirement below deliberately does not cover it.
+        ("entrypoints/tui/destination_session.py", "run_requested_destination"),
     },
 )
 

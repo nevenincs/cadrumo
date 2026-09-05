@@ -41,6 +41,22 @@ apply = "--apply" in sys.argv
 report: list[str] = []
 
 
+def _exists(path: Path) -> bool:
+    """Return whether ``path`` exists, treating an unusable name as absent.
+
+    Every string constant mentioning a slash and ``cadrumo`` reaches here as a
+    candidate, and a module docstring quoting a data path is such a constant.
+    The operating system is entitled to reject the resulting name outright --
+    macOS raises ``ENAMETOOLONG`` where Windows simply answers False -- and a
+    sweep that dies on one unusable candidate reports nothing about the files
+    it never reached.
+    """
+    try:
+        return path.exists()
+    except OSError:
+        return False
+
+
 def _read(path: Path) -> str | None:
     """Return a file's text, or ``None`` when it is not readable right now.
 
@@ -231,9 +247,9 @@ def fix_pins() -> int:
                 if "cadrumo" not in v:
                     continue
                 cand = Path(v) if v.startswith(("src/", "dev/")) else Path("src") / v
-                if cand.exists() or not cand.name.startswith("_"):
+                if _exists(cand) or not cand.name.startswith("_"):
                     continue
-                if cand.with_name(cand.name[1:]).exists():
+                if _exists(cand.with_name(cand.name[1:])):
                     edits.setdefault(path, set()).add((v, v.replace("/" + cand.name, "/" + cand.name[1:])))
             elif v.startswith("_"):
                 if v in public or v[1:] not in public:
@@ -346,12 +362,25 @@ def fix_string_module_paths() -> int:
     return changed
 
 
-counts = {
-    "dot-depth files": fix_dot_depth(),
-    "module-object files": fix_module_object_imports(),
-    "pin files": fix_pins(),
-    "pyproject ignores": fix_pyproject(),
-    "string module paths": fix_string_module_paths(),
-}
-print("\n".join(report) if report else "  (nothing found)")
-print("\n" + ("APPLIED" if apply else "DRY RUN") + ":", ", ".join(f"{k}={v}" for k, v in counts.items()))
+def main() -> None:
+    """Run every pass and report what each one found.
+
+    Deliberately not executed at import. Importing this module -- which pytest
+    does merely to collect its tests -- used to run all five passes over the
+    whole tree, so the suite paid for a full sweep before its first test and,
+    on any platform where a stray long candidate path raises rather than
+    returning False, collection died outright.
+    """
+    counts = {
+        "dot-depth files": fix_dot_depth(),
+        "module-object files": fix_module_object_imports(),
+        "pin files": fix_pins(),
+        "pyproject ignores": fix_pyproject(),
+        "string module paths": fix_string_module_paths(),
+    }
+    print("\n".join(report) if report else "  (nothing found)")
+    print("\n" + ("APPLIED" if apply else "DRY RUN") + ":", ", ".join(f"{k}={v}" for k, v in counts.items()))
+
+
+if __name__ == "__main__":
+    main()
