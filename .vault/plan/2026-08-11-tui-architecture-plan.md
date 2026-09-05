@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-05'
-body_hash: 'sha256:e647fbb1d8508133fb024d48cf9d9ca44c268f2c44180e3b585a617e0ae7af9e'
+body_hash: 'sha256:5df8c7c71e0999e35c85d5f92d63960bfb66cb4de237dba5bb404864be088096'
 ---
 
 <!-- RETIRED: S370 -->
@@ -653,6 +653,7 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S437` - Adjudicate the 16 M200/2024 casillas whose declaration appeared to contradict its own authority. Nine are not contradictions at all: their declared section carries a year prefix that does not name the label's cohort year, and each already carries a pin that settles the text. Three are genuine, their number appearing in neither design under the section they declare. Four are structural: two symbolic identifiers that name no design row, and two whose number repeats on their own page.; `src/cadrumo/locales/*/modelo/schema/200.yml`.
 - [x] `W08.P30.S438` - Resolve the three M200/2024 casillas the row-splitting parser had mis-read as structural. Joining record-design rows before matching shows DP200014B:00599 names exactly one cell on its own page, and the two symbolic identifiers are calculation-only casillas -- one internal_only and computed, one manual and manual-sourced -- which have no design row by construction and take a label describing what they are rather than one claiming design authority.; `src/cadrumo/locales/*/modelo/schema/200.yml`.
 - [x] `W08.P30.S439` - Make the page-resolved cohort compiler read a wrapped record-design row whole. A design cell long enough to wrap is read line by line as fragments: the tail still ends in the casilla number so it parses as a valid cell beginning mid-sentence, and one row looks like a number occurring several times. Both failures are silent and point opposite ways, one writing a truncated label and the other refusing a casilla that is well determined. Reassemble rows before matching, and gate the property on a casilla outside the cohort.; `dev/registry/analysis/m200_2024_page_resolved_adjudications.py, dev/registry/tests/test_m200_2024_page_resolved_adjudications.py`.
+- [x] `W08.P30.S440` - Write record-qualified casilla labels to the key the resolver actually reads. A record-qualified casilla does not localize under its raw identifier: the registry gives it an encoded key, so DP200018:00588 resolves through casilla.x-8h834c1g60ojgehg60qjge0. Labels written under the raw id are accepted by the catalogue and never read, which made 44 of them dead weight and made an earlier progress count measure the catalogue rather than the resolver. Fill the canonical keys from those labels, delete the dead ones, and settle the last four casillas against their authority's own preimage.; `src/cadrumo/locales/*/modelo/schema/200.yml, dev/locales/tests/test_casilla_label_matches_pinned_official_text.py`.
 
 ## Parallelization
 

@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:b9b8508e283157cadb3dd9614da5e7b64c25ac9d2b5e1cf6bb03ba4b09bcb1c1'
+body_hash: 'sha256:658baa9c82013ff3f4512685c46ac764cb7b725ef57c735811b6ebd81988546c'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -577,6 +577,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S695` - Derive the redirected export path from the isolated tree: the modelo was transcribed as 130 against a 184 tree, so the link-redirect absence claim held over a directory that could never exist; `dev/registry/tests/test_generated_tree_check.py`.
 - [x] `W02.P02.S696` - Narrow the three dev-scoped broad refusals the no-broad-raises gate reports: raises(Exception) accepted a TypeError from a changed signature or wrong keyword while the ambiguity and validation checks under test never ran; `dev/registry/tests/test_revision_selection_probe.py`.
 - [x] `W02.P02.S697` - Refuse rather than skip when the status frames stop carrying the untranslatable glyph: frames rendered means the precondition held, so a fall-through skip retired the end-to-end proof while the run read green; `dev/tui/tests/test_tui_visual_inventory.py`.
+- [x] `W02.P02.S698` - Raise the facade export scan population floors: 1,000 modules and 100 facades sat against a live 5,857 and 295, so four fifths of the corpus could vanish while every clean break result still read green; `dev/tests/test_facade_export_gate.py`.
+- [x] `W02.P02.S699` - Raise the repository source universe floor: > 0 sat against 27,717 live sources, so a narrowed root could drop the denominator to a handful and every consumer reading it would still be trivially clean; `dev/quality/tests/test_repository_sources.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
