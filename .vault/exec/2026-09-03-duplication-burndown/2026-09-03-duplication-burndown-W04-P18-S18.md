@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:4d04c16e71fb7d41cb65883243a0b2dc0585be8dc0dd3fb247ba665a88022c98'
+body_hash: 'sha256:69e44891152a5df474f4f67d5c354a5b7400a1452cc9bfbc2072e5df98fa06f3'
 step_id: 'S18'
 related:
   - "[[2026-09-03-duplication-burndown-plan]]"
@@ -93,11 +93,12 @@ tree periodically, not only over the files an iteration touched.
 Watched across several days rather than sampled once, because the direction
 matters more than the number to whoever closes this Step.
 
-`check-format` went 11 files, then 12, 13 and 14, each addition arriving with a
-peer commit that added a `dev/` test -- `test_no_unbounded_subprocess_wait.py`,
-`test_i18n.py`, then `test_rule_grounding_coverage.py` -- and holding steady
-across commits that touched only docs and vault records, including a four-run
-plateau between the third and fourth. Every one of the thirteen is peer-owned: none appears in a
+`check-format` went 11, 12, 13, 14, 15 over six days. Every addition arrived
+with a peer commit adding a `dev/` test, and the count held across commits that
+touched only docs and vault records. The converse does not hold, and the record
+said so too strongly before this correction: at least one `dev/` test commit
+landed already formatted and added nothing. So the mechanism is a tendency, not
+a rule -- some of that work runs the formatter and some does not. Every one of the thirteen is peer-owned: none appears in a
 `## Changes` list in this campaign's execution records.
 
 So this blocker is not a fixed backlog waiting to be cleared; it grows with the
