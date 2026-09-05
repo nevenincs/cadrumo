@@ -21,6 +21,7 @@ tree matters here only once it actually carries Python.
 
 from __future__ import annotations
 
+import subprocess
 import tomllib
 from pathlib import Path
 from typing import Final
@@ -44,8 +45,30 @@ def _excluded(pyproject: Path) -> list[str]:
     return list(config.get("tool", {}).get("ruff", {}).get("extend-exclude", []))
 
 
+def _tracked_python_trees(repo_root: Path) -> set[str]:
+    """Return the scaffolding trees that carry TRACKED Python, asked of git.
+
+    Git is both faster and more correct than walking: a scaffolding tree holds
+    generated data (the search index among it) that a ``rglob`` must traverse
+    in full to prove a negative, and an untracked scratch file in a corpus is
+    not something the project's lint scope has any business covering.
+    """
+    listed = subprocess.run(  # noqa: S603
+        ["git", "-C", str(repo_root), "ls-files", "--", *(f"{name}/**/*.py" for name in _SCAFFOLDING_TREES)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    found: set[str] = set()
+    for line in listed.stdout.splitlines():
+        head = line.split("/", 1)[0]
+        if head in _SCAFFOLDING_TREES:
+            found.add(head)
+    return found
+
+
 def _carries_python(tree: Path) -> bool:
-    """Whether a tree exists and holds at least one Python file."""
+    """Whether a tree exists and holds at least one Python file (fixture use)."""
     return tree.is_dir() and any(tree.rglob("*.py"))
 
 
