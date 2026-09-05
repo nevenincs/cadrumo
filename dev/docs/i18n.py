@@ -75,7 +75,13 @@ _EXCLUDED_TOP_DIRS: Final[frozenset[str]] = frozenset(
 )
 
 #: Authored files under ``docs/`` that are not part of the published surface.
-_EXCLUDED_FILES: Final[frozenset[str]] = frozenset({"USERDOCS-KICKOFF-BRIEF.md"})
+#:
+#: Currently empty, and gated as such. Its one entry named a docs-root process
+#: brief that commit 06e03da6a4 retired; the file went and the exemption stayed,
+#: excluding nothing while still reading as a reviewed decision. That is the
+#: second-registry failure :data:`_GENERATED_MARKER` below is written to avoid,
+#: so every entry here must name a file that exists.
+_EXCLUDED_FILES: Final[frozenset[str]] = frozenset()
 
 #: The banner a generator writes into a page it owns. A page carrying it is
 #: English-only by policy and is excluded from the localized surface.
