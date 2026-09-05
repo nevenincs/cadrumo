@@ -3709,6 +3709,7 @@ class LedgerMatrixAcceptanceAttestationV1(BaseModel):
     review_subject_digest: str = Field(min_length=1)
     review_subject_observed_at: datetime
     attested_at: datetime
+    closure_receipt_set_digest: str | None = None
 
     @model_validator(mode="after")
     def _check_attestation(self) -> LedgerMatrixAcceptanceAttestationV1:
@@ -3724,6 +3725,8 @@ class LedgerMatrixAcceptanceAttestationV1(BaseModel):
         _require_digest(self.review_subject_digest, field_name="review_subject_digest")
         _require_observed_at(self.review_subject_observed_at, field_name="review_subject_observed_at")
         _require_observed_at(self.attested_at, field_name="attested_at")
+        if self.closure_receipt_set_digest is not None:
+            _require_digest(self.closure_receipt_set_digest, field_name="closure_receipt_set_digest")
         return self
 
     @property
@@ -3845,7 +3848,12 @@ class LedgerCapabilityMatrixV1(BaseModel):
         ):
             raise ValueError("gate closure receipts contain duplicate identities")
         attestation = self.acceptance_attestation
-        if attestation.ruling is not ReviewRuling.ACCEPT:
+        expected_receipt_set_digest = (
+            self.gate_closure_receipt_set_digest if self.accepted_gate_closure_receipts else None
+        )
+        if attestation.closure_receipt_set_digest != expected_receipt_set_digest:
+            raise ValueError("acceptance attestation is not bound to the exact gate closure receipt identity set")
+        if self.accepted_gate_closure_receipts and attestation.ruling is not ReviewRuling.ACCEPT:
             raise ValueError("gate closure receipts require a current ACCEPT acceptance attestation")
         for receipt in self.accepted_gate_closure_receipts:
             if receipt.matrix_closure_basis_digest != self.gate_closure_basis_digest(receipt.gate):
@@ -3856,6 +3864,18 @@ class LedgerCapabilityMatrixV1(BaseModel):
     def accepted_gate_closure_receipt(self, gate: LedgerGate) -> LedgerGateClosureReceiptV1 | None:
         """Return the current accepted receipt for one pre-TUI gate, if recorded."""
         return next((receipt for receipt in self.accepted_gate_closure_receipts if receipt.gate is gate), None)
+
+    @property
+    def gate_closure_receipt_set_digest(self) -> str:
+        """Hash the frozen receipt identities and gates that the attestation authorizes."""
+        return self.calculate_gate_closure_receipt_set_digest(
+            tuple((receipt.receipt_id, receipt.gate) for receipt in self.accepted_gate_closure_receipts)
+        )
+
+    @classmethod
+    def calculate_gate_closure_receipt_set_digest(cls, identities: tuple[tuple[str, LedgerGate], ...]) -> str:
+        """Calculate the noncircular receipt-set binding before receipt attestation digests exist."""
+        return _canonical_digest({"gate_closure_receipt_identities": tuple(sorted(identities))})
 
     def iter_evidence(self) -> Iterable[EvidenceCoordinateV1]:
         """Yield every coordinate whose identity and freshness are globally checked."""
@@ -3878,23 +3898,48 @@ class LedgerCapabilityMatrixV1(BaseModel):
         avoid a hash cycle; the gate closure basis below includes its complete
         canonical content.
         """
-        controls = {
-            "sole_ledger_parity_plan_owner": self.controls.sole_ledger_parity_plan_owner,
-            "tui_implementation_hold_recorded": self.controls.tui_implementation_hold_recorded,
+        return self.calculate_attestation_matrix_basis_digest(
+            schema_version=self.schema_version,
+            controls=self.controls,
+            accepted_denominator=self.accepted_denominator,
+            current_denominator=self.current_denominator,
+            accepted_authority_dispositions=self.accepted_authority_dispositions,
+            current_authority_dispositions=self.current_authority_dispositions,
+            current_subjects=self.current_subjects,
+            rows=self.rows,
+            campaign_evidence=self.campaign_evidence,
+        )
+
+    @classmethod
+    def calculate_attestation_matrix_basis_digest(
+        cls,
+        *,
+        schema_version: int,
+        controls: LedgerCampaignControlsV1,
+        accepted_denominator: LedgerDenominatorSnapshotV1,
+        current_denominator: LedgerDenominatorSnapshotV1,
+        accepted_authority_dispositions: AuthorityDispositionSnapshotV1,
+        current_authority_dispositions: AuthorityDispositionSnapshotV1,
+        current_subjects: tuple[EvidenceSubjectSnapshotV1, ...],
+        rows: tuple[LedgerCapabilityRowV1, ...],
+        campaign_evidence: tuple[EvidenceCoordinateV1, ...],
+    ) -> str:
+        """Calculate the acceptance basis without constructing a cyclic matrix."""
+        normalized_controls = {
+            "sole_ledger_parity_plan_owner": controls.sole_ledger_parity_plan_owner,
+            "tui_implementation_hold_recorded": controls.tui_implementation_hold_recorded,
         }
         return _canonical_digest(
             {
-                "schema_version": self.schema_version,
-                "controls": controls,
-                "accepted_denominator": self.accepted_denominator,
-                "current_denominator": self.current_denominator,
-                "accepted_authority_dispositions": self.accepted_authority_dispositions,
-                "current_authority_dispositions": self.current_authority_dispositions,
-                "current_subjects": tuple(sorted(self.current_subjects, key=lambda subject: subject.subject_id)),
-                "rows": tuple(sorted(self.rows, key=lambda row: row.identity.row_id)),
-                "campaign_evidence": tuple(
-                    sorted(self.campaign_evidence, key=lambda coordinate: coordinate.evidence_id)
-                ),
+                "schema_version": schema_version,
+                "controls": normalized_controls,
+                "accepted_denominator": accepted_denominator,
+                "current_denominator": current_denominator,
+                "accepted_authority_dispositions": accepted_authority_dispositions,
+                "current_authority_dispositions": current_authority_dispositions,
+                "current_subjects": tuple(sorted(current_subjects, key=lambda subject: subject.subject_id)),
+                "rows": tuple(sorted(rows, key=lambda row: row.identity.row_id)),
+                "campaign_evidence": tuple(sorted(campaign_evidence, key=lambda coordinate: coordinate.evidence_id)),
             }
         )
 

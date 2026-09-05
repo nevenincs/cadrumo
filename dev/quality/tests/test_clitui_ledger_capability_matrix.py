@@ -1638,12 +1638,23 @@ def _matrix(
         campaign_evidence=evidence,
         accepted_gate_closure_receipts=accepted_gate_closure_receipts,
     )
+    attestation_matrix_basis_digest = LedgerCapabilityMatrixV1.calculate_attestation_matrix_basis_digest(
+        schema_version=SCHEMA_VERSION,
+        controls=controls_value,
+        accepted_denominator=accepted,
+        current_denominator=current,
+        accepted_authority_dispositions=accepted_authority,
+        current_authority_dispositions=current_authority,
+        current_subjects=current_subjects,
+        rows=rows,
+        campaign_evidence=evidence,
+    )
     attestation = LedgerMatrixAcceptanceAttestationV1(
         attestation_id="attestation.ledger.s02",
         reviewer="independent-engineering-reviewer",
         ruling=ruling,
         plan_owner=ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
-        matrix_digest=matrix_digest,
+        matrix_digest=attestation_matrix_basis_digest,
         denominator_digest=current.digest,
         denominator_revision=current.revision,
         review_subject_id=_SUBJECT.subject_id,
@@ -1682,7 +1693,7 @@ def _matrix_with(
     if bind_attestation:
         attestation = candidate.acceptance_attestation.model_copy(
             update={
-                "matrix_digest": candidate.matrix_digest,
+                "matrix_digest": candidate.attestation_matrix_basis_digest,
                 "denominator_digest": candidate.current_denominator.digest,
                 "denominator_revision": candidate.current_denominator.revision,
             }
@@ -1698,28 +1709,30 @@ def _accepted_gate_receipts(matrix: LedgerCapabilityMatrixV1) -> tuple[LedgerGat
         LedgerGateClosureReceiptV1(
             receipt_id=f"receipt.ledger.{gate.value}",
             gate=gate,
-            reviewer="independent-engineering-reviewer",
-            ruling=ReviewRuling.ACCEPT,
-            plan_owner=ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
             matrix_closure_basis_digest=matrix.gate_closure_basis_digest(gate),
-            denominator_census_id=matrix.current_denominator.census_id,
-            denominator_digest=matrix.current_denominator.digest,
-            denominator_revision=matrix.current_denominator.revision,
-            attestation_id=attestation.attestation_id,
-            attestation_reviewer=attestation.reviewer,
-            attestation_review_subject_id=attestation.review_subject_id,
-            attestation_review_subject_revision=attestation.review_subject_revision,
-            attestation_review_subject_digest=attestation.review_subject_digest,
-            attestation_review_subject_observed_at=attestation.review_subject_observed_at,
-            accepted_at=_OBSERVED_AT,
+            acceptance_attestation_digest=attestation.calculated_digest,
         )
         for gate in tuple(LedgerGate)[:-1]
     )
 
 
+def _matrix_with_accepted_gate_receipts(matrix: LedgerCapabilityMatrixV1) -> LedgerCapabilityMatrixV1:
+    """Record a receipt set that the frozen independent acceptance attestation binds."""
+    receipt_identities = tuple((f"receipt.ledger.{gate.value}", gate) for gate in tuple(LedgerGate)[:-1])
+    attestation = matrix.acceptance_attestation.model_copy(
+        update={
+            "closure_receipt_set_digest": LedgerCapabilityMatrixV1.calculate_gate_closure_receipt_set_digest(
+                receipt_identities
+            )
+        }
+    )
+    attested = _matrix_with(matrix, acceptance_attestation=attestation)
+    return _matrix_with(attested, accepted_gate_closure_receipts=_accepted_gate_receipts(attested))
+
+
 def _matrix_with_authorized_hold_lift(matrix: LedgerCapabilityMatrixV1) -> LedgerCapabilityMatrixV1:
     """Record current G0--G3 acceptance, then make the one authorized hold transition."""
-    frozen = _matrix_with(matrix, accepted_gate_closure_receipts=_accepted_gate_receipts(matrix))
+    frozen = _matrix_with_accepted_gate_receipts(matrix)
     controls = frozen.controls.model_copy(update={"tui_implementation_hold_active": False})
     return _matrix_with(frozen, controls=controls)
 
@@ -3138,7 +3151,7 @@ def test_ordered_post_g3_hold_lift_preserves_accepted_history_and_allows_g4() ->
     "mutation",
     [
         pytest.param("forged_basis", id="forged-basis"),
-        pytest.param("non_accept", id="non-accept"),
+        pytest.param("forged_attestation_digest", id="forged-attestation-digest"),
         pytest.param("wrong_order", id="wrong-order"),
     ],
 )
@@ -3150,8 +3163,11 @@ def test_g4_refuses_forged_or_wrong_order_gate_closure_receipts(mutation: str) -
             *receipts[:-1],
             receipts[-1].model_copy(update={"matrix_closure_basis_digest": "sha256:" + "b" * 64}),
         )
-    elif mutation == "non_accept":
-        receipts = (*receipts[:-1], receipts[-1].model_copy(update={"ruling": ReviewRuling.REJECT}))
+    elif mutation == "forged_attestation_digest":
+        receipts = (
+            *receipts[:-1],
+            receipts[-1].model_copy(update={"acceptance_attestation_digest": "sha256:" + "c" * 64}),
+        )
     else:
         receipts = tuple(reversed(receipts))
     candidate = _matrix_with(matrix, accepted_gate_closure_receipts=receipts)
@@ -3165,7 +3181,7 @@ def test_g4_refuses_forged_or_wrong_order_gate_closure_receipts(mutation: str) -
 
 def test_receipt_serialization_and_matrix_digest_mutations_fail_closed() -> None:
     base = _matrix()
-    frozen = _matrix_with(base, accepted_gate_closure_receipts=_accepted_gate_receipts(base))
+    frozen = _matrix_with_accepted_gate_receipts(base)
     lifted = _matrix_with_authorized_hold_lift(base)
     stale_digest = lifted.model_copy(update={"matrix_digest": frozen.matrix_digest})
 
@@ -3183,6 +3199,65 @@ def test_g4_refuses_receipts_when_the_bound_acceptance_attestation_is_not_accept
     matrix = _matrix_with_authorized_hold_lift(_matrix())
     attestation = matrix.acceptance_attestation.model_copy(update={"ruling": ReviewRuling.REJECT})
     candidate = _matrix_with(matrix, acceptance_attestation=attestation)
+
+    assessment = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY)
+
+    assert not assessment.closed
+    assert assessment.blockers == ("matrix validation failed at <root>: value_error",)
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "bind_attestation"),
+    [
+        pytest.param("attested_at", _LATER_OBSERVED_AT, True, id="attested-at"),
+        pytest.param("reviewer", "fabricated-reviewer", True, id="reviewer"),
+        pytest.param("attestation_id", "attestation.ledger.reminted", True, id="identity"),
+        pytest.param("matrix_digest", "sha256:" + "d" * 64, False, id="matrix-basis"),
+    ],
+)
+def test_g4_refuses_each_reminted_bound_attestation_fact(
+    field: str,
+    value: datetime | str,
+    bind_attestation: bool,
+) -> None:
+    matrix = _matrix_with_authorized_hold_lift(_matrix())
+    attestation = matrix.acceptance_attestation.model_copy(update={field: value})
+    candidate = _matrix_with(matrix, acceptance_attestation=attestation, bind_attestation=bind_attestation)
+
+    assessment = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY)
+
+    assert not assessment.closed
+    assert assessment.blockers == ("matrix validation failed at <root>: value_error",)
+
+
+def test_receipt_reviewer_is_not_an_unbound_mutable_authority_claim() -> None:
+    matrix = _matrix_with_authorized_hold_lift(_matrix())
+    payload = matrix.model_dump(mode="python")
+    receipts = list(payload["accepted_gate_closure_receipts"])
+    receipts[-1]["reviewer"] = "fabricated-reviewer"
+    payload["accepted_gate_closure_receipts"] = tuple(receipts)
+
+    with pytest.raises(ValidationError, match="extra_forbidden"):
+        LedgerCapabilityMatrixV1.model_validate(payload)
+
+
+def test_receipt_identity_change_cannot_be_reminted_by_recomputing_attestation() -> None:
+    matrix = _matrix_with_authorized_hold_lift(_matrix())
+    receipts = (
+        *matrix.accepted_gate_closure_receipts[:-1],
+        matrix.accepted_gate_closure_receipts[-1].model_copy(update={"receipt_id": "receipt.ledger.reminted"}),
+    )
+    identities = tuple((receipt.receipt_id, receipt.gate) for receipt in receipts)
+    attestation = matrix.acceptance_attestation.model_copy(
+        update={
+            "closure_receipt_set_digest": LedgerCapabilityMatrixV1.calculate_gate_closure_receipt_set_digest(identities)
+        }
+    )
+    candidate = _matrix_with(
+        matrix,
+        accepted_gate_closure_receipts=receipts,
+        acceptance_attestation=attestation,
+    )
 
     assessment = _evaluate(candidate, LedgerGate.G4_TUI_ADMISSION_AND_PARITY)
 
