@@ -807,6 +807,17 @@ def test_unsafe_replay_path_forms_are_refused(tmp_path: Path, relative: str) -> 
         replay_module._safe_path(root, relative, allow_missing_leaf=True)
 
 
+#: The refusal each failure phase must produce. `post-gate` raises the bare
+#: gate label, so it is anchored rather than matched loosely.
+_FAILURE_REFUSAL = {
+    "stage": "live replay failed and was rolled back: stage",
+    "replace": "live replay failed and was rolled back: replace",
+    "post-gate": "^gate$",
+    "finding": "post-apply object-name finding delta differs from the receipt",
+    "content": "post-apply content digests differ from the receipt",
+}
+
+
 @pytest.mark.parametrize("failure", ["stage", "replace", "post-gate", "finding", "content"])
 def test_apply_and_postcondition_failures_restore_exact_live_bytes(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failure: str
@@ -860,7 +871,11 @@ def test_apply_and_postcondition_failures_restore_exact_live_bytes(
         monkeypatch.setattr(replay_module, "_run_gates_in_verified_copy", gates_finished_content)
         monkeypatch.setattr(replay_module, "_snapshot", corrupt_post_snapshot)
 
-    with pytest.raises(ObjectNameReplayError, match="__harvest__"):
+    # Five distinct failure phases shared one bare `raises`, so a rollback
+    # error raised in the wrong phase - or an early refusal that never
+    # reached the apply at all - satisfied every case identically while the
+    # live-bytes claim below held for the wrong reason.
+    with pytest.raises(ObjectNameReplayError, match=_FAILURE_REFUSAL[failure]):
         replay_object_name_component(
             manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
         )
