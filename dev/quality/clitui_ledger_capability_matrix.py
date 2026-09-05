@@ -1422,7 +1422,7 @@ class LedgerUnionDenominatorV1(BaseModel):
 
 def _ledger_union_digest_payload(union: LedgerUnionDenominatorV1) -> dict[str, object]:
     """Return JSON data with every set-valued field in canonical order."""
-    payload = union.model_dump(mode="json", exclude={"digest"})
+    payload = cast(dict[str, object], union.model_dump(mode="json", exclude={"digest"}))
     rows = cast(list[dict[str, object]], payload["rows"])
     for row in rows:
         row["sources"] = sorted(cast(list[str], row["sources"]))
@@ -3645,8 +3645,8 @@ __all__ = [
     "EvidenceSubjectSnapshotV1",
     "GateAssessmentV1",
     "InitialCliOwnership",
-    "LedgerCampaignControlsV1",
     "LedgerAxisApplicabilityDecisionV1",
+    "LedgerCampaignControlsV1",
     "LedgerCapabilityAxis",
     "LedgerCapabilityEffect",
     "LedgerCapabilityIdentityV1",

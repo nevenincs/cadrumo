@@ -11,12 +11,12 @@ cannot masquerade as the live campaign census.
 from __future__ import annotations
 
 import json
-from importlib import import_module
 from collections.abc import Callable
 from copy import copy
 from datetime import UTC, datetime
 from decimal import Decimal
 from functools import cache
+from importlib import import_module
 from pathlib import Path
 from typing import Final, cast
 

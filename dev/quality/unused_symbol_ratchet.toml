@@ -24,10 +24,8 @@
 [symbols]
 "cadrumo.application.user_profile.capsule_restore" = 2
 "cadrumo.entrypoints.cli._modelo" = 1
-"cadrumo.adapters.inbound.einvoice.shape" = 1
 "cadrumo.adapters.inbound.financial.providers.detection" = 1
 "cadrumo.adapters.inbound.pdf.label_regex" = 1
-"cadrumo.adapters.outbound.aeat.auth._clave_movil_page_flow" = 1
 "cadrumo.adapters.outbound.aeat.auth.certificate" = 1
 "cadrumo.adapters.outbound.aeat.auth.clave_permanente_support" = 1
 "cadrumo.adapters.outbound.aeat.sede._browser_constants" = 1
