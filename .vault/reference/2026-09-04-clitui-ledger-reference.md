@@ -438,4 +438,3 @@ A receipt alone is insufficient to lift the hold. `LedgerAcceptanceRecordAnchorV
 ## S13 fail-closed reopening contract
 
 LedgerUnionReviewSnapshotV1 is the non-duplicating gate projection of the validated schema-v4 union: outer union digest, aggregate row-review digest, row-review-attestation digest, reviewed-row count, review revision, review identity, and review time. The matrix attestation, every receipt basis, and the external acceptance anchor bind that snapshot. Gate evaluation requires a fresh validated union observation; a new, removed, or changed observation (including one that reuses an old semantic identity), semantic home/effect/applicability/gap/proof/route/hold/artifact/registry/provenance/status drift, incomplete review coverage, evidence-subject drift, or stale/missing receipt anchor returns G0-G4 to OPEN. The active-to-inactive hold bit remains the only authorized basis exclusion, and cannot suppress any other currentness failure.
-

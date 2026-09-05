@@ -5,16 +5,11 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:77099b314a92ca13040c6aafa3be98b55cdc8bddcd038818850784af58333c94'
+body_hash: 'sha256:a98201989b4447c183f7bb1c72d469c2834de252c718008860bff38c93816ac5'
 step_id: 'S429'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Ground the M200/2024 casilla 00067 label in its pinned official cell, and gate that grounding. The label was absent in every locale, not just es, so this is a capture gap rather than a translation gap. Casilla numbers are reused across Modelo 200 record pages, so the text cannot be chosen by searching for the number; the adjudication ledger's official_label_sha256 identifies the exact record-design cell, and matching that digest is what makes the label grounded rather than merely plausible. Add a gate asserting every pinned label ships verbatim.
 
@@ -24,23 +19,6 @@ related:
 - `dev/locales/tests/test_casilla_label_matches_pinned_official_text.py`
 
 ## Changes
-
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
-
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
-
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->
 
 The backlog called this "the missing es label". It is not an es problem: the key
 was absent from all four catalogues, and it is one of 199 M200/2024 casillas in
@@ -94,4 +72,3 @@ no label. 116 more have a pinned digest that matches a shipped record-design
 cell and are mechanically derivable the same way. 79 have no adjudication entry
 at all. 3 carry a pin that matches no cell in the shipped design. The 79 and the
 3 need adjudication before a label can be grounded; only the 116 are ready.
-

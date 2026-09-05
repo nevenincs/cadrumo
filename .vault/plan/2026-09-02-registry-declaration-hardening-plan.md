@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:651a9707c365b9eb851ffc64c938f00bb2cc210bfe6972a7ffc0521bccc2418c'
+body_hash: 'sha256:9e2776367bffacc42c7a487ecf6526ef6e49cd59ec3ef384db16c02245cb7e74'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -544,6 +544,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S662` - Floor the configured extra files that reach the release annotation check, since the corpus arrives through a get default and a renamed or emptied key yields no entries, which is the same silent success the gate exists to prevent one level up; `dev/ci/tests/test_action_pinning.py`.
 - [x] `W02.P02.S663` - Refuse every route to an empty synthetic pool in the sanitiser round-trip gate and floor its corpus, since a sidecar without its replacements list and a list with no synthetic each skipped the one comparison proving the parsed identity was sanitised, so a fixture carrying a real identity would pass by not being asked; `dev/sanitizer/tests/test_round_trip.py`.
 - [x] `W02.P02.S664` - Floor the workflow steps the runtime compatibility skip prohibition examines, since the step corpus arrives through a get default and a job that lost its steps contributes nothing while reading exactly like a job whose steps are clean, which the presence claims further down cannot see; `dev/ci/tests/test_python_runtime_compatibility_workflow.py`.
+- [x] `W02.P02.S665` - Pin the footnote-pointer gate's unresolved-sheet claim: DP200020B is absent from the parse entirely, so `.get(..., {})` proved nothing about the sheet it names; `dev/registry/tests/test_footnote_pointer_notes.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
