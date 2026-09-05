@@ -467,6 +467,19 @@ def test_real_rollback_attempts_every_member_and_aggregates_failures(
     assert second.read_bytes() == b"applied-two"
 
 
+#: The refusal each corrupted field must produce, so a case cannot pass on
+#: another check's error. `schema` and `source-unchanged` share one refusal
+#: because production tests them in a single `or`.
+_REFUSAL_BY_FIELD = {
+    "schema": "not a successful current-schema rehearsal",
+    "source-unchanged": "not a successful current-schema rehearsal",
+    "receipt-id": "identity digest is invalid",
+    "evidence-digest": "evidence digest is invalid",
+    "changed-path-digest": "changed-path digest is invalid",
+    "failed-gate": "contains a failed declared command",
+}
+
+
 @pytest.mark.parametrize(
     "field",
     [
@@ -491,7 +504,17 @@ def test_invalid_receipt_integrity_refuses_before_any_live_write(
     elif field == "evidence-digest":
         candidate = replace(receipt, evidence_digest=_digest(b"wrong"))
     elif field == "changed-path-digest":
-        candidate = replace(receipt, changed_path_digest=_digest(b"wrong"))
+        # The identity and evidence digests both cover this field, so
+        # corrupting it alone refused at the IDENTITY check and this case
+        # never reached the changed-path check it is named for. Re-seal both
+        # covering digests through production's own helper so the only
+        # remaining mismatch is the one under test.
+        corrupted = replace(receipt, changed_path_digest=_digest(b"wrong"))
+        candidate = replace(
+            corrupted,
+            receipt_id=replay_module._receipt_digest(corrupted, evidence=False),
+            evidence_digest=replay_module._receipt_digest(corrupted, evidence=True),
+        )
     else:
         failed = replace(receipt.gate_outcomes[0], return_code=7)
         candidate = replace(receipt, gate_outcomes=(failed,))
@@ -499,7 +522,13 @@ def test_invalid_receipt_integrity_refuses_before_any_live_write(
     monkeypatch.setattr(replay_module, "_replace_staged", lambda *_args, **_kwargs: writes.append("replace"))
     monkeypatch.setattr(replay_module, "_unlink_regular", lambda *_args, **_kwargs: writes.append("unlink"))
 
-    with pytest.raises(ObjectNameReplayError):
+    # A bare `raises(ObjectNameReplayError)` is satisfied by ANY refusal, so a
+    # single early guard rejecting every candidate would make all six cases
+    # pass while five of the six integrity checks did nothing. The sibling
+    # drift case already matches on its message; these carry the same
+    # discipline. Refusal ORDER is load-bearing too: an earlier check firing
+    # first is a finding this now surfaces rather than absorbs.
+    with pytest.raises(ObjectNameReplayError, match=_REFUSAL_BY_FIELD[field]):
         replay_object_name_component(
             manifest, inventory=inventory, component=component, receipt=candidate, repo_root=repo
         )
