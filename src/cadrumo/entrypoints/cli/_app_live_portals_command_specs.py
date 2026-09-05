@@ -62,7 +62,7 @@ LIVE_PORTALS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="modelo",
                 declarations=("--modelo",),
-                value=ValueContract(DeferredTarget("cadrumo.entrypoints.cli._common", "MODELO_CODE_CHOICE_ALL")),
+                value=ValueContract(DeferredTarget("builtins", "str")),
                 default=ParameterDefault.value(None),
                 help_key=_key("cli.app.live.portals.modelo_help"),
                 multiple=False,
