@@ -4377,15 +4377,34 @@ def test_canonical_matrix_builds_every_reviewed_union_row_deterministically() ->
     assert first.accepted_gate_closure_receipts == ()
 
 
-def test_canonical_matrix_refuses_missing_union_identity_even_after_digest_remint() -> None:
+@pytest.mark.parametrize("identity_mutation", ["subset", "extra", "duplicate"])
+def test_canonical_matrix_refuses_row_identity_mismatch_even_after_digest_remint(identity_mutation: str) -> None:
     matrix = build_ledger_capability_matrix()
-    payload = matrix.model_dump(mode="python")
-    payload["rows"] = payload["rows"][:-1]
-    provisional = LedgerCapabilityMatrixV1.model_construct(**payload)
-    payload["matrix_digest"] = provisional.calculated_matrix_digest
+    rows = list(matrix.rows)
+    if identity_mutation == "subset":
+        rows.pop()
+    elif identity_mutation == "extra":
+        exemplar = rows[-1]
+        extra_id = f"{exemplar.identity.row_id}.unexpected"
+        rows.append(
+            exemplar.model_copy(
+                update={
+                    "identity": LedgerCapabilityIdentityV1(
+                        capability_id=extra_id,
+                        operation_id=extra_id,
+                        suboperation_id=extra_id,
+                    )
+                }
+            )
+        )
+    else:
+        rows.append(rows[-1])
+    provisional = matrix.model_copy(update={"rows": tuple(rows)})
+    reminted = provisional.model_copy(update={"matrix_digest": provisional.calculated_matrix_digest})
 
-    with pytest.raises(ValidationError, match="live union identities"):
-        LedgerCapabilityMatrixV1.model_validate(payload)
+    expected = "duplicate row identities" if identity_mutation == "duplicate" else "current complete denominator"
+    with pytest.raises(ValidationError, match=expected):
+        LedgerCapabilityMatrixV1.model_validate(reminted.model_dump(mode="python"))
 
 
 def test_matrix_contract_source_digest_normalizes_checkout_newlines(tmp_path: Path) -> None:
@@ -4395,4 +4414,13 @@ def test_matrix_contract_source_digest_normalizes_checkout_newlines(tmp_path: Pa
     crlf.write_bytes(b"first\r\nsecond\r\n")
 
     assert ledger_capability_matrix_source_digest(lf) == ledger_capability_matrix_source_digest(crlf)
+    crlf.write_bytes(b"first\r\nchanged\r\n")
+    assert ledger_capability_matrix_source_digest(lf) != ledger_capability_matrix_source_digest(crlf)
     assert ledger_capability_matrix_source_digest().startswith("sha256:")
+
+
+def test_g0_refuses_a_small_fixture_without_a_live_union_identity_observation() -> None:
+    assessment = _evaluate(_matrix(), LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE)
+
+    assert not assessment.closed
+    assert "G0 requires the complete current live union identity observation" in assessment.blockers

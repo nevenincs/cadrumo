@@ -5067,7 +5067,7 @@ def _matrix_row_from_union(
                     next_closure_action=decision.proof_requirement,
                 )
             )
-    annotations: frozenset[CapabilityAnnotation] = frozenset()
+    annotations = frozenset[CapabilityAnnotation]()
     initial_ownership = InitialCliOwnership.NOT_CLI_OWNED
     if cli_applicable:
         initial_ownership = InitialCliOwnership.CLI_OWNED
@@ -5300,6 +5300,11 @@ def _matrix_acceptance_errors(matrix: LedgerCapabilityMatrixV1) -> list[str]:
         errors.append("campaign controls do not name the accepted clitui-ledger plan identity")
     if matrix.matrix_digest != matrix.calculated_matrix_digest:
         errors.append("matrix digest is stale or does not bind the current campaign state")
+    source_subject = next(
+        (subject for subject in matrix.current_subjects if subject.subject_id == "subject.ledger.matrix_contract"), None
+    )
+    if source_subject is not None and source_subject.digest != ledger_capability_matrix_source_digest():
+        errors.append("matrix-contract evidence source digest drifted")
     attestation = matrix.acceptance_attestation
     if attestation.plan_owner != matrix.controls.sole_ledger_parity_plan_owner:
         errors.append("acceptance attestation plan owner differs from campaign controls")
@@ -5566,6 +5571,8 @@ def evaluate_ledger_capability_gate(
         observed_acceptance_subjects=observed_acceptance_subjects,
     )
     if gate is LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE:
+        if matrix.live_union is None:
+            blockers.append("G0 requires the complete current live union identity observation")
         if not matrix.controls.tui_implementation_hold_recorded or not matrix.controls.tui_implementation_hold_active:
             blockers.append("the Ledger TUI implementation hold is not recorded and active")
         if matrix.acceptance_attestation.ruling is not ReviewRuling.ACCEPT:
