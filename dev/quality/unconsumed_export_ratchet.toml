@@ -2,12 +2,12 @@
 #
 # A name in __all__ that no non-test module imports AND that the reachability
 # audit reports unused. Resolving these is a published-surface decision for an
-# owner; the area and shape breakdowns are in
+# owner; the area and shape breakdowns live in
 # dev/audit/reachability_classification.toml, which counts the same population
 # by the same method so the two records cannot disagree.
 #
 # This file enforces only the half needing no decision: that the number does
-# not GROW while the review waits. Shrink-only.
+# not grow. Shrink-only.
 
 [files]
 "adapters/inbound/pdf/label_regex.py" = 1

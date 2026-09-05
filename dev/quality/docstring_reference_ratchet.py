@@ -1,24 +1,19 @@
 """Ratchet: no shipped module may gain a docstring reference that names nothing.
 
 The screen beside this file finds them; this refuses new ones. A Sphinx role is
-a claim that the named symbol exists, and nothing checked that claim, so it
-routinely outlived the symbol -- a rename updated the code and left the prose,
-and a reader who followed it landed on something gone. That is worse than no
+a claim that the named symbol exists, and nothing else checks that claim, so it
+outlives the symbol: a rename updates the code and leaves the prose, and a
+reader who follows it lands on something gone. That is worse than no
 documentation, because it is confidently wrong.
 
-The population went from 87 to 4. What is left is not debt: each of the four is
-an accurate statement about the PAST, naming a module or method that correctly
-no longer exists. ``core.decimal.formatting`` records that it consolidated the
-copies that "previously lived in" three now-absent modules, and
-``secure_bound_repository`` explains why two read paths were merged by naming
-the method that used to be one of them. Rewriting either would turn a true
-sentence about history into a false one about the present -- an earlier sweep
-did exactly that and was reverted.
+The baseline is not a debt ledger. A reference can be correct BECAUSE it names
+something absent -- a sentence recording what a module consolidated, or why two
+read paths were merged, naming code that is properly gone. Rewriting one of
+those would turn a true statement about history into a false one about the
+present. Read a row before acting on it.
 
-So the baseline is not a debt ledger to burn down. It is the set of references
-that are correct BECAUSE they name something absent, and the gate exists to
-keep any other kind from joining them. It fails in four directions, so that
-paid-down debt is recorded rather than leaving headroom:
+It fails in four directions, so paid-down debt is recorded rather than leaving
+headroom:
 
 * a file not in the baseline carries a dangling reference -- new debt;
 * a recorded file carries more than recorded -- growth;
