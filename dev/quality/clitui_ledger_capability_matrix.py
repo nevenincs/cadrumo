@@ -18,6 +18,7 @@ from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date, datetime
 from enum import StrEnum
+from functools import cache
 from pathlib import Path
 from types import MappingProxyType
 from typing import Final, Literal, TypedDict, cast, override
@@ -26,8 +27,10 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError,
 from pydantic_core import to_jsonable_python
 
 from cadrumo.core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingSourceKind
+from cadrumo.core.transport_locus import TransportLocus, TransportRole, TransportShape
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 from cadrumo.domain.calculations.registry.binding_targets import casillas_by_binding
+from cadrumo.entrypoints.cli.command_spec import CommandSpec
 
 SCHEMA_VERSION: Final[int] = 4
 _DIGEST_PATTERN: Final[re.Pattern[str]] = re.compile(r"^sha256:[0-9a-f]{64}$")
@@ -1490,7 +1493,7 @@ class LedgerUnionDenominatorV1(BaseModel):
 
     @model_validator(mode="after")
     def _check_union(self) -> LedgerUnionDenominatorV1:
-        _validate_artifact_input_capabilities(_EXPLICIT_ARTIFACT_INPUT_CAPABILITIES)
+        _artifact_input_capabilities()
         sources = tuple(item.source for item in self.source_digests)
         if len(set(sources)) != len(sources) or frozenset(sources) != frozenset(DenominatorSourceKind):
             raise ValueError("the union must bind every mandatory source digest exactly once")
@@ -2765,23 +2768,119 @@ _EXPLICIT_BACKEND_HELPER_ONLY_CAPABILITIES: Final[frozenset[str]] = frozenset(
     }
 )
 
-_EXPLICIT_ARTIFACT_INPUT_CAPABILITIES: Final[frozenset[str]] = frozenset(
+@dataclass(frozen=True, slots=True)
+class LedgerCliArtifactInputObservation:
+    """One live local-input declaration and every semantic row selected by its command."""
+
+    command_key: str
+    parameter_name: str
+    shape: TransportShape
+    role: TransportRole
+    capability_ids: tuple[str, ...]
+
+
+_EXPECTED_LEDGER_CLI_ARTIFACT_INPUT_OBSERVATIONS: Final[tuple[LedgerCliArtifactInputObservation, ...]] = (
+    LedgerCliArtifactInputObservation(
+        "app_ledger_classify",
+        "file",
+        TransportShape.FILE,
+        TransportRole.PRIMARY,
+        (
+            "ledger.classification.bulk_csv",
+            "ledger.classify",
+            "ledger.classify.direct",
+            "ledger.classify.m210",
+            "ledger.llm.apply",
+            "ledger.llm.apply_saturated",
+            "ledger.llm.apply_split",
+            "ledger.llm.classify_with_evidence",
+            "ledger.llm.iva_derive",
+            "ledger.llm.reject",
+            "ledger.llm.saturate",
+            "ledger.llm.suggest",
+            "ledger.llm.suggest_split",
+        ),
+    ),
+    LedgerCliArtifactInputObservation(
+        "app_ledger_evidence_add",
+        "source_path",
+        TransportShape.FILE,
+        TransportRole.PRIMARY,
+        ("ledger.evidence.add",),
+    ),
+    LedgerCliArtifactInputObservation(
+        "app_ledger_evidence_batch",
+        "directory",
+        TransportShape.DIRECTORY,
+        TransportRole.PRIMARY,
+        ("ledger.evidence.batch",),
+    ),
+    LedgerCliArtifactInputObservation(
+        "app_ledger_evidence_batch",
+        "file",
+        TransportShape.FILE,
+        TransportRole.PRIMARY,
+        ("ledger.evidence.batch",),
+    ),
+    LedgerCliArtifactInputObservation(
+        "app_ledger_import",
+        "file",
+        TransportShape.FILE,
+        TransportRole.PRIMARY,
+        (
+            "ledger.import",
+            "ledger.import.directory",
+            "ledger.import.dry_run",
+            "ledger.import.file",
+            "ledger.import.provider_auto",
+            "ledger.import.provider_csv",
+            "ledger.import.provider_n26",
+            "ledger.import.provider_ofx_qfx",
+            "ledger.import.provider_pdf",
+            "ledger.import.provider_pdf_n26",
+            "ledger.import.provider_xlsx_excel",
+            "ledger.import.verify",
+        ),
+    ),
+    LedgerCliArtifactInputObservation(
+        "app_ledger_import",
+        "verify_source",
+        TransportShape.FILE,
+        TransportRole.AUXILIARY,
+        (
+            "ledger.import",
+            "ledger.import.directory",
+            "ledger.import.dry_run",
+            "ledger.import.file",
+            "ledger.import.provider_auto",
+            "ledger.import.provider_csv",
+            "ledger.import.provider_n26",
+            "ledger.import.provider_ofx_qfx",
+            "ledger.import.provider_pdf",
+            "ledger.import.provider_pdf_n26",
+            "ledger.import.provider_xlsx_excel",
+            "ledger.import.verify",
+        ),
+    ),
+    LedgerCliArtifactInputObservation(
+        "app_ledger_inventory_closing_authority_record",
+        "file",
+        TransportShape.FILE,
+        TransportRole.PRIMARY,
+        ("ledger.inventory.closing_authority.record",),
+    ),
+    LedgerCliArtifactInputObservation(
+        "app_ledger_invoice_import",
+        "file",
+        TransportShape.FILE,
+        TransportRole.PRIMARY,
+        ("ledger.invoice.import",),
+    ),
+)
+_REVIEWED_ADDITIONAL_ARTIFACT_INPUT_CAPABILITIES: Final[frozenset[str]] = frozenset(
     {
-        "ledger.classification.bulk_csv",
-        "ledger.import",
-        "ledger.import.directory",
-        "ledger.import.dry_run",
-        "ledger.import.file",
-        "ledger.import.provider_auto",
-        "ledger.import.provider_csv",
-        "ledger.import.provider_n26",
-        "ledger.import.provider_ofx_qfx",
-        "ledger.import.provider_pdf",
-        "ledger.import.provider_pdf_n26",
-        "ledger.import.provider_xlsx_excel",
+        "ledger.evidence.replace",
         "ledger.import.source",
-        "ledger.import.verify",
-        "ledger.invoice.import",
     }
 )
 
@@ -2957,13 +3056,71 @@ _EXPLICIT_TUI_ROUTE_ADJUDICATION: Final[tuple[tuple[str, tuple[str, ...]], ...]]
 )
 
 
-def _validate_artifact_input_capabilities(capability_ids: frozenset[str]) -> None:
-    """Refuse drift from the reviewed local file and directory input cohort."""
-    if capability_ids != _EXPLICIT_ARTIFACT_INPUT_CAPABILITIES:
-        raise ValueError("artifact-input capability adjudication drifted from the exhaustive reviewed set")
+def _derive_ledger_cli_artifact_input_observations(
+    command_specs: tuple[CommandSpec, ...] | None = None,
+    *,
+    selection_for_observation: Callable[[str], tuple[str, ...]] = _selection_for_observation,
+) -> tuple[LedgerCliArtifactInputObservation, ...]:
+    """Project local file/directory input authority from the live Ledger CommandSpecs."""
+    from cadrumo.entrypoints.cli._app_ledger_command_specs import (
+        LEDGER_CLI_COMMAND_CENSUS,
+        LEDGER_COMMAND_SPECS,
+    )
+
+    specs = LEDGER_COMMAND_SPECS if command_specs is None else command_specs
+    census_by_key = {entry.command_key: entry for entry in LEDGER_CLI_COMMAND_CENSUS}
+    observations: list[LedgerCliArtifactInputObservation] = []
+    for spec in specs:
+        local_inputs = tuple(
+            parameter
+            for parameter in spec.parameters
+            if parameter.transport_locus is TransportLocus.LOCAL_IN
+            and parameter.transport_shape in {TransportShape.FILE, TransportShape.DIRECTORY}
+        )
+        if not local_inputs:
+            continue
+        entry = census_by_key.get(spec.key)
+        if entry is None:
+            raise ValueError(f"Ledger local-input CommandSpec is not an invocable census member: {spec.key}")
+        capability_ids = set(selection_for_observation(f"cli_endpoint:{entry.command_key}"))
+        for suboperation_id in entry.suboperation_ids:
+            capability_ids.update(selection_for_observation(f"cli_suboperation:{suboperation_id}"))
+        canonical_capability_ids = tuple(sorted(capability_ids))
+        if not canonical_capability_ids:
+            raise ValueError(f"Ledger local-input CommandSpec selects no semantic capabilities: {spec.key}")
+        observations.extend(
+            LedgerCliArtifactInputObservation(
+                command_key=spec.key,
+                parameter_name=parameter.name,
+                shape=parameter.transport_shape,
+                role=parameter.transport_role,
+                capability_ids=canonical_capability_ids,
+            )
+            for parameter in local_inputs
+        )
+    return tuple(sorted(observations, key=lambda item: (item.command_key, item.parameter_name)))
+
+
+def _validate_artifact_input_capabilities(
+    observations: tuple[LedgerCliArtifactInputObservation, ...],
+) -> frozenset[str]:
+    """Refuse transport metadata or semantic-selection drift and return its row authority."""
+    if observations != _EXPECTED_LEDGER_CLI_ARTIFACT_INPUT_OBSERVATIONS:
+        raise ValueError("artifact-input CommandSpec metadata or semantic mapping drifted")
+    live_capabilities = frozenset(
+        capability_id for observation in observations for capability_id in observation.capability_ids
+    )
+    capability_ids = live_capabilities | _REVIEWED_ADDITIONAL_ARTIFACT_INPUT_CAPABILITIES
     unknown = capability_ids - set(_EXPLICIT_EFFECTS)
     if unknown:
         raise ValueError(f"artifact-input adjudication names unknown capabilities: {sorted(unknown)!r}")
+    return capability_ids
+
+
+@cache
+def _artifact_input_capabilities() -> frozenset[str]:
+    """Return live CommandSpec-derived plus explicit reviewed planned artifact inputs."""
+    return _validate_artifact_input_capabilities(_derive_ledger_cli_artifact_input_observations())
 
 
 def _validate_tui_route_adjudication(
@@ -3156,7 +3313,7 @@ def _axis_decisions(
         },
         LedgerCapabilityAxis.ARTIFACT: effect
         in {LedgerCapabilityEffect.ARTIFACT, LedgerCapabilityEffect.ARTIFACT_QUERY}
-        or capability_id in _EXPLICIT_ARTIFACT_INPUT_CAPABILITIES,
+        or capability_id in _artifact_input_capabilities(),
         LedgerCapabilityAxis.PROVENANCE: effect
         in {
             LedgerCapabilityEffect.MUTATION,
@@ -3302,7 +3459,7 @@ def _reviewed_union_row_fields(
         gaps.add(LedgerGapClass.COMPOSITION)
     if (
         effect in {LedgerCapabilityEffect.ARTIFACT, LedgerCapabilityEffect.ARTIFACT_QUERY}
-        or capability_id in _EXPLICIT_ARTIFACT_INPUT_CAPABILITIES
+        or capability_id in _artifact_input_capabilities()
     ):
         gaps.add(LedgerGapClass.ARTIFACT)
     if effect is LedgerCapabilityEffect.REGISTRY_ROUTE:
@@ -3349,7 +3506,7 @@ def _reviewed_union_row_fields(
         blockers.append("A TUI component exists without installed navigation or executable door reachability.")
     if capability_id in _BACKEND_DIRECT_PROOF_GAPS:
         blockers.append("No direct symbol-level backend behavior test was located for this public operation.")
-    if capability_id in _EXPLICIT_ARTIFACT_INPUT_CAPABILITIES:
+    if capability_id in _artifact_input_capabilities():
         blockers.append("The local artifact input lacks complete readability, refusal, digest, and custody proof.")
 
     destination_status = _registry_destination_status(effect, registry_row)
@@ -3382,7 +3539,7 @@ def _reviewed_union_row_fields(
     elif primary_gap is LedgerGapClass.ARTIFACT:
         next_action = (
             "Prove artifact readability, format refusal, digest handling, and custody cleanup for the local input."
-            if capability_id in _EXPLICIT_ARTIFACT_INPUT_CAPABILITIES
+            if capability_id in _artifact_input_capabilities()
             else "Prove the artifact with an independent reader, declared-loss contract, and cleanup behavior."
         )
     else:
@@ -3567,7 +3724,7 @@ def build_ledger_union_denominator(
     tui = build_ledger_tui_supported_surface_census() if tui is None else tui
     for declaration in _LEDGER_BACKEND_OPERATION_DECLARATIONS:
         _validate_existing_semantic_home(declaration)
-    _validate_artifact_input_capabilities(_EXPLICIT_ARTIFACT_INPUT_CAPABILITIES)
+    _artifact_input_capabilities()
     observations = _union_observations(registry, tui)
     effect_groups = (
         _EXPLICIT_QUERY_CAPABILITIES,
