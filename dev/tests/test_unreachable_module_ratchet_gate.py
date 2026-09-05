@@ -33,6 +33,7 @@ cannot commit the plant.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
@@ -510,3 +511,32 @@ def test_the_live_tui_projections_are_deferred_by_their_frozen_consumers() -> No
         for importer in entry.deferring_importers:
             carried = baseline.is_frozen(importer) or importer in deferred_modules
             assert carried, f"{entry.module} deferred by non-deferred importer {importer}"
+
+
+def test_every_intentional_rationale_names_a_reader_that_still_reads_it() -> None:
+    """A disposition's justification must stay true, or the module is orphaned.
+
+    Four of the five design-time authorities are excused because a specific
+    dev-side file reads them: delete that reader and the module becomes
+    genuinely unreachable while this gate stays green, because the disposition
+    still says otherwise. The rationale is the evidence, so it has to be
+    checkable evidence.
+
+    Only paths a rationale actually names are checked. A disposition that
+    claims no reader -- ``core.address_components`` deliberately has none --
+    asserts nothing here and is left alone.
+    """
+    repo_root = Path(__file__).resolve().parent.parent.parent
+    referenced = re.compile(r"dev/[\w/]+\.py")
+
+    unread: list[str] = []
+    for disposition in UnreachableBaseline.load().intentional:
+        leaf = disposition.module.rsplit(".", 1)[-1]
+        for claimed in referenced.findall(disposition.rationale):
+            reader = repo_root / claimed
+            if not reader.is_file():
+                unread.append(f"{disposition.module}: {claimed} no longer exists")
+            elif leaf not in reader.read_text(encoding="utf-8"):
+                unread.append(f"{disposition.module}: {claimed} no longer mentions {leaf}")
+
+    assert not unread, "intentional dispositions whose stated reader is gone: " + "; ".join(unread)
