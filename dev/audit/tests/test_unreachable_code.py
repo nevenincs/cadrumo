@@ -279,6 +279,7 @@ def test_symbol_layer_reports_only_definitions_shipped_code_never_references(res
         "Color.BLUE",
         "Config",
         "Config.NEVER_ANYWHERE",
+        "Config.PROSE_ONLY",
         "Widget.hidden_field",
         "Widget.hidden",
         "UNUSED_CONST",
