@@ -204,7 +204,7 @@
 "cadrumo.domain.calculations.registry._validate_cross_revision" = 1
 "cadrumo.domain.calculations.registry._validate_evidence" = 2
 "cadrumo.domain.calculations.registry._validate_semantic_role_required" = 1
-"cadrumo.domain.calculations.registry.applicability" = 3
+"cadrumo.domain.calculations.registry.applicability" = 2
 "cadrumo.domain.calculations.registry.authority" = 3
 "cadrumo.domain.calculations.registry.bindings" = 1
 "cadrumo.domain.calculations.registry.censo_modelos" = 3

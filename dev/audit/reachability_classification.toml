@@ -821,3 +821,19 @@ resolved = false
 symbols = ["wire_detail_row"]
 evidence = "It is called, at application/modelo/edit_session.py lines 65 and 513, so it is not dead. The module ratchet already reports edit_session as reachable only from the frozen cadrumo.entrypoints.tui.modelo.edit cluster, so this symbol is the tail of that deferral rather than a separate finding: it lives exactly as long as its importer does. Resolving it means resolving the TUI cluster, and doing anything to it before then would be acting inside another campaign's scope."
 
+[[symbol_cluster]]
+name = "withholding296 binding family with an enrolled validator and no reached resolver"
+class = "should-be-live"
+area = "domain/calculations/registry"
+resolved = false
+symbols = ["resolve_withholding296_binding_values"]
+evidence = "The family is half wired. Its validator is enrolled canonically - bindings.py imports validate_withholding296_binding_selector_shape and registers it against BindingSourceKind.WITHHOLDING296 - and application/calculations/row_set_assembly consumes the Withholding296Observation type and assembles observations itself. But neither resolver in the owning module is called by anything: resolve_withholding296_binding_row_values is exported in __all__ and unconsumed, and resolve_withholding296_binding_values is not exported and unconsumed. The registry-bindings contract expects a family to carry a declaration, an enrolled validator AND a resolver at its owning public module, so deleting the unexported one would not tidy dead code, it would remove half of an already incomplete pair. Resolution is an owner decision on which resolver is canonical and wiring it, or retiring the unchosen form deliberately."
+
+[[symbol_cluster]]
+name = "seed applicability coverage marker read by nothing"
+class = "superseded"
+area = "domain/calculations/registry"
+resolved = true
+symbols = ["_SEED_COVERAGE_NOTICE"]
+evidence = "An English module-level string documenting that the applicability seed table is deliberately narrow. The behaviour it described is genuinely implemented and does not depend on it: a modelo with no seed rule is reported INCOMPLETE carrying an emitted Spanish rationale that states the deferral to the operator, and that constant's own docstring already carries the explanation. The marker was read by no code and cross-referenced from three places, so removing it required repointing the module docstring, the seed-table banner comment and the table docstring to state the deferral directly rather than name a constant that no longer exists."
+
