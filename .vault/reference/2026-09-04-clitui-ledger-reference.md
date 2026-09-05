@@ -24,17 +24,17 @@ This document is the authoritative human-readable publication surface for the `L
 | Publication field | Current value |
 | --- | --- |
 | Contract / schema | `LedgerCapabilityMatrixV1` / `4`; `LedgerUnionDenominatorV1` / `4` |
-| Publication revision | `s14-preacceptance-candidate-1` |
+| Publication revision | `s14-remediation-candidate-2` |
 | Observation timestamp | `2026-09-05T12:00:00+02:00` |
-| Candidate implementation base | `bd2f61103d`, `55b47b660a`; final candidate commit is the review subject |
-| Contract source digest | `sha256:d58918930a1e18f9e9b65636d09998e21a60f3a9f35d00cf0084a17359ab9248` |
+| Candidate revision | Final scoped commit is the review subject; its source and matrix digests below are the only candidate identity claims |
+| Contract source digest | `sha256:18e201e66d73b883ad015aff966a8255febeffbac7b04e923d278d2b02adce58` (newline-normalized framed bytes) |
 | Accepted plan owner | `clitui-ledger` |
-| Denominator revision / digest | `s12-row-review-3` / `sha256:8a158b5cc4c8e6c3035dc272999af61ac6cb080af8c208eccc8d28e4105a7575` |
+| Denominator revision / digest | `row-review-v1` / `sha256:48c2c800faa2c9932811678fc16c8caff2cae89bcdaf81512e7ae7aa29d5d140` |
 | Row-review coverage / digest | `693 / 693` / `sha256:4e42e5e04ccfd7a8654e629933698e141033b0767d0f94ec5433619400203ff8` |
 | Row-review attestation | `complete_with_open_gaps`; `sha256:fc15a433ad145832934cbe894d3d0b875d27e9a54ed1a70ae271c16ff81aedf7` |
 | Matrix denominator snapshot | `693` identities; `sha256:48c2c800faa2c9932811678fc16c8caff2cae89bcdaf81512e7ae7aa29d5d140` |
-| Matrix digest / pre-receipt review basis | `sha256:ac5d5ab8cbfa9aa3233c858c2693a143a6436e4131ece7fc6652d4341b51e284` / `sha256:9462e6d32faa67c7d45f08d30d0c4b6c15622479d1fdec8385b3fa95ed1b9750` |
-| Candidate identity equality | matrix rows = current denominator = row-review identities = live union identities = `693` |
+| Matrix digest / pre-receipt review basis | `sha256:c4a210bbd5410a3b6f7630262277b0cfc780d278815cc7a58da66dccd265c30a` / `sha256:a8cd7cb17aea3d508459423c708b596d8931c76660fee6abf987c2c6fe21d7bd` |
+| Candidate identity equality | matrix rows = current denominator = row-review snapshot = persisted live union = supplied observed live union = `693`; an absent, malformed, subset, extra, duplicate, or divergent union relocks G0--G4 |
 | Acceptance attestation | No accepted attestation: candidate carries the deterministic `independent-review-pending` / `REJECT` state only |
 | Acceptance-record anchor / G0 | Absent / **OPEN**; neither is minted by candidate preparation |
 | TUI hold | Campaign sequencing bars Ledger TUI implementation; global ownership/hold is recorded and every TUI-applicable row is typed as held until G3 |
