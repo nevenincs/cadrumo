@@ -1085,3 +1085,31 @@ async def test_the_census_comparison_shows_both_values_or_neither(width: int) ->
     assert ("local_value" in keys) == ("aeat_value" in keys), (
         f"at {width} columns the census shows half a comparison: {sorted(keys)}"
     )
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("width", [80, 100, 120, 200])
+@pytest.mark.parametrize(
+    "screen_type",
+    [AeatSyncCensusScreen, AeatSyncEvidenceComparisonScreen, AeatSyncReconciliationScreen],
+)
+async def test_every_comparison_surface_shows_both_values_or_neither(
+    screen_type: type[AeatSyncWorkspaceScreen], width: int
+) -> None:
+    """One rule, asserted on all three surfaces that compare two sides.
+
+    The column fitter is shared precisely so the rule cannot drift between
+    them, and this is what proves the sharing held: a screen that grew its own
+    copy and split the pair fails here without touching the others.
+    """
+    controller = _controller()
+    screen = screen_type(controller)
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(width, 40)) as pilot:
+        await pilot.pause()
+        table = cast("DataTable[str]", screen.query_one("#aeat-sync-rows", DataTable))
+        keys = {str(column.key.value) for column in table.columns.values()}
+        app.exit(None)
+
+    assert ("local_value" in keys) == ("aeat_value" in keys), (
+        f"{screen_type.__name__} at {width} columns shows half a comparison: {sorted(keys)}"
+    )

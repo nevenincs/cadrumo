@@ -74,6 +74,43 @@ def _compact(value: str, width: int) -> str:
     return f"{value[: width - 1]}…"
 
 
+def _fit_columns(
+    width: int,
+    standalone: tuple[tuple[str, str, int], ...],
+    pair: tuple[tuple[str, str, int], ...] = (),
+) -> tuple[tuple[str, str, int], ...]:
+    """Take columns in priority order, and a comparison pair whole or not at all.
+
+    Shared by every AEAT Sync screen that compares two sides, because the rule
+    is the same wherever a comparison is rendered and three copies of it would
+    drift. `standalone` columns are taken while they fit; `pair` is taken only
+    if BOTH fit after them.
+
+    Dropping one half of a pair is the failure this exists to prevent: a column
+    headed "Local value" beside nothing to compare against reads as a value
+    AEAT does not hold, rather than a column the terminal had no room for.
+    """
+    taken: list[tuple[str, str, int]] = []
+    used = 0
+
+    def _sized(column: tuple[str, str, int]) -> tuple[str, str, int, int]:
+        header = aeat_sync_copy(column[1])
+        size = max(column[2], len(header))
+        return column[0], header, size, size + 2
+
+    for name, header, size, cost in (_sized(column) for column in standalone):
+        if used + cost > width - 1:
+            break
+        taken.append((name, header, size))
+        used += cost
+
+    sized_pair = [_sized(column) for column in pair]
+    if sized_pair and used + sum(cost for *_, cost in sized_pair) <= width - 1:
+        for name, header, size, _cost in sized_pair:
+            taken.append((name, header, size))
+    return tuple(taken)
+
+
 def _census_value(value: str | None) -> str:
     """Render one side of a census comparison, naming an unobserved side."""
     if value is None:
@@ -457,31 +494,7 @@ class AeatSyncCensusScreen(AeatSyncWorkspaceScreen):
     @override
     def populate_rows(self, table: DataTable[str]) -> None:
         """Render the census comparison, dropping columns before overflowing."""
-        width = self.app.size.width
-        taken: list[tuple[str, str, int]] = []
-        used = 0
-
-        def _cost(column: tuple[str, str, int]) -> tuple[str, str, int, int]:
-            header = aeat_sync_copy(column[1])
-            size = max(column[2], len(header))
-            return column[0], header, size, size + 2
-
-        standalone = [_cost(column) for column in self._COLUMNS]
-        pair = [_cost(column) for column in self._VALUE_COLUMNS]
-
-        for name, header, size, cost in standalone:
-            if used + cost > width - 1:
-                break
-            taken.append((name, header, size))
-            used += cost
-
-        # The pair goes in AFTER the standalone columns and only whole, so a
-        # narrow terminal keeps the field and its verdict rather than half a
-        # comparison.
-        if used + sum(cost for *_, cost in pair) <= width - 1:
-            for name, header, size, cost in pair:
-                taken.append((name, header, size))
-                used += cost
+        taken = _fit_columns(self.app.size.width, self._COLUMNS, self._VALUE_COLUMNS)
         for name, header, size in taken:
             table.add_column(header, key=name, width=size)
         for row in self.controller.projection.census:
@@ -575,16 +588,32 @@ class AeatSyncEvidenceComparisonScreen(AeatSyncWorkspaceScreen):
     @override
     def populate_rows(self, table: DataTable[str]) -> None:
         """Render a safe public comparison coordinate and discrepancy."""
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.declaration"), width=22)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.local"), width=13)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.aeat"), width=13)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.difference"), width=16)
+        taken = _fit_columns(
+            self.app.size.width,
+            (
+                ("declaration", "tui.aeat_sync.column.declaration", 22),
+                ("difference", "tui.aeat_sync.column.difference", 16),
+                ("local", "tui.aeat_sync.column.local", 13),
+                ("aeat", "tui.aeat_sync.column.aeat", 13),
+            ),
+            (
+                ("local_value", "tui.aeat_sync.column.local_value", 18),
+                ("aeat_value", "tui.aeat_sync.column.aeat_value", 18),
+            ),
+        )
+        for name, header, size in taken:
+            table.add_column(header, key=name, width=size)
         for row in self.controller.projection.evidence_comparison:
+            cells = {
+                "declaration": _address(row),
+                "local": _label(row.local_state),
+                "aeat": _label(row.aeat_state),
+                "difference": _label(row.discrepancy_kind),
+                "local_value": _census_value(row.local_value),
+                "aeat_value": _census_value(row.aeat_value),
+            }
             table.add_row(
-                _address(row),
-                _label(row.local_state),
-                _label(row.aeat_state),
-                _label(row.discrepancy_kind),
+                *(cells[name] for name, _, _ in taken),
                 key=_natural_identity(row, prefix="comparison"),
             )
             self.add_operation(cast("_OperationRow", row))
@@ -603,18 +632,36 @@ class AeatSyncReconciliationScreen(AeatSyncWorkspaceScreen):
     @override
     def populate_rows(self, table: DataTable[str]) -> None:
         """Render source states, discrepancy, and application-set resolution."""
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.declaration"), width=20)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.local"), width=10)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.aeat"), width=10)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.difference"), width=14)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.resolution"), width=14)
+        taken = _fit_columns(
+            self.app.size.width,
+            (
+                ("declaration", "tui.aeat_sync.column.declaration", 20),
+                ("resolution", "tui.aeat_sync.column.resolution", 14),
+                ("difference", "tui.aeat_sync.column.difference", 14),
+                ("local", "tui.aeat_sync.column.local", 10),
+                ("aeat", "tui.aeat_sync.column.aeat", 10),
+            ),
+            (
+                ("local_value", "tui.aeat_sync.column.local_value", 16),
+                ("aeat_value", "tui.aeat_sync.column.aeat_value", 16),
+            ),
+        )
+        for name, header, size in taken:
+            table.add_column(header, key=name, width=size)
         for row in self.controller.projection.reconciliation:
+            cells = {
+                "declaration": _address(row),
+                "local": _label(row.local_state),
+                "aeat": _label(row.aeat_state),
+                "difference": _label(row.discrepancy_kind),
+                # The resolution outranks the raw states here: it is what the
+                # operator is being asked to accept or change.
+                "resolution": _label(row.reconciliation_state),
+                "local_value": _census_value(row.local_value),
+                "aeat_value": _census_value(row.aeat_value),
+            }
             table.add_row(
-                _address(row),
-                _label(row.local_state),
-                _label(row.aeat_state),
-                _label(row.discrepancy_kind),
-                _label(row.reconciliation_state),
+                *(cells[name] for name, _, _ in taken),
                 key=_natural_identity(row, prefix="reconciliation"),
             )
 
