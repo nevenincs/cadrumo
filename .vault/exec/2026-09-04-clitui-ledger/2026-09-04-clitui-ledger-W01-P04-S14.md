@@ -5,36 +5,31 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:5858b19108722a8dbeacb4551ee7e1ee400ec607fd3e5273aebb82822321b430'
+body_hash: 'sha256:371d8d860a14a963d6ee464cd6a9ab08e758b4759f540ba9120e837a2d2744ac'
 step_id: 'S14'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
 ---
+# Reconcile discovered import preparation into the G0 denominator
 
-# Record G0 closure only after an independent engineering review accepts the frozen matrix
+## Status
 
-## Scope
+- **Open.** `W01.P04.S14` remains unchecked: this reconciliation changes the reviewed denominator, so the historical independent attestation, G0 closure receipt, and external acceptance anchor are invalid and cannot be reused.
 
-- `.vault/reference/2026-09-04-clitui-ledger-reference.md`
+## Reconciliation
 
-## Changes
+- Added `backend_operation:ledger.import.prepare` for `cadrumo.application.ledger.import_preparation:prepare_ledger_import_command`.
+- The semantic row is a planned typed `QUERY` (`LedgerImportPreparationRequest` to `LedgerSourceImportCommand`), with `PRODUCT` and `PROOF` gaps. It prepares a validated path and auto-provider command; it does not execute an import.
+- Included `src/cadrumo/application/ledger/import_preparation.py` in the backend census source set and made omission of either source or public operation fail closed.
+- The installed read-only Overview supported-surface observation now selects `ledger.workspace.read` and `ledger.import.prepare`; it does not select `ledger.import.source`.
+- Live union: **761 observations / 771 selected edges / 694 reviewed rows**; union digest `sha256:1abe7593edafc15bf1006ac1ab5926936cebf8e379f1bb268f513de64b7121e8`.
 
-- `M` `dev/quality/clitui_ledger_capability_matrix.py`
-- `M` `dev/quality/tests/test_clitui_ledger_capability_matrix.py`
-- `M` `.vault/reference/2026-09-04-clitui-ledger-reference.md`
-- `M` `.vault/index/clitui-ledger.index.md`
-- `A` `.vault/exec/2026-09-04-clitui-ledger/2026-09-04-clitui-ledger-W01-P04-S14.md`
-- `verify:` `uv run --no-sync pytest -q -n 0 dev/quality/tests/test_clitui_ledger_capability_matrix.py` -> `pass`
-- `verify:` `uv run --no-sync ruff format --check dev/quality/clitui_ledger_capability_matrix.py dev/quality/tests/test_clitui_ledger_capability_matrix.py` -> `pass`
-- `verify:` `uv run --no-sync ruff check dev/quality/clitui_ledger_capability_matrix.py dev/quality/tests/test_clitui_ledger_capability_matrix.py` -> `pass`
-- `verify:` `uv run --no-sync basedpyright dev/quality/clitui_ledger_capability_matrix.py dev/quality/tests/test_clitui_ledger_capability_matrix.py` -> `pass`
-- `verify:` `uv run --no-sync ty check dev/quality/clitui_ledger_capability_matrix.py` -> `pass`
-- `verify:` `uv run --no-sync pytest -q -n 0 dev/quality/tests/test_clitui_ledger_capability_matrix.py -k "canonical_matrix or g0 or acceptance_record_anchor or external_acceptance or gate_reopening_accepts_only"` -> `pass` (51 passed)
-- `verify:` `vaultspec-core vault plan check clitui-ledger` -> `pass`
+## Evidence
 
-- `verify:` `uv run --no-sync pytest -q -n 0 dev/quality/tests/test_clitui_ledger_capability_matrix.py -k human_matrix_contract_coordinate_matches_live_source_digest` -> `pass` (1 passed)
+- `src/cadrumo/application/ledger/tests/test_import_preparation.py` directly proves trimming, expansion, existence, file, readability refusals, and command construction without importing the TUI.
+- `uv run --no-sync pytest -q -n 0 src/cadrumo/application/ledger/tests/test_import_preparation.py` -> `7 passed`.
+- Focused matrix reconciliation lane -> `9 passed`.
 
-## Notes
+## Publication hold
 
-- `vaultspec-core vault check all` retains one pre-existing unrelated schema error in `.vault/adr/2026-08-28-test-reconciliation-sweep-adr.md`; all other check families are clean or warning-only.
-- `LOW` deferred: the missing external-anchor diagnostic currently names accepted G3 closure even when evaluating G0. The frozen matrix source remains unchanged so the two independent receipts and source-bound anchor stay valid; correct the diagnostic in the next gate-governance source revision and remint acceptance through the normal reopening lifecycle.
+The reference now records G0 as open and labels the old acceptance material historical. Fresh independent review, receipt, and external anchor work is required before this Step can close. The busy TUI-owned paths were not modified or quarantined.

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:56ebc446f1233043feef010a0684bfb0b2305d0ffeb74c820d32c921e56f7445'
+body_hash: 'sha256:465df4d2c9da27dd29997dc3163e948893fc38d0c1d24ebe7bba8fdb3c4220ab'
 related:
   - "[[2026-09-04-clitui-ledger-research]]"
   - "[[2026-06-10-ledger-interface-contract-adr]]"
@@ -19,30 +19,19 @@ This reference maps the first semantic-search-led census of Ledger behavior owne
 
 ### Campaign matrix publication
 
-This document is the authoritative human-readable publication surface for the `LedgerCapabilityMatrixV1` campaign contract in `dev/quality/clitui_ledger_capability_matrix.py`. The exact union contains 760 raw observations, 769 observation-to-row selections, and 693 semantic rows. Singular ownership and the active campaign hold are recorded, every TUI-applicable row carries the hold, and the exhaustive row review binds all eight applicability and proof decisions plus every open disposition. Two independent engineering rulings accepted the same frozen 693-row candidate, the accepted attestation and exact G0 gate receipt are digest-bound, and the separately observed acceptance-record anchor closes G0. G1 through G4 remain locked, and the Ledger TUI implementation hold remains active.
+This document is the authoritative human-readable publication surface for the `LedgerCapabilityMatrixV1` campaign contract in `dev/quality/clitui_ledger_capability_matrix.py`. The live reconciliation adds `ledger.import.prepare`: it validates and normalizes an entered local path into an auto-provider `LedgerSourceImportCommand`; it does not execute an import. The exact live union is 761 raw observations, 771 observation-to-row selections, and 694 semantic rows. The installed read-only Overview surface selects `ledger.workspace.read` and this preparation query only; it does not install `ledger.import.source` or any import execution. This denominator and matrix-source change invalidates the earlier S14 attestation, G0 receipt, and external acceptance anchor. No replacement attestation, receipt, or anchor has been issued: G0 is open, G1 through G4 remain locked, and the Ledger TUI implementation hold remains active.
 
 | Publication field | Current value |
 | --- | --- |
 | Contract / schema | `LedgerCapabilityMatrixV1` / `4`; `LedgerUnionDenominatorV1` / `4` |
-| Publication revision | `s14-g0-accepted-1` |
-| Observation timestamp | `2026-09-05T12:00:00+02:00` |
-| Frozen candidate revision | commit `f9580577ffcb1d730c6459c73ff209e3ea3412bc`; tree `4db16a09813d8f41702b8779881f3996e9f8de39` |
-| Contract source digest | `sha256:18e201e66d73b883ad015aff966a8255febeffbac7b04e923d278d2b02adce58` (newline-normalized framed bytes) |
-| Accepted plan owner | `clitui-ledger` |
-| Denominator revision / digest | `row-review-v1` / `sha256:48c2c800faa2c9932811678fc16c8caff2cae89bcdaf81512e7ae7aa29d5d140` |
-| Row-review coverage / digest | `693 / 693` / `sha256:4e42e5e04ccfd7a8654e629933698e141033b0767d0f94ec5433619400203ff8` |
-| Row-review attestation | `complete_with_open_gaps`; `sha256:fc15a433ad145832934cbe894d3d0b875d27e9a54ed1a70ae271c16ff81aedf7` |
-| Matrix denominator snapshot | `693` identities; `sha256:48c2c800faa2c9932811678fc16c8caff2cae89bcdaf81512e7ae7aa29d5d140` |
-| Candidate matrix digest / pre-receipt review basis | `sha256:c4a210bbd5410a3b6f7630262277b0cfc780d278815cc7a58da66dccd265c30a` / `sha256:a8cd7cb17aea3d508459423c708b596d8931c76660fee6abf987c2c6fe21d7bd` |
-| Accepted matrix digest | `sha256:6f4dcc03bbf6c8780affefb35546aaa47c3f883e83e6150ff5bb30aed6151f50` |
-| Candidate identity equality | matrix rows = current denominator = row-review snapshot = persisted live union = supplied observed live union = `693`; an absent, malformed, subset, extra, duplicate, or divergent union relocks G0--G4 |
-| Acceptance attestation | `attestation.ledger.g0`; `primary-independent-review`; `ACCEPT`; digest `sha256:d0b8630c9e137efb3e308ed7f185623745ee4f15c573f9cbd154264ee33e34d7` |
-| Acceptance-record anchor / G0 | current external subject `sha256:0c3807c8c53259c97b4bd4ac923c3de5f216684910d9f0674f5ee526ffb9f64a` / **CLOSED** |
-| TUI hold | Campaign sequencing bars Ledger TUI implementation; global ownership/hold is recorded and every TUI-applicable row is typed as held until G3 |
+| Publication revision | `s14-import-prepare-reconciliation-1`; not accepted |
+| Contract source digest | `sha256:e92be258d4801cfdcf8b6096d9105d05c2f31345df91a36287244a9490977aec` (newline-normalized framed bytes) |
+| Union / row review | `761` observations / `771` edges / `694` rows; union `sha256:1abe7593edafc15bf1006ac1ab5926936cebf8e379f1bb268f513de64b7121e8`; row review `sha256:780008bd7f25097b412184e4f19e76a6750313322d735e34ffb81fa627db8ed0` |
+| Current G0 state | **OPEN**; previous attestation, receipt, and external anchor are stale and invalidated |
+| TUI hold | Active; Overview admits preparation and workspace-read queries only, never import execution |
+#### Superseded G0 acceptance record (historical)
 
-#### G0 independent acceptance record
-
-Both engineering rulings independently observed the same frozen candidate commit and tree. The labels below are durable review roles only; no agent identity or team topology is recorded. Both rulings carry the observed date `2026-09-05`. Because no event time was supplied, the typed attestation and external subject use the explicit date-normalized value `2026-09-05T00:00:00+02:00`; it denotes date granularity, not a claimed review time.
+The following acceptance material is historical only. It is invalid for the current 694-row union and must not be reused; a future G0 closure requires fresh independent review, a fresh receipt, and a fresh external anchor. The labels below are durable review roles only; no agent identity or team topology is recorded. Both rulings carry the observed date `2026-09-05`. Because no event time was supplied, the typed attestation and external subject use the explicit date-normalized value `2026-09-05T00:00:00+02:00`; it denotes date granularity, not a claimed review time.
 
 | Receipt | Ruling | Bound evidence | Receipt digest |
 | --- | --- | --- | --- |
@@ -121,7 +110,7 @@ The exhaustive review partitions primary closure ownership without discarding se
 
 TUI routing is exhaustive and exact: all 680 applicable identities map to at least one reviewed route and the 13 backend-helper-only identities map to none. Route coverage is Classification 9, Entries 31, Evidence 21, Import 13, Overview 1, Reconciliation 588 (including all 546 registry rows and `ledger.transaction.invoice_link`), and Review 17. Every embedded supported-surface observation is joined back to every selected row and must name a destination present in that row's adjudicated route set. The installed Overview route carries only the read-only `ledger.workspace.read` query; all other 679 applicable rows retain `REACHABILITY` because their routes are component-only and cannot prove mutation, artifact, or query execution.
 
-Open adjudicated blockers remain concrete: eight public backend operations lack direct symbol-level tests; 510 registry declarations have direct destinations but still need route proof, three use application sidecars without registry output identities, and 33 have no located destination; six TUI routes remain component-only; 39 artifact-applicable rows, provenance, refusal, and finish-line compositions remain unproved. The accepted reviewed union does not upgrade any operational claim or erase these open gaps. G0 is closed by the S14 digest-bound independent acceptance record; the S13 currentness contract relocks G0 through G4 for every reviewed-union, census, row, evidence, receipt, or anchor defect.
+Open adjudicated blockers remain concrete: eight public backend operations lack direct symbol-level tests; 510 registry declarations have direct destinations but still need route proof, three use application sidecars without registry output identities, and 33 have no located destination; six TUI routes remain component-only; 39 artifact-applicable rows, provenance, refusal, and finish-line compositions remain unproved. The historical accepted union did not upgrade any operational claim or erase these open gaps. The current reconciliation invalidates its acceptance record and leaves G0 open; the S13 currentness contract relocks G0 through G4 for every reviewed-union, census, row, evidence, receipt, or anchor defect.
 
 #### Provisional capability rows
 
@@ -177,7 +166,7 @@ These coordinates bind the baseline claims to the current observation revision. 
 
 | Coordinate | Locator | Subject digest | Claim boundary |
 | --- | --- | --- | --- |
-| `evidence.baseline.matrix_contract` | `dev/quality/clitui_ledger_capability_matrix.py:22` | `sha256:18e201e66d73b883ad015aff966a8255febeffbac7b04e923d278d2b02adce58` | Matrix schema 4 plus union schema 4, eight axes, reviewed proof requirements, typed row-level TUI hold, source kinds, gaps, controls, evidence currentness, and G0-G4 predicates |
+| `evidence.baseline.matrix_contract` | `dev/quality/clitui_ledger_capability_matrix.py:22` | `sha256:e92be258d4801cfdcf8b6096d9105d05c2f31345df91a36287244a9490977aec` | Matrix schema 4 plus union schema 4, eight axes, reviewed proof requirements, typed row-level TUI hold, source kinds, gaps, controls, evidence currentness, G0-G4 predicates, and the required public import-preparation census operation |
 | `evidence.baseline.semantic_union_review` | `build_ledger_union_denominator` in `dev/quality/clitui_ledger_capability_matrix.py` | `sha256:8a158b5cc4c8e6c3035dc272999af61ac6cb080af8c208eccc8d28e4105a7575` | Schema-v4 domain-separated union: exact 760-source observation graph; all 693 reviewed rows; owner, applicability, proof, gap, action, TUI, and registry dispositions; row-review digest and reviewed-open attestation |
 | `evidence.s04.cli_command_census` | `src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py:51` | `sha256:2cd8e21e2b8602e5e18338c22350301f2bc76f580873af51b1154d5364e6769b` | Exact current CLI stream: 78 invocables, 50 supplemental behavior-distinct sub-operations across ten overloaded endpoints, derived path/handler/schema/TUI facts, and fail-closed ownership annotations |
 | `evidence.s05.backend_operation_census` | `src/cadrumo/application/ledger/` operational modules listed in the backend census | `sha256:4b0d917dd20d155f348958559037695cb5bab356867a1c88305bb42080f3b2f0` | Exact current backend observation: 63 operations, actual request/result contracts, direct-test locators, production compositions, and the one backend-only product capability |
@@ -210,7 +199,7 @@ The exact current ownership inventory is 44 `policy-bearing`, 27 `mixed`, and 7 
 
 The 50 behavior-distinct supplemental sub-operation identities are `ledger.classify.direct`, `ledger.classify.m210`, `ledger.classify.iva_derive`, `ledger.classify.llm_preview`, `ledger.classify.llm_apply`, `ledger.classify.llm_reject`, `ledger.classify.llm_saturate_preview`, `ledger.classify.llm_saturate_apply`, `ledger.classify.llm_saturate_reject`, `ledger.classify.evidence_read`, `ledger.classify.auto_split.reject`, `ledger.classify.auto_split.split_preview`, `ledger.classify.auto_split.split_apply`, `ledger.classify.auto_split.single_preview`, `ledger.classify.auto_split.single_apply`, `ledger.classify.bulk_csv`, `ledger.evidence.pull.gmail`, `ledger.evidence.pull.drive`, `ledger.evidence.pull.url`, `ledger.export.csv`, `ledger.export.jsonl`, `ledger.export.xlsx`, `ledger.history.direct`, `ledger.history.split_siblings`, `ledger.import.file`, `ledger.import.directory`, `ledger.import.dry_run`, `ledger.import.verify`, `ledger.import.provider_auto`, `ledger.import.provider_csv`, `ledger.import.provider_ofx_qfx`, `ledger.import.provider_xlsx_excel`, `ledger.import.provider_n26`, `ledger.import.provider_pdf`, `ledger.import.provider_pdf_n26`, `ledger.list.filter`, `ledger.list.group`, `ledger.list.sort`, `ledger.list.page`, `ledger.list.rejected_llm_filter`, `ledger.remove.preview`, `ledger.remove.commit`, `ledger.reset.preview`, `ledger.reset.commit`, `ledger.rule.apply.preview`, `ledger.rule.apply.commit`, `ledger.split.manual`, `ledger.split.llm_preview`, `ledger.split.llm_apply`, and `ledger.split.evidence_read`. Auto-split separately records refusal and the split/single preview and apply outcomes because their refusal, result type, and persistence effects differ. Equivalent parser aliases (`qfx`/`ofx`, `excel`/`xlsx`) remain one capability because their importer effect is the same; enum tokens alone do not inflate the denominator.
 
-The leaf families contain evidence 10, lifecycle 10, prorrata 8, foundation 6, operations 6, management 6, invoice lifecycle 5, ratios 5, evidence follow-up 4, counterparty 3, inventory 3, rules 3, bienes de inversiÃ³n 2, inventory analysis 2, invoice intake 2, classification 1, and participation rebuild 1. All 78 invocables, including the executable group, currently declare `TuiCapability.NOT_IMPLEMENTED`; this command metadata is distinct from the separate installed workbench components and is another reason the matrix must not conflate CLI enrollment, TUI component existence, and installed reachability. S04 established only the complete CLI stream and current observations; it did not close G0 by itself. S14 now closes G0 only after every mandatory stream, row decision, hold, and digest-bound independent acceptance requirement is satisfied.
+The leaf families contain evidence 10, lifecycle 10, prorrata 8, foundation 6, operations 6, management 6, invoice lifecycle 5, ratios 5, evidence follow-up 4, counterparty 3, inventory 3, rules 3, bienes de inversiÃƒÆ’Ã‚Â³n 2, inventory analysis 2, invoice intake 2, classification 1, and participation rebuild 1. All 78 invocables, including the executable group, currently declare `TuiCapability.NOT_IMPLEMENTED`; this command metadata is distinct from the separate installed workbench components and is another reason the matrix must not conflate CLI enrollment, TUI component existence, and installed reachability. S04 established only the complete CLI stream and current observations; it did not close G0 by itself. S14 now closes G0 only after every mandatory stream, row decision, hold, and digest-bound independent acceptance requirement is satisfied.
 
 Focused command-graph/spec tests passed 27 tests, the root Ledger help and all 13 nested group help invocations exited zero. A broader generated-reference run had 19 passing tests and one unrelated failure caused by a config-profile `archive import` versus `restore` mismatch; it does not contradict the exact Ledger tree comparison, but remains visible as pre-existing global documentation drift.
 
@@ -303,7 +292,7 @@ The source-set digest covers the 21 operational modules defining the 63 entries,
 | Ratios | `_ledger_ratios_cli.py:34-240` owns Censo joins, persistence, warnings, events | Pure helpers at `application/ledger/ratios.py:177-294` | Backport atomic workflows urgently |
 | Counterparty confirmation | `_ledger_counterparty_cli.py:99-230` infers outcomes/repeats prechecks | Writer/resolver in `counterparty_establishment.py` | Return typed application outcomes |
 | Prorrata | `_prorrata_register_cli.py:139-635` owns legality, precedence, blockers, persistence | Lower-level services exist | Backport end-to-end commands |
-| Bienes de inversiÃ³n | `_bienes_inversion_cli.py:58` constructs disposal coupling/record | Service accepts finished record | Backport typed command |
+| Bienes de inversiÃƒÆ’Ã‚Â³n | `_bienes_inversion_cli.py:58` constructs disposal coupling/record | Service accepts finished record | Backport typed command |
 | Inventory | `_ledger_inventory_cli.py` mainly parses/redacts | `InventoryService` owns operations | Already backend |
 | Payload families | `_ledger_payloads.py` and siblings redeclare facts | Partial application DTO coverage | Add canonical results, then project |
 
@@ -312,7 +301,7 @@ The source-set digest covers the 21 operational modules defining the 63 entries,
 | Gap | Reusable analogue | Required proof |
 | --- | --- | --- |
 | Review-grade workbook | Modelo shared plan, guide/evidence facets | Open/read semantics, protection, offline/Google parity |
-| Restore archive | Profile capsule | Exportâ†’restoreâ†’canonical equality, integrity, encryption |
+| Restore archive | Profile capsule | ExportÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢restoreÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢canonical equality, integrity, encryption |
 | Google Ledger export | Optional Google adapter and Modelo renderer | One transport-neutral plan, value parity |
 | Complete export provenance | Transaction facts and package manifests | Versioned schema, redaction, checksum verification |
 | Evidence download | Secure byte loader and file/package export boundaries | Exact bytes/hash, safe destination, cleanup |
@@ -341,7 +330,7 @@ The source-set digest covers the 21 operational modules defining the 63 entries,
 | LLM classify/saturate/split/apply | Extensive direct primitive/review-decision tests | Partial: frontend-neutral routing/preview outcome missing |
 | Invoice create/import/list | Create/import strongly tested | Partial: list proof and operator orchestration missing |
 | Ratios/counterparty/prorrata | Lower-level services have direct tests | Partial: atomic operator use cases/outcomes missing |
-| Bienes de inversiÃ³n | Service accepts a finished record | Missing direct service test and operator-intent facade |
+| Bienes de inversiÃƒÆ’Ã‚Â³n | Service accepts a finished record | Missing direct service test and operator-intent facade |
 | Review export/Google/restore archive | No Ledger backend symbols | Missing |
 
 Backend status is therefore not green. Direct tests establish reusable foundations, but no CLI refactor step may use primitive presence as proof that the backend gate for the corresponding operator capability is complete.
@@ -428,13 +417,13 @@ These 33 selectors still participate in family matching. Until S100 either gives
 | --- | --- | --- | --- |
 | IVA / M303 | Nonzero persisted-ledger calculation in `test_e2e_ledger_m303_quarters_to_m390_annual.py`; deductible-evidence and drift tests exercise real stores | M303 verifies, captures snapshot/evidence, locally files, and correctly refuses export because its registry has no complete layout | Prove general non-OSS unrouted-observation refusal and resolve two destinationless historical declarations |
 | IVA / M390 | Registry resolver tests exercise nonzero IVA selectors; production annual calculation and verification consume the M303 relation chain | M390 verifies and correctly refuses unavailable export layout; this proves the relation route, not every one of its 74 direct Ledger selectors | Add nonzero production-route coverage for representative direct M390 Ledger destinations; resolve 29 destinationless historical declarations |
-| IVA / M309, M322, M353 | Selector, validator, and resolver tests exist | No live nonzero work-calculateâ†’verifyâ†’evidenceâ†’export/file chain was located | Add per-Modelo positive, exclusion, zero-versus-missing, unrouted refusal, and finish-line proof |
-| OSS / M369 | Nonzero issued-invoice-catalogue projection and production calculation are direct-tested | Successful calculateâ†’verifyâ†’export exists; missing source and unrouted observation both refuse verify/export; genuine zero remains distinguishable | Preserve that this is invoice-catalogue-backed, not transaction-catalogue-backed; filing proof is still absent |
+| IVA / M309, M322, M353 | Selector, validator, and resolver tests exist | No live nonzero work-calculateÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢verifyÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢evidenceÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢export/file chain was located | Add per-Modelo positive, exclusion, zero-versus-missing, unrouted refusal, and finish-line proof |
+| OSS / M369 | Nonzero issued-invoice-catalogue projection and production calculation are direct-tested | Successful calculateÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢verifyÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢export exists; missing source and unrouted observation both refuse verify/export; genuine zero remains distinguishable | Preserve that this is invoice-catalogue-backed, not transaction-catalogue-backed; filing proof is still absent |
 | Renta expense / M100 | Nonzero persisted-ledger M100 calculations cover direct-expense destinations and ratio/evidence rules | M100 verification succeeds; observed export refuses an undeclared mandatory Aux field | Complete successful export/file finish line after the layout product is complete |
 | Renta income / M100 and M130 | Nonzero M130 c01/c06 and annual M100 calculations are direct-tested, including currency handling | M100 verification and ledger evidence are exercised; M100 export currently refuses its incomplete layout | Resolve the two destinationless M130 declarations and move c06 output identity into an honest typed registry route |
-| Renta income / M131 | Registry declaration and resolver-level coverage exist | No live nonzero production work-calculate chain from Ledger through M131 was located | Add calculateâ†’verifyâ†’evidenceâ†’export/file proof plus missing/deferred/zero and exclusion cases |
+| Renta income / M131 | Registry declaration and resolver-level coverage exist | No live nonzero production work-calculate chain from Ledger through M131 was located | Add calculateÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢verifyÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢evidenceÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢export/file proof plus missing/deferred/zero and exclusion cases |
 | M130 expense / c02 | Resolver/binding, currency, zero, and verification-shape tests exist | M130 workflow tests prove c02 is bound, but no explicit nonzero production-route c02 assertion was located | Add a nonzero persisted-ledger c02 calculation and finish-line proof |
-| Impatriado income / M151 | Repository aggregation and real registry-binding resolution cover nonzero ES inclusion, foreign exclusion, ambiguity, and currency | No live M151 work-calculateâ†’verifyâ†’evidenceâ†’export/file chain was located | Add the full production chain; keep the separate savings base manual until grounded |
+| Impatriado income / M151 | Repository aggregation and real registry-binding resolution cover nonzero ES inclusion, foreign exclusion, ambiguity, and currency | No live M151 work-calculateÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢verifyÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢evidenceÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢export/file chain was located | Add the full production chain; keep the separate savings base manual until grounded |
 | IRNR income / M210 | Nonzero secure-store calculation, selected-code separation, mutation, foreign exclusion, and manual/ledger authority exclusivity are direct-tested | Verification captures filing evidence without reclassifying gross income as manual | Move the sidecar output into an honest registry route and add export/file proof |
 
 Unmatched nonzero observations become persisted `CalculationSourceIssue` values through `src/cadrumo/domain/calculations/registry/_ledger_binding_resolution.py:96` and `src/cadrumo/application/modelo/calculation_actions.py:1513`. Verification explicitly blocks OSS `unrouted_observation` at `src/cadrumo/application/modelo/verification_actions.py:1364`, but no general non-OSS source-issue gate was found. Export and filing require a sealed/verified revision and other evidence/precondition gates, but do not independently inspect those non-OSS source issues. This is a high-confidence filing-path gap: a non-OSS unmatched fact can remain only an advisory while the revision advances.
@@ -456,7 +445,7 @@ CLI may own argv syntax, token/date/decimal parsing, confirmations, resolution g
 1. Query/read facades: list, review, check, status, history, track, invoice list, evidence review.
 2. Mutation facades: create, allocate, classification, ratios, rule dry-run.
 3. Multi-system workflows: LLM routing, Drive evidence, consent, directory import.
-4. Adjacent registers: invoice orchestration, prorrata, bienes de inversiÃ³n.
+4. Adjacent registers: invoice orchestration, prorrata, bienes de inversiÃƒÆ’Ã‚Â³n.
 5. Missing capability services and export products.
 6. Canonical outcome DTOs, CLI reprojection, removal of direct business orchestration.
 
@@ -466,10 +455,12 @@ This ordering is research evidence, not execution authorization. Backend complet
 
 Accepted G0--G3 closure receipts are historical authority, not mutable matrix status. Each pre-TUI gate has exactly one derived identity: `receipt.ledger.{gate.value}`. The receipt binds its gate closure basis and the canonical acceptance-attestation digest; the receipt collection must be the ordered G0--G3 prefix and the attestation binds that exact identity/gate set.
 
-The two internal digest domains stay deliberately noncircular. The attestationâ€™s pre-receipt matrix basis omits the acceptance attestation, receipt collection, and only the active-hold bit needed for the authorized lift. Each receiptâ€™s closure basis omits only the receipt collection and active-hold bit, while retaining the complete canonical acceptance attestation. Thus union denominator, matrix row/evidence, census, and attestation drift relock affected gates, while the authorized G3-to-G4 hold lift does not erase accepted G0--G3 history.
+The two internal digest domains stay deliberately noncircular. The attestationÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s pre-receipt matrix basis omits the acceptance attestation, receipt collection, and only the active-hold bit needed for the authorized lift. Each receiptÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s closure basis omits only the receipt collection and active-hold bit, while retaining the complete canonical acceptance attestation. Thus union denominator, matrix row/evidence, census, and attestation drift relock affected gates, while the authorized G3-to-G4 hold lift does not erase accepted G0--G3 history.
 
 A receipt alone is insufficient to lift the hold. `LedgerAcceptanceRecordAnchorV1` is supplied outside `LedgerCapabilityMatrixV1` at evaluation time and composes the existing `EvidenceCoordinateV1` / `EvidenceSubjectSnapshotV1` freshness contract. Its independently observed subject must exactly match coordinate identity, locator, revision, content digest, and observation time. The external subject digest canonically commits the attestation digest, identity, reviewer, attested time, pre-receipt basis, denominator revision/digest, review-subject snapshot, and coordinate claim identity. G0 closure, every accepted receipt, G4, and ordered post-G3 evaluation require this current external anchor. Recomputing matrix, receipt, and attestation digests cannot remint acceptance around an unchanged external subject; stale, absent, rebound, or wrong-coordinate evidence refuses closure.
 
 ## S13 fail-closed reopening contract
 
 LedgerUnionReviewSnapshotV1 is the non-duplicating gate projection of the validated schema-v4 union: outer union digest, aggregate row-review digest, row-review-attestation digest, reviewed-row count, review revision, review identity, and review time. The matrix attestation, every receipt basis, and the external acceptance anchor bind that snapshot. Gate evaluation requires a fresh validated union observation; a new, removed, or changed observation (including one that reuses an old semantic identity), semantic home/effect/applicability/gap/proof/route/hold/artifact/registry/provenance/status drift, incomplete review coverage, evidence-subject drift, or stale/missing receipt anchor returns G0-G4 to OPEN. The active-to-inactive hold bit remains the only authorized basis exclusion, and cannot suppress any other currentness failure.
+
+

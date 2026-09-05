@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:69a80010caf23dfe2dc4ddf1bb07641c5697e4c1838edea4e7ede17e0f2a8adb'
+body_hash: 'sha256:117be9df6ce900c57852cfcd1a45345100ce6d9ea2f59528e83d88532480a6cc'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -535,6 +535,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S653` - Floor the parsed call surface behind the identity CLI write-surface gate, since its three claims are all absences and a stubbed subject satisfies every one of them while the command it describes has stopped existing; `dev/registry/tests/test_m200_semantic_casilla_candidates.py`.
 - [x] `W02.P02.S654` - Floor both absence claims in the ledger import aggregation gate, since the disjointness holds over an empty parse and the CadrumoError claim iterates exactly one except handler, so deleting that handler empties the loop rather than failing the gate; `dev/locales/tests/test_ledger_notice_action_conformance.py`.
 - [x] `W02.P02.S655` - Floor each source corpus the static inspection boundary gates read, separately rather than in aggregate, since the first unions a three thousand six hundred file boundary with two five-file collections and a total floor would be satisfied by the large member while either small one emptied; `dev/registry/tests/test_static_inspection.py`.
+- [x] `W02.P02.S656` - Floor the parsed function surface behind the re-homed digest site gate, since its claim is an absence over the functions a site defines and a module gutted to a shell declares no private digest helper for the same reason it declares nothing at all; `dev/packaging/tests/test_hashing.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
