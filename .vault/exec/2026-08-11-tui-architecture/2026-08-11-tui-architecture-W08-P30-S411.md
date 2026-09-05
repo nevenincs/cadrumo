@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#tui-architecture'
 date: '2026-09-04'
-modified: '2026-09-04'
+modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:37c125596c18e7b2ce4f76ddd6b188a99578d13509909cba774aa0d3c2dfd6c2'
+body_hash: 'sha256:42eb8590b085177b1c0ff15f214c17f8e2d851bd9bee19c744be4d7ffb536458'
 step_id: 'S411'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -54,7 +54,39 @@ admits classification passes the second and one that never does passes the
 first. A second gate proves the visibility check refuses an id outside the
 snapshot. Teeth proven by dropping the selection in the handler.
 
-IMPORT is untouched, and measuring it shows why it is a different KIND of gap
+IMPORT: two of its three missing pieces now exist. Original measurement kept
+below, because it is what scoped the work.
+
+`operator.ledger.import` is in the operator action catalogue, targeting the
+real `ledger.import` command identity. It declares NO arguments: the source
+path rides inside the sealed command the operator prepared, never as a
+catalogue argument, so a filesystem path cannot reach an action record or
+anything that renders one.
+
+`prepare_ledger_import` is the producer that did not exist. It turns an entered
+path into a `LedgerPreparedImportV1`, refusing a blank entry, an absent path, a
+directory or an unreadable file BEFORE any provider work -- `import_ledger_source`
+would refuse an unreadable source too, but by then the operator has left the
+screen and the refusal arrives detached from the entry that caused it. The
+provider resolves as `auto`, the detection the import service already performs;
+asking an operator to name the bank format of a file they just chose is asking
+them to do the parser's job.
+
+The path never escapes the sealed command. `LedgerPreparedImportV1` keeps it in
+a weak-keyed vault with no attribute, repr or serialization surface, and the
+gate asserts the path, its PARENT and its filename are all absent from
+everything the object exposes -- a directory alone identifies a machine and a
+person. Refusal messages name which condition failed and never the path, so a
+refusal cannot leak what a success hides.
+
+Teeth proven by naming the path in a refusal; the gate fails on the message
+text. 6 passed on the producer, 49 on the operator-action catalogue.
+
+STILL MISSING: the path-entry surface itself. Nothing in the TUI yet asks the
+operator for a path and calls this producer, so the import area remains
+refused in a live session.
+
+The original measurement, kept because it scoped this work:
 from the classification one -- which is worth stating, because the step's
 wording assumes otherwise.
 

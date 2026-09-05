@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:972042274658a88eadadc1f145be8d63e6c5baa908d0070cf41ec5e6c3e5a33f'
+body_hash: 'sha256:329949e30ba15602cba34f2bd378624ba868cc06af4d4e128583013f782f77f6'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -525,6 +525,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S643` - Refuse a production source the identifier enrolment gates cannot parse, since an unparsed module is absent from the shared tree map and an unenrolled identifier field declared in it reaches none of the three gates that consume it; `dev/identity/tests/test_identifier_namespace_enrollment_gate.py`.
 - [x] `W02.P02.S644` - Announce the documentation pages the acquisition claim scan cannot read and raise its corpus floor off zero, since an unreadable page contributes no claim and an unbacked acquisition promise inside one is not there to fail on, while fifty-eight of fifty-nine pages could vanish beneath a greater-than-zero guard; `dev/docs/tests/test_distribution_claims.py`.
 - [x] `W02.P02.S645` - Guard the shipped cohort transitional-marker sweep with a root check, a corpus floor and a strict read, and correct its anti-tautology case which proved the matcher against an in-memory string while claiming to prove the scan reads files; `dev/tests/test_modelo_workspace_fixed_point.py`.
+- [x] `W02.P02.S646` - Guard the release boundary gate with a root check and a corpus floor, since it asserted no dependency edge from the shipped package to its harness over an unguarded walk while its positive sibling already refuses an empty import set; `dev/release/tests/test_external_client_release_boundary.py`.
+- [x] `W02.P02.S647` - Route the five lane gates through one guarded workflow walk that checks its root and refuses a collapsed directory, since each asserts that no workflow does some forbidden thing and an empty directory satisfies every one of them; `dev/ci/tests/test_change_class_tiers.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
