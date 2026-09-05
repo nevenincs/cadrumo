@@ -547,6 +547,7 @@ def test_a_classification_target_outside_the_visible_projection_is_refused() -> 
     with pytest.raises(ValueError, match="absent from the visible Ledger projection"):
         controller.select_classification_target("f" * 64)
 
+
 @pytest.mark.asyncio
 async def test_preparing_an_import_from_a_path_makes_the_import_area_reachable(tmp_path: Path) -> None:
     """The import area is entered WITH a prepared command, and nothing made one.

@@ -1051,3 +1051,37 @@ async def test_completing_one_overview_operation_keeps_the_other_action_reachabl
         "operator.profile.edit",
         "operator.live.filed.pull_all",
     )
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("width", [80, 100, 120, 200])
+async def test_the_census_comparison_shows_both_values_or_neither(width: int) -> None:
+    """Half a comparison is worse than none, and the verdict outranks both.
+
+    A lone "Local value" column beside nothing to compare it against reads as a
+    value AEAT does not hold, rather than a column the terminal had no room
+    for. So the pair is taken whole or dropped whole.
+
+    100 columns is the width that makes this testable, and it was added after
+    the first version passed with the pair-splitting defect in place: at 80
+    neither value fits and at 120 both do, so neither width can tell an atomic
+    pair from a greedy one. Only a width where exactly ONE would fit
+    distinguishes them.
+
+    The status column is asserted at EVERY width because it is the verdict: an
+    operator who cannot see whether a field is adopted or in conflict has lost
+    the thing that tells them to act, and an earlier ordering that ranked the
+    raw values above it failed exactly this way.
+    """
+    controller = _controller()
+    screen = AeatSyncCensusScreen(controller)
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(width, 40)) as pilot:
+        await pilot.pause()
+        table = cast("DataTable[str]", screen.query_one("#aeat-sync-rows", DataTable))
+        keys = {str(column.key.value) for column in table.columns.values()}
+        app.exit(None)
+
+    assert "status" in keys, f"the census verdict is missing at {width} columns"
+    assert ("local_value" in keys) == ("aeat_value" in keys), (
+        f"at {width} columns the census shows half a comparison: {sorted(keys)}"
+    )

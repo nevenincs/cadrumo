@@ -74,6 +74,13 @@ def _compact(value: str, width: int) -> str:
     return f"{value[: width - 1]}…"
 
 
+def _census_value(value: str | None) -> str:
+    """Render one side of a census comparison, naming an unobserved side."""
+    if value is None:
+        return aeat_sync_copy("tui.aeat_sync.value.unobserved")
+    return _compact(value, 24)
+
+
 def _census_identity(path: str) -> str:
     """Derive a stable key from the safe canonical census path only."""
     return f"census:{' '.join(path.split()).casefold()}"
@@ -422,17 +429,75 @@ class AeatSyncCensusScreen(AeatSyncWorkspaceScreen):
         """Build the census body."""
         super().__init__(controller, id="aeat-sync-census-screen")
 
+    _COLUMNS: ClassVar[tuple[tuple[str, str, int], ...]] = (
+        ("field", "tui.aeat_sync.column.field", 26),
+        ("status", "tui.aeat_sync.column.status", 16),
+        ("category", "tui.aeat_sync.column.category", 16),
+    )
+    """Census columns that stand alone, in priority order.
+
+    Status ranks above the values, and a first ordering that put them below it
+    was wrong: the values are the EVIDENCE, the status is the VERDICT, and an
+    operator who cannot see whether a field is adopted or in conflict has lost
+    the thing that tells them to act. Showing evidence for a verdict they
+    cannot read is the worse trade.
+    """
+
+    _VALUE_COLUMNS: ClassVar[tuple[tuple[str, str, int], ...]] = (
+        ("local_value", "tui.aeat_sync.column.local_value", 22),
+        ("aeat_value", "tui.aeat_sync.column.aeat_value", 22),
+    )
+    """The comparison pair, taken together or not at all.
+
+    Dropping ONE side would leave a column headed "Local value" beside nothing
+    to compare it against, which reads as a value AEAT does not hold rather
+    than a column the terminal had no room for. Both or neither.
+    """
+
     @override
     def populate_rows(self, table: DataTable[str]) -> None:
-        """Render safe census path/category/status metadata only."""
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.field"), width=30)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.category"), width=16)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.status"), width=16)
+        """Render the census comparison, dropping columns before overflowing."""
+        width = self.app.size.width
+        taken: list[tuple[str, str, int]] = []
+        used = 0
+
+        def _cost(column: tuple[str, str, int]) -> tuple[str, str, int, int]:
+            header = aeat_sync_copy(column[1])
+            size = max(column[2], len(header))
+            return column[0], header, size, size + 2
+
+        standalone = [_cost(column) for column in self._COLUMNS]
+        pair = [_cost(column) for column in self._VALUE_COLUMNS]
+
+        for name, header, size, cost in standalone:
+            if used + cost > width - 1:
+                break
+            taken.append((name, header, size))
+            used += cost
+
+        # The pair goes in AFTER the standalone columns and only whole, so a
+        # narrow terminal keeps the field and its verdict rather than half a
+        # comparison.
+        if used + sum(cost for *_, cost in pair) <= width - 1:
+            for name, header, size, cost in pair:
+                taken.append((name, header, size))
+                used += cost
+        for name, header, size in taken:
+            table.add_column(header, key=name, width=size)
         for row in self.controller.projection.census:
+            cells = {
+                "field": _compact(row.path, 32),
+                "category": _label(row.category),
+                "status": _label(row.status),
+                # An unobserved side is WORDED. A blank cell beside a populated
+                # one reads as "AEAT holds nothing", which is a different claim
+                # from "nobody has looked" -- and the second is the truth
+                # before any pull.
+                "local_value": _census_value(row.local_value),
+                "aeat_value": _census_value(row.aeat_value),
+            }
             table.add_row(
-                _compact(row.path, 32),
-                _label(row.category),
-                _label(row.status),
+                *(cells[name] for name, _, _ in taken),
                 key=_census_identity(row.path),
             )
 

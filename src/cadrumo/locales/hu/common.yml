@@ -1032,6 +1032,7 @@ tui:
       unset: Nincs beállítva
     column:
       aeat: AEAT
+      aeat_value: AEAT érték
       area: Terület
       availability: Elérhetőség
       category: Kategória
@@ -1042,6 +1043,7 @@ tui:
       issued: Kiállítva
       local: Helyi
       local_filing: Helyi benyújtás
+      local_value: Helyi érték
       read: Olvasottság
       receipt: Igazolás
       resolution: Rendezés
@@ -1132,6 +1134,7 @@ tui:
       joined: '%{entries}'
     value:
       none: —
+      unobserved: Nem megfigyelt
     zone:
       census: Nyilvántartás
       evidence_comparison: Bizonyítékok összehasonlítása

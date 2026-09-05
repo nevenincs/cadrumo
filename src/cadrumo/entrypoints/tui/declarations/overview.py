@@ -68,8 +68,7 @@ class DeclarationsOverviewScreen(DeclarationsWorkspaceScreen):
                 # `None` from several distinct unknowns -- an unmodelled
                 # settlement chain, no calculation yet, a cell not computed --
                 # none of which is a figure.
-                row.settled_result
-                or declarations_copy("tui.declarations.value.result_unknown"),
+                row.settled_result or declarations_copy("tui.declarations.value.result_unknown"),
                 key=row.work_unit_id,
             )
         if not table.row_count:

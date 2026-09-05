@@ -1037,6 +1037,7 @@ tui:
       unset: No establert
     column:
       aeat: AEAT
+      aeat_value: Valor AEAT
       area: Àrea
       availability: Disponibilitat
       category: Categoria
@@ -1047,6 +1048,7 @@ tui:
       issued: Emesa
       local: Local
       local_filing: Presentació local
+      local_value: Valor local
       read: Llegida
       receipt: Justificant
       resolution: Resolució
@@ -1137,6 +1139,7 @@ tui:
       joined: '%{entries}'
     value:
       none: —
+      unobserved: No observat
     zone:
       census: Cens
       evidence_comparison: Comparació d'evidències

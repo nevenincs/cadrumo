@@ -239,9 +239,7 @@ def _declaration_result_casilla_reader() -> Callable[[str, int, Period], str | N
         from ...domain.calculations.registry.authority import bundled_authority
 
         try:
-            snapshot = bundled_authority().snapshot(
-                str(modelo), filing_year=filing_year, period=period.registry_token
-            )
+            snapshot = bundled_authority().snapshot(str(modelo), filing_year=filing_year, period=period.registry_token)
         except Exception:
             return None
         return declaration_result_casilla_id(snapshot.revision)

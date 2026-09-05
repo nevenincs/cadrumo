@@ -1008,6 +1008,7 @@ tui:
       unset: Unset
     column:
       aeat: AEAT
+      aeat_value: AEAT value
       area: Area
       availability: Availability
       category: Category
@@ -1018,6 +1019,7 @@ tui:
       issued: Issued
       local: Local
       local_filing: Local filing
+      local_value: Local value
       read: Read
       receipt: Receipt
       resolution: Resolution
@@ -1108,6 +1110,7 @@ tui:
       joined: '%{entries}'
     value:
       none: —
+      unobserved: Not observed
     zone:
       census: Census
       evidence_comparison: Evidence comparison

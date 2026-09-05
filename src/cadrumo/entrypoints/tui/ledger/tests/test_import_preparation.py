@@ -58,9 +58,7 @@ def test_the_entered_path_never_escapes_the_sealed_command(tmp_path: Path) -> No
         ("<directory>", "the entered source is not a file"),
     ],
 )
-def test_an_unusable_entry_is_refused_at_the_screen_that_caused_it(
-    tmp_path: Path, entry: str, reason: str
-) -> None:
+def test_an_unusable_entry_is_refused_at_the_screen_that_caused_it(tmp_path: Path, entry: str, reason: str) -> None:
     """Refused here, not later inside the import service.
 
     `import_ledger_source` would refuse an unreadable source too, but by then
