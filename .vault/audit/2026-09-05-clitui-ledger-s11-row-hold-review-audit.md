@@ -5,31 +5,12 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:62247ce27975771c26d0316ad9282d9a488ae558a5da2a2f6171621b7aa84dbc'
+body_hash: 'sha256:3f0788eed964557ba9b7d1765d6400782908b14a87c388a6da5df76811c8f7b4'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-reference]]"
   - "[[2026-09-04-clitui-ledger-W01-P03-S11]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace clitui-ledger with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `clitui-ledger` audit: `S11 row-level TUI hold review`
 
@@ -88,6 +69,6 @@ does not authenticate that the boundary was crossed.
 ## Verification
 
 The independent projection reproduced the exact count, hold, digest, and TUI
-reachability facts above. Ruff format/check, scoped `ty`, and feature Vault
-checks pass. The full matrix module result is appended after completion; green
+reachability facts above. The full matrix module passes all 222 tests. Ruff
+format/check, scoped `ty`, and feature Vault checks pass. Green
 hold-serialization tests do not resolve the gate-lifecycle contradiction.
