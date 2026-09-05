@@ -119,3 +119,72 @@ green checks encode the two incorrect classifications and therefore do not
 lower their severity. G0 remains OPEN. S12's scoped commits change only quality
 contract/tests and Vault documents; they do not implement Ledger product or TUI
 behavior.
+
+## Remediation review
+
+**Ruling: NOT ACCEPTED.** The original missing-route condition is mechanically
+closed, and the fifteen named import identities are artifact-applicable and
+unproven. Two HIGH semantic/source-consistency findings remain.
+
+The remediated projection reproduces 693 rows, effects
+546/83/47/9/7/1, homes 689 planned/four existing, primary gaps 112 AUTHORITY,
+546 REGISTRY, 34 PRODUCT, one ARTIFACT and zero COMPOSITION/proof-only, and
+registry dispositions 510 direct/three sidecar/33 destinationless/147 not
+applicable. It reports 23 artifact-applicable rows. All 680 TUI-applicable rows
+have a known route and the 13 non-applicable rows have none; published route
+counts are Classification 9, Entries 32, Evidence 21, Import 13, Overview 1,
+Reconciliation 587 and Review 17. Exactly 679 component-only rows retain a
+reachability gap/blocker and the sole Overview row is the read-only
+`ledger.workspace.read` query. No applicable decision is upgraded above
+UNPROVEN.
+
+Row-review, attestation and union digests independently reproduce as
+`sha256:3809546161a2164a50fa442ad5759b104092ccf231627d45f849e5b3023ccfb8`,
+`sha256:60fd297e03e1384d3eca3d56b568a21ea0f6b913cc8c2b7f15dc6aab7e2b0ce4`,
+and
+`sha256:a8e2854f6fa822824618e428a56c0390343f77b7f0233bd165985f9d0edb9f65`.
+The focused artifact/route/review lane passes 18 tests.
+
+### tui-route-source-contradiction | high | Invoice-link is mapped away from the live reconciliation component that selected it
+
+The supported-surface source observation for `ledger.reconciliation` selects
+`ledger.transaction.invoice_link`. The live `LedgerReconciliationScreen`
+renders transaction/invoice pairs and submits that exact link operation through
+its injected door. The exhaustive mapping instead assigns
+`ledger.transaction.invoice_link` to `ledger.entries`. Validation checks that
+both tables are separately complete but never joins a supported-surface
+selection back to its source destination, so the contradiction survives every
+row, attestation and outer digest recomputation.
+
+Move invoice-link to `ledger.reconciliation`; absent another independently
+grounded reassignment, the honest route totals are Entries 31 and
+Reconciliation 588. Add a detector requiring every capability selected by a
+supported-surface observation to include that observation's destination in its
+row-level TUI route authority. Mutate the source destination/selection and the
+row mapping independently, refresh all dependent digests, and require refusal.
+
+### artifact-input-authority-omits-live-local-inputs | high | The claimed exhaustive set excludes evidence and inventory files
+
+The new fifteen-row set correctly covers the requested import cohort, but its
+validator and test describe it as the exhaustive local file/directory input
+set. Live command metadata contradicts that assertion:
+`ledger.evidence.add` declares a primary LOCAL_IN file,
+`ledger.evidence.batch` declares primary LOCAL_IN directory and file inputs,
+and `ledger.inventory.closing-authority.record` declares a primary LOCAL_IN
+file. All three rows remain artifact-not-applicable and omit the artifact gap,
+proof requirement and blocker. The already admitted planned
+`ledger.evidence.replace` capability likewise consumes the replacement
+attachment. Thus 23 is not an exhaustive artifact-applicable cohort: the live
+minimum is 26, and it is 27 when the explicit atomic-replace product is
+included. These additions do not change the primary-gap partition because
+their authority/product gaps retain higher priority.
+
+Derive or cross-check local artifact inputs from live `CommandSpec` transport
+locus/shape metadata, then add a small explicit authority only for planned
+inputs that have no installed command metadata. Add positive and removal/
+reclassification mutations for evidence add, evidence batch, inventory closing
+authority and evidence replace, with every digest recomputed.
+
+G0 remains OPEN and the remediation contains no Ledger product or TUI
+implementation changes. Green tests encode both remaining contradictions and
+therefore cannot support acceptance.
