@@ -891,7 +891,7 @@ async def capture_declaration(
     ``expediente_id`` matches ``declaration.expediente_id``, clicks
     that row's *Obtención de Justificante* button, captures the
     CSV from the resulting cotejo URL, and downloads the PDF via
-    :class:`APIRequestContext` (so Chrome's PDF viewer never
+    :class:`playwright.async_api.APIRequestContext` (so Chrome's PDF viewer never
     intercepts the response).
 
     Args:

@@ -35,6 +35,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.config import Settings
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
+from ...core.hashing import HEX_ALPHABET
 from ...core.hex import Hex64Str
 from ...core.identity import ContentDigest, ProfileId
 from ...core.locks import exclusive_file_lock
@@ -47,7 +48,6 @@ from .bundle_export_contracts import ProfileBundleExportPurpose, ProfileBundleEx
 PROFILE_EXPORT_JOURNAL_DIRNAME = "profile-export-operations"
 PROFILE_EXPORT_STAGED_TEMP_SUFFIX = ".export-tmp"
 _PROFILE_EXPORT_STAGED_NONCE_LENGTH = 8
-_ASCII_HEX_LOWER = frozenset("0123456789abcdef")
 
 
 def profile_export_staged_path(
@@ -80,7 +80,7 @@ def is_canonical_profile_export_staged_path(
         or not process_id.isdecimal()
         or int(process_id) < 1
         or len(nonce) != _PROFILE_EXPORT_STAGED_NONCE_LENGTH
-        or not set(nonce).issubset(_ASCII_HEX_LOWER)
+        or not set(nonce).issubset(HEX_ALPHABET)
     ):
         return False
     return staged_path == profile_export_staged_path(

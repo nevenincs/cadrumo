@@ -4,7 +4,7 @@ Behind :mod:`cadrumo.application.modelo`. This module owns the read-only half
 of the edit contract: it independently re-resolves a target, projects the
 registry-declared permitted surface, and rechecks a submission before
 execution. It never writes -- persistence and the guarded compare-and-swap
-commit belong to :mod:`._revision_persistence` and :mod:`._edit_execution`.
+commit belong to :mod:`.revision_persistence` and :mod:`._edit_execution`.
 
 A :class:`~.workspace_models.ModeloWorkspaceBaselineV1` read-consistency token
 is never accepted here as mutation authority: every coordinate below is

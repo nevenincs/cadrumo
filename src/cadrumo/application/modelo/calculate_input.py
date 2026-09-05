@@ -14,7 +14,7 @@ The application result pairs that persisted revision with its parent
 surfaced by bucket aggregation or post-calculation advisory collectors.
 
 See Also:
-    :func:`cadrumo.entrypoints.cli._modelo_work_calculate_cli.register_work_calculate_commands`:
+    :mod:`cadrumo.entrypoints.cli._modelo_work_calculate_cli`:
         Parses the operator-facing ``modelo work calculate`` command and calls
         this module to build the input bundle.
     :func:`cadrumo.application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
@@ -694,7 +694,7 @@ def _validated_declarante_selector(raw_value: str, *, key: CasillaId, casilla_de
     casilla — surface as a wrong (negative) base imponible. This guard fails the
     override early, naming the casilla, its label, its ``data_type``, and the
     numeric casilla channel the amount belongs on, mirroring the
-    :func:`_validated_m210_tipo_renta_code` semantic-role fallback for the generic
+    :func:`_validated_m210_official_tipo_renta_code` semantic-role fallback for the generic
     ``--casilla key=value`` surface that cannot render a per-casilla Typer choice.
     """
     value = _text_value(raw_value, key=key)

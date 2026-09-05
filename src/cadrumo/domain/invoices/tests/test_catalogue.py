@@ -27,7 +27,6 @@ from ..errors import (
 )
 from ..models import Invoice, InvoiceCatalogue, InvoiceLine
 from ..service import (
-    find_invoice,
     find_unmatched,
     link_transaction,
 )
@@ -222,10 +221,10 @@ def test_load_raises_typed_error_for_invalid_json() -> None:
         InvoiceCatalogue.model_validate_json("{not-valid")
 
 
-def test_find_invoice_returns_none_for_missing_id() -> None:
+def test_catalogue_get_returns_none_for_missing_id() -> None:
     """Missing IDs return None rather than raising."""
     catalogue = InvoiceCatalogue.from_invoices([_valid_invoice()])
-    assert find_invoice(catalogue, "missing") is None
+    assert catalogue.get("missing") is None
 
 
 def test_find_unmatched_filters_by_kind() -> None:
@@ -249,8 +248,8 @@ def test_link_transaction_appends_id_and_returns_new_catalogue() -> None:
 
     updated = link_transaction(catalogue, invoice.invoice_id, hex_a)
     assert updated is not catalogue
-    original = find_invoice(catalogue, invoice.invoice_id)
-    after = find_invoice(updated, invoice.invoice_id)
+    original = catalogue.get(invoice.invoice_id)
+    after = updated.get(invoice.invoice_id)
     assert original is not None and original.linked_transaction_ids == ()
     assert after is not None and after.linked_transaction_ids == (hex_a,)
 

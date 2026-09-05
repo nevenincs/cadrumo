@@ -271,7 +271,7 @@ def assert_read_landing(
     the scan knows. The path allow-list is what closes that half, so the two
     checks are complementary and both are required.
 
-    The censal reader (:mod:`._censal_datos`) keeps its own marker-keyed
+    The censal reader (:mod:`.censal_datos`) keeps its own marker-keyed
     refusal in addition to this one. Its consulta page and its modification
     siblings are reached through the same launcher, so it names the write
     paths outright; that predicate is exported for conformance gates and is

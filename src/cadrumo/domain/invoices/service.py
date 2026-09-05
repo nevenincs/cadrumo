@@ -2,7 +2,7 @@
 
 Exposes pure-function service operations over an
 :class:`~cadrumo.domain.invoices.InvoiceCatalogue`: lookup
-(:func:`find_invoice`, :func:`find_unmatched`), in-memory linking
+(:func:`find_unmatched`), in-memory linking
 (:func:`link_transaction`), reconciliation suggestions
 (:func:`suggest_reconciliations`), and bidirectional consistency checks
 (:func:`verify_link_consistency`). Operations that span both the invoice
@@ -96,20 +96,6 @@ class LinkInconsistency(BaseModel):
     invoice_id: str = Field(min_length=1)
     transaction_id: TransactionId
     direction: LinkInconsistencyDirection
-
-
-def find_invoice(catalogue: InvoiceCatalogue, invoice_id: str) -> Invoice | None:
-    """Return one invoice from a catalogue if present.
-
-    Args:
-        catalogue: Source :class:`~cadrumo.domain.invoices.InvoiceCatalogue`.
-        invoice_id: Stable invoice identifier to look up.
-
-    Returns:
-        The matching :class:`~cadrumo.domain.invoices.Invoice`, or ``None``
-        when absent.
-    """
-    return catalogue.get(invoice_id)
 
 
 def find_unmatched(

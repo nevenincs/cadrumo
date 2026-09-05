@@ -102,7 +102,7 @@ def test_modify_review_renders_save_unavailable_refusal() -> None:
     the substrate ``save_unavailable`` refusal — the operator is told save
     is unavailable at exactly the moment they would reach for it. That the
     save action itself is not offered is proven structurally by
-    :func:`test_setup_flow_declares_modify_checkpoint_unavailable` (the
+    :func:`test_setup_flow_declares_checkpoint_unavailable_in_both_modes` (the
     refusal copy embeds the action phrase, so a text-absence check on the
     action title would be unsound).
     """

@@ -18,8 +18,8 @@ it bounds what the refusal protects -- everything upstream of a session
 will not notice the disagreement, so a reader must not assume the two
 have been reconciled merely because they are stored.
 
-The write below goes through :func:`set_active_field`, the validated
-edit door, deliberately. A fixture that wrote the fact underneath the
+The write below goes through :func:`replace_test_profile_record`, which
+drives the production write doors, deliberately. A fixture that wrote the fact underneath the
 door would prove only that the storage layer is untyped; driving the
 real door is what shows no validator refuses this.
 """

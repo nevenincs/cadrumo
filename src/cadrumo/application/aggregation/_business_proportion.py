@@ -1,7 +1,7 @@
 """Shared BUSINESS / MIXED business-proportion dispatch.
 
 Centralises business proportion dispatch: four aggregation sites
-(:mod:`~._iva_ledger`, :mod:`~._renta_ledger`, :mod:`~._renta_income_ledger`,
+(:mod:`~.iva_ledger`, :mod:`~._renta_ledger`, :mod:`~._renta_income_ledger`,
 and :mod:`~._renta_gasto_ledger`) each carry the
 same dispatch shape::
 

@@ -133,7 +133,9 @@ def resolve_id(transaction_repository: TransactionRepo, prefix: str) -> str:
     verbs (update, classify, allocate, link, attach, doclink, archive, stash,
     restore, remove, split, merge). It matches only ids of rows still in the
     catalogue, because a mutation always targets a live row. Read verbs use the
-    lineage-following ``resolve_read_id`` in :mod:`_ledger` instead.
+    lineage-following ``resolve_ledger_transaction_id`` in
+    :mod:`_ledger_read_cli` instead, which resolves a superseded id through the
+    edit chain.
     """
     try:
         return resolve_transaction_id(prefix, _bucket_transaction_ids(transaction_repository))

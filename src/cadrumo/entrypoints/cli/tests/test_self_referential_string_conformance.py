@@ -31,12 +31,12 @@ handler accepts: an advertised member the handler refuses is a gate failure
 the tree is disproportionate here - many choice sets are validated late against
 dynamic registry data - so this gate pins the explicitly-registered surfaces
 that the audit named plus any future surface enrolled in
-:data:`_ENUM_CHOICE_SURFACES`. Each surface declares the command path, the
+:func:`_enum_choice_surfaces`. Each surface declares the command path, the
 option flag, the advertised member set, and the independently grounded
 handler-accepted member set; the gate asserts advertised == accepted.
 
-To enrol a new enum-choice surface: append an :class:`_EnumChoiceSurface` row to
-:data:`_ENUM_CHOICE_SURFACES` naming the command path, the option, the advertised
+To enrol a new enum-choice surface: add an :class:`_EnumChoiceSurface` row to
+:func:`_enum_choice_surfaces` naming the command path, the option, the advertised
 members, and the handler's real accepted set.
 
 Real-behavior only: the gate imports the real ``cadrumo`` app object, walks the

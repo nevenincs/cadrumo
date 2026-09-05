@@ -1,13 +1,13 @@
 """Resolve which Member State a party is IVA-identified in — never where it is established.
 
-Separate from :mod:`._establishment` because the two answer legally distinct
+Separate from :mod:`.establishment` because the two answer legally distinct
 questions, and conflating them is the defect this module exists to end. A
 document printing ``DE811234567`` states two things that look like one: that the
 party operates under a German IVA identification, and — the reader's inference —
 that the party is in Germany. Only the first is evidence.
 
 **Registration IS the identification fact, so a printed prefix is decisive
-here.** Where :mod:`._establishment` refuses to let the same prefix settle a
+here.** Where :mod:`.establishment` refuses to let the same prefix settle a
 place on its own -- the establishment ladder reaches a territory only once a
 printed country name or postal code corroborates one -- this module treats it as
 what it actually is: the Member State under whose identification the party

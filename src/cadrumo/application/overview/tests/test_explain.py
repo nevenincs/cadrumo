@@ -1,7 +1,7 @@
 """Real-behavior tests for ``build_overview_explain``.
 
 The ``applicable`` flag is derived from the three-axis taxpayer model
-(see :mod:`._applicability`), not from the deadline engine. These
+(see :mod:`.applicability`), not from the deadline engine. These
 tests pin the verdict for a declared autónomo and assert the service
 boundary refusals; the per-persona derivation matrix lives in
 :mod:`.test_applicability`.

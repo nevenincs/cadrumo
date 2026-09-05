@@ -110,8 +110,8 @@ def _live_prefixed_test_modules() -> list[Path]:
     """Return every ``test_live_*.py`` module present on disk under ``src/cadrumo``.
 
     The scan is a filesystem glob and deliberately does not consult git, so an
-    untracked module is in scope — matching :func:`_discover_test_modules` in
-    the companion marker-integrity ratchet. In a worktree where several
+    untracked module is in scope, matching how the companion marker-integrity
+    ratchet discovers its own scan set. In a worktree where several
     agents hold uncommitted work at once, a mis-declared ``test_live_*`` module
     is caught before it is committed rather than after. The cost is that a red
     here may name a file absent at HEAD, so triage starts with

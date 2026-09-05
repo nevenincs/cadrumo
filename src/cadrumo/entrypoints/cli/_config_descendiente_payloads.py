@@ -1,6 +1,6 @@
 """Typed ``--json`` payload schemas for the ``config profile descendiente`` family.
 
-Split out of the cohesive sibling :mod:`_config_payloads` so the declared-descendant
+Split out of the cohesive sibling :mod:`config_payloads` so the declared-descendant
 transport can carry the full canonical contract without growing that module.
 
 :class:`ProfileDescendientePayload` is a lossless projection of

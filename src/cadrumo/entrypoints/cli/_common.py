@@ -669,8 +669,7 @@ def emit_envelope(
     severities. Text mode keeps the existing line iterator unchanged so
     terminal output is unaffected.
 
-    When the active profile bucket is a sandbox
-    (:func:`~cadrumo.application.bucket_maintenance.is_sandbox_label`), a
+    When the active profile bucket is a sandbox, a
     persistent info :class:`Notice` naming the sandbox is prepended to
     ``notices`` (JSON mode, via
     :func:`~cadrumo.application.operator_output.emit_operator_json_success`)

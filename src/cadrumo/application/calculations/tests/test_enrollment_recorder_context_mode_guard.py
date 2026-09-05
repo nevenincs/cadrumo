@@ -3,7 +3,7 @@
 These tests exist specifically to prove the ``record_context_year`` guard is
 load-bearing. Deleting the ``persisted_observation_count <= 0`` check inside
 ``_multi_year.py`` would make the ``count=0`` test below go RED immediately —
-which is the anti-tautology proof required by :ref:`aeat-quality-gates`.
+which is the anti-tautology proof this test owes.
 
 Three contracts under test:
 

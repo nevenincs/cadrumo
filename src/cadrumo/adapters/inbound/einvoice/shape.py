@@ -7,7 +7,7 @@ complete invoice, so the most exactly readable document in the corpus was
 routed to prose extraction.
 
 The probe is read-only and allocates nothing outside memory. XML detection runs
-through the hardened parser in :mod:`._xml`, so a probe against a hostile
+through the hardened parser in :mod:`.xml`, so a probe against a hostile
 document cannot resolve an external entity or expand a billion-laughs payload.
 """
 

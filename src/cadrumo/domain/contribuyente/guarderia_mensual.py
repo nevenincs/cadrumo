@@ -129,7 +129,7 @@ def parse_month_spec(
 ) -> Sequence[int]:
     """Read a bare month or an inclusive range into the months it names.
 
-    Shared with :mod:`._meses_trabajo`, which carries the Art. 81.1 month set
+    Shared with :mod:`.meses_trabajo`, which carries the Art. 81.1 month set
     through the same doors. *accepted_form* is the caller's own grammar, quoted
     in refusals so an operator is told the form of the surface they used rather
     than this module's.

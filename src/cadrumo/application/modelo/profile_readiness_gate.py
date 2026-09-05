@@ -64,7 +64,7 @@ _PROFILE_ACTIVITY_START_PATH = "censo.activity_start_date"
 _PRE_ACTIVITY_LIFECYCLE_MODELOS = frozenset({Modelo.M130.value, Modelo.M303.value})
 _FILING_BASELINE_PROFILE_PATHS = ("identity.tax_id",)
 _PROFILE_ACTIVITY_DESCRIPTION_PATH = "activities.description"
-#: Shared with :mod:`._work_create_policy`, which runs the same applicability
+#: Shared with :mod:`.work_create_policy`, which runs the same applicability
 #: block ahead of work-unit provisioning; kept public so that cross-module use
 #: is a declared contract rather than a private-symbol reach.
 BLOCKING_APPLICABILITY_VERDICTS = frozenset(

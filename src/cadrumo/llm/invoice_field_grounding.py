@@ -1,8 +1,8 @@
 """Transport-neutral invoice-field response schema, parser and grounded re-validation.
 
 A model asked to read an invoice returns strings. Whether it read those strings
-off rasterised pixels (:mod:`._evidence_draft_vision`) or off an already-extracted
-text layer (:mod:`._evidence_draft_text`) changes nothing about what must happen
+off rasterised pixels (:mod:`.evidence_draft_vision`) or off an already-extracted
+text layer (:mod:`.evidence_draft_text`) changes nothing about what must happen
 next: the response has to be recovered from possibly-chatty completion text,
 validated against a strict schema, and then *re-validated field by field* so a
 value the model invented is dropped rather than trusted.

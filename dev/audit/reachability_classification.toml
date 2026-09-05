@@ -625,10 +625,49 @@ evidence = "Seven private aliases to public imports, carrying the comment 'Kept 
 # ---------------------------------------------------------------------------
 
 [exported_unused]
-declared_exports = 8524
-exported_and_unconsumed = 367
+declared_exports = 8534
+exported_and_unconsumed = 368
 method = "a name counts as consumed only when another module from-imports it FROM the declaring module; bare-name matching would count same-named symbols in unrelated packages"
 remedy_requires_decision = true
+note = """
+The population is 4.3% of the declared surface and is CONCENTRATED, not
+scattered: three areas hold 135 of the 368. That shape is what makes a
+per-area ruling tractable, and it is why no blanket disposition is proposed
+here - the reason a name went unconsumed differs by area, and the areas have
+different owners.
+
+Every count below is names / modules. Ordered by size.
+"""
+
+[[exported_unused_area]]
+area = "domain/calculations"
+names = 53
+modules = 31
+shape = "Registry binding and schema families. The withholding296 family cluster in this ledger is the worked example: a family can carry an enrolled validator and an exported-but-unreached resolver at the same time, so a name here is more often half-wired than abandoned. Rule per family, not per name."
+
+[[exported_unused_area]]
+area = "entrypoints/cli"
+names = 44
+modules = 21
+shape = "Command-spec and payload modules. The MODELO_CODE_CHOICE_ALL cluster shows the trap: wiring an exported constant into the surface it was written for broke the live-subtree demand-loading contract. A CLI export may be unconsumed because consuming it is structurally blocked, so check the loading contract before treating one as unwanted."
+
+[[exported_unused_area]]
+area = "application/modelo"
+names = 38
+modules = 21
+shape = "Projection and operation-definition surfaces, already partly recorded above as should-be-live. Several are result projections whose consumer is the TUI cluster this ledger defers, so a share of this area resolves with that cluster rather than independently."
+
+[[exported_unused_area]]
+area = "adapters/persistence"
+names = 27
+modules = 13
+shape = "Storage and profile repositories. Deletion risk is highest here: a row type or namespace constant may be the only declaration of a persisted shape, as the finca ORM rows are, so removing one can change the schema rather than the API."
+
+[[exported_unused_area]]
+area = "entrypoints/tui"
+names = 20
+modules = 11
+shape = "Inside the deferred TUI prefix. Not this campaign's to rule on; listed so the total reconciles."
 
 [[symbol_cluster]]
 name = "modelo operation definitions exported projections"
@@ -788,4 +827,76 @@ area = "core"
 resolved = false
 symbols = ["BOE_ENCODING_CHOICES", "IVA_BIEN_ESCASO_VALOR_UMBRAL_EUR"]
 evidence = "Both carry a cited authority in the comment block above them: the IVA low-value-goods threshold states its binding provision as Art. 108.Dos.5 LIVA (Ley 37/1992) together with the peseta origin of the 3.005,06 EUR figure, and the encoding tuple records which encodings AEAT treats as equivalent for fichero-BOE purposes. A constant like this is captured legal research rather than code: the value is the provenance, and deleting it discards work that would have to be re-derived from the BOE while the calculation-grounding rule requires that provenance be preserved. Measured against the whole unused-constant population they are the exception, not the rule - 2 of 41 cite an authority - so this classification is narrow and the remaining 39 stay ordinary deletion candidates."
+
+[[symbol_cluster]]
+name = "duplicate read-side lineage resolver in the ledger CLI"
+class = "superseded"
+area = "entrypoints/cli"
+resolved = true
+symbols = ["resolve_read_id"]
+evidence = "Two implementations of read-side transaction id resolution existed. The live one is resolve_ledger_transaction_id in _ledger_read_cli, which ledger history, view and track actually call; resolve_read_id in _ledger had the same body - load the catalogue, delegate to resolve_lineage_transaction_id, translate TransactionIdPrefixError through ledger_cli_no_recovery - plus a fallback for a non-catalogue repository that its own comment states never occurs on the read path. Its only remaining reference was a docstring in _ledger_support directing readers to it as the read-side resolver, so the prose pointed at the copy nothing ran; that sentence now names the function the read verbs use."
+
+[[symbol_cluster]]
+name = "declared review capabilities with no production caller"
+class = "should-be-live"
+area = "application"
+resolved = false
+symbols = ["unapprove_draft", "reserved_kind_reason"]
+evidence = "Neither is dead code and neither should be deleted: each is the only implementation of a capability the package documents as supported. application/filing/__init__ presents approve_draft and unapprove_draft as the pair that manages local review state, and approve_draft is live in adapters/persistence/profile/usage_ratios, so the approve half is wired and the un-approve half is not. reserved_kind_reason reads the _RESERVED_KINDS table that enums documents as the reserved --kind surface, and ReviewKindReservedError names it as the source of its blocking reason, but that error is raised only inside a test with a hardcoded string and never in production, so a reserved token is currently accepted rather than refused. Resolution is wiring each to its caller, or an owner decision to retire the declared capability along with its error type and table."
+
+[[symbol_cluster]]
+name = "documented filing and submission ports"
+class = "design-time-authority"
+area = "domain"
+resolved = false
+symbols = ["ModeloDraftRepositoryProtocol", "ModeloDraftLoader"]
+evidence = "Both are Protocols, so an implementer satisfies one structurally and never imports it; an import-graph audit therefore cannot see the relationship that makes them live. Each is named as a port by the code that implements it: adapters/persistence/profile/__init__ and filing_drafts both describe themselves as the ModeloDraftRepositoryProtocol port, and domain/submission/__init__ presents ModeloDraftLoader as one of the narrow filing draft surfaces. Deleting either would remove the written contract while leaving the implementations that claim to satisfy it, which is the opposite of what the architecture boundaries require. They stay unresolved because the audit cannot bind structural conformance, not because anything is wrong."
+
+[[symbol_cluster]]
+name = "modelo edit-session wiring behind the frozen TUI cluster"
+class = "deferred-by-ownership"
+area = "application/modelo"
+resolved = false
+symbols = ["wire_detail_row"]
+evidence = "It is called, at application/modelo/edit_session.py lines 65 and 513, so it is not dead. The module ratchet already reports edit_session as reachable only from the frozen cadrumo.entrypoints.tui.modelo.edit cluster, so this symbol is the tail of that deferral rather than a separate finding: it lives exactly as long as its importer does. Resolving it means resolving the TUI cluster, and doing anything to it before then would be acting inside another campaign's scope."
+
+[[symbol_cluster]]
+name = "withholding296 binding family with an enrolled validator and no reached resolver"
+class = "should-be-live"
+area = "domain/calculations/registry"
+resolved = false
+symbols = ["resolve_withholding296_binding_values"]
+evidence = "The family is half wired. Its validator is enrolled canonically - bindings.py imports validate_withholding296_binding_selector_shape and registers it against BindingSourceKind.WITHHOLDING296 - and application/calculations/row_set_assembly consumes the Withholding296Observation type and assembles observations itself. But neither resolver in the owning module is called by anything: resolve_withholding296_binding_row_values is exported in __all__ and unconsumed, and resolve_withholding296_binding_values is not exported and unconsumed. The registry-bindings contract expects a family to carry a declaration, an enrolled validator AND a resolver at its owning public module, so deleting the unexported one would not tidy dead code, it would remove half of an already incomplete pair. Resolution is an owner decision on which resolver is canonical and wiring it, or retiring the unchosen form deliberately."
+
+[[symbol_cluster]]
+name = "seed applicability coverage marker read by nothing"
+class = "superseded"
+area = "domain/calculations/registry"
+resolved = true
+symbols = ["_SEED_COVERAGE_NOTICE"]
+evidence = "An English module-level string documenting that the applicability seed table is deliberately narrow. The behaviour it described is genuinely implemented and does not depend on it: a modelo with no seed rule is reported INCOMPLETE carrying an emitted Spanish rationale that states the deferral to the operator, and that constant's own docstring already carries the explanation. The marker was read by no code and cross-referenced from three places, so removing it required repointing the module docstring, the seed-table banner comment and the table docstring to state the deferral directly rather than name a constant that no longer exists."
+
+[[symbol_cluster]]
+name = "full-taxonomy modelo choice the demand-loading contract keeps unwired"
+class = "should-be-live"
+area = "entrypoints/cli"
+resolved = false
+symbols = ["MODELO_CODE_CHOICE_ALL"]
+evidence = "It exists for one stated purpose: the portal catalogue ships an entry for the suppressed Modelo 037, so a portal filter pinned to MODELO_CODE_CHOICE would refuse a code the application deliberately supports. A harness gate asserts that pinning is in place. It is not - the portal --modelo option is declared as DeferredTarget(builtins, str), so the option accepts any string and performs no validation at all, which the CLI contract requires at the boundary. Wiring it was attempted and reverted: pointing the option at _common pulls that module eagerly and breaks the live-subtree demand-loading contract, so app.live.portals.list exited 6 instead of 0 and two spec-compilation gates failed. So this is not an oversight anyone can close by adding an import; resolution needs a way to supply the Choice without eagerly loading _common, and until then both the gate's claim and the option's validation are wrong."
+
+[[symbol_cluster]]
+name = "manual fetch capability with no CLI verb"
+class = "should-be-live"
+area = "domain/manuals"
+resolved = false
+symbols = ["fetch_manual_part"]
+evidence = "Its result type FetchResult is documented as the thin wrapper it returns TO THE CLI, and core/storage_taxonomy names domain.manuals.fetch as a module that demonstrably writes to the operator's storage area, so the capability is known to the surrounding design. No CLI verb reaches it: the only manual-shaped commands in entrypoints/cli are the ledger manual-transaction verbs, an unrelated sense of the word. Deleting it would remove the whole downloading-and-sha256-verifying path rather than tidy a helper, so resolution is wiring the verb the docstring assumes or retiring the capability with its manifest types."
+
+[[symbol_cluster]]
+name = "attachment catalogue model without a consumer"
+class = "staged-capability"
+area = "domain/attachments"
+resolved = false
+symbols = ["AttachmentCatalogue"]
+evidence = "The immutable keyed catalogue over Attachment, verifying that every mapping key matches the embedded attachment_id so lookups cannot drift from the manifest. Its element type Attachment is heavily exercised across the storage attachment tests, so the half below it is live while the catalogue itself has no consumer. That asymmetry is what makes it staged rather than dead: the manifest-level invariant it enforces has no other home, and deleting it would leave attachment collections with no type that checks key-to-id agreement."
 

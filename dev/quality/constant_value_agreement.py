@@ -35,6 +35,12 @@ evidence of anything.
 But declining to compare a value is not a reason to ignore the name. A third
 condition covers the constants whose values are unevaluable:
 
+- ``derived_name_collision`` - the same, but every site builds the value from
+  an imported authority rather than from literals. ``SEDE_BASE =
+  EXTERNAL.aeat.domains.www6`` in four sede modules is four local bindings of
+  one canonical value: they read the same source, so they cannot drift, and
+  that is the pattern working rather than failing. Reported separately so it
+  does not crowd out the kind that can.
 - ``unevaluated_name_collision`` - one name defined in several modules, at
   least one of them by a call or comprehension. The screen reports the
   collision and says nothing about agreement, because it cannot know. This is
@@ -150,6 +156,33 @@ def collect_unevaluated_constants(root: Path) -> dict[str, dict[str, str]]:
     return dict(found)
 
 
+def _is_literal_construction(expression: str) -> bool:
+    """Report whether an expression builds its value rather than reading one.
+
+    This is the whole difference between a duplicate that can drift and one
+    that cannot, and the test is simply whether any literal appears.
+
+    An expression made only of names and attributes reads a value that lives
+    somewhere else -- ``EXTERNAL.aeat.domains.www6``,
+    ``storage_location(StorageCategory.BUCKETS).subpath`` -- so every copy
+    resolves to whatever that source says and no edit can leave one stale.
+
+    The moment a literal appears, the value is written down here:
+    ``frozenset('0123456789abcdef')``, ``re.compile('[^a-z0-9]+')``,
+    ``TypeAdapter(tuple[int | float, ...])``. A second copy is then a second
+    source of truth, and changing one leaves the other behind. That holds for
+    a bare ``...`` or ``True`` as much as for a string, which is why the rule
+    is stated over literals rather than over a list of known constructors -- a
+    list would have to be maintained, and mistaking a constructor for an
+    authority hides real drift.
+    """
+    try:
+        parsed = ast.parse(expression, mode="eval")
+    except SyntaxError:
+        return False
+    return any(isinstance(node, ast.Constant) for node in ast.walk(parsed))
+
+
 def unevaluated_collisions(constants: dict[str, dict[str, str]]) -> tuple[ConstantFinding, ...]:
     """Report unevaluable constant names several modules bind IDENTICALLY.
 
@@ -166,10 +199,15 @@ def unevaluated_collisions(constants: dict[str, dict[str, str]]) -> tuple[Consta
         sites = {module: text for module, text in sites.items() if "__name__" not in text}
         if len(sites) < 2 or len(set(sites.values())) != 1:
             continue
+        kind = (
+            "unevaluated_name_collision"
+            if _is_literal_construction(next(iter(sites.values())))
+            else "derived_name_collision"
+        )
         findings.append(
             ConstantFinding(
                 name=name,
-                kind="unevaluated_name_collision",
+                kind=kind,
                 public=not name.startswith("_"),
                 sites=tuple(sorted(sites.items())),
             )

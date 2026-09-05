@@ -1,7 +1,7 @@
 """Cross-module import resolution gate.
 
-The companion :mod:`test_layout_import_smoke` proves every canonical
-layout package imports cleanly. This gate proves the inverse: every
+Importing a package cleanly proves only that its own module body runs.
+This gate proves the other direction: every
 ``from cadrumo.X import {name}`` statement under ``src/cadrumo/`` resolves
 to an attribute that actually exists on ``cadrumo.X``.
 

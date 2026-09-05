@@ -15,18 +15,6 @@ def metric_line(key: str, value: object) -> str:
     return f"{key}={value}"
 
 
-def run_auth_preflight(preflight: Callable[[], None] | None, *, family: str) -> None:
-    """Run a live command family's registered auth preflight, or refuse if unregistered.
-
-    Single canonical guard shared by the live command-family modules
-    (expedientes, justificante, notifications), which previously each
-    declared an identical guard differing only in the family name.
-    """
-    if preflight is None:
-        raise RuntimeError(f"live {family} commands were not registered")
-    preflight()
-
-
 def resolve_active_bucket(active_bucket_id: Callable[[], str] | None, *, family: str) -> str:
     """Resolve a live command family's registered active-bucket id, or refuse if unregistered.
 

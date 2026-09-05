@@ -6,7 +6,7 @@ one modelo's vocabulary, and a modelo branch in generic construction means a
 second such modelo edits the shared code path instead of registering a compiler.
 
 Both properties are derived rather than listed. A class whose own name carries a
-modelo code (:class:`M303FilingEnvelopeDefinition`) is a per-modelo type and its
+modelo code (``M303FilingEnvelopeDefinition``, say) is a per-modelo type and its
 fields are its own business; a generically named one must declare no
 modelo-named field. The modules building a :class:`ValidatedRegistryAuthority`
 and its :class:`RegistrySnapshot` values must reference no ``Modelo.M###``

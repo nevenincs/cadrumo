@@ -15,7 +15,7 @@ one so a later change optimising for latency does not discard it: **a document
 carrying a structured record reaches no model at all**, which makes prompt
 injection categorically impossible for that document rather than merely
 mitigated. The corresponding hazard moves to the XML reader rather than
-disappearing, and is bounded there -- see :mod:`._xml`.
+disappearing, and is bounded there -- see :mod:`.xml`.
 
 Two properties are load-bearing and neither is an accuracy claim. The reader
 **fails loudly**: a malformed document raises :class:`EInvoiceXmlParseError` and

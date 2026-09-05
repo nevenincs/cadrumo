@@ -55,7 +55,7 @@ if TYPE_CHECKING:
     from googleapiclient._apis.drive.v3.resources import DriveResource
     from googleapiclient._apis.sheets.v4.resources import SheetsResource
 
-from pydantic import TypeAdapter, ValidationError
+from pydantic import ValidationError
 
 from ....application.storage.calc_sheets.engine import CALC_SHEETS_ENGINE_VERSION, collect_row_sets, registry_sha
 from ....application.storage.calc_sheets.layout import SheetLayout, plan_layout
@@ -78,6 +78,8 @@ from ....domain.calculations.registry.formula_runtime import (
     calculate_registry_snapshot,
 )
 from ....domain.calculations.registry.ids import (
+    LEGAL_REFS_ADAPTER,
+    SOURCE_REFS_ADAPTER,
     BindingId,
     LegalRefId,
     ModeloId,
@@ -140,8 +142,6 @@ _DUPLICATE_SENSITIVE_METADATA_KEYS: Final[frozenset[str]] = frozenset(
         "cadrumo_period",
     },
 )
-_LEGAL_REFS_ADAPTER = TypeAdapter(tuple[LegalRefId, ...])
-_SOURCE_REFS_ADAPTER = TypeAdapter(tuple[SourceRefId, ...])
 
 
 class CalcSheetsPullPreconditionCondition(StrEnum):
@@ -831,7 +831,7 @@ def _relation_ref_tokens(raw: str) -> tuple[str, ...]:
 
 def _validated_relation_legal_refs(raw: str) -> tuple[LegalRefId, ...]:
     try:
-        return _LEGAL_REFS_ADAPTER.validate_python(_relation_ref_tokens(raw))
+        return LEGAL_REFS_ADAPTER.validate_python(_relation_ref_tokens(raw))
     except ValidationError as exc:
         error = OutboundStorageValidationError(
             "relation metadata legal_refs contains malformed registry legal reference ids",
@@ -847,7 +847,7 @@ def _validated_relation_legal_refs(raw: str) -> tuple[LegalRefId, ...]:
 
 def _validated_relation_source_refs(raw: str) -> tuple[SourceRefId, ...]:
     try:
-        return _SOURCE_REFS_ADAPTER.validate_python(_relation_ref_tokens(raw))
+        return SOURCE_REFS_ADAPTER.validate_python(_relation_ref_tokens(raw))
     except ValidationError as exc:
         error = OutboundStorageValidationError(
             "relation metadata source_refs contains malformed registry source reference ids",

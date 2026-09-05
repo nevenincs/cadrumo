@@ -8,12 +8,6 @@ if TYPE_CHECKING:
     from ....application.workflow.profile_bucket_models import ProfileBucketPointer
 
 
-def profile_state():
-    from ....application.workflow.persistence import workflow_state_repository
-
-    return workflow_state_repository()
-
-
 def resolve_profile_by_label(name: str) -> ProfileBucketPointer:
     from ....application.workflow.errors import ProfileLabelAmbiguousError
     from ....application.workflow.profile_bucket_scan import read_profile_bucket

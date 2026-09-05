@@ -12,7 +12,7 @@ both times; only the contract was ambiguous.
 So the form is declared ONCE here, as typed data
 (:class:`InvoiceFieldContract`, one row per field of
 :class:`~llm.invoice_field_grounding.ExtractedInvoiceFields`), and both sides
-derive from it: :mod:`._invoice_extraction_prompt` renders each row's
+derive from it: :mod:`.invoice_extraction_prompt` renders each row's
 ``form_instruction`` into the compiled prompt, and
 :func:`~llm.invoice_field_grounding.ground_extracted_fields` dispatches each
 row's :class:`InvoiceFieldForm` to the matching grounding validator. Two

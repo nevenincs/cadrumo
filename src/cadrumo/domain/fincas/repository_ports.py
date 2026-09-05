@@ -4,7 +4,7 @@ These :class:`~typing.Protocol` declarations are the hexagonal boundary
 between the pure :mod:`domain.fincas` aggregation logic and the
 ORM-backed concrete repositories that live in the persistence adapter
 (:mod:`adapters.persistence.profile.fincas`). The aggregation
-functions in :mod:`._aggregates` annotate against these ports and depend
+functions in :mod:`.aggregates` annotate against these ports and depend
 only on the read methods they call, never on SQLAlchemy or the storage
 mapper rows — keeping the domain layer free of adapter coupling.
 

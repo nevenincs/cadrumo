@@ -15,8 +15,8 @@ original profile facts and reruns the calculation with only
 same observation payload shape used by non-warning previews.
 
 See Also:
-    :func:`cadrumo.entrypoints.cli._modelo_maritime_cli.register_maritime_commands`:
-        Registers the CLI command that serialises this preview into operator
+    :mod:`cadrumo.entrypoints.cli._modelo_maritime_cli`:
+        Serves the CLI command that serialises this preview into operator
         payloads.
     :func:`cadrumo.application.calculations.resolve_maritime_exemption`:
         Legal application service that produces the typed observations.

@@ -24,10 +24,8 @@
 [symbols]
 "cadrumo.application.user_profile.capsule_restore" = 2
 "cadrumo.entrypoints.cli._modelo" = 1
-"cadrumo.adapters.inbound.einvoice.shape" = 1
 "cadrumo.adapters.inbound.financial.providers.detection" = 1
 "cadrumo.adapters.inbound.pdf.label_regex" = 1
-"cadrumo.adapters.outbound.aeat.auth._clave_movil_page_flow" = 1
 "cadrumo.adapters.outbound.aeat.auth.certificate" = 1
 "cadrumo.adapters.outbound.aeat.auth.clave_permanente_support" = 1
 "cadrumo.adapters.outbound.aeat.sede._browser_constants" = 1
@@ -43,7 +41,7 @@
 "cadrumo.adapters.outbound.google.impersonation" = 1
 "cadrumo.adapters.persistence.profile.assets" = 2
 "cadrumo.adapters.persistence.profile.inventory" = 3
-"cadrumo.adapters.persistence.profile.invoices" = 4
+"cadrumo.adapters.persistence.profile.invoices" = 3
 "cadrumo.adapters.persistence.profile.prorrata_register" = 4
 "cadrumo.adapters.persistence.storage.bucket.directory_layout" = 1
 "cadrumo.adapters.persistence.storage.bucket.output_language_hint" = 2
@@ -64,7 +62,7 @@
 "cadrumo.application.aggregation._evidence_advisory" = 2
 "cadrumo.application.aggregation._retenciones" = 1
 "cadrumo.application.aggregation._source_mesh" = 1
-"cadrumo.application.aggregation.iva_ledger" = 2
+"cadrumo.application.aggregation.iva_ledger" = 1
 "cadrumo.application.aggregation.ledger_filing_snapshot" = 1
 "cadrumo.application.auth.apoderado_flow" = 1
 "cadrumo.application.auth.catalogue" = 1
@@ -206,7 +204,7 @@
 "cadrumo.domain.calculations.registry._validate_cross_revision" = 1
 "cadrumo.domain.calculations.registry._validate_evidence" = 2
 "cadrumo.domain.calculations.registry._validate_semantic_role_required" = 1
-"cadrumo.domain.calculations.registry.applicability" = 3
+"cadrumo.domain.calculations.registry.applicability" = 2
 "cadrumo.domain.calculations.registry.authority" = 3
 "cadrumo.domain.calculations.registry.bindings" = 1
 "cadrumo.domain.calculations.registry.censo_modelos" = 3
@@ -214,7 +212,7 @@
 "cadrumo.domain.calculations.registry.corpus_catalogue" = 1
 "cadrumo.domain.calculations.registry.counterpart_bindings" = 3
 "cadrumo.domain.calculations.registry.design_constant_bindings" = 1
-"cadrumo.domain.calculations.registry.detail_record_bindings" = 4
+"cadrumo.domain.calculations.registry.detail_record_bindings" = 3
 "cadrumo.domain.calculations.registry.donativo_bindings" = 1
 "cadrumo.domain.calculations.registry.export" = 2
 "cadrumo.domain.calculations.registry.external_grounding" = 1
@@ -287,22 +285,21 @@
 "cadrumo.domain.user_profile.values" = 1
 "cadrumo.entrypoints.cli" = 2
 "cadrumo.entrypoints.cli._app_live" = 1
-"cadrumo.entrypoints.cli._app_live_auth_preflight" = 1
 "cadrumo.entrypoints.cli._bootstrap_exempt" = 1
 "cadrumo.entrypoints.cli._command_runtime" = 1
 "cadrumo.entrypoints.cli._command_schema" = 1
 "cadrumo.entrypoints.cli._common" = 5
-"cadrumo.entrypoints.cli._ledger" = 2
+"cadrumo.entrypoints.cli._ledger" = 1
 "cadrumo.entrypoints.cli._ledger_ratios_cli" = 1
 "cadrumo.entrypoints.cli._modelo_behavior_support" = 1
 "cadrumo.entrypoints.cli._modelo_cli_support" = 1
 
 "cadrumo.entrypoints.cli._modelo_work_calculate_cli" = 1
-"cadrumo.entrypoints.cli._modelo_work_lifecycle_cli" = 6
+"cadrumo.entrypoints.cli._modelo_work_lifecycle_cli" = 5
 "cadrumo.entrypoints.cli._modelo_work_revision_cli" = 3
 "cadrumo.entrypoints.cli._modelo_work_runs_cli" = 4
 "cadrumo.entrypoints.cli._modelo_work_select_cli" = 1
-"cadrumo.entrypoints.cli._modelo_work_verification_cli" = 4
+"cadrumo.entrypoints.cli._modelo_work_verification_cli" = 3
 "cadrumo.entrypoints.cli._modelo_work_wizard_cli" = 1
 "cadrumo.entrypoints.cli._overview" = 2
 "cadrumo.entrypoints.cli._profile_session_gate" = 2
@@ -311,7 +308,6 @@
 "cadrumo.entrypoints.cli.command_api" = 2
 "cadrumo.entrypoints.cli.command_suggestions" = 3
 "cadrumo.entrypoints.cli.config._censo_transport" = 1
-"cadrumo.entrypoints.cli.config._profile_support" = 1
 "cadrumo.entrypoints.cli.config._spec_policies" = 6
 "cadrumo.entrypoints.cli.config.google" = 1
 "cadrumo.entrypoints.cli.config_payloads" = 1

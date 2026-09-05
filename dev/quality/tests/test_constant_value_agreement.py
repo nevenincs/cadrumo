@@ -180,28 +180,74 @@ def test_one_name_bound_to_the_same_call_in_two_modules_is_detected() -> None:
 
 def test_a_per_module_logger_is_not_reported_however_many_modules_hold_it() -> None:
     """`get_logger(__name__)` is the correct idiom; eighty of them are not a defect."""
-    assert unevaluated_collisions(
-        {"_log": {f"pkg/mod{index}.py": "get_logger(__name__)" for index in range(80)}}
-    ) == ()
+    assert unevaluated_collisions({"_log": {f"pkg/mod{index}.py": "get_logger(__name__)" for index in range(80)}}) == ()
 
 
 def test_two_configured_instances_of_one_helper_are_not_a_redeclaration() -> None:
     """Differing arguments mean reuse is working, not that a concept was copied."""
-    assert unevaluated_collisions(
-        {
-            "_playwright_stage": {
-                "sede/groi_check.py": "build_playwright_stage_runner(surface_label='GROI')",
-                "sede/nif_iva_check.py": "build_playwright_stage_runner(surface_label='NIF-IVA')",
+    assert (
+        unevaluated_collisions(
+            {
+                "_playwright_stage": {
+                    "sede/groi_check.py": "build_playwright_stage_runner(surface_label='GROI')",
+                    "sede/nif_iva_check.py": "build_playwright_stage_runner(surface_label='NIF-IVA')",
+                }
             }
-        }
-    ) == ()
+        )
+        == ()
+    )
 
 
 def test_an_evaluable_literal_stays_with_the_literal_census(tmp_path: Path) -> None:
     """The unevaluated collector must not double-report what the census reads."""
-    (tmp_path / "mod.py").write_text(
-        "_LITERAL = 16\n_CALLED = frozenset({'a'})\n", encoding="utf-8"
-    )
+    (tmp_path / "mod.py").write_text("_LITERAL = 16\n_CALLED = frozenset({'a'})\n", encoding="utf-8")
     collected = collect_unevaluated_constants(tmp_path)
     assert "_LITERAL" not in collected
     assert collected["_CALLED"] == {"mod.py": "frozenset({'a'})"}
+
+
+def test_a_value_built_from_an_imported_authority_cannot_drift() -> None:
+    """The distinction that took the collision backlog from 35 to 3.
+
+    Four sede modules each bind SEDE_BASE to EXTERNAL.aeat.domains.www6. That is
+    four local bindings of ONE value: every copy resolves to whatever the
+    authority says, so no edit can leave one of them stale. Reporting it beside
+    a retyped literal would bury the three findings that can actually diverge.
+    """
+    findings = unevaluated_collisions(
+        {
+            "SEDE_BASE": {
+                "sede/notifications.py": "EXTERNAL.aeat.domains.www6",
+                "sede/walker.py": "EXTERNAL.aeat.domains.www6",
+            }
+        }
+    )
+    assert [item.kind for item in findings] == ["derived_name_collision"]
+
+
+def test_a_value_retyped_from_literals_is_a_second_source_of_truth() -> None:
+    """Five modules each retyped the hex alphabet; a change to one left four stale."""
+    findings = unevaluated_collisions(
+        {
+            "_HEX_DIGITS": {
+                "storage/_integrity.py": "frozenset('0123456789abcdef')",
+                "attachments/models.py": "frozenset('0123456789abcdef')",
+            }
+        }
+    )
+    assert [item.kind for item in findings] == ["unevaluated_name_collision"]
+
+
+def test_a_constructor_name_does_not_make_a_literal_look_derived() -> None:
+    """``frozenset`` and ``re.compile`` build a value; they do not read one.
+
+    Counting them as authorities would reclassify every literal set and pattern
+    in the tree as safe, which is the failure direction that hides real drift.
+    """
+    for expression in (
+        "frozenset({'.csv', '.txt'})",
+        "re.compile('[^a-z0-9]+')",
+        "Decimal('3005.06')",
+    ):
+        findings = unevaluated_collisions({"_X": {"a.py": expression, "b.py": expression}})
+        assert [item.kind for item in findings] == ["unevaluated_name_collision"], expression

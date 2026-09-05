@@ -145,7 +145,7 @@ def test_no_orphan_parameters_in_any_revision() -> None:
     A parameter counts as referenced when it is consumed either by a
     formula expression tree (``{ parameter = "..." }`` arg) or by an
     in-tree ``read_parameter("100", revision, parameter_id, ...)`` call
-    in :mod:`cadrumo.domain.*` Python source. The latter is the
+    in ``cadrumo.domain.*`` Python source. The latter is the
     out-of-formula consumption pattern used by the rental tier resolver
     and any future cross-module readers.
 

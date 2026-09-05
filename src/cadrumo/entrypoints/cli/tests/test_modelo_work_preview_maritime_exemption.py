@@ -157,7 +157,7 @@ class TestDa41InactiveGuard:
 
     The active profile carries ``maritime_worker.tuna_fleet=true`` and
     ``maritime_worker.pending_eu_clearance=true`` schema facts; the verb
-    body resolves them via :func:`_maritime_facts_from_active_profile`
+    body resolves them via :func:`maritime_facts_from_active_profile`
     and dispatches the maritime exemption service, which raises
     :class:`MaritimeExemptionInactiveError`. The CLI error boundary maps
     that exception to the registered ``REFUSED`` exit category and

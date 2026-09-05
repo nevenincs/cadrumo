@@ -6,7 +6,7 @@ LIVA arts. 99, 115-116 and RD 1624/1992 arts. 29-30 define the
 compensación carry: when a period's ``iva.resultado`` is negative (more
 IVA soportado-deducible than devengado), the credit becomes a saldo a
 compensar that rolls forward. The saldo available at the end of one
-period (:class:`registry casilla` ``iva.compensacion-disponible-fin-periodo``)
+period (registry casilla ``iva.compensacion-disponible-fin-periodo``)
 flows into the *next* period's casilla 110 ("Cuotas a compensar pendientes
 de periodos anteriores") and is applied there.
 

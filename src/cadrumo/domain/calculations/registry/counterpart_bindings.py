@@ -148,7 +148,7 @@ def _counterpart_to_invoice(observation: CounterpartAggregationObservation) -> I
     ``source_kind`` is stated rather than left to a default, and the value is
     deliberately arbitrary: it is NOT read on this path. The supplier filters
     on the counterpart observation's OWN ``source_kind`` before calling here
-    (see :func:`_counterpart_observation_supplier`), so by the time a record
+    (see :func:`_counterpart_observations_for_binding`), so by the time a record
     reaches this function its family has already been decided, and the field
     set below is never compared against a binding source again.
 

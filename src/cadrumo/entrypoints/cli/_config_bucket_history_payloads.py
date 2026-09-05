@@ -1,6 +1,6 @@
 """Typed ``--json`` payload schemas for ``aeat config profile history``.
 
-Split out of the cohesive sibling :mod:`_config_payloads` so the append-only
+Split out of the cohesive sibling :mod:`config_payloads` so the append-only
 event history can carry the canonical bucket-event contract without growing that
 module.
 

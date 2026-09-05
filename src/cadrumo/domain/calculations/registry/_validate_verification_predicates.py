@@ -1,7 +1,7 @@
 """Authoring-time semantic validators for verification-predicate expressions.
 
 The typed syntax parser and every operator grammar live in
-:mod:`._schema_verification`. This module applies revision-specific reference,
+:mod:`.schema_verification`. This module applies revision-specific reference,
 scalar-family, and literal checks to its parsed captures.
 """
 

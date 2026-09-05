@@ -4,8 +4,8 @@ Exact citations ("art. 27.2 LGT", ``ley-58-2003:art-27.2``) do not go
 through the FTS index: the wheel already ships typed citation data (the
 registry ``legal_refs`` with their ``corpus_ref`` and BOE permalinks),
 so this is a direct structured key lookup, not a parallel citation
-parser. The registry legal catalogue is the single citation authority
-(:data:`aeat-registry-authority-flow`); this module reuses it and adds
+parser. The registry legal catalogue is the single citation authority;
+this module reuses it and adds
 the one thing the product lacked at runtime: resolving a citation id to
 the verbatim authoritative text its ``corpus_ref`` points at.
 

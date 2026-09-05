@@ -1,6 +1,6 @@
 """Shared currency predicates for aggregation gates.
 
-Used by :mod:`~._iva_ledger`, :mod:`~._renta_ledger`,
+Used by :mod:`~.iva_ledger`, :mod:`~._renta_ledger`,
 :mod:`~._renta_income_ledger`, and :mod:`~._renta_gasto_ledger` to gate
 non-EUR rows and extract effective EUR amounts.
 

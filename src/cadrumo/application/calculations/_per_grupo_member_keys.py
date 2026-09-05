@@ -12,7 +12,7 @@ clean-state gate
 requirement ``requires_member_fan_in``) need the same key set, so it is derived
 once here.
 
-Sister shared module to :mod:`~._revision_carry_gate`.
+Sister shared module to :mod:`~.revision_carry_gate`.
 """
 
 from __future__ import annotations

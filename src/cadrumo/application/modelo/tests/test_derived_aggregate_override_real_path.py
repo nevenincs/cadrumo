@@ -27,8 +27,8 @@ assertion that the sentinel reached 0513 cannot be satisfied by the computation
 coincidentally producing the same number.
 
 Real adapters throughout: a real encrypted storage root, the real profile
-registration and write doors (:func:`register_active_profile` via
-:func:`register_minimal_profile`, then :func:`set_active_field`), the resident
+registration and write doors (:func:`register_minimal_profile`, the single
+seeding door for a real profile), the resident
 registry authority, and the real bucket-aggregation calculate action
 (:func:`calculate_modelo_revision_from_bucket_aggregation`) resolving its
 repositories from the active bucket exactly as production does. Nothing is

@@ -371,7 +371,7 @@ class RecipientEncryptedPackage(BaseModel):
     AEAD ciphertext is not, so a bare ``bytes`` field would raise
     ``PydanticSerializationError`` the first time a caller (e.g. the CLI
     ``encrypt-for-recipient`` verb) writes the envelope to disk as JSON.
-    :meth:`model_validate_json` accepts the hex form it produced; the
+    :meth:`pydantic.BaseModel.model_validate_json` accepts the hex form it produced; the
     plain-Python constructor still accepts raw ``bytes`` directly.
 
     ``envelope_nonce_hex`` is a replay-detection token, independent of the

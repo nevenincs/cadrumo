@@ -507,7 +507,7 @@ BindingSelectorMap = dict[str, BindingSelectorValue]
 
 Registry TOML and tests still supply selector payloads as ordinary dictionaries.
 ``DataBindingDefinition`` immediately hydrates that mapping through the
-per-source selector model registered in :mod:`_bindings`, so the stored binding
+per-source selector model registered in :mod:`bindings`, so the stored binding
 field is no longer this broad map.
 """
 

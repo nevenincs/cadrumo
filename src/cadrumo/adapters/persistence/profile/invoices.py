@@ -37,7 +37,6 @@ if TYPE_CHECKING:
 _log = get_logger(__name__)
 
 _INVOICE_CATALOGUE_VERSION = INVOICE_CATALOGUE_NAMESPACE.schema_version
-_INVOICE_CATALOGUE_SENSITIVITY = INVOICE_CATALOGUE_NAMESPACE.sensitivity
 _INVOICE_NAMESPACE = INVOICE_CATALOGUE_NAMESPACE.namespace
 _INVOICE_OBJECT_KEY = INVOICE_CATALOGUE_NAMESPACE.require_default_object_key()
 
@@ -171,8 +170,8 @@ class InvoiceCatalogueRepository:
 
         Raises:
             :class:`~adapters.persistence.storage.ClassificationError`:
-                If the persisted object's classification is not
-                ``_INVOICE_CATALOGUE_SENSITIVITY``.
+                If the persisted object's classification is not the
+                sensitivity ``INVOICE_CATALOGUE_NAMESPACE`` declares.
             :class:`~adapters.persistence.storage.EnvelopeVersionError`:
                 If the envelope schema version is higher than the consumer
                 supports.

@@ -4,7 +4,7 @@ See Also:
     :func:`~core.external_constants.load_external_constants`
         Runtime loader for the packaged TOML registry validated by this test
         module.
-    :class:`~core.external_constants.ExternalConstantRegistry`
+    :class:`~core.external_constants.ExternalConstants`
         Typed, frozen registry root that keeps remote-mirror constants
         schema-owned.
     :class:`~core.config.Settings`
@@ -117,7 +117,7 @@ def _token_literal_offenders(
 
 
 def test_load_external_constants_returns_cached_model_used_by_settings_facade() -> None:
-    """The loader yields the canonical cached :class:`ExternalConstantRegistry`."""
+    """The loader yields the canonical cached :class:`ExternalConstants`."""
 
     constants = load_external_constants()
 

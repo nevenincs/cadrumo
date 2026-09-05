@@ -42,7 +42,7 @@ def _local_persistence_is_allowed(source_name: str, line: str) -> bool:
 
     Local encrypted observation persistence is allowed; this guard exists for
     REMOTE Sede mutation verbs. The exemption is deliberately scoped to
-    :mod:`_observation_store` and to named accessors -- the legacy raw
+    :mod:`observation_store` and to named accessors -- the legacy raw
     ``SecureObjectRepository`` handles and the current
     ``SecureBoundRepository``-backed properties, which persist to the same
     local encrypted namespaces.

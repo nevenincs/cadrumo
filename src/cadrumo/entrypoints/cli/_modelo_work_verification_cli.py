@@ -12,10 +12,6 @@ only and emits :class:`WorkDependenciesResult`.
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass
-from typing import Any
-
 import typer
 
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -72,16 +68,6 @@ from ._modelo_rendering import (
     verification_report_notices,
     verification_report_payload,
 )
-
-
-@dataclass(frozen=True, slots=True)
-class VerificationDeps:
-    """Typed behavior dependencies shared by verification and filing."""
-
-    activate_output_language: Callable[[typer.Context, OutputLanguage | None], None]
-    require_active_profile: Callable[[], None]
-    resolve_revision_for_cli: Callable[..., Any]
-    resolve_default_actor: Callable[[], str]
 
 
 def _profile_expected_member_sets(profile: object) -> tuple[CrossPeriodExpectedMemberSet, ...]:

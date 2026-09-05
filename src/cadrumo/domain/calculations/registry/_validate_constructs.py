@@ -12,8 +12,6 @@ refs declared by the owning construct.
 See Also:
     :func:`cadrumo.domain.calculations.registry.validate_revision_closure._validate_revision_closure_sections`
         Revision-level runner that invokes the validator in this module.
-    :func:`cadrumo.domain.calculations.registry.resolve_revision_constructs`
-        Runtime projection of validated construct declarations.
 """
 
 from __future__ import annotations
