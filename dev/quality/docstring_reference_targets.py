@@ -65,6 +65,11 @@ _SIBLING_TREES: tuple[Path, ...] = (_REPO_ROOT / "dev", _REPO_ROOT / "src" / "ca
 #: anchors instead and are not this screen's business.
 _ROLE = re.compile(r":(?:func|class|data|meth|attr|mod|obj|exc):`([^`]+)`")
 
+#: A long reference wraps inside its backticks, and the halves of a dotted path
+#: resume on the next line with no space between them -- which is how Sphinx
+#: reads it, and how it must be rejoined before resolving.
+_REWRAP = re.compile(r"\s*\n\s*")
+
 
 @dataclass(frozen=True, slots=True)
 class DanglingReference:
@@ -208,7 +213,9 @@ def dangling_references(root: Path) -> tuple[DanglingReference, ...]:
     known = defined | imported | leaves | set(dir(builtins))
     findings: list[DanglingReference] = []
     for module, raw in docstring_references(root):
-        target = raw.lstrip("~.").split("(")[0].strip()
+        # A long reference wraps across lines inside its backticks; the halves
+        # of a dotted path rejoin with no space, which is how Sphinx reads it.
+        target = _REWRAP.sub("", raw).lstrip("~.").split("(")[0].strip()
         if not target:
             continue
         if "[" in target:
