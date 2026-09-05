@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:dc740cccf47ee1685f4724b0181eeb8f9ecd5c1a2dd66054d0b2a4b5ec300dce'
+body_hash: 'sha256:29c8a107760407289194fdfe39d843859318e23e6e2ccd8452ab0d4712dd771b'
 step_id: 'S411'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -16,6 +16,7 @@ related:
 ## S14 corrective quarantine (2026-09-05)
 
 The import-preparation operator reachability work recorded below was removed from production because this row remains `DISPLACED_AND_HELD_UNTIL_G3`. The prior IMPORT `CLOSED` claim is therefore superseded: there is no Overview path-entry route, controller admission, installed import submitter, import operator action, or TUI-only producer/coverage. The canonical application validator at `application/ledger/import_preparation.py` and its direct application tests remain backend-only. This record does not authorize reimplementation; clitui-ledger remains the sole owner through W05.P21.S136, with W05.P19.S128 as the disposition checkpoint.
+
 ## Scope
 
 - `src/cadrumo/entrypoints/tui/ledger/controller.py and src/cadrumo/entrypoints/tui/ledger/routes.py`
@@ -153,4 +154,3 @@ to make a call site read symmetrically would have been invented API. The
 dependency was dropped with it.
 
 91 passed across the ledger and installed-entrypoint suites.
-
