@@ -67,23 +67,23 @@ from .protocols import (
 )
 from .run_models import (
     WorkflowAbortReason,
-    WorkflowAlreadyFiledDetail,
-    WorkflowAuthCheckDetail,
-    WorkflowDeadlineContextDetail,
+    WorkflowAlreadyFiledDetails,
+    WorkflowAuthCheckDetails,
+    WorkflowDeadlineContextDetails,
     WorkflowDiagnosticSkipReason,
-    WorkflowDraftBuiltDetail,
-    WorkflowDraftMismatchDetail,
-    WorkflowDraftNotReadyDetail,
-    WorkflowFailureDetail,
-    WorkflowInboxBlockedDetail,
-    WorkflowInboxSkippedDetail,
+    WorkflowDraftBuiltDetails,
+    WorkflowDraftMismatchDetails,
+    WorkflowDraftNotReadyDetails,
+    WorkflowFailureDetails,
+    WorkflowInboxBlockedDetails,
+    WorkflowInboxSkippedDetails,
     WorkflowObligationFacts,
-    WorkflowPreflightFailedDetail,
+    WorkflowPreflightFailedDetails,
     WorkflowPurpose,
     WorkflowResult,
     WorkflowStage,
     WorkflowStep,
-    WorkflowValidationFailedDetail,
+    WorkflowValidationFailedDetails,
     compute_run_id,
 )
 
@@ -548,7 +548,7 @@ class WorkflowEngine:
                     ended_at=_utcnow(),
                     success=False,
                     summary_locale_key="application.workflow.steps.deadline_future",
-                    details=WorkflowDeadlineContextDetail(
+                    details=WorkflowDeadlineContextDetails(
                         kind="deadline_context",
                         modelo=obligation.modelo,
                         period=obligation.period,
@@ -585,7 +585,7 @@ class WorkflowEngine:
                         ended_at=_utcnow(),
                         success=True,
                         summary_locale_key="application.workflow.steps.deadline_overdue",
-                        details=WorkflowDeadlineContextDetail(
+                        details=WorkflowDeadlineContextDetails(
                             kind="deadline_context",
                             modelo=obligation.modelo,
                             period=obligation.period,
@@ -603,7 +603,7 @@ class WorkflowEngine:
                     ended_at=_utcnow(),
                     success=False,
                     summary_locale_key="application.workflow.steps.deadline_closed",
-                    details=WorkflowDeadlineContextDetail(
+                    details=WorkflowDeadlineContextDetails(
                         kind="deadline_context",
                         modelo=obligation.modelo,
                         period=obligation.period,
@@ -632,7 +632,7 @@ class WorkflowEngine:
                 ended_at=_utcnow(),
                 success=True,
                 summary_locale_key="application.workflow.steps.deadline_open",
-                details=WorkflowDeadlineContextDetail(
+                details=WorkflowDeadlineContextDetails(
                     kind="deadline_context",
                     modelo=obligation.modelo,
                     period=obligation.period,
@@ -683,7 +683,7 @@ class WorkflowEngine:
                     ended_at=_utcnow(),
                     success=True,
                     summary_locale_key="application.workflow.steps.deadline_informational",
-                    details=WorkflowDeadlineContextDetail(
+                    details=WorkflowDeadlineContextDetails(
                         kind="deadline_context",
                         modelo=obligation.modelo,
                         period=obligation.period,
@@ -715,7 +715,7 @@ class WorkflowEngine:
                 ended_at=_utcnow(),
                 success=True,
                 summary_locale_key="application.workflow.steps.deadline_absent",
-                details=WorkflowDeadlineContextDetail(
+                details=WorkflowDeadlineContextDetails(
                     kind="deadline_context",
                     modelo=Modelo(target_modelo),
                     period=target_period,
@@ -750,7 +750,7 @@ class WorkflowEngine:
                     ended_at=_utcnow(),
                     success=True,
                     summary_locale_key="application.workflow.steps.inbox_skipped",
-                    details=WorkflowInboxSkippedDetail(
+                    details=WorkflowInboxSkippedDetails(
                         kind="inbox_skipped",
                         skip_reason=WorkflowDiagnosticSkipReason.NOT_WIRED,
                     ),
@@ -782,7 +782,7 @@ class WorkflowEngine:
                     ended_at=_utcnow(),
                     success=False,
                     summary_locale_key="application.workflow.steps.inbox_blocked",
-                    details=WorkflowInboxBlockedDetail(
+                    details=WorkflowInboxBlockedDetails(
                         kind="inbox_blocked",
                         blocker_count=len(blockers),
                         first_notificacion_id=blockers[0].certificado_id,
@@ -848,7 +848,7 @@ class WorkflowEngine:
                 ended_at=_utcnow(),
                 success=True,
                 summary_locale_key="application.workflow.steps.draft_built",
-                details=WorkflowDraftBuiltDetail(kind="draft_built", draft_id=draft.draft_id),
+                details=WorkflowDraftBuiltDetails(kind="draft_built", draft_id=draft.draft_id),
             ),
         )
         return draft
@@ -894,7 +894,7 @@ class WorkflowEngine:
                         ended_at=_utcnow(),
                         success=False,
                         summary_locale_key="application.workflow.steps.already_filed",
-                        details=WorkflowAlreadyFiledDetail(
+                        details=WorkflowAlreadyFiledDetails(
                             kind="already_filed",
                             modelo=obligation.modelo,
                             period=obligation.period,
@@ -975,7 +975,7 @@ class WorkflowEngine:
                     ended_at=_utcnow(),
                     success=False,
                     summary_locale_key="application.workflow.steps.draft_build_failed",
-                    details=WorkflowFailureDetail(
+                    details=WorkflowFailureDetails(
                         kind="workflow_failure",
                         error_code="workflow.draft.build_failure",
                     ),
@@ -1021,7 +1021,7 @@ class WorkflowEngine:
                     ended_at=_utcnow(),
                     success=False,
                     summary_locale_key="application.workflow.steps.draft_not_ready",
-                    details=WorkflowDraftNotReadyDetail(
+                    details=WorkflowDraftNotReadyDetails(
                         kind="draft_not_ready",
                         draft_id=draft.draft_id,
                         draft_status=ModeloDraftStatus(status_value),
@@ -1072,7 +1072,7 @@ class WorkflowEngine:
                 ended_at=_utcnow(),
                 success=False,
                 summary_locale_key="application.workflow.steps.draft_identity_mismatch",
-                details=WorkflowDraftMismatchDetail(kind="draft_mismatch", draft_id=draft.draft_id),
+                details=WorkflowDraftMismatchDetails(kind="draft_mismatch", draft_id=draft.draft_id),
                 precondition_verdict=_no_recovery_verdict(
                     condition_id="workflow.draft.identity_matches",
                     evidence_id="workflow.draft.identity",
@@ -1119,7 +1119,7 @@ class WorkflowEngine:
                     ended_at=_utcnow(),
                     success=False,
                     summary_locale_key="application.workflow.steps.validation_failed",
-                    details=WorkflowValidationFailedDetail(
+                    details=WorkflowValidationFailedDetails(
                         kind="validation_failed",
                         error_count=len(error_findings),
                     ),
@@ -1167,7 +1167,7 @@ class WorkflowEngine:
         refused.
         """
         started = _utcnow()
-        cert_details: WorkflowAuthCheckDetail
+        cert_details: WorkflowAuthCheckDetails
         if self._certificate_bundle is not None:
             try:
                 certificate = self._certificate_bundle.describe()
@@ -1179,7 +1179,7 @@ class WorkflowEngine:
                         ended_at=_utcnow(),
                         success=False,
                         summary_locale_key="application.workflow.steps.auth_certificate_load_failed",
-                        details=WorkflowFailureDetail(
+                        details=WorkflowFailureDetails(
                             kind="workflow_failure",
                             error_code="workflow.auth.certificate_load_failed",
                         ),
@@ -1196,7 +1196,7 @@ class WorkflowEngine:
                     ),
                 )
                 raise WorkflowAbortSignalError(reason=WorkflowAbortReason.CERT_INVALID) from exc
-            cert_details = WorkflowAuthCheckDetail(
+            cert_details = WorkflowAuthCheckDetails(
                 kind="auth_check",
                 provider_kind=certificate.kind,
             )
@@ -1230,7 +1230,7 @@ class WorkflowEngine:
                     warn_days=self._settings.cadrumo_cert_warn_days,
                     critical_days=self._settings.cadrumo_cert_critical_days,
                 )
-                cert_details = WorkflowAuthCheckDetail(
+                cert_details = WorkflowAuthCheckDetails(
                     kind="auth_check",
                     provider_kind=certificate.kind,
                     cert_not_after=certificate.expires_on,
@@ -1273,7 +1273,7 @@ class WorkflowEngine:
                     days_until_expiry,
                 )
         else:
-            cert_details = WorkflowAuthCheckDetail(
+            cert_details = WorkflowAuthCheckDetails(
                 kind="auth_check",
                 provider_check_skipped=True,
                 skip_reason=WorkflowDiagnosticSkipReason.NOT_WIRED,
@@ -1318,7 +1318,7 @@ class WorkflowEngine:
                     ended_at=_utcnow(),
                     success=False,
                     summary_locale_key="application.workflow.steps.preflight_failed",
-                    details=WorkflowPreflightFailedDetail(
+                    details=WorkflowPreflightFailedDetails(
                         kind="preflight_failed",
                         error_code="workflow.submission.preflight_refused",
                         auth_check=cert_details,

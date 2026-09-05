@@ -48,10 +48,10 @@ from ..persistence import WorkflowRunRepository, load_run, save_run
 from ..run_models import (
     SiteHealthAlert,
     WorkflowAbortReason,
-    WorkflowDeadlineContextDetail,
+    WorkflowDeadlineContextDetails,
     WorkflowDeadlineRecoveryFacts,
-    WorkflowDraftNotReadyDetail,
-    WorkflowFailureDetail,
+    WorkflowDraftNotReadyDetails,
+    WorkflowFailureDetails,
     WorkflowObligationFacts,
     WorkflowResult,
     WorkflowSiteHealthFacts,
@@ -128,7 +128,7 @@ def _populated_run() -> WorkflowResult:
                 ended_at=_SECOND_STEP_STARTED_AT,
                 success=True,
                 summary_locale_key="application.workflow.steps.profile_loaded",
-                details=WorkflowDeadlineContextDetail(
+                details=WorkflowDeadlineContextDetails(
                     kind="deadline_context",
                     modelo=Modelo.M303,
                     period=_PERIOD,
@@ -142,7 +142,7 @@ def _populated_run() -> WorkflowResult:
                 ended_at=_RUN_ENDED_AT,
                 success=False,
                 summary_locale_key="application.workflow.steps.draft_not_ready",
-                details=WorkflowDraftNotReadyDetail(
+                details=WorkflowDraftNotReadyDetails(
                     kind="draft_not_ready",
                     draft_id="d" * 64,
                     draft_status=ModeloDraftStatus.BORRADOR,
@@ -152,7 +152,7 @@ def _populated_run() -> WorkflowResult:
             ),
         ),
         summary_locale_key="application.workflow.results.aborted",
-        summary_details=WorkflowDeadlineContextDetail(
+        summary_details=WorkflowDeadlineContextDetails(
             kind="deadline_context",
             modelo=Modelo.M303,
             period=_PERIOD,
@@ -190,7 +190,7 @@ def _operationally_aborted_run() -> WorkflowResult:
                 ended_at=_RUN_ENDED_AT,
                 success=False,
                 summary_locale_key="application.workflow.steps.workflow_failure",
-                details=WorkflowFailureDetail(
+                details=WorkflowFailureDetails(
                     kind="workflow_failure",
                     error_code="workflow.runtime.failure",
                 ),
@@ -198,7 +198,7 @@ def _operationally_aborted_run() -> WorkflowResult:
             ),
         ),
         summary_locale_key="application.workflow.results.aborted",
-        summary_details=WorkflowFailureDetail(
+        summary_details=WorkflowFailureDetails(
             kind="workflow_failure",
             error_code="workflow.runtime.failure",
         ),

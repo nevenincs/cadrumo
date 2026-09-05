@@ -17,7 +17,7 @@ from .abort import WorkflowAbortReason
 from .errors import UnhandledWorkflowError, WorkflowAbortSignalError
 from .run_models import (
     SiteHealthAlert,
-    WorkflowFailureDetail,
+    WorkflowFailureDetails,
     WorkflowSiteHealthFacts,
     WorkflowStage,
     WorkflowStep,
@@ -56,7 +56,7 @@ def record_unhandled(
             ended_at=_utcnow(),
             success=False,
             summary_locale_key="application.workflow.steps.workflow_failure",
-            details=WorkflowFailureDetail(
+            details=WorkflowFailureDetails(
                 kind="workflow_failure",
                 error_code="workflow.execution.unhandled_exception",
             ),
@@ -83,7 +83,7 @@ def record_site_unavailable(
             ended_at=_utcnow(),
             success=False,
             summary_locale_key="application.workflow.steps.site_unavailable",
-            details=WorkflowFailureDetail(
+            details=WorkflowFailureDetails(
                 kind="workflow_failure",
                 error_code="workflow.site.unavailable",
             ),

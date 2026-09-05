@@ -564,7 +564,7 @@ def test_workflow_step_details_typed_envelope_roundtrip() -> None:
     from datetime import timedelta
 
     from .....application.workflow.run_models import (
-        WorkflowAuthCheckDetail,
+        WorkflowAuthCheckDetails,
         WorkflowDiagnosticSkipReason,
         WorkflowStage,
         WorkflowStep,
@@ -576,20 +576,20 @@ def test_workflow_step_details_typed_envelope_roundtrip() -> None:
         ended_at=_WORKFLOW_STEP_STARTED_AT + timedelta(seconds=2),
         success=True,
         summary_locale_key="application.workflow.steps.preflight_completed",
-        details=WorkflowAuthCheckDetail(
+        details=WorkflowAuthCheckDetails(
             kind="auth_check",
             provider_check_skipped=True,
             skip_reason=WorkflowDiagnosticSkipReason.NOT_WIRED,
         ),
     )
 
-    assert isinstance(original.details, WorkflowAuthCheckDetail)
+    assert isinstance(original.details, WorkflowAuthCheckDetails)
     assert original.details.kind == "auth_check"
     assert original.details.provider_check_skipped is True
     assert original.details.skip_reason is WorkflowDiagnosticSkipReason.NOT_WIRED
 
     roundtripped = WorkflowStep.model_validate_json(original.model_dump_json())
-    assert isinstance(roundtripped.details, WorkflowAuthCheckDetail)
+    assert isinstance(roundtripped.details, WorkflowAuthCheckDetails)
     assert roundtripped == original
     assert roundtripped.details.kind == "auth_check"
     assert roundtripped.details.provider_check_skipped is True

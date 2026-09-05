@@ -6,7 +6,7 @@ import pytest
 
 from ....core.casilla_id import CasillaId
 from ....tests.cross_period_seeding import seed_clean_cross_period_sources
-from ...workflow.run_models import WorkflowDeadlineContextDetail
+from ...workflow.run_models import WorkflowDeadlineContextDetails
 from ._file_flow_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
@@ -284,7 +284,7 @@ def test_verify_records_deadline_state_as_informational_not_abort(repos: Repos) 
     assert len(deadline_steps) == 1
     deadline_step = deadline_steps[0]
     assert deadline_step.success is True
-    assert isinstance(deadline_step.details, WorkflowDeadlineContextDetail)
+    assert isinstance(deadline_step.details, WorkflowDeadlineContextDetails)
     assert deadline_step.details.deadline_role is not None
     assert deadline_step.details.deadline_role.value == "informational"
 
