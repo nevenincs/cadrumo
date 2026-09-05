@@ -16,7 +16,7 @@ bindings, and reports source issues or unrouted expenses on its
 :class:`~._source_mesh.CalculationSourceResolution`. The M130 quarterly gasto
 projection is intentionally separate in :mod:`~._renta_gasto_ledger`.
 
-Related: :mod:`~._iva_ledger` and :mod:`~._renta_income_ledger` for sibling
+Related: :mod:`~.iva_ledger` and :mod:`~._renta_income_ledger` for sibling
 ledger projections.
 """
 

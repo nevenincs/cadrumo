@@ -8,7 +8,7 @@ values declared on the snapshot's
 :class:`~domain.calculations.registry.ModeloRevision`.
 
 The IVA, Renta income, Renta expense, and M130 gasto resolvers delegate their
-ledger projection to :mod:`~._iva_ledger`, :mod:`~._renta_income_ledger`,
+ledger projection to :mod:`~.iva_ledger`, :mod:`~._renta_income_ledger`,
 :mod:`~._renta_ledger`, and :mod:`~._renta_gasto_ledger`. The retenciones
 resolver reads the dedicated per-perceptor store through
 :mod:`~._retencion_observations_repository`. The separate

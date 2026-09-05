@@ -1,7 +1,7 @@
 """Canonical IVA transaction classification and observation projection.
 
 This module owns the per-transaction IVA pipeline. Repository aggregation remains
-in :mod:`._iva_ledger`; this module owns the transaction-level admission,
+in :mod:`.iva_ledger`; this module owns the transaction-level admission,
 classification, and observation sinks consumed by that orchestrator.
 """
 
