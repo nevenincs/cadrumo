@@ -1775,6 +1775,12 @@ _LEDGER_BACKEND_OPERATION_DECLARATIONS: Final[tuple[_BackendOperationDeclaration
         existing_command=True,
     ),
     _backend(
+        "ledger.import.prepare",
+        "cadrumo.application.ledger.import_preparation:prepare_ledger_import_command",
+        "LedgerImportPreparationRequest",
+        "LedgerSourceImportCommand",
+    ),
+    _backend(
         "ledger.import.parsed_rows",
         "cadrumo.application.ledger.actions_import:import_ledger_transactions",
         "LedgerParsedRowsImportCommand",
@@ -2246,7 +2252,7 @@ _LEDGER_ARTIFACT_OBSERVATIONS: Final[tuple[tuple[str, str], ...]] = (
 
 _LEDGER_TUI_ROUTE_OBSERVATION_CAPABILITIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
     {
-        "ledger.overview": ("ledger.workspace.read",),
+        "ledger.overview": ("ledger.import.prepare", "ledger.workspace.read"),
         "ledger.entries": ("ledger.transaction.list",),
         "ledger.review": ("ledger.transaction.review_query",),
         "ledger.import": ("ledger.import.source",),
@@ -2283,6 +2289,7 @@ _EXPLICIT_NON_REGISTRY_OBSERVATION_SELECTIONS: Final[Mapping[str, tuple[str, ...
         "backend_operation:ledger.evidence.view": ("ledger.evidence.view",),
         "backend_operation:ledger.export.flat": ("ledger.export.flat",),
         "backend_operation:ledger.import.aggregate_results": ("ledger.import.aggregate_results",),
+        "backend_operation:ledger.import.prepare": ("ledger.import.prepare",),
         "backend_operation:ledger.import.parsed_rows": ("ledger.import.parsed_rows",),
         "backend_operation:ledger.import.source": ("ledger.import.source",),
         "backend_operation:ledger.invoice.confirm_draft": ("ledger.invoice.confirm_draft",),
@@ -2536,6 +2543,7 @@ _LEDGER_BACKEND_OPERATION_SOURCE_PATHS: Final[tuple[str, ...]] = (
     "src/cadrumo/application/ledger/actions_classification.py",
     "src/cadrumo/application/ledger/actions_export.py",
     "src/cadrumo/application/ledger/actions_import.py",
+    "src/cadrumo/application/ledger/import_preparation.py",
     "src/cadrumo/application/ledger/actions_lifecycle.py",
     "src/cadrumo/application/ledger/actions_manual.py",
     "src/cadrumo/application/ledger/actions_split_merge.py",
@@ -2555,6 +2563,32 @@ _LEDGER_BACKEND_OPERATION_SOURCE_PATHS: Final[tuple[str, ...]] = (
     "src/cadrumo/application/ledger/workspace.py",
     "src/cadrumo/application/ledger/workspace_reader.py",
 )
+
+_REQUIRED_PUBLIC_BACKEND_OPERATIONS: Final[Mapping[str, tuple[str, str]]] = MappingProxyType(
+    {
+        "ledger.import.prepare": (
+            "src/cadrumo/application/ledger/import_preparation.py",
+            "prepare_ledger_import_command",
+        ),
+    }
+)
+
+
+def _validate_required_public_backend_operations() -> None:
+    """Refuse a census that loses a public application operation or its source."""
+    declarations = {item.capability_id: item for item in _LEDGER_BACKEND_OPERATION_DECLARATIONS}
+    source_paths = frozenset(_LEDGER_BACKEND_OPERATION_SOURCE_PATHS)
+    for capability_id, (source_path, symbol_name) in _REQUIRED_PUBLIC_BACKEND_OPERATIONS.items():
+        if source_path not in source_paths:
+            raise ValueError(f"public backend operation source is omitted: {source_path}")
+        declaration = declarations.get(capability_id)
+        if declaration is None:
+            raise ValueError(f"public backend operation is omitted: {capability_id}")
+        module_name, separator, declared_symbol = declaration.owner.partition(":")
+        if not separator or declared_symbol != symbol_name:
+            raise ValueError(f"public backend operation owner drifted: {capability_id}")
+        if not callable(getattr(importlib.import_module(module_name), symbol_name, None)):
+            raise ValueError(f"public backend operation symbol is unavailable: {capability_id}")
 
 
 def _stable_segment(value: str) -> str:
@@ -2610,6 +2644,7 @@ _EXPLICIT_QUERY_CAPABILITIES: Final[frozenset[str]] = frozenset(
         "ledger.history.direct",
         "ledger.history.split_siblings",
         "ledger.import.aggregate_results",
+        "ledger.import.prepare",
         "ledger.import.normalization_provenance",
         "ledger.inventory.list",
         "ledger.invoice.list",
@@ -2939,7 +2974,7 @@ _REVIEWED_ADDITIONAL_ARTIFACT_INPUT_CAPABILITIES: Final[frozenset[str]] = frozen
 
 _EXPLICIT_TUI_ROUTE_GROUPS: Final[Mapping[str, frozenset[str]]] = MappingProxyType(
     {
-        "ledger.overview": frozenset({"ledger.workspace.read"}),
+        "ledger.overview": frozenset({"ledger.import.prepare", "ledger.workspace.read"}),
         "ledger.classification": frozenset(
             {
                 "ledger.categories",
@@ -3799,6 +3834,7 @@ def build_ledger_union_denominator(
     """Join all seven accepted S04--S07 streams into the S08 semantic union."""
     registry = build_ledger_registry_route_census() if registry is None else registry
     tui = build_ledger_tui_supported_surface_census() if tui is None else tui
+    _validate_required_public_backend_operations()
     for declaration in _LEDGER_BACKEND_OPERATION_DECLARATIONS:
         _validate_existing_semantic_home(declaration)
     _artifact_input_capabilities()

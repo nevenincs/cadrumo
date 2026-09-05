@@ -357,13 +357,38 @@ def test_ledger_bad_parameters_do_not_embed_caught_exception_text() -> None:
     assert failures == []
 
 
+#: Floors for the parsed surface behind the absence claims below. Live: 89
+#: referenced names and exactly one except handler in the import CLI.
+_MINIMUM_IMPORT_CLI_NAMES = 30
+
+
 def test_ledger_import_does_not_aggregate_typed_refusals_into_prose() -> None:
-    """Per-file typed failures cannot be reduced to refusal strings or one `_bad`."""
+    """Per-file typed failures cannot be reduced to refusal strings or one `_bad`.
+
+    Both claims are absences over a parsed surface, so both are satisfied by a
+    module that does nothing. The handler claim is the tighter of the two: the
+    CLI carries exactly ONE except handler, so deleting it does not fail this
+    gate - it empties the loop and the CadrumoError claim becomes a statement
+    about no handlers at all.
+    """
     tree = ast.parse(inspect.getsource(_ledger_import_cli))
     forbidden_names = {"resolve_error_message", "_all_files_refused"}
     observed_names = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
+
+    assert len(observed_names) >= _MINIMUM_IMPORT_CLI_NAMES, (
+        f"the import CLI parsed to only {len(observed_names)} referenced name(s); below this "
+        "the disjointness below holds because the module is empty, not because it refrains"
+    )
     assert observed_names.isdisjoint(forbidden_names)
-    for handler in (node for node in ast.walk(tree) if isinstance(node, ast.ExceptHandler)):
+
+    handlers = [node for node in ast.walk(tree) if isinstance(node, ast.ExceptHandler)]
+
+    assert handlers, (
+        "the import CLI declares no except handler, so the CadrumoError claim below is "
+        "about nothing; either the typed refusal path was removed or this gate has lost "
+        "its subject"
+    )
+    for handler in handlers:
         caught = _caught_names(handler)
         assert "CadrumoError" not in caught
 
