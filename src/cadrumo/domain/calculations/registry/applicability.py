@@ -82,8 +82,8 @@ corporate IS modelos (200 / 202), the IVA modelos (303 / 390), the
 retención modelos and their annual companions (111 / 190, 115 / 180),
 the operaciones modelos (349 / 347), and the attribution-entity
 informational Modelo 184. Per-entity / per-regime expansion to the
-remaining registered modelos is intentionally deferred, marked at
-:data:`_SEED_COVERAGE_NOTICE`.
+remaining registered modelos is intentionally deferred; a modelo with no
+seed rule is reported INCOMPLETE with a rationale that says so.
 """
 
 from __future__ import annotations
@@ -118,20 +118,6 @@ from .ids import LegalRefId, ModeloId
 from .schema_revision_members import ApplicabilityRuleDefinition
 
 type _OperatorReason = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
-
-_SEED_COVERAGE_NOTICE = (
-    "Seed coverage only — the modelos in this table are the core "
-    "natural-person and corporate-entity set. Full per-entity / "
-    "per-regime applicability for every registered modelo is a "
-    "deferred expansion."
-)
-"""Explicit marker that the seed rule table is intentionally narrow.
-
-A modelo absent from :data:`_MODELO_APPLICABILITY_RULES` is reported
-with :attr:`ApplicabilityVerdict.INCOMPLETE` and a rationale pointing
-at the deferred expansion — never a confident guess.
-"""
-
 
 class ApplicabilityVerdict(StrEnum):
     """Whether a modelo applies to a taxpayer, derived from its model.
@@ -507,8 +493,7 @@ _INCOMPLETE_UNRULED_REASON = (
 
 Used when :data:`_MODELO_APPLICABILITY_RULES` carries no rule for the
 requested modelo. The profile may be fully declared; this verdict is a
-statement about the seed coverage (:data:`_SEED_COVERAGE_NOTICE`), not
-about the operator. It must never tell a declared operator to declare
+statement about the seed coverage, not about the operator. It must never tell a declared operator to declare
 their taxpayer type.
 """
 
@@ -686,7 +671,7 @@ def _undetermined_applicability(
 
 
 # ---------------------------------------------------------------------
-# Seed rule table — core persona coverage (see _SEED_COVERAGE_NOTICE)
+# Seed rule table — core persona coverage, deliberately narrow
 # ---------------------------------------------------------------------
 #
 # Every rule below is grounded against the registry legal tables for the
@@ -769,8 +754,7 @@ MODELO_APPLICABILITY_RULES = _MODELO_APPLICABILITY_RULES
 
 A modelo absent from this table has no derived rule yet: its
 applicability is reported :attr:`ApplicabilityVerdict.INCOMPLETE` with
-a rationale pointing at the deferred expansion. See
-:data:`_SEED_COVERAGE_NOTICE`.
+a rationale naming the deferred expansion, never a confident guess.
 """
 
 
