@@ -9,7 +9,6 @@ import zipfile
 from dataclasses import dataclass
 from email.parser import Parser
 from pathlib import Path
-from urllib.parse import urlparse
 
 from packaging.requirements import Requirement
 
@@ -101,18 +100,6 @@ def _validate_companion_pins(
             )
 
 
-def _release_base_url(value: str, *, version: str) -> str:
-    parsed = urlparse(value)
-    if parsed.scheme != "https" or not parsed.netloc or parsed.query or parsed.fragment:
-        raise SystemExit(f"release base URL must be immutable HTTPS without query or fragment: {value!r}")
-    normalized = value.rstrip("/")
-    if not normalized.endswith(f"/releases/download/v{version}"):
-        raise SystemExit(
-            f"release base URL must end with '/releases/download/v{version}': {value!r}",
-        )
-    return normalized
-
-
 def _wrapper_script(executable: str) -> str:
     return (
         "$state = Join-Path $persist_dir 'state'; "
@@ -129,7 +116,6 @@ def generate_manifest(
     *,
     cohort_dir: Path,
     version: str,
-    release_base_url: str,
 ) -> dict[str, object]:
     """Return one Scoop manifest bound to exact cohort filenames and hashes."""
     load_python_cohort(cohort_dir)
@@ -141,7 +127,6 @@ def generate_manifest(
         raise SystemExit(
             f"cohort wheel versions must all equal {version!r}: {sorted(observed_versions)!r}",
         )
-    base_url = _release_base_url(release_base_url, version=version)
     root, manuals, official = artifacts
     _validate_companion_pins(root, manuals, official)
     constraints_body = "\n".join(export_runtime_constraints(repo_root=_REPO_ROOT))
@@ -157,10 +142,15 @@ def generate_manifest(
         "Set-Content -LiteralPath (Join-Path $dir 'constraints.txt') -Value @'\n"
         f"{constraints_body}\n"
         "'@ -Encoding ascii",
-        f"$root = (Join-Path $dir '{root.path.name}'); "
+        # Installed from the index by name and exact version. The wheels are
+        # not downloaded by the manifest: only a source distribution has a
+        # stable address on the index ahead of an upload, and addressing a
+        # release asset instead would point this manifest at a surface no
+        # workflow populates. The constraints file still pins the whole
+        # transitive closure to the tested lock.
         f"& uv pip install --python {python_path} --no-cache "
-        "--constraint (Join-Path $dir 'constraints.txt') $root "
-        f"(Join-Path $dir '{manuals.path.name}') (Join-Path $dir '{official.path.name}'); "
+        "--constraint (Join-Path $dir 'constraints.txt') "
+        f"'cadrumo=={version}'; "
         "if ($LASTEXITCODE -ne 0) { throw 'uv pip install failed' }",
         f"& uv pip check --python {python_path}; if ($LASTEXITCODE -ne 0) {{ throw 'uv pip check failed' }}",
         _wrapper_script("aeat"),
@@ -175,12 +165,6 @@ def generate_manifest(
         "homepage": "https://github.com/nevenincs/cadrumo",
         "license": "Apache-2.0",
         "depends": ["python", "uv"],
-        "architecture": {
-            "64bit": {
-                "url": [f"{base_url}/{artifact.path.name}" for artifact in artifacts],
-                "hash": [artifact.sha256 for artifact in artifacts],
-            },
-        },
         "pre_install": pre_install,
         "bin": [
             ["aeat.cmd", "aeat"],
@@ -197,7 +181,6 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cohort-dir", required=True, type=Path)
     parser.add_argument("--version", required=True)
-    parser.add_argument("--release-base-url", required=True)
     parser.add_argument("--output", required=True, type=Path)
     return parser
 
@@ -208,7 +191,6 @@ def main() -> int:
     manifest = generate_manifest(
         cohort_dir=args.cohort_dir.resolve(strict=True),
         version=args.version,
-        release_base_url=args.release_base_url,
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
