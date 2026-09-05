@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: ''
+body_hash: 'sha256:33eddea0638bbf7e7c0f4e38b52fa21611b8831b5e8fdb670da0bfe4e3697a33'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-reference]]"
@@ -145,8 +145,8 @@ accounting are reviewed.
 
 ## Verification
 
-The focused union lane passes nine tests with 182 deselected. Ruff
-format/check, scoped `ty`, basedpyright, and the feature Vault check pass. The
-full matrix result is recorded in the handoff after completion. Green tests do
-not cover the fail-open source addition, effect truth, live owner signatures,
-or missing semantic joins above.
+The focused union lane passes nine tests with 182 deselected, and the full
+matrix module passes all 191 tests. Ruff format/check, scoped `ty`,
+basedpyright, and the feature Vault check pass. Green tests do not cover the
+fail-open source addition, effect truth, live owner signatures, or missing
+semantic joins above.
