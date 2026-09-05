@@ -183,6 +183,10 @@ def _build_tree(root: Path) -> ShippedTreeSpec:
     _write(root, "src/pkg/tests/test_things.py", _TESTS)
     _write(root, "src/pkg/tests/test_live.py", _LIVE_TESTS)
     _write(root, "src/pkg/tests/test_harness_only.py", "import pytest\n")
+    _write(root, "src/pkg/tests/_support.py", _SUPPORT)
+    _write(root, "src/pkg/tests/test_via_support.py", _TEST_VIA_SUPPORT)
+    _write(root, "src/pkg/tests/_live_support.py", _LIVE_SUPPORT)
+    _write(root, "src/pkg/tests/test_via_live_support.py", _TEST_VIA_LIVE_SUPPORT)
     _write(root, "dev/tool.py", _DEV)
     return ShippedTreeSpec(
         repo_root=root,
@@ -339,6 +343,32 @@ def test_shipped_data_naming_a_member_clears_it_but_never_a_top_level_symbol(
     assert "Widget.hidden_field" in reported
     assert "Config.NEVER_ANYWHERE" in reported
     assert result.data_cleared == 3
+
+
+def test_a_test_reaching_dead_code_only_through_a_support_module_is_reported(
+    result: UnreachableCodeResult,
+) -> None:
+    """The hop the walk was blind to: a test whose subjects come via a helper.
+
+    ``test_via_support`` imports nothing from the shipped tree itself; its only
+    import is ``._support``, which imports the dead ``pkg.loner``. Test modules
+    are excluded from the shipped population, so that relative import resolves
+    to nothing and the test looked subjectless. On the real tree 239 of 3334
+    test modules were skipped that way.
+    """
+    assert "pkg.tests.test_via_support" in {finding.module for finding in result.tests}
+
+
+def test_a_test_whose_support_module_reaches_live_code_is_not_reported(
+    result: UnreachableCodeResult,
+) -> None:
+    """The hop must not manufacture an orphan out of a live test.
+
+    ``test_via_live_support`` reaches ``pkg.used:run`` through its helper, which
+    is live, so following the hop has to leave it unreported. Without this the
+    change would trade one blind spot for a false accusation.
+    """
+    assert "pkg.tests.test_via_live_support" not in {finding.module for finding in result.tests}
 
 
 def test_a_member_bound_by_its_declared_value_is_cleared(result: UnreachableCodeResult) -> None:

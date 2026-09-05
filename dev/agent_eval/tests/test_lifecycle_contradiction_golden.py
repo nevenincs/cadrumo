@@ -47,10 +47,10 @@ from cadrumo_harness.mcp import build_tool_descriptors
 
 from .._models import ContradictionScenario
 from .._runner import check_contradiction_scenario
+from ...scripted_registration_channels import scripted_registration_descriptors
 from ._scripted_registration_channels import (
     creation_secrets_payload,
     login_secrets_payload,
-    scripted_registration_descriptors,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

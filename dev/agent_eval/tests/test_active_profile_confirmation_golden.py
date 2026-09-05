@@ -34,10 +34,10 @@ from cadrumo_harness.mcp import ConfirmationPolicy, build_tool_descriptors, conf
 from .._models import ProfileConfirmationScenario
 from .._runner import check_profile_confirmation_scenario
 from ._real_cli_support import valid_cli_commands
+from ...scripted_registration_channels import scripted_registration_descriptors
 from ._scripted_registration_channels import (
     creation_secrets_payload,
     login_secrets_payload,
-    scripted_registration_descriptors,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

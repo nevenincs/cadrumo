@@ -29,8 +29,10 @@ if not __package__:
 
 from ._command import CommandResult, run_command  # noqa: E402
 from ._installed_wheel_binding import installed_wheel_payload_sha256  # noqa: E402
+from ._recovery_enrollment import enrolled_profile_creation  # noqa: E402
 
 _UTF_8: Final[str] = "utf-8"
+_JSON_FORMAT: Final[tuple[str, ...]] = ("--format", "json")
 
 PROFILE_LABEL = "installed-oracle"
 PROFILE_TAX_ID = "B66012345"
@@ -234,6 +236,7 @@ def _run(
     env: dict[str, str],
     timeout_seconds: float,
     input_text: str | None = None,
+    inherited_descriptors: tuple[int, ...] = (),
 ) -> CommandResult:
     result = run_command(
         argv,
@@ -241,6 +244,7 @@ def _run(
         environment=env,
         timeout_seconds=timeout_seconds,
         input_text=input_text,
+        inherited_descriptors=inherited_descriptors,
     )
     if result.returncode != 0:
         raise InstalledTaxOracleError(
@@ -314,6 +318,39 @@ def _assert_no_diagnostic_notices(document: dict[str, Any], *, command: str) -> 
     assert_no_diagnostic_notices(document, command=command, error=InstalledTaxOracleError)
 
 
+def create_installed_profile(
+    cli: Path,
+    *,
+    cwd: Path,
+    environment: dict[str, str],
+    passphrase: str,
+    timeout_seconds: float,
+) -> CommandResult:
+    """Create the oracle's profile, completing the mandatory recovery enrollment.
+
+    Creation refuses outright without a channel to hand the recovery phrase
+    over and read the exact phrase back, so the oracle plays the operator's
+    part rather than asking the product to skip a possession proof. Everything
+    the oracle asserts afterwards depends on this profile existing, so a
+    refusal here is raised, never carried forward.
+    """
+    with enrolled_profile_creation(
+        cli=cli,
+        arguments=(*_JSON_FORMAT, *profile_create_arguments(), "--secrets-stdin"),
+    ) as invocation:
+        return _run(
+            invocation.argv,
+            cwd=cwd,
+            env=environment,
+            timeout_seconds=timeout_seconds,
+            input_text=json.dumps(
+                {"passphrase": passphrase, "passphrase_confirmation": passphrase},
+                separators=(",", ":"),
+            ),
+            inherited_descriptors=invocation.inherited_descriptors,
+        )
+
+
 def assert_grounded_observations(
     observations_result: dict[str, Any],
     *,
@@ -382,7 +419,7 @@ def run_installed_tax_oracle(
     resolved_work_dir = work_dir.resolve()
     resolved_work_dir.mkdir(parents=True, exist_ok=True)
     environment = isolated_product_environment(storage_root)
-    base = (str(resolved_cli), "--format", "json")
+    base = (str(resolved_cli), *_JSON_FORMAT)
     authenticated_base = (*base, "--profile-secrets-stdin")
     passphrase = secrets.token_urlsafe(32)
     profile_authentication = json.dumps({"profile_passphrase": passphrase}, separators=(",", ":"))
@@ -396,15 +433,12 @@ def run_installed_tax_oracle(
     )
     commands.append(version)
 
-    profile = _run(
-        (*base, *profile_create_arguments(), "--secrets-stdin"),
+    profile = create_installed_profile(
+        resolved_cli,
         cwd=resolved_work_dir,
-        env=environment,
+        environment=environment,
+        passphrase=passphrase,
         timeout_seconds=timeout_seconds,
-        input_text=json.dumps(
-            {"passphrase": passphrase, "passphrase_confirmation": passphrase},
-            separators=(",", ":"),
-        ),
     )
     commands.append(profile)
     profile_document = _json_envelope(profile, expected_command="config.profile.create")

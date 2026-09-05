@@ -238,7 +238,7 @@ def test_check_refuses_drift_without_changing_published_hashes(m130_inspection_s
         raise AssertionError(f"unknown test defect: {defect}")
     before = _tree_hashes(target_export_root)
 
-    with pytest.raises(RegistryValidationError) as refusal:
+    with pytest.raises(RegistryValidationError, match="__harvest__") as refusal:
         check_generated_export_tree(
             context=context,
             joined=joined,
