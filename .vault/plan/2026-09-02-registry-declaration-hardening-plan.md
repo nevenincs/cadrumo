@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:3862691b63194154b69621d69d89474474bc3b7d46142316b4278e8ab520b44e'
+body_hash: 'sha256:9bb56b8b905cde3e5acb91a1aea4f1e46094ba7e03d006c7d02635085774a058'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -520,6 +520,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S638` - Guard the record-design sidecar gate against a relocated corpus root and an empty walk, since it asserted no missing sidecars over a walk with neither a root check nor a minimum while every sibling freshness gate guards its own corpus; `dev/corpus/tests/test_extraction_sidecar_freshness.py`.
 - [x] `W02.P02.S639` - Guard the bundled normative canonicality gate against a relocated corpus root and a collapsed walk, since it asserted no CRLF endings over a walk with neither check and the cross-platform hash equality it protects would rot invisibly; `dev/tests/test_fetch_boe_normative.py`.
 - [x] `W02.P02.S640` - Route the workflow gates through one guarded walk that checks its root, refuses a collapsed directory and honours both yaml suffixes, since two gates asserted that no workflow does a forbidden thing over a walk an empty directory would satisfy perfectly; `dev/packaging/tests/test_evidence_release_transport.py`.
+- [x] `W02.P02.S641` - Announce the sources the scratch reclamation sweep cannot read, since an unreadable file declares no scratch family and therefore looks exactly like a compliant one, and only five families are examined across six thousand nine hundred sources so one loss removes a fifth of the subject; `dev/ci/tests/test_scratch_prefixes_are_reclaimed.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
