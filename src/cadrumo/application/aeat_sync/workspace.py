@@ -290,6 +290,30 @@ class AeatSyncWorkspaceCensusRowV1(AeatSyncWorkspaceActionRowV1):
     path: str = Field(min_length=1, max_length=256)
     category: AeatSyncCensusCategory
     status: AeatSyncCensusStatus
+    local_value: str | None = None
+    """What the local profile holds for this field, or nothing when unobserved."""
+    aeat_value: str | None = None
+    """What the AEAT censo holds, or nothing when no pull has observed it.
+
+    `None` on either side is UNOBSERVED, never an empty field. A censo entry the
+    taxpayer has genuinely left blank is the empty string, and collapsing the
+    two would tell an operator AEAT holds nothing where in truth nobody has
+    looked -- which is the difference between "correct" and "unchecked" on a
+    comparison whose entire purpose is to show what differs.
+    """
+
+    @model_validator(mode="after")
+    def _conflict_needs_both_sides(self) -> Self:
+        """A CONFLICT is a claim about two values, so it must carry both.
+
+        Reporting a conflict while withholding one side asks the operator to
+        accept a difference they cannot see, which is the same defect the
+        invoice/entry suggestions carried before they showed the amounts they
+        compared.
+        """
+        if self.status is AeatSyncCensusStatus.CONFLICT and (self.local_value is None or self.aeat_value is None):
+            raise ValueError("a census conflict must carry both the local and the AEAT value")
+        return self
 
 
 class AeatSyncWorkspaceFiledDeclarationRowV1(AeatSyncWorkspaceActionRowV1):

@@ -5,9 +5,17 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ...application.ledger.models import LedgerSourceImportCommand, LedgerSourceImportResult
+    from ...application.ledger.models import (
+        LedgerSourceImportCommand,
+        LedgerSourceImportResult,
+        ManualLedgerTransactionResult,
+    )
     from ...core.period import Period
-    from .ledger.models import LedgerImportSubmitterV1
+    from .ledger.models import (
+        LedgerClassificationSubmissionV1,
+        LedgerClassificationSubmitterV1,
+        LedgerImportSubmitterV1,
+    )
 
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Generator, Iterable, Mapping, Sequence
@@ -154,6 +162,29 @@ def compose_secure_profile_workbench_generation_provider(
         modelo_projection_reader=_modelo_projection_reader(),
     )
     return ApplicationGenerationProviderV1(door)
+
+
+def _ledger_classification_submitter(profile_id: str) -> LedgerClassificationSubmitterV1:
+    """Apply one authorised classification patch to the operator's own ledger.
+
+    The submission carries the action reference the catalogue admitted, so the
+    door records WHICH authority the operator acted under rather than a bare
+    "tui" label -- an amended classification that cannot say who authorised it
+    is an audit gap in a filing-bound record.
+    """
+
+    async def submit(submission: LedgerClassificationSubmissionV1) -> ManualLedgerTransactionResult:
+        from ...application.ledger.actions_manual import update_manual_transaction_fields
+
+        return update_manual_transaction_fields(
+            bucket_id=profile_id,
+            transaction_id=submission.transaction_id,
+            patch=submission.patch,
+            actor="operator",
+            source_command=str(submission.action.action_id),
+        )
+
+    return submit
 
 
 def _ledger_import_submitter() -> LedgerImportSubmitterV1:
@@ -502,6 +533,7 @@ def _ledger_generation_factory(
             # on, not part of the immutable session snapshot.
             evidence_items=list_attachment_review_queue(AttachmentStore(bucket_id=dependencies.account.profile_id)),
             classify_action=dependencies.ledger_classify_action,
+            classification_submitter=_ledger_classification_submitter(dependencies.account.profile_id),
             import_submitter=_ledger_import_submitter(),
         )(context)
 

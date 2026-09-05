@@ -147,7 +147,15 @@ def _overview(
 def _census(
     path: str = "address", category: AeatSyncCensusCategory = AeatSyncCensusCategory.ADDRESS
 ) -> AeatSyncWorkspaceCensusRowV1:
-    return AeatSyncWorkspaceCensusRowV1(path=path, category=category, status=AeatSyncCensusStatus.CONFLICT)
+    # A CONFLICT carries both sides: the row asserts the two disagree, and the
+    # model now refuses to make that claim while withholding either value.
+    return AeatSyncWorkspaceCensusRowV1(
+        path=path,
+        category=category,
+        status=AeatSyncCensusStatus.CONFLICT,
+        local_value="Calle Local 1",
+        aeat_value="Calle AEAT 2",
+    )
 
 
 def _filed(
