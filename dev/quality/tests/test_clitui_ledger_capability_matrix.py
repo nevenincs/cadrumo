@@ -59,6 +59,7 @@ from ..clitui_ledger_capability_matrix import (
     LedgerDenominatorSnapshotV1,
     LedgerGapClass,
     LedgerGate,
+    LedgerGateClosureReceiptV1,
     LedgerLiveCensusReportV1,
     LedgerMatrixAcceptanceAttestationV1,
     LedgerRegistryRouteCensusV1,
@@ -1593,6 +1594,7 @@ def _matrix(
     report: LedgerLiveCensusReportV1 | None = None,
     controls: LedgerCampaignControlsV1 | None = None,
     campaign_evidence: tuple[EvidenceCoordinateV1, ...] | None = None,
+    accepted_gate_closure_receipts: tuple[LedgerGateClosureReceiptV1, ...] = (),
     accepted_denominator: LedgerDenominatorSnapshotV1 | None = None,
     current_denominator: LedgerDenominatorSnapshotV1 | None = None,
     accepted_authority_dispositions: AuthorityDispositionSnapshotV1 | None = None,
@@ -1634,6 +1636,7 @@ def _matrix(
         current_subjects=current_subjects,
         rows=rows,
         campaign_evidence=evidence,
+        accepted_gate_closure_receipts=accepted_gate_closure_receipts,
     )
     attestation = LedgerMatrixAcceptanceAttestationV1(
         attestation_id="attestation.ledger.s02",
@@ -1659,6 +1662,7 @@ def _matrix(
         current_subjects=current_subjects,
         rows=rows,
         campaign_evidence=evidence,
+        accepted_gate_closure_receipts=accepted_gate_closure_receipts,
         matrix_digest=matrix_digest,
         acceptance_attestation=attestation,
     )
@@ -1685,6 +1689,39 @@ def _matrix_with(
         )
         candidate = candidate.model_copy(update={"acceptance_attestation": attestation})
     return candidate
+
+
+def _accepted_gate_receipts(matrix: LedgerCapabilityMatrixV1) -> tuple[LedgerGateClosureReceiptV1, ...]:
+    """Build a complete ordered G0--G3 receipt chain for a currently frozen matrix."""
+    attestation = matrix.acceptance_attestation
+    return tuple(
+        LedgerGateClosureReceiptV1(
+            receipt_id=f"receipt.ledger.{gate.value}",
+            gate=gate,
+            reviewer="independent-engineering-reviewer",
+            ruling=ReviewRuling.ACCEPT,
+            plan_owner=ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
+            matrix_closure_basis_digest=matrix.gate_closure_basis_digest(gate),
+            denominator_census_id=matrix.current_denominator.census_id,
+            denominator_digest=matrix.current_denominator.digest,
+            denominator_revision=matrix.current_denominator.revision,
+            attestation_id=attestation.attestation_id,
+            attestation_reviewer=attestation.reviewer,
+            attestation_review_subject_id=attestation.review_subject_id,
+            attestation_review_subject_revision=attestation.review_subject_revision,
+            attestation_review_subject_digest=attestation.review_subject_digest,
+            attestation_review_subject_observed_at=attestation.review_subject_observed_at,
+            accepted_at=_OBSERVED_AT,
+        )
+        for gate in tuple(LedgerGate)[:-1]
+    )
+
+
+def _matrix_with_authorized_hold_lift(matrix: LedgerCapabilityMatrixV1) -> LedgerCapabilityMatrixV1:
+    """Record current G0--G3 acceptance, then make the one authorized hold transition."""
+    frozen = _matrix_with(matrix, accepted_gate_closure_receipts=_accepted_gate_receipts(matrix))
+    controls = frozen.controls.model_copy(update={"tui_implementation_hold_active": False})
+    return _matrix_with(frozen, controls=controls)
 
 
 def _row_with_assessments(

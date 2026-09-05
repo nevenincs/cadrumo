@@ -37,6 +37,7 @@ _FINDING_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^finding\.[a-z][a-z0-
 _SUBJECT_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^subject\.[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)*$")
 _CENSUS_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^census\.ledger(?:\.[a-z][a-z0-9_]*)*$")
 _ATTESTATION_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^attestation\.ledger(?:\.[a-z][a-z0-9_]*)*$")
+_GATE_RECEIPT_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^receipt\.ledger(?:\.[a-z][a-z0-9_]*)*$")
 _PLACEHOLDER_TEXT: Final[frozenset[str]] = frozenset({"", "n/a", "na", "none", "tbd", "todo", "unknown", "unmeasured"})
 ACCEPTED_LEDGER_PARITY_PLAN_OWNER: Final[str] = "clitui-ledger"
 LEDGER_REGISTRY_ROUTE_CENSUS_SCHEMA_VERSION: Final[Literal[1]] = 1
@@ -3726,6 +3727,65 @@ class LedgerMatrixAcceptanceAttestationV1(BaseModel):
         return self
 
 
+class LedgerGateClosureReceiptV1(BaseModel):
+    """An independently accepted, current closure of one ordered pre-TUI gate.
+
+    The receipt binds the gate-relevant matrix projection, rather than the full
+    matrix digest, so the one authorized transition from an active to inactive
+    TUI hold does not erase accepted G0--G3 history.  Every other matrix change
+    remains part of the projection and invalidates the receipt.
+    """
+
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+
+    receipt_id: str = Field(min_length=1)
+    gate: LedgerGate
+    reviewer: str = Field(min_length=1)
+    ruling: ReviewRuling
+    plan_owner: str = Field(min_length=1)
+    matrix_closure_basis_digest: str = Field(min_length=1)
+    denominator_census_id: str = Field(min_length=1)
+    denominator_digest: str = Field(min_length=1)
+    denominator_revision: str = Field(min_length=1)
+    attestation_id: str = Field(min_length=1)
+    attestation_reviewer: str = Field(min_length=1)
+    attestation_review_subject_id: str = Field(min_length=1)
+    attestation_review_subject_revision: str = Field(min_length=1)
+    attestation_review_subject_digest: str = Field(min_length=1)
+    attestation_review_subject_observed_at: datetime
+    accepted_at: datetime
+
+    @model_validator(mode="after")
+    def _check_receipt(self) -> LedgerGateClosureReceiptV1:
+        _require_identity(self.receipt_id, field_name="receipt_id", pattern=_GATE_RECEIPT_ID_PATTERN)
+        if self.gate not in _GATE_ORDER[:-1]:
+            raise ValueError("gate closure receipts are limited to G0 through G3")
+        _require_non_placeholder(self.reviewer, field_name="reviewer")
+        if self.ruling is not ReviewRuling.ACCEPT:
+            raise ValueError("gate closure receipts require an ACCEPT ruling")
+        if self.plan_owner != ACCEPTED_LEDGER_PARITY_PLAN_OWNER:
+            raise ValueError("gate closure receipt must name the accepted clitui-ledger plan identity")
+        _require_digest(self.matrix_closure_basis_digest, field_name="matrix_closure_basis_digest")
+        _require_identity(self.denominator_census_id, field_name="denominator_census_id", pattern=_CENSUS_ID_PATTERN)
+        _require_digest(self.denominator_digest, field_name="denominator_digest")
+        _require_non_placeholder(self.denominator_revision, field_name="denominator_revision")
+        _require_identity(self.attestation_id, field_name="attestation_id", pattern=_ATTESTATION_ID_PATTERN)
+        _require_non_placeholder(self.attestation_reviewer, field_name="attestation_reviewer")
+        _require_identity(
+            self.attestation_review_subject_id,
+            field_name="attestation_review_subject_id",
+            pattern=_SUBJECT_ID_PATTERN,
+        )
+        _require_non_placeholder(self.attestation_review_subject_revision, field_name="attestation_review_subject_revision")
+        _require_digest(self.attestation_review_subject_digest, field_name="attestation_review_subject_digest")
+        _require_observed_at(
+            self.attestation_review_subject_observed_at,
+            field_name="attestation_review_subject_observed_at",
+        )
+        _require_observed_at(self.accepted_at, field_name="accepted_at")
+        return self
+
+
 class LedgerCapabilityMatrixV1(BaseModel):
     """Accepted/current census and current evidence subjects bind every matrix row."""
 
@@ -3740,6 +3800,7 @@ class LedgerCapabilityMatrixV1(BaseModel):
     current_subjects: tuple[EvidenceSubjectSnapshotV1, ...]
     rows: tuple[LedgerCapabilityRowV1, ...]
     campaign_evidence: tuple[EvidenceCoordinateV1, ...] = ()
+    accepted_gate_closure_receipts: tuple[LedgerGateClosureReceiptV1, ...] = ()
     matrix_digest: str = Field(min_length=1)
     acceptance_attestation: LedgerMatrixAcceptanceAttestationV1
 
@@ -3798,7 +3859,44 @@ class LedgerCapabilityMatrixV1(BaseModel):
             or attestation.review_subject_observed_at != review_subject.observed_at
         ):
             raise ValueError("acceptance attestation review subject is stale or absent")
+        self._validate_gate_closure_receipts()
         return self
+
+    def _validate_gate_closure_receipts(self) -> None:
+        """Require a unique ordered prefix of current independently accepted receipts."""
+        expected_gates = _GATE_ORDER[: len(self.accepted_gate_closure_receipts)]
+        actual_gates = tuple(receipt.gate for receipt in self.accepted_gate_closure_receipts)
+        if actual_gates != expected_gates:
+            raise ValueError("gate closure receipts must form the ordered G0-through-G3 prefix exactly once")
+        if len({receipt.receipt_id for receipt in self.accepted_gate_closure_receipts}) != len(
+            self.accepted_gate_closure_receipts
+        ):
+            raise ValueError("gate closure receipts contain duplicate identities")
+        for receipt in self.accepted_gate_closure_receipts:
+            if receipt.plan_owner != self.controls.sole_ledger_parity_plan_owner:
+                raise ValueError("gate closure receipt plan owner differs from campaign controls")
+            if receipt.matrix_closure_basis_digest != self.gate_closure_basis_digest(receipt.gate):
+                raise ValueError("gate closure receipt is stale or not bound to the current matrix closure basis")
+            if (
+                receipt.denominator_census_id != self.current_denominator.census_id
+                or receipt.denominator_digest != self.current_denominator.digest
+                or receipt.denominator_revision != self.current_denominator.revision
+            ):
+                raise ValueError("gate closure receipt is stale or not bound to the current denominator")
+            attestation = self.acceptance_attestation
+            if (
+                receipt.attestation_id != attestation.attestation_id
+                or receipt.attestation_reviewer != attestation.reviewer
+                or receipt.attestation_review_subject_id != attestation.review_subject_id
+                or receipt.attestation_review_subject_revision != attestation.review_subject_revision
+                or receipt.attestation_review_subject_digest != attestation.review_subject_digest
+                or receipt.attestation_review_subject_observed_at != attestation.review_subject_observed_at
+            ):
+                raise ValueError("gate closure receipt is not bound to the current independent acceptance attestation")
+
+    def accepted_gate_closure_receipt(self, gate: LedgerGate) -> LedgerGateClosureReceiptV1 | None:
+        """Return the current accepted receipt for one pre-TUI gate, if recorded."""
+        return next((receipt for receipt in self.accepted_gate_closure_receipts if receipt.gate is gate), None)
 
     def iter_evidence(self) -> Iterable[EvidenceCoordinateV1]:
         """Yield every coordinate whose identity and freshness are globally checked."""
@@ -3825,6 +3923,37 @@ class LedgerCapabilityMatrixV1(BaseModel):
             current_subjects=self.current_subjects,
             rows=self.rows,
             campaign_evidence=self.campaign_evidence,
+            accepted_gate_closure_receipts=self.accepted_gate_closure_receipts,
+        )
+
+    def gate_closure_basis_digest(self, gate: LedgerGate) -> str:
+        """Hash the frozen matrix state that a G0--G3 receipt is allowed to carry.
+
+        The current full matrix digest includes the active-hold control and the
+        receipt collection.  Neither belongs in a historical closure basis:
+        lifting the hold is the authorized G3-to-G4 transition, and a receipt
+        cannot cryptographically contain itself.  All other matrix facts remain
+        bound, including every row and current evidence subject.
+        """
+        if gate not in _GATE_ORDER[:-1]:
+            raise ValueError("only G0 through G3 have closure receipt bases")
+        controls = {
+            "sole_ledger_parity_plan_owner": self.controls.sole_ledger_parity_plan_owner,
+            "tui_implementation_hold_recorded": self.controls.tui_implementation_hold_recorded,
+        }
+        return _canonical_digest(
+            {
+                "gate": gate,
+                "schema_version": self.schema_version,
+                "controls": controls,
+                "accepted_denominator": self.accepted_denominator,
+                "current_denominator": self.current_denominator,
+                "accepted_authority_dispositions": self.accepted_authority_dispositions,
+                "current_authority_dispositions": self.current_authority_dispositions,
+                "current_subjects": tuple(sorted(self.current_subjects, key=lambda subject: subject.subject_id)),
+                "rows": tuple(sorted(self.rows, key=lambda row: row.identity.row_id)),
+                "campaign_evidence": tuple(sorted(self.campaign_evidence, key=lambda coordinate: coordinate.evidence_id)),
+            }
         )
 
     @classmethod
@@ -3840,6 +3969,7 @@ class LedgerCapabilityMatrixV1(BaseModel):
         current_subjects: tuple[EvidenceSubjectSnapshotV1, ...],
         rows: tuple[LedgerCapabilityRowV1, ...],
         campaign_evidence: tuple[EvidenceCoordinateV1, ...],
+        accepted_gate_closure_receipts: tuple[LedgerGateClosureReceiptV1, ...] = (),
     ) -> str:
         """Calculate the pre-attestation digest without constructing an invalid matrix."""
         return _canonical_digest(
@@ -3853,6 +3983,9 @@ class LedgerCapabilityMatrixV1(BaseModel):
                 "current_subjects": tuple(sorted(current_subjects, key=lambda subject: subject.subject_id)),
                 "rows": tuple(sorted(rows, key=lambda row: row.identity.row_id)),
                 "campaign_evidence": tuple(sorted(campaign_evidence, key=lambda coordinate: coordinate.evidence_id)),
+                "accepted_gate_closure_receipts": tuple(
+                    sorted(accepted_gate_closure_receipts, key=lambda receipt: receipt.gate)
+                ),
             }
         )
 
@@ -4181,6 +4314,8 @@ def evaluate_ledger_capability_gate(
     if gate is LedgerGate.G4_TUI_ADMISSION_AND_PARITY:
         if matrix.controls.tui_implementation_hold_active:
             blockers.append("the Ledger TUI implementation hold remains active")
+        elif matrix.accepted_gate_closure_receipt(LEDGER_TUI_HOLD_UNTIL_GATE) is None:
+            blockers.append("the Ledger TUI implementation hold lacks a current accepted G3 closure receipt")
         for row in matrix.rows:
             tui = row.assessment(LedgerCapabilityAxis.TUI)
             if tui.applicability is ApplicabilityState.APPLICABLE:
@@ -4207,13 +4342,24 @@ def evaluate_ledger_capability_gates(
     observed_census: LedgerLiveCensusReportV1,
     observed_subjects: tuple[EvidenceSubjectSnapshotV1, ...],
 ) -> tuple[GateAssessmentV1, ...]:
-    """Evaluate ordered gates without allowing a later false closure."""
+    """Evaluate ordered gates without allowing a later false closure.
+
+    A current G0 receipt preserves the historical active-hold closure across
+    the one authorized post-G3 hold lift.  It never suppresses census, matrix,
+    or receipt-currentness failures, which are still evaluated on every call.
+    """
     assessments: list[GateAssessmentV1] = []
     prior_open = False
     for gate in _GATE_ORDER:
         assessment = evaluate_ledger_capability_gate(
             matrix, gate, observed_census=observed_census, observed_subjects=observed_subjects
         )
+        if (
+            gate is LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE
+            and matrix.accepted_gate_closure_receipt(gate) is not None
+            and assessment.blockers == ("the Ledger TUI implementation hold is not recorded and active",)
+        ):
+            assessment = GateAssessmentV1(gate=gate, closed=True)
         if prior_open and assessment.closed:
             assessment = GateAssessmentV1(
                 gate=gate, closed=False, blockers=(f"{gate.value} cannot close while an earlier gate remains open",)
@@ -4276,6 +4422,7 @@ __all__ = [
     "LedgerCapabilityRowV1",
     "LedgerDenominatorSnapshotV1",
     "LedgerGapClass",
+    "LedgerGateClosureReceiptV1",
     "LedgerGate",
     "LedgerLiveCensusReportV1",
     "LedgerMatrixAcceptanceAttestationV1",
