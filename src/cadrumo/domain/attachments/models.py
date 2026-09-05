@@ -25,7 +25,6 @@ from pydantic import (
 )
 
 from ...core.errors.hierarchy import CoreValidationError
-from ...core.hashing import HEX_ALPHABET
 from ...core.hex import Hex64Str
 from ...core.identity import BucketId, ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -34,6 +33,7 @@ from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTE
 from .enums import AttachmentKind, AttachmentSource
 from .errors import AttachmentValidationError
 
+_HEX_DIGITS = frozenset("0123456789abcdef")
 _LINK_ONLY_MIME_TYPE = "text/uri-list"
 _STRING_METADATA_MAPPING: TypeAdapter[dict[str, str]] = TypeAdapter(dict[str, str], config=ConfigDict(strict=True))
 
@@ -74,7 +74,7 @@ def _normalize_hex_digest(value: str, *, field_name: str) -> str:
         AttachmentValidationError: When ``value`` is not a 64-character hex string.
     """
     normalized = value.strip().lower()
-    if len(normalized) != 64 or any(char not in HEX_ALPHABET for char in normalized):
+    if len(normalized) != 64 or any(char not in _HEX_DIGITS for char in normalized):
         raise AttachmentValidationError(f"{field_name} must be a 64-character lowercase hex digest")
     return normalized
 

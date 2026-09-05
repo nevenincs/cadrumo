@@ -35,13 +35,13 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from ...core.hashing import HEX_ALPHABET
 from ...domain.transactions.errors import TransactionIdPrefixError
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from .actions_common import transaction_modelo_source_ids
 
 MINIMUM_DISPLAY_ID_WIDTH = 8
 _FULL_ID_LENGTH = 64
+_HEX_ALPHABET = frozenset("0123456789abcdef")
 
 
 def compute_display_id_width(transaction_ids: Iterable[str]) -> int:
@@ -89,7 +89,7 @@ def resolve_transaction_id(prefix: str, transaction_ids: Iterable[str]) -> str:
         raise TransactionIdPrefixError(
             translated_message="application.ledger.errors.transaction_id_prefix_empty",
         )
-    if not HEX_ALPHABET.issuperset(normalized):
+    if not _HEX_ALPHABET.issuperset(normalized):
         raise TransactionIdPrefixError(
             translated_message="application.ledger.errors.transaction_id_prefix_non_hex",
             context={"prefix": repr(prefix)},

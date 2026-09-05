@@ -32,7 +32,7 @@ from typing import BinaryIO
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ....core.external_constants import UTF_8_ENCODING
-from ....core.hashing import HEX_ALPHABET, sha256_hex
+from ....core.hashing import sha256_hex
 from ....core.identity import BucketId
 from ....core.logging import get_logger
 from ....core.secure_object_write import SecureObjectWrite
@@ -56,6 +56,7 @@ from .sql import SecureObjectRepository
 
 _LOGGER = get_logger(__name__)
 
+_HEX_DIGITS = frozenset("0123456789abcdef")
 _ATTACHMENT_BLOB_VERSION = ATTACHMENT_BLOB_STORAGE_NAMESPACE.schema_version
 _ATTACHMENT_BLOB_SENSITIVITY = ATTACHMENT_BLOB_STORAGE_NAMESPACE.sensitivity
 _ATTACHMENT_MANIFEST_VERSION = ATTACHMENT_MANIFEST_STORAGE_NAMESPACE.schema_version
@@ -190,7 +191,7 @@ def unwrap_blob_payload(stored: bytes) -> bytes:
 
 def _require_digest(value: str, *, field_name: str = "attachment_id") -> str:
     """Reject any digest input that is not a 64-char lowercase hex string."""
-    if len(value) != 64 or any(char not in HEX_ALPHABET for char in value):
+    if len(value) != 64 or any(char not in _HEX_DIGITS for char in value):
         raise _attachment_validation_error(
             f"{field_name} must be a 64-character lowercase hex digest",
             violation=f"{field_name}_invalid_digest",
