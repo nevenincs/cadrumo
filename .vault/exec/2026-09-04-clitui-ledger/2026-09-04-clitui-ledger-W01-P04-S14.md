@@ -19,10 +19,10 @@ related:
 ## Reconciliation
 
 - Added `backend_operation:ledger.import.prepare` for `cadrumo.application.ledger.import_preparation:prepare_ledger_import_command`.
-- The semantic row is a planned typed `QUERY` (`LedgerImportPreparationRequest` to `LedgerSourceImportCommand`), with `PRODUCT` and `PROOF` gaps. It prepares a validated path and auto-provider command; it does not execute an import.
+- The semantic row is a planned typed `QUERY` (`LedgerImportPreparationRequest` to `LedgerSourceImportCommand`), with backend `ABSENT`/`UNPROVEN`, CLI/TUI `N/A`, `PRODUCT` primary and `PROOF` secondary gaps. Composition, artifact, provenance, and registry are `N/A`; it has no annotation, TUI route, or hold. It prepares a validated path and auto-provider command; it does not execute an import.
 - Included `src/cadrumo/application/ledger/import_preparation.py` in the backend census source set and made omission of either source or public operation fail closed.
-- The installed read-only Overview supported-surface observation now selects `ledger.workspace.read` and `ledger.import.prepare`; it does not select `ledger.import.source`.
-- Live union: **761 observations / 771 selected edges / 694 reviewed rows**; union digest `sha256:1abe7593edafc15bf1006ac1ab5926936cebf8e379f1bb268f513de64b7121e8`.
+- The installed read-only Overview supported-surface observation selects only `ledger.workspace.read`; it does not select preparation, `ledger.import.source`, or any import execution.
+- Live union: **761 observations / 770 selected edges / 694 reviewed rows**. Preparation is now one of 14 explicit backend-helper-only rows. The higher-level `ledger.import.source` authority and parity gaps remain unchanged.
 
 ## Evidence
 
@@ -32,4 +32,4 @@ related:
 
 ## Publication hold
 
-The reference now records G0 as open and labels the old acceptance material historical. Fresh independent review, receipt, and external anchor work is required before this Step can close. The busy TUI-owned paths were not modified or quarantined.
+The active candidate records `REJECT`, zero accepted closure receipts, no external acceptance anchor, and G0 `OPEN`. Fresh independent review, receipt, and external anchor work is required before this Step can close. The busy TUI-owned paths were not modified or quarantined.
