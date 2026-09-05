@@ -1046,6 +1046,7 @@ class LedgerCapabilityEffect(StrEnum):
     MUTATION = "mutation"
     PROPOSAL = "proposal"
     ARTIFACT = "artifact"
+    ARTIFACT_QUERY = "artifact_query"
     REGISTRY_ROUTE = "registry_route"
 
 
@@ -2008,43 +2009,81 @@ _LEDGER_BACKEND_OPERATION_SOURCE_PATHS: Final[tuple[str, ...]] = (
 )
 
 
-_CLI_CAPABILITY_REMAP: Final[Mapping[str, str]] = MappingProxyType(
+_CLI_CAPABILITY_REMAP: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
     {
-        "ledger.add": "ledger.transaction.create",
-        "ledger.archive": "ledger.lifecycle.archive",
-        "ledger.attach": "ledger.transaction.attach",
-        "ledger.detach": "ledger.transaction.detach",
-        "ledger.exclude": "ledger.lifecycle.reviewed_exclude",
-        "ledger.link": "ledger.transaction.invoice_link",
-        "ledger.llm_diagnostics": "ledger.llm.diagnostics",
-        "ledger.merge": "ledger.transaction.merge",
-        "ledger.participation": "ledger.participation.get",
-        "ledger.preflight": "ledger.preflight.readiness",
-        "ledger.ratios.list": "ledger.ratio.list",
-        "ledger.ratios.validate": "ledger.ratio.validate",
-        "ledger.ratios.set": "ledger.ratio.set",
-        "ledger.ratios.unset": "ledger.ratio.unset",
-        "ledger.remove": "ledger.lifecycle.remove",
-        "ledger.reset": "ledger.lifecycle.reset",
-        "ledger.restore": "ledger.lifecycle.restore",
-        "ledger.review": "ledger.transaction.review_query",
-        "ledger.stash": "ledger.lifecycle.stash",
-        "ledger.status": "ledger.transaction.status_summary",
-        "ledger.update": "ledger.transaction.update_fields",
-        "ledger.view": "ledger.transaction.get",
+        "ledger.add": ("ledger.transaction.create",),
+        "ledger.archive": ("ledger.lifecycle.archive",),
+        "ledger.attach": ("ledger.transaction.attach",),
+        "ledger.detach": ("ledger.transaction.detach",),
+        "ledger.exclude": ("ledger.lifecycle.reviewed_exclude",),
+        "ledger.link": ("ledger.transaction.invoice_link",),
+        "ledger.llm_diagnostics": ("ledger.llm.diagnostics",),
+        "ledger.merge": ("ledger.transaction.merge",),
+        "ledger.participation": ("ledger.participation.get",),
+        "ledger.preflight": ("ledger.preflight.readiness",),
+        "ledger.ratios.list": ("ledger.ratio.list",),
+        "ledger.ratios.validate": ("ledger.ratio.validate",),
+        "ledger.ratios.set": ("ledger.ratio.set",),
+        "ledger.ratios.unset": ("ledger.ratio.unset",),
+        "ledger.remove": ("ledger.lifecycle.remove",),
+        "ledger.reset": ("ledger.lifecycle.reset",),
+        "ledger.restore": ("ledger.lifecycle.restore",),
+        "ledger.review": ("ledger.transaction.review_query",),
+        "ledger.stash": ("ledger.lifecycle.stash",),
+        "ledger.status": ("ledger.transaction.status_summary",),
+        "ledger.update": ("ledger.transaction.update_fields",),
+        "ledger.view": ("ledger.transaction.get",),
+        "ledger.counterparty.confirm": ("ledger.counterparty.record",),
+        "ledger.counterparty.view": ("ledger.counterparty.resolve",),
+        "ledger.counterparty.withdraw": ("ledger.counterparty.forget",),
+        "ledger.export": (
+            "ledger.export.flat",
+            "ledger.export.csv",
+            "ledger.export.jsonl",
+            "ledger.export.xlsx",
+        ),
+        "ledger.rule.add": ("ledger.classification.rule_add",),
+        "ledger.rule.apply": (
+            "ledger.rule.apply.preview",
+            "ledger.classification.rule_apply",
+        ),
+        "ledger.split": (
+            "ledger.transaction.split",
+            "ledger.llm.suggest_split",
+            "ledger.llm.apply_split",
+        ),
     }
 )
 
-_SUBOPERATION_CAPABILITY_REMAP: Final[Mapping[str, str]] = MappingProxyType(
+_SUBOPERATION_CAPABILITY_REMAP: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
     {
-        "ledger.classify.bulk_csv": "ledger.classification.bulk_csv",
-        "ledger.export.csv": "ledger.export.csv",
-        "ledger.export.jsonl": "ledger.export.jsonl",
-        "ledger.export.xlsx": "ledger.export.xlsx",
-        "ledger.remove.commit": "ledger.lifecycle.remove.commit",
-        "ledger.remove.preview": "ledger.lifecycle.remove.preview",
-        "ledger.reset.commit": "ledger.lifecycle.reset.commit",
-        "ledger.reset.preview": "ledger.lifecycle.reset.preview",
+        "ledger.classify.bulk_csv": ("ledger.classification.bulk_csv",),
+        "ledger.classify.evidence_read": ("ledger.llm.classify_with_evidence",),
+        "ledger.classify.iva_derive": ("ledger.llm.iva_derive",),
+        "ledger.classify.llm_apply": ("ledger.llm.apply",),
+        "ledger.classify.llm_preview": ("ledger.llm.suggest",),
+        "ledger.classify.llm_reject": ("ledger.llm.reject",),
+        "ledger.classify.llm_saturate_apply": ("ledger.llm.apply_saturated",),
+        "ledger.classify.llm_saturate_preview": ("ledger.llm.saturate",),
+        "ledger.classify.llm_saturate_reject": ("ledger.llm.reject",),
+        "ledger.classify.auto_split.reject": ("ledger.llm.reject",),
+        "ledger.classify.auto_split.single_apply": ("ledger.llm.apply",),
+        "ledger.classify.auto_split.single_preview": ("ledger.llm.suggest",),
+        "ledger.classify.auto_split.split_apply": ("ledger.llm.apply_split",),
+        "ledger.classify.auto_split.split_preview": ("ledger.llm.suggest_split",),
+        "ledger.export.csv": ("ledger.export.csv",),
+        "ledger.export.jsonl": ("ledger.export.jsonl",),
+        "ledger.export.xlsx": ("ledger.export.xlsx",),
+        "ledger.remove.commit": ("ledger.lifecycle.remove.commit",),
+        "ledger.remove.preview": ("ledger.lifecycle.remove.preview",),
+        "ledger.reset.commit": ("ledger.lifecycle.reset.commit",),
+        "ledger.reset.preview": ("ledger.lifecycle.reset.preview",),
+        "ledger.rule.apply.commit": ("ledger.classification.rule_apply",),
+        "ledger.rule.apply.preview": ("ledger.rule.apply.preview",),
+        "ledger.split.evidence_read": ("ledger.llm.classify_with_evidence",),
+        "ledger.split.llm_apply": ("ledger.llm.apply_split",),
+        "ledger.split.llm_preview": ("ledger.llm.suggest_split",),
+        "ledger.split.manual": ("ledger.transaction.split",),
     }
 )
 
@@ -2067,6 +2106,11 @@ def _registry_union_capability_id(row: LedgerRegistryRouteRowV1) -> str:
             f"route_{identity_digest}",
         )
     )
+
+
+def _selected_capabilities(mapping: Mapping[str, tuple[str, ...]], identity: str) -> tuple[str, ...]:
+    """Return an exact authored selection or the unchanged observed identity."""
+    return mapping[identity] if identity in mapping else (identity,)
 
 
 def _pascal_identity(capability_id: str) -> str:
@@ -2283,19 +2327,19 @@ def _union_observations(
     observations: list[LedgerUnionSourceObservationV1] = []
     for entry in LEDGER_CLI_COMMAND_CENSUS:
         schema_id = entry.result_schema_identity.replace("-", "_")
-        capability_id = _CLI_CAPABILITY_REMAP.get(schema_id, schema_id)
+        capability_ids = _selected_capabilities(_CLI_CAPABILITY_REMAP, schema_id)
         observations.append(
             LedgerUnionSourceObservationV1(
                 source=DenominatorSourceKind.CLI_ENDPOINT,
                 observation_id=f"cli_endpoint:{entry.command_key}",
-                capability_ids=(capability_id,),
+                capability_ids=capability_ids,
             )
         )
         observations.extend(
             LedgerUnionSourceObservationV1(
                 source=DenominatorSourceKind.CLI_SUBOPERATION,
                 observation_id=f"cli_suboperation:{suboperation_id}",
-                capability_ids=(_SUBOPERATION_CAPABILITY_REMAP.get(suboperation_id, suboperation_id),),
+                capability_ids=_selected_capabilities(_SUBOPERATION_CAPABILITY_REMAP, suboperation_id),
             )
             for suboperation_id in entry.suboperation_ids
         )
@@ -2427,11 +2471,12 @@ def build_ledger_union_denominator(
 
     for entry in LEDGER_CLI_COMMAND_CENSUS:
         schema_id = entry.result_schema_identity.replace("-", "_")
-        capability_id = _CLI_CAPABILITY_REMAP.get(schema_id, schema_id)
-        cli_ownership_by_capability.setdefault(capability_id, set()).add(entry.adapter_ownership.value)
+        capability_ids = _selected_capabilities(_CLI_CAPABILITY_REMAP, schema_id)
+        for capability_id in capability_ids:
+            cli_ownership_by_capability.setdefault(capability_id, set()).add(entry.adapter_ownership.value)
         for suboperation_id in entry.suboperation_ids:
-            mapped = _SUBOPERATION_CAPABILITY_REMAP.get(suboperation_id, suboperation_id)
-            cli_ownership_by_capability.setdefault(mapped, set()).add(entry.adapter_ownership.value)
+            for mapped in _selected_capabilities(_SUBOPERATION_CAPABILITY_REMAP, suboperation_id):
+                cli_ownership_by_capability.setdefault(mapped, set()).add(entry.adapter_ownership.value)
     rows: list[LedgerUnionCapabilityRowV1] = []
     for capability_id, selecting in sorted(observations_by_capability.items()):
         sources = frozenset(item.source for item in selecting)
