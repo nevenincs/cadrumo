@@ -3726,6 +3726,11 @@ class LedgerMatrixAcceptanceAttestationV1(BaseModel):
         _require_observed_at(self.attested_at, field_name="attested_at")
         return self
 
+    @property
+    def calculated_digest(self) -> str:
+        """Hash every independently reviewed assertion without a self-reference."""
+        return _canonical_digest(self)
+
 
 class LedgerGateClosureReceiptV1(BaseModel):
     """An independently accepted, current closure of one ordered pre-TUI gate.
@@ -3740,51 +3745,16 @@ class LedgerGateClosureReceiptV1(BaseModel):
 
     receipt_id: str = Field(min_length=1)
     gate: LedgerGate
-    reviewer: str = Field(min_length=1)
-    ruling: ReviewRuling
-    plan_owner: str = Field(min_length=1)
     matrix_closure_basis_digest: str = Field(min_length=1)
-    denominator_census_id: str = Field(min_length=1)
-    denominator_digest: str = Field(min_length=1)
-    denominator_revision: str = Field(min_length=1)
-    attestation_id: str = Field(min_length=1)
-    attestation_reviewer: str = Field(min_length=1)
-    attestation_review_subject_id: str = Field(min_length=1)
-    attestation_review_subject_revision: str = Field(min_length=1)
-    attestation_review_subject_digest: str = Field(min_length=1)
-    attestation_review_subject_observed_at: datetime
-    accepted_at: datetime
+    acceptance_attestation_digest: str = Field(min_length=1)
 
     @model_validator(mode="after")
     def _check_receipt(self) -> LedgerGateClosureReceiptV1:
         _require_identity(self.receipt_id, field_name="receipt_id", pattern=_GATE_RECEIPT_ID_PATTERN)
         if self.gate not in _GATE_ORDER[:-1]:
             raise ValueError("gate closure receipts are limited to G0 through G3")
-        _require_non_placeholder(self.reviewer, field_name="reviewer")
-        if self.ruling is not ReviewRuling.ACCEPT:
-            raise ValueError("gate closure receipts require an ACCEPT ruling")
-        if self.plan_owner != ACCEPTED_LEDGER_PARITY_PLAN_OWNER:
-            raise ValueError("gate closure receipt must name the accepted clitui-ledger plan identity")
         _require_digest(self.matrix_closure_basis_digest, field_name="matrix_closure_basis_digest")
-        _require_identity(self.denominator_census_id, field_name="denominator_census_id", pattern=_CENSUS_ID_PATTERN)
-        _require_digest(self.denominator_digest, field_name="denominator_digest")
-        _require_non_placeholder(self.denominator_revision, field_name="denominator_revision")
-        _require_identity(self.attestation_id, field_name="attestation_id", pattern=_ATTESTATION_ID_PATTERN)
-        _require_non_placeholder(self.attestation_reviewer, field_name="attestation_reviewer")
-        _require_identity(
-            self.attestation_review_subject_id,
-            field_name="attestation_review_subject_id",
-            pattern=_SUBJECT_ID_PATTERN,
-        )
-        _require_non_placeholder(
-            self.attestation_review_subject_revision, field_name="attestation_review_subject_revision"
-        )
-        _require_digest(self.attestation_review_subject_digest, field_name="attestation_review_subject_digest")
-        _require_observed_at(
-            self.attestation_review_subject_observed_at,
-            field_name="attestation_review_subject_observed_at",
-        )
-        _require_observed_at(self.accepted_at, field_name="accepted_at")
+        _require_digest(self.acceptance_attestation_digest, field_name="acceptance_attestation_digest")
         return self
 
 
@@ -3847,8 +3817,8 @@ class LedgerCapabilityMatrixV1(BaseModel):
         attestation = self.acceptance_attestation
         if attestation.plan_owner != self.controls.sole_ledger_parity_plan_owner:
             raise ValueError("acceptance attestation plan owner differs from campaign controls")
-        if attestation.matrix_digest != self.matrix_digest:
-            raise ValueError("acceptance attestation is not bound to this exact matrix digest")
+        if attestation.matrix_digest != self.attestation_matrix_basis_digest:
+            raise ValueError("acceptance attestation is not bound to the frozen pre-receipt matrix basis")
         if (
             attestation.denominator_digest != self.current_denominator.digest
             or attestation.denominator_revision != self.current_denominator.revision
@@ -3874,28 +3844,13 @@ class LedgerCapabilityMatrixV1(BaseModel):
             self.accepted_gate_closure_receipts
         ):
             raise ValueError("gate closure receipts contain duplicate identities")
+        attestation = self.acceptance_attestation
+        if attestation.ruling is not ReviewRuling.ACCEPT:
+            raise ValueError("gate closure receipts require a current ACCEPT acceptance attestation")
         for receipt in self.accepted_gate_closure_receipts:
-            if receipt.plan_owner != self.controls.sole_ledger_parity_plan_owner:
-                raise ValueError("gate closure receipt plan owner differs from campaign controls")
             if receipt.matrix_closure_basis_digest != self.gate_closure_basis_digest(receipt.gate):
                 raise ValueError("gate closure receipt is stale or not bound to the current matrix closure basis")
-            if (
-                receipt.denominator_census_id != self.current_denominator.census_id
-                or receipt.denominator_digest != self.current_denominator.digest
-                or receipt.denominator_revision != self.current_denominator.revision
-            ):
-                raise ValueError("gate closure receipt is stale or not bound to the current denominator")
-            attestation = self.acceptance_attestation
-            if (
-                attestation.ruling is not ReviewRuling.ACCEPT
-                or receipt.ruling is not ReviewRuling.ACCEPT
-                or receipt.attestation_id != attestation.attestation_id
-                or receipt.attestation_reviewer != attestation.reviewer
-                or receipt.attestation_review_subject_id != attestation.review_subject_id
-                or receipt.attestation_review_subject_revision != attestation.review_subject_revision
-                or receipt.attestation_review_subject_digest != attestation.review_subject_digest
-                or receipt.attestation_review_subject_observed_at != attestation.review_subject_observed_at
-            ):
+            if receipt.acceptance_attestation_digest != attestation.calculated_digest:
                 raise ValueError("gate closure receipt is not bound to the current independent acceptance attestation")
 
     def accepted_gate_closure_receipt(self, gate: LedgerGate) -> LedgerGateClosureReceiptV1 | None:
@@ -3913,6 +3868,35 @@ class LedgerCapabilityMatrixV1(BaseModel):
     def has_campaign_evidence(self, role: EvidenceRole) -> bool:
         """Return whether a current campaign-wide coordinate has a role."""
         return any(coordinate.role is role for coordinate in self.campaign_evidence)
+
+    @property
+    def attestation_matrix_basis_digest(self) -> str:
+        """Return the noncircular exact matrix basis independently reviewed before receipts.
+
+        Receipt publication and the sole authorized active-hold transition are
+        excluded.  The acceptance attestation itself is omitted only here to
+        avoid a hash cycle; the gate closure basis below includes its complete
+        canonical content.
+        """
+        controls = {
+            "sole_ledger_parity_plan_owner": self.controls.sole_ledger_parity_plan_owner,
+            "tui_implementation_hold_recorded": self.controls.tui_implementation_hold_recorded,
+        }
+        return _canonical_digest(
+            {
+                "schema_version": self.schema_version,
+                "controls": controls,
+                "accepted_denominator": self.accepted_denominator,
+                "current_denominator": self.current_denominator,
+                "accepted_authority_dispositions": self.accepted_authority_dispositions,
+                "current_authority_dispositions": self.current_authority_dispositions,
+                "current_subjects": tuple(sorted(self.current_subjects, key=lambda subject: subject.subject_id)),
+                "rows": tuple(sorted(self.rows, key=lambda row: row.identity.row_id)),
+                "campaign_evidence": tuple(
+                    sorted(self.campaign_evidence, key=lambda coordinate: coordinate.evidence_id)
+                ),
+            }
+        )
 
     @property
     def calculated_matrix_digest(self) -> str:
@@ -3959,6 +3943,7 @@ class LedgerCapabilityMatrixV1(BaseModel):
                 "campaign_evidence": tuple(
                     sorted(self.campaign_evidence, key=lambda coordinate: coordinate.evidence_id)
                 ),
+                "acceptance_attestation": self.acceptance_attestation,
             }
         )
 
@@ -4100,8 +4085,8 @@ def _matrix_acceptance_errors(matrix: LedgerCapabilityMatrixV1) -> list[str]:
     attestation = matrix.acceptance_attestation
     if attestation.plan_owner != matrix.controls.sole_ledger_parity_plan_owner:
         errors.append("acceptance attestation plan owner differs from campaign controls")
-    if attestation.matrix_digest != matrix.matrix_digest:
-        errors.append("acceptance attestation is not bound to this exact matrix digest")
+    if attestation.matrix_digest != matrix.attestation_matrix_basis_digest:
+        errors.append("acceptance attestation is not bound to the frozen pre-receipt matrix basis")
     if (
         attestation.denominator_digest != matrix.current_denominator.digest
         or attestation.denominator_revision != matrix.current_denominator.revision
