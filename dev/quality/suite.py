@@ -88,6 +88,10 @@ GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
         "check-unconsumed-export-ratchet",
         (sys.executable, "-m", "dev.quality.unconsumed_export_ratchet"),
     ),
+    (
+        "check-write-path-backlog",
+        (sys.executable, "-m", "dev.quality.write_path_backlog"),
+    ),
 )
 
 

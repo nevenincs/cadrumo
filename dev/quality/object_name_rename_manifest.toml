@@ -1,0 +1,1024 @@
+schema_version = 1
+inventory_digest = "sha256:a6bdcc403fee2d73f49a9a05468753f38de45217c87124c2c9d2c746084c4131"
+
+[[operations]]
+operation_id = "rename-workflowalreadyfileddetails"
+finding_id = "sha256:62dd91258ce46d7d5e7dba3550e5cdc69ac55fcb2244ed5bf5a57730e3ba4214"
+operation_kind = "symbol-rename"
+disposition = "lexical-singular"
+lifecycle = "reviewed"
+old_locator = "class:cadrumo.application.workflow.run_models.WorkflowAlreadyFiledDetails#binding=1"
+old_path = "src/cadrumo/application/workflow/run_models.py"
+new_locator = "class:cadrumo.application.workflow.run_models.WorkflowAlreadyFiledDetail#binding=1"
+new_path = "src/cadrumo/application/workflow/run_models.py"
+owner = "application-workflow"
+rationale = "The model carries one step's diagnostic detail or one bundle of run facts; the plural name implied a collection the type does not hold."
+expected_reference_classes = ["definition", "shared-consumer", "static-import"]
+changed_paths = ["src/cadrumo/application/modelo/tests/test_file_flow_filing.py", "src/cadrumo/application/modelo/tests/test_file_flow_verify.py", "src/cadrumo/application/workflow/engine.py", "src/cadrumo/application/workflow/engine_recording.py", "src/cadrumo/application/workflow/resume.py", "src/cadrumo/application/workflow/run_models.py", "src/cadrumo/application/workflow/tests/test_models.py", "src/cadrumo/application/workflow/tests/test_resume.py", "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py", "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py", "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py", "src/cadrumo/entrypoints/cli/tests/test_work_resume.py", "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"]
+generator_commands = []
+focused_gates = [
+  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/application/workflow/tests/test_models.py", "-q"],
+  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/application/workflow/run_models.py"],
+]
+moves = []
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/modelo/tests/test_file_flow_filing.py"
+sha256 = "sha256:4944e9a437adca403ff87c9926a37e279573be4cef06a8bdafc522fedfc4eada"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/modelo/tests/test_file_flow_verify.py"
+sha256 = "sha256:b1de005cd6971d09ac0d9c25736298c3e049a05a9f78652d05f702308261931c"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/engine.py"
+sha256 = "sha256:0537de4a8e40a60084fbad08d4e9a7f886b9a09c0f2e4f3befce9dc1166ce813"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/engine_recording.py"
+sha256 = "sha256:492cdd62f30b16e6586fb48491e0a1145725e44954ad9087ceb2dd2382f74ee0"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/resume.py"
+sha256 = "sha256:9ff249518814d3bc7921b71a775fc12c2dabda31734d367f0cb34fcf7a64a59f"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/run_models.py"
+sha256 = "sha256:132f87c8ac2343607bc607bd889178567f68c51627c04378beae7a549d6a63e7"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_models.py"
+sha256 = "sha256:6ff8029cb40aaf3e01df5363a8b4975efca04d572af4c6a83fac6e148baf7a75"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_resume.py"
+sha256 = "sha256:b85dc7e4119e23a3beeebba1b536b4f47fe91b25c179f101fdd2a633a5b52faa"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py"
+sha256 = "sha256:3b60db978f3ea7065dd951b8bdf3bc274d98600afc7914a5237970539af0d7b1"
+
+[[operations.preconditions]]
+path = "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py"
+sha256 = "sha256:6e2110d33720789377b3ff6991818d9df55aa0daa84c75c8d9baa5846d6ece93"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py"
+sha256 = "sha256:e29e385b857b426cfb857602bef03bb3c8e71c09c15cc8fd84000f3ccf78527d"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/tests/test_work_resume.py"
+sha256 = "sha256:3b7bb628b08540c9ce0086634e72f1e95adee54ce6d331f2b646d53c45adc9c0"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"
+sha256 = "sha256:6ddb1015bbfc0a28e1970a8c9a140968434323b139a7c679c3bbcbe87a55a5da"
+
+[[operations]]
+operation_id = "rename-workflowauthcheckdetails"
+finding_id = "sha256:16c8d77e85894f335dee3a81ec978740b65b973e9a3a0cdb4c26b13f05c464d9"
+operation_kind = "symbol-rename"
+disposition = "lexical-singular"
+lifecycle = "reviewed"
+old_locator = "class:cadrumo.application.workflow.run_models.WorkflowAuthCheckDetails#binding=1"
+old_path = "src/cadrumo/application/workflow/run_models.py"
+new_locator = "class:cadrumo.application.workflow.run_models.WorkflowAuthCheckDetail#binding=1"
+new_path = "src/cadrumo/application/workflow/run_models.py"
+owner = "application-workflow"
+rationale = "The model carries one step's diagnostic detail or one bundle of run facts; the plural name implied a collection the type does not hold."
+expected_reference_classes = ["definition", "shared-consumer", "static-import"]
+changed_paths = ["src/cadrumo/application/modelo/tests/test_file_flow_filing.py", "src/cadrumo/application/modelo/tests/test_file_flow_verify.py", "src/cadrumo/application/workflow/engine.py", "src/cadrumo/application/workflow/engine_recording.py", "src/cadrumo/application/workflow/resume.py", "src/cadrumo/application/workflow/run_models.py", "src/cadrumo/application/workflow/tests/test_models.py", "src/cadrumo/application/workflow/tests/test_resume.py", "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py", "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py", "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py", "src/cadrumo/entrypoints/cli/tests/test_work_resume.py", "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"]
+generator_commands = []
+focused_gates = [
+  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/application/workflow/tests/test_models.py", "-q"],
+  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/application/workflow/run_models.py"],
+]
+moves = []
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/modelo/tests/test_file_flow_filing.py"
+sha256 = "sha256:4944e9a437adca403ff87c9926a37e279573be4cef06a8bdafc522fedfc4eada"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/modelo/tests/test_file_flow_verify.py"
+sha256 = "sha256:b1de005cd6971d09ac0d9c25736298c3e049a05a9f78652d05f702308261931c"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/engine.py"
+sha256 = "sha256:0537de4a8e40a60084fbad08d4e9a7f886b9a09c0f2e4f3befce9dc1166ce813"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/engine_recording.py"
+sha256 = "sha256:492cdd62f30b16e6586fb48491e0a1145725e44954ad9087ceb2dd2382f74ee0"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/resume.py"
+sha256 = "sha256:9ff249518814d3bc7921b71a775fc12c2dabda31734d367f0cb34fcf7a64a59f"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/run_models.py"
+sha256 = "sha256:132f87c8ac2343607bc607bd889178567f68c51627c04378beae7a549d6a63e7"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_models.py"
+sha256 = "sha256:6ff8029cb40aaf3e01df5363a8b4975efca04d572af4c6a83fac6e148baf7a75"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_resume.py"
+sha256 = "sha256:b85dc7e4119e23a3beeebba1b536b4f47fe91b25c179f101fdd2a633a5b52faa"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py"
+sha256 = "sha256:3b60db978f3ea7065dd951b8bdf3bc274d98600afc7914a5237970539af0d7b1"
+
+[[operations.preconditions]]
+path = "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py"
+sha256 = "sha256:6e2110d33720789377b3ff6991818d9df55aa0daa84c75c8d9baa5846d6ece93"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py"
+sha256 = "sha256:e29e385b857b426cfb857602bef03bb3c8e71c09c15cc8fd84000f3ccf78527d"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/tests/test_work_resume.py"
+sha256 = "sha256:3b7bb628b08540c9ce0086634e72f1e95adee54ce6d331f2b646d53c45adc9c0"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"
+sha256 = "sha256:6ddb1015bbfc0a28e1970a8c9a140968434323b139a7c679c3bbcbe87a55a5da"
+
+[[operations]]
+operation_id = "rename-workflowdeadlinecontextdetails"
+finding_id = "sha256:8d5a2b4d89f89fc963233df475542ad881038efbbc1cc727a15f8911370aa803"
+operation_kind = "symbol-rename"
+disposition = "lexical-singular"
+lifecycle = "reviewed"
+old_locator = "class:cadrumo.application.workflow.run_models.WorkflowDeadlineContextDetails#binding=1"
+old_path = "src/cadrumo/application/workflow/run_models.py"
+new_locator = "class:cadrumo.application.workflow.run_models.WorkflowDeadlineContextDetail#binding=1"
+new_path = "src/cadrumo/application/workflow/run_models.py"
+owner = "application-workflow"
+rationale = "The model carries one step's diagnostic detail or one bundle of run facts; the plural name implied a collection the type does not hold."
+expected_reference_classes = ["definition", "shared-consumer", "static-import"]
+changed_paths = ["src/cadrumo/application/modelo/tests/test_file_flow_filing.py", "src/cadrumo/application/modelo/tests/test_file_flow_verify.py", "src/cadrumo/application/workflow/engine.py", "src/cadrumo/application/workflow/engine_recording.py", "src/cadrumo/application/workflow/resume.py", "src/cadrumo/application/workflow/run_models.py", "src/cadrumo/application/workflow/tests/test_models.py", "src/cadrumo/application/workflow/tests/test_resume.py", "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py", "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py", "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py", "src/cadrumo/entrypoints/cli/tests/test_work_resume.py", "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"]
+generator_commands = []
+focused_gates = [
+  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/application/workflow/tests/test_models.py", "-q"],
+  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/application/workflow/run_models.py"],
+]
+moves = []
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/modelo/tests/test_file_flow_filing.py"
+sha256 = "sha256:4944e9a437adca403ff87c9926a37e279573be4cef06a8bdafc522fedfc4eada"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/modelo/tests/test_file_flow_verify.py"
+sha256 = "sha256:b1de005cd6971d09ac0d9c25736298c3e049a05a9f78652d05f702308261931c"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/engine.py"
+sha256 = "sha256:0537de4a8e40a60084fbad08d4e9a7f886b9a09c0f2e4f3befce9dc1166ce813"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/engine_recording.py"
+sha256 = "sha256:492cdd62f30b16e6586fb48491e0a1145725e44954ad9087ceb2dd2382f74ee0"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/resume.py"
+sha256 = "sha256:9ff249518814d3bc7921b71a775fc12c2dabda31734d367f0cb34fcf7a64a59f"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/run_models.py"
+sha256 = "sha256:132f87c8ac2343607bc607bd889178567f68c51627c04378beae7a549d6a63e7"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_models.py"
+sha256 = "sha256:6ff8029cb40aaf3e01df5363a8b4975efca04d572af4c6a83fac6e148baf7a75"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_resume.py"
+sha256 = "sha256:b85dc7e4119e23a3beeebba1b536b4f47fe91b25c179f101fdd2a633a5b52faa"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py"
+sha256 = "sha256:3b60db978f3ea7065dd951b8bdf3bc274d98600afc7914a5237970539af0d7b1"
+
+[[operations.preconditions]]
+path = "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py"
+sha256 = "sha256:6e2110d33720789377b3ff6991818d9df55aa0daa84c75c8d9baa5846d6ece93"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py"
+sha256 = "sha256:e29e385b857b426cfb857602bef03bb3c8e71c09c15cc8fd84000f3ccf78527d"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/tests/test_work_resume.py"
+sha256 = "sha256:3b7bb628b08540c9ce0086634e72f1e95adee54ce6d331f2b646d53c45adc9c0"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"
+sha256 = "sha256:6ddb1015bbfc0a28e1970a8c9a140968434323b139a7c679c3bbcbe87a55a5da"
+
+[[operations]]
+operation_id = "rename-workflowdeadlinerecoveryfacts"
+finding_id = "sha256:c48d58d2858cbcb0fb4b8daf5ed4582b377df45768b31e894b4582ec7a8e3f37"
+operation_kind = "symbol-rename"
+disposition = "lexical-singular"
+lifecycle = "reviewed"
+old_locator = "class:cadrumo.application.workflow.run_models.WorkflowDeadlineRecoveryFacts#binding=1"
+old_path = "src/cadrumo/application/workflow/run_models.py"
+new_locator = "class:cadrumo.application.workflow.run_models.WorkflowDeadlineRecoveryFactSet#binding=1"
+new_path = "src/cadrumo/application/workflow/run_models.py"
+owner = "application-workflow"
+rationale = "The model carries one step's diagnostic detail or one bundle of run facts; the plural name implied a collection the type does not hold."
+expected_reference_classes = ["definition", "shared-consumer", "static-import"]
+changed_paths = ["src/cadrumo/application/modelo/tests/test_file_flow_filing.py", "src/cadrumo/application/modelo/tests/test_file_flow_verify.py", "src/cadrumo/application/workflow/engine.py", "src/cadrumo/application/workflow/engine_recording.py", "src/cadrumo/application/workflow/resume.py", "src/cadrumo/application/workflow/run_models.py", "src/cadrumo/application/workflow/tests/test_models.py", "src/cadrumo/application/workflow/tests/test_resume.py", "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py", "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py", "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py", "src/cadrumo/entrypoints/cli/tests/test_work_resume.py", "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"]
+generator_commands = []
+focused_gates = [
+  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/application/workflow/tests/test_models.py", "-q"],
+  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/application/workflow/run_models.py"],
+]
+moves = []
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/modelo/tests/test_file_flow_filing.py"
+sha256 = "sha256:4944e9a437adca403ff87c9926a37e279573be4cef06a8bdafc522fedfc4eada"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/modelo/tests/test_file_flow_verify.py"
+sha256 = "sha256:b1de005cd6971d09ac0d9c25736298c3e049a05a9f78652d05f702308261931c"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/engine.py"
+sha256 = "sha256:0537de4a8e40a60084fbad08d4e9a7f886b9a09c0f2e4f3befce9dc1166ce813"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/engine_recording.py"
+sha256 = "sha256:492cdd62f30b16e6586fb48491e0a1145725e44954ad9087ceb2dd2382f74ee0"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/resume.py"
+sha256 = "sha256:9ff249518814d3bc7921b71a775fc12c2dabda31734d367f0cb34fcf7a64a59f"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/run_models.py"
+sha256 = "sha256:132f87c8ac2343607bc607bd889178567f68c51627c04378beae7a549d6a63e7"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_models.py"
+sha256 = "sha256:6ff8029cb40aaf3e01df5363a8b4975efca04d572af4c6a83fac6e148baf7a75"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_resume.py"
+sha256 = "sha256:b85dc7e4119e23a3beeebba1b536b4f47fe91b25c179f101fdd2a633a5b52faa"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py"
+sha256 = "sha256:3b60db978f3ea7065dd951b8bdf3bc274d98600afc7914a5237970539af0d7b1"
+
+[[operations.preconditions]]
+path = "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py"
+sha256 = "sha256:6e2110d33720789377b3ff6991818d9df55aa0daa84c75c8d9baa5846d6ece93"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py"
+sha256 = "sha256:e29e385b857b426cfb857602bef03bb3c8e71c09c15cc8fd84000f3ccf78527d"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/tests/test_work_resume.py"
+sha256 = "sha256:3b7bb628b08540c9ce0086634e72f1e95adee54ce6d331f2b646d53c45adc9c0"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"
+sha256 = "sha256:6ddb1015bbfc0a28e1970a8c9a140968434323b139a7c679c3bbcbe87a55a5da"
+
+[[operations]]
+operation_id = "rename-workflowdraftbuiltdetails"
+finding_id = "sha256:1ce6ebe6125ab414c45e3888ecf9e49426249bf81d15e9759a02870159813900"
+operation_kind = "symbol-rename"
+disposition = "lexical-singular"
+lifecycle = "reviewed"
+old_locator = "class:cadrumo.application.workflow.run_models.WorkflowDraftBuiltDetails#binding=1"
+old_path = "src/cadrumo/application/workflow/run_models.py"
+new_locator = "class:cadrumo.application.workflow.run_models.WorkflowDraftBuiltDetail#binding=1"
+new_path = "src/cadrumo/application/workflow/run_models.py"
+owner = "application-workflow"
+rationale = "The model carries one step's diagnostic detail or one bundle of run facts; the plural name implied a collection the type does not hold."
+expected_reference_classes = ["definition", "shared-consumer", "static-import"]
+changed_paths = ["src/cadrumo/application/modelo/tests/test_file_flow_filing.py", "src/cadrumo/application/modelo/tests/test_file_flow_verify.py", "src/cadrumo/application/workflow/engine.py", "src/cadrumo/application/workflow/engine_recording.py", "src/cadrumo/application/workflow/resume.py", "src/cadrumo/application/workflow/run_models.py", "src/cadrumo/application/workflow/tests/test_models.py", "src/cadrumo/application/workflow/tests/test_resume.py", "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py", "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py", "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py", "src/cadrumo/entrypoints/cli/tests/test_work_resume.py", "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"]
+generator_commands = []
+focused_gates = [
+  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/application/workflow/tests/test_models.py", "-q"],
+  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/application/workflow/run_models.py"],
+]
+moves = []
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/modelo/tests/test_file_flow_filing.py"
+sha256 = "sha256:4944e9a437adca403ff87c9926a37e279573be4cef06a8bdafc522fedfc4eada"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/modelo/tests/test_file_flow_verify.py"
+sha256 = "sha256:b1de005cd6971d09ac0d9c25736298c3e049a05a9f78652d05f702308261931c"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/engine.py"
+sha256 = "sha256:0537de4a8e40a60084fbad08d4e9a7f886b9a09c0f2e4f3befce9dc1166ce813"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/engine_recording.py"
+sha256 = "sha256:492cdd62f30b16e6586fb48491e0a1145725e44954ad9087ceb2dd2382f74ee0"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/resume.py"
+sha256 = "sha256:9ff249518814d3bc7921b71a775fc12c2dabda31734d367f0cb34fcf7a64a59f"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/run_models.py"
+sha256 = "sha256:132f87c8ac2343607bc607bd889178567f68c51627c04378beae7a549d6a63e7"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_models.py"
+sha256 = "sha256:6ff8029cb40aaf3e01df5363a8b4975efca04d572af4c6a83fac6e148baf7a75"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_resume.py"
+sha256 = "sha256:b85dc7e4119e23a3beeebba1b536b4f47fe91b25c179f101fdd2a633a5b52faa"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py"
+sha256 = "sha256:3b60db978f3ea7065dd951b8bdf3bc274d98600afc7914a5237970539af0d7b1"
+
+[[operations.preconditions]]
+path = "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py"
+sha256 = "sha256:6e2110d33720789377b3ff6991818d9df55aa0daa84c75c8d9baa5846d6ece93"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py"
+sha256 = "sha256:e29e385b857b426cfb857602bef03bb3c8e71c09c15cc8fd84000f3ccf78527d"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/tests/test_work_resume.py"
+sha256 = "sha256:3b7bb628b08540c9ce0086634e72f1e95adee54ce6d331f2b646d53c45adc9c0"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"
+sha256 = "sha256:6ddb1015bbfc0a28e1970a8c9a140968434323b139a7c679c3bbcbe87a55a5da"
+
+[[operations]]
+operation_id = "rename-workflowdraftmismatchdetails"
+finding_id = "sha256:2ef72225d4d8bacebd19f295bb74c9fe4bdd45bd744a4700aafc8688ec7dfb8b"
+operation_kind = "symbol-rename"
+disposition = "lexical-singular"
+lifecycle = "reviewed"
+old_locator = "class:cadrumo.application.workflow.run_models.WorkflowDraftMismatchDetails#binding=1"
+old_path = "src/cadrumo/application/workflow/run_models.py"
+new_locator = "class:cadrumo.application.workflow.run_models.WorkflowDraftMismatchDetail#binding=1"
+new_path = "src/cadrumo/application/workflow/run_models.py"
+owner = "application-workflow"
+rationale = "The model carries one step's diagnostic detail or one bundle of run facts; the plural name implied a collection the type does not hold."
+expected_reference_classes = ["definition", "shared-consumer", "static-import"]
+changed_paths = ["src/cadrumo/application/modelo/tests/test_file_flow_filing.py", "src/cadrumo/application/modelo/tests/test_file_flow_verify.py", "src/cadrumo/application/workflow/engine.py", "src/cadrumo/application/workflow/engine_recording.py", "src/cadrumo/application/workflow/resume.py", "src/cadrumo/application/workflow/run_models.py", "src/cadrumo/application/workflow/tests/test_models.py", "src/cadrumo/application/workflow/tests/test_resume.py", "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py", "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py", "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py", "src/cadrumo/entrypoints/cli/tests/test_work_resume.py", "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"]
+generator_commands = []
+focused_gates = [
+  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/application/workflow/tests/test_models.py", "-q"],
+  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/application/workflow/run_models.py"],
+]
+moves = []
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/modelo/tests/test_file_flow_filing.py"
+sha256 = "sha256:4944e9a437adca403ff87c9926a37e279573be4cef06a8bdafc522fedfc4eada"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/modelo/tests/test_file_flow_verify.py"
+sha256 = "sha256:b1de005cd6971d09ac0d9c25736298c3e049a05a9f78652d05f702308261931c"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/engine.py"
+sha256 = "sha256:0537de4a8e40a60084fbad08d4e9a7f886b9a09c0f2e4f3befce9dc1166ce813"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/engine_recording.py"
+sha256 = "sha256:492cdd62f30b16e6586fb48491e0a1145725e44954ad9087ceb2dd2382f74ee0"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/resume.py"
+sha256 = "sha256:9ff249518814d3bc7921b71a775fc12c2dabda31734d367f0cb34fcf7a64a59f"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/run_models.py"
+sha256 = "sha256:132f87c8ac2343607bc607bd889178567f68c51627c04378beae7a549d6a63e7"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_models.py"
+sha256 = "sha256:6ff8029cb40aaf3e01df5363a8b4975efca04d572af4c6a83fac6e148baf7a75"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_resume.py"
+sha256 = "sha256:b85dc7e4119e23a3beeebba1b536b4f47fe91b25c179f101fdd2a633a5b52faa"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py"
+sha256 = "sha256:3b60db978f3ea7065dd951b8bdf3bc274d98600afc7914a5237970539af0d7b1"
+
+[[operations.preconditions]]
+path = "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py"
+sha256 = "sha256:6e2110d33720789377b3ff6991818d9df55aa0daa84c75c8d9baa5846d6ece93"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py"
+sha256 = "sha256:e29e385b857b426cfb857602bef03bb3c8e71c09c15cc8fd84000f3ccf78527d"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/tests/test_work_resume.py"
+sha256 = "sha256:3b7bb628b08540c9ce0086634e72f1e95adee54ce6d331f2b646d53c45adc9c0"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"
+sha256 = "sha256:6ddb1015bbfc0a28e1970a8c9a140968434323b139a7c679c3bbcbe87a55a5da"
+
+[[operations]]
+operation_id = "rename-workflowdraftnotreadydetails"
+finding_id = "sha256:9000e978e1511cebc7493ec74506662f3a126081a816cd90ea06ac703ebdab22"
+operation_kind = "symbol-rename"
+disposition = "lexical-singular"
+lifecycle = "reviewed"
+old_locator = "class:cadrumo.application.workflow.run_models.WorkflowDraftNotReadyDetails#binding=1"
+old_path = "src/cadrumo/application/workflow/run_models.py"
+new_locator = "class:cadrumo.application.workflow.run_models.WorkflowDraftNotReadyDetail#binding=1"
+new_path = "src/cadrumo/application/workflow/run_models.py"
+owner = "application-workflow"
+rationale = "The model carries one step's diagnostic detail or one bundle of run facts; the plural name implied a collection the type does not hold."
+expected_reference_classes = ["definition", "shared-consumer", "static-import"]
+changed_paths = ["src/cadrumo/application/modelo/tests/test_file_flow_filing.py", "src/cadrumo/application/modelo/tests/test_file_flow_verify.py", "src/cadrumo/application/workflow/engine.py", "src/cadrumo/application/workflow/engine_recording.py", "src/cadrumo/application/workflow/resume.py", "src/cadrumo/application/workflow/run_models.py", "src/cadrumo/application/workflow/tests/test_models.py", "src/cadrumo/application/workflow/tests/test_resume.py", "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py", "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py", "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py", "src/cadrumo/entrypoints/cli/tests/test_work_resume.py", "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"]
+generator_commands = []
+focused_gates = [
+  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/application/workflow/tests/test_models.py", "-q"],
+  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/application/workflow/run_models.py"],
+]
+moves = []
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/modelo/tests/test_file_flow_filing.py"
+sha256 = "sha256:4944e9a437adca403ff87c9926a37e279573be4cef06a8bdafc522fedfc4eada"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/modelo/tests/test_file_flow_verify.py"
+sha256 = "sha256:b1de005cd6971d09ac0d9c25736298c3e049a05a9f78652d05f702308261931c"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/engine.py"
+sha256 = "sha256:0537de4a8e40a60084fbad08d4e9a7f886b9a09c0f2e4f3befce9dc1166ce813"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/engine_recording.py"
+sha256 = "sha256:492cdd62f30b16e6586fb48491e0a1145725e44954ad9087ceb2dd2382f74ee0"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/resume.py"
+sha256 = "sha256:9ff249518814d3bc7921b71a775fc12c2dabda31734d367f0cb34fcf7a64a59f"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/run_models.py"
+sha256 = "sha256:132f87c8ac2343607bc607bd889178567f68c51627c04378beae7a549d6a63e7"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_models.py"
+sha256 = "sha256:6ff8029cb40aaf3e01df5363a8b4975efca04d572af4c6a83fac6e148baf7a75"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_resume.py"
+sha256 = "sha256:b85dc7e4119e23a3beeebba1b536b4f47fe91b25c179f101fdd2a633a5b52faa"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py"
+sha256 = "sha256:3b60db978f3ea7065dd951b8bdf3bc274d98600afc7914a5237970539af0d7b1"
+
+[[operations.preconditions]]
+path = "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py"
+sha256 = "sha256:6e2110d33720789377b3ff6991818d9df55aa0daa84c75c8d9baa5846d6ece93"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py"
+sha256 = "sha256:e29e385b857b426cfb857602bef03bb3c8e71c09c15cc8fd84000f3ccf78527d"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/tests/test_work_resume.py"
+sha256 = "sha256:3b7bb628b08540c9ce0086634e72f1e95adee54ce6d331f2b646d53c45adc9c0"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"
+sha256 = "sha256:6ddb1015bbfc0a28e1970a8c9a140968434323b139a7c679c3bbcbe87a55a5da"
+
+[[operations]]
+operation_id = "rename-workflowfailuredetails"
+finding_id = "sha256:f32f8935973bd93f878c14464626462f46c28fdb12bae642025c7bcbc0ede16f"
+operation_kind = "symbol-rename"
+disposition = "lexical-singular"
+lifecycle = "reviewed"
+old_locator = "class:cadrumo.application.workflow.run_models.WorkflowFailureDetails#binding=1"
+old_path = "src/cadrumo/application/workflow/run_models.py"
+new_locator = "class:cadrumo.application.workflow.run_models.WorkflowFailureDetail#binding=1"
+new_path = "src/cadrumo/application/workflow/run_models.py"
+owner = "application-workflow"
+rationale = "The model carries one step's diagnostic detail or one bundle of run facts; the plural name implied a collection the type does not hold."
+expected_reference_classes = ["definition", "shared-consumer", "static-import"]
+changed_paths = ["src/cadrumo/application/modelo/tests/test_file_flow_filing.py", "src/cadrumo/application/modelo/tests/test_file_flow_verify.py", "src/cadrumo/application/workflow/engine.py", "src/cadrumo/application/workflow/engine_recording.py", "src/cadrumo/application/workflow/resume.py", "src/cadrumo/application/workflow/run_models.py", "src/cadrumo/application/workflow/tests/test_models.py", "src/cadrumo/application/workflow/tests/test_resume.py", "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py", "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py", "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py", "src/cadrumo/entrypoints/cli/tests/test_work_resume.py", "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"]
+generator_commands = []
+focused_gates = [
+  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/application/workflow/tests/test_models.py", "-q"],
+  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/application/workflow/run_models.py"],
+]
+moves = []
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/modelo/tests/test_file_flow_filing.py"
+sha256 = "sha256:4944e9a437adca403ff87c9926a37e279573be4cef06a8bdafc522fedfc4eada"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/modelo/tests/test_file_flow_verify.py"
+sha256 = "sha256:b1de005cd6971d09ac0d9c25736298c3e049a05a9f78652d05f702308261931c"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/engine.py"
+sha256 = "sha256:0537de4a8e40a60084fbad08d4e9a7f886b9a09c0f2e4f3befce9dc1166ce813"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/engine_recording.py"
+sha256 = "sha256:492cdd62f30b16e6586fb48491e0a1145725e44954ad9087ceb2dd2382f74ee0"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/resume.py"
+sha256 = "sha256:9ff249518814d3bc7921b71a775fc12c2dabda31734d367f0cb34fcf7a64a59f"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/run_models.py"
+sha256 = "sha256:132f87c8ac2343607bc607bd889178567f68c51627c04378beae7a549d6a63e7"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_models.py"
+sha256 = "sha256:6ff8029cb40aaf3e01df5363a8b4975efca04d572af4c6a83fac6e148baf7a75"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_resume.py"
+sha256 = "sha256:b85dc7e4119e23a3beeebba1b536b4f47fe91b25c179f101fdd2a633a5b52faa"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py"
+sha256 = "sha256:3b60db978f3ea7065dd951b8bdf3bc274d98600afc7914a5237970539af0d7b1"
+
+[[operations.preconditions]]
+path = "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py"
+sha256 = "sha256:6e2110d33720789377b3ff6991818d9df55aa0daa84c75c8d9baa5846d6ece93"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py"
+sha256 = "sha256:e29e385b857b426cfb857602bef03bb3c8e71c09c15cc8fd84000f3ccf78527d"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/tests/test_work_resume.py"
+sha256 = "sha256:3b7bb628b08540c9ce0086634e72f1e95adee54ce6d331f2b646d53c45adc9c0"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"
+sha256 = "sha256:6ddb1015bbfc0a28e1970a8c9a140968434323b139a7c679c3bbcbe87a55a5da"
+
+[[operations]]
+operation_id = "rename-workflowinboxblockeddetails"
+finding_id = "sha256:2147da38a524f06278f64b9968fa93a2b9843f1964fd91da46a6a19f744e223b"
+operation_kind = "symbol-rename"
+disposition = "lexical-singular"
+lifecycle = "reviewed"
+old_locator = "class:cadrumo.application.workflow.run_models.WorkflowInboxBlockedDetails#binding=1"
+old_path = "src/cadrumo/application/workflow/run_models.py"
+new_locator = "class:cadrumo.application.workflow.run_models.WorkflowInboxBlockedDetail#binding=1"
+new_path = "src/cadrumo/application/workflow/run_models.py"
+owner = "application-workflow"
+rationale = "The model carries one step's diagnostic detail or one bundle of run facts; the plural name implied a collection the type does not hold."
+expected_reference_classes = ["definition", "shared-consumer", "static-import"]
+changed_paths = ["src/cadrumo/application/modelo/tests/test_file_flow_filing.py", "src/cadrumo/application/modelo/tests/test_file_flow_verify.py", "src/cadrumo/application/workflow/engine.py", "src/cadrumo/application/workflow/engine_recording.py", "src/cadrumo/application/workflow/resume.py", "src/cadrumo/application/workflow/run_models.py", "src/cadrumo/application/workflow/tests/test_models.py", "src/cadrumo/application/workflow/tests/test_resume.py", "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py", "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py", "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py", "src/cadrumo/entrypoints/cli/tests/test_work_resume.py", "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"]
+generator_commands = []
+focused_gates = [
+  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/application/workflow/tests/test_models.py", "-q"],
+  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/application/workflow/run_models.py"],
+]
+moves = []
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/modelo/tests/test_file_flow_filing.py"
+sha256 = "sha256:4944e9a437adca403ff87c9926a37e279573be4cef06a8bdafc522fedfc4eada"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/modelo/tests/test_file_flow_verify.py"
+sha256 = "sha256:b1de005cd6971d09ac0d9c25736298c3e049a05a9f78652d05f702308261931c"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/engine.py"
+sha256 = "sha256:0537de4a8e40a60084fbad08d4e9a7f886b9a09c0f2e4f3befce9dc1166ce813"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/engine_recording.py"
+sha256 = "sha256:492cdd62f30b16e6586fb48491e0a1145725e44954ad9087ceb2dd2382f74ee0"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/resume.py"
+sha256 = "sha256:9ff249518814d3bc7921b71a775fc12c2dabda31734d367f0cb34fcf7a64a59f"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/run_models.py"
+sha256 = "sha256:132f87c8ac2343607bc607bd889178567f68c51627c04378beae7a549d6a63e7"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_models.py"
+sha256 = "sha256:6ff8029cb40aaf3e01df5363a8b4975efca04d572af4c6a83fac6e148baf7a75"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_resume.py"
+sha256 = "sha256:b85dc7e4119e23a3beeebba1b536b4f47fe91b25c179f101fdd2a633a5b52faa"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py"
+sha256 = "sha256:3b60db978f3ea7065dd951b8bdf3bc274d98600afc7914a5237970539af0d7b1"
+
+[[operations.preconditions]]
+path = "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py"
+sha256 = "sha256:6e2110d33720789377b3ff6991818d9df55aa0daa84c75c8d9baa5846d6ece93"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py"
+sha256 = "sha256:e29e385b857b426cfb857602bef03bb3c8e71c09c15cc8fd84000f3ccf78527d"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/tests/test_work_resume.py"
+sha256 = "sha256:3b7bb628b08540c9ce0086634e72f1e95adee54ce6d331f2b646d53c45adc9c0"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"
+sha256 = "sha256:6ddb1015bbfc0a28e1970a8c9a140968434323b139a7c679c3bbcbe87a55a5da"
+
+[[operations]]
+operation_id = "rename-workflowinboxskippeddetails"
+finding_id = "sha256:5a8b953fe126dc3e77127a74fa88a03e6b7ef65841464beed460062288a032af"
+operation_kind = "symbol-rename"
+disposition = "lexical-singular"
+lifecycle = "reviewed"
+old_locator = "class:cadrumo.application.workflow.run_models.WorkflowInboxSkippedDetails#binding=1"
+old_path = "src/cadrumo/application/workflow/run_models.py"
+new_locator = "class:cadrumo.application.workflow.run_models.WorkflowInboxSkippedDetail#binding=1"
+new_path = "src/cadrumo/application/workflow/run_models.py"
+owner = "application-workflow"
+rationale = "The model carries one step's diagnostic detail or one bundle of run facts; the plural name implied a collection the type does not hold."
+expected_reference_classes = ["definition", "shared-consumer", "static-import"]
+changed_paths = ["src/cadrumo/application/modelo/tests/test_file_flow_filing.py", "src/cadrumo/application/modelo/tests/test_file_flow_verify.py", "src/cadrumo/application/workflow/engine.py", "src/cadrumo/application/workflow/engine_recording.py", "src/cadrumo/application/workflow/resume.py", "src/cadrumo/application/workflow/run_models.py", "src/cadrumo/application/workflow/tests/test_models.py", "src/cadrumo/application/workflow/tests/test_resume.py", "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py", "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py", "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py", "src/cadrumo/entrypoints/cli/tests/test_work_resume.py", "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"]
+generator_commands = []
+focused_gates = [
+  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/application/workflow/tests/test_models.py", "-q"],
+  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/application/workflow/run_models.py"],
+]
+moves = []
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/modelo/tests/test_file_flow_filing.py"
+sha256 = "sha256:4944e9a437adca403ff87c9926a37e279573be4cef06a8bdafc522fedfc4eada"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/modelo/tests/test_file_flow_verify.py"
+sha256 = "sha256:b1de005cd6971d09ac0d9c25736298c3e049a05a9f78652d05f702308261931c"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/engine.py"
+sha256 = "sha256:0537de4a8e40a60084fbad08d4e9a7f886b9a09c0f2e4f3befce9dc1166ce813"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/engine_recording.py"
+sha256 = "sha256:492cdd62f30b16e6586fb48491e0a1145725e44954ad9087ceb2dd2382f74ee0"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/resume.py"
+sha256 = "sha256:9ff249518814d3bc7921b71a775fc12c2dabda31734d367f0cb34fcf7a64a59f"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/run_models.py"
+sha256 = "sha256:132f87c8ac2343607bc607bd889178567f68c51627c04378beae7a549d6a63e7"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_models.py"
+sha256 = "sha256:6ff8029cb40aaf3e01df5363a8b4975efca04d572af4c6a83fac6e148baf7a75"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_resume.py"
+sha256 = "sha256:b85dc7e4119e23a3beeebba1b536b4f47fe91b25c179f101fdd2a633a5b52faa"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py"
+sha256 = "sha256:3b60db978f3ea7065dd951b8bdf3bc274d98600afc7914a5237970539af0d7b1"
+
+[[operations.preconditions]]
+path = "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py"
+sha256 = "sha256:6e2110d33720789377b3ff6991818d9df55aa0daa84c75c8d9baa5846d6ece93"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py"
+sha256 = "sha256:e29e385b857b426cfb857602bef03bb3c8e71c09c15cc8fd84000f3ccf78527d"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/tests/test_work_resume.py"
+sha256 = "sha256:3b7bb628b08540c9ce0086634e72f1e95adee54ce6d331f2b646d53c45adc9c0"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"
+sha256 = "sha256:6ddb1015bbfc0a28e1970a8c9a140968434323b139a7c679c3bbcbe87a55a5da"
+
+[[operations]]
+operation_id = "rename-workflowobligationfacts"
+finding_id = "sha256:e54b5fe7c3d21803e499df0eae58756067890949fb4358a379d297b17d1bb841"
+operation_kind = "symbol-rename"
+disposition = "lexical-singular"
+lifecycle = "reviewed"
+old_locator = "class:cadrumo.application.workflow.run_models.WorkflowObligationFacts#binding=1"
+old_path = "src/cadrumo/application/workflow/run_models.py"
+new_locator = "class:cadrumo.application.workflow.run_models.WorkflowObligationFactSet#binding=1"
+new_path = "src/cadrumo/application/workflow/run_models.py"
+owner = "application-workflow"
+rationale = "The model carries one step's diagnostic detail or one bundle of run facts; the plural name implied a collection the type does not hold."
+expected_reference_classes = ["definition", "shared-consumer", "static-import"]
+changed_paths = ["src/cadrumo/application/modelo/tests/test_file_flow_filing.py", "src/cadrumo/application/modelo/tests/test_file_flow_verify.py", "src/cadrumo/application/workflow/engine.py", "src/cadrumo/application/workflow/engine_recording.py", "src/cadrumo/application/workflow/resume.py", "src/cadrumo/application/workflow/run_models.py", "src/cadrumo/application/workflow/tests/test_models.py", "src/cadrumo/application/workflow/tests/test_resume.py", "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py", "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py", "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py", "src/cadrumo/entrypoints/cli/tests/test_work_resume.py", "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"]
+generator_commands = []
+focused_gates = [
+  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/application/workflow/tests/test_models.py", "-q"],
+  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/application/workflow/run_models.py"],
+]
+moves = []
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/modelo/tests/test_file_flow_filing.py"
+sha256 = "sha256:4944e9a437adca403ff87c9926a37e279573be4cef06a8bdafc522fedfc4eada"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/modelo/tests/test_file_flow_verify.py"
+sha256 = "sha256:b1de005cd6971d09ac0d9c25736298c3e049a05a9f78652d05f702308261931c"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/engine.py"
+sha256 = "sha256:0537de4a8e40a60084fbad08d4e9a7f886b9a09c0f2e4f3befce9dc1166ce813"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/engine_recording.py"
+sha256 = "sha256:492cdd62f30b16e6586fb48491e0a1145725e44954ad9087ceb2dd2382f74ee0"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/resume.py"
+sha256 = "sha256:9ff249518814d3bc7921b71a775fc12c2dabda31734d367f0cb34fcf7a64a59f"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/run_models.py"
+sha256 = "sha256:132f87c8ac2343607bc607bd889178567f68c51627c04378beae7a549d6a63e7"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_models.py"
+sha256 = "sha256:6ff8029cb40aaf3e01df5363a8b4975efca04d572af4c6a83fac6e148baf7a75"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_resume.py"
+sha256 = "sha256:b85dc7e4119e23a3beeebba1b536b4f47fe91b25c179f101fdd2a633a5b52faa"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py"
+sha256 = "sha256:3b60db978f3ea7065dd951b8bdf3bc274d98600afc7914a5237970539af0d7b1"
+
+[[operations.preconditions]]
+path = "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py"
+sha256 = "sha256:6e2110d33720789377b3ff6991818d9df55aa0daa84c75c8d9baa5846d6ece93"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py"
+sha256 = "sha256:e29e385b857b426cfb857602bef03bb3c8e71c09c15cc8fd84000f3ccf78527d"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/tests/test_work_resume.py"
+sha256 = "sha256:3b7bb628b08540c9ce0086634e72f1e95adee54ce6d331f2b646d53c45adc9c0"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"
+sha256 = "sha256:6ddb1015bbfc0a28e1970a8c9a140968434323b139a7c679c3bbcbe87a55a5da"
+
+[[operations]]
+operation_id = "rename-workflowpreflightfaileddetails"
+finding_id = "sha256:3920f6d458db7a0eefbf24983113fda61c9e2601d8637593d6938d0b7f11e4b3"
+operation_kind = "symbol-rename"
+disposition = "lexical-singular"
+lifecycle = "reviewed"
+old_locator = "class:cadrumo.application.workflow.run_models.WorkflowPreflightFailedDetails#binding=1"
+old_path = "src/cadrumo/application/workflow/run_models.py"
+new_locator = "class:cadrumo.application.workflow.run_models.WorkflowPreflightFailedDetail#binding=1"
+new_path = "src/cadrumo/application/workflow/run_models.py"
+owner = "application-workflow"
+rationale = "The model carries one step's diagnostic detail or one bundle of run facts; the plural name implied a collection the type does not hold."
+expected_reference_classes = ["definition", "shared-consumer", "static-import"]
+changed_paths = ["src/cadrumo/application/modelo/tests/test_file_flow_filing.py", "src/cadrumo/application/modelo/tests/test_file_flow_verify.py", "src/cadrumo/application/workflow/engine.py", "src/cadrumo/application/workflow/engine_recording.py", "src/cadrumo/application/workflow/resume.py", "src/cadrumo/application/workflow/run_models.py", "src/cadrumo/application/workflow/tests/test_models.py", "src/cadrumo/application/workflow/tests/test_resume.py", "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py", "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py", "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py", "src/cadrumo/entrypoints/cli/tests/test_work_resume.py", "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"]
+generator_commands = []
+focused_gates = [
+  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/application/workflow/tests/test_models.py", "-q"],
+  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/application/workflow/run_models.py"],
+]
+moves = []
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/modelo/tests/test_file_flow_filing.py"
+sha256 = "sha256:4944e9a437adca403ff87c9926a37e279573be4cef06a8bdafc522fedfc4eada"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/modelo/tests/test_file_flow_verify.py"
+sha256 = "sha256:b1de005cd6971d09ac0d9c25736298c3e049a05a9f78652d05f702308261931c"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/engine.py"
+sha256 = "sha256:0537de4a8e40a60084fbad08d4e9a7f886b9a09c0f2e4f3befce9dc1166ce813"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/engine_recording.py"
+sha256 = "sha256:492cdd62f30b16e6586fb48491e0a1145725e44954ad9087ceb2dd2382f74ee0"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/resume.py"
+sha256 = "sha256:9ff249518814d3bc7921b71a775fc12c2dabda31734d367f0cb34fcf7a64a59f"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/run_models.py"
+sha256 = "sha256:132f87c8ac2343607bc607bd889178567f68c51627c04378beae7a549d6a63e7"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_models.py"
+sha256 = "sha256:6ff8029cb40aaf3e01df5363a8b4975efca04d572af4c6a83fac6e148baf7a75"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_resume.py"
+sha256 = "sha256:b85dc7e4119e23a3beeebba1b536b4f47fe91b25c179f101fdd2a633a5b52faa"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py"
+sha256 = "sha256:3b60db978f3ea7065dd951b8bdf3bc274d98600afc7914a5237970539af0d7b1"
+
+[[operations.preconditions]]
+path = "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py"
+sha256 = "sha256:6e2110d33720789377b3ff6991818d9df55aa0daa84c75c8d9baa5846d6ece93"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py"
+sha256 = "sha256:e29e385b857b426cfb857602bef03bb3c8e71c09c15cc8fd84000f3ccf78527d"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/tests/test_work_resume.py"
+sha256 = "sha256:3b7bb628b08540c9ce0086634e72f1e95adee54ce6d331f2b646d53c45adc9c0"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"
+sha256 = "sha256:6ddb1015bbfc0a28e1970a8c9a140968434323b139a7c679c3bbcbe87a55a5da"
+
+[[operations]]
+operation_id = "rename-workflowsitehealthfacts"
+finding_id = "sha256:6abcf0044efe575aaa84ebf8451c6a1a5162a9b194fb17efacab52254c0f3d64"
+operation_kind = "symbol-rename"
+disposition = "lexical-singular"
+lifecycle = "reviewed"
+old_locator = "class:cadrumo.application.workflow.run_models.WorkflowSiteHealthFacts#binding=1"
+old_path = "src/cadrumo/application/workflow/run_models.py"
+new_locator = "class:cadrumo.application.workflow.run_models.WorkflowSiteHealthFactSet#binding=1"
+new_path = "src/cadrumo/application/workflow/run_models.py"
+owner = "application-workflow"
+rationale = "The model carries one step's diagnostic detail or one bundle of run facts; the plural name implied a collection the type does not hold."
+expected_reference_classes = ["definition", "shared-consumer", "static-import"]
+changed_paths = ["src/cadrumo/application/modelo/tests/test_file_flow_filing.py", "src/cadrumo/application/modelo/tests/test_file_flow_verify.py", "src/cadrumo/application/workflow/engine.py", "src/cadrumo/application/workflow/engine_recording.py", "src/cadrumo/application/workflow/resume.py", "src/cadrumo/application/workflow/run_models.py", "src/cadrumo/application/workflow/tests/test_models.py", "src/cadrumo/application/workflow/tests/test_resume.py", "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py", "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py", "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py", "src/cadrumo/entrypoints/cli/tests/test_work_resume.py", "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"]
+generator_commands = []
+focused_gates = [
+  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/application/workflow/tests/test_models.py", "-q"],
+  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/application/workflow/run_models.py"],
+]
+moves = []
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/modelo/tests/test_file_flow_filing.py"
+sha256 = "sha256:4944e9a437adca403ff87c9926a37e279573be4cef06a8bdafc522fedfc4eada"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/modelo/tests/test_file_flow_verify.py"
+sha256 = "sha256:b1de005cd6971d09ac0d9c25736298c3e049a05a9f78652d05f702308261931c"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/engine.py"
+sha256 = "sha256:0537de4a8e40a60084fbad08d4e9a7f886b9a09c0f2e4f3befce9dc1166ce813"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/engine_recording.py"
+sha256 = "sha256:492cdd62f30b16e6586fb48491e0a1145725e44954ad9087ceb2dd2382f74ee0"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/resume.py"
+sha256 = "sha256:9ff249518814d3bc7921b71a775fc12c2dabda31734d367f0cb34fcf7a64a59f"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/run_models.py"
+sha256 = "sha256:132f87c8ac2343607bc607bd889178567f68c51627c04378beae7a549d6a63e7"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_models.py"
+sha256 = "sha256:6ff8029cb40aaf3e01df5363a8b4975efca04d572af4c6a83fac6e148baf7a75"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_resume.py"
+sha256 = "sha256:b85dc7e4119e23a3beeebba1b536b4f47fe91b25c179f101fdd2a633a5b52faa"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py"
+sha256 = "sha256:3b60db978f3ea7065dd951b8bdf3bc274d98600afc7914a5237970539af0d7b1"
+
+[[operations.preconditions]]
+path = "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py"
+sha256 = "sha256:6e2110d33720789377b3ff6991818d9df55aa0daa84c75c8d9baa5846d6ece93"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py"
+sha256 = "sha256:e29e385b857b426cfb857602bef03bb3c8e71c09c15cc8fd84000f3ccf78527d"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/tests/test_work_resume.py"
+sha256 = "sha256:3b7bb628b08540c9ce0086634e72f1e95adee54ce6d331f2b646d53c45adc9c0"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"
+sha256 = "sha256:6ddb1015bbfc0a28e1970a8c9a140968434323b139a7c679c3bbcbe87a55a5da"
+
+[[operations]]
+operation_id = "rename-workflowvalidationfaileddetails"
+finding_id = "sha256:a1c852814a2798a01f05977b6357dde90879c71af82b68bf879145d9b1cb8699"
+operation_kind = "symbol-rename"
+disposition = "lexical-singular"
+lifecycle = "reviewed"
+old_locator = "class:cadrumo.application.workflow.run_models.WorkflowValidationFailedDetails#binding=1"
+old_path = "src/cadrumo/application/workflow/run_models.py"
+new_locator = "class:cadrumo.application.workflow.run_models.WorkflowValidationFailedDetail#binding=1"
+new_path = "src/cadrumo/application/workflow/run_models.py"
+owner = "application-workflow"
+rationale = "The model carries one step's diagnostic detail or one bundle of run facts; the plural name implied a collection the type does not hold."
+expected_reference_classes = ["definition", "shared-consumer", "static-import"]
+changed_paths = ["src/cadrumo/application/modelo/tests/test_file_flow_filing.py", "src/cadrumo/application/modelo/tests/test_file_flow_verify.py", "src/cadrumo/application/workflow/engine.py", "src/cadrumo/application/workflow/engine_recording.py", "src/cadrumo/application/workflow/resume.py", "src/cadrumo/application/workflow/run_models.py", "src/cadrumo/application/workflow/tests/test_models.py", "src/cadrumo/application/workflow/tests/test_resume.py", "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py", "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py", "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py", "src/cadrumo/entrypoints/cli/tests/test_work_resume.py", "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"]
+generator_commands = []
+focused_gates = [
+  ["uv", "run", "--no-sync", "pytest", "src/cadrumo/application/workflow/tests/test_models.py", "-q"],
+  ["uv", "run", "--no-sync", "ruff", "check", "src/cadrumo/application/workflow/run_models.py"],
+]
+moves = []
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/modelo/tests/test_file_flow_filing.py"
+sha256 = "sha256:4944e9a437adca403ff87c9926a37e279573be4cef06a8bdafc522fedfc4eada"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/modelo/tests/test_file_flow_verify.py"
+sha256 = "sha256:b1de005cd6971d09ac0d9c25736298c3e049a05a9f78652d05f702308261931c"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/engine.py"
+sha256 = "sha256:0537de4a8e40a60084fbad08d4e9a7f886b9a09c0f2e4f3befce9dc1166ce813"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/engine_recording.py"
+sha256 = "sha256:492cdd62f30b16e6586fb48491e0a1145725e44954ad9087ceb2dd2382f74ee0"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/resume.py"
+sha256 = "sha256:9ff249518814d3bc7921b71a775fc12c2dabda31734d367f0cb34fcf7a64a59f"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/run_models.py"
+sha256 = "sha256:132f87c8ac2343607bc607bd889178567f68c51627c04378beae7a549d6a63e7"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_models.py"
+sha256 = "sha256:6ff8029cb40aaf3e01df5363a8b4975efca04d572af4c6a83fac6e148baf7a75"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_resume.py"
+sha256 = "sha256:b85dc7e4119e23a3beeebba1b536b4f47fe91b25c179f101fdd2a633a5b52faa"
+
+[[operations.preconditions]]
+path = "src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py"
+sha256 = "sha256:3b60db978f3ea7065dd951b8bdf3bc274d98600afc7914a5237970539af0d7b1"
+
+[[operations.preconditions]]
+path = "src/cadrumo/domain/calculations/registry/tests/test_cross_boundary_roundtrip.py"
+sha256 = "sha256:6e2110d33720789377b3ff6991818d9df55aa0daa84c75c8d9baa5846d6ece93"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/modelo_aux_payloads.py"
+sha256 = "sha256:e29e385b857b426cfb857602bef03bb3c8e71c09c15cc8fd84000f3ccf78527d"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/tests/test_work_resume.py"
+sha256 = "sha256:3b7bb628b08540c9ce0086634e72f1e95adee54ce6d331f2b646d53c45adc9c0"
+
+[[operations.preconditions]]
+path = "src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py"
+sha256 = "sha256:6ddb1015bbfc0a28e1970a8c9a140968434323b139a7c679c3bbcbe87a55a5da"
