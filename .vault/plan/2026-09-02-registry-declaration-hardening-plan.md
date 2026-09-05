@@ -9,9 +9,9 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
   - '[[2026-06-10-period-revision-resolution-adr]]'
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
-modified: '2026-09-04'
+modified: '2026-09-05'
 body_schema: body-v2
-body_hash: 'sha256:c0c673d2e048c7a9d9fb14ce5a058a6eb50f1f0f70f1f39dfccfcc171824215c'
+body_hash: 'sha256:9497bed1853a76f7dd88b692b60f1752cff6fb7c1bec577e164901d06f4daaf0'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -500,6 +500,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S618` - Read the glossary render's deduplicated-term evidence and make the approved-concept bound exact, since a concept whose every headword collides is skipped from the page and counted nowhere, and the bound was a less-than-or-equal that absorbed such a drop as a smaller number; `dev/docs/tests/test_glossary_reference.py`.
 - [x] `W02.P02.S619` - Gate the download descriptor's tap, bucket and repository names against the install commands that publish them, since all five location fields were read nowhere while hand-written commands restated the same names, so renaming a tap in the single source of truth would leave every published command pointing at the old one; `dev/docs/tests/test_download_matrix.py`.
 - [x] `W02.P02.S620` - Derive the capability matrix's placeholder and identity checks from the model rather than a hardcoded tuple of field names, since a field added to either declaration would have been silently exempt while the validator went on naming three; `dev/quality/clitui_ledger_capability_matrix.py`.
+- [x] `W02.P02.S621` - Give the M200 reconciliation module a contention-aware budget, since its rebind-refusal case runs 251s alone but measured 305s under the repository's default parallelism against a 300-second wall-clock ceiling it carried no marker for, while the sibling two-channel-proof module already marks its own long case; `dev/registry/tests/test_m200_2024_full_reconciliation.py`.
+- [x] `W02.P02.S622` - Bound the one unbounded child-process wait in a unit-lane test and gate the class, since the per-test ceiling cannot interrupt a thread blocked in wait by the repository's own account, so the worker exits uncleanly and max-worker-restart zero stops the session naming a test that never hung; `dev/packaging/tests/test_build_scratch_reclaim.py dev/tests/test_no_unbounded_subprocess_wait.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
