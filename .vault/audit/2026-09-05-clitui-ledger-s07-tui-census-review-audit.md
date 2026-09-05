@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:85f6bff35493bb50063e2ad5a975dadcc40d7c26a5c626b2f2e2b9cd15c87872'
+body_hash: 'sha256:c6cac07a6aa1142f28c119de28c295446e6935d0b5220a2fa7ba654e1bb3dbc5'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
   - "[[2026-09-04-clitui-ledger-reference]]"
@@ -344,7 +344,8 @@ tests for a same-name nested callable factory and import alias; retain the
 positive test proving that a differently named nested body's local writes do
 not contaminate the enclosing scope.
 
-The focused S07 detector selection passes 26 tests with 135 deselected. Ruff
-format/check, scoped `ty`, basedpyright, and the feature Vault check pass. The
-record/reference/plan preserve the accurate current live observations, but S07
-cannot pass the detector-teeth gate while this same-scope rebinding is silent.
+The focused S07 detector selection passes 26 tests with 135 deselected, and the
+full matrix module passes all 161 tests. Ruff format/check, scoped `ty`,
+basedpyright, and the feature Vault check pass. The record/reference/plan
+preserve the accurate current live observations, but S07 cannot pass the
+detector-teeth gate while this same-scope rebinding is silent.
