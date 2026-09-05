@@ -16,6 +16,7 @@ installed ``vaultspec-rag`` walker (no mocks, no fakes):
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
@@ -151,12 +152,12 @@ def test_tampered_sidecar_is_rejected(tmp_path: Path) -> None:
 
     # Corruption 1: a sha256 that is too short violates the field constraint.
     json_path.write_text(good.replace(output.source_sha256, "deadbeef"), "utf-8")
-    with pytest.raises(PreprocessSidecarError):
+    with pytest.raises(PreprocessSidecarError, match="String should have at least 64 characters"):
         load_sidecar(source_copy)
 
     # Corruption 2: an unexpected field is rejected by extra="forbid".
     json_path.write_text(good.replace('"units":', '"smuggled_field": true,\n  "units":'), "utf-8")
-    with pytest.raises(PreprocessSidecarError):
+    with pytest.raises(PreprocessSidecarError, match="smuggled_field"):
         load_sidecar(source_copy)
 
 
@@ -180,7 +181,17 @@ def test_load_sidecar_refuses_an_unsupported_schema_version(tmp_path: Path, bad_
     assert tampered != good
     json_path.write_text(tampered, encoding="utf-8")
 
-    with pytest.raises(PreprocessSidecarError):
+    # `""` never reaches the schema-version comparison: the field's own
+    # minimum length rejects it first, so this case proves a length
+    # constraint rather than the unsupported-version check it is named for.
+    # Stated rather than hidden - a bare refusal made the two look alike.
+    # The other three expectations are derived from the parameter.
+    expected = (
+        "String should have at least 1 character"
+        if bad_version == ""
+        else f"unsupported preprocess schema_version '{bad_version}'"
+    )
+    with pytest.raises(PreprocessSidecarError, match=re.escape(expected)):
         load_sidecar(source_copy)
 
 

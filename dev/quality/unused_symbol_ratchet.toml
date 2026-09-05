@@ -29,9 +29,8 @@
 "cadrumo.adapters.outbound.aeat.auth.certificate" = 1
 "cadrumo.adapters.outbound.aeat.auth.clave_permanente_support" = 1
 "cadrumo.adapters.outbound.aeat.sede._browser_constants" = 1
-"cadrumo.adapters.outbound.aeat.sede._declarations_fetch" = 1
 "cadrumo.adapters.outbound.aeat.sede.censal_datos" = 1
-"cadrumo.adapters.outbound.aeat.sede.declarations" = 2
+"cadrumo.adapters.outbound.aeat.sede.declarations" = 1
 "cadrumo.adapters.outbound.aeat.sede.declarations_capture" = 1
 "cadrumo.adapters.outbound.aeat.sede.declarations_observations" = 2
 "cadrumo.adapters.outbound.aeat.sede.deudas" = 2
@@ -41,7 +40,6 @@
 "cadrumo.adapters.outbound.google.impersonation" = 1
 "cadrumo.adapters.persistence.profile.assets" = 2
 "cadrumo.adapters.persistence.profile.inventory" = 3
-"cadrumo.adapters.persistence.profile.invoices" = 3
 "cadrumo.adapters.persistence.profile.prorrata_register" = 4
 "cadrumo.adapters.persistence.storage.bucket.directory_layout" = 1
 "cadrumo.adapters.persistence.storage.bucket.output_language_hint" = 2
@@ -62,14 +60,12 @@
 "cadrumo.application.aggregation._evidence_advisory" = 2
 "cadrumo.application.aggregation._retenciones" = 1
 "cadrumo.application.aggregation._source_mesh" = 1
-"cadrumo.application.aggregation.iva_ledger" = 1
 "cadrumo.application.aggregation.ledger_filing_snapshot" = 1
 "cadrumo.application.auth.apoderado_flow" = 1
 "cadrumo.application.auth.catalogue" = 1
 "cadrumo.application.auth.certificate_secret_backend" = 1
 "cadrumo.application.auth.certificate_source_operations" = 1
 "cadrumo.application.auth.certificate_sources" = 1
-"cadrumo.application.auth.operator" = 1
 "cadrumo.application.auth.sessions" = 1
 "cadrumo.application.calculations.prorrata_regularizacion" = 1
 "cadrumo.application.corpus_search.terminology" = 1
@@ -323,7 +319,6 @@
 #: classified in dev/audit/reachability_classification.toml.
 modules = [
   "cadrumo.adapters.persistence.storage.sql.tests.test_secure_objects_schema_lineage",
-  "cadrumo.application.aggregation.tests.test_iva_rate_tier_concurrency_guard",
   "cadrumo.application.operator_surface.tests.test_crud_contract",
   "cadrumo.application.operator_surface.tests.test_crud_registry",
   "cadrumo.application.user_profile.tests.test_custody_retryable_codes_are_declared",

@@ -184,16 +184,27 @@ def test_apply_refuses_explicit_identity_mismatch_before_context(
     assert cli.main(["apply", f"--receipt={receipt_path}", "--receipt-id=sha256:wrong"]) == 2
 
 
+#: Each payload with the refusal it must produce. A bare raise let five
+#: distinct malformations share one verdict, so a loader that rejected
+#: everything at the decode step would still look like three working
+#: checks. The pairs that share a refusal do so because production
+#: catches them at one point: decode failures, then field-set failures.
 @pytest.mark.parametrize(
-    "payload",
-    [b"not-json", b"[]", b"{}", b'{"unexpected":true}', b"\xff"],
+    ("payload", "refusal"),
+    [
+        (b"not-json", "receipt file is invalid"),
+        (b"[]", "receipt schema must be an object"),
+        (b"{}", "receipt schema fields are not exact"),
+        (b'{"unexpected":true}', "receipt schema fields are not exact"),
+        (b"\xff", "receipt file is invalid"),
+    ],
     ids=("invalid-json", "non-object", "missing-fields", "extra-fields", "invalid-utf8"),
 )
-def test_receipt_loader_refuses_malformed_payloads(tmp_path: Path, payload: bytes) -> None:
+def test_receipt_loader_refuses_malformed_payloads(tmp_path: Path, payload: bytes, refusal: str) -> None:
     path = tmp_path / "receipt.json"
     path.write_bytes(payload)
 
-    with pytest.raises(cli.ObjectNameDeclusteringCliError):
+    with pytest.raises(cli.ObjectNameDeclusteringCliError, match=refusal):
         cli._receipt(path)
 
 

@@ -785,7 +785,18 @@ def test_staging_failure_phases_remove_local_sibling(
             lambda path: ".object-name-stage-" in Path(path).name or original_link_check(path),
         )
 
-    with pytest.raises((OSError, ObjectNameReplayError)):
+    # A two-class refusal with no message was the widest claim in this file:
+    # any OSError from any phase satisfied all six cases, so a staging path
+    # that failed at `mkstemp` for every input would have looked like six
+    # working phases. The first four inject an OSError whose message IS the
+    # phase name, so those expectations are derived from the parameter; only
+    # the two production refusals are named.
+    production_refusals = {
+        "digest": "staged replay bytes failed verification",
+        "link": "unsafe cross-filesystem replay staging path",
+    }
+    expected = production_refusals.get(phase, phase)
+    with pytest.raises((OSError, ObjectNameReplayError), match=expected):
         replay_module._stage_bytes(target, b"payload", label="stage")
 
     monkeypatch.setattr(replay_module.os, "fsync", original_fsync)
