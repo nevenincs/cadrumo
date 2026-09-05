@@ -898,7 +898,7 @@ def _dependency_blocked_revisions(
     nothing is actually waiting on.
     """
     if verification is None:
-        return frozenset()
+        return frozenset[str]()
     return frozenset(
         report.calculation_revision_id
         for report in verification.reports.values()

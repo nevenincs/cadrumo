@@ -1095,7 +1095,7 @@ async def test_the_census_comparison_shows_both_values_or_neither(width: int) ->
     [AeatSyncCensusScreen, AeatSyncEvidenceComparisonScreen, AeatSyncReconciliationScreen],
 )
 async def test_every_comparison_surface_shows_both_values_or_neither(
-    screen_type: type[AeatSyncWorkspaceScreen], width: int
+    screen_type: _ScreenFactory, width: int
 ) -> None:
     """One rule, asserted on all three surfaces that compare two sides.
 
@@ -1113,5 +1113,5 @@ async def test_every_comparison_surface_shows_both_values_or_neither(
         app.exit(None)
 
     assert ("local_value" in keys) == ("aeat_value" in keys), (
-        f"{screen_type.__name__} at {width} columns shows half a comparison: {sorted(keys)}"
+        f"{type(screen).__name__} at {width} columns shows half a comparison: {sorted(keys)}"
     )
