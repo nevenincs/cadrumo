@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#reachability-burndown'
 date: '2026-09-04'
-modified: '2026-09-04'
+modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:a249dc66d322a78dbeef1a9cb77e5cbea2fb9d9cf8e756ab4e454e01d540ddf5'
+body_hash: 'sha256:7b39d0eb105c75d5874de428c88912aeb5f86d12646b277d3bb64a3723f9aef5'
 related:
   - "[[2026-09-04-reachability-burndown-reference]]"
 ---
@@ -124,6 +124,28 @@ The class already existed in the tree without a name: `cadrumo.core.address_comp
 carries `design_time_authority` in the module ratchet for exactly this shape. The taxonomy
 now names it, and the remedy for the class is an `[[intentional]]` classification rather
 than a relocation.
+
+### Amendment - the constraint is the evidence, not the search tool
+
+Implementation names semantic search as "a constraint here rather than a convenience",
+and execution could not use it: the `vaultspec-rag` index was unavailable throughout, so
+every classification was grounded by reading the definition, tracing its callers, and
+confirming symbols with grep. The classifications that resulted held -- supersession was
+established from live equivalents and staging from the code's own recorded intent, which
+is what the constraint was protecting.
+
+So the constraint stands but was stated too narrowly. What must not happen is
+classification from a NAME; what establishes intent is evidence in the code and the
+decision corpus, and semantic search is one route to that rather than the only one.
+
+Execution also found a check the ADR does not mention, and it turned out to be the
+decisive one: read the definition body before accepting that a finding needs an owner.
+`find_invoice` was carried as a capability decision for weeks on entirely true reasoning
+about its surroundings -- documented as canonical, live siblings, test usage -- and its
+body was `return catalogue.get(invoice_id)`, a pass-through over an accessor its own
+argument already exposed. Reading the body afterwards for every other deferred finding
+found no second case, which is the point: the check costs one read and the deferral costs
+indefinite carrying.
 
 ## Consequences
 
