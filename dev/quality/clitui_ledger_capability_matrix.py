@@ -2752,6 +2752,16 @@ def _union_observations(
     }
     if declared_missing != observed_missing:
         raise ValueError("missing-product observations and semantic declarations disagree")
+    for item in _LEDGER_BACKEND_OPERATION_DECLARATIONS:
+        observation_id = f"backend_operation:{item.capability_id}"
+        if _selection_for_observation(observation_id) != (item.capability_id,):
+            raise ValueError(f"backend observation selection drifted: {observation_id}")
+    for observation_id, capability_ids in _LEDGER_MISSING_PRODUCT_OBSERVATIONS:
+        if _selection_for_observation(f"missing_product:{observation_id}") != capability_ids:
+            raise ValueError(f"missing-product observation selection drifted: {observation_id}")
+    for observation_id, capability_id in _LEDGER_ARTIFACT_OBSERVATIONS:
+        if _selection_for_observation(f"artifact_product:{observation_id}") != (capability_id,):
+            raise ValueError(f"artifact observation selection drifted: {observation_id}")
     observations: list[LedgerUnionSourceObservationV1] = []
     for entry in LEDGER_CLI_COMMAND_CENSUS:
         observation_id = f"cli_endpoint:{entry.command_key}"
@@ -2784,7 +2794,7 @@ def _union_observations(
             observation_id=f"missing_product:{observation_id}",
             capability_ids=_selection_for_observation(f"missing_product:{observation_id}"),
         )
-        for observation_id, capability_ids in _LEDGER_MISSING_PRODUCT_OBSERVATIONS
+        for observation_id, _capability_ids in _LEDGER_MISSING_PRODUCT_OBSERVATIONS
     )
     observations.extend(
         LedgerUnionSourceObservationV1(
@@ -2800,11 +2810,15 @@ def _union_observations(
             observation_id=f"artifact_product:{observation_id}",
             capability_ids=_selection_for_observation(f"artifact_product:{observation_id}"),
         )
-        for observation_id, capability_id in _LEDGER_ARTIFACT_OBSERVATIONS
+        for observation_id, _capability_id in _LEDGER_ARTIFACT_OBSERVATIONS
     )
     route_rows = {row.destination: row for row in tui.routes}
     if set(route_rows) != set(_LEDGER_TUI_ROUTE_CAPABILITIES):
         raise ValueError("the TUI route-to-capability adjudication is stale")
+    for destination, capability_ids in _LEDGER_TUI_ROUTE_CAPABILITIES.items():
+        observation_id = f"supported_surface:{destination}:{route_rows[destination].reachability}"
+        if _selection_for_observation(observation_id) != capability_ids:
+            raise ValueError(f"TUI observation selection drifted: {observation_id}")
     observations.extend(
         LedgerUnionSourceObservationV1(
             source=DenominatorSourceKind.SUPPORTED_SURFACE,
@@ -2813,7 +2827,7 @@ def _union_observations(
                 f"supported_surface:{destination}:{route_rows[destination].reachability}"
             ),
         )
-        for destination, capability_ids in _LEDGER_TUI_ROUTE_CAPABILITIES.items()
+        for destination, _capability_ids in _LEDGER_TUI_ROUTE_CAPABILITIES.items()
     )
     canonical = tuple(sorted(observations, key=lambda item: (item.source.value, item.observation_id)))
     _validate_non_registry_observation_adjudication(canonical)

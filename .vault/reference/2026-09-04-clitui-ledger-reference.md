@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:5d3e7c91089a35a621d878af76e673908ed7f15945b8ca555a073194f24755de'
+body_hash: 'sha256:a3240bf9c0af3098f66759b35b41e2f42f07f06e6e47996866fc949c3bc973e6'
 related:
   - "[[2026-09-04-clitui-ledger-research]]"
   - "[[2026-06-10-ledger-interface-contract-adr]]"
@@ -29,7 +29,7 @@ This document is the authoritative human-readable publication surface for the `L
 | Source revision | `bafb4d0e0a0913298b11670cb2046641b2eff6fb` |
 | Contract source digest | `sha256:c2998c8ff958ae820b59fa7055a36d83117bb35282fe2679761032fab7a15a10` |
 | Accepted plan owner | `clitui-ledger` |
-| Denominator revision / digest | `s08-semantic-union-2` / `sha256:77f310d3de86c3a097b5c976a8cdc4b1941b24e3e15d0eb47971985b38764dff` |
+| Denominator revision / digest | `s08-semantic-union-3` / `sha256:46b2292f43821f5d120e71ddff6a7bc2a46a9ed75ebb974f641481b794ddf0a9` |
 | Matrix digest | Not issued: a digest-bound `LedgerCapabilityMatrixV1` cannot exist before the complete denominator and current evidence subjects exist |
 | Acceptance attestation | Absent by design: only S14 may record an independent `ACCEPT` ruling bound to the frozen digest |
 | TUI hold | Campaign sequencing bars Ledger TUI implementation; the cross-plan recorded control remains open until S09 and row-level hold classification remains open until S11 |
@@ -61,7 +61,7 @@ The eight independent axes are `backend`, `cli`, `tui`, `composition`, `artifact
 
 #### S08 serialized union adjudication
 
-`build_ledger_union_denominator` is the reproducible S08 projection. It consumes the live command census, the authored 63-operation S05 register plus its 21-file source set, the ten missing-product observations, the validated 546-row registry census, six artifact-product observations, and the live seven-route TUI census. `LedgerUnionDenominatorV1` rejects a missing or duplicate raw observation, an unavailable selected row, row/source disagreement, incomplete eight-axis applicability, an absent semantic home, unordered identities, or a stale digest. Serialization uses the domain `cadrumo:ledger-union-denominator:v1`, a NUL terminator, unsigned-eight-byte-big-endian payload length, canonical ASCII JSON, and SHA-256.
+`build_ledger_union_denominator` is the reproducible S08 projection. It consumes the live command census, the authored 63-operation S05 register plus its 21-file source set, the ten missing-product observations, the validated 546-row registry census, six artifact-product observations, and the live seven-route TUI census. An exact committed mapping binds all 214 non-registry observation identities to ordered semantic-row tuples; any added, removed, duplicated, or changed observation or selection fails closed even when it reuses an existing capability identity. Registry observation identities, count, selections, and route-census digest remain mechanically validated for all 546 units. `LedgerUnionDenominatorV1` also rejects row/source, effect, home, applicability, ordering, accounting, or digest drift. Serialization uses the domain `cadrumo:ledger-union-denominator:v1`, a NUL terminator, unsigned-eight-byte-big-endian payload length, canonical ASCII JSON, and SHA-256.
 
 | Stream | Raw observations | S08 stream digest |
 | --- | ---: | --- |
@@ -72,7 +72,7 @@ The eight independent axes are `backend`, `cli`, `tui`, `composition`, `artifact
 | `registry_route` | 546 | `sha256:76b05fa59223ef5d11da50d0d108720f644fb7c2dfe4361cf11854f5aff397e2` |
 | `artifact_product` | 6 | `sha256:3b0c161490b1a885c894758b8cfda68a4b79c346d6d03ca8ab3fa7949e378685` |
 | `supported_surface` | 7 | `sha256:57220a5ecc682cadcf36492a7d30013f1a154c41cc4576f153c5c548fac55f1d` |
-| **Union** | **760 observations / 769 selected edges / 693 semantic rows** | `sha256:77f310d3de86c3a097b5c976a8cdc4b1941b24e3e15d0eb47971985b38764dff` |
+| **Union** | **760 observations / 769 selected edges / 693 semantic rows** | `sha256:46b2292f43821f5d120e71ddff6a7bc2a46a9ed75ebb974f641481b794ddf0a9` |
 
 The selection arithmetic is explicit: four observations make one-to-many selections, adding nine edges; 59 rows are selected by multiple observations; 76 duplicate selection edges converge on already selected rows; `760 + 9 - 76 = 693`. This is join-and-split accounting, not capability loss. Exact joins cover CLI/backend rule add and apply, counterparty confirm/view/withdraw, flat and format-specific export, manual and LLM split, and classify/LLM preview/apply/reject/saturation/evidence families. Effect-distinct preview and mutation rows remain separate. A backend helper that is not independently invocable remains a row but is explicitly not applicable to CLI and TUI.
 
@@ -80,7 +80,7 @@ The overloaded CLI endpoints remain discriminated routers whose observations may
 
 Every row carries one canonical owner, immutable command or query type, result type, existing-versus-planned disposition, explicit effect class, eight applicability decisions, gap classes, proof requirements, current blockers, next action, and any TUI route. Four rows pass signature-aware existing-home validation: flat export, one-source import, transaction create, and review query. Reviewed LLM decision, full update, and field patch are planned because their live callables still require loose business parameters outside the named request. The remaining 689 rows name planned contracts at the application or registry boundary; this is a closure target, not a completeness claim. All 147 non-registry identities must exactly equal the authored effect/home/applicability decision set; an added, removed, duplicated, or unknown identity fails closed. The 546 registry identities retain their mechanically exact structural projection.
 
-Applicability is explicit but remains subject to S12 evidence review. Direct backend authority and proof apply to every row. CLI and TUI are not applicable only for the exact 13 lower-level backend compositions listed by the adjudication; registry-route visibility remains applicable through participation/reconciliation projections. `ledger.evidence.download` is explicitly an artifact-producing query. Provenance reads and LLM diagnostics are queries, while LLM apply, saturated apply, split apply, evidence-classification apply, reject, and review decision are persistent mutations. Every row retains a `PROOF` gap, 689 planned-contract rows retain a `PRODUCT` gap, and current CLI policy observations retain `AUTHORITY`; no row is declared complete.
+Applicability is explicit but remains subject to S12 evidence review. Direct backend authority and proof apply to every row. CLI and TUI are not applicable only for the exact 13 lower-level backend compositions listed by the adjudication; registry-route visibility remains applicable through participation/reconciliation projections. `ledger.evidence.download` is explicitly an artifact-producing query. It and the five provenance reads have provenance applicability, a provenance gap, and actor/source/operation/field/normalization/revision lineage proof. Provenance reads and LLM diagnostics are queries, while LLM apply, saturated apply, split apply, evidence-classification apply, reject, and review decision are persistent mutations. Every row retains a `PROOF` gap, 689 planned-contract rows retain a `PRODUCT` gap, and current CLI policy observations retain `AUTHORITY`; no row is declared complete.
 
 Open adjudicated blockers remain concrete: eight public backend operations lack direct symbol-level tests; 510 registry declarations have direct destinations but still need route proof, three use application sidecars without registry output identities, and 33 have no located destination; six TUI routes remain component-only; artifact readers, provenance, refusal, and finish-line compositions remain unproved. These are resolved by their named G1-G4 steps. S08 issues the provisional union digest only. G0 remains open pending singular ownership/hold records, reviewed row evidence and reopening enforcement, and the S14 independent digest-bound acceptance.
 
@@ -139,7 +139,7 @@ These coordinates bind the S03 claims to the current observation revision. They 
 | Coordinate | Locator | Subject digest | Claim boundary |
 | --- | --- | --- | --- |
 | `evidence.baseline.matrix_contract` | `dev/quality/clitui_ledger_capability_matrix.py:22` | `sha256:c2998c8ff958ae820b59fa7055a36d83117bb35282fe2679761032fab7a15a10` | Schema 3, eight axes, source kinds, gaps, controls, evidence currentness, and G0-G4 predicates |
-| `evidence.s08.semantic_union` | `build_ledger_union_denominator` in `dev/quality/clitui_ledger_capability_matrix.py` | `sha256:77f310d3de86c3a097b5c976a8cdc4b1941b24e3e15d0eb47971985b38764dff` | Domain-separated serialized union: 760 observations, 769 selected edges, 693 semantic rows, exact join/split accounting, every source selector, canonical typed home, applicability decision, gap, proof requirement, blocker, next action, and TUI route |
+| `evidence.s08.semantic_union` | `build_ledger_union_denominator` in `dev/quality/clitui_ledger_capability_matrix.py` | `sha256:46b2292f43821f5d120e71ddff6a7bc2a46a9ed75ebb974f641481b794ddf0a9` | Domain-separated serialized union: 760 observations, 769 selected edges, 693 semantic rows, exact 214-observation non-registry mapping, registry projection validation, join/split accounting, typed homes, applicability, gaps, proof requirements, blockers, next actions, and TUI routes |
 | `evidence.s04.cli_command_census` | `src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py:51` | `sha256:2cd8e21e2b8602e5e18338c22350301f2bc76f580873af51b1154d5364e6769b` | Exact current CLI stream: 78 invocables, 50 supplemental behavior-distinct sub-operations across ten overloaded endpoints, derived path/handler/schema/TUI facts, and fail-closed ownership annotations |
 | `evidence.s05.backend_operation_census` | `src/cadrumo/application/ledger/` operational modules listed in the backend census | `sha256:4b0d917dd20d155f348958559037695cb5bab356867a1c88305bb42080f3b2f0` | Exact current backend observation: 63 operations, actual request/result contracts, direct-test locators, production compositions, and the one backend-only product capability |
 | `evidence.baseline.cli_authority` | `2026-09-04-clitui-ledger-reference`, CLI-to-backend disposition matrix | Bound by this document's CLI-maintained `body_hash` after publication | Initial authority families and candidate application homes |

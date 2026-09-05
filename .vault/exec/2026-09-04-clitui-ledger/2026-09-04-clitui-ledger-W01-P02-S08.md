@@ -5,7 +5,7 @@ tags:
 date: '2026-09-05'
 modified: '2026-09-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:868d3b1eb18691cc182066d4de1d61b770f206c6d9fc70411625c90038776af6'
+body_hash: 'sha256:db77a6a2fc1943e4c953eccba5b4e7ac258019e6381e75a5e1e4e51366cfdb47'
 step_id: 'S08'
 related:
   - "[[2026-09-04-clitui-ledger-plan]]"
@@ -31,10 +31,12 @@ related:
 - `verify:` `uv run --no-sync ty check dev/quality/clitui_ledger_capability_matrix.py` -> `pass`
 - `verify:` `uv run --no-sync basedpyright dev/quality/clitui_ledger_capability_matrix.py dev/quality/tests/test_clitui_ledger_capability_matrix.py` -> `pass`
 - `verify:` exact selection accounting -> `760 observations / 769 selected edges / 4 one-to-many observations / 9 split edges / 59 multi-observation rows / 76 duplicate selections / 693 rows`
-- `verify:` union digest -> `sha256:77f310d3de86c3a097b5c976a8cdc4b1941b24e3e15d0eb47971985b38764dff`
+- `verify:` union digest -> `sha256:46b2292f43821f5d120e71ddff6a7bc2a46a9ed75ebb974f641481b794ddf0a9`
 
 ## Notes
 
 Shared worktree automation committed the union implementation and detector changes across `9c3d32a2f4`, `421eafcbd7`, `96604c8ee8`, `ede8ec4d29`, `df3e6a56f8`, and `bafb4d0e0a`, then captured the reference and Step Record in `6355355b90` and `d9feb980ac` while S08 remained active. The split is retained rather than rewriting concurrent history.
 
 The first independent S08 review reopened the step with four HIGH findings. The remediation removes prefix/token/default semantic inference for non-registry rows, requires exact equality between the 147 live non-registry identities and their authored decisions, corrects persistent LLM/provenance/diagnostic/download effects, validates the four remaining existing homes against live callable signatures, and records explicit rule, counterparty, export, split, and classify/LLM joins. G0 remains OPEN; S09-S14 remain required.
+
+The remediation review reopened S08 with two remaining HIGH findings. The second remediation commits the exact ordered selections for all 214 non-registry observation identities, rejects identity reuse and added/removed/duplicate/changed observations, validates the 546 mechanically projected registry observations, and makes provenance applicable with coherent gap and lineage-proof requirements for five provenance queries plus evidence download.
