@@ -7,6 +7,18 @@ request is opened, not by hand — see [`RELEASING.md`](RELEASING.md).
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0](https://github.com/nevenincs/cadrumo/compare/v0.5.1...v0.6.0) (2026-09-06)
+
+
+### Features
+
+* **ci:** add the workflow run text screen with its gate ([5a30129](https://github.com/nevenincs/cadrumo/commit/5a30129404450f0c622d8acafbdc226d8bc47a92))
+
+
+### Bug Fixes
+
+* **packaging:** bound a wedged serial module to itself ([617985c](https://github.com/nevenincs/cadrumo/commit/617985c99d03afe441e56c54703c67a0aa369a21))
+
 ## [0.5.1](https://github.com/nevenincs/cadrumo/compare/v0.5.0...v0.5.1) (2026-09-06)
 
 
