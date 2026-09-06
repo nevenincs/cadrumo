@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:ccceff1087c296cc32dba7e3750ab05c3b8c55b00929c3887de129c02a60c4ac'
+body_hash: 'sha256:55bd0162b24a641805c4af57ffa2b29aefab0d2f27d8aa64ee65342f0eaac111'
 ---
 
 # `reachability-burndown` plan
@@ -165,6 +165,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S64` - Wire the flow checkpoint discard and reverse the custody record bound: the line frontend offers save-and-exit which writes a checkpoint while its submit path returned without clearing one, so an operator who saved, resumed and submitted left the checkpoint on disk and a later run would offer to resume an already-submitted flow, and submit now discards once eligibility is asserted under the same store guard as save-and-exit; and the four megabyte custody bound is orphaned rather than an unenforced safety limit, because no profile-record file exists in that package and the only profile_record in the tree is a record-format label on an encrypted secure-object namespace, to which a file-read byte cap does not apply; `src/cadrumo/application/flows/line_frontend.py`.
 - [x] `W05.P12.S65` - Wire the optional-extra classifier as the import-failure backstop it was written to be: the console-script bootstrap now catches a ModuleNotFoundError escaping the CLI, classifies it against the declared optional-extras inventory, and routes a declared optional package through the same require path a feature boundary uses so the operator gets an actionable install message instead of a deep-stack import failure, while a module outside the inventory re-raises untouched as the broken installation it is and an extra that is actually installed also re-raises so a genuine deep-import failure inside it is never mislabelled; `src/cadrumo/entrypoints/_cli_main.py`.
 - [x] `W05.P12.S66` - Apply the declared optional-source-url distinction to the field that needed it: the model licence source url carried a bare string default of empty with no length bound at all, which is precisely the case the alias documents, so it now carries the alias and the thousand-and-twenty-four character bound applies where previously any length passed, while the empty string still validates so absence on the wire is unaffected; `src/cadrumo/core/model_catalogue.py`.
+- [ ] `W05.P12.S67` - Reverse the localizable-field union and sharpen the IVA escaso-valor threshold into an actionable owner decision: the four-kind literal is superseded because every site is deliberately narrower, the modelo key taking only title and official name, the casilla key taking the label-and-help sibling, and the revision key a single-member literal, so annotating anything with the union would widen a contract; and the art 108 exclusion figure cannot simply be wired because the register carries art108 eligibility as an operator-supplied boolean and holds no acquisition value to compare, storing the input IVA borne instead, making the remedy a schema change plus a decision on whether the product judges article 108 or the operator does; `dev/audit/reachability_classification.toml`.
 
 ## Parallelization
 
