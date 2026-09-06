@@ -376,9 +376,15 @@ def test_em_dash_count_ratchets_down_in_docs_prose() -> None:
     editorial agents tighten emdash_baseline.json down as they land; an empty
     baseline means the corpus is em-dash-free.
     """
+    if not _EM_DASH_BASELINE_PATH.is_file():
+        raise AssertionError(
+            f"the em-dash ratchet baseline is missing: {_EM_DASH_BASELINE_PATH}. "
+            "This gate ratchets per-page counts down from that committed file; without it the ratchet has "
+            "no state and enforces nothing. Restore the baseline (or commit an empty object for an "
+            "em-dash-free corpus) rather than deleting it alongside unrelated work."
+        )
     baseline: dict[str, int] = json.loads(_EM_DASH_BASELINE_PATH.read_text(encoding="utf-8"))
     current = _em_dash_counts()
-    assert current, "no docs prose was counted; an empty corpus ratchets to zero without prose changing"
     problems: list[str] = []
     for page in sorted(current):
         count = current[page]

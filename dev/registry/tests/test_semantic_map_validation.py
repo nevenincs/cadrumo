@@ -88,6 +88,7 @@ def _semantic_map_payload(
     source_sha256: str = "92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509",
     modelo: str = "200",
     design_epoch: str = "2025",
+    variable_envelopes: tuple[dict[str, object], ...] = (),
 ) -> dict[str, object]:
     return {
         "modelo": modelo,
@@ -103,6 +104,108 @@ def _semantic_map_payload(
             },
         ),
         "entries": entries,
+        "variable_envelopes": variable_envelopes,
+    }
+
+
+def _variable_envelope_intermediate_payload(
+    *,
+    record_identity: str,
+    sheet: str = "Registro tipo 1",
+    row: int = 20,
+) -> dict[str, object]:
+    """Build the smallest typed parser-owned envelope for boundary tests.
+
+    Only the composition identity (``sheet``, ``record_identity``) and the
+    count of declared envelopes matter to ``_validate_variable_envelope_boundary``'s
+    cardinality guards; the remaining anchors just need to satisfy the type.
+    """
+    return {
+        "sheet": sheet,
+        "record_identity": record_identity,
+        "prefix_extent": 1,
+        "prefix_fields": (
+            {
+                "sheet": sheet,
+                "record_identity": record_identity,
+                "source_row": row,
+                "source_cell": f"A{row}",
+                "ordinal": "1",
+                "offset": 1,
+                "length": 1,
+                "aeat_type": "AN",
+                "normalized_description": "Apertura de sobre",
+            },
+        ),
+        "body_source_row": row + 1,
+        "body_source_cell": f"A{row + 1}",
+        "body_ordinal": 2,
+        "body_offset": 2,
+        "body_length": "Variable",
+        "body_aeat_type": "AN",
+        "body_normalized_description": "Cuerpo variable",
+        "closing": {
+            "source_row": row + 2,
+            "source_cell": f"A{row + 2}",
+            "ordinal": 3,
+            "offset": "***",
+            "length": 1,
+            "aeat_type": "AN",
+            "normalized_description": "Cierre relativo",
+        },
+        "total_source_row": row + 3,
+        "total_source_cell": f"A{row + 3}",
+        "total_label": "total",
+        "total_length": "Variable",
+    }
+
+
+def _variable_envelope_semantic_payload(
+    *,
+    record_identity: str,
+    source_sha256: str,
+    source_ref: str = "aeat-dr-200-2025",
+    sheet: str = "Registro tipo 1",
+    row: int = 20,
+) -> dict[str, object]:
+    """Build the smallest reviewed envelope contract for boundary tests."""
+    return {
+        "source_ref": source_ref,
+        "source_sha256": source_sha256,
+        "record_identity": record_identity,
+        "prefix_fields": (
+            {
+                "role": "composed_opening_tag",
+                "anchor": {
+                    "sheet": sheet,
+                    "source_row": row,
+                    "source_cell": f"A{row}",
+                    "ordinal": "1",
+                    "record_identity": record_identity,
+                },
+            },
+        ),
+        "body_anchor": {
+            "sheet": sheet,
+            "source_row": row + 1,
+            "source_cell": f"A{row + 1}",
+            "ordinal": "2",
+            "record_identity": record_identity,
+        },
+        "body_record_ids": ("registro-tipo-1",),
+        "closer_anchor": {
+            "sheet": sheet,
+            "source_row": row + 2,
+            "source_cell": f"A{row + 2}",
+            "ordinal": "3",
+            "record_identity": record_identity,
+        },
+        "total_anchor": {
+            "source_row": row + 3,
+            "source_cell": f"A{row + 3}",
+            "label": "total",
+            "length": "Variable",
+        },
     }
 
 
@@ -753,6 +856,233 @@ def test_validation_uses_no_legacy_export_layout_membership_or_identifier_infere
         ),
     )
     validate_semantic_map(semantic_map, intermediate, m130_inspection_snapshot)
+
+
+#: Round-21 note: none of the tests above ever populate ``variable_envelopes``
+#: on either side, so every call to ``validate_semantic_map`` exercises only
+#: the "parser has none, map has none" early return inside
+#: ``_validate_variable_envelope_boundary``. The remaining branches -- more
+#: than one parser envelope, a missing or doubled reviewed contract, and a
+#: record-identity mismatch between the two sides -- were reachable through
+#: the exact same private boundary but undriven. The tests below drive them
+#: directly, mirroring the file's existing pattern of calling private
+#: validation helpers with the smallest typed fixture that reaches them.
+
+
+def test_duplicate_or_colliding_variable_envelope_identities_are_refused_before_the_boundary_runs() -> None:
+    """The parser intermediate's own type already forbids the two inputs that
+    ``_validate_variable_envelope_boundary``'s duplicate/collision guards
+    exist to catch: two envelopes cannot share a composition identity, and an
+    envelope cannot share one with a fixed sheet. Both refuse at construction,
+    before the boundary function ever runs -- proving those two guards are
+    unreachable dead code relative to any input the type system admits.
+    """
+    base = _intermediate_payload()
+
+    with pytest.raises(ValidationError, match="composition identities must each be unique"):
+        RecordDesignIntermediate.model_validate(
+            {
+                **base,
+                "variable_envelopes": (
+                    _variable_envelope_intermediate_payload(record_identity="envelope-wrap", row=20),
+                    _variable_envelope_intermediate_payload(record_identity="envelope-wrap", row=30),
+                ),
+            },
+        )
+    with pytest.raises(ValidationError, match="must be disjoint"):
+        RecordDesignIntermediate.model_validate(
+            {
+                **base,
+                "variable_envelopes": (
+                    _variable_envelope_intermediate_payload(record_identity="registro-tipo-1", row=20),
+                ),
+            },
+        )
+
+
+def test_variable_envelope_boundary_refuses_reviewed_contract_without_parser_envelope() -> None:
+    """A reviewed envelope contract cannot compose a wrapper the parser never printed."""
+    intermediate = RecordDesignIntermediate.model_validate(_intermediate_payload())
+    source_sha256 = "9" * 64
+    semantic_map = SemanticMap.model_validate(
+        _semantic_map_payload(
+            entries=(
+                _entry(row=14, ordinal=1, field_id="generated.literal.one", literal="T"),
+                _entry(row=15, ordinal=2, field_id="generated.literal.two", literal="0"),
+            ),
+            source_sha256=source_sha256,
+            variable_envelopes=(
+                _variable_envelope_semantic_payload(record_identity="envelope-wrap", source_sha256=source_sha256),
+            ),
+        ),
+    )
+
+    with pytest.raises(
+        RegistryValidationError,
+        match="declares a variable-envelope contract but parser output contains no variable envelope",
+    ):
+        _semantic_map_validation._validate_variable_envelope_boundary(semantic_map, intermediate)
+
+
+def test_variable_envelope_boundary_refuses_more_than_one_parser_envelope() -> None:
+    """The composition authority admits exactly one parser envelope per design."""
+    intermediate = RecordDesignIntermediate.model_validate(
+        {
+            **_intermediate_payload(),
+            "variable_envelopes": (
+                _variable_envelope_intermediate_payload(record_identity="envelope-one", row=20),
+                _variable_envelope_intermediate_payload(record_identity="envelope-two", row=30),
+            ),
+        },
+    )
+    semantic_map = SemanticMap.model_validate(
+        _semantic_map_payload(
+            entries=(
+                _entry(row=14, ordinal=1, field_id="generated.literal.one", literal="T"),
+                _entry(row=15, ordinal=2, field_id="generated.literal.two", literal="0"),
+            ),
+        ),
+    )
+
+    with pytest.raises(
+        RegistryValidationError,
+        match="variable-envelope composition authority admits exactly one parser envelope per design",
+    ):
+        _semantic_map_validation._validate_variable_envelope_boundary(semantic_map, intermediate)
+
+
+@pytest.mark.parametrize("declared_envelope_count", (0, 2))
+def test_variable_envelope_boundary_refuses_wrong_number_of_reviewed_contracts(declared_envelope_count: int) -> None:
+    """Exactly one parser envelope requires exactly one reviewed semantic contract."""
+    source_sha256 = "9" * 64
+    intermediate = RecordDesignIntermediate.model_validate(
+        {
+            **_intermediate_payload(source_sha256=source_sha256),
+            "variable_envelopes": (_variable_envelope_intermediate_payload(record_identity="envelope-wrap"),),
+        },
+    )
+    declared_envelopes = tuple(
+        _variable_envelope_semantic_payload(record_identity=f"envelope-wrap-{index}", source_sha256=source_sha256)
+        for index in range(declared_envelope_count)
+    )
+    semantic_map = SemanticMap.model_validate(
+        _semantic_map_payload(
+            entries=(
+                _entry(row=14, ordinal=1, field_id="generated.literal.one", literal="T"),
+                _entry(row=15, ordinal=2, field_id="generated.literal.two", literal="0"),
+            ),
+            source_sha256=source_sha256,
+            variable_envelopes=declared_envelopes,
+        ),
+    )
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=(
+            "requires exactly one reviewed variable-envelope semantic contract, "
+            f"found {declared_envelope_count}"
+        ),
+    ):
+        _semantic_map_validation._validate_variable_envelope_boundary(semantic_map, intermediate)
+
+
+def test_variable_envelope_boundary_refuses_record_identity_mismatch() -> None:
+    """A reviewed envelope contract must name the parser's own envelope identity."""
+    source_sha256 = "9" * 64
+    intermediate = RecordDesignIntermediate.model_validate(
+        {
+            **_intermediate_payload(source_sha256=source_sha256),
+            "variable_envelopes": (_variable_envelope_intermediate_payload(record_identity="envelope-wrap"),),
+        },
+    )
+    semantic_map = SemanticMap.model_validate(
+        _semantic_map_payload(
+            entries=(
+                _entry(row=14, ordinal=1, field_id="generated.literal.one", literal="T"),
+                _entry(row=15, ordinal=2, field_id="generated.literal.two", literal="0"),
+            ),
+            source_sha256=source_sha256,
+            variable_envelopes=(
+                _variable_envelope_semantic_payload(record_identity="envelope-other", source_sha256=source_sha256),
+            ),
+        ),
+    )
+
+    with pytest.raises(
+        RegistryValidationError,
+        match="reviewed variable-envelope contract names 'envelope-other' but the parser owns 'envelope-wrap'",
+    ):
+        _semantic_map_validation._validate_variable_envelope_boundary(semantic_map, intermediate)
+
+
+@pytest.mark.parametrize(
+    ("token", "identifier"),
+    (
+        ("abc", "DP200018:00588"),
+        ("588", "00588"),
+    ),
+)
+def test_qualified_token_match_refuses_non_decimal_token_or_unqualified_identifier(token: str, identifier: str) -> None:
+    """The early refusal branch: a non-numeric token or an unqualified identifier never matches."""
+    assert _semantic_map_validation._is_qualified_token_match(token, identifier) is False
+
+
+def test_reviewed_qualified_identity_admission_requires_matching_token_and_target_membership() -> None:
+    """The M200/2024 receipt admission drifts closed on a mismatched token or an absent target identity.
+
+    ``_reviewed_qualified_identity_admissions`` is reachable through the public
+    ``validate_semantic_map``/``join_record_design_semantics`` entry points only
+    for modelo 200, design epoch 2024, revision 2024 -- everywhere else it
+    short-circuits to an empty admission set before ever touching the receipt.
+    That narrow gate previously left both of its raise branches undriven; this
+    test calls the private function directly, the same pattern already used
+    above for ``_resolve_semantic_map_casilla_tokens``, using the real bundled
+    M200/2024 revision and its real closed promotion receipt.
+    """
+    from cadrumo.domain.calculations.registry.authority import bundled_revision_inspection
+
+    inspection = bundled_revision_inspection("200", filing_year=2024, period="0A")
+    # A real closed receipt row, captured once: export field
+    # "m200-2024.dp200018.f0172" is reviewed-admitted to qualified identity
+    # "DP200018:00588".
+    real_export_field_id = "m200-2024.dp200018.f0172"
+    real_qualified_identity = "DP200018:00588"
+
+    drifted_map = SemanticMap.model_validate(
+        _semantic_map_payload(
+            modelo="200",
+            design_epoch="2024",
+            entries=(
+                _entry(row=14, ordinal=1, field_id=real_export_field_id, kind="casilla", casilla_id="999"),
+                _entry(row=15, ordinal=2, field_id="generated.literal.two", literal="0"),
+            ),
+        ),
+    )
+    with pytest.raises(RegistryValidationError, match="does not match its semantic-map token"):
+        _semantic_map_validation._reviewed_qualified_identity_admissions(drifted_map, inspection)
+
+    matching_map = SemanticMap.model_validate(
+        _semantic_map_payload(
+            modelo="200",
+            design_epoch="2024",
+            entries=(
+                _entry(row=14, ordinal=1, field_id=real_export_field_id, kind="casilla", casilla_id="588"),
+                _entry(row=15, ordinal=2, field_id="generated.literal.two", literal="0"),
+            ),
+        ),
+    )
+    inspection_without_identity = inspection.model_copy(
+        update={"casilla_ids": frozenset(cid for cid in inspection.casilla_ids if cid != real_qualified_identity)},
+    )
+    with pytest.raises(RegistryValidationError, match="is absent from the target revision"):
+        _semantic_map_validation._reviewed_qualified_identity_admissions(matching_map, inspection_without_identity)
+
+    # Sibling-blindness: the exact same matching map against the REAL,
+    # unmodified inspection is admitted cleanly -- so the refusal above is
+    # about the mutated casilla_ids, not something else drifting in the fixture.
+    admissions, snapshot = _semantic_map_validation._reviewed_qualified_identity_admissions(matching_map, inspection)
+    assert admissions[real_export_field_id] == real_qualified_identity
+    assert snapshot is not None
 
 
 def test_validation_module_carries_no_legacy_layout_dependency() -> None:

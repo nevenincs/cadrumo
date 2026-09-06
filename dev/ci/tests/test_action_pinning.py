@@ -61,14 +61,48 @@ def _action_uses(document: dict[str, object]) -> list[str]:
     return uses
 
 
+#: A local `uses:` reference the tree does not actually carry.
+_UNRESOLVED: Final = "(names no action or workflow in this repository)"
+
+
+def _local_reference_resolves(reference: str) -> bool:
+    """A local ``uses:`` reference really names a path in this repository.
+
+    The exemption in :func:`_unpinned` rests on this and nothing else. GitHub
+    resolves a ``./...`` reference against the repository root at the commit
+    being run, so "already at this commit" is true only when the path is there.
+    It may name a directory holding an ``action.yml``/``action.yaml``, or a
+    reusable workflow file directly.
+    """
+    root = REPO_ROOT.resolve()
+    target = (root / reference).resolve()
+    if target != root and root not in target.parents:
+        return False
+    if target.is_file():
+        return True
+    return (target / "action.yml").is_file() or (target / "action.yaml").is_file()
+
+
 def _unpinned(path: Path) -> list[str]:
     document = yaml.safe_load(path.read_text(encoding="utf-8"))
     if not isinstance(document, dict):
         return []
     offenders: list[str] = []
     for reference in _action_uses(document):
-        # A local action is a path in this repository, already at this commit.
-        if reference.startswith(("./", "../")) or reference.startswith("docker://"):
+        # The exemption states a premise, so the premise is asserted beside it:
+        # a local action is exempt BECAUSE it is a path in this repository,
+        # already at this commit. A `./...` naming nothing in the tree is not
+        # that. It is a workflow the forge refuses before any step runs -- the
+        # same silent refusal an unpinned tag earns -- so skipping it on the
+        # strength of its prefix alone would report success over exactly the
+        # dead workflow this gate exists to find.
+        if reference.startswith(("./", "../")):
+            if not _local_reference_resolves(reference):
+                offenders.append(f"{path.name}: {reference} {_UNRESOLVED}")
+            continue
+        # A registry image, not an action reference: its version lives in the
+        # image tag or digest, which the commit-SHA rule below does not describe.
+        if reference.startswith("docker://"):
             continue
         _, separator, version = reference.partition("@")
         if not separator or not _FULL_SHA.match(version):
@@ -117,16 +151,51 @@ def test_the_gate_refuses_a_short_sha(tmp_path: Path) -> None:
     assert _unpinned(workflow) == ["short.yml: actions/checkout@34e1148"]
 
 
-def test_a_local_action_needs_no_pin(tmp_path: Path) -> None:
-    """A path inside this repository is already at the commit being run."""
+def test_a_local_action_that_exists_needs_no_pin(tmp_path: Path) -> None:
+    """A path inside this repository is already at the commit being run.
+
+    Driven by a path read out of the LIVE tree, so the premise the exemption
+    states is the premise this case actually satisfies. Naming a path that does
+    not exist would assert the exemption over the state that falsifies it.
+    """
+    resident = _workflow_paths()[0].relative_to(REPO_ROOT).as_posix()
     workflow = tmp_path / "local.yml"
     workflow.write_text(
         "name: local\non: workflow_dispatch\njobs:\n"
-        "  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: ./.github/actions/setup\n",
+        f"  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: ./{resident}\n",
         encoding="utf-8",
     )
 
     assert _unpinned(workflow) == []
+
+
+def test_the_gate_refuses_a_local_reference_that_names_nothing(tmp_path: Path) -> None:
+    """Teeth for the exemption's premise: unresolvable is not exempt.
+
+    This is the state the previous case asserted the exemption over. The tree
+    carries no local action at all, so a `./` reference resolving to nothing was
+    both the only shape available to it and the one the premise excludes.
+    """
+    workflow = tmp_path / "dangling.yml"
+    workflow.write_text(
+        "name: dangling\non: workflow_dispatch\njobs:\n"
+        "  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: ./.github/actions/setup\n",
+        encoding="utf-8",
+    )
+
+    assert _unpinned(workflow) == [f"dangling.yml: ./.github/actions/setup {_UNRESOLVED}"]
+
+
+def test_the_gate_refuses_a_local_reference_that_escapes_the_repository(tmp_path: Path) -> None:
+    """A `../` climbing above the root is not "a path in this repository" either."""
+    workflow = tmp_path / "escaping.yml"
+    workflow.write_text(
+        "name: escaping\non: workflow_dispatch\njobs:\n"
+        "  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: ../outside/action\n",
+        encoding="utf-8",
+    )
+
+    assert _unpinned(workflow) == [f"escaping.yml: ../outside/action {_UNRESOLVED}"]
 
 
 def _upload_arguments(run: str) -> list[str]:

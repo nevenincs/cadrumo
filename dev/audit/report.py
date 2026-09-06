@@ -7,10 +7,11 @@ verdict instead of four unrelated tool invocations with no shared severity
 model:
 
 * **Shadowing** (D1) -- reuses ``dev.quality.import_hygiene_scan.find_multi_sourced_symbols``
-  against the checked-in ``dev/import_hygiene_baseline.json`` Family-3 pinned
-  set (the same authority ``src/cadrumo/tests/test_import_hygiene_gate.py``
-  enforces). A genuine multi-facade duplicate symbol not in the pinned set is
-  RED; the pinned/tolerated set is AMBER debt; zero unpinned hits is GREEN.
+  over the live facade set. The Family-3 pinned baseline and the gate that
+  enforced it were both retired, so nothing is grandfathered: any
+  "high"-confidence symbol declared in more than one owning package's
+  ``__all__`` is RED, and zero such symbols is GREEN. Because no symbol can
+  be tolerated any more, this dimension has no reachable AMBER state.
 * **Duplication** (D2) -- delegates the entire measurement to
   ``dev.audit.duplication.run_duplication_scan``, the one runner
   ``just audit-duplication`` also calls. Any clone cluster is advisory debt
