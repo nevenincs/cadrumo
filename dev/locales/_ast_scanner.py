@@ -171,6 +171,16 @@ _TRANSLATION_KEY_KWARGS: frozenset[str] = frozenset(
         # through call sites nothing here read, so their keys looked orphaned.
         "label_key",
         "empty_key",
+        # These three are not a judgement call: the parameter is DECLARED
+        # `TranslationKey`, so the type states what the value is. They were
+        # missing because this set was grown one orphan at a time, which is
+        # why `test_every_translation_key_annotated_parameter_is_declared_here`
+        # now holds the set to the annotations rather than to whoever last
+        # chased a key.
+        "reason_key",
+        "short_help_key",
+        "prompt_key",
+        "confirmation_prompt_key",
     },
 )
 
@@ -553,23 +563,25 @@ def _flow_confirmed_locale_key_dicts(tree: ast.AST, wrappers: frozenset[str] = f
 def _literal_row_grid(node: ast.expr | None) -> list[list[str | None]] | None:
     """Return the table's cells by position, or ``None`` when it is not a literal grid.
 
-    Every cell must be a literal constant, but it need NOT be a string. A
-    column table pairs its key with a width::
+    A cell need not be a string, or even a literal. These are all one shape::
 
         ("date", "tui.ledger.column.date", 10)
+        (BusinessClassification.BUSINESS, "tui.ledger.classification.business")
 
-    Requiring all-string rows rejected that table outright, so the keys in it
-    were never even candidates. A non-string cell is carried as ``None``, which
-    can never be a key column -- the positional signal the shape test relies on
-    is unchanged, and a numeric sibling is no more a key than a prose one.
+    Demanding all-string rows rejected the first outright and demanding literal
+    constants rejected the second, so in both cases the keys were never even
+    candidates. Anything that is not a string literal is carried as ``None``,
+    a position that can never BE a key column: the positional signal the shape
+    test relies on is unchanged, and a width or an enum member is no more a key
+    than a prose sibling is. What keeps this from over-firing is not the cell
+    types but the confirmation that follows -- the table must be iterated into
+    a translator, and the bound name must sit at a key column.
     """
     if not isinstance(node, ast.Tuple | ast.List) or not node.elts:
         return None
     rows: list[list[str | None]] = []
     for element in node.elts:
         if not isinstance(element, ast.Tuple | ast.List) or not element.elts:
-            return None
-        if any(not isinstance(item, ast.Constant) for item in element.elts):
             return None
         rows.append([
             item.value if isinstance(item, ast.Constant) and isinstance(item.value, str) else None

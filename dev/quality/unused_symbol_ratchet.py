@@ -106,7 +106,7 @@ def _baseline() -> tuple[dict[str, int], set[str]]:
     return {str(k): int(v) for k, v in symbols.items()}, {str(t) for t in tests}
 
 
-def _intentional() -> dict[tuple[str, str], str]:
+def _intentional(path: Path = _BASELINE_PATH) -> dict[tuple[str, str], str]:
     """Return ``(module, symbol) -> rationale`` for each recorded disposition.
 
     The kind is validated against the closed enum the module ratchet already
@@ -114,7 +114,7 @@ def _intentional() -> dict[tuple[str, str], str]:
     deliberate keep, and an entry without a rationale is refused rather than
     silently honoured.
     """
-    data = tomllib.loads(_BASELINE_PATH.read_text(encoding="utf-8"))
+    data = tomllib.loads(path.read_text(encoding="utf-8"))
     entries = data.get("intentional", [])
     if not isinstance(entries, list):
         raise ValueError("unused-symbol intentional dispositions must be a list of tables")
@@ -124,7 +124,12 @@ def _intentional() -> dict[tuple[str, str], str]:
         kind, rationale = row.get("kind"), row.get("rationale")
         if not all(isinstance(v, str) and v for v in (module, symbol, kind, rationale)):
             raise ValueError("an intentional symbol disposition needs module, symbol, kind and rationale")
-        IntentionalReachabilityKind(kind)
+        parsed = IntentionalReachabilityKind(kind)
+        if parsed is not IntentionalReachabilityKind.DESIGN_TIME_AUTHORITY:
+            # declared_by_contract carries a declared_by path the MODULE
+            # baseline verifies on load. There is no symbol-level equivalent,
+            # so accepting the kind here would take the claim on trust.
+            raise ValueError(f"{module}:{symbol}: symbol dispositions accept design_time_authority only, not {kind!r}")
         recorded[(module, symbol)] = rationale
     return recorded
 

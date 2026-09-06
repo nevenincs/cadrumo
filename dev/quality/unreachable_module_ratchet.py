@@ -105,6 +105,7 @@ class IntentionalReachabilityKind(StrEnum):
     """Closed reasons an unreached shipped module is intentional."""
 
     DESIGN_TIME_AUTHORITY = "design_time_authority"
+    DECLARED_BY_CONTRACT = "declared_by_contract"
 
 
 @dataclass(frozen=True, slots=True)
@@ -114,6 +115,13 @@ class IntentionalReachabilityDisposition:
     module: str
     kind: IntentionalReachabilityKind
     rationale: str
+    declared_by: str | None = None
+    """Repository-relative file whose declaration requires the module.
+
+    Required by DECLARED_BY_CONTRACT and verified on load, so the entry states
+    a checkable fact rather than an intention. A promise that a capability is
+    "landing soon" cannot go stale loudly; a named declaration can.
+    """
 
     def __post_init__(self) -> None:
         """Reject a disposition that cannot identify or justify its exception."""
@@ -194,11 +202,19 @@ class UnreachableBaseline:
                 disposition_kind = IntentionalReachabilityKind(kind)
             except ValueError as exc:
                 raise ValueError(f"unknown intentional reachability kind: {kind!r}") from exc
+            declared_by = row.get("declared_by")
+            if disposition_kind is IntentionalReachabilityKind.DECLARED_BY_CONTRACT:
+                if not isinstance(declared_by, str) or not declared_by:
+                    raise ValueError(f"{module}: declared_by_contract requires a declared_by path")
+                _require_declaration(module=module, declared_by=declared_by, root=path.parent.parent.parent)
+            elif declared_by is not None:
+                raise ValueError(f"{module}: declared_by belongs to a declared_by_contract entry only")
             intentional.append(
                 IntentionalReachabilityDisposition(
                     module=module,
                     kind=disposition_kind,
                     rationale=rationale,
+                    declared_by=declared_by if isinstance(declared_by, str) else None,
                 )
             )
         return cls(
@@ -207,6 +223,22 @@ class UnreachableBaseline:
             intentional=tuple(intentional),
         )
 
+
+
+def _require_declaration(*, module: str, declared_by: str, root: Path) -> None:
+    """Refuse a contract disposition whose named declaration does not name the module.
+
+    The claim is that a production declaration requires the module even though
+    no entrypoint reaches it. That is only evidence while the declaration
+    actually mentions it: once the contract drops the module, the disposition
+    is a stale exemption keeping a dead module quiet, which is the failure the
+    intentional mechanism exists to prevent.
+    """
+    source = root / declared_by
+    if not source.is_file():
+        raise ValueError(f"{module}: declared_by names no file: {declared_by}")
+    if module not in source.read_text(encoding=UTF_8, errors="ignore"):
+        raise ValueError(f"{module}: {declared_by} no longer declares it; the disposition is spent")
 
 @dataclass(frozen=True, slots=True)
 class DeferredDerivation:

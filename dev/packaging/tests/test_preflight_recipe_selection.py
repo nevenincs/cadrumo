@@ -85,7 +85,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _REPO_ROOT: Final = REPO_ROOT
 _JUSTFILE: Final = _REPO_ROOT / "justfile"
 _TARGET_DIRECTORY: Final = "dev/packaging/tests"
-_COLLECT_TIMEOUT_SECONDS: Final = 300
+#: Wall-clock bound for one nested collection. The heaviest here costs
+#: about 8.2s unloaded, so 300s carried roughly a thirty-sevenfold margin.
+#: Its sibling in ``dev/quality/tests/test_shard.py`` ran the same kind of
+#: nested ``--collect-only`` on a HUNDREDfold margin and still expired inside
+#: a twenty-three-minute concurrent suite, so this one had a third of the
+#: headroom of a budget already shown to be too tight. The bound stays --
+#: an unbounded wait on a child cannot be interrupted by the per-test
+#: ceiling, and the worker dies taking every sibling's result with it -- but
+#: it is sized for real contention rather than an idle machine.
+_COLLECT_TIMEOUT_SECONDS: Final = 600
 
 #: Recipes known to invoke pytest over this directory. Asserted as a subset of
 #: what the parser finds, so a parser that stops matching fails loudly instead
@@ -300,25 +309,36 @@ def _collect(label: str, arguments: tuple[str, ...]) -> frozenset[str]:
     Returns:
         The node ids the collection selected.
     """
-    completed = subprocess.run(  # noqa: S603 - fixed interpreter argv; arguments come from the tracked justfile.
-        [
-            sys.executable,
-            "-m",
-            "pytest",
-            "-p",
-            "no:cacheprovider",
-            "--collect-only",
-            *arguments,
-            "-n0",
-        ],
-        cwd=_REPO_ROOT,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
-        timeout=_COLLECT_TIMEOUT_SECONDS,
-    )
+    try:
+        completed = subprocess.run(  # noqa: S603 - fixed interpreter argv; arguments come from the tracked justfile.
+            [
+                sys.executable,
+                "-m",
+                "pytest",
+                "-p",
+                "no:cacheprovider",
+                "--collect-only",
+                *arguments,
+                "-n0",
+            ],
+            cwd=_REPO_ROOT,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+            timeout=_COLLECT_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired as expiry:
+        # Chained on purpose: the expiry carries the argv and the elapsed budget,
+        # and none of it is sensitive. Reading an expiry as a recipe-selection
+        # defect is the wrong first move, so the message says what it means.
+        message = (
+            f"{label} did not finish collecting within {_COLLECT_TIMEOUT_SECONDS}s. The heaviest "
+            "collection here costs about 8.2s unloaded, so an expiry means the machine was "
+            "contended, not that the recipe selection changed"
+        )
+        raise AssertionError(message) from expiry
 
     assert completed.returncode == 0, (
         f"{label} failed to collect (exit {completed.returncode}):\n{completed.stdout}\n{completed.stderr}"

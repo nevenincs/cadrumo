@@ -803,6 +803,23 @@ def test_a_column_table_is_read_as_an_attribute_and_confirmed_by_its_key_index()
         "indexing a prose column into the translator does not confirm the table"
     )
 
+    # A sibling need not be a literal at all. The choice table pairs its key
+    # with the ENUM member the choice sets, and demanding literal constants
+    # rejected that table as surely as demanding strings rejected the one
+    # above -- same shape, different sibling.
+    enum_sibling = chr(10).join((
+        "_CHOICES = (",
+        '    (BusinessClassification.BUSINESS, "tui.ledger.classification.business"),',
+        '    (BusinessClassification.PERSONAL, "tui.ledger.classification.personal"),',
+        ")",
+        "for classification, key in _CHOICES:",
+        "    table.add_row(tr(key), key=classification.value)",
+    ))
+
+    assert "tui.ledger.classification.business" in scan_source_text(enum_sibling, filename="classification.py"), (
+        "an enum member sibling must not disqualify the table either"
+    )
+
 
 def test_a_class_attribute_key_is_confirmed_by_the_attribute_the_base_renders(tmp_path) -> None:
     """Incident 11: a screen family names its banner on the subclass.
@@ -841,4 +858,58 @@ def test_a_class_attribute_key_is_confirmed_by_the_attribute_the_base_renders(tm
     assert "tui.aeat_sync.census.title" in keys, "the attribute the base renders carries a real key"
     assert "workbench.census.home" not in keys, (
         "a class attribute nothing renders is a route or an action id, not copy"
+    )
+
+
+def test_every_translation_key_annotated_parameter_is_declared_a_key_kwarg() -> None:
+    """Incident 12: the kwarg set was grown one orphan at a time.
+
+    `_TRANSLATION_KEY_KWARGS` decides which keyword arguments carry a locale
+    key, and every entry in it arrived because somebody chased a key that had
+    gone missing. That is discovery by casualty: a parameter is only added
+    after its keys have already been invisible for a while.
+
+    The codebase states the answer in the type. A parameter annotated
+    `TranslationKey` IS a translation key, so the annotation -- not a
+    maintainer's memory -- is what the set must agree with. Three names were
+    missing when this gate was written (`reason_key`, `short_help_key`,
+    `prompt_key`, `confirmation_prompt_key`).
+
+    The set stays hand-written rather than derived, deliberately: it is read at
+    five sites and an explicit list is auditable, while a set computed from a
+    tree walk hides the surface it admits. The gate is what makes the list
+    honest.
+    """
+    import ast
+
+    from .._ast_scanner import _TRANSLATION_KEY_KWARGS
+
+    def _names_the_translation_key_type(annotation: ast.expr | None) -> bool:
+        if isinstance(annotation, ast.Name):
+            return annotation.id == "TranslationKey"
+        if isinstance(annotation, ast.Constant) and isinstance(annotation.value, str):
+            return annotation.value.split("|")[0].strip() == "TranslationKey"
+        if isinstance(annotation, ast.BinOp) and isinstance(annotation.op, ast.BitOr):
+            return _names_the_translation_key_type(annotation.left) or _names_the_translation_key_type(
+                annotation.right
+            )
+        return False
+
+    annotated: set[str] = set()
+    for module in scan_directory(SRC_DIR, pattern="*.py", recursive=True):
+        if "TranslationKey" not in module.read_text(encoding="utf-8"):
+            continue
+        tree = ast.parse(module.read_text(encoding="utf-8"), filename=str(module))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+                if _names_the_translation_key_type(node.annotation):
+                    annotated.add(node.target.id)
+            elif isinstance(node, ast.arg) and _names_the_translation_key_type(node.annotation):
+                annotated.add(node.arg)
+
+    assert annotated, "no TranslationKey-annotated parameter was found, so this proved nothing"
+    undeclared = sorted(annotated - set(_TRANSLATION_KEY_KWARGS))
+    assert not undeclared, (
+        "these parameters are annotated TranslationKey but are not declared translation-key "
+        f"kwargs, so every dotted literal passed to one is invisible to the scanner: {undeclared}"
     )
