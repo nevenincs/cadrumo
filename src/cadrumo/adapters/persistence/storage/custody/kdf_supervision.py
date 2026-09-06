@@ -7,7 +7,7 @@ import os
 import sys
 import threading
 import time
-from collections.abc import Generator
+from collections.abc import Generator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from statistics import median
@@ -190,6 +190,55 @@ def fixed_profile_kdf_fallback(*, salt: bytes) -> ProfileCustodyKdfParameters:
     )
 
 
+def _posix_memory_bytes() -> int:
+    """Return a POSIX memory bound for the eligibility gate, or 0 if unknowable.
+
+    ``SC_AVPHYS_PAGES`` is the currently-free page count and is the figure to
+    prefer, but it is NOT portable: macOS omits it from ``os.sysconf_names``
+    entirely, so asking for it by name raises ``ValueError`` rather than
+    answering. The sibling probe in ``application/provisioning.py`` already
+    guards on membership for exactly this reason and calls the constant "the
+    more commonly absent of the three".
+
+    Reading it unguarded here made every macOS host refuse profile custody
+    outright: the ``ValueError`` was caught beside genuine probe failures and
+    turned into ``KDF_RESOURCE_LIMIT``, so `config profile create` could not
+    succeed on any Mac at any memory pressure -- while the refusal told the
+    operator to retry when the machine was less loaded, a state that could
+    never arrive. Measured on macOS 26.5.1: ``SC_AVPHYS_PAGES`` absent,
+    ``SC_PHYS_PAGES`` present and reporting 8 GiB, ~1.6 GiB genuinely
+    reclaimable.
+
+    Where the free count is unavailable, total physical memory is used
+    instead. That is deliberately a weaker bound -- it cannot see load -- and
+    it is the honest one, because the alternative on such a platform is to
+    refuse work the host can plainly do. The allocation is not left unguarded:
+    the derivation runs in a supervised child under ``RLIMIT_AS`` with a
+    deadline, so a host that genuinely cannot supply the memory still fails
+    there, loudly, instead of being predicted here.
+    """
+    # Reached through ``getattr`` rather than named directly: neither attribute
+    # is declared on Windows, where this branch never runs, so naming them
+    # outright is an unresolved attribute to a type checker reading the
+    # Windows surface. The names are also the only portable way to ask what
+    # this host actually answers.
+    names = getattr(os, "sysconf_names", None)
+    sysconf = getattr(os, "sysconf", None)
+    # Narrowed by test rather than by annotation. Annotating the ``getattr``
+    # results would assert their shape instead of establishing it, and these
+    # are exactly the attributes whose presence and type this function exists
+    # to be unsure about.
+    if not isinstance(names, Mapping) or not callable(sysconf):
+        return 0
+    if "SC_PAGE_SIZE" not in names:
+        return 0
+    page_size = int(sysconf("SC_PAGE_SIZE"))
+    for pages_name in ("SC_AVPHYS_PAGES", "SC_PHYS_PAGES"):
+        if pages_name in names:
+            return page_size * int(sysconf(pages_name))
+    return 0
+
+
 def profile_kdf_resources() -> ProfileCustodyKdfResources:
     """Read the portable resources that bound a local KDF worker."""
     cpu_count = os.cpu_count()
@@ -199,9 +248,7 @@ def profile_kdf_resources() -> ProfileCustodyKdfResources:
         if sys.platform == "win32":
             available_memory = _windows_available_memory_bytes()
         else:
-            page_size = os.sysconf("SC_PAGE_SIZE")
-            available_pages = os.sysconf("SC_AVPHYS_PAGES")
-            available_memory = page_size * available_pages
+            available_memory = _posix_memory_bytes()
     except (AttributeError, OSError, ValueError):
         raise _resource_refusal() from None
     if available_memory < 1:
