@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:077043d0cd0414c2d63e146c0cb730a64be2d91d39d9def96816bc1d14823ae0'
+body_hash: 'sha256:97d1157685b973af3dbcbf25f53af371dabf0f9082baf1cc7060412a63a24660'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -606,6 +606,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S724` - Read a returned tag and a parameter default as base-image bindings so the singularity gate cannot be restated through the two spellings it never parsed; `dev/packaging/tests/test_container_base_image_singularity.py`.
 - [x] `W02.P02.S725` - Raise the sanitizer source-open refusal outside its except block so the unredacted pikepdf context stops travelling on the exception; `dev/sanitizer/_pipeline.py`.
 - [x] `W02.P02.S726` - Name the observed and expected values in every record-design corpus staleness refusal so the verdict says what drifted instead of only that something did; `dev/corpus/sync_aeat_record_design_corpus.py`.
+- [x] `W02.P02.S727` - Derive the work-selection retirement paths from the retired-module declaration and anchor them on the canonical module, replacing a restated path that demanded the canonical module be absent; `dev/tests/test_modelo_work_selection_fixed_point.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

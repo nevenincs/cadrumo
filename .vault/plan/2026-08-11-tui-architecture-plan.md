@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-06'
-body_hash: 'sha256:1b9d4567e9937d3f3c19f3ea2c36d1b58234e992bfc07e0bbcb1ef4317cec65a'
+body_hash: 'sha256:a244451755ed4dc1170e1fe619db2f4b6cb28b209aca3ec953c08588da2ccc2b'
 ---
 
 <!-- RETIRED: S370 -->
@@ -666,6 +666,7 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S450` - Name the Home locale-key registries by the scanner's convention, and partition the locale parity extras by evidence instead of pruning them. Six dict constants carried a _KEYS suffix the registry naming gate refuses. Then establish what the remaining extras actually are: which carry no string literal anywhere in the tree, and which are referenced by code the scanner cannot read, since only the first group could ever be safe to remove and the two are indistinguishable in the gate's own output.; `src/cadrumo/entrypoints/tui/home.py`.
 - [x] `W08.P30.S451` - Resolve a translation key filled positionally into a helper defined in another module, and make the resolution refuse a name whose definitions disagree. The CLI command specs pass their help key by position to a helper whose parameter the scanner already recognises by name, but only as a keyword and only within one module, so the keys read as orphaned catalogue entries. Collect the callee signatures across the tree first, and count a position only where every definition of that name agrees it carries a key.; `dev/locales/_ast_scanner.py, dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
 - [x] `W08.P30.S452` - Re-apply the reconciliation direction key rename the concurrent writer reverted, and record why nothing caught it. The catalogue kept the corrected shape while the committed source went back to the old keys, so the surface asked for keys the catalogue no longer holds. It rendered anyway: tr() humanises an unknown key into title-cased prose from its last segment, so a missing key reads as a plausible English label in every locale while the authored translation sits unused.; `src/cadrumo/entrypoints/tui/ledger/reconciliation.py, src/cadrumo/entrypoints/tui/ledger/controller.py`.
+- [x] `W08.P30.S453` - Follow the per-surface translator boundary helpers the locale scanner could not see. Every TUI surface routes its copy through a local wrapper that forwards its key to tr, so the call sites never name the translator and every key reaching the catalogue through one read as an orphan. Resolve wrapper names across the tree to a fixpoint, admitting only a function that forwards its own first parameter, so a helper that merely calls the translator on something else is not mistaken for a key channel.; `dev/locales/_ast_scanner.py, dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
 
 ## Parallelization
 
