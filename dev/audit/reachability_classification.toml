@@ -1469,3 +1469,17 @@ class = "superseded"
 area = "application/modelo"
 symbols = ["resolve_modelo_work_unit_id", "project_modelo_work_target"]
 evidence = "The module is five-live to four-dead, and the live half names the holder. resolve_modelo_work_unit_for_operator_target and select_modelo_work_resolution are reached, and callers read the identifier off the resolved work unit rather than resolving it separately -- calculation_actions.py:801 and the m303 annual summary both pass work_unit_id=work_unit.work_unit_id into CalculationSourceContext. So the standalone id resolver and the target projector are displaced by a resolution that already carries what they return. Checked against the constant-default shape first: CalculationSourceContext.work_unit_id defaults to None, but two of its three construction sites pass a computed value, so the field is populated and this is ordinary supersession rather than a producer replaced by a literal."
+
+[[symbol_cluster]]
+name = "path-taking restore wrappers the shared authority displaced"
+class = "superseded"
+area = "application/user_profile"
+symbols = ["restore_profile_from_source_with_password", "restore_profile_from_source_with_recovery_artifact"]
+evidence = "Two wrappers that take a filesystem path and republish the capsule found there. The displacing holder states the arrangement itself: restore_profile_capsule_with_password is documented as the shared publication authority, where a directory restore and an archive import differ only in how they OBTAIN a ProfileCapsuleSource and both arrive at one place, and adding a second is called the fork the arrangement exists to prevent. The live callers follow that split -- entrypoints/cli/config/_restore_cli.py reads the source through read_profile_capsule_source and then publishes, and capsule_archive.py publishes too -- so these path-taking variants are the second thing the design refuses."
+
+[[symbol_cluster]]
+name = "manifest validators the atomic capture made unnecessary"
+class = "superseded"
+area = "application/modelo"
+symbols = ["validate_modelo_workspace_field_manifest", "validate_modelo_workspace_field_manifest_for_inspection"]
+evidence = "Each validator regenerates the manifest and refuses one that is not the current fixed point. The live capture pair makes that comparison unreachable by construction: capture_modelo_workspace_manifest documents that the walk is atomic, the sole generating authority runs once and its own digest becomes the observation, so no second walk can pair a manifest with a coordinate from different schema state. Every manifest in the tree therefore comes from the same walk that produced its coordinate, and a generate-then-compare check would always trivially pass. Note the generator itself is NOT a finding: capture calls it in the same module, which a cross-module reference count cannot see."
