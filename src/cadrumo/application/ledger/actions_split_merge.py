@@ -807,6 +807,16 @@ def _build_merged_transaction(
                 sibling_transaction_ids=sorted_child_ids,
             ),
             "notes": "",
+            # The merged row restates the parent's money exactly -- ``merged_raw``
+            # copies its amount and currency verbatim -- so the parent's foreign
+            # conversion still describes it and there is nothing to re-derive.
+            # Dropping it would leave a row with a foreign currency and no euro
+            # value, and ``summarize_manual_transactions`` counts such a row at
+            # its face number: a merged 1000 USD parent would re-enter the totals
+            # as 1000 EUR, with the parent archived and the figure gone from the
+            # active catalogue.
+            "fx_rate": parent.fx_rate,
+            "value_in_eur": parent.value_in_eur,
             # D6: the merged transaction is a freshly-created row.
             "created_at": occurred_at,
             "modified_at": occurred_at,
