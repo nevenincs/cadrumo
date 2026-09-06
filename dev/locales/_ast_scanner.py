@@ -666,47 +666,101 @@ def _row_table_names_iterated_into_a_sink(
     """
     tr_names = _translation_call_names(tree) | wrappers
     key_columns = {name: _row_table_key_columns(value) for name, value in candidates.items()}
-    bound_to_table: dict[str, str] = {}
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.For | ast.AsyncFor):
-            continue
-        table = _iterated_candidate_name(node.iter, candidates)
-        if table is None:
-            continue
-        columns = key_columns[table]
-        if isinstance(node.target, ast.Name):
-            # A whole-row binding cannot say which column reaches the sink, so
-            # it stays confirmable as before.
-            bound_to_table[node.target.id] = table
-            continue
-        # Unpacked: only the KEY column binding confirms. A name bound to a
-        # prose column reaching a sink is the framework passing its English
-        # source string, which says nothing about whether the table holds keys.
-        for index, target in enumerate(getattr(node.target, "elts", [])):
-            if isinstance(target, ast.Name) and index in columns:
-                bound_to_table[target.id] = table
+    aliases = _parameters_bound_to_a_candidate_table(tree, candidates)
+    bound_to_table: dict[str, set[str]] = {}
+    for node in _iteration_bindings(tree):
+        for table in _iterated_candidate_tables(node.iter, candidates, aliases):
+            columns = key_columns[table]
+            if isinstance(node.target, ast.Name):
+                # A whole-row binding cannot say which column reaches the sink,
+                # so it stays confirmable as before.
+                bound_to_table.setdefault(node.target.id, set()).add(table)
+                continue
+            # Unpacked: only the KEY column binding confirms. A name bound to a
+            # prose column reaching a sink is the framework passing its English
+            # source string, which says nothing about whether the table holds
+            # keys.
+            for index, target in enumerate(getattr(node.target, "elts", [])):
+                if isinstance(target, ast.Name) and index in columns:
+                    bound_to_table.setdefault(target.id, set()).add(table)
     confirmed: set[str] = set()
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
             continue
         for argument in _call_site_key_argument_exprs(node, tr_names):
             if isinstance(argument, ast.Name) and argument.id in bound_to_table:
-                confirmed.add(bound_to_table[argument.id])
+                confirmed |= bound_to_table[argument.id]
                 continue
             # `for column in TABLE: tr(column[1])` -- the row is bound whole and
             # the key taken by index. The index must BE a key column: a prose
             # sibling reaching the sink says nothing about the table, exactly as
             # it does not when the row is unpacked.
-            subscripted = _row_subscript_source(argument, bound_to_table)
-            if subscripted is None:
-                continue
-            table, index = subscripted
-            if index in key_columns[table]:
-                confirmed.add(table)
+            for table, index in _row_subscript_sources(argument, bound_to_table):
+                if index in key_columns[table]:
+                    confirmed.add(table)
     return frozenset(confirmed)
 
 
-def _iterated_candidate_name(node: ast.expr, candidates: dict[str, ast.expr]) -> str | None:
+def _iteration_bindings(tree: ast.AST) -> Iterator[ast.For | ast.AsyncFor | ast.comprehension]:
+    """Yield every construct that binds names by iterating something.
+
+    A ``for`` statement and a comprehension's generator bind identically, and
+    reading only the statement form missed the table iterated inside a
+    generator expression -- which is how the widest screen sizes its columns.
+    """
+    for node in ast.walk(tree):
+        if isinstance(node, ast.For | ast.AsyncFor):
+            yield node
+        elif isinstance(node, ast.ListComp | ast.SetComp | ast.DictComp | ast.GeneratorExp):
+            yield from node.generators
+
+
+def _parameters_bound_to_a_candidate_table(
+    tree: ast.AST, candidates: dict[str, ast.expr]
+) -> dict[str, frozenset[str]]:
+    """Map a local function's parameter name to the candidate table passed into it.
+
+    A screen shares its column-fitting rule rather than repeating it, so the
+    table is not iterated where it is declared -- it is handed to a helper::
+
+        _fit_columns(self.app.size.width, self._COLUMNS, self._VALUE_COLUMNS)
+
+    Inside that helper the parameter is iterated and its rows translated, but
+    the confirmation walk saw only a parameter name and could not tell it was
+    this table. One hop is enough here because the analysis is name-based
+    within the module, so a row bound in the helper is already followed into
+    the nested function it is handed to.
+
+    A parameter filled by SEVERAL tables confirms all of them, and that is
+    not a guess: one shared helper is called by every screen with its own
+    columns, so if the parameter's rows reach a translator then every table
+    handed to it is translated. Dropping the name as ambiguous would fail the
+    common case for being common.
+    """
+    parameters: dict[str, ast.arguments] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+            parameters[node.name] = node.args
+    seen: dict[str, set[str]] = {}
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        signature = parameters.get(_callee_name(node.func) or "")
+        if signature is None:
+            continue
+        positional = [*signature.posonlyargs, *signature.args]
+        for index, argument in enumerate(node.args):
+            if index >= len(positional):
+                break
+            tables = _iterated_candidate_tables(argument, candidates)
+            if tables:
+                seen.setdefault(positional[index].arg, set()).update(tables)
+    return {name: frozenset(tables) for name, tables in seen.items()}
+
+
+def _iterated_candidate_tables(
+    node: ast.expr, candidates: dict[str, ast.expr], aliases: dict[str, frozenset[str]] | None = None
+) -> frozenset[str]:
     """Resolve the candidate table a ``for`` statement iterates.
 
     A screen holds its column table as a ``ClassVar`` and reads it back as
@@ -716,21 +770,23 @@ def _iterated_candidate_name(node: ast.expr, candidates: dict[str, ast.expr]) ->
     already in this module.
     """
     if isinstance(node, ast.Name) and node.id in candidates:
-        return node.id
+        return frozenset({node.id})
     if isinstance(node, ast.Attribute) and node.attr in candidates:
-        return node.attr
-    return None
+        return frozenset({node.attr})
+    if aliases is not None and isinstance(node, ast.Name):
+        return aliases.get(node.id, frozenset())
+    return frozenset()
 
 
-def _row_subscript_source(node: ast.expr, bound_to_table: dict[str, str]) -> tuple[str, int] | None:
-    """Return ``(table, index)`` when ``node`` indexes a bound whole row."""
+def _row_subscript_sources(node: ast.expr, bound_to_table: dict[str, set[str]]) -> list[tuple[str, int]]:
+    """Return ``(table, index)`` pairs when ``node`` indexes a bound whole row."""
     if not isinstance(node, ast.Subscript):
-        return None
+        return []
     if not (isinstance(node.value, ast.Name) and node.value.id in bound_to_table):
-        return None
+        return []
     if not (isinstance(node.slice, ast.Constant) and isinstance(node.slice.value, int)):
-        return None
-    return bound_to_table[node.value.id], node.slice.value
+        return []
+    return [(table, node.slice.value) for table in bound_to_table[node.value.id]]
 
 
 def _flow_confirmed_locale_key_row_tables(tree: ast.AST, wrappers: frozenset[str] = frozenset()) -> dict[str, ast.expr]:

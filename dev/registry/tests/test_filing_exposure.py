@@ -48,6 +48,13 @@ def test_any_filing_exposure_defeats_the_deferral() -> None:
     assert exposed.wholly_below_filing is False
 
 
+#: Floor for the denominator the three populations are drawn from. Live the
+#: walk measures 36 conditions, partitioned exactly 24 exposed / 4 measured
+#: safe / 8 unmeasurable. Two thirds of live, so ordinary movement never
+#: fires it while a narrowed walk does.
+_MINIMUM_MEASURED_CONDITIONS = 24
+
+
 def test_the_live_report_separates_the_three_populations() -> None:
     """The corpus carries exposed, measured-safe and unmeasurable conditions.
 
@@ -58,12 +65,30 @@ def test_the_live_report_separates_the_three_populations() -> None:
     authority = bundled_authority()
     modelo_ids = bundled_modelo_ids()
     exposures = condition_exposure(authority, modelo_ids)
-    assert exposures, "no condition was measured, so this proves nothing"
+    # A floor, not an existence check. The three claims below are all
+    # non-emptiness, so a walk that narrowed to a fraction would still satisfy
+    # every one of them -- live the populations are 24 / 4 / 8, and each would
+    # survive losing two thirds of the corpus. Presence is the right shape for
+    # the three (their counts move whenever a screen is added or a revision
+    # changes grade); the DENOMINATOR they are drawn from is what needs a size.
+    assert len(exposures) >= _MINIMUM_MEASURED_CONDITIONS, (
+        f"only {len(exposures)} condition(s) were measured against a corpus of about "
+        f"{_MINIMUM_MEASURED_CONDITIONS + 12}; the walk is reading part of the registry, so the "
+        "three populations below are separated within a fraction of it"
+    )
 
     exposed = [item for item in exposures if item.filing_findings]
     measured_safe = [item for item in exposures if item.wholly_below_filing]
     unmeasurable = [item for item in exposures if item.findings == item.unmeasured]
-    assert exposed and measured_safe and unmeasurable
+    # Named one at a time rather than conjoined. Which population emptied is the
+    # whole diagnosis: no EXPOSED condition means filing exposure stopped being
+    # detected, no MEASURED-SAFE one means nothing is provably below filing
+    # grade, and no UNMEASURABLE one means the report lost its own blind spot.
+    # ``exposed and measured_safe and unmeasurable`` reads identically for all
+    # three and names none of them.
+    assert exposed, "no condition carries a filing finding, so the ordering below separates nothing"
+    assert measured_safe, "no condition is wholly below filing grade, so the safe population vanished"
+    assert unmeasurable, "no condition is wholly unmeasured, so the report lost its own blind spot"
     # Nothing may be counted in two of the three.
     assert not ({id(x) for x in exposed} & {id(x) for x in measured_safe})
     assert not ({id(x) for x in measured_safe} & {id(x) for x in unmeasurable})

@@ -131,16 +131,12 @@ def test_a_symbol_disposition_may_not_claim_a_contract(tmp_path: Path) -> None:
 
     path = tmp_path / "unused_symbol_ratchet.toml"
     path.write_text(
-        "
-".join(
-            (
-                "[[intentional]]",
-                'module = "cadrumo.example"',
-                'symbol = "THING"',
-                'kind = "declared_by_contract"',
-                'rationale = "A contract declares it."',
-            )
-        ),
+        """[[intentional]]
+module = "cadrumo.example"
+symbol = "THING"
+kind = "declared_by_contract"
+rationale = "A contract declares it."
+""",
         encoding="utf-8",
     )
 

@@ -913,3 +913,55 @@ def test_every_translation_key_annotated_parameter_is_declared_a_key_kwarg() -> 
         "these parameters are annotated TranslationKey but are not declared translation-key "
         f"kwargs, so every dotted literal passed to one is invisible to the scanner: {undeclared}"
     )
+
+
+def test_a_column_table_handed_to_a_shared_fitter_is_still_confirmed() -> None:
+    """Incident 13: the table is not iterated where it is declared.
+
+    Every AEAT Sync screen sizes its columns with one shared helper rather than
+    repeating the rule, so the table is HANDED OVER::
+
+        _fit_columns(self.app.size.width, self._COLUMNS, self._VALUE_COLUMNS)
+
+    Inside the helper the parameter is iterated in a GENERATOR EXPRESSION and
+    each row is translated. Two things hid that: confirmation walked only
+    ``for`` statements, and a parameter name said nothing about which table had
+    been passed into it.
+
+    A parameter filled by several tables confirms all of them. That is not a
+    guess -- one helper serves every screen, so if its parameter's rows reach a
+    translator then every table handed to it is translated. Dropping the name
+    as ambiguous, which is what a first attempt did, failed the common case for
+    being common: only the table that happened to be unique was recovered.
+
+    The key-column discipline is unchanged, and the negative arm holds it: a
+    helper that indexes the PROSE column confirms nothing, however many tables
+    are handed to it.
+    """
+    from .._ast_scanner import scan_source_text
+
+    handed_over = chr(10).join((
+        "_CENSUS = (",
+        '    ("field", "tui.aeat_sync.column.field", 26),',
+        ")",
+        "_VALUES = (",
+        '    ("local_value", "tui.aeat_sync.column.local_value", 16),',
+        ")",
+        "def _fit(width, standalone, pair=()):",
+        "    def _sized(column):",
+        "        return column[0], tr(column[1])",
+        "    return [_sized(column) for column in standalone]",
+        "def render(self):",
+        "    return _fit(80, _CENSUS, _VALUES) + _fit(80, _VALUES)",
+    ))
+    prose_fitter = handed_over.replace("tr(column[1])", "tr(column[0])")
+
+    collected = scan_source_text(handed_over, filename="screens.py")
+
+    assert "tui.aeat_sync.column.field" in collected, "a table handed to the shared fitter is translated"
+    assert "tui.aeat_sync.column.local_value" in collected, (
+        "a parameter filled by several tables confirms every one of them"
+    )
+    assert "tui.aeat_sync.column.field" not in scan_source_text(prose_fitter, filename="screens.py"), (
+        "a fitter that indexes the prose column confirms nothing"
+    )

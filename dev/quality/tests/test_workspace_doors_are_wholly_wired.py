@@ -69,11 +69,7 @@ def supplied_fields(source: str, factory: str = _FACTORY) -> frozenset[str]:
     """Return the keyword names production passes to the workspace factory."""
     supplied: set[str] = set()
     for node in ast.walk(ast.parse(source)):
-        if (
-            isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Name)
-            and node.func.id == factory
-        ):
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == factory:
             supplied.update(kw.arg for kw in node.keywords if kw.arg)
     return frozenset(supplied)
 
@@ -110,9 +106,7 @@ def test_the_launcher_still_supplies_something() -> None:
 
 def test_no_workspace_door_is_wired_in_part() -> None:
     """The direction the gate exists for."""
-    partial = partially_wired_doors(
-        _CONTROLLER.read_text(encoding="utf-8"), _LAUNCHER.read_text(encoding="utf-8")
-    )
+    partial = partially_wired_doors(_CONTROLLER.read_text(encoding="utf-8"), _LAUNCHER.read_text(encoding="utf-8"))
     assert not partial, (
         "these workspace areas are given some of their dependencies and not the "
         "rest, so the door is refused at runtime while the call site reads as "
@@ -130,9 +124,7 @@ def test_the_gate_catches_a_planted_half_wired_door() -> None:
     )
     launcher = "def make():\n    return ledger_screen_factory(p, classify_action=a)\n"
 
-    assert partially_wired_doors(controller, launcher) == {
-        "CLASSIFICATION": ("classification_submitter",)
-    }
+    assert partially_wired_doors(controller, launcher) == {"CLASSIFICATION": ("classification_submitter",)}
 
 
 def test_an_area_supplied_in_full_is_left_alone() -> None:

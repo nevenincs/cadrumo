@@ -224,7 +224,6 @@ class UnreachableBaseline:
         )
 
 
-
 def _require_declaration(*, module: str, declared_by: str, root: Path) -> None:
     """Refuse a contract disposition whose named declaration does not name the module.
 
@@ -239,6 +238,7 @@ def _require_declaration(*, module: str, declared_by: str, root: Path) -> None:
         raise ValueError(f"{module}: declared_by names no file: {declared_by}")
     if module not in source.read_text(encoding=UTF_8, errors="ignore"):
         raise ValueError(f"{module}: {declared_by} no longer declares it; the disposition is spent")
+
 
 @dataclass(frozen=True, slots=True)
 class DeferredDerivation:
