@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import calendar
 import time
+from copy import deepcopy
 from pathlib import Path
 from typing import Any, Final
 
@@ -36,6 +37,7 @@ from ..runner_queue_watchdog import (
     occupied_label_keys,
     parse_jobs,
 )
+from ..workflow_run_text import executed_text
 from ..workflow_runner_targets import is_unresolved, runner_targets
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -446,17 +448,57 @@ def test_a_lane_whose_labels_cannot_be_read_counts_as_off_lane() -> None:
     assert _off_watchdog_lane_jobs(document) == ["fanned"]
 
 
+def _watchdog_invokes_the_module(job: dict[str, Any]) -> bool:
+    """Whether ``job`` actually RUNS the shared watchdog module.
+
+    Read from what the steps execute rather than from their text. A module name
+    can appear in a workflow in an explanatory comment as well as in a command,
+    and a comment is a name the shell never acts on: a watchdog whose
+    invocation was commented out, or replaced by a hand-copied shell loop under
+    a note naming the module, satisfies a substring reading of the same block
+    while running nothing.
+    """
+    return _WATCHDOG_MODULE in executed_text(step.get("run") for step in job.get("steps") or [])
+
+
 def test_every_watchdog_job_invokes_the_shared_module() -> None:
     """One implementation of the decision, not five hand-copied shell loops."""
+    examined = 0
     for path, document in _workflow_documents():
         job = (document.get("jobs") or {}).get(_WATCHDOG_JOB_ID)
         if job is None:
             continue
-        body = "\n".join(str(step.get("run", "")) for step in job.get("steps") or [])
-        assert _WATCHDOG_MODULE in body, f"{path.name}: watchdog does not run {_WATCHDOG_MODULE}"
+        examined += 1
+        assert _watchdog_invokes_the_module(job), f"{path.name}: watchdog does not run {_WATCHDOG_MODULE}"
         assert job.get("runs-on") is not None and tuple(sorted(job["runs-on"])) == _WATCHDOG_LABELS, (
             f"{path.name}: the watchdog must run on a lane the fleet can always serve"
         )
+    assert examined, f"no workflow declares a {_WATCHDOG_JOB_ID} job; this gate examined nothing"
+
+
+def test_a_watchdog_whose_invocation_is_commented_out_is_not_invoking_it() -> None:
+    """Teeth, over a copy of a real watchdog job rather than an invented one.
+
+    Both directions across the same input: the job as it stands invokes the
+    module, and the same job with its commands commented out does not -- while
+    the substring reading this replaced still finds the module name in it.
+    """
+    job = next(
+        (document.get("jobs") or {})[_WATCHDOG_JOB_ID]
+        for _, document in _workflow_documents()
+        if _WATCHDOG_JOB_ID in (document.get("jobs") or {})
+    )
+
+    assert _watchdog_invokes_the_module(job)
+
+    commented = deepcopy(job)
+    newline = chr(10)
+    for step in commented["steps"]:
+        if "run" in step:
+            step["run"] = "# " + str(step["run"]).replace(newline, newline + "# ")
+
+    assert _WATCHDOG_MODULE in "".join(str(step.get("run", "")) for step in commented["steps"])
+    assert not _watchdog_invokes_the_module(commented)
 
 
 def _needs_of(job: dict[str, Any]) -> frozenset[str]:

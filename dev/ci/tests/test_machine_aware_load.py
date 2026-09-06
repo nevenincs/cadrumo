@@ -29,6 +29,7 @@ from ..lane_reachability import (
     expression_selects,
     marker_sets_in,
 )
+from ..workflow_run_text import executed_lines
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -65,7 +66,7 @@ def _justfile_recipe_bodies() -> dict[str, list[str]]:
             bodies.setdefault(current, [])
             continue
         if current is not None and raw_line[:1].isspace():
-            bodies[current].append(raw_line.strip())
+            bodies[current].extend(executed_lines(raw_line))
     return bodies
 
 
@@ -149,14 +150,17 @@ def _pytest_lines(
     substituted using the CALLING line's positional args and env-var prefix,
     so the check below applies to what CI actually executes, not to the
     recipe's local-dev default.
+
+    Comment lines are not invocations. A `pytest` named only behind a `#` --
+    in a rationale note above the command, or in the command itself after it
+    was commented out -- runs nothing, so counting one would let a workflow
+    that executes no pytest at all satisfy the vacuity guard below, and would
+    equally fail a workflow whose prose merely mentions `-n auto`.
     """
     lines: list[str] = []
     for job in document["jobs"].values():
         for step in job.get("steps") or []:
-            for raw_line in str(step.get("run", "")).splitlines():
-                line = raw_line.strip()
-                if not line:
-                    continue
+            for line in executed_lines(step.get("run")):
                 if "pytest" in line:
                     lines.append(line)
                     continue
@@ -519,3 +523,55 @@ def test_dropping_the_exclusion_lets_a_real_lane_actually_collect_a_member() -> 
         f"dropping `{lane.source}/{lane.recipe}`'s exclusion did not make real pytest collect a "
         f"harness member\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
     )
+
+
+def _synthetic_workflow(run: str) -> dict[str, Any]:
+    """One job, one step, running ``run`` -- the smallest gateable document."""
+    return {"jobs": {"lane": {"steps": [{"name": "Test", "run": run}]}}}
+
+
+def test_a_commented_out_pytest_invocation_is_not_counted_as_one() -> None:
+    """Teeth: the vacuity guard must not be satisfiable by prose.
+
+    Both directions over the same command. Uncommented it is the invocation
+    this gate sizes; commented it is a workflow that runs no pytest, and a
+    reader that still counted it would report a gated lane where nothing runs.
+    """
+    command = "uv run --no-sync pytest -n 8 dev -q"
+    empty: dict[str, list[str]] = {}
+
+    assert _pytest_lines(_synthetic_workflow(command), empty, {}, {}) == [command]
+    assert _pytest_lines(_synthetic_workflow("# " + command), empty, {}, {}) == []
+
+
+def test_a_commented_out_pytest_line_in_a_recipe_is_not_counted_either() -> None:
+    """The delegated half of the same rule.
+
+    A `just <recipe>` call resolves the recipe's body, so a commented-out
+    invocation inside the recipe would reach the gate by the longer route if
+    the body reader did not apply the same rule.
+    """
+    live = _pytest_lines(
+        _synthetic_workflow("just test-lane"),
+        {"test-lane": ["pytest -n 8 dev"]},
+        {"test-lane": []},
+        {},
+    )
+    commented = _pytest_lines(
+        _synthetic_workflow("just test-lane"),
+        {"test-lane": ["# pytest -n 8 dev"]},
+        {"test-lane": []},
+        {},
+    )
+
+    assert live == ["pytest -n 8 dev"]
+    assert commented == []
+
+
+def test_the_recipe_body_reader_drops_a_commented_line() -> None:
+    """Read from the real justfile, so the rule is proven where it is used."""
+    bodies = _justfile_recipe_bodies()
+
+    assert bodies, "the justfile parsed to no recipe at all"
+    commented = {recipe: line for recipe, body in bodies.items() for line in body if line.startswith("#")}
+    assert commented == {}
