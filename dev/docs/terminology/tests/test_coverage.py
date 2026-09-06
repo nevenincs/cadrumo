@@ -257,9 +257,15 @@ def test_report_over_the_committed_mapping_is_grounded(
         **_EMPTY_CLI,
     )
 
-    assert report.referenced_target_count > 0
-    assert report.kind(CoverageKind.CONCEPT).covered > 0
-    assert report.kind(CoverageKind.LEGAL).covered > 0
+    # 'Populated' is a magnitude, and `> 0` measured none of it. Live the
+    # report references 90 targets, of which CONCEPT covers 49 and LEGAL 41 -
+    # the total is exactly the two kinds summed. The floors are set against
+    # the degradation that actually happens rather than a round fraction:
+    # losing either kind entirely drops the total to 49 or 41, so 70 catches
+    # it, and each kind's own floor catches that kind collapsing alone.
+    assert report.referenced_target_count > 70, report.referenced_target_count
+    assert report.kind(CoverageKind.CONCEPT).covered > 35, report.kind(CoverageKind.CONCEPT).covered
+    assert report.kind(CoverageKind.LEGAL).covered > 30, report.kind(CoverageKind.LEGAL).covered
     # The refreshed manifest-admissible relevance emits no synthetic code
     # targets, so the orphan report contains no ``code:`` ids.
     assert not any(orphan.startswith("code:") for orphan in report.orphan_mapping_target_ids)

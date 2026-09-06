@@ -92,6 +92,32 @@ def _captured_text(document: dict[str, object]) -> str:
     return "\n".join(parts)
 
 
+def _captured_lengths(document: dict[str, object]) -> dict[str, int]:
+    """Return characters read PER CARRIER, so a total cannot hide one dying.
+
+    Measured across the live corpus the carriers are wildly unequal: the
+    envelope holds 15,752,565 characters (98.2%), text 290,627 (1.8%) and
+    stderr_text none at all. A floor on their sum therefore proves only that
+    the envelope is being read - losing text entirely still leaves 98% of the
+    total standing.
+    """
+    lengths = {"text": 0, "stderr_text": 0, "envelope": 0}
+    frames = document.get("frames")
+    if not isinstance(frames, list):
+        return lengths
+    for frame in frames:
+        if not isinstance(frame, dict):
+            continue
+        for key in ("text", "stderr_text"):
+            value = frame.get(key)
+            if isinstance(value, str):
+                lengths[key] += len(value)
+        envelope = frame.get("envelope")
+        if envelope is not None:
+            lengths["envelope"] += len(json.dumps(envelope, ensure_ascii=False))
+    return lengths
+
+
 def _read_corpus() -> list[tuple[Path, str]]:
     """Return ``(path, captured_text)`` for every readable golden.
 
@@ -129,6 +155,22 @@ def test_golden_scan_actually_reads_captured_output() -> None:
         f"only {len(corpus)} goldens were discovered; the gate below is measured over a "
         "fraction of the recorded corpus"
     )
+    # Per carrier, because the total is 98% envelope: a floor on the sum
+    # proves only that the envelope is read, and losing `text` entirely
+    # leaves 15.75M characters standing. Live: envelope 15,752,565, text
+    # 290,627, stderr_text 0 - so stderr_text carries nothing in this corpus
+    # and no character floor can prove it is being read at all.
+    carriers = {
+        "text": 0,
+        "stderr_text": 0,
+        "envelope": 0,
+    }
+    for path, _text in corpus:
+        for key, value in _captured_lengths(json.loads(path.read_text(encoding="utf-8"))).items():
+            carriers[key] += value
+    assert carriers["envelope"] > 10_000_000, carriers
+    assert carriers["text"] > 150_000, carriers
+
     total = sum(len(text) for _, text in corpus)
     assert total > 5_000_000, (
         f"read {len(corpus)} goldens but only {total} characters of captured output; "

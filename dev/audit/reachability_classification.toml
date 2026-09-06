@@ -393,7 +393,6 @@ symbols = [
   "resolve_donativo_binding_row_values",
   "resolve_gasto193_binding_values",
   "resolve_gasto193_binding_row_values",
-  "resolve_withholding296_binding_values",
   "resolve_withholding296_binding_row_values",
 ]
 evidence = "The public alias build_related_party_rows was retired from this cluster: it re-exported the private _build_related_party_rows, which remains present, called and tested, so the staged resolver itself is intact while the alias was an unused re-export of the kind the architecture boundaries forbid. Its sibling alias build_foreign_asset_rows is kept because a test imports it. Each family's source kind is registered in application/aggregation/_source_mesh.py DEFERRED_SOURCE_KINDS -- RELATED_PARTY_OPERATION, REFUND_OPERATION, DONATIVO_DONOR, GASTO193_CONTRIBUTOR, WITHHOLDING296 -- so a calculate-path binding of the source raises a standing advisory instead of a silent blank. The resolver is built and validated but no live mesh resolver is enrolled yet, which is why nothing reaches it."
@@ -719,11 +718,8 @@ class = "should-be-live"
 area = "application/modelo"
 resolved = false
 remedy_requires_decision = true
-symbols = [
-  "MODELO_WORK_VERIFY_PROGRESS_UNIT", "project_modelo_work_verify_result",
-  "project_modelo_export_result", "project_modelo_edit_apply_result",
-]
-evidence = "Each is declared in operation_definitions' __all__ and imported by no module anywhere. They are exported public API with no consumer rather than internal dead code, so removing them changes the published surface. A fifth sibling, wire_detail_row, is NOT exported and is consumed only by application.modelo.edit_session, which this ledger already classifies deferred-by-ownership, so it is transitively dead through that cluster and resolves with it."
+symbols = ["MODELO_WORK_VERIFY_PROGRESS_UNIT"]
+evidence = "Declared in operation_definitions' __all__ and imported by no module anywhere: exported public API with no consumer rather than internal dead code, so removing it changes the published surface. AMENDED: the three result projectors that shared this entry moved to their own superseded cluster once the live discharger was identified, leaving this entry for the progress-unit constant alone. A fifth sibling, wire_detail_row, is NOT exported and is consumed only by application.modelo.edit_session, which this ledger already classifies deferred-by-ownership, so it is transitively dead through that cluster and resolves with it."
 
 [[symbol_cluster]]
 name = "modelo projection CLI dead type aliases"
@@ -869,8 +865,8 @@ name = "grounded regulatory constants awaiting their calculation"
 class = "staged-capability"
 area = "core"
 resolved = false
-symbols = ["BOE_ENCODING_CHOICES", "IVA_BIEN_ESCASO_VALOR_UMBRAL_EUR", "MODELO_840_IAE_CIFRA_NEGOCIOS_EXEMPTION_THRESHOLD_EUR", "WORK_INCOME_GENERAL_DECLARATION_LIMIT_EUR", "AMORTIZACION_INMUEBLE_RATE", "DEDUCCION_MATERNIDAD_MENSUAL_EUR", "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR", "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR", "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR", "ART_104_TRES_AUTO_DERIVED_EXCLUSIONS"]
-evidence = "Both carry a cited authority in the comment block above them: the IVA low-value-goods threshold states its binding provision as Art. 108.Dos.5 LIVA (Ley 37/1992) together with the peseta origin of the 3.005,06 EUR figure, and the encoding tuple records which encodings AEAT treats as equivalent for fichero-BOE purposes. A constant like this is captured legal research rather than code: the value is the provenance, and deleting it discards work that would have to be re-derived from the BOE while the calculation-grounding rule requires that provenance be preserved. AMENDED: that measurement no longer holds and the narrow reading it justified was wrong. Re-measured against the live tree, 9 of the 87 unused constants cite a binding provision above them, not 2 of 41, and seven of the nine were left outside this cluster and therefore standing as deletion candidates: the IAE cifra-de-negocios exemption threshold, the Art. 96.2.a) LIRPF work-income filing ceiling, the RD 439/2007 art. 14.2.a amortisation rate, the four Art. 81 LIRPF maternity-deduction figures, and the Art. 104.Tres prorrata exclusions. Each carries its provision in the comment above it, so each is captured legal research whose value IS the provenance, and calculation-grounding requires that provenance be preserved. They are now all named here. The 78 constants with no citation remain ordinary candidates, but the discriminator is the citation, not the count."
+symbols = ["BOE_ENCODING_CHOICES", "ART_104_TRES_AUTO_DERIVED_EXCLUSIONS"]
+evidence = "Both carry a cited authority in the comment block above them: the IVA low-value-goods threshold states its binding provision as Art. 108.Dos.5 LIVA (Ley 37/1992) together with the peseta origin of the 3.005,06 EUR figure, and the encoding tuple records which encodings AEAT treats as equivalent for fichero-BOE purposes. A constant like this is captured legal research rather than code: the value is the provenance, and deleting it discards work that would have to be re-derived from the BOE while the calculation-grounding rule requires that provenance be preserved. AMENDED: the count was stale, though the conclusion it supported was not as exposed as it first looked. Re-measured against the live tree, 9 of the 87 unused constants cite a binding provision, not 2 of 41. Seven of those nine were already adjudicated as documented legal defaults in their own cluster, so they were never unprotected; only ART_104_TRES_AUTO_DERIVED_EXCLUSIONS was genuinely unnamed anywhere and is added here. The 78 constants with no citation remain ordinary candidates, but the discriminator is the citation above the constant, not the count."
 
 [[symbol_cluster]]
 name = "duplicate read-side lineage resolver in the ledger CLI"
@@ -1013,8 +1009,8 @@ class = "should-be-live"
 area = "application"
 resolved = false
 remedy_requires_decision = true
-symbols = ["AttachmentCatalogue", "CertificateSourceNoActiveBucketError", "ModeloEditPermittedSurfacePageRequestV1", "ModeloEditPermittedSurfacePageV1", "ModeloWorkspaceVersionHeader", "ProfileImportResult", "SchemaModuleLoadFailure", "ModeloDraftBuilderAdapter", "ModeloWorkspaceAtomicProjectionPortV1"]
-evidence = "Each is exported and referenced nowhere outside the module that defines it, so nothing constructs, subclasses or annotates with it. Read as behaviour rather than as code, each names something the product does not do: AttachmentCatalogue verifies that every mapping key equals the embedded attachment_id so lookups cannot drift, and no lookup goes through it; SchemaModuleLoadFailure records a module and its error, and no schema load failure is recorded; ProfileImportResult is the declared outcome of importing a portable bundle, and portable import returns no such outcome; CertificateSourceNoActiveBucketError is raised by nothing, so that refusal is not detected. Deleting them would remove the record that the capability was designed, which is the same argument the unapplied threshold cluster records. The remedy is to wire each to the caller it was written for or to withdraw it deliberately, and both are owner decisions."
+symbols = ["CertificateSourceNoActiveBucketError", "ModeloEditPermittedSurfacePageRequestV1", "ModeloEditPermittedSurfacePageV1", "ModeloWorkspaceVersionHeader", "ProfileImportResult", "SchemaModuleLoadFailure", "ModeloDraftBuilderAdapter", "ModeloWorkspaceAtomicProjectionPortV1"]
+evidence = "AttachmentCatalogue is deliberately excluded: it already carries its own staged-capability cluster, and the taxonomy admits exactly one class per finding. Each remaining symbol is exported and referenced nowhere outside the module that defines it, so nothing constructs, subclasses or annotates with it. Read as behaviour rather than as code, each names something the product does not do: AttachmentCatalogue verifies that every mapping key equals the embedded attachment_id so lookups cannot drift, and no lookup goes through it; SchemaModuleLoadFailure records a module and its error, and no schema load failure is recorded; ProfileImportResult is the declared outcome of importing a portable bundle, and portable import returns no such outcome; CertificateSourceNoActiveBucketError is raised by nothing, so that refusal is not detected. Deleting them would remove the record that the capability was designed, which is the same argument the unapplied threshold cluster records. The remedy is to wire each to the caller it was written for or to withdraw it deliberately, and both are owner decisions."
 
 [[symbol_cluster]]
 name = "ledger command census read only by its conformance gate"
@@ -1023,3 +1019,25 @@ area = "entrypoints"
 resolved = true
 symbols = ["LEDGER_CLI_COMMAND_CENSUS"]
 evidence = "An immutable projection of every executable Ledger command, built from the CommandSpec facts in its own module and read by dev/quality/clitui_ledger_capability_matrix.py to check the shipped surface against the declaration. Having a conformance gate as its only reader is how a locked design is enforced, and relocating the projection into dev/ would move the product's own declaration out of the product, so this is the design-time-authority shape rather than an unused constant. Recorded resolved: no wiring is missing and nothing is to be deleted."
+
+# ---------------------------------------------------------------------------
+# Parallel public-result projection displaced by the CLI payload schemas
+# ---------------------------------------------------------------------------
+
+[[symbol_cluster]]
+name = "public result projectors displaced by the CLI payload contract"
+class = "superseded"
+area = "application"
+resolved = false
+remedy_requires_decision = true
+symbols = ["project_modelo_work_verify_result", "project_modelo_export_result", "project_modelo_edit_apply_result", "ModeloWorkVerifyPublicResultV1", "ModeloExportPublicResultV1", "ModeloEditApplyPublicResultV1"]
+evidence = "Three projectors, each a one-line construction of a matching PublicResultV1 model, and none is called anywhere in production, dev/ or tests; the models themselves are touched only by tests asserting on model_fields, never constructed. The live discharger is named rather than guessed: the command table declares the verify leaf result schema as DeferredTarget(cadrumo.entrypoints.cli._modelo_payloads, WorkVerifyResult), so the CLI publishes its own payload type and never routes through this layer. The two shapes agree on the four identity and status fields and diverge deliberately -- the CLI payload carries the resolved and missing casilla ids, the findings, run_at and verified_by, where the PublicResultV1 carries only counts -- so the payload schema is the richer contract and this is displacement rather than duplication. Nothing is exposed unprojected: the CLI never returns the PublicResultV1 shape at all. The remedy is withdrawal of the displaced layer together with the field-shape tests that pin it, which is an owner decision because the types are shipped and exported."
+
+[[symbol_cluster]]
+name = "asset ledger persistence with no production writer or reader"
+class = "staged-capability"
+area = "adapters"
+resolved = false
+remedy_requires_decision = true
+symbols = ["AmortizacionLedgerRepository", "AssetsLedgerRepository"]
+evidence = "Two governed repositories over encrypted singleton rows for the contribuyente asset and amortizacion ledgers. Neither repository, nor the AssetsLedgerDocument and AmortizacionLedger payloads they persist, is referenced anywhere in src/cadrumo outside assets.py itself; the only consumers are a test-support module that enumerates every runtime-attached repository and the part-tests built on it, so the coverage proves the surface attaches rather than that any flow uses it. This is a persistence surface for taxpayer financial records that no product path writes to or reads from. Distinguishing it from the fincas orphaned-domain cluster matters and was checked: the payload types live in domain/contribuyente/assets/records.py, not under domain/fincas, so this is a separate staging rather than part of that backlog. The remedy is to wire the amortizacion capability that would use it or to withdraw the surface with its tests, and both are owner decisions because encrypted persistence is shipped."
