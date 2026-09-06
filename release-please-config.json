@@ -3,7 +3,7 @@
   "bootstrap-sha": "70ca8b18940db8e4a9d465d631df52c02973b011",
   "release-type": "python",
   "include-component-in-tag": false,
-  "separate-pull-requests": false,
+  "separate-pull-requests": true,
   "draft": false,
   "prerelease": false,
   "bump-minor-pre-major": true,
