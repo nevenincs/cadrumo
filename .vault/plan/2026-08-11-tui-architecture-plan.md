@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-06'
-body_hash: 'sha256:e8b161b90f06ba247dc5d951867280d21cc6d44731f9d7858f1342550c8570a6'
+body_hash: 'sha256:e745c7d619bb6a1d828520dd12c583ff3e5fa3b2a82a1209faed61350942c414'
 ---
 
 <!-- RETIRED: S370 -->
@@ -698,6 +698,8 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S482` - Correct the claim that the four remaining tui extras have no authority to consult, since the workbench naming authority declares fourteen operator actions and neither of the two action keys is among them while their live siblings are, and the declarations and ledger surfaces render every sibling column and import state literally at the call site without the other two; `dev/locales`.
 - [x] `W08.P30.S483` - Re-verify every gate closed in this campaign still holds after the concurrent writers commits and confirm the export tree blocker is unchanged, since a rename on this worktree was reverted five times before and a closed gate is only closed until someone else edits its surface; `dev/locales dev/docs src/cadrumo/entrypoints src/cadrumo/domain`.
 - [x] `W08.P30.S484` - Sweep the packaging test root that neither earlier sweep reached and establish that both its suites pass, the scoop and homebrew builds simply exceeding the configured three hundred second timeout under host contention rather than failing; `packaging`.
+- [x] `W08.P30.S485` - Correct the attribution for the packaging build timeouts, since running the scoop suite with nothing of mine in flight still finds the host saturated with more python processes than before, so the contention is not this sessions and the gates exceed their configured timeout on this machine as it is actually shared; `packaging`.
+- [ ] `W08.P30.S486` - Re-verify the five named targets that are not the parity prune still hold at current head after the concurrent writers commits, and record that regenerating the export trees would leave a large uncommitted generated diff in a shared worktree which is a second reason to leave that group to its owner; `dev/locales src/cadrumo/entrypoints/tui/modelo`.
 
 ## Parallelization
 

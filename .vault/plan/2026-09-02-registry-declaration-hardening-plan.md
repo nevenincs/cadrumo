@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:e52235430c427edd11c34e731972f839cfd45e5e2b324395bfa378cab1cba8c0'
+body_hash: 'sha256:3f65c9dc201eb86c9d2c2eca218d14f5d65c7452738d91c0c34b41825c1e3266'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -694,6 +694,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S812` - Measure the system temporary directory when proving an embedded payload read spills no evidence to disk; `dev/sanitizer/tests/test_embedded_file_read_does_not_mutate.py`.
 - [x] `W02.P02.S813` - Read the formatted log record so a source path carried in an attached traceback cannot escape the hygiene gate; `dev/sanitizer/tests/test_pipeline.py`.
 - [x] `W02.P02.S814` - Treat only shipped distribution metadata as a dependency declaration and stop scanning unshipped test modules; `dev/packaging/tests/test_inference_imports_are_declared.py`.
+- [x] `W02.P02.S815` - Route the registry module-importer walk through the guarded directory primitive so a missing package root refuses instead of reporting no eager importers; `dev/registry/analysis/load_census.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
