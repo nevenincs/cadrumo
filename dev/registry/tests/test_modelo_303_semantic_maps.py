@@ -914,7 +914,16 @@ def epoch(request: pytest.FixtureRequest) -> _EpochAuthorities:
 
 def test_every_authored_design_epoch_is_discoverable_and_reviewed() -> None:
     """Discovery must find real epochs, each with a profile and a reviewed census."""
-    assert _DESIGN_EPOCHS, "no Modelo 303 semantic-map epoch was discovered under the mapping tree"
+    # This tuple is a DIRECTORY WALK, and it parametrizes the module-scoped
+    # `epoch` fixture that seven tests run through, so a partial collapse
+    # silently shrinks their coverage rather than failing anything: a
+    # truthiness check only rules out the walk finding nothing at all. Live it
+    # discovers 6 epochs - 2022, 2023, 2024-early, 2024-late, 2025, 2026 -
+    # each with a reviewed census expectation. A floor, not a pinned count.
+    assert len(_DESIGN_EPOCHS) >= 5, (
+        f"discovery found only {len(_DESIGN_EPOCHS)} mapping epochs {_DESIGN_EPOCHS}; the "
+        "seven epoch-parametrized proofs below now run over a fraction of the authored tree"
+    )
     for design_epoch in _DESIGN_EPOCHS:
         assert (_PROFILE_ROOT / design_epoch).is_dir(), f"epoch {design_epoch!r} has no render profile"
         assert design_epoch in M303_SEMANTIC_CENSUS_EXPECTATIONS, (
@@ -1182,7 +1191,10 @@ def test_the_note_form_sweep_reaches_every_bundled_design_and_all_three_shapes()
     forms = _bundled_design_note_forms()
     swept_epochs = {epoch for form in forms for epoch in form.design_epochs}
 
-    assert len(declared_designs) > 1, declared_designs
+    # Floored against the live 6 rather than `> 1`: the equality below ties
+    # this set to the swept epochs, so both can shrink together and still
+    # satisfy each other.
+    assert len(declared_designs) >= 5, declared_designs
     assert len(swept_epochs) == len(declared_designs), (swept_epochs, declared_designs)
     assert _DESIGN_EPOCHS and set(_DESIGN_EPOCHS) <= swept_epochs
     assert any(form.notes_are_all_parenthesised for form in forms), "no parenthesised note form was swept"

@@ -26,6 +26,23 @@ _SCENARIOS_DIR = Path(__file__).resolve().parent.parent / "scenarios"
 _SCENARIO = _SCENARIOS_DIR / "modelo_130.toml"
 _ALL_SCENARIOS = scan_directory(_SCENARIOS_DIR, pattern="*.toml")
 
+#: The sweep below is PARAMETRIZED over that walk, so an empty or narrowed
+#: result does not fail it - it generates fewer cases, and at zero the gate
+#: disappears while the run stays green. A renamed directory or a changed
+#: pattern does exactly that. Live the walk finds 10 scenario TOMLs and the
+#: directory holds nothing else, so the floor admits retiring a few while
+#: refusing a collapse. A floor, not a pinned count: the gate is designed to
+#: auto-extend as scenarios are added.
+_MINIMUM_GOLDEN_SCENARIOS = 7
+
+
+def test_the_golden_scenario_sweep_still_has_a_corpus() -> None:
+    """The parametrized sweep cannot report its own disappearance."""
+    assert len(_ALL_SCENARIOS) >= _MINIMUM_GOLDEN_SCENARIOS, (
+        f"scenario discovery found {len(_ALL_SCENARIOS)} TOMLs under {_SCENARIOS_DIR}; "
+        "the every-scenario sweep below is running over a fraction of the shipped set"
+    )
+
 
 @pytest.mark.parametrize("scenario_path", _ALL_SCENARIOS, ids=lambda p: p.stem)
 def test_every_golden_scenario_passes_all_dimensions(scenario_path: Path) -> None:

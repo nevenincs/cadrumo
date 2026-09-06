@@ -204,7 +204,7 @@ _DATA_SHAPED_KINDS: Final[frozenset[SymbolKind]] = frozenset(
 _DATA_GLOBS: Final[tuple[str, ...]] = ("_data/registry/**/*.toml", "_data/registry/**/*.json", "locales/**/*.json")
 _DATA_TOKEN: Final = re.compile(r"[A-Za-z_][A-Za-z0-9_]{2,}")
 # A command leaf token: lowercase words joined by hyphens, as the CLI spells them.
-_COMMAND_TOKEN: Final = re.compile(r"[a-z][a-z0-9]*(?:-[a-z0-9]+)*")
+_COMMAND_TOKEN: Final = re.compile(r"[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*")
 
 
 @dataclass(frozen=True)
@@ -830,7 +830,21 @@ def assembled_reference_names(tree: ast.Module) -> Iterator[str]:
         prefix = head.value
         if prefix.endswith("_") and prefix[:-1].isidentifier():
             prefixes.add(prefix)
-    if not prefixes:
+    # A second construction of the same kind: the handler name is derived from a
+    # declared key by a string METHOD rather than by formatting, as in
+    # ``DeferredTarget(_MODULE, key.removeprefix("app_"))``. Only the two affix
+    # strippers are read; they are total functions of the literal they apply to,
+    # so the derived name is exact rather than guessed.
+    strippers: list[tuple[str, str]] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
+            continue
+        if node.func.attr not in {"removeprefix", "removesuffix"} or len(node.args) != 1:
+            continue
+        argument = node.args[0]
+        if isinstance(argument, ast.Constant) and isinstance(argument.value, str):
+            strippers.append((node.func.attr, argument.value))
+    if not prefixes and not strippers:
         return
     tokens = {
         node.value
@@ -840,6 +854,12 @@ def assembled_reference_names(tree: ast.Module) -> Iterator[str]:
     for prefix in prefixes:
         for token in tokens:
             yield f"{prefix}{token.replace('-', '_')}"
+    for method, affix in strippers:
+        for token in tokens:
+            if method == "removeprefix" and token.startswith(affix):
+                yield token[len(affix) :]
+            elif method == "removesuffix" and token.endswith(affix):
+                yield token[: -len(affix)]
 
 
 def forward_reference_names(value: str) -> Iterator[str]:

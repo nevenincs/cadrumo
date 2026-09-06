@@ -776,6 +776,10 @@ class LocaleManager:
             _rewrite_locale_mapping(guard, target, data)
         return target
 
+    def locale_catalogue_keys(self, locale: str) -> set[str]:
+        """Return every dotted leaf key one shipped catalogue carries."""
+        return self.get_yaml_keys(self.load_locale(self._locale_path(locale)))
+
     def remove_locale_values(self, locale: str, dotted_keys: Iterable[str]) -> Path:
         """Atomically remove validated locale leaves from one catalogue."""
         keys = tuple(sorted(set(dotted_keys)))

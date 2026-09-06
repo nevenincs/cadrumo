@@ -396,6 +396,73 @@ def remove_value(
     typer.echo(f"removed {path.name}:{key}")
 
 
+@app.command("remove-batch")
+def remove_batch(
+    manifest: Annotated[
+        Path,
+        typer.Argument(help="JSON object mapping locale codes to arrays of dotted keys."),
+    ],
+    ignore_missing: Annotated[
+        bool,
+        typer.Option("--ignore-missing", help="Report keys that are already absent instead of refusing."),
+    ] = False,
+) -> None:
+    """Remove many locale string leaves through one catalogue authority pass.
+
+    The single-key ``remove`` verb costs one interpreter start per key, so a
+    catalogue cleanup of any size was paying minutes of process startup to
+    delete map entries. This applies the whole manifest in one pass.
+
+    An absent key REFUSES by default rather than being skipped. The batch
+    remover underneath silently ignores a key it cannot find in a sharded
+    catalogue, which turns a typo, a stale list or an already-applied manifest
+    into a successful-looking no-op -- the failure mode that makes a caller
+    believe work happened. ``--ignore-missing`` is the explicit opt-in for
+    re-running a manifest, and it still names what it skipped.
+    """
+    try:
+        payload = json.loads(manifest.read_text(encoding=UTF_8_ENCODING))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise typer.BadParameter(f"Cannot read locale batch manifest: {exc}", param_hint="manifest") from exc
+    if not isinstance(payload, dict):
+        raise typer.BadParameter("Locale batch manifest must contain an object", param_hint="manifest")
+
+    manager = _default_manager()
+    plan: dict[str, tuple[list[str], list[str]]] = {}
+    try:
+        for locale, raw_keys in sorted(payload.items()):
+            if not isinstance(locale, str) or not isinstance(raw_keys, list):
+                raise LocaleError("Locale batch entries must map one locale code to an array of dotted keys")
+            keys = []
+            for key in raw_keys:
+                if not isinstance(key, str) or not key.strip():
+                    raise LocaleError("Locale batch keys must be non-empty strings")
+                keys.append(key)
+            present = manager.locale_catalogue_keys(locale)
+            plan[locale] = ([k for k in keys if k in present], [k for k in keys if k not in present])
+    except LocaleError as exc:
+        raise typer.BadParameter(str(exc), param_hint="manifest") from exc
+
+    absent = {locale: missing for locale, (_, missing) in plan.items() if missing}
+    if absent and not ignore_missing:
+        detail = "; ".join(f"{locale}: {', '.join(sorted(keys))}" for locale, keys in sorted(absent.items()))
+        raise typer.BadParameter(f"Locale keys not found: {detail}", param_hint="manifest")
+
+    removed = 0
+    try:
+        for locale, (found, _missing) in sorted(plan.items()):
+            if not found:
+                continue
+            manager.remove_locale_values(locale, found)
+            removed += len(found)
+    except LocaleError as exc:
+        raise typer.BadParameter(str(exc), param_hint="manifest") from exc
+
+    typer.echo(f"removed {removed} locale leaf/leaves from {len([1 for _, (f, _) in plan.items() if f])} catalogue(s)")
+    for locale, keys in sorted(absent.items()):
+        typer.echo(f"  skipped {len(keys)} already-absent key(s) in {locale}")
+
+
 @app.command("co-landing")
 def co_landing(
     ctx: typer.Context,
