@@ -130,6 +130,31 @@ def _run_exact_commands(
     return outcomes
 
 
+def _verified_copy_temporary_root(root: Path) -> Path:
+    """Return the system temporary root, refusing one a verified copy cannot trust.
+
+    Both verified-copy paths -- the post-apply gate run and the isolated generator
+    run -- need the same two assurances before they copy the live tree anywhere:
+    the advertised temporary directory is not itself a link, and it resolves to a
+    real directory outside the repository. Those ten lines stood twice, character
+    for character, which is one edit away from two behaviours; they stand here once
+    so a divergence between the two callers is unconstructable rather than merely
+    discouraged. The allocation that follows stays at each call site, because its
+    cleanup belongs to that site's own try/finally.
+    """
+    temporary_candidate = Path(tempfile.gettempdir())
+    if is_link_like(temporary_candidate):
+        raise ObjectNameReplayError(f"system temporary root is link-like: {temporary_candidate}")
+    system_temporary_root = temporary_candidate.resolve()
+    if (
+        not system_temporary_root.is_dir()
+        or is_link_like(system_temporary_root)
+        or system_temporary_root.is_relative_to(root)
+    ):
+        raise ObjectNameReplayError(f"system temporary root is unsafe: {system_temporary_root}")
+    return system_temporary_root
+
+
 def _run_gates_in_verified_copy(
     *, root: Path, expected: tuple[ObjectNameGateOutcome, ...], guarded_paths: frozenset[str]
 ) -> tuple[ObjectNameGateOutcome, ...]:
@@ -147,16 +172,7 @@ def _run_gates_in_verified_copy(
     files = _snapshot(root, paths)
     guarded = tuple(sorted(guarded_paths))
     guarded_baseline = _snapshot(root, guarded)
-    temporary_candidate = Path(tempfile.gettempdir())
-    if is_link_like(temporary_candidate):
-        raise ObjectNameReplayError(f"system temporary root is link-like: {temporary_candidate}")
-    system_temporary_root = temporary_candidate.resolve()
-    if (
-        not system_temporary_root.is_dir()
-        or is_link_like(system_temporary_root)
-        or system_temporary_root.is_relative_to(root)
-    ):
-        raise ObjectNameReplayError(f"system temporary root is unsafe: {system_temporary_root}")
+    system_temporary_root = _verified_copy_temporary_root(root)
     temporary_root = Path(
         tempfile.mkdtemp(prefix="cadrumo-object-name-post-apply-", dir=system_temporary_root)
     ).resolve()
@@ -249,16 +265,7 @@ def _run_generators_in_verified_copy(
         return (), {}
     paths = _git_snapshot_paths(root)
     files = _snapshot(root, paths)
-    temporary_candidate = Path(tempfile.gettempdir())
-    if is_link_like(temporary_candidate):
-        raise ObjectNameReplayError(f"system temporary root is link-like: {temporary_candidate}")
-    system_temporary_root = temporary_candidate.resolve()
-    if (
-        not system_temporary_root.is_dir()
-        or is_link_like(system_temporary_root)
-        or system_temporary_root.is_relative_to(root)
-    ):
-        raise ObjectNameReplayError(f"system temporary root is unsafe: {system_temporary_root}")
+    system_temporary_root = _verified_copy_temporary_root(root)
     temporary_root = Path(
         tempfile.mkdtemp(prefix="cadrumo-object-name-generator-", dir=system_temporary_root)
     ).resolve()
