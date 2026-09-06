@@ -310,13 +310,13 @@ def ledger_evidence_pull_all(
     """
     from ...adapters.outbound.google.active_profile import resolve_active_profile
     from ...adapters.outbound.google.document_link_resolver import (
+        DriveFolderDocument,
         list_drive_folder_documents,
         resolve_document_link,
     )
     from ...adapters.outbound.storage.factory import build_google_credentials
     from ...adapters.persistence.storage.attachment import AttachmentStore
-    from ...application.ledger.evidence_sweep import classify_evidence_sweep_failure
-    from ...core.errors.hierarchy import CadrumoError
+    from ...application.ledger.evidence_sweep import sweep_evidence_folder
     from ...domain.attachments.enums import AttachmentKind
     from ...domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
     from ._ledger_payloads import LedgerEvidencePullAllFilePayload, LedgerEvidencePullAllResult
@@ -331,73 +331,56 @@ def ledger_evidence_pull_all(
     listing = list_drive_folder_documents(folder_id=folder_id, credentials=credentials)
 
     store = AttachmentStore()
-    rows: list[LedgerEvidencePullAllFilePayload] = []
-    fetched_count = 0
-    refused_count = 0
-    for document in listing.documents:
+
+    def _fetch(document: DriveFolderDocument) -> str:
+        """Fetch and encrypt one folder child, returning its attachment id."""
         reference = f"https://drive.google.com/file/d/{document.file_id}"
-        try:
-            data = resolve_document_link(
+        data = resolve_document_link(
+            source=AttachmentSource.GOOGLE_DRIVE,
+            reference=reference,
+            credentials=credentials,
+        )
+        attachment = add_attachment(
+            store,
+            content=AttachmentBytesContent(data=data),
+            request=AttachmentIngestionRequest(
+                kind=AttachmentKind.DRIVE_DOCUMENT,
                 source=AttachmentSource.GOOGLE_DRIVE,
-                reference=reference,
-                credentials=credentials,
-            )
-            attachment = add_attachment(
-                store,
-                content=AttachmentBytesContent(data=data),
-                request=AttachmentIngestionRequest(
-                    kind=AttachmentKind.DRIVE_DOCUMENT,
-                    source=AttachmentSource.GOOGLE_DRIVE,
-                    source_reference=reference,
-                    mime_type=document.mime_type or _sniff_document_mime_type(document.name, data),
-                    captured_at=now(),
-                    bucket_id=bucket_id,
-                    metadata={
-                        "source": AttachmentSource.GOOGLE_DRIVE.value,
-                        "source_reference": reference,
-                        "drive_folder_id": folder_id,
-                        "drive_file_name": document.name,
-                    },
-                    notes=note,
-                ),
-            )
-        except CadrumoError as exc:
-            # Only a failure that is a fact about THIS document continues the
-            # sweep; the classifier answers None for anything else, and that
-            # one re-raises rather than fabricating a per-file cause for a
-            # transport problem affecting every remaining row.
-            refusal = classify_evidence_sweep_failure(exc)
-            if refusal is None:
-                raise
-            refused_count += 1
-            rows.append(
-                LedgerEvidencePullAllFilePayload(
-                    file_id=document.file_id,
-                    name=document.name,
-                    mime_type=document.mime_type,
-                    fetched=False,
-                    refusal_reason=refusal.value,
-                ),
-            )
-            continue
-        fetched_count += 1
-        rows.append(
-            LedgerEvidencePullAllFilePayload(
-                file_id=document.file_id,
-                name=document.name,
-                mime_type=document.mime_type,
-                fetched=True,
-                attachment_id=attachment.attachment_id,
+                source_reference=reference,
+                mime_type=document.mime_type or _sniff_document_mime_type(document.name, data),
+                captured_at=now(),
+                bucket_id=bucket_id,
+                metadata={
+                    "source": AttachmentSource.GOOGLE_DRIVE.value,
+                    "source_reference": reference,
+                    "drive_folder_id": folder_id,
+                    "drive_file_name": document.name,
+                },
+                notes=note,
             ),
         )
+        return attachment.attachment_id
+
+    sweep = sweep_evidence_folder(documents=listing.documents, fetch=_fetch)
+    rows = [
+        LedgerEvidencePullAllFilePayload(
+            file_id=swept.file_id,
+            name=swept.name,
+            mime_type=swept.mime_type,
+            fetched=swept.fetched,
+            attachment_id=swept.attachment_id,
+            refusal_reason=None if swept.refusal is None else swept.refusal.value,
+        )
+        for swept in sweep.documents
+    ]
 
     result = LedgerEvidencePullAllResult.model_validate(
         {
             "bucket_id": bucket_id,
             "folder_id": folder_id,
             "total_documents": len(listing.documents),
-            "fetched_count": fetched_count,
-            "refused_count": refused_count,
+            "fetched_count": sweep.fetched_count,
+            "refused_count": sweep.refused_count,
             "skipped_non_document_count": listing.skipped_non_document_count,
             "files": [row.model_dump(mode="json") for row in rows],
         },
@@ -405,8 +388,8 @@ def ledger_evidence_pull_all(
     lines = [
         f"{tr('cli.app.ledger.evidence.pull_all_labels.folder_id')}\t{folder_id}",
         f"{tr('cli.app.ledger.evidence.pull_all_labels.total')}\t{len(listing.documents)}",
-        f"{tr('cli.app.ledger.evidence.pull_all_labels.fetched')}\t{fetched_count}",
-        f"{tr('cli.app.ledger.evidence.pull_all_labels.refused')}\t{refused_count}",
+        f"{tr('cli.app.ledger.evidence.pull_all_labels.fetched')}\t{sweep.fetched_count}",
+        f"{tr('cli.app.ledger.evidence.pull_all_labels.refused')}\t{sweep.refused_count}",
         f"{tr('cli.app.ledger.evidence.pull_all_labels.skipped')}\t{listing.skipped_non_document_count}",
     ]
     lines.extend(
@@ -415,16 +398,16 @@ def ledger_evidence_pull_all(
         for row in rows
     )
     notices: list[Notice] = []
-    if refused_count:
+    if sweep.refused_count:
         notices.append(
             Notice(
                 severity=NoticeSeverity.WARNING,
                 code="ledger.pull_folder.files_refused",
                 message=tr(
                     "cli.app.ledger.evidence.pull_all_notices.files_refused",
-                    refused_count=refused_count,
+                    refused_count=sweep.refused_count,
                 ),
-                context={"folder_id": folder_id, "refused_count": str(refused_count)},
+                context={"folder_id": folder_id, "refused_count": str(sweep.refused_count)},
             ),
         )
     emit_envelope(

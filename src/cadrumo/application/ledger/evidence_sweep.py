@@ -30,13 +30,19 @@ set. A second frontend would have had the same three ways to get it wrong.
 
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
 from enum import StrEnum
+from typing import NamedTuple
 
+from ...adapters.outbound.google.document_link_resolver import DriveFolderDocument
 from ...adapters.outbound.storage.errors import OutboundStoragePermissionError
 
 __all__ = [
+    "EvidenceFolderSweep",
     "EvidenceSweepRefusal",
+    "SweptDocument",
     "classify_evidence_sweep_failure",
+    "sweep_evidence_folder",
 ]
 
 
@@ -67,3 +73,105 @@ def classify_evidence_sweep_failure(error: Exception) -> EvidenceSweepRefusal | 
     if isinstance(error, OutboundStoragePermissionError):
         return EvidenceSweepRefusal.FILE_NOT_REACHABLE
     return None
+
+
+class SweptDocument(NamedTuple):
+    """What became of one document in a folder sweep.
+
+    ``fetched`` and ``refusal`` are mutually exclusive by construction: a
+    fetched document names its attachment, a refused one names why. Neither
+    row can claim both, which is what keeps a caller from reporting a refusal
+    with an attachment id or a fetch with no evidence behind it.
+    """
+
+    file_id: str
+    name: str
+    mime_type: str
+    attachment_id: str | None
+    refusal: EvidenceSweepRefusal | None
+
+    @property
+    def fetched(self) -> bool:
+        """Whether this document's bytes reached the attachment store."""
+        return self.attachment_id is not None
+
+
+class EvidenceFolderSweep(NamedTuple):
+    """One folder sweep's outcome, with its counts derived from its rows.
+
+    The counts are properties rather than stored fields on purpose. The CLI
+    sweep this replaced tracked ``refused_count`` in a separate variable that
+    was initialised and never incremented, so the summary said zero refusals
+    while the rows it printed alongside said otherwise. A count that cannot be
+    computed from anything but the rows cannot disagree with them.
+    """
+
+    documents: tuple[SweptDocument, ...]
+
+    @property
+    def fetched_count(self) -> int:
+        """How many documents reached the attachment store."""
+        return sum(1 for document in self.documents if document.fetched)
+
+    @property
+    def refused_count(self) -> int:
+        """How many documents were refused individually."""
+        return sum(1 for document in self.documents if document.refusal is not None)
+
+
+def sweep_evidence_folder(
+    *,
+    documents: Sequence[DriveFolderDocument],
+    fetch: Callable[[DriveFolderDocument], str],
+) -> EvidenceFolderSweep:
+    """Fetch every document, recording the ones refused individually.
+
+    One row per document, in the order given, so a caller can report the sweep
+    against the folder it listed rather than against the subset that happened
+    to succeed.
+
+    Args:
+        documents: The folder's children, as listed.
+        fetch: Fetches and stores one document, returning its attachment id.
+            Raising is how it reports a failure;
+            :func:`classify_evidence_sweep_failure` decides whether that
+            failure belongs to the document or to the sweep.
+
+    Returns:
+        The sweep, whose counts are derived from its rows.
+
+    Raises:
+        Exception: Whatever ``fetch`` raised, when the failure is not a fact
+            about that one document. Propagating is deliberate: a transport
+            that has stopped working will fail every remaining document, and
+            reporting those as individually refused would be confidently wrong
+            about every row.
+    """
+    swept: list[SweptDocument] = []
+    for document in documents:
+        try:
+            attachment_id = fetch(document)
+        except Exception as error:
+            refusal = classify_evidence_sweep_failure(error)
+            if refusal is None:
+                raise
+            swept.append(
+                SweptDocument(
+                    file_id=document.file_id,
+                    name=document.name,
+                    mime_type=document.mime_type,
+                    attachment_id=None,
+                    refusal=refusal,
+                ),
+            )
+            continue
+        swept.append(
+            SweptDocument(
+                file_id=document.file_id,
+                name=document.name,
+                mime_type=document.mime_type,
+                attachment_id=attachment_id,
+                refusal=None,
+            ),
+        )
+    return EvidenceFolderSweep(documents=tuple(swept))
