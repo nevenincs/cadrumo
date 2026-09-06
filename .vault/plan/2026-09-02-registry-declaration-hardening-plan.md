@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:939d9fcf92204e598f625ce4ae182a0a960e37a4213140da9af72c13e62019c3'
+body_hash: 'sha256:e9efb9f3bed943d56fa987caea32218820cf2983a99ae5061583232243af785f'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -617,6 +617,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S735` - Correct the load-census cross-references that cite each other one package level too shallow after the move into the analysis package; `dev/registry/analysis/load_census.py`.
 - [x] `W02.P02.S736` - Repoint the development cross-references that still name core symbols through the package facade the import-centralization refactor emptied; `dev/registry/conformance/_stamp.py`.
 - [x] `W02.P02.S737` - Establish that development cross-reference roles sit outside the documented scope, so the remaining unresolved ones are reader-facing rather than docs-build failures; `dev/docs/apidocs/manager.py`.
+- [x] `W02.P02.S738` - Assert the refusal the diagnostic-notice gate actually raises and prove the status branch that no case reached; `dev/packaging/tests/test_delivery_envelope_contract.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
