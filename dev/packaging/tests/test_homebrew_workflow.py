@@ -45,6 +45,16 @@ def test_homebrew_workflow_declares_every_generated_target_row() -> None:
     assert 'test -x "$BREW_PATH"' in preflight["run"]
 
 
+def _executable_lines(script: str) -> str:
+    """The script with comment-only lines removed.
+
+    A structural assertion must read what the shell RUNS. Prose explaining why
+    a token is absent from a branch contains that token, so a naive membership
+    test matches the comment and reports the opposite of the truth.
+    """
+    return chr(10).join(line for line in script.splitlines() if not line.strip().startswith("#"))
+
+
 def test_homebrew_workflow_consumes_one_successful_commit_bound_cohort() -> None:
     """Every row downloads the same stored bytes from one trusted source run."""
     document = _workflow()
@@ -60,13 +70,25 @@ def test_homebrew_workflow_consumes_one_successful_commit_bound_cohort() -> None
     assert 'test "$(jq -r .name <<<"$run_json")" = "Cadrumo Packaging Smoke"' in source_gate["run"]
     assert ".github/workflows/packaging-smoke.yml" in source_gate["run"]
     assert 'test "$(jq -r .conclusion <<<"$run_json")" = "success"' in source_gate["run"]
-    # Trusted-source predicate (ci-speed redesign): main-branch runs, either
-    # push (historical) or dispatch verified on main history via compare API.
-    assert 'test "$(jq -r .head_branch <<<"$run_json")" = "main"' in source_gate["run"]
+    # Trusted-source predicate: a run is on main by HISTORY for a dispatch, and
+    # by branch name for a push. The two arms are asserted separately because
+    # they are not interchangeable -- a dispatch computes ancestry and a push
+    # does not, so requiring the branch NAME of a dispatch proves nothing the
+    # ancestry check has not already proved, while making a `--ref v{version}`
+    # run unusable. That is not hypothetical: `readiness.py` requires the
+    # cohort to be built at the commit carrying tag `v{version}`, which is
+    # reachable only as `--ref v{version}`, so the unconditional name test made
+    # every homebrew evidence row unobtainable.
     assert '"$event" = "workflow_dispatch"' in source_gate["run"]
     assert "/compare/main..." in source_gate["run"]
     assert 'test "$ancestry" = "identical" -o "$ancestry" = "behind"' in source_gate["run"]
     assert 'test "$event" = "push"' in source_gate["run"]
+    assert 'test "$(jq -r .head_branch <<<"$run_json")" = "main"' in source_gate["run"]
+    # ...and the name test is INSIDE the push arm, not ahead of the branch.
+    # Asserting only its presence would pass against the very bug this fixes.
+    dispatch_arm, _, push_arm = _executable_lines(source_gate["run"]).partition("else")
+    assert "head_branch" not in dispatch_arm, "the branch-name test must not gate a dispatch run"
+    assert "head_branch" in push_arm, "a push run has no ancestry proof and must be pinned by branch name"
     assert checkout["with"]["ref"] == "${{ inputs.source_commit }}"
     assert checkout["with"]["persist-credentials"] is False
     # The cohorts come from the source run's own artifacts, which bind them to
@@ -154,3 +176,28 @@ def test_homebrew_workflow_runs_the_real_source_install_and_oracles() -> None:
     assert "dev/packaging/smoke_homebrew.py" in smoke["run"]
     assert '--tap-name "cadrumo-smoke/${MATRIX_ID}"' in smoke["run"]
     assert publish["if"] == "always() && steps.initialize.outputs.ready == 'true'"
+
+
+def test_the_structural_check_detects_a_branch_test_that_gates_a_dispatch() -> None:
+    """Teeth for the assertion above, in the exact shape of the real defect.
+
+    The pre-fix script tested the branch NAME before the event conditional, so
+    a `--ref v{version}` run failed on a string comparison despite its commit
+    being provably on main. Without this case the gate would pass just as well
+    against a check that inspects nothing.
+    """
+    pre_fix = chr(10).join(
+        (
+            'test "$(jq -r .conclusion <<<"$run_json")" = "success"',
+            'test "$(jq -r .head_branch <<<"$run_json")" = "main"',
+            'if [ "$event" = "workflow_dispatch" ]; then',
+            "  ancestry=$(gh api .../compare/main...$sha --jq .status)",
+            "else",
+            '  test "$event" = "push"',
+            "fi",
+        )
+    )
+    dispatch_arm, _, push_arm = _executable_lines(pre_fix).partition("else")
+
+    assert "head_branch" in dispatch_arm, "the pre-fix shape must be detected, or this gate is inert"
+    assert "head_branch" not in push_arm

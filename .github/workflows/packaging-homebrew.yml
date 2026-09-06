@@ -152,17 +152,28 @@ jobs:
           test "$(jq -r .name <<<"$run_json")" = "Cadrumo Packaging Smoke"
           test "$(jq -r .path <<<"$run_json")" = ".github/workflows/packaging-smoke.yml"
           test "$(jq -r .conclusion <<<"$run_json")" = "success"
-          test "$(jq -r .head_branch <<<"$run_json")" = "main"
           event="$(jq -r .event <<<"$run_json")"
           if [ "$event" = "workflow_dispatch" ]; then
             # Dispatch-only full campaign (ci-speed redesign, 2026-07-20): a
             # dispatch run is trusted only when its commit is verified on main
             # history via the compare API - equal-or-stronger than the former
             # push-event pin, which trusted the push router.
+            #
+            # The branch NAME is deliberately not tested here. It is redundant
+            # with the ancestry proof below, and strictly weaker: a ref name is
+            # mutable and says nothing about history, while `compare` settles
+            # whether these exact bytes are on main. Testing it unconditionally
+            # also made the evidence rows unobtainable, because the only commit
+            # carrying tag `v{version}` -- which `readiness.py` requires the
+            # cohort to be built at -- is reachable only as `--ref v{version}`,
+            # whose head_branch is the tag, not `main`.
             ancestry="$(gh api "repos/${GITHUB_REPOSITORY}/compare/main...$(jq -r .head_sha <<<"$run_json")" --jq .status)"
             test "$ancestry" = "identical" -o "$ancestry" = "behind"
           else
+            # A push run computes no ancestry, so the branch it targeted is the
+            # only evidence available that it came from main.
             test "$event" = "push"
+            test "$(jq -r .head_branch <<<"$run_json")" = "main"
           fi
           test "$(jq -r .head_repository.full_name <<<"$run_json")" = "$GITHUB_REPOSITORY"
           source_commit_lower="$(printf '%s' "$SOURCE_COMMIT" | tr '[:upper:]' '[:lower:]')"

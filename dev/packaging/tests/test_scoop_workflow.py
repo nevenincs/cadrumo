@@ -57,6 +57,16 @@ def test_scoop_workflow_declares_the_native_release_row() -> None:
     assert "docker" not in preflight["run"]
 
 
+def _executable_lines(script: str) -> str:
+    """The script with comment-only lines removed.
+
+    A structural assertion must read what the shell RUNS. Prose explaining why
+    a token is absent from a branch contains that token, so a naive membership
+    test matches the comment and reports the opposite of the truth.
+    """
+    return chr(10).join(line for line in script.splitlines() if not line.strip().startswith("#"))
+
+
 def test_scoop_workflow_consumes_one_successful_commit_bound_cohort() -> None:
     """The row downloads stored tested bytes from the named successful source run."""
     document = _workflow()
@@ -73,13 +83,19 @@ def test_scoop_workflow_consumes_one_successful_commit_bound_cohort() -> None:
     assert '$run.name -ne "Cadrumo Packaging Smoke"' in source_gate["run"]
     assert '$run.path -ne ".github/workflows/packaging-smoke.yml"' in source_gate["run"]
     assert '$run.conclusion -ne "success"' in source_gate["run"]
-    # Trusted-source predicate (ci-speed redesign): main-branch runs, either
-    # push (historical) or dispatch verified on main history via compare API.
-    assert '$run.head_branch -ne "main"' in source_gate["run"]
+    # Trusted-source predicate: a run is on main by HISTORY for a dispatch, and
+    # by branch name for a push. See the sibling homebrew gate for why the two
+    # arms must stay separate; in short, the unconditional name test made every
+    # evidence row unobtainable, because the tagged commit `readiness.py`
+    # demands is reachable only as `--ref v{version}`.
     assert '$run.event -eq "workflow_dispatch"' in source_gate["run"]
     assert "/compare/main..." in source_gate["run"]
     assert '$ancestry.status -ne "identical" -and $ancestry.status -ne "behind"' in source_gate["run"]
-    assert '$run.event -ne "push"' in source_gate["run"]
+    assert '$run.event -eq "push"' in source_gate["run"]
+    assert '$run.head_branch -ne "main"' in source_gate["run"]
+    dispatch_arm, _, push_arm = _executable_lines(source_gate["run"]).partition("elseif")
+    assert "head_branch" not in dispatch_arm, "the branch-name test must not gate a dispatch run"
+    assert "head_branch" in push_arm, "a push run has no ancestry proof and must be pinned by branch name"
     assert "$run.head_repository.full_name -ne $env:GITHUB_REPOSITORY" in source_gate["run"]
     assert "$run.head_sha -ne $env:SOURCE_COMMIT.ToLowerInvariant()" in source_gate["run"]
     assert checkout["with"]["ref"] == "${{ inputs.source_commit }}"
@@ -166,3 +182,25 @@ def test_scoop_workflow_binds_the_smoke_evidence_before_minting_the_row() -> Non
     # A failed smoke writes scoop-failure.json instead; surface its reason
     # rather than a bare missing-file error.
     assert "scoop-failure.json" in verify["run"]
+
+
+def test_the_structural_check_detects_a_branch_test_that_gates_a_dispatch() -> None:
+    """Teeth for the assertion above, in the exact shape of the real defect."""
+    pre_fix = chr(10).join(
+        (
+            'if ($run.conclusion -ne "success") { throw "no" }',
+            'if ($run.head_branch -ne "main") { throw "no" }',
+            'if ($run.event -eq "workflow_dispatch") {',
+            "  $ancestry = Invoke-RestMethod -Uri '.../compare/main...'",
+            "}",
+            'elseif ($run.event -eq "push") {',
+            '  if ($run.head_branch -ne "main") { throw "no" }',
+            "}",
+        )
+    )
+    dispatch_arm, _, push_arm = _executable_lines(pre_fix).partition("elseif")
+
+    assert "head_branch" in dispatch_arm, "the pre-fix shape must be detected, or this gate is inert"
+    # The pre-fix script tested the name in BOTH arms, which is why presence
+    # alone could never distinguish it from the corrected shape.
+    assert "head_branch" in push_arm
