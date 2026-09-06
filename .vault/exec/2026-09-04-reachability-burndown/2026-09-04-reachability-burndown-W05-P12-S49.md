@@ -5,16 +5,11 @@ tags:
 date: '2026-09-06'
 modified: '2026-09-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:7232260e2dd4525615021b59fed9b2bb72f1118347c964a66f8b2ae84a2d1ff2'
+body_hash: 'sha256:b1a8fa18f4488a4348efecfb03bc7cb860db3a075165375bc39032e91ac65dff'
 step_id: 'S49'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Correct an earlier wrong negative about transitive deadness and adjudicate what the corrected scan surfaced: the first attempt reported zero because it treated a module-level import as proof of life, which is exactly how the review-only workspace type looked consumed while its only consumer was a recorded finding; a two-pass scan over audit-reached symbols found three modules whose whole defined surface is findings, and eight symbols referred to only by them, but those eight resolve to a documented re-export boundary rather than dead code, leaving as the real finding the two command-spec projections that module actually defines, both read by the CLI reference and tree generators
 

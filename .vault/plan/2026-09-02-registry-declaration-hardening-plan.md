@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:53c680fd470c1039d3d1535713bd63c0f4673972b69516c7592cd3f98bc29d87'
+body_hash: 'sha256:786fdf20f9c3f915c7c33bbfc902a4a66fe60d9b56db4691566e75451bd61767'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -685,6 +685,11 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S803` - Compare committed corpus text sidecars as bytes so a translated terminator cannot read as fresh; `dev/corpus/tests/test_extraction_sidecar_freshness.py`.
 - [x] `W02.P02.S804` - Floor the PyPI cohort roster and derive it from the packaging sources so a drifted distribution name cannot leave a release destination unchecked; `dev/release/tests/test_version_identity.py`.
 - [x] `W02.P02.S805` - Refuse a cognitive-complexity scan whose root yields no Python files so a moved product tree cannot report clean over nothing; `dev/audit/complexity.py`.
+- [x] `W02.P02.S806` - Refuse the unused-symbol ratchet when the reachability scan errored so a failed scan cannot report every baselined module as resolved; `dev/quality/unused_symbol_ratchet.py`.
+- [x] `W02.P02.S807` - Derive the deploy required-artifact roster from the materialised site root so a dropped member cannot silently relax the publish gate; `dev/deploy/tests/test_docs_static_site.py`.
+- [x] `W02.P02.S808` - Re-raise when a PDF-shaped artefact cannot yield its decompressed stream surface so a residual identity cannot hide in a damaged stream; `dev/sanitizer/residual_identity.py`.
+- [x] `W02.P02.S809` - Refuse a radon complexity scan whose product tree is absent, since radon reports a missing path with empty output and exit zero; `dev/audit/complexity.py`.
+- [x] `W02.P02.S810` - Compare committed M200 2024 adjudication declarations as bytes so a line-ending corrupted declaration cannot read as compiler-identical; `dev/registry/analysis/m200_2024_unique_adjudications.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
