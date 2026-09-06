@@ -135,9 +135,9 @@ def verify_canonical_declarations(
     )
     for row in authority.adjudications:
         path = root / f"c{row.casilla_id}.toml"
-        if not path.is_file() or path.read_text(encoding="utf-8") != render_canonical_declaration(
+        if not path.is_file() or path.read_bytes() != render_canonical_declaration(
             authority, row.casilla_id
-        ):
+        ).encode("utf-8"):
             raise RegistryValidationError(f"M200/2024 blocker declaration {row.casilla_id!r} is not compiler-identical")
 
 

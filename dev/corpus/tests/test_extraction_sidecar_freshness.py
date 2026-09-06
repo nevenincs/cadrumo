@@ -154,7 +154,14 @@ def test_committed_extraction_sidecars_match_current_sources() -> None:
             )
         if not text_path.is_file():
             failures.append(f"{rel_json}: text sidecar is missing: {text_path.relative_to(_REPO_ROOT).as_posix()}")
-        elif text_path.read_text(encoding="utf-8") != output.render_text():
+        # Compared as BYTES. The writer emits the rendered payload with
+        # ``newline=""`` -- no translation -- so the committed sidecar is
+        # byte-exact by construction, and the corpus tree is ``-text`` in
+        # .gitattributes precisely so nothing rewrites its terminators.
+        # ``read_text`` folds CR and CRLF to LF, so a translated sidecar
+        # decodes to the rendered string and reads fresh while its bytes
+        # differ from every byte the producer would write.
+        elif text_path.read_bytes() != output.render_text().encode("utf-8"):
             failures.append(f"{rel_json}: text sidecar does not match rendered schema payload")
 
     assert sidecars, "no committed extraction sidecars found under src/cadrumo/_data/corpus"

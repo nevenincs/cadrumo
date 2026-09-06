@@ -21,12 +21,33 @@ from __future__ import annotations
 
 import os
 import pathlib
+from typing import Final
 
 import pytest
+import yaml
 
+from ..._paths import REPO_ROOT
 from ..runner_capabilities import _BREW_PATHS, Finding, _machine, version_probe
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+#: The homebrew acquisition matrix this probe's table mirrors. Live: three legs.
+_HOMEBREW_WORKFLOW: Final = REPO_ROOT / ".github" / "workflows" / "packaging-homebrew.yml"
+_MINIMUM_BREW_LEGS: Final = 3
+
+
+def _declared_brew_legs() -> dict[tuple[str, str], pathlib.Path]:
+    """Return the (system, architecture) -> brew path mapping the workflow matrix declares."""
+    document = yaml.safe_load(_HOMEBREW_WORKFLOW.read_text(encoding="utf-8"))
+    legs: dict[tuple[str, str], pathlib.Path] = {}
+    for job in (document.get("jobs") or {}).values():
+        rows = ((job.get("strategy") or {}).get("matrix") or {}).get("include") or []
+        for row in rows:
+            if not isinstance(row, dict) or "brew" not in row:
+                continue
+            legs[(str(row["expected_os"]), str(row["expected_arch"]))] = pathlib.Path(str(row["brew"]))
+    return legs
 
 
 def _launcher(directory: pathlib.Path, name: str, *, exit_code: int, output: str) -> pathlib.Path:
@@ -127,6 +148,32 @@ def test_the_architecture_token_is_normalised_away_from_the_windows_spelling() -
 
 def test_the_brew_table_is_keyed_on_normalised_tokens() -> None:
     """A key the normaliser can never produce is a leg that is never checked."""
+    assert len(_BREW_PATHS) >= _MINIMUM_BREW_LEGS, (
+        f"the brew path table holds {len(_BREW_PATHS)} leg(s); an empty or shrunken table makes "
+        "every key assertion below vacuous and makes the probe itself return no brew finding"
+    )
+
     for system, machine in _BREW_PATHS:
         assert system in {"Darwin", "Linux"}
         assert machine in {"x86_64", "arm64", "aarch64"}
+
+
+def test_the_brew_table_equals_the_legs_the_acquisition_workflow_declares() -> None:
+    """The table is a hand-copied inventory of a live matrix, so parity is read, not assumed.
+
+    ``_check_brew`` returns None for a platform the table does not key, and ``main``
+    then prints "runner carries every capability the workflows assume" and exits 0.
+    So a leg the workflow adds, or a prefix it moves, turns the brew probe off on
+    that runner while the fleet-health report still reads clean.
+    """
+    declared = _declared_brew_legs()
+
+    assert len(declared) >= _MINIMUM_BREW_LEGS, (
+        f"only {len(declared)} homebrew acquisition leg(s) were read from "
+        f"{_HOMEBREW_WORKFLOW.name}; below this the comparison proves nothing about the table"
+    )
+    assert declared == _BREW_PATHS, (
+        "the probe's brew path table has drifted from the acquisition matrix: "
+        f"table={ {k: str(v) for k, v in sorted(_BREW_PATHS.items())} }, "
+        f"workflow={ {k: str(v) for k, v in sorted(declared.items())} }"
+    )

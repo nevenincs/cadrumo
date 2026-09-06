@@ -128,9 +128,9 @@ def verify_canonical_declarations(
     )
     for entry in authority.adjudications:
         path = root / f"c{entry.casilla_id}.toml"
-        if not path.is_file() or path.read_text(encoding="utf-8") != render_canonical_declaration(
+        if not path.is_file() or path.read_bytes() != render_canonical_declaration(
             authority, entry.casilla_id
-        ):
+        ).encode("utf-8"):
             raise RegistryValidationError(
                 f"M200/2024 same-template declaration {entry.casilla_id!r} is not compiler-identical"
             )

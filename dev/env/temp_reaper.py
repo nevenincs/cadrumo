@@ -143,17 +143,31 @@ def newest_activity(directory: Path) -> tuple[float, int]:
 
     It is used as the fallback for a directory holding no files at all, where
     it is the only timestamp that exists.
+
+    A file that cannot be stat'd is an unanswered question, and this module
+    answers those by sparing. Dropping it silently would take it out of the
+    maximum below, so an unreadable NEWEST entry makes a live session read as
+    idle: measured on a tree written five seconds earlier, the walk reported
+    100000 seconds of silence once its newest file refused to stat, which is
+    past every ceiling this reaper runs with. A refusal therefore reports the
+    current time, exactly as the empty-directory fallback below does. The byte
+    total still omits the unread file, because under-reporting what can be
+    reclaimed is the safe direction for that number.
     """
     newest = 0.0
     total = 0
+    refused = False
     for parent, _directories, files in os.walk(directory):
         for name in files:
             try:
                 stat = os.stat(os.path.join(parent, name))
             except OSError:
+                refused = True
                 continue
             total += stat.st_size
             newest = max(newest, stat.st_mtime)
+    if refused:
+        return time.time(), total
     if newest == 0.0:
         try:
             newest = directory.stat().st_mtime

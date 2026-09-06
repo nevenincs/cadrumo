@@ -1432,3 +1432,18 @@ area = "application/live"
 symbols = ["load_iva_remote_state", "load_iva_remote_state_acquisition_manifest"]
 evidence = "The read side of the IVA remote-state capture. capture_iva_remote_state is reached by production while neither loader is, so the product captures remote IVA state and never reads it back, and the acquisition-manifest surface beside it -- the manifest loader here, with its persist and list siblings also unreached -- records nothing about what was acquired. This is the same write-with-no-reader shape recorded for the committed custody data and the ledger import door, distinguished from the deudas entry above by there being no fail-closed rationale: the capture succeeds and the state simply cannot be retrieved."
 remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "recipient keypair accessors the ensure path subsumes"
+class = "superseded"
+area = "application/modelo"
+symbols = ["load_recipient_encryption_keypair", "recipient_encryption_public_key"]
+evidence = "The module is mostly live -- encrypt_review_package_for_recipient, decrypt_review_package_for_recipient, ensure_recipient_encryption_keypair and the package types are all reached by production. The named holder is ensure_recipient_encryption_keypair, documented as returning the bucket's X25519 keypair and minting one on first use, so it subsumes the plain loader, and the encrypt path takes the keypair rather than asking for a public key separately. This is a displaced accessor pair inside a working feature, not an unwired one."
+
+[[symbol_cluster]]
+name = "review-only workspace feature with no opener or guard"
+class = "should-be-live"
+area = "application/modelo"
+symbols = ["open_review_only_workspace", "assert_workspace_permits_official_action"]
+evidence = "The opener for a review-only workspace and the guard refusing an official action inside one. Neither is reached, and the ReviewOnlyWorkspace type they produce and check has exactly one production consumer: review_package_collab_audit.py, whose emit_collab_* emitters this ledger already records as reached by nothing. So the type is held alive only by code that is itself unreached, and the feature has no producer, no authority guard and no audit trail. The guard is the part that matters -- an official action inside a review-only workspace is refused by nothing."
+remedy_requires_decision = true
