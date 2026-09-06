@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:bd40df52776b29332ebfc7e1c69cf9abf700d20c862795641d4e764900662b30'
+body_hash: 'sha256:62d77a3ad8c381035297d21c077fc2026bd7cbcb68330bb17e80b1ff74f9089d'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -597,6 +597,9 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S715` - Floor the golden scenario corpus the every-scenario sweep is parametrized over: a renamed directory or changed pattern yields zero cases, which deletes the gate rather than failing it; `dev/agent_eval/tests/test_modelo_130_golden.py`.
 - [x] `W02.P02.S716` - Floor the registry locale key scan without restoring the pinned count its docstring refuses: truthiness left the negative shape assertions trivially true and let the 360-case per-key parity gate shrink silently; `dev/locales/tests/test_registry_locale_key_parity.py`.
 - [x] `W02.P02.S717` - Floor the shipped module walk from its own shape: > 100 sat against 2,110 modules, so 95 percent of the shipped tree could go unscanned while the no-dev-dependency gate still reported clean; `dev/packaging/tests/test_shipped_code_carries_no_dev_dependency.py`.
+- [x] `W02.P02.S718` - Widen the unbounded-child-wait screen to every Popen binding form so its absence claim covers the spellings it could not parse; `dev/tests/test_no_unbounded_subprocess_wait.py`.
+- [x] `W02.P02.S719` - Read bare callees in the M200 identity CLI no-write absence claim so its forbidden builtin spellings become detectable, with a floor per callee shape; `dev/registry/tests/test_m200_semantic_casilla_candidates.py`.
+- [x] `W02.P02.S720` - Refuse the dunder-init submodule import in the plain-import spelling as well, which carries the identical double-execution hazard the gate names; `dev/quality/tests/test_no_dunder_init_module_imports.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
