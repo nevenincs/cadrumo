@@ -391,7 +391,6 @@ def test_defining_module_has_no_io_adapter_entrypoint_or_network_import() -> Non
     assert calls.isdisjoint({"open", "print", "input", "read", "write"})
 
 
-
 def _entry_ref_payload() -> dict[str, object]:
     """One valid entry ref, taken from a real projection."""
     evidence = _filing_evidence(local=OverviewLocalFilingState.READY_TO_FILE)
@@ -437,4 +436,3 @@ def test_a_directly_built_entry_refuses_a_recovery_bound_to_another_address() ->
 
     with pytest.raises(ValidationError, match="contradicts its natural address"):
         DeclarationsCalendarEntryRefV1.model_validate(payload)
-
