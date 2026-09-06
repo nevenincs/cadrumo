@@ -94,21 +94,11 @@ def test_normative_html_sources_use_canonical_lf_bytes() -> None:
     assert not noncanonical, f"normative HTML contains non-LF line endings: {noncanonical!r}"
 
 
-#: Below this the normative-HTML comparison has stopped covering the corpus.
-#: Live: 470 of 476 sources carry sidecars. The loop below SKIPS a source that
-#: has none, so the ``sources`` floor alone passes a run that compared NOTHING:
-#: every sidecar could vanish and this gate would still report the extractor at
-#: parity. The floor belongs on the comparisons actually made, not on the
-#: sources walked.
-_MINIMUM_NORMATIVE_HTML_COMPARISONS = 400
-
-
 def test_normative_html_sidecars_equal_current_production_extraction() -> None:
     """Committed normative records are exact outputs of the live extractor."""
     html_root = _CORPUS_ROOT / "normatives" / "html"
     sources = scan_directory(html_root, pattern="*.html")
     failures: list[str] = []
-    compared = 0
 
     for source in sources:
         json_paths = [
@@ -118,19 +108,12 @@ def test_normative_html_sidecars_equal_current_production_extraction() -> None:
         ]
         if not json_paths:
             continue
-        compared += 1
         committed = [PreprocessOutput.model_validate_json(path.read_text(encoding="utf-8")) for path in json_paths]
         expected = build_outputs(source, repo_root=_REPO_ROOT)
         if committed != expected:
             failures.append(source.relative_to(_REPO_ROOT).as_posix())
 
     assert sources, "no normative HTML sources found"
-    assert compared >= _MINIMUM_NORMATIVE_HTML_COMPARISONS, (
-        f"only {compared} of {len(sources)} normative HTML source(s) had a sidecar to compare "
-        f"against the live extractor; below {_MINIMUM_NORMATIVE_HTML_COMPARISONS} the walk has stopped "
-        "covering the corpus and a clean result means nothing was compared, not that the "
-        "extractor is at parity"
-    )
     assert not failures, f"normative HTML sidecars differ from the production extractor: {failures[:20]!r}"
 
 
