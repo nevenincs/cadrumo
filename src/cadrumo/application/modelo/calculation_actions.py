@@ -14,10 +14,13 @@ and :class:`~adapters.persistence.profile.buckets.BucketEventHistoryRepository`,
 :func:`~application.modelo.calculate_modelo_revision` is the lower-level
 calculation service: callers provide already-resolved manual, binding,
 enum-binding, relation, borrador, and IVA-wallet inputs.
-:func:`~application.modelo.calculate_modelo_revision_from_bucket_aggregation`
+:func:`~application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`
 first runs the application source mesh over bucket-local ledgers, invoices,
 previous filings, relation prefill, retenciones, withholding, and detail rows,
-then feeds the resolved backend channels into the same persistence path.
+then feeds the resolved backend channels into the same persistence path. It is
+the only entry point into that orchestration, and it returns the non-blocking
+source diagnostics with the revision rather than beside it, so no caller can
+reach the mesh and lose the advisories on the way out.
 Source-owned bindings and their bound casillas are guarded before the engine
 runs so a persisted revision cannot claim bucket-source grounding while carrying
 a caller substitute for the same value.
@@ -633,90 +636,6 @@ def _calculate_prepared_registry_snapshot(
         unresolved_binding_ids=unresolved_binding_ids,
         date_binding_values=date_binding_values or None,
     )
-
-
-def calculate_modelo_revision_from_bucket_aggregation(
-    work_unit_id: str,
-    *,
-    actor: str = "system",
-    casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
-    text_casilla_inputs: Mapping[CasillaId, str] | None = None,
-    m210_official_tipo_renta_code: str | None = None,
-    m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
-    binding_values: Mapping[BindingId, Decimal] | None = None,
-    enum_binding_values: Mapping[BindingId, str] | None = None,
-    iva_compensation_decision: object | None = None,
-    iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
-    borrador_snapshot_id: str | None = None,
-    relation_values: Mapping[RelationId, Decimal] | None = None,
-    filing_period_date: date | None = None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    transaction_repository: TransactionCatalogueRepository | None = None,
-    invoice_repository: InvoiceCatalogueRepository | None = None,
-    foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...] = (),
-    foreign_asset_row_observations: tuple[Modelo720RowObservation, ...] = (),
-    borrador_snapshot_repository: Borrador100SnapshotRepository | None = None,
-    detail_rows: tuple[ModeloDetailRow, ...] = (),
-    filing_instance_evidence: FilingInstanceEvidence | None = None,
-    clock: datetime | None = None,
-) -> CalculationRevision:
-    """Calculate a modelo revision through the bucket-local source mesh.
-
-    ``transaction_repository`` is a :class:`TransactionCatalogueRepository` used to
-    load bucket-local ledger transactions for aggregation.
-    ``invoice_repository`` is an :class:`InvoiceCatalogueRepository` used by
-    invoice and OSS/IOSS resolvers. ``foreign_asset_observations`` feeds the
-    repository-free M720 foreign-asset resolver when the caller has already
-    supplied typed asset observations. The wrapper resolves enrolled source
-    families into backend binding, casilla, relation, detail-row, and provenance
-    channels, rejects caller collisions with source-owned bindings, and then
-    delegates to :func:`~application.modelo.calculate_modelo_revision`.
-
-    Returns a :class:`CalculationRevision`. Use
-    :func:`~application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`
-    when the caller also needs the non-blocking source diagnostics (e.g. the
-    operator-facing CLI calculate surface, which surfaces unconsumed-declarable
-    IVA advisories).
-
-    See Also:
-        :func:`_resolve_bucket_source_mesh`:
-            Runs the enrolled resolver set and returns the merged
-            :class:`~application.aggregation.CalculationSourceResolution`.
-        :func:`_reject_caller_overrides_of_source_bindings`:
-            Refuses caller values for source-owned binding and bound-casilla
-            slots.
-    """
-    fr_repo = filing_repository or modelo_record_repository_for_application()
-    return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit_id,
-        actor=actor,
-        casilla_inputs=casilla_inputs,
-        text_casilla_inputs=text_casilla_inputs,
-        m210_official_tipo_renta_code=m210_official_tipo_renta_code,
-        m210_gross_income_source_mode=m210_gross_income_source_mode,
-        binding_values=binding_values,
-        enum_binding_values=enum_binding_values,
-        iva_compensation_decision=iva_compensation_decision,
-        iva_compensation_decision_repository=iva_compensation_decision_repository,
-        borrador_snapshot_id=borrador_snapshot_id,
-        relation_values=relation_values,
-        filing_period_date=filing_period_date,
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
-        filing_repository=fr_repo,
-        bucket_event_repository=bucket_event_repository,
-        transaction_repository=transaction_repository,
-        invoice_repository=invoice_repository,
-        foreign_asset_observations=foreign_asset_observations,
-        foreign_asset_row_observations=foreign_asset_row_observations,
-        borrador_snapshot_repository=borrador_snapshot_repository,
-        detail_rows=detail_rows,
-        filing_instance_evidence=filing_instance_evidence,
-        clock=clock,
-    ).revision
 
 
 def _resolve_bucket_source_mesh(
@@ -1394,9 +1313,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
 ) -> BucketAggregationCalculationResult:
     """Calculate a modelo revision and return it alongside the source diagnostics.
 
-    Identical orchestration to
-    :func:`~application.modelo.calculate_modelo_revision_from_bucket_aggregation`,
-    but returns a
+    Returns a
     :class:`BucketAggregationCalculationResult` carrying both the persisted
     :class:`CalculationRevision` and the NON-blocking
     :class:`~application.aggregation.CalculationSourceDiagnostic` rows the
