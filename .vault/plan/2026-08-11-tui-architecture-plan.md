@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-06'
-body_hash: 'sha256:99708b50799e4e33b7b40c852524a054845a42c7dbf776a59ed9601928ec38dc'
+body_hash: 'sha256:f07ac46318d8d5bc229a3c3b5de7a21b216dedd2d24936dbe9c79d13fa5de17b'
 ---
 
 <!-- RETIRED: S370 -->
@@ -672,6 +672,7 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S456` - Read the dynamic namespace a screen declares by selecting a prefix from a table, and register the bounded spaces rather than tolerating them, since the workspace helpers append an enum member value to a prefix chosen by class name so the f-string head is an interpolation and no namespace was declared at all; `dev/locales/_ast_scanner.py dev/locales/_fstring_registry.py dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
 - [x] `W08.P30.S457` - Read the screen column table the shape test rejected for carrying a width, read back as a class attribute and indexed rather than unpacked, keeping the key-column discipline so a prose or numeric sibling reaching the translator still confirms nothing; `dev/locales/_ast_scanner.py dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
 - [x] `W08.P30.S458` - Read the banner key a screen subclass declares as a class attribute and the base renders through the workspace copy helper, requiring the attribute name to reach a translator so a route or action id held the same way is still not mistaken for copy; `dev/locales/_ast_scanner.py dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
+- [x] `W08.P30.S459` - Stop deciding row-table candidacy by cell type and hold the translation-key kwarg set to the TranslationKey annotation, since a choice table pairs its key with the enum member it sets and four parameters the type already declares as keys were absent from a list grown one orphan at a time; `dev/locales/_ast_scanner.py dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
 
 ## Parallelization
 

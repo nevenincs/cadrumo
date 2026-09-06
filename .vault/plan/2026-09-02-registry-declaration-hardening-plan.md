@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:dc25d98661618a9122d044352934076fbc60c936ef09db30656a4ae915d41f5d'
+body_hash: 'sha256:41028a0db32d5db8757ab83d7203b8650e48618e8e29cd071824f5a8a8bf989c'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -622,6 +622,9 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S740` - Name the drifted concepts and their actions in the handbook scaffold verdicts, which reported only that the tree had drifted; `dev/docs/terminology_handbook/tests/test_bootstrap.py`.
 - [x] `W02.P02.S741` - Size the nested-collection budget for real contention and make its expiry say the machine was loaded rather than the shard plugin broken; `dev/quality/tests/test_shard.py`.
 - [x] `W02.P02.S742` - Size the preflight collection budget for contention, which carried a third the headroom of one already shown too tight, and make its expiry legible; `dev/packaging/tests/test_preflight_recipe_selection.py`.
+- [x] `W02.P02.S743` - Floor the condition-exposure denominator and split its three-population conjunction so a narrowed walk fires and an emptied population names itself; `dev/registry/tests/test_filing_exposure.py`.
+- [x] `W02.P02.S744` - Separate the anti-vacuity guard from the claim it guards in the revision selection probe, where an empty selection and a resolution failure read identically; `dev/registry/tests/test_revision_selection_probe.py`.
+- [x] `W02.P02.S745` - Replace the palette concept fixture's tautological lifecycle assertion and its untrue invariant comment with a floor on the fixture it actually selects; `dev/docs/tests/test_palette_ranking.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
