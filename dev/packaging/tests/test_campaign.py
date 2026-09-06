@@ -15,9 +15,11 @@ from ..campaign import (
     _LANES,
     _PROFILES,
     _TEST_WORKERS_ENV,
+    PytestPass,
     _attempt_step,
     _run_step,
     _test_worker_count,
+    preflight_pass_failures,
     resolve_form,
 )
 
@@ -274,3 +276,52 @@ def test_run_step_still_ends_the_campaign_on_a_failure(tmp_path: Path) -> None:
         _run_step([sys.executable, "-c", "raise SystemExit(4)"], tmp_path, "probe")
 
     assert "probe" in str(excinfo.value)
+
+
+def _doomed_pass(label: str) -> PytestPass:
+    """A pass whose pytest invocation fails fast and for a real reason.
+
+    The target does not exist, so pytest exits non-zero within a second. No
+    stub or fake: a real interpreter runs a real pytest and really fails.
+    """
+    return PytestPass(
+        label=label,
+        markers="unit",
+        target="dev/packaging/tests/__no_such_target__.py",
+        parallel=False,
+    )
+
+
+def test_a_failing_pass_does_not_stop_the_passes_after_it(tmp_path: Path) -> None:
+    """The property the fix exists for, and the one the primitive cannot show.
+
+    Aborting on the first failure meant one wedged pass hid every later one,
+    so an invocation could surface at most one defect -- an hour of a
+    two-machine fleet per defect on CI. Both labels must come back.
+    """
+    failures = preflight_pass_failures((_doomed_pass("first"), _doomed_pass("second")), tmp_path, None)
+
+    assert [failure.split(" ")[0] for failure in failures] == ["first", "second"]
+
+
+def test_passes_that_all_succeed_report_nothing(tmp_path: Path) -> None:
+    """The other direction: an empty list must mean success, not an inert loop.
+
+    Without this the gate above would pass equally against a function that
+    collected every pass as a failure regardless of its outcome.
+    """
+    # NOT this module: pointing a real pytest run at the file containing this
+    # test re-enters it, and the run hangs until the ceiling kills it. A small
+    # sibling that parses yaml and spawns nothing is the honest fast target.
+    # The marker must MATCH the target: that file is integration-marked, and
+    # `-m unit` deselected everything, which pytest exits 5 for and the
+    # campaign correctly counts as a failure. A selection matching nothing is
+    # a failure here, not a pass.
+    healthy = PytestPass(
+        label="healthy",
+        markers="integration",
+        target="dev/packaging/tests/test_homebrew_workflow.py",
+        parallel=False,
+    )
+
+    assert preflight_pass_failures((healthy,), REPO_ROOT, None) == []

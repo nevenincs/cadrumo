@@ -34,6 +34,7 @@ import os
 import subprocess
 import sys
 import time
+from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
@@ -384,6 +385,30 @@ def campaign_pytest_argv(repo_root: Path, test_workers: int | None) -> tuple[tup
     )
 
 
+def preflight_pass_failures(passes: Sequence[PytestPass], repo_root: Path, test_workers: int | None) -> list[str]:
+    """Run every preflight pass and return a description of each that failed.
+
+    Named and public so the behaviour can be exercised directly. The property
+    that matters is not that a failure is reported -- it is that a failure does
+    not stop the passes after it, which is invisible from the primitive alone
+    and is exactly what used to make an invocation surface at most one defect.
+
+    Args:
+        passes: The preflight passes to run, in order.
+        repo_root: The repository root each pass runs from.
+        test_workers: The resolved preflight worker count, or ``None``.
+
+    Returns:
+        One description per failing pass, in run order; empty when all passed.
+    """
+    failures: list[str] = []
+    for pytest_pass in passes:
+        failure = _attempt_step(pytest_pass_argv(pytest_pass, repo_root, test_workers), repo_root, pytest_pass.label)
+        if failure is not None:
+            failures.append(failure)
+    return failures
+
+
 def _attempt_step(argv: list[str], repo_root: Path, label: str) -> str | None:
     """Run one step and DESCRIBE its failure rather than raising on it.
 
@@ -513,16 +538,7 @@ def main(argv: list[str] | None = None) -> int:
         # everywhere and ruinous on CI, where the invocation costs an hour of
         # a two-machine fleet. A gate should report what it found, not the
         # first thing it found.
-        preflight_failures = [
-            failure
-            for pytest_pass in _PREFLIGHT_PASSES
-            if (
-                failure := _attempt_step(
-                    pytest_pass_argv(pytest_pass, repo_root, test_workers), repo_root, pytest_pass.label
-                )
-            )
-            is not None
-        ]
+        preflight_failures = preflight_pass_failures(_PREFLIGHT_PASSES, repo_root, test_workers)
         if preflight_failures:
             raise SystemExit("campaign preflight failed: " + "; ".join(preflight_failures))
 
