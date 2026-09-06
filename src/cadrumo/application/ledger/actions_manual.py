@@ -816,6 +816,7 @@ def _prepare_manual_transaction_update(
         created_at=current.created_at,
         modified_at=now,
     )
+    replacement = _carry_forward_fx(current, replacement)
     if mutation_signature(current) == mutation_signature(replacement):
         return None
     verify_evidence_references(
@@ -870,7 +871,7 @@ def _prepare_manual_transaction_update(
         created_at=current.created_at,
         modified_at=now,
     )
-    return replacement, events
+    return _carry_forward_fx(current, replacement), events
 
 
 def update_manual_transaction_fields(
@@ -1405,6 +1406,33 @@ def _fx_conversion_fields(
     if fx_rate is None or value_in_eur is None:
         return {}
     return {"fx_rate": fx_rate, "value_in_eur": value_in_eur}
+
+
+def _carry_forward_fx(current: Transaction, replacement: Transaction) -> Transaction:
+    """Keep an edited row's euro value when the money behind it did not change.
+
+    An edit rebuilds the row from the command, and the rebuild re-derives the
+    foreign-currency conversion through :func:`_fx_conversion_fields`. That
+    needs a :class:`CurrencyNormalizationService`, and no caller of
+    :func:`update_manual_transaction` has one — so the projection returns an
+    empty mapping and the replacement takes the model default of ``None``.
+
+    The consequence is not a missing display field. ``summarize_manual_transactions``
+    falls back to ``abs(raw.amount)`` when ``value_in_eur`` is absent, so a
+    1000 USD row that had been converted at import is counted as 1000 EUR from
+    the first unrelated edit onwards — a description fix silently restates the
+    amount.
+
+    Carried only when the amount AND the currency are untouched. If either
+    moved, the stored euro value describes a different sum and reusing it would
+    replace a lost figure with a wrong one; absence is the honest answer there,
+    and it is what the row already gets today.
+    """
+    if replacement.value_in_eur is not None or current.value_in_eur is None:
+        return replacement
+    if replacement.raw.amount != current.raw.amount or replacement.raw.currency != current.raw.currency:
+        return replacement
+    return replacement.model_copy(update={"fx_rate": current.fx_rate, "value_in_eur": current.value_in_eur})
 
 
 def _classification_fields(
