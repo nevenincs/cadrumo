@@ -850,6 +850,104 @@ def test_annotated_export_entry_is_rewritten_with_the_definition(tmp_path: Path)
     }
 
 
+def test_docstring_role_target_is_rewritten_with_the_definition(tmp_path: Path) -> None:
+    """A Sphinx role naming the renamed class is a reference, so it moves with it.
+
+    Leaving it behind would point the reader at a class that no longer exists,
+    and refusing the rename outright would make the tool unable to touch any
+    symbol anybody documented -- which in this repository is most of them.
+    """
+    module = "\n".join(
+        [
+            '"""Widget contracts.',
+            '',
+            'See :class:`Widgets` and :obj:`~cadrumo.widget_contract.Widgets`.',
+            '"""',
+            '',
+            '',
+            'class Widgets:',
+            '    pass',
+            '',
+        ]
+    )
+    inventory = _inventory(tmp_path, {"src/cadrumo/widget_contract.py": module})
+    declaration = _declaration(inventory, path="src/cadrumo/widget_contract.py", name="Widgets")
+    operation = _operation(
+        declaration,
+        target_name="Widget",
+        sources=_tree_bytes(tmp_path),
+        expected_reference_classes=("definition",),
+    )
+
+    result = plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
+
+    rewritten = result.content_by_path()["src/cadrumo/widget_contract.py"].decode("utf-8")
+    assert ":class:`Widget`" in rewritten
+    assert ":obj:`~cadrumo.widget_contract.Widget`" in rewritten
+    assert "Widgets" not in rewritten
+
+
+def test_prose_mentioning_the_old_name_is_still_refused_beside_a_role(tmp_path: Path) -> None:
+    """The exemption covers role targets only, never the sentence around them.
+
+    A rename cannot tell whether prose is naming the symbol or using the word,
+    so one bare mention still refuses the whole plan even when another mention
+    in the same docstring is a rewritable reference.
+    """
+    module = "\n".join(
+        [
+            '"""Widget contracts.',
+            '',
+            'See :class:`Widgets`. The Widgets model is described above.',
+            '"""',
+            '',
+            '',
+            'class Widgets:',
+            '    pass',
+            '',
+        ]
+    )
+    inventory = _inventory(tmp_path, {"src/cadrumo/widget_contract.py": module})
+    declaration = _declaration(inventory, path="src/cadrumo/widget_contract.py", name="Widgets")
+    operation = _operation(declaration, target_name="Widget", sources=_tree_bytes(tmp_path))
+
+    with pytest.raises(ObjectNameTransformError, match="unsupported string reference"):
+        plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
+
+
+def test_role_target_naming_a_different_symbol_is_left_alone(tmp_path: Path) -> None:
+    """Only the renamed symbol's own references move; a neighbour's stay put."""
+    module = "\n".join(
+        [
+            '"""Widget contracts.',
+            '',
+            'See :class:`Widgets` and :class:`Gadgets`.',
+            '"""',
+            '',
+            '',
+            'class Widgets:',
+            '    pass',
+            '',
+            '',
+            'class Gadgets:',
+            '    pass',
+            '',
+        ]
+    )
+    inventory = _inventory(tmp_path, {"src/cadrumo/widget_contract.py": module})
+    declaration = _declaration(inventory, path="src/cadrumo/widget_contract.py", name="Widgets")
+    operation = _operation(
+        declaration,
+        target_name="Widget",
+        sources=_tree_bytes(tmp_path),
+        expected_reference_classes=("definition",),
+    )
+
+    result = plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
+
+    rewritten = result.content_by_path()["src/cadrumo/widget_contract.py"].decode("utf-8")
+    assert ":class:`Widget`" in rewritten
+    assert ":class:`Gadgets`" in rewritten
 def test_unrelated_string_matching_the_old_name_is_still_refused(tmp_path: Path) -> None:
     inventory = _inventory(
         tmp_path,

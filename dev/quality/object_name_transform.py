@@ -47,6 +47,13 @@ __all__ = [
 
 
 _SHA256_PREFIX: Final[str] = "sha256:"
+# A Sphinx cross-reference: a role, then a backticked target that may carry a
+# `~` or `.` prefix and a dotted path. Only the target inside those backticks is
+# a reference to a symbol; the surrounding prose is the author's sentence.
+_DOCUMENTATION_REFERENCE: Final[re.Pattern[str]] = re.compile(
+    r":(?:class|obj|func|meth|exc|data|attr):`~?\.?(?P<target>[A-Za-z_][A-Za-z0-9_.]*)`"
+)
+
 _UNSUPPORTED_REFERENCE_CLASSES: Final[frozenset[str]] = frozenset({"generated-artifact"})
 
 
@@ -337,6 +344,60 @@ class _RenameTransformer(cst.CSTTransformer):
             return node.with_changes(value=f"{node.prefix}{node.quote}{new_name}{node.quote}")
         return None
 
+    def _documentation_reference_spans(self, text: str, old_name: str) -> list[tuple[int, int]]:
+        """Return the spans in ``text`` where ``old_name`` is a documentation target.
+
+        Only the backticked target of a Sphinx role counts. Prose that merely
+        mentions the name does not: a rename cannot know whether such a sentence
+        is naming the symbol or using the word, and rewriting it would edit an
+        author's meaning rather than a reference.
+        """
+        spans: list[tuple[int, int]] = []
+        for match in _DOCUMENTATION_REFERENCE.finditer(text):
+            target = match.group("target")
+            if target.rsplit(".", 1)[-1] != old_name:
+                continue
+            start = match.start("target") + len(target) - len(old_name)
+            spans.append((start, start + len(old_name)))
+        return spans
+
+    def _is_documentation_only(self, text: str, old_name: str) -> bool:
+        """Report whether every mention of ``old_name`` in ``text`` is a role target."""
+        mentions = [
+            match.start()
+            for match in re.finditer(rf"(?<![A-Za-z0-9_]){re.escape(old_name)}(?![A-Za-z0-9_])", text)
+        ]
+        if not mentions:
+            return False
+        covered = {start for start, _end in self._documentation_reference_spans(text, old_name)}
+        return all(start in covered for start in mentions)
+
+    def _renamed_documentation_reference(self, node: cst.SimpleString) -> cst.SimpleString | None:
+        """Return ``node`` with its role targets renamed, or ``None`` when unchanged.
+
+        The substitution runs over the literal's raw source so the prefix, quote
+        style, and every other byte survive exactly as authored; only the target
+        inside a role's backticks changes.
+        """
+        raw = node.value
+        rewritten = raw
+        touched: list[str] = []
+        for operation in self.operations:
+            if operation.operation_kind != "symbol-rename":
+                continue
+            _old_module, old_name, _new_module, new_name = self._operation_names(operation)
+            spans = self._documentation_reference_spans(rewritten, old_name)
+            if not spans:
+                continue
+            for start, end in reversed(spans):
+                rewritten = rewritten[:start] + new_name + rewritten[end:]
+            touched.append(operation.operation_id)
+        if rewritten == raw:
+            return None
+        for operation_id in touched:
+            self.evidence[operation_id].add("documentation-reference")
+        return node.with_changes(value=rewritten)
+
     @override
     def visit_ClassDef(self, node: cst.ClassDef) -> bool | None:
         self._declaration_name_nodes.add(id(node.name))
@@ -365,7 +426,7 @@ class _RenameTransformer(cst.CSTTransformer):
             for operation in self.operations
         ):
             return True
-        self._refuse_opaque_spelling(value)
+        self._refuse_opaque_spelling(value, documentation_text=value)
         return True
 
     @override
@@ -376,6 +437,9 @@ class _RenameTransformer(cst.CSTTransformer):
         renamed_export = self._renamed_export_entry(original_node)
         if renamed_export is not None:
             return renamed_export
+        renamed_reference = self._renamed_documentation_reference(original_node)
+        if renamed_reference is not None:
+            return renamed_reference
         for operation in self.operations:
             old_module, _old_name, new_module, _new_name = self._operation_names(operation)
             if (
@@ -396,13 +460,27 @@ class _RenameTransformer(cst.CSTTransformer):
         self._refuse_opaque_spelling(node.value)
         return True
 
-    def _refuse_opaque_spelling(self, value: str) -> None:
+    def _refuse_opaque_spelling(self, value: str, *, documentation_text: str | None = None) -> None:
+        """Refuse a literal that spells a renamed symbol the transform cannot rewrite.
+
+        ``documentation_text`` opts a literal into the one exemption: when every
+        mention of a name inside it is the backticked target of a Sphinx role, the
+        rename can rewrite those targets precisely and the literal is not opaque.
+        Prose mentioning the name outside a role is still refused, because nothing
+        here can tell a reference from a sentence that happens to use the word.
+        """
         for operation in self.operations:
             old_module, old_name, _new_module, _new_name = self._operation_names(operation)
             spellings = (old_module,) if operation.operation_kind == "module-rename" else (old_name,)
-            if any(
-                re.search(rf"(?<![A-Za-z0-9_]){re.escape(spelling)}(?![A-Za-z0-9_])", value) for spelling in spellings
-            ):
+            for spelling in spellings:
+                if not re.search(rf"(?<![A-Za-z0-9_]){re.escape(spelling)}(?![A-Za-z0-9_])", value):
+                    continue
+                if (
+                    operation.operation_kind == "symbol-rename"
+                    and documentation_text is not None
+                    and self._is_documentation_only(documentation_text, spelling)
+                ):
+                    continue
                 raise ObjectNameTransformError(
                     f"operation {operation.operation_id!r} has an unsupported string reference in {self.module_name}"
                 )
