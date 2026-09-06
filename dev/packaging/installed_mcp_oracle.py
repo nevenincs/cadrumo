@@ -34,6 +34,7 @@ from cadrumo.core.directory_scan import scan_directory
 from .._paths import UTF_8
 from ._command import run_command
 from ._installed_wheel_binding import installed_distribution_payload_sha256
+from ._recovery_enrollment import enrolled_profile_creation
 from .installed_tax_oracle import (
     BINDINGS,
     CASILLAS,
@@ -548,24 +549,34 @@ def run_installed_mcp_oracle(
     sibling_cli = runtime_server.with_name("aeat.exe" if runtime_server.suffix.lower() == ".exe" else "aeat")
 
     passphrase = secrets.token_urlsafe(32)
-    profile = run_command(
-        (
-            str(sibling_cli),
-            "--format",
-            "json",
-            *cli_profile_create_arguments(),
-            "--secrets-stdin",
-        ),
-        cwd=resolved_work_dir,
-        environment=isolated_product_environment(storage_root),
-        timeout_seconds=timeout_seconds,
-        input_text=json.dumps(
-            {"passphrase": passphrase, "passphrase_confirmation": passphrase},
-            separators=(",", ":"),
-        ),
-    )
+    # Creation refuses without a channel to hand the recovery phrase over and
+    # read the exact phrase back. The sibling tax oracle plays the operator's
+    # part through `enrolled_profile_creation`; this one called the CLI
+    # straight through and so could never succeed once enrollment became
+    # mandatory. Asking the product to skip a possession proof is not the
+    # alternative -- the oracle does what an operator does.
+    with enrolled_profile_creation(
+        cli=sibling_cli,
+        arguments=("--format", "json", *cli_profile_create_arguments(), "--secrets-stdin"),
+    ) as invocation:
+        profile = run_command(
+            invocation.argv,
+            cwd=resolved_work_dir,
+            environment=isolated_product_environment(storage_root),
+            timeout_seconds=timeout_seconds,
+            input_text=json.dumps(
+                {"passphrase": passphrase, "passphrase_confirmation": passphrase},
+                separators=(",", ":"),
+            ),
+            inherited_descriptors=invocation.inherited_descriptors,
+        )
     if profile.returncode != 0:
-        raise InstalledMcpOracleError("local machine-secret profile provisioning failed")
+        # Carrying the child's own output: the bare sentence that stood here
+        # made every CI failure of this lane undiagnosable without a rerun.
+        raise InstalledMcpOracleError(
+            f"local machine-secret profile provisioning failed ({profile.returncode})\n"
+            f"stdout:\n{profile.stdout}\nstderr:\n{profile.stderr}",
+        )
     secret_file = resolved_work_dir / ".cadrumo-mcp-profile-secret.json"
     secret_file.write_text(
         json.dumps({"profile_passphrase": passphrase}, separators=(",", ":")), encoding=_UTF_8, newline="\n"
