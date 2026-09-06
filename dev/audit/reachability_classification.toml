@@ -1041,3 +1041,12 @@ resolved = false
 remedy_requires_decision = true
 symbols = ["AmortizacionLedgerRepository", "AssetsLedgerRepository"]
 evidence = "Two governed repositories over encrypted singleton rows for the contribuyente asset and amortizacion ledgers. Neither repository, nor the AssetsLedgerDocument and AmortizacionLedger payloads they persist, is referenced anywhere in src/cadrumo outside assets.py itself; the only consumers are a test-support module that enumerates every runtime-attached repository and the part-tests built on it, so the coverage proves the surface attaches rather than that any flow uses it. This is a persistence surface for taxpayer financial records that no product path writes to or reads from. Distinguishing it from the fincas orphaned-domain cluster matters and was checked: the payload types live in domain/contribuyente/assets/records.py, not under domain/fincas, so this is a separate staging rather than part of that backlog. The remedy is to wire the amortizacion capability that would use it or to withdraw the surface with its tests, and both are owner decisions because encrypted persistence is shipped."
+
+[[symbol_cluster]]
+name = "root CLI tty and colour rules no command consults"
+class = "should-be-live"
+area = "entrypoints"
+resolved = false
+remedy_requires_decision = true
+symbols = ["should_use_color", "should_show_rich_progress", "refuse_if_stdin_non_tty"]
+evidence = "The module docstring states it centralises the rules EVERY CLI command uses to decide whether to emit colour, render a progress widget, or refuse a request needing interactivity. All three are called by nothing: the only occurrence of should_use_color outside the module is a docstring sentence in core/config.py describing what it would consult, not a call. Colour is nonetheless decided, which is what makes this a divergence rather than an absence: the localised usage-error path passes color=self.show_color, and that attribute is Click own UsageError state, so the framework default is in force while the project settings no_color and CADRUMO_FORCE_COLOR, and the helper written to reconcile them, are consulted by nothing. The two remaining rules have no second path at all, so no command refuses a non-tty request through the shared helper and none consults the progress rule. The remedy is to route the CLI through these helpers or to withdraw them and the settings they read; either is an owner decision because it changes user-visible terminal behaviour."

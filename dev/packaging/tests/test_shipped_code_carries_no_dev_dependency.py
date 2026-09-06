@@ -172,7 +172,18 @@ def test_the_gate_is_looking_at_something() -> None:
     )
 
     modules = _shipped_modules()
-    assert len(modules) > 100, f"only {len(modules)} shipped modules found; the scan is not reading the tree"
+    # Live the walk reaches 2,110 shipped modules, so `> 100` let 95% of the
+    # shipped tree go unscanned while this gate still reported no development
+    # dependency anywhere. The floor is set from the walk's own shape: losing
+    # `recursive=True` leaves exactly 1 module, and dropping the largest
+    # subpackage (application, 641) leaves 1,469. It deliberately does NOT
+    # catch losing a smaller subpackage alone - adapters is 295, and a floor
+    # tight enough for that would sit 300 below live and red on any ordinary
+    # removal. A floor, not a pinned count.
+    assert len(modules) > 1500, (
+        f"only {len(modules)} shipped modules found against a tree of about 2,100; the scan "
+        "is reading part of the shipped surface, so a clean result covers less than it appears to"
+    )
     assert any(_top_level_imports(path) for path in modules), "no imports parsed from any shipped module"
 
 

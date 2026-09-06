@@ -269,7 +269,6 @@
 "cadrumo.entrypoints.cli._modelo_behavior_support" = 1
 "cadrumo.entrypoints.cli._modelo_cli_support" = 1
 
-"cadrumo.entrypoints.cli._overview" = 2
 "cadrumo.entrypoints.cli._profile_session_gate" = 2
 "cadrumo.entrypoints.cli._tty" = 3
 "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap" = 1

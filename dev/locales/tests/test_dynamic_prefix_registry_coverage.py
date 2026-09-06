@@ -459,3 +459,37 @@ def test_language_override_sites_match_the_sanctioned_inventory() -> None:
         "ctx-scoped override sites no longer enter through ctx.with_resource(...) - "
         f"they have silently become post-callback-unwind exposed: {sorted(unwrapped)}"
     )
+
+def test_a_locale_key_mapping_declares_its_values_and_not_its_lookup_tokens() -> None:
+    """Incident 3: a registry's KEYS are what the runtime selects on, not translations.
+
+    A locale-key mapping is keyed by whatever picks the entry -- an enum value,
+    a route identity, a catalogue action id -- and only its values are locale
+    keys. Those tokens are dotted often enough to pass for keys:
+    ``workbench.home`` is a TUI route and ``operator.profile.edit`` a catalogue
+    action, and collecting them made the parity gate demand translations for
+    24 identifiers no catalogue should ever have carried.
+
+    The distinction only exists for a mapping. A tuple or list under the same
+    naming convention is a flat set of keys and is still collected whole, which
+    is the half this must not break.
+    """
+    from .._ast_scanner import scan_source_text
+
+    source = chr(10).join((
+        "_ROUTE_LOCALE_KEYS = {",
+        '    "workbench.home": "tui.search.destination.home",',
+        '    "operator.profile.edit": "tui.search.action.edit_profile",',
+        "}",
+        "_FLAT_LOCALE_KEYS = (",
+        '    "tui.search.refusal.unknown",',
+        ")",
+    ))
+
+    keys = scan_source_text(source, filename="probe.py")
+
+    assert "tui.search.destination.home" in keys
+    assert "tui.search.action.edit_profile" in keys
+    assert "tui.search.refusal.unknown" in keys, "a flat registry must still be collected whole"
+    assert "workbench.home" not in keys, "a route identity is not a locale key"
+    assert "operator.profile.edit" not in keys, "a catalogue action id is not a locale key"

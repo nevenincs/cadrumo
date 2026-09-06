@@ -268,13 +268,34 @@ def _extract_locale_constant_keys(tree: ast.AST) -> set[str]:
                 isinstance(target, ast.Name) and flow_confirmed.get(target.id) is node.value for target in node.targets
             )
             if named or shaped:
-                _collect_dotted_literals(node.value, findings)
+                _collect_declared_locale_keys(node.value, findings)
         elif isinstance(node, ast.AnnAssign):
             named = _declares_locale_key_constant(node.target)
             shaped = isinstance(node.target, ast.Name) and flow_confirmed.get(node.target.id) is node.value
             if named or shaped:
-                _collect_dotted_literals(node.value, findings)
+                _collect_declared_locale_keys(node.value, findings)
     return findings
+
+
+def _collect_declared_locale_keys(value: ast.expr, findings: set[str]) -> None:
+    """Collect the locale keys a declared registry holds, and not its lookup tokens.
+
+    A locale-key MAPPING is keyed by whatever the runtime selects on -- an enum
+    value, a route identity, an action id -- and only its VALUES are locale
+    keys. Sweeping the whole literal in claims those tokens as keys too, and
+    they are dotted often enough to look the part: `workbench.home` and
+    `operator.profile.edit` are a TUI route and a catalogue action, and the
+    parity gate reported all of them as missing translations that no catalogue
+    should ever have carried.
+
+    Every other shape -- a tuple, list or set of keys, or a bare string -- has
+    no such distinction, so it is collected whole as before.
+    """
+    if isinstance(value, ast.Dict):
+        for item in value.values:
+            _collect_dotted_literals(item, findings)
+        return
+    _collect_dotted_literals(value, findings)
 
 
 _LOCALE_KEY_CONSTANT_SUFFIXES: tuple[str, str] = ("_LOCALE_KEY", "_LOCALE_KEYS")

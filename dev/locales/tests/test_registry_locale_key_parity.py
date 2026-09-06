@@ -107,7 +107,18 @@ def test_registry_scan_excludes_citation_quotes() -> None:
     """
     keys = scan_registry_keys()
 
-    assert keys, "the scan returned nothing, so the assertions below are vacuous"
+    # A FLOOR, which is not the pinned count the docstring rightly refuses: a
+    # tally reds on every new category, while a floor only fires when the scan
+    # SHRINKS. Truthiness alone ruled out a scan returning nothing, and the
+    # shape assertions below are all negatives - no quote, no escape, no
+    # literal None - so they hold trivially over a handful of keys. The same
+    # scan parametrizes the per-key parity gate above, where a partial
+    # collapse shrinks 360 cases without failing anything. Live: 90 keys,
+    # 42 notes and 37 labels.
+    assert len(keys) >= 70, (
+        f"the registry scan returned {len(keys)} keys; the negative assertions below and "
+        "the per-key parity gate above are both measured over a fraction of the surface"
+    )
     assert not [key for key in keys if key.endswith(".quote")]
     assert "None" not in keys, (
         "the scan emitted the literal key 'None', which means a profile declares no "

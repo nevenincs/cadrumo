@@ -443,6 +443,33 @@ def test_a_prefix_only_combines_with_tokens_in_its_own_module() -> None:
     assert set(assembled_reference_names(ast.parse(source))) == set()
 
 
+def test_a_handler_name_stripped_from_a_declared_key_counts_as_a_reference() -> None:
+    """The second binding construction: a string METHOD, not a format string.
+
+    The overview table binds through ``DeferredTarget(_MODULE,
+    key.removeprefix("app_"))``, so `aeat app overview pipeline` runs while
+    ``overview_pipeline`` read as unused. Affix strippers are total functions
+    of the literal they apply to, so the derived name is exact.
+    """
+    source = chr(10).join(
+        (
+            'KEYS = ("app_overview_pipeline", "app_overview_prepare")',
+            "def _leaf(key):",
+            '    return Binding(_MODULE, key.removeprefix("app_"))',
+        )
+    )
+    derived = set(assembled_reference_names(ast.parse(source)))
+
+    assert {"overview_pipeline", "overview_prepare"} <= derived
+
+
+def test_a_string_method_the_reader_cannot_evaluate_contributes_nothing() -> None:
+    """``replace`` depends on content the reader cannot see, so it is excluded."""
+    source = chr(10).join(('KEY = "app_overview_pipeline"', 'NAME = KEY.replace("app", "x")'))
+
+    assert set(assembled_reference_names(ast.parse(source))) == set()
+
+
 def test_a_member_bound_by_its_declared_value_is_cleared(result: UnreachableCodeResult) -> None:
     """A declaration addresses a StrEnum member by its VALUE, never by its name.
 
