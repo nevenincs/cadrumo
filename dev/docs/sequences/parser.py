@@ -34,9 +34,10 @@ from __future__ import annotations
 import json
 import re
 import shlex
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
+from types import MappingProxyType
 from typing import get_args
 
 from pydantic import StringConstraints
@@ -502,13 +503,14 @@ def parse_frame_lines(text: str, *, source: str) -> tuple[list[_FrameBuilder], l
     return builders, problems
 
 
-def _enforce_result_contract(builders: list[_FrameBuilder], problems: list[str]) -> None:
+def _enforce_result_contract(builders: list[_FrameBuilder], problems: list[str], *, sequence_id: str) -> None:
     """Enforce the @result contract, relaxed for ``@static`` frames.
 
     An all-``@static`` sequence runs nothing, so it must carry NO @result. A
     sequence with at least one executed frame must carry exactly one @result,
     which must be the LAST EXECUTED frame (``@static`` frames may follow it) and
-    carry at least one @expect.
+    carry at least one @expect, which must assert the result PAYLOAD unless
+    the sequence is named in :data:`_RESULT_PAYLOAD_EXEMPT`.
     """
     executed = [index for index, builder in enumerate(builders) if builder.kind is not FrameKind.STATIC]
     result_indices = [index for index, builder in enumerate(builders) if builder.kind is FrameKind.RESULT]
@@ -541,12 +543,60 @@ def _enforce_result_contract(builders: list[_FrameBuilder], problems: list[str])
             f"the @result frame ({_at(result.source, result.line_number)}) must carry at least one "
             "@expect assertion (e.g. '@expect result.status == \"verified_complete\"')",
         )
+        return
+    if sequence_id in _RESULT_PAYLOAD_EXEMPT:
+        return
+    if not _expects_assert_result_payload(result.command_line, tuple(result.expects)):
+        problems.append(
+            f"the @result frame ({_at(result.source, result.line_number)}) must assert the result "
+            "PAYLOAD with at least one @expect on a 'result.*' or 'error.*' json-path; asserting "
+            "only 'exit_code'/'status' proves the command ran, not that it produced the right answer",
+        )
 
 
 #: A json-path addressing the result PAYLOAD (the ``result`` object of the
 #: envelope), as opposed to the ``exit_code`` process status or the ``status``
 #: envelope-spine field.
 _SEMANTIC_PAYLOAD_PREFIXES: tuple[str, ...] = ("result.", "result[", "error.", "error[")
+
+
+#: Enrolled sequences whose ``@result`` frame is permitted to assert process
+#: success alone, each with the reason it is not yet convertible. The contract
+#: is enforced at the :func:`parse_sequence` boundary for every other sequence,
+#: so a NEW payload-less ``@result`` frame cannot be authored: it must be named
+#: here, with a reason, in the same change. Entries are asserted to correspond
+#: to a genuinely payload-less frame, so a stale exemption cannot linger.
+_RESULT_PAYLOAD_EXEMPT: Mapping[str, str] = MappingProxyType(
+    {
+        "ledger-category-list": (
+            "Residual pre-contract debt: the frame asserts only exit_code. Converting it "
+            "needs a stable category-list payload assertion that survives catalogue growth."
+        ),
+        "modelo-349-applicability": (
+            "Residual pre-contract debt: the frame asserts only exit_code. Converting it "
+            "needs an applicability-explanation payload shape that is not yet settled."
+        ),
+    },
+)
+
+
+def _expects_assert_result_payload(command_line: str, expects: Sequence[ExpectAssertion]) -> bool:
+    """Whether ``expects`` assert the result PAYLOAD for a frame running ``command_line``.
+
+    The single definition of the payload contract, shared by the
+    :func:`parse_sequence` boundary enforcement and the public
+    :func:`result_frame_asserts_result_payload` predicate, so the refusal and the
+    report can never disagree.
+    """
+    if command_line.rstrip().endswith("--help"):
+        # Click help is deliberately human-readable text, not a JSON envelope.
+        # Its exact process-success assertion is the only available structured
+        # contract; text rendering itself is covered by the CLI help snapshots.
+        return any(assertion.json_path == "exit_code" and assertion.expected == 0 for assertion in expects)
+    return any(
+        assertion.json_path in {"result", "error"} or assertion.json_path.startswith(_SEMANTIC_PAYLOAD_PREFIXES)
+        for assertion in expects
+    )
 
 
 def result_frame_asserts_result_payload(sequence: ParsedSequence) -> bool:
@@ -564,15 +614,7 @@ def result_frame_asserts_result_payload(sequence: ParsedSequence) -> bool:
     frame = sequence.result_frame
     if frame is None:
         return True
-    if frame.command_line.rstrip().endswith("--help"):
-        # Click help is deliberately human-readable text, not a JSON envelope.
-        # Its exact process-success assertion is the only available structured
-        # contract; text rendering itself is covered by the CLI help snapshots.
-        return any(assertion.json_path == "exit_code" and assertion.expected == 0 for assertion in frame.expects)
-    return any(
-        assertion.json_path in {"result", "error"} or assertion.json_path.startswith(_SEMANTIC_PAYLOAD_PREFIXES)
-        for assertion in frame.expects
-    )
+    return _expects_assert_result_payload(frame.command_line, frame.expects)
 
 
 def _enforce_static_frames_state_a_reason(builders: list[_FrameBuilder], problems: list[str]) -> None:
@@ -669,7 +711,7 @@ def parse_sequence(
     if not builders:
         problems.append("a cli-sequence must contain at least one frame")
 
-    _enforce_result_contract(builders, problems)
+    _enforce_result_contract(builders, problems, sequence_id=sequence_id.strip())
     _enforce_static_frames_state_a_reason(builders, problems)
     _enforce_captures_and_placeholders(builders, problems)
 

@@ -13,7 +13,7 @@ from __future__ import annotations
 import pytest
 
 from ..errors import SequenceParseError
-from ..parser import parse_sequence, result_frame_asserts_result_payload
+from ..parser import _RESULT_PAYLOAD_EXEMPT, parse_sequence, result_frame_asserts_result_payload
 from ..schema import CaptureBinding, ExpectAssertion, FrameKind, StaticBlocker
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
@@ -345,9 +345,35 @@ def test_result_frame_semantic_contract_accepts_refusal_payload_and_terminal_hel
     assert result_frame_asserts_result_payload(_parse(body)) is True
 
 
-def test_result_frame_semantic_contract_rejects_exit_only_structured_command() -> None:
-    sequence = _parse("@result aeat app modelo work list\n@expect exit_code == 0\n")
+_EXIT_ONLY_BODY = "@result aeat app modelo work list\n@expect exit_code == 0\n"
+
+
+def test_exit_only_structured_result_frame_is_refused_at_the_parse_boundary() -> None:
+    """The payload contract REFUSES at the boundary, it does not merely report.
+
+    The contract used to live only in the predicate below, whose sole caller was a
+    test module: the parser accepted an exit-code-only @result frame, so the docs
+    build accepted what only a test refused. Enforcement now sits in parse_sequence.
+    """
+    problems = _problems(_EXIT_ONLY_BODY)
+    assert any("must assert the result PAYLOAD" in problem for problem in problems), problems
+
+
+def test_a_named_exemption_is_admitted_and_still_reported_by_the_predicate() -> None:
+    """The only way past the boundary is a named, reason-carrying exemption.
+
+    The exempt sequence parses, so the enrolled corpus keeps building, while the
+    predicate still reports it as payload-less; that is what stops an exemption
+    from silently outliving the debt it was granted for.
+    """
+    exempt_id = next(iter(_RESULT_PAYLOAD_EXEMPT))
+    sequence = parse_sequence(
+        sequence_id=exempt_id,
+        options={"verify": _VERIFY, "seed": None},
+        body=_EXIT_ONLY_BODY,
+    )
     assert result_frame_asserts_result_payload(sequence) is False
+    assert _RESULT_PAYLOAD_EXEMPT[exempt_id].strip(), "every exemption must state a reason"
 
 
 def test_blank_lines_are_ignored() -> None:
@@ -415,7 +441,7 @@ def test_over_long_verify_is_refused() -> None:
 
 
 def test_int_exit_code_expect_is_accepted() -> None:
-    body = "@result aeat app modelo verify\n@expect exit_code == 1\n"
+    body = '@result aeat app modelo verify\n@expect exit_code == 1\n@expect error.code == "REFUSED"\n'
     sequence = _parse(body)
     assert sequence.result_frame.expects[0].expected == 1
 
@@ -472,7 +498,7 @@ def test_step_prose_is_not_placeholder_scanned() -> None:
         "@step Reuse the {work_unit_id} value from the create step.\n"
         "aeat app modelo create 303 --year 2026 --period 1T\n"
         "@result aeat app modelo verify\n"
-        "@expect exit_code == 0\n"
+        '@expect result.status == "verified_complete"\n'
     )
     sequence = _parse(body)
     assert sequence.frames[0].step_description == "Reuse the {work_unit_id} value from the create step."
@@ -547,7 +573,7 @@ def test_static_frame_may_follow_the_result_frame() -> None:
     """A @static frame is allowed after the terminal @result (it is display-only)."""
     sequence = _parse(
         "@result aeat app modelo verify wu\n"
-        "@expect exit_code == 0\n"
+        '@expect result.status == "verified_complete"\n'
         "@static aeat app live justificante pull\n"
         "@blocked live-aeat The pull verb fetches from the AEAT sede; the sandbox refuses it.",
     )
