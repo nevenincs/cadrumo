@@ -61,8 +61,16 @@ def test_every_disposition_names_a_reader_file_that_exists() -> None:
 
 
 def test_every_named_reader_still_mentions_the_symbol() -> None:
-    """The reader must still read it, not merely still exist."""
+    """The reader must still read it, not merely still exist.
+
+    The vacuity floor beside the staleness check is the point, and it is
+    borrowed from the module ratchet's equivalent gate: if the rationale
+    format drifts so the reader pattern stops matching, every disposition
+    would pass this silently at once. Counting the checks distinguishes
+    'nothing is stale' from 'nothing was examined'.
+    """
     stale: list[str] = []
+    checked = 0
     for row in _dispositions():
         symbol = str(row.get("symbol", ""))
         pattern = re.compile(rf"(?<![A-Za-z0-9_]){re.escape(symbol)}(?![A-Za-z0-9_])")
@@ -70,9 +78,15 @@ def test_every_named_reader_still_mentions_the_symbol() -> None:
             path = REPO_ROOT / reader
             if not path.is_file():
                 continue
+            checked += 1
             if not pattern.search(path.read_text(encoding="utf-8")):
                 stale.append(f"{symbol}: {reader} no longer mentions it")
     assert not stale, f"these dispositions name a reader that stopped reading them: {stale}"
+    assert checked >= len(_dispositions()), (
+        f"only {checked} reader(s) were checked across {len(_dispositions())} disposition(s); "
+        "below one per disposition the rationales have stopped being checkable evidence "
+        "and this gate is inert rather than satisfied"
+    )
 
 
 def test_every_disposition_carries_a_substantive_rationale() -> None:

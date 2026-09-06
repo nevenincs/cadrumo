@@ -256,7 +256,7 @@ def _translation_call_names(tree: ast.AST) -> frozenset[str]:
     return frozenset(names)
 
 
-def _extract_locale_constant_keys(tree: ast.AST) -> set[str]:
+def _extract_locale_constant_keys(tree: ast.AST, wrappers: frozenset[str] = frozenset()) -> set[str]:
     """Find dotted locale keys declared in explicit locale-key constants.
 
     Recognizes two independent declaration shapes: a constant NAMED as a
@@ -273,7 +273,9 @@ def _extract_locale_constant_keys(tree: ast.AST) -> set[str]:
     from being misread as a locale-key declaration.
     """
     findings: set[str] = set()
-    flow_confirmed = _flow_confirmed_locale_key_dicts(tree) | _flow_confirmed_locale_key_row_tables(tree)
+    flow_confirmed = _flow_confirmed_locale_key_dicts(tree, wrappers) | _flow_confirmed_locale_key_row_tables(
+        tree, wrappers
+    )
     for node in ast.walk(tree):
         if isinstance(node, ast.Assign):
             named = any(_declares_locale_key_constant(target) for target in node.targets)
@@ -424,7 +426,9 @@ def _call_site_key_argument_exprs(node: ast.Call, tr_names: frozenset[str]) -> l
     return exprs
 
 
-def _locale_key_dict_names_read_into_a_sink(tree: ast.AST, candidate_names: frozenset[str]) -> frozenset[str]:
+def _locale_key_dict_names_read_into_a_sink(
+    tree: ast.AST, candidate_names: frozenset[str], wrappers: frozenset[str] = frozenset()
+) -> frozenset[str]:
     """Return the candidate dict names actually read into a recognized locale-key sink.
 
     Tracks the ``local = SOME_DICT.get(...)`` / ``local = SOME_DICT[...]``
@@ -443,7 +447,7 @@ def _locale_key_dict_names_read_into_a_sink(tree: ast.AST, candidate_names: froz
     textual order): the first pass fully populates the local-to-dict map,
     the second checks every call against it.
     """
-    tr_names = _translation_call_names(tree)
+    tr_names = _translation_call_names(tree) | wrappers
     confirmed: set[str] = set()
     for func in ast.walk(tree):
         if not isinstance(func, ast.FunctionDef | ast.AsyncFunctionDef):
@@ -466,7 +470,7 @@ def _locale_key_dict_names_read_into_a_sink(tree: ast.AST, candidate_names: froz
     return frozenset(confirmed)
 
 
-def _flow_confirmed_locale_key_dicts(tree: ast.AST) -> dict[str, ast.expr]:
+def _flow_confirmed_locale_key_dicts(tree: ast.AST, wrappers: frozenset[str] = frozenset()) -> dict[str, ast.expr]:
     """Return shape-candidate locale-key dicts actually read into a translator sink.
 
     Combines :func:`_shape_candidate_locale_key_dicts` (structural
@@ -477,7 +481,7 @@ def _flow_confirmed_locale_key_dicts(tree: ast.AST) -> dict[str, ast.expr]:
     candidates.
     """
     candidates = _shape_candidate_locale_key_dicts(tree)
-    confirmed_names = _locale_key_dict_names_read_into_a_sink(tree, frozenset(candidates))
+    confirmed_names = _locale_key_dict_names_read_into_a_sink(tree, frozenset(candidates), wrappers)
     return {name: value for name, value in candidates.items() if name in confirmed_names}
 
 
@@ -555,7 +559,9 @@ def _shape_candidate_locale_key_row_tables(tree: ast.AST) -> dict[str, ast.expr]
     return candidates
 
 
-def _row_table_names_iterated_into_a_sink(tree: ast.AST, candidates: dict[str, ast.expr]) -> frozenset[str]:
+def _row_table_names_iterated_into_a_sink(
+    tree: ast.AST, candidates: dict[str, ast.expr], wrappers: frozenset[str] = frozenset()
+) -> frozenset[str]:
     """Return the candidate row-table names whose loop variable reaches a translator.
 
     The dict sink tracks ``.get(...)``/subscript access. A row table is not
@@ -564,7 +570,7 @@ def _row_table_names_iterated_into_a_sink(tree: ast.AST, candidates: dict[str, a
     separates a genuine locale-key table from a same-shaped table of unrelated
     string tuples that never reaches the translator.
     """
-    tr_names = _translation_call_names(tree)
+    tr_names = _translation_call_names(tree) | wrappers
     key_columns = {name: _row_table_key_columns(value) for name, value in candidates.items()}
     bound_to_table: dict[str, str] = {}
     for node in ast.walk(tree):
@@ -594,10 +600,10 @@ def _row_table_names_iterated_into_a_sink(tree: ast.AST, candidates: dict[str, a
     return frozenset(confirmed)
 
 
-def _flow_confirmed_locale_key_row_tables(tree: ast.AST) -> dict[str, ast.expr]:
+def _flow_confirmed_locale_key_row_tables(tree: ast.AST, wrappers: frozenset[str] = frozenset()) -> dict[str, ast.expr]:
     """Return shape-candidate row tables actually iterated into a translator sink."""
     candidates = _shape_candidate_locale_key_row_tables(tree)
-    confirmed_names = _row_table_names_iterated_into_a_sink(tree, candidates)
+    confirmed_names = _row_table_names_iterated_into_a_sink(tree, candidates, wrappers)
     return {name: value for name, value in candidates.items() if name in confirmed_names}
 
 
@@ -1098,7 +1104,7 @@ def scan_source_tree(root: Path) -> set[str]:
     findings: set[str] = set()
     for _module, tree in modules:
         findings.update(_extract_error_constructor_keys(tree, wrappers))
-        findings.update(_extract_locale_constant_keys(tree))
+        findings.update(_extract_locale_constant_keys(tree, wrappers))
         findings.update(_extract_positional_translation_key_arguments(tree, key_positions))
     return findings
 

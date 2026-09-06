@@ -13,8 +13,9 @@ from __future__ import annotations
 import ast
 import json
 import re
+import subprocess
 from collections.abc import Callable
-from copy import copy
+from copy import copy, deepcopy
 from dataclasses import replace
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -155,6 +156,19 @@ _ACCEPTED_G0_PUBLICATION_PATTERN: Final[re.Pattern[str]] = re.compile(
     re.DOTALL,
 )
 _MOJIBAKE_PATTERN: Final[re.Pattern[str]] = re.compile(r"[ÃÂâ]")
+_FROZEN_G0_CANDIDATE_COMMIT: Final[str] = "cf2ec779685ee4b58727b708ef8ad61c8231f3c2"
+_FROZEN_G0_ACCEPTED_MATRIX_DIGEST: Final[str] = (
+    "sha256:658b1f6f2ad09bacf57ce58ba43913bdf19def7693d7967a44fb6716f39f0a11"
+)
+_FROZEN_G0_ACCEPTANCE_ATTESTATION_DIGEST: Final[str] = (
+    "sha256:d680107325ede5c108d35d58adf0ea64560f203e1618e5b2eb68c539e937d3fe"
+)
+_FROZEN_G0_CLOSURE_BASIS_DIGEST: Final[str] = (
+    "sha256:23f4c180707765054bae7ddb1a358fc2b2d9d159a7f81b3b6d22f7e218d81dbd"
+)
+_FROZEN_G0_ACCEPTANCE_SUBJECT_DIGEST: Final[str] = (
+    "sha256:1ce7ea53db4c50c24040d771bf7b8c7a8cea186aa30d4251d9d091ff7dc0d682"
+)
 
 
 def _s14_coordinate_table(
@@ -259,19 +273,54 @@ def _published_accepted_g0_payload(path: Path = _REFERENCE_PATH) -> dict[str, ob
 def _assert_published_accepted_g0_payload(path: Path = _REFERENCE_PATH) -> None:
     """Validate cross-record bindings that a JSON parser alone cannot establish."""
     payload = _published_accepted_g0_payload(path)
-    attestation = cast(dict[str, object], payload["acceptance_attestation"])
+    attestation = LedgerMatrixAcceptanceAttestationV1.model_validate_json(
+        json.dumps(payload["acceptance_attestation"])
+    )
     receipt = LedgerGateClosureReceiptV1.model_validate_json(json.dumps(payload["g0_receipt"]))
     subject = EvidenceSubjectSnapshotV1.model_validate_json(json.dumps(payload["acceptance_subject"]))
-    anchor = cast(dict[str, object], payload["acceptance_record_anchor"])
-    coordinate = EvidenceCoordinateV1.model_validate_json(json.dumps(anchor["coordinate"]))
-    if not coordinate.is_current_against(subject):
+    anchor = LedgerAcceptanceRecordAnchorV1.model_validate_json(json.dumps(payload["acceptance_record_anchor"]))
+    if not anchor.coordinate.is_current_against(subject):
         raise AssertionError("accepted G0 anchor coordinate is stale against its published subject")
-    if anchor["acceptance_attestation_digest"] != receipt.acceptance_attestation_digest:
+    if attestation.calculated_digest != receipt.acceptance_attestation_digest:
+        raise AssertionError("accepted G0 attestation digest binding drifted")
+    if anchor.calculated_subject_digest != subject.digest:
+        raise AssertionError("accepted G0 anchor subject digest binding drifted")
+    if anchor.acceptance_attestation_digest != receipt.acceptance_attestation_digest:
         raise AssertionError("accepted G0 anchor receipt digest binding drifted")
-    for field in ("attestation_id", "reviewer", "matrix_basis_digest", "denominator_digest", "denominator_revision"):
-        expected = attestation["matrix_digest"] if field == "matrix_basis_digest" else attestation[field]
-        if anchor[field] != expected:
+    expected_bindings = {
+        "attestation_id": attestation.attestation_id,
+        "reviewer": attestation.reviewer,
+        "attested_at": attestation.attested_at,
+        "matrix_basis_digest": attestation.matrix_digest,
+        "denominator_digest": attestation.denominator_digest,
+        "denominator_revision": attestation.denominator_revision,
+        "union_review": attestation.union_review,
+        "review_subject_id": attestation.review_subject_id,
+        "review_subject_revision": attestation.review_subject_revision,
+        "review_subject_digest": attestation.review_subject_digest,
+        "review_subject_observed_at": attestation.review_subject_observed_at,
+    }
+    for field, expected in expected_bindings.items():
+        if getattr(anchor, field) != expected:
             raise AssertionError(f"accepted G0 anchor {field} binding drifted")
+
+
+def _published_accepted_g0_records(
+    path: Path = _REFERENCE_PATH,
+) -> tuple[
+    LedgerMatrixAcceptanceAttestationV1,
+    LedgerGateClosureReceiptV1,
+    EvidenceSubjectSnapshotV1,
+    LedgerAcceptanceRecordAnchorV1,
+]:
+    """Parse every authoritative publication object through its actual strict model."""
+    payload = _published_accepted_g0_payload(path)
+    return (
+        LedgerMatrixAcceptanceAttestationV1.model_validate_json(json.dumps(payload["acceptance_attestation"])),
+        LedgerGateClosureReceiptV1.model_validate_json(json.dumps(payload["g0_receipt"])),
+        EvidenceSubjectSnapshotV1.model_validate_json(json.dumps(payload["acceptance_subject"])),
+        LedgerAcceptanceRecordAnchorV1.model_validate_json(json.dumps(payload["acceptance_record_anchor"])),
+    )
 
 
 _S14_CURRENT_COHORT_RESTATEMENT_PATTERNS: Final[tuple[tuple[str, re.Pattern[str]], ...]] = (
@@ -2804,45 +2853,94 @@ def _acceptance_record_anchor(
     return make_anchor(subject), (subject,)
 
 
-def _reconstruct_published_g0_evaluation() -> tuple[
+@cache
+def _frozen_published_g0_evaluation() -> tuple[
     LedgerCapabilityMatrixV1,
     LedgerLiveCensusReportV1,
     LedgerAcceptanceRecordAnchorV1,
     tuple[EvidenceSubjectSnapshotV1, ...],
 ]:
-    """Rebuild the published sole-G0 acceptance shape around real matching live inputs."""
-    payload = _published_accepted_g0_payload()
-    published_attestation = cast(dict[str, object], payload["acceptance_attestation"])
-    published_receipt = LedgerGateClosureReceiptV1.model_validate_json(json.dumps(payload["g0_receipt"]))
-    published_anchor = cast(dict[str, object], payload["acceptance_record_anchor"])
-    published_coordinate = EvidenceCoordinateV1.model_validate_json(json.dumps(published_anchor["coordinate"]))
-    base = build_ledger_capability_matrix()
+    """Evaluate the parsed records against the exact pre-violation TUI source observation."""
+    attestation, receipt, acceptance_subject, anchor = _published_accepted_g0_records()
+    repo_root = Path(__file__).resolve().parents[3]
+    source_files = ledger_tui_supported_surface_source_files(repo_root)
+    records = dict(matrix_module._source_records(source_files, repo_root=repo_root))
+    candidate_paths = {
+        "src/cadrumo/entrypoints/tui/flows/app.py",
+        "src/cadrumo/entrypoints/tui/home.py",
+        "src/cadrumo/entrypoints/tui/ledger/controller.py",
+        "src/cadrumo/entrypoints/tui/ledger/reconciliation.py",
+        "src/cadrumo/entrypoints/tui/modelo/tests/test_create_deferred.py",
+    }
+    for relative in sorted(candidate_paths & records.keys()):
+        completed = subprocess.run(
+            ["git", "show", f"{_FROZEN_G0_CANDIDATE_COMMIT}:{relative}"],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+        )
+        candidate_bytes = completed.stdout
+        if b"\r\n" in records[relative]:
+            candidate_bytes = candidate_bytes.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
+        records[relative] = candidate_bytes
+
+    frozen_tui = build_ledger_tui_supported_surface_census(source_records=tuple(records.items()))
+    frozen_union = build_ledger_union_denominator(tui=frozen_tui)
+    assert frozen_tui.calculated_digest == _TUI_CENSUS_DIGEST
+    assert frozen_tui.source_set_digest == _TUI_SOURCE_DIGEST
+    assert frozen_union.digest == _UNION_DIGEST
+    assert frozen_union.row_review_digest == _ROW_REVIEW_DIGEST
+    assert frozen_union.row_review_attestation.digest == _ROW_REVIEW_ATTESTATION_DIGEST
+
+    matrix_subject = EvidenceSubjectSnapshotV1(
+        subject_id=attestation.review_subject_id,
+        locator="dev/quality/clitui_ledger_capability_matrix.py",
+        revision=attestation.review_subject_revision,
+        digest=attestation.review_subject_digest,
+        observed_at=attestation.review_subject_observed_at,
+    )
+    rows = tuple(matrix_module._matrix_row_from_union(row, matrix_subject) for row in frozen_union.rows)
+    report = matrix_module._matrix_live_report(frozen_union)
+    denominator = LedgerDenominatorSnapshotV1.from_live_report(report)
+    union_review = LedgerUnionReviewSnapshotV1.from_union(frozen_union)
+    authority = matrix_module._matrix_authority_snapshot(denominator, rows)
+    controls = LedgerCampaignControlsV1(
+        sole_ledger_parity_plan_owner=ACCEPTED_LEDGER_PARITY_PLAN_OWNER,
+        tui_implementation_hold_recorded=True,
+        tui_implementation_hold_active=True,
+    )
+    campaign_evidence = (
+        matrix_module._matrix_coordinate(
+            matrix_subject,
+            evidence_id="evidence.ledger.matrix.publication",
+            kind=EvidenceKind.REFERENCE,
+            role=EvidenceRole.MATRIX_PUBLICATION,
+            axes=frozenset(LedgerCapabilityAxis),
+            claim="This coordinate binds the canonical matrix contract source under newline-normalized framing.",
+        ),
+    )
     gate = LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE
-    assert published_receipt.gate is gate
-    attestation = base.acceptance_attestation.model_copy(
-        update={
-            "attestation_id": published_attestation["attestation_id"],
-            "reviewer": published_attestation["reviewer"],
-            "ruling": ReviewRuling.ACCEPT,
-            "closure_receipt_set_digest": LedgerCapabilityMatrixV1.calculate_gate_closure_receipt_set_digest(
-                ((published_receipt.receipt_id, gate),)
-            ),
-        }
+    assert receipt.gate is gate
+    accepted = LedgerCapabilityMatrixV1(
+        schema_version=SCHEMA_VERSION,
+        controls=controls,
+        accepted_denominator=denominator,
+        current_denominator=denominator,
+        accepted_union_review=union_review,
+        current_union_review=union_review,
+        live_union=frozen_union,
+        accepted_authority_dispositions=authority,
+        current_authority_dispositions=authority,
+        current_subjects=(matrix_subject,),
+        rows=rows,
+        campaign_evidence=campaign_evidence,
+        accepted_gate_closure_receipts=(receipt,),
+        matrix_digest=_FROZEN_G0_ACCEPTED_MATRIX_DIGEST,
+        acceptance_attestation=attestation,
     )
-    attested = _matrix_with(base, acceptance_attestation=attestation)
-    receipt = LedgerGateClosureReceiptV1(
-        receipt_id=published_receipt.receipt_id,
-        gate=gate,
-        matrix_closure_basis_digest=attested.gate_closure_basis_digest(gate),
-        acceptance_attestation_digest=attested.acceptance_attestation.calculated_digest,
-    )
-    accepted = _matrix_with(attested, accepted_gate_closure_receipts=(receipt,))
-    anchor, acceptance_subjects = _acceptance_record_anchor(
-        accepted,
-        claim=published_coordinate.claim,
-    )
-    assert accepted.live_union is not None
-    return accepted, matrix_module._matrix_live_report(accepted.live_union), anchor, acceptance_subjects
+    assert accepted.attestation_matrix_basis_digest == attestation.matrix_digest
+    assert accepted.gate_closure_basis_digest(gate) == receipt.matrix_closure_basis_digest
+    return accepted, report, anchor, (acceptance_subject,)
 
 
 def _reminted_live_union() -> LedgerUnionDenominatorV1:
@@ -4969,42 +5067,48 @@ def test_s14_publication_coordinates_match_canonical_matrix_and_tui_census() -> 
 
 def test_s14_accepted_g0_publication_parses_its_typed_receipt_subject_and_anchor_coordinate() -> None:
     """The frozen candidate's acceptance record is structured, unique, and claim-bound."""
-    payload = _published_accepted_g0_payload()
     _assert_published_accepted_g0_payload()
-    attestation = cast(dict[str, object], payload["acceptance_attestation"])
-    receipt = LedgerGateClosureReceiptV1.model_validate_json(json.dumps(payload["g0_receipt"]))
-    subject = EvidenceSubjectSnapshotV1.model_validate_json(json.dumps(payload["acceptance_subject"]))
-    anchor = cast(dict[str, object], payload["acceptance_record_anchor"])
-    coordinate = EvidenceCoordinateV1.model_validate_json(json.dumps(anchor["coordinate"]))
+    attestation, receipt, subject, anchor = _published_accepted_g0_records()
 
-    assert attestation["attestation_id"] == "attestation.ledger.g0"
-    assert attestation["ruling"] == ReviewRuling.ACCEPT.value
+    assert attestation.attestation_id == "attestation.ledger.g0"
+    assert attestation.ruling is ReviewRuling.ACCEPT
+    assert attestation.calculated_digest == _FROZEN_G0_ACCEPTANCE_ATTESTATION_DIGEST
     assert receipt.gate is LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE
     assert receipt.receipt_id == ledger_gate_closure_receipt_id(receipt.gate)
-    assert coordinate.is_current_against(subject)
-    assert coordinate.claim == (
+    assert receipt.matrix_closure_basis_digest == _FROZEN_G0_CLOSURE_BASIS_DIGEST
+    assert receipt.acceptance_attestation_digest == attestation.calculated_digest
+    assert subject.digest == _FROZEN_G0_ACCEPTANCE_SUBJECT_DIGEST
+    assert anchor.calculated_subject_digest == subject.digest
+    assert anchor.coordinate.is_current_against(subject)
+    assert anchor.coordinate.claim == (
         "The independently observed acceptance record freezes the exact accepted G0 attestation, sole G0 receipt, "
         "and frozen 694-row candidate."
     )
-    assert anchor["acceptance_attestation_digest"] == receipt.acceptance_attestation_digest
-    assert attestation["union_review"] == {
-        "union_digest": _UNION_DIGEST,
-        "row_review_digest": _ROW_REVIEW_DIGEST,
-        "row_review_attestation_digest": _ROW_REVIEW_ATTESTATION_DIGEST,
-        "reviewed_row_count": 694,
-        "candidate_commit": "cf2ec779685ee4b58727b708ef8ad61c8231f3c2",
-        "candidate_tree": "ca3ee3c39f36b3d9f16269173ec8f68e5a05b05c",
-    }
+    assert anchor.acceptance_attestation_digest == receipt.acceptance_attestation_digest
+    assert anchor.union_review == attestation.union_review
+    assert attestation.union_review.union_digest == _UNION_DIGEST
+    assert attestation.union_review.row_review_digest == _ROW_REVIEW_DIGEST
+    assert attestation.union_review.row_review_attestation_digest == _ROW_REVIEW_ATTESTATION_DIGEST
+    assert len(attestation.union_review.capability_ids) == attestation.union_review.reviewed_row_count == 694
 
 
-@pytest.mark.parametrize("mutation", ["missing", "stale", "field"])
+@pytest.mark.parametrize(
+    "mutation",
+    ["missing_attestation", "missing_receipt", "missing_subject", "missing_anchor", "stale", "field"],
+)
 def test_s14_accepted_g0_publication_detector_rejects_missing_stale_and_field_mutations(
     tmp_path: Path, mutation: str
 ) -> None:
     """Publication drift cannot remint acceptance outside the typed records."""
     source = _REFERENCE_PATH.read_text(encoding="utf-8")
-    if mutation == "missing":
+    if mutation == "missing_attestation":
+        source = source.replace('"acceptance_attestation":{', '"attestation_removed":{', 1)
+    elif mutation == "missing_receipt":
         source = source.replace('"g0_receipt":{', '"receipt_removed":{', 1)
+    elif mutation == "missing_subject":
+        source = source.replace('"acceptance_subject":{', '"subject_removed":{', 1)
+    elif mutation == "missing_anchor":
+        source = source.replace('"acceptance_record_anchor":{', '"anchor_removed":{', 1)
     elif mutation == "stale":
         source = source.replace('"revision":"g0-acceptance-2026-09-06","digest"', '"revision":"stale","digest"', 1)
     else:
@@ -5014,13 +5118,34 @@ def test_s14_accepted_g0_publication_detector_rejects_missing_stale_and_field_mu
     candidate = tmp_path / "reference.md"
     candidate.write_text(source, encoding="utf-8")
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValidationError)):
         _assert_published_accepted_g0_payload(candidate)
 
 
-def test_s14_published_g0_records_close_the_real_matrix_when_all_live_inputs_match() -> None:
+def test_s14_published_g0_records_close_the_real_matrix_when_all_live_inputs_match(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """The publication becomes authority only through the typed G0 evaluator."""
-    matrix, report, anchor, acceptance_subjects = _reconstruct_published_g0_evaluation()
+    matrix, report, anchor, acceptance_subjects = _frozen_published_g0_evaluation()
+    completed = subprocess.run(
+        [
+            "git",
+            "show",
+            f"{_FROZEN_G0_CANDIDATE_COMMIT}:dev/quality/clitui_ledger_capability_matrix.py",
+        ],
+        cwd=Path(__file__).resolve().parents[3],
+        check=True,
+        capture_output=True,
+    )
+    frozen_contract = tmp_path / "clitui_ledger_capability_matrix.py"
+    frozen_contract.write_bytes(completed.stdout)
+    assert ledger_capability_matrix_source_digest(frozen_contract) == matrix.current_subjects[0].digest
+    live_digest = matrix_module.ledger_capability_matrix_source_digest
+    monkeypatch.setattr(
+        matrix_module,
+        "ledger_capability_matrix_source_digest",
+        lambda path=None: live_digest(frozen_contract if path is None else path),
+    )
 
     assessment = _evaluate(
         matrix,
@@ -5036,10 +5161,145 @@ def test_s14_published_g0_records_close_the_real_matrix_when_all_live_inputs_mat
     assert assessment.blockers == ()
 
 
+def test_s14_published_g0_records_relock_against_the_drifted_current_tui() -> None:
+    """The frozen authority cannot be refreshed onto the prohibited current TUI bytes."""
+    attestation, receipt, subject, anchor = _published_accepted_g0_records()
+    current = build_ledger_capability_matrix()
+    candidate = current.model_copy(
+        update={
+            "acceptance_attestation": attestation,
+            "accepted_gate_closure_receipts": (receipt,),
+            "matrix_digest": _FROZEN_G0_ACCEPTED_MATRIX_DIGEST,
+        }
+    )
+
+    assessment = _evaluate(
+        candidate,
+        LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE,
+        report=matrix_module._matrix_live_report(current.live_union),
+        subjects=current.current_subjects,
+        union=current.live_union,
+        acceptance_anchor=anchor,
+        acceptance_subjects=(subject,),
+    )
+
+    assert not assessment.closed
+    assert any("matrix validation failed" in blocker for blocker in assessment.blockers)
+
+
+_PUBLISHED_G0_BOUND_FIELD_MUTATIONS: Final[tuple[tuple[str, tuple[str, ...], object], ...]] = (
+    ("acceptance_attestation", ("attestation_id",), "attestation.ledger.changed"),
+    ("acceptance_attestation", ("reviewer",), "changed-reviewer"),
+    ("acceptance_attestation", ("ruling",), "reject"),
+    ("acceptance_attestation", ("plan_owner",), "changed-plan"),
+    ("acceptance_attestation", ("matrix_digest",), "sha256:" + "b" * 64),
+    ("acceptance_attestation", ("denominator_digest",), "sha256:" + "b" * 64),
+    ("acceptance_attestation", ("denominator_revision",), "changed-revision"),
+    ("acceptance_attestation", ("union_review", "union_digest"), "sha256:" + "b" * 64),
+    ("acceptance_attestation", ("union_review", "row_review_digest"), "sha256:" + "b" * 64),
+    ("acceptance_attestation", ("union_review", "row_review_attestation_digest"), "sha256:" + "b" * 64),
+    ("acceptance_attestation", ("union_review", "reviewed_row_count"), 693),
+    ("acceptance_attestation", ("union_review", "review_revision"), "changed-revision"),
+    ("acceptance_attestation", ("union_review", "review_id"), "review.ledger.changed"),
+    ("acceptance_attestation", ("union_review", "reviewed_at"), "2026-09-05T12:00:01+02:00"),
+    ("acceptance_attestation", ("union_review", "capability_ids"), ["ledger.allocate"]),
+    ("acceptance_attestation", ("review_subject_id",), "subject.ledger.changed"),
+    ("acceptance_attestation", ("review_subject_revision",), "changed-revision"),
+    ("acceptance_attestation", ("review_subject_digest",), "sha256:" + "b" * 64),
+    ("acceptance_attestation", ("review_subject_observed_at",), "2026-09-05T12:00:01+02:00"),
+    ("acceptance_attestation", ("attested_at",), "2026-09-06T00:00:01+02:00"),
+    ("acceptance_attestation", ("closure_receipt_set_digest",), "sha256:" + "b" * 64),
+    ("g0_receipt", ("receipt_id",), "receipt.ledger.g1_semantic_authority_recovery"),
+    ("g0_receipt", ("gate",), "g1_semantic_authority_recovery"),
+    ("g0_receipt", ("matrix_closure_basis_digest",), "sha256:" + "b" * 64),
+    ("g0_receipt", ("acceptance_attestation_digest",), "sha256:" + "b" * 64),
+    ("acceptance_subject", ("subject_id",), "subject.ledger.changed"),
+    ("acceptance_subject", ("locator",), "reference://clitui-ledger/changed"),
+    ("acceptance_subject", ("revision",), "changed-revision"),
+    ("acceptance_subject", ("digest",), "sha256:" + "b" * 64),
+    ("acceptance_subject", ("observed_at",), "2026-09-06T00:00:01+02:00"),
+    ("acceptance_record_anchor", ("coordinate", "evidence_id"), "evidence.acceptance_record.changed"),
+    ("acceptance_record_anchor", ("coordinate", "kind"), "code"),
+    ("acceptance_record_anchor", ("coordinate", "role"), "matrix_publication"),
+    ("acceptance_record_anchor", ("coordinate", "axes"), ["artifact"]),
+    ("acceptance_record_anchor", ("coordinate", "subject_id"), "subject.ledger.changed"),
+    ("acceptance_record_anchor", ("coordinate", "subject_revision"), "changed-revision"),
+    ("acceptance_record_anchor", ("coordinate", "subject_digest"), "sha256:" + "b" * 64),
+    ("acceptance_record_anchor", ("coordinate", "observed_at"), "2026-09-06T00:00:01+02:00"),
+    ("acceptance_record_anchor", ("coordinate", "locator"), "reference://clitui-ledger/changed"),
+    ("acceptance_record_anchor", ("coordinate", "claim"), "Changed acceptance claim."),
+    ("acceptance_record_anchor", ("acceptance_attestation_digest",), "sha256:" + "b" * 64),
+    ("acceptance_record_anchor", ("attestation_id",), "attestation.ledger.changed"),
+    ("acceptance_record_anchor", ("reviewer",), "changed-reviewer"),
+    ("acceptance_record_anchor", ("attested_at",), "2026-09-06T00:00:01+02:00"),
+    ("acceptance_record_anchor", ("matrix_basis_digest",), "sha256:" + "b" * 64),
+    ("acceptance_record_anchor", ("denominator_digest",), "sha256:" + "b" * 64),
+    ("acceptance_record_anchor", ("denominator_revision",), "changed-revision"),
+    ("acceptance_record_anchor", ("union_review", "union_digest"), "sha256:" + "b" * 64),
+    ("acceptance_record_anchor", ("union_review", "row_review_digest"), "sha256:" + "b" * 64),
+    ("acceptance_record_anchor", ("union_review", "row_review_attestation_digest"), "sha256:" + "b" * 64),
+    ("acceptance_record_anchor", ("union_review", "reviewed_row_count"), 693),
+    ("acceptance_record_anchor", ("union_review", "review_revision"), "changed-revision"),
+    ("acceptance_record_anchor", ("union_review", "review_id"), "review.ledger.changed"),
+    ("acceptance_record_anchor", ("union_review", "reviewed_at"), "2026-09-05T12:00:01+02:00"),
+    ("acceptance_record_anchor", ("union_review", "capability_ids"), ["ledger.allocate"]),
+    ("acceptance_record_anchor", ("review_subject_id",), "subject.ledger.changed"),
+    ("acceptance_record_anchor", ("review_subject_revision",), "changed-revision"),
+    ("acceptance_record_anchor", ("review_subject_digest",), "sha256:" + "b" * 64),
+    ("acceptance_record_anchor", ("review_subject_observed_at",), "2026-09-05T12:00:01+02:00"),
+)
+
+
+@pytest.mark.parametrize(
+    ("record_name", "field_path", "changed_value"),
+    _PUBLISHED_G0_BOUND_FIELD_MUTATIONS,
+    ids=lambda value: ".".join(value) if isinstance(value, tuple) else None,
+)
+def test_each_published_g0_bound_field_mutation_fails_parsing_or_relocks_g0(
+    record_name: str,
+    field_path: tuple[str, ...],
+    changed_value: object,
+) -> None:
+    """Every serialized authority field has detector teeth without digest reminting."""
+    payload = deepcopy(_published_accepted_g0_payload())
+    selected = cast(dict[str, object], payload[record_name])
+    for part in field_path[:-1]:
+        selected = cast(dict[str, object], selected[part])
+    selected[field_path[-1]] = changed_value
+    try:
+        attestation = LedgerMatrixAcceptanceAttestationV1.model_validate_json(
+            json.dumps(payload["acceptance_attestation"])
+        )
+        receipt = LedgerGateClosureReceiptV1.model_validate_json(json.dumps(payload["g0_receipt"]))
+        subject = EvidenceSubjectSnapshotV1.model_validate_json(json.dumps(payload["acceptance_subject"]))
+        anchor = LedgerAcceptanceRecordAnchorV1.model_validate_json(json.dumps(payload["acceptance_record_anchor"]))
+    except ValidationError:
+        return
+
+    baseline, report, _baseline_anchor, _baseline_subjects = _frozen_published_g0_evaluation()
+    candidate = baseline.model_copy(
+        update={
+            "acceptance_attestation": attestation,
+            "accepted_gate_closure_receipts": (receipt,),
+        }
+    )
+    assessment = _evaluate(
+        candidate,
+        LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE,
+        report=report,
+        subjects=candidate.current_subjects,
+        union=candidate.live_union,
+        acceptance_anchor=anchor,
+        acceptance_subjects=(subject,),
+    )
+
+    assert not assessment.closed
+
+
 @pytest.mark.parametrize("mutation", ["missing", "stale", "reviewer"])
 def test_g0_refuses_missing_stale_or_altered_published_acceptance_anchor(mutation: str) -> None:
     """G0 itself, not only G4, fails closed for typed external-anchor drift."""
-    matrix, report, anchor, subjects = _reconstruct_published_g0_evaluation()
+    matrix, report, anchor, subjects = _frozen_published_g0_evaluation()
     if mutation == "missing":
         anchor = None
         subjects = ()

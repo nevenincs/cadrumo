@@ -661,3 +661,47 @@ def test_a_translation_key_kwarg_is_read_through_a_conditional(tmp_path) -> None
         "a key inside a conditional is the key that ships on that branch"
     )
     assert not any(key.endswith("None") for key in keys), "a non-literal arm is not a key"
+
+
+def test_a_key_registry_is_flow_confirmed_through_a_boundary_wrapper(tmp_path) -> None:
+    """Incident 8: the same wrapper blindness as Incident 6, one layer down.
+
+    A dict shaped as a key registry is admitted only when it is proved to
+    REACH a translator -- shape alone is deliberately insufficient, because
+    same-shaped lookup tables exist that never translate. That proof consulted
+    only `tr` and its import aliases, so a registry read through the boundary
+    helper every surface is asked to use was never confirmed, and every key in
+    it read as an orphan.
+
+    Shape alone must still not be enough, which is what the second registry
+    pins: a same-shaped table nothing reads stays unconfirmed even in a module
+    that has a wrapper in it.
+    """
+    from .._ast_scanner import scan_source_tree
+
+    (tmp_path / "boundary.py").write_text(
+        chr(10).join(("def screen_copy(key, **values):", "    return tr(key, **values)")),
+        encoding="utf-8",
+    )
+    (tmp_path / "controller.py").write_text(
+        chr(10).join((
+            "_AVAILABILITY_KEYS = {",
+            '    Availability.STALE: "tui.declarations.availability.stale",',
+            "}",
+            "_ROUTING_TABLE = {",
+            '    Notice.RETRY: "notice.machine.retry",',
+            "}",
+            "def label(value):",
+            "    return screen_copy(_AVAILABILITY_KEYS[value])",
+        )),
+        encoding="utf-8",
+    )
+
+    keys = scan_source_tree(tmp_path)
+
+    assert "tui.declarations.availability.stale" in keys, (
+        "a registry read through a boundary wrapper reaches the translator and is confirmed"
+    )
+    assert "notice.machine.retry" not in keys, (
+        "shape alone must still not confirm a table nothing reads into a translator"
+    )
