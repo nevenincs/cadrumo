@@ -64,6 +64,17 @@ AFTER the watchdog it waited on completed at 12:52:35, and never appeared in any
 earlier poll. Dependency waits are therefore invisible here and need no special
 handling.
 
+*A job held by ``max-parallel`` is NOT known to be excluded, and this is a
+gap rather than a measurement.* ``packaging-homebrew.yml`` caps its acquisition
+matrix at two concurrent legs. If GitHub reports a leg held by that cap as
+``queued`` -- which is plausible and is NOT verified here, unlike the ``needs:``
+case above which was measured with timestamps -- then a held leg whose label
+set happens to be unoccupied would be flagged, and cancelling the run is what
+follows. Nothing in this module reasons about ``max-parallel``. Verifying it
+needs an observed dispatch of that workflow with three legs and a held third;
+until someone does that, treat a cancellation of a matrix-capped run as
+suspect before treating it as a real starvation.
+
 The residual limit is stated rather than papered over: this cannot distinguish
 "no runner carries these labels" from "the only runner carrying them has been
 busy with work outside this repository for longer than the threshold". On this
@@ -367,6 +378,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     watchdog_job_name = os.environ.get("WATCHDOG_JOB_NAME", "")
     threshold = float(os.environ.get("THRESHOLD_SECONDS", "300"))
     poll = float(os.environ.get("POLL_SECONDS", "15"))
+    # The window must outlast the earliest possible firing, which is derived
+    # rather than guessed: a verdict needs `waited > THRESHOLD_SECONDS` (300)
+    # and must then hold across `UNSCHEDULABLE_CONFIRMATIONS` (2) consecutive
+    # polls of `POLL_SECONDS` (15), so nothing can fire before 330s. The
+    # verdict path above runs BEFORE this check, so the window only bounds how
+    # long a healthy run keeps watching.
+    #
+    # The workflows set 480, leaving ten polls of headroom past that floor.
+    # The old 900 was chosen when a watched job could be created after the
+    # window closed; `test_the_watchdog_is_created_no_later_than_the_lanes_it
+    # _watches` now forces the watchdog to share its watched jobs' `needs:`,
+    # so they are co-created and the long tail bought nothing -- while the
+    # watchdog held the single contended Linux runner for the difference.
     window = float(os.environ.get("MAX_WATCH_SECONDS", "900"))
     required = int(os.environ.get("UNSCHEDULABLE_CONFIRMATIONS", "2"))
 

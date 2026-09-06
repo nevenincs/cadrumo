@@ -51,7 +51,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           WATCHDOG_JOB_NAME: Cadrumo / runner queue watchdog
           THRESHOLD_SECONDS: "300"
-          MAX_WATCH_SECONDS: "900"
+          MAX_WATCH_SECONDS: "480"
         run: python3 -m dev.ci.runner_queue_watchdog
 
   runtime-inventory:
