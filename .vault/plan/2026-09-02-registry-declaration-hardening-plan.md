@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:3b0dfc52980fa10d31429e60157dd9406daad84dcad307aa38aa5dced78441cb'
+body_hash: 'sha256:afe3035f76bf75b7248f7882117d578c4d04e6ef51deff877dec50db59e9fe9d'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -652,6 +652,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S770` - Floor the watchdog workflow census in its helper, matching the sibling module, so a narrowed walk cannot leave three loop-only gates green; `dev/ci/tests/test_runner_queue_watchdog.py`.
 - [x] `W02.P02.S771` - Floor the irreducible year-only refusal rows in their helper, so a resolver that stopped refusing cannot leave three loop-only gates executing nothing; `dev/registry/tests/test_irreducible_year_only_selection_refusals.py`.
 - [x] `W02.P02.S772` - Floor the DP30302 epoch corpus and its per-epoch fields in the helper, so two loop-only exhaustiveness gates cannot pass over a narrowed load; `dev/registry/tests/test_dp30302_field_matrix.py`.
+- [x] `W02.P02.S773` - Floor the relevance corpus inside the fixture seven gates read, whose existing guard proved the file present but never that it carried anything; `dev/docs/terminology/tests/test_relevance_data.py`.
+- [x] `W02.P02.S774` - Floor the footnote note corpus in its fixture, so the two gates whose results are identical over an empty mapping cannot pass on a sheet that stopped matching; `dev/registry/tests/test_footnote_pointer_notes.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

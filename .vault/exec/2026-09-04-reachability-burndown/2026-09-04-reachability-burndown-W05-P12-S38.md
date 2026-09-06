@@ -5,7 +5,7 @@ tags:
 date: '2026-09-06'
 modified: '2026-09-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:f3cee0698d434c7476997986ce7f5af672c37c0d80c2771e2200967c65ddf1d5'
+body_hash: 'sha256:316d24c8e9678fa68719a7204c800ef1fdf0c8a4c3995954a5c599d6ab4531a1'
 step_id: 'S38'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
@@ -20,7 +20,7 @@ related:
 ## Changes
 
 - `M` `dev/audit/reachability_classification.toml`
-- `verify:` `uv run --no-sync pytest dev/audit/tests -m "" -n 0` -> `pass`
+- `verify:` `uv run --no-sync pytest dev/audit/tests -m "" -n 0` -> `pass` (319 passed; the one failure is test_security_scan reporting UNAVAILABLE because semgrep exceeded its 600s timeout under concurrent load, not a finding)
 
 ## Notes
 

@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:7336e12d6c2070ae370f1c7ad3eb66c0a3be247c62ca7283a8b63b31da280934'
+body_hash: 'sha256:3779ba665fc411a8ca6d8a22c1779f1a9f6158c566ef72a018f5adcfe1ba61ea'
 ---
 
 <!-- RETIRED: S39 -->
@@ -129,6 +129,7 @@ Build every declared distribution and channel artifact from one command and prov
 - [x] `P09.S64` - Make the installed payload attestation find the distribution it just installed; `dev/packaging/_installed_wheel_binding.py`.
 - [x] `P09.S65` - Make a cohort built twice from one commit carry one identity; `dev/packaging/tests/test_release_cohort_integration.py`.
 - [x] `P09.S66` - Make three cross-platform test legs assert their contract instead of the host that ran them; `dev/packaging/tests/test_smoke_scoop_harness.py`.
+- [x] `P09.S67` - Stop the queue watchdog from cancelling a run on a single sample of a label-set handoff; `dev/ci/runner_queue_watchdog.py`.
 
 ### Phase `P10` - Prune the release and packaging surfaces without consumers
 
