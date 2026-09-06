@@ -50,6 +50,15 @@ _MODELO_390_DESIGNS = (
 )
 
 
+#: Floors for the modelo 200 workbook parse this projection test equates against
+#: the intermediate. Live: 77 sheets, of which 76 are fixed and 1 carries a
+#: variable envelope. The envelope branch is a single sheet, so one is the
+#: strongest honest floor there -- but its equality is vacuous without it.
+_MINIMUM_PARSED_SHEETS = 50
+_MINIMUM_FIXED_SHEETS = 50
+_MINIMUM_VARIABLE_ENVELOPES = 1
+
+
 def test_intermediate_is_a_complete_total_preserving_projection_of_the_verified_workbook() -> None:
     """Every parsed record and official total reaches the generator IR unchanged."""
     source_root = bundled_path()
@@ -76,6 +85,23 @@ def test_intermediate_is_a_complete_total_preserving_projection_of_the_verified_
     assert intermediate.source.design_epoch == resolved.source.record_design_epoch
     assert intermediate.source.workbook_format is RecordDesignWorkbookFormat.XLS
     fixed_parser_sheets = tuple(sheet for sheet in parsed_sheets if sheet.variable_envelope is None)
+    # Every claim below equates two tuples derived from this one parse, and the
+    # zip is strict only about a LENGTH MISMATCH: two empty tuples zip to zero
+    # iterations and skip the per-sheet body entirely. A parse that returned
+    # nothing would satisfy the whole 'complete total-preserving projection'
+    # claim this test is named for. Live: 77 sheets, 76 fixed and 1 envelope.
+    assert len(parsed_sheets) >= _MINIMUM_PARSED_SHEETS, (
+        f"the verified workbook parsed to {len(parsed_sheets)} sheet(s); the projection "
+        "equalities below compare empty tuples and the per-sheet loop never runs"
+    )
+    assert len(fixed_parser_sheets) >= _MINIMUM_FIXED_SHEETS, (
+        f"only {len(fixed_parser_sheets)} of {len(parsed_sheets)} sheet(s) are fixed; "
+        "the fixed branch carries the per-sheet total-preservation body"
+    )
+    assert len(intermediate.variable_envelopes) >= _MINIMUM_VARIABLE_ENVELOPES, (
+        f"the intermediate declares {len(intermediate.variable_envelopes)} variable "
+        "envelope(s); the envelope equality below is otherwise between two empty tuples"
+    )
     assert tuple(sheet.sheet for sheet in intermediate.sheets) == tuple(sheet.name for sheet in fixed_parser_sheets)
     assert tuple(envelope.sheet for envelope in intermediate.variable_envelopes) == tuple(
         sheet.name for sheet in parsed_sheets if sheet.variable_envelope is not None

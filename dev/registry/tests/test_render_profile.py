@@ -756,6 +756,13 @@ def test_profile_refuses_unknown_anchor_without_tolerating_partial_coverage() ->
         validate_render_profile(profile, _joined(), _source_evidence())
 
 
+#: Floors for the live modelo 200 eligibility this coverage test equates against
+#: the shipped profile. Live: 5682 fields, of which 5556 are width-17 and 126
+#: are smaller.
+_MINIMUM_M200_ELIGIBLE_FIELDS = 4000
+_MINIMUM_M200_SMALLER_FIELDS = 80
+
+
 def test_real_m200_profile_exactly_covers_source_eligibility_and_excludes_variable_envelope() -> None:
     """The committed profile validates exhaustively against the hash-verified source."""
     source_root = bundled_path()
@@ -798,6 +805,23 @@ def test_real_m200_profile_exactly_covers_source_eligibility_and_excludes_variab
         width_rules["N"].decimal_digits,
         width_rules["N"].sign_policy,
     ) == (14, 2, "n-prefix-negative-blank-nonnegative")
+
+    # Every coverage claim below equates two sets DERIVED from this one
+    # eligibility, so each holds when both sides are empty. This module's own
+    # sibling records that exact incident: with no eligible field, an empty
+    # render profile satisfied exhaustive coverage completely. The split is
+    # lopsided -- 5556 width-17 against 126 smaller -- so a single total would
+    # sit clear while the smaller branch, which the singleton equality covers,
+    # emptied entirely.
+    assert len(eligibility.all_fields) >= _MINIMUM_M200_ELIGIBLE_FIELDS, (
+        f"modelo 200 projected {len(eligibility.all_fields)} eligible field(s); the "
+        "coverage equalities below compare two empty sets and pass"
+    )
+    assert len(eligibility.smaller_fields) >= _MINIMUM_M200_SMALLER_FIELDS, (
+        f"only {len(eligibility.smaller_fields)} smaller field(s) of "
+        f"{len(eligibility.all_fields)}; the singleton-rule equality below is over this "
+        "branch alone, and the width-17 majority keeps any total floor clear"
+    )
 
     eligible_anchors = {
         RenderProfileAnchor(

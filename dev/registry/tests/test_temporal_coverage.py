@@ -169,12 +169,15 @@ def test_temporal_coverage_uses_the_catalogue_horizon_not_a_copied_year_list(
 
     # Both sides of the equality below are DERIVED from the same shortened
     # authority, so an empty report satisfies it against an empty expectation,
-    # and ``all`` over no rows is True. The sibling test above states the
-    # derived floor for exactly this reason; it belongs here too.
-    assert len(report.rows) > len(revision.period_selector.periods), (
+    # and ``all`` over no rows is True. The sibling test above carries the same
+    # derived floor, but with a strict ``>``: it composes the OPEN revision,
+    # which spans many years. This one takes the first revision of modelo 036,
+    # whose window is a single year, so one COMPLETE year of coordinates is the
+    # honest floor here. Live: three rows for the three declared periods.
+    assert len(report.rows) >= len(revision.period_selector.periods), (
         f"the shortened authority produced {len(report.rows)} row(s) for a selector "
-        f"declaring {len(revision.period_selector.periods)} period(s); below one full "
-        "year the horizon claim below holds over almost nothing"
+        f"declaring {len(revision.period_selector.periods)} period(s); below one "
+        "complete year the horizon claim below holds over almost nothing"
     )
     assert {(row.filing_year, row.period) for row in report.rows} == set(
         revision_selection_coordinates(revision, assessment_horizon=assessment_horizon),
