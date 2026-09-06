@@ -158,16 +158,31 @@ class _RevisionInputsProvider:
 class _RevisionDraftBuilder:
     """Build and locally approve the draft backed by the target :class:`WorkUnit`."""
 
-    def __init__(self, *, revision: CalculationRevision, work_unit: WorkUnit, actor: str, clock: datetime) -> None:
+    def __init__(
+        self,
+        *,
+        revision: CalculationRevision,
+        work_unit: WorkUnit,
+        actor: str,
+        clock: datetime,
+        draft_repository: ModeloDraftRepository | None = None,
+    ) -> None:
         self._revision = revision
         self._work_unit = work_unit
         self._actor = actor
         self._clock = clock
+        self._draft_repository = draft_repository
         self._schema_provider = build_runtime_schema_provider(
             filing_year=work_unit.filing_year,
             period=work_unit.period,
             modelos=(work_unit.modelo,),
         )
+
+    def _drafts(self) -> ModeloDraftRepository:
+        """Return the encrypted filing-draft store for this work unit's bucket."""
+        if self._draft_repository is None:
+            self._draft_repository = ModeloDraftRepository(bucket_id=self._work_unit.bucket_id)
+        return self._draft_repository
 
     def build(
         self,
@@ -183,6 +198,20 @@ class _RevisionDraftBuilder:
         The :class:`TaxpayerProfile` is converted to the filing profile Protocol;
         approval uses a transient :class:`TransactionCatalogue` because persisted
         transaction evidence remains owned by the calculation revision.
+
+        An approved draft is persisted to the encrypted filing-draft store
+        before it is returned. Nothing else in the application writes that
+        namespace, so without this the review queue's draft rows, the workspace
+        summary's draft count and the CLI's draft lookup all read an empty
+        store and report zero forever -- an operator reads that as having no
+        drafts rather than as the application not keeping them.
+        :attr:`~domain.filing.ModeloDraft.draft_id` is a content address, so
+        re-running the gate over unchanged inputs rewrites the same row rather
+        than accumulating near-duplicates.
+
+        A persistence failure is raised, not swallowed: a filing artefact that
+        silently failed to durably exist is exactly the absence this store's
+        readers cannot distinguish from an empty workspace.
         """
         draft = build_draft(
             modelo=modelo,
@@ -195,7 +224,7 @@ class _RevisionDraftBuilder:
         draft = attach_revision_row_source_identities(draft=draft, revision=self._revision)
         if draft.status is not ModeloDraftStatus.LISTO_PARA_PRESENTAR:
             return draft
-        return approve_draft(
+        approved = approve_draft(
             draft,
             bucket_id=self._work_unit.bucket_id,
             approved_by=self._actor,
@@ -203,6 +232,8 @@ class _RevisionDraftBuilder:
             transaction_catalogue=TransactionCatalogue(),
             approved_at=self._clock,
         )
+        self._drafts().save(approved)
+        return approved
 
 
 class _RevisionDeadlineWindowChecker:
