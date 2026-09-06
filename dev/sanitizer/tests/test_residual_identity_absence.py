@@ -81,7 +81,7 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.tests import SRC_CADRUMO
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
@@ -137,6 +137,21 @@ _SYNTHETIC_IBAN = "ES6011111111111111111111"
 _SYNTHETIC_NAME = "APELLIDO APELLIDO NOMBRE"
 
 
+def _candidate_sidecars(target: Path) -> tuple[Path, ...]:
+    """Return the sidecar names the two fixture writers give ``target``.
+
+    Both rules applied FORWARD, in the writers' own form: the evidence-corpus
+    writer appends ``.provenance.json`` to the artefact's FULL filename, and
+    the justificante generators write ``pdf_path.with_suffix('.json')``. Order
+    matters only for an artefact that somehow carries both; the full-name form
+    is the unambiguous one, so it wins.
+    """
+    return (
+        target.with_name(target.name + ".provenance.json"),
+        target.with_suffix(".json"),
+    )
+
+
 def _real_corpus_fixtures() -> tuple[list[tuple[Path, Path]], list[str]]:
     """Every committed artefact whose sidecar declares real provenance.
 
@@ -155,24 +170,43 @@ def _real_corpus_fixtures() -> tuple[list[tuple[Path, Path]], list[str]]:
     on a false premise is worse than a silent one, because the premise is what
     a reader carries away.
 
-    Both sidecar conventions in the tree are honoured: ``X.pdf`` beside
-    ``X.json`` for the justificante fixtures, and ``X.<ext>`` beside
-    ``X.<ext>.provenance.json`` for the evidence corpus. Non-PDF artefacts are
-    included because the scan reads bytes and a JPEG can carry an identity in
-    its metadata exactly as a PDF can in a content stream.
+    Both sidecar conventions in the tree are honoured, and the walk runs in
+    the direction the writers do: ARTEFACT to sidecar, applying each writer's
+    own naming rule forward (``X.json`` beside ``X.pdf`` for the justificante
+    fixtures, ``X.<ext>.provenance.json`` beside ``X.<ext>`` for the evidence
+    corpus). Walking sidecar-to-artefact instead means INVERTING those rules,
+    and the plain convention has no inverse: ``X.json`` names no extension, so
+    an inverse has to guess one. The guess was ``.pdf``, which silently made
+    the promise below false for every other artefact kind -- 19 of the 92
+    plain-convention sidecars in the tree sit beside something that is not a
+    PDF (``.html``, ``.csv``, ``.tsv``, ``.txt``, ``.xml``), and none of them
+    was ever offered to this scan. Today all 19 declare synthetic provenance,
+    so the scanned population is the same either way; re-stamping any one of
+    them ``real_corpus`` would have enrolled nothing.
+
+    Non-PDF artefacts are in scope because the scan reads bytes and a JPEG can
+    carry an identity in its metadata exactly as a PDF can in a content stream.
     """
     pairs: list[tuple[Path, Path]] = []
     unreadable: list[str] = []
     seen: set[Path] = set()
-    for sidecar_path in scan_directory(SRC_CADRUMO, pattern="*.json", recursive=True):
-        if "__pycache__" in sidecar_path.parts:
+    committed = scan_directory(
+        SRC_CADRUMO,
+        select=DirectoryEntryKind.FILES,
+        recursive=True,
+        prune_directories=("__pycache__",),
+    )
+    # One walk, then membership: asking the filesystem whether each candidate
+    # sidecar exists costs a stat per artefact across a tree of this size.
+    committed_set = frozenset(committed)
+    for target in committed:
+        if target.suffix == ".json":
             continue
-        name = sidecar_path.name
-        if name.endswith(".provenance.json"):
-            target = sidecar_path.parent / name[: -len(".provenance.json")]
-        else:
-            target = sidecar_path.with_suffix(".pdf")
-        if not target.is_file() or target in seen:
+        sidecar_path = next(
+            (candidate for candidate in _candidate_sidecars(target) if candidate in committed_set),
+            None,
+        )
+        if sidecar_path is None or target in seen:
             continue
         try:
             sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
