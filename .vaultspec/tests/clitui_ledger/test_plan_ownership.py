@@ -52,8 +52,9 @@ _RETAINED: Final[frozenset[str]] = frozenset(
     }
 )
 _RETIRED_MARKERS: Final[frozenset[str]] = frozenset({"S73"})
-_HELD: Final[frozenset[str]] = frozenset({"S390", "S395", "S396", "S411", "S424"})
-_MIXED_HELD: Final[frozenset[str]] = _HELD - {"S411"}
+_HELD: Final[frozenset[str]] = frozenset({"S390", "S395", "S396", "S411", "S424", "S449", "S452"})
+_PRODUCTION_HELD: Final[frozenset[str]] = frozenset({"S449", "S452"})
+_MIXED_HELD: Final[frozenset[str]] = _HELD - {"S411"} - _PRODUCTION_HELD
 _KNOWN_OVERLAP: Final[frozenset[str]] = _RETAINED | _RETIRED_MARKERS | _HELD
 _REVIEWED_INCLUDE: Final[frozenset[str]] = _KNOWN_OVERLAP
 _EXPECTED_TOKEN: Final[dict[str, str]] = {
@@ -61,6 +62,16 @@ _EXPECTED_TOKEN: Final[dict[str, str]] = {
     **dict.fromkeys(_RETIRED_MARKERS, "RETAINED_RETIRED_PREMISE_MARKER"),
     **dict.fromkeys(_HELD, "DISPLACED_AND_HELD_UNTIL_G3"),
 }
+_PRODUCTION_HELD_OWNER_CLAUSE: Final[str] = (
+    "clitui-ledger is the sole owner of this row's Ledger production slice; "
+    "do not implement that slice in this plan; re-admit only after clitui-ledger G3 closes."
+)
+_PRODUCTION_HELD_SCOPE_TARGETS: Final[frozenset[str]] = frozenset(
+    {
+        "src/cadrumo/entrypoints/tui/ledger/reconciliation.py",
+        "src/cadrumo/entrypoints/tui/ledger/controller.py",
+    }
+)
 _LEDGER_PATH_PATTERN: Final[re.Pattern[str]] = re.compile(
     r"(?:^|[\s`'\",])(src/)?cadrumo/(?:entrypoints/tui|application|domain)/ledger"
     r"(?:/|[_.]|(?=[\s`'\",;]|$))|/ledger/",
@@ -175,6 +186,14 @@ def _validate_plan_ownership(plan_text: str) -> None:
         raise ValueError("retained Ledger predecessor evidence must remain checked")
     if any(by_id[step_id].checked for step_id in _RETIRED_MARKERS | _HELD):
         raise ValueError("retired-marker and held Ledger rows must remain open")
+
+    for step_id in _PRODUCTION_HELD:
+        row = by_id[step_id]
+        if row.action.count(_PRODUCTION_HELD_OWNER_CLAUSE) != 1:
+            raise ValueError(f"exact Ledger production owner clause drifted on {step_id}")
+        scope_paths = {part.strip().replace("\\", "/") for part in row.scope.split(",")}
+        if not scope_paths >= _PRODUCTION_HELD_SCOPE_TARGETS:
+            raise ValueError(f"Ledger TUI controller/reconciliation scope drifted on {step_id}")
 
     for step_id in _MIXED_HELD:
         if "non-Ledger scope remains owned here" not in by_id[step_id].action:
@@ -353,6 +372,70 @@ def test_ledger_ownership_detector_rejects_each_plan_mutation(mutation: str, exp
         )
     else:
         plan_text = _replace_once(plan_text, "W05.P21.S136", "W05.P19.S128")
+
+    with pytest.raises(ValueError, match=expected):
+        _validate_plan_ownership(plan_text)
+
+
+@pytest.mark.parametrize(
+    ("step_id", "mutation", "expected"),
+    [
+        pytest.param("S449", "checked", "retired-marker and held Ledger rows", id="s449-checked"),
+        pytest.param("S449", "missing", "unannotated Ledger overlap", id="s449-missing-disposition"),
+        pytest.param("S449", "altered", "Ledger disposition reclassified", id="s449-altered-disposition"),
+        pytest.param("S452", "checked", "retired-marker and held Ledger rows", id="s452-checked"),
+        pytest.param("S452", "missing", "unannotated Ledger overlap", id="s452-missing-disposition"),
+        pytest.param("S452", "altered", "Ledger disposition reclassified", id="s452-altered-disposition"),
+    ],
+)
+def test_newly_reconciled_held_rows_reject_checked_missing_or_altered_disposition(
+    step_id: str, mutation: str, expected: str
+) -> None:
+    plan_text = _plan_text()
+    display_path = f"W08.P30.{step_id}"
+    disposition_marker = "CLITUI_LEDGER_DISPOSITION: DISPLACED_AND_HELD_UNTIL_G3"
+    if mutation == "checked":
+        plan_text = _replace_once(plan_text, f"- [ ] `{display_path}`", f"- [x] `{display_path}`")
+    elif mutation == "missing":
+        plan_text = _replace_once_in_step(plan_text, display_path, f" {disposition_marker};", "")
+    else:
+        plan_text = _replace_once_in_step(
+            plan_text,
+            display_path,
+            disposition_marker,
+            "CLITUI_LEDGER_DISPOSITION: RETAINED_PREDECESSOR_EVIDENCE",
+        )
+
+    with pytest.raises(ValueError, match=expected):
+        _validate_plan_ownership(plan_text)
+
+
+@pytest.mark.parametrize(
+    ("step_id", "mutation", "expected"),
+    [
+        pytest.param("S449", "owner-clause", "exact Ledger production owner clause drifted", id="s449-owner-clause"),
+        pytest.param("S449", "scope", "Ledger TUI controller/reconciliation scope drifted", id="s449-scope"),
+        pytest.param("S452", "owner-clause", "exact Ledger production owner clause drifted", id="s452-owner-clause"),
+        pytest.param("S452", "scope", "Ledger TUI controller/reconciliation scope drifted", id="s452-scope"),
+    ],
+)
+def test_newly_reconciled_held_rows_reject_owner_or_scope_drift(step_id: str, mutation: str, expected: str) -> None:
+    plan_text = _plan_text()
+    display_path = f"W08.P30.{step_id}"
+    if mutation == "owner-clause":
+        plan_text = _replace_once_in_step(
+            plan_text,
+            display_path,
+            _PRODUCTION_HELD_OWNER_CLAUSE,
+            _PRODUCTION_HELD_OWNER_CLAUSE.replace("sole owner", "owner", 1),
+        )
+    else:
+        plan_text = _replace_once_in_step(
+            plan_text,
+            display_path,
+            "src/cadrumo/entrypoints/tui/ledger/controller.py",
+            "src/cadrumo/entrypoints/tui/ledger/controller.txt",
+        )
 
     with pytest.raises(ValueError, match=expected):
         _validate_plan_ownership(plan_text)
