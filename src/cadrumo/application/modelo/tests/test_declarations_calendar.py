@@ -403,7 +403,11 @@ def _entry_ref_payload() -> dict[str, object]:
         as_of=date(2026, 3, 1),
         schedule_observation=_schedule(),
     )
-    return projection.entries[0].model_dump()
+    dumped = projection.entries[0].model_dump()
+    # Rebuild rather than cast: model_dump() is dict[str, Any], and the
+    # declared return promises object values, which this comprehension
+    # actually produces instead of merely asserting.
+    return {str(key): value for key, value in dumped.items()}
 
 
 def test_a_directly_built_entry_refuses_a_foreign_recovery_action() -> None:

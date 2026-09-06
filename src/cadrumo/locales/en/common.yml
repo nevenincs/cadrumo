@@ -1110,7 +1110,7 @@ tui:
       entry: '%{source}: %{availability}'
       joined: '%{entries}'
     value:
-      none: —
+      none: '-'
       unobserved: Not observed
     zone:
       census: Census
@@ -1282,7 +1282,7 @@ tui:
       context_across_records: Across records
       label: Open suggested task
       reason: Suggested by the local overview
-    action_context: '%{label} — %{reason} · %{context}'
+    action_context: '%{label} - %{reason} · %{context}'
     address: Modelo %{modelo} · %{filing_year} · %{period}
     aeat_evidence: 'AEAT evidence: %{state}'
     aeat_state:
@@ -1290,15 +1290,15 @@ tui:
       justificante_verified: AEAT receipt verified
       not_observed: not observed at AEAT
       submitted_observed: submission observed at AEAT
-    agenda_evidence_row: '%{address} — %{evidence}'
+    agenda_evidence_row: '%{address} - %{evidence}'
     availability:
       available: Available
-      available_empty: '%{label} — %{detail}'
-      locked: Locked — unlock the selected profile to view this information
+      available_empty: '%{label} - %{detail}'
+      locked: Locked - unlock the selected profile to view this information
       never_captured: Not captured yet
-      stale: Stale — the last local snapshot needs refresh
+      stale: Stale - the last local snapshot needs refresh
       stale_observed: '%{label}; last observed %{observed_at}'
-      unavailable: Unavailable — this source cannot be read in the current session
+      unavailable: Unavailable - this source cannot be read in the current session
     declaration_state:
       discarded: Discarded
       draft: Draft
@@ -1316,13 +1316,13 @@ tui:
       declarations: Declarations
       ledger: Ledger readiness
       messages: Messages
-    ledger_summary: Available — %{entries} entries; %{requiring_review} need review;
+    ledger_summary: Available - %{entries} entries; %{requiring_review} need review;
       %{unclassified} unclassified; %{missing_evidence} missing evidence
     local_state:
       external_baseline_imported: external filing baseline stored locally
       not_ready_to_file: not ready locally
       ready_to_file: ready locally
-    messages_summary: Available — %{count} requiring attention
+    messages_summary: Available - %{count} requiring attention
     period_state:
       due: Due
       filed: Filed

@@ -1151,7 +1151,7 @@ tui:
       entry: '%{source}: %{availability}'
       joined: '%{entries}'
     value:
-      none: —
+      none: '-'
       unobserved: No observado
     zone:
       census: Censo
@@ -1324,7 +1324,7 @@ tui:
       context_across_records: En todos los registros
       label: Abrir la tarea sugerida
       reason: Sugerida por el resumen local
-    action_context: '%{label} — %{reason} · %{context}'
+    action_context: '%{label} - %{reason} · %{context}'
     address: Modelo %{modelo} · %{filing_year} · %{period}
     aeat_evidence: 'Evidencia de la AEAT: %{state}'
     aeat_state:
@@ -1332,15 +1332,15 @@ tui:
       justificante_verified: justificante de la AEAT verificado
       not_observed: no observada en la AEAT
       submitted_observed: presentación observada en la AEAT
-    agenda_evidence_row: '%{address} — %{evidence}'
+    agenda_evidence_row: '%{address} - %{evidence}'
     availability:
       available: Disponible
-      available_empty: '%{label} — %{detail}'
-      locked: Bloqueado — desbloquea el perfil seleccionado para ver esta información
+      available_empty: '%{label} - %{detail}'
+      locked: Bloqueado - desbloquea el perfil seleccionado para ver esta información
       never_captured: Todavía sin capturar
-      stale: Desactualizado — la última copia local necesita actualizarse
+      stale: Desactualizado - la última copia local necesita actualizarse
       stale_observed: '%{label}; última observación %{observed_at}'
-      unavailable: No disponible — esta fuente no puede leerse en la sesión actual
+      unavailable: No disponible - esta fuente no puede leerse en la sesión actual
     declaration_state:
       discarded: Descartada
       draft: Borrador
@@ -1358,13 +1358,13 @@ tui:
       declarations: Declaraciones
       ledger: Preparación del libro
       messages: Mensajes
-    ledger_summary: Disponible — %{entries} apuntes; %{requiring_review} necesitan
+    ledger_summary: Disponible - %{entries} apuntes; %{requiring_review} necesitan
       revisión; %{unclassified} sin clasificar; %{missing_evidence} sin justificante
     local_state:
       external_baseline_imported: base de presentación externa guardada localmente
       not_ready_to_file: no lista localmente
       ready_to_file: lista localmente
-    messages_summary: Disponible — %{count} requieren atención
+    messages_summary: Disponible - %{count} requieren atención
     period_state:
       due: Pendiente
       filed: Presentada

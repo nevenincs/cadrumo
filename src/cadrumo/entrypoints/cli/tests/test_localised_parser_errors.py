@@ -14,11 +14,8 @@ exercised end to end.
 
 from __future__ import annotations
 
-from typing import cast
-
-from .._terminal_errors import _render_click_exception_text
-
 from collections.abc import Iterator
+from typing import cast, override
 
 import pytest
 import typer
@@ -28,6 +25,7 @@ from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import clear_output_language_cache
 from .._date_parsing import _parse_iso_date
 from .._decimal_parsing import parse_decimal_amount
+from .._terminal_errors import _render_click_exception_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -113,6 +111,7 @@ def test_the_click_exception_funnel_calls_the_renderer_rather_than_writing_the_b
         def show(self) -> None:
             self.rendered = True
 
+        @override
         def __str__(self) -> str:
             return "bare message"
 
