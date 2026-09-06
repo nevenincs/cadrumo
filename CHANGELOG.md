@@ -7,6 +7,49 @@ request is opened, not by hand — see [`RELEASING.md`](RELEASING.md).
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0](https://github.com/nevenincs/cadrumo/compare/v0.4.0...v0.5.0) (2026-09-06)
+
+
+### Features
+
+* **bienes-inversion:** add the declare command surface with its gates and CLI consumer ([39bccd6](https://github.com/nevenincs/cadrumo/commit/39bccd6dd91f95e0c34e8efb14587d5d4adc60e8))
+* **dev:** add the command spec scanner with its gate and follow the locale manager ([43f9147](https://github.com/nevenincs/cadrumo/commit/43f91475abf96616a60c5f1cf42d39b75f4e3d83))
+* **dev:** add the modelo 200 page resolved adjudications screen with its gate ([ea632c3](https://github.com/nevenincs/cadrumo/commit/ea632c336fcb7186c08824f3afe771c129ce36ef))
+* **dev:** add the unconsumed export ratchet screen with its declaration ([4de9327](https://github.com/nevenincs/cadrumo/commit/4de9327d05454df42604b3ab8d84781dffec9290))
+* **dev:** extend the object name transform with its grounding tests ([93b854a](https://github.com/nevenincs/cadrumo/commit/93b854abb40fb6924cd11cf316e5c5a62c050ae9))
+* **ledger:** add the check query surface with its gate and CLI consumer ([71cb87d](https://github.com/nevenincs/cadrumo/commit/71cb87d223e56a3474fd830799ab50bec803ae8a))
+* **ledger:** add the history query surface with its gate and CLI consumer ([af17666](https://github.com/nevenincs/cadrumo/commit/af17666d9ee9340c5825eaeb8d5492d44ca0f3f2))
+* **ledger:** add the readiness query surface and follow its CLI consumer ([1f6a176](https://github.com/nevenincs/cadrumo/commit/1f6a1766d5d599c1f6e4b92462b42d737c38addf))
+* **ledger:** add the stale filing query surface with its gate and CLI consumer ([47fb4d0](https://github.com/nevenincs/cadrumo/commit/47fb4d0eadabe62ad97c86cc7f7458f6221edd58))
+* **locales:** recognise translation-key factory functions in the AST scanner ([67249ae](https://github.com/nevenincs/cadrumo/commit/67249ae290cd429800fd636e121a95aa0b8a9685))
+* **modelo:** thread the settlement casilla surface through the tui and locales ([761fc25](https://github.com/nevenincs/cadrumo/commit/761fc2577cbacf3fc51c17ed58007f3f0569665e))
+* **persistence:** add the notification documents profile surface ([e627d96](https://github.com/nevenincs/cadrumo/commit/e627d96174dc393acc020f6397fb802b38b9256d))
+* **tui:** add the ledger import preparation surface and follow the operator catalogue ([27c61ff](https://github.com/nevenincs/cadrumo/commit/27c61ffb61ae6b9cc557ddc31f58ec7780f1823b))
+* **tui:** add the workspace host component and follow its consumers ([145cdd6](https://github.com/nevenincs/cadrumo/commit/145cdd615c789b5466f28a42122c00c70c7a476d))
+* **tui:** wire the ledger import preparation flow through the controller and locales ([ad66c88](https://github.com/nevenincs/cadrumo/commit/ad66c889fc1ae6bbf43b965a83b33f102016585b))
+
+
+### Bug Fixes
+
+* **audit:** judge a plural module by what it contains ([0a0988e](https://github.com/nevenincs/cadrumo/commit/0a0988ee02f4b81ff7e1130e67e09bbc103fc6bf))
+* **dev:** rewrite __all__ entries inside the object name transform ([b6f1a27](https://github.com/nevenincs/cadrumo/commit/b6f1a2757fa05926c64678d214d094df40517584))
+* **dev:** scope a rename's definition-line guard to its own file ([6b80900](https://github.com/nevenincs/cadrumo/commit/6b80900b27943250e64a828f169142d1e53b1176))
+* **dev:** scope definition renames to the operation's owning path ([8202581](https://github.com/nevenincs/cadrumo/commit/8202581ee87d123af5be22990ebf80d251cefb15))
+* **ledger:** enforce the pre-G3 TUI hold ([9862077](https://github.com/nevenincs/cadrumo/commit/9862077461d770a4c53867009b3b801ac093f7fb))
+* **ledger:** name required anchor gate ([584da3e](https://github.com/nevenincs/cadrumo/commit/584da3eda2d68473ea6379b13f3b46917e4e743c))
+* **ledger:** report gate-specific anchor requirements ([08292b7](https://github.com/nevenincs/cadrumo/commit/08292b75e27e5299a8ba443170418c7e2980826f))
+* **packaging:** report every preflight failure, not just the first ([fa2c616](https://github.com/nevenincs/cadrumo/commit/fa2c6168b0c6bfde02ad1dbfb267dc145a9cbf47))
+* **packaging:** stop a redundant branch-name test blocking every evidence row ([f3c8caf](https://github.com/nevenincs/cadrumo/commit/f3c8caf2905d81732d54558795f44da4f4ba0520))
+* **packaging:** stop passing a generator flag neither channel accepts ([7547de0](https://github.com/nevenincs/cadrumo/commit/7547de08c07400be03e18fc0731573709253951c))
+* **tui:** preserve ledger production hold ([3e03f94](https://github.com/nevenincs/cadrumo/commit/3e03f94fff4d3cc53b6bb6e68e096187a6a82e21))
+* **vault:** follow current S14 predecessor plan baseline ([724c2d9](https://github.com/nevenincs/cadrumo/commit/724c2d969d3c303da3b27c3ba102055861f94003))
+* **workflow:** restore the run-models __all__ to the names the module defines ([76f4bbb](https://github.com/nevenincs/cadrumo/commit/76f4bbb79f12daea0783285cc00bf7fa9de8b586))
+
+
+### Reverts
+
+* **ledger:** preserve the accepted matrix contract ([a213502](https://github.com/nevenincs/cadrumo/commit/a21350225e1a399bafc07533cf54188f2510458a))
+
 ## [0.4.0](https://github.com/nevenincs/cadrumo/compare/v0.3.0...v0.4.0) (2026-09-03)
 
 
