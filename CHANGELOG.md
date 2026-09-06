@@ -7,6 +7,16 @@ request is opened, not by hand — see [`RELEASING.md`](RELEASING.md).
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1](https://github.com/nevenincs/cadrumo/compare/v0.5.0...v0.5.1) (2026-09-06)
+
+
+### Bug Fixes
+
+* **packaging:** follow the retired llm namespace in the extra-boundary lane ([b149bbe](https://github.com/nevenincs/cadrumo/commit/b149bbe7bd2d99c1f7f66b65affd5c194de0aea8))
+* **packaging:** give the MCP oracle the recovery enrollment creation requires ([6749f68](https://github.com/nevenincs/cadrumo/commit/6749f687b158861e22ec82e36170a3c66a688876))
+* **release:** keep the version in the release PR title ([336ef85](https://github.com/nevenincs/cadrumo/commit/336ef85fe7eb39926b2c5209fd7ec73c8e8fc07a))
+* **release:** match the configured component to the PR release-please creates ([0f3349a](https://github.com/nevenincs/cadrumo/commit/0f3349a78b28a7e6ab49249b1b5633d8cf7cc4eb))
+
 ## [0.5.0](https://github.com/nevenincs/cadrumo/compare/v0.4.0...v0.5.0) (2026-09-06)
 
 
