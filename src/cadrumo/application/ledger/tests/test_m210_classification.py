@@ -20,6 +20,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import TypedDict
 
 import pytest
 
@@ -79,8 +80,30 @@ def _stored(*transactions: Transaction) -> Iterator[TransactionCatalogueReposito
         yield TransactionCatalogueRepository(bucket_id=profile.bucket_id)
 
 
-def _complete(**overrides: object) -> dict[str, object]:
-    payload: dict[str, object] = {
+class _Answers(TypedDict, total=False):
+    """The classification answers an operator supplies, keyed as the resolver takes them.
+
+    A `dict[str, object]` cannot be unpacked into a typed signature: every
+    value arrives as `object` and the checker reports one error per parameter
+    per call site -- 29 of them here, silenced by five `type: ignore` comments
+    that `ty` does not honour anyway. Declaring the shape types the unpack
+    instead, so a case supplying the wrong type for a field is caught at the
+    call rather than suppressed at it.
+
+    `total=False` because every field is an override: the resolver defaults
+    each to None, and the refusal cases below exist precisely to omit them.
+    """
+
+    tipo_renta_code: str | None
+    gross_income_amount: Decimal | None
+    applicable_rate: Decimal | None
+    payer_mode: M210PayerMode | None
+    payer_id: str | None
+    asset_or_right_id: str | None
+
+
+def _complete(**overrides: object) -> _Answers:
+    payload: _Answers = {
         "tipo_renta_code": _CODE,
         "gross_income_amount": Decimal("1000.00"),
         "applicable_rate": Decimal("0.19"),
@@ -90,7 +113,10 @@ def _complete(**overrides: object) -> dict[str, object]:
         # fixture incomplete and every refusal below untestable.
         "payer_id": "B12345674",
     }
-    payload.update(overrides)
+    # `update` rather than a literal merge: the overrides arrive untyped from
+    # `**overrides`, and a TypedDict rejects an unknown key at type level while
+    # still accepting this call, which is the behaviour the cases want.
+    payload.update(overrides)  # ty: ignore[invalid-argument-type]
     return payload
 
 
@@ -115,7 +141,7 @@ def test_a_complete_declaration_on_an_incoming_row_is_built() -> None:
             bucket_id=_BUCKET,
             transaction_id=transaction_id,
             transaction_repository=repository,
-            **_complete(),  # type: ignore[arg-type]
+            **_complete(),
         )
 
     assert result is not None
@@ -139,7 +165,7 @@ def test_omitting_any_single_answer_refuses(omitted: str) -> None:
                 bucket_id=_BUCKET,
                 transaction_id=transaction_id,
                 transaction_repository=repository,
-                **answers,  # type: ignore[arg-type]
+                **answers,
             )
 
     assert omitted in str(getattr(excinfo.value, "context", {}).get("missing", ""))
@@ -158,7 +184,7 @@ def test_an_outgoing_row_cannot_carry_the_declaration() -> None:
                 bucket_id=_BUCKET,
                 transaction_id=transaction_id,
                 transaction_repository=repository,
-                **_complete(),  # type: ignore[arg-type]
+                **_complete(),
             )
 
     context = getattr(excinfo.value, "context", {})
@@ -176,7 +202,7 @@ def test_an_absent_transaction_is_refused_and_named_as_absent() -> None:
             bucket_id=_BUCKET,
             transaction_id="f" * 64,
             transaction_repository=repository,
-            **_complete(),  # type: ignore[arg-type]
+            **_complete(),
         )
 
     assert getattr(excinfo.value, "context", {}).get("actual_direction") == "absent"
@@ -198,7 +224,7 @@ def test_the_direction_rule_is_checked_only_after_completeness() -> None:
                 bucket_id=_BUCKET,
                 transaction_id=transaction_id,
                 transaction_repository=repository,
-                **answers,  # type: ignore[arg-type]
+                **answers,
             )
 
     assert "missing" in getattr(excinfo.value, "context", {})
