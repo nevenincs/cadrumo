@@ -760,3 +760,86 @@ def test_a_dynamic_namespace_is_read_when_its_prefix_is_selected_from_a_table() 
     assert "cli.greeting.morning.*" not in markers, (
         "an interpolation not followed by a dot is not being used as a prefix"
     )
+
+
+def test_a_column_table_is_read_as_an_attribute_and_confirmed_by_its_key_index() -> None:
+    """Incident 10: the screen column table, held as a ClassVar and indexed.
+
+    Three things stood between this table and the scanner, and each alone was
+    enough to hide every heading key in it:
+
+    * the row carries a WIDTH, and the shape test demanded all-string rows, so
+      the table was never even a candidate;
+    * it is read back as `self._COLUMNS`, an attribute, while confirmation
+      required a bare name to be iterated;
+    * the row is bound whole and the key taken as `column[1]`, while
+      confirmation looked for an unpacked name.
+
+    The key-column discipline is unchanged and is what the negative arm pins:
+    indexing a PROSE sibling into the translator says nothing about the table,
+    exactly as it says nothing when the row is unpacked. A width is no more a
+    key than prose is, which is why a non-string cell is carried as a position
+    that can never be a key column rather than as grounds to reject the table.
+    """
+    from .._ast_scanner import scan_source_text
+
+    key_index = chr(10).join((
+        "class Screen:",
+        "    _COLUMNS = (",
+        '        ("date", "tui.ledger.column.date", 10),',
+        '        ("amount", "tui.ledger.column.amount", 14),',
+        "    )",
+        "    def render(self):",
+        "        for column in self._COLUMNS:",
+        "            yield tr(column[1])",
+    ))
+    prose_index = key_index.replace("tr(column[1])", "tr(column[0])")
+
+    collected = scan_source_text(key_index, filename="entries.py")
+
+    assert "tui.ledger.column.date" in collected, "a width sibling must not disqualify the table"
+    assert "tui.ledger.column.amount" in collected, "the attribute read and the key index both confirm"
+    assert "tui.ledger.column.amount" not in scan_source_text(prose_index, filename="entries.py"), (
+        "indexing a prose column into the translator does not confirm the table"
+    )
+
+
+def test_a_class_attribute_key_is_confirmed_by_the_attribute_the_base_renders() -> None:
+    """Incident 11: a screen family names its banner on the subclass.
+
+    The subclass declares `heading = "tui.aeat_sync.census.title"` and the base
+    renders `aeat_sync_copy(self.heading)`. That declaration is not a call, a
+    suffixed registry constant, or a collection, so every rule in the scanner
+    looked straight past it and each subclass banner read as an orphan.
+
+    The negative arm is the one this scanner has already been bitten by: a
+    class attribute holding a dotted literal is just as likely to be a route or
+    an action id as a translation key, and `workbench.home` is a lookup token,
+    not copy. The attribute NAME must be read into a translator for its
+    literals to count -- the same bargain the dict and row-table shapes strike.
+    """
+    from .._ast_scanner import scan_source_tree
+
+    (tmp := __import__("pathlib").Path(__import__("tempfile").mkdtemp()))
+    (tmp / "boundary.py").write_text(
+        chr(10).join(("def screen_copy(key, **values):", "    return tr(key, **values)")),
+        encoding="utf-8",
+    )
+    (tmp / "screens.py").write_text(
+        chr(10).join((
+            "class Base:",
+            "    def compose(self):",
+            "        yield Static(screen_copy(self.heading))",
+            "class Census(Base):",
+            '    heading = "tui.aeat_sync.census.title"',
+            '    route = "workbench.census.home"',
+        )),
+        encoding="utf-8",
+    )
+
+    keys = scan_source_tree(tmp)
+
+    assert "tui.aeat_sync.census.title" in keys, "the attribute the base renders carries a real key"
+    assert "workbench.census.home" not in keys, (
+        "a class attribute nothing renders is a route or an action id, not copy"
+    )

@@ -271,6 +271,56 @@ def _translation_call_names(tree: ast.AST) -> frozenset[str]:
     return frozenset(names)
 
 
+def _flow_confirmed_class_attribute_keys(tree: ast.AST, wrappers: frozenset[str] = frozenset()) -> set[str]:
+    """Return dotted literals a class declares as an attribute and reads into a translator.
+
+    A screen family names its own banner on the subclass and lets the base
+    render it::
+
+        class AeatSyncCensusScreen(AeatSyncWorkspaceScreen):
+            heading = "tui.aeat_sync.census.title"
+        ...
+            yield Static(aeat_sync_copy(self.heading), ...)
+
+    Nothing about that declaration is a call, a registry constant, or a
+    collection, so every rule here looked past it and each subclass banner read
+    as an orphan.
+
+    Shape alone is again insufficient, and here the counter-example is one this
+    scanner has already been bitten by: a class attribute holding a dotted
+    literal is just as likely to be a route or an action id as a key. The
+    attribute NAME must be read into a translator somewhere for its literals to
+    count, which is the same bargain the dict and row-table shapes strike.
+    """
+    candidates: dict[str, set[str]] = {}
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ClassDef):
+            continue
+        for statement in node.body:
+            target: ast.expr | None = None
+            value: ast.expr | None = None
+            if isinstance(statement, ast.Assign) and len(statement.targets) == 1:
+                target, value = statement.targets[0], statement.value
+            elif isinstance(statement, ast.AnnAssign):
+                target, value = statement.target, statement.value
+            if not isinstance(target, ast.Name) or not isinstance(value, ast.Constant):
+                continue
+            if isinstance(value.value, str) and _is_dotted_literal(value.value):
+                candidates.setdefault(target.id, set()).add(value.value)
+    if not candidates:
+        return set()
+
+    tr_names = _translation_call_names(tree) | wrappers
+    findings: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        for argument in _call_site_key_argument_exprs(node, tr_names):
+            if isinstance(argument, ast.Attribute) and argument.attr in candidates:
+                findings |= candidates[argument.attr]
+    return findings
+
+
 def _extract_locale_constant_keys(tree: ast.AST, wrappers: frozenset[str] = frozenset()) -> set[str]:
     """Find dotted locale keys declared in explicit locale-key constants.
 
@@ -287,7 +337,7 @@ def _extract_locale_constant_keys(tree: ast.AST, wrappers: frozenset[str] = froz
     one dotted identifier to another without ever reaching the translator —
     from being misread as a locale-key declaration.
     """
-    findings: set[str] = set()
+    findings: set[str] = _flow_confirmed_class_attribute_keys(tree, wrappers)
     flow_confirmed = _flow_confirmed_locale_key_dicts(tree, wrappers) | _flow_confirmed_locale_key_row_tables(
         tree, wrappers
     )
