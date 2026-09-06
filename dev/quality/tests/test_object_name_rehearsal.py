@@ -16,7 +16,13 @@ import pytest
 
 from cadrumo.core.hashing import canonical_json_bytes
 
-from ...audit.object_names import ObjectNameAuditResult, scan, to_json
+from ...audit.object_names import (
+    ObjectNameAuditResult,
+    ObjectNameFinding,
+    ObjectNameFindingKind,
+    scan,
+    to_json,
+)
 from .. import object_name_graph as graph_module
 from .. import object_name_rehearsal as rehearsal_module
 from ..object_name_graph import HardEdge, ReferenceKind, build_manifest_components
@@ -713,6 +719,37 @@ def test_copy_race_that_adds_selected_reference_is_refused(tmp_path: Path, monke
         rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
 
 
+def test_a_copy_that_alters_the_selected_component_is_refused(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The integrity check every later step depends on, driven for the first time.
+
+    The rehearsal reasons about a copy of the component, so if the copy does not
+    carry the component's own bytes then every gate, digest and receipt below is
+    about a different file than the one under review. The sibling race test
+    corrupts an UNGUARDED path and lands on the allowlist refusal; this one
+    corrupts the guarded component itself, which is caught earlier and by a
+    different claim.
+    """
+    repo = tmp_path / "repo"
+    inventory, manifest, component = _fixture(repo)
+    original_copy = rehearsal_module._copy_snapshot
+
+    def copy_then_alter_the_component(*args: Any, **kwargs: Any) -> None:
+        original_copy(*args, **kwargs)
+        target_root = args[1]
+        (target_root / "src/example/contracts.py").write_text(
+            "class Widgets:" + chr(10) + "    pass" + chr(10) + "# altered inside the copy" + chr(10),
+            encoding="utf-8",
+        )
+
+    monkeypatch.setattr(rehearsal_module, "_copy_snapshot", copy_then_alter_the_component)
+
+    with pytest.raises(
+        ObjectNameRehearsalError,
+        match="selected component bytes changed during the temporary copy",
+    ):
+        rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
+
+
 def test_unsafe_system_temp_and_escaped_allocation_are_refused(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     repo = tmp_path / "repo"
     inventory, manifest, component = _fixture(repo)
@@ -954,3 +991,43 @@ def test_identical_focused_gates_run_once_for_the_whole_component(tmp_path: Path
     assert len(focused) == 1
     assert focused[0].argv == gate
     assert focused[0].return_code == 0
+
+
+def test_a_rehearsal_that_introduces_an_enforced_finding_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The proposition the whole rehearsal exists to evaluate.
+
+    Everything before this refusal -- the isolated copy, the bounded transform,
+    the re-scan -- is machinery for reaching one comparison: does the rehearsed
+    change ADD an enforced finding. Nothing drove that comparison to its refusing
+    side, so the branch that makes the rehearsal protective was never observed.
+
+    The real `_inventory_after_allowed_changes` still runs; one enforced finding
+    is appended to its result, so the real delta and the real comparison decide.
+    """
+    repo = tmp_path / "repo"
+    inventory, manifest, component = _fixture(repo)
+    original_after = rehearsal_module._inventory_after_allowed_changes
+    introduced = ObjectNameFinding(
+        kind=ObjectNameFindingKind.DUPLICATE,
+        name="Widgets",
+        enforced=True,
+        sites=("src/example/contracts.py:1",),
+        detail="a finding the rehearsed change would introduce",
+        qualified_sites=("src/example/contracts.py::Widgets",),
+    )
+
+    def with_one_more_enforced_finding(before: ObjectNameAuditResult, **kwargs: Any) -> ObjectNameAuditResult:
+        after = original_after(before, **kwargs)
+        return replace(after, findings=(*after.findings, introduced))
+
+    monkeypatch.setattr(rehearsal_module, "_inventory_after_allowed_changes", with_one_more_enforced_finding)
+
+    # The refusal is re-raised by the outer handler with the retained root
+    # appended, so the pattern spans both halves rather than pinning the first.
+    with pytest.raises(
+        ObjectNameRehearsalError,
+        match=r"rehearsal introduces an enforced object-name finding.*retained rehearsal root",
+    ):
+        rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)

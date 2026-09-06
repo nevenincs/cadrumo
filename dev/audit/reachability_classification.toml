@@ -999,8 +999,8 @@ class = "should-be-live"
 area = "application"
 resolved = false
 remedy_requires_decision = true
-symbols = ["default_profile_secure_object_inventory", "profile_advance_session_idle_deadline", "profile_is_persisted_session"]
-evidence = "Five of the eight one-line port-facade wrappers in the shipped tree are called by nothing; the other three are reached from tests or dev. Re-tested against the live design: profile_is_authentication_failure was removed from this cluster and recorded as superseded, because authentication failures ARE recognised -- by map_profile_authentication_proof_failure at custody_ports.py:1538, which collapses credential-shape and proof failures into a typed ProfileAuthenticationRefusedError and is reached from login_session, passphrase_rotation and recovery_custody. The earlier inference that an adapter exception type must be leaking into application code was wrong. The remaining three are still one-line port facades no caller reaches."
+symbols = ["default_profile_secure_object_inventory"]
+evidence = "Five of the eight one-line port-facade wrappers in the shipped tree are called by nothing; the other three are reached from tests or dev. Re-tested against the live design: profile_is_authentication_failure was removed from this cluster and recorded as superseded, because authentication failures ARE recognised -- by map_profile_authentication_proof_failure at custody_ports.py:1538, which collapses credential-shape and proof failures into a typed ProfileAuthenticationRefusedError and is reached from login_session, passphrase_rotation and recovery_custody. The earlier inference that an adapter exception type must be leaking into application code was wrong. Two more were removed on re-test and recorded as superseded, leaving one port facade here."
 
 # ---------------------------------------------------------------------------
 # Shipped types nothing constructs
@@ -1018,7 +1018,7 @@ class = "should-be-live"
 area = "application"
 resolved = false
 remedy_requires_decision = true
-symbols = ["ModeloWorkspaceVersionHeader", "ModeloDraftBuilderAdapter", "ModeloWorkspaceAtomicProjectionPortV1"]
+symbols = ["ModeloWorkspaceAtomicProjectionPortV1"]
 evidence = "AttachmentCatalogue is deliberately excluded: it already carries its own staged-capability cluster, and the taxonomy admits exactly one class per finding. Each remaining symbol is exported and referenced nowhere outside the module that defines it, so nothing constructs, subclasses or annotates with it. Read as behaviour rather than as code, each names something the product does not do: AttachmentCatalogue verifies that every mapping key equals the embedded attachment_id so lookups cannot drift, and no lookup goes through it; SchemaModuleLoadFailure records a module and its error, and no schema load failure is recorded; Three symbols were removed from this cluster on re-test against the live design and are recorded separately as superseded; the claim that the certificate refusal goes undetected was wrong. Deleting them would remove the record that the capability was designed, which is the same argument the unapplied threshold cluster records. The remedy is to wire each to the caller it was written for or to withdraw it deliberately, and both are owner decisions."
 
 [[symbol_cluster]]
@@ -1577,3 +1577,17 @@ class = "superseded"
 area = "application/user_profile"
 symbols = ["register_imported_profile_bundle", "ProfileImportResult"]
 evidence = "The registrar for an imported portable bundle and its declared outcome type. Re-tested against the live design and reversed: portable profile import IS wired, through the capsule archive rather than the bundle registrar. The restore CLI defines a profile_archive_import command, and capsule_archive exposes a live surface -- read_profile_capsule_archive, inspect_profile_capsule_archive, export_profile_capsule_archive and both the inspection and receipt types are each reached -- which hands capsule material to the shared publication authority recorded elsewhere in this ledger. Recorded first as portable import being declared and unwired, and as this outcome type being returned by nothing; both readings were wrong."
+
+[[symbol_cluster]]
+name = "session port facades callers reach through the port object"
+class = "superseded"
+area = "application/user_profile"
+symbols = ["profile_advance_session_idle_deadline", "profile_is_persisted_session"]
+evidence = "Two module-level facades over the login-session port. Re-tested against the live design and reversed. The idle deadline IS advanced: login_session.py calls advance_acceleration_idle_deadline on the port object, and the storage adapter implements it by calling advance_persisted_profile_session_idle_deadline, so the behaviour the facade wraps is reached without the facade. The TypeGuard narrows an untyped object to the persisted-session port, and nothing receives one untyped -- the adapter annotates ProfilePersistedSessionPort directly on the functions that take and return it, and constructs the concrete record itself. The module is mostly live around them, with the current-bucket-session helper at seven references and the serves-bucket predicate at four."
+
+[[symbol_cluster]]
+name = "workspace header and draft adapter with live equivalents"
+class = "superseded"
+area = "application/modelo"
+symbols = ["ModeloWorkspaceVersionHeader", "ModeloDraftBuilderAdapter"]
+evidence = "Two types re-tested against the live design and reversed. The version header is a minimal pre-dispatch shape carrying contract_version bounded only at one or more; the concrete workspace models each pin their own contract_version as a single-value Literal and one cross-checks a baseline against itself, which is a stronger guarantee than the shared header offers, so the pre-dispatch sniff is superseded by per-model pinning. The draft adapter is one implementer of the modelo draft-builder Protocol and a different one is live: the workflow gate constructs _RevisionDraftBuilder, documented as building and locally approving the draft backed by the target work unit, and passes it as the filing_draft_builder the adapter factory requires. A Protocol with a live implementer under another name is supersession, not an unwired capability."
