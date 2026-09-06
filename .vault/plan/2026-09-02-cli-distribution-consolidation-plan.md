@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:3779ba665fc411a8ca6d8a22c1779f1a9f6158c566ef72a018f5adcfe1ba61ea'
+body_hash: 'sha256:fc6eef9b93f19977baba4f37c112e0bb7f3f7e7216287312e0662bde085d337b'
 ---
 
 <!-- RETIRED: S39 -->
@@ -130,6 +130,8 @@ Build every declared distribution and channel artifact from one command and prov
 - [x] `P09.S65` - Make a cohort built twice from one commit carry one identity; `dev/packaging/tests/test_release_cohort_integration.py`.
 - [x] `P09.S66` - Make three cross-platform test legs assert their contract instead of the host that ran them; `dev/packaging/tests/test_smoke_scoop_harness.py`.
 - [x] `P09.S67` - Stop the queue watchdog from cancelling a run on a single sample of a label-set handoff; `dev/ci/runner_queue_watchdog.py`.
+- [x] `P09.S68` - Repair the release automation that had never once completed a release; `release-please-config.json`.
+- [x] `P09.S69` - Close the three cross-platform defects the serial wedge had been hiding; `dev/packaging/installed_mcp_oracle.py`.
 
 ### Phase `P10` - Prune the release and packaging surfaces without consumers
 

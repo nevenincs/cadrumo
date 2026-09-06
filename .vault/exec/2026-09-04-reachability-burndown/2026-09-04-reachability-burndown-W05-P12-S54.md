@@ -5,16 +5,11 @@ tags:
 date: '2026-09-06'
 modified: '2026-09-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:c2a6b34fb3ad3213f51187619353b9bd2c722071f52946e7f282f13df11d3a0a'
+body_hash: 'sha256:85ab04c032ac92e4ef40b0cd4e228980da3a5faca21e51ed943ce7ad6fa7c98c'
 step_id: 'S54'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Record a measured performance consequence and two filing-runtime dispositions: the locale catalogue's cross-process disk cache is never read or written although its in-process half is live, so every new process pays the roughly 800 millisecond YAML parse the cache was written to avoid according to the measurement in its own module docstring; the default filing profile loader is displaced by the builder that takes an already-resolved taxpayer identity; and the fingerprint cache reset seam is orphaned rather than test support, because the function that would populate the cache is itself unreached and the live schema surface never consults it
 

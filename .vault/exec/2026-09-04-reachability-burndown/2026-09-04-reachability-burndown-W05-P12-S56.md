@@ -5,16 +5,11 @@ tags:
 date: '2026-09-06'
 modified: '2026-09-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:2db62903579eaea69ae89515035f1ce4c2624d68b8650931258a4125aaa422df'
+body_hash: 'sha256:cf16a7e362d50ec64acb9647c2f86af37ed6c5adfe8cfc4829f467940e914b8f'
 step_id: 'S56'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Record the campaign's clearest cost finding and one supersession: the encrypted stage-S1 transcription cache is never populated, its own docstring stating that re-reading is the expensive half of ingestion at a vision model pass over every page and that re-running the cheap semantic stages is only affordable if the transcription is kept, while the single live reader is the consent-withdrawal path that touches the cache to erase it; and the standalone corpus manifest writer is subsumed by the bundle builder that writes the manifest inside the zip archive
 

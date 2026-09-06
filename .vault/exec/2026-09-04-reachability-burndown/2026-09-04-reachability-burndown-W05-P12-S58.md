@@ -5,16 +5,11 @@ tags:
 date: '2026-09-06'
 modified: '2026-09-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:7c52c9cf02c1188b43b563e5b758f0580af4212f4f9be2cf37c0f813e540a6a6'
+body_hash: 'sha256:1f87bf9f1ccd8a5984bfd1963d068b972d7f7f7f7a264e20db2f22c83f670f29'
 step_id: 'S58'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Reclassify both of the campaign's cost findings after testing them against the live design rather than the finding's own docstring: the locale catalogue disk cache is superseded because locale_map returns a lazy shard catalogue whose full parse runs only from iteration, length and to-dict, none of which production calls, so the eight hundred millisecond figure is not a live cost; and the transcription cache is superseded because the CLI-facing extraction layer states that everything runs on-host in memory, that the evidence bytes, transcription and draft never touch disk, and that the module performs no filesystem write, so persisting a transcription would contradict the live posture rather than complete it
 

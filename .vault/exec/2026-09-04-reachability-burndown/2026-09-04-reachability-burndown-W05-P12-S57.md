@@ -5,16 +5,11 @@ tags:
 date: '2026-09-06'
 modified: '2026-09-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:daf459c636f42fd9ac49927feef284af48f8606445ae283a62b2f208c61304a6'
+body_hash: 'sha256:1174b4d5720c53cedd95b951d4ed31bf1b995df4112ca816f3f5bbbfb43356f7'
 step_id: 'S57'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Sweep every cache-shaped module and bound that finding class at the two already recorded, since the other six are healthy with both halves live or reached intra-module; then adjudicate the domain attachment readers as displaced because the application layer reads the same store protocol directly while this service's write half stays live, and the M036 IAE subject sets as should-be-live because the field rule they encode, that only A-prefix codes carry an epigrafe, is enforced nowhere while the simplified-regime calculation separates agrarian rows by type instead
 

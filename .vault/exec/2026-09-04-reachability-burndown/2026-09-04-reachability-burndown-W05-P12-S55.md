@@ -5,16 +5,11 @@ tags:
 date: '2026-09-06'
 modified: '2026-09-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:0ea010d325be5b4fa1b347ba52982ffda5df1623473bc4acacb24b80e6c70402'
+body_hash: 'sha256:46aa1594f4744ad3eb479dea8909affc5006449545dd77feeccae64f5b465789'
 step_id: 'S55'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Scan same-module read/write name pairs for a split half, which found five instances with no noise, and adjudicate the two that ground out as design rather than defect: the encrypted envelope tier is unreached as a group, appearing partly live only because its saver is called by a reencrypt helper that is itself unreached, while the plain tier beside it carries eighteen references and sensitive payloads encrypt through the application-layer secure-object envelope instead; and the mnemonic decoder is unnecessary because the custody design hands the twenty-four word phrase to the KDF as the recovery secret rather than decoding it to entropy
 

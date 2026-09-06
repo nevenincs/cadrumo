@@ -5,16 +5,11 @@ tags:
 date: '2026-09-06'
 modified: '2026-09-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:582c718d2e8e8de7670581a41cce0e3de8a89f5f668ae9c96b2bc48c9f60f474'
+body_hash: 'sha256:7e1c17ff6c111cd275538a0a5955051d68f0275436097413b247f5b20b6948b2'
 step_id: 'S63'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Wire the remaining reachable collaboration audit emitters so the event history records the acts it was built for: counter-sign emits on the counter-signer's bucket after the receipt is written, decrypt emits on the recipient's bucket after the envelope opens, and the collab recipient add and remove commands emit when trust is granted and revoked, each resolving the active bucket once and constructing the registry from it rather than through the bucket-resolving factory so the same identifier reaches both the repository and the event
 

@@ -5,16 +5,11 @@ tags:
 date: '2026-09-06'
 modified: '2026-09-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:b1a5f0eb9b3d95f84a0cb269f827524a49149335d6719666d0ed4d51e4f41842'
+body_hash: 'sha256:06c8b1f6a1a1bb46f58837fa8272f8a038480dbee5c04730ad83d48209939fce'
 step_id: 'S62'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Wire two confirmed findings instead of classifying them: give the colour rule an optional stream probe so it can serve stderr, and have the localised Click exception override consult it with the stderr probe rather than Click's own show_color, which makes NO_COLOR and CADRUMO_FORCE_COLOR reach error output for the first time while an explicit show_color still wins; and emit the collaboration package-encrypted event from the review-package encrypt command against the bucket event history, so a package leaving the bucket is now recorded where the encrypt previously succeeded silently
 
