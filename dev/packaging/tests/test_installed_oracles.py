@@ -164,7 +164,14 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
         ["git", "clone", "--local", "--no-hardlinks", str(_REPO_ROOT), str(clean_repo)],
         cwd=work_dir,
     )
-    cohort_dir = work_dir / "python-cohort"
+    # Under the clone's OWN var/, not beside it. `build_python_cohort` refuses
+    # an output that is not below `<repo_root>/var`, and repo_root here is the
+    # clone -- so a sibling of the clone can never satisfy it and this fixture
+    # raised SystemExit on every platform. The SystemExit then escaped a
+    # module-scoped fixture, which left pytest's finalizer bookkeeping
+    # inconsistent and reported the module's other tests as bare internal
+    # AssertionErrors naming nothing.
+    cohort_dir = clean_repo / "var" / "python-cohort"
     supplied = build_python_cohort(clean_repo, cohort_dir)
     source_commit = supplied.source_commit
     root_wheel = supplied.root_wheel

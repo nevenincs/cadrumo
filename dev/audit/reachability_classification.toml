@@ -1341,3 +1341,18 @@ class = "staged-capability"
 area = "domain/iva"
 symbols = ["IossFilerRole", "REGIME_PERIODICITY", "regime_allows_deduction"]
 evidence = "The regime substrate for the Modelo 369 autoliquidation chain: the filer-role enumeration, the regime to filing-periodicity mapping, and the LIVA-grounded deductibility predicate. Its own module docstring records that it closes a regime taxonomy gap surfaced by a Modelo 369 IVA centralization audit and is purely additive against the rest of domain/iva, leaving existing rates, classifier rules and consumers unaffected. No consumer exists because the modelo it serves is not yet in the registry, which is the declared state of a substrate landed ahead of its filing surface rather than a wiring gap."
+
+[[symbol_cluster]]
+name = "repair integrity reports displaced by diagnostics"
+class = "superseded"
+area = "application"
+symbols = ["build_repair_integrity_report", "build_repair_list_report", "build_repair_policy_command_surface_catalog"]
+evidence = "The metadata-only read side of the repair surface. The live holder is named rather than guessed: the config repair verb at entrypoints/cli/config/_repair_cli.py imports exclusively from application/diagnostics.py, and that module performs the same work these build -- it calls probe_namespace_integrity per namespace and assembles SecureObjectNamespaceIntegrity items. Nothing in production imports application/repair_integrity at all, so this is a second implementation of a surface that already has one."
+
+[[symbol_cluster]]
+name = "repair remediation decisions never recorded"
+class = "should-be-live"
+area = "application"
+symbols = ["RepairRemediationDecisionRepository"]
+evidence = "The repository for operator remediation decisions over damaged secure-object rows. Unlike the report half beside it, this has no replacement: application/diagnostics.py, which the live config repair verb uses, contains no remediation-decision handling at all. The persistence is declared -- adapters/persistence/storage/secure_object_namespaces.py registers the secure-object namespace cadrumo.application.repair_integrity.decisions for exactly this -- and nothing writes or reads it. So an encrypted store stands ready and an operator's decision about a damaged row leaves no record."
+remedy_requires_decision = true
