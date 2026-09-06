@@ -1,4 +1,13 @@
-"""Repository-wide contract for the exact CI Python toolchain pin."""
+"""Repository-wide contract for the exact CI Python toolchain pin.
+
+The pin lives in ``.python-version`` and uv reads it -- unless something names
+an interpreter first. ``with: python-version:`` is one way to name one and
+``UV_PYTHON`` is the other, and only the first was ever read here: a workflow
+declaring ``env: {UV_PYTHON: \"3.12\"}`` beside a bare ``setup-uv`` step ran on
+3.12 and reported no violation. Both channels now resolve through
+:mod:`dev.ci.workflow_python_selection`, which also keeps the third state
+distinct: a file naming no selection is deferring to a value it cannot see,
+not proving the pin applies."""
 
 from __future__ import annotations
 
@@ -10,6 +19,7 @@ import pytest
 import yaml
 
 from ..._paths import REPO_ROOT
+from ..workflow_python_selection import declared_python_selection, uv_python_env
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -61,10 +71,10 @@ def _assert_setup_uv_consumers_follow_pin(
                 if not isinstance(step, dict) or not str(step.get("uses", "")).startswith("astral-sh/setup-uv@"):
                     continue
                 consumer_found = True
-                selection = (step.get("with") or {}).get("python-version")
+                selection = declared_python_selection(document, job_name, step_index)
                 if selection is None:
-                    # With no UV_PYTHON override, uv resolves the checked-in
-                    # exact .python-version pin itself. The checkout must already
+                    # Neither channel names an interpreter, so uv resolves the
+                    # checked-in exact .python-version pin. The checkout must already
                     # exist when setup-uv establishes the job's toolchain context.
                     checked_out = any(
                         isinstance(previous, dict) and str(previous.get("uses", "")).startswith("actions/checkout@")
@@ -161,3 +171,78 @@ def test_matrix_override_is_rejected_outside_the_compatibility_workflow() -> Non
 
     with pytest.raises(AssertionError, match="bypass"):
         _assert_setup_uv_consumers_follow_pin(documents, pin=pin)
+
+
+def _uv_step(**extra: Any) -> dict[str, Any]:
+    return {"uses": "astral-sh/setup-uv@0000000000000000000000000000000000000000", **extra}
+
+
+def _checkout() -> dict[str, Any]:
+    return {"uses": "actions/checkout@0000000000000000000000000000000000000000"}
+
+
+@pytest.mark.parametrize(
+    "document",
+    [
+        {"env": {"UV_PYTHON": "3.12"}, "jobs": {"build": {"steps": [_checkout(), _uv_step()]}}},
+        {"jobs": {"build": {"env": {"UV_PYTHON": "3.12"}, "steps": [_checkout(), _uv_step()]}}},
+        {"jobs": {"build": {"steps": [_checkout(), _uv_step(env={"UV_PYTHON": "3.12"})]}}},
+    ],
+    ids=("workflow-env", "job-env", "step-env"),
+)
+def test_a_uv_python_override_is_refused_at_every_env_scope(document: dict[str, Any]) -> None:
+    """The pin has two doors, and the gate reads both.
+
+    Measured against uv 0.12.8: two projects pinned identically to 3.13 built a
+    3.13 environment and, under ``UV_PYTHON=3.14``, a 3.14 one. So this document
+    runs on 3.12 while declaring no ``with: python-version:`` at all, and before
+    the selection moved behind one resolver it passed at all three scopes.
+    """
+    with pytest.raises(AssertionError, match=r"bypass \.python-version"):
+        _assert_setup_uv_consumers_follow_pin([(Path("ci.yml"), document)], pin=_python_pin())
+
+
+def test_the_innermost_uv_python_declaration_wins() -> None:
+    """GitHub resolves ``env:`` narrowest-first, so a step override is the answer.
+
+    Without this the resolver could read the outermost declaration and report a
+    selection the runtime never applies -- the same "declared text is not the
+    effective value" mistake one level down.
+    """
+    document = {
+        "env": {"UV_PYTHON": "3.11"},
+        "jobs": {"build": {"env": {"UV_PYTHON": "3.12"}, "steps": [_checkout(), _uv_step(env={"UV_PYTHON": "3.13"})]}},
+    }
+
+    assert uv_python_env(document, "build", 1) == "3.13"
+    assert uv_python_env(document, "build", 0) == "3.12"
+
+
+def test_a_step_with_neither_channel_is_unsettled_not_pinned() -> None:
+    """Naming no selection is the third state, reported as ``None``.
+
+    A resolver that answered the pin here would be asserting that no ambient
+    ``UV_PYTHON`` exists on the runner, which no file in this repository can
+    know. The caller pairs the ``None`` with the checkout-ordering check rather
+    than treating it as proof.
+    """
+    document = {"jobs": {"build": {"steps": [_checkout(), _uv_step()]}}}
+
+    assert declared_python_selection(document, "build", 1) is None
+    assert uv_python_env(document, "build", 1) is None
+
+
+def test_the_with_channel_still_outranks_an_ambient_declaration() -> None:
+    """An explicit input is the selection setup-uv applies, env or not."""
+    document = {
+        "env": {"UV_PYTHON": "3.11"},
+        "jobs": {"build": {"steps": [_checkout(), _uv_step(**{"with": {"python-version": "3.14"}})]}},
+    }
+
+    assert declared_python_selection(document, "build", 1) == "3.14"
+
+
+def test_the_selection_resolver_refuses_an_unknown_job() -> None:
+    """A misspelled job name is a lookup error, never a silent ``None``."""
+    with pytest.raises(KeyError, match="no job named"):
+        declared_python_selection({"jobs": {"build": {}}}, "absent", 0)
