@@ -668,6 +668,26 @@ def require_transaction(catalogue: TransactionCatalogue, transaction_id: str) ->
 
 
 def mutation_signature(transaction: Transaction) -> tuple[object, ...]:
+    """Fold every operator-settable ledger field into one comparable tuple.
+
+    This is what decides whether an edit changed anything: two equal signatures
+    make the update a no-op, and the caller refuses it with "manual ledger
+    update must change at least one ledger field". A persisted field missing
+    from here is therefore not merely uncompared — an edit touching ONLY that
+    field is rejected and the operator's correction is dropped.
+
+    It must stay key-for-key with :func:`_transaction_idempotency_fields`, minus
+    ``classified_by`` alone. That exclusion is deliberate: ``classified_by`` is
+    provenance a write stamps, not a value the operator set, so comparing it
+    would make every re-classification look like a change and defeat the guard.
+    Re-applying an identical classification on purpose is what ``--reaffirm``
+    is for.
+
+    ``recargo_amount`` and ``deduction_fact_kind`` were absent, and both are
+    Modelo 303 figures rather than provenance: an operator correcting a recargo
+    de equivalencia, or the deduction source behind an input-IVA claim, was
+    told nothing had changed.
+    """
     raw = transaction.raw
     return (
         raw.booked_date,
@@ -685,6 +705,8 @@ def mutation_signature(transaction: Transaction) -> tuple[object, ...]:
         transaction.iva_rate,
         transaction.iva_amount,
         transaction.iva_category,
+        transaction.deduction_fact_kind,
+        transaction.recargo_amount,
         transaction.counterparty_country,
         transaction.counterparty_identification_state,
         transaction.irpf_category,

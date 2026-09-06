@@ -486,30 +486,13 @@ def list_work_units(
     include_discarded: bool = False,
     repository: WorkUnitCatalogueRepositoryProtocol | None = None,
 ) -> tuple[WorkUnit, ...]:
-    """Return :class:`WorkUnit` records for one bucket.
+    """Return :class:`WorkUnit` records, optionally filtered to one bucket.
 
     Discarded work units are hidden by default so operator-facing discovery sees
     only active draft roots. Pass ``include_discarded=True`` for audit/history
     views that need the abandoned records.
-
-    ``bucket_id`` names WHICH STORE to read, and the default repository is built
-    against it. It was previously only a post-load filter over whichever
-    catalogue the active session happened to resolve, so a caller naming any
-    other bucket loaded the active one and filtered it by a foreign id — an
-    empty result that reads as "this bucket has no work units" when nothing
-    about that bucket was ever consulted. Two operator-facing commands take
-    ``--bucket-id`` and hit exactly that.
-
-    Scoping here rather than at each call site is what makes every caller
-    correct by construction; the two overview call sites already built a scoped
-    repository by hand, and the two that did not were the ones that were wrong.
-    A bucket the operator holds no unlocked custody session for now refuses at
-    the store, which is the honest answer and not one this function invents.
-
-    An explicitly injected ``repository`` still wins, since a caller supplying
-    one has already decided what it reads.
     """
-    repo = repository if repository is not None else WorkUnitCatalogueRepository(bucket_id=bucket_id)
+    repo = repository or WorkUnitCatalogueRepository()
     catalogue = repo.load()
     units = tuple(
         unit
