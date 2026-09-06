@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:e16735c2c006fb49117e4aae3028fe362dde0fac043378c8971262eaa0bc2e5d'
+body_hash: 'sha256:2810323aaf611a9d98e3e042140cdf01d944951bb82d31f3137091016759af77'
 ---
 
 <!-- RETIRED: S39 -->
@@ -128,6 +128,7 @@ Build every declared distribution and channel artifact from one command and prov
 - [ ] `P09.S63` - Stop a quality sweep from running a repository rewrite when its test module is imported; `dev/quality/namespace_retirement_sweep.py`.
 - [x] `P09.S64` - Make the installed payload attestation find the distribution it just installed; `dev/packaging/_installed_wheel_binding.py`.
 - [x] `P09.S65` - Make a cohort built twice from one commit carry one identity; `dev/packaging/tests/test_release_cohort_integration.py`.
+- [x] `P09.S66` - Make three cross-platform test legs assert their contract instead of the host that ran them; `dev/packaging/tests/test_smoke_scoop_harness.py`.
 
 ### Phase `P10` - Prune the release and packaging surfaces without consumers
 

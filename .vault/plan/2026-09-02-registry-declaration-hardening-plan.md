@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:25c1ae937d34b1803b549b21952d5c7d53f8cdabbeea319008c6553a6e3c5ee3'
+body_hash: 'sha256:632eb21add30e5310868457f4d4cf20ab82610e348962974851965a30e6aa89b'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -647,6 +647,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S765` - Floor the attribute surface in the three generated-tree boundary gates, whose existing floor counts only Name nodes while the forbidden entries are all attributes; `dev/registry/tests/test_generated_tree_publication.py`.
 - [x] `W02.P02.S766` - Floor the single-file parse and the per-locale ledger catalogue in the notice-action conformance module, the two claims its four sibling floors left bare; `dev/locales/tests/test_ledger_notice_action_conformance.py`.
 - [x] `W02.P02.S767` - Floor the parsed whitelist surface and its fixture in the mirrors-only claim, which sibling tests guard but this one did not reach; `dev/audit/tests/test_vulture_whitelist_is_not_stale.py`.
+- [x] `W02.P02.S768` - Refuse a missing cohort namespace initialiser instead of skipping it, which let the inertness claim pass by reading neither package; `dev/tests/test_modelo_workspace_fixed_point.py`.
+- [x] `W02.P02.S769` - Floor the page catalogues the localization dash gate opens, which its page-list guard did not reach because every missing catalogue was skipped; `dev/docs/tests/test_docs_localization.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
