@@ -1371,3 +1371,34 @@ class = "staged-capability"
 area = "adapters/persistence/storage"
 symbols = ["EncryptedBytes", "EncryptedJSON"]
 evidence = "Two of the four SQLAlchemy TypeDecorators that wrap the AEAD primitives so an ORM model can declare encryption at the column level. The family is partly live and the split is what settles this: HashedLookup is consumed in production for row-key digests in profile snapshots and attachments, and EncryptedString is not reported. These two appear only in their own module and in the inert namespace docstrings, which are prose rather than re-exports. Not an unencrypted column: the sensitive payload path encrypts through the application-layer secure-object envelope with its own integrity and provenance metadata, so the column-level decorator is an alternative mechanism the persistence layer did not take up."
+
+[[symbol_cluster]]
+name = "envelope-level recovery entry points the artifact path bypasses"
+class = "superseded"
+area = "adapters/persistence/storage/custody"
+symbols = ["unlock_profile_custody_recovery", "parse_profile_custody_recovery_envelope"]
+evidence = "Two envelope-level conveniences over the recovery primitives, each appearing in production only in its own __all__. The live holder is named: recovery_artifact.py calls the field-level unlock_profile_custody_recovery_material from kdf_supervision.py and derives the wrapper AAD through profile_custody_recovery_aad_for, so it never routes through the envelope forms. Checked for a crypto divergence before recording this, because two AAD helpers in one module is the shape that hides one: the envelope form profile_custody_recovery_aad DELEGATES to the field-level _for helper, so there is a single canonical derivation and the bypass changes no bytes."
+
+[[symbol_cluster]]
+name = "committed custody read and replace side with no caller"
+class = "should-be-live"
+area = "adapters/persistence/storage/custody"
+symbols = ["load_committed_profile_custody_summary_witness", "replace_committed_profile_custody_data_file"]
+evidence = "What remains of the committed profile-custody data path after its reader trio was removed as inert: the summary-witness load and the data-file replace, each referenced in production only by its own __all__. The write side of the same package is live -- write_data_files and write_posix_data_files are reached -- so the product commits custody data and can neither read a summary witness back nor replace a committed file. That asymmetry is the finding, and it is the same shape recorded for the earlier reader trio rather than a new one."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "bucket output-language hint read by production and written by nothing"
+class = "should-be-live"
+area = "adapters/persistence/storage"
+symbols = ["write_bucket_output_language_hint", "clear_bucket_output_language_hint"]
+evidence = "The mirror of the write-with-no-reader shape recorded elsewhere in this ledger. Here the READ is live: adapters/persistence/storage/profile_custody.py calls read_bucket_output_language_hint, and neither the writer nor the clear is called anywhere in production. The reader is documented to fail soft on absence or drift -- it catches every exception, logs at DEBUG and returns None -- so the hint file never exists, the read always yields None, and every caller silently takes the default output language. A per-bucket language preference therefore cannot take effect, and nothing above DEBUG says so."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "profile inventory persistence pair with neither side wired"
+class = "should-be-live"
+area = "adapters/persistence/profile"
+symbols = ["load_inventory", "save_inventory"]
+evidence = "Both halves of the profile inventory persistence, and unlike the half-wired paths recorded elsewhere neither side is reached: load_inventory has no production reference at all, and save_inventory's single apparent one is a docstring sentence in domain/contribuyente/inventory/records.py describing an older save path, which is prose rather than a call. The module's create_inventory_ledger sibling carries its own port-facade cluster for the same reason, so the whole inventory persistence surface is unreached."
+remedy_requires_decision = true
