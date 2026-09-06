@@ -1024,53 +1024,86 @@ def test_qualified_token_match_refuses_non_decimal_token_or_unqualified_identifi
     assert _semantic_map_validation._is_qualified_token_match(token, identifier) is False
 
 
-def test_reviewed_qualified_identity_admission_requires_matching_token_and_target_membership() -> None:
-    """The M200/2024 receipt admission drifts closed on a mismatched token or an absent target identity.
+#: A real closed M200/2024 receipt row, captured once: export field
+#: "m200-2024.dp200018.f0172" is reviewed-admitted to qualified identity
+#: "DP200018:00588". Each test below makes exactly ONE call into
+#: ``_reviewed_qualified_identity_admissions``, which freshly rebuilds the real
+#: M200/2024 promotion receipt every time it runs -- an expensive, CPU-bound
+#: compilation over real bundled audit data. Splitting one raise branch per
+#: test (rather than driving both from a single test) gives each its own
+#: per-test timeout budget instead of sharing one.
+_M200_2024_REAL_EXPORT_FIELD_ID = "m200-2024.dp200018.f0172"
+_M200_2024_REAL_QUALIFIED_IDENTITY = "DP200018:00588"
 
-    ``_reviewed_qualified_identity_admissions`` is reachable through the public
+
+def test_reviewed_qualified_identity_admission_refuses_a_drifted_token() -> None:
+    """``_reviewed_qualified_identity_admissions`` is reachable through the public
     ``validate_semantic_map``/``join_record_design_semantics`` entry points only
     for modelo 200, design epoch 2024, revision 2024 -- everywhere else it
     short-circuits to an empty admission set before ever touching the receipt.
-    That narrow gate previously left both of its raise branches undriven; this
-    test calls the private function directly, the same pattern already used
-    above for ``_resolve_semantic_map_casilla_tokens``, using the real bundled
+    That narrow gate previously left this raise branch undriven; this test
+    calls the private function directly, the same pattern already used above
+    for ``_resolve_semantic_map_casilla_tokens``, using the real bundled
     M200/2024 revision and its real closed promotion receipt.
     """
     from cadrumo.domain.calculations.registry.authority import bundled_revision_inspection
 
     inspection = bundled_revision_inspection("200", filing_year=2024, period="0A")
-    # A real closed receipt row, captured once: export field
-    # "m200-2024.dp200018.f0172" is reviewed-admitted to qualified identity
-    # "DP200018:00588".
-    real_export_field_id = "m200-2024.dp200018.f0172"
-    real_qualified_identity = "DP200018:00588"
-
     drifted_map = SemanticMap.model_validate(
         _semantic_map_payload(
             modelo="200",
             design_epoch="2024",
             entries=(
-                _entry(row=14, ordinal=1, field_id=real_export_field_id, kind="casilla", casilla_id="999"),
+                _entry(
+                    row=14,
+                    ordinal=1,
+                    field_id=_M200_2024_REAL_EXPORT_FIELD_ID,
+                    kind="casilla",
+                    casilla_id="999",
+                ),
                 _entry(row=15, ordinal=2, field_id="generated.literal.two", literal="0"),
             ),
         ),
     )
+
     with pytest.raises(RegistryValidationError, match="does not match its semantic-map token"):
         _semantic_map_validation._reviewed_qualified_identity_admissions(drifted_map, inspection)
 
+
+def test_reviewed_qualified_identity_admission_refuses_an_identity_absent_from_the_target_revision() -> None:
+    """The receipt-admitted qualified identity must still live in the selected revision.
+
+    Reachable the same way as the sibling drifted-token case above; driven
+    separately so each expensive real-receipt compilation keeps its own
+    per-test timeout budget.
+    """
+    from cadrumo.domain.calculations.registry.authority import bundled_revision_inspection
+
+    inspection = bundled_revision_inspection("200", filing_year=2024, period="0A")
     matching_map = SemanticMap.model_validate(
         _semantic_map_payload(
             modelo="200",
             design_epoch="2024",
             entries=(
-                _entry(row=14, ordinal=1, field_id=real_export_field_id, kind="casilla", casilla_id="588"),
+                _entry(
+                    row=14,
+                    ordinal=1,
+                    field_id=_M200_2024_REAL_EXPORT_FIELD_ID,
+                    kind="casilla",
+                    casilla_id="588",
+                ),
                 _entry(row=15, ordinal=2, field_id="generated.literal.two", literal="0"),
             ),
         ),
     )
     inspection_without_identity = inspection.model_copy(
-        update={"casilla_ids": frozenset(cid for cid in inspection.casilla_ids if cid != real_qualified_identity)},
+        update={
+            "casilla_ids": frozenset(
+                cid for cid in inspection.casilla_ids if cid != _M200_2024_REAL_QUALIFIED_IDENTITY
+            ),
+        },
     )
+
     with pytest.raises(RegistryValidationError, match="is absent from the target revision"):
         _semantic_map_validation._reviewed_qualified_identity_admissions(matching_map, inspection_without_identity)
 
