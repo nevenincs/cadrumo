@@ -107,7 +107,7 @@ def attach_setup_legal_validators(definition: FlowDefinition) -> FlowDefinition:
     The setup flow projects from the one-shot catalogue (which declares no
     validator ids), so this decorator names the registered validator on the
     ``familia`` :class:`FlowSection`'s ``exit_validator_ids`` — mirroring how
-    :func:`attach_format_hints` decorates the projected definition. Idempotent:
+    :func:`attachformat_hints` decorates the projected definition. Idempotent:
     a definition already carrying the id passes through untouched.
     """
     sections: list[FlowSection] = []

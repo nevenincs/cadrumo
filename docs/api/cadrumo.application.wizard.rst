@@ -14,7 +14,6 @@ Submodules
    :maxdepth: 4
 
    cadrumo.application.wizard._checkpoint_store
-   cadrumo.application.wizard._format_hints
    cadrumo.application.wizard._registered_values
    cadrumo.application.wizard.catalogue
    cadrumo.application.wizard.commands
@@ -23,6 +22,7 @@ Submodules
    cadrumo.application.wizard.descendant_group
    cadrumo.application.wizard.errors
    cadrumo.application.wizard.flow_validators
+   cadrumo.application.wizard.format_hints
    cadrumo.application.wizard.legal_zone
    cadrumo.application.wizard.models
    cadrumo.application.wizard.persistence

@@ -34,7 +34,7 @@ _PUBLIC_MODULE_NAMES = (
 )
 _INTERNAL_MODULE_NAMES = (
     "_checkpoint_store",
-    "_format_hints",
+    "format_hints",
     "_registered_values",
 )
 _MOVED_MODULE_NAMES = (

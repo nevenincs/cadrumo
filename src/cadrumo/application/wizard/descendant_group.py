@@ -52,14 +52,14 @@ from ..flows.definition import (
 )
 from ..flows.definition import locale_copy_ref as _locale_ref
 from ..flows.validators import ValidationVerdict, register_answer_validator, register_cross_field_validator
-from ._format_hints import (
+from .catalogue import FAMILIA_SECTION_ID as _FAMILIA_SECTION_ID
+from .format_hints import (
     FORMAT_AMOUNT_LOCALE_KEY,
     FORMAT_DATE_LOCALE_KEY,
     FORMAT_TAX_ID_LOCALE_KEY,
     FORMAT_UNITS_LOCALE_KEY,
     NIF_INVALID_LOCALE_KEY,
 )
-from .catalogue import FAMILIA_SECTION_ID as _FAMILIA_SECTION_ID
 
 if TYPE_CHECKING:
     from datetime import date
