@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:cf28c3b3f5b2b79f5fa43d4ddedf0e525eba91d896bca5569d8ac2524ea96c7e'
+body_hash: 'sha256:3e797f891ec27f57bcb7008c222274f56553067e770d04f6506e8cb17b487f87'
 ---
 
 # `reachability-burndown` plan
@@ -162,6 +162,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [ ] `W05.P12.S61` - Continue the backlog re-test with one reversal and one confirmation: portable profile import is wired after all, through the capsule archive rather than the bundle registrar, since the restore CLI defines an archive import command and the archive module's read, inspect, export and both result types are each reached, so the registrar and its outcome type are superseded and two earlier claims were wrong; and the root CLI tty and colour rules are confirmed unconsulted, with the alternative decider now named, because the localised Click exception override passes Click's own show_color attribute which is defined nowhere in this tree; `dev/audit/reachability_classification.toml`.
 - [ ] `W05.P12.S62` - Wire two confirmed findings instead of classifying them: give the colour rule an optional stream probe so it can serve stderr, and have the localised Click exception override consult it with the stderr probe rather than Click's own show_color, which makes NO_COLOR and CADRUMO_FORCE_COLOR reach error output for the first time while an explicit show_color still wins; and emit the collaboration package-encrypted event from the review-package encrypt command against the bucket event history, so a package leaving the bucket is now recorded where the encrypt previously succeeded silently; `src/cadrumo/entrypoints/cli/_tty.py`.
 - [x] `W05.P12.S63` - Wire the remaining reachable collaboration audit emitters so the event history records the acts it was built for: counter-sign emits on the counter-signer's bucket after the receipt is written, decrypt emits on the recipient's bucket after the envelope opens, and the collab recipient add and remove commands emit when trust is granted and revoked, each resolving the active bucket once and constructing the registry from it rather than through the bucket-resolving factory so the same identifier reaches both the repository and the event; `src/cadrumo/entrypoints/cli/config/_collab.py`.
+- [x] `W05.P12.S64` - Wire the flow checkpoint discard and reverse the custody record bound: the line frontend offers save-and-exit which writes a checkpoint while its submit path returned without clearing one, so an operator who saved, resumed and submitted left the checkpoint on disk and a later run would offer to resume an already-submitted flow, and submit now discards once eligibility is asserted under the same store guard as save-and-exit; and the four megabyte custody bound is orphaned rather than an unenforced safety limit, because no profile-record file exists in that package and the only profile_record in the tree is a record-format label on an encrypted secure-object namespace, to which a file-read byte cap does not apply; `src/cadrumo/application/flows/line_frontend.py`.
 
 ## Parallelization
 

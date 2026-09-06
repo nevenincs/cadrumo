@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:e2abc47648125666dd8673b557d86fdae0f30176f140e67ae26775376c25bd6e'
+body_hash: 'sha256:bcf954a5f4c2dfe3dc6fb42dec0ab347d3a5255994867242363c655949f15a20'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -325,6 +325,9 @@ Deliver one accessor returning a revision's complete resolved export casilla sur
 - [x] `W01.P01.S845` - Write the import-centralization codemod's and module-promotion's in-place rewrites atomically: both rewrite shipped `.py` files with a bare truncate-then-write, the same shape that destroyed a registry declaration at S841, and the codemod's own `_UTF_8` constant is passed through rather than substituted for a literal; `dev/quality/import_centralization_codemod.py dev/quality/module_promotion.py`.
 - [x] `W01.P01.S846` - Walk artefact to sidecar through the writers' own rules in the residual-identity gate: it walked sidecar to artefact and the plain `X.json` form has no inverse, so the code guessed `.pdf` and 19 of 92 plain sidecars were invisible -- html, csv, tsv, txt, xml -- against a docstring promising non-PDF artefacts are included because the scan reads bytes; `dev/sanitizer/tests/test_residual_identity_absence.py`.
 - [x] `W01.P01.S847` - Derive the all-extras import probe from the installed OPTIONAL_EXTRAS registry and import the modules rather than find_spec them: the manifest claimed "all capability-gated optional imports" while the hand-kept list covered three of five, leaving `ofx` and `llm` with zero invocation sites despite live production reliances, and `pynvml` ships from a differently named distribution behind an `except ImportError` that returns UNKNOWN; `dev/packaging/all_extra_smoke.py dev/packaging/tests/test_all_extra_smoke.py`.
+- [x] `W01.P01.S848` - Write the promoted scenario and the pyproject rewrite atomically, closing the same-path read-modify-write class: a truncated scenario makes the next promotion read it back, find `existing != text` and raise a FALSE identity collision that refuses to repair the file it corrupted, and 62.5 percent of scenario truncations parse silently while 33.3 percent of pyproject truncations keep their top-level table count unchanged; `dev/agent_eval/_flywheel.py dev/quality/namespace_retirement_sweep.py`.
+- [x] `W01.P01.S849` - Read the cohort build-before-fan-out ordering off the driver's parsed statement list rather than two byte offsets into its source text: moving the build block into the callable `pool.submit` dispatches makes every lane rebuild the same cohort directory concurrently -- the exact race the gate exists to exclude -- while both shipped assertions stay green, and hoisting the label to a module constant makes the ordering assertion permanently unfailable; `dev/release/tests/test_justfile_release_guidance.py`.
+- [x] `W01.P01.S850` - Refuse an unreadable schema module in the closed-vocabulary scan rather than crashing the sweep on it: the module calls itself the authority for which fields still spell a vocabulary out inline and the measurement the canonicalization gate asserts on, so a module the walk listed and the read never reached would lower that count without lowering the vocabularies, and HEAD's `_module_trees` caught only SyntaxError and UnicodeDecodeError; `dev/quality/closed_vocabulary_scan.py`.
 
 ## Wave `W02` - gate restoration and residue removal
 
