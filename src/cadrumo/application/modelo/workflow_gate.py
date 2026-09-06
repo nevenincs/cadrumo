@@ -61,7 +61,6 @@ from ...domain.modelos.work_unit import WorkUnit
 from ...domain.submission.engine import SubmissionEngine
 from ...domain.submission.models import ModeloDraftStatus
 from ...domain.submission.protocols import DeadlineWindowChecker
-from ...domain.transactions.models import TransactionCatalogue
 from ..filing.draft_construction import build_draft
 from ..filing.draft_review import approve_draft
 from ..filing.runtime import build_runtime_schema_provider, filing_profile_from_taxpayer
@@ -196,9 +195,17 @@ class _RevisionDraftBuilder:
     ) -> RegistryModeloDraftProtocol:
         """Build a :class:`RegistryModeloDraftProtocol` and approve it when it is filing-ready.
 
-        The :class:`TaxpayerProfile` is converted to the filing profile Protocol;
-        approval uses a transient :class:`TransactionCatalogue` because persisted
-        transaction evidence remains owned by the calculation revision.
+        The :class:`TaxpayerProfile` is converted to the filing profile Protocol.
+
+        The approval basis is computed against the bucket's OWN transaction
+        catalogue rather than a transient empty one. The catalogue reaches
+        approval as a fingerprint and nothing else, so this does not give the
+        calculation revision's evidence a second owner -- but the digest is
+        later recompared by the review queue against whatever the bucket holds,
+        and a digest of an empty catalogue can only ever disagree with that.
+        Stamping the empty one made every stored draft read as an aged-out
+        approval the first time anyone opened the queue, which is a permanent
+        high-severity row that is always wrong.
 
         An approved draft is persisted to the encrypted filing-draft store
         before it is returned. Nothing else in the application writes that
@@ -230,7 +237,6 @@ class _RevisionDraftBuilder:
             bucket_id=self._work_unit.bucket_id,
             approved_by=self._actor,
             schema_provider=self._schema_provider,
-            transaction_catalogue=TransactionCatalogue(),
             approved_at=self._clock,
         )
         self._drafts().save(approved)
