@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:10bfe9dd1b3b3c7bd0ea43223646e5aa2bca3de842e3afe21c3c418935c3c7e0'
+body_hash: 'sha256:0b3002ea45d9810d091f18695a3bb67d5ba66a263cd4d7349a770ed3dc52efcb'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -610,6 +610,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S728` - Pin the line terminator on every development text writer so generated artefacts stop being rewritten to CRLF where git normalisation hides the drift; `dev/quality/namespace_retirement_sweep.py`.
 - [x] `W02.P02.S729` - Restore the m303 generated-envelope proof to the current filing-facts contract by sourcing the bienes bundle and its provenance from the module that owns them; `dev/registry/tests/test_m303_generated_envelope_proof.py`.
 - [x] `W02.P02.S730` - Measure the five remaining unmeasured development directories against the per-test ceiling and adjudicate the decorator-spelling axis as a null vector; `dev/release`.
+- [x] `W02.P02.S731` - Read every spelling of a private streamed-digest helper in the re-homed digest sites so the absence claim covers the bare sha256 import and the async definition; `dev/packaging/tests/test_hashing.py`.
+- [x] `W02.P02.S732` - Reconcile the regulatory-prose channel after the record-design decomposition and derive its coverage anchor instead of pinning a filename; `dev/registry/analysis/regulatory_prose_parser_channel.toml`.
 
 ### Phase `W02.P03` - release predicate relocation
 
