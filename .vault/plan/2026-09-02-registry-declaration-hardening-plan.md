@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:701a18eebbf8561fd75416b7d3586a84668091f35828dd1e9a6284f828feef23'
+body_hash: 'sha256:44c64df59a9aec148c7471d608d74c21490794b4004202342d4d4882d4ddc788'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -665,6 +665,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S783` - Floor both chain transcripts behind the isolation and determinism claims, whose strict zip and pin to frozenset are both satisfied by a run that produced no frame; `dev/docs/sequences/tests/test_runner.py`.
 - [x] `W02.P02.S784` - Make the residue worklist group-count case assert the comparison its name promises: compare every heading's declared count against the rows printed beneath it at both levels, replacing a positivity check that never read the kind-level sum; `dev/registry/tests/test_coverage_residue_worklist.py`.
 - [x] `W02.P02.S785` - Anchor the api-stub manager claims to a real module corpus: pin the stale-stub removal to exactly the phantom and floor the written stub population, so a collapsed expected set that deletes the whole docs/api reference can no longer satisfy the removal, conformance and terminator cases; `dev/docs/apidocs/tests/test_manager.py`.
+- [x] `W02.P02.S786` - Floor the live legal catalogue at its three claim sites so a render that produces no page cannot pass: the docutils absence claim had no guard at all, and the idempotence and prune guards were existence checks satisfied by the index page the sweep keeps unconditionally; `dev/docs/tests/test_legal_reference.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
