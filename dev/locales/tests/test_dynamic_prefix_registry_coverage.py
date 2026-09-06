@@ -804,7 +804,7 @@ def test_a_column_table_is_read_as_an_attribute_and_confirmed_by_its_key_index()
     )
 
 
-def test_a_class_attribute_key_is_confirmed_by_the_attribute_the_base_renders() -> None:
+def test_a_class_attribute_key_is_confirmed_by_the_attribute_the_base_renders(tmp_path) -> None:
     """Incident 11: a screen family names its banner on the subclass.
 
     The subclass declares `heading = "tui.aeat_sync.census.title"` and the base
@@ -820,12 +820,11 @@ def test_a_class_attribute_key_is_confirmed_by_the_attribute_the_base_renders() 
     """
     from .._ast_scanner import scan_source_tree
 
-    (tmp := __import__("pathlib").Path(__import__("tempfile").mkdtemp()))
-    (tmp / "boundary.py").write_text(
+    (tmp_path / "boundary.py").write_text(
         chr(10).join(("def screen_copy(key, **values):", "    return tr(key, **values)")),
         encoding="utf-8",
     )
-    (tmp / "screens.py").write_text(
+    (tmp_path / "screens.py").write_text(
         chr(10).join((
             "class Base:",
             "    def compose(self):",
@@ -837,7 +836,7 @@ def test_a_class_attribute_key_is_confirmed_by_the_attribute_the_base_renders() 
         encoding="utf-8",
     )
 
-    keys = scan_source_tree(tmp)
+    keys = scan_source_tree(tmp_path)
 
     assert "tui.aeat_sync.census.title" in keys, "the attribute the base renders carries a real key"
     assert "workbench.census.home" not in keys, (
