@@ -255,6 +255,14 @@ def test_loader_refuses_prohibited_keep_distinct_disposition(tmp_path: Path) -> 
 
 
 def test_loader_refuses_linked_manifest(tmp_path: Path) -> None:
+    """The link refusal, which this machine can only measure with the privilege.
+
+    Pinned to the LINK message rather than the shared one it used to carry: a
+    symlink to a manifest satisfies ``is_file()``, so the old wording claimed
+    the supplied path was not a regular file when it was. The sibling test
+    below covers the other condition and needs no privilege, so a machine
+    that skips this one still measures half the guard rather than none.
+    """
     inventory, declaration, finding = _symbol_fixture(tmp_path)
     real_manifest = tmp_path / "real.toml"
     _write_manifest(real_manifest, _manifest_payload(inventory, _operation(declaration, finding)))
@@ -264,8 +272,38 @@ def test_loader_refuses_linked_manifest(tmp_path: Path) -> None:
     except OSError as exc:
         pytest.skip(f"symlinks unavailable: {exc}")
 
-    with pytest.raises(ObjectNameManifestError, match="regular file"):
+    assert linked_manifest.is_file(), "the link resolves to a regular file, which is the whole point"
+    with pytest.raises(ObjectNameManifestError, match="must not be reached through a link"):
         load_object_name_manifest(linked_manifest)
+
+
+@pytest.mark.parametrize("shape", ("directory", "absent"))
+def test_loader_refuses_a_manifest_path_that_is_not_a_regular_file(tmp_path: Path, shape: str) -> None:
+    """The other half of a guard only a symlink used to reach.
+
+    ``load_object_name_manifest`` refuses on two disjoint conditions, and one
+    test drove only the link one -- behind a skip, so on a machine without the
+    symlink privilege NEITHER was measured and the suite still reported green.
+    Measured: a link satisfies ``is_file()`` and a directory is never
+    link-like, so no input reaches both. These two shapes need no privilege.
+    """
+    candidate = tmp_path / "manifest.toml"
+    if shape == "directory":
+        candidate.mkdir()
+
+    with pytest.raises(ObjectNameManifestError, match="must be a regular file"):
+        load_object_name_manifest(candidate)
+
+
+def test_the_two_loader_refusals_do_not_match_each_other(tmp_path: Path) -> None:
+    """A shared fragment would let either test pass on the wrong branch."""
+    directory = tmp_path / "as_directory.toml"
+    directory.mkdir()
+    with pytest.raises(ObjectNameManifestError) as caught:
+        load_object_name_manifest(directory)
+
+    assert "must not be reached through a link" not in str(caught.value)
+    assert "must be a regular file" in str(caught.value)
 
 
 @pytest.mark.parametrize(

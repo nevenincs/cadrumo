@@ -62,6 +62,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 __all__ = [
+    "ConstantAgreementScanError",
     "ConstantFinding",
     "collect_constants",
     "collect_unevaluated_constants",
@@ -72,6 +73,18 @@ __all__ = [
 
 _PACKAGE_ROOT = Path(__file__).resolve().parent.parent.parent / "src" / "cadrumo"
 _COMPARABLE = (str, int, float, tuple, frozenset)
+
+
+class ConstantAgreementScanError(Exception):
+    """A module the walk listed could not be read.
+
+    The two tolerated failures -- a module this Python cannot parse and one it
+    cannot decode -- are skipped because neither can contribute a comparable
+    constant. An unreadable module is different in a way that matters to THIS
+    screen specifically: the verdict is agreement ACROSS modules, so a module
+    that goes unread can turn a real disagreement into a reported agreement.
+    Skipping it would not lose a finding, it would invert one.
+    """
 
 
 @dataclass(frozen=True, slots=True)
@@ -105,7 +118,16 @@ def collect_constants(root: Path) -> dict[str, dict[str, str]]:
         if "__pycache__" in path.parts or "tests" in path.parts:
             continue
         try:
-            tree = ast.parse(path.read_text(encoding="utf-8"))
+            source = path.read_text(encoding="utf-8")
+        except OSError as exc:
+            unreadable = (
+                f"constant-agreement screen could not read {path}, which its own walk listed: {exc}. "
+                "The verdict is agreement across modules, so an unread module can report agreement "
+                "where the tree holds a conflict."
+            )
+            raise ConstantAgreementScanError(unreadable) from exc
+        try:
+            tree = ast.parse(source)
         except (SyntaxError, UnicodeDecodeError):
             continue
         module = path.relative_to(root).as_posix()
@@ -136,7 +158,16 @@ def collect_unevaluated_constants(root: Path) -> dict[str, dict[str, str]]:
         if "__pycache__" in path.parts or "tests" in path.parts:
             continue
         try:
-            tree = ast.parse(path.read_text(encoding="utf-8"))
+            source = path.read_text(encoding="utf-8")
+        except OSError as exc:
+            unreadable = (
+                f"constant-agreement screen could not read {path}, which its own walk listed: {exc}. "
+                "The verdict is agreement across modules, so an unread module can report agreement "
+                "where the tree holds a conflict."
+            )
+            raise ConstantAgreementScanError(unreadable) from exc
+        try:
+            tree = ast.parse(source)
         except (SyntaxError, UnicodeDecodeError):
             continue
         module = path.relative_to(root).as_posix()

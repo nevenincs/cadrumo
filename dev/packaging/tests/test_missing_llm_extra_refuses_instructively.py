@@ -71,6 +71,23 @@ _GUARDED_SURFACES: tuple[tuple[str, str], ...] = (
 )
 
 
+#: Where each guarded surface is DEFINED. The package namespace re-exports
+#: nothing, so every consumer -- this probe included -- reaches a name at the
+#: module that owns it.
+_DEFINING_MODULES: dict[str, str] = {
+    "rasterise_pdf_pages_to_base64_png": "cadrumo.llm.providers.local",
+    "transcribe_document_images": "cadrumo.llm.evidence_draft_vision",
+    "extract_invoice_fields_from_text": "cadrumo.llm.evidence_draft_text",
+    "LocalVisionDocumentTranscriber": "cadrumo.llm.evidence_draft_vision",
+    "TextInvoiceFieldExtractor": "cadrumo.llm.evidence_draft_text",
+    "LocalTextLLMClassifier": "cadrumo.llm.text_classifier",
+    "LocalVisionLLMClassifier": "cadrumo.llm.vision_classifier",
+    "SemanticColumnRoleMapper": "cadrumo.llm.column_role_mapping",
+    "SupplyNatureProposer": "cadrumo.llm.supply_nature_proposal",
+    "MultimodalImageInput": "cadrumo.llm.models",
+}
+
+
 @pytest.fixture(scope="module")
 def installed_core_environment(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Path]:
     """Build one complete core-only cohort where the LLM extra is genuinely absent."""
@@ -101,7 +118,6 @@ def _guarded_definition_names() -> frozenset[str]:
         message = "the llm package has no file location to scan"
         raise RuntimeError(message)
     package = Path(llm.__file__).resolve().parent
-    exported = frozenset(llm.__all__)
     derived: set[str] = set()
     for path in scan_directory(package, pattern="*.py", recursive=True):
         if "tests" in path.relative_to(package).parts:
@@ -118,7 +134,11 @@ def _guarded_definition_names() -> frozenset[str]:
                 for child in ast.walk(node)
             ):
                 derived.add(node.name)
-    return frozenset(derived) & exported
+    # NOT intersected with `llm.__all__`: that namespace is an inert marker
+    # whose `__all__` is literally `()`, so the intersection could only ever
+    # be empty and the caller's `assert derived` failed on a tree where every
+    # guard was present. The AST walk IS the derivation.
+    return frozenset(derived)
 
 
 def _isolated_environment(work_dir: Path) -> dict[str, str]:
@@ -136,9 +156,16 @@ def _drive_surfaces(work_dir: Path, python: Path) -> dict[str, object]:
     # NameError -- which reads as "this surface did not refuse properly" when
     # the truth is that the probe never reached it. `MultimodalImageInput` is a
     # helper the calls construct, not a guarded surface, so it stays explicit.
-    llm_imports = "\n".join(
-        f"            {name},"
-        for name in sorted({name for name, _call in _GUARDED_SURFACES} | {"MultimodalImageInput"})
+    # One import per DEFINING module, not one from the package. `cadrumo.llm`
+    # is an inert namespace marker and re-exports nothing, so the former
+    # `from cadrumo.llm import (...)` raised ImportError and the probe died
+    # before reaching any surface -- which reads as 'the surface did not
+    # refuse properly' when the probe never ran.
+    by_module: dict[str, set[str]] = {}
+    for surface in sorted({name for name, _call in _GUARDED_SURFACES} | {"MultimodalImageInput"}):
+        by_module.setdefault(_DEFINING_MODULES[surface], set()).add(surface)
+    llm_imports = chr(10).join(
+        f"        from {module} import {', '.join(sorted(names))}" for module, names in sorted(by_module.items())
     )
     code = textwrap.dedent(
         f"""
@@ -155,9 +182,7 @@ def _drive_surfaces(work_dir: Path, python: Path) -> dict[str, object]:
             optional_extra_available,
         )
         from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
-        from cadrumo.llm import (
 {llm_imports}
-        )
 
         _PAGES = (MultimodalImageInput.from_base64("aGk=", ImageMediaType.PNG),)
         _TRANSCRIPTION = DocumentTranscription(

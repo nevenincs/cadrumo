@@ -298,7 +298,16 @@ class ObjectNameRenameManifest(_StrictModel):
 
 def load_object_name_manifest(path: Path) -> ObjectNameRenameManifest:
     """Load one regular strict TOML rename manifest without consulting live state."""
-    if is_link_like(path) or not path.is_file():
+    if is_link_like(path):
+        # Split from the regular-file check rather than sharing its message. The two
+        # conditions are disjoint -- measured: a symlink to a manifest satisfies
+        # is_file(), and a directory or absent path is never link-like -- so one
+        # message could not be true of both. It told an operator holding a symlink
+        # to a perfectly regular file that their file was not one. The refusal is
+        # about the indirection, not the file kind.
+        linked = f"object-name manifest must not be reached through a link: {path}"
+        raise ObjectNameManifestError(linked)
+    if not path.is_file():
         raise ObjectNameManifestError(f"object-name manifest must be a regular file: {path}")
     frozen = freeze_toml(read_toml(path, error_factory=ObjectNameManifestError))
     try:

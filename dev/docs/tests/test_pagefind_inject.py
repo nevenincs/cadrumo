@@ -22,13 +22,17 @@ from cadrumo.core.external_constants import OutputLanguage
 from ..pagefind_inject import (
     InjectionStats,
     SearchInjectionError,
+    _bounded_to_sample,
     _effective_weight,
     _filters_for,
+    _Materialised,
     _meta_for,
     _sort_key,
     build_record_injector,
     load_relevance_weights,
 )
+from ..terminology._cli_projection import project_cli_search_records
+from ..terminology.unified_record import to_search_record
 from ._pagefind_inject_support import concept_records
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -156,3 +160,29 @@ def test_build_record_injector_returns_a_callable(tmp_path: Path) -> None:
     assert callable(inject)
     stats = InjectionStats(concepts=1, custom_records_written=4)
     assert stats.custom_records_written == 4  # the stats type the callback emits
+
+
+def test_the_bounded_sample_reports_exactly_the_records_it_carries() -> None:
+    """A bounded injection cannot claim a record it dropped.
+
+    A CLI command and a CLI option share the single ``cli`` record kind, so a
+    cap taken on the kind spent its whole allowance on commands and then went
+    on reporting a full complement of options that never reached the index.
+    Both halves are asserted against the real live command tree: the options
+    are carried, and every counter is the length of what the bound kept.
+    """
+    commands, options, _stats = project_cli_search_records()
+    assert commands and options
+    materialised = _Materialised(
+        records=[to_search_record(record) for record in (*commands, *options)],
+        cli_commands=len(commands),
+        cli_options=len(options),
+    )
+
+    bounded = _bounded_to_sample(materialised, 4)
+
+    assert bounded.cli_commands == 4
+    assert bounded.cli_options == 4
+    assert len(bounded.records) == bounded.cli_commands + bounded.cli_options
+    carried_options = sum(1 for record in bounded.records if record.id.startswith("cli-option:"))
+    assert carried_options == bounded.cli_options

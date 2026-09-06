@@ -233,46 +233,33 @@ def dispatch_autosplit(
     from ._ledger_llm_payloads import LedgerClassifyLlmSuggestResult
     from ._ledger_payloads import LedgerClassifySingleResult
 
+    # Checked before the shared three: an operator who asked for --auto-split
+    # without --read-evidence should hear about the flag they actually typed,
+    # not about a conflict further down the same argv.
     if not read_evidence:
         raise bad(
             tr("cli.ledger.classify.auto_split_needs_evidence"),
         )
-    if classification is not None or file is not None:
-        raise bad(
-            tr("cli.ledger.classify.llm_exclusive"),
-        )
-    if reject and apply:
-        raise bad(
-            tr("cli.ledger.classify.reject_apply_exclusive"),
-        )
-    if transaction_id is None:
-        raise bad(
-            tr("cli.ledger.classify.id_required"),
-        )
-
-    state = current_workflow_state()
-    transaction_repository = transaction_catalogue_repo(state)
-    bucket_id = transaction_repository.bucket_id
-    resolved_id = resolve_id(transaction_repository, transaction_id)
-    suggestion = suggest_evidence_split(
-        bucket_id=bucket_id,
-        transaction_id=resolved_id,
-        transaction_repository=transaction_repository,
+    prologue = _llm_classify_prologue(
+        ctx,
+        suggest_fn=suggest_evidence_split,
+        classification=classification,
+        file=file,
+        transaction_id=transaction_id,
+        apply=apply,
+        actor=actor,
+        # Unconditionally true: the guard above already refused otherwise, so
+        # passing the flag through would only offer a second way to disagree.
         read_evidence=True,
         vision_model=vision_model,
+        reject=reject,
+        reason=reason,
     )
-
-    if reject:
-        emit_llm_rejection(
-            ctx,
-            suggestion,
-            origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT,
-            bucket_id=bucket_id,
-            reason=reason,
-            actor=actor,
-            transaction_repository=transaction_repository,
-        )
+    if prologue is None:
         return
+    suggestion, transaction_repository = prologue
+    bucket_id = transaction_repository.bucket_id
+
     if suggestion.recommends_split:
         _emit_split(ctx, suggestion, bucket_id=bucket_id, apply=apply, actor=actor)
         return
@@ -464,15 +451,23 @@ def _validate_classify_llm_options(
     apply: bool,
     transaction_id: str | None,
 ) -> str:
-    """Reject the manual-override combination, the reject/apply conflict, a missing id, and an unavailable provider.
+    """Reject the manual-override combination, the reject/apply conflict, and a missing id.
+
+    These three are argv-shape rules: they judge which flags were typed
+    together, so they belong at the boundary that parsed them rather than in a
+    service a second frontend would call with a structured request.
 
     Returns the validated ``transaction_id`` so the caller carries the
     non-``None`` guarantee this function enforces, rather than re-deriving it.
 
-    A provider is checked for PATH availability only when one is named. With
-    ``--read-evidence`` and no ``--llm``, a scanned/image invoice is read on-host
-    by the local vision model, which needs no subprocess provider; a text-layer
-    read with no provider is refused instructively downstream by the application.
+    Reader availability is deliberately NOT checked here. With
+    ``--read-evidence`` and no ``--llm``, a scanned or image invoice is read
+    on-host by the local vision model, which needs no subprocess provider at
+    all; and a text-layer read whose semantic reader is missing is refused by
+    :func:`~application.ledger.invoice_draft_extraction._refuse_a_text_read_with_no_reader`,
+    which says so instructively and declines to escalate to a heavier engine the
+    operator did not ask for. Repeating that judgement here would put an
+    environment check in an adapter and give the two answers room to disagree.
     """
     if classification is not None or file is not None:
         raise bad(
@@ -589,7 +584,7 @@ def _render_saturate_llm_preview(
     emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines, notices=notices)
 
 
-def _llm_classify_prologue[SuggestionT: (LLMClassificationSuggestion, LLMSaturatedSuggestion)](
+def _llm_classify_prologue[SuggestionT: (LLMClassificationSuggestion, LLMSaturatedSuggestion, LLMSplitSuggestion)](
     ctx: typer.Context,
     *,
     suggest_fn: Callable[..., SuggestionT],

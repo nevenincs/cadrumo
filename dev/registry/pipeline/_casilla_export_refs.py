@@ -24,6 +24,7 @@ import re
 from collections.abc import Mapping
 from pathlib import Path
 
+from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
@@ -124,12 +125,18 @@ def write_generated_casilla_export_refs(
     left untouched, and a differing one raises, because two disagreeing answers
     to "which field addresses this casilla" is a finding rather than something
     to silently union.
+
+    Every casilla file is read and validated before any file is written. A
+    conflicting declaration on one file, or an addressed casilla missing from
+    the whole directory, must be discoverable without first mutating the
+    casillas that sorted ahead of the file that failed: these ``.toml`` files
+    are the live registry tree, not a staging copy the caller can roll back.
     """
     casillas_root = revision_root / "casillas"
     if not casillas_root.is_dir():
         raise RegistryValidationError(f"generated export_refs write found no casillas directory: {casillas_root}")
 
-    written: list[Path] = []
+    pending: list[tuple[Path, str]] = []
     seen: set[str] = set()
     for path in scan_directory(casillas_root, pattern="*.toml"):
         original = path.read_text(encoding="utf-8")
@@ -182,12 +189,25 @@ def write_generated_casilla_export_refs(
             lines.insert(anchor + 1, _render(expected) + ending)
             changed = True
         if changed:
-            path.write_text("".join(lines), encoding="utf-8", newline="\n")
-            written.append(path)
+            pending.append((path, "".join(lines)))
 
     missing = sorted(set(export_refs_by_casilla) - seen)
     if missing:
         raise RegistryValidationError(
             f"generated layout addresses casillas the revision does not declare: {missing!r}",
         )
+
+    # These are live registry files, not a staging copy: a plain ``write_text``
+    # truncates the target before the new bytes land, so a crash mid-write (a
+    # killed process, a full disk) leaves a torn file that is neither the old
+    # nor the new declaration -- and, being byte-addressed rather than
+    # TOML-parsed on the next pass, silently misreads as a different casilla
+    # shape rather than raising. ``atomic_write_text`` stages the full content
+    # in a sibling tempfile and only ``os.replace``s it in after a successful
+    # write and fsync, so an interruption anywhere in this loop leaves every
+    # not-yet-swapped file exactly as it was.
+    written: list[Path] = []
+    for path, content in pending:
+        atomic_write_text(path, content, encoding="utf-8")
+        written.append(path)
     return tuple(written)

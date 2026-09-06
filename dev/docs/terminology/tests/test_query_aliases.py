@@ -244,3 +244,37 @@ def test_authority_rejects_extra_fields_and_mutation() -> None:
 def test_provenance_rejects_path_escape() -> None:
     with pytest.raises(QueryAliasAuthorityError, match="inside the repository"):
         build_query_alias_authority_provenance(Path("..") / "query-alias-authority.json")
+
+
+def test_an_alias_survives_a_canonical_query_two_languages_authored() -> None:
+    """A canonical query shared by two languages stays visible to alias validation.
+
+    The Handbook authors ``casilla`` as the Spanish preferred term and again as
+    the English admitted term. The sweep vocabulary deliberately collapses the
+    two into one query so retrieval is not asked the same string twice, and the
+    survivor carries whichever language reached the key first. Alias validation
+    asks a ``(concept_id, language, canonical_query)`` question, so reading its
+    canonical set off those survivors made the English row invisible and refused
+    a legitimate English alias for a query the Handbook plainly declares.
+    """
+    survivors = [
+        query for query in enumerate_query_vocabulary(concept_ids={"casilla"}) if query.query.casefold() == "casilla"
+    ]
+    assert len(survivors) == 1, "the shared query string is expected to collapse to one swept query"
+    assert survivors[0].language is OutputLanguage.ES, "Spanish is expected to win the collapsed key"
+
+    authority = _authority(
+        _entry(
+            concept_id="casilla",
+            language=OutputLanguage.EN,
+            query="numbered return field",
+            canonical_query="casilla",
+            review_reason="Independent English wording reviewed against the admitted English casilla term.",
+        ),
+    )
+
+    queries = enumerate_query_vocabulary(concept_ids={"casilla"}, query_alias_authority=authority)
+
+    assert any(query.query == "numbered return field" and query.language is OutputLanguage.EN for query in queries), (
+        "the English alias was not enumerated"
+    )

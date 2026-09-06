@@ -138,3 +138,60 @@ def test_view_shows_no_rejection_notice_when_none(tmp_path: Path) -> None:
     assert viewed.exit_code == 0, viewed.output
     codes = [notice["code"] for notice in unwrap_envelope_notices(viewed.output)]
     assert "ledger.view.llm_suggestion_rejected" not in codes
+
+
+def test_the_auto_split_route_shares_the_classify_prologue() -> None:
+    """Both LLM routes must validate, resolve and reject through one path.
+
+    The auto-split route re-implemented the classify prologue inline: three
+    option guards byte-identical, its own resolve, and its own copy of the
+    ``--reject`` terminal down to the origin constant. Nothing failed while
+    they agreed. The day one gained a rule or a different rejection origin,
+    an operator would get a refusal on one route and silence on the other for
+    the same argv, and the audit trail would name the wrong surface.
+
+    The prologue calls the validator, so pinning this link pins both.
+
+    Asserted structurally because behavioural coverage of a duplicate reads
+    identically to coverage of a delegation right up until they diverge.
+    """
+    import ast
+    import inspect
+
+    from .. import _ledger_llm_cli as module
+
+    source = inspect.getsource(module.dispatch_autosplit)
+    tree = ast.parse(source.lstrip())
+    called = {node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
+
+    assert "_llm_classify_prologue" in called
+
+
+def test_the_auto_split_flag_rule_is_answered_before_the_shared_ones() -> None:
+    """The operator hears about the flag they typed, not one further along.
+
+    ``--auto-split`` without ``--read-evidence`` is specific to what they
+    asked for; reporting the manual-override conflict first would send them to
+    edit a different part of the same command line. The shared prologue runs
+    the other guards, so this one has to stay ahead of the delegation.
+    """
+    import ast
+    import inspect
+
+    from .. import _ledger_llm_cli as module
+
+    body = ast.parse(inspect.getsource(module.dispatch_autosplit).lstrip()).body[0]
+    statements = getattr(body, "body", [])
+    raised_before_delegation: list[str] = []
+    for statement in statements:
+        if isinstance(statement, ast.If):
+            raised_before_delegation.append(ast.dump(statement.test))
+        if any(
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "_llm_classify_prologue"
+            for node in ast.walk(statement)
+        ):
+            break
+
+    assert any("read_evidence" in test for test in raised_before_delegation)

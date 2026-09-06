@@ -137,6 +137,17 @@ def scan_type_only_runtime_uses(path: Path, *, source: str | None = None) -> lis
     else:
         try:
             text = path.read_text(encoding="utf-8")
+        except OSError as error:
+            # The same policy the decode and parse skips follow, for the same
+            # stated reason: the tree is edited while the sweep runs, and a file
+            # deleted between the walk and this read must not cost the thousands
+            # that were read. Announced rather than skipped silently, because
+            # saying nothing either way is the one outcome this scan refuses.
+            sys.stderr.write(
+                f"type-only runtime-use scan: {path} could not be read and was not scanned, so a "
+                f"guard-only name evaluated at runtime in it goes unreported: {error}" + chr(10)
+            )
+            return []
         except UnicodeDecodeError as error:
             # Read strictly. With errors='ignore' an undecodable byte was dropped
             # and the scan then analysed text that is not what the file contains -

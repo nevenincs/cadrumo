@@ -281,7 +281,21 @@ def screen(root: Path) -> tuple[int, list[tuple[str, str, int]], list[str]]:
             if path.relative_to(root).as_posix() not in tracked:
                 continue
             try:
-                parsed = ast.parse(path.read_text(encoding=_UTF_8))
+                source = path.read_text(encoding=_UTF_8)
+            except OSError as exc:
+                # NOT the `unreadable` channel. A file that fails to parse is a
+                # persistent fact about that file, and reporting it leaves the rest
+                # of the census sound. A file the walk listed and the read cannot
+                # reach means the tree moved underneath this walk, so `scanned` is
+                # a denominator over a population that no longer exists -- the same
+                # inflation the missing-tree refusal above already refuses to serve.
+                moved = (
+                    f"screened tree changed under the walk at {path}: {exc}. "
+                    "The scanned count would answer for a population that no longer exists."
+                )
+                raise SystemExit(moved) from exc
+            try:
+                parsed = ast.parse(source)
             except (SyntaxError, UnicodeDecodeError):
                 unreadable.append(path.relative_to(root).as_posix())
                 continue

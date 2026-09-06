@@ -202,6 +202,14 @@ def enumerate_query_vocabulary(
     query strings within one concept collapse (the es/ca preferred label is
     often the same word); the concept association is kept on each query.
 
+    That collapse keys on ``(concept_id, casefolded query)``, which is coarser
+    than the ``(concept_id, language, query)`` row the alias authority is
+    validated against: one surviving key stands for every language that
+    authored the same string. The declared rows are therefore accumulated
+    alongside the collapsed vocabulary and handed to that validation, so a
+    canonical query is never invisible to it merely because a sibling language
+    authored the same word first.
+
     Args:
         handbook: The compiled Handbook; defaults to the bundled load.
         concept_ids: Optional subset of concept ids to sweep (the test path
@@ -214,6 +222,7 @@ def enumerate_query_vocabulary(
     wanted = set(concept_ids) if concept_ids is not None else None
 
     queries: dict[tuple[str, str], SweepQuery] = {}
+    declared: set[tuple[str, OutputLanguage, str]] = set()
     for concept in resolved.concepts:
         if wanted is not None and concept.concept_id not in wanted:
             continue
@@ -228,9 +237,13 @@ def enumerate_query_vocabulary(
             for term in section.terms:
                 if term.term_status not in _SHIPPED_TERM_STATUSES:
                     continue
-                _add_query(queries, concept.concept_id, term.label, section.language, is_hidden=False)
+                row = _add_query(queries, concept.concept_id, term.label, section.language, is_hidden=False)
+                if row is not None:
+                    declared.add(row)
                 for form in term.hidden_search_forms:
-                    _add_query(queries, concept.concept_id, form, section.language, is_hidden=True)
+                    row = _add_query(queries, concept.concept_id, form, section.language, is_hidden=True)
+                    if row is not None:
+                        declared.add(row)
 
     authority = query_alias_authority if query_alias_authority is not None else load_query_alias_authority()
     authority_for_validation = authority
@@ -245,7 +258,7 @@ def enumerate_query_vocabulary(
     validate_query_alias_authority(
         authority_for_validation,
         handbook=resolved,
-        canonical_queries=((query.concept_id, query.language, query.query) for query in queries.values()),
+        canonical_queries=declared,
     )
     for entry in authority.entries:
         if wanted is not None and entry.concept_id not in wanted:
@@ -261,19 +274,28 @@ def _add_query(
     language: OutputLanguage,
     *,
     is_hidden: bool,
-) -> None:
+) -> tuple[str, OutputLanguage, str] | None:
+    """Record one authored query row, collapsing repeats of the same string.
+
+    Returns the ``(concept_id, language, query)`` row this label declares --
+    whether or not it survived the collapse -- so a caller needing the declared
+    rows never has to read them off the collapsed survivors, whose key does not
+    carry the language. ``None`` means a blank label, which declares nothing.
+    """
     normalised = label.strip()
     if not normalised:
-        return
+        return None
+    declared = (concept_id, language, normalised)
     key = (concept_id, normalised.casefold())
     if key in queries:
-        return
+        return declared
     queries[key] = SweepQuery(
         query=normalised,
         concept_id=concept_id,
         language=language,
         is_hidden_form=is_hidden,
     )
+    return declared
 
 
 # ---------------------------------------------------------------------------
