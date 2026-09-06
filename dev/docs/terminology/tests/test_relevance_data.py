@@ -62,12 +62,32 @@ class _BuildSurfaces(TypedDict):
     cli_targets: set[str]
 
 
+#: Floors for the corpus seven gates in this module read through the fixture
+#: below. The existing guard proves the FILE is present; it cannot prove the
+#: file carries anything, and an empty ``mappings`` list validates perfectly
+#: well. Every gate here ranges over that list, so an emptied sweep would
+#: leave all seven reporting green over nothing. Live: 114 mappings across
+#: 49 concepts. ``failed_query_count`` is deliberately NOT floored -- it is a
+#: count of problems and belongs at zero.
+_MINIMUM_RELEVANCE_MAPPINGS = 75
+_MINIMUM_RELEVANCE_CONCEPTS = 30
+
+
 @pytest.fixture(scope="module")
 def relevance() -> SweepResult:
     """Load and strictly validate the committed relevance data file."""
     if not _RELEVANCE_PATH.is_file():
         pytest.fail(f"committed relevance data missing: {_RELEVANCE_PATH}")
-    return SweepResult.model_validate_json(_RELEVANCE_PATH.read_text(encoding="utf-8"))
+    result = SweepResult.model_validate_json(_RELEVANCE_PATH.read_text(encoding="utf-8"))
+    assert len(result.mappings) >= _MINIMUM_RELEVANCE_MAPPINGS, (
+        f"the committed relevance sweep carries {len(result.mappings)} mapping(s); below "
+        "this the gates that read this fixture judge almost nothing and still report clean"
+    )
+    assert result.concept_count >= _MINIMUM_RELEVANCE_CONCEPTS, (
+        f"the sweep reports {result.concept_count} concept(s); a mapping corpus over a "
+        "collapsed concept set says nothing about Handbook coverage"
+    )
+    return result
 
 
 # ---------------------------------------------------------------------------

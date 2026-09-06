@@ -458,7 +458,7 @@ class TestLiveAeatRefusal:
     def test_option_value_spelled_like_a_pull_verb_is_not_flagged(self) -> None:
         """The scan skips option VALUES: '--file pull-history.csv' is a local
         file input, not a live verb (the reviewer-named false positive)."""
-        from ..runner import _live_aeat_tokens
+        from ..runner import live_aeat_tokens
 
         benign = _result_sequence(
             "@setup aeat app ledger import --file pull-history.csv\n"
@@ -466,7 +466,7 @@ class TestLiveAeatRefusal:
             '@expect status == "success"\n',
             sequence_id="runner-option-value-scan",
         )
-        assert _live_aeat_tokens(benign.frames[0]) == ()
+        assert live_aeat_tokens(benign.frames[0]) == ()
 
 
 class TestStderrErrorDocument:

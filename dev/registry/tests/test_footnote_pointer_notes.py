@@ -31,9 +31,26 @@ _DESIGN = (
 _SHEET = "35301"
 
 
+#: Floor for the note corpus five gates read through the fixture below. The
+#: design file is pinned, so a missing FILE raises and is already loud; the
+#: silent case is a sheet name that stops matching, which returns an empty
+#: mapping. Two of the five gates pass unchanged over that empty mapping:
+#: ``resolve_pointer_notes(stating_cell, {}) == ()`` holds trivially, and an
+#: unresolvable pointer resolves to the same unresolved item whether the
+#: corpus is empty or complete -- so neither could tell a correct refusal
+#: from a corpus that was never read. Live: notes 1 through 4.
+_MINIMUM_NOTE_DEFINITIONS = 4
+
+
 @pytest.fixture(scope="module")
 def definitions() -> dict[str, str]:
-    return note_definitions(_DESIGN.read_text(encoding=_UTF_8), sheet=_SHEET)
+    resolved = note_definitions(_DESIGN.read_text(encoding=_UTF_8), sheet=_SHEET)
+    assert len(resolved) >= _MINIMUM_NOTE_DEFINITIONS, (
+        f"sheet {_SHEET} of the pinned design yielded {len(resolved)} note "
+        f"definition(s) ({sorted(resolved)}); below this the gates reading this "
+        "fixture cannot distinguish a correct refusal from a corpus never read"
+    )
+    return resolved
 
 
 def test_the_note_behind_the_known_defect_states_applicability_and_no_wire_fact(

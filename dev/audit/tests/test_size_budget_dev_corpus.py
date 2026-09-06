@@ -25,9 +25,26 @@ import inspect
 import pytest
 
 from ..advisory import audit_size_budget, build_advisory_report
-from ..size_budget import dev_python_files, measure_dev_module_lines, run_size_budget_scan
+from ..size_budget import (
+    SizeBudgetResult,
+    dev_python_files,
+    measure_dev_module_lines,
+    run_size_budget_scan,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+@pytest.fixture(scope="module")
+def scan() -> SizeBudgetResult:
+    """One scan shared by every test that needs it.
+
+    The scan measures ~6,800 modules and ~16,000 callables and costs roughly a
+    minute. Re-running it per test put this file near the 300-second per-test
+    ceiling for no added coverage: the corpus does not change between
+    assertions in one session.
+    """
+    return run_size_budget_scan()
 
 
 def test_the_dev_tree_is_enumerated_without_compiled_caches() -> None:
@@ -48,7 +65,7 @@ def test_dev_modules_are_measured_against_the_repository_root() -> None:
     assert all("\\" not in key for key in measured)
 
 
-def test_an_oversize_dev_module_is_a_finding() -> None:
+def test_an_oversize_dev_module_is_a_finding(scan: SizeBudgetResult) -> None:
     """The defect this corpus exists for: `dev/` growth must reach the verdict.
 
     Anchored to whichever `dev/` module is largest rather than to a named file
@@ -60,30 +77,29 @@ def test_an_oversize_dev_module_is_a_finding() -> None:
     if measured[largest] <= 1250:
         pytest.skip("no dev/ module exceeds the default module limit; nothing to prove here")
 
-    findings = run_size_budget_scan().modules.failing
+    findings = scan.modules.failing
 
     assert any(line.startswith(f"{largest}:") for line in findings), (
         f"{largest} is {measured[largest]} lines and must appear in the size-budget verdict"
     )
 
 
-def test_the_scan_spans_both_trees() -> None:
+def test_the_scan_spans_both_trees(scan: SizeBudgetResult) -> None:
     """A regression that dropped either tree would still look like a working scan."""
-    findings = run_size_budget_scan().modules.failing
+    findings = scan.modules.failing
     prefixes = {line.split("/", 1)[0] for line in findings}
 
     assert "dev" in prefixes
     assert "src" in prefixes
 
 
-def test_the_dimension_reports_amber_rather_than_green_while_debt_stands() -> None:
+def test_the_dimension_reports_amber_rather_than_green_while_debt_stands(scan: SizeBudgetResult) -> None:
     """An unmeasurable or ignored axis must never render as GREEN."""
     dimension = audit_size_budget()
-    result = run_size_budget_scan()
 
     assert dimension.report.name == "size_budget"
-    assert dimension.report.status.value == ("green" if result.is_clean else "amber")
-    assert len(dimension.report.details or []) == len(result.findings)
+    assert dimension.report.status.value == ("green" if scan.is_clean else "amber")
+    assert len(dimension.report.details or []) == len(scan.findings)
 
 
 def test_the_composed_dashboard_carries_the_size_budget_dimension() -> None:

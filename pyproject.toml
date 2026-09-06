@@ -1212,6 +1212,22 @@ ignore_decorators = [
   "@staticmethod",
   "@property",
 ]
+# Textual dispatches message and event handlers by NAME, not by call site:
+# posting `LedgerEntrySelected` invokes `on_ledger_entry_selected` through the
+# framework's message pump, so the method has no caller any static analysis can
+# see. Treating those as dead is not hypothetical here -- a working Ledger
+# entry-to-classification path (handler, controller method, production
+# submitter, installed wiring and both its tests) was removed in one 130-line
+# commit because the convention-dispatched edge was invisible, and the
+# resulting gap was then documented as a deliberate design constraint. The
+# same shape covers Textual's `on_mount` / `on_key` lifecycle hooks and the
+# `action_*` methods bound from key tables.
+ignore_names = [
+  "on_*",
+  "action_*",
+  "compose",
+  "watch_*",
+]
 
 # ── Deptry (unused / transitive dependency lint) ─────────────────────────────
 # Suppress the false positives surfaced by deptry's default heuristics. Every
