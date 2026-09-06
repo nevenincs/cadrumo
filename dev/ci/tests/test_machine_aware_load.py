@@ -170,7 +170,8 @@ def _pytest_lines(
                 recipe = match.group("recipe")
                 env_prefix = line[: match.start()]
                 call_args = line[match.end() :].split()
-                for body_line in recipe_bodies.get(recipe, []):
+                for raw_body_line in recipe_bodies.get(recipe, []):
+                    body_line = next(iter(executed_lines(raw_body_line)), "")
                     if "pytest" not in body_line:
                         continue
                     resolved = _resolve_recipe_line(

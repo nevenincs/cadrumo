@@ -30,6 +30,7 @@ import yaml
 from cadrumo.core.directory_scan import scan_directory
 
 from ..._paths import REPO_ROOT
+from ..workflow_run_text import executed_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -134,11 +135,17 @@ def _upload_arguments(run: str) -> list[str]:
 
 
 def _publish_command(path: Path) -> str:
-    """The `uv publish` command line in a workflow, or a refusal if it has none."""
+    """The `uv publish` command line a workflow EXECUTES, or a refusal if it has none.
+
+    Read from the executed lines rather than the raw block. A commented-out
+    upload keeps every token this function returns -- the command, the file
+    arguments, the flags -- while the step uploads nothing, so a raw reading
+    would let the checks below pass over an upload that cannot happen.
+    """
     document = yaml.safe_load(path.read_text(encoding="utf-8"))
     for job in document["jobs"].values():
         for step in job.get("steps") or []:
-            run = str(step.get("run", ""))
+            run = executed_text(step.get("run"))
             if "uv publish" in run:
                 return run
     raise AssertionError(f"{path.name} no longer runs `uv publish`")
@@ -248,3 +255,29 @@ def test_every_other_configured_extra_file_carries_the_annotation_that_moves_it(
     ]
 
     assert unmarked == [], f"these files are configured for bumping but carry no version annotation: {unmarked}"
+
+
+def test_the_publish_command_reader_refuses_a_commented_out_upload(tmp_path: Path) -> None:
+    """Teeth: a commented-out upload is not the upload this gate inspects.
+
+    Both directions over the same document. Intact, the reader finds the
+    command and the file arguments it gates; commented, it refuses -- while a
+    raw reading of the very same block still returns every token.
+    """
+    document = yaml.safe_load((_WORKFLOWS_DIR / "publish.yml").read_text(encoding="utf-8"))
+    intact = tmp_path / "intact.yml"
+    intact.write_text(yaml.safe_dump(document, sort_keys=False), encoding="utf-8")
+
+    assert _upload_arguments(_publish_command(intact))
+
+    newline = chr(10)
+    for job in document["jobs"].values():
+        for step in job.get("steps") or []:
+            if "uv publish" in str(step.get("run", "")):
+                step["run"] = "# " + str(step["run"]).replace(newline, newline + "# ")
+    commented = tmp_path / "commented.yml"
+    commented.write_text(yaml.safe_dump(document, sort_keys=False), encoding="utf-8")
+
+    assert "uv publish" in commented.read_text(encoding="utf-8")
+    with pytest.raises(AssertionError, match="no longer runs"):
+        _publish_command(commented)

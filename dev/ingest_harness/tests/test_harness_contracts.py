@@ -150,6 +150,57 @@ def test_the_two_tier_refusals_do_not_answer_for_each_other() -> None:
         assert shared in absent_message and shared in unknown_message
 
 
+def test_the_three_row_refusals_do_not_answer_for_each_other() -> None:
+    """Three branches, so each pattern has to name the one it drives.
+
+    Every one of these messages talks about authored truth and about the
+    denominator, because that is the subject of all three. `(?i)authored|scorable`
+    matched ALL THREE, so the test carrying it proved only that the function
+    refused something. Driven at runtime, the three raise on distinct lines.
+    """
+    no_truth = _key([_entry("NO-TRUTH", ground_truth={})]).document("NO-TRUTH")
+    has_truth = _key([_entry("HAS-TRUTH")]).document("HAS-TRUTH")
+    authored = len(has_truth.scorable_fields)
+
+    def refusal(document: CorpusDocument, outcome: Scored | EmittedOnly) -> str:
+        with pytest.raises(HarnessRefusalError) as caught:
+            build_result_row(
+                document=document,
+                key_sha256=_SHA,
+                stage=PipelineStage.S2_EXTRACTION,
+                engine_route=EngineRoute.GATED_CLOUD,
+                model_identity="m",
+                model_revision="r",
+                model_tier=ModelTier.CLOUD_DESIGN_PROXY,
+                outcome=outcome,
+            )
+        return str(caught.value)
+
+    messages = {
+        "scored over no truth": refusal(no_truth, Scored(scorable_field_count=8, matched=1, wrong=0, fabricated=0)),
+        "denominator mismatch": refusal(
+            has_truth,
+            Scored(scorable_field_count=authored + 7, matched=1, wrong=0, fabricated=0),
+        ),
+        "emitted over truth": refusal(has_truth, EmittedOnly(emitted_field_count=1)),
+    }
+    fragments = {
+        "scored over no truth": "refused a scored outcome",
+        "denominator mismatch": "scored denominator",
+        "emitted over truth": "refused an emitted-only outcome",
+    }
+    for branch, fragment in fragments.items():
+        for other, message in messages.items():
+            assert (fragment in message) is (branch == other)
+    # Why the loose patterns passed, stated exactly. "authored" is in all three,
+    # so `(?i)authored|scorable` could not separate any of them. "denominator" is
+    # in exactly the two that `(?i)denominator` conflated, and NOT in the third --
+    # which is why that pattern looked narrower than it was.
+    assert all("authored" in message for message in messages.values())
+    carry_denominator = {branch for branch, message in messages.items() if "denominator" in message}
+    assert carry_denominator == {"scored over no truth", "denominator mismatch"}
+
+
 def test_only_the_upper_reference_tier_is_barred_from_setting_a_floor() -> None:
     """The tier is not decoration: it decides baseline eligibility."""
     assert ModelTier.ON_HOST_SMALL.is_baseline_eligible
@@ -166,7 +217,7 @@ def test_a_scored_outcome_is_refused_over_a_document_with_no_authored_truth() ->
     """The '0-1 of 8 recovered' shape: an accuracy with no denominator in existence."""
     key = _key([_entry("NO-TRUTH", ground_truth={})])
 
-    with pytest.raises(HarnessRefusalError, match=r"(?i)no authored truth|denominator"):
+    with pytest.raises(HarnessRefusalError, match=r"refused a scored outcome"):
         build_result_row(
             document=key.document("NO-TRUTH"),
             key_sha256=_SHA,
@@ -191,7 +242,7 @@ def test_an_emitted_only_outcome_is_refused_where_truth_exists() -> None:
     """The opposite direction: a bare emitted count would discard a real denominator."""
     key = _key([_entry("HAS-TRUTH")])
 
-    with pytest.raises(HarnessRefusalError, match=r"(?i)authored|scorable"):
+    with pytest.raises(HarnessRefusalError, match=r"refused an emitted-only outcome"):
         build_result_row(
             document=key.document("HAS-TRUTH"),
             key_sha256=_SHA,
@@ -208,7 +259,7 @@ def test_a_denominator_that_is_not_the_keys_own_is_refused() -> None:
     """A figure over a set nobody can reconstruct from the key is not quotable."""
     key = _key([_entry("HAS-TRUTH")])
 
-    with pytest.raises(HarnessRefusalError, match=r"(?i)denominator"):
+    with pytest.raises(HarnessRefusalError, match=r"scored denominator"):
         build_result_row(
             document=key.document("HAS-TRUTH"),
             key_sha256=_SHA,

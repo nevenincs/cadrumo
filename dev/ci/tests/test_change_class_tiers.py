@@ -21,6 +21,7 @@ import yaml
 from cadrumo.core.directory_scan import scan_directory
 
 from ..._paths import REPO_ROOT
+from ..workflow_run_text import executed_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -132,8 +133,12 @@ def test_t2_trigger_dispatches_the_full_campaign_and_nothing_else() -> None:
     job = document["jobs"]["dispatch-full-campaign"]
     assert job["timeout-minutes"] <= 10
     commands = "\n".join(str(step.get("run", "")) for step in job["steps"])
-    assert "gh workflow run packaging-smoke.yml" in commands
-    assert "--ref main" in commands
+    # The dispatch is asserted against what the job EXECUTES: this workflow
+    # explains itself at length in comments, and a dispatch line commented out
+    # still satisfies a reading of the raw block while pressing no button.
+    dispatched = executed_text(step.get("run") for step in job["steps"])
+    assert "gh workflow run packaging-smoke.yml" in dispatched
+    assert "--ref main" in dispatched
     # The trigger never runs the campaign inline or mints evidence itself.
     for forbidden in ("just packaging", "campaign.py", "evidence", "gh release"):
         assert forbidden not in commands, forbidden
@@ -390,9 +395,7 @@ def test_durable_maintenance_gates_moved_into_the_full_lane() -> None:
     (aeat-quality-gates: never removed without a replacement).
     """
     assert not (_WORKFLOWS_DIR / "durable-maintenance-gates.yml").exists()
-    commands = "\n".join(
-        str(step.get("run", "")) for step in _document(_FULL)["jobs"]["cadrumo-full-conformance"]["steps"]
-    )
+    commands = executed_text(step.get("run") for step in _document(_FULL)["jobs"]["cadrumo-full-conformance"]["steps"])
     assert "vaultspec-core vault check all" in commands
     assert "dev/tests/test_roundtrip_coverage.py" in commands
     assert "src/cadrumo/application/ledger/tests" in commands
@@ -409,8 +412,34 @@ def test_drift_detector_targets_exist_on_disk() -> None:
     """
     repo_root = _WORKFLOWS_DIR.parents[1]
     document = _document(_WORKFLOWS_DIR / "aeat-drift-detector.yml")
-    commands = "\n".join(str(step.get("run", "")) for job in document["jobs"].values() for step in job["steps"])
+    commands = executed_text(step.get("run") for job in document["jobs"].values() for step in job["steps"])
     targets = [token for token in commands.replace("\\", " ").split() if token.startswith("src/")]
     assert targets, "drift detector runs no src-tree pytest targets"
     for target in targets:
         assert (repo_root / target).exists(), f"drift-detector target moved or deleted: {target}"
+
+
+def test_the_workflow_presence_gates_read_what_a_job_executes() -> None:
+    """Teeth for the positive command readings above, over the real documents.
+
+    Each of them names a command a lane must run. Commented out, that command
+    runs nothing while its text still sits in the `run:` block, so the reading
+    that mattered is the executed one -- asserted here in both directions over
+    the same input rather than trusted.
+    """
+    cases = (
+        (_TRIGGER, "dispatch-full-campaign", "gh workflow run packaging-smoke.yml"),
+        (_FULL, "cadrumo-full-conformance", "vaultspec-core vault check all"),
+    )
+    for path, job_name, command in cases:
+        steps = _document(path)["jobs"][job_name]["steps"]
+        assert command in executed_text(step.get("run") for step in steps), f"{path.name}: {command}"
+
+        newline = chr(10)
+        commented = [
+            {**step, "run": "# " + str(step["run"]).replace(newline, newline + "# ")} if "run" in step else step
+            for step in deepcopy(steps)
+        ]
+        raw = "".join(str(step.get("run", "")) for step in commented)
+        assert command in raw, f"{path.name}: the raw reading no longer finds the degraded command"
+        assert command not in executed_text(step.get("run") for step in commented), f"{path.name}: {command}"
