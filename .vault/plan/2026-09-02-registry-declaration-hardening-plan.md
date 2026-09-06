@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:c259cb17a462be89117fff40600bdaf3dff325771d24b9184e7935fbedc242fc'
+body_hash: 'sha256:867066faad4bc1d088ed24ae0f8d3e42cc11bf3477b95c7151727e9b70a3201c'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -628,6 +628,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S746` - Separate the cleanup-injection premise from the evidence claim in the object-name replay test, where an unreached cleanup and a removed file read identically; `dev/quality/tests/test_object_name_replay.py`.
 - [x] `W02.P02.S747` - Assert each tree-digest derivation produced something before asserting they differ, so a collapsed digest is not reported as a distinctness failure; `dev/tests/test_registry_identity_enrolment.py`.
 - [x] `W02.P02.S748` - Assert the non-emptiness premise before the subset and inequality claims it protects at three sites, where each claim is vacuously true once the premise fails; `dev/quality/tests/test_repository_sources.py`.
+- [x] `W02.P02.S749` - Anchor the monetary scale absence claim on the endpoints it is absent from and name the test for the wire family it actually exercises; `dev/registry/tests/test_monetary_scale.py`.
+- [x] `W02.P02.S750` - Anchor the reserved-slot absence claim on modelo 347's eligible fields, the population a narrowed match once took to zero in this same file; `dev/registry/tests/test_render_profile.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
