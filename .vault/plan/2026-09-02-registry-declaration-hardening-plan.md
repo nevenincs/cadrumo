@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:674f2501c6ac20798111ad32791c6fac1261942cf916f582d0a03c3b1208868a'
+body_hash: 'sha256:ff5ad0ce7bbc57767e060cde622e7876590dc0683e740b84b020310bf6dc6b0a'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -304,6 +304,7 @@ Deliver one accessor returning a revision's complete resolved export casilla sur
 - [x] `W01.P01.S103` - Gate that no screen module reaches for the binding derivation instead of the resolved-surface accessor; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W01.P01.S825` - Drive the export-tree renderer's generic ambiguous-official-constant branch: all four parametrized cases reached the alternative-constants branch, leaving `_export_tree.py`'s fallback refusal unexercised while `match="official constant"` passed; `dev/registry/tests/test_export_tree.py`.
 - [x] `W01.P01.S826` - Floor the legal catalogue read and pin the files that carry no `[legal]` table by equality: the loader refuses a missing directory but a present directory yielding almost nothing reached every screen in the package unchallenged; `dev/audit/tests/test_legal_excerpt_vintage_screen.py`.
+- [x] `W01.P01.S827` - Classify the unreadable file at the docstring-reference screen's two walk-and-read sites: `SyntaxError` and `UnicodeDecodeError` were tolerated deliberately while `OSError` was left unclassified, so a listed path that cannot be read crashed in pathlib internals instead of refusing, and skipping it would have reported a clean screen over a corpus smaller than the one walked; `dev/quality/docstring_reference_targets.py dev/quality/tests/test_docstring_reference_targets.py`.
 
 ## Wave `W02` - gate restoration and residue removal
 
