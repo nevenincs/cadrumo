@@ -99,6 +99,7 @@ _DYNAMIC_TRANSLATION_ROOTS = frozenset(
         "profile",
         "sheets",
         "topic",
+        "tui",
         "wizard",
     },
 )
@@ -128,6 +129,20 @@ the ``"wizard"`` root entry:
 These patterns are picked up by :func:`_extract_fstring_prefixes` and emitted
 as ``wizard.setup.*`` namespace markers, which the parity check validates
 against concrete locale entries. No additional static registration is needed.
+
+The ``"tui"`` entry earns its place by the same criterion, through a different
+shape. A workspace screen renders every public enum on it with one helper that
+selects a prefix from a declared table and appends the member value::
+
+    _LABEL_PREFIXES = {"AeatSyncCensusStatus": "tui.aeat_sync.census_status", ...}
+    return aeat_sync_copy(f"{prefix}.{value.value}")
+
+The tail is an enum member value, so the key space is bounded by the enum
+definitions exactly as the wizard patterns above are. Admitting the root does
+NOT tolerate ``tui.*`` at large: a marker is still emitted only where a
+concrete dotted prefix is written down in source and used as one, which
+:func:`_interpolated_head_prefixes` requires by demanding the segment after the
+interpolation begin with the dot.
 """
 
 
@@ -822,6 +837,59 @@ dot and carries at least one word segment before it (e.g. ``topic.``,
 ``cli.registry.metrics.``)."""
 
 
+def _dotted_prefix_tables(tree: ast.AST) -> dict[str, frozenset[str]]:
+    """Return ``name -> dotted prefixes`` for tables that hold ONLY prefix literals.
+
+    A surface that renders many enums through one helper does not write the
+    prefix at the call site; it declares a table of them and selects one. The
+    literals are still written down, which is what makes this readable without
+    guessing.
+    """
+    tables: dict[str, frozenset[str]] = {}
+    for node in ast.walk(tree):
+        target: ast.expr | None = None
+        value: ast.expr | None = None
+        if isinstance(node, ast.Assign) and len(node.targets) == 1:
+            target, value = node.targets[0], node.value
+        elif isinstance(node, ast.AnnAssign):
+            target, value = node.target, node.value
+        if not isinstance(target, ast.Name) or not isinstance(value, ast.Dict) or not value.values:
+            continue
+        literals = [
+            item.value for item in value.values if isinstance(item, ast.Constant) and isinstance(item.value, str)
+        ]
+        if len(literals) == len(value.values) and all(_is_dotted_literal(literal) for literal in literals):
+            tables[target.id] = frozenset(literals)
+    return tables
+
+
+def _names_selected_from_a_prefix_table(tree: ast.AST, tables: dict[str, frozenset[str]]) -> dict[str, frozenset[str]]:
+    """Return the local names bound by reading one prefix out of such a table."""
+    bound: dict[str, frozenset[str]] = {}
+    for node in ast.walk(tree):
+        target: ast.expr | None = None
+        value: ast.expr | None = None
+        if isinstance(node, ast.Assign) and len(node.targets) == 1:
+            target, value = node.targets[0], node.value
+        elif isinstance(node, ast.AnnAssign):
+            target, value = node.target, node.value
+        if not isinstance(target, ast.Name) or value is None:
+            continue
+        base: str | None = None
+        if isinstance(value, ast.Subscript) and isinstance(value.value, ast.Name):
+            base = value.value.id
+        elif (
+            isinstance(value, ast.Call)
+            and isinstance(value.func, ast.Attribute)
+            and value.func.attr == "get"
+            and isinstance(value.func.value, ast.Name)
+        ):
+            base = value.func.value.id
+        if base is not None and base in tables:
+            bound[target.id] = tables[base]
+    return bound
+
+
 def _extract_fstring_prefixes(tree: ast.AST) -> set[str]:
     """Walk f-string literals and emit ``<prefix>.*`` namespace markers.
 
@@ -852,6 +920,43 @@ def _extract_fstring_prefixes(tree: ast.AST) -> set[str]:
         if not _is_dynamic_translation_prefix(prefix):
             continue
         findings.add(f"{prefix}.*")
+    findings |= _interpolated_head_prefixes(tree)
+    return findings
+
+
+def _interpolated_head_prefixes(tree: ast.AST) -> set[str]:
+    """Emit markers for ``f"{prefix}.{value}"`` where ``prefix`` is a declared literal.
+
+    The literal-head rule cannot see this shape at all: the head is an
+    interpolation, so a helper that renders every enum on a screen through one
+    selected prefix declares no namespace, and every key it builds reads as an
+    orphan.
+
+    The next segment must begin with the dot. That is what proves the
+    interpolated name is being used AS a dotted prefix rather than as ordinary
+    text, and it keeps the rule from firing on any f-string that happens to
+    start with a variable.
+    """
+    tables = _dotted_prefix_tables(tree)
+    if not tables:
+        return set()
+    bound = _names_selected_from_a_prefix_table(tree, tables)
+    if not bound:
+        return set()
+    findings: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.JoinedStr) or len(node.values) < 2:
+            continue
+        head, following = node.values[0], node.values[1]
+        if not (isinstance(head, ast.FormattedValue) and isinstance(head.value, ast.Name)):
+            continue
+        if not (isinstance(following, ast.Constant) and isinstance(following.value, str)):
+            continue
+        if not following.value.startswith("."):
+            continue
+        for prefix in bound.get(head.value.id, ()):
+            if _is_dynamic_translation_prefix(prefix):
+                findings.add(f"{prefix}.*")
     return findings
 
 

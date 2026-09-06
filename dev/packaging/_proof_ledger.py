@@ -29,14 +29,18 @@ only a reader comparing counts across revisions will see it.
 **The mechanism degrades to one-sided wherever the two literals share a source.**
 A form that both records and declares from the same expression compares a set
 against itself, so the runtime check cannot fail and the static gate — which
-reads string constants — sees nothing. ``smoke_docker`` is the live instance:
-its per-variant claims are recorded and declared from one ``variant_claims``
-tuple, because the assertions themselves run inside a container and cannot reach
-this ledger across the process boundary. What is unbacked there is the
-GRANULARITY of the claims, not whether the work ran — the container probe is
-fail-closed, so reaching the record at all means the probe passed. Closing it
-properly means having the in-tree probe report which claims it performed and
-recording that, so the record derives from behaviour again.
+reads string constants — sees nothing.
+
+It has NO live instance today. The one it had was ``smoke_docker``, whose
+per-variant claims were recorded and declared from a single ``variant_claims``
+tuple because the assertions ran inside a container and could not reach this
+ledger across the process boundary; what was unbacked there was the GRANULARITY
+of the claims rather than whether the work ran. That lane has since been
+retired, and no surviving form records and declares from one expression. The
+degradation is documented here because the shape returns whenever a proof runs
+across a process boundary: the fix is to have the out-of-process probe report
+which claims it performed and record that, so the record derives from behaviour
+again rather than from the declaration beside it.
 """
 
 from __future__ import annotations
