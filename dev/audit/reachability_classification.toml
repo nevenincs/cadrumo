@@ -999,8 +999,8 @@ class = "should-be-live"
 area = "application"
 resolved = false
 remedy_requires_decision = true
-symbols = ["default_profile_secure_object_inventory", "profile_is_authentication_failure", "profile_advance_session_idle_deadline", "profile_is_persisted_session"]
-evidence = "Five of the eight one-line port-facade wrappers in the shipped tree are called by nothing; the other three are reached from tests or dev. The asymmetry is what makes this a finding rather than a dead layer: `profile_is_keyring_unavailable` sits directly beside `profile_is_authentication_failure` in custody_ports and IS used, so typed authentication refusals are being recognised somewhere WITHOUT the facade -- which means an adapter exception type is leaking into application code, the exact thing the docstring says the wrapper exists to prevent. The same reading applies to the session-receipt and inventory members. The remedy is to route the existing callers through the facade or to withdraw the unused members and record that the boundary is narrower than it looks; both are owner decisions about the application/adapter boundary rather than deletions of dead code."
+symbols = ["default_profile_secure_object_inventory", "profile_advance_session_idle_deadline", "profile_is_persisted_session"]
+evidence = "Five of the eight one-line port-facade wrappers in the shipped tree are called by nothing; the other three are reached from tests or dev. Re-tested against the live design: profile_is_authentication_failure was removed from this cluster and recorded as superseded, because authentication failures ARE recognised -- by map_profile_authentication_proof_failure at custody_ports.py:1538, which collapses credential-shape and proof failures into a typed ProfileAuthenticationRefusedError and is reached from login_session, passphrase_rotation and recovery_custody. The earlier inference that an adapter exception type must be leaking into application code was wrong. The remaining three are still one-line port facades no caller reaches."
 
 # ---------------------------------------------------------------------------
 # Shipped types nothing constructs
@@ -1568,3 +1568,10 @@ class = "superseded"
 area = "application"
 symbols = ["CertificateSourceNoActiveBucketError", "ModeloEditPermittedSurfacePageRequestV1", "ModeloEditPermittedSurfacePageV1"]
 evidence = "Three types re-tested against the live path after being recorded as constructed by nobody, and each has a live equivalent. CertificateSourceNoActiveBucketError: the no-active-bucket refusal IS detected, by AuthConfigureNoActiveBucketError, which carries four production references including entrypoints/cli/config/_certificate.py, beside require_active_bucket_id at twenty-one. The two ModeloEditPermittedSurfacePage types: the permitted surface is not paginated but carried whole, as a tuple of the live ModeloEditPermittedSurfaceEntryV1 bounded by _MAX_SURFACE_ENTRIES and checked by a field validator at edit_models.py:475, so the page request and page envelope are a displaced transport rather than a missing one."
+
+[[symbol_cluster]]
+name = "authentication predicate the port mapper displaced"
+class = "superseded"
+area = "application/user_profile"
+symbols = ["profile_is_authentication_failure"]
+evidence = "A one-line predicate asking whether an error is an authentication failure. The live holder is map_profile_authentication_proof_failure, defined at application/user_profile/custody_ports.py:1538 and reached from login_session.py, passphrase_rotation.py and recovery_custody.py: it collapses credential-shape and proof failures for one named capability into a typed ProfileAuthenticationRefusedError or None. So the application recognises the refusal through a mapper at the port boundary rather than through a boolean test, and its keyring-unavailable sibling remains live because no equivalent mapper covers that case."

@@ -112,7 +112,13 @@ def collect_public_definitions(root: Path) -> tuple[PublicDefinition, ...]:
             continue
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"))
-        except (SyntaxError, UnicodeDecodeError) as error:
+        # OSError joins the two parse-time failures rather than crashing past
+        # them. The channel is already named `unread` and its notice already
+        # says the modules 'could not be read' -- a file the walk listed and
+        # the read cannot reach is the plainest case of that, and the stated
+        # policy above covers it: the tree is edited while this runs, so one
+        # file must not cost the whole census.
+        except (OSError, SyntaxError, UnicodeDecodeError) as error:
             unread.append(f"{path}: {error}")
             continue
         module = path.relative_to(root).as_posix()

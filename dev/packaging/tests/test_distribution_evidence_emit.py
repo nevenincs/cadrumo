@@ -234,12 +234,30 @@ def test_foreign_launcher_cannot_borrow_an_exact_installed_payload(tmp_path: Pat
         foreign.unlink()
 
 
+def _link_or_copy(source: str, destination: str) -> None:
+    """Hard-link a file, falling back to a copy when the link cannot be made.
+
+    The venv template is built in the OS temp directory while the campaign
+    pins its basetemp inside the repository's own `var/`. Those are the same
+    filesystem on the CI runners and routinely are NOT on a developer machine
+    whose checkout lives off the system drive, where `os.link` fails outright
+    -- `EXDEV` on POSIX, `WinError 17` on Windows. Linking is worth keeping
+    where it works, because the template is a full environment and copying it
+    is the expensive path; falling back is what makes the test portable rather
+    than incidentally passing on hosts with one volume.
+    """
+    try:
+        os.link(source, destination)
+    except OSError:
+        shutil.copy2(source, destination)
+
+
 def test_exact_path_foreign_launcher_is_refused(tmp_path: Path) -> None:
     """Replacing the canonical launcher cannot borrow its adjacent sealed payload."""
     template = client_venv_template()
     server = venv_executable(template, "cadrumo-mcp").resolve(strict=True)
     copied_venv = tmp_path / ".venv"
-    shutil.copytree(template, copied_venv, copy_function=os.link)
+    shutil.copytree(template, copied_venv, copy_function=_link_or_copy)
     scripts = venv_bin_dir(copied_venv)
     copied_server = scripts / server.name
     copied_server.unlink()
