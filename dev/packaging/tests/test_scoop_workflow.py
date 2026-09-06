@@ -6,6 +6,7 @@ import pytest
 import yaml
 
 from ..._paths import REPO_ROOT
+from ...ci.workflow_permissions import jobs_granting
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -107,10 +108,14 @@ def test_scoop_workflow_consumes_one_successful_commit_bound_cohort() -> None:
     assert "gh run download" in download["run"]
     assert "--name cadrumo-python-cohort-linux" in download["run"]
     assert "--name cadrumo-release-cohort" in download["run"]
-    # Least privilege: workflow-level stays read; only the uploader job holds
-    # contents:write for the draft-release transport.
+    # Least privilege as the RUNTIME reads it: a job-level `permissions:` block
+    # REPLACES the workflow-level map rather than merging into it, so the
+    # declared map below settles nothing about what any job holds. `actions:
+    # write` is the watchdog's cancel capability and belongs to that job alone.
     assert document["permissions"] == {"actions": "read", "contents": "read"}
     assert job["permissions"] == {"actions": "read", "contents": "read"}
+    assert jobs_granting(document, "actions", "write") == ("runner-queue-watchdog",)
+    assert jobs_granting(document, "contents", "write") == ()
 
 
 def test_scoop_workflow_runs_the_real_native_lifecycle_without_rebuilding() -> None:

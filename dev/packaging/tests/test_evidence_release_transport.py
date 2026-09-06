@@ -24,6 +24,7 @@ import yaml
 from cadrumo.core.directory_scan import scan_directory
 
 from ..._paths import REPO_ROOT
+from ...ci.workflow_permissions import jobs_granting
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -75,9 +76,8 @@ def test_no_packaging_job_can_write_repository_contents(workflow: str) -> None:
     """
     document = _document(workflow)
     assert (document.get("permissions") or {}).get("contents") != "write", workflow
-    for job_name, job in document["jobs"].items():
-        granted = (job.get("permissions") or {}).get("contents")
-        assert granted != "write", f"{workflow}:{job_name} still grants contents:write"
+    escalated = jobs_granting(document, "contents", "write")
+    assert escalated == (), f"{workflow}: {', '.join(escalated)} still grants contents:write"
 
 
 @pytest.mark.parametrize("workflow", _PACKAGING_WORKFLOWS)

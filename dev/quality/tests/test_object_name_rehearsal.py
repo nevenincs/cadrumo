@@ -8,7 +8,7 @@ import shutil
 import subprocess
 import sys
 from dataclasses import replace
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from types import SimpleNamespace
 from typing import Any
 
@@ -748,6 +748,48 @@ def test_a_copy_that_alters_the_selected_component_is_refused(tmp_path: Path, mo
         match="selected component bytes changed during the temporary copy",
     ):
         rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
+
+
+def test_a_leftover_output_temp_path_is_refused_rather_than_overwritten(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A crashed earlier run leaves `.<name>.object-name-output` behind.
+
+    `_materialise` writes each proposed output to that sibling and then
+    `os.replace`s it into place, so an occupied sibling is either someone else's
+    in-flight write or debris from a run that died mid-materialise. Overwriting
+    it blindly would destroy the one copy of whatever it holds. Nothing drove
+    this refusal.
+
+    The occupied path is derived from the REAL planner's own outputs rather than
+    a guessed filename, and the real `_materialise` decides.
+    """
+    repo = tmp_path / "repo"
+    inventory, manifest, component = _fixture(repo)
+    original_plan = rehearsal_module.plan_object_name_transformation
+    occupied: list[str] = []
+
+    def plan_then_occupy_the_first_output_temp(*args: Any, repo_root: Path, **kwargs: Any) -> Any:
+        result = original_plan(*args, repo_root=repo_root, **kwargs)
+        for output in result.outputs:
+            if output.content is None:
+                continue
+            target = repo_root.joinpath(*PurePosixPath(output.path).parts)
+            temporary = target.with_name(f".{target.name}.object-name-output")
+            temporary.parent.mkdir(parents=True, exist_ok=True)
+            temporary.write_bytes(b"debris from a run that died mid-materialise")
+            occupied.append(output.path)
+            break
+        return result
+
+    monkeypatch.setattr(rehearsal_module, "plan_object_name_transformation", plan_then_occupy_the_first_output_temp)
+
+    with pytest.raises(ObjectNameRehearsalError, match="temporary output path is occupied"):
+        rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
+
+    # The refusal must be about the path the planner actually proposed, not a
+    # coincidence: prove the fixture reached a real output before asserting.
+    assert occupied, "the planner proposed no writable output, so the refusal proves nothing"
 
 
 def test_unsafe_system_temp_and_escaped_allocation_are_refused(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

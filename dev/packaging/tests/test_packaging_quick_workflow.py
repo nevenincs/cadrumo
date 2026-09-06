@@ -18,6 +18,7 @@ import pytest
 import yaml
 
 from ..._paths import REPO_ROOT
+from ...ci.workflow_permissions import effective_job_permissions, jobs_granting
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -91,6 +92,8 @@ def test_quick_workflow_mints_no_promotable_evidence() -> None:
     for module in ("oracle_emit_cohort", "evidence_release", "distribution_evidence", "dev.packaging.evidence"):
         assert module not in surface, module
     assert document["permissions"] == {"contents": "read"}
+    assert jobs_granting(document, "contents", "write") == (), "no quick job may escalate to contents:write"
+    assert jobs_granting(document, "actions", "write") == ("runner-queue-watchdog",)
     for job_name, job in document["jobs"].items():
         # Evidence honesty is a CONTENTS question: a draft release and the assets
         # hanging off it are what make a run promotable, and no job in this lane
@@ -98,11 +101,10 @@ def test_quick_workflow_mints_no_promotable_evidence() -> None:
         # workflow runs and mints nothing — and exactly one job is allowed to
         # hold it, because cancelling is the only way to turn a lane no runner
         # can serve into a terminal state instead of a six-hour silent queue.
-        permissions = job.get("permissions") or {}
-        assert set(permissions) <= {"actions", "contents"}, f"{job_name}: unexpected permission scope"
-        assert permissions.get("contents", "read") == "read", f"{job_name} must not escalate to contents:write"
-        if permissions.get("actions") == "write":
-            assert job_name == "runner-queue-watchdog", f"{job_name} must not take actions:write"
+        permissions = effective_job_permissions(document, job_name)
+        assert isinstance(permissions, dict) and set(permissions) <= {"actions", "contents"}, (
+            f"{job_name}: unexpected permission scope"
+        )
         for step in job["steps"]:
             uses = str(step.get("uses", ""))
             assert "upload-artifact" not in uses and "download-artifact" not in uses, job_name
