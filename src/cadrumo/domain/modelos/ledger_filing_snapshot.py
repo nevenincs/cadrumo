@@ -132,12 +132,22 @@ class LedgerEvidenceRow(BaseModel):
     """Typed evidence projection of one contributing ledger transaction.
 
     Where :class:`LedgerRowFingerprint` records only the content hash (for
-    staleness detection), this record carries the actual tax-relevant facts that
-    moved a casilla, plus its regulatory grounding and evidence references, so the
-    fact basis can be reconstituted from the revision and rendered into a filing
-    artefact. ``fingerprint`` binds this row to the matching
+    staleness detection), this record carries the tax-relevant facts themselves,
+    plus regulatory grounding and evidence references, so the fact basis can be
+    reconstituted from the revision and rendered into a filing artefact.
+    ``fingerprint`` binds this row to the matching
     :class:`LedgerRowFingerprint`, so an evidence/fingerprint mismatch is
     detectable.
+
+    The field set deliberately mirrors the fingerprint's rather than the
+    transaction's, so evidence and staleness always describe the same facts.
+    That coupling is also how the fingerprint's known gap reaches this record:
+    ``recargo_amount``, ``deduction_fact_kind``, the prorrata declarations and
+    ``usage_ratio_id`` move a casilla and appear in neither, so the exported
+    evidence for a recargo-de-equivalencia purchase shows base and IVA with no
+    surcharge. Widening this record alone would break the mirror; the two move
+    together, and the fingerprint side is the one carrying the migration
+    constraint (see ``_FINGERPRINT_FIELDS`` in the application capture module).
 
     Enum-valued facts are stored as their canonical string ``value`` (and dates as
     ISO-8601 strings) so the record roundtrips cleanly through the strict

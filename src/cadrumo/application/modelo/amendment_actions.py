@@ -516,6 +516,29 @@ def _build_amendment_draft_revision(
     filing_instance_evidence: FilingInstanceEvidence | None,
     aggregate_context: CalculationRevisionAggregateContext,
 ) -> CalculationRevision:
+    """Build the BORRADOR an amendment is filed from, carrying the baseline forward.
+
+    The lifecycle fields are deliberately absent: this is a new draft, so
+    ``verified_at``, ``filed_at``, ``superseded_at`` and the discard trio must
+    not inherit the baseline's.
+
+    ``detail_rows`` is a different case and is NOT settled. It is absent here,
+    and neither :func:`_verified_amendment_revision` nor
+    :func:`_filed_amendment_revision` recomputes anything — both are pure state
+    transitions — so an amended informational modelo (M347 counterparties, M349
+    operators, M184 members, M232 operaciones vinculadas) is filed declaring
+    none. Only M303 is gated on this path; nothing scopes the others away from
+    it.
+
+    Carrying the baseline's rows forward is not obviously right either: the
+    amendment supplies corrected aggregate casilla values and says nothing
+    about which counterpart moved, so inherited rows could contradict the
+    totals filed alongside them. Which of the two a complementaria should
+    declare is an owner's decision about filed content, so it is recorded here
+    rather than chosen silently. The same applies to ``ledger_filing_snapshot``
+    and ``ledger_filing_evidence``, captured at verify time by a collaborator
+    this path never invokes, so an amendment also carries no drift baseline.
+    """
     return CalculationRevision.model_validate(
         {
             "calculation_revision_id": new_revision_id,
