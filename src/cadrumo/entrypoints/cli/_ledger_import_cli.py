@@ -2,14 +2,19 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import typer
 
-from ...application.ledger.actions_import import LedgerProviderID, aggregate_ledger_import_results, import_ledger_source
+from ...application.ledger.actions_import import (
+    LedgerProviderID,
+    aggregate_ledger_import_results,
+    import_ledger_source,
+    plan_ledger_import_sources,
+)
 from ...application.ledger.models import (
     LedgerSourceImportCommand,
     LedgerSourceImportResult,
@@ -17,8 +22,6 @@ from ...application.ledger.models import (
     LedgerSourceVerificationReport,
 )
 from ...core.bucket_pointer import resolve_active_bucket_id
-from ...core.directory_scan import DirectoryEntryKind, scan_directory
-from ...core.external_constants import XLS_EXTENSION, XLSX_EXTENSION
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.transactions.errors import TransactionValidationError
@@ -105,7 +108,7 @@ def _import_bucket_context(*, dry_run: bool) -> _ImportBucketContext:
 
 
 def _imported_files(
-    import_paths: list[Path],
+    import_paths: Sequence[Path],
     *,
     command: Callable[[Path], LedgerSourceImportCommand],
     transaction_repository: TransactionCatalogueRepositoryProtocol | None,
@@ -228,25 +231,14 @@ def ledger_import(
     )
 
 
-_IMPORT_DIR_EXTENSIONS = frozenset(
-    {".csv", XLSX_EXTENSION, XLS_EXTENSION, ".ofx", ".qfx", ".tsv"},
-)
+def _resolve_import_paths(path: Path) -> tuple[Path, ...]:
+    """Resolve the import target, mapping the refusal to its operator message."""
+    from ...domain.transactions.errors import TransactionValidationError
 
-
-def _resolve_import_paths(path: Path) -> list[Path]:
-    """Return the statement files to import."""
-    if not path.is_dir():
-        return [path]
-    files = [
-        child
-        for child in scan_directory(path, select=DirectoryEntryKind.FILES)
-        if child.suffix.lower() in _IMPORT_DIR_EXTENSIONS
-    ]
-    if not files:
-        raise bad(
-            tr("cli.ledger.import.empty_directory", path=str(path)),
-        )
-    return files
+    try:
+        return plan_ledger_import_sources(path)
+    except TransactionValidationError as exc:
+        raise bad(tr("cli.ledger.import.empty_directory", path=str(path))) from exc
 
 
 def _empty_import_notice(result: LedgerSourceImportResult) -> tuple[str, Notice] | None:

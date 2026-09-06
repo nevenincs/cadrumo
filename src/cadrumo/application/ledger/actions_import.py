@@ -16,7 +16,7 @@ from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, Final, NamedTuple
 
 from ...core.hashing import sha256_hex
 
@@ -26,8 +26,9 @@ if TYPE_CHECKING:
 from collections.abc import Sequence
 
 from ...adapters.persistence.storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
+from ...core.directory_scan import DirectoryEntryKind, scan_directory
 from ...core.errors.error_codes import resolve_error_message
-from ...core.external_constants import DEFAULT_CURRENCY
+from ...core.external_constants import DEFAULT_CURRENCY, XLS_EXTENSION, XLSX_EXTENSION
 from ...core.hashing import canonical_json_bytes, sha256_file
 from ...core.i18n import tr
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
@@ -680,9 +681,61 @@ def aggregate_ledger_import_results(
     )
 
 
+#: The file kinds this product can read as a bank statement. It is a statement
+#: about ingestion capability, not about one surface's argument parsing, so a
+#: second frontend importing a folder selects exactly the same files.
+IMPORTABLE_SOURCE_EXTENSIONS: Final[frozenset[str]] = frozenset(
+    {".csv", XLSX_EXTENSION, XLS_EXTENSION, ".ofx", ".qfx", ".tsv"},
+)
+
+
+def plan_ledger_import_sources(path: Path) -> tuple[Path, ...]:
+    """Resolve one import target into the ordered files to read.
+
+    A file is itself; a directory is its importable children. The extension
+    filter is what keeps a stray note or an exported PDF in the same folder
+    from being handed to a statement parser, and refusing an empty directory
+    matters because the alternative is an import that reports success having
+    read nothing.
+
+    Order is :func:`scan_directory`'s deterministic sort. That is load-bearing
+    rather than incidental: several files fold into one aggregated result, and
+    a filesystem-dependent order would make the same folder import differently
+    on two machines.
+
+    Args:
+        path: The file or directory the operator named.
+
+    Returns:
+        The files to import, in the order they will be read.
+
+    Raises:
+        TransactionValidationError: When ``path`` is a directory holding no
+            importable file.
+    """
+    if not path.is_dir():
+        return (path,)
+    files = tuple(
+        child
+        for child in scan_directory(path, select=DirectoryEntryKind.FILES)
+        if child.suffix.lower() in IMPORTABLE_SOURCE_EXTENSIONS
+    )
+    if not files:
+        raise TransactionValidationError(
+            f"no importable statement file in directory {str(path)!r}",
+            context={
+                "path": str(path),
+                "accepted_extensions": ", ".join(sorted(IMPORTABLE_SOURCE_EXTENSIONS)),
+            },
+        )
+    return files
+
+
 __all__ = [
+    "IMPORTABLE_SOURCE_EXTENSIONS",
     "LedgerProviderID",
     "aggregate_ledger_import_results",
     "import_ledger_source",
     "import_ledger_transactions",
+    "plan_ledger_import_sources",
 ]
