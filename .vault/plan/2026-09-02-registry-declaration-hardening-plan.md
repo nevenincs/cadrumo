@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:858f16821f8edfb57e4dbfa5357aead705e1462e271cfc80c6a37237b82d2082'
+body_hash: 'sha256:38c5b64ebf81e9c3a2d08309436bdd44db196b2b467fd55f73654c026ab1df3f'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -699,6 +699,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S817` - Floor the user-docs corpus behind the redeclaration gate so an empty prose walk skips loudly instead of passing green; `dev/docs/terminology_handbook/tests/test_terminology_redeclaration_conformance.py`.
 - [x] `W02.P02.S818` - Assert the built sdist sheds its test tree, floored so a truncated or failed build cannot read as a clean archive; `dev/packaging/tests/test_sdist_test_tree_exclusion.py`.
 - [x] `W02.P02.S819` - Report os.open as an ambiguous write site so flag-assembled filesystem writes stop dropping out of the census; `dev/audit/write_site_census.py`.
+- [x] `W02.P02.S820` - Exercise the alias-authority collision refusal that no input reached and pin each branch to its own message; `dev/docs/terminology/tests/test_query_aliases.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
