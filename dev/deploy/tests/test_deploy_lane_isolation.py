@@ -45,6 +45,28 @@ _REPO_ROOT = REPO_ROOT
 _JUSTFILE = _REPO_ROOT / "justfile"
 _WORKFLOWS = _REPO_ROOT / ".github" / "workflows"
 
+#: Both suffixes, because GitHub Actions reads either from the workflows
+#: directory. A sweep pinned to ``*.yml`` silently skips a lane filed as
+#: ``.yaml``, and both claims below check their result for the ABSENCE of
+#: other publishers -- so an unswept lane reads exactly like a clean one.
+_WORKFLOW_SUFFIXES = (".yml", ".yaml")
+
+#: Floor for the workflow corpus. Live it holds 16 documents. The pinned
+#: equalities below fail loud on a sweep that found nothing, but not on
+#: one narrowed to the few files that happen to satisfy them.
+_MINIMUM_WORKFLOWS = 8
+
+
+def _workflow_documents() -> tuple[Path, ...]:
+    """Return every workflow document GitHub Actions would read."""
+    documents = tuple(sorted(path for path in scan_directory(_WORKFLOWS) if path.suffix in _WORKFLOW_SUFFIXES))
+    assert len(documents) >= _MINIMUM_WORKFLOWS, (
+        f"the sweep found only {len(documents)} workflow document(s) under {_WORKFLOWS}; "
+        "every claim keyed on it would then range over almost no lane"
+    )
+    return documents
+
+
 #: The publishing verbs. Membership is asserted rather than trusted, so an
 #: undeclared publisher cannot join the command surface.
 _DEPLOY_RECIPES = frozenset({"docs-deploy", "docs-stack-deploy"})
@@ -237,8 +259,7 @@ def test_only_the_delivery_workflow_runs_a_publisher() -> None:
     Swept across every workflow rather than the two that were known to matter,
     so a newly added verification lane cannot acquire a publish step unobserved.
     """
-    workflows = scan_directory(_WORKFLOWS, pattern="*.yml")
-    assert workflows, "no workflows found; the sweep is looking at the wrong directory"
+    workflows = _workflow_documents()
 
     publishing: dict[str, list[str]] = {}
     for path in workflows:
@@ -263,7 +284,7 @@ def test_only_the_delivery_workflow_runs_a_publisher() -> None:
 
 def test_no_publisher_here_reaches_the_site_root() -> None:
     """Only the documentation publisher may be reachable from this repository."""
-    text = "\n".join(path.read_text(encoding="utf-8") for path in scan_directory(_WORKFLOWS, pattern="*.yml"))
+    text = "\n".join(path.read_text(encoding="utf-8") for path in _workflow_documents())
     invoked = {
         module
         for module in ("docs_static_site", "frontend_static_site")

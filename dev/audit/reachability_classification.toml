@@ -1297,3 +1297,33 @@ area = "entrypoints/cli/config"
 symbols = ["CALCULATION_WRITE", "PROFILE_WRITE", "GOOGLE_CALCULATION_WRITE", "GOOGLE_CALCULATION_HANDOFF", "GOOGLE_HANDOFF"]
 evidence = "Public execution-policy constants that no command spec imports. The live modelo command specs declare private equivalents inline, so the canonical home was displaced by copies. The declarations are EQUIVALENT, which took checking: the public CALCULATION_WRITE spells capabilities calculation, encrypted-facts and profile-custody while the private _CALCULATION_WRITE the specs use spells only the first two, but command_spec._IMPLIED_CAPABILITIES maps encrypted-facts onto profile-custody and every policy check runs against expanded_capabilities, so the shorter form expands to the longer one. The finding is therefore displacement alone -- five public constants nothing reads, beside private copies that say the same thing -- and not the under-declaration it first looked like."
 remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "reserved-source-kind binding families"
+class = "staged-capability"
+area = "domain/calculations/registry"
+symbols = ["counterpart_binding_requirements", "resolve_counterpart_binding_row_values", "resolve_counterpart_binding_values", "invoice_binding_requirements", "validate_invoice_binding_definition", "_INVOICE_INDEPENDENT_QUANTITY_FACTS"]
+evidence = "The counterpart and invoice-shaped binding families. Their source kinds -- PURCHASE_INVOICE_EVIDENCE and LEDGER_TRANSACTION -- sit in RESERVED_SOURCE_KINDS in application/aggregation/_source_mesh.py, which the module's own comment defines as a member of the closed taxonomy carrying no registry binding and no resolver yet, recorded RESERVED so the source-kind parity gate accounts for every member. So the requirement builders and validators are written against a tier that is deliberately not routed, and nothing reaching them is the declared state rather than a gap. Deleting them would remove the headroom the reserved tier exists to hold."
+
+[[symbol_cluster]]
+name = "deferred withholding binding resolvers"
+class = "staged-capability"
+area = "domain/calculations/registry"
+symbols = ["WithholdingObservationRequirement", "compute_withholding_totals_parity", "resolve_withholding_binding_row_values"]
+evidence = "The withholding family beside the already-recorded deferred-source-kind resolvers. WITHHOLDING296 is a member of DEFERRED_SOURCE_KINDS in application/aggregation/_source_mesh.py -- known but with no resolver yet, so a calculate-path binding of the source raises a standing advisory instead of a silent blank. The requirement type, the totals-parity check and the row-value resolver are built and validated ahead of that enrolment, which is why no live mesh resolver reaches them."
+
+[[symbol_cluster]]
+name = "secure-object schema upgrade path with no registration"
+class = "staged-capability"
+area = "adapters/persistence/storage"
+symbols = ["register_secure_object_schema_upgrader", "deregister_secure_object_schema_upgrader", "SECURE_OBJECT_DURABILITY_FLOOR"]
+evidence = "The one-hop payload upgrader registry for a (namespace, from_version) pair, with the floor naming the oldest version every read path keeps readable. Only tests register an upgrader. The floor is 1 while six namespaces declare schema version 2 and one declares 4, so a row stored at an older version in those namespaces has no registered upgrade hop. It is not silent corruption: the row decode path is documented fail-closed and returns the typed error rather than a placeholder, so the missing hop surfaces as a refusal. Whether any such row EXISTS is deployment state the tree cannot answer, which is what an owner has to decide before the floor moves."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "registry handoff path audit nothing runs"
+class = "should-be-live"
+area = "domain/calculations/registry"
+symbols = ["audit_registry_handoff_paths", "audit_registry_relation_handoff_applicability", "relation_is_consumed"]
+evidence = "An audit that classifies validated relation paths against the registry authority without inventing semantic repairs, its applicability sibling, and the predicate answering whether a formula or bound casilla consumes a relation. No production or dev caller runs any of them, so the classification the audit exists to produce is never produced and an unconsumed relation is never reported."
+remedy_requires_decision = true
