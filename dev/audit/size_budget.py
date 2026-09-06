@@ -56,7 +56,22 @@ from cadrumo.tests import (  # noqa: E402
     evaluate_budget,
     measure_callable_lines,
     measure_module_lines,
+    scan_module_lines,
 )
+from cadrumo.tests.size_budget import BudgetVerdict  # noqa: E402
+
+#: The development tree, measured on the MODULE axis beside the shipped package.
+#:
+#: `dev/` was outside every size axis until it produced a 6,060-line quality
+#: module in two days, so "it does not ship" turned out to describe the absence
+#: of counter-pressure rather than the absence of a problem. The enumeration
+#: lives HERE rather than beside the shipped corpus helper: `src/` may carry no
+#: awareness of `dev/`, and pointing the package's own file walker at this tree
+#: would put that awareness in exactly the place the boundary forbids.
+#:
+#: `scan_module_lines` takes its files and root as parameters, so the real
+#: measurement code is reused rather than re-implemented for this corpus.
+_DEV_ROOT: Final[Path] = _REPO_ROOT / "dev"
 
 SIZE_BUDGET_BASELINE_PATH: Final[Path] = _REPO_ROOT / "dev" / "audit" / "size_budget_baseline.json"
 """Committed, generated limit table consumed by the pytest size ratchet."""
@@ -136,20 +151,85 @@ def _emit(label: str, lines: tuple[str, ...]) -> None:
         print(f"  {line}")
 
 
+def dev_python_files() -> tuple[Path, ...]:
+    """Return every `.py` file under `dev/`, excluding compiled caches.
+
+    Tests are INCLUDED. The largest single artefact the campaign that motivated
+    this corpus produced was a 5,510-line test module, so exempting tests would
+    carve out the worst instance of the defect.
+    """
+    return tuple(sorted(path for path in _DEV_ROOT.rglob("*.py") if "__pycache__" not in path.parts))
+
+
+def measure_dev_module_lines() -> dict[str, int]:
+    """Measure every `dev/` module against the repository root."""
+    return scan_module_lines(files=dev_python_files(), root=_REPO_ROOT)
+
+
+@dataclass(frozen=True)
+class SizeBudgetResult:
+    """The composed size-budget verdict across both measured trees.
+
+    Args:
+        modules: Verdict for the module axis, spanning `src/` and `dev/`.
+        callables: Verdict for production callables in the shipped package.
+        module_count: Modules scanned, for an honest "measured nothing" signal.
+        callable_count: Production callables scanned.
+    """
+
+    modules: BudgetVerdict
+    callables: BudgetVerdict
+    module_count: int
+    callable_count: int
+
+    @property
+    def findings(self) -> tuple[str, ...]:
+        """Every failing line, modules first."""
+        return (*self.modules.failing, *self.callables.failing)
+
+    @property
+    def is_clean(self) -> bool:
+        """True when every measured subject sits inside its declared band."""
+        return not self.findings
+
+    def headline(self) -> str:
+        """One-line summary naming what was measured and what failed."""
+        scanned = f"scanned {self.module_count} modules, {self.callable_count} production callables"
+        if self.is_clean:
+            return f"size budget clean: {scanned}"
+        return f"{len(self.findings)} size-budget finding(s): {scanned}"
+
+
+def run_size_budget_scan() -> SizeBudgetResult:
+    """Measure both trees against the declared budget.
+
+    The one scan path, shared by the CLI and the advisory dashboard, so the
+    composed report cannot drift from what `python -m dev.audit.size_budget`
+    prints.
+    """
+    modules = measure_module_lines() | measure_dev_module_lines()
+    callables = measure_callable_lines()
+    assert_real_corpus(modules, callables)
+
+    baseline = load_size_budget_baseline()
+    return SizeBudgetResult(
+        modules=evaluate_budget(modules, baseline.modules, MODULE_POLICY),
+        callables=evaluate_budget(callables, baseline.callables, CALLABLE_POLICY),
+        module_count=len(modules),
+        callable_count=len(callables),
+    )
+
+
 def main(argv: list[str] | None = None) -> int:
     """Report every module and callable that exceeds the declared size budget."""
     parser = argparse.ArgumentParser(description="Audit module/callable sizes against a generated limit baseline.")
     parser.parse_args(argv)
 
-    modules = measure_module_lines()
-    callables = measure_callable_lines()
-    assert_real_corpus(modules, callables)
+    result = run_size_budget_scan()
+    module_verdict = result.modules
+    callable_verdict = result.callables
 
-    print(f"size budget: scanned {len(modules)} modules, {len(callables)} production callables.")
-
-    baseline = load_size_budget_baseline()
-    module_verdict = evaluate_budget(modules, baseline.modules, MODULE_POLICY)
-    callable_verdict = evaluate_budget(callables, baseline.callables, CALLABLE_POLICY)
+    print(f"size budget: scanned {result.module_count} modules, {result.callable_count} production callables.")
 
     _emit("modules OVER BUDGET", module_verdict.over_budget)
     _emit("modules with a STALE PIN", module_verdict.stale)

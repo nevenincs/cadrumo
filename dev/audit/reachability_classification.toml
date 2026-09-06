@@ -1265,3 +1265,35 @@ referenced_by_production = 17
 referenced_nowhere = 14
 dev_only = 1
 method = "a reference counts only when it appears as an ast.Name load, an attribute access, an import alias, or a string constant binding the name; prose in a docstring or comment does not vote"
+
+[[symbol_cluster]]
+name = "collaboration audit trail nothing writes"
+class = "should-be-live"
+area = "application/modelo"
+symbols = ["emit_collab_package_encrypted_event", "emit_collab_package_decrypted_event", "emit_collab_package_counter_signed_event", "emit_collab_recipient_registered_event", "emit_collab_recipient_removed_event", "emit_collab_review_only_workspace_opened_event"]
+evidence = "Six emitters covering the whole collaboration review-package lifecycle -- package encrypted and decrypted, counter-signature recorded, recipient registered and removed, review-only workspace opened -- each writing to the bucket event history. No production caller reaches any of them. The apparent references are Sphinx :func: cross-links inside sibling docstrings, which is prose rather than a call, so the collaboration flow currently produces no audit record at all. An event history that is declared and never written is worse than none, because the empty history reads as 'nothing happened'."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "sectoral prorrata calculation with no caller"
+class = "should-be-live"
+area = "domain/iva"
+symbols = ["compute_sectoral_prorrata", "requires_sectoral_separation", "classify_input_deduction", "sum_deductible_amounts"]
+evidence = "The sectoral prorrata path: the predicate deciding whether sectors must be separated, the calculator that runs once they are, the input-deduction classifier and the deductible summation. Referenced only from its own module's docstrings and __all__. A taxpayer with differentiated sectors therefore gets no sectoral separation, and under the calculation-grounding rule the declared legal capability stays visible rather than being deleted for being uncalled."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "registry source-connectivity projections with no consumer"
+class = "should-be-live"
+area = "application/registry"
+symbols = ["derive_registry_binding_records", "derive_registry_destination_records", "derive_registry_formula_records", "derive_registry_relation_records", "derive_registry_source_disposition_records"]
+evidence = "Five projections turning a validated RegistrySnapshot into connectivity records -- bindings, destinations, formulas, relations and source dispositions -- each documented as avoiding a re-parse of the expressions. Nothing in production or dev consumes them, so the source-connectivity view they exist to produce is never assembled."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "displaced CLI execution-policy declarations"
+class = "superseded"
+area = "entrypoints/cli/config"
+symbols = ["CALCULATION_WRITE", "PROFILE_WRITE", "GOOGLE_CALCULATION_WRITE", "GOOGLE_CALCULATION_HANDOFF", "GOOGLE_HANDOFF"]
+evidence = "Public execution-policy constants that no command spec imports. The live modelo command specs declare private equivalents inline instead, and the two do not agree: the public CALCULATION_WRITE names the capabilities calculation, encrypted-facts and profile-custody, while the private _CALCULATION_WRITE the specs actually use names only calculation and encrypted-facts. So the canonical home was displaced by copies AND the surviving copy declares a narrower capability set than the home it displaced. Which reading is correct is an owner decision -- either the public constant is over-broad, or the live specs under-declare a command that reaches profile custody -- and the second would be a silent under-declaration at a security-relevant boundary."
+remedy_requires_decision = true

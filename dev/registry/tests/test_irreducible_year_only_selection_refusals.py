@@ -67,9 +67,26 @@ def _co_claimants(modelo, filing_year: int, period: str):
     )
 
 
+#: Floor for the refusals this module's three gates iterate. Every assertion
+#: in all three runs INSIDE the loop over this tuple, so an empty result is
+#: not a passing corpus -- it is three gates executing nothing. The rows are
+#: legally irreducible, as the module docstring sets out: a mid-year orden
+#: leaves no correct year-only answer, so the coordinate cannot stop being
+#: refused without the resolver silently PICKING one design. Live the matrix
+#: carries two, both modelo 308; a floor rather than a pin, because a newly
+#: published mid-year split legitimately adds rows.
+_MINIMUM_REFUSED_ROWS = 2
+
+
 def _refused_selection_rows():
     report = compose_temporal_coverage(authority=_authority())
-    return tuple(row for row in report.refused_rows if row.failure_code == "law_selection_refused")
+    rows = tuple(row for row in report.refused_rows if row.failure_code == "law_selection_refused")
+    assert len(rows) >= _MINIMUM_REFUSED_ROWS, (
+        f"the coverage matrix reports {len(rows)} year-only selection refusal(s); below "
+        "this the gates that iterate them assert nothing, and a resolver that stopped "
+        "refusing an irreducible coordinate would read exactly like a clean corpus"
+    )
+    return rows
 
 
 def test_every_year_only_refusal_is_an_overlapping_period_split() -> None:
