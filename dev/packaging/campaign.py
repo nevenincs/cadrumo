@@ -384,12 +384,28 @@ def campaign_pytest_argv(repo_root: Path, test_workers: int | None) -> tuple[tup
     )
 
 
-def _run_step(argv: list[str], repo_root: Path, label: str) -> None:
-    """Run one serial pipeline step, echoing through to the console."""
+def _attempt_step(argv: list[str], repo_root: Path, label: str) -> str | None:
+    """Run one step and DESCRIBE its failure rather than raising on it.
+
+    Split out so a caller can decide whether a failure ends the campaign or is
+    collected and reported beside its siblings. Every step still runs through
+    one execution site.
+
+    Returns:
+        A short failure description, or ``None`` when the step succeeded.
+    """
     print(f"[campaign] {label}: {' '.join(argv)}", flush=True)
     result = subprocess.run(argv, cwd=repo_root, check=False)
     if result.returncode != 0:
-        raise SystemExit(f"campaign step failed ({label}): exit {result.returncode}")
+        return f"{label} (exit {result.returncode})"
+    return None
+
+
+def _run_step(argv: list[str], repo_root: Path, label: str) -> None:
+    """Run one serial pipeline step, echoing through to the console."""
+    failure = _attempt_step(argv, repo_root, label)
+    if failure is not None:
+        raise SystemExit(f"campaign step failed ({failure})")
 
 
 def _run_form(selector: str, repo_root: Path, log_dir: Path) -> tuple[str, int, float, Path]:
@@ -489,8 +505,26 @@ def main(argv: list[str] | None = None) -> int:
         # logs.
         preflight_basetemp_root(repo_root).mkdir(parents=True, exist_ok=True)
         test_workers = _test_worker_count(args.test_workers)
-        for pytest_pass in _PREFLIGHT_PASSES:
-            _run_step(pytest_pass_argv(pytest_pass, repo_root, test_workers), repo_root, pytest_pass.label)
+        # Every preflight pass runs even after one fails, and the campaign
+        # reports all of them together. The exit status is unchanged -- any
+        # failure still ends the run -- but stopping at the first one made a
+        # single wedged module hide every later pass, so a campaign could
+        # surface at most one defect per invocation. That is expensive
+        # everywhere and ruinous on CI, where the invocation costs an hour of
+        # a two-machine fleet. A gate should report what it found, not the
+        # first thing it found.
+        preflight_failures = [
+            failure
+            for pytest_pass in _PREFLIGHT_PASSES
+            if (
+                failure := _attempt_step(
+                    pytest_pass_argv(pytest_pass, repo_root, test_workers), repo_root, pytest_pass.label
+                )
+            )
+            is not None
+        ]
+        if preflight_failures:
+            raise SystemExit("campaign preflight failed: " + "; ".join(preflight_failures))
 
     # Fail before any wheel or venv work if a git-tracked shipped data file is
     # missing from the worktree (seconds). Runs in every profile that reaches

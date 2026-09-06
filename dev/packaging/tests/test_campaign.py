@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import os
+import sys
 from pathlib import Path
 
 import pytest
@@ -14,6 +15,8 @@ from ..campaign import (
     _LANES,
     _PROFILES,
     _TEST_WORKERS_ENV,
+    _attempt_step,
+    _run_step,
     _test_worker_count,
     resolve_form,
 )
@@ -245,3 +248,29 @@ def test_lane_names_are_distinct_so_manifest_rows_stay_distinguishable() -> None
     names = [lane.name for lane in _LANES.values()]
     assert len(names) == len(set(names)), f"lane names must discriminate manifest rows: {names}"
     assert all(name and name.strip() == name for name in names), f"lane names must be non-empty: {names}"
+
+
+def test_a_failing_step_is_described_rather_than_raised(tmp_path: Path) -> None:
+    """`_attempt_step` reports a failure so a caller can keep going."""
+    failure = _attempt_step([sys.executable, "-c", "raise SystemExit(3)"], tmp_path, "probe")
+
+    assert failure is not None
+    assert "probe" in failure
+    assert "3" in failure
+
+
+def test_a_succeeding_step_reports_nothing(tmp_path: Path) -> None:
+    """The other direction: silence must mean success, not an inert check."""
+    assert _attempt_step([sys.executable, "-c", ""], tmp_path, "probe") is None
+
+
+def test_run_step_still_ends_the_campaign_on_a_failure(tmp_path: Path) -> None:
+    """Collecting failures must not weaken the steps that should abort.
+
+    Only the preflight passes are collected; every other step keeps fail-fast,
+    because a cohort built on a broken tree is worse than no cohort.
+    """
+    with pytest.raises(SystemExit) as excinfo:
+        _run_step([sys.executable, "-c", "raise SystemExit(4)"], tmp_path, "probe")
+
+    assert "probe" in str(excinfo.value)
