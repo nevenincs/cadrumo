@@ -22,8 +22,8 @@ from typing import Any, Final
 
 from .._paths import UTF_8
 from ._acquire_common import (
-    EXPECTED_ORACLE_TARGET_VALUE,
     AcquisitionError,
+    expected_oracle_target_value,
     require_command_succeeded,
 )
 from ._command import CommandResult, run_command
@@ -228,10 +228,10 @@ def run_homebrew_acquisition(
         cohort_root_wheel_sha256=cohort.sha256["cadrumo"],
         timeout_seconds=timeout_seconds,
     )
-    if tax_evidence.target_value != EXPECTED_ORACLE_TARGET_VALUE:
+    expected = expected_oracle_target_value()
+    if tax_evidence.target_value != expected:
         raise AcquisitionError(
-            f"installed CLI oracle target value drifted: expected {EXPECTED_ORACLE_TARGET_VALUE}, "
-            f"got {tax_evidence.target_value!r}",
+            f"installed CLI oracle target value drifted: expected {expected}, got {tax_evidence.target_value!r}",
         )
 
     evidence = {

@@ -348,6 +348,7 @@ subjects = 1
 # ---------------------------------------------------------------------------
 
 [symbol_partition]
+measured = "2026-09-04"
 exact_total = 602
 test_only = 350
 unreferenced = 198
@@ -492,6 +493,7 @@ evidence = "AST sweep for module-level public-to-private aliases, cross-referenc
 # ---------------------------------------------------------------------------
 
 [test_only_triage]
+measured = "2026-09-04"
 population = 350
 retires_with_test = 341
 transitively_dead = 9
@@ -629,6 +631,7 @@ evidence = "Seven private aliases to public imports, carrying the comment 'Kept 
 # ---------------------------------------------------------------------------
 
 [exported_unused]
+measured = "2026-09-04"
 declared_exports = 8534
 exported_and_unconsumed = 368
 method = "a name counts as consumed only when another module from-imports it FROM the declaring module; bare-name matching would count same-named symbols in unrelated packages"

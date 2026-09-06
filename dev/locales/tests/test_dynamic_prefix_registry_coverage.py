@@ -1104,3 +1104,56 @@ def test_a_local_bound_to_a_registry_is_left_to_the_registry_rules() -> None:
     assert "workbench.routes.home" in scan_source_text(source, filename="router.py"), (
         "the registry rule still confirms the dict it owns"
     )
+
+
+def test_a_guard_that_admits_only_authored_keys_declares_them(tmp_path) -> None:
+    """Incident 16: the keys are declared in one module and rendered in another.
+
+    A boundary that will not render an arbitrary string states the keys it
+    accepts::
+
+        _SAFE_SOURCE_KEYS = frozenset({"tui.ledger.import.source.prepared"})
+        if source_label_key not in _SAFE_SOURCE_KEYS:
+            raise ...
+
+    and the screen beside it renders the admitted value as
+    `ledger_copy(choice.source_label_key)`. Nothing in the module that DECLARES
+    the keys translates them, and nothing in the module that translates them
+    mentions a literal, so each half looked inert on its own.
+
+    The link is the membership test, NOT a naming convention -- the guarded
+    name has to be one this tree actually passes to a translator. The negative
+    arm is a guard over a name nothing translates: an allow-list of choice ids
+    is the same shape and proves nothing about copy, so it stays out.
+    """
+    from .._ast_scanner import scan_source_tree
+
+    (tmp_path / "boundary.py").write_text(
+        chr(10).join(("def ledger_copy(key, **values):", "    return tr(key, **values)")),
+        encoding="utf-8",
+    )
+    (tmp_path / "models.py").write_text(
+        chr(10).join((
+            '_SAFE_SOURCE_KEYS = frozenset({"tui.ledger.import.source.prepared"})',
+            '_SAFE_CHOICE_IDS = frozenset({"ledger.choice.prepared"})',
+            "def seal(source_label_key, choice_id):",
+            "    if source_label_key not in _SAFE_SOURCE_KEYS:",
+            "        raise ValueError",
+            "    if choice_id not in _SAFE_CHOICE_IDS:",
+            "        raise ValueError",
+        )),
+        encoding="utf-8",
+    )
+    (tmp_path / "import_flow.py").write_text(
+        chr(10).join(("def row(choice):", "    return ledger_copy(choice.source_label_key)")),
+        encoding="utf-8",
+    )
+
+    keys = scan_source_tree(tmp_path)
+
+    assert "tui.ledger.import.source.prepared" in keys, (
+        "a guard admitting a value the tree translates is declaring keys"
+    )
+    assert "ledger.choice.prepared" not in keys, (
+        "the same shape over a name nothing translates is an identity allow-list, not copy"
+    )

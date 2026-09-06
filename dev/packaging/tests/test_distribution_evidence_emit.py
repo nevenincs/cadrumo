@@ -47,7 +47,15 @@ from ..evidence import (
     EvidenceStatus,
 )
 from ..installed_mcp_oracle import InstalledMcpEvidence, McpCallEvidence
-from ..installed_tax_oracle import InstalledTaxEvidence
+from ..installed_tax_oracle import (
+    EXPECTED_FORMULA,
+    EXPECTED_LEGAL_REF,
+    EXPECTED_NOTICE_CODES,
+    EXPECTED_SOURCE_REF,
+    EXPECTED_VALUE,
+    TARGET_CASILLA,
+    InstalledTaxEvidence,
+)
 from ._release_cohort_support import client_venv_template, release_cohort
 
 # Serial and integration, matching the Homebrew and Scoop packaging suites: these
@@ -56,12 +64,17 @@ from ._release_cohort_support import client_venv_template, release_cohort
 # than quick-feedback unit work.
 pytestmark = [pytest.mark.integration, pytest.mark.serial, pytest.mark.hex_core]
 
-_TARGET_CASILLA = "DP200014:00562"
-_TARGET_VALUE = "23000.00"
-_FORMULA = "modelo-200-cuota-integra"
-_LEGAL_REFS = ("ley-27-2014:art-29",)
-_SOURCE_REFS = ("aeat-modelo-200-manual-2024",)
-_NOTICE = ("modelo.work.calculate.plazo_vencido_unassessed_preview",)
+# The evidence these cases emit is built from the oracle's own expectations
+# rather than from copies of them. The fixture below is round-tripped and
+# then asserted against itself, so a copied expectation would keep passing
+# after the oracle moved: the emitter would be proven against a shape the
+# real oracle no longer produces, and nothing here would say so.
+_TARGET_CASILLA = TARGET_CASILLA
+_TARGET_VALUE = str(EXPECTED_VALUE)
+_FORMULA = EXPECTED_FORMULA
+_LEGAL_REFS = (EXPECTED_LEGAL_REF,)
+_SOURCE_REFS = (EXPECTED_SOURCE_REF,)
+_NOTICE = tuple(sorted(EXPECTED_NOTICE_CODES))
 _REVISION = "a" * 64
 _COHORT_VERSION = "0.2.1"
 
