@@ -1066,3 +1066,29 @@ area = "application"
 resolved = false
 symbols = ["revision_is_refund_disposition"]
 evidence = "Its docstring calls it a convenience wrapper used by the cross-period carry path, and no code calls it: the only other occurrence is a docstring sentence in core/refund_election.py, which additionally names the module as _result_disposition_resolution, an underscore the module does not carry. The rule it describes IS enforced, which is why this is displacement and not a correctness gap: application/calculations/m303_carry_ingress resolves the disposition itself and calls result_disposition_is_refund on it directly, so a refunded Modelo 303 period does carry zero forward. What is dead is the wrapper and the two prose claims about it. The remedy is to delete the function and correct both docstrings, since a sentence asserting a consumer that does not exist is the same defect as the locale manifests written for a scaffold gate that reads nothing."
+
+[[symbol_cluster]]
+name = "live filing token no mounted command family reads"
+class = "should-be-live"
+area = "application"
+resolved = false
+remedy_requires_decision = true
+symbols = ["FilingStatus"]
+evidence = "A one-member StrEnum whose docstring calls it the canonical live-read filing token used by mounted live command families. No mounted family reads it: the only true reference outside its module is dev/locales/tests/test_contract.py, which imports it alongside the other operator-surface models to check the locale contract, and the remaining occurrence is a string fixture in an object-names test rather than a use. So a dev contract test exercises the token while the production surface it names ignores it, and the docstring asserts the opposite. The remedy is to route the live command families through the token or to withdraw it and correct the sentence; the enum carries a single member, so the choice is about whether the filing state belongs in this vocabulary at all."
+
+[[symbol_cluster]]
+name = "protocols satisfied structurally by a named implementer"
+class = "design-time-authority"
+area = "application"
+resolved = true
+symbols = ["CertificateSecretBackend", "OperationTransientFinancialOperandSubmission", "OperationTransientFinancialOperandProtocolV1", "EphemeralSecretSubmission", "ModeloRecordCatalogueQueryProtocol"]
+evidence = "A Protocol is satisfied structurally, so an implementer never names it and the import graph cannot see the relationship; absence of a reference is not absence of use. Checked rather than assumed: matching each protocol method set against every class in the shipped tree finds exactly one implementer apiece, and each is the obviously intended one - SecureStorageCertificateSecretBackend for CertificateSecretBackend, OperationTransientFinancialOperandBroker for the ProtocolV1, ModeloRecordCatalogue for the catalogue query protocol, and OperationSupervisor for both operand and secret submission. Each protocol is the declaration constraining its implementer and the type checker is its reader, which is the design-time-authority shape. Recorded resolved: nothing to wire and nothing to delete."
+
+[[symbol_cluster]]
+name = "protocols no implementer satisfies"
+class = "should-be-live"
+area = "domain"
+resolved = false
+remedy_requires_decision = true
+symbols = ["GeneratedArtifactInspection", "WizardFlowProtocol"]
+evidence = "The two protocols the same structural check leaves unmatched, and each fails differently. GeneratedArtifactInspection requires a sources member and NO class in the shipped tree provides it, so the contract has no implementer at all. WizardFlowProtocol is runtime_checkable and its docstring states that domain code reaches the descriptor through this core slot and never imports the application-layer WizardFlow class directly; it appears nowhere outside its own module and __all__, so no domain code annotates or isinstance-checks against it and the layering it describes is not in force. Its single required member is only an id, which is why the structural sweep matched nine unrelated classes and proved nothing either way - the module-level evidence is what settles it. The remedy is to implement the one and to route domain code through the other or withdraw both claims."

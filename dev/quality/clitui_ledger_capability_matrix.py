@@ -5624,7 +5624,7 @@ def _acceptance_record_anchor_errors(
 ) -> list[str]:
     """Require an immutable, independently observed record for receipt authority."""
     if acceptance_record_anchor is None:
-        return ["accepted G3 closure requires a current external acceptance record anchor"]
+        return ["accepted G0 closure requires a current external acceptance record anchor"]
     try:
         anchor = LedgerAcceptanceRecordAnchorV1.model_validate(_serialized_python_data(acceptance_record_anchor))
     except ValidationError as error:
@@ -5763,10 +5763,9 @@ def evaluate_ledger_capability_gate(
             blockers.append("the Ledger TUI implementation hold is not recorded and active")
         if matrix.acceptance_attestation.ruling is not ReviewRuling.ACCEPT:
             blockers.append("independent review has not issued an ACCEPT attestation for the frozen matrix")
-        if not matrix.accepted_gate_closure_receipts:
-            blockers.extend(
-                _acceptance_record_anchor_errors(matrix, acceptance_record_anchor, observed_acceptance_subjects)
-            )
+        blockers.extend(
+            _acceptance_record_anchor_errors(matrix, acceptance_record_anchor, observed_acceptance_subjects)
+        )
         for row in matrix.rows:
             for assessment in row.assessments:
                 if (

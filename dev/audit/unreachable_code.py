@@ -1475,6 +1475,16 @@ def _symbol_findings(
             ):
                 data_cleared += 1
                 continue
+            # A registry declaration can name a CLASS as the target of a binding,
+            # as in ``profile_model = "TaxResidenceProfile"``. That is a reference
+            # the import graph cannot see. It is checked against the PARSED value
+            # set rather than the loose token set, so the name must equal a whole
+            # declared value; a class mentioned inside prose or a comment does not
+            # qualify, which keeps a real finding from being cleared by a passing
+            # sentence.
+            if definition.kind is SymbolKind.CLASS and definition.name in declared_values:
+                data_cleared += 1
+                continue
             findings.append(
                 SymbolFinding(
                     path=relative_to_repo(module.path, spec),
