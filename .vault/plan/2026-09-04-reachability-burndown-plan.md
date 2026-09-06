@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:01b42a72107dca5a99bebfc0dd47aeed3e734de1b33e499f4f224491cbbaa496'
+body_hash: 'sha256:9c14adc222fa755e3c6e41ab8f048ba46751bd473c6ae2d5f1cd1f1ca78aaed0'
 ---
 
 # `reachability-burndown` plan
@@ -151,6 +151,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S50` - Record a producer-replaced-by-constant shape the reachability signal cannot see as a missing consumer: the register scoping classifier and the filed period selection row projector are both unreached while their types and the whole downstream projection are live, because both onboarding run construction sites pass the inconclusive enum constant matching the field default and leave the selection rows at their empty tuple default, so the scoping signal is always inconclusive and the operator is always shown no selection rows even though the plumbing that would carry them is complete; `dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S51` - Test whether the producer-replaced-by-a-constant shape is gateable and record that it is not: matching a field annotation against an unreached producer's return type yields 3844 candidates when builtins are included and 227 when they are excluded, but the shape alone is not the defect, since the discriminating condition is that EVERY construction site passes the literal, and the leading candidate fails it because two of three sites pass a computed work unit id; adjudicate the work-address resolvers the investigation settled, displaced by a resolution that already carries what they return; `dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S52` - Adjudicate two supersessions whose displacing holder states the arrangement in its own docstring: the path-taking capsule restore wrappers are the second publication path that the shared authority explicitly exists to prevent, since a directory restore and an archive import differ only in how they obtain the capsule source and the live CLI reads the source then publishes; and the workspace manifest validators regenerate and compare a manifest that cannot differ, because the live capture is documented atomic with one generating authority whose own digest becomes the observation, so the comparison would always trivially pass; `dev/audit/reachability_classification.toml`.
+- [x] `W05.P12.S53` - Adjudicate the error registry inspection surfaces as test support, since production reaches the registry through typed accessors that are live at twenty-two, sixteen and eight references while the read-only view and the declared-rows accessor carry thirty-two and three test references and no dev consumer; and the in-service resume selector resolvers as superseded, the live resume target resolver documenting that visible and work-unit selectors route through the public modelo addressing facade so the service does not duplicate modelo selector policy, which is what these two are; `dev/audit/reachability_classification.toml`.
 
 ## Parallelization
 

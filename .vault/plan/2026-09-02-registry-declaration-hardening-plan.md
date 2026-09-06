@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:3f65c9dc201eb86c9d2c2eca218d14f5d65c7452738d91c0c34b41825c1e3266'
+body_hash: 'sha256:858f16821f8edfb57e4dbfa5357aead705e1462e271cfc80c6a37237b82d2082'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -695,6 +695,10 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S813` - Read the formatted log record so a source path carried in an attached traceback cannot escape the hygiene gate; `dev/sanitizer/tests/test_pipeline.py`.
 - [x] `W02.P02.S814` - Treat only shipped distribution metadata as a dependency declaration and stop scanning unshipped test modules; `dev/packaging/tests/test_inference_imports_are_declared.py`.
 - [x] `W02.P02.S815` - Route the registry module-importer walk through the guarded directory primitive so a missing package root refuses instead of reporting no eager importers; `dev/registry/analysis/load_census.py`.
+- [x] `W02.P02.S816` - Admit the plain-text suffix classes the identity canary read through neither tier so a catalogue or properties payload cannot go unscanned; `dev/identity/_tree_scan.py`.
+- [x] `W02.P02.S817` - Floor the user-docs corpus behind the redeclaration gate so an empty prose walk skips loudly instead of passing green; `dev/docs/terminology_handbook/tests/test_terminology_redeclaration_conformance.py`.
+- [x] `W02.P02.S818` - Assert the built sdist sheds its test tree, floored so a truncated or failed build cannot read as a clean archive; `dev/packaging/tests/test_sdist_test_tree_exclusion.py`.
+- [x] `W02.P02.S819` - Report os.open as an ambiguous write site so flag-assembled filesystem writes stop dropping out of the census; `dev/audit/write_site_census.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

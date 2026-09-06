@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-06'
-body_hash: 'sha256:e745c7d619bb6a1d828520dd12c583ff3e5fa3b2a82a1209faed61350942c414'
+body_hash: 'sha256:acced80fc3992e240de63c376c9590ea0cd86ab242c62cc364b825f3324972a5'
 ---
 
 <!-- RETIRED: S370 -->
@@ -699,7 +699,8 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S483` - Re-verify every gate closed in this campaign still holds after the concurrent writers commits and confirm the export tree blocker is unchanged, since a rename on this worktree was reverted five times before and a closed gate is only closed until someone else edits its surface; `dev/locales dev/docs src/cadrumo/entrypoints src/cadrumo/domain`.
 - [x] `W08.P30.S484` - Sweep the packaging test root that neither earlier sweep reached and establish that both its suites pass, the scoop and homebrew builds simply exceeding the configured three hundred second timeout under host contention rather than failing; `packaging`.
 - [x] `W08.P30.S485` - Correct the attribution for the packaging build timeouts, since running the scoop suite with nothing of mine in flight still finds the host saturated with more python processes than before, so the contention is not this sessions and the gates exceed their configured timeout on this machine as it is actually shared; `packaging`.
-- [ ] `W08.P30.S486` - Re-verify the five named targets that are not the parity prune still hold at current head after the concurrent writers commits, and record that regenerating the export trees would leave a large uncommitted generated diff in a shared worktree which is a second reason to leave that group to its owner; `dev/locales src/cadrumo/entrypoints/tui/modelo`.
+- [x] `W08.P30.S486` - Re-verify the five named targets that are not the parity prune still hold at current head after the concurrent writers commits, and record that regenerating the export trees would leave a large uncommitted generated diff in a shared worktree which is a second reason to leave that group to its owner; `dev/locales src/cadrumo/entrypoints/tui/modelo`.
+- [x] `W08.P30.S487` - Prepare the parity prune as a reviewable removal manifest without applying it, deriving the one hundred and thirty two keys and a per key verdict from the live authority owning each namespace, and confirm none of them is declared anywhere so the list cannot remove a key the product resolves; `dev/locales`.
 
 ## Parallelization
 
