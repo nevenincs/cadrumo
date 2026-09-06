@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:2f59521e05165c7d0f6cd67c6397bf3e75e7b7e8f3b7e2364c1bac1ac1b24402'
+body_hash: 'sha256:3a346e01bd59da1b005bf789077e48a75c118176652840fba4a8ff347f390896'
 ---
 
 # `reachability-burndown` plan
@@ -134,6 +134,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S33` - Give the module ratchet a verifiable disposition for capability a production contract requires but no entrypoint reaches: the classification ledger had already adjudicated domain.contabilidad and domain.is_compensation as staged capability, but the intentional kind enum held only design_time_authority, so the sole way to record them was widening allowed; add declared_by_contract, which must name the declaring file and is refused on load when that file stops naming the module, and close the hole the shared enum opened in the symbol ratchet where no declared_by exists to check; `dev/quality/unreachable_module_ratchet.py`.
 - [x] `W05.P12.S34` - Repair the classification ledger's own drift, which had gone red on two gates: three clusters filed a symbol under an area the audit never names, so the staleness check read a live finding as one the audit had stopped reporting; the three PublicResultV1 models had genuinely stopped being reported because the dead projectors beside them construct them and a construction counts as a use even when the constructor is unreached; and the reported module import_preparation carried no entry at all, which the ledger requires and the earlier reading had wrongly ruled out; also adjudicate the process-cache reset seams as test-support after checking their docstrings' production claims against the closed override_settings field list; `dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S35` - Record the paid-down unused-symbol debt the earlier deletion sweep left unwritten (six modules lowered, nine spent entries removed, no line added for the one peer finding the ratchet refuses to absorb), and adjudicate the eight findings referenced nowhere in the tree as should-be-live rather than deleting them: a custody record bound whose siblings are enforced and it is not, an unreachable flow-checkpoint discard, the unwired half of portable profile import beside its already-classified result type, two declared type distinctions nothing annotates, a sectoral retencion rate set no classifier consults, and the censo divergence projection that keeps unadopted certificate statements from the operator; `dev/quality/unused_symbol_ratchet.toml`.
+- [ ] `W05.P12.S36` - Stop an undated measurement in the classification ledger from reading as a current one: three tables recorded counts with no date, and the prose beneath exported_unused derived a 4.3 percent proportion from 368 of 8534 declared exports while the live figures had moved to 310 and roughly 8061, so a sentence stated a proportion that no longer held with nothing on the page to warn a reader; date the measurement tables and gate the property, requiring a date rather than currency so that a considered analysis is not turned into churn by every deletion; `dev/audit/tests/test_ledger_measurements_are_dated.py`.
 
 ## Parallelization
 

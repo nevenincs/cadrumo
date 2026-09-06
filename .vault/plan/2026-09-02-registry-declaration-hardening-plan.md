@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:0138d021fe8bc5f6347d8a529614499ef6bf458d93a59839b511de6b61655070'
+body_hash: 'sha256:52bc47690979ad685a470092a310c6954ced3896770c9bd914ca4dc3ac1c45fb'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -638,6 +638,9 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S756` - Read the forbidden command-artefact names from the cohort authority instead of the copy the installed-archive gate kept beside it; `dev/packaging/tests/test_command_spec_distribution_lanes.py`.
 - [x] `W02.P02.S757` - Import the just-call recipe pattern from the lane authority the test already consumes instead of recompiling an identical copy beside it; `dev/ci/tests/test_machine_aware_load.py`.
 - [x] `W02.P02.S758` - Build the distribution evidence fixture from the installed tax oracle's own expectations instead of six copies of them; `dev/packaging/tests/test_distribution_evidence_emit.py`.
+- [x] `W02.P02.S759` - Read the expected oracle cuota from the oracle that defines it, replacing the mirrored constant the acquisition lanes compared against; `dev/packaging/acquire_homebrew.py`.
+- [x] `W02.P02.S760` - Anchor the two module-promotion untouched-file claims that an empty plan satisfied, pinning the consumers the planner must still rewrite; `dev/quality/tests/test_module_promotion.py`.
+- [x] `W02.P02.S761` - Floor the two filtered sets the live casilla-claim relations range over, which the unfiltered pooled anchor left unguarded; `dev/registry/aeip/tests/test_cli_casilla_claims.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
