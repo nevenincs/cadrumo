@@ -497,6 +497,7 @@ def test_a_locale_key_mapping_declares_its_values_and_not_its_lookup_tokens() ->
     assert "workbench.home" not in keys, "a route identity is not a locale key"
     assert "operator.profile.edit" not in keys, "a catalogue action id is not a locale key"
 
+
 def test_a_row_table_is_confirmed_by_its_key_column_and_not_a_prose_sibling() -> None:
     """Incident 4: which COLUMN reaches the sink decides whether a table holds keys.
 
@@ -511,19 +512,23 @@ def test_a_row_table_is_confirmed_by_its_key_column_and_not_a_prose_sibling() ->
     """
     from .._ast_scanner import scan_source_text
 
-    prose_sink = chr(10).join((
-        '_GUARDS = (("review_action", "ledger.review", "injected action is not canonical"),)',
-        "def guard(supplied):",
-        "    for attribute, command_key, refusal in _GUARDS:",
-        "        if supplied[attribute] != command_key:",
-        "            raise ValueError(refusal)",
-    ))
-    key_sink = chr(10).join((
-        '_ROWS = (("prefix", "flows.errors.blank_required", "English source"),)',
-        "def render():",
-        "    for prefix, key, default in _ROWS:",
-        "        tr(key)",
-    ))
+    prose_sink = chr(10).join(
+        (
+            '_GUARDS = (("review_action", "ledger.review", "injected action is not canonical"),)',
+            "def guard(supplied):",
+            "    for attribute, command_key, refusal in _GUARDS:",
+            "        if supplied[attribute] != command_key:",
+            "            raise ValueError(refusal)",
+        )
+    )
+    key_sink = chr(10).join(
+        (
+            '_ROWS = (("prefix", "flows.errors.blank_required", "English source"),)',
+            "def render():",
+            "    for prefix, key, default in _ROWS:",
+            "        tr(key)",
+        )
+    )
 
     assert "ledger.review" not in scan_source_text(prose_sink, filename="guards.py"), (
         "a command key is not a translation key because its prose sibling reached a raise"
@@ -531,6 +536,7 @@ def test_a_row_table_is_confirmed_by_its_key_column_and_not_a_prose_sibling() ->
     assert "flows.errors.blank_required" in scan_source_text(key_sink, filename="rows.py"), (
         "a key column reaching tr must still confirm its table"
     )
+
 
 def test_a_positional_translation_key_needs_every_same_named_helper_to_agree(tmp_path) -> None:
     """Incident 5: resolving a key by parameter NAME collides on function name.
@@ -549,26 +555,32 @@ def test_a_positional_translation_key_needs_every_same_named_helper_to_agree(tmp
     from .._ast_scanner import scan_source_tree
 
     (tmp_path / "helpers.py").write_text(
-        chr(10).join((
-            "def option(name, flags, help_key):",
-            "    return (name, flags, help_key)",
-            "def leaf(token, help_key, handler):",
-            "    return (token, help_key, handler)",
-        )),
+        chr(10).join(
+            (
+                "def option(name, flags, help_key):",
+                "    return (name, flags, help_key)",
+                "def leaf(token, help_key, handler):",
+                "    return (token, help_key, handler)",
+            )
+        ),
         encoding="utf-8",
     )
     (tmp_path / "other.py").write_text(
-        chr(10).join((
-            "def leaf(token, module, parameters):",
-            "    return (token, module, parameters)",
-        )),
+        chr(10).join(
+            (
+                "def leaf(token, module, parameters):",
+                "    return (token, module, parameters)",
+            )
+        ),
         encoding="utf-8",
     )
     (tmp_path / "specs.py").write_text(
-        chr(10).join((
-            'option("note", ("--note",), "cli.app.ledger.note_help")',
-            'leaf("calculate", "cadrumo.entrypoints.cli._work_cli", "handler")',
-        )),
+        chr(10).join(
+            (
+                'option("note", ("--note",), "cli.app.ledger.note_help")',
+                'leaf("calculate", "cadrumo.entrypoints.cli._work_cli", "handler")',
+            )
+        ),
         encoding="utf-8",
     )
 
@@ -577,4 +589,44 @@ def test_a_positional_translation_key_needs_every_same_named_helper_to_agree(tmp
     assert "cli.app.ledger.note_help" in keys, "an agreeing helper must resolve its positional key"
     assert "cadrumo.entrypoints.cli._work_cli" not in keys, (
         "definitions that disagree on the position must collect nothing there"
+    )
+
+def test_a_local_translator_wrapper_is_followed_but_only_when_it_forwards_its_key(tmp_path) -> None:
+    """Incident 6: every TUI surface routes copy through its own boundary helper.
+
+    `def aeat_sync_copy(key, **values): return tr(key, **values)` means the call
+    sites read `aeat_sync_copy("tui.aeat_sync.column.area")` and never `tr(...)`.
+    The scanner resolved aliased IMPORTS of tr but not a wrapper defined as a
+    function, so every key reaching the catalogue through one of these
+    boundaries read as an orphan -- 89 of them.
+
+    The shape is deliberately tight, and the negative case is what keeps it so:
+    the function must forward its OWN first parameter. A helper that calls tr on
+    something else is not a key channel, and its arguments are not keys.
+    """
+    from .._ast_scanner import scan_source_tree
+
+    (tmp_path / "boundary.py").write_text(
+        chr(10).join((
+            "def copy(key, **values):",
+            "    return tr(key, **values)",
+            "def shout(text):",
+            '    return tr("ui.fixed.banner") + text',
+        )),
+        encoding="utf-8",
+    )
+    (tmp_path / "screen.py").write_text(
+        chr(10).join((
+            'copy("tui.aeat_sync.column.area")',
+            'shout("tui.aeat_sync.column.not_a_key")',
+        )),
+        encoding="utf-8",
+    )
+
+    keys = scan_source_tree(tmp_path)
+
+    assert "tui.aeat_sync.column.area" in keys, "a wrapper forwarding its key must be followed"
+    assert "ui.fixed.banner" in keys, "the non-forwarding helper still declares its own literal"
+    assert "tui.aeat_sync.column.not_a_key" not in keys, (
+        "a helper that does not forward its first parameter is not a key channel"
     )

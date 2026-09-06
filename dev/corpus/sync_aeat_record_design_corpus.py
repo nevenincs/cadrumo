@@ -596,14 +596,34 @@ def check() -> None:
         }
         for modelo in expected_models
     ]
-    if root.get("supported_corpus_modelos") != expected_models:
-        failures.append("root manifest supported_corpus_modelos is stale")
+    # Each staleness report names the observed and expected values. "is stale"
+    # alone states that something drifted and withholds what, so the reader
+    # cannot tell a one-artefact addition from a wholesale corpus change, and
+    # the cheapest response to an unactionable verdict is to regenerate blindly.
+    recorded_models = root.get("supported_corpus_modelos")
+    if recorded_models != expected_models:
+        missing = sorted(set(expected_models) - set(recorded_models or []))
+        extra = sorted(set(recorded_models or []) - set(expected_models))
+        failures.append(f"root manifest supported_corpus_modelos is stale: missing {missing}, unexpected {extra}")
     if root.get("model_count") != len(expected_models):
-        failures.append("root manifest model_count is stale")
+        failures.append(
+            f"root manifest model_count is stale: records {root.get('model_count')}, "
+            f"corpus holds {len(expected_models)}"
+        )
     if root.get("artefact_count") != expected_artifact_count:
-        failures.append("root manifest artefact_count is stale")
+        failures.append(
+            f"root manifest artefact_count is stale: records {root.get('artefact_count')}, "
+            f"corpus holds {expected_artifact_count}"
+        )
     if root.get("modelos") != expected_rows:
-        failures.append("root manifest per-model counts are stale")
+        recorded_counts = {row["modelo"]: row["artefact_count"] for row in root.get("modelos") or []}
+        expected_counts = {row["modelo"]: row["artefact_count"] for row in expected_rows}
+        drifted = [
+            f"{modelo} records {recorded_counts.get(modelo)} holds {expected_counts.get(modelo)}"
+            for modelo in sorted(set(recorded_counts) | set(expected_counts))
+            if recorded_counts.get(modelo) != expected_counts.get(modelo)
+        ]
+        failures.append("root manifest per-model counts are stale: " + "; ".join(drifted))
     exclusion_urls = historical_exclusions.get("urls", [])
     expected_historical_pages = [_PAGES[key] for key in _HISTORICAL_PAGE_KEYS]
     if historical_exclusions.get("schema_version") != 1:

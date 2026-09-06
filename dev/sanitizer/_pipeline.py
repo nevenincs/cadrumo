@@ -134,20 +134,7 @@ def sanitize_pdf(
     if refuse_if_already_sanitized and source_sha in _fixtures.SANITIZED_SHAS:
         raise AlreadySanitizedError(source_sha256=source_sha)
 
-    try:
-        # Path inputs feed pikepdf directly so QPDF's memory-mapping
-        # path can avoid a full in-memory copy of the source bytes.
-        # bytes inputs (uncommon — used by tests + library consumers
-        # with the bytes already in hand) take the BytesIO path.
-        pdf = pikepdf.Pdf.open(io.BytesIO(source) if isinstance(source, bytes) else source)
-    except PikepdfError as exc:
-        _LOG.debug(
-            "sanitize_pdf: source=<input-pdf> failure=%s",
-            type(exc).__name__,
-        )
-        # `from None`: the refusal deliberately carries the exception TYPE and no
-        # message, so the pikepdf cause stays out of the traceback with it.
-        raise SanitizerSourceParseError(failure=type(exc).__name__) from None
+    pdf = _open_source_pdf(source)
 
     _refuse_if_signed(pdf)
 
@@ -207,6 +194,35 @@ def sanitize_pdf(
         surfaces_scrubbed=tuple(surfaces),
         warnings=tuple(warnings),
     )
+
+
+def _open_source_pdf(source: bytes | Path) -> pikepdf.Pdf:
+    """Open the source with pikepdf, refusing under a redacted label.
+
+    Path inputs feed pikepdf directly so QPDF's memory-mapping path can avoid a
+    full in-memory copy of the source bytes. bytes inputs (uncommon - used by
+    tests and by library consumers with the bytes already in hand) take the
+    BytesIO path.
+
+    The refusal is raised OUTSIDE the ``except`` block, matching
+    :func:`_digest_source`. ``raise ... from None`` is not sufficient here: it
+    clears ``__cause__`` and suppresses the chained traceback from DISPLAY, but
+    ``__context__`` still holds the pikepdf error, and that error's message
+    embeds the source - a filesystem path for a Path input. Anything that reads
+    ``__context__`` rather than the rendered traceback (a handler logging with
+    ``exc_info``, a crash reporter, a structured serializer) would carry the
+    unredacted source out with it. Leaving the handler is what drops it.
+    """
+    failure: str | None = None
+    try:
+        return pikepdf.Pdf.open(io.BytesIO(source) if isinstance(source, bytes) else source)
+    except PikepdfError as exc:
+        _LOG.debug(
+            "sanitize_pdf: source=<input-pdf> failure=%s",
+            type(exc).__name__,
+        )
+        failure = type(exc).__name__
+    raise SanitizerSourceParseError(failure=failure)
 
 
 def _digest_source(source: bytes | Path) -> tuple[str, int]:

@@ -202,7 +202,7 @@ def _is_dynamic_translation_prefix(prefix: str) -> bool:
     return root in _DYNAMIC_TRANSLATION_ROOTS
 
 
-def _extract_error_constructor_keys(tree: ast.AST) -> set[str]:
+def _extract_error_constructor_keys(tree: ast.AST, extra_translators: frozenset[str] = frozenset()) -> set[str]:
     """Find translation keys declared anywhere in the module.
 
     Collects positional translation keys passed to classes whose name
@@ -215,7 +215,7 @@ def _extract_error_constructor_keys(tree: ast.AST) -> set[str]:
     ``translated_message``/``message_key``/``translation_key`` parameters.
     """
     findings: set[str] = set()
-    tr_names = _translation_call_names(tree)
+    tr_names = _translation_call_names(tree) | extra_translators
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef):
             _collect_kwonly_default_keys(node, findings)
@@ -957,6 +957,54 @@ def _iter_parseable_python_modules(root: Path) -> Iterator[tuple[Path, ast.Modul
     )
 
 
+def _translation_wrapper_names(modules: list[tuple[Path, ast.Module]]) -> frozenset[str]:
+    """Return functions that forward their own first parameter to a translator.
+
+    Every TUI surface routes its copy through one boundary helper --
+    ``def aeat_sync_copy(key, **values): return tr(key, **values)`` -- so the
+    call sites read ``aeat_sync_copy("tui.aeat_sync.column.area")`` and never
+    ``tr(...)``. The scanner resolved aliased IMPORTS of ``tr`` but not a
+    wrapper defined as a function, so every key reaching the catalogue through
+    one of these boundaries read as an orphan.
+
+    The shape is deliberately tight: the function must pass its OWN first
+    parameter as the first positional argument to something already known to
+    translate. A helper that merely calls ``tr`` on some other value is not a
+    key channel and does not qualify.
+
+    Resolved to a fixpoint across the whole tree, because a wrapper may be
+    imported from another module and may itself wrap a wrapper.
+    """
+    definitions: list[tuple[str, str, ast.AST]] = []
+    for _path, tree in modules:
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+                continue
+            parameters = [*node.args.posonlyargs, *node.args.args]
+            if parameters and parameters[0].arg in {"self", "cls"}:
+                parameters = parameters[1:]
+            if parameters:
+                definitions.append((node.name, parameters[0].arg, node))
+
+    known = {"tr", "t"}
+    while True:
+        discovered = set()
+        for name, first, node in definitions:
+            if name in known:
+                continue
+            for inner in ast.walk(node):
+                if not isinstance(inner, ast.Call) or not inner.args:
+                    continue
+                callee = getattr(inner.func, "id", getattr(inner.func, "attr", None))
+                argument = inner.args[0]
+                if callee in known and isinstance(argument, ast.Name) and argument.id == first:
+                    discovered.add(name)
+                    break
+        if not discovered:
+            return frozenset(known - {"tr", "t"})
+        known |= discovered
+
+
 def _translation_key_parameter_positions(
     modules: list[tuple[Path, ast.Module]],
 ) -> dict[str, frozenset[int]]:
@@ -1031,9 +1079,10 @@ def scan_source_tree(root: Path) -> set[str]:
     """
     modules = list(_iter_parseable_python_modules(root))
     key_positions = _translation_key_parameter_positions(modules)
+    wrappers = _translation_wrapper_names(modules)
     findings: set[str] = set()
     for _module, tree in modules:
-        findings.update(_extract_error_constructor_keys(tree))
+        findings.update(_extract_error_constructor_keys(tree, wrappers))
         findings.update(_extract_locale_constant_keys(tree))
         findings.update(_extract_positional_translation_key_arguments(tree, key_positions))
     return findings

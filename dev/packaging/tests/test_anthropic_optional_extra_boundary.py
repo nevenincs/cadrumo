@@ -90,7 +90,7 @@ def test_client_and_provider_loader_preserve_the_registered_extra_facts(
         from pathlib import Path
 
         import cadrumo
-        from cadrumo.core import MissingOptionalExtraError
+        from cadrumo.core.optional_extras import MissingOptionalExtraError
         from cadrumo.core.config import load_settings
         from cadrumo.llm.client import LLMClient
         from cadrumo.llm.models import LLMProvider

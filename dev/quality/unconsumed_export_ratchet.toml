@@ -23,7 +23,7 @@
 "adapters/outbound/google/impersonation.py" = 1
 "adapters/persistence/profile/assets.py" = 2
 "adapters/persistence/profile/inventory.py" = 3
-"adapters/persistence/profile/prorrata_register.py" = 4
+"adapters/persistence/profile/prorrata_register.py" = 1
 "adapters/persistence/storage/bucket/directory_layout.py" = 1
 "adapters/persistence/storage/bucket/output_language_hint.py" = 2
 "adapters/persistence/storage/custody/capsule.py" = 3
@@ -48,7 +48,6 @@
 "application/corpus_search/terminology.py" = 1
 "application/filing/_export_parity.py" = 1
 "application/filing/export_proof.py" = 2
-"application/filing/record_renderer.py" = 10
 "application/filing/runtime.py" = 2
 "application/flows/checkpoint.py" = 1
 "application/flows/engine.py" = 1
@@ -67,7 +66,6 @@
 "application/modelo/_row_source_identity_replay.py" = 1
 "application/modelo/calculation_route.py" = 1
 "application/modelo/edit_models.py" = 3
-"application/modelo/export.py" = 1
 "application/modelo/iva_wallet_gate.py" = 1
 "application/modelo/local_observation_spreadsheet.py" = 1
 "application/modelo/m145_communication_records.py" = 1
@@ -78,7 +76,6 @@
 "application/modelo/review_package_recipient_encryption.py" = 2
 "application/modelo/review_package_signing.py" = 1
 "application/modelo/work_addressing.py" = 2
-"application/modelo/work_create_policy.py" = 1
 "application/modelo/workspace.py" = 2
 "application/modelo/workspace_manifest.py" = 2
 "application/modelo/workspace_models.py" = 2
@@ -108,7 +105,6 @@
 "application/user_profile/presentation.py" = 1
 "application/user_profile/repository.py" = 1
 "application/wizard/_format_hints.py" = 1
-"application/wizard/commands.py" = 1
 "application/wizard/descendant_door.py" = 1
 "application/wizard/descendant_group.py" = 1
 "application/wizard/persistence.py" = 2
@@ -205,14 +201,6 @@
 "entrypoints/cli/_command_runtime.py" = 1
 "entrypoints/cli/_command_schema.py" = 1
 "entrypoints/cli/_modelo_cli_support.py" = 1
-"entrypoints/cli/_modelo_work_calculate_cli.py" = 1
-"entrypoints/cli/_modelo_work_lifecycle_cli.py" = 5
-"entrypoints/cli/_modelo_work_revision_cli.py" = 3
-"entrypoints/cli/_modelo_work_runs_cli.py" = 4
-"entrypoints/cli/_modelo_work_select_cli.py" = 1
-"entrypoints/cli/_modelo_work_verification_cli.py" = 3
-"entrypoints/cli/_modelo_work_wizard_cli.py" = 1
-"entrypoints/cli/_overview.py" = 2
 "entrypoints/cli/_profile_session_gate.py" = 2
 "entrypoints/cli/_tty.py" = 3
 "entrypoints/cli/_windows_profile_secret_bootstrap.py" = 1

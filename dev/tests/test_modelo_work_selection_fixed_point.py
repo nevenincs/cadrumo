@@ -70,9 +70,25 @@ def _tracked_live_corpus() -> tuple[Path, ...]:
     return tracked_live_files()
 
 
+def _retired_module_paths() -> tuple[Path, ...]:
+    """Return the file each retired module would occupy, derived from ``_RETIRED``.
+
+    Restating those filenames here is what broke this gate: the retired module
+    carries a LEADING UNDERSCORE and the hand-written path dropped it, so the
+    assertion demanded the absence of the canonical module the whole spec
+    targets, and the retirement it meant to prove went unchecked in both
+    directions at once. ``_RETIRED`` is the one declaration of what is retired;
+    the paths follow from it rather than beside it.
+    """
+    return tuple(_ROOT / "src" / f"{dotted.replace('.', '/')}.py" for dotted in sorted(_RETIRED))
+
+
 def test_work_selection_fixed_point_is_discovery_complete() -> None:
-    assert not (_CADRUMO / "application/modelo/work_addressing.py").exists()
-    assert not (_CADRUMO / "application/modelo/work_unit_selection.py").exists()
+    # The absence claims need an anchor: were the canonical module gone, every
+    # retirement below would hold over a package that no longer selects work.
+    assert _CANONICAL.is_file(), f"the canonical work-selection module is missing: {_CANONICAL}"
+    for retired in _retired_module_paths():
+        assert not retired.exists(), f"this module is declared retired but is present: {retired}"
     assert scan_canonical_authority(_SPEC, _tracked_live_corpus()) == []
 
 
