@@ -508,8 +508,17 @@ def _recover_interrupted_publication(
         return True
     if backup_export_root.exists():
         if candidate_is_verified:
+            if target_export_root.exists():
+                _move_failed_candidate_aside(target_export_root)
+            os.replace(staged_candidate_export_root, target_export_root)
+            fsync_parent_dir(target_export_root)
+            # The authority check reads `revision.export_layouts` off the disk
+            # tree, which only exists once the candidate is at the canonical
+            # `export/` location -- it cannot see content still sitting at the
+            # staging path, so this runs after the swap, mirroring the primary
+            # publish path's own swap-then-verify order.
             candidate_manifest = _verify_recovery_package_against_current_authorities(
-                staged_candidate_export_root,
+                target_export_root,
                 context=context,
                 modelo_root=target_export_root.parent.parent.parent,
                 joined=joined,
@@ -518,10 +527,6 @@ def _recover_interrupted_publication(
                 render_profile=render_profile,
                 render_profile_source_evidence=render_profile_source_evidence,
             )
-            if target_export_root.exists():
-                _move_failed_candidate_aside(target_export_root)
-            os.replace(staged_candidate_export_root, target_export_root)
-            fsync_parent_dir(target_export_root)
             _verify_post_cutover_target(
                 target_export_root,
                 expected_manifest_sha256=journal.candidate_manifest_sha256,
@@ -537,8 +542,10 @@ def _recover_interrupted_publication(
         _delete_journal(journal_path)
         return False
     if candidate_is_verified and not target_export_root.exists():
+        os.replace(staged_candidate_export_root, target_export_root)
+        fsync_parent_dir(target_export_root)
         candidate_manifest = _verify_recovery_package_against_current_authorities(
-            staged_candidate_export_root,
+            target_export_root,
             context=context,
             modelo_root=target_export_root.parent.parent.parent,
             joined=joined,
@@ -547,8 +554,6 @@ def _recover_interrupted_publication(
             render_profile=render_profile,
             render_profile_source_evidence=render_profile_source_evidence,
         )
-        os.replace(staged_candidate_export_root, target_export_root)
-        fsync_parent_dir(target_export_root)
         _verify_post_cutover_target(
             target_export_root,
             expected_manifest_sha256=journal.candidate_manifest_sha256,

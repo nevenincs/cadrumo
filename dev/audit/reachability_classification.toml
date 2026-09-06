@@ -1178,9 +1178,8 @@ remedy_requires_decision = true
 name = "declared type distinctions nothing annotates"
 class = "should-be-live"
 area = "core"
-symbols = ["OptionalSourceUrl", "optional_extra_for_module"]
-evidence = "OptionalSourceUrl is a constrained alias whose own docstring explains why it is spelled separately from SourceUrl rather than as SourceUrl | None -- and no model field or signature annotates with it, so the distinction it draws is enforced nowhere while its sibling is in use. optional_extra_for_module answers 'is this missing module a capability package the operator may legitimately not have installed?' against the declared OPTIONAL_EXTRAS inventory, and nothing asks: a missing optional package therefore reaches the operator unclassified rather than as the install-this-extra remedy the inventory exists to give."
-remedy_requires_decision = true
+symbols = ["OptionalSourceUrl"]
+evidence = "OptionalSourceUrl is a constrained alias whose own docstring explains why it is spelled separately from SourceUrl rather than as SourceUrl | None: the projection spells an absent value as the empty string on the wire, and a minimum length of one would refuse it. It is now WIRED. ModelLicence.source_url carried a bare str default of empty string with NO length bound at all, which is exactly the case the alias describes, and it now carries the alias. Verified live: the empty string still validates so absence on the wire is unaffected, a value at the 1024 bound is accepted, and one over it is refused where previously any length passed. Its sibling optional_extra_for_module left this cluster on being wired as the import-failure backstop."
 
 [[symbol_cluster]]
 name = "sectoral retencion rate set no classifier consults"

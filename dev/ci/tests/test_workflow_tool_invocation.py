@@ -22,8 +22,10 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from typing import Any
 
 import pytest
+import yaml
 
 from ..._paths import REPO_ROOT
 
@@ -89,17 +91,63 @@ def test_no_workflow_runs_a_relative_importing_module_as_a_script() -> None:
     assert not offenders, "packaged tool(s) invoked as scripts:\n  " + "\n  ".join(offenders)
 
 
+def _executable_run_surface(text: str) -> str:
+    """Return the shell a workflow actually executes, comments excluded.
+
+    Reading the raw file instead accepts a state this gate's own claim
+    forbids: commenting out every `uv run ... -m <module>` line leaves the
+    bytes in place, so a substring check stays green while not one of the
+    tools runs. The parsed reading keeps only live `run:` bodies, so a
+    prose-only or commented-out workflow cannot satisfy the contract.
+    """
+    document: Any = yaml.safe_load(text)
+    assert isinstance(document, dict)
+    jobs = document["jobs"]
+    assert isinstance(jobs, dict)
+    lines: list[str] = []
+    for job in jobs.values():
+        for step in job.get("steps") or []:
+            if not isinstance(step, dict) or "run" not in step:
+                continue
+            for line in str(step["run"]).splitlines():
+                stripped = line.strip()
+                if stripped and not stripped.startswith("#"):
+                    lines.append(stripped)
+    return "\n".join(lines)
+
+
 def test_compatibility_workflow_uses_module_entry_points() -> None:
     """Inventory, probe, and cohort tools run with package context intact."""
     workflow = REPO_ROOT / ".github" / "workflows" / "python-runtime-compatibility.yml"
-    surface = workflow.read_text(encoding="utf-8")
+    surface = _executable_run_surface(workflow.read_text(encoding="utf-8"))
     for module in (
         "dev.ci.python_runtime_matrix",
         "dev.ci.python_runtime_compatibility",
         "dev.packaging.release_cohort",
     ):
-        assert f"uv run --no-sync python -m {module}" in surface
+        assert f"uv run --no-sync python -m {module}" in surface, f"{module} is not invoked by any live run step"
     assert re.search(r"\bpython3?\s+(?:dev|packaging|src)/[\w/]+\.py", surface) is None
+
+
+def test_executable_surface_ignores_a_commented_out_invocation(tmp_path: Path) -> None:
+    """A commented-out module call is bytes in the file, not an invocation."""
+    workflow = tmp_path / "commented.yml"
+    workflow.write_text(
+        "name: commented\n"
+        "on: [workflow_dispatch]\n"
+        "jobs:\n"
+        "  run:\n"
+        "    runs-on: [self-hosted, Linux, X64]\n"
+        "    steps:\n"
+        "      - run: |\n"
+        "          # uv run --no-sync python -m dev.ci.python_runtime_matrix\n"
+        "          echo skipped\n",
+        encoding="utf-8",
+    )
+    text = workflow.read_text(encoding="utf-8")
+    call = "uv run --no-sync python -m dev.ci.python_runtime_matrix"
+    assert call in text
+    assert call not in _executable_run_surface(text)
 
 
 def test_direct_script_detector_has_detector_teeth(tmp_path: Path) -> None:
