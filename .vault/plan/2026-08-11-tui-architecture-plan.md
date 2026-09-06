@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-06'
-body_hash: 'sha256:249cb2e1b4243c3eae777d9877120ccffcb7bfc2512a197145ce7c163a51f3fd'
+body_hash: 'sha256:13b31ead89ecaae09607960f9a742300d8e24b14e0f3447a869bc7e59240e49a'
 ---
 
 <!-- RETIRED: S370 -->
@@ -675,6 +675,7 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S459` - Stop deciding row-table candidacy by cell type and hold the translation-key kwarg set to the TranslationKey annotation, since a choice table pairs its key with the enum member it sets and four parameters the type already declares as keys were absent from a list grown one orphan at a time; `dev/locales/_ast_scanner.py dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
 - [x] `W08.P30.S460` - Follow a column table into the shared fitter it is handed to, walking comprehension generators as well as for statements and confirming every table a parameter receives rather than dropping the name as ambiguous, since one helper serves every screen and the ambiguity rule failed the common case for being common; `dev/locales/_ast_scanner.py dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
 - [x] `W08.P30.S461` - Read the CLI help keys from the live command-spec registry rather than from source text, since a spec table builds an options help key from the option name so no literal exists and fifty-eight shipped keys the CLI resolves on every run were indistinguishable from keys nothing uses; establish on the same evidence that the live registry declares none of the 125 cli catalogue extras; `dev/locales/_command_spec_scanner.py dev/locales/manager.py dev/locales/tests/test_command_spec_key_source.py`.
+- [x] `W08.P30.S462` - Repair the generated casilla reference key derivation that silently enumerated nothing after three closed fields became enums, since get_args answers for a Literal and returns empty for an Enum so the families vanished from the declaration while the surface kept rendering them and twenty-six shipped keys were reported as stale copy; `dev/docs/casilla_reference.py dev/docs/tests/test_casilla_reference_presentation.py`.
 
 ## Parallelization
 
