@@ -16,7 +16,7 @@ line formatting, which stay with the surface that displays them.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, override
 
 from pydantic import BaseModel, NonNegativeInt
 
@@ -96,10 +96,12 @@ class _DescendingKey:
         """Invert the natural ordering."""
         return other.value < self.value
 
+    @override
     def __eq__(self, other: object) -> bool:
         """Compare only against another reversed key."""
         return isinstance(other, _DescendingKey) and other.value == self.value
 
+    @override
     def __hash__(self) -> int:
         """Hash by the wrapped value so equal keys agree."""
         return hash(self.value)

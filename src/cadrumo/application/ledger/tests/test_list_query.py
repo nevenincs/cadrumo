@@ -15,7 +15,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict, Unpack
 
 import pytest
 
@@ -68,7 +68,22 @@ def _transaction(*, provider_id: str, amount: Decimal, group_label: str | None =
     )
 
 
-def _query(**overrides: object) -> LedgerTransactionListQuery:
+class _QueryOverrides(TypedDict, total=False):
+    """The fields a test may vary on a list query.
+
+    Typed rather than ``object`` because the per-field types have to survive
+    ``**`` unpacking into the model: a bare ``object`` widens every value and
+    the model's own bool, int, and enum fields can no longer be checked.
+    """
+
+    group: str | None
+    by_group: bool
+    limit: int | None
+    offset: int
+    sort_by: LedgerSortField | None
+    sort_order: LedgerSortOrder
+    exclude_llm_rejected: bool
+def _query(**overrides: Unpack[_QueryOverrides]) -> LedgerTransactionListQuery:
     return LedgerTransactionListQuery(spec=LedgerReviewFilterSpec(clauses=()), **overrides)
 
 

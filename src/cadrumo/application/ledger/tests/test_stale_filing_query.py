@@ -86,7 +86,7 @@ def test_a_drifted_filing_owned_by_this_bucket_is_reported() -> None:
     findings = read_stale_ledger_filings(
         bucket_id=_BUCKET,
         revisions={},
-        work_units=_WorkUnits({"wu-1": _WorkUnit(bucket_id=_BUCKET)}),  # type: ignore[arg-type]
+        work_units=_WorkUnits({"wu-1": _WorkUnit(bucket_id=_BUCKET)}),
         transactions=TransactionCatalogue(),
         detector=_detector(((revision, _Verdict(changed=("a",), removed=())),)),
     )
@@ -111,7 +111,7 @@ def test_a_filing_owned_by_another_bucket_is_excluded() -> None:
     findings = read_stale_ledger_filings(
         bucket_id=_BUCKET,
         revisions={},
-        work_units=_WorkUnits({"wu-1": _WorkUnit(bucket_id=_OTHER_BUCKET)}),  # type: ignore[arg-type]
+        work_units=_WorkUnits({"wu-1": _WorkUnit(bucket_id=_OTHER_BUCKET)}),
         transactions=TransactionCatalogue(),
         detector=_detector(((revision, _Verdict(changed=("a",), removed=())),)),
     )
@@ -126,7 +126,7 @@ def test_a_revision_whose_work_unit_is_missing_is_excluded() -> None:
     findings = read_stale_ledger_filings(
         bucket_id=_BUCKET,
         revisions={},
-        work_units=_WorkUnits({}),  # type: ignore[arg-type]
+        work_units=_WorkUnits({}),
         transactions=TransactionCatalogue(),
         detector=_detector(((revision, _Verdict(changed=("a",), removed=())),)),
     )
@@ -141,7 +141,7 @@ def test_changed_and_removed_counts_are_carried_separately() -> None:
     findings = read_stale_ledger_filings(
         bucket_id=_BUCKET,
         revisions={},
-        work_units=_WorkUnits({"wu-1": _WorkUnit(bucket_id=_BUCKET)}),  # type: ignore[arg-type]
+        work_units=_WorkUnits({"wu-1": _WorkUnit(bucket_id=_BUCKET)}),
         transactions=TransactionCatalogue(),
         detector=_detector(((revision, _Verdict(changed=("a", "b"), removed=("c",))),)),
     )
@@ -156,7 +156,7 @@ def test_no_drift_reports_nothing() -> None:
     findings = read_stale_ledger_filings(
         bucket_id=_BUCKET,
         revisions={},
-        work_units=_WorkUnits({}),  # type: ignore[arg-type]
+        work_units=_WorkUnits({}),
         transactions=TransactionCatalogue(),
         detector=_detector(()),
     )

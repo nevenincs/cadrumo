@@ -19,7 +19,7 @@ revision id names nothing they filed, whereas modelo, year and period do.
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Protocol
 
 from pydantic import BaseModel, NonNegativeInt
 
@@ -33,7 +33,6 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
 
     from ...domain.modelos.calculation_revision import CalculationRevision
-    from ...domain.modelos.work_unit import WorkUnitCatalogue
     from ...domain.transactions.models import TransactionCatalogue
 
 
@@ -55,11 +54,44 @@ class LedgerStaleFilingV1(BaseModel):
     removed_count: NonNegativeInt
 
 
+class StaleFilingPeriodV1(Protocol):
+    """The period surface this query reads."""
+
+    @property
+    def registry_token(self) -> str: ...
+
+
+class StaleFilingWorkUnitV1(Protocol):
+    """The work-unit surface this query reads: four fields, no more."""
+
+    @property
+    def bucket_id(self) -> str: ...
+
+    @property
+    def modelo(self) -> str: ...
+
+    @property
+    def filing_year(self) -> int: ...
+
+    @property
+    def period(self) -> StaleFilingPeriodV1: ...
+
+
+class StaleFilingWorkUnitLookupV1(Protocol):
+    """The catalogue surface this query reads.
+
+    Structural rather than :class:`WorkUnitCatalogue` because the query calls
+    exactly one method on it. A caller's minimal stand-in is then a legitimate
+    argument rather than something that has to be waved past the type checker,
+    and the real catalogue satisfies it unchanged.
+    """
+
+    def get(self, work_unit_id: str, /) -> StaleFilingWorkUnitV1 | None: ...
 def read_stale_ledger_filings(
     *,
     bucket_id: str,
     revisions: Mapping[str, CalculationRevision],
-    work_units: WorkUnitCatalogue,
+    work_units: StaleFilingWorkUnitLookupV1,
     transactions: TransactionCatalogue,
     detector: StaleRevisionDetectorV1 = stale_filed_revisions,
 ) -> tuple[LedgerStaleFilingV1, ...]:

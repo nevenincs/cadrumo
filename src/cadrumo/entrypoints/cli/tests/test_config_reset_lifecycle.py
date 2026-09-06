@@ -10,6 +10,7 @@ import pytest
 
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.storage.bucket.directory_layout import bucket_paths
+from ....application.filing.retention import try_record_filing_retention_snapshot
 from ....core.config import override_settings
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
@@ -48,10 +49,20 @@ def _persist_retained_filing() -> None:
     with open_test_profile_session(_PROFILE_ID):
         repository = ModeloRecordCatalogueRepository(bucket_id=_PROFILE_ID)
         catalogue = repository.load()
-        repository.save(
-            ModeloRecordCatalogue(
-                records={**catalogue.records, record_id: record},
-            ),
+        saved = ModeloRecordCatalogue(records={**catalogue.records, record_id: record})
+        repository.save(saved)
+        # Production refreshes the retention snapshot at the moment a filing is
+        # persisted (`modelo.revision_persistence`), because the deletion
+        # preflight cannot read a bucket it has not unlocked and reads this
+        # plaintext record instead. Writing the catalogue directly skips that
+        # producer, leaving a profile whose filing exists but whose snapshot
+        # still says "no filings" -- a state production never reaches, and one
+        # in which the preflight sees nothing to retain and the reset runs
+        # straight to completion.
+        try_record_filing_retention_snapshot(
+            bucket_id=_PROFILE_ID,
+            records=tuple(saved.records.values()),
+            observed_at=datetime(2025, 7, 1, tzinfo=UTC),
         )
 
 
@@ -77,7 +88,13 @@ def test_config_reset_start_status_and_resume_exact_durable_journal(
 ) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         with open_test_profile_session(_PROFILE_ID):
-            register_minimal_profile(profile_id=_PROFILE_ID)
+            # `config reset` runs the custody-transaction deletion preflight,
+            # which joins the legal and filing hold owners. An ABSENT legal-hold
+            # snapshot fails closed by design -- it means nobody was asked, not
+            # that no case is open -- so a profile seeded without one refuses
+            # here for a reason that is not this test's subject. This is the
+            # opt-in the seeding door documents for exactly that case.
+            register_minimal_profile(profile_id=_PROFILE_ID, record_empty_legal_hold=True)
         _persist_retained_filing()
 
         empty_status = _invoke_json(["config", "reset", "status"])

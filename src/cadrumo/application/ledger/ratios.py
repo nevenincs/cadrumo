@@ -22,6 +22,7 @@ from ...core.identity import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.prose_elision import ElidedProse
 from ...core.unit_proportion import UnitProportion, is_unit_proportion
+from ...domain.buckets.event import BucketEventType
 from ...domain.categories.proportionality import ProportionalityKind, ProportionalityRule, effective_usage_ratio
 from ...domain.categories.registry import resolve_category_profiles
 from ...domain.categories.spending_category import HOME_OFFICE_FAMILIES, SpendingCategory, family_for
@@ -350,3 +351,150 @@ __all__ = [
     "validate_ratios_for_bucket",
     "validate_ratios_profile",
 ]
+
+
+class UsageRatioMutationOutcomeV1(BaseModel):
+    """What one ratio mutation changed, and what it raised against the Censo."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    category: SpendingCategory
+    prior_ratio: Decimal | None
+    new_ratio: Decimal | None
+    censo_override_warning: RatiosCensoOverrideWarning | None = None
+
+
+def _emit_ratio_event(
+    *,
+    bucket_id: str,
+    event_type: BucketEventType,
+    object_id: str,
+    payload: dict[str, str],
+) -> None:
+    """Append one ratios audit event to the bucket-event history.
+
+    The event's type, object class, actor and payload shape are the audit
+    record's contract, not a display choice, so they are decided here rather
+    than by whichever surface performed the mutation.
+    """
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ...core.time.clock import now
+    from ...domain.buckets.event import BucketEventObjectType
+    from ...domain.buckets.event_repository import emit_bucket_event
+
+    emit_bucket_event(
+        repository=BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id)),
+        bucket_id=bucket_id,
+        event_type=event_type,
+        occurred_at=now(),
+        actor="operator",
+        object_type=BucketEventObjectType.PROFILE,
+        object_id=object_id,
+        payload=payload,
+        payload_version=1,
+    )
+
+
+def _ratio_change_payload(*, category: SpendingCategory, prior: Decimal | None, new: Decimal | None) -> dict[str, str]:
+    """Render a before/after pair, with an absent value as the empty string."""
+    return {
+        "category": category.value,
+        "prior": "" if prior is None else str(prior),
+        "new": "" if new is None else str(new),
+    }
+
+
+def apply_usage_ratio_override(
+    *,
+    bucket_id: str,
+    category: SpendingCategory,
+    ratio: Decimal,
+    year: int,
+    profile_id: str | None = None,
+    raw_afectacion_ratio: Decimal | None = None,
+) -> UsageRatioMutationOutcomeV1:
+    """Persist one override, record it, and check it against the Censo.
+
+    Three things that had to happen together and were composed by the caller:
+    the write, its audit event, and the comparison against the afectación ratio
+    the operator declared to the AEAT. A surface that performed the write and
+    forgot the comparison would let an override silently contradict the Censo.
+
+    NOT ATOMIC, and deliberately reported rather than papered over: the ratio
+    store and the event history are separate secure objects with no shared
+    commit, so a failure after the write leaves a persisted override with no
+    audit event. Making it atomic needs the co-commit treatment the invoice
+    link writer uses; this function does not invent one.
+
+    Args:
+        bucket_id: The owning profile bucket.
+        category: The spending category being overridden.
+        ratio: The override to store.
+        year: The filing year the Censo comparison is made for.
+        profile_id: The active profile, when one is bound.
+        raw_afectacion_ratio: The Censo-declared afectación ratio, when known.
+
+    Returns:
+        The prior and new values, plus any Censo override warning raised.
+    """
+    prior = set_usage_ratio(bucket_id=bucket_id, category=category, ratio=ratio)
+    _emit_ratio_event(
+        bucket_id=bucket_id,
+        event_type=BucketEventType.LEDGER_RATIOS_SET,
+        object_id=category.value,
+        payload=_ratio_change_payload(category=category, prior=prior, new=ratio),
+    )
+    warning = (
+        censo_override_warning(
+            category=category,
+            override_ratio=ratio,
+            raw_afectacion_ratio=raw_afectacion_ratio,
+            year=year,
+        )
+        if profile_id is not None and raw_afectacion_ratio is not None
+        else None
+    )
+    if warning is not None:
+        _emit_ratio_event(
+            bucket_id=bucket_id,
+            event_type=BucketEventType.LEDGER_RATIOS_CENSO_OVERRIDE_WARNING,
+            object_id=warning.category.value,
+            payload={
+                "category": warning.category.value,
+                "override_ratio": str(warning.override_ratio),
+                "censo_derived_ratio": str(warning.censo_derived_ratio),
+                "raw_afectacion_ratio": str(warning.raw_afectacion_ratio),
+            },
+        )
+    return UsageRatioMutationOutcomeV1(
+        category=category,
+        prior_ratio=prior,
+        new_ratio=ratio,
+        censo_override_warning=warning,
+    )
+
+
+def clear_usage_ratio_override(*, bucket_id: str, category: SpendingCategory) -> UsageRatioMutationOutcomeV1:
+    """Clear one override and record the clearance.
+
+    Carries the same non-atomicity as :func:`apply_usage_ratio_override`.
+
+    Args:
+        bucket_id: The owning profile bucket.
+        category: The category whose override is cleared.
+
+    Returns:
+        The cleared value as ``prior_ratio``, with ``new_ratio`` absent.
+
+    Raises:
+        UsageRatioValidationError: When the category carries no override.
+    """
+    prior = unset_usage_ratio(bucket_id=bucket_id, category=category)
+    _emit_ratio_event(
+        bucket_id=bucket_id,
+        event_type=BucketEventType.LEDGER_RATIOS_UNSET,
+        object_id=category.value,
+        payload=_ratio_change_payload(category=category, prior=prior, new=None),
+    )
+    return UsageRatioMutationOutcomeV1(category=category, prior_ratio=prior, new_ratio=None)
