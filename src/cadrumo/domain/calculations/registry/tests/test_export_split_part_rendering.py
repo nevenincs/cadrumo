@@ -59,32 +59,41 @@ _UNADJUDICATED_REPEATED_SLOTS: dict[tuple[str, str, str], str] = {
     ("390", "modelo-390-page-06", "iva.anual.suma-resultados"): (
         "two 17-position slots carrying one annual figure; same open question as its page siblings"
     ),
+    ("200", "m200-page-045", "00199"): (
+        "two adjacent 17-position slots the design labels 'Perdidas fiscales a compensar [00199] "
+        "Aplicable a IIC financieras' and '... Aplicable a IIC inmobiliarias': distinct figures for "
+        "distinct institution types sharing one printed number, not two parts of one value. Needs a "
+        "casilla per institution type in the generator's semantic map, a filing-grade modelling "
+        "change to a generator-owned tree"
+    ),
+    ("200", "m200-page-015b", "00103"): (
+        "three 7-position 'Tipo de gravamen 2025' slots the design attaches to three separate "
+        "deduction blocks: 'Deducciones doble imposicion interna', the same 'DT 23.1 LIS' variant, "
+        "and 'Deducciones doble imposicion internacional RDLeg. 4/2004'. Whether one entity can "
+        "carry three different rates across those blocks is a tax review, and the same "
+        "generator-owned-tree constraint applies"
+    ),
 }
 
-# MODELO 200 CARRIED TWO ENTRIES HERE AND NO LONGER DOES, WHICH IS NOT THE SAME
-# AS THE QUESTIONS BEING ANSWERED. Both revisions ('2024' and
-# '2025-y-siguientes') now declare ZERO export layouts -- the premature filing
-# layout was withdrawn rather than repaired -- so there are no repeated slots for
-# this gate to see, and the liveness check below correctly demanded the entries
-# go. They are recorded here rather than deleted because re-authoring the Modelo
-# 200 layout brings both questions straight back, and neither has a part policy
-# available to it: a part policy declares which PART of one value a slot carries,
-# while AEAT prints one casilla number against slots holding SEPARATE figures in
-# both cases. Read from the design's own labels, not inferred from the offsets.
+# THE TWO MODELO 200 ENTRIES ABOVE CAME BACK EXACTLY AS THIS COMMENT PREDICTED
+# THEY WOULD. They were removed once because both revisions declared ZERO export
+# layouts -- the premature filing layout was withdrawn rather than repaired --
+# and the note kept here said that "re-authoring the Modelo 200 layout brings
+# both questions straight back". A layout has since been re-authored, the
+# repeated slots are live again, and the reasons were reinstated verbatim from
+# this note.
 #
-#   ('200', 'm200-page-045', '00199') -- two adjacent 17-position slots the
-#   design labels 'Perdidas fiscales a compensar [00199] Aplicable a IIC
-#   financieras' and '... Aplicable a IIC inmobiliarias': distinct figures for
-#   distinct institution types sharing one printed number, not two parts of one
-#   value. Needs a casilla per institution type in the generator's semantic map,
-#   a filing-grade modelling change to a generator-owned tree.
+# Confirmed against the design the revision CITES rather than assumed from the
+# note: '2025-y-siguientes' declares `aeat-dr-200-2025`, and it is that file --
+# not the 2024 design, where these numbers also appear on other pages -- whose
+# rows carry the distinguishing labels quoted in each reason.
 #
-#   ('200', 'm200-page-015b', '00103') -- three 7-position 'Tipo de gravamen
-#   2025' slots the design attaches to three separate deduction blocks:
-#   'Deducciones doble imposicion interna', the same 'DT 23.1 LIS' variant, and
-#   'Deducciones doble imposicion internacional RDLeg. 4/2004'. Whether one
-#   entity can carry three different rates across those blocks is a tax review,
-#   and the same generator-owned-tree constraint applies.
+# Neither has a part policy available to it: a part policy declares which PART
+# of one value a slot carries, while AEAT prints one casilla number against
+# slots holding SEPARATE figures in both cases. Read from the design's own
+# labels, not inferred from the offsets, which is what the geometry alone would
+# have got wrong -- 00199's two slots are contiguous and would look like an
+# integer/decimal pair to anyone reading offsets.
 
 
 def _published_multi_field_groups():
