@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:7e4e52e193739965f41b54e33a6d4d615061c5ae0296a469d8afc998ee2c4a5c'
+body_hash: 'sha256:674f2501c6ac20798111ad32791c6fac1261942cf916f582d0a03c3b1208868a'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -302,6 +302,8 @@ Deliver one accessor returning a revision's complete resolved export casilla sur
 - [x] `W01.P01.S05` - Repoint the development accessor at the canonical one and delete the duplicate walk; `dev/registry/analysis/resolved_export_surface.py`.
 - [x] `W01.P01.S83` - Document the three linkage paths and require every export coverage figure to come from the resolved accessor; `dev/registry/mappings/README.md`.
 - [x] `W01.P01.S103` - Gate that no screen module reaches for the binding derivation instead of the resolved-surface accessor; `dev/registry/tests/test_declaration_invariant_gates.py`.
+- [x] `W01.P01.S825` - Drive the export-tree renderer's generic ambiguous-official-constant branch: all four parametrized cases reached the alternative-constants branch, leaving `_export_tree.py`'s fallback refusal unexercised while `match="official constant"` passed; `dev/registry/tests/test_export_tree.py`.
+- [x] `W01.P01.S826` - Floor the legal catalogue read and pin the files that carry no `[legal]` table by equality: the loader refuses a missing directory but a present directory yielding almost nothing reached every screen in the package unchallenged; `dev/audit/tests/test_legal_excerpt_vintage_screen.py`.
 
 ## Wave `W02` - gate restoration and residue removal
 
