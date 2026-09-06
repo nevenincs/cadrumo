@@ -1458,7 +1458,8 @@ tui:
       confirm: Confirma l'enllaç
       confirming: Confirma aquest enllaç local.
       counterparty_match: Coincideix la contrapart
-      direction:
+      direction: Direcció
+      direction_state:
         invoice_only: Només la factura cita l'assentament
         transaction_only: Només l'assentament cita la factura
       empty: No hi ha tasques locals de conciliació disponibles.

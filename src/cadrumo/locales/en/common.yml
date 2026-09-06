@@ -1428,7 +1428,8 @@ tui:
       confirm: Confirm link
       confirming: Confirm this local link.
       counterparty_match: Counterparty matches
-      direction:
+      direction: Direction
+      direction_state:
         invoice_only: Invoice cites entry only
         transaction_only: Entry cites invoice only
       empty: No local reconciliation work is available.
