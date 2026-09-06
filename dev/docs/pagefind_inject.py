@@ -411,28 +411,51 @@ async def _inject_records(
 
 
 def _bounded_to_sample(materialised: _Materialised, sample_per_kind: int) -> _Materialised:
-    """Return the materialised records capped at ``sample_per_kind`` per kind.
+    """Return the materialised records capped at ``sample_per_kind`` per projection.
 
-    The records kept are real projections — real targets, meta, filters, and
-    weights — so a caller working over the bound still exercises the production
-    record shape; only the row count shrinks. The per-kind counters are recut to
-    what is actually carried, so the stats never over-report the injection.
+    ``records`` is the concatenation of the five projection runs in the order
+    :func:`_materialise_records` appends them, and each counter is that run's
+    length. Capping those runs and reporting the kept lengths is therefore ONE
+    operation, so a counter cannot claim a record the bound did not carry.
+
+    Capping on :class:`SearchRecordKind` cannot express the split: a CLI command
+    and a CLI option share the single ``cli`` kind, so a cap taken there spent the
+    whole allowance on commands while the counters went on reporting a full
+    complement of options that no longer reached the index.
+
+    The records kept are real projections - real targets, meta, filters, and
+    weights - so a caller working over the bound still exercises the production
+    record shape; only the row count shrinks.
+
+    Raises:
+        SearchInjectionError: When the counters do not account for every record,
+            since no honest bound can be taken over an unattributed remainder.
     """
-    kept: list[SearchRecord] = []
-    seen: dict[str, int] = {}
-    for record in materialised.records:
-        kind = record.kind.value
-        if seen.get(kind, 0) >= sample_per_kind:
-            continue
-        seen[kind] = seen.get(kind, 0) + 1
-        kept.append(record)
+    sizes = (
+        materialised.concepts,
+        materialised.casillas,
+        materialised.legal_provisions,
+        materialised.cli_commands,
+        materialised.cli_options,
+    )
+    if sum(sizes) != len(materialised.records):
+        raise SearchInjectionError(
+            f"cannot bound a projection whose counters describe {sum(sizes)} records "
+            f"while it carries {len(materialised.records)}",
+        )
+    runs: list[list[SearchRecord]] = []
+    start = 0
+    for size in sizes:
+        runs.append(materialised.records[start : start + min(size, sample_per_kind)])
+        start += size
+    concepts, casillas, legal_provisions, cli_commands, cli_options = runs
     return _Materialised(
-        records=kept,
-        concepts=min(materialised.concepts, sample_per_kind),
-        casillas=min(materialised.casillas, sample_per_kind),
-        legal_provisions=min(materialised.legal_provisions, sample_per_kind),
-        cli_commands=min(materialised.cli_commands, sample_per_kind),
-        cli_options=min(materialised.cli_options, sample_per_kind),
+        records=[record for run in runs for record in run],
+        concepts=len(concepts),
+        casillas=len(casillas),
+        legal_provisions=len(legal_provisions),
+        cli_commands=len(cli_commands),
+        cli_options=len(cli_options),
         cli_skipped_reason=materialised.cli_skipped_reason,
     )
 

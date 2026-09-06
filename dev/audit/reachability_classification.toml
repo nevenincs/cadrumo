@@ -1548,3 +1548,18 @@ class = "superseded"
 area = "core"
 symbols = ["save_corpus_manifest"]
 evidence = "Writes a corpus manifest to a target path. The live holder is build_corpus_bundle, documented as building the manifest and then writing a new zip archive containing it, so the manifest reaches disk inside the bundle rather than through a separate sidecar write. build_corpus_bundle and verify_corpus_bundle are the module's only cross-module consumers, at one and two references; the manifest-level functions beside them are reached from inside the module by those two entry points."
+
+[[symbol_cluster]]
+name = "domain attachment readers displaced by the store protocol"
+class = "superseded"
+area = "domain/attachments"
+symbols = ["list_attachments", "load_attachment"]
+evidence = "The domain service's read helpers, both taking an AttachmentStoreProtocol. Attachments ARE read in production, just not through here: AttachmentStore carries eight references and application/ledger/attachment_review.py's list_attachment_review_queue two, operating on the same protocol these helpers take. The write half of this service is live -- add_attachment at three references, both link functions at one -- so this is not the store-what-you-cannot-read shape recorded elsewhere in this ledger; the application layer simply reads the store directly."
+
+[[symbol_cluster]]
+name = "M036 IAE subject sets no censo path consults"
+class = "should-be-live"
+area = "core"
+symbols = ["IAE_SUBJECT_TIPOS_ACTIVIDAD", "NON_IAE_SUBJECT_TIPOS_ACTIVIDAD"]
+evidence = "The two derived sets splitting Modelo 036 tipo-de-actividad codes by whether the activity forms part of the IAE hecho imponible, built from the code prefix so a future A06 joins by construction. Their docstrings state the rule they encode: these are the only codes for which the M036 epigrafe/seccion IAE field is filled, and a filer outside them carries no epigrafe. Nothing consults either set, so that field rule is enforced nowhere. Checked whether another path covers it: the m303 simplified-regime calculation separates agrarian rows by TYPE, testing isinstance against ActividadNoAgricolaSimplificado rather than by epigrafe presence, so the live code avoids the discriminator these sets warn about without using them, and the TipoActividad enum beside them is live at three references."
+remedy_requires_decision = true

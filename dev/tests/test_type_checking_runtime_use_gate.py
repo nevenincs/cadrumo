@@ -162,6 +162,30 @@ def test_an_undecodable_module_is_not_silently_mangled(
     assert "not valid UTF-8" in capsys.readouterr().err
 
 
+def test_a_module_the_walk_listed_but_cannot_read_is_announced(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The third way a read fails, and the only one that used to crash.
+
+    The scan already skips a module it cannot parse and one it cannot decode,
+    announcing both, because the tree is edited while the sweep runs and one
+    half-written file must not cost the thousands that were read. A file the
+    walk listed and the read cannot reach is the same situation arriving
+    through a third door, and it took the whole sweep down with it -- losing
+    every finding from every module already scanned, which is the outcome the
+    other two skips exist to prevent.
+
+    The fixture is a DIRECTORY named ``*.py``: a walk lists it and a read
+    refuses it, with no symlink privilege required.
+    """
+    unreadable = tmp_path / "unreadable.py"
+    unreadable.mkdir()
+
+    assert scan_type_only_runtime_uses(unreadable) == []
+    assert "could not be read and was not scanned" in capsys.readouterr().err
+
+
 def test_a_clean_module_announces_nothing(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
