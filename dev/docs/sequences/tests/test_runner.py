@@ -642,24 +642,30 @@ class TestAmbientEnvNeutralisation:
             assert os.environ["AEAT_FAKE_SESSION_TOKEN"] == "fake-session-token-do-not-leak"  # noqa: S105 - synthetic test value
 
     def test_external_tool_probes_are_pinned_to_stable_absence(self, tmp_path: Path) -> None:
-        """Real provider and browser probes cannot observe workstation installs."""
+        """A real browser probe cannot observe workstation installs.
+
+        This probed the subprocess LLM providers as well, and that whole
+        transport has since been deleted -- ``probe_subprocess_providers`` is a
+        named member of the retired set that
+        ``core/tests/test_cloud_transport_fully_deleted.py`` asserts stays
+        gone. The import outlived it, so this case could not be COLLECTED and
+        the pins below went unchecked on every run.
+
+        Only the deleted half is dropped. What the case exists to prove is that
+        the sandbox pins ``PATH`` and ``PLAYWRIGHT_BROWSERS_PATH`` beneath its
+        own workdir, and both pins are still asserted here against a probe that
+        really runs.
+        """
         import os
 
-        from cadrumo.application.provisioning import (
-            probe_playwright_browser,
-            probe_subprocess_providers,
-        )
+        from cadrumo.application.provisioning import probe_playwright_browser
 
         from ..runner import sequence_sandbox
 
         original_path = os.environ.get("PATH")
         with sequence_sandbox(sequence_id="external-tool-probe", sandbox_root=tmp_path / "scope"):
-            providers = probe_subprocess_providers()
             browser = probe_playwright_browser()
 
-            assert providers
-            assert all(not status.available for status in providers)
-            assert all("PATH" in status.remediation for status in providers)
             assert browser.available is False
             assert browser.remediation == "playwright install chromium"
             # Both pins live BENEATH the sandbox workdir so the golden path

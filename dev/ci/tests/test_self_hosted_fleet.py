@@ -62,6 +62,14 @@ _RUNTIME_MATRIX_REFERENCE: Final = "${{ fromJSON(needs.inventory.outputs.matrix)
 HOSTED_WORKFLOWS: Final[frozenset[str]] = frozenset({"release-please.yml", "publish.yml"})
 
 
+#: Floors for the workflow census this fleet gate reads. Two sibling modules
+#: floor the same directory at eight; this one carried only a truthiness.
+#: Live: sixteen workflows, of which fourteen are gated (publish and
+#: release-please run on hosted images by design).
+_MINIMUM_FLEET_WORKFLOWS = 8
+_MINIMUM_GATED_WORKFLOWS = 6
+
+
 def _collect_violations(workflows_dir: Path) -> list[tuple[str, str, object]]:
     """Return every (workflow, job, target) whose runner is not self-hosted."""
     workflows = sorted(
@@ -118,6 +126,31 @@ def test_the_release_path_workflows_run_on_hosted_images() -> None:
         assert jobs, f"{workflow_name} declares no jobs"
         violations = _hosted_violations(workflow_name, document)
         assert violations == [], f"release-path jobs not on a hosted image: {violations}"
+
+
+def test_the_live_fleet_census_reaches_the_whole_workflow_directory() -> None:
+    """The gate below asserts an EMPTY violation list, which nothing proves alone.
+
+    Floored here rather than inside ``_collect_violations`` because that helper
+    is deliberately dual-purpose: five teeth cases drive it over a temporary
+    directory holding a single planted workflow, and a census floor inside it
+    would refuse exactly the fixtures that prove the gate can fail. Two sibling
+    modules floor this same directory at eight.
+    """
+    workflows = sorted(
+        {*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")}
+    )
+    gated = [workflow for workflow in workflows if workflow.name not in HOSTED_WORKFLOWS]
+
+    assert len(workflows) >= _MINIMUM_FLEET_WORKFLOWS, (
+        f"only {len(workflows)} workflow(s) under {_WORKFLOWS_DIR}; a narrowed census "
+        "reports an empty violation list exactly as a compliant fleet does"
+    )
+    assert len(gated) >= _MINIMUM_GATED_WORKFLOWS, (
+        f"only {len(gated)} of {len(workflows)} workflow(s) are gated; "
+        f"{sorted(HOSTED_WORKFLOWS)} are excused, and an exclusion list grown to cover "
+        "the fleet would empty the violations without a word"
+    )
 
 
 def test_every_workflow_job_runs_on_the_self_hosted_fleet() -> None:

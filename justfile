@@ -788,7 +788,7 @@ test-integration:
 [doc('Run the dev/ tooling gates that no other lane reaches (audit, benchmarks, deploy, env, identity, locales, sanitizer, registry, docs, agent-eval, ingest-harness subsystems).')]
 [group('testing')]
 test-dev-tooling:
-    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "(unit or integration) and not resident_service and not external_tool" dev/audit/tests dev/benchmarks/cli/tests dev/corpus/tests dev/deploy/tests dev/docs/tests dev/env/tests dev/identity/tests dev/locales/tests dev/readme/tests dev/tests dev/sanitizer/tests dev/registry/tests dev/registry/newmodelo/tests dev/registry/aeip/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests dev/agent_eval/tests dev/ingest_harness/tests
+    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "(unit or integration) and not resident_service and not external_tool" dev/audit/tests dev/benchmarks/cli/tests dev/corpus/tests dev/deploy/tests dev/docs/tests dev/env/tests dev/identity/tests dev/locales/tests dev/readme/tests dev/tests dev/sanitizer/tests dev/registry/tests dev/registry/newmodelo/tests dev/registry/aeip/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests dev/agent_eval/tests dev/ingest_harness/tests dev/containers/tests dev/smoke/tests dev/tui/tests dev/registry/parity/tests
 
 # Run the dev-tree workflow/tooling conformance gates that CI runs per-push
 # (workflow structural pins, evidence-transport conformance, shard-plugin

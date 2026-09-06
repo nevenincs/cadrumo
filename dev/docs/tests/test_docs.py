@@ -144,6 +144,15 @@ _DANGEROUS_COMMAND_PATTERNS = (
 _RETIRED_GIT_CLEAN_PATTERN = re.compile(r"\bgit\s+clean\s+-[^\n]*f\b")
 
 
+#: Floors for the documentation corpus six gates scan. Live: 59 pages across
+#: six areas (how-to 35, root 8, explanation 7, reference 7, api 1,
+#: architecture 1). Both are needed: the total is dominated by how-to, so a
+#: page floor alone would sit clear while a smaller subtree left the scan,
+#: and an area floor alone would sit clear while how-to emptied.
+_MINIMUM_MARKDOWN_PAGES = 40
+_MINIMUM_MARKDOWN_AREAS = 5
+
+
 def _markdown_docs() -> tuple[Path, ...]:
     """Return checked-in markdown documentation pages.
 
@@ -156,6 +165,17 @@ def _markdown_docs() -> tuple[Path, ...]:
         path for path in scan_directory(_DOCS_ROOT, pattern="*.md", recursive=True) if "_build" not in path.parts
     )
     assert pages, f"no markdown documentation pages found under {_DOCS_ROOT}"
+    areas = {path.relative_to(_DOCS_ROOT).parts[0] for path in pages if len(path.relative_to(_DOCS_ROOT).parts) > 1}
+    assert len(pages) >= _MINIMUM_MARKDOWN_PAGES, (
+        f"only {len(pages)} markdown page(s) under {_DOCS_ROOT}; the gates that scan this "
+        "corpus report an empty offender list over a narrowed one exactly as they do "
+        "over a clean one"
+    )
+    assert len(areas) >= _MINIMUM_MARKDOWN_AREAS, (
+        f"the corpus spans only {len(areas)} documentation area(s) ({sorted(areas)}); "
+        "one subtree dropping out of the scan leaves the page total high enough to pass "
+        "while nothing in it is read"
+    )
     return pages
 
 
