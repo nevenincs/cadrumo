@@ -5,16 +5,11 @@ tags:
 date: '2026-09-06'
 modified: '2026-09-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:cde248e8acfe6a01b03edbaba63d59392d6b8832e0acad1266fcaffe79dfe9fd'
+body_hash: 'sha256:78367b883dc945a7bc21068997805fb7581daa9a6c632657eac8a582b1f60fad'
 step_id: 'S22'
 related:
   - "[[2026-09-03-duplication-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Remove constant-level duplication the clone detector structurally cannot see: 34 public module-level constants carry a private same-stem copy elsewhere and 21 are literal-identical, each far below the jscpd clone threshold so the scanner reports its adjudicated floor while they stand; replace the five whose canonical home is safely importable with imports of that home, and record why the rest are not simple imports
 

@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-06'
-body_hash: 'sha256:33e03f44f521554b3110d866c77e9130eef346e57310e4ee2520cc6cadf4d950'
+body_hash: 'sha256:ee41a50ec35dea14babaf5bb9c1022025705f8f1b6684339569edfc8bf463fe3'
 ---
 
 <!-- RETIRED: S370 -->
@@ -685,6 +685,7 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S469` - Replace the em dash the operator directive forbids across nine workbench keys in all four catalogues, using the spaced hyphen the gate prescribes for a label and its qualifier and a bare hyphen for the value that is only a no-value placeholder; `src/cadrumo/locales`.
 - [x] `W08.P30.S470` - Restore the static frame reasons gate to running, promoting the live AEAT token helper to the public name its cross-package consumer and the packages own docstring already use and recovering the unconverted baseline an import refactor deleted alongside it; `dev/docs/sequences/runner.py dev/docs/sequences/tests/test_runner.py dev/docs/tests/unconverted_static_baseline.json`.
 - [x] `W08.P30.S471` - Drop the retired subprocess provider probe and the deleted remediation field from the sandbox external tool pin test, since both were removed with the cloud transport and the executable-text advice it carried, leaving the case uncollectable and its PATH and browser pins unchecked on every run; `dev/docs/sequences/tests/test_runner.py`.
+- [x] `W08.P30.S472` - Establish why the generated export tree gate is red and stop rather than regenerate: twenty-seven of twenty-nine enrolled trees drift only in their generation provenance with no record layout fragment differing, and the twenty-eighth is enrolled ahead of publication so publishing it would require authoring a filing-grade check-mode refusal reason; `dev/registry/tests/test_generated_export_trees.py`.
 
 ## Parallelization
 
