@@ -967,16 +967,22 @@ def _translation_key_parameter_positions(
     routinely in different files. A per-module view sees the call and not the
     signature, which is why 192 live keys read as orphans.
 
-    Keyed by bare function name, so two same-named functions merge. That is
-    deliberate rather than tolerated: a collision only widens collection when
-    the OTHER function also names a parameter in
-    :data:`_TRANSLATION_KEY_KWARGS` at that index, and a dotted literal passed
-    there is a translation key whichever of them is being called.
+    Keyed by bare function name, which collides: eight different ``_leaf``
+    helpers ship here, carrying ``help_key`` at index 3, 1 or 2, and one whose
+    index 1 is ``module``. Taking the union of those positions and applying it
+    to every ``_leaf`` call collected module import paths as translation keys.
+
+    So a position counts only when EVERY definition of that name carries a
+    translation-key parameter there. A name whose definitions disagree yields
+    nothing, which loses the keys it would have contributed rather than
+    inventing keys it would not -- the safe direction, because an uncollected
+    key reads as an unused catalogue entry while an invented one reads as a
+    missing translation somebody has to chase.
 
     ``self`` and ``cls`` are dropped, since a bound call omits them and the
     index would otherwise be off by one for every method.
     """
-    positions: dict[str, set[int]] = {}
+    per_definition: dict[str, list[set[int]]] = {}
     for _path, tree in modules:
         for node in ast.walk(tree):
             if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
@@ -984,10 +990,15 @@ def _translation_key_parameter_positions(
             parameters = [*node.args.posonlyargs, *node.args.args]
             if parameters and parameters[0].arg in {"self", "cls"}:
                 parameters = parameters[1:]
-            found = {index for index, arg in enumerate(parameters) if arg.arg in _TRANSLATION_KEY_KWARGS}
-            if found:
-                positions.setdefault(node.name, set()).update(found)
-    return {name: frozenset(indices) for name, indices in positions.items()}
+            per_definition.setdefault(node.name, []).append(
+                {index for index, arg in enumerate(parameters) if arg.arg in _TRANSLATION_KEY_KWARGS},
+            )
+    agreed: dict[str, frozenset[int]] = {}
+    for name, definitions in per_definition.items():
+        shared = set.intersection(*definitions) if definitions else set()
+        if shared:
+            agreed[name] = frozenset(shared)
+    return agreed
 
 
 def _extract_positional_translation_key_arguments(

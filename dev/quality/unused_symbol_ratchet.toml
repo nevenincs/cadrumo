@@ -227,7 +227,6 @@
 "cadrumo.domain.contribuyente.constants" = 1
 "cadrumo.domain.contribuyente.keys" = 3
 "cadrumo.domain.contribuyente.marriage_facts" = 3
-"cadrumo.domain.contribuyente.tax_residence" = 1
 "cadrumo.domain.filing.protocols" = 1
 "cadrumo.domain.invoices.decomposition" = 2
 "cadrumo.domain.invoices.enums" = 2

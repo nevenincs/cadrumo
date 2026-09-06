@@ -531,3 +531,50 @@ def test_a_row_table_is_confirmed_by_its_key_column_and_not_a_prose_sibling() ->
     assert "flows.errors.blank_required" in scan_source_text(key_sink, filename="rows.py"), (
         "a key column reaching tr must still confirm its table"
     )
+
+def test_a_positional_translation_key_needs_every_same_named_helper_to_agree(tmp_path) -> None:
+    """Incident 5: resolving a key by parameter NAME collides on function name.
+
+    A command spec fills its help key positionally into a helper defined in
+    another module, so the key is invisible without the callee signature.
+    Resolving it by bare function name collides: eight ``_leaf`` helpers ship
+    here, carrying ``help_key`` at index 3, 1 or 2, and one whose index 1 is
+    ``module``. Taking the union collected module import paths as translation
+    keys, and the parity gate reported them as missing translations.
+
+    A position counts only when EVERY definition of that name carries a
+    translation-key parameter there. Both halves are pinned here: the agreeing
+    name resolves, the disagreeing one yields nothing rather than guessing.
+    """
+    from .._ast_scanner import scan_source_tree
+
+    (tmp_path / "helpers.py").write_text(
+        chr(10).join((
+            "def option(name, flags, help_key):",
+            "    return (name, flags, help_key)",
+            "def leaf(token, help_key, handler):",
+            "    return (token, help_key, handler)",
+        )),
+        encoding="utf-8",
+    )
+    (tmp_path / "other.py").write_text(
+        chr(10).join((
+            "def leaf(token, module, parameters):",
+            "    return (token, module, parameters)",
+        )),
+        encoding="utf-8",
+    )
+    (tmp_path / "specs.py").write_text(
+        chr(10).join((
+            'option("note", ("--note",), "cli.app.ledger.note_help")',
+            'leaf("calculate", "cadrumo.entrypoints.cli._work_cli", "handler")',
+        )),
+        encoding="utf-8",
+    )
+
+    keys = scan_source_tree(tmp_path)
+
+    assert "cli.app.ledger.note_help" in keys, "an agreeing helper must resolve its positional key"
+    assert "cadrumo.entrypoints.cli._work_cli" not in keys, (
+        "definitions that disagree on the position must collect nothing there"
+    )

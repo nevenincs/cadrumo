@@ -121,10 +121,21 @@ def _base_image_bindings(surface: Path) -> list[tuple[int, str]]:
     """Return each line of ``surface`` that BINDS the literal, not one that names it.
 
     In Python the difference is structural, so it is read from the AST: a bare
-    tag is a redeclaration when it is assigned to a name or passed as a keyword
-    argument, and merely a mention when it sits in a docstring or an assertion
-    message. Elsewhere the file formats carry no such structure, so a comment
-    prefix is the only available distinction.
+    tag is a redeclaration when it is assigned to a name, passed as a keyword
+    argument, RETURNED, or standing as a parameter default, and merely a
+    mention when it sits in a docstring or an assertion message. Elsewhere the
+    file formats carry no such structure, so a comment prefix is the only
+    available distinction.
+
+    A helper that returns the tag and a parameter that defaults to it declare
+    the value exactly as an assignment does; reading only assignments and
+    keywords let those two spellings restate the base image invisibly.
+
+    A POSITIONAL call argument is deliberately still a mention. The live
+    instances of one are fixture SOURCE TEXT handed to a writer - the tag
+    appears inside a quoted module this gate's own proofs plant - and treating
+    those as declarations would make the gate flag the very fixtures that
+    demonstrate it works.
     """
     try:
         text = surface.read_text(encoding="utf-8")
@@ -147,8 +158,11 @@ def _base_image_bindings(surface: Path) -> list[tuple[int, str]]:
         tree = ast.parse(text)
         bound: list[ast.Constant] = []
         for node in ast.walk(tree):
-            if isinstance(node, ast.Assign | ast.AnnAssign) and node.value is not None:
+            if isinstance(node, ast.Assign | ast.AnnAssign | ast.Return) and node.value is not None:
                 bound.extend(_string_constants(node.value))
+            elif isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+                for default in [*node.args.defaults, *(d for d in node.args.kw_defaults if d is not None)]:
+                    bound.extend(_string_constants(default))
             elif isinstance(node, ast.Call):
                 for keyword in node.keywords:
                     bound.extend(_string_constants(keyword.value))
@@ -208,6 +222,33 @@ def test_a_python_redeclaration_is_detected(tmp_path: Path) -> None:
     surface = tmp_path / "restated.py"
     surface.write_text(
         'parser.add_argument("--image", default="python:3.13-slim-trixie")\n',
+        encoding="utf-8",
+    )
+
+    assert [line for line, _ in _base_image_bindings(surface)] == [1]
+
+
+def test_a_returned_tag_is_a_redeclaration(tmp_path: Path) -> None:
+    """A helper handing back the tag declares it as surely as an assignment does.
+
+    This is the shape that makes a second source of truth look like a utility:
+    every caller derives the base image from the helper, and the helper derives
+    it from nothing.
+    """
+    surface = tmp_path / "returned.py"
+    surface.write_text(
+        'def base_image() -> str:\n    return "python:3.13-slim-trixie"\n',
+        encoding="utf-8",
+    )
+
+    assert [line for line, _ in _base_image_bindings(surface)] == [2]
+
+
+def test_a_parameter_default_carrying_the_tag_is_a_redeclaration(tmp_path: Path) -> None:
+    """A default is a declaration every caller that omits the argument inherits."""
+    surface = tmp_path / "defaulted.py"
+    surface.write_text(
+        'def build(image: str = "python:3.13-slim-trixie") -> None:\n    ...\n',
         encoding="utf-8",
     )
 
