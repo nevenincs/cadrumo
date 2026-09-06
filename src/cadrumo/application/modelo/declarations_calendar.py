@@ -130,6 +130,33 @@ class DeclarationsCalendarEntryRefV1(BaseModel):
             raise ValueError("AEAT justificante state and verification flag disagree")
         return self
 
+    @model_validator(mode="after")
+    def _recovery_action_is_the_canonical_create_at_this_address(self) -> Self:
+        """A recovery action must be the create action, bound to THIS entry.
+
+        The rule lived in the projector and again in the TUI controller, which
+        left it enforced twice for projections built through the projector and
+        not at all for one constructed directly -- and a frontend takes the
+        model, not the projector. Carrying it here makes construction the
+        moment it is checked, which is the only moment every caller shares.
+
+        The bindings half matters as much as the action id: an action naming
+        the right operation against a DIFFERENT address would offer the
+        operator a recovery that silently creates the wrong obligation.
+        """
+        if self.recovery_action is None:
+            return self
+        if self.recovery_action.action.action_id != "operator.modelo.work.create":
+            raise ValueError("calendar recovery action is not the canonical create action")
+        bindings = {item.argument_name: item.value for item in self.recovery_action.argument_bindings}
+        if bindings != {
+            "modelo": str(self.modelo),
+            "year": self.filing_year,
+            "period": self.period.registry_token,
+        }:
+            raise ValueError("calendar recovery action contradicts its natural address")
+        return self
+
     def semantic_key(self) -> tuple[str, int, str]:
         """Return the public natural obligation identity."""
         return (str(self.modelo), self.filing_year, self.period.registry_token)
