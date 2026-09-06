@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:7bb3d4bb2b4b9db83ba25441a5f8f03eab0c0f6d76b36c4419e018dfb31a3ff4'
+body_hash: 'sha256:3b0dfc52980fa10d31429e60157dd9406daad84dcad307aa38aa5dced78441cb'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -650,6 +650,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S768` - Refuse a missing cohort namespace initialiser instead of skipping it, which let the inertness claim pass by reading neither package; `dev/tests/test_modelo_workspace_fixed_point.py`.
 - [x] `W02.P02.S769` - Floor the page catalogues the localization dash gate opens, which its page-list guard did not reach because every missing catalogue was skipped; `dev/docs/tests/test_docs_localization.py`.
 - [x] `W02.P02.S770` - Floor the watchdog workflow census in its helper, matching the sibling module, so a narrowed walk cannot leave three loop-only gates green; `dev/ci/tests/test_runner_queue_watchdog.py`.
+- [x] `W02.P02.S771` - Floor the irreducible year-only refusal rows in their helper, so a resolver that stopped refusing cannot leave three loop-only gates executing nothing; `dev/registry/tests/test_irreducible_year_only_selection_refusals.py`.
+- [x] `W02.P02.S772` - Floor the DP30302 epoch corpus and its per-epoch fields in the helper, so two loop-only exhaustiveness gates cannot pass over a narrowed load; `dev/registry/tests/test_dp30302_field_matrix.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
