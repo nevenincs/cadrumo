@@ -197,6 +197,13 @@ def _legacy_orphan_journal(
 #: Floor for the parsed surface below. Live: 185 referenced names.
 _MINIMUM_PUBLICATION_NAMES = 61
 
+#: Floor for the ATTRIBUTE surface of the same parse. The floor above counts
+#: ast.Name nodes and does not reach these: a module can hold plenty of names
+#: while its attribute set empties, and the forbidden entries most likely to
+#: return -- ``shutil.copytree``, ``path.read_text`` -- are ATTRIBUTES, so the
+#: unguarded claim was the load-bearing one. Live: 53 attribute names.
+_MINIMUM_PUBLICATION_ATTRIBUTES = 18
+
 
 def test_recovery_retires_only_a_provably_completed_legacy_cross_volume_orphan(tmp_path) -> None:
     context = _legacy_orphan_context(tmp_path)
@@ -726,6 +733,11 @@ def test_publication_module_has_no_old_tree_read_merge_or_copy_surface() -> None
         "this an absence claim proves nothing about the boundary it guards"
     )
     attribute_names = {node.attr for node in ast.walk(module) if isinstance(node, ast.Attribute)}
+    assert len(attribute_names) >= _MINIMUM_PUBLICATION_ATTRIBUTES, (
+        f"the publication limb parsed to only {len(attribute_names)} attribute name(s); below "
+        "this the forbidden-attribute claim below holds because the parse reached no "
+        "attributes, not because the boundary is clean"
+    )
 
     assert not {
         "copytree",

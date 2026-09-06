@@ -19,6 +19,18 @@ from .._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
+#: Per-suffix floors for the tracked census this gate reads. Live it reaches
+#: 6931 .py, 20495 .toml and 1769 .rst files; roughly three fifths of each.
+#: Stated per suffix rather than as one total because the total is dominated
+#: by .toml: every .py file could vanish from the census and a single total
+#: would still clear twenty thousand, while the forbidden name is a .py one
+#: carried in .py and .rst prose.
+_MINIMUM_SCANNED_BY_SUFFIX = {
+    ".py": 4000,
+    ".toml": 12000,
+    ".rst": 1000,
+}
+
 
 def test_workspace_assembly_forbidden_private_paths_have_not_reappeared_in_the_tracked_tree() -> None:
     """Zero-remnant fixed point: enumerate TRACKED files, never walk the filesystem.
@@ -58,6 +70,14 @@ def test_workspace_assembly_forbidden_private_paths_have_not_reappeared_in_the_t
             if (path := repository / entry).is_file()
         ),
     )
+    for suffix, floor in _MINIMUM_SCANNED_BY_SUFFIX.items():
+        reached = sum(1 for path in scanned_paths if path.suffix == suffix)
+        assert reached >= floor, (
+            f"only {reached} tracked {suffix} file(s) reached the scan against a floor of "
+            f"{floor}; below this the absence claim at the end of this test holds because "
+            f"the census stopped reaching the tree, not because no remnant names the "
+            f"forbidden module"
+        )
     # workspace.py's own module docstring names "_workspace_projection.py" once,
     # deliberately: it records the REJECTED intermediate design this assembly
     # chose against, and test_workspace.py's own docstring (and this module's)

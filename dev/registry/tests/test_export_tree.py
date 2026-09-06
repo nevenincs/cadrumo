@@ -76,6 +76,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 #: Floor for the parsed surface below. Live: 116 referenced names.
 _MINIMUM_VALIDATION_NAMES = 38
 
+#: Floor for the ATTRIBUTE surface of the same parse. The floor above counts
+#: ast.Name nodes and does not reach these: a module can hold plenty of names
+#: while its attribute set empties, and the forbidden entries most likely to
+#: return -- ``shutil.copytree``, ``path.read_text`` -- are ATTRIBUTES, so the
+#: unguarded claim was the load-bearing one. Live: 36 attribute names.
+_MINIMUM_VALIDATION_ATTRIBUTES = 12
+
 
 def test_generated_casilla_export_refs_replace_a_displaced_field_with_no_stale_reference(tmp_path: Path) -> None:
     """Generator-owned refs are exactly the generated casilla field relation."""
@@ -992,6 +999,11 @@ def test_generated_tree_validation_module_has_no_legacy_loader_surface() -> None
         "this an absence claim proves nothing about the boundary it guards"
     )
     attribute_names = {node.attr for node in ast.walk(module) if isinstance(node, ast.Attribute)}
+    assert len(attribute_names) >= _MINIMUM_VALIDATION_ATTRIBUTES, (
+        f"the validation boundary parsed to only {len(attribute_names)} attribute name(s); below "
+        "this the forbidden-attribute claim below holds because the parse reached no "
+        "attributes, not because the boundary is clean"
+    )
     forbidden = {
         "bundled_authority",
         "load_modelo_file",
