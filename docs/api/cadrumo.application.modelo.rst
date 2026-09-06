@@ -79,6 +79,8 @@ Submodules
    cadrumo.application.modelo.calculation_route
    cadrumo.application.modelo.calculation_source_policy
    cadrumo.application.modelo.data_inventory
+   cadrumo.application.modelo.declarations_calendar
+   cadrumo.application.modelo.declarations_workspace
    cadrumo.application.modelo.edit_contract
    cadrumo.application.modelo.edit_models
    cadrumo.application.modelo.edit_services
@@ -123,6 +125,7 @@ Submodules
    cadrumo.application.modelo.revision_persistence
    cadrumo.application.modelo.selectors
    cadrumo.application.modelo.semantic_role_resolution
+   cadrumo.application.modelo.settlement_casilla
    cadrumo.application.modelo.taxation_comparison
    cadrumo.application.modelo.verification_actions
    cadrumo.application.modelo.verification_preconditions

@@ -24,4 +24,5 @@ Submodules
    :maxdepth: 4
 
    cadrumo.entrypoints.tui.modelo.actions
+   cadrumo.entrypoints.tui.modelo.installed_workspace
    cadrumo.entrypoints.tui.modelo.routes

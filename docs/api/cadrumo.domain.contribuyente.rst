@@ -31,6 +31,7 @@ Submodules
    cadrumo.domain.contribuyente.descendant_madrid
    cadrumo.domain.contribuyente.descendant_maternity
    cadrumo.domain.contribuyente.descendant_record
+   cadrumo.domain.contribuyente.entity_type
    cadrumo.domain.contribuyente.errors
    cadrumo.domain.contribuyente.family_profile
    cadrumo.domain.contribuyente.family_types

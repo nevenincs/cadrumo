@@ -13,4 +13,5 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.application.search.installed_workbench
    cadrumo.application.search.workbench

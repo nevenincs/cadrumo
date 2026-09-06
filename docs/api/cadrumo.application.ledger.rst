@@ -53,6 +53,7 @@ Submodules
    cadrumo.application.ledger.grounding_anchor
    cadrumo.application.ledger.id_resolution
    cadrumo.application.ledger.identity_roles
+   cadrumo.application.ledger.import_preparation
    cadrumo.application.ledger.invoice_confirmation
    cadrumo.application.ledger.invoice_draft_extraction
    cadrumo.application.ledger.invoice_draft_records
@@ -76,3 +77,4 @@ Submodules
    cadrumo.application.ledger.transaction_repository
    cadrumo.application.ledger.usage_ratio_repository
    cadrumo.application.ledger.workspace
+   cadrumo.application.ledger.workspace_reader

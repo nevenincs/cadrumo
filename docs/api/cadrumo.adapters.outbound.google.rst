@@ -15,7 +15,6 @@ Submodules
 
    cadrumo.adapters.outbound.google._calc_sheets_apply_formatting
    cadrumo.adapters.outbound.google._calc_sheets_apply_values
-   cadrumo.adapters.outbound.google.drive_entries
    cadrumo.adapters.outbound.google._preconditions
    cadrumo.adapters.outbound.google.active_profile
    cadrumo.adapters.outbound.google.api
@@ -23,6 +22,7 @@ Submodules
    cadrumo.adapters.outbound.google.calc_sheets_pull
    cadrumo.adapters.outbound.google.calc_sheets_pull_records
    cadrumo.adapters.outbound.google.document_link_resolver
+   cadrumo.adapters.outbound.google.drive_entries
    cadrumo.adapters.outbound.google.errors
    cadrumo.adapters.outbound.google.impersonation
    cadrumo.adapters.outbound.google.oauth_flow

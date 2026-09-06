@@ -20,6 +20,7 @@ Subpackages
    cadrumo.domain.calculations
    cadrumo.domain.categories
    cadrumo.domain.censo
+   cadrumo.domain.contabilidad
    cadrumo.domain.contribuyente
    cadrumo.domain.currency
    cadrumo.domain.deadlines
@@ -27,6 +28,7 @@ Subpackages
    cadrumo.domain.filing
    cadrumo.domain.fincas
    cadrumo.domain.invoices
+   cadrumo.domain.is_compensation
    cadrumo.domain.iva
    cadrumo.domain.iva_compensation
    cadrumo.domain.justificante

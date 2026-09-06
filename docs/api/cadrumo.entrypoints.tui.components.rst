@@ -24,3 +24,4 @@ Submodules
    cadrumo.entrypoints.tui.components.status
    cadrumo.entrypoints.tui.components.theme
    cadrumo.entrypoints.tui.components.widgets
+   cadrumo.entrypoints.tui.components.workspace_host
