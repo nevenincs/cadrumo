@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:42a38020e428b9ea30a94962a004592ddc6d2a79aa41dba5392bd91fdf13dcab'
+body_hash: 'sha256:8b7ce5de1a6b3c0fc1db80db2282b9d87e20ce8b32e26e048fb1711552d8fbbc'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -590,6 +590,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S708` - Floor the golden capture per carrier: the total is 98 percent envelope, so a sum floor proved only the envelope was read and losing text entirely left 15.75M characters standing; `dev/docs/tests/test_golden_records_no_crash.py`.
 - [x] `W02.P02.S709` - Floor the dependency surface counts and split its chained comparison: > 0 sat against 31 project and 51 development-only dependencies, so a reader parsing one table and stopping reported success; `dev/packaging/tests/test_dependency_surface.py`.
 - [x] `W02.P02.S710` - Guard the zero-clause finding population in the legal excerpt screen: 50 of 328 findings parse no clauses and nothing bounded that share, so a clause reader returning nothing would leave every verdict assertion green; `dev/audit/tests/test_legal_excerpt_vintage_screen.py`.
+- [x] `W02.P02.S711` - Tighten the project dependency floor on structural grounds and record why: project.dependencies is a single array of 31, so the optional-group degradation I had assumed cannot move this count at all; `dev/packaging/tests/test_dependency_surface.py`.
+- [x] `W02.P02.S712` - Floor the revision move candidate key count: > 0 sat against 397 keys, and the composition of 199 label plus 198 help means a renamer matching one suffix relocates half and still reads as one clean move; `dev/locales/tests/test_modelo_revision_locale_key_parity.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
