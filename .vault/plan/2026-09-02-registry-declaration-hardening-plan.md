@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:0ff97760cd4e2de872078ee05a5a3da1d002076be361a829a92cec7d8fb84756'
+body_hash: 'sha256:077043d0cd0414c2d63e146c0cb730a64be2d91d39d9def96816bc1d14823ae0'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -604,6 +604,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S722` - Screen async test definitions in the vacuity screen so the instrument that refuses silent green does not go silent on a whole function form; `dev/audit/vacuity_screen.py`.
 - [x] `W02.P02.S723` - Floor the registry tooling import-coverage gate per root and refuse a missing root, so a tooling tree that disappears cannot silently exempt every module it held; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W02.P02.S724` - Read a returned tag and a parameter default as base-image bindings so the singularity gate cannot be restated through the two spellings it never parsed; `dev/packaging/tests/test_container_base_image_singularity.py`.
+- [x] `W02.P02.S725` - Raise the sanitizer source-open refusal outside its except block so the unredacted pikepdf context stops travelling on the exception; `dev/sanitizer/_pipeline.py`.
+- [x] `W02.P02.S726` - Name the observed and expected values in every record-design corpus staleness refusal so the verdict says what drifted instead of only that something did; `dev/corpus/sync_aeat_record_design_corpus.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

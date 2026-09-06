@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:1daf17916732ec483e93fc5905f1080200d54a9910b6cb30b5ebdf6b44b5982e'
+body_hash: 'sha256:ffb882ca0b67c24fb874f74707469da8b918d44013872a8c1b4333239bf7da38'
 ---
 
 <!-- RETIRED: S39 -->
@@ -124,9 +124,10 @@ Build every declared distribution and channel artifact from one command and prov
 - [ ] `P09.S59` - Give the fleet enough Linux capacity for the lanes its own policy requires; `dev/runners/README.md`.
 - [x] `P09.S60` - Teach the installed oracle the recovery enrollment the product now requires; `dev/packaging/installed_tax_oracle.py`.
 - [x] `P09.S61` - Stop every packaging lane from re-running the whole packaging suite before it starts; `dev/packaging/campaign.py`.
-- [ ] `P09.S62` - Give the campaign preflight an explicit selection the recipe guard can see; `dev/packaging/campaign.py`.
+- [x] `P09.S62` - Give the campaign preflight an explicit selection the recipe guard can see; `dev/packaging/campaign.py`.
 - [ ] `P09.S63` - Stop a quality sweep from running a repository rewrite when its test module is imported; `dev/quality/namespace_retirement_sweep.py`.
 - [x] `P09.S64` - Make the installed payload attestation find the distribution it just installed; `dev/packaging/_installed_wheel_binding.py`.
+- [ ] `P09.S65` - Make a cohort built twice from one commit carry one identity; `dev/packaging/tests/test_release_cohort_integration.py`.
 
 ### Phase `P10` - Prune the release and packaging surfaces without consumers
 
