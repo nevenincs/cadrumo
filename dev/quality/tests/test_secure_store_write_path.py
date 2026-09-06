@@ -181,3 +181,14 @@ def test_the_shipped_tree_reports_its_stores() -> None:
     usage = collect_store_usage()
     assert len(usage) >= 20
     assert any(store.written_by for store in usage)
+    assert any(store.read_by for store in usage)
+
+
+def test_the_shipped_tree_agrees_with_its_declaration() -> None:
+    """The live gate, run where CI can see it.
+
+    Without this the module is a command nobody invokes: the synthetic cases
+    above prove the detector works on trees that do not ship, and a store wired
+    for reading with no writer would still reach a release unremarked.
+    """
+    assert evaluate() == ()
