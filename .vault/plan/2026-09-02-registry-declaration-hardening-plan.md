@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:9b0ba08f83556a8295384e33f42678020c0ad400e994011809b7feab1451bcf4'
+body_hash: 'sha256:713242024e249f906f5e0b8b486b8e2e9bbde2fb6baad848b19076fc47801a50'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -1236,6 +1236,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S381` - Measure whether every declared casilla localization key resolves in the shipped catalogues; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [ ] `W06.P13.S382` - Complete the localization crossing across all five key-bearing declaration families and decline to gate the one carrying findings; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S383` - Measure the per-revision label restatement corpus-wide after the operator corrected the authoring framing; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S870` - Bind the dead-code scan's CLEAN outcome to a measured module population, so vulture's exit 0 cannot report green over a production tree it never read; `dev/audit/dead_code.py, dev/audit/tests/test_dead_code.py, dev/audit/tests/test_dead_code_scan.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 
