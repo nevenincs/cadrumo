@@ -12,12 +12,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+import typer
 from pydantic import ValidationError
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.i18n.render import tr
 from ...core.irnr import M210PayerMode
-from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.m210_income_classification import M210IncomeClassification
 from ._common import bad
@@ -73,12 +73,15 @@ class M210LedgerClassifyOptions:
         transaction_repository: TransactionCatalogueRepository,
         transaction_id: str,
     ) -> M210IncomeClassification | None:
-        """Build the explicit typed classification after direct-route validation.
+        """Parse the operator's options and hand them to the application resolver.
+
+        Argv arrives as strings, so decimal parsing stays here; the completeness
+        rule and the incoming-only rule belong to the declaration itself and are
+        decided by the resolver.
 
         Args:
-            transaction_repository: The active
-                :class:`TransactionCatalogueRepository` used to load the transaction.
-            transaction_id: Identifier of the incoming transaction to classify.
+            transaction_repository: The active repository supplying the row.
+            transaction_id: Identifier of the transaction to classify.
 
         Returns:
             The explicit M210 classification, or ``None`` when no M210 option
@@ -88,62 +91,46 @@ class M210LedgerClassifyOptions:
             typer.BadParameter: If options are incomplete or invalid, or the
                 selected transaction is absent or not incoming.
         """
+        from ...application.ledger.m210_classification import resolve_m210_income_classification
+
         if not self.requested:
             return None
-        required = self._require_complete_options()
-        self._require_incoming_transaction(
-            transaction_repository=transaction_repository,
-            transaction_id=transaction_id,
-        )
-        return self._build_classification(required)
-
-    def _require_complete_options(self) -> tuple[str, str, str, M210PayerMode]:
-        """Return the four required M210 options, refusing an incomplete selection."""
-        tipo_renta_code = self.tipo_renta_code
-        gross_income_amount = self.gross_income_amount
-        applicable_rate = self.applicable_rate
-        payer_mode = self.payer_mode
-        if tipo_renta_code is None or gross_income_amount is None or applicable_rate is None or payer_mode is None:
-            raise bad(tr("cli.ledger.classify.m210_required_options"))
-        return tipo_renta_code, gross_income_amount, applicable_rate, payer_mode
-
-    @staticmethod
-    def _require_incoming_transaction(
-        *,
-        transaction_repository: TransactionCatalogueRepository,
-        transaction_id: str,
-    ) -> None:
-        """Refuse when the selected transaction is absent or not incoming."""
-        transaction = transaction_repository.load().get(transaction_id)
-        if transaction is None or transaction.direction is not TransactionDirection.INCOMING:
-            raise bad(tr("cli.ledger.classify.m210_incoming_only"))
-
-    def _build_classification(
-        self,
-        required: tuple[str, str, str, M210PayerMode],
-    ) -> M210IncomeClassification:
-        """Parse the numeric options and build the typed classification."""
-        tipo_renta_code, gross_income_amount, applicable_rate, payer_mode = required
         try:
-            parsed_gross_income_amount = parse_decimal_option(
-                gross_income_amount,
+            gross_income_amount = parse_decimal_option(
+                self.gross_income_amount,
                 label="m210-gross-income-amount",
             )
-            parsed_applicable_rate = parse_decimal_option(applicable_rate, label="m210-applicable-rate")
-            if parsed_gross_income_amount is None or parsed_applicable_rate is None:
-                raise bad(tr("cli.ledger.classify.m210_required_options"))
-            return M210IncomeClassification(
-                official_tipo_renta_code=tipo_renta_code,
-                gross_income_amount=parsed_gross_income_amount,
-                applicable_rate=parsed_applicable_rate,
-                payer_mode=payer_mode,
+            applicable_rate = parse_decimal_option(self.applicable_rate, label="m210-applicable-rate")
+            return resolve_m210_income_classification(
+                bucket_id=transaction_repository.bucket_id,
+                transaction_id=transaction_id,
+                tipo_renta_code=self.tipo_renta_code,
+                gross_income_amount=gross_income_amount,
+                applicable_rate=applicable_rate,
+                payer_mode=self.payer_mode,
                 payer_id=self.payer_id,
                 asset_or_right_id=self.asset_or_right_id,
+                transaction_repository=transaction_repository,
             )
         except ValidationError as exc:
             raise ledger_validation_bad(exc) from exc
         except TransactionValidationError as exc:
-            raise ledger_transaction_validation_no_recovery(exc) from None
+            raise _m210_refusal(exc) from exc
+
+
+def _m210_refusal(exc: TransactionValidationError) -> typer.BadParameter | TransactionValidationError:
+    """Map the resolver's refusal to the message naming what to fix.
+
+    Discriminated on the context key the resolver sets for each case, so a
+    partially answered declaration and a wrong-direction row do not collapse
+    into one message an operator cannot act on.
+    """
+    context = getattr(exc, "context", None) or {}
+    if "required_direction" in context:
+        return bad(tr("cli.ledger.classify.m210_incoming_only"))
+    if "missing" in context:
+        return bad(tr("cli.ledger.classify.m210_required_options"))
+    return ledger_transaction_validation_no_recovery(exc)
 
 
 __all__ = [
