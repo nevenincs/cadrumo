@@ -25,7 +25,11 @@ from ..pipeline.render_check import (
     RevisionRenderInputs,
     revision_render_inputs,
 )
-from .test_export_tree import _ISOLATED_TREE, _real_authorities, _write_isolated_generated_authority_tree
+from .test_generated_export_tree_validation import (
+    _ISOLATED_TREE,
+    _real_authorities,
+    _write_isolated_generated_authority_tree,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

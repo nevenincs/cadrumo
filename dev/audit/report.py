@@ -28,8 +28,11 @@ model:
   AMBER state: a layering contract is either satisfied or it is not.
 * **Complexity** -- reuses ``dev.audit.complexity``'s baseline-ratchet
   verdict (cyclomatic, maintainability, cognitive). A NEW or REGRESSED hotspot
-  is RED; baselined (grandfathered) debt is AMBER; a clean run against an
-  empty baseline is GREEN.
+  is RED; a clean run is GREEN. ``load_baseline`` returns an empty baseline
+  unconditionally now that the committed baseline and the reviewed allowlist
+  were both retired, so nothing can be grandfathered and this dimension has
+  no reachable AMBER state either -- the same retirement already recorded
+  for Shadowing above.
 
 This module does not re-implement any scanner; it shells out to / imports the
 existing tools and applies one shared severity vocabulary on top. See
@@ -224,9 +227,17 @@ def audit_layering(repo_root: Path) -> DimensionReport:
     """Classify the layering dimension via the ``.importlinter`` contracts.
 
     RED: at least one contract is BROKEN. GREEN: every declared contract is
-    KEPT. There is no AMBER state -- a layering contract is a hard boundary,
-    not a ratcheted debt ceiling (see ``.importlinter``'s own per-contract
-    ``ignore_imports`` for how sanctioned exceptions are recorded instead).
+    KEPT. The VERDICT carries no AMBER -- a layering contract is a hard
+    boundary, not a ratcheted debt ceiling (see ``.importlinter``'s own
+    per-contract ``ignore_imports`` for how sanctioned exceptions are
+    recorded instead).
+
+    AVAILABILITY is a separate axis and DOES return AMBER: a missing
+    ``lint-imports`` or a runner that could not complete reports
+    AMBER-unavailable rather than GREEN, on the same convention the
+    duplication dimension states -- we could not measure is not a clean
+    result. A reader told there is no AMBER here would read either of
+    those returns as impossible.
     """
     lint_imports = shutil.which("lint-imports")
     if lint_imports is None:
@@ -333,9 +344,11 @@ def _declared_contract_count(repo_root: Path) -> int:
 def audit_complexity() -> DimensionReport:
     """Classify complexity by reusing ``dev.audit.complexity``'s own ratchet.
 
-    RED: a new or regressed hotspot vs. the checked-in baseline. AMBER: the
-    baseline carries grandfathered debt this run stays within. GREEN: no
-    findings and an empty baseline.
+    RED: a new or regressed hotspot. GREEN: no findings. The AMBER branch
+    below is UNREACHABLE and kept only as the shape a future baseline would
+    fill: ``load_baseline`` grandfathers nothing, so ``allowed`` is always
+    zero. A reader told AMBER means grandfathered debt would expect this
+    dimension to report debt it can no longer carry.
     """
     cc = collect_cc(_PRODUCTION_EXCLUDE)
     mi = collect_mi(_PRODUCTION_EXCLUDE)

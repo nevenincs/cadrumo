@@ -36,7 +36,7 @@ from ..pipeline._tree_check import (
     GeneratedExportTreeCheckContext,
     check_generated_export_tree,
 )
-from .test_export_tree import (
+from .test_generated_export_tree_validation import (
     _ISOLATED_TREE,
     _isolated_render_profile,
     _real_authorities,

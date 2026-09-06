@@ -29,11 +29,10 @@ from ..pipeline._tree_publication import (
 )
 from ..pipeline._tree_validation import validate_generated_export_tree
 from ..pipeline.render_check import RevisionRenderInputs
-from .test_export_tree import (
+from .test_export_tree import _wire_evidence, _wire_profile
+from .test_generated_export_tree_validation import (
     _ISOLATED_TREE,
     _isolated_render_profile,
-    _wire_evidence,
-    _wire_profile,
     _write_isolated_generated_authority_tree,
 )
 
