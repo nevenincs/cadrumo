@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:38c5b64ebf81e9c3a2d08309436bdd44db196b2b467fd55f73654c026ab1df3f'
+body_hash: 'sha256:7e4e52e193739965f41b54e33a6d4d615061c5ae0296a469d8afc998ee2c4a5c'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -700,6 +700,10 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S818` - Assert the built sdist sheds its test tree, floored so a truncated or failed build cannot read as a clean archive; `dev/packaging/tests/test_sdist_test_tree_exclusion.py`.
 - [x] `W02.P02.S819` - Report os.open as an ambiguous write site so flag-assembled filesystem writes stop dropping out of the census; `dev/audit/write_site_census.py`.
 - [x] `W02.P02.S820` - Exercise the alias-authority collision refusal that no input reached and pin each branch to its own message; `dev/docs/terminology/tests/test_query_aliases.py`.
+- [x] `W02.P02.S821` - Exercise the three ingest-harness coherence refusals no input reached, including the zero-denominator projection; `dev/ingest_harness/tests/test_harness_contracts.py`.
+- [x] `W02.P02.S822` - Exercise the per-frame kind staleness refusal and stop the frame-count branch standing in for it; `dev/docs/tests/test_sequence_directive.py`.
+- [x] `W02.P02.S823` - Assert every pinned wall threshold is backed by a live consumer so an orphaned advisory reddens instead of shrinking a count; `dev/ci/tests/test_wall_advisory.py`.
+- [x] `W02.P02.S824` - Drive the non-integer docs-jobs refusal and stop the below-one branch satisfying its assertion; `dev/docs/tests/test_docs_build.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

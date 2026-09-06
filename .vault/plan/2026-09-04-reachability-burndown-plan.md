@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:e5a51749eeaeb3205288bcaee779d04973032b7c8845a0a04ddc98b9190a9c59'
+body_hash: 'sha256:f71a0186a2a66d2efc29ecfbfe110fac58cc762d3058cbe3b30cbbc57d5c3d32'
 ---
 
 # `reachability-burndown` plan
@@ -153,6 +153,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S52` - Adjudicate two supersessions whose displacing holder states the arrangement in its own docstring: the path-taking capsule restore wrappers are the second publication path that the shared authority explicitly exists to prevent, since a directory restore and an archive import differ only in how they obtain the capsule source and the live CLI reads the source then publishes; and the workspace manifest validators regenerate and compare a manifest that cannot differ, because the live capture is documented atomic with one generating authority whose own digest becomes the observation, so the comparison would always trivially pass; `dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S53` - Adjudicate the error registry inspection surfaces as test support, since production reaches the registry through typed accessors that are live at twenty-two, sixteen and eight references while the read-only view and the declared-rows accessor carry thirty-two and three test references and no dev consumer; and the in-service resume selector resolvers as superseded, the live resume target resolver documenting that visible and work-unit selectors route through the public modelo addressing facade so the service does not duplicate modelo selector policy, which is what these two are; `dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S54` - Record a measured performance consequence and two filing-runtime dispositions: the locale catalogue's cross-process disk cache is never read or written although its in-process half is live, so every new process pays the roughly 800 millisecond YAML parse the cache was written to avoid according to the measurement in its own module docstring; the default filing profile loader is displaced by the builder that takes an already-resolved taxpayer identity; and the fingerprint cache reset seam is orphaned rather than test support, because the function that would populate the cache is itself unreached and the live schema surface never consults it; `dev/audit/reachability_classification.toml`.
+- [x] `W05.P12.S55` - Scan same-module read/write name pairs for a split half, which found five instances with no noise, and adjudicate the two that ground out as design rather than defect: the encrypted envelope tier is unreached as a group, appearing partly live only because its saver is called by a reencrypt helper that is itself unreached, while the plain tier beside it carries eighteen references and sensitive payloads encrypt through the application-layer secure-object envelope instead; and the mnemonic decoder is unnecessary because the custody design hands the twenty-four word phrase to the KDF as the recovery secret rather than decoding it to entropy; `dev/audit/reachability_classification.toml`.
 
 ## Parallelization
 
