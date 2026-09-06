@@ -500,6 +500,37 @@ def _flow_confirmed_locale_key_dicts(tree: ast.AST, wrappers: frozenset[str] = f
     return {name: value for name, value in candidates.items() if name in confirmed_names}
 
 
+def _literal_row_grid(node: ast.expr | None) -> list[list[str | None]] | None:
+    """Return the table's cells by position, or ``None`` when it is not a literal grid.
+
+    Every cell must be a literal constant, but it need NOT be a string. A
+    column table pairs its key with a width::
+
+        ("date", "tui.ledger.column.date", 10)
+
+    Requiring all-string rows rejected that table outright, so the keys in it
+    were never even candidates. A non-string cell is carried as ``None``, which
+    can never be a key column -- the positional signal the shape test relies on
+    is unchanged, and a numeric sibling is no more a key than a prose one.
+    """
+    if not isinstance(node, ast.Tuple | ast.List) or not node.elts:
+        return None
+    rows: list[list[str | None]] = []
+    for element in node.elts:
+        if not isinstance(element, ast.Tuple | ast.List) or not element.elts:
+            return None
+        if any(not isinstance(item, ast.Constant) for item in element.elts):
+            return None
+        rows.append([
+            item.value if isinstance(item, ast.Constant) and isinstance(item.value, str) else None
+            for item in element.elts
+        ])
+    width = len(rows[0])
+    if any(len(row) != width for row in rows):
+        return None
+    return rows
+
+
 def _is_locale_key_row_table_literal(node: ast.expr | None) -> bool:
     """Return True when ``node`` is a table of string ROWS carrying a key column.
 
@@ -518,20 +549,12 @@ def _is_locale_key_row_table_literal(node: ast.expr | None) -> bool:
     qualify. Prose does not collide with the key shape in any case, since
     :data:`_KEY_LITERAL_RE` admits no spaces.
     """
-    if not isinstance(node, ast.Tuple | ast.List) or not node.elts:
+    rows = _literal_row_grid(node)
+    if rows is None:
         return False
-    rows: list[list[str]] = []
-    for element in node.elts:
-        if not isinstance(element, ast.Tuple | ast.List) or not element.elts:
-            return False
-        values = [item.value for item in element.elts if isinstance(item, ast.Constant) and isinstance(item.value, str)]
-        if len(values) != len(element.elts):
-            return False
-        rows.append(values)
-    width = len(rows[0])
-    if any(len(row) != width for row in rows):
-        return False
-    return any(all(_is_dotted_literal(row[index]) for row in rows) for index in range(width))
+    return any(
+        all(cell is not None and _is_dotted_literal(cell) for cell in column) for column in zip(*rows, strict=True)
+    )
 
 
 def _row_table_key_columns(node: ast.expr | None) -> frozenset[int]:
@@ -541,20 +564,14 @@ def _row_table_key_columns(node: ast.expr | None) -> frozenset[int]:
     know WHICH, because the sibling columns are prose by design and a name
     bound to one of those reaching a sink says nothing about the table.
     """
-    if not isinstance(node, ast.Tuple | ast.List) or not node.elts:
+    rows = _literal_row_grid(node)
+    if rows is None:
         return frozenset()
-    rows: list[list[str]] = []
-    for element in node.elts:
-        if not isinstance(element, ast.Tuple | ast.List) or not element.elts:
-            return frozenset()
-        values = [item.value for item in element.elts if isinstance(item, ast.Constant) and isinstance(item.value, str)]
-        if len(values) != len(element.elts):
-            return frozenset()
-        rows.append(values)
-    width = len(rows[0])
-    if any(len(row) != width for row in rows):
-        return frozenset()
-    return frozenset(index for index in range(width) if all(_is_dotted_literal(row[index]) for row in rows))
+    return frozenset(
+        index
+        for index, column in enumerate(zip(*rows, strict=True))
+        if all(cell is not None and _is_dotted_literal(cell) for cell in column)
+    )
 
 
 def _shape_candidate_locale_key_row_tables(tree: ast.AST) -> dict[str, ast.expr]:
@@ -591,20 +608,21 @@ def _row_table_names_iterated_into_a_sink(
     for node in ast.walk(tree):
         if not isinstance(node, ast.For | ast.AsyncFor):
             continue
-        if not (isinstance(node.iter, ast.Name) and node.iter.id in candidates):
+        table = _iterated_candidate_name(node.iter, candidates)
+        if table is None:
             continue
-        columns = key_columns[node.iter.id]
+        columns = key_columns[table]
         if isinstance(node.target, ast.Name):
             # A whole-row binding cannot say which column reaches the sink, so
             # it stays confirmable as before.
-            bound_to_table[node.target.id] = node.iter.id
+            bound_to_table[node.target.id] = table
             continue
         # Unpacked: only the KEY column binding confirms. A name bound to a
         # prose column reaching a sink is the framework passing its English
         # source string, which says nothing about whether the table holds keys.
         for index, target in enumerate(getattr(node.target, "elts", [])):
             if isinstance(target, ast.Name) and index in columns:
-                bound_to_table[target.id] = node.iter.id
+                bound_to_table[target.id] = table
     confirmed: set[str] = set()
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
@@ -612,7 +630,45 @@ def _row_table_names_iterated_into_a_sink(
         for argument in _call_site_key_argument_exprs(node, tr_names):
             if isinstance(argument, ast.Name) and argument.id in bound_to_table:
                 confirmed.add(bound_to_table[argument.id])
+                continue
+            # `for column in TABLE: tr(column[1])` -- the row is bound whole and
+            # the key taken by index. The index must BE a key column: a prose
+            # sibling reaching the sink says nothing about the table, exactly as
+            # it does not when the row is unpacked.
+            subscripted = _row_subscript_source(argument, bound_to_table)
+            if subscripted is None:
+                continue
+            table, index = subscripted
+            if index in key_columns[table]:
+                confirmed.add(table)
     return frozenset(confirmed)
+
+
+def _iterated_candidate_name(node: ast.expr, candidates: dict[str, ast.expr]) -> str | None:
+    """Resolve the candidate table a ``for`` statement iterates.
+
+    A screen holds its column table as a ``ClassVar`` and reads it back as
+    ``self._COLUMNS``, so requiring a bare name saw no iteration at all and
+    left every heading key in the table unconfirmed. The attribute's own name
+    is what identifies the candidate; the declaration it was collected from is
+    already in this module.
+    """
+    if isinstance(node, ast.Name) and node.id in candidates:
+        return node.id
+    if isinstance(node, ast.Attribute) and node.attr in candidates:
+        return node.attr
+    return None
+
+
+def _row_subscript_source(node: ast.expr, bound_to_table: dict[str, str]) -> tuple[str, int] | None:
+    """Return ``(table, index)`` when ``node`` indexes a bound whole row."""
+    if not isinstance(node, ast.Subscript):
+        return None
+    if not (isinstance(node.value, ast.Name) and node.value.id in bound_to_table):
+        return None
+    if not (isinstance(node.slice, ast.Constant) and isinstance(node.slice.value, int)):
+        return None
+    return bound_to_table[node.value.id], node.slice.value
 
 
 def _flow_confirmed_locale_key_row_tables(tree: ast.AST, wrappers: frozenset[str] = frozenset()) -> dict[str, ast.expr]:
