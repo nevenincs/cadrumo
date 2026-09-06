@@ -1,0 +1,72 @@
+# Secure stores production reads but never writes.
+#
+# Read by dev/quality/secure_store_write_path.py. Every entry names a store the
+# shipped application reads while nothing in the tree fills it, together with
+# the kind of exception it is and why. The comparison is set equality in both
+# directions: a read-only store missing from this file fails as new debt, and
+# an entry the tree now writes fails as spent and must be removed.
+#
+# kind = "awaiting_writer"
+#     Capability whose reader was wired before its writer. The store is part of
+#     the shipped design, so a reader renders or aggregates from it, but no
+#     production path has ever put anything in it. Every one of these is debt.
+#
+# kind = "custody_carry_only"
+#     A namespace this application never authors, moved between profiles by the
+#     custody carry alone. Registering a resolver for it is not a write.
+#
+# Adding an entry is not permission to leave a store unwritten. It records that
+# the gap is known and where it bites, so a reader of a zero can tell an empty
+# store from an unfilled one.
+
+[[read_only]]
+name = "ModeloDraftRepository"
+kind = "awaiting_writer"
+rationale = """
+Filing drafts are approved but never persisted. Both approval sites build the \
+draft and approve it in the same call -- application/modelo/workflow_gate.py \
+and application/modelo/export.py -- and return it to their caller, so the \
+encrypted filing-drafts namespace has no writer at all. Three readers render \
+from it regardless: the review queue's draft rows in \
+application/review/_adapters.py, the drafts count in \
+application/state_projection.py, and the CLI overview. Each reports zero \
+permanently, which an operator reads as having no drafts rather than as the \
+application not storing them. The unreached approval-staleness lifecycle in \
+application/filing/draft_review.py follows from the same gap: there is no \
+persisted approved draft to go stale.
+"""
+
+[[read_only]]
+name = "RetencionObservationRepository"
+kind = "awaiting_writer"
+rationale = """
+Retenciones observations back a filing-grade aggregation source read at \
+application/aggregation/_modelo_bindings_retenciones.py, and the repository's \
+own save_observation has no caller anywhere in the tree. The aggregation \
+therefore reads an empty store and contributes zero withholding, which is the \
+absence-as-zero collapse the aggregation contract refuses: a missing source \
+and a proven zero are different states and must stay distinguishable through \
+the filing handoff.
+"""
+
+[[read_only]]
+name = "PercepcionObservationRepository"
+kind = "awaiting_writer"
+rationale = """
+The percepciones counterpart of the retenciones store, read at \
+application/aggregation/_withholding_source.py through the same \
+inject-or-default binding, with an equally uncalled save_observation. Same \
+consequence: a filing-grade withholding total assembled from a store nothing \
+fills.
+"""
+
+[[read_only]]
+name = "PurchaseInvoiceEvidenceRepository"
+kind = "awaiting_writer"
+rationale = """
+Purchase-invoice evidence records are loaded in \
+application/ledger/actions_common.py to answer whether a manual ledger \
+transaction's evidence reference is accepted by either id space. Nothing \
+writes the store, so that consultation can only ever find nothing, and the \
+answer it returns is shaped by absence rather than by evidence.
+"""
