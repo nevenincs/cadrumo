@@ -111,7 +111,6 @@ if TYPE_CHECKING:
     from ...domain.deadlines.models import TaxpayerProfile
     from ...domain.filing.schema import ModeloDraft
     from ...domain.invoices.models import InvoiceCatalogue
-    from ...domain.transactions.models import TransactionCatalogue
     from ...domain.user_profile.values import UserProfileRecord
     from ._verb_input_schema import VerbInputSchema
 
@@ -139,9 +138,6 @@ __all__ = [
 
 REQUESTED_CLI_LEAF_META_KEY = "cadrumo.requested_cli_leaf"
 """Context key holding the terminal leaf selected before root guards run."""
-
-_OPERATOR_SURFACE_RECONCILIATION_META_KEY = "cadrumo.operator_surface_reconciliation"
-"""Invocation-scoped immutable reconciliation shared by nested Click contexts."""
 
 _CLI_POLICY_REFUSAL_PROJECTION_ATTRIBUTE = "_cadrumo_cli_policy_refusal_projection"
 
@@ -1068,10 +1064,6 @@ def _draft_repo(*, bucket_id: str | None = None) -> ModeloDraftRepository:
     from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 
     return ModeloDraftRepository(bucket_id=bucket_id)
-
-
-def load_transactions(state: WorkflowState) -> TransactionCatalogue:
-    return transaction_catalogue_repo(state).load()
 
 
 def load_invoices() -> InvoiceCatalogue:

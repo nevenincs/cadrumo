@@ -172,6 +172,35 @@ class LedgerWorkspaceController:
         """Build an internal semantic target without invoking it."""
         return LedgerRouteTargetV1(destination=cast("LedgerDestinationIdV1", _DESTINATION_BY_AREA[area]), area=area)
 
+    def _selection_refusal(
+        self,
+        area: LedgerWorkspaceArea,
+        target: LedgerRouteTargetV1,
+    ) -> LedgerRouteRefusalV1 | None:
+        """Refuse an area that needs a chosen entry when none has been chosen.
+
+        Kept out of ``refusal_for``'s ``missing_door`` expression on purpose,
+        and out of any boolean joining it to the area comparison. A missing
+        door is an absent INJECTED dependency — something the launcher failed
+        to wire — and the wholly-wired-doors gate derives what the launcher
+        owes by reading that expression. A selection is the operator's, made at
+        runtime, so joining the two demanded an operator value from the
+        launcher; that unsatisfiable demand is why the classification door was
+        removed rather than wired.
+
+        It also lets the operator hear what is actually true — choose an entry
+        — instead of being told submission is unavailable.
+        """
+        if area is not LedgerWorkspaceArea.CLASSIFICATION:
+            return None
+        if self.classification_target is not None:
+            return None
+        return LedgerRouteRefusalV1(
+            target=target,
+            availability=LedgerWorkspaceAvailability.UNAVAILABLE,
+            reason_key="tui.ledger.refusal.selection_required",
+        )
+
     def refusal_for(self, area: LedgerWorkspaceArea) -> LedgerRouteRefusalV1 | None:
         """Preserve application refusal separately from deferred screen availability."""
         target = self.route_target(area)
@@ -182,21 +211,9 @@ class LedgerWorkspaceController:
                 availability=state.availability,
                 reason_key="tui.ledger.refusal.application_state",
             )
-        # Deliberately its own statement rather than a term in ``missing_door``.
-        # A missing door is an absent INJECTED dependency — something the
-        # launcher failed to wire — and the wholly-wired-doors gate derives what
-        # the launcher owes by reading that boolean. A selection is the
-        # operator's, made at runtime, so folding it in demanded an operator
-        # value from the launcher; that unsatisfiable demand is why the
-        # classification door was removed rather than wired. Separating it also
-        # lets the operator hear what is actually true — choose an entry —
-        # instead of being told submission is unavailable.
-        if area is LedgerWorkspaceArea.CLASSIFICATION and self.classification_target is None:
-            return LedgerRouteRefusalV1(
-                target=target,
-                availability=LedgerWorkspaceAvailability.UNAVAILABLE,
-                reason_key="tui.ledger.refusal.selection_required",
-            )
+        selection_refusal = self._selection_refusal(area, target)
+        if selection_refusal is not None:
+            return selection_refusal
         missing_door = (
             area is LedgerWorkspaceArea.CLASSIFICATION
             and (self.classify_action is None or self.classification_submitter is None)

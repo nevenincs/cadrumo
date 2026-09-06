@@ -23,6 +23,7 @@ from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
 from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
+from .....core.identity import TransactionId
 from .....domain.transactions.enums import BusinessClassification
 from ....tui.components.host import ScreenHostApp
 from ....tui.devtools.frame import geometry_band
