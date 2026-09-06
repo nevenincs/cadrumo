@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-06'
-body_hash: 'sha256:13b31ead89ecaae09607960f9a742300d8e24b14e0f3447a869bc7e59240e49a'
+body_hash: 'sha256:ec4417f61773ebf4b7226c713c3ef83f2301dac8e63186a6577757dc611ea472'
 ---
 
 <!-- RETIRED: S370 -->
@@ -676,6 +676,7 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S460` - Follow a column table into the shared fitter it is handed to, walking comprehension generators as well as for statements and confirming every table a parameter receives rather than dropping the name as ambiguous, since one helper serves every screen and the ambiguity rule failed the common case for being common; `dev/locales/_ast_scanner.py dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
 - [x] `W08.P30.S461` - Read the CLI help keys from the live command-spec registry rather than from source text, since a spec table builds an options help key from the option name so no literal exists and fifty-eight shipped keys the CLI resolves on every run were indistinguishable from keys nothing uses; establish on the same evidence that the live registry declares none of the 125 cli catalogue extras; `dev/locales/_command_spec_scanner.py dev/locales/manager.py dev/locales/tests/test_command_spec_key_source.py`.
 - [x] `W08.P30.S462` - Repair the generated casilla reference key derivation that silently enumerated nothing after three closed fields became enums, since get_args answers for a Literal and returns empty for an Enum so the families vanished from the declaration while the surface kept rendering them and twenty-six shipped keys were reported as stale copy; `dev/docs/casilla_reference.py dev/docs/tests/test_casilla_reference_presentation.py`.
+- [x] `W08.P30.S463` - Confirm a column table written inline at the call site by registering it under a synthetic name so the parameter alias and key-column rule apply unchanged, and establish from the live error registry that the five application filing error keys are declared nowhere it owns; `dev/locales/_ast_scanner.py dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
 
 ## Parallelization
 

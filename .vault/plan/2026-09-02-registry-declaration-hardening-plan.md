@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:20937d77cae56692314432aa307c1005d01905b3572bd1febd3b4b3b1690e5c8'
+body_hash: 'sha256:04384af65fd7a3417300cd9700ced4f8130e8dc36e693dae5d27476bc9656b84'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -632,6 +632,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S750` - Anchor the reserved-slot absence claim on modelo 347's eligible fields, the population a narrowed match once took to zero in this same file; `dev/registry/tests/test_render_profile.py`.
 - [x] `W02.P02.S751` - Derive the constraint export's local-package exclusions from uv.lock instead of a hand-written triple, and route the test's duplicate literal through the same owner; `dev/packaging/tests/test_uv_constraints.py`.
 - [x] `W02.P02.S752` - Extract the inert-initialiser predicate to one owner so the teeth case proves the gate instead of its own copy of the predicate; `dev/registry/tests/test_declaration_invariant_gates.py`.
+- [x] `W02.P02.S753` - Route the scaffolding lint-scope gate through the tracked-Python discovery the module already documented, and extract the exclusion predicate its three copies restated; `dev/quality/tests/test_lint_scope_covers_scaffolding.py`.
+- [x] `W02.P02.S754` - Anchor the two module-reach absence claims that an empty walk satisfied, with a positive control and a pinned reported set; `dev/quality/tests/test_module_test_reach.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
