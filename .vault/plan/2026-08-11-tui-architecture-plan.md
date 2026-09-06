@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-06'
-body_hash: 'sha256:fb18d52e2405e670ddbb9734ad1c66a9e098939e1b5060c75cc01663f46b5672'
+body_hash: 'sha256:338e3e0bb65227e5edce989b4b27b3a85c548813d63e92a468ce693b94163663'
 ---
 
 <!-- RETIRED: S370 -->
@@ -670,6 +670,7 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S454` - Read a translation key supplied through a conditional, since `empty_key="..." if not rows else None` is how a surface states a state-dependent label and the collector read only a bare literal, so both arms vanished and the catalogue looked complete on whichever branch a developer happened to exercise; two genuinely missing error messages surfaced once the arms were read, closing the missing side of codebase-to-locale parity to zero; `dev/locales/_ast_scanner.py dev/locales/tests/test_dynamic_prefix_registry_coverage.py src/cadrumo/locales`.
 - [x] `W08.P30.S455` - Confirm a locale-key registry through the boundary wrapper that reads it, since flow confirmation consulted only tr and its import aliases while every surface is asked to route copy through its own helper, so a registry read through declarations_copy or aeat_sync_copy was never confirmed and every key in it read as an orphan; shape alone still does not confirm; `dev/locales/_ast_scanner.py dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
 - [x] `W08.P30.S456` - Read the dynamic namespace a screen declares by selecting a prefix from a table, and register the bounded spaces rather than tolerating them, since the workspace helpers append an enum member value to a prefix chosen by class name so the f-string head is an interpolation and no namespace was declared at all; `dev/locales/_ast_scanner.py dev/locales/_fstring_registry.py dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
+- [x] `W08.P30.S457` - Read the screen column table the shape test rejected for carrying a width, read back as a class attribute and indexed rather than unpacked, keeping the key-column discipline so a prose or numeric sibling reaching the translator still confirms nothing; `dev/locales/_ast_scanner.py dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
 
 ## Parallelization
 

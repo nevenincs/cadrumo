@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:e9efb9f3bed943d56fa987caea32218820cf2983a99ae5061583232243af785f'
+body_hash: 'sha256:8fe046252bdf17fe81be4a6b0829094447f0e069414abe7d6a54d17bdee7f70d'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -618,6 +618,9 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S736` - Repoint the development cross-references that still name core symbols through the package facade the import-centralization refactor emptied; `dev/registry/conformance/_stamp.py`.
 - [x] `W02.P02.S737` - Establish that development cross-reference roles sit outside the documented scope, so the remaining unresolved ones are reader-facing rather than docs-build failures; `dev/docs/apidocs/manager.py`.
 - [x] `W02.P02.S738` - Assert the refusal the diagnostic-notice gate actually raises and prove the status branch that no case reached; `dev/packaging/tests/test_delivery_envelope_contract.py`.
+- [x] `W02.P02.S739` - Replace the pinned enrolment-candidate total with a floor per concept family, which the single number could not do while two families moved in opposite directions; `dev/docs/terminology_handbook/tests/test_curation.py`.
+- [x] `W02.P02.S740` - Name the drifted concepts and their actions in the handbook scaffold verdicts, which reported only that the tree had drifted; `dev/docs/terminology_handbook/tests/test_bootstrap.py`.
+- [x] `W02.P02.S741` - Size the nested-collection budget for real contention and make its expiry say the machine was loaded rather than the shard plugin broken; `dev/quality/tests/test_shard.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
