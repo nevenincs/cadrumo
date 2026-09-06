@@ -46,6 +46,9 @@ _HOOK_COMMAND = "python -m dev.docs.preprocess.hook {path}"
 #: than silently degrading every index job for this root to zero rules.
 _RULE_SCHEMA_VERSION = 2
 _TERMINOLOGY = _REPO_ROOT / "src" / "cadrumo" / "_data" / "terminology" / "concepts"
+#: Rule patterns rooted here target the Handbook concept tree rather than the
+#: corpus, so they are resolved against a different directory below.
+_TERMINOLOGY_PATTERN_PREFIX = "src/cadrumo/_data/terminology/concepts/"
 
 
 def _smallest(pattern: str) -> Path:
@@ -62,7 +65,7 @@ def test_rule_file_is_wellformed_and_targets_the_hook() -> None:
     rules = data["rule"]
     assert len(rules) == 6
     for rule in rules:
-        assert rule["pattern"].startswith(("src/cadrumo/_data/corpus/", "src/cadrumo/_data/terminology/concepts/"))
+        assert rule["pattern"].startswith(("src/cadrumo/_data/corpus/", _TERMINOLOGY_PATTERN_PREFIX))
         assert _HOOK_COMMAND in rule["command"]
         assert rule["on_error"] == "skip"
         assert rule["timeout_s"] > 0
@@ -109,10 +112,27 @@ def test_every_rule_owns_the_code_index_and_versions_its_extractor() -> None:
 
 
 def test_every_rule_pattern_matches_committed_sources() -> None:
-    """A rule over zero files is dead configuration; each must match today."""
-    for pattern in ("*.html", "*.pdf", "*.xlsm", "*.xlsx"):
-        assert _smallest(pattern).is_file()
-    assert any(iter_directory(_TERMINOLOGY, pattern="*.toml")), "no Handbook concept TOML matches the terminology rule"
+    """A rule over zero files is dead configuration; each must match today.
+
+    The families are READ FROM the rule file rather than restated here. A
+    hand-listed subset is exactly how a rule stops being checked: this loop
+    named four suffixes against six declared rules, so ``*.xls`` -- a whole
+    source family, 47 committed workbooks -- was enumerated nowhere in this
+    module, and its rule could have matched nothing with every gate green.
+    Deriving the enumeration from the population makes omitting a family
+    impossible rather than merely unlikely.
+    """
+    rules = tomllib.loads(_RULE_FILE.read_text(encoding="utf-8"))["rule"]
+    patterns = sorted({cast(str, rule["pattern"]) for rule in rules})
+    assert len(patterns) == len(rules) == 6, patterns
+    for pattern in patterns:
+        suffix = Path(pattern).suffix.lower()
+        if pattern.startswith(_TERMINOLOGY_PATTERN_PREFIX):
+            assert any(iter_directory(_TERMINOLOGY, pattern=f"*{suffix}")), (
+                f"no Handbook concept file matches the terminology rule {pattern!r}"
+            )
+        else:
+            assert _smallest(f"*{suffix}").is_file(), pattern
 
 
 def test_terminology_concept_rule_emits_the_source_path_and_kind() -> None:
