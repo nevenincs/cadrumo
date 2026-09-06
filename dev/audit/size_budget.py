@@ -67,7 +67,7 @@ from .._paths import REPO_ROOT, UTF_8
 if str(REPO_ROOT / "src") not in sys.path:  # pragma: no cover - import bootstrap
     sys.path.insert(0, str(REPO_ROOT / "src"))
 
-from cadrumo.tests import (  # noqa: E402
+from cadrumo.tests import (
     CALLABLE_POLICY,
     MODULE_POLICY,
     assert_real_corpus,
@@ -78,7 +78,7 @@ from cadrumo.tests import (  # noqa: E402
     python_files_under,
     scan_module_lines,
 )
-from cadrumo.tests.size_budget import BudgetVerdict, EmptyScanError  # noqa: E402
+from cadrumo.tests.size_budget import BudgetVerdict, EmptyScanError
 
 #: The development tree, measured on the MODULE axis beside the shipped package.
 #:

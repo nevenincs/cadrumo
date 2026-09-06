@@ -129,7 +129,7 @@
 "cadrumo.application.user_profile.login_session_port" = 3
 "cadrumo.application.user_profile.presentation" = 1
 "cadrumo.application.user_profile.repository" = 1
-"cadrumo.application.wizard._format_hints" = 1
+"cadrumo.application.wizard.format_hints" = 1
 "cadrumo.application.wizard.descendant_door" = 1
 "cadrumo.application.wizard.descendant_group" = 1
 "cadrumo.application.wizard.persistence" = 2

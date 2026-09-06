@@ -268,6 +268,8 @@ def test_plural_module_holding_one_declaration_still_fails(tmp_path: Path) -> No
     assert any(
         item.kind is ObjectNameFindingKind.PLURAL and item.name == "invoices" for item in result.enforced_findings
     )
+
+
 def test_private_and_test_module_stems_are_advisory(tmp_path: Path) -> None:
     _write(tmp_path, "src/cadrumo/_support.py", "")
     _write(tmp_path, "dev/tests/_support.py", "")

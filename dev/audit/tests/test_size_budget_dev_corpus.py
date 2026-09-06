@@ -1,61 +1,60 @@
-"""Gate: the size budget measures `dev/` too, and the dashboard carries the result.
+"""Gate: the size budget measures `dev/`, and the ratchet detects what it claims to.
 
-`dev/` sat outside every size axis until it produced a 6,060-line quality module
-in two days. The scanner that should have seen it existed the whole time and was
-correct; it measured the shipped package only, and the pytest gate enforcing it
-had been deleted when the package's zero-awareness boundary was closed. Nothing
-ran it, so nothing said anything.
+`dev/` sat outside every size axis while the shipped package was measured, so a
+development module could accrete without bound and no check anywhere would say
+so. The corpus half of this file proves `dev/` is measured at all; the ratchet
+half proves the measurement has teeth.
 
-Two properties therefore need holding, and neither is implied by the other:
+Every assertion here is STATE-INDEPENDENT. An earlier version asserted that both
+trees currently contain failing modules, which made paying the debt down turn the
+suite red -- a gate punishing the remedy it exists to motivate. The properties
+below hold whether the tree is clean or filthy: that each tree is measured, that
+a broken walk refuses rather than reading clean, and that a subject crossing its
+own ceiling fails.
 
-* the `dev/` tree is IN the measured corpus, so growth there is visible at all;
-* the composed advisory dashboard CARRIES the dimension, so the measurement
-  reaches a surface somebody reads.
-
-The corpus assertion is deliberately anchored to a real oversize module rather
-than to a count. A count moves every time somebody splits a file and would have
-to be edited to stay green, which is the decay mode the size baseline itself was
-regenerated to escape.
+The detector proofs run against a temporary tree rather than live findings.
+`scan_module_lines` takes its files and root as parameters precisely so the real
+measurement code can be pointed at one, so each proof exercises production code
+without depending on the repository's current debt.
 """
 
 from __future__ import annotations
 
-import inspect
+from pathlib import Path
 
 import pytest
 
-from ..advisory import audit_size_budget, build_advisory_report
+from cadrumo.tests import MODULE_POLICY, build_limits, evaluate_budget, scan_module_lines
+from cadrumo.tests.size_budget import EmptyScanError
+
 from ..size_budget import (
-    SizeBudgetResult,
     dev_python_files,
+    load_size_budget_baseline,
     measure_dev_module_lines,
     run_size_budget_scan,
 )
 
 pytestmark = [pytest.mark.hex_core]
 
-# The corpus enumeration is cheap and stays on the fast per-push lane. The three
-# tests that need a full measurement are marked `integration`: one scan reads
-# ~6,800 modules and AST-parses ~16,000 callables, which is a minute the
-# per-push unit lane should not spend. `just test-dev-tooling` selects both
-# markers, so nothing drops out of coverage by being moved off the fast lane.
+_OVER = MODULE_POLICY.default_limit + 500
 
 
-@pytest.fixture(scope="module")
-def scan() -> SizeBudgetResult:
-    """One scan shared by every test that needs it.
+def _planted(root: Path, relative: str, lines: int) -> Path:
+    """Write a module of exactly ``lines`` lines into a temporary tree."""
+    path = root / relative
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("x = 1\n" * lines, encoding="utf-8")
+    return path
 
-    The scan measures ~6,800 modules and ~16,000 callables and costs roughly a
-    minute. Re-running it per test put this file near the 300-second per-test
-    ceiling for no added coverage: the corpus does not change between
-    assertions in one session.
-    """
-    return run_size_budget_scan()
+
+# ---------------------------------------------------------------------------
+# The dev/ corpus is measured at all
+# ---------------------------------------------------------------------------
 
 
 @pytest.mark.unit
 def test_the_dev_tree_is_enumerated_without_compiled_caches() -> None:
-    """The corpus is real `dev/` source, and never a stale `__pycache__` artefact."""
+    """The corpus is real `dev/` source, never a stale `__pycache__` artefact."""
     files = dev_python_files()
 
     assert files, "dev/ must not enumerate empty; an empty corpus measures nothing"
@@ -65,7 +64,11 @@ def test_the_dev_tree_is_enumerated_without_compiled_caches() -> None:
 
 @pytest.mark.unit
 def test_dev_modules_are_measured_against_the_repository_root() -> None:
-    """Keys are repo-relative POSIX paths, so `dev/` and `src/` share one namespace."""
+    """Keys are repo-relative POSIX paths, so `dev/` and `src/` share one namespace.
+
+    A statement about the CORPUS, not about findings: it holds identically
+    whether or not any `dev/` module is currently oversize.
+    """
     measured = measure_dev_module_lines()
 
     assert measured
@@ -73,56 +76,109 @@ def test_dev_modules_are_measured_against_the_repository_root() -> None:
     assert all("\\" not in key for key in measured)
 
 
-@pytest.mark.integration
-def test_an_oversize_dev_module_is_a_finding(scan: SizeBudgetResult) -> None:
-    """The defect this corpus exists for: `dev/` growth must reach the verdict.
-
-    Anchored to whichever `dev/` module is largest rather than to a named file
-    or a count, so the test keeps its meaning after the current offenders are
-    split and cannot be satisfied by editing a number.
-    """
-    measured = measure_dev_module_lines()
-    largest = max(measured, key=lambda key: measured[key])
-    if measured[largest] <= 1250:
-        pytest.skip("no dev/ module exceeds the default module limit; nothing to prove here")
-
-    findings = scan.modules.failing
-
-    assert any(line.startswith(f"{largest}:") for line in findings), (
-        f"{largest} is {measured[largest]} lines and must appear in the size-budget verdict"
-    )
-
-
-@pytest.mark.integration
-def test_the_scan_spans_both_trees(scan: SizeBudgetResult) -> None:
-    """A regression that dropped either tree would still look like a working scan."""
-    findings = scan.modules.failing
-    prefixes = {line.split("/", 1)[0] for line in findings}
-
-    assert "dev" in prefixes
-    assert "src" in prefixes
-
-
-@pytest.mark.integration
-def test_the_dimension_reports_amber_rather_than_green_while_debt_stands(scan: SizeBudgetResult) -> None:
-    """An unmeasurable or ignored axis must never render as GREEN."""
-    dimension = audit_size_budget()
-
-    assert dimension.report.name == "size_budget"
-    assert dimension.report.status.value == ("green" if scan.is_clean else "amber")
-    assert len(dimension.report.details or []) == len(scan.findings)
+# ---------------------------------------------------------------------------
+# The ratchet detects what it claims to
+# ---------------------------------------------------------------------------
 
 
 @pytest.mark.unit
-def test_the_composed_dashboard_carries_the_size_budget_dimension() -> None:
-    """The measurement must reach the surface people actually read.
+def test_a_module_crossing_its_own_ceiling_is_reported(tmp_path: Path) -> None:
+    """THE defect: a declared subject that keeps growing must fail.
 
-    Asserted structurally rather than by running the composition: the other
-    dimensions shell out to semgrep and a full dead-code walk, so executing it
-    here would put minutes into the unit lane to prove one call site. What
-    matters is that `build_advisory_report` is the caller, which the source
-    settles.
+    This is the shape of the incident that motivated measuring `dev/` at all --
+    a module accreting past a size somebody already accepted. A ceiling-less
+    model passes it once the subject is known, so it is proved explicitly, at
+    one line over.
     """
-    source = inspect.getsource(build_advisory_report)
+    planted = _planted(tmp_path, "dev/quality/grower.py", _OVER)
+    measured = scan_module_lines(files=(planted,), root=tmp_path)
 
-    assert "audit_size_budget()" in source
+    verdict = evaluate_budget(measured, {"dev/quality/grower.py": _OVER - 1}, MODULE_POLICY)
+
+    assert verdict.over_budget == (f"dev/quality/grower.py: {_OVER} lines > limit {_OVER - 1}",)
+    assert verdict.failing
+
+
+@pytest.mark.unit
+def test_an_undeclared_oversize_module_is_reported(tmp_path: Path) -> None:
+    """A module nothing has ever declared is measured against the default."""
+    planted = _planted(tmp_path, "dev/quality/newcomer.py", _OVER)
+    measured = scan_module_lines(files=(planted,), root=tmp_path)
+
+    verdict = evaluate_budget(measured, {}, MODULE_POLICY)
+
+    assert verdict.over_budget == (f"dev/quality/newcomer.py: {_OVER} lines > limit {MODULE_POLICY.default_limit}",)
+
+
+@pytest.mark.unit
+def test_a_subject_inside_its_ceiling_is_clean(tmp_path: Path) -> None:
+    """The gate stays quiet on a declared subject that has not moved."""
+    planted = _planted(tmp_path, "dev/quality/steady.py", _OVER)
+    measured = scan_module_lines(files=(planted,), root=tmp_path)
+
+    verdict = evaluate_budget(measured, {"dev/quality/steady.py": _OVER}, MODULE_POLICY)
+
+    assert not verdict.failing
+
+
+@pytest.mark.unit
+def test_regeneration_cannot_launder_a_live_offender(tmp_path: Path) -> None:
+    """Re-measuring must not lift a ceiling the subject has already broken.
+
+    The anti-launder rule is what stops the ratchet being reset by whoever
+    caused the growth: without it, regenerating after an accretion simply
+    blesses it, and the gate reports green on the defect it exists to catch.
+    """
+    planted = _planted(tmp_path, "dev/quality/grower.py", _OVER)
+    measured = scan_module_lines(files=(planted,), root=tmp_path)
+    broken = {"dev/quality/grower.py": _OVER - 1}
+
+    held = build_limits(measured, MODULE_POLICY, previous=broken, accept_growth=False)
+    absorbed = build_limits(measured, MODULE_POLICY, previous=broken, accept_growth=True)
+
+    assert held["dev/quality/grower.py"] == _OVER - 1, "a live offender keeps its broken ceiling"
+    assert evaluate_budget(measured, held, MODULE_POLICY).failing, "and stays red"
+    assert absorbed["dev/quality/grower.py"] >= _OVER, "only the explicit flag may absorb it"
+
+
+# ---------------------------------------------------------------------------
+# The guards refuse rather than reading clean
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_a_broken_dev_walk_refuses_rather_than_reporting_clean(monkeypatch: pytest.MonkeyPatch) -> None:
+    """An empty dev walk must raise, not report a clean dev axis.
+
+    The two trees are unioned before the shared corpus floor is applied, and
+    `src/` alone clears that floor several times over. Without a floor of its
+    own the dev axis could return nothing, contribute no findings, and read as
+    healthy -- absent and zero collapsed into one.
+    """
+    monkeypatch.setattr("dev.audit.size_budget.dev_python_files", lambda: ())
+
+    with pytest.raises(EmptyScanError, match="dev source walk is broken"):
+        measure_dev_module_lines()
+
+
+# ---------------------------------------------------------------------------
+# The live tree
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.integration
+def test_the_live_tree_sits_inside_its_committed_baseline() -> None:
+    """The real gate: every subject is inside the band the baseline declares."""
+    result = run_size_budget_scan()
+
+    assert result.is_clean, "\n".join(result.findings)
+
+
+@pytest.mark.integration
+def test_the_committed_baseline_declares_both_measured_trees() -> None:
+    """Debt is declared for both trees, so neither axis is silently absent."""
+    baseline = load_size_budget_baseline()
+    prefixes = {key.split("/", 1)[0] for key in baseline.modules}
+
+    assert baseline.modules, "the committed baseline must not be empty"
+    assert prefixes <= {"src", "dev"}

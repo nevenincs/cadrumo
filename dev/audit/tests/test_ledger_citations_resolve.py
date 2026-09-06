@@ -104,20 +104,14 @@ def test_the_gate_catches_a_citation_that_names_no_subject(tmp_path: Path) -> No
     reader = tmp_path / "dev" / "tool.py"
     reader.parent.mkdir(parents=True)
     reader.write_text("from x import something_else\n", encoding="utf-8")
-    data = {
-        "symbol_cluster": [
-            {"name": "c", "symbols": ["absent_symbol"], "evidence": "read by dev/tool.py"}
-        ]
-    }
+    data = {"symbol_cluster": [{"name": "c", "symbols": ["absent_symbol"], "evidence": "read by dev/tool.py"}]}
 
     assert unresolved_citations(data, tmp_path) == ["c -> dev/tool.py (names no subject of the entry)"]
 
 
 def test_the_gate_catches_a_citation_to_a_missing_file(tmp_path: Path) -> None:
     """Detector teeth: a reader that was renamed or deleted."""
-    data = {
-        "symbol_cluster": [{"name": "c", "symbols": ["thing"], "evidence": "read by dev/gone.py"}]
-    }
+    data = {"symbol_cluster": [{"name": "c", "symbols": ["thing"], "evidence": "read by dev/gone.py"}]}
 
     assert unresolved_citations(data, tmp_path) == ["c -> dev/gone.py (no such file)"]
 
@@ -127,9 +121,7 @@ def test_a_citation_that_names_its_subject_is_accepted(tmp_path: Path) -> None:
     reader = tmp_path / "dev" / "tool.py"
     reader.parent.mkdir(parents=True)
     reader.write_text("from x import thing\n\nthing()\n", encoding="utf-8")
-    data = {
-        "symbol_cluster": [{"name": "c", "symbols": ["thing"], "evidence": "read by dev/tool.py"}]
-    }
+    data = {"symbol_cluster": [{"name": "c", "symbols": ["thing"], "evidence": "read by dev/tool.py"}]}
 
     assert unresolved_citations(data, tmp_path) == []
 

@@ -364,8 +364,7 @@ class _RenameTransformer(cst.CSTTransformer):
     def _is_documentation_only(self, text: str, old_name: str) -> bool:
         """Report whether every mention of ``old_name`` in ``text`` is a role target."""
         mentions = [
-            match.start()
-            for match in re.finditer(rf"(?<![A-Za-z0-9_]){re.escape(old_name)}(?![A-Za-z0-9_])", text)
+            match.start() for match in re.finditer(rf"(?<![A-Za-z0-9_]){re.escape(old_name)}(?![A-Za-z0-9_])", text)
         ]
         if not mentions:
             return False

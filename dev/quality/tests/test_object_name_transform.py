@@ -860,14 +860,14 @@ def test_docstring_role_target_is_rewritten_with_the_definition(tmp_path: Path) 
     module = "\n".join(
         [
             '"""Widget contracts.',
-            '',
-            'See :class:`Widgets` and :obj:`~cadrumo.widget_contract.Widgets`.',
+            "",
+            "See :class:`Widgets` and :obj:`~cadrumo.widget_contract.Widgets`.",
             '"""',
-            '',
-            '',
-            'class Widgets:',
-            '    pass',
-            '',
+            "",
+            "",
+            "class Widgets:",
+            "    pass",
+            "",
         ]
     )
     inventory = _inventory(tmp_path, {"src/cadrumo/widget_contract.py": module})
@@ -897,14 +897,14 @@ def test_prose_mentioning_the_old_name_is_still_refused_beside_a_role(tmp_path: 
     module = "\n".join(
         [
             '"""Widget contracts.',
-            '',
-            'See :class:`Widgets`. The Widgets model is described above.',
+            "",
+            "See :class:`Widgets`. The Widgets model is described above.",
             '"""',
-            '',
-            '',
-            'class Widgets:',
-            '    pass',
-            '',
+            "",
+            "",
+            "class Widgets:",
+            "    pass",
+            "",
         ]
     )
     inventory = _inventory(tmp_path, {"src/cadrumo/widget_contract.py": module})
@@ -920,18 +920,18 @@ def test_role_target_naming_a_different_symbol_is_left_alone(tmp_path: Path) -> 
     module = "\n".join(
         [
             '"""Widget contracts.',
-            '',
-            'See :class:`Widgets` and :class:`Gadgets`.',
+            "",
+            "See :class:`Widgets` and :class:`Gadgets`.",
             '"""',
-            '',
-            '',
-            'class Widgets:',
-            '    pass',
-            '',
-            '',
-            'class Gadgets:',
-            '    pass',
-            '',
+            "",
+            "",
+            "class Widgets:",
+            "    pass",
+            "",
+            "",
+            "class Gadgets:",
+            "    pass",
+            "",
         ]
     )
     inventory = _inventory(tmp_path, {"src/cadrumo/widget_contract.py": module})
@@ -948,6 +948,8 @@ def test_role_target_naming_a_different_symbol_is_left_alone(tmp_path: Path) -> 
     rewritten = result.content_by_path()["src/cadrumo/widget_contract.py"].decode("utf-8")
     assert ":class:`Widget`" in rewritten
     assert ":class:`Gadgets`" in rewritten
+
+
 def test_unrelated_string_matching_the_old_name_is_still_refused(tmp_path: Path) -> None:
     inventory = _inventory(
         tmp_path,

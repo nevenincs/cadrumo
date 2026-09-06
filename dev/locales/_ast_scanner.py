@@ -642,10 +642,12 @@ def _literal_row_grid(node: ast.expr | None) -> list[list[str | None]] | None:
     for element in node.elts:
         if not isinstance(element, ast.Tuple | ast.List) or not element.elts:
             return None
-        rows.append([
-            item.value if isinstance(item, ast.Constant) and isinstance(item.value, str) else None
-            for item in element.elts
-        ])
+        rows.append(
+            [
+                item.value if isinstance(item, ast.Constant) and isinstance(item.value, str) else None
+                for item in element.elts
+            ]
+        )
     width = len(rows[0])
     if any(len(row) != width for row in rows):
         return None
@@ -782,9 +784,7 @@ def _iteration_bindings(tree: ast.AST) -> Iterator[ast.For | ast.AsyncFor | ast.
             yield from node.generators
 
 
-def _parameters_bound_to_a_candidate_table(
-    tree: ast.AST, candidates: dict[str, ast.expr]
-) -> dict[str, frozenset[str]]:
+def _parameters_bound_to_a_candidate_table(tree: ast.AST, candidates: dict[str, ast.expr]) -> dict[str, frozenset[str]]:
     """Map a local function's parameter name to the candidate table passed into it.
 
     A screen shares its column-fitting rule rather than repeating it, so the

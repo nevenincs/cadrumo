@@ -14,6 +14,15 @@ from ..manager import ApiStubManager, DriftResult, ScaffoldResult
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+#: Floor for the stub population ``scaffold`` derives from the source tree.
+#: Live it expects 1822 stubs. Every claim in this module reads a corpus
+#: that an empty expected set empties: ``scaffold`` writes each expected
+#: stub and then unlinks every ``.rst`` absent from that set, so a
+#: discovery that found no module deletes the whole reference while
+#: reporting the removal each case here asks for.
+_MINIMUM_STUB_POPULATION = 1000
+
+
 def test_public_type_aliases_have_one_canonical_module_target(tmp_path: Path) -> None:
     """Public PEP 695 aliases are indexed once at their defining modules."""
     manager = ApiStubManager(src_cadrumo=REPO_ROOT / "src" / "cadrumo", docs_api=tmp_path / "api")
@@ -76,7 +85,10 @@ def test_scaffold_produces_conformant_tree(tmp_path: Path) -> None:
     result = manager.scaffold()
 
     assert isinstance(result, ScaffoldResult)
-    assert result.written > 0
+    assert result.written >= _MINIMUM_STUB_POPULATION, (
+        f"the run wrote only {result.written} stubs, so the conformance claim below "
+        "compares a tree that is not the source tree"
+    )
 
     drift = manager.check()
     assert isinstance(drift, DriftResult)
@@ -201,6 +213,12 @@ def test_scaffold_writes_line_feed_terminators(tmp_path: Path) -> None:
     result = manager.scaffold()
 
     rst_paths = scan_directory(docs_api, pattern="*.rst")
+    # The equality alone does not establish that the run covered the source
+    # tree: an empty expected set writes nothing and scans nothing, ``0 == 0``
+    # holds, and ``translated`` is then empty for the absence claim below.
+    assert result.written >= _MINIMUM_STUB_POPULATION, (
+        f"the run wrote only {result.written} stubs, so the terminator claim below reads almost nothing"
+    )
     assert len(rst_paths) == result.written, "the scan must cover every stub the run reported writing"
 
     translated = [rst_path.name for rst_path in rst_paths if b"\r\n" in rst_path.read_bytes()]
@@ -250,7 +268,15 @@ def test_scaffold_removes_stale_stub(tmp_path: Path) -> None:
     manager = ApiStubManager(src_cadrumo=src_cadrumo, docs_api=docs_api)
     result = manager.scaffold()
 
-    assert "cadrumo.phantom_module.rst" in result.removed_names
+    # Pinned rather than a membership test, and floored beside it: the
+    # generator removes every ``.rst`` absent from its expected set, so a
+    # collapsed expectation deletes the entire reference and still satisfies
+    # both halves of "the stale stub was removed". Measured live: 1822
+    # stubs expected, exactly this one file removed.
+    assert result.removed_names == ["cadrumo.phantom_module.rst"]
+    assert result.written >= _MINIMUM_STUB_POPULATION, (
+        f"the run wrote only {result.written} stubs, so the removal above may be the whole reference"
+    )
     assert not phantom.exists()
 
 

@@ -359,6 +359,7 @@ def _module_holds_several(declaration: ObjectNameDeclaration, declarations: Sequ
     ]
     return len(owned) > 1
 
+
 def _looks_plural(word: str | None, kind: ObjectNameKind) -> bool:
     if word is None or len(word) < 4 or word.endswith(_NON_PLURAL_SUFFIXES):
         return False

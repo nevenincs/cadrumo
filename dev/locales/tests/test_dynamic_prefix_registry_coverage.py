@@ -600,6 +600,7 @@ def test_a_positional_translation_key_needs_every_same_named_helper_to_agree(tmp
         "definitions that disagree on the position must collect nothing there"
     )
 
+
 def test_a_local_translator_wrapper_is_followed_but_only_when_it_forwards_its_key(tmp_path) -> None:
     """Incident 6: every TUI surface routes copy through its own boundary helper.
 
@@ -616,19 +617,23 @@ def test_a_local_translator_wrapper_is_followed_but_only_when_it_forwards_its_ke
     from .._ast_scanner import scan_source_tree
 
     (tmp_path / "boundary.py").write_text(
-        chr(10).join((
-            "def copy(key, **values):",
-            "    return tr(key, **values)",
-            "def shout(text):",
-            '    return tr("ui.fixed.banner") + text',
-        )),
+        chr(10).join(
+            (
+                "def copy(key, **values):",
+                "    return tr(key, **values)",
+                "def shout(text):",
+                '    return tr("ui.fixed.banner") + text',
+            )
+        ),
         encoding="utf-8",
     )
     (tmp_path / "screen.py").write_text(
-        chr(10).join((
-            'copy("tui.aeat_sync.column.area")',
-            'shout("tui.aeat_sync.column.not_a_key")',
-        )),
+        chr(10).join(
+            (
+                'copy("tui.aeat_sync.column.area")',
+                'shout("tui.aeat_sync.column.not_a_key")',
+            )
+        ),
         encoding="utf-8",
     )
 
@@ -655,20 +660,20 @@ def test_a_translation_key_kwarg_is_read_through_a_conditional(tmp_path) -> None
     """
     from .._ast_scanner import scan_source_text
 
-    source = chr(10).join((
-        "def render(rows):",
-        "    return table(",
-        '        label_key="flows.progress.rows_present",',
-        '        empty_key="flows.progress.rows_absent" if not rows else None,',
-        "    )",
-    ))
+    source = chr(10).join(
+        (
+            "def render(rows):",
+            "    return table(",
+            '        label_key="flows.progress.rows_present",',
+            '        empty_key="flows.progress.rows_absent" if not rows else None,',
+            "    )",
+        )
+    )
 
     keys = scan_source_text(source, filename="table.py")
 
     assert "flows.progress.rows_present" in keys, "a plain key kwarg must be collected"
-    assert "flows.progress.rows_absent" in keys, (
-        "a key inside a conditional is the key that ships on that branch"
-    )
+    assert "flows.progress.rows_absent" in keys, "a key inside a conditional is the key that ships on that branch"
     assert not any(key.endswith("None") for key in keys), "a non-literal arm is not a key"
 
 
@@ -693,16 +698,18 @@ def test_a_key_registry_is_flow_confirmed_through_a_boundary_wrapper(tmp_path) -
         encoding="utf-8",
     )
     (tmp_path / "controller.py").write_text(
-        chr(10).join((
-            "_AVAILABILITY_KEYS = {",
-            '    Availability.STALE: "tui.declarations.availability.stale",',
-            "}",
-            "_ROUTING_TABLE = {",
-            '    Notice.RETRY: "notice.machine.retry",',
-            "}",
-            "def label(value):",
-            "    return screen_copy(_AVAILABILITY_KEYS[value])",
-        )),
+        chr(10).join(
+            (
+                "_AVAILABILITY_KEYS = {",
+                '    Availability.STALE: "tui.declarations.availability.stale",',
+                "}",
+                "_ROUTING_TABLE = {",
+                '    Notice.RETRY: "notice.machine.retry",',
+                "}",
+                "def label(value):",
+                "    return screen_copy(_AVAILABILITY_KEYS[value])",
+            )
+        ),
         encoding="utf-8",
     )
 
@@ -737,20 +744,22 @@ def test_a_dynamic_namespace_is_read_when_its_prefix_is_selected_from_a_table() 
     """
     from .._ast_scanner import scan_namespace_markers_in_text
 
-    source = chr(10).join((
-        "_LABEL_PREFIXES = {",
-        '    "AeatSyncCensusStatus": "tui.aeat_sync.census_status",',
-        "}",
-        "_GREETINGS = {",
-        '    "morning": "cli.greeting.morning",',
-        "}",
-        "def label(value):",
-        "    prefix = _LABEL_PREFIXES.get(type(value).__name__)",
-        '    return copy(f"{prefix}.{value.value}")',
-        "def greet(slot):",
-        "    greeting = _GREETINGS.get(slot)",
-        '    return f"{greeting} and welcome"',
-    ))
+    source = chr(10).join(
+        (
+            "_LABEL_PREFIXES = {",
+            '    "AeatSyncCensusStatus": "tui.aeat_sync.census_status",',
+            "}",
+            "_GREETINGS = {",
+            '    "morning": "cli.greeting.morning",',
+            "}",
+            "def label(value):",
+            "    prefix = _LABEL_PREFIXES.get(type(value).__name__)",
+            '    return copy(f"{prefix}.{value.value}")',
+            "def greet(slot):",
+            "    greeting = _GREETINGS.get(slot)",
+            '    return f"{greeting} and welcome"',
+        )
+    )
 
     markers = scan_namespace_markers_in_text(source, filename="screens.py")
 
@@ -783,16 +792,18 @@ def test_a_column_table_is_read_as_an_attribute_and_confirmed_by_its_key_index()
     """
     from .._ast_scanner import scan_source_text
 
-    key_index = chr(10).join((
-        "class Screen:",
-        "    _COLUMNS = (",
-        '        ("date", "tui.ledger.column.date", 10),',
-        '        ("amount", "tui.ledger.column.amount", 14),',
-        "    )",
-        "    def render(self):",
-        "        for column in self._COLUMNS:",
-        "            yield tr(column[1])",
-    ))
+    key_index = chr(10).join(
+        (
+            "class Screen:",
+            "    _COLUMNS = (",
+            '        ("date", "tui.ledger.column.date", 10),',
+            '        ("amount", "tui.ledger.column.amount", 14),',
+            "    )",
+            "    def render(self):",
+            "        for column in self._COLUMNS:",
+            "            yield tr(column[1])",
+        )
+    )
     prose_index = key_index.replace("tr(column[1])", "tr(column[0])")
 
     collected = scan_source_text(key_index, filename="entries.py")
@@ -807,14 +818,16 @@ def test_a_column_table_is_read_as_an_attribute_and_confirmed_by_its_key_index()
     # with the ENUM member the choice sets, and demanding literal constants
     # rejected that table as surely as demanding strings rejected the one
     # above -- same shape, different sibling.
-    enum_sibling = chr(10).join((
-        "_CHOICES = (",
-        '    (BusinessClassification.BUSINESS, "tui.ledger.classification.business"),',
-        '    (BusinessClassification.PERSONAL, "tui.ledger.classification.personal"),',
-        ")",
-        "for classification, key in _CHOICES:",
-        "    table.add_row(tr(key), key=classification.value)",
-    ))
+    enum_sibling = chr(10).join(
+        (
+            "_CHOICES = (",
+            '    (BusinessClassification.BUSINESS, "tui.ledger.classification.business"),',
+            '    (BusinessClassification.PERSONAL, "tui.ledger.classification.personal"),',
+            ")",
+            "for classification, key in _CHOICES:",
+            "    table.add_row(tr(key), key=classification.value)",
+        )
+    )
 
     assert "tui.ledger.classification.business" in scan_source_text(enum_sibling, filename="classification.py"), (
         "an enum member sibling must not disqualify the table either"
@@ -842,23 +855,23 @@ def test_a_class_attribute_key_is_confirmed_by_the_attribute_the_base_renders(tm
         encoding="utf-8",
     )
     (tmp_path / "screens.py").write_text(
-        chr(10).join((
-            "class Base:",
-            "    def compose(self):",
-            "        yield Static(screen_copy(self.heading))",
-            "class Census(Base):",
-            '    heading = "tui.aeat_sync.census.title"',
-            '    route = "workbench.census.home"',
-        )),
+        chr(10).join(
+            (
+                "class Base:",
+                "    def compose(self):",
+                "        yield Static(screen_copy(self.heading))",
+                "class Census(Base):",
+                '    heading = "tui.aeat_sync.census.title"',
+                '    route = "workbench.census.home"',
+            )
+        ),
         encoding="utf-8",
     )
 
     keys = scan_source_tree(tmp_path)
 
     assert "tui.aeat_sync.census.title" in keys, "the attribute the base renders carries a real key"
-    assert "workbench.census.home" not in keys, (
-        "a class attribute nothing renders is a route or an action id, not copy"
-    )
+    assert "workbench.census.home" not in keys, "a class attribute nothing renders is a route or an action id, not copy"
 
 
 def test_every_translation_key_annotated_parameter_is_declared_a_key_kwarg() -> None:
@@ -890,9 +903,7 @@ def test_every_translation_key_annotated_parameter_is_declared_a_key_kwarg() -> 
         if isinstance(annotation, ast.Constant) and isinstance(annotation.value, str):
             return annotation.value.split("|")[0].strip() == "TranslationKey"
         if isinstance(annotation, ast.BinOp) and isinstance(annotation.op, ast.BitOr):
-            return _names_the_translation_key_type(annotation.left) or _names_the_translation_key_type(
-                annotation.right
-            )
+            return _names_the_translation_key_type(annotation.left) or _names_the_translation_key_type(annotation.right)
         return False
 
     annotated: set[str] = set()
@@ -940,20 +951,22 @@ def test_a_column_table_handed_to_a_shared_fitter_is_still_confirmed() -> None:
     """
     from .._ast_scanner import scan_source_text
 
-    handed_over = chr(10).join((
-        "_CENSUS = (",
-        '    ("field", "tui.aeat_sync.column.field", 26),',
-        ")",
-        "_VALUES = (",
-        '    ("local_value", "tui.aeat_sync.column.local_value", 16),',
-        ")",
-        "def _fit(width, standalone, pair=()):",
-        "    def _sized(column):",
-        "        return column[0], tr(column[1])",
-        "    return [_sized(column) for column in standalone]",
-        "def render(self):",
-        "    return _fit(80, _CENSUS, _VALUES) + _fit(80, _VALUES)",
-    ))
+    handed_over = chr(10).join(
+        (
+            "_CENSUS = (",
+            '    ("field", "tui.aeat_sync.column.field", 26),',
+            ")",
+            "_VALUES = (",
+            '    ("local_value", "tui.aeat_sync.column.local_value", 16),',
+            ")",
+            "def _fit(width, standalone, pair=()):",
+            "    def _sized(column):",
+            "        return column[0], tr(column[1])",
+            "    return [_sized(column) for column in standalone]",
+            "def render(self):",
+            "    return _fit(80, _CENSUS, _VALUES) + _fit(80, _VALUES)",
+        )
+    )
     prose_fitter = handed_over.replace("tr(column[1])", "tr(column[0])")
 
     collected = scan_source_text(handed_over, filename="screens.py")
@@ -985,32 +998,36 @@ def test_a_row_table_written_inline_at_the_call_site_is_confirmed() -> None:
     """
     from .._ast_scanner import scan_source_text
 
-    confirmed = chr(10).join((
-        "def _fit(width, standalone):",
-        "    return [tr(column[1]) for column in standalone]",
-        "def _measure(width, rows):",
-        "    return [column[2] for column in rows]",
-        "def render(self):",
-        "    return _fit(",
-        "        80,",
-        "        (",
-        '            ("declaration", "tui.aeat_sync.column.declaration", 20),',
-        '            ("resolution", "tui.aeat_sync.column.resolution", 14),',
-        "        ),",
-        "    )",
-    ))
-    never_translated = chr(10).join((
-        "def _measure(width, rows):",
-        "    return [column[2] for column in rows]",
-        "def render(self):",
-        "    return _measure(",
-        "        80,",
-        "        (",
-        '            ("declaration", "tui.aeat_sync.column.untranslated", 20),',
-        '            ("resolution", "tui.aeat_sync.column.also_untranslated", 14),',
-        "        ),",
-        "    )",
-    ))
+    confirmed = chr(10).join(
+        (
+            "def _fit(width, standalone):",
+            "    return [tr(column[1]) for column in standalone]",
+            "def _measure(width, rows):",
+            "    return [column[2] for column in rows]",
+            "def render(self):",
+            "    return _fit(",
+            "        80,",
+            "        (",
+            '            ("declaration", "tui.aeat_sync.column.declaration", 20),',
+            '            ("resolution", "tui.aeat_sync.column.resolution", 14),',
+            "        ),",
+            "    )",
+        )
+    )
+    never_translated = chr(10).join(
+        (
+            "def _measure(width, rows):",
+            "    return [column[2] for column in rows]",
+            "def render(self):",
+            "    return _measure(",
+            "        80,",
+            "        (",
+            '            ("declaration", "tui.aeat_sync.column.untranslated", 20),',
+            '            ("resolution", "tui.aeat_sync.column.also_untranslated", 14),',
+            "        ),",
+            "    )",
+        )
+    )
 
     keys = scan_source_text(confirmed, filename="screens.py")
 
@@ -1043,13 +1060,15 @@ def test_a_key_held_in_a_local_is_confirmed_by_the_translator_that_reads_it() ->
     """
     from .._ast_scanner import scan_source_text
 
-    source = chr(10).join((
-        "def render(self, pending, rows):",
-        '    status_key = "tui.ledger.evidence.pending" if pending else "tui.ledger.evidence.reviewed"',
-        '    destination = "workbench.home"',
-        "    self.navigate(destination)",
-        "    return tr(status_key)",
-    ))
+    source = chr(10).join(
+        (
+            "def render(self, pending, rows):",
+            '    status_key = "tui.ledger.evidence.pending" if pending else "tui.ledger.evidence.reviewed"',
+            '    destination = "workbench.home"',
+            "    self.navigate(destination)",
+            "    return tr(status_key)",
+        )
+    )
 
     keys = scan_source_text(source, filename="evidence.py")
 
@@ -1071,14 +1090,16 @@ def test_a_local_bound_to_a_registry_is_left_to_the_registry_rules() -> None:
 
     from .._ast_scanner import _flow_confirmed_local_key_names, scan_source_text
 
-    source = chr(10).join((
-        "_ROUTES = {",
-        '    "home": "workbench.routes.home",',
-        "}",
-        "def render(self, token):",
-        "    chosen = _ROUTES[token]",
-        "    return tr(chosen)",
-    ))
+    source = chr(10).join(
+        (
+            "_ROUTES = {",
+            '    "home": "workbench.routes.home",',
+            "}",
+            "def render(self, token):",
+            "    chosen = _ROUTES[token]",
+            "    return tr(chosen)",
+        )
+    )
 
     assert not _flow_confirmed_local_key_names(ast.parse(source)), (
         "the local rule must not claim a name bound to a registry; its value is not a key expression"
@@ -1088,11 +1109,13 @@ def test_a_local_bound_to_a_registry_is_left_to_the_registry_rules() -> None:
     # can carry a dotted literal that is not a key at all -- a module path is
     # the form this campaign has already been bitten by -- and admitting any
     # expression would collect it the moment the name is translated.
-    derived = chr(10).join((
-        "def render(self):",
-        '    label = _humanise("cadrumo.core.wizard_catalogue")',
-        "    return tr(label)",
-    ))
+    derived = chr(10).join(
+        (
+            "def render(self):",
+            '    label = _humanise("cadrumo.core.wizard_catalogue")',
+            "    return tr(label)",
+        )
+    )
 
     assert not _flow_confirmed_local_key_names(ast.parse(derived)), (
         "a local bound to a call is not a key expression, whatever literals the call mentions"
@@ -1133,15 +1156,17 @@ def test_a_guard_that_admits_only_authored_keys_declares_them(tmp_path) -> None:
         encoding="utf-8",
     )
     (tmp_path / "models.py").write_text(
-        chr(10).join((
-            '_SAFE_SOURCE_KEYS = frozenset({"tui.ledger.import.source.prepared"})',
-            '_SAFE_CHOICE_IDS = frozenset({"ledger.choice.prepared"})',
-            "def seal(source_label_key, choice_id):",
-            "    if source_label_key not in _SAFE_SOURCE_KEYS:",
-            "        raise ValueError",
-            "    if choice_id not in _SAFE_CHOICE_IDS:",
-            "        raise ValueError",
-        )),
+        chr(10).join(
+            (
+                '_SAFE_SOURCE_KEYS = frozenset({"tui.ledger.import.source.prepared"})',
+                '_SAFE_CHOICE_IDS = frozenset({"ledger.choice.prepared"})',
+                "def seal(source_label_key, choice_id):",
+                "    if source_label_key not in _SAFE_SOURCE_KEYS:",
+                "        raise ValueError",
+                "    if choice_id not in _SAFE_CHOICE_IDS:",
+                "        raise ValueError",
+            )
+        ),
         encoding="utf-8",
     )
     (tmp_path / "import_flow.py").write_text(

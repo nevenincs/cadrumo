@@ -34,9 +34,7 @@ _LEDGER: Final[Path] = REPO_ROOT / "dev" / "audit" / "reachability_classificatio
 
 #: Tables holding adjudications rather than measurements. Their integers are
 #: properties of a named symbol, not a count of a population that moves.
-_ADJUDICATION_TABLES: Final[frozenset[str]] = frozenset(
-    {"symbol_cluster", "module", "test_module", "intentional"}
-)
+_ADJUDICATION_TABLES: Final[frozenset[str]] = frozenset({"symbol_cluster", "module", "test_module", "intentional"})
 
 
 def undated_measurement_tables(data: dict[str, Any]) -> list[str]:
