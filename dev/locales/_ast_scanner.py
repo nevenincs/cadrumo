@@ -384,6 +384,83 @@ def _flow_confirmed_local_key_names(tree: ast.AST, wrappers: frozenset[str] = fr
     return findings
 
 
+def _key_factory_returns(tree: ast.AST) -> dict[str, set[str]]:
+    """Return ``function name -> the dotted keys every one of its returns yields``.
+
+    A refusal that must name its own reason writes the choice as a function
+    rather than at the call site::
+
+        def session_refusal_translation_key(refusal):
+            return (
+                "cli.config.errors.profile_session_absent"
+                if refusal in _LOGGED_OUT_REFUSALS
+                else "cli.config.errors.profile_session_expired"
+            )
+
+    and the caller does ``key = session_refusal_translation_key(refusal)`` before
+    passing ``key`` on. The local rule declines that deliberately -- its
+    candidate value must be a key EXPRESSION, and a call is not one -- so both
+    literals were invisible.
+
+    A function qualifies only when EVERY return it makes is a key expression: a
+    string constant, or a conditional between them. One return of anything else
+    -- a computed name, a lookup, a formatted string -- and the function is not
+    a key factory and none of its literals count. That is what keeps this from
+    becoming "any function that mentions a dotted string".
+    """
+    factories: dict[str, set[str]] = {}
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+            continue
+        returns = [child for child in ast.walk(node) if isinstance(child, ast.Return)]
+        if not returns:
+            continue
+        literals: set[str] = set()
+        for statement in returns:
+            if not isinstance(statement.value, ast.Constant | ast.IfExp):
+                literals.clear()
+                break
+            found: set[str] = set()
+            _collect_dotted_literals(statement.value, found)
+            if not found:
+                literals.clear()
+                break
+            literals |= found
+        if literals:
+            factories[node.name] = literals
+    return factories
+
+
+def _flow_confirmed_key_factory_keys(tree: ast.AST, wrappers: frozenset[str] = frozenset()) -> set[str]:
+    """Return key-factory literals whose call result reaches a translator."""
+    factories = _key_factory_returns(tree)
+    if not factories:
+        return set()
+    bound: dict[str, set[str]] = {}
+    for node in ast.walk(tree):
+        target: ast.expr | None = None
+        value: ast.expr | None = None
+        if isinstance(node, ast.Assign) and len(node.targets) == 1:
+            target, value = node.targets[0], node.value
+        elif isinstance(node, ast.AnnAssign):
+            target, value = node.target, node.value
+        if not isinstance(target, ast.Name) or not isinstance(value, ast.Call):
+            continue
+        name = _callee_name(value.func)
+        if name in factories:
+            bound.setdefault(target.id, set()).update(factories[name])
+
+    tr_names = _translation_call_names(tree) | wrappers
+    findings: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        for argument in _call_site_key_argument_exprs(node, tr_names):
+            if isinstance(argument, ast.Name) and argument.id in bound:
+                findings |= bound[argument.id]
+    return findings
+
+
 def _extract_locale_constant_keys(tree: ast.AST, wrappers: frozenset[str] = frozenset()) -> set[str]:
     """Find dotted locale keys declared in explicit locale-key constants.
 
@@ -402,6 +479,7 @@ def _extract_locale_constant_keys(tree: ast.AST, wrappers: frozenset[str] = froz
     """
     findings: set[str] = _flow_confirmed_class_attribute_keys(tree, wrappers)
     findings |= _flow_confirmed_local_key_names(tree, wrappers)
+    findings |= _flow_confirmed_key_factory_keys(tree, wrappers)
     flow_confirmed = _flow_confirmed_locale_key_dicts(tree, wrappers) | _flow_confirmed_locale_key_row_tables(
         tree, wrappers
     )

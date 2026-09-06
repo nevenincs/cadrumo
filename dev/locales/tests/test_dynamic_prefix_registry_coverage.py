@@ -1182,3 +1182,54 @@ def test_a_guard_that_admits_only_authored_keys_declares_them(tmp_path) -> None:
     assert "ledger.choice.prepared" not in keys, (
         "the same shape over a name nothing translates is an identity allow-list, not copy"
     )
+
+
+def test_a_function_whose_every_return_is_a_key_is_followed_into_its_caller() -> None:
+    """Incident 17: the refusal names its own reason through a factory.
+
+    A gate that must pick a reason writes the choice as a FUNCTION and the
+    caller assigns the result before passing it on::
+
+        def session_refusal_translation_key(refusal):
+            return "cli...absent" if refusal in _LOGGED_OUT else "cli...expired"
+        ...
+        key = session_refusal_translation_key(refusal)
+        raise CliRefusedBoundaryError(translated_message=key, ...)
+
+    The local rule (Incident 15) declines this deliberately: its candidate value
+    must be a key EXPRESSION and a call is not one. So both branches were
+    invisible, and the asymmetry is the familiar one -- whichever refusal a
+    developer happens to trigger looks translated.
+
+    The admission rule is that EVERY return must be a key expression. The
+    negative arm is a function with one ordinary return among its keys: it is
+    not a key factory, and none of its literals count. Without that, this would
+    collect from any function that mentions a dotted string.
+    """
+    from .._ast_scanner import scan_source_text
+
+    source = chr(10).join((
+        "def refusal_key(reason):",
+        '    return "cli.config.errors.profile_session_absent" if reason else "cli.config.errors.profile_session_expired"',
+        "def route_for(reason):",
+        "    if reason:",
+        '        return "workbench.routes.home"',
+        "    return compute_route(reason)",
+        "def refuse(reason):",
+        "    key = refusal_key(reason)",
+        "    routed = route_for(reason)",
+        # Deliberately TRANSLATED, not merely navigated. Sending it somewhere
+        # inert would let flow confirmation reject it and leave the
+        # every-return rule untested -- the arm below has to fail for the
+        # reason it names.
+        "    banner(tr(routed))",
+        "    raise CliRefusedBoundaryError(translated_message=key)",
+    ))
+
+    keys = scan_source_text(source, filename="gate.py")
+
+    assert "cli.config.errors.profile_session_absent" in keys, "the branch a logged-out refusal renders is a key"
+    assert "cli.config.errors.profile_session_expired" in keys, "so is the branch no run may have exercised"
+    assert "workbench.routes.home" not in keys, (
+        "a function with one non-key return is not a key factory, whatever its other returns hold"
+    )
