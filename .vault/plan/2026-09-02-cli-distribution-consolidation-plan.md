@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:2810323aaf611a9d98e3e042140cdf01d944951bb82d31f3137091016759af77'
+body_hash: 'sha256:7336e12d6c2070ae370f1c7ad3eb66c0a3be247c62ca7283a8b63b31da280934'
 ---
 
 <!-- RETIRED: S39 -->
@@ -125,7 +125,7 @@ Build every declared distribution and channel artifact from one command and prov
 - [x] `P09.S60` - Teach the installed oracle the recovery enrollment the product now requires; `dev/packaging/installed_tax_oracle.py`.
 - [x] `P09.S61` - Stop every packaging lane from re-running the whole packaging suite before it starts; `dev/packaging/campaign.py`.
 - [x] `P09.S62` - Give the campaign preflight an explicit selection the recipe guard can see; `dev/packaging/campaign.py`.
-- [ ] `P09.S63` - Stop a quality sweep from running a repository rewrite when its test module is imported; `dev/quality/namespace_retirement_sweep.py`.
+- [x] `P09.S63` - Stop a quality sweep from running a repository rewrite when its test module is imported; `dev/quality/namespace_retirement_sweep.py`.
 - [x] `P09.S64` - Make the installed payload attestation find the distribution it just installed; `dev/packaging/_installed_wheel_binding.py`.
 - [x] `P09.S65` - Make a cohort built twice from one commit carry one identity; `dev/packaging/tests/test_release_cohort_integration.py`.
 - [x] `P09.S66` - Make three cross-platform test legs assert their contract instead of the host that ran them; `dev/packaging/tests/test_smoke_scoop_harness.py`.

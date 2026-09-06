@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:632eb21add30e5310868457f4d4cf20ab82610e348962974851965a30e6aa89b'
+body_hash: 'sha256:7bb3d4bb2b4b9db83ba25441a5f8f03eab0c0f6d76b36c4419e018dfb31a3ff4'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -649,6 +649,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S767` - Floor the parsed whitelist surface and its fixture in the mirrors-only claim, which sibling tests guard but this one did not reach; `dev/audit/tests/test_vulture_whitelist_is_not_stale.py`.
 - [x] `W02.P02.S768` - Refuse a missing cohort namespace initialiser instead of skipping it, which let the inertness claim pass by reading neither package; `dev/tests/test_modelo_workspace_fixed_point.py`.
 - [x] `W02.P02.S769` - Floor the page catalogues the localization dash gate opens, which its page-list guard did not reach because every missing catalogue was skipped; `dev/docs/tests/test_docs_localization.py`.
+- [x] `W02.P02.S770` - Floor the watchdog workflow census in its helper, matching the sibling module, so a narrowed walk cannot leave three loop-only gates green; `dev/ci/tests/test_runner_queue_watchdog.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

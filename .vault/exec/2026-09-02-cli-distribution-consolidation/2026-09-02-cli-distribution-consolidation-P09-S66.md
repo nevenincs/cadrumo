@@ -5,7 +5,7 @@ tags:
 date: '2026-09-06'
 modified: '2026-09-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:320f374c799f422da76dec614f2349a01ee5d26247b1956d59989de382bf70ba'
+body_hash: 'sha256:4e2225c401c14b496fe3955d96f91b5bff16c08b23560037602138bf77d7d163'
 step_id: 'S66'
 related:
   - "[[2026-09-02-cli-distribution-consolidation-plan]]"
@@ -27,10 +27,13 @@ related:
 
 ## Notes
 
-Both files were absorbed into commit `9f0f673c41`, authored by a concurrent
-session, whose message describes unrelated reachability work. The content is
-correct and present in `HEAD`; history was not rewritten. The rationale is
-recorded here because that commit message does not carry it.
+Both files were absorbed into commit `9f0f673c41`, whose subject describes
+unrelated reachability work. No contributor chose that: this worktree runs an
+auto-committer, and every commit it makes stages the whole tree, so one subject
+routinely spans files from several unrelated areas. The content is correct and
+present in `HEAD`; history was not rewritten. The rationale is recorded here
+because the commit message cannot carry it, and a commit subject in this
+repository is not evidence of what that commit contains.
 
 Only two of the four macOS lane failures were macOS-specific. The completion
 leg used `--show-completion`, which takes no shell argument and detects the

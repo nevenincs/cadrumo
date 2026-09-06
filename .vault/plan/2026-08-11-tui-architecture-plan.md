@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-06'
-body_hash: 'sha256:e55f98ce2253ccbbd852c5a56982ca29c21f58b87885e4f3ed8ca55bc63f0c76'
+body_hash: 'sha256:6aa709d92885eeb501853a7b0e5b49a363a710cd5e2c3a6848f14c2f5675b485'
 ---
 
 <!-- RETIRED: S370 -->
@@ -682,6 +682,7 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S466` - Call the click exceptions own renderer in the plain-text funnel, since it looked up an attribute named view that no click exception has so every parse refusal fell through to a bare message write and lost its prefix usage block hint and the parameter name, leaving the localised show reimplementation dead code in the text path; `src/cadrumo/entrypoints/cli/_terminal_errors.py src/cadrumo/entrypoints/cli/tests/test_localised_parser_errors.py`.
 - [x] `W08.P30.S467` - Hold the error spine assertion to the envelope model that declares it, since the hand-written member list named a suggestion field the model never carried and forbids, and split the text-mode case so the usage block is asserted on an input that raises a usage error rather than on a domain refusal; `src/cadrumo/entrypoints/cli/tests/test_json_error_contract.py`.
 - [x] `W08.P30.S468` - Point the discriminating parse-envelope case at a command that exists and guard the fixture against the same drift, since it invoked a config profile preflight this CLI has never had so click resolved only the group and the case had silently become a second copy of the unknown-command test beside it; `src/cadrumo/entrypoints/cli/tests/test_parse_error_envelope_names_its_command.py`.
+- [x] `W08.P30.S469` - Replace the em dash the operator directive forbids across nine workbench keys in all four catalogues, using the spaced hyphen the gate prescribes for a label and its qualifier and a bare hyphen for the value that is only a no-value placeholder; `src/cadrumo/locales`.
 
 ## Parallelization
 
