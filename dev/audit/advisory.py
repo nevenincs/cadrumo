@@ -61,7 +61,6 @@ from .checkout_drift import growth_against_ceiling, load_ceiling, measure
 from .dead_code import DeadCodeOutcome, run_dead_code_scan
 from .report import DimensionReport, Status, audit_complexity, audit_duplication
 from .security import SecurityOutcome, run_security_scan
-from .size_budget import run_size_budget_scan
 
 _UTF_8: Final[str] = UTF_8
 _TEXT_CAP: Final[int] = 8
@@ -125,41 +124,6 @@ def audit_dead_code(repo_root: Path) -> AdvisoryDimension:
         DimensionReport(name="dead_code", status=Status.AMBER, headline=result.headline(), details=details),
         count_by_severity=result.count_by_confidence,
         findings=findings,
-    )
-
-
-# ---------------------------------------------------------------------------
-# Size budget
-# ---------------------------------------------------------------------------
-
-
-def audit_size_budget() -> AdvisoryDimension:
-    """Classify the size-budget dimension from the one size-budget scanner.
-
-    AMBER on any finding -- advisory debt, matching the non-blocking posture
-    every other dimension here carries. This display invents no new policy: a
-    blocking size gate is a separate decision with an owner, and choosing RED
-    here would smuggle it in through a dashboard that always exits 0.
-
-    GREEN only on a genuinely clean scan, never on an unmeasurable one.
-    """
-    result = run_size_budget_scan()
-    if result.is_clean:
-        return AdvisoryDimension(
-            DimensionReport(name="size_budget", status=Status.GREEN, headline=result.headline()),
-        )
-    return AdvisoryDimension(
-        DimensionReport(
-            name="size_budget",
-            status=Status.AMBER,
-            headline=result.headline(),
-            details=list(result.findings),
-        ),
-        count_by_severity={
-            "modules": len(result.modules.failing),
-            "callables": len(result.callables.failing),
-        },
-        findings=tuple({"subject": line} for line in result.findings),
     )
 
 
@@ -281,15 +245,15 @@ def _wrap(report: DimensionReport) -> AdvisoryDimension:
 def build_advisory_report(repo_root: Path) -> tuple[AdvisoryDimension, ...]:
     """Run every advisory-audit dimension and assemble the composed report.
 
-    Six dimensions in a fixed order: complexity, dead code, duplication,
-    checkout drift, security, size budget.
+    Returns exactly the five dimensions `just audit-all` has always covered,
+    in a fixed order: complexity, dead code, duplication, checkout drift,
+    security.
 
-    Size budget is the newest and was the longest unwired. Its scanner has
-    lived in `dev/audit/` throughout, but the pytest gate that enforced it was
-    deleted when the shipped package's zero-awareness boundary was closed --
-    the gate read a `dev/` baseline from inside `src/`, so the boundary fix
-    removed it rather than relocating it here. It then sat exiting 1 into a
-    tree where nothing ran it, which is where a 6,060-line module came from.
+    Size budget is deliberately NOT here. It measures against flat defaults
+    with no baseline, so it cannot reach GREEN and cannot move a composed
+    verdict that is already RED -- a status-inert row costing a 90-second
+    scan. It is wired once its ratchet gives it a reachable GREEN; until then
+    `just audit-size-budget` is its honest surface, and that one exits 1.
     """
     return (
         _wrap(audit_complexity()),
@@ -297,7 +261,6 @@ def build_advisory_report(repo_root: Path) -> tuple[AdvisoryDimension, ...]:
         _wrap(audit_duplication(repo_root)),
         audit_checkout_drift(repo_root),
         audit_security(repo_root),
-        audit_size_budget(),
     )
 
 
