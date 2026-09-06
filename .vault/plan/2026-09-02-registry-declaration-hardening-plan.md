@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:23ff5e4d747d6974c72701b6f2c6bca45f399968e1b269e2e7631fe09990befe'
+body_hash: 'sha256:c4ce8c63afdab5066b82f0f59c10ad98732fbdcb4232cf12d539e204558da929'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -673,6 +673,9 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S791` - Resolve the two dangling :mod: roles in dev docstrings: demote the reference to the deleted dev.packaging.smoke_docker to a literal as its sibling already does, and correct the dev.harness collectability harness path that omitted its tests package; `dev/tests/test_every_test_module_is_collectable.py`.
 - [x] `W02.P02.S792` - Correct the dangling class role in the api-stub correspondence gate: the docstring named dev.docs.apidocs.ApiStubManager while the class lives in the manager module and the package initializer exports nothing, so the reference resolved nowhere even though the file's own import used the right path; `dev/docs/tests/test_api_stubs.py`.
 - [x] `W02.P02.S793` - Restore refuse_live_frames to the sequences runner public surface: a refactor privatised it without updating the cross-module caller in sequence_directive.py, so the Sphinx build hook raised ImportError at call time and five directive tests were red, while the package docstring still documented it as a public pair with live_aeat_tokens; `dev/docs/sequences/runner.py`.
+- [x] `W02.P02.S794` - Stop the temp reaper reporting bytes it did not remove: reclaim absorbed a failed rmtree by design but still added the verdict's whole total_bytes, and main prints that figure to the operator as removed, so a directory held open by another handle survived on disk while its 4096 bytes were counted as reclaimed; `dev/env/temp_reaper.py`.
+- [x] `W02.P02.S795` - Absorb only an absent session root in the temp reaper, not one that cannot be scanned: any OSError from the root scan returned an empty verdict list, so a root that exists but is unscannable printed spared 0 of 0 sessions, exactly what a genuinely clean box prints, and the operator read a failed scan as nothing to reclaim; `dev/env/temp_reaper.py`.
+- [x] `W02.P02.S796` - Floor the nested group pages the CLI reference toctree gate walks: the enrolment claim asserted no missing pages without establishing the walk reached any page, and the module's two sibling anchors cover different populations, so a zero-page walk read exactly like a fully enrolled reference; live 16 nested group pages of 21; `dev/docs/tests/test_cli_reference_pages_are_not_stubs.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

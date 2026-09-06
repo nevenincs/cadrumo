@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-06'
-body_hash: 'sha256:97b24bdd756960a9debf6d3074946fb2771739fe56a2194611801da76ac8973b'
+body_hash: 'sha256:c063527d8c6ebf5dfbd087a6ba58dabeef3a2c6db34f704d9ce98727ae905d93'
 ---
 
 <!-- RETIRED: S370 -->
@@ -691,6 +691,8 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S475` - Recover the two documented-command ratchet baselines the import promotion sweep deleted, the third and fourth data file that commit removed while leaving the gates that read them, restoring the docs fence and inline span gates to running against the empty baselines that mean the doctrine is fully applied; `src/cadrumo/entrypoints/cli/tests/aeat_plain_fence_baseline.json src/cadrumo/entrypoints/cli/tests/inline_aeat_span_baseline.json`.
 - [x] `W08.P30.S476` - Admit the registry replay parity verb into the bootstrap exempt subtree it belongs to, deriving its qualification from the live spec rather than the family claim, since it declares the registry capability alone with no side effects no write route and profile authentication not applicable, the same posture as the verify and inspect leaves already there; `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`.
 - [x] `W08.P30.S477` - Reinstate the two Modelo 200 unadjudicated repeated slot entries that a re-authored export layout brought back, confirming against the design the revision actually cites that each slot carries a separate figure under its own label rather than a part of one value, so a part policy would be wrong and the question stays open; `src/cadrumo/domain/calculations/registry/tests/test_export_split_part_rendering.py`.
+- [x] `W08.P30.S478` - Seed the reset lifecycle profile the way production leaves one, recording the legal hold snapshot through the door that documents the opt-in and refreshing the filing retention snapshot the way persisting a filing does, since the fixture wrote the catalogue directly and produced a profile whose filing exists while its snapshot still says none; `src/cadrumo/entrypoints/cli/tests/test_config_reset_lifecycle.py`.
+- [x] `W08.P30.S479` - Establish that the two custody owner receipt cases fail on this host because the Windows credential store is unreachable from this logon session rather than on any defect, and leave them failing rather than pinning a null keyring that would defeat what they exercise; `src/cadrumo/application/user_profile/tests/test_custody_transactions.py`.
 
 ## Parallelization
 
