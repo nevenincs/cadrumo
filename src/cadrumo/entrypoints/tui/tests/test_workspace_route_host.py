@@ -108,7 +108,7 @@ def _catalogue() -> TuiDestinationCatalogueV1:
     def absent(context: TuiScreenContextV1) -> None:
         raise AssertionError(f"no other destination should be built by this test: {context.destination}")
 
-    admissions = {
+    admissions: dict[str, TuiDestinationAdmissionV1] = {
         descriptor.destination: TuiDestinationAdmissionV1(
             destination=descriptor.destination,
             state=WorkbenchDestinationAdmissionState.AVAILABLE,
