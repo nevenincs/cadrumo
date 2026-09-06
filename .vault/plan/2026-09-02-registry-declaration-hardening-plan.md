@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:71d586e7241442425994a2f58737ef2e0c2d16b5e3aaba2ce831b8555ac67d98'
+body_hash: 'sha256:ab6a033a3a33908d3eb2c8a221af7987c2866a8349453289f3291c6a7d87300c'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -656,6 +656,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S774` - Floor the footnote note corpus in its fixture, so the two gates whose results are identical over an empty mapping cannot pass on a sheet that stopped matching; `dev/registry/tests/test_footnote_pointer_notes.py`.
 - [x] `W02.P02.S775` - Floor both surfaces of the packaging invocation census outside the parametrize they feed, so an emptied census cannot delete two gates at collection time; `dev/packaging/tests/test_preflight_recipe_selection.py`.
 - [x] `W02.P02.S776` - Give the epoch/width census the per-epoch floors its own docstring implies, since a truthiness check cannot see an epoch losing its slot; `dev/registry/tests/test_modelo_303_semantic_maps.py`.
+- [x] `W02.P02.S777` - Floor the live self-hosted fleet census and its gated remainder at the live call site, leaving the dual-purpose helper free for its five planted-workflow teeth cases; `dev/ci/tests/test_self_hosted_fleet.py`.
+- [x] `W02.P02.S778` - Floor the markdown documentation corpus by page count and area span in its single-purpose producer, replacing the truthiness six scanning gates relied on; `dev/docs/tests/test_docs.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

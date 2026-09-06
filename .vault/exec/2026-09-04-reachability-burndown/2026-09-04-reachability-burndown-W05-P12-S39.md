@@ -5,16 +5,11 @@ tags:
 date: '2026-09-06'
 modified: '2026-09-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:4f32df7173f16919b8841983a3801e933d6534eebbd4b8e071301dd819531f92'
+body_hash: 'sha256:ecb679d664e5cf8750204b9f3ce349a75fb8c6374e722c88f489c27a605f80fd'
 step_id: 'S39'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Adjudicate the four largest coherent test-only families: six collaboration audit emitters covering the whole review-package lifecycle that no production caller reaches, so the flow writes no audit record and an empty event history reads as nothing happened; the sectoral prorrata predicate, calculator, classifier and summation, so a taxpayer with differentiated sectors gets no separation; five registry source-connectivity projections nothing assembles; and five public CLI execution-policy constants displaced by private inline copies that DISAGREE with them, the live private CALCULATION_WRITE omitting the profile-custody capability the public one declares
 

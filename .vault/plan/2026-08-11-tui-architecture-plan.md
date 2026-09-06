@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-06'
-body_hash: 'sha256:1b0bd4dede0c54fc5cf75956d76ead8d1d955310e17325927bc690232153ff5a'
+body_hash: 'sha256:4799304bb8724619f38400ba7f972bc94aba8430c76697faeec3c1e10fa30bff'
 ---
 
 <!-- RETIRED: S370 -->
@@ -683,6 +683,7 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S467` - Hold the error spine assertion to the envelope model that declares it, since the hand-written member list named a suggestion field the model never carried and forbids, and split the text-mode case so the usage block is asserted on an input that raises a usage error rather than on a domain refusal; `src/cadrumo/entrypoints/cli/tests/test_json_error_contract.py`.
 - [x] `W08.P30.S468` - Point the discriminating parse-envelope case at a command that exists and guard the fixture against the same drift, since it invoked a config profile preflight this CLI has never had so click resolved only the group and the case had silently become a second copy of the unknown-command test beside it; `src/cadrumo/entrypoints/cli/tests/test_parse_error_envelope_names_its_command.py`.
 - [x] `W08.P30.S469` - Replace the em dash the operator directive forbids across nine workbench keys in all four catalogues, using the spaced hyphen the gate prescribes for a label and its qualifier and a bare hyphen for the value that is only a no-value placeholder; `src/cadrumo/locales`.
+- [x] `W08.P30.S470` - Restore the static frame reasons gate to running, promoting the live AEAT token helper to the public name its cross-package consumer and the packages own docstring already use and recovering the unconverted baseline an import refactor deleted alongside it; `dev/docs/sequences/runner.py dev/docs/sequences/tests/test_runner.py dev/docs/tests/unconverted_static_baseline.json`.
 
 ## Parallelization
 
