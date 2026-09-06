@@ -1038,6 +1038,37 @@ def _command_from_patch(
         current.counterparty_identification_state,
     )
     group_label = optional_patched(patch, patch_fields, "group_label", current.group_label)
+    # The three prorrata declarations carry forward from the stored row. They
+    # were absent here, so a reclassify rebuilt the command with all three as
+    # ``None`` and the write erased them: an operator who had declared a
+    # differentiated sector, an art. 104.Tres exclusion and an art. 106 input
+    # classification lost all three by correcting a category or a note.
+    # ``mutation_signature`` compares them, so the guard read the wipe as a
+    # genuine change and let it through rather than stopping it.
+    #
+    # ``ManualLedgerTransactionPatch`` does not declare them — they are
+    # declared at add time — so today these always resolve to the stored value.
+    # They are read through ``optional_patched`` anyway, so that the day the
+    # patch does carry them, an explicit override works without a second edit
+    # here.
+    art_104_tres_exclusion = optional_patched(
+        patch,
+        patch_fields,
+        "art_104_tres_exclusion",
+        current.art_104_tres_exclusion,
+    )
+    input_classification = optional_patched(
+        patch,
+        patch_fields,
+        "input_classification",
+        current.input_classification,
+    )
+    prorrata_sector_id = optional_patched(
+        patch,
+        patch_fields,
+        "prorrata_sector_id",
+        current.prorrata_sector_id,
+    )
     return ManualLedgerTransactionCommand(
         bucket_id=bucket_id,
         booked_date=booked_date,
@@ -1073,6 +1104,9 @@ def _command_from_patch(
             patch.source_jurisdiction if "source_jurisdiction" in patch_fields else current.source_jurisdiction
         ),
         group_label=group_label,
+        art_104_tres_exclusion=art_104_tres_exclusion,
+        input_classification=input_classification,
+        prorrata_sector_id=prorrata_sector_id,
         actor=actor,
         source_command=source_command,
         classified_by_override=classified_by_override,
