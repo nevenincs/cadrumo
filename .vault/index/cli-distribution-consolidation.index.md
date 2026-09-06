@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#cli-distribution-consolidation'
 date: '2026-09-02'
-modified: '2026-09-04'
+modified: '2026-09-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:01c08d6789e22128185a14ec015226612b686dd750c377744fd29dbbec0fc1f9'
+body_hash: 'sha256:c7aa7a732bcd16b3ebee5db3533be0de88692a451ec60afe753cbee09f5c74ec'
 related:
   - '[[2026-09-02-cli-distribution-consolidation-P01-S01]]'
   - '[[2026-09-02-cli-distribution-consolidation-P01-S02]]'
@@ -51,6 +51,8 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-P09-S56]]'
   - '[[2026-09-02-cli-distribution-consolidation-P09-S57]]'
   - '[[2026-09-02-cli-distribution-consolidation-P09-S58]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P09-S60]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P09-S61]]'
   - '[[2026-09-02-cli-distribution-consolidation-P10-S38]]'
   - '[[2026-09-02-cli-distribution-consolidation-P10-S40]]'
   - '[[2026-09-02-cli-distribution-consolidation-P10-S41]]'
@@ -70,6 +72,7 @@ related:
   - '[[2026-09-04-cli-distribution-consolidation-cohort-build-cost-audit]]'
   - '[[2026-09-04-cli-distribution-consolidation-surface-pruning-audit]]'
   - '[[2026-09-04-cli-distribution-consolidation-test-suite-cost-audit]]'
+  - '[[2026-09-06-cli-distribution-consolidation-import-time-collectability-audit]]'
 ---
 
 # `cli-distribution-consolidation` feature index
@@ -87,6 +90,7 @@ Auto-generated index of all documents tagged with `#cli-distribution-consolidati
 - `2026-09-04-cli-distribution-consolidation-cohort-build-cost-audit` - `cli-distribution-consolidation` audit: `cohort build cost`
 - `2026-09-04-cli-distribution-consolidation-surface-pruning-audit` - `cli-distribution-consolidation` audit: `surface pruning`
 - `2026-09-04-cli-distribution-consolidation-test-suite-cost-audit` - `cli-distribution-consolidation` audit: `test suite cost`
+- `2026-09-06-cli-distribution-consolidation-import-time-collectability-audit` - `cli-distribution-consolidation` audit: `import time collectability`
 
 ### exec
 
@@ -146,6 +150,8 @@ Auto-generated index of all documents tagged with `#cli-distribution-consolidati
 - `2026-09-02-cli-distribution-consolidation-P11-S51` - Restate the surfaces naming workflows the repository does not contain
 - `2026-09-02-cli-distribution-consolidation-P11-S53` - Close the workflow-reading gates that crash or drift against the live workflow set
 - `2026-09-02-cli-distribution-consolidation-P11-S54` - Cover the test directory reachable only by naming one file, and discover the class
+- `2026-09-02-cli-distribution-consolidation-P09-S60` - Teach the installed oracle the recovery enrollment the product now requires
+- `2026-09-02-cli-distribution-consolidation-P09-S61` - Stop every packaging lane from re-running the whole packaging suite before it starts
 
 ### plan
 

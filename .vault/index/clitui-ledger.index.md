@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#clitui-ledger'
 date: '2026-09-04'
-modified: '2026-09-05'
+modified: '2026-09-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:df913a4180bc5a289395aafdd5c5660a19412d3702c1dd5e4add597805df8869'
+body_hash: 'sha256:1dc6a4426e22be9002cc636c5caf95fa72e113dbd60371dab2354fb35e45bf45'
 related:
   - '[[2026-09-04-clitui-ledger-W01-P01-S01]]'
   - '[[2026-09-04-clitui-ledger-W01-P01-S02]]'
@@ -88,7 +88,7 @@ Auto-generated index of all documents tagged with `#clitui-ledger`.
 - `2026-09-04-clitui-ledger-W01-P03-S11` - Mark every TUI-applicable union and matrix row held until G3, retain component-only versus installed distinctions, and fail closed on hold drift, additions, or an unauthorized lift
 - `2026-09-04-clitui-ledger-W01-P04-S12` - Review every row for explicit applicability, semantic owner, proof state, gap class, and next closure action
 - `2026-09-04-clitui-ledger-W01-P04-S13` - 2026-09-04-clitui-ledger-W01-P04-S13
-- `2026-09-04-clitui-ledger-W01-P04-S14` - Reconcile discovered import preparation into the G0 denominator
+- `2026-09-04-clitui-ledger-W01-P04-S14` - Record G0 closure only after an independent engineering review accepts the frozen matrix
 
 ### plan
 
