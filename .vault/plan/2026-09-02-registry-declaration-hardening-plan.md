@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:04384af65fd7a3417300cd9700ced4f8130e8dc36e693dae5d27476bc9656b84'
+body_hash: 'sha256:4e178d8b3ddfb825f03061f0eae47620324993943a4f308c982b983c01cd6b05'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -634,6 +634,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S752` - Extract the inert-initialiser predicate to one owner so the teeth case proves the gate instead of its own copy of the predicate; `dev/registry/tests/test_declaration_invariant_gates.py`.
 - [x] `W02.P02.S753` - Route the scaffolding lint-scope gate through the tracked-Python discovery the module already documented, and extract the exclusion predicate its three copies restated; `dev/quality/tests/test_lint_scope_covers_scaffolding.py`.
 - [x] `W02.P02.S754` - Anchor the two module-reach absence claims that an empty walk satisfied, with a positive control and a pinned reported set; `dev/quality/tests/test_module_test_reach.py`.
+- [x] `W02.P02.S755` - Read the decided search-record kinds from their owning authority instead of the mirrored copy the deployment-parity gate kept beside it; `dev/docs/tests/test_deployment_search_parity.py`.
+- [x] `W02.P02.S756` - Read the forbidden command-artefact names from the cohort authority instead of the copy the installed-archive gate kept beside it; `dev/packaging/tests/test_command_spec_distribution_lanes.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
