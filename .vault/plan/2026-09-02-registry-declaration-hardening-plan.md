@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:8b7ce5de1a6b3c0fc1db80db2282b9d87e20ce8b32e26e048fb1711552d8fbbc'
+body_hash: 'sha256:e466196d7aa03a383226853bb31cc151e1f3879c4bfb635db57c3f1c86e60c8f'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -592,6 +592,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S710` - Guard the zero-clause finding population in the legal excerpt screen: 50 of 328 findings parse no clauses and nothing bounded that share, so a clause reader returning nothing would leave every verdict assertion green; `dev/audit/tests/test_legal_excerpt_vintage_screen.py`.
 - [x] `W02.P02.S711` - Tighten the project dependency floor on structural grounds and record why: project.dependencies is a single array of 31, so the optional-group degradation I had assumed cannot move this count at all; `dev/packaging/tests/test_dependency_surface.py`.
 - [x] `W02.P02.S712` - Floor the revision move candidate key count: > 0 sat against 397 keys, and the composition of 199 label plus 198 help means a renamer matching one suffix relocates half and still reads as one clean move; `dev/locales/tests/test_modelo_revision_locale_key_parity.py`.
+- [x] `W02.P02.S713` - Floor the harness scorable field count: > 0 accepted an oracle narrowed to a single field, against a live expected set of 15 decomposing as 11 matched plus 4 missed; `dev/ingest_harness/tests/test_driver.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
