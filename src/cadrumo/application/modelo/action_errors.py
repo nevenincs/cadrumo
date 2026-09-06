@@ -195,6 +195,23 @@ class StoredCalculationDriftError(ModeloError):
     """Raised when a persisted calculation revision has drifted from its content-addressed id."""
 
 
+class LedgerEvidenceRecaptureRefusedError(ModeloError):
+    """Raised when a sealed revision's evidence cannot be re-bundled from the live ledger.
+
+    Recapture exists to pick up evidence attached AFTER a revision was sealed —
+    an invoice linked to a row the filing gate refused — without disturbing the
+    facts the filing asserts. That is only sound while the tax facts themselves
+    are unchanged, because the revision's content address is derived from them
+    and the bundle is pegged to their fingerprint.
+
+    A moved row fingerprint therefore means something else happened: the ledger
+    drifted, and the revision no longer describes it. That is staleness, whose
+    remedy is a fresh calculation, not a re-bundle. Recapturing over it would
+    silently swap the fact basis underneath a sealed filing while leaving its
+    id and casilla values asserting the old one.
+    """
+
+
 class ExternalModeloImportError(ModeloError):
     """Raised when the external-filing import path cannot persist an imported baseline."""
 
@@ -383,6 +400,7 @@ __all__ = [
     "CalculationRevisionStateError",
     "CasillaProvenanceMissingError",
     "ExternalModeloImportError",
+    "LedgerEvidenceRecaptureRefusedError",
     "ModeloAggregationBindingError",
     "ModeloApplicabilityFilterError",
     "ModeloChargeAccountMissingError",

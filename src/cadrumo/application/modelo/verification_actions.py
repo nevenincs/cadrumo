@@ -53,6 +53,8 @@ from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
+from pydantic import BaseModel
+
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -66,6 +68,7 @@ from ...core.config import Settings
 from ...core.identity import CalculationRevisionId
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.time.clock import now as _utc_now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
@@ -85,13 +88,14 @@ from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.iva.schema import CUOTA_LESS_M303_IVA_CATEGORIES
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
 from ...domain.modelos.calculation_revision import (
+    SEALED_REVISION_STATES,
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
     CalculationSourceIssue,
 )
 from ...domain.modelos.errors import ModeloValidationError
-from ...domain.modelos.ledger_filing_snapshot import ManualFactBasisEntry
+from ...domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow, ManualFactBasisEntry
 from ...domain.modelos.participation_index import TransactionRevisionParticipation, upsert_transaction_participation
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -176,6 +180,7 @@ from .action_errors import (
     WORKFLOW_GATE_LEGAL_REFS,
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
+    LedgerEvidenceRecaptureRefusedError,
     WorkUnitNotFoundError,
 )
 from .iva_wallet_gate import ModeloIvaWalletReconciliationBlocked

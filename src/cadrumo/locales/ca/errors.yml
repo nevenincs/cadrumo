@@ -1014,6 +1014,10 @@ errors:
       la taula de despacho de filtres.
     refused_modelo_charge_account_missing: S ha triat una domiciliacio pero no hi
       ha cap compte de carrec registrat.
+    refused_modelo_ledger_evidence_recapture: No es pot tornar a agrupar l'evidència
+      d'aquesta declaració perquè els assentaments comptables que la sustenten han
+      canviat des que es va segellar. Torna a calcular la declaració; la recaptura
+      només recull evidència adjuntada a assentaments sense canvis.
     refused_modelo_m303_rectificativa_motive: Les rectificatives del model 303 requereixen
       exactament un motiu canònic en un disseny de registre aplicable i revisat; el
       motiu està prohibit en els altres casos.

@@ -951,6 +951,10 @@ errors:
       táblázatot.
     refused_modelo_charge_account_missing: Csoportos beszedesi bevallast valasztottak,
       de nincs rogzitett terhelesi szamla.
+    refused_modelo_ledger_evidence_recapture: A bevallás bizonyítékai nem csomagolhatók
+      újra, mert a mögöttes főkönyvi tételek a lezárás óta megváltoztak. Számold újra
+      a bevallást; az újrarögzítés csak a változatlan tételekhez csatolt bizonyítékot
+      veszi fel.
     refused_modelo_m303_rectificativa_motive: A 303-as rectificativa egyetlen kanonikus
       indokot követel meg egy alkalmazható és felülvizsgált rekordtervnél; az indok
       minden más esetben tiltott.

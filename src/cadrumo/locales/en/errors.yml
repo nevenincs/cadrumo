@@ -932,6 +932,10 @@ errors:
       filter dispatch table.
     refused_modelo_charge_account_missing: A direct-debit filing was selected but
       no charge account is recorded.
+    refused_modelo_ledger_evidence_recapture: The evidence behind this filing cannot
+      be re-bundled because the contributing ledger rows have changed since it was
+      sealed. Recalculate the return instead; recapture only picks up evidence
+      attached to unchanged rows.
     refused_modelo_m303_rectificativa_motive: Modelo 303 rectificativa amendments
       require exactly one canonical motive on an applicable reviewed record design;
       the motive is forbidden elsewhere.

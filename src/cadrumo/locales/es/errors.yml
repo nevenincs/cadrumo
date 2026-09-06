@@ -1007,6 +1007,10 @@ errors:
       la tabla de despacho de filtros.
     refused_modelo_charge_account_missing: Se ha elegido una domiciliacion pero no
       hay una cuenta de cargo registrada.
+    refused_modelo_ledger_evidence_recapture: No se puede volver a agrupar la evidencia
+      de esta declaración porque los apuntes contables que la sustentan han cambiado
+      desde que se selló. Vuelve a calcular la declaración; la recaptura solo recoge
+      evidencia adjuntada a apuntes sin cambios.
     refused_modelo_m303_rectificativa_motive: Las rectificativas del modelo 303 requieren
       exactamente un motivo canónico en un diseño de registro aplicable y revisado;
       el motivo está prohibido en los demás casos.

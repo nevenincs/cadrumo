@@ -548,6 +548,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.action_errors.LedgerEvidenceRecaptureRefusedError",
+        ErrorCode(
+            code="REFUSED_MODELO_LEDGER_EVIDENCE_RECAPTURE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_ledger_evidence_recapture",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.action_errors.AmendmentEvidenceMissingError",
         ErrorCode(
             code="ERROR_MODELO_AMENDMENT_EVIDENCE_MISSING",
