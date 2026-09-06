@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:74a8029659f31acfd0505cab70d0c2969c75435c113d409a5747f8dfabed065a'
+body_hash: 'sha256:e2abc47648125666dd8673b557d86fdae0f30176f140e67ae26775376c25bd6e'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -321,6 +321,10 @@ Deliver one accessor returning a revision's complete resolved export casilla sur
 - [x] `W01.P01.S841` - Write the generated export_refs atomically: `_write_export_refs` runs AFTER the export-directory cutover, mutating live casilla TOMLs the transaction's post-cutover verification never inspects, and a bare truncate-then-write left a truncated declaration that recovery then CONCATENATED onto -- producing `source_refexport_refs = [...]` and destroying the original irrecoverably while reporting success; `dev/registry/pipeline/_casilla_export_refs.py`.
 - [x] `W01.P01.S842` - Pair a sidecar with its source through the producer's own naming rule instead of a bare prefix glob: `sidecar_paths_for` names by full filename precisely so an `.xls` and an `.xlsx` of one design cannot collide, and the glob re-collided them -- 116 workbooks matched 134 sidecars against 109 under the strict rule, crediting 25 workbooks with a sidecar describing a different file; `dev/docs/preprocess/sidecar.py dev/corpus/tests/test_extraction_sidecar_freshness.py dev/docs/preprocess/tests/test_hook.py`.
 - [x] `W01.P01.S843` - Assert the harness lane is an assurance surface rather than a file that exists: the gate claimed "the harness keeps its own assurance lane" and measured only `.is_file()`, so a dispatch-only trigger, a job whose steps were stripped to a checkout, or `continue-on-error: true` at either level all passed -- the lane itself measured healthy (2 triggers, 1 job, 0 continue-on-error), which is exactly why nothing had noticed; `dev/release/tests/test_external_client_release_boundary.py`.
+- [x] `W01.P01.S844` - Write the facade-retirement codemod's rewrites atomically at both sites: these rewrite shipped `.py` files in place with a bare truncate-then-write, and a measurement over the real package showed 16.7 percent of interrupted writes leave VALID Python with definitions silently missing -- including a test module reduced from nine definitions to zero, which pytest would collect and pass; `dev/quality/facade_retirement.py`.
+- [x] `W01.P01.S845` - Write the import-centralization codemod's and module-promotion's in-place rewrites atomically: both rewrite shipped `.py` files with a bare truncate-then-write, the same shape that destroyed a registry declaration at S841, and the codemod's own `_UTF_8` constant is passed through rather than substituted for a literal; `dev/quality/import_centralization_codemod.py dev/quality/module_promotion.py`.
+- [x] `W01.P01.S846` - Walk artefact to sidecar through the writers' own rules in the residual-identity gate: it walked sidecar to artefact and the plain `X.json` form has no inverse, so the code guessed `.pdf` and 19 of 92 plain sidecars were invisible -- html, csv, tsv, txt, xml -- against a docstring promising non-PDF artefacts are included because the scan reads bytes; `dev/sanitizer/tests/test_residual_identity_absence.py`.
+- [x] `W01.P01.S847` - Derive the all-extras import probe from the installed OPTIONAL_EXTRAS registry and import the modules rather than find_spec them: the manifest claimed "all capability-gated optional imports" while the hand-kept list covered three of five, leaving `ofx` and `llm` with zero invocation sites despite live production reliances, and `pynvml` ships from a differently named distribution behind an `except ImportError` that returns UNKNOWN; `dev/packaging/all_extra_smoke.py dev/packaging/tests/test_all_extra_smoke.py`.
 
 ## Wave `W02` - gate restoration and residue removal
 
