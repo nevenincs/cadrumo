@@ -27,6 +27,12 @@ import pytest
 
 from ..cli import _load, casilla_claims
 
+#: Floors for the live modelo 100 family. It yields 314 same-revision keys and
+#: 30 reassigned casillas; two thirds of each, so ordinary declaration movement
+#: never fires them but a family the analysis stopped reaching does.
+_MINIMUM_LIVE_REVISION_KEYS = 200
+_MINIMUM_LIVE_REASSIGNED_CASILLAS = 20
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
@@ -118,9 +124,15 @@ def test_the_live_family_separates_the_two_counts() -> None:
 
     The relationship is asserted rather than either count: every same-revision
     collision is necessarily also pooled reuse, so the sharp number can never
-    exceed the broad one. A run where they were equal would mean the pooled
-    number had been telling the truth all along; a run where the sharp one was
-    larger would mean the analysis was inconsistent.
+    exceed the broad one. A run where the sharp one was larger would mean the
+    analysis was inconsistent.
+
+    The sharp set is EMPTY on this family today, so both relations below hold
+    over nothing and cannot be the whole guard: the collision path is carried
+    by the constructed sibling above. What the live run can still prove is
+    that the analysis reached the family at all, which is what the two floors
+    state. Anchoring ``pooled`` alone did not do that -- it is the unfiltered
+    dict, and it stayed populated while both filtered sets could empty.
     """
     inventory, _ = _load("100", None)
 
@@ -129,5 +141,13 @@ def test_the_live_family_separates_the_two_counts() -> None:
     reassigned = {casilla for casilla, slugs in pooled.items() if len(slugs) > 1}
 
     assert pooled, "the live family produced no casilla claims at all"
+    assert len(within_revision) >= _MINIMUM_LIVE_REVISION_KEYS, (
+        f"only {len(within_revision)} same-revision key(s) for modelo 100; below this the "
+        f"relations below hold because the analysis reached almost nothing"
+    )
+    assert len(reassigned) >= _MINIMUM_LIVE_REASSIGNED_CASILLAS, (
+        f"only {len(reassigned)} reassigned casilla(s); the subset claim below would "
+        f"then compare against an empty right-hand side"
+    )
     assert len(collisions) <= len(reassigned)
     assert {casilla for _, casilla in collisions} <= reassigned

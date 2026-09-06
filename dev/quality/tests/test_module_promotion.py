@@ -106,7 +106,13 @@ def test_a_same_named_module_in_a_sibling_package_is_untouched(relative_root: pa
     package = _tree(relative_root)
     plan = plan_promotion(package, "_target", "target", search_root=relative_root)
 
-    assert not [edit for edit in plan.edits if edit.path.name == "uses_own.py"]
+    rewritten = {edit.path.as_posix() for edit in plan.edits}
+
+    assert rewritten == {"absolute_user.py", "pkg/sub/neighbour.py"}, (
+        f"the plan must still rewrite the real consumers, or the exclusion below holds because "
+        f"the planner produced nothing at all: {sorted(rewritten)}"
+    )
+    assert "pkg/other/uses_own.py" not in rewritten
 
 
 def test_dotted_prose_is_moved_with_the_module(relative_root: pathlib.Path) -> None:
@@ -183,7 +189,14 @@ def test_a_body_use_is_not_rewritten_in_a_file_that_never_imported_the_module(
     (relative_root / "unrelated.py").write_text("_target = 3" + chr(10) + "print(_target)" + chr(10), encoding="utf-8")
 
     plan = plan_promotion(package, "_target", "target", search_root=relative_root)
-    assert not [edit for edit in plan.edits if edit.path.name == "unrelated.py"]
+
+    rewritten = {edit.path.as_posix() for edit in plan.edits}
+
+    assert rewritten == {"absolute_user.py", "pkg/sub/neighbour.py"}, (
+        f"the plan must still rewrite the real consumers, or the exclusion below holds because "
+        f"the planner produced nothing at all: {sorted(rewritten)}"
+    )
+    assert "unrelated.py" not in rewritten
 
 
 def test_apply_refuses_a_plan_carrying_an_unhandled_statement(tmp_path: pathlib.Path) -> None:
