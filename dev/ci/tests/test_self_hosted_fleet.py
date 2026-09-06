@@ -10,12 +10,19 @@ workflows both) must be a self-hosted label set; a GitHub-hosted image
 gate refuses. Fail-closed: a matrix-referencing ``runs-on`` that resolves to
 zero concrete targets is itself a violation, never a silent pass.
 
-The release path is exempt as a whole, enumerated in :data:`HOSTED_WORKFLOWS`
-and pinned in both directions by the tests below. It is not a softening of the
-mandate: those workflows build a `py3-none-any` artifact the host cannot
-affect, and publication must not be gated on a fleet runner being free. The
-spend premise does not apply either - this repository is public, and hosted
-runners are free for public repositories.
+The release-path exemption is RETIRED. `HOSTED_WORKFLOWS` is empty, so
+`release-please.yml` and `publish.yml` are gated like everything else and the
+mandate above holds without a carve-out.
+
+The carve-out was granted on the ground that publication must not be gated on
+a fleet runner being free, which remains a real property and is now owned
+where it belongs: enrolment and availability are driven by the `ci-fleet`
+repository, which is binding for every `nevenincs` repo, and whose `fleetctl
+guards` audit reports a release guard scheduled onto the fleet it judges. A
+cadrumo-local exemption cannot express a fleet-wide policy, and while it stood
+the two surfaces disagreed -- the workflows moved onto the fleet under that
+policy and this gate refused them, so `main` carried a red gate with neither
+side wrong on its own terms.
 
 Both directions resolve their targets through the shared runner-target
 authority, including the runtime-computed matrix the release path uses: the
@@ -59,7 +66,11 @@ _RUNTIME_MATRIX_REFERENCE: Final = "${{ fromJSON(needs.inventory.outputs.matrix)
 #:
 #: Every other workflow proves behaviour on a real target platform and stays on
 #: the fleet.
-HOSTED_WORKFLOWS: Final[frozenset[str]] = frozenset({"release-please.yml", "publish.yml"})
+#: Workflows excused from the self-hosted mandate. EMPTY, deliberately: the
+#: release path was the only entry and its exemption is retired. Kept as a
+#: named seam rather than deleted, so a future exemption has to be added here
+#: with a reason instead of scattered through the census helpers.
+HOSTED_WORKFLOWS: Final[frozenset[str]] = frozenset()
 
 
 #: Floors for the workflow census this fleet gate reads. Two sibling modules
@@ -105,27 +116,26 @@ def _hosted_violations(workflow_name: str, document: dict[str, Any]) -> list[tup
     ]
 
 
-def test_the_release_path_workflows_run_on_hosted_images() -> None:
-    """The hosted split is pinned in BOTH directions.
+def test_the_release_path_is_gated_like_everything_else() -> None:
+    """The retired exemption must leave the release path COVERED, not skipped.
 
-    A release job that drifts onto the fleet reintroduces the availability
-    dependency the split exists to remove, and does so silently: the run does
-    not error, it queues behind whatever already holds the runner.
-
-    The release path computes one of its matrices at runtime, so its runner
-    labels are read from the step that emits them rather than from a matrix
-    mapping that does not exist yet. An unresolvable reference is a violation
-    here exactly as a fleet label would be: an exemption granted on the ground
-    that every job is hosted has to be able to see every job.
+    Emptying `HOSTED_WORKFLOWS` is only a strengthening if the census then
+    reaches those files. An exemption list that is merely emptied while the
+    helpers still skip the names would read exactly the same green as this,
+    so both halves are asserted: nothing is excused, and the release path is
+    on the fleet like every other workflow.
     """
-    for workflow_name in sorted(HOSTED_WORKFLOWS):
-        workflow = _WORKFLOWS_DIR / workflow_name
-        assert workflow.is_file(), f"{workflow_name} is declared hosted but does not exist"
-        document = yaml.safe_load(workflow.read_text(encoding="utf-8"))
-        jobs = document.get("jobs") or {}
-        assert jobs, f"{workflow_name} declares no jobs"
-        violations = _hosted_violations(workflow_name, document)
-        assert violations == [], f"release-path jobs not on a hosted image: {violations}"
+    assert frozenset() == HOSTED_WORKFLOWS, "an exemption needs a reason recorded beside it"
+
+    workflows = sorted(
+        {*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")}
+    )
+    names = {workflow.name for workflow in workflows}
+    for release_path in ("release-please.yml", "publish.yml"):
+        assert release_path in names, f"{release_path} vanished from the census"
+
+    violations = _collect_violations(_WORKFLOWS_DIR)
+    assert violations == [], f"hosted (or unresolvable) runner targets found: {violations}"
 
 
 def test_the_live_fleet_census_reaches_the_whole_workflow_directory() -> None:
@@ -240,27 +250,6 @@ def _rewrite_emitted_images(document: dict[str, Any], replacement: str) -> int:
                 step["run"] = script.replace('"ubuntu-latest"', f'"{replacement}"')
                 rewritten += 1
     return rewritten
-
-
-def test_the_gate_notices_the_real_release_path_moving_onto_the_fleet() -> None:
-    """Detector teeth on the shipped document, not on a look-alike.
-
-    The fixtures below prove the resolver's rules; this proves those rules bind
-    the file the exemption is actually granted to. The workflow is parsed, the
-    script that emits its smoke targets is rewritten in the parsed copy, and
-    the copy re-read -- nothing on disk is touched, and the clean reading taken
-    first is what makes the second reading mean something.
-    """
-    document = yaml.safe_load((_WORKFLOWS_DIR / "publish.yml").read_text(encoding="utf-8"))
-    assert _hosted_violations("publish.yml", document) == []
-
-    assert _rewrite_emitted_images(document, "self-hosted") > 0, (
-        "no step in the release path emits a hosted image literal, so this proves nothing"
-    )
-    violations = _hosted_violations("publish.yml", document)
-
-    assert violations, "a release job emitting a fleet label was not reported"
-    assert {target for *_, target in violations} == {"self-hosted"}
 
 
 def _runtime_matrix_workflow(*, emitted_labels: str, matrix: str = _RUNTIME_MATRIX_REFERENCE) -> dict[str, Any]:

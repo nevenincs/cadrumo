@@ -37,6 +37,7 @@ from ..runner_queue_watchdog import (
     occupied_label_keys,
     parse_jobs,
 )
+from ..workflow_permissions import granted_level
 from ..workflow_run_text import executed_text
 from ..workflow_runner_targets import is_unresolved, runner_targets
 
@@ -578,8 +579,8 @@ def test_every_watchdog_job_can_read_jobs_and_cancel_the_run() -> None:
     sit for GitHub's full 24-hour ceiling, which is the original defect.
     """
     for path, document in _workflow_documents():
-        job = (document.get("jobs") or {}).get(_WATCHDOG_JOB_ID)
-        if job is None:
+        if _WATCHDOG_JOB_ID not in (document.get("jobs") or {}):
             continue
-        permissions = job.get("permissions") or document.get("permissions") or {}
-        assert permissions.get("actions") == "write", f"{path.name}: watchdog needs actions: write to cancel"
+        assert granted_level(document, _WATCHDOG_JOB_ID, "actions") == "write", (
+            f"{path.name}: watchdog needs actions: write to cancel"
+        )

@@ -60,6 +60,16 @@ _RUNNER_LABEL_LITERAL: Final = re.compile(
     r"""["'](?P<label>(?:ubuntu|windows|macos)-[0-9a-z][0-9a-z.\-]*|self-hosted)["']""",
 )
 
+#: A bracketed LABEL SET as a script writes one, e.g. ["self-hosted","Linux","X64"].
+#: Matched as a GROUP because a self-hosted target is a set, not a name: reading
+#: its members individually loses the grouping, and `self-hosted` alone is not a
+#: valid target. Only quoted tokens and commas, so a JSON object literal in the
+#: same script cannot match it.
+_RUNNER_LABEL_GROUP: Final = re.compile(r'\[(?P<body>(?:\s*["\'][A-Za-z0-9_.\-]+["\']\s*,?)+)\]')
+
+#: One quoted token inside such a group.
+_GROUP_MEMBER: Final = re.compile(r'["\'](?P<label>[A-Za-z0-9_.\-]+)["\']')
+
 #: A GitHub-hosted runner image name.
 _HOSTED_IMAGE: Final = re.compile(r"^(?:ubuntu|windows|macos)-[0-9a-z][0-9a-z.\-]*$")
 
@@ -185,4 +195,14 @@ def _runner_label_literals(script: str) -> list[object]:
     workflow be judged on prose it does not execute.
     """
     executed = "\n".join(line for line in script.splitlines() if not line.strip().startswith("#"))
+    grouped: list[tuple[str, ...]] = []
+    for group in _RUNNER_LABEL_GROUP.finditer(executed):
+        members = tuple(member.group("label") for member in _GROUP_MEMBER.finditer(group.group("body")))
+        # Only a set LED by `self-hosted` is a fleet target. Any other bracketed
+        # list in the script -- image names, versions -- is left to the per-literal
+        # reading below, where each entry really is its own target.
+        if members and members[0] == "self-hosted":
+            grouped.append(members)
+    if grouped:
+        return [list(members) for members in dict.fromkeys(grouped)]
     return list(dict.fromkeys(match.group("label") for match in _RUNNER_LABEL_LITERAL.finditer(executed)))
