@@ -61,16 +61,19 @@ _RUNTIME_MATRIX_REFERENCE: Final = "${{ fromJSON(needs.inventory.outputs.matrix)
 #: with a reason instead of scattered through the census helpers.
 #:
 #: Empty is why the seam cannot prove itself from the live tree: with nothing
-#: excused, deleting the skip that reads this set changes no verdict in this
-#: module. So `_collect_violations` takes the excused set as an argument, and
-#: the keying case below drives it with a planted one.
+#: excused, deleting a reader's skip changes no verdict in this module. So
+#: BOTH readers of this set -- `_collect_violations` and `_census_shortfalls`
+#: -- take the excused set as an argument, and the keying and census cases
+#: below drive them with a planted one.
 HOSTED_WORKFLOWS: Final[frozenset[str]] = frozenset()
 
 
 #: Floors for the workflow census this fleet gate reads. Two sibling modules
 #: floor the same directory at eight; this one carried only a truthiness.
 #: Live: sixteen workflows, all sixteen gated -- the release path included,
-#: since nothing is excused.
+#: since nothing is excused. That equality is exactly why the gated floor
+#: cannot fail from the live tree while the total floor passes, and why
+#: `_census_shortfalls` takes the excused set rather than reading it.
 _MINIMUM_FLEET_WORKFLOWS = 8
 _MINIMUM_GATED_WORKFLOWS = 6
 
@@ -140,29 +143,74 @@ def test_the_release_path_is_gated_like_everything_else() -> None:
     assert violations == [], f"hosted (or unresolvable) runner targets found: {violations}"
 
 
-def test_the_live_fleet_census_reaches_the_whole_workflow_directory() -> None:
-    """The gate below asserts an EMPTY violation list, which nothing proves alone.
+def _census_shortfalls(
+    workflows_dir: Path,
+    *,
+    excused: frozenset[str] = HOSTED_WORKFLOWS,
+    minimum_total: int = _MINIMUM_FLEET_WORKFLOWS,
+    minimum_gated: int = _MINIMUM_GATED_WORKFLOWS,
+) -> list[str]:
+    """Return the census floors ``workflows_dir`` fails, named and quantified.
 
     Floored here rather than inside ``_collect_violations`` because that helper
     is deliberately dual-purpose: five teeth cases drive it over a temporary
     directory holding a single planted workflow, and a census floor inside it
     would refuse exactly the fixtures that prove the gate can fail. Two sibling
     modules floor this same directory at eight.
+
+    ``excused`` is a parameter for the same reason it is one on
+    ``_collect_violations``, and the reason is sharper here. With
+    ``HOSTED_WORKFLOWS`` empty the gated subset EQUALS the whole census by
+    construction, so the gated floor cannot fail while the total floor passes:
+    deleting the filter, and deleting the gated floor outright, each left this
+    module fourteen-green. Taking the excused set as an argument is what lets
+    the census case below drive the branch a repopulated exemption list would
+    take, instead of pinning a comparison no input can reach.
     """
     workflows = sorted(
-        {*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")}
+        {*scan_directory(workflows_dir, pattern="*.yml"), *scan_directory(workflows_dir, pattern="*.yaml")}
     )
-    gated = [workflow for workflow in workflows if workflow.name not in HOSTED_WORKFLOWS]
+    gated = [workflow for workflow in workflows if workflow.name not in excused]
 
-    assert len(workflows) >= _MINIMUM_FLEET_WORKFLOWS, (
-        f"only {len(workflows)} workflow(s) under {_WORKFLOWS_DIR}; a narrowed census "
-        "reports an empty violation list exactly as a compliant fleet does"
-    )
-    assert len(gated) >= _MINIMUM_GATED_WORKFLOWS, (
-        f"only {len(gated)} of {len(workflows)} workflow(s) are gated; "
-        f"{sorted(HOSTED_WORKFLOWS)} are excused, and an exclusion list grown to cover "
-        "the fleet would empty the violations without a word"
-    )
+    shortfalls: list[str] = []
+    if len(workflows) < minimum_total:
+        shortfalls.append(
+            f"total: only {len(workflows)} workflow(s) under {workflows_dir}, below {minimum_total}; "
+            "a narrowed census reports an empty violation list exactly as a compliant fleet does"
+        )
+    if len(gated) < minimum_gated:
+        shortfalls.append(
+            f"gated: only {len(gated)} of {len(workflows)} workflow(s) are gated, below "
+            f"{minimum_gated}; {sorted(excused)} are excused, and an exclusion list grown "
+            "to cover the fleet would empty the violations without a word"
+        )
+    return shortfalls
+
+
+def test_the_live_fleet_census_reaches_the_whole_workflow_directory() -> None:
+    """The gate below asserts an EMPTY violation list, which nothing proves alone."""
+    assert _census_shortfalls(_WORKFLOWS_DIR) == []
+
+
+def test_the_census_floor_refuses_a_workflow_set_narrowed_by_exemptions(tmp_path: Path) -> None:
+    """A census whittled down by exemptions is refused by the gated floor alone.
+
+    The contrast is the claim, as with the keying case: the SAME eight planted
+    workflows clear both floors with nothing excused, and excusing three of
+    them trips the gated floor while the total floor still passes. That is the
+    only run in this module in which the gated floor decides anything -- from
+    the live tree it is implied by the total floor and can never fail on its
+    own. The plants come from ``_hosted_workflow`` because the census counts
+    files and never reads their runners; their hosted jobs are irrelevant here.
+    """
+    for index in range(8):
+        _hosted_workflow(tmp_path, f"lane-{index}.yml")
+
+    assert _census_shortfalls(tmp_path) == []
+
+    shortfalls = _census_shortfalls(tmp_path, excused=frozenset({"lane-0.yml", "lane-1.yml", "lane-2.yml"}))
+    assert len(shortfalls) == 1, shortfalls
+    assert shortfalls[0].startswith("gated: only 5 of 8 workflow(s) are gated, below 6;")
 
 
 def test_every_workflow_job_runs_on_the_self_hosted_fleet() -> None:

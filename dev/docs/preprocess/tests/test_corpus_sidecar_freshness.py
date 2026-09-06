@@ -59,9 +59,10 @@ Three edge cases are handled explicitly rather than by accident:
 
 from __future__ import annotations
 
+import collections
 import json
 import re
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Final
 
 import pytest
@@ -92,9 +93,43 @@ _CORPUS_ROOT = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus"
 _WORKED_EXAMPLE_HTML = _CORPUS_ROOT / "normatives" / "html" / "orden-hap-2250-2015-art-4.html"
 
 # The sweep is meaningless if discovery silently returns nothing, so it asserts
-# a floor. Set well below the 577 sidecars committed today: this guards against
+# a floor. Set well below the 707 sidecars committed today: this guards against
 # a broken glob or a moved corpus root, not against the corpus shrinking.
 _MINIMUM_EXPECTED_SIDECARS = 400
+
+#: Per-origin-kind floors over the same population. This corpus is NOT one
+#: kind: its sidecars derive from five source families with three different
+#: extractors behind them (``normatives_html``, ``_pdf``, ``_workbook``).
+#: Live: ``.html`` 470, ``.pdf`` 104, ``.xlsx`` 90, ``.xls`` 41, ``.xlsm`` 2.
+#:
+#: A floor over the UNION cannot see one family leave. The total is dominated
+#: by ``.html``, so against 707 sidecars a floor of 400 leaves 307 of slack --
+#: more than the other four families put together (237). Every one of them
+#: could drop to zero, individually or all at once, and the total would still
+#: read 470 and pass.
+#:
+#: That is not merely an uncounted family, it is an unchecked one: the three
+#: sweeps below iterate this same population, so a vanished ``.pdf`` family
+#: would have freshness, loadability and locality all reporting a clean corpus
+#: having never opened a PDF.
+#:
+#: ``.xls`` is why this is not hypothetical. It is one of the six declared
+#: preprocess rules, yet it appears in neither enumeration in ``test_hook.py``
+#: -- the smallest committed ``.xls`` source carries no sidecar, so the
+#: per-kind parity test cannot cover it -- and nothing else in the tree pins
+#: it. Its 41 sidecars are the one family that could vanish with every other
+#: gate still green.
+#:
+#: Each floor sits near two thirds of its live figure, so ordinary corpus
+#: movement never reds the gate while a family losing most of itself always
+#: does. ``.xlsm`` has two members; one is the floor that still means present.
+_MINIMUM_SIDECARS_BY_ORIGIN_KIND: Final[dict[str, int]] = {
+    ".html": 300,
+    ".pdf": 70,
+    ".xls": 27,
+    ".xlsm": 1,
+    ".xlsx": 60,
+}
 
 #: Multi-part sidecars infix ``.part-N`` between the payload name and the
 #: sidecar suffix (see ``_parts.part_stand_in_path``), so the payload a
@@ -112,6 +147,17 @@ def _payload_beside(json_path: Path) -> Path:
     """
     base = json_path.name[: -len(EXTRACTED_JSON_SUFFIX)]
     return json_path.with_name(_PART_INFIX.sub("", base))
+
+
+def _origin_kind(output: PreprocessOutput) -> str:
+    """Return the source family a sidecar derives from, as a lowercase suffix.
+
+    Read from the record's declared ``source_relpath`` rather than from the
+    sidecar filename, so the ``.part-N`` infix cannot be mistaken for an
+    extension. Locality is gated separately, so the declared locator is the
+    right authority for which extractor produced this record.
+    """
+    return PurePosixPath(output.source_relpath).suffix.lower()
 
 
 def _provenance_bearing_sidecars(
@@ -197,10 +243,24 @@ def _locality_reason(json_path: Path, output: PreprocessOutput, *, repo_root: Pa
 
 
 def test_sidecar_discovery_finds_the_committed_corpus() -> None:
-    """Discovery reaches the corpus (a silently empty sweep would pass vacuously)."""
+    """Discovery reaches the corpus, and reaches every source family in it.
+
+    The total is the anti-vacuity floor; the per-kind floors are what make it
+    mean anything. A floor over the union of five extractor families cannot
+    see one family leave, and the three sweeps below inherit that blindness
+    exactly, because they iterate the population this test measures.
+    """
     assert _CORPUS_ROOT.is_dir(), _CORPUS_ROOT
     found, _ = _provenance_bearing_sidecars()
     assert len(found) >= _MINIMUM_EXPECTED_SIDECARS
+
+    live = collections.Counter(_origin_kind(output) for _, output in found)
+    for kind, floor in _MINIMUM_SIDECARS_BY_ORIGIN_KIND.items():
+        assert live[kind] >= floor, (
+            f"only {live[kind]} committed sidecar(s) derive from a {kind} source, against a floor "
+            f"of {floor}; the freshness, loadability and locality sweeps below iterate this same "
+            f"population, so each would report a clean corpus without having read a {kind} at all"
+        )
 
 
 def test_every_committed_sidecar_loads() -> None:

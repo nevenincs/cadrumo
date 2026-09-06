@@ -86,7 +86,14 @@ def _persisted_fields() -> set[str]:
     tree = ast.parse(inspect.getsource(actions_common._transaction_idempotency_fields).lstrip())
     for node in ast.walk(tree):
         if isinstance(node, ast.Return) and isinstance(node.value, ast.Dict):
-            return {key.value for key in node.value.keys if isinstance(key, ast.Constant)}
+            # The value check is not ceremony: `ast.Constant.value` spans str,
+            # bytes, complex, None and Ellipsis, so an unnarrowed comprehension
+            # yields a set wider than the field names this compares against. A
+            # non-string key is not a persisted field, so excluding it is the
+            # correct reading as well as the typed one.
+            return {
+                key.value for key in node.value.keys if isinstance(key, ast.Constant) and isinstance(key.value, str)
+            }
     raise AssertionError("_transaction_idempotency_fields no longer returns a dict literal")
 
 

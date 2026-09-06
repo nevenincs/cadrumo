@@ -156,8 +156,11 @@ def test_omitting_any_single_answer_refuses(omitted: str) -> None:
 
     A single case would pass while three of the four were silently optional.
     """
-    answers = _complete()
-    answers[omitted] = None
+    # Overridden through the builder rather than subscripted afterwards: a
+    # TypedDict cannot be indexed with a runtime key, and the builder already
+    # takes overrides, so this states the same case without reaching past the
+    # declared shape.
+    answers = _complete(**{omitted: None})
     with _stored(_transaction(provider_id="a", direction=TransactionDirection.INCOMING)) as repository:
         transaction_id = next(iter(repository.load().transactions))
         with pytest.raises(TransactionValidationError) as excinfo:
