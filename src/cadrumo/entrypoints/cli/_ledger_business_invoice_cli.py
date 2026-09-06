@@ -29,6 +29,7 @@ from ...application.invoices.catalogue_lifecycle import (
     resolve_catalogue_invoice_from_repository,
     update_catalogue_invoice,
 )
+from ...application.invoices.source_resolver import iva_category_for_operation_type
 from ...core.aggregation import IntracomOperationType
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.field_role import FieldRole
@@ -56,29 +57,6 @@ from ._ledger_catalogue_invoice_payloads import (
     CatalogueInvoiceWizardResult,
 )
 from ._ledger_support import ledger_invoice_validation_no_recovery
-
-_OPERATION_TYPE_TO_IVA_CATEGORY: dict[IntracomOperationType, IvaCategory] = {
-    IntracomOperationType.E: IvaCategory.INTRA_COMMUNITY_SUPPLY,
-    IntracomOperationType.A: IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-    IntracomOperationType.T: IvaCategory.INTRA_COMMUNITY_TRIANGULATION,
-    # The service claves. Before these existed the operator could pick S or I
-    # and the record came back with NO category at all, so an ordinary
-    # intracomunitaria de servicios was ungrounded to every consumer that reads
-    # the IVA treatment. They map to the service categories, not to the goods
-    # ones: a service is no sujeta by the art. 69 localisation rule, where an
-    # entrega de bienes is exempt under art. 25.
-    IntracomOperationType.S: IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY,
-    IntracomOperationType.ADQUISICION_SERVICIOS: (IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE),
-}
-
-
-def _catalogue_iva_category_for_operation_type(
-    operation_type: IntracomOperationType | None,
-) -> IvaCategory | None:
-    if operation_type is None:
-        return None
-    return _OPERATION_TYPE_TO_IVA_CATEGORY.get(operation_type)
-
 
 # The invoice fields every operator surface renders, declared once. Both
 # projections below read this tuple, so a field added to one surface cannot go
@@ -299,7 +277,7 @@ def invoice_add(
     # clave. The derivation exists so an intracomunitaria is not left
     # ungrounded when the operator only states the clave; it is a fallback, and
     # silently overriding a value the operator did state would be the reverse.
-    resolved_iva_category = iva_category or _catalogue_iva_category_for_operation_type(
+    resolved_iva_category = iva_category or iva_category_for_operation_type(
         operation_type,
     )
     try:
@@ -382,7 +360,7 @@ def invoice_wizard(
     from ...application.invoices.creation_wizard import create_invoice_via_wizard
 
     bucket_id = _business_invoice_bucket_id()
-    resolved_iva_category = iva_category or _catalogue_iva_category_for_operation_type(operation_type)
+    resolved_iva_category = iva_category or iva_category_for_operation_type(operation_type)
     try:
         wizard_result = create_invoice_via_wizard(
             bucket_id=bucket_id,
