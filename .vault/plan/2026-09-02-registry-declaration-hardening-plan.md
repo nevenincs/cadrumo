@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:a6a0b1d88298c59e5fb615c4dec2aff20793c7e04d50f9e5e70c1051ace726d6'
+body_hash: 'sha256:10bfe9dd1b3b3c7bd0ea43223646e5aa2bca3de842e3afe21c3c418935c3c7e0'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -608,6 +608,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S726` - Name the observed and expected values in every record-design corpus staleness refusal so the verdict says what drifted instead of only that something did; `dev/corpus/sync_aeat_record_design_corpus.py`.
 - [x] `W02.P02.S727` - Derive the work-selection retirement paths from the retired-module declaration and anchor them on the canonical module, replacing a restated path that demanded the canonical module be absent; `dev/tests/test_modelo_work_selection_fixed_point.py`.
 - [x] `W02.P02.S728` - Pin the line terminator on every development text writer so generated artefacts stop being rewritten to CRLF where git normalisation hides the drift; `dev/quality/namespace_retirement_sweep.py`.
+- [x] `W02.P02.S729` - Restore the m303 generated-envelope proof to the current filing-facts contract by sourcing the bienes bundle and its provenance from the module that owns them; `dev/registry/tests/test_m303_generated_envelope_proof.py`.
+- [x] `W02.P02.S730` - Measure the five remaining unmeasured development directories against the per-test ceiling and adjudicate the decorator-spelling axis as a null vector; `dev/release`.
 
 ### Phase `W02.P03` - release predicate relocation
 
