@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:ab6a033a3a33908d3eb2c8a221af7987c2866a8349453289f3291c6a7d87300c'
+body_hash: 'sha256:a12333bc819d487047d9ca81d433ca1475281614176239201aaa0a46c1b781a0'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -658,6 +658,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S776` - Give the epoch/width census the per-epoch floors its own docstring implies, since a truthiness check cannot see an epoch losing its slot; `dev/registry/tests/test_modelo_303_semantic_maps.py`.
 - [x] `W02.P02.S777` - Floor the live self-hosted fleet census and its gated remainder at the live call site, leaving the dual-purpose helper free for its five planted-workflow teeth cases; `dev/ci/tests/test_self_hosted_fleet.py`.
 - [x] `W02.P02.S778` - Floor the markdown documentation corpus by page count and area span in its single-purpose producer, replacing the truthiness six scanning gates relied on; `dev/docs/tests/test_docs.py`.
+- [x] `W02.P02.S779` - Floor the static-frame subset four reason gates iterate, which the producer guarded only at the unfiltered discovery level; `dev/docs/tests/test_static_frame_reasons.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

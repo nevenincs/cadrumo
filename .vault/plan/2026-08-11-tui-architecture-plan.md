@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-06'
-body_hash: 'sha256:4799304bb8724619f38400ba7f972bc94aba8430c76697faeec3c1e10fa30bff'
+body_hash: 'sha256:d4c5560e50810c510512c3fa44109571bf1f5a5457d183fbe0c5501c10bdc39b'
 ---
 
 <!-- RETIRED: S370 -->
@@ -684,6 +684,7 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S468` - Point the discriminating parse-envelope case at a command that exists and guard the fixture against the same drift, since it invoked a config profile preflight this CLI has never had so click resolved only the group and the case had silently become a second copy of the unknown-command test beside it; `src/cadrumo/entrypoints/cli/tests/test_parse_error_envelope_names_its_command.py`.
 - [x] `W08.P30.S469` - Replace the em dash the operator directive forbids across nine workbench keys in all four catalogues, using the spaced hyphen the gate prescribes for a label and its qualifier and a bare hyphen for the value that is only a no-value placeholder; `src/cadrumo/locales`.
 - [x] `W08.P30.S470` - Restore the static frame reasons gate to running, promoting the live AEAT token helper to the public name its cross-package consumer and the packages own docstring already use and recovering the unconverted baseline an import refactor deleted alongside it; `dev/docs/sequences/runner.py dev/docs/sequences/tests/test_runner.py dev/docs/tests/unconverted_static_baseline.json`.
+- [ ] `W08.P30.S471` - Drop the retired subprocess provider probe and the deleted remediation field from the sandbox external tool pin test, since both were removed with the cloud transport and the executable-text advice it carried, leaving the case uncollectable and its PATH and browser pins unchecked on every run; `dev/docs/sequences/tests/test_runner.py`.
 
 ## Parallelization
 
