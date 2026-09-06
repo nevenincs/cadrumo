@@ -9,9 +9,9 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
   - '[[2026-06-10-period-revision-resolution-adr]]'
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
-modified: '2026-09-05'
+modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:d1d68308a995c46c68043d01598179c072c78a17dedffd89045e83865057d88b'
+body_hash: 'sha256:6d89c9c52f515bba24f28c3ebcc2527a9379b39406f939f71eba4f21edd3bd20'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -586,6 +586,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S704` - Floor the vulture citation table: the whitelist-versus-citation equality survives both sides emptying together, which would also reduce the per-mirror parametrize below to zero cases and retire that gate silently; `dev/audit/tests/test_vulture_whitelist_is_not_stale.py`.
 - [x] `W02.P02.S705` - Raise the glossary positive-control floor: > 0 sat against 704 grounded legal permalinks, and this is the success path that keeps the module's refusals from being satisfied by refusing almost everything; `dev/docs/tests/test_glossary_reference.py`.
 - [x] `W02.P02.S706` - Scale the golden-record anti-vacuity control to its live corpus: > 0 characters closed only the historical zero-read, while a reader taking one frame carrier of three or a single golden still passed against 206 goldens and 16 million characters; `dev/docs/tests/test_golden_records_no_crash.py`.
+- [x] `W02.P02.S707` - Scale the terminology coverage floors to their live figures: three > 0 checks measured none of the populated-ness the docstring claims, against 90 referenced targets covering 49 concepts and 41 legal provisions; `dev/docs/terminology/tests/test_coverage.py`.
+- [x] `W02.P02.S708` - Floor the golden capture per carrier: the total is 98 percent envelope, so a sum floor proved only the envelope was read and losing text entirely left 15.75M characters standing; `dev/docs/tests/test_golden_records_no_crash.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
