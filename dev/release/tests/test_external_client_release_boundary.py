@@ -16,6 +16,7 @@ import pytest
 import yaml
 
 from ..._paths import REPO_ROOT
+from ...ci.workflow_run_text import executed_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -38,6 +39,11 @@ def _assert_lane_is_an_assurance_surface(path: Path, *, invocation: str) -> None
     where a presence check looks for it, and still reports nothing: an
     automatic trigger, a step that actually invokes the surface, and the
     absence of `continue-on-error` on that step and the job carrying it.
+
+    The invocation is looked for in what the step EXECUTES, not in its text. A
+    commented-out invocation is prose: it satisfies a substring reading of the
+    `run:` block while the shell runs nothing, which is the exact shape that
+    turns this gate back into the presence check it was written to replace.
     """
     assert path.is_file(), f"{path.name} is missing; the lane it names does not exist"
 
@@ -62,7 +68,7 @@ def _assert_lane_is_an_assurance_surface(path: Path, *, invocation: str) -> None
         (job_name, job, step)
         for job_name, job in jobs.items()
         for step in (job.get("steps") or ())
-        if invocation in str(step.get("run", ""))
+        if invocation in executed_text(step.get("run"))
     ]
     assert invoking, (
         f"no step across the {len(jobs)} job(s) in {path.name} invokes {invocation!r}; the lane "
@@ -148,6 +154,36 @@ def test_the_harness_evaluation_lane_is_an_assurance_surface() -> None:
     and the harness ships unverified while a presence check stays green.
     """
     _assert_lane_is_an_assurance_surface(_HARNESS_EVAL_WORKFLOW, invocation="src/cadrumo_harness")
+
+
+def test_the_assurance_gate_reads_what_the_lane_executes(tmp_path: Path) -> None:
+    """Teeth, against a copy: prose naming the surface is not the lane running it.
+
+    Built by commenting out the real workflow's eval command rather than by
+    inventing a document, so the degraded lane keeps its automatic trigger, its
+    job, and its step -- everything a presence check looks at -- and differs
+    only in whether the shell executes the line. The undegraded round trip is
+    asserted first, so a refusal below is attributable to the comment rather
+    than to the rewrite.
+    """
+    document = yaml.safe_load(_HARNESS_EVAL_WORKFLOW.read_text(encoding="utf-8"))
+    intact = tmp_path / "intact.yml"
+    intact.write_text(yaml.safe_dump(document, sort_keys=False), encoding="utf-8")
+
+    _assert_lane_is_an_assurance_surface(intact, invocation="src/cadrumo_harness")
+
+    steps = document["jobs"]["agent-harness-eval"]["steps"]
+    invoking = next(step for step in steps if "src/cadrumo_harness" in str(step.get("run", "")))
+    newline = chr(10)
+    invoking["run"] = "# " + str(invoking["run"]).replace(newline, newline + "# ")
+    commented = tmp_path / "commented.yml"
+    commented.write_text(yaml.safe_dump(document, sort_keys=False), encoding="utf-8")
+
+    # The reading this gate used to make is still satisfied by the degraded lane.
+    assert "src/cadrumo_harness" in str(invoking["run"])
+
+    with pytest.raises(AssertionError, match="exercises nothing"):
+        _assert_lane_is_an_assurance_surface(commented, invocation="src/cadrumo_harness")
 
 
 def test_the_harness_evaluation_lane_stays_separate_from_the_release_path() -> None:

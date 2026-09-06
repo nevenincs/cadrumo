@@ -395,6 +395,50 @@ def test_the_corpus_refuses_a_module_it_cannot_parse(tmp_path: pathlib.Path) -> 
         _load_modules(package)
 
 
+def test_the_corpus_refuses_a_module_it_cannot_read(tmp_path: pathlib.Path) -> None:
+    """A module lost between the walk and the read shortens the corpus identically.
+
+    The screen already refuses an unparsable module because a short corpus and a
+    clean one look identical downstream. A module the walk listed and the read
+    cannot reach costs the corpus the same module, so it is refused for its own
+    reason rather than crashing with a traceback that names neither the loss nor
+    its size.
+    """
+    from ..semantic_duplication import _load_modules
+
+    package = tmp_path / "cadrumo"
+    package.mkdir()
+    (package / "sound.py").write_text("VALUE = 1" + chr(10), encoding="utf-8")
+    # A directory named like a module: the walk lists it and the read refuses it,
+    # which is the shape a file deleted between the walk and the read also takes.
+    (package / "vanished.py").mkdir()
+
+    with pytest.raises(SystemExit, match="could not be read"):
+        _load_modules(package)
+
+
+def test_the_two_corpus_refusals_do_not_answer_for_each_other(tmp_path: pathlib.Path) -> None:
+    """Each cause must be provable on its own, or one match satisfies both."""
+    from ..semantic_duplication import _load_modules
+
+    unparsable = tmp_path / "a" / "cadrumo"
+    unparsable.mkdir(parents=True)
+    (unparsable / "broken.py").write_text("def (:" + chr(10), encoding="utf-8")
+    unreadable = tmp_path / "b" / "cadrumo"
+    unreadable.mkdir(parents=True)
+    (unreadable / "vanished.py").mkdir()
+
+    with pytest.raises(SystemExit) as parsed:
+        _load_modules(unparsable)
+    with pytest.raises(SystemExit) as read:
+        _load_modules(unreadable)
+
+    assert "could not be parsed" in str(parsed.value)
+    assert "could not be read" not in str(parsed.value)
+    assert "could not be read" in str(read.value)
+    assert "could not be parsed" not in str(read.value)
+
+
 def test_an_empty_corpus_refuses_rather_than_reporting_clean(tmp_path: pathlib.Path) -> None:
     """Zero modules is the answer a perfectly deduplicated tree gives.
 

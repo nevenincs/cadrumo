@@ -21,6 +21,7 @@ from ..campaign import (
     _test_worker_count,
     preflight_pass_failures,
     resolve_form,
+    serial_pass_modules,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -325,3 +326,45 @@ def test_passes_that_all_succeed_report_nothing(tmp_path: Path) -> None:
     )
 
     assert preflight_pass_failures((healthy,), REPO_ROOT, None) == []
+
+
+def test_a_parallel_pass_is_never_split() -> None:
+    """xdist already isolates a crash into a worker; splitting buys nothing."""
+    parallel = next(p for p in _PREFLIGHT_PASSES if p.parallel)
+
+    assert serial_pass_modules(parallel, REPO_ROOT) == ()
+
+
+def test_a_serial_pass_splits_across_every_module_it_would_have_collected() -> None:
+    """The split must change the blast radius, not the selection.
+
+    One wedged test used to take the whole serial invocation with it, and on
+    Windows the timeout cannot interrupt a subprocess, so the session died
+    with no summary and the remaining modules never ran. Splitting bounds that
+    to one module -- but only if the union is still exactly what the whole-
+    directory pass would have collected, which is what this asserts.
+    """
+    serial = next(p for p in _PREFLIGHT_PASSES if not p.parallel)
+    modules = serial_pass_modules(serial, REPO_ROOT)
+    expected = {
+        path.relative_to(REPO_ROOT).as_posix()
+        for path in (REPO_ROOT / serial.target).glob("test_*.py")
+        if path.relative_to(REPO_ROOT).as_posix() not in serial.ignore
+    }
+
+    assert modules, "a serial pass over a directory must split"
+    assert set(modules) == expected
+
+
+def test_a_held_out_module_stays_held_out_after_the_split() -> None:
+    """The pass's `ignore` is a coverage boundary, not a scheduling hint.
+
+    `installed-oracles` owns that module. If the split re-admitted it, two
+    passes would run it and the directory's ownership invariant would break
+    silently -- both passes would still be green.
+    """
+    serial = next(p for p in _PREFLIGHT_PASSES if not p.parallel)
+
+    assert serial.ignore, "this case is vacuous unless the pass holds something out"
+    for held in serial.ignore:
+        assert held not in serial_pass_modules(serial, REPO_ROOT)

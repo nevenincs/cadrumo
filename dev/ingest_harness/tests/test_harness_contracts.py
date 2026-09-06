@@ -110,17 +110,44 @@ def test_a_row_arriving_as_data_without_a_tier_is_refused(payload: dict[str, Any
     A persisted result file or another tool's output is where the omission
     happens; the in-process type cannot police that direction.
     """
-    with pytest.raises(HarnessRefusalError, match=r"(?i)model_tier|tier"):
+    # Both refusals in this function name the tier and both interpolate the full
+    # accepted set, so a pattern matching either cannot say which branch fired:
+    # deleting the absent-value guard leaves ModelTier(None) raising the UNKNOWN
+    # refusal, and a looser pattern stays green over the missing guard.
+    with pytest.raises(HarnessRefusalError, match=r"carries no model_tier"):
         require_model_tier(payload)
 
 
 def test_an_unknown_tier_is_refused_and_names_the_accepted_set() -> None:
     """A refusal that does not list the accepted values just restates the problem."""
-    with pytest.raises(HarnessRefusalError, match=r"on_host_small") as caught:
+    with pytest.raises(HarnessRefusalError, match=r"names an unknown") as caught:
         require_model_tier({"doc_id": "DOC-1", "model_tier": "gpt-9-ultra"})
 
     assert "cloud_design_proxy" in str(caught.value)
     assert "upper_reference" in str(caught.value)
+
+
+def test_the_two_tier_refusals_do_not_answer_for_each_other() -> None:
+    """Each branch must be provable on its own, or one pattern satisfies both.
+
+    Both messages name the tier and both interpolate the whole accepted set, so
+    the fragments the two tests match on have to be the parts that differ. Without
+    this, deleting the absent-value guard leaves the missing-tier test green: the
+    fallback constructor raises the unknown-tier refusal, which also says `tier`.
+    """
+    with pytest.raises(HarnessRefusalError) as absent:
+        require_model_tier({"doc_id": "DOC-1"})
+    with pytest.raises(HarnessRefusalError) as unknown:
+        require_model_tier({"doc_id": "DOC-1", "model_tier": "gpt-9-ultra"})
+
+    absent_message, unknown_message = str(absent.value), str(unknown.value)
+    assert "carries no model_tier" in absent_message
+    assert "carries no model_tier" not in unknown_message
+    assert "names an unknown" in unknown_message
+    assert "names an unknown" not in absent_message
+    # The reason the loose patterns passed: these fragments are in BOTH messages.
+    for shared in ("model_tier", "on_host_small"):
+        assert shared in absent_message and shared in unknown_message
 
 
 def test_only_the_upper_reference_tier_is_barred_from_setting_a_floor() -> None:

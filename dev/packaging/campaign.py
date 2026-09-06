@@ -36,9 +36,11 @@ import sys
 import time
 from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Final
+
+from cadrumo.core.directory_scan import scan_directory
 
 from .._paths import REPO_ROOT, UTF_8
 from . import proof_cache
@@ -403,10 +405,72 @@ def preflight_pass_failures(passes: Sequence[PytestPass], repo_root: Path, test_
     """
     failures: list[str] = []
     for pytest_pass in passes:
-        failure = _attempt_step(pytest_pass_argv(pytest_pass, repo_root, test_workers), repo_root, pytest_pass.label)
-        if failure is not None:
-            failures.append(failure)
+        modules = serial_pass_modules(pytest_pass, repo_root)
+        if not modules:
+            failure = _attempt_step(
+                pytest_pass_argv(pytest_pass, repo_root, test_workers), repo_root, pytest_pass.label
+            )
+            if failure is not None:
+                failures.append(failure)
+            continue
+        collected_anything = False
+        for module in modules:
+            label = f"{pytest_pass.label}:{Path(module).stem}"
+            argv = pytest_pass_argv(replace(pytest_pass, target=module, ignore=()), repo_root, test_workers)
+            code = _step_returncode(argv, repo_root, label)
+            if code == _NO_TESTS_COLLECTED:
+                # Normal per module: this pass's markers select from only some
+                # of the directory's modules. It is NOT normal for the pass as
+                # a whole, which is why the aggregate is checked below.
+                continue
+            collected_anything = True
+            if code != 0:
+                failures.append(f"{label} (exit {code})")
+        if not collected_anything:
+            failures.append(f"{pytest_pass.label} (selected no test in any module)")
     return failures
+
+
+#: pytest's exit status for a run that collected nothing.
+_NO_TESTS_COLLECTED: Final[int] = 5
+
+
+def serial_pass_modules(pytest_pass: PytestPass, repo_root: Path) -> tuple[str, ...]:
+    """Return the modules a SERIAL pass should be split across, or empty.
+
+    A serial pass runs `-n0`, so one wedged test takes the whole invocation
+    with it -- and on Windows pytest-timeout falls back to the thread method,
+    which cannot interrupt `subprocess.wait`, so the session dies with NO
+    summary line at all and every later module in that pass is never reached.
+    A campaign could therefore surface at most one serial defect per run, which
+    is expensive locally and ruinous on CI where the run costs an hour of a
+    two-machine fleet.
+
+    Splitting the invocation bounds that blast radius to one module. The
+    selection is unchanged: same markers, same files, same scheduler.
+
+    A parallel pass is returned empty and left whole, because xdist already
+    isolates a crashing test into a worker.
+    """
+    if pytest_pass.parallel:
+        return ()
+    target = repo_root / pytest_pass.target
+    if not target.is_dir():
+        return ()
+    ignored = {(repo_root / path).resolve() for path in pytest_pass.ignore}
+    return tuple(
+        sorted(
+            module.relative_to(repo_root).as_posix()
+            for module in scan_directory(target, pattern="test_*.py")
+            if module.resolve() not in ignored
+        )
+    )
+
+
+def _step_returncode(argv: list[str], repo_root: Path, label: str) -> int:
+    """Run one step and return its exit status, echoing the command."""
+    print(f"[campaign] {label}: {' '.join(argv)}", flush=True)
+    return subprocess.run(argv, cwd=repo_root, check=False).returncode
 
 
 def _attempt_step(argv: list[str], repo_root: Path, label: str) -> str | None:

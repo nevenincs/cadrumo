@@ -145,7 +145,18 @@ def _load_modules(root: Path) -> list[Module]:
     modules: list[Module] = []
     for path in _iter_source_files(root):
         try:
-            tree = ast.parse(path.read_text(encoding="utf-8"))
+            source = path.read_text(encoding="utf-8")
+        except OSError as error:
+            # A module the walk listed and the read could not reach shortens the
+            # corpus exactly as an unparsable one does, and a raw traceback names
+            # neither the loss nor its size. Refused for its own reason, so a
+            # caller matching on one cause cannot be satisfied by the other.
+            raise SystemExit(
+                f"{path} could not be read, so the duplication corpus would be short "
+                f"by exactly the module nobody can analyse: {error}"
+            ) from error
+        try:
+            tree = ast.parse(source)
         except (SyntaxError, UnicodeDecodeError) as error:
             raise SystemExit(
                 f"{path} could not be parsed, so the duplication corpus would be short "
