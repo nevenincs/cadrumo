@@ -368,7 +368,7 @@ def write_cli_tree(output_path: Path, *, in_subprocess: bool = True) -> CliTree:
     tree = build_cli_tree_in_subprocess() if in_subprocess else build_cli_tree()
     content = serialise_cli_tree(tree)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    if not (output_path.is_file() and output_path.read_text(encoding=UTF_8_ENCODING) == content):
+    if not (output_path.is_file() and output_path.read_bytes() == content.encode(UTF_8_ENCODING)):
         output_path.write_text(content, encoding=UTF_8_ENCODING, newline="\n")
     return tree
 

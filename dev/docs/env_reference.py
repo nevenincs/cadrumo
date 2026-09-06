@@ -142,8 +142,8 @@ def main(argv: list[str] | None = None) -> int:
     path = target_path()
     fresh = render_environment_reference()
     if args.check:
-        on_disk = path.read_text(encoding=_UTF_8) if path.is_file() else ""
-        if on_disk != fresh:
+        on_disk = path.read_bytes() if path.is_file() else b""
+        if on_disk != fresh.encode(_UTF_8):
             print(f"DRIFT: {path} is stale; regenerate with python -m dev.docs.env_reference", file=sys.stderr)
             return 1
         print(f"OK: {path} is fresh.")

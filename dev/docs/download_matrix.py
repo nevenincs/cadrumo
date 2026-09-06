@@ -274,8 +274,13 @@ def inject_download_matrix(docs_root: Path) -> None:
 
 
 def _write_text_if_changed(path: Path, content: str) -> None:
-    """Write ``content`` with LF newlines only when it differs from disk."""
-    if path.is_file() and path.read_text(encoding=_UTF_8) == content:
+    """Write ``content`` with LF newlines only when its BYTES differ from disk.
+
+    Byte comparison, not decoded text: a CRLF-translated file decodes to the
+    same string, so a text comparison would skip the write and leave the
+    generator unable to repair its own artefact.
+    """
+    if path.is_file() and path.read_bytes() == content.encode(_UTF_8):
         return
     path.write_text(content, encoding=_UTF_8, newline="\n")
 
@@ -363,22 +368,27 @@ def build_download_latest(
 # ---------------------------------------------------------------------------
 
 
-def _run_generate(*, check: bool) -> int:
+def _run_generate(*, check: bool, page: Path | None = None) -> int:
     descriptor = load_descriptor()
-    page = download_page_path()
-    on_disk = page.read_text(encoding=_UTF_8)
+    target = page if page is not None else download_page_path()
+    on_disk = target.read_text(encoding=_UTF_8)
     fresh = render_page(descriptor, on_disk)
     if check:
-        if on_disk != fresh:
+        # Compared as BYTES. ``read_text`` folds CRLF to LF, so a page whose
+        # terminators were translated after checkout decodes to the canonical
+        # string and reads fresh while its bytes differ from what this
+        # generator emits -- and the index-side LF normalisation keeps ``git
+        # diff`` silent about it too.
+        if target.read_bytes() != fresh.encode(_UTF_8):
             print(
-                f"DRIFT: {page} generated zone is stale; regenerate with {_REGEN_HINT}",
+                f"DRIFT: {target} generated zone is stale; regenerate with {_REGEN_HINT}",
                 file=sys.stderr,
             )
             return 1
-        print(f"OK: {page} generated zone is fresh.")
+        print(f"OK: {target} generated zone is fresh.")
         return 0
-    _write_text_if_changed(page, fresh)
-    print(f"Wrote {page}")
+    _write_text_if_changed(target, fresh)
+    print(f"Wrote {target}")
     return 0
 
 

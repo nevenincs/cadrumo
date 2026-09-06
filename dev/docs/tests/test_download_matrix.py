@@ -21,6 +21,7 @@ from ..download_matrix import (
     _ZONE_BEGIN,
     _ZONE_END,
     DownloadDescriptor,
+    _run_generate,
     build_download_latest,
     download_page_path,
     load_descriptor,
@@ -88,6 +89,35 @@ def test_generated_zone_present_in_download_page() -> None:
 def test_check_is_clean_for_committed_page() -> None:
     """The committed download.md is in sync with the descriptor (drift gate clean)."""
     assert main(["--check"]) == 0
+
+
+def test_check_fires_on_a_terminator_translated_page(tmp_path: Path) -> None:
+    """A CRLF-translated page is drift, not freshness.
+
+    The gate compared decoded text, and decoding folds carriage returns away: a
+    page whose terminators were translated after checkout decoded to exactly the
+    canonical string and was reported fresh, while its bytes differed from
+    everything this generator emits. Measured on the real tree, docs/download.md
+    carried 133 CRLF pairs and no bare line feed, --check printed OK, and
+    generate skipped the write for the same reason, so the generator could not
+    repair its own artefact. The index-side LF normalisation kept git diff silent
+    too, leaving no reader that could see it.
+
+    Driven over an isolated copy, so the shared working tree is never mutated.
+    """
+    canonical = download_page_path().read_bytes()
+    assert b"\r\n" not in canonical, "the committed page must be LF for the plant to mean anything"
+
+    page = tmp_path / "download.md"
+    page.write_bytes(canonical)
+    assert _run_generate(check=True, page=page) == 0, "the untouched copy must read fresh"
+
+    page.write_bytes(canonical.replace(b"\n", b"\r\n"))
+    assert page.read_text(encoding="utf-8") == canonical.decode("utf-8"), (
+        "the planted page must still decode to the canonical text, or this proves "
+        "nothing about the comparison that normalised terminators away"
+    )
+    assert _run_generate(check=True, page=page) == 1, "a CRLF-translated page must read as drift"
 
 
 def test_check_fails_on_mutated_zone() -> None:

@@ -18,6 +18,11 @@ _RUNTIME_ARTIFACTS = frozenset(
     }
 )
 
+# The live walk covers 2132 non-test modules under ``src/cadrumo``. A floor well
+# beneath that keeps a relocated or renamed package root from collapsing the walk
+# to nothing and reporting a clean verdict over a corpus it never read.
+_MINIMUM_WALKED_MODULES = 1500
+
 
 def _assert_no_runtime_artifact_edge(source: str) -> None:
     tree = ast.parse(source)
@@ -38,9 +43,14 @@ def test_ci_observes_every_production_node_through_the_public_api() -> None:
 
 def test_production_has_no_dev_or_generated_runtime_artifact_edge() -> None:
     root = Path(__file__).parents[3]
+    walked = 0
     for path in (root / "src/cadrumo").rglob("*.py"):
         if "tests" not in path.parts:
             _assert_no_runtime_artifact_edge(path.read_text(encoding="utf-8"))
+            walked += 1
+    assert walked >= _MINIMUM_WALKED_MODULES, (
+        f"only {walked} production modules were walked; the package root moved and the gate read nothing"
+    )
 
 
 def test_forbidden_import_and_artifact_detectors_bite_independently() -> None:

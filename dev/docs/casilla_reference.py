@@ -1280,6 +1280,6 @@ def _write_if_changed(path: Path, rst: str) -> None:
     CheckCarriageReturn (D004) then flags on every regeneration; force LF so the
     generated page is byte-identical across platforms (the glossary precedent).
     """
-    if not (path.is_file() and path.read_text(encoding=_UTF_8) == rst):
+    if not (path.is_file() and path.read_bytes() == rst.encode(_UTF_8)):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(rst, encoding=_UTF_8, newline="\n")

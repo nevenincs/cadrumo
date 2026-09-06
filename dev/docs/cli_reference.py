@@ -436,7 +436,7 @@ def _write_text_if_changed(path: Path, content: str) -> None:
         path: Destination path.
         content: Text to persist using the project UTF-8 encoding.
     """
-    if path.is_file() and path.read_text(encoding=UTF_8_ENCODING) == content:
+    if path.is_file() and path.read_bytes() == content.encode(UTF_8_ENCODING):
         return
     # Force LF so generated pages are byte-identical across platforms; the
     # default newline translation emits CRLF on Windows.

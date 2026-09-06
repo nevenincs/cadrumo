@@ -1417,3 +1417,18 @@ area = "application/invoices"
 symbols = ["list_invoice_rows", "list_unmatched_invoice_rows"]
 evidence = "Two query projections whose module docstring states they exist for the invoice CLI surfaces, taking a catalogue the caller has already loaded so bucket scoping stays the caller's decision. No CLI reaches them. The module is partly live and the split is the evidence: check_query.py imports verify_invoice_repository_links from the same module, so the module is consumed while these two projections are not, and the listing surfaces they were written for either do not exist or read through another path."
 remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "deudas read surface fail-closed pending a page specimen"
+class = "staged-capability"
+area = "adapters/outbound/aeat/sede"
+symbols = ["assert_deudas_landing", "deudas_read_path_prefixes"]
+evidence = "The landing guard and path prefixes for the AEAT deudas read. Not unwired capability: application/live/deudas.py states in its own module docstring that no specimen of AEAT's consulta page has been captured and that the adapter's read-landing guard therefore refuses every landing until one exists, so the service persists and reads only what a specimen would justify. The guard's own docstring confirms the mechanism -- it delegates to the shared assert_read_landing wall, where a surface declaring no read pages refuses everything. Nothing calls the guard because no live read is attempted, which is the fail-closed state the design intends. The Deuda model from the same module IS imported by that service, so the module is partly live."
+
+[[symbol_cluster]]
+name = "IVA remote state captured and never loaded back"
+class = "should-be-live"
+area = "application/live"
+symbols = ["load_iva_remote_state", "load_iva_remote_state_acquisition_manifest"]
+evidence = "The read side of the IVA remote-state capture. capture_iva_remote_state is reached by production while neither loader is, so the product captures remote IVA state and never reads it back, and the acquisition-manifest surface beside it -- the manifest loader here, with its persist and list siblings also unreached -- records nothing about what was acquired. This is the same write-with-no-reader shape recorded for the committed custody data and the ledger import door, distinguished from the deudas entry above by there being no fail-closed rationale: the capture succeeds and the state simply cannot be retrieved."
+remedy_requires_decision = true
