@@ -248,18 +248,21 @@ def test_a_drifted_copy_is_reported_even_in_a_file_named_like_this_module(tmp_pa
     assert "_COLD_START_WALL_ADVISORY_S" in drifted[0]
 
 
-#: The pinned names a live consumer actually declares, asserted as an EQUALITY
-#: against what the scan finds. The drift check above is one-directional: it
-#: reports no drift for a threshold nobody declares exactly as it does for one
-#: every consumer agrees on, and its census floor is a total across all four
-#: names, so a whole site can vanish while the remaining site keeps the count
-#: non-zero. The two cold-start names are in that state today -- the budget
-#: they were copied from was replaced wholesale by a same-named import gate,
-#: taking its advisory with it -- so this set records which half of the pinned
-#: vocabulary is still enforced against real code. Restoring that advisory adds
-#: its names here; losing the surviving one removes them. Either move is
-#: deliberate and visible rather than a silently emptier scan.
-_CONSUMER_BACKED_THRESHOLDS: Final[frozenset[str]] = frozenset(
+#: The pinned names a live consumer must STILL declare: a FLOOR, not a record of
+#: the ones that happen to qualify today. The drift check above is
+#: one-directional in the wrong axis -- it reports no drift for a threshold
+#: nobody declares exactly as it does for one every consumer agrees on, and its
+#: census floor is a total across all four names, so a whole site can vanish
+#: while the remaining site keeps the count non-zero. This floor closes that:
+#: losing a declaration drops the scan below it and fails.
+#:
+#: The two cold-start names sit OUTSIDE the floor rather than being asserted
+#: absent -- the budget they were copied from was replaced wholesale by a
+#: same-named import gate, taking its advisory with it. An equality here would
+#: have reddened the moment that advisory was restored, making the gate's green
+#: depend on the hole persisting. Restoring it is free; losing a declaration
+#: that exists today is not.
+_MINIMUM_CONSUMER_BACKED_THRESHOLDS: Final[frozenset[str]] = frozenset(
     {"_P95_WALL_ADVISORY_SECONDS", "_P95_WEDGE_WALL_TO_CPU_RATIO"}
 )
 
@@ -274,7 +277,7 @@ def _declared_threshold_names(root: Path) -> set[str]:
     }
 
 
-def test_only_the_recorded_half_of_the_pinned_thresholds_has_a_live_consumer() -> None:
+def test_no_pinned_threshold_loses_the_live_consumer_it_still_has() -> None:
     """A threshold no consumer declares is a deleted advisory, not agreement.
 
     The gate above proves the classifier behaves correctly at all four pinned
@@ -282,16 +285,18 @@ def test_only_the_recorded_half_of_the_pinned_thresholds_has_a_live_consumer() -
     there is no consumer to carry anything: the cold-start pair is validated
     in the abstract while the site that once emitted the advisory is gone,
     and the total-count floor cannot see it because the surviving site keeps
-    the count above zero. An equality against the live scan says which
-    thresholds are still enforced and reddens the moment that changes.
+    the count above zero.
+
+    Asserted as a SUPERSET of the recorded floor, deliberately. An equality
+    reddened the day someone restored the missing advisory, so its green
+    depended on the hole staying open -- the gate punishing the repair it
+    exists to motivate. Adding a consumer is free here; dropping one that
+    exists today fails.
     """
     declared = _declared_threshold_names(REPO_ROOT / "dev")
 
-    assert declared == _CONSUMER_BACKED_THRESHOLDS, (
-        "pinned thresholds without a live consumer: "
-        f"{sorted(set(_PINNED_THRESHOLDS) - declared)}; "
-        f"declared but not recorded as consumer-backed: "
-        f"{sorted(declared - _CONSUMER_BACKED_THRESHOLDS)}"
+    assert declared >= _MINIMUM_CONSUMER_BACKED_THRESHOLDS, (
+        f"pinned thresholds that lost their live consumer: {sorted(_MINIMUM_CONSUMER_BACKED_THRESHOLDS - declared)}"
     )
 
 
@@ -310,6 +315,26 @@ def test_a_threshold_whose_only_consumer_vanishes_is_reported(tmp_path: Path) ->
     declared = _declared_threshold_names(tmp_path)
 
     assert declared == {"_P95_WALL_ADVISORY_SECONDS"}
-    assert declared != _CONSUMER_BACKED_THRESHOLDS, (
-        "a consumer that dropped one of its two thresholds must not read as complete"
+    assert not declared >= _MINIMUM_CONSUMER_BACKED_THRESHOLDS, (
+        "a consumer that dropped one of its two thresholds must not clear the floor"
+    )
+
+
+def test_restoring_a_missing_advisory_clears_the_floor_rather_than_failing_it(tmp_path: Path) -> None:
+    """The repair this file motivates must not redden it.
+
+    The counterpart teeth to the case above, and the reason the assertion is a
+    superset: driven over an isolated tree holding every pinned name, which is
+    what ``dev/`` looks like once the retired cold-start advisory is restored.
+    Under the previous equality this tree failed, so the only way to keep the
+    suite green was to leave the advisory deleted.
+    """
+    declarations = [f"{name} = {value}" for name, value in _PINNED_THRESHOLDS.items()]
+    (tmp_path / "consumer.py").write_text("\n".join(declarations) + "\n", encoding="utf-8")
+
+    declared = _declared_threshold_names(tmp_path)
+
+    assert declared == set(_PINNED_THRESHOLDS)
+    assert declared >= _MINIMUM_CONSUMER_BACKED_THRESHOLDS, (
+        "restoring the missing advisory must clear the floor, not fail it"
     )
