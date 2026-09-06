@@ -38,6 +38,7 @@ if TYPE_CHECKING:
     from ...application.operations.registry import OperationPublicContractSetV1
     from ...application.operator_actions.models import ActionReference
     from ...application.overview.home import HomeProjectionV1
+    from .ledger.models import LedgerLinkResultV1, LedgerLinkSubmissionV1, LedgerLinkSubmitterV1
     from ...application.user_profile.login_interaction import ProfileLoginAttempt, ProfileLoginChoice
     from ...application.user_profile.overview import ProfileOverview
     from ...core.credentials import ProfilePasswordAssessment
@@ -148,6 +149,33 @@ def compose_secure_profile_workbench_generation_provider(
         modelo_projection_reader=_modelo_projection_reader(),
     )
     return ApplicationGenerationProviderV1(door)
+
+
+def _ledger_link_submitter(profile_id: str) -> LedgerLinkSubmitterV1:
+    """Link one invoice to one transaction in the operator's own ledger.
+
+    The application writer owns every precondition -- missing invoice,
+    cross-bucket ownership, an existing link -- and co-commits both catalogues
+    with its audit event, so this door adds no policy of its own. It carries
+    the catalogue-admitted action reference through as the source command, so
+    the persisted event records which authority the operator acted under rather
+    than an anonymous surface label.
+    """
+
+    async def submit(submission: LedgerLinkSubmissionV1) -> LedgerLinkResultV1:
+        from ...application.ledger.actions_manual import link_manual_transaction_invoice
+        from .ledger.models import LedgerLinkResultV1 as _LedgerLinkResultV1
+
+        result = link_manual_transaction_invoice(
+            bucket_id=profile_id,
+            transaction_id=submission.transaction_id,
+            invoice_id=submission.invoice_id,
+            actor="operator",
+            source_command=str(submission.action.action_id),
+        )
+        return _LedgerLinkResultV1(transaction_id=result.transaction_id, invoice_id=result.invoice_id)
+
+    return submit
 
 
 def _notification_custody_reader(profile_id: str) -> Callable[[], int]:
@@ -315,6 +343,7 @@ class InstalledWorkbenchFactoryDependenciesV1:
     ledger_review_action: ActionReference
     ledger_evidence_action: ActionReference
     ledger_classify_action: ActionReference
+    ledger_link_action: ActionReference
     declarations_work_action: ActionReference
     declarations_revisions_action: ActionReference
     declarations_filing_action: ActionReference
@@ -477,6 +506,12 @@ def _ledger_generation_factory(
             # generation because the queue is per-visit state an operator acts
             # on, not part of the immutable session snapshot.
             evidence_items=list_attachment_review_queue(AttachmentStore(bucket_id=dependencies.account.profile_id)),
+            # The link door is passed as a pair. The reconciliation body reads
+            # without either, but its confirmation control stays hidden unless
+            # BOTH the admitted action and a submitter are present, so passing
+            # one alone would read as wired while still refusing.
+            link_action=dependencies.ledger_link_action,
+            link_submitter=_ledger_link_submitter(dependencies.account.profile_id),
             # classify_action is deliberately NOT passed: the classification
             # door also needs a target and a submitter, and no production
             # implementation of LedgerClassificationSubmitterV1 exists yet.

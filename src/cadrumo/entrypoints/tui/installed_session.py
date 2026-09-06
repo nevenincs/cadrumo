@@ -71,6 +71,7 @@ SESSION_INVENTORY_UNAVAILABLE = 1
 _LEDGER_REVIEW_ACTION = "operator.ledger.review"
 _LEDGER_EVIDENCE_ACTION = "operator.ledger.evidence.review.list"
 _LEDGER_CLASSIFY_ACTION = "operator.ledger.classify"
+_LEDGER_LINK_ACTION = "operator.ledger.link"
 _DECLARATIONS_WORK_ACTION = "operator.modelo.work.list"
 _DECLARATIONS_REVISIONS_ACTION = "operator.modelo.work.revisions"
 _DECLARATIONS_FILING_ACTION = "operator.modelo.filing_record.list"
@@ -153,6 +154,7 @@ def compose_authenticated_root_inputs_provider(
         ledger_review_action=action(_LEDGER_REVIEW_ACTION),
         ledger_evidence_action=action(_LEDGER_EVIDENCE_ACTION),
         ledger_classify_action=action(_LEDGER_CLASSIFY_ACTION),
+        ledger_link_action=action(_LEDGER_LINK_ACTION),
         declarations_work_action=action(_DECLARATIONS_WORK_ACTION),
         declarations_revisions_action=action(_DECLARATIONS_REVISIONS_ACTION),
         declarations_filing_action=action(_DECLARATIONS_FILING_ACTION),

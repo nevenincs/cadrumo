@@ -178,8 +178,8 @@ async def test_selecting_a_review_row_reports_the_pending_state() -> None:
         await pilot.press("enter")
         await pilot.pause()
 
-        notice = review.query_one("#ledger-refusal", Static).renderable
-        assert str(notice), "selecting a review row produced no visible outcome at all"
+        notice = str(review.query_one("#ledger-refusal", Static).render())
+        assert notice, "selecting a review row produced no visible outcome at all"
 
 
 @pytest.mark.asyncio
