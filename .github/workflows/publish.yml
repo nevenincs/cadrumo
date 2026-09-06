@@ -20,6 +20,35 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  runner-queue-watchdog:
+    # Mandatory now that the release path runs on the fleet: `smoke-test`
+    # targets macOS ARM64 and Windows X64, and a lane whose label set no online
+    # runner carries does NOT go red -- it queues silently until GitHub gives
+    # up. On this fleet that is the normal state rather than an outage, because
+    # the only macOS runner is a laptop whose battery and sleep gating is
+    # deliberate policy. A publish that never happened must fail loudly, not
+    # hang. Enforced by dev/ci/tests/test_runner_queue_watchdog.py, which
+    # refused this workflow until the job was added.
+    name: Cadrumo / runner queue watchdog
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 20
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+
+      - name: Fail fast on a lane no online runner can serve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WATCHDOG_JOB_NAME: Cadrumo / runner queue watchdog
+          THRESHOLD_SECONDS: "300"
+          MAX_WATCH_SECONDS: "900"
+        run: python3 -m dev.ci.runner_queue_watchdog
+
   runtime-inventory:
     name: Validate stable runtime inventory
     runs-on: [self-hosted, Linux, X64]
