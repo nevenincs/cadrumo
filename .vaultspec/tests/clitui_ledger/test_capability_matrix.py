@@ -149,6 +149,12 @@ _S14_PUBLICATION_COORDINATES: Final[frozenset[str]] = frozenset(
         "s14.tui.production-executable-mutation-doors",
     }
 )
+_ACCEPTED_G0_PUBLICATION_MARKER: Final[str] = "The complete accepted G0 publication is one typed, frozen record."
+_ACCEPTED_G0_PUBLICATION_PATTERN: Final[re.Pattern[str]] = re.compile(
+    r"```json\r?\n(?P<payload>\{\"acceptance_attestation\".*?\})\r?\n```",
+    re.DOTALL,
+)
+_MOJIBAKE_PATTERN: Final[re.Pattern[str]] = re.compile(r"[ÃÂâ]")
 
 
 def _s14_coordinate_table(
@@ -225,6 +231,47 @@ def _published_s14_coordinates(path: Path = _REFERENCE_PATH) -> dict[str, str]:
             f"expected {sorted(_S14_PUBLICATION_COORDINATES)}, found {sorted(coordinates)}"
         )
     return {match.group("coordinate"): match.group("value").strip().replace("`", "") for match in matches}
+
+
+def _published_accepted_g0_payload(path: Path = _REFERENCE_PATH) -> dict[str, object]:
+    """Parse the sole frozen G0 publication rather than trusting prose summaries."""
+    source = path.read_text(encoding="utf-8")
+    marker_index = source.find(_ACCEPTED_G0_PUBLICATION_MARKER)
+    if marker_index < 0:
+        raise AssertionError("accepted G0 publication marker is missing")
+    matches = tuple(_ACCEPTED_G0_PUBLICATION_PATTERN.finditer(source[marker_index:]))
+    if len(matches) != 1:
+        raise AssertionError("accepted G0 publication must contain one machine-readable payload")
+    payload = json.loads(matches[0].group("payload"))
+    if not isinstance(payload, dict):
+        raise AssertionError("accepted G0 publication payload must be an object")
+    required = {
+        "acceptance_attestation",
+        "g0_receipt",
+        "acceptance_subject",
+        "acceptance_record_anchor",
+    }
+    if set(payload) != required:
+        raise AssertionError("accepted G0 publication payload fields drifted")
+    return cast(dict[str, object], payload)
+
+
+def _assert_published_accepted_g0_payload(path: Path = _REFERENCE_PATH) -> None:
+    """Validate cross-record bindings that a JSON parser alone cannot establish."""
+    payload = _published_accepted_g0_payload(path)
+    attestation = cast(dict[str, object], payload["acceptance_attestation"])
+    receipt = LedgerGateClosureReceiptV1.model_validate_json(json.dumps(payload["g0_receipt"]))
+    subject = EvidenceSubjectSnapshotV1.model_validate_json(json.dumps(payload["acceptance_subject"]))
+    anchor = cast(dict[str, object], payload["acceptance_record_anchor"])
+    coordinate = EvidenceCoordinateV1.model_validate_json(json.dumps(anchor["coordinate"]))
+    if not coordinate.is_current_against(subject):
+        raise AssertionError("accepted G0 anchor coordinate is stale against its published subject")
+    if anchor["acceptance_attestation_digest"] != receipt.acceptance_attestation_digest:
+        raise AssertionError("accepted G0 anchor receipt digest binding drifted")
+    for field in ("attestation_id", "reviewer", "matrix_basis_digest", "denominator_digest", "denominator_revision"):
+        expected = attestation["matrix_digest"] if field == "matrix_basis_digest" else attestation[field]
+        if anchor[field] != expected:
+            raise AssertionError(f"accepted G0 anchor {field} binding drifted")
 
 
 _S14_CURRENT_COHORT_RESTATEMENT_PATTERNS: Final[tuple[tuple[str, re.Pattern[str]], ...]] = (
@@ -2655,6 +2702,26 @@ def _matrix_with_accepted_gate_receipts(matrix: LedgerCapabilityMatrixV1) -> Led
     return _matrix_with(attested, accepted_gate_closure_receipts=_accepted_gate_receipts(attested))
 
 
+def _matrix_with_accepted_g0_receipt(matrix: LedgerCapabilityMatrixV1) -> LedgerCapabilityMatrixV1:
+    """Bind the exact one-element receipt set published for the frozen G0 candidate."""
+    gate = LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE
+    attestation = matrix.acceptance_attestation.model_copy(
+        update={
+            "closure_receipt_set_digest": LedgerCapabilityMatrixV1.calculate_gate_closure_receipt_set_digest(
+                ((ledger_gate_closure_receipt_id(gate), gate),)
+            )
+        }
+    )
+    attested = _matrix_with(matrix, acceptance_attestation=attestation)
+    receipt = LedgerGateClosureReceiptV1(
+        receipt_id=ledger_gate_closure_receipt_id(gate),
+        gate=gate,
+        matrix_closure_basis_digest=attested.gate_closure_basis_digest(gate),
+        acceptance_attestation_digest=attested.acceptance_attestation.calculated_digest,
+    )
+    return _matrix_with(attested, accepted_gate_closure_receipts=(receipt,))
+
+
 def _matrix_with_authorized_hold_lift(matrix: LedgerCapabilityMatrixV1) -> LedgerCapabilityMatrixV1:
     """Record current G0--G3 acceptance, then make the one authorized hold transition."""
     frozen = _matrix_with_accepted_gate_receipts(matrix)
@@ -4616,7 +4683,7 @@ def test_gate_reopening_accepts_only_the_unchanged_reviewed_union_and_external_a
 
 
 def test_absent_live_reviewed_union_relocks_every_gate() -> None:
-    matrix = _matrix_with_accepted_gate_receipts(_matrix())
+    matrix = _matrix_with_accepted_g0_receipt(_matrix())
     anchor, acceptance_subjects = _acceptance_record_anchor(matrix)
 
     reopened = reopened_gates_for_currentness(
@@ -4856,6 +4923,98 @@ def test_s14_publication_coordinates_match_canonical_matrix_and_tui_census() -> 
     """The S14 prose cannot silently drift from the live denominator or TUI composition."""
     _assert_s14_publication_matches()
     _assert_s14_current_facts_have_one_home(_S14_RECORD_PATH)
+
+
+def test_s14_accepted_g0_publication_parses_its_typed_receipt_subject_and_anchor_coordinate() -> None:
+    """The frozen candidate's acceptance record is structured, unique, and claim-bound."""
+    payload = _published_accepted_g0_payload()
+    _assert_published_accepted_g0_payload()
+    attestation = cast(dict[str, object], payload["acceptance_attestation"])
+    receipt = LedgerGateClosureReceiptV1.model_validate_json(json.dumps(payload["g0_receipt"]))
+    subject = EvidenceSubjectSnapshotV1.model_validate_json(json.dumps(payload["acceptance_subject"]))
+    anchor = cast(dict[str, object], payload["acceptance_record_anchor"])
+    coordinate = EvidenceCoordinateV1.model_validate_json(json.dumps(anchor["coordinate"]))
+
+    assert attestation["attestation_id"] == "attestation.ledger.g0"
+    assert attestation["ruling"] == ReviewRuling.ACCEPT.value
+    assert receipt.gate is LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE
+    assert receipt.receipt_id == ledger_gate_closure_receipt_id(receipt.gate)
+    assert coordinate.is_current_against(subject)
+    assert coordinate.claim == (
+        "The independently observed acceptance record freezes the exact accepted G0 attestation, sole G0 receipt, "
+        "and frozen 694-row candidate."
+    )
+    assert anchor["acceptance_attestation_digest"] == receipt.acceptance_attestation_digest
+    assert attestation["union_review"] == {
+        "union_digest": _UNION_DIGEST,
+        "row_review_digest": _ROW_REVIEW_DIGEST,
+        "row_review_attestation_digest": _ROW_REVIEW_ATTESTATION_DIGEST,
+        "reviewed_row_count": 694,
+        "candidate_commit": "cf2ec779685ee4b58727b708ef8ad61c8231f3c2",
+        "candidate_tree": "ca3ee3c39f36b3d9f16269173ec8f68e5a05b05c",
+    }
+
+
+@pytest.mark.parametrize("mutation", ["missing", "stale", "field"])
+def test_s14_accepted_g0_publication_detector_rejects_missing_stale_and_field_mutations(
+    tmp_path: Path, mutation: str
+) -> None:
+    """Publication drift cannot remint acceptance outside the typed records."""
+    source = _REFERENCE_PATH.read_text(encoding="utf-8")
+    if mutation == "missing":
+        source = source.replace('"g0_receipt":{', '"receipt_removed":{', 1)
+    elif mutation == "stale":
+        source = source.replace('"revision":"g0-acceptance-2026-09-06","digest"', '"revision":"stale","digest"', 1)
+    else:
+        marker = '"reviewer":"primary-independent-review","attested_at"'
+        assert source.count(marker) == 1
+        source = source.replace(marker, '"reviewer":"changed-reviewer","attested_at"', 1)
+    candidate = tmp_path / "reference.md"
+    candidate.write_text(source, encoding="utf-8")
+
+    with pytest.raises(AssertionError):
+        _assert_published_accepted_g0_payload(candidate)
+
+
+@pytest.mark.parametrize("mutation", ["missing", "stale", "reviewer"])
+def test_g0_refuses_missing_stale_or_altered_acceptance_anchor(mutation: str) -> None:
+    """G0 itself, not only G4, requires the independently observed anchor."""
+    matrix = _matrix_with_accepted_gate_receipts(_matrix())
+    anchor, subjects = _acceptance_record_anchor(matrix)
+    if mutation == "missing":
+        anchor = None
+        subjects = ()
+    elif mutation == "stale":
+        subjects = (subjects[0].model_copy(update={"revision": "acceptance-record-rev-2"}),)
+    else:
+        anchor = anchor.model_copy(update={"reviewer": "changed-reviewer"})
+
+    assessment = _evaluate(
+        matrix,
+        LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE,
+        acceptance_anchor=anchor,
+        acceptance_subjects=subjects,
+    )
+
+    assert not assessment.closed
+    if mutation == "missing":
+        assert "accepted G0 closure requires a current external acceptance record anchor" in assessment.blockers
+    elif mutation == "stale":
+        assert (
+            "acceptance record anchor coordinate is stale against independently observed acceptance subject"
+            in assessment.blockers
+        )
+    else:
+        assert "acceptance record anchor validation failed" in " ".join(assessment.blockers)
+
+
+def test_s14_reference_rejects_mojibake_and_the_detector_has_teeth(tmp_path: Path) -> None:
+    """The authoritative publication must remain UTF-8 Spanish prose, not mis-decoded bytes."""
+    source = _REFERENCE_PATH.read_text(encoding="utf-8")
+    assert _MOJIBAKE_PATTERN.search(source) is None
+    candidate = tmp_path / "reference.md"
+    candidate.write_text(source + "\ncorrupted: inversiÃ³n\n", encoding="utf-8")
+    assert _MOJIBAKE_PATTERN.search(candidate.read_text(encoding="utf-8")) is not None
 
 
 @pytest.mark.parametrize(
