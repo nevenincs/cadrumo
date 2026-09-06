@@ -283,15 +283,53 @@ def drafts_pending(
         return ()
     items: list[FindingReviewItem] = []
     seen: set[tuple[str, str, str]] = set()
-    for path, draft in drafts:
-        if (draft.profile_tax_id or "") != active_tax_id:
+    for path, stored in drafts:
+        if (stored.profile_tax_id or "") != active_tax_id:
             continue
+        draft = _reviewed_against_current_state(stored, bucket_id=bucket_id)
         path_str = str(path)
         if draft.findings:
             items.extend(_draft_finding_review_items(draft, path_str=path_str, seen=seen))
         else:
             _append_unready_draft_review_item(draft, path_str=path_str, items=items)
     return tuple(items)
+
+
+def _reviewed_against_current_state(draft: ModeloDraft, *, bucket_id: str) -> ModeloDraft:
+    """Return ``draft`` with an aged-out approval reported as aged out.
+
+    An approval is a claim about the inputs it was granted over, and the review
+    queue is the surface whose job is to notice when that claim has stopped
+    holding. Reading only the stored status cannot notice: an approved draft
+    stays approved on disk however far the ledger, invoices, taxpayer profile
+    or registry schema have moved underneath it, so the
+    ``APROBACION_CADUCADA`` row this adapter already knows how to emit was
+    unreachable and the queue reported nothing to do.
+
+    Only ``APROBADO`` drafts are recomputed. Every other status either has no
+    approval basis to compare or is already downstream of approval, and the
+    recomputation loads catalogues and a registry snapshot, which is not work
+    to do for a draft that cannot be stale.
+
+    The refreshed draft is NOT written back. This module's adapters are pure
+    readers, and the verdict is derived state: freezing it into the store on a
+    read would make the stored status depend on when someone happened to open
+    the review queue.
+    """
+    if draft.status is not ModeloDraftStatus.APROBADO:
+        return draft
+    from ..filing.draft_review import refresh_review_status
+    from ..filing.runtime import build_runtime_schema_provider
+
+    return refresh_review_status(
+        draft,
+        bucket_id=bucket_id,
+        schema_provider=build_runtime_schema_provider(
+            filing_year=draft.period.filing_year,
+            period=draft.period,
+            modelos=(draft.modelo,),
+        ),
+    )
 
 
 def _draft_finding_review_items(
