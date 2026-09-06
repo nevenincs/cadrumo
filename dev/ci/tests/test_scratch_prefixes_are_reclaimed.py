@@ -104,7 +104,7 @@ def _unreclaimed(paths: list[Path]) -> tuple[list[str], int]:
             # A source that will not read declares no scratch family, which is
             # exactly what a compliant one looks like from here. The counter
             # below guards vacuity but not partial loss: five families are
-            # examined across 6,911 sources, so one unreadable file carrying
+            # examined across 6,999 sources, so one unreadable file carrying
             # a family removes a fifth of the subject with nothing said.
             unread.append(f"{path} ({type(refusal).__name__})")
             continue

@@ -93,7 +93,7 @@ def _import_targets(path: Path) -> tuple[str, ...]:
 
 
 #: Below this the base-package walk has stopped covering the shipped surface.
-#: A floor, not a pinned count: 5,854 modules ship today.
+#: A floor, not a pinned count: 5,904 modules ship today.
 _MINIMUM_BASE_MODULES = 500
 
 

@@ -54,7 +54,7 @@ _COMPATIBILITY_INPUTS: Final = frozenset(
 # `docs/**` joined the set when it gained its own lane. It is not a "runs
 # nothing" path — that is the point. Before the split the carve-out was keyed on
 # file SUFFIX rather than on role, so `**.md` held `docs/index.md` out while
-# `docs/**.rst` (1384 files) started the full Python unit suite and still
+# `docs/**.rst` (2,051 files) started the full Python unit suite and still
 # produced no documentation verdict. A path belongs here when the PYTHON lanes
 # cannot observe its regressions, and a path that belongs here needs a lane of
 # its own — which is what docs.yml is, and what

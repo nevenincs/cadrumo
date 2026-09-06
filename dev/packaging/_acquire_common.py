@@ -308,7 +308,7 @@ def verify_release_download(
     under its manifest filename with the exact declared size and digest.
 
     Args:
-        cohort: The loaded release cohort (all twelve manifest artifacts).
+        cohort: The loaded release cohort (all eleven manifest artifacts).
         download_dir: The directory the public release assets were fetched into.
         mechanism: The acquisition channel, for the refusal messages.
         endpoint: The public locator (repo slug / tag), for the refusal messages.

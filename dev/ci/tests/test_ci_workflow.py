@@ -466,7 +466,7 @@ def test_full_lane_carries_every_slow_conformance_surface() -> None:
 
 
 #: Below these the lane workflows have stopped carrying a surface to inspect.
-#: Live: ci.yml has 4 jobs and 27 steps, ci-full.yml has 1 job and 25 steps.
+#: Live: ci.yml has 4 jobs and 28 steps, ci-full.yml has 1 job and 26 steps.
 #: Floors, not pinned counts.
 _MINIMUM_LANE_JOBS = 1
 _MINIMUM_LANE_STEPS = 8

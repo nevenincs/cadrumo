@@ -2,7 +2,7 @@
 
 This post-publication check downloads every asset attached to the ``v<version>``
 GitHub release via ``gh release download``, then proves the promoted release
-cohort is served completely and byte-for-byte: every one of the twelve declared
+cohort is served completely and byte-for-byte: every one of the eleven declared
 cohort artifacts must be present with its exact manifest size and SHA-256. It is
 digest-only — no installed behaviour is repeated here (that is the channel-
 specific rows) — and refuses instructively when the tag or an asset is absent
@@ -54,7 +54,8 @@ def run_github_release_acquisition(
     """Download the release cohort for ``v<version>`` and verify every asset.
 
     Args:
-        cohort_dir: The promoted release cohort directory (twelve artifacts).
+        cohort_dir: The promoted release cohort directory (eleven manifest
+            artifacts beside the release manifest itself).
         evidence_dir: The directory retaining per-run evidence.
         repo: The ``owner/name`` GitHub repository slug hosting the release.
         gh_executable: An explicit ``gh`` path, or ``None`` to resolve from PATH.

@@ -179,7 +179,7 @@ def _threshold_drift(root: Path) -> tuple[list[str], int]:
         # This module is scanned like any other. It once skipped itself, and the
         # skip was dead: the pinned names appear here only as dictionary keys,
         # which the line-anchored pattern above cannot match, so removing it
-        # changes nothing that is read today - twelve declarations either way -
+        # changes nothing that is read today - two declarations either way -
         # and removes a blind spot over the one file most likely to acquire a
         # stale copy of a threshold it defines.
         for name, declared in declaration.findall(source.read_text(encoding="utf-8")):
@@ -252,8 +252,9 @@ def test_a_drifted_copy_is_reported_even_in_a_file_named_like_this_module(tmp_pa
 #: the ones that happen to qualify today. The drift check above is
 #: one-directional in the wrong axis -- it reports no drift for a threshold
 #: nobody declares exactly as it does for one every consumer agrees on, and its
-#: census floor is a total across all four names, so a whole site can vanish
-#: while the remaining site keeps the count non-zero. This floor closes that:
+#: census floor is a total across all four names, and both live declarations
+#: sit in one consumer, so either can vanish while the other keeps the count
+#: non-zero. This floor closes that:
 #: losing a declaration drops the scan below it and fails.
 #:
 #: The two cold-start names sit OUTSIDE the floor rather than being asserted
