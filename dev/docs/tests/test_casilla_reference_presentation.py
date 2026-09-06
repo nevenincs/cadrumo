@@ -21,10 +21,8 @@ renderer's behaviour, never a catalogue's current contents.
 
 from __future__ import annotations
 
-import inspect
-
 import importlib
-
+import inspect
 import re
 from typing import Any
 

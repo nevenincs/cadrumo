@@ -32,7 +32,13 @@ from ..size_budget import (
     run_size_budget_scan,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.hex_core]
+
+# The corpus enumeration is cheap and stays on the fast per-push lane. The three
+# tests that need a full measurement are marked `integration`: one scan reads
+# ~6,800 modules and AST-parses ~16,000 callables, which is a minute the
+# per-push unit lane should not spend. `just test-dev-tooling` selects both
+# markers, so nothing drops out of coverage by being moved off the fast lane.
 
 
 @pytest.fixture(scope="module")
@@ -47,6 +53,7 @@ def scan() -> SizeBudgetResult:
     return run_size_budget_scan()
 
 
+@pytest.mark.unit
 def test_the_dev_tree_is_enumerated_without_compiled_caches() -> None:
     """The corpus is real `dev/` source, and never a stale `__pycache__` artefact."""
     files = dev_python_files()
@@ -56,6 +63,7 @@ def test_the_dev_tree_is_enumerated_without_compiled_caches() -> None:
     assert not [path for path in files if "__pycache__" in path.parts]
 
 
+@pytest.mark.unit
 def test_dev_modules_are_measured_against_the_repository_root() -> None:
     """Keys are repo-relative POSIX paths, so `dev/` and `src/` share one namespace."""
     measured = measure_dev_module_lines()
@@ -65,6 +73,7 @@ def test_dev_modules_are_measured_against_the_repository_root() -> None:
     assert all("\\" not in key for key in measured)
 
 
+@pytest.mark.integration
 def test_an_oversize_dev_module_is_a_finding(scan: SizeBudgetResult) -> None:
     """The defect this corpus exists for: `dev/` growth must reach the verdict.
 
@@ -84,6 +93,7 @@ def test_an_oversize_dev_module_is_a_finding(scan: SizeBudgetResult) -> None:
     )
 
 
+@pytest.mark.integration
 def test_the_scan_spans_both_trees(scan: SizeBudgetResult) -> None:
     """A regression that dropped either tree would still look like a working scan."""
     findings = scan.modules.failing
@@ -93,6 +103,7 @@ def test_the_scan_spans_both_trees(scan: SizeBudgetResult) -> None:
     assert "src" in prefixes
 
 
+@pytest.mark.integration
 def test_the_dimension_reports_amber_rather_than_green_while_debt_stands(scan: SizeBudgetResult) -> None:
     """An unmeasurable or ignored axis must never render as GREEN."""
     dimension = audit_size_budget()
@@ -102,6 +113,7 @@ def test_the_dimension_reports_amber_rather_than_green_while_debt_stands(scan: S
     assert len(dimension.report.details or []) == len(scan.findings)
 
 
+@pytest.mark.unit
 def test_the_composed_dashboard_carries_the_size_budget_dimension() -> None:
     """The measurement must reach the surface people actually read.
 

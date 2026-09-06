@@ -39,6 +39,7 @@ the tree.
 from __future__ import annotations
 
 import argparse
+import functools
 import json
 import sys
 from dataclasses import dataclass
@@ -200,8 +201,15 @@ class SizeBudgetResult:
         return f"{len(self.findings)} size-budget finding(s): {scanned}"
 
 
+@functools.cache
 def run_size_budget_scan() -> SizeBudgetResult:
     """Measure both trees against the declared budget.
+
+    Cached: the scan reads ~6,800 modules and AST-parses ~16,000 callables, and
+    every caller here is a one-shot process that wants the same answer. The CLI
+    asks once and the dashboard asks once, so the cache changes no behaviour --
+    it only stops a second consumer in the same run from paying the minute
+    again.
 
     The one scan path, shared by the CLI and the advisory dashboard, so the
     composed report cannot drift from what `python -m dev.audit.size_budget`
