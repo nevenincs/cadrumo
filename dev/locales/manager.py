@@ -33,6 +33,7 @@ from ._subtree_move import (
 )
 from ._write_guard import CatalogueWriteGuard, catalogue_write_guard
 from .errors import LocaleError
+from .wizard_translation_audit import wizard_descriptor_keys
 
 # YAML locale values are either leaf strings or nested dicts of the same shape.
 type LocaleNode = str | dict[str, "LocaleNode"] | None
@@ -386,6 +387,7 @@ class LocaleManager:
         keys.update(scan_registry_keys())
         keys.update(scan_profile_schema_keys())
         keys.update(scan_modelo_schema_keys())
+        keys.update(wizard_descriptor_keys())
         report_unread(
             "locale key scan",
             "any key they use is absent from this set and would look unused",

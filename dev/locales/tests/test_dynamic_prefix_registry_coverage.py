@@ -45,6 +45,7 @@ from .._ast_scanner import scan_namespace_markers, scan_source_tree
 from .._fstring_registry import get_registered_keys
 from .._paths import SRC_DIR
 from ..manager import LocaleManager, locale_catalogue_source
+from ..wizard_translation_audit import wizard_descriptor_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -288,6 +289,26 @@ def test_required_optional_badge_keys_remain_scanner_visible() -> None:
             "_*_LOCALE_KEYS constant collection regressed (see "
             "locales/_ast_scanner.py._extract_locale_constant_keys)."
         )
+
+
+def test_wizard_descriptor_keys_remain_discoverable_by_the_manager() -> None:
+    """The wizard flow-help keys stay in the manager's codebase-key set.
+
+    ``_walk_keys`` builds ``cli.config.<flow id>.help`` by interpolation, so no
+    source scan can see it and the descriptors are its only declaration. The
+    wizard audit asserts the key resolves in every locale; parity independently
+    asks whether anything reads it. Without the descriptor discovery path those
+    two authorities disagree, and the catalogue entry looks unused while a live
+    surface still renders it.
+    """
+    manager = LocaleManager(src_dir=SRC_DIR, locales_dir=_LOCALES_ROOT)
+    codebase_keys = manager.get_codebase_keys()
+    missing = sorted(key for key in wizard_descriptor_keys() if key not in codebase_keys)
+    assert not missing, (
+        f"the manager no longer discovers {len(missing)} wizard descriptor key(s): "
+        f"{missing} - the descriptor discovery path in manager.get_codebase_keys "
+        "regressed, and these keys would read as unused catalogue entries."
+    )
 
 
 def test_no_catalogue_leaf_is_a_self_referencing_placeholder() -> None:

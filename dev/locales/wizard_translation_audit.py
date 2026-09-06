@@ -82,6 +82,15 @@ def _resolves_in(locale: str, key: str) -> bool:
     return rendered != _UNRESOLVED_SENTINEL
 
 
+def wizard_descriptor_keys() -> frozenset[str]:
+    """Return every translation key the wizard descriptors resolve at runtime.
+
+    The flow-help keys are interpolated from the flow id, so a source scan
+    cannot see them; the descriptors are their only declaration.
+    """
+    return frozenset(_walk_keys(WIZARD_FLOWS))
+
+
 def audit_wizard_translations() -> tuple[str, ...]:
     """Return the keys that fail to resolve in any locale.
 
@@ -180,4 +189,5 @@ __all__ = [
     "audit_cli_translations",
     "audit_wizard_translations",
     "cli_keys_referenced_in_source",
+    "wizard_descriptor_keys",
 ]
