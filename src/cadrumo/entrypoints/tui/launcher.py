@@ -477,7 +477,11 @@ def _ledger_generation_factory(
             # generation because the queue is per-visit state an operator acts
             # on, not part of the immutable session snapshot.
             evidence_items=list_attachment_review_queue(AttachmentStore(bucket_id=dependencies.account.profile_id)),
-            classify_action=dependencies.ledger_classify_action,
+            # classify_action is deliberately NOT passed: the classification
+            # door also needs a target and a submitter, and no production
+            # implementation of LedgerClassificationSubmitterV1 exists yet.
+            # Passing the action alone leaves the door refused exactly as if
+            # nothing were passed, while reading as though it were wired.
         )(context)
 
     return create
