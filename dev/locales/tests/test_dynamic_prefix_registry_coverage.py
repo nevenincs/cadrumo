@@ -630,3 +630,34 @@ def test_a_local_translator_wrapper_is_followed_but_only_when_it_forwards_its_ke
     assert "tui.aeat_sync.column.not_a_key" not in keys, (
         "a helper that does not forward its first parameter is not a key channel"
     )
+
+
+def test_a_translation_key_kwarg_is_read_through_a_conditional(tmp_path) -> None:
+    """Incident 7: a key chosen by a conditional is still a key.
+
+    `empty_key="a.b" if not rows else None` is how a surface says "this label
+    depends on state". The collector read only a bare literal, so BOTH arms
+    vanished -- and the failure is asymmetric in the worst direction: the key
+    that ships is the one behind the condition, so the catalogue looks complete
+    on the path a developer happens to exercise and is missing on the other.
+
+    The negative arm matters as much: `None` is not a key, and a value that is
+    not a dotted literal must not be invented into one.
+    """
+    from .._ast_scanner import scan_source_text
+
+    source = chr(10).join((
+        "def render(rows):",
+        "    return table(",
+        '        label_key="flows.progress.rows_present",',
+        '        empty_key="flows.progress.rows_absent" if not rows else None,',
+        "    )",
+    ))
+
+    keys = scan_source_text(source, filename="table.py")
+
+    assert "flows.progress.rows_present" in keys, "a plain key kwarg must be collected"
+    assert "flows.progress.rows_absent" in keys, (
+        "a key inside a conditional is the key that ships on that branch"
+    )
+    assert not any(key.endswith("None") for key in keys), "a non-literal arm is not a key"

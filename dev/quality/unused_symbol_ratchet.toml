@@ -311,3 +311,12 @@ modules = [
   "cadrumo.entrypoints.cli.tests.test_resolution_defers_capabilities",
   "cadrumo.entrypoints.cli.tests.test_state_free_capability_isolation",
 ]
+
+# A symbol kept deliberately, admitted only with the closed kind the module
+# ratchet defines and a rationale naming its live reader. Excluded from the
+# comparison AND printed on every run, so the keep stays reviewable.
+[[intentional]]
+module = "cadrumo.entrypoints.cli._app_ledger_command_specs"
+symbol = "LEDGER_CLI_COMMAND_CENSUS"
+kind = "design_time_authority"
+rationale = "Immutable projection of every executable Ledger command, built from the CommandSpec facts in its own module and read by dev/quality/clitui_ledger_capability_matrix.py to check the shipped surface against the declaration. A conformance gate as its only reader is how a locked design is enforced; relocating the projection into dev/ would move the product own declaration out of the product."

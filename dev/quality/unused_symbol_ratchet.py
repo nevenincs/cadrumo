@@ -41,6 +41,7 @@ from typing import Final
 
 from .._paths import REPO_ROOT
 from ..audit.unreachable_code import run_unreachable_code_scan
+from .unreachable_module_ratchet import IntentionalReachabilityKind
 
 _BASELINE_PATH: Final[Path] = Path(__file__).with_name("unused_symbol_ratchet.toml")
 
@@ -62,6 +63,15 @@ class RatchetVerdict:
     resolved: tuple[str, ...]
     orphan_tests_unrecorded: tuple[str, ...]
     orphan_tests_resolved: tuple[str, ...]
+    intentional: tuple[tuple[str, str, str], ...] = ()
+    """Symbols kept deliberately, as ``(module, symbol, rationale)``.
+
+    The module ratchet beside this one admits a design-time authority through
+    an ``[[intentional]]`` entry; this one offered only a count baseline, so a
+    symbol correctly kept could sit red forever or be baselined, and baselining
+    is barred. They are excluded from the comparison AND printed, because a
+    disposition that disappears from the output stops being reviewable.
+    """
     deferred_symbols: int = 0
     deferred_tests: int = 0
     """Findings excluded by the deferral prefix, carried so they can be stated.
@@ -96,13 +106,44 @@ def _baseline() -> tuple[dict[str, int], set[str]]:
     return {str(k): int(v) for k, v in symbols.items()}, {str(t) for t in tests}
 
 
+def _intentional() -> dict[tuple[str, str], str]:
+    """Return ``(module, symbol) -> rationale`` for each recorded disposition.
+
+    The kind is validated against the closed enum the module ratchet already
+    defines, so the two ratchets cannot drift apart on what counts as a
+    deliberate keep, and an entry without a rationale is refused rather than
+    silently honoured.
+    """
+    data = tomllib.loads(_BASELINE_PATH.read_text(encoding="utf-8"))
+    entries = data.get("intentional", [])
+    if not isinstance(entries, list):
+        raise ValueError("unused-symbol intentional dispositions must be a list of tables")
+    recorded: dict[tuple[str, str], str] = {}
+    for row in entries:
+        module, symbol = row.get("module"), row.get("symbol")
+        kind, rationale = row.get("kind"), row.get("rationale")
+        if not all(isinstance(v, str) and v for v in (module, symbol, kind, rationale)):
+            raise ValueError("an intentional symbol disposition needs module, symbol, kind and rationale")
+        IntentionalReachabilityKind(kind)
+        recorded[(module, symbol)] = rationale
+    return recorded
+
+
 def evaluate(repo_root: Path = REPO_ROOT) -> RatchetVerdict:
     """Compare the live scan against the recorded baseline."""
     result = run_unreachable_code_scan(repo_root)
+    kept = _intentional()
+    intentional = tuple(
+        (finding.module, finding.name, kept[(finding.module, finding.name)])
+        for finding in result.symbols
+        if (finding.module, finding.name) in kept
+    )
     live: collections.Counter[str] = collections.Counter(
         finding.module
         for finding in result.symbols
-        if finding.confidence.value == "exact" and not finding.module.startswith(_DEFERRED_PREFIX)
+        if finding.confidence.value == "exact"
+        and not finding.module.startswith(_DEFERRED_PREFIX)
+        and (finding.module, finding.name) not in kept
     )
     live_tests = {finding.module for finding in result.tests if not finding.module.startswith(_DEFERRED_PREFIX)}
     recorded, recorded_tests = _baseline()
@@ -120,6 +161,7 @@ def evaluate(repo_root: Path = REPO_ROOT) -> RatchetVerdict:
     )
     resolved = tuple(module for module in sorted(recorded) if module not in live)
     return RatchetVerdict(
+        intentional=intentional,
         grew=grew,
         unrecorded=unrecorded,
         shrank=shrank,
@@ -145,10 +187,18 @@ def _deferral_note(verdict: RatchetVerdict) -> str:
     )
 
 
+def _intentional_note(verdict: RatchetVerdict) -> str:
+    """Return the standing dispositions, so a deliberate keep stays reviewable."""
+    if not verdict.intentional:
+        return ""
+    rows = "".join(f"{chr(10)}  = {module}.{symbol}: {rationale}" for module, symbol, rationale in verdict.intentional)
+    return f"{chr(10)}{len(verdict.intentional)} intentional unused symbol(s) remain visible:{rows}"
+
+
 def render(verdict: RatchetVerdict) -> str:
     """Render the verdict for an operator."""
     if verdict.ok:
-        return "unused-symbol ratchet: tree matches baseline" + _deferral_note(verdict)
+        return "unused-symbol ratchet: tree matches baseline" + _intentional_note(verdict) + _deferral_note(verdict)
 
     lines: list[str] = []
     if verdict.unrecorded:
@@ -170,7 +220,11 @@ def render(verdict: RatchetVerdict) -> str:
     if verdict.orphan_tests_resolved:
         lines.append("recorded orphaned test module(s) the tree no longer reports; remove them:")
         lines += [f"  - {module}" for module in verdict.orphan_tests_resolved]
-    return chr(10).join([*lines, _deferral_note(verdict).lstrip()]) if _deferral_note(verdict) else chr(10).join(lines)
+    note = _intentional_note(verdict).lstrip(chr(10))
+    if note:
+        lines.append(note)
+    deferral = _deferral_note(verdict)
+    return chr(10).join([*lines, deferral.lstrip()]) if deferral else chr(10).join(lines)
 
 
 def main() -> int:
