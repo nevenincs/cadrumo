@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-06'
-body_hash: 'sha256:f56fb4516753d326f6546fbe2f618468361fa8c7ff6f0a447051da664aa74d4b'
+body_hash: 'sha256:e55f98ce2253ccbbd852c5a56982ca29c21f58b87885e4f3ed8ca55bc63f0c76'
 ---
 
 <!-- RETIRED: S370 -->
@@ -680,7 +680,8 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S464` - Read the key a surface names in a local before rendering it, admitting only a string constant or a conditional between them so the rule cannot claim the registry and row-table shapes it does not confirm, and requiring the name to reach a translator so a route held the same way stays out; `dev/locales/_ast_scanner.py dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
 - [x] `W08.P30.S465` - Read the display keys a boundary guard admits, linking the module that declares them to the screen that renders them through the membership test on a name the tree proves translatable, so an identically shaped allow-list of identities stays out; `dev/locales/_ast_scanner.py dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
 - [x] `W08.P30.S466` - Call the click exceptions own renderer in the plain-text funnel, since it looked up an attribute named view that no click exception has so every parse refusal fell through to a bare message write and lost its prefix usage block hint and the parameter name, leaving the localised show reimplementation dead code in the text path; `src/cadrumo/entrypoints/cli/_terminal_errors.py src/cadrumo/entrypoints/cli/tests/test_localised_parser_errors.py`.
-- [ ] `W08.P30.S467` - Hold the error spine assertion to the envelope model that declares it, since the hand-written member list named a suggestion field the model never carried and forbids, and split the text-mode case so the usage block is asserted on an input that raises a usage error rather than on a domain refusal; `src/cadrumo/entrypoints/cli/tests/test_json_error_contract.py`.
+- [x] `W08.P30.S467` - Hold the error spine assertion to the envelope model that declares it, since the hand-written member list named a suggestion field the model never carried and forbids, and split the text-mode case so the usage block is asserted on an input that raises a usage error rather than on a domain refusal; `src/cadrumo/entrypoints/cli/tests/test_json_error_contract.py`.
+- [x] `W08.P30.S468` - Point the discriminating parse-envelope case at a command that exists and guard the fixture against the same drift, since it invoked a config profile preflight this CLI has never had so click resolved only the group and the case had silently become a second copy of the unknown-command test beside it; `src/cadrumo/entrypoints/cli/tests/test_parse_error_envelope_names_its_command.py`.
 
 ## Parallelization
 

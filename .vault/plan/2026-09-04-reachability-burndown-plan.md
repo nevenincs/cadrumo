@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:c4d9308ee80401c5376191d2a78d10bdce5cc91a1fd62790b1987cea894fd0fe'
+body_hash: 'sha256:7757b50f5a07c36db56baa5a188f2db44a56bfef27d2cef7a6e1e5efead65c21'
 ---
 
 # `reachability-burndown` plan
@@ -136,6 +136,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S35` - Record the paid-down unused-symbol debt the earlier deletion sweep left unwritten (six modules lowered, nine spent entries removed, no line added for the one peer finding the ratchet refuses to absorb), and adjudicate the eight findings referenced nowhere in the tree as should-be-live rather than deleting them: a custody record bound whose siblings are enforced and it is not, an unreachable flow-checkpoint discard, the unwired half of portable profile import beside its already-classified result type, two declared type distinctions nothing annotates, a sectoral retencion rate set no classifier consults, and the censo divergence projection that keeps unadopted certificate statements from the operator; `dev/quality/unused_symbol_ratchet.toml`.
 - [x] `W05.P12.S36` - Stop an undated measurement in the classification ledger from reading as a current one: three tables recorded counts with no date, and the prose beneath exported_unused derived a 4.3 percent proportion from 368 of 8534 declared exports while the live figures had moved to 310 and roughly 8061, so a sentence stated a proportion that no longer held with nothing on the page to warn a reader; date the measurement tables and gate the property, requiring a date rather than currency so that a considered analysis is not turned into churn by every deletion; `dev/audit/tests/test_ledger_measurements_are_dated.py`.
 - [x] `W05.P12.S37` - Adjudicate the nine findings whose only reader is dev tooling, naming that reader in each, and make the naming falsifiable: the registry parity cluster cited a load-census classification module among the readers of eleven symbols when it names only the record_design_coverage module and consumes none of them, so the citation overstated the readership with nothing able to catch it because no gate reads evidence prose; gate that a cited path resolves and mentions a subject, while leaving an entry that cites no path alone since a legal default or an implementer class is a different honest shape; `dev/audit/tests/test_ledger_citations_resolve.py`.
+- [ ] `W05.P12.S38` - Recount the residue by code reference rather than by word match, after finding that the triage resolved a consumer by searching file text and so counted names mentioned in inert-namespace docstrings as production consumers; those docstrings are navigational maps naming every contract in the package, making the error systematic and one-directional because it inflated the healthiest-looking bucket, and correcting it moves referenced-by-production from 66 to 17 and the residue from 69 to 83 percent test-only; also count conftest as test infrastructure, which it is despite matching neither the tests directory nor the test prefix; `dev/audit/reachability_classification.toml`.
 
 ## Parallelization
 

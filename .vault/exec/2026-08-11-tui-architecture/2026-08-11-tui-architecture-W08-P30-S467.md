@@ -5,7 +5,7 @@ tags:
 date: '2026-09-06'
 modified: '2026-09-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:047fab196e2c75cb457e08ca0b82d929f81fc712ebf502ffadc767d7693069c0'
+body_hash: 'sha256:f03c6a9b2c1370674c5a5bebd51bbcd09581d9fbfc7fa332b51c2cb76701f6a5'
 step_id: 'S467'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
