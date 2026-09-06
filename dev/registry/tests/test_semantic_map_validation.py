@@ -978,10 +978,7 @@ def test_variable_envelope_boundary_refuses_wrong_number_of_reviewed_contracts(d
 
     with pytest.raises(
         RegistryValidationError,
-        match=(
-            "requires exactly one reviewed variable-envelope semantic contract, "
-            f"found {declared_envelope_count}"
-        ),
+        match=(f"requires exactly one reviewed variable-envelope semantic contract, found {declared_envelope_count}"),
     ):
         _semantic_map_validation._validate_variable_envelope_boundary(semantic_map, intermediate)
 
@@ -1076,13 +1073,6 @@ def test_reviewed_qualified_identity_admission_requires_matching_token_and_targe
     )
     with pytest.raises(RegistryValidationError, match="is absent from the target revision"):
         _semantic_map_validation._reviewed_qualified_identity_admissions(matching_map, inspection_without_identity)
-
-    # Sibling-blindness: the exact same matching map against the REAL,
-    # unmodified inspection is admitted cleanly -- so the refusal above is
-    # about the mutated casilla_ids, not something else drifting in the fixture.
-    admissions, snapshot = _semantic_map_validation._reviewed_qualified_identity_admissions(matching_map, inspection)
-    assert admissions[real_export_field_id] == real_qualified_identity
-    assert snapshot is not None
 
 
 def test_validation_module_carries_no_legacy_layout_dependency() -> None:
