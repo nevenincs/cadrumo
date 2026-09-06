@@ -790,6 +790,22 @@ test-integration:
 test-dev-tooling:
     @uv run --no-sync pytest -q -n {{pytest_workers}} -m "(unit or integration) and not resident_service and not external_tool" dev/audit/tests dev/benchmarks/cli/tests dev/corpus/tests dev/deploy/tests dev/docs/tests dev/env/tests dev/identity/tests dev/locales/tests dev/readme/tests dev/tests dev/sanitizer/tests dev/registry/tests dev/registry/newmodelo/tests dev/registry/aeip/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests dev/agent_eval/tests dev/ingest_harness/tests dev/containers/tests dev/smoke/tests dev/tui/tests dev/registry/parity/tests
 
+# Run the registry conformance suite. It sits in its own lane rather than in
+# `test-dev-tooling` because of cost, not category: a sequential local run
+# measured roughly two minutes per test across 32 tests, where that whole
+# lane's other 24 directories finish in well under a minute. The composer
+# walks every revision in the bundled registry, which is the same reason
+# `dev/tests/test_registry_conformance_gate.py` records the real run as being
+# beyond the per-push budget.
+#
+# It is named here so the directory sits inside a lane at all. Left unnamed it
+# was one of six directories `dev/tests/test_lane_reachability.py` reported as
+# swept by nothing -- a suite that looks like coverage and reports to no one.
+[doc('Run the registry conformance suite (slow: walks every bundled revision).')]
+[group('testing')]
+test-registry-conformance:
+    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "(unit or integration) and not resident_service and not external_tool" --timeout=300 dev/registry/conformance/tests
+
 # Run the dev-tree workflow/tooling conformance gates that CI runs per-push
 # (workflow structural pins, evidence-transport conformance, shard-plugin
 # partition proof). ci.yml calls THIS recipe, so the paths and the marker

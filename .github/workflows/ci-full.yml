@@ -273,6 +273,25 @@ jobs:
         run: CADRUMO_PYTEST_WORKERS=8 just test-dev-tooling
         continue-on-error: true
 
+      - name: Registry conformance suite
+        # `dev/registry/conformance/tests` ran in no lane and no workflow: it
+        # was one of six directories `dev/tests/test_lane_reachability.py`
+        # reported as swept by nothing, which is coverage that reports to
+        # nobody. It is here rather than in the per-push lane on cost: the
+        # composer walks every revision in the bundled registry, and a
+        # sequential (-n0) local run measured roughly two minutes per test,
+        # so the 32 tests are an hour-scale suite rather than a per-push one.
+        #
+        # Non-blocking on the same terms as the two measurement steps above,
+        # and for a stated reason: the suite has NOT been measured green end to
+        # end. `test_manager_locale_coverage.py` passes in full (9 tests,
+        # 3.8s); the two closure modules were still running when this was
+        # wired, so their first CI verdict is a backlog measurement. Flip this
+        # to blocking once a full run is observed green, and record the
+        # measurement when you do.
+        run: CADRUMO_PYTEST_WORKERS=8 just test-registry-conformance
+        continue-on-error: true
+
       - name: Channel artifact conformance (Homebrew formula and Scoop manifest)
         # These fourteen tests bind the generated formula and manifest to a real
         # built cohort, and until now NOTHING ran them: the per-push lanes scope

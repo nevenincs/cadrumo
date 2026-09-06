@@ -667,7 +667,13 @@ class TestAmbientEnvNeutralisation:
             browser = probe_playwright_browser()
 
             assert browser.available is False
-            assert browser.remediation == "playwright install chromium"
+            # ``remediation`` carried the fix as executable text and was
+            # deliberately removed: ``DependencyStatus`` now closes an
+            # unavailable outcome through the typed ``precondition_verdict``
+            # instead, "without embedding presentation or executable text".
+            # Asserting the verdict is present is asserting the contract the
+            # model actually enforces, rather than a string it stopped holding.
+            assert browser.precondition_verdict is not None
             # Both pins live BENEATH the sandbox workdir so the golden path
             # normaliser rewrites their per-run root to ``<sandbox-workdir>``.
             assert os.environ["PATH"] == str(tmp_path / "scope" / "workdir" / ".external-tools")
