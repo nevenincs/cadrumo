@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-06'
-body_hash: 'sha256:a7f7bed98ac789d78a485ae0bda84de15214cc6cfa8aa611e8f080cf3ae6b120'
+body_hash: 'sha256:eb54b0598063e9171b6c4d1ff18495ef8875e10d2fe2ac8356e56bfad1697480'
 ---
 
 <!-- RETIRED: S370 -->
@@ -678,6 +678,7 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S462` - Repair the generated casilla reference key derivation that silently enumerated nothing after three closed fields became enums, since get_args answers for a Literal and returns empty for an Enum so the families vanished from the declaration while the surface kept rendering them and twenty-six shipped keys were reported as stale copy; `dev/docs/casilla_reference.py dev/docs/tests/test_casilla_reference_presentation.py`.
 - [x] `W08.P30.S463` - Confirm a column table written inline at the call site by registering it under a synthetic name so the parameter alias and key-column rule apply unchanged, and establish from the live error registry that the five application filing error keys are declared nowhere it owns; `dev/locales/_ast_scanner.py dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
 - [x] `W08.P30.S464` - Read the key a surface names in a local before rendering it, admitting only a string constant or a conditional between them so the rule cannot claim the registry and row-table shapes it does not confirm, and requiring the name to reach a translator so a route held the same way stays out; `dev/locales/_ast_scanner.py dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
+- [x] `W08.P30.S465` - Read the display keys a boundary guard admits, linking the module that declares them to the screen that renders them through the membership test on a name the tree proves translatable, so an identically shaped allow-list of identities stays out; `dev/locales/_ast_scanner.py dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
 
 ## Parallelization
 

@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:4e178d8b3ddfb825f03061f0eae47620324993943a4f308c982b983c01cd6b05'
+body_hash: 'sha256:0138d021fe8bc5f6347d8a529614499ef6bf458d93a59839b511de6b61655070'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -636,6 +636,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S754` - Anchor the two module-reach absence claims that an empty walk satisfied, with a positive control and a pinned reported set; `dev/quality/tests/test_module_test_reach.py`.
 - [x] `W02.P02.S755` - Read the decided search-record kinds from their owning authority instead of the mirrored copy the deployment-parity gate kept beside it; `dev/docs/tests/test_deployment_search_parity.py`.
 - [x] `W02.P02.S756` - Read the forbidden command-artefact names from the cohort authority instead of the copy the installed-archive gate kept beside it; `dev/packaging/tests/test_command_spec_distribution_lanes.py`.
+- [x] `W02.P02.S757` - Import the just-call recipe pattern from the lane authority the test already consumes instead of recompiling an identical copy beside it; `dev/ci/tests/test_machine_aware_load.py`.
+- [x] `W02.P02.S758` - Build the distribution evidence fixture from the installed tax oracle's own expectations instead of six copies of them; `dev/packaging/tests/test_distribution_evidence_emit.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
