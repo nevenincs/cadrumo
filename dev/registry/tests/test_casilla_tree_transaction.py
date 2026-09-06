@@ -53,7 +53,7 @@ def test_publish_refuses_a_canonical_tree_with_a_hard_linked_member(tmp_path: Pa
     root.mkdir(parents=True)
     (root / "c00001.toml").write_bytes(b"old\n")
     (root / "c00002.toml").write_bytes(b"unchanged\n")
-    os.link(root / "c00001.toml", tmp_path / "shadow.toml")
+    os.link(root / "c00002.toml", tmp_path / "shadow.toml")
     before = _tree(root)
 
     with pytest.raises(RegistryValidationError, match="canonical casilla tree contains a non-regular or hard-linked member"):
