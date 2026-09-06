@@ -1454,3 +1454,11 @@ class = "design-time-authority"
 area = "entrypoints/cli"
 symbols = ["command_spec_nodes", "command_spec_for_path"]
 evidence = "The only two symbols command_api DEFINES; everything else in its __all__ is re-exported from the private modules that define it. Both are read by dev/docs/cli_reference.py and dev/docs/cli_tree.py to generate the CLI reference from the live command tree, which the documentation rule requires be generator-owned rather than hand-maintained. No runtime caller reaches them, which is the contract holding: a projection of the command surface exists so the generator need not restate the command tree, and the same shape is already recorded for resolve_command_path."
+
+[[symbol_cluster]]
+name = "filed-history producers replaced by constant defaults"
+class = "should-be-live"
+area = "application/live"
+symbols = ["classify_register_scoping_signal", "filed_period_selection_rows"]
+evidence = "Two producers in a module that is otherwise half live -- twelve of its twenty-four exports are reached -- whose outputs are consumed downstream from a constant instead. classify_register_scoping_signal says what the offered modelo set suggests about its own scoping; filed_history_operation reads that through run.scoping_signal, and BOTH FiledHistoryOnboardingRun construction sites pass RegisterScopingSignal.INCONCLUSIVE, matching the field default, so the signal is always inconclusive and the classification is never computed. filed_period_selection_rows is the only producer of FiledPeriodSelectionRow; the run field defaults to an empty tuple, neither construction site fills it, and filed_history_operation projects selection_rows from run.selection_rows, so the operator is always shown none. The types are live and the plumbing is complete in both cases -- only the producer is unreached, which is why neither shows up as a missing consumer."
+remedy_requires_decision = true

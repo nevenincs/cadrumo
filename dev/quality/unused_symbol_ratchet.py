@@ -40,7 +40,7 @@ from pathlib import Path
 from typing import Final
 
 from .._paths import REPO_ROOT
-from ..audit.unreachable_code import run_unreachable_code_scan
+from ..audit.unreachable_code import UnreachableCodeOutcome, run_unreachable_code_scan
 from .unreachable_module_ratchet import IntentionalReachabilityKind
 
 _BASELINE_PATH: Final[Path] = Path(__file__).with_name("unused_symbol_ratchet.toml")
@@ -135,8 +135,21 @@ def _intentional(path: Path = _BASELINE_PATH) -> dict[tuple[str, str], str]:
 
 
 def evaluate(repo_root: Path = REPO_ROOT) -> RatchetVerdict:
-    """Compare the live scan against the recorded baseline."""
+    """Compare the live scan against the recorded baseline.
+
+    Raises:
+        RuntimeError: If the scan cannot produce a trustworthy result. An
+            errored scan reports no symbols, which reads here as an empty live
+            set: nothing grew, nothing was unrecorded, and every baselined
+            module came back RESOLVED. A gate that cannot see the tree would
+            therefore not merely pass but claim progress, inviting the baseline
+            to be shrunk on the strength of a scan that never ran. The sibling
+            gates refuse in exactly this shape.
+    """
     result = run_unreachable_code_scan(repo_root)
+    if result.outcome is UnreachableCodeOutcome.ERROR:
+        msg = f"reachability scan unavailable, ratchet unproven: {result.reason}"
+        raise RuntimeError(msg)
     kept = _intentional()
     intentional = tuple(
         (finding.module, finding.name, kept[(finding.module, finding.name)])

@@ -19,6 +19,7 @@ from pathlib import Path
 
 import pytest
 
+from .. import complexity
 from ..complexity import (
     CcHit,
     CogHit,
@@ -29,6 +30,7 @@ from ..complexity import (
     _classify_mi,
     _cog_key,
     build_baseline,
+    collect_cc,
     collect_cog,
     load_baseline,
 )
@@ -165,3 +167,21 @@ def test_a_root_holding_no_python_files_refuses_instead_of_reporting_clean(tmp_p
     (populated / "module.py").write_text("def f():\n    return 1\n", encoding="utf-8")
 
     assert collect_cog(populated, is_test_run=False, threshold=20) == []
+
+
+def test_a_missing_product_tree_refuses_instead_of_scanning_nothing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """radon cannot tell an absent tree from a clean one, so the guard must.
+
+    Pointed at a path that does not exist, radon prints nothing and exits 0 --
+    measured at zero bytes on both streams, against 240693 bytes for the real
+    tree. The return code carries no signal at all, so inspecting it would not
+    separate the two; only the source can be checked. The scan root is a module
+    constant both collectors read, so redirecting it here supplies INPUT rather
+    than substituting behaviour: the refusal being exercised is the real one.
+    """
+    monkeypatch.setattr(complexity, "_TARGET", str(tmp_path / "absent"))
+
+    with pytest.raises(FileNotFoundError):
+        collect_cc("")

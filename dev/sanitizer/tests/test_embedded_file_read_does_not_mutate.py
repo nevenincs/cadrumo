@@ -29,6 +29,7 @@ that actually guarantees it.
 from __future__ import annotations
 
 import contextlib
+import tempfile
 from io import BytesIO
 
 import pytest
@@ -84,7 +85,7 @@ def test_the_embedded_xml_payload_is_readable() -> None:
     assert [payload for _, payload in embedded] == [_XML_PAYLOAD]
 
 
-def test_reading_the_payload_writes_nothing_to_disk(tmp_path) -> None:
+def test_reading_the_payload_writes_nothing_to_disk(tmp_path, monkeypatch) -> None:
     """The read side leaves no file behind.
 
     The in-memory half of "does not mutate" needs no test and must not pretend
@@ -101,11 +102,23 @@ def test_reading_the_payload_writes_nothing_to_disk(tmp_path) -> None:
     worth a gate even though the payload assertions would never notice.
     """
     with contextlib.chdir(tmp_path):
+        payload = _pdf_with_embedded_xml()
+        # Changing the working directory only brings a spill written to a
+        # RELATIVE path inside the scanned tree. The regression this test
+        # names -- opening the document by spilling it to a temp file --
+        # writes an ABSOLUTE path under the system temp directory, which the
+        # scan below never looked at, so the gate reported clean over the
+        # exact failure it exists to catch. Pointing tempfile at the scanned
+        # tree puts both spill shapes on the measured surface; it is set
+        # after the fixture is built so only the probe under test is measured.
+        monkeypatch.setattr(tempfile, "tempdir", str(tmp_path))
         before = set(scan_directory(tmp_path, pattern="*", recursive=True))
 
-        iter_pdf_embedded_files(_pdf_with_embedded_xml())
+        iter_pdf_embedded_files(payload)
 
-    assert set(scan_directory(tmp_path, pattern="*", recursive=True)) == before, (
+        after = set(scan_directory(tmp_path, pattern="*", recursive=True))
+
+    assert after == before, (
         "reading an embedded payload left a file behind; evidence bytes must never reach disk outside encrypted storage"
     )
 

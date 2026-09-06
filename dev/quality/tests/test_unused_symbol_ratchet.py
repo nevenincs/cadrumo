@@ -15,9 +15,11 @@ different states, and only one of them was being reported.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
-from ..unused_symbol_ratchet import RatchetVerdict, render
+from ..unused_symbol_ratchet import RatchetVerdict, evaluate, render
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -73,3 +75,17 @@ def test_the_deferral_does_not_change_the_verdict() -> None:
     prefix would stop being a deferral at all.
     """
     assert _verdict(deferred_symbols=22, deferred_tests=2).ok
+
+
+def test_a_scan_that_cannot_see_the_tree_refuses_rather_than_reporting_progress(tmp_path: Path) -> None:
+    """An errored scan must not be read as an empty live set.
+
+    ``run_unreachable_code_scan`` returns an error result for a root it cannot
+    read, and an error result carries no symbols. Read straight through, that
+    emptiness means nothing grew, nothing was unrecorded, and every baselined
+    module came back RESOLVED -- so a gate that never saw the tree did not merely
+    pass, it claimed progress and invited the baseline to be shrunk on the
+    strength of a scan that never ran. Both sibling gates refuse in this shape.
+    """
+    with pytest.raises(RuntimeError, match="ratchet unproven"):
+        evaluate(tmp_path / "absent")

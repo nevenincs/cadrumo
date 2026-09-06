@@ -45,7 +45,11 @@ def test_receipt_refuses_tampered_canonical_bytes(tmp_path) -> None:
         path.write_bytes(subject.render_canonical_declaration(authority, row.casilla_id).encode("utf-8"))
     subject.verify_canonical_declarations(authority, casillas_root=tmp_path)
     target = tmp_path / "c01134.toml"
-    target.write_text(target.read_text(encoding="utf-8").replace("exceso_cuota", "drifted", 1), encoding="utf-8")
+    original_text = target.read_bytes().decode("utf-8")
+    assert "exceso_cuota" in original_text
+    tampered_text = original_text.replace("exceso_cuota", "drifted", 1)
+    assert tampered_text != original_text
+    target.write_bytes(tampered_text.encode("utf-8"))
 
     with pytest.raises(RegistryValidationError, match="not compiler-identical"):
         subject.verify_canonical_declarations(authority, casillas_root=tmp_path)

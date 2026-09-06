@@ -104,7 +104,23 @@ class CogHit:
 
 
 def _radon(args: list[str], exclude: str) -> list[str]:
-    """Run a radon subcommand and return raw stdout lines."""
+    """Run a radon subcommand over the product tree and return raw stdout lines.
+
+    Refuses a scan target that is not there. radon answers a path that does not
+    exist by printing nothing and exiting 0 -- measured against
+    ``src/cadrumo_moved_away``: returncode 0 with zero bytes on both stdout and
+    stderr, where the real tree produces 240693 bytes. An empty result is
+    therefore indistinguishable from a clean tree, and inspecting the return code
+    cannot tell the two apart, so the guard has to be on the source. Both
+    collectors reach radon through here, so one refusal covers the cyclomatic and
+    maintainability halves of the dimension.
+
+    Raises:
+        FileNotFoundError: If the product tree is missing or is not a directory.
+    """
+    if not Path(_TARGET).is_dir():
+        message = f"complexity target {_TARGET} is not a directory: a scan of nothing is not a clean scan"
+        raise FileNotFoundError(message)
     cmd = ["uv", "run", "--no-sync", "radon", *args]
     if exclude:
         cmd.extend(["-e", exclude])
