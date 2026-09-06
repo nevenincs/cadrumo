@@ -141,7 +141,7 @@ adapters:
         en la sede y compruébelo a mano.
   outbound:
     storage:
-      factory:
+      _factory:
         errors:
           drive_root_missing: No hay ningún id de carpeta raíz de Google Drive configurado
             para el perfil activo. Ejecuta `aeat config google folder set <id>` primero.

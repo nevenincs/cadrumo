@@ -126,7 +126,7 @@ adapters:
         it in the sede and check it by hand.
   outbound:
     storage:
-      factory:
+      _factory:
         errors:
           drive_root_missing: No Google Drive root folder id is configured for the
             active profile. Run `aeat config google folder set <id>` first.

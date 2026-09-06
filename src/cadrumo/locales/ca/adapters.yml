@@ -140,7 +140,7 @@ adapters:
         Obriu-lo a la seu i comproveu-lo a mà.
   outbound:
     storage:
-      factory:
+      _factory:
         errors:
           drive_root_missing: No hi ha cap id de carpeta arrel de Google Drive configurat
             per al perfil actiu. Executa `aeat config google folder set <id>` primer.
