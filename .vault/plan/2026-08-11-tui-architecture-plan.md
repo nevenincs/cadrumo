@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-06'
-body_hash: 'sha256:c063527d8c6ebf5dfbd087a6ba58dabeef3a2c6db34f704d9ce98727ae905d93'
+body_hash: 'sha256:cf927b937c0e8f8da422a118e5ecbbdc1f364a05f2d5484630bda95e779175ac'
 ---
 
 <!-- RETIRED: S370 -->
@@ -693,6 +693,7 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S477` - Reinstate the two Modelo 200 unadjudicated repeated slot entries that a re-authored export layout brought back, confirming against the design the revision actually cites that each slot carries a separate figure under its own label rather than a part of one value, so a part policy would be wrong and the question stays open; `src/cadrumo/domain/calculations/registry/tests/test_export_split_part_rendering.py`.
 - [x] `W08.P30.S478` - Seed the reset lifecycle profile the way production leaves one, recording the legal hold snapshot through the door that documents the opt-in and refreshing the filing retention snapshot the way persisting a filing does, since the fixture wrote the catalogue directly and produced a profile whose filing exists while its snapshot still says none; `src/cadrumo/entrypoints/cli/tests/test_config_reset_lifecycle.py`.
 - [x] `W08.P30.S479` - Establish that the two custody owner receipt cases fail on this host because the Windows credential store is unreachable from this logon session rather than on any defect, and leave them failing rather than pinning a null keyring that would defeat what they exercise; `src/cadrumo/application/user_profile/tests/test_custody_transactions.py`.
+- [x] `W08.P30.S480` - Record that the ledger reconciliation direction collision is resolved by the owning writer adopting the direction state spelling, which turns the shadow gate green and takes the missing side of parity to zero, leaving the parity and audit gates red on the extras alone; `dev/locales`.
 
 ## Parallelization
 

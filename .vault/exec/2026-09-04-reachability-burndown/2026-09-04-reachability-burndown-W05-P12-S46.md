@@ -5,16 +5,11 @@ tags:
 date: '2026-09-06'
 modified: '2026-09-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:18ef188b5d80171464eed3b520ea1c79086a4a8030e11ce93a5369a7a0ba4ee8'
+body_hash: 'sha256:8ade4612625eecc8b4c33923210f9e1cee3b5a427bbb987b3015b5b525a2a325'
 step_id: 'S46'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Adjudicate the grounding-anchor provenance wrappers and the invoice CLI query projections, and record what the first is NOT: the anti-fabrication contract's structural half is live, since evaluate anchor, the printed-excerpt predicates, the refusal constructor and the ambiguous-candidate grounder are all imported by production modules, so an extracted value is still checked against the transcription and only the envelope-building convenience is displaced by callers constructing the provenance directly; the two invoice projections declare themselves for CLI surfaces that never reach them, while a sibling in the same module is consumed
 

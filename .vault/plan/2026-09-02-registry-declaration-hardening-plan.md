@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:421126a5fcce81179a3f1dcd120df08004886cc22077a575eb7e90d1d6f92626'
+body_hash: 'sha256:90e7409addea0b44aa0c907a5f4b2b5249ecb795584daa5da1a2e7fe75979d69'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -679,6 +679,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S797` - Floor the companion projects the release-please version-surface gate discovers: the requirement set unioned two hard-coded literals with a live filesystem glob, so a relocated packaging root collapsed the discovered half and the subset check still passed while the companion claim evaporated, though dev/release/readiness.py keeps comparing both companions by literal path; `dev/ci/tests/test_action_pinning.py`.
 - [x] `W02.P02.S798` - Floor the production modules the command-spec authority gate walks: the loop body carried the entire claim with no non-empty check, so a relocated test file or renamed package root collapsed the rglob to zero and the gate returned green over no modules, while its sibling in the same file already anchored with assert nodes; live 2132 non-test modules; `dev/ci/tests/test_command_spec_authority_gate.py`.
 - [x] `W02.P02.S799` - Prove the load census clean property reads every field it claims: clean is a conjunction over unclassified, stale_rules and undeclared_dead_candidates, all three empty live, so degrading it to read only the first is indistinguishable from correct and the authoritative gate asserting report.clean never observed it False; `dev/registry/tests/test_load_census_classification.py`.
+- [x] `W02.P02.S800` - Compare generated documentation artefacts as bytes so the freshness gates detect line-ending drift they previously normalised away; `dev/docs/download_matrix.py`.
+- [x] `W02.P02.S801` - Floor the runner brew-capability table and prove it equals the legs the acquisition workflow declares; `dev/containers/tests/test_runner_capabilities.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

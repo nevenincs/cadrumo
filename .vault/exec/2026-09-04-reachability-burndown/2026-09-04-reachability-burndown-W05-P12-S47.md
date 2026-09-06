@@ -5,16 +5,11 @@ tags:
 date: '2026-09-06'
 modified: '2026-09-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:8c21bb610a1efeeb17ec154879ae5d40327080dc7e693e332b536ef0bbf26c19'
+body_hash: 'sha256:4212c9a59178805b218122160bc2dbfbfd1e5caa2dc6d394a26eab87dc10738f'
 step_id: 'S47'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Separate two unreached read paths that look identical and are not: the deudas landing guard and path prefixes are staged and fail-closed by design, because the live deudas service records that no specimen of the AEAT consulta page exists and the shared read-landing wall refuses every landing while a surface declares no read pages, so nothing calls the guard precisely because no live read is attempted; whereas the IVA remote-state loaders sit beside a capture that IS reached, so state is captured and cannot be retrieved and the acquisition-manifest surface records nothing, with no fail-closed rationale
 
