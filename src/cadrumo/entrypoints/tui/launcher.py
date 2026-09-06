@@ -29,6 +29,7 @@ if TYPE_CHECKING:
     from textual.app import AutopilotCallbackType
     from textual.screen import Screen
 
+    from ...application.ledger.models import ManualLedgerTransactionResult
     from ...application.modelo.work_review import ModeloWorkReview
     from ...application.modelo.workspace_models import (
         ModeloWorkspaceProjectionV1,
@@ -45,7 +46,13 @@ if TYPE_CHECKING:
     from ...core.period import Period
     from ...domain.modelos.work_unit import WorkUnit
     from .account import AccountFactoriesV1
-    from .ledger.models import LedgerLinkResultV1, LedgerLinkSubmissionV1, LedgerLinkSubmitterV1
+    from .ledger.models import (
+        LedgerClassificationSubmissionV1,
+        LedgerClassificationSubmitterV1,
+        LedgerLinkResultV1,
+        LedgerLinkSubmissionV1,
+        LedgerLinkSubmitterV1,
+    )
     from .navigation import (
         TuiActionCandidateV1,
         TuiDestinationCatalogueV1,
@@ -149,6 +156,34 @@ def compose_secure_profile_workbench_generation_provider(
         modelo_projection_reader=_modelo_projection_reader(),
     )
     return ApplicationGenerationProviderV1(door)
+
+
+def _ledger_classification_submitter(profile_id: str) -> LedgerClassificationSubmitterV1:
+    """Apply one reviewed classification patch to the operator's own ledger.
+
+    The application writer owns every precondition — the row's lifecycle state,
+    the no-op guard, evidence and usage-ratio references, the audit event — so
+    this door adds no policy of its own, exactly as the link door does not.
+
+    The catalogue-admitted action reference travels through as the source
+    command, so the persisted event records which authority the operator acted
+    under rather than an anonymous surface label. The transaction id is the
+    workspace's current focus, already checked against the visible projection
+    before the classification screen could be reached at all.
+    """
+
+    async def submit(submission: LedgerClassificationSubmissionV1) -> ManualLedgerTransactionResult:
+        from ...application.ledger.actions_manual import update_manual_transaction_fields
+
+        return update_manual_transaction_fields(
+            bucket_id=profile_id,
+            transaction_id=submission.transaction_id,
+            patch=submission.patch,
+            actor="operator",
+            source_command=str(submission.action.action_id),
+        )
+
+    return submit
 
 
 def _ledger_link_submitter(profile_id: str) -> LedgerLinkSubmitterV1:
@@ -512,11 +547,14 @@ def _ledger_generation_factory(
             # one alone would read as wired while still refusing.
             link_action=dependencies.ledger_link_action,
             link_submitter=_ledger_link_submitter(dependencies.account.profile_id),
-            # classify_action is deliberately NOT passed: the classification
-            # door also needs a target and a submitter, and no production
-            # implementation of LedgerClassificationSubmitterV1 exists yet.
-            # Passing the action alone leaves the door refused exactly as if
-            # nothing were passed, while reading as though it were wired.
+            # The classification door is a pair for the same reason the link
+            # door is: the screen's control stays hidden unless BOTH the
+            # admitted action and a submitter are present. The third thing it
+            # needs — which entry to classify — is not the launcher's to give;
+            # the operator supplies it by selecting a row, and it travels in
+            # the workspace focus.
+            classify_action=dependencies.ledger_classify_action,
+            classification_submitter=_ledger_classification_submitter(dependencies.account.profile_id),
         )(context)
 
     return create

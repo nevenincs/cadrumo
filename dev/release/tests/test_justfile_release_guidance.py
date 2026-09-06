@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import subprocess
 
 import pytest
@@ -12,6 +13,7 @@ from ...ci.lane_reachability import resolve_just_executable
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _REPO_ROOT = REPO_ROOT
+_CAMPAIGN_SOURCE = _REPO_ROOT / "dev" / "packaging" / "campaign.py"
 _DISTRIBUTIONS = (
     "cadrumo",
     "cadrumo-data-manuals",
@@ -42,6 +44,75 @@ def _recipe_summary() -> set[str]:
         check=True,
     )
     return set(result.stdout.split())
+
+
+def _cohort_build_and_fanout_positions(source: str) -> tuple[int, int, int]:
+    """Locate the cohort build and the worker fan-out in the campaign driver.
+
+    Returns the build statement index within ``main``, the fan-out statement
+    index, and the module-wide cohort-build call count, using -1 for a
+    position the driver does not carry.
+
+    The order is read off the parsed statement list rather than off byte
+    offsets in the file. Byte offsets answer "where does this text sit", not
+    "when does this run", and the two come apart: moving the cohort build out
+    of ``main`` and into ``_run_form`` -- the callable the thread pool
+    submits -- leaves the label string present exactly once and still above
+    the ``ThreadPoolExecutor(`` text, so an offset comparison stays green while
+    every lane races to rebuild the same cohort directory concurrently. The
+    parsed form refuses that driver because the build is then not a statement
+    of ``main`` at all.
+
+    Parsing is the honest stopping point here: the real operation this
+    certifies is a full portable campaign, which builds a Python cohort and
+    runs every install-surface lane, so executing it is not something a unit
+    gate may cause. What the gate can do without executing anything is read
+    the driver's structure instead of its text.
+    """
+    module = ast.parse(source)
+    main_function = next(node for node in module.body if isinstance(node, ast.FunctionDef) and node.name == "main")
+
+    def _is_cohort_build(node: ast.AST) -> bool:
+        if not isinstance(node, ast.Call):
+            return False
+        literals = {
+            child.value for child in ast.walk(node) if isinstance(child, ast.Constant) and isinstance(child.value, str)
+        }
+        return {"dev.packaging.python_cohort", "build"} <= literals
+
+    def _is_fanout(statement: ast.stmt) -> bool:
+        if not isinstance(statement, ast.With):
+            return False
+        return any(
+            isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "ThreadPoolExecutor"
+            for item in statement.items
+            for node in ast.walk(item.context_expr)
+        )
+
+    total = sum(1 for node in ast.walk(module) if _is_cohort_build(node))
+    build_index = -1
+    fanout_index = -1
+    for position, statement in enumerate(main_function.body):
+        if build_index < 0 and any(_is_cohort_build(node) for node in ast.walk(statement)):
+            build_index = position
+        if fanout_index < 0 and _is_fanout(statement):
+            fanout_index = position
+    return build_index, fanout_index, total
+
+
+def _build_moved_into_the_worker_pool(source: str) -> str:
+    """Return the driver with its cohort build relocated inside `_run_form`."""
+    block = (
+        "    _run_step(\n"
+        '        [sys.executable, "-m", "dev.packaging.python_cohort", "build", "--output", _COHORT_DIR],\n'
+        "        repo_root,\n"
+        '        "build-cohort",\n'
+        "    )\n"
+    )
+    seat = "    _lane, form = resolve_form(selector)\n"
+    assert source.count(block) == 1, "cohort build block anchor moved"
+    assert source.count(seat) == 1, "_run_form seat anchor moved"
+    return source.replace(block, "", 1).replace(seat, block + seat, 1)
 
 
 def test_release_apply_is_absent_from_the_justfile() -> None:
@@ -100,8 +171,8 @@ def test_packaging_smoke_builds_one_cohort_before_every_consumer() -> None:
     The aggregate routes through the campaign driver (ci-speed redesign), so
     the build-once-before-lanes invariant now lives in the driver: its serial
     pipeline builds the cohort exactly once, and only then fans the lanes out
-    over the worker pool. The rendered recipe pins the routing; the driver
-    source pins the ordering; every portable lane consumes the shared cohort
+    over the worker pool. The rendered recipe pins the routing; the driver's
+    parsed structure pins the ordering; every portable lane consumes the cohort
     directory by construction (`takes_cohort`).
     """
     rendered = _render_recipe("packaging-smoke")
@@ -112,9 +183,12 @@ def test_packaging_smoke_builds_one_cohort_before_every_consumer() -> None:
     assert _COHORT_DIR == "var/packaging-smoke-cohort/python"
     assert all(resolve_form(selector)[1].takes_cohort for selector in _PROFILES["portable"])
 
-    driver_source = (_REPO_ROOT / "dev" / "packaging" / "campaign.py").read_text(encoding="utf-8")
-    assert driver_source.count('"build-cohort"') == 1
-    assert driver_source.index('"build-cohort"') < driver_source.index("ThreadPoolExecutor(")
+    build_index, fanout_index, total = _cohort_build_and_fanout_positions(_CAMPAIGN_SOURCE.read_text(encoding="utf-8"))
+
+    assert total == 1, "the driver builds the cohort in more than one place"
+    assert build_index >= 0, "the cohort build is not a statement of the campaign driver's main"
+    assert fanout_index >= 0, "the campaign driver no longer fans lanes out over a worker pool"
+    assert build_index < fanout_index
 
 
 def test_local_upload_authority_is_absent_from_just() -> None:
@@ -124,3 +198,31 @@ def test_local_upload_authority_is_absent_from_just() -> None:
     assert "publish-data" not in recipes
     assert "release" in recipes
     assert "release-readiness" in recipes
+
+
+def test_the_cohort_ordering_gate_refuses_a_build_moved_into_the_worker_pool() -> None:
+    """A build relocated into the pooled callable must fail the ordering gate.
+
+    The degraded driver is assembled in memory from the tracked source; the
+    tracked file is never written. Its defect is the one the invariant exists
+    to exclude: every lane rebuilds the shared cohort directory concurrently
+    instead of consuming the one cohort the driver built before the fan-out.
+    """
+    source = _CAMPAIGN_SOURCE.read_text(encoding="utf-8").replace("\r\n", "\n")
+    degraded = _build_moved_into_the_worker_pool(source)
+    ast.parse(degraded)
+
+    # Control: the displaced byte-offset shape reads this defect as green,
+    # because the label still occurs exactly once and still sits above the
+    # `ThreadPoolExecutor(` text -- it merely sits inside `_run_form` now.
+    assert degraded.count('"build-cohort"') == 1
+    assert degraded.index('"build-cohort"') < degraded.index("ThreadPoolExecutor(")
+
+    build_index, fanout_index, total = _cohort_build_and_fanout_positions(degraded)
+
+    assert total == 1
+    assert fanout_index >= 0
+    assert build_index == -1
+
+    # The honest driver still passes the same gate.
+    assert _cohort_build_and_fanout_positions(source)[0] >= 0

@@ -51,7 +51,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           WATCHDOG_JOB_NAME: Cadrumo / runner queue watchdog
           THRESHOLD_SECONDS: "300"
-          MAX_WATCH_SECONDS: "900"
+          MAX_WATCH_SECONDS: "480"
         run: python3 -m dev.ci.runner_queue_watchdog
 
   cadrumo-packaging-smoke:
@@ -92,17 +92,13 @@ jobs:
       # resource death names its lane in the interleaved output. The campaign
       # stays a single `just packaging-smoke-ci` invocation so every lane
       # consumes the same cohort bytes built once.
-      - name: Reclaim runner disk space
-        # GitHub-hosted only: on a self-hosted runner these paths belong to the
-        # operator's machine and the docker prune would wipe the shared WSL
-        # engine's images.
-        if: runner.environment == 'github-hosted'
-        run: |
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
-          sudo docker image prune --all --force
-          df -h /
-          free -m
-
+      # NOTE: this lane performs no disk reclamation. A GitHub-hosted-only
+      # reclaim step stood here, and under the self-hosted-only fleet policy
+      # its `runner.environment == 'github-hosted'` condition can never be
+      # true, so the lane advertised hygiene it never performed -- on a fleet
+      # where space is a documented constraint. Reclamation belongs to the
+      # runner's job-completed hook, which owns paths this workflow must not
+      # touch: pruning here would wipe the shared engine's images.
       - name: Cadrumo immutable-cohort packaging campaign
         # Machine-aware sizing (.github/ci-control-plane.md): the workstation's 24
         # logical CPUs are shared with co-resident runners from other

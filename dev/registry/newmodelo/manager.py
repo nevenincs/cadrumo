@@ -28,6 +28,8 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
     revision_locale_key,
 )
 
+from ..conformance.manager import reset_conformance_cache
+
 __all__ = [
     "NewModeloError",
     "NewModeloScaffoldManager",
@@ -312,6 +314,13 @@ class NewModeloScaffoldManager:
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(entry.content, encoding=_UTF_8, newline="\n")
             written.append(entry.relative_path)
+
+        if written:
+            # The conformance snapshot cache is keyed only on `validate`, never
+            # on registry source state, so it cannot notice this write on its
+            # own; a scaffold-then-audit call in one process would otherwise
+            # see the pre-scaffold profile. See reset_conformance_cache.
+            reset_conformance_cache()
 
         return ScaffoldResult(
             modelo_id=modelo_id,

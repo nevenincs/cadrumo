@@ -816,6 +816,7 @@ def _prepare_manual_transaction_update(
         created_at=current.created_at,
         modified_at=now,
     )
+    replacement = _carry_forward_fx(current, replacement)
     if mutation_signature(current) == mutation_signature(replacement):
         return None
     verify_evidence_references(
@@ -870,7 +871,7 @@ def _prepare_manual_transaction_update(
         created_at=current.created_at,
         modified_at=now,
     )
-    return replacement, events
+    return _carry_forward_fx(current, replacement), events
 
 
 def update_manual_transaction_fields(
@@ -1037,6 +1038,37 @@ def _command_from_patch(
         current.counterparty_identification_state,
     )
     group_label = optional_patched(patch, patch_fields, "group_label", current.group_label)
+    # The three prorrata declarations carry forward from the stored row. They
+    # were absent here, so a reclassify rebuilt the command with all three as
+    # ``None`` and the write erased them: an operator who had declared a
+    # differentiated sector, an art. 104.Tres exclusion and an art. 106 input
+    # classification lost all three by correcting a category or a note.
+    # ``mutation_signature`` compares them, so the guard read the wipe as a
+    # genuine change and let it through rather than stopping it.
+    #
+    # ``ManualLedgerTransactionPatch`` does not declare them — they are
+    # declared at add time — so today these always resolve to the stored value.
+    # They are read through ``optional_patched`` anyway, so that the day the
+    # patch does carry them, an explicit override works without a second edit
+    # here.
+    art_104_tres_exclusion = optional_patched(
+        patch,
+        patch_fields,
+        "art_104_tres_exclusion",
+        current.art_104_tres_exclusion,
+    )
+    input_classification = optional_patched(
+        patch,
+        patch_fields,
+        "input_classification",
+        current.input_classification,
+    )
+    prorrata_sector_id = optional_patched(
+        patch,
+        patch_fields,
+        "prorrata_sector_id",
+        current.prorrata_sector_id,
+    )
     return ManualLedgerTransactionCommand(
         bucket_id=bucket_id,
         booked_date=booked_date,
@@ -1072,6 +1104,9 @@ def _command_from_patch(
             patch.source_jurisdiction if "source_jurisdiction" in patch_fields else current.source_jurisdiction
         ),
         group_label=group_label,
+        art_104_tres_exclusion=art_104_tres_exclusion,
+        input_classification=input_classification,
+        prorrata_sector_id=prorrata_sector_id,
         actor=actor,
         source_command=source_command,
         classified_by_override=classified_by_override,
@@ -1405,6 +1440,33 @@ def _fx_conversion_fields(
     if fx_rate is None or value_in_eur is None:
         return {}
     return {"fx_rate": fx_rate, "value_in_eur": value_in_eur}
+
+
+def _carry_forward_fx(current: Transaction, replacement: Transaction) -> Transaction:
+    """Keep an edited row's euro value when the money behind it did not change.
+
+    An edit rebuilds the row from the command, and the rebuild re-derives the
+    foreign-currency conversion through :func:`_fx_conversion_fields`. That
+    needs a :class:`CurrencyNormalizationService`, and no caller of
+    :func:`update_manual_transaction` has one — so the projection returns an
+    empty mapping and the replacement takes the model default of ``None``.
+
+    The consequence is not a missing display field. ``summarize_manual_transactions``
+    falls back to ``abs(raw.amount)`` when ``value_in_eur`` is absent, so a
+    1000 USD row that had been converted at import is counted as 1000 EUR from
+    the first unrelated edit onwards — a description fix silently restates the
+    amount.
+
+    Carried only when the amount AND the currency are untouched. If either
+    moved, the stored euro value describes a different sum and reusing it would
+    replace a lost figure with a wrong one; absence is the honest answer there,
+    and it is what the row already gets today.
+    """
+    if replacement.value_in_eur is not None or current.value_in_eur is None:
+        return replacement
+    if replacement.raw.amount != current.raw.amount or replacement.raw.currency != current.raw.currency:
+        return replacement
+    return replacement.model_copy(update={"fx_rate": current.fx_rate, "value_in_eur": current.value_in_eur})
 
 
 def _classification_fields(

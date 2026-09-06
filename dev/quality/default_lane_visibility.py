@@ -26,6 +26,10 @@ conditions are reported:
 - ``per_function_markers_only`` - the module has no module-level `pytestmark`
   but decorates individual tests. The screen cannot decide visibility from the
   module level alone and says so rather than guessing.
+- ``unread`` - the module could not be read or parsed, so the screen never
+  classified it. Reported because silence here is indistinguishable from a
+  module the default lane selects fully, and the walk can list a path the read
+  no longer reaches.
 
 Marker detection is static. A module-level ``pytestmark`` assignment is read
 from the syntax tree, which is how every module in this tree declares markers,
@@ -133,9 +137,20 @@ def visibility_census(
         for path in sorted(root.rglob("test_*.py")):
             if "__pycache__" in path.parts:
                 continue
+            # Named relative to the repository when it sits inside one, and to the
+            # scanned root otherwise, so the census can be run over a constructed
+            # tree without the reporting path deciding whether it works.
+            anchor = _REPO_ROOT if path.is_relative_to(_REPO_ROOT) else root
+            module = path.relative_to(anchor).as_posix()
             try:
                 tree = ast.parse(path.read_text(encoding="utf-8"))
-            except (SyntaxError, UnicodeDecodeError):
+            except (OSError, SyntaxError, UnicodeDecodeError):
+                # Dropping the module here would take it out of a report whose
+                # emptiness reads as full visibility, so a module the screen could
+                # not read is reported rather than skipped. The walk can list a
+                # path the read no longer reaches, and a half-written module is
+                # the same condition: the screen could not decide, and it says so.
+                findings.append(LaneVisibility(module=module, kind="unread", markers=()))
                 continue
             if not any(
                 isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and node.name.startswith("test_")
@@ -143,11 +158,6 @@ def visibility_census(
             ):
                 continue
             markers = module_markers(tree)
-            # Named relative to the repository when it sits inside one, and to the
-            # scanned root otherwise, so the census can be run over a constructed
-            # tree without the reporting path deciding whether it works.
-            anchor = _REPO_ROOT if path.is_relative_to(_REPO_ROOT) else root
-            module = path.relative_to(anchor).as_posix()
             if markers is None:
                 decorated = any(
                     isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and node.decorator_list

@@ -41,6 +41,7 @@ from ....domain.modelos.work_unit import WorkUnitState
 from ..components.theme import BASE_CSS, tokenised
 from ..components.workspace_host import replace_workspace_body
 from ..navigation import TuiScreenContextV1
+from .action_guards import require_canonical_declarations_actions
 from .models import (
     CalendarEntryHandoffV1,
     CalendarRecoveryHandoffV1,
@@ -160,14 +161,11 @@ class DeclarationsWorkspaceController:
             raise ValueError("Declarations workspace requires the workbench.declarations context")
         if projection.contract_version != DECLARATIONS_WORKSPACE_CONTRACT_VERSION:
             raise ValueError("unsupported Declarations workspace projection contract")
-        expected = (
-            (work_action, "modelo.work.list"),
-            (revisions_action, "modelo.work.revisions"),
-            (filing_action, "modelo.filing_record.list"),
+        require_canonical_declarations_actions(
+            work_action=work_action,
+            revisions_action=revisions_action,
+            filing_action=filing_action,
         )
-        for action, command in expected:
-            if lookup_action(action.action_id).target_command_key != command:
-                raise ValueError("injected Declarations read action resolves to another application door")
         self.context = context
         self.projection = projection
         self.work_action = work_action

@@ -268,9 +268,21 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
     async def action_request_close(self) -> None:
         """Close the modal, detaching first if the operation is still live."""
         view_model = self._view_model
-        if view_model is not None and view_model.detach_control_enabled:
+        if view_model is None:
+            # No observation has ever succeeded, so there is no revision to
+            # detach against and no outcome to report. Leaving is still the
+            # operator's right: Escape is bound here and the Close button keeps
+            # its compose-time enabled state until a render disables it, so
+            # returning early made BOTH inert and the modal impossible to
+            # leave whenever observation refused from the first poll onward.
+            # ``None`` is the screen's own declared result type and the
+            # sign-out caller already reads it as "backed out", not as failure.
+            await self._stop_poll_worker()
+            self.dismiss(None)
+            return
+        if view_model.detach_control_enabled:
             await self._request_detach()
-        elif view_model is not None and not view_model.spinner_visible:
+        elif not view_model.spinner_visible:
             # Reap before dismissing for the same reason the detach path does:
             # dismissing alone pops the screen while the worker may still be
             # parked in its sleep or inside the observation read.

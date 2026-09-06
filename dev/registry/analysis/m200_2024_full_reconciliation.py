@@ -28,6 +28,7 @@ from cadrumo.domain.calculations.registry.legal import verify_legal_catalogue
 from cadrumo.domain.calculations.registry.loader import load_catalogue_file, load_modelo_directory
 from cadrumo.domain.calculations.registry.schema_references import governed_period_span
 
+from ..conformance.manager import reset_conformance_cache
 from ..pipeline._record_design_ir import intermediate_anchor_key, load_record_design_intermediate
 from ..pipeline._semantic_map import semantic_anchor_key
 from ..pipeline._semantic_map_loader import load_semantic_map
@@ -687,6 +688,11 @@ def _apply_m200_source_rebind_plan(
     registry_root = registry_root.resolve()
     with exclusive_file_lock(registry_root / ".m200-2024-source-rebind.lock"):
         _recover_m200_source_rebind(plan, registry_root, reviewed_promotions=reviewed_promotions)
+        # Recovery may have cut a candidate live or restored the backup --
+        # both outside what the conformance snapshot cache's key covers, and
+        # unconditional here is harmless when there was no journal to recover.
+        # See reset_conformance_cache.
+        reset_conformance_cache()
         return _apply_preflighted_m200_source_rebind(
             plan,
             registry_root=registry_root,
@@ -745,6 +751,9 @@ def _apply_preflighted_m200_source_rebind(
     changed_paths = tuple(sorted(rendered))
     if not dry_run:
         _publish_m200_source_rebind_transaction(registry_root, rendered, plan, reviewed_promotions=reviewed_promotions)
+        # See reset_conformance_cache: this cut a new casilla tree live and the
+        # snapshot cache's key carries no registry-source input to notice it.
+        reset_conformance_cache()
     return M200SourceRebindApplication(
         planned_rebind_count=len(plan.rebinds),
         changed_paths=changed_paths,

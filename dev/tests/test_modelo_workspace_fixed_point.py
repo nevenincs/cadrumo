@@ -192,7 +192,7 @@ def test_no_shipped_cohort_module_carries_a_transitional_marker() -> None:
 
     markers = ("TODO", "FIXME", "XXX", "TRANSITIONAL", "PROVISIONAL", "for now")
     offenders: list[str] = []
-    undecodable: list[str] = []
+    unsearched: list[str] = []
     read = 0
     for path in sorted(_TUI_MODELO.rglob("*.py")):
         if "tests" in path.parts:
@@ -200,16 +200,19 @@ def test_no_shipped_cohort_module_carries_a_transitional_marker() -> None:
         try:
             # Strict. With errors="ignore" a dropped byte takes any marker
             # straddling it with it, and the module then reads as clean.
+            # An unreadable module is the same loss without the dropped byte:
+            # the walk can list a path a peer removes before the read reaches
+            # it, and this gate refuses rather than searching one module fewer.
             text = path.read_text(encoding="utf-8")
-        except UnicodeDecodeError as refusal:
-            undecodable.append(f"{_cohort_name(path)}: {refusal}")
+        except (OSError, UnicodeDecodeError) as refusal:
+            unsearched.append(f"{_cohort_name(path)}: {refusal}")
             continue
         read += 1
         offenders.extend(f"{_cohort_name(path)}: {marker}" for marker in markers if marker in text)
 
-    assert not undecodable, (
-        "these shipped cohort modules could not be decoded, so a transitional marker inside "
-        f"one was never searched for: {undecodable}"
+    assert not unsearched, (
+        "these shipped cohort modules could not be read or decoded, so a transitional marker inside "
+        f"one was never searched for: {unsearched}"
     )
     assert read >= _MINIMUM_COHORT_MODULES, (
         f"only {read} shipped cohort module(s) were read; below this an empty offender list "

@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from pathlib import Path
 from typing import Final
 
@@ -36,6 +37,10 @@ EXTRACTED_TEXT_SUFFIX = ".extracted.md"
 
 #: Suffix of the provenance sidecar carrying the serialised record.
 EXTRACTED_JSON_SUFFIX = ".extracted.json"
+
+#: The infix a multi-part extraction gives each group's stand-in name
+#: (``<file>.part-2.extracted.json``).
+_PART_INFIX: Final[re.Pattern[str]] = re.compile(r"\.part-\d+$")
 
 
 class PreprocessSidecarError(RuntimeError):
@@ -61,6 +66,31 @@ def sidecar_paths_for(source: Path) -> tuple[Path, Path]:
         source.with_name(base + EXTRACTED_TEXT_SUFFIX),
         source.with_name(base + EXTRACTED_JSON_SUFFIX),
     )
+
+
+def matches_origin_name(sidecar_name: str, origin_name: str) -> bool:
+    """Return whether ``sidecar_name`` is a sidecar of ``origin_name``.
+
+    The inverse of :func:`sidecar_paths_for` and of the ``.part-N`` stand-in
+    naming multi-part extractions use: a sidecar is named for its origin's
+    FULL filename, plus an optional ``.part-N`` infix, plus the sidecar
+    suffix. Pairing on that whole name is what keeps two sources differing
+    only by extension off one sidecar. A caller that pairs by filename
+    PREFIX instead -- globbing ``<name>*.extracted.json`` -- re-collides
+    exactly what the naming rule separates, crediting ``design.xls`` with
+    ``design.xlsx``'s sidecar and reporting it sidecar-complete when its
+    own sidecars are gone. Every consumer pairs through this one predicate
+    so the two rules cannot drift apart again.
+
+    Args:
+        sidecar_name: Filename of a candidate ``*.extracted.json`` sidecar.
+        origin_name: Filename of the source it would describe.
+
+    Returns:
+        True when the sidecar belongs to that exact source file.
+    """
+    stand_in_name = sidecar_name.removesuffix(EXTRACTED_JSON_SUFFIX)
+    return stand_in_name == origin_name or _PART_INFIX.sub("", stand_in_name) == origin_name
 
 
 def sha256_of(path: Path) -> str:

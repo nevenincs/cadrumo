@@ -50,6 +50,16 @@ class DriftResult:
         return not self.missing_stubs and not self.orphan_stubs and not self.stale_stubs
 
 
+#: Directory name of the source package this generator documents, under
+#: ``src/``. The incremental docs planner reads it rather than repeating
+#: the literal, so a package rename cannot leave the planner addressing a
+#: tree that no longer exists.
+API_SOURCE_PACKAGE: str = "cadrumo"
+
+#: Package-relative subtree documented through the generated command
+#: reference instead of autodoc.
+CLI_REFERENCE_SUBTREE: tuple[str, ...] = ("entrypoints", "cli")
+
 # Module segments that exclude an entire subtree.
 _EXCLUDED_PACKAGES: frozenset[str] = frozenset({"tests", "_data"})
 
@@ -57,7 +67,7 @@ _EXCLUDED_PACKAGES: frozenset[str] = frozenset({"tests", "_data"})
 # stubs.  The CLI is documented through the generated command reference rather
 # than autodoc; importing the cli command/payload modules under autodoc also
 # fails on pydantic model construction, so the cli implementation is not stubbed.
-_EXCLUDED_SUBTREES: frozenset[tuple[str, ...]] = frozenset({("entrypoints", "cli")})
+_EXCLUDED_SUBTREES: frozenset[tuple[str, ...]] = frozenset({CLI_REFERENCE_SUBTREE})
 
 # Individual filenames excluded from stub coverage even inside included packages.
 _EXCLUDED_FILENAMES: frozenset[str] = frozenset({"conftest.py"})
@@ -166,8 +176,14 @@ class ApiStubManager:
 
     # ── Discovery ────────────────────────────────────────────────────────────
 
-    def _is_excluded(self, path: Path) -> bool:
+    def excludes_source(self, path: Path) -> bool:
         """Return True when *path* is outside the documentable module set.
+
+        Public because it is the ONE eligibility rule: the incremental docs
+        planner asks this generator whether a changed path participates in
+        the stub tree rather than restating the rule, which is how the two
+        drifted apart before. The check is pure path arithmetic, so a
+        deleted path can still be classified.
 
         Args:
             path: An absolute ``Path`` to a Python file under ``src_cadrumo``.
@@ -200,7 +216,7 @@ class ApiStubManager:
         results: list[tuple[str, bool]] = []
 
         for py_file in scan_directory(self.src_cadrumo, pattern="*.py", recursive=True):
-            if self._is_excluded(py_file):
+            if self.excludes_source(py_file):
                 continue
 
             relative = py_file.relative_to(self.src_cadrumo.parent)

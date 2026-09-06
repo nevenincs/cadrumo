@@ -166,9 +166,9 @@ remedy_requires_decision = true
 
 [[module]]
 name = "cadrumo.application.ledger.import_preparation"
-class = "should-be-live"
-evidence = "Validates an operator-entered import path and builds the canonical command; its docstring records that it was moved OUT of entrypoints/tui/ledger because the Ledger TUI boundary gate refuses adapter work there. Nothing in production calls it. The door it feeds cannot open either, and the root cause is one level above this module: the Ledger IMPORT area is reached only by a LedgerRouteRequested message posted at entrypoints/tui/ledger/controller.py, and no production class handles that message, so no workspace screen past Overview is reachable in the installed app. The Ledger controller additionally refuses the IMPORT area when prepared_imports is empty or import_submitter is None, and the only production caller of ledger_screen_factory (entrypoints/tui/launcher.py) passes neither. So the application-side preparation and the TUI-side carrier were both built and never connected. Deliberately NOT given an intentional entry in the module ratchet: a declared_by_contract disposition would quiet a module whose consumer does not yet exist. Remedy is the workspace route host, not a change here."
-remedy_requires_decision = true
+class = "superseded"
+evidence = "WITHDRAWN 2026-09-06: the module is deleted, and the ratchet is green. Re-tested against the live design rather than against its own docstring. The guard it performs -- refuse a blank, absent, non-file or unreadable import source before provider resolution, so a --provider auto run does not open a missing path through every candidate provider -- is already performed unconditionally INSIDE the action every caller reaches: _require_readable_source at src/cadrumo/application/ledger/actions_import.py:483, called first thing in import_ledger_source at line 339 and again from _validate_import_source at line 499. The two carry the same rationale in the same words, which is what the preparer's own docstring meant by mirroring the action's guard. So no caller could gain anything by routing through the preparer, and the TUI route host that entry named as the remedy would not have changed that: a prepared import is submitted to import_ledger_source like any other. The path-naming behaviour is where the two actually disagreed, and the live guard is the one in force -- it names the path deliberately so an operator can correct the argument, while the preparer's docstring forbade naming it. Directory expansion, the other half of turning an operator's entry into sources, is plan_ledger_import_sources at line 692. Nothing declared the module: not the error registry, not a dev check, not a contract. Its only reference in the tree was its own test, deleted with it."
+remedy_requires_decision = false
 
 [[module]]
 name = "cadrumo.domain.contabilidad"
@@ -179,6 +179,32 @@ evidence = "Added by commit b0305f2c3a, feat(domain): add the contabilidad cuent
 name = "cadrumo.domain.is_compensation"
 class = "staged-capability"
 evidence = "Landed alongside the contabilidad package from the same concurrent work. Impuesto sobre Sociedades compensacion, the stock of losses a company carries forward; its only non-test consumer is the error registry at core/errors/registry/_application_part2.py."
+
+[[symbol_cluster]]
+name = "approval staleness with no persisted draft to go stale"
+class = "should-be-live"
+symbols = []
+evidence = "CLOSED across three steps, each of which unblocked the next. Nothing wrote the encrypted filing-draft namespace, so the staleness lifecycle had no persisted approved draft to refresh; the workflow gate's draft builder now persists it (src/cadrumo/application/modelo/workflow_gate.py). With a subject in the store, drafts_pending recomputes an APROBADO draft's verdict before classifying it, reaching refresh_review_status and making the APROBACION_CADUCADA row reachable (src/cadrumo/application/review/_adapters.py). Finally the row carries the reasons as stable enum tokens and the queue projection renders them through describe_stale_reason (src/cadrumo/application/review/operator.py), so an operator is told WHICH of eight upstream axes moved rather than only that something did. The tokens ride on the item rather than being folded into its summary because FindingReviewItem.summary is a Translatable, an abstract catalogue key that cannot absorb rendered prose; the projection is the boundary where a key becomes words and is therefore the only place a reason may be described. Covered by src/cadrumo/application/review/tests/test_adapters_approval_staleness.py, whose detection case was A/B-confirmed to fail without the wiring and which pairs each assertion with a control."
+remedy_requires_decision = false
+
+[[symbol_cluster]]
+name = "dead duplicates of a name that is live elsewhere"
+class = "superseded"
+symbols = [
+  "load_transactions",
+  "_OPERATOR_SURFACE_RECONCILIATION_META_KEY",
+]
+evidence = "Both are dead duplicates of a name that is live elsewhere, deleted 2026-09-07. entrypoints/cli/_common.py defined load_transactions(state) with no caller anywhere, while the live load_transactions(settings, bucket_id=...) is a different function in src/cadrumo/application/review/_adapters.py, so a grep for the name returned a dead copy alongside the real one. _OPERATOR_SURFACE_RECONCILIATION_META_KEY was defined identically in _common.py and in src/cadrumo/entrypoints/cli/_operator_surface_reconciliation.py, which is the module that both writes and reads the Click ctx.meta entry. The constant-agreement screen reports one name with one value in two modules without judgement, which is right for ordinary repetition; it is not ordinary for a meta-key protocol, where writer and reader silently stop agreeing the moment one copy is edited. The unused copy is gone and the owning module keeps the only definition."
+remedy_requires_decision = false
+
+[[symbol_cluster]]
+name = "diagnostics-discarding calculate wrapper only tests reach"
+class = "test-support"
+symbols = [
+  "calculate_modelo_revision_from_bucket_aggregation",
+]
+evidence = "A diagnostics-DISCARDING wrapper that no production path calls. calculate_modelo_revision_from_bucket_aggregation at src/cadrumo/application/modelo/calculation_actions.py delegates straight to calculate_modelo_revision_from_bucket_aggregation_with_diagnostics and returns .revision, dropping the non-blocking source diagnostics. Its own docstring names the operator-facing CLI calculate surface as a caller of the diagnostics variant, and a grep confirms that: the wrapper's twenty-five call sites are all tests, across ten modules in application/modelo, application/aggregation, application/calculations and dev/ci. So it is test ergonomics living on the production API, and under no-silent-under-declaration its existence is the hazard rather than its disuse: a future caller that picks the shorter name silently drops advisories. The remedy is relocation to the shared test-support home at src/cadrumo/tests/ rather than deletion, since the tests exercise real behaviour. Not done in this step: the move carries roughly twenty-five type imports into test support and touches ten peer-visible test modules, and the machine could not run those suites to validate it."
+remedy_requires_decision = false
 
 # ---------------------------------------------------------------------------
 # Orphaned test modules
@@ -759,7 +785,7 @@ area = "core"
 resolved = false
 remedy_requires_decision = true
 symbols = ["IVA_BIEN_ESCASO_VALOR_UMBRAL_EUR"]
-evidence = "Declared once in core/external_constants.py as Decimal('3005.06') and read by nothing in src/cadrumo or dev/. A legal threshold that no calculation applies is an unenforced rule rather than an unused value, so the remedy is to wire it or to record why the capability is unsupported."
+evidence = "The Art. 108.Dos.5 LIVA exclusion figure, 3005.06 EUR, the euro equivalent of the 500.000 pesetas the consolidated corpus still states: a good acquired below it is NOT a bien de inversion. Re-tested against the live design and CONFIRMED, with the reason it cannot simply be wired now stated. The bien-de-inversion register does not compute art-108 eligibility -- it carries art108_elegible as an operator-supplied boolean, documented as marking a good the operator recorded but which is excluded from regularisation -- and the record has no acquisition-value field to compare against the threshold at all, storing cuota_soportada, the input IVA borne, instead. So applying the figure means adding an acquisition-value field and deriving eligibility rather than trusting the flag, which is a schema change and a decision about whether the product judges art-108 or the operator does."
 
 
 # ---------------------------------------------------------------------------
@@ -999,8 +1025,8 @@ class = "should-be-live"
 area = "application"
 resolved = false
 remedy_requires_decision = true
-symbols = ["default_profile_secure_object_inventory", "profile_advance_session_idle_deadline", "profile_is_persisted_session"]
-evidence = "Five of the eight one-line port-facade wrappers in the shipped tree are called by nothing; the other three are reached from tests or dev. Re-tested against the live design: profile_is_authentication_failure was removed from this cluster and recorded as superseded, because authentication failures ARE recognised -- by map_profile_authentication_proof_failure at custody_ports.py:1538, which collapses credential-shape and proof failures into a typed ProfileAuthenticationRefusedError and is reached from login_session, passphrase_rotation and recovery_custody. The earlier inference that an adapter exception type must be leaking into application code was wrong. The remaining three are still one-line port facades no caller reaches."
+symbols = ["default_profile_secure_object_inventory"]
+evidence = "Five of the eight one-line port-facade wrappers in the shipped tree are called by nothing; the other three are reached from tests or dev. Re-tested against the live design: profile_is_authentication_failure was removed from this cluster and recorded as superseded, because authentication failures ARE recognised -- by map_profile_authentication_proof_failure at custody_ports.py:1538, which collapses credential-shape and proof failures into a typed ProfileAuthenticationRefusedError and is reached from login_session, passphrase_rotation and recovery_custody. The earlier inference that an adapter exception type must be leaking into application code was wrong. Two more were removed on re-test and recorded as superseded, leaving one port facade here."
 
 # ---------------------------------------------------------------------------
 # Shipped types nothing constructs
@@ -1018,8 +1044,8 @@ class = "should-be-live"
 area = "application"
 resolved = false
 remedy_requires_decision = true
-symbols = ["ModeloWorkspaceVersionHeader", "ProfileImportResult", "ModeloDraftBuilderAdapter", "ModeloWorkspaceAtomicProjectionPortV1"]
-evidence = "AttachmentCatalogue is deliberately excluded: it already carries its own staged-capability cluster, and the taxonomy admits exactly one class per finding. Each remaining symbol is exported and referenced nowhere outside the module that defines it, so nothing constructs, subclasses or annotates with it. Read as behaviour rather than as code, each names something the product does not do: AttachmentCatalogue verifies that every mapping key equals the embedded attachment_id so lookups cannot drift, and no lookup goes through it; SchemaModuleLoadFailure records a module and its error, and no schema load failure is recorded; ProfileImportResult is the declared outcome of importing a portable bundle, and portable import returns no such outcome; Three symbols were removed from this cluster on re-test against the live design and are recorded separately as superseded; the claim that the certificate refusal goes undetected was wrong. Deleting them would remove the record that the capability was designed, which is the same argument the unapplied threshold cluster records. The remedy is to wire each to the caller it was written for or to withdraw it deliberately, and both are owner decisions."
+symbols = ["ModeloWorkspaceAtomicProjectionPortV1"]
+evidence = "AttachmentCatalogue is deliberately excluded: it already carries its own staged-capability cluster, and the taxonomy admits exactly one class per finding. Each remaining symbol is exported and referenced nowhere outside the module that defines it, so nothing constructs, subclasses or annotates with it. Read as behaviour rather than as code, each names something the product does not do: AttachmentCatalogue verifies that every mapping key equals the embedded attachment_id so lookups cannot drift, and no lookup goes through it; SchemaModuleLoadFailure records a module and its error, and no schema load failure is recorded; Three symbols were removed from this cluster on re-test against the live design and are recorded separately as superseded; the claim that the certificate refusal goes undetected was wrong. Deleting them would remove the record that the capability was designed, which is the same argument the unapplied threshold cluster records. The remedy is to wire each to the caller it was written for or to withdraw it deliberately, and both are owner decisions."
 
 [[symbol_cluster]]
 name = "ledger command census read only by its conformance gate"
@@ -1057,8 +1083,8 @@ class = "should-be-live"
 area = "entrypoints"
 resolved = false
 remedy_requires_decision = true
-symbols = ["should_use_color", "should_show_rich_progress", "refuse_if_stdin_non_tty"]
-evidence = "The module docstring states it centralises the rules EVERY CLI command uses to decide whether to emit colour, render a progress widget, or refuse a request needing interactivity. All three are called by nothing: the only occurrence of should_use_color outside the module is a docstring sentence in core/config.py describing what it would consult, not a call. Colour is nonetheless decided, which is what makes this a divergence rather than an absence: the localised usage-error path passes color=self.show_color, and that attribute is Click own UsageError state, so the framework default is in force while the project settings no_color and CADRUMO_FORCE_COLOR, and the helper written to reconcile them, are consulted by nothing. The two remaining rules have no second path at all, so no command refuses a non-tty request through the shared helper and none consults the progress rule. The remedy is to route the CLI through these helpers or to withdraw them and the settings they read; either is an owner decision because it changes user-visible terminal behaviour."
+symbols = ["should_show_rich_progress", "refuse_if_stdin_non_tty"]
+evidence = "The module docstring states it centralises the rules EVERY CLI command uses to decide whether to emit colour, render a progress widget, or refuse a request needing interactivity. All three are called by nothing: the only occurrence of should_use_color outside the module is a docstring sentence in core/config.py describing what it would consult, not a call. Colour is nonetheless decided, which is what makes this a divergence rather than an absence: the localised usage-error path passes color=self.show_color, and that attribute is Click own UsageError state, so the framework default is in force while the project settings no_color and CADRUMO_FORCE_COLOR, and the helper written to reconcile them, are consulted by nothing. The two remaining rules have no second path at all, so no command refuses a non-tty request through the shared helper and none consults the progress rule. The remedy is to route the CLI through these helpers or to withdraw them and the settings they read; either is an owner decision because it changes user-visible terminal behaviour. Re-tested against the live design and CONFIRMED rather than reversed, with the alternative decider now named: the localised Click exception override passes color=self.show_color, where self is a ClickException and show_color is CLICK's own attribute, defined nowhere in this tree. That is now FIXED for colour: should_use_color gained an optional stream_is_tty probe and the exception override calls it with stderr_is_tty, so NO_COLOR and CADRUMO_FORCE_COLOR reach error output, which they previously did not; an explicit show_color still wins. should_use_color was removed from this cluster on that change. The progress-widget and interactivity rules remain consulted by nothing."
 
 [[symbol_cluster]]
 name = "first-slice routing accessors displaced by direct mapping access"
@@ -1153,26 +1179,24 @@ symbols = ["WizardFlowProtocol"]
 evidence = "Split out of the domain-area protocol cluster, which recorded the wrong area: the symbol is reported in cadrumo.core.wizard_catalogue. Runtime-checkable, and its module docstring states that domain code reaches the descriptor through this core slot rather than importing the application-layer WizardFlow directly; it appears nowhere outside its own module and __all__, so no domain code annotates or isinstance-checks against it and the layering it describes is not in force."
 
 [[symbol_cluster]]
-name = "declared bound nothing enforces: profile custody record"
-class = "should-be-live"
+name = "vestigial custody bound for a record this package does not hold"
+class = "orphaned"
 area = "adapters/persistence/storage/custody"
 symbols = ["PROFILE_CUSTODY_PROFILE_RECORD_MAX_BYTES"]
-evidence = "A 4 MiB ceiling on the profile record. Its siblings in the same package ARE enforced -- _capsule_data.py refuses a payload over PROFILE_CUSTODY_DATA_FILE_MAX_BYTES and reads the envelope with PROFILE_CUSTODY_ENVELOPE_MAX_BYTES as the cap -- and this one is compared against nothing, so the profile record is the single unbounded member of a family whose whole point is bounded reads. The asymmetry is what makes it a finding rather than an unused number; deleting it would remove the record that the bound was intended."
-remedy_requires_decision = true
+evidence = "A 4 MiB literal sitting in the block that re-exports the current public custody vocabulary after the inventory owner was split out. Re-tested against the live design and reversed: there is no profile-record FILE in the custody package for it to bound. Its neighbours in that block alias real owner constants and those owners enforce themselves -- the inventory entry cap is checked where entries are counted, and the data-file cap where file metadata is sized. The only profile_record in the tree is a record-format label on the user-profile secure-object namespace, which is an encrypted row in structured custody rather than a capsule file, so a file-read byte cap does not apply to it. Recorded first as the single unbounded member of a family built for bounded reads; that reading assumed a file this package does not have."
 
 [[symbol_cluster]]
 name = "checkpoint discard nothing reaches"
 class = "should-be-live"
 area = "application/flows"
 symbols = ["discard_checkpoint"]
-evidence = "Erases an in-progress flow run through the domain store. No production caller reaches it and no production code calls store.discard for a flow definition directly either, so a run can be checkpointed and resumed but never discarded. Not a superseded wrapper -- there is no other discard path that displaced it."
-remedy_requires_decision = true
+evidence = "Erases an in-progress flow run through the domain store. Now WIRED, and the gap it left was concrete: the line frontend offers save-and-exit, which writes a checkpoint, and its submit path returned the projection without clearing one, so an operator who saved, resumed and then submitted left the checkpoint on disk and a later run would offer to resume an already-submitted flow. The submit branch now discards it once submit eligibility has been asserted, guarded on the store being present exactly as save-and-exit is. Its siblings were live throughout -- CheckpointStore, checkpoint_available and save_checkpoint each at two references -- which is why only the discard half was missing."
 
 [[symbol_cluster]]
 name = "portable profile import declared and unwired"
 class = "should-be-live"
 area = "application/user_profile"
-symbols = ["register_imported_profile_bundle", "censo_unadopted_evidence"]
+symbols = ["censo_unadopted_evidence"]
 evidence = "Two halves of profile ingestion that nothing reaches. register_imported_profile_bundle registers an imported portable bundle against a target bucket, and pairs with ProfileImportResult in the public-types cluster, whose evidence already records that portable import returns no such outcome -- so the declared outcome and its registrar are both unreached, which is one capability, not two coincidences. censo_unadopted_evidence projects the certificate fields the cotejo deliberately does NOT adopt into divergence rows; nothing calls it, so those certified-but-unadopted statements are never surfaced, which is the silent under-declaration the project forbids."
 remedy_requires_decision = true
 
@@ -1180,9 +1204,8 @@ remedy_requires_decision = true
 name = "declared type distinctions nothing annotates"
 class = "should-be-live"
 area = "core"
-symbols = ["OptionalSourceUrl", "optional_extra_for_module"]
-evidence = "OptionalSourceUrl is a constrained alias whose own docstring explains why it is spelled separately from SourceUrl rather than as SourceUrl | None -- and no model field or signature annotates with it, so the distinction it draws is enforced nowhere while its sibling is in use. optional_extra_for_module answers 'is this missing module a capability package the operator may legitimately not have installed?' against the declared OPTIONAL_EXTRAS inventory, and nothing asks: a missing optional package therefore reaches the operator unclassified rather than as the install-this-extra remedy the inventory exists to give."
-remedy_requires_decision = true
+symbols = ["OptionalSourceUrl"]
+evidence = "OptionalSourceUrl is a constrained alias whose own docstring explains why it is spelled separately from SourceUrl rather than as SourceUrl | None: the projection spells an absent value as the empty string on the wire, and a minimum length of one would refuse it. It is now WIRED. ModelLicence.source_url carried a bare str default of empty string with NO length bound at all, which is exactly the case the alias describes, and it now carries the alias. Verified live: the empty string still validates so absence on the wire is unaffected, a value at the 1024 bound is accepted, and one over it is refused where previously any length passed. Its sibling optional_extra_for_module left this cluster on being wired as the import-failure backstop."
 
 [[symbol_cluster]]
 name = "sectoral retencion rate set no classifier consults"
@@ -1193,12 +1216,11 @@ evidence = "The art. 95.4/95.5/95.6.1 rate set, with any art. 95.1 figure subtra
 remedy_requires_decision = true
 
 [[symbol_cluster]]
-name = "localizable field literal nothing annotates"
-class = "should-be-live"
+name = "localizable field union the narrower aliases superseded"
+class = "superseded"
 area = "domain/calculations/registry"
 symbols = ["ModeloLocalizationField"]
-evidence = "A Literal enumerating every localizable modelo field -- label, help, title, official name. Nothing annotates with it, so the closed set is asserted in prose and enforced by no signature, leaving the localization surface free to accept a kind outside the four this declares."
-remedy_requires_decision = true
+evidence = "A Literal spanning all four localizable kinds -- label, help, title and official name. Re-tested against the live design and reversed: annotating anything with it would WIDEN a contract, because every site in the tree is narrower and deliberately so. The modelo-level key accepts only title and official name, the casilla key takes the sibling CasillaLocalizationField which is label and help alone, and the revision key is annotated with a single-member Literal of label. The only external consumers of the kind enum pass LABEL for a casilla. So the broad union is superseded by the narrower aliases beside it rather than an unapplied distinction; recorded first as a closed set enforced by no signature, which was true but read as a gap when it is the correct absence of one."
 
 [[symbol_cluster]]
 name = "registry declarations the dev pipeline reads"
@@ -1270,8 +1292,8 @@ method = "a reference counts only when it appears as an ast.Name load, an attrib
 name = "collaboration audit trail nothing writes"
 class = "should-be-live"
 area = "application/modelo"
-symbols = ["emit_collab_package_encrypted_event", "emit_collab_package_decrypted_event", "emit_collab_package_counter_signed_event", "emit_collab_recipient_registered_event", "emit_collab_recipient_removed_event", "emit_collab_review_only_workspace_opened_event"]
-evidence = "Six emitters covering the whole collaboration review-package lifecycle -- package encrypted and decrypted, counter-signature recorded, recipient registered and removed, review-only workspace opened -- each writing to the bucket event history. No production caller reaches any of them. The apparent references are Sphinx :func: cross-links inside sibling docstrings, which is prose rather than a call, so the collaboration flow currently produces no audit record at all. An event history that is declared and never written is worse than none, because the empty history reads as 'nothing happened'."
+symbols = ["emit_collab_review_only_workspace_opened_event"]
+evidence = "Six emitters covering the whole collaboration review-package lifecycle -- package encrypted and decrypted, counter-signature recorded, recipient registered and removed, review-only workspace opened -- each writing to the bucket event history. No production caller reaches any of them. The apparent references are Sphinx :func: cross-links inside sibling docstrings, which is prose rather than a call, so the collaboration flow currently produces no audit record at all. Re-tested against the live design and CONFIRMED rather than reversed: the flow demonstrably runs, because encrypt_review_package_for_recipient and decrypt_review_package_for_recipient are each reached twice, from the modelo review-package CLI and from the feedback service. The encrypt event is now WIRED: the review-package encrypt command emits it against the bucket event history after writing the envelope, so a package leaving the bucket is recorded, and that emitter was removed from this cluster. Five of the six are now WIRED and were removed from this cluster: the encrypt command emits after writing the envelope, counter-sign emits on the counter-signer's bucket, decrypt emits on the recipient's, and the collab recipient add and remove commands emit when trust is granted and revoked, each resolving the bucket once and passing bucket_event_history_repository. Only the review-only workspace opening remains, and it is genuinely blocked rather than skipped: it has no producer to emit from, which is the same gap as the missing workspace opener recorded beside it. An event history that is declared and never written is worse than none, because the empty history reads as 'nothing happened'."
 remedy_requires_decision = true
 
 [[symbol_cluster]]
@@ -1279,16 +1301,15 @@ name = "sectoral prorrata calculation with no caller"
 class = "should-be-live"
 area = "domain/iva"
 symbols = ["compute_sectoral_prorrata", "requires_sectoral_separation", "classify_input_deduction", "sum_deductible_amounts"]
-evidence = "The sectoral prorrata path: the predicate deciding whether sectors must be separated, the calculator that runs once they are, the input-deduction classifier and the deductible summation. Referenced only from its own module's docstrings and __all__. A taxpayer with differentiated sectors therefore gets no sectoral separation, and under the calculation-grounding rule the declared legal capability stays visible rather than being deleted for being uncalled."
+evidence = "The sectoral prorrata path: the predicate deciding whether sectors must be separated, the calculator that runs once they are, the input-deduction classifier and the deductible summation. Referenced only from its own module's docstrings and __all__. Re-tested against the live design and CONFIRMED rather than reversed: prorrata itself IS computed, and the module is majority-live -- compute_prorrata_definitiva_anual is reached twice, with compute_regularizacion_prorrata_anual, deductible_percentage_for, especial_mandatory_rule, is_especial_mandatory and validate_prorrata_reference each reached as well. What is unreached is specifically the differentiated-sectors regime. A taxpayer with differentiated sectors therefore gets no sectoral separation, and under the calculation-grounding rule the declared legal capability stays visible rather than being deleted for being uncalled."
 remedy_requires_decision = true
 
 [[symbol_cluster]]
-name = "registry source-connectivity projections with no consumer"
-class = "should-be-live"
+name = "snapshot-derived connectivity records the declared census displaced"
+class = "superseded"
 area = "application/registry"
 symbols = ["derive_registry_binding_records", "derive_registry_destination_records", "derive_registry_formula_records", "derive_registry_relation_records", "derive_registry_source_disposition_records"]
-evidence = "Five projections turning a validated RegistrySnapshot into connectivity records -- bindings, destinations, formulas, relations and source dispositions -- each documented as avoiding a re-parse of the expressions. Nothing in production or dev consumes them, so the source-connectivity view they exist to produce is never assembled."
-remedy_requires_decision = true
+evidence = "Five projections turning a validated RegistrySnapshot into connectivity records. Re-tested against the live path: the module HAS a consumer, and the source-connectivity view IS assembled -- the dev source-connectivity check imports load_source_connectivity_census from this module, which loads the canonical bundled census.toml and validates it against a closed typed contract. That declared census is the strategy in force; these five derive the same view from a snapshot instead, are called nowhere including inside their own module, and appear only in __all__. Recorded first as saying the view they exist to produce is never assembled, which was wrong -- it is produced, from a declaration rather than a derivation."
 
 [[symbol_cluster]]
 name = "displaced CLI execution-policy declarations"
@@ -1575,3 +1596,24 @@ class = "superseded"
 area = "application/user_profile"
 symbols = ["profile_is_authentication_failure"]
 evidence = "A one-line predicate asking whether an error is an authentication failure. The live holder is map_profile_authentication_proof_failure, defined at application/user_profile/custody_ports.py:1538 and reached from login_session.py, passphrase_rotation.py and recovery_custody.py: it collapses credential-shape and proof failures for one named capability into a typed ProfileAuthenticationRefusedError or None. So the application recognises the refusal through a mapper at the port boundary rather than through a boolean test, and its keyring-unavailable sibling remains live because no equivalent mapper covers that case."
+
+[[symbol_cluster]]
+name = "bundle import surface the capsule archive path displaced"
+class = "superseded"
+area = "application/user_profile"
+symbols = ["register_imported_profile_bundle", "ProfileImportResult"]
+evidence = "The registrar for an imported portable bundle and its declared outcome type. Re-tested against the live design and reversed: portable profile import IS wired, through the capsule archive rather than the bundle registrar. The restore CLI defines a profile_archive_import command, and capsule_archive exposes a live surface -- read_profile_capsule_archive, inspect_profile_capsule_archive, export_profile_capsule_archive and both the inspection and receipt types are each reached -- which hands capsule material to the shared publication authority recorded elsewhere in this ledger. Recorded first as portable import being declared and unwired, and as this outcome type being returned by nothing; both readings were wrong."
+
+[[symbol_cluster]]
+name = "session port facades callers reach through the port object"
+class = "superseded"
+area = "application/user_profile"
+symbols = ["profile_advance_session_idle_deadline", "profile_is_persisted_session"]
+evidence = "Two module-level facades over the login-session port. Re-tested against the live design and reversed. The idle deadline IS advanced: login_session.py calls advance_acceleration_idle_deadline on the port object, and the storage adapter implements it by calling advance_persisted_profile_session_idle_deadline, so the behaviour the facade wraps is reached without the facade. The TypeGuard narrows an untyped object to the persisted-session port, and nothing receives one untyped -- the adapter annotates ProfilePersistedSessionPort directly on the functions that take and return it, and constructs the concrete record itself. The module is mostly live around them, with the current-bucket-session helper at seven references and the serves-bucket predicate at four."
+
+[[symbol_cluster]]
+name = "workspace header and draft adapter with live equivalents"
+class = "superseded"
+area = "application/modelo"
+symbols = ["ModeloWorkspaceVersionHeader", "ModeloDraftBuilderAdapter"]
+evidence = "Two types re-tested against the live design and reversed. The version header is a minimal pre-dispatch shape carrying contract_version bounded only at one or more; the concrete workspace models each pin their own contract_version as a single-value Literal and one cross-checks a baseline against itself, which is a stronger guarantee than the shared header offers, so the pre-dispatch sniff is superseded by per-model pinning. The draft adapter is one implementer of the modelo draft-builder Protocol and a different one is live: the workflow gate constructs _RevisionDraftBuilder, documented as building and locally approving the draft backed by the target work unit, and passes it as the filing_draft_builder the adapter factory requires. A Protocol with a live implementer under another name is supersession, not an unwired capability."

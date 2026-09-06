@@ -838,20 +838,23 @@ def _ledger_controller(scenario: WorkbenchFixtureScenario) -> LedgerWorkspaceCon
     from ....application.operator_actions.models import ActionReference
     from ..ledger.controller import LedgerWorkspaceController
 
-    return LedgerWorkspaceController(
+    controller = LedgerWorkspaceController(
         TuiScreenContextV1(destination="workbench.ledger"),
         _ledger_projection(scenario),
         LedgerWorkspaceInjection(
             review_action=ActionReference(action_id=lookup_action("operator.ledger.review").action_id),
             classify_action=ActionReference(action_id=lookup_action("operator.ledger.classify").action_id),
-            classification_target=_LEDGER_TX_A
-            if scenario in {WorkbenchFixtureScenario.READY, WorkbenchFixtureScenario.STALE}
-            else None,
             evidence_action=ActionReference(action_id=lookup_action("operator.ledger.evidence.review.list").action_id),
             evidence_items=(),
             link_action=ActionReference(action_id=lookup_action("operator.ledger.link").action_id),
         ),
     )
+    # The scenarios that used to be handed an injected classification target now
+    # start already focused on that entry, which is the state an operator
+    # reaches by selecting a row rather than one the launcher can supply.
+    if scenario in {WorkbenchFixtureScenario.READY, WorkbenchFixtureScenario.STALE}:
+        return controller.with_transaction_focus(_LEDGER_TX_A)
+    return controller
 
 
 def _ledger_scenarios(surface_id: str) -> tuple[WorkbenchFixtureScenario, ...]:

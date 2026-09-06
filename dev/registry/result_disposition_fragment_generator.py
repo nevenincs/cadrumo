@@ -29,6 +29,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from .conformance.manager import reset_conformance_cache
 from .derive_result_dispositions import read_diseno_evidence
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -133,6 +134,10 @@ def write_fragments(root: Path | None = None, *, apply: bool = False) -> tuple[G
         for fragment in planned:
             fragment.path.parent.mkdir(parents=True, exist_ok=True)
             fragment.path.write_text(fragment.body, encoding="utf-8", newline="\n")
+        if planned:
+            # See reset_conformance_cache: the snapshot cache's key carries no
+            # registry-source input, so it cannot notice this write on its own.
+            reset_conformance_cache()
     return planned
 
 

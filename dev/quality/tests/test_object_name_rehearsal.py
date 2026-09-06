@@ -8,7 +8,7 @@ import shutil
 import subprocess
 import sys
 from dataclasses import replace
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from types import SimpleNamespace
 from typing import Any
 
@@ -16,7 +16,13 @@ import pytest
 
 from cadrumo.core.hashing import canonical_json_bytes
 
-from ...audit.object_names import ObjectNameAuditResult, scan, to_json
+from ...audit.object_names import (
+    ObjectNameAuditResult,
+    ObjectNameFinding,
+    ObjectNameFindingKind,
+    scan,
+    to_json,
+)
 from .. import object_name_graph as graph_module
 from .. import object_name_rehearsal as rehearsal_module
 from ..object_name_graph import HardEdge, ReferenceKind, build_manifest_components
@@ -468,7 +474,16 @@ def test_post_allocation_failures_retain_root_and_live_tree(
     }[stage]
     monkeypatch.setattr(rehearsal_module, target, fail)
 
-    with pytest.raises(ObjectNameRehearsalError, match=r"retained rehearsal root: .+") as raised:
+    # Every rehearsal refusal carries the retained-root suffix, so matching on it alone
+    # cannot show the refusal came from the stage this case injected at. Add one
+    # precondition that fails earlier and all seven cases still pass while six of the
+    # seven injection points are never reached: the parametrisation would read as
+    # seven-point coverage while measuring one. Naming the stage pins each case to its
+    # own injection.
+    with pytest.raises(
+        ObjectNameRehearsalError,
+        match=rf"injected {stage} failure.*retained rehearsal root: .+",
+    ) as raised:
         rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
 
     assert Path(str(raised.value).rsplit("retained rehearsal root: ", 1)[1]).is_dir()
@@ -713,6 +728,79 @@ def test_copy_race_that_adds_selected_reference_is_refused(tmp_path: Path, monke
         rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
 
 
+def test_a_copy_that_alters_the_selected_component_is_refused(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The integrity check every later step depends on, driven for the first time.
+
+    The rehearsal reasons about a copy of the component, so if the copy does not
+    carry the component's own bytes then every gate, digest and receipt below is
+    about a different file than the one under review. The sibling race test
+    corrupts an UNGUARDED path and lands on the allowlist refusal; this one
+    corrupts the guarded component itself, which is caught earlier and by a
+    different claim.
+    """
+    repo = tmp_path / "repo"
+    inventory, manifest, component = _fixture(repo)
+    original_copy = rehearsal_module._copy_snapshot
+
+    def copy_then_alter_the_component(*args: Any, **kwargs: Any) -> None:
+        original_copy(*args, **kwargs)
+        target_root = args[1]
+        (target_root / "src/example/contracts.py").write_text(
+            "class Widgets:" + chr(10) + "    pass" + chr(10) + "# altered inside the copy" + chr(10),
+            encoding="utf-8",
+        )
+
+    monkeypatch.setattr(rehearsal_module, "_copy_snapshot", copy_then_alter_the_component)
+
+    with pytest.raises(
+        ObjectNameRehearsalError,
+        match="selected component bytes changed during the temporary copy",
+    ):
+        rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
+
+
+def test_a_leftover_output_temp_path_is_refused_rather_than_overwritten(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A crashed earlier run leaves `.<name>.object-name-output` behind.
+
+    `_materialise` writes each proposed output to that sibling and then
+    `os.replace`s it into place, so an occupied sibling is either someone else's
+    in-flight write or debris from a run that died mid-materialise. Overwriting
+    it blindly would destroy the one copy of whatever it holds. Nothing drove
+    this refusal.
+
+    The occupied path is derived from the REAL planner's own outputs rather than
+    a guessed filename, and the real `_materialise` decides.
+    """
+    repo = tmp_path / "repo"
+    inventory, manifest, component = _fixture(repo)
+    original_plan = rehearsal_module.plan_object_name_transformation
+    occupied: list[str] = []
+
+    def plan_then_occupy_the_first_output_temp(*args: Any, repo_root: Path, **kwargs: Any) -> Any:
+        result = original_plan(*args, repo_root=repo_root, **kwargs)
+        for output in result.outputs:
+            if output.content is None:
+                continue
+            target = repo_root.joinpath(*PurePosixPath(output.path).parts)
+            temporary = target.with_name(f".{target.name}.object-name-output")
+            temporary.parent.mkdir(parents=True, exist_ok=True)
+            temporary.write_bytes(b"debris from a run that died mid-materialise")
+            occupied.append(output.path)
+            break
+        return result
+
+    monkeypatch.setattr(rehearsal_module, "plan_object_name_transformation", plan_then_occupy_the_first_output_temp)
+
+    with pytest.raises(ObjectNameRehearsalError, match="temporary output path is occupied"):
+        rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
+
+    # The refusal must be about the path the planner actually proposed, not a
+    # coincidence: prove the fixture reached a real output before asserting.
+    assert occupied, "the planner proposed no writable output, so the refusal proves nothing"
+
+
 def test_unsafe_system_temp_and_escaped_allocation_are_refused(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     repo = tmp_path / "repo"
     inventory, manifest, component = _fixture(repo)
@@ -954,3 +1042,43 @@ def test_identical_focused_gates_run_once_for_the_whole_component(tmp_path: Path
     assert len(focused) == 1
     assert focused[0].argv == gate
     assert focused[0].return_code == 0
+
+
+def test_a_rehearsal_that_introduces_an_enforced_finding_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The proposition the whole rehearsal exists to evaluate.
+
+    Everything before this refusal -- the isolated copy, the bounded transform,
+    the re-scan -- is machinery for reaching one comparison: does the rehearsed
+    change ADD an enforced finding. Nothing drove that comparison to its refusing
+    side, so the branch that makes the rehearsal protective was never observed.
+
+    The real `_inventory_after_allowed_changes` still runs; one enforced finding
+    is appended to its result, so the real delta and the real comparison decide.
+    """
+    repo = tmp_path / "repo"
+    inventory, manifest, component = _fixture(repo)
+    original_after = rehearsal_module._inventory_after_allowed_changes
+    introduced = ObjectNameFinding(
+        kind=ObjectNameFindingKind.DUPLICATE,
+        name="Widgets",
+        enforced=True,
+        sites=("src/example/contracts.py:1",),
+        detail="a finding the rehearsed change would introduce",
+        qualified_sites=("src/example/contracts.py::Widgets",),
+    )
+
+    def with_one_more_enforced_finding(before: ObjectNameAuditResult, **kwargs: Any) -> ObjectNameAuditResult:
+        after = original_after(before, **kwargs)
+        return replace(after, findings=(*after.findings, introduced))
+
+    monkeypatch.setattr(rehearsal_module, "_inventory_after_allowed_changes", with_one_more_enforced_finding)
+
+    # The refusal is re-raised by the outer handler with the retained root
+    # appended, so the pattern spans both halves rather than pinning the first.
+    with pytest.raises(
+        ObjectNameRehearsalError,
+        match=r"rehearsal introduces an enforced object-name finding.*retained rehearsal root",
+    ):
+        rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)

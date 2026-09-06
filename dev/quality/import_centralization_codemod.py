@@ -47,6 +47,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.core.directory_scan import scan_directory
 
 # Imported through the package rather than by inserting this directory on
@@ -134,13 +135,18 @@ def _format_import_stmt(
 
 def collect_plans(
     *, only_file: Path | None, include_tests: bool = False, tests_only: bool = False
-) -> tuple[list[RewritePlan], dict[str, scan.FacadeInfo]]:
+) -> tuple[list[RewritePlan], dict[str, scan.FacadeInfo], tuple[Path, ...]]:
     """Collect every rewritable ``ImportFrom`` statement under ``src/cadrumo``.
 
     ``include_tests=False`` (the default) preserves production-only
     behavior. ``include_tests=True`` also visits test
     modules; ``tests_only=True`` additionally excludes production modules,
     restricting the sweep to test files only.
+
+    The third element names every file the walk listed and the read could not
+    reach. A codemod that silently omits a file reports a coverage figure over
+    a tree it never finished reading, so the omission is returned rather than
+    dropped.
     """
     facades = scan.discover_facades()
 
@@ -149,6 +155,7 @@ def collect_plans(
         py_files = [p for p in py_files if p == only_file]
 
     plans: list[RewritePlan] = []
+    unread: list[Path] = []
     for path in py_files:
         mod = scan.module_name_for(path)
         is_test = scan.is_test_module(mod, path)
@@ -160,7 +167,8 @@ def collect_plans(
         try:
             src = path.read_text(encoding=_UTF_8)
             tree = ast.parse(src, filename=str(path))
-        except (SyntaxError, UnicodeDecodeError):
+        except (OSError, SyntaxError, UnicodeDecodeError):
+            unread.append(path)
             continue
 
         for node in ast.walk(tree):
@@ -201,7 +209,7 @@ def collect_plans(
                     private_aliases=private_aliases,
                 )
             )
-    return plans, facades
+    return plans, facades, tuple(sorted(unread))
 
 
 def apply_plans_to_file(path: Path, plans: list[RewritePlan]) -> bool:
@@ -245,7 +253,7 @@ def apply_plans_to_file(path: Path, plans: list[RewritePlan]) -> bool:
         changed = True
 
     if changed:
-        path.write_text("".join(lines), encoding=_UTF_8, newline="\n")
+        atomic_write_text(path, "".join(lines), encoding=_UTF_8)
     return changed
 
 
@@ -266,13 +274,17 @@ def main() -> int:
         only_file = only_file.resolve()
 
     include_tests = args.include_tests or args.tests_only
-    plans, _facades = collect_plans(only_file=only_file, include_tests=include_tests, tests_only=args.tests_only)
+    plans, _facades, unread = collect_plans(
+        only_file=only_file, include_tests=include_tests, tests_only=args.tests_only
+    )
 
     by_file: dict[Path, list[RewritePlan]] = defaultdict(list)
     for plan in plans:
         by_file[plan.path].append(plan)
 
     print(f"Collected {len(plans)} rewritable ImportFrom statement(s) across {len(by_file)} file(s).")
+    for path in unread:
+        print(f"  UNREAD {path.relative_to(REPO_ROOT)} :: listed by the walk, not readable; not rewritten")
     for path in sorted(by_file):
         n_names = sum(len(p.facaded_aliases) for p in by_file[path])
         print(f"  {path.relative_to(REPO_ROOT)} :: {len(by_file[path])} stmt(s), {n_names} name(s)")

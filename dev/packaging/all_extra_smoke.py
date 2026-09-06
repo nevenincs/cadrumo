@@ -49,25 +49,70 @@ def _install_all_extras_with_pip(
     )
 
 
-def _assert_all_extra_imports(work_dir: Path, venv_path: Path) -> None:
-    """Verify all capability-gated optional packages import in the installed venv."""
-    code = """
-import anthropic
-import google_auth_oauthlib.flow
-import googleapiclient.discovery
-import playwright.async_api
-import playwright_stealth
+COMPANION_MODULES = (
+    "google_auth_oauthlib.flow",
+    "googleapiclient.discovery",
+    "playwright.async_api",
+    "playwright_stealth",
+)
+"""Extra-supplied distributions the registry's one probe name per extra does not reach.
 
-from cadrumo.core.optional_extras import ANTHROPIC_EXTRA, BROWSER_EXTRA, GOOGLE_EXTRA, require_optional_extra
+``OPTIONAL_EXTRAS`` carries a single import name per extra, chosen to answer one
+question: is the extra installed. The ``google`` and ``browser`` extras each ship
+further distributions (``google-auth-oauthlib``, ``playwright-stealth``) that the
+probe name never touches, so they are named here and imported alongside it.
+"""
 
-for extra in (GOOGLE_EXTRA, BROWSER_EXTRA, ANTHROPIC_EXTRA):
-    require_optional_extra(extra)
+_PROBE_TEMPLATE = """
+import importlib
+
+from cadrumo.core.optional_extras import OPTIONAL_EXTRAS, require_optional_extra
+
+if not OPTIONAL_EXTRAS:
+    raise SystemExit("installed optional-extra registry is empty")
+
+for _name in __COMPANION_MODULES__:
+    importlib.import_module(_name)
+
+for _extra in OPTIONAL_EXTRAS:
+    importlib.import_module(_extra.import_name)
+    require_optional_extra(_extra)
 
 print("all-extra-imports-ok")
 """
+
+
+def optional_import_probe_source(companions: tuple[str, ...] = COMPANION_MODULES) -> str:
+    """Return the in-venv program proving every capability-gated extra imports.
+
+    Derived from the installed ``OPTIONAL_EXTRAS`` registry rather than a hand-kept
+    name list. The hand-kept list reached three of the five registered extras:
+    ``ofx`` and ``llm`` had no present-side import proof in any lane, so a supply
+    that resolves but no longer imports -- ``nvidia-ml-py`` ceasing to provide
+    ``pynvml`` is the concrete shape -- would leave ``cadrumo[all]`` installing
+    cleanly while the capability reports itself absent, because the production
+    reader answers ``ImportError`` with an ``UNKNOWN`` accelerator rather than a
+    failure. Iterating the registry also makes the proof self-extending: a sixth
+    extra is covered by declaring it, not by remembering this list.
+
+    ``import_module`` rather than ``require_optional_extra`` alone, because the
+    latter is a spec-only probe: it answers that the module is findable, not that
+    importing it succeeds. Both run, so a findable-but-broken supply still fails.
+
+    Exposed as a value so its per-extra teeth are provable without building a
+    wheel, a venv and every optional extra.
+    """
+    return _PROBE_TEMPLATE.replace("__COMPANION_MODULES__", repr(tuple(companions)))
+
+
+def _assert_all_extra_imports(work_dir: Path, venv_path: Path) -> None:
+    """Verify every capability-gated optional package imports in the installed venv."""
     env = isolated_product_env(work_dir / "all-extras-import-state")
     run_checked_marker(
-        [str(venv_python_path(venv_path)), "-c", code], cwd=work_dir, env=env, marker="all-extra-imports-ok"
+        [str(venv_python_path(venv_path)), "-c", optional_import_probe_source()],
+        cwd=work_dir,
+        env=env,
+        marker="all-extra-imports-ok",
     )
     record_proof("all capability-gated optional imports")
 

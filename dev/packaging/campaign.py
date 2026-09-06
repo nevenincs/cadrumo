@@ -16,9 +16,9 @@ Profiles mirror the two workflow aggregates:
 
 - ``portable``: the host-portable lane set every OS leg runs
   (core / pip-core / sdist-core / extras / split / browser).
-- ``ci``: the Ubuntu superset (adds the dev-environment lane, the
-  ``--with-deps`` browser variant instead of the portable one, and the two
-  Docker lanes).
+- ``ci``: the Ubuntu lane set (adds the dev-environment lane and swaps the
+  portable browser form for the ``--with-deps`` variant). It is NOT a
+  superset of ``portable``: ``browser/host`` runs there and nowhere else.
 - ``quick``: the single per-push probe (core only) used by the quick
   workflow; it exists here so the lane registry is the one source of truth
   for what each profile proves.
@@ -36,9 +36,11 @@ import sys
 import time
 from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Final
+
+from cadrumo.core.directory_scan import scan_directory
 
 from .._paths import REPO_ROOT, UTF_8
 from . import proof_cache
@@ -161,7 +163,7 @@ _LANES: Final[dict[str, Lane]] = {
     # own metadata can settle that. The lane is host-portable — two stdlib venvs
     # and pip, no host package manager and no container — and the extra it
     # installs and removes is small, so it belongs in every OS leg rather than
-    # in the Linux-only superset alone.
+    # in the Linux-only ``ci`` profile alone.
     "inference-boundary": Lane(
         name="inference-boundary",
         invariant="the inference boundary refuses instructively without the llm extra, "
@@ -403,10 +405,72 @@ def preflight_pass_failures(passes: Sequence[PytestPass], repo_root: Path, test_
     """
     failures: list[str] = []
     for pytest_pass in passes:
-        failure = _attempt_step(pytest_pass_argv(pytest_pass, repo_root, test_workers), repo_root, pytest_pass.label)
-        if failure is not None:
-            failures.append(failure)
+        modules = serial_pass_modules(pytest_pass, repo_root)
+        if not modules:
+            failure = _attempt_step(
+                pytest_pass_argv(pytest_pass, repo_root, test_workers), repo_root, pytest_pass.label
+            )
+            if failure is not None:
+                failures.append(failure)
+            continue
+        collected_anything = False
+        for module in modules:
+            label = f"{pytest_pass.label}:{Path(module).stem}"
+            argv = pytest_pass_argv(replace(pytest_pass, target=module, ignore=()), repo_root, test_workers)
+            code = _step_returncode(argv, repo_root, label)
+            if code == _NO_TESTS_COLLECTED:
+                # Normal per module: this pass's markers select from only some
+                # of the directory's modules. It is NOT normal for the pass as
+                # a whole, which is why the aggregate is checked below.
+                continue
+            collected_anything = True
+            if code != 0:
+                failures.append(f"{label} (exit {code})")
+        if not collected_anything:
+            failures.append(f"{pytest_pass.label} (selected no test in any module)")
     return failures
+
+
+#: pytest's exit status for a run that collected nothing.
+_NO_TESTS_COLLECTED: Final[int] = 5
+
+
+def serial_pass_modules(pytest_pass: PytestPass, repo_root: Path) -> tuple[str, ...]:
+    """Return the modules a SERIAL pass should be split across, or empty.
+
+    A serial pass runs `-n0`, so one wedged test takes the whole invocation
+    with it -- and on Windows pytest-timeout falls back to the thread method,
+    which cannot interrupt `subprocess.wait`, so the session dies with NO
+    summary line at all and every later module in that pass is never reached.
+    A campaign could therefore surface at most one serial defect per run, which
+    is expensive locally and ruinous on CI where the run costs an hour of a
+    two-machine fleet.
+
+    Splitting the invocation bounds that blast radius to one module. The
+    selection is unchanged: same markers, same files, same scheduler.
+
+    A parallel pass is returned empty and left whole, because xdist already
+    isolates a crashing test into a worker.
+    """
+    if pytest_pass.parallel:
+        return ()
+    target = repo_root / pytest_pass.target
+    if not target.is_dir():
+        return ()
+    ignored = {(repo_root / path).resolve() for path in pytest_pass.ignore}
+    return tuple(
+        sorted(
+            module.relative_to(repo_root).as_posix()
+            for module in scan_directory(target, pattern="test_*.py")
+            if module.resolve() not in ignored
+        )
+    )
+
+
+def _step_returncode(argv: list[str], repo_root: Path, label: str) -> int:
+    """Run one step and return its exit status, echoing the command."""
+    print(f"[campaign] {label}: {' '.join(argv)}", flush=True)
+    return subprocess.run(argv, cwd=repo_root, check=False).returncode
 
 
 def _attempt_step(argv: list[str], repo_root: Path, label: str) -> str | None:

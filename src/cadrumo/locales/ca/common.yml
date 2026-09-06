@@ -1482,6 +1482,8 @@ tui:
       application_state: Aquesta àrea no està disponible en l'estat actual del llibre
         comptable.
       destination_pending: Aquesta àrea encara no està disponible en aquesta versió.
+      selection_required: Selecciona primer un apunt i obre després aquesta tasca
+        per a ell.
       submission_unavailable: Aquesta tasca no està disponible fins que es proporcioni
         una operació preparada.
     review:

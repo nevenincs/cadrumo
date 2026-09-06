@@ -7,10 +7,11 @@ verdict instead of four unrelated tool invocations with no shared severity
 model:
 
 * **Shadowing** (D1) -- reuses ``dev.quality.import_hygiene_scan.find_multi_sourced_symbols``
-  against the checked-in ``dev/import_hygiene_baseline.json`` Family-3 pinned
-  set (the same authority ``src/cadrumo/tests/test_import_hygiene_gate.py``
-  enforces). A genuine multi-facade duplicate symbol not in the pinned set is
-  RED; the pinned/tolerated set is AMBER debt; zero unpinned hits is GREEN.
+  over the live facade set. The Family-3 pinned baseline and the gate that
+  enforced it were both retired, so nothing is grandfathered: any
+  "high"-confidence symbol declared in more than one owning package's
+  ``__all__`` is RED, and zero such symbols is GREEN. Because no symbol can
+  be tolerated any more, this dimension has no reachable AMBER state.
 * **Duplication** (D2) -- delegates the entire measurement to
   ``dev.audit.duplication.run_duplication_scan``, the one runner
   ``just audit-duplication`` also calls. Any clone cluster is advisory debt
@@ -81,9 +82,6 @@ from ..quality.import_hygiene_scan import (
     walk_module_imports,
 )
 from .complexity import (
-    _BASELINE_PATH as _COMPLEXITY_BASELINE_PATH,
-)
-from .complexity import (
     Baseline as ComplexityBaseline,
 )
 from .complexity import (
@@ -100,9 +98,6 @@ from .complexity import (
 from .duplication import DuplicationOutcome, run_duplication_scan
 
 _UTF_8: Final[str] = UTF_8
-_IMPORT_HYGIENE_BASELINE_PATH: Final[Path] = (
-    Path(__file__).resolve().parents[1] / "quality" / "import_hygiene_baseline.json"
-)
 _PRODUCT_SOURCE_ROOT: Final[Path] = Path("src/cadrumo")
 _PRODUCTION_EXCLUDE: Final[str] = (
     "src/cadrumo/test_*.py,src/cadrumo/**/test_*.py,src/cadrumo/**/_test_*.py,src/cadrumo/tests/*,src/cadrumo/_data/*"
@@ -346,7 +341,7 @@ def audit_complexity() -> DimensionReport:
     mi = collect_mi(_PRODUCTION_EXCLUDE)
     cog = collect_cog(_PRODUCT_SOURCE_ROOT, is_test_run=False, threshold=20)
 
-    baseline: ComplexityBaseline = load_complexity_baseline(is_test_run=False, path=_COMPLEXITY_BASELINE_PATH)
+    baseline: ComplexityBaseline = load_complexity_baseline(is_test_run=False)
     # No baseline and no reviewed-acceptance allowlist: every hotspot the
     # scanners report is classified on its own merits.
     cc_verdict = _classify_cc(cc, baseline.cyclomatic)

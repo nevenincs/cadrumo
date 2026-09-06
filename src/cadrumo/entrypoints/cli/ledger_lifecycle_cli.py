@@ -8,6 +8,7 @@ payloads inside :class:`SchemaEnvelope` through
 
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING
 
 import typer
@@ -264,18 +265,37 @@ def ledger_evidence_pull(
     )
 
 
+#: A Drive folder URL, which carries its id after a ``/folders/`` segment
+#: rather than the ``/d/`` one a file link uses. Matched here rather than in
+#: the shared file-id grammar so a single-document pull still refuses a folder
+#: link at the boundary instead of failing later against the media endpoint.
+_DRIVE_FOLDER_URL = re.compile(r"/folders/(?P<id>[A-Za-z0-9_-]{10,})")
+
+
 def _parse_drive_folder_reference(reference: str) -> str:
     """Resolve a Drive folder id/URL/reference to a bare folder id.
 
-    Reuses the same id-extraction grammar as a single Drive document link
-    (:func:`~adapters.outbound.google.parse_drive_file_id`); a Drive
-    folder id has the same shape as a file id, only the ``in parents`` query
-    disambiguates the two on the Drive side. Refuses a reference with no
-    recognisable Drive id rather than sending an unparsed string to the API.
+    A folder id has the same shape as a file id — only the ``in parents``
+    query disambiguates the two on the Drive side — so a bare id and a
+    ``?id=`` link resolve through
+    :func:`~adapters.outbound.google.parse_drive_file_id`.
+
+    A folder URL does not. Drive writes it as ``/drive/folders/<id>`` (with an
+    optional ``/u/<n>/`` account segment and a ``?usp=sharing`` suffix), and
+    the file grammar looks for ``/d/<id>``, so the URL an operator copies out
+    of the browser to sweep a folder was refused as unrecognisable — the one
+    reference form this verb exists to accept.
+
+    Refuses anything carrying no recognisable Drive id rather than sending an
+    unparsed string to the API.
     """
     from ...adapters.outbound.google.document_link_resolver import parse_drive_file_id
 
-    folder_id = parse_drive_file_id(reference)
+    folder_url = _DRIVE_FOLDER_URL.search(reference.strip())
+    # ``Match.group`` is typed ``str | Any``; the explicit ``str`` keeps the
+    # union honest so the ``None`` check below is a real narrowing rather than
+    # something an assertion would have to paper over.
+    folder_id = str(folder_url.group("id")) if folder_url is not None else parse_drive_file_id(reference)
     if folder_id is None:
         raise bad(
             tr("cli.app.ledger.evidence.pull_all_errors.folder_id_unrecognised", reference=reference),

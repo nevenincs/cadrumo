@@ -34,7 +34,7 @@ from ...core.i18n import tr
 from ...core.parsing import parse_bool
 from ...core.tty import stdin_is_tty
 from .capability import NO_CONSOLE_ERRORS as _NO_CONSOLE_ERRORS
-from .checkpoint import CheckpointStore, checkpoint_available, save_checkpoint
+from .checkpoint import CheckpointStore, checkpoint_available, discard_checkpoint, save_checkpoint
 from .copy import (
     PAGE_REQUIREMENT_LOCALE_KEYS,
     PageCopy,
@@ -156,6 +156,11 @@ class LineFlowFrontend:
                     if action == _REVIEW_ACTION_SUBMIT
                     else review(self._definition, state)
                 )
+                if action == _REVIEW_ACTION_SUBMIT and self._store is not None:
+                    # A submitted flow must not stay resumable: save-and-exit
+                    # writes a checkpoint, and without this the next run would
+                    # offer to resume a run that was already submitted.
+                    discard_checkpoint(self._definition, self._store)
                 return state, projection
 
     def _walk_unanswered(self, state: FlowState) -> FlowState:

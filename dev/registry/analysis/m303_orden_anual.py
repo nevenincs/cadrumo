@@ -22,6 +22,8 @@ from cadrumo.domain.calculations.registry.m303_orden_manifest import (
     render_m303_annual_orden_manifest,
 )
 
+from ..conformance.manager import reset_conformance_cache
+
 
 def _registry_root() -> Path:
     return bundled_path("registry", "aeat")
@@ -73,6 +75,10 @@ def main(argv: list[str] | None = None) -> int:
         encoding="utf-8",
         newline="\n",
     )
+    # The conformance snapshot cache is keyed only on `validate`, never on
+    # registry source state, so a read in this same process would otherwise
+    # serve the pre-write profile. See reset_conformance_cache.
+    reset_conformance_cache()
     return 0
 
 

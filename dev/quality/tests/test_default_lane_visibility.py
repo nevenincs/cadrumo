@@ -97,3 +97,24 @@ def test_a_file_with_no_test_functions_is_not_reported(tmp_path: Path, lane: tup
     required, excluded = lane
     (tmp_path / "test_support.py").write_text("VALUE = 1\n", encoding="utf-8")
     assert visibility_census((tmp_path,), required=required, excluded=excluded) == ()
+
+
+def test_a_module_the_walk_listed_but_cannot_read_is_reported_not_dropped(
+    tmp_path: Path, lane: tuple[str, frozenset[str]]
+) -> None:
+    """An unreadable module is a row, because silence here reads as full visibility."""
+    required, excluded = lane
+    _write(tmp_path, "test_seen.py", "pytestmark = [pytest.mark.unit, pytest.mark.hex_core]")
+    # A directory named like a module: the walk lists it and the read refuses it,
+    # which is the shape a file deleted between the walk and the read also takes.
+    (tmp_path / "test_vanished.py").mkdir()
+    findings = visibility_census((tmp_path,), required=required, excluded=excluded)
+    assert [(item.module, item.kind) for item in findings] == [("test_vanished.py", "unread")]
+
+
+def test_a_half_written_module_is_reported_not_dropped(tmp_path: Path, lane: tuple[str, frozenset[str]]) -> None:
+    """A module that does not parse is the same condition: the screen could not decide."""
+    required, excluded = lane
+    (tmp_path / "test_half.py").write_text("def (:\n", encoding="utf-8")
+    findings = visibility_census((tmp_path,), required=required, excluded=excluded)
+    assert [(item.module, item.kind) for item in findings] == [("test_half.py", "unread")]

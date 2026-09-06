@@ -34,9 +34,10 @@ from __future__ import annotations
 import json
 import re
 import shlex
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
+from types import MappingProxyType
 from typing import get_args
 
 from pydantic import StringConstraints
@@ -59,7 +60,13 @@ from .schema import (
     VerifySentence,
 )
 
-__all__ = ["parse_frame_lines", "parse_sequence", "result_frame_asserts_result_payload"]
+__all__ = [
+    "RESULT_PAYLOAD_EXEMPT",
+    "parse_frame_lines",
+    "parse_sequence",
+    "refuse_payload_less_result_frame",
+    "result_frame_asserts_result_payload",
+]
 
 #: The sole human CLI executable; every frame command leads with this token.
 _EXECUTABLE: str = "aeat"
@@ -549,6 +556,48 @@ def _enforce_result_contract(builders: list[_FrameBuilder], problems: list[str])
 _SEMANTIC_PAYLOAD_PREFIXES: tuple[str, ...] = ("result.", "result[", "error.", "error[")
 
 
+#: Enrolled sequences whose ``@result`` frame is permitted to assert process
+#: success alone, each with the reason it is not yet convertible. The contract
+#: is refused by :func:`refuse_payload_less_result_frame` at the enrolled-directive
+#: boundary for every other sequence, so a NEW payload-less ``@result`` frame
+#: cannot be documented: it must be named here, with a reason, in the same
+#: change. Entries are asserted to correspond to a genuinely payload-less
+#: frame, so a stale exemption cannot linger.
+RESULT_PAYLOAD_EXEMPT: Mapping[str, str] = MappingProxyType(
+    {
+        "ledger-category-list": (
+            "Residual pre-contract debt. The payload is a catalogue-sized "
+            "result.category_ids list, so a durable assertion needs a shape that "
+            "survives the catalogue growing."
+        ),
+        "modelo-349-applicability": (
+            "Residual pre-contract debt. The payload exposes a directly assertable "
+            "result.applicable, so this entry is cheap to retire; doing so is a "
+            "documentation edit under docs/, not made by the change that added this boundary."
+        ),
+    },
+)
+
+
+def _expects_assert_result_payload(command_line: str, expects: Sequence[ExpectAssertion]) -> bool:
+    """Whether ``expects`` assert the result PAYLOAD for a frame running ``command_line``.
+
+    The single definition of the payload contract, shared by
+    :func:`refuse_payload_less_result_frame` and the public
+    :func:`result_frame_asserts_result_payload` predicate, so the refusal and the
+    report can never disagree.
+    """
+    if command_line.rstrip().endswith("--help"):
+        # Click help is deliberately human-readable text, not a JSON envelope.
+        # Its exact process-success assertion is the only available structured
+        # contract; text rendering itself is covered by the CLI help snapshots.
+        return any(assertion.json_path == "exit_code" and assertion.expected == 0 for assertion in expects)
+    return any(
+        assertion.json_path in {"result", "error"} or assertion.json_path.startswith(_SEMANTIC_PAYLOAD_PREFIXES)
+        for assertion in expects
+    )
+
+
 def result_frame_asserts_result_payload(sequence: ParsedSequence) -> bool:
     """Whether the sequence's ``@result`` frame asserts the result PAYLOAD.
 
@@ -564,14 +613,38 @@ def result_frame_asserts_result_payload(sequence: ParsedSequence) -> bool:
     frame = sequence.result_frame
     if frame is None:
         return True
-    if frame.command_line.rstrip().endswith("--help"):
-        # Click help is deliberately human-readable text, not a JSON envelope.
-        # Its exact process-success assertion is the only available structured
-        # contract; text rendering itself is covered by the CLI help snapshots.
-        return any(assertion.json_path == "exit_code" and assertion.expected == 0 for assertion in frame.expects)
-    return any(
-        assertion.json_path in {"result", "error"} or assertion.json_path.startswith(_SEMANTIC_PAYLOAD_PREFIXES)
-        for assertion in frame.expects
+    return _expects_assert_result_payload(frame.command_line, frame.expects)
+
+
+def refuse_payload_less_result_frame(sequence: ParsedSequence) -> None:
+    """Refuse an ENROLLED sequence whose ``@result`` frame asserts no result payload.
+
+    Called by the ``cli-sequence`` directive, the boundary that admits a sequence
+    as published documentation, beside :func:`refuse_live_frames`. A documented
+    sequence must prove the MEANING of its final output, not merely that the
+    process exited; a synthetic sequence built by a unit test is not documentation
+    and is deliberately not subject to this editorial contract.
+
+    The contract previously existed only as the predicate above, whose sole caller
+    was a test module reading a committed baseline. When that baseline was deleted
+    the contract stopped being enforced anywhere, and nothing announced it.
+
+    Raises:
+        SequenceParseError: The ``@result`` frame asserts neither a ``result.*``
+            nor an ``error.*`` json-path and the sequence is not named in
+            :data:`RESULT_PAYLOAD_EXEMPT`.
+    """
+    if sequence.sequence_id in RESULT_PAYLOAD_EXEMPT:
+        return
+    if result_frame_asserts_result_payload(sequence):
+        return
+    raise SequenceParseError(
+        sequence.sequence_id,
+        [
+            "the @result frame must assert the result PAYLOAD with at least one @expect on a "
+            "'result.*' or 'error.*' json-path; asserting only 'exit_code'/'status' proves the "
+            "command ran, not that it produced the right answer",
+        ],
     )
 
 

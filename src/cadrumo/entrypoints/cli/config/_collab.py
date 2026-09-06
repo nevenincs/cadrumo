@@ -37,6 +37,11 @@ from __future__ import annotations
 
 import typer
 
+from ....application.bucket_event_repository import bucket_event_history_repository
+from ....application.modelo.review_package_collab_audit import (
+    emit_collab_recipient_registered_event,
+    emit_collab_recipient_removed_event,
+)
 from ....application.modelo.review_package_recipient_registry import (
     RecipientFingerprintRegistryRepository,
     public_key_hex_from_raw_bytes,
@@ -86,9 +91,16 @@ def collab_recipient_add(
     """Register one trusted recipient's public key, refusing a duplicate id."""
     validated_key_hex = _validated_public_key_hex(public_key)
 
-    registry = _registry()
+    bucket_id = _active_bucket_id_or_refuse()
+    registry = RecipientFingerprintRegistryRepository(bucket_id=bucket_id)
     registry.add(recipient_id=recipient_id, public_key_hex=validated_key_hex, label=label)
     record = registry.get(recipient_id)
+    # Trusting a new recipient is an auditable act on this bucket.
+    emit_collab_recipient_registered_event(
+        record,
+        bucket_id=bucket_id,
+        repository=bucket_event_history_repository(bucket_id=bucket_id),
+    )
 
     result = ConfigCollabRecipientAddResult(
         recipient_id=record.recipient_id,
@@ -135,8 +147,15 @@ def collab_recipient_remove(
     recipient_id: str,
 ) -> None:
     """Remove the recipient registered under ``recipient_id``."""
-    registry = _registry()
+    bucket_id = _active_bucket_id_or_refuse()
+    registry = RecipientFingerprintRegistryRepository(bucket_id=bucket_id)
     updated = registry.remove(recipient_id)
+    # Revoking trust is auditable for the same reason granting it is.
+    emit_collab_recipient_removed_event(
+        recipient_id=recipient_id,
+        bucket_id=bucket_id,
+        repository=bucket_event_history_repository(bucket_id=bucket_id),
+    )
 
     result = ConfigCollabRecipientRemoveResult(recipient_id=recipient_id, remaining=len(updated.records))
     emit_envelope(

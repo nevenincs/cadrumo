@@ -1,0 +1,22 @@
+# Secure stores production reads but never writes.
+#
+# Read by dev/quality/secure_store_write_path.py. Every entry names a store the
+# shipped application reads while nothing in the tree fills it, together with
+# the kind of exception it is and why. The comparison is set equality in both
+# directions: a read-only store missing from this file fails as new debt, and
+# an entry the tree now writes fails as spent and must be removed.
+#
+# kind = "awaiting_writer"
+#     Capability whose reader was wired before its writer. The store is part of
+#     the shipped design, so a reader renders or aggregates from it, but no
+#     production path has ever put anything in it. Every one of these is debt.
+#
+# kind = "custody_carry_only"
+#     A namespace this application never authors, moved between profiles by the
+#     custody carry alone. Registering a resolver for it is not a write.
+#
+# Adding an entry is not permission to leave a store unwritten. It records that
+# the gap is known and where it bites, so a reader of a zero can tell an empty
+# store from an unfilled one.
+
+# No entries: every secure store the application reads has a production writer.

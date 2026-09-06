@@ -27,7 +27,7 @@ from ....core.i18n.render import tr
 from ....core.identity import InvoiceId, TransactionId
 from ..components.theme import BASE_CSS, tokenised
 from ..components.workspace_host import replace_workspace_body
-from ..navigation import TuiScreenContextV1
+from ..navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from .models import (
     LedgerClassificationSubmissionV1,
     LedgerDestinationIdV1,
@@ -142,13 +142,9 @@ class LedgerWorkspaceController:
             raise ValueError("unsupported Ledger workspace projection contract")
         self.context = context
         self.projection = projection
-        visible_ids = {row.transaction_id for row in projection.entries}
-        if injection.classification_target is not None and injection.classification_target not in visible_ids:
-            raise ValueError("classification target is absent from the visible Ledger projection")
         self.injection = injection
         self.review_action = injection.review_action
         self.classify_action = injection.classify_action
-        self.classification_target = injection.classification_target
         self.classification_submitter = injection.classification_submitter
         self.prepared_imports = injection.prepared_imports
         self.import_submitter = injection.import_submitter
@@ -176,6 +172,35 @@ class LedgerWorkspaceController:
         """Build an internal semantic target without invoking it."""
         return LedgerRouteTargetV1(destination=cast("LedgerDestinationIdV1", _DESTINATION_BY_AREA[area]), area=area)
 
+    def _selection_refusal(
+        self,
+        area: LedgerWorkspaceArea,
+        target: LedgerRouteTargetV1,
+    ) -> LedgerRouteRefusalV1 | None:
+        """Refuse an area that needs a chosen entry when none has been chosen.
+
+        Kept out of ``refusal_for``'s ``missing_door`` expression on purpose,
+        and out of any boolean joining it to the area comparison. A missing
+        door is an absent INJECTED dependency — something the launcher failed
+        to wire — and the wholly-wired-doors gate derives what the launcher
+        owes by reading that expression. A selection is the operator's, made at
+        runtime, so joining the two demanded an operator value from the
+        launcher; that unsatisfiable demand is why the classification door was
+        removed rather than wired.
+
+        It also lets the operator hear what is actually true — choose an entry
+        — instead of being told submission is unavailable.
+        """
+        if area is not LedgerWorkspaceArea.CLASSIFICATION:
+            return None
+        if self.classification_target is not None:
+            return None
+        return LedgerRouteRefusalV1(
+            target=target,
+            availability=LedgerWorkspaceAvailability.UNAVAILABLE,
+            reason_key="tui.ledger.refusal.selection_required",
+        )
+
     def refusal_for(self, area: LedgerWorkspaceArea) -> LedgerRouteRefusalV1 | None:
         """Preserve application refusal separately from deferred screen availability."""
         target = self.route_target(area)
@@ -186,13 +211,12 @@ class LedgerWorkspaceController:
                 availability=state.availability,
                 reason_key="tui.ledger.refusal.application_state",
             )
+        selection_refusal = self._selection_refusal(area, target)
+        if selection_refusal is not None:
+            return selection_refusal
         missing_door = (
             area is LedgerWorkspaceArea.CLASSIFICATION
-            and (
-                self.classify_action is None
-                or self.classification_target is None
-                or self.classification_submitter is None
-            )
+            and (self.classify_action is None or self.classification_submitter is None)
         ) or (area is LedgerWorkspaceArea.IMPORT and (not self.prepared_imports or self.import_submitter is None))
         missing_door = missing_door or (
             area is LedgerWorkspaceArea.EVIDENCE and (self.evidence_action is None or self.evidence_items is None)
@@ -219,6 +243,51 @@ class LedgerWorkspaceController:
             )
             for row in self.projection.entries
         )
+
+    def with_transaction_focus(self, transaction_id: TransactionId) -> LedgerWorkspaceController:
+        """Re-address this workspace at one visible entry, carrying nothing else.
+
+        Selection travels in ``context.focus`` — the channel
+        :meth:`restored_transaction_id` already reads for cursor restore — so
+        there is one answer to "which entry is the operator on". A separate
+        mutable attribute beside it would let the restored cursor and the
+        classification target disagree about the same question.
+
+        Returns a NEW controller rather than mutating, because the context is
+        frozen. An internal area move resolves its next screen synchronously
+        against whatever controller the outgoing screen holds, so rebinding
+        there is what carries the selection across a body swap — with no extra
+        screen push, and therefore no result callback left registered against a
+        pump that is about to stop.
+
+        The context is constructed explicitly rather than by ``model_copy``:
+        ``model_copy`` skips validation, and the focus/destination agreement
+        check is the thing stopping a focus from naming another workspace.
+
+        Raises:
+            ValueError: When the entry is not in the visible projection. An
+                entry the operator cannot see is one they cannot have chosen.
+        """
+        if all(row.transaction_id != transaction_id for row in self.projection.entries):
+            raise ValueError("classification target is absent from the visible Ledger projection")
+        return LedgerWorkspaceController(
+            TuiScreenContextV1(
+                destination=self.context.destination,
+                focus=TuiFocusIdentityV1(
+                    destination=self.context.destination,
+                    semantic_key="ledger.transaction",
+                    restore_token=transaction_id,
+                ),
+                action_candidate_id=self.context.action_candidate_id,
+            ),
+            self.projection,
+            self.injection,
+        )
+
+    @property
+    def classification_target(self) -> TransactionId | None:
+        """The entry the operator selected, read from the one focus channel."""
+        return self.restored_transaction_id()
 
     def restored_transaction_id(self) -> TransactionId | None:
         """Resolve a transaction focus by semantic identity, never by row position."""
@@ -415,6 +484,26 @@ class LedgerWorkspaceScreen(Screen[None]):
         """Ask the host to return; never terminate the application."""
         self.back_requested = True
         self.post_message(LedgerBackRequested())
+
+    def on_ledger_entry_selected(self, event: LedgerEntrySelected) -> None:
+        """Re-address the workspace at the chosen entry and repaint navigation.
+
+        Lives on the shared base rather than on the entries screen because the
+        controller is shared: review and reconciliation restore their cursor
+        from the same focus, so a selection made anywhere is the selection
+        everywhere.
+
+        The controller is REBOUND, not mutated — ``with_transaction_focus``
+        returns a new one — so the next area move, which resolves its screen
+        against ``self.controller``, carries the selection across the body swap
+        without any extra push. The navigation table is rebuilt because
+        classification's reachability has just changed, and a stale row would
+        keep offering the old refusal.
+        """
+        self.controller = self.controller.with_transaction_focus(event.transaction_id)
+        table = cast("DataTable[str]", self.query_one("#ledger-navigation", DataTable))
+        table.clear(columns=True)
+        self.populate_navigation()
 
     def on_ledger_route_requested(self, event: LedgerRouteRequested) -> None:
         """Resolve the requested area here and hand the finished body to the host.

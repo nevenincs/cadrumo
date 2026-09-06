@@ -19,11 +19,11 @@ from ....application.modelo.declarations_workspace import (
     DeclarationsWorkspaceProjectionV1,
     DeclarationsWorkspaceZone,
 )
-from ....application.operator_actions.catalogue import lookup_action
 from ....application.operator_actions.models import ActionReference
 from ....application.overview.home import HomeAvailability
 from ..components.widgets import ContentDataTable, ContentScroll
 from ..navigation import TuiScreenContextV1, TuiScreenFactoryV1
+from .action_guards import require_canonical_declarations_actions
 from .calendar import DeclarationsCalendarScreen
 from .controller import (
     DeclarationsCalendarController,
@@ -162,14 +162,11 @@ def declarations_screen_factory(
     calendar_recovery_handoff: CalendarRecoveryHandoffV1 | None = None,
 ) -> TuiScreenFactoryV1:
     """Bind only injected facts, admissions, and typed handoffs."""
-    expected = (
-        (work_action, "modelo.work.list"),
-        (revisions_action, "modelo.work.revisions"),
-        (filing_action, "modelo.filing_record.list"),
+    require_canonical_declarations_actions(
+        work_action=work_action,
+        revisions_action=revisions_action,
+        filing_action=filing_action,
     )
-    for action, command in expected:
-        if lookup_action(action.action_id).target_command_key != command:
-            raise ValueError("injected Declarations read action resolves to another application door")
 
     def create(context: TuiScreenContextV1) -> Screen[None]:
         controller = DeclarationsWorkspaceController(

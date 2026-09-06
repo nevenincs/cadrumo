@@ -112,6 +112,23 @@ def _context() -> TuiScreenContextV1:
     return TuiScreenContextV1(destination="workbench.ledger")
 
 
+def _focused_context(transaction_id: TransactionId) -> TuiScreenContextV1:
+    """A workspace context already addressed at one entry.
+
+    Selection lives in ``context.focus``, so a test that needs the operator to
+    have chosen a row states it here rather than injecting a target. That is
+    the same channel the production selection handler writes.
+    """
+    return TuiScreenContextV1(
+        destination="workbench.ledger",
+        focus=TuiFocusIdentityV1(
+            destination="workbench.ledger",
+            semantic_key="ledger.transaction",
+            restore_token=transaction_id,
+        ),
+    )
+
+
 def _review_action() -> ActionReference:
     declaration = lookup_action("operator.ledger.review")
     return ActionReference(action_id=declaration.action_id)

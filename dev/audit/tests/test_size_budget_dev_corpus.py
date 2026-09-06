@@ -141,6 +141,38 @@ def test_regeneration_cannot_launder_a_live_offender(tmp_path: Path) -> None:
     assert absorbed["dev/quality/grower.py"] >= _OVER, "only the explicit flag may absorb it"
 
 
+@pytest.mark.unit
+def test_a_subject_inside_its_ceiling_is_rebanded_even_when_that_lifts_the_pin(tmp_path: Path) -> None:
+    """Re-banding a subject that has NOT broken its ceiling may lift its pin.
+
+    This is the other half of the anti-launder rule, and it reads like a
+    contradiction until the distinction is named: accept_growth=False does
+    not mean no pin may rise. It means a subject already OVER its ceiling
+    keeps that ceiling. A subject still INSIDE its ceiling is re-derived from
+    the policy band, and once it has grown toward that ceiling the derivation
+    is upward. The rise is bounded by the band, not by the growth, so it
+    cannot absorb an offender -- which is why it is safe, and why it
+    surprises anyone who reads the flag name alone.
+    """
+    generous = _OVER + 30
+    planted = _planted(tmp_path, "dev/quality/creeper.py", _OVER)
+    measured = scan_module_lines(files=(planted,), root=tmp_path)
+    actual = measured["dev/quality/creeper.py"]
+    assert actual <= generous, "the subject must start INSIDE its ceiling"
+
+    rebanded = build_limits(
+        measured,
+        MODULE_POLICY,
+        previous={"dev/quality/creeper.py": generous},
+        accept_growth=False,
+    )
+
+    pin = rebanded["dev/quality/creeper.py"]
+    assert pin > generous, "an unbroken ceiling is re-derived, not held"
+    assert pin == MODULE_POLICY.limit_for(actual), "and the band bounds the rise"
+    assert not evaluate_budget(measured, rebanded, MODULE_POLICY).failing
+
+
 # ---------------------------------------------------------------------------
 # The guards refuse rather than reading clean
 # ---------------------------------------------------------------------------

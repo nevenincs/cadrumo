@@ -25,6 +25,8 @@ import pytest
 from cadrumo.core.directory_scan import scan_directory
 
 from ..._paths import REPO_ROOT
+from ..apidocs.manager import API_SOURCE_PACKAGE, CLI_REFERENCE_SUBTREE, ApiStubManager
+from ..build import planned_doc_targets
 
 #: A real nitpicky whole-tree Sphinx build is minutes of work, not seconds, so
 #: the project-wide 300 s per-test ceiling (``pyproject.toml``) cannot hold it.
@@ -85,6 +87,70 @@ def _generated_docs_snapshot() -> set[tuple[str, str, int, int]]:
             size = stat.st_size if path.is_file() else 0
             snapshot.add((relative.as_posix(), kind, size, stat.st_mtime_ns))
     return snapshot
+
+
+def _producer_source_paths() -> dict[str, Path]:
+    """``dotted module -> repo-relative source path`` for every stub the generator emits.
+
+    Built by applying the generator's OWN naming rule forward over its
+    discovered inventory, so the mapping cannot drift from what it writes.
+    """
+    manager = ApiStubManager(
+        src_cadrumo=REPO_ROOT / "src" / API_SOURCE_PACKAGE,
+        docs_api=_DOCS / "api",
+    )
+    paths: dict[str, Path] = {}
+    for dotted, is_package in manager.discover_modules():
+        parts = dotted.split(".")
+        relative = Path("src", *parts, "__init__.py") if is_package else Path("src", *parts).with_suffix(".py")
+        paths[dotted] = relative
+    return paths
+
+
+def test_every_generated_api_stub_is_reachable_from_its_changed_source_path() -> None:
+    """A changed source file plans the API stub the generator would write for it.
+
+    The planner recovers a documentable module from a changed path, which is
+    the inverse of the generator's module-to-path naming. That inverse was
+    once restated here instead of delegated, and it addressed a source
+    package the generator no longer emits: it accepted zero of the tree, so
+    every source edit planned no API target at all, silently. This gate holds
+    the two sides at parity by asking the generator for its inventory and
+    requiring the planner to reach each entry from the file that produced it.
+    """
+    expected = _producer_source_paths()
+    assert len(expected) > 1000, f"generator inventory implausibly small: {len(expected)}"
+
+    plan = planned_doc_targets(REPO_ROOT, list(expected.values()))
+    assert plan.api_scaffold_required, "no changed source was recognised as documentable"
+
+    planned = {target.resolve() for target in plan.targets}
+    unreachable = sorted(dotted for dotted in expected if (_DOCS / "api" / f"{dotted}.rst").resolve() not in planned)
+    assert not unreachable, (
+        f"{len(unreachable)} of {len(expected)} generated stubs are unreachable from their source path:"
+        + chr(10)
+        + chr(10).join(f"  - {name}" for name in unreachable[:40])
+    )
+
+
+def test_changed_cli_source_plans_the_generated_command_reference() -> None:
+    """A CLI implementation edit regenerates the command reference, not an API stub."""
+    cli_source = Path("src", API_SOURCE_PACKAGE, *CLI_REFERENCE_SUBTREE, "main.py")
+    plan = planned_doc_targets(REPO_ROOT, [cli_source])
+    assert plan.cli_reference_required, f"{cli_source.as_posix()} did not plan the CLI reference"
+    assert not plan.api_scaffold_required, "the CLI subtree is documented by the generator, not autodoc"
+
+
+def test_changed_source_the_generator_excludes_plans_nothing() -> None:
+    """Paths the stub generator refuses must not plan an API scaffold either."""
+    excluded = [
+        Path("src", API_SOURCE_PACKAGE, "core", "tests", "test_thing.py"),
+        Path("src", API_SOURCE_PACKAGE, "core", "conftest.py"),
+        Path("src", API_SOURCE_PACKAGE, "core", "_data", "table.py"),
+    ]
+    for rel_path in excluded:
+        plan = planned_doc_targets(REPO_ROOT, [rel_path])
+        assert not plan.api_scaffold_required, f"{rel_path.as_posix()} must not plan an API scaffold"
 
 
 def test_docs_build_directory_contains_only_canonical_html() -> None:

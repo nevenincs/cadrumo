@@ -122,9 +122,11 @@ def _supplied_fields(source_root: Path, models_module: Path, known: set[str]) ->
             continue
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"))
-        except (SyntaxError, UnicodeDecodeError):
-            # A file being rewritten by another lane is not evidence about
-            # fields; skipping it can only over-report, never under-report.
+        except (OSError, SyntaxError, UnicodeDecodeError):
+            # A file that is unreadable, or half-written by another lane, is not
+            # evidence about fields; skipping it can only over-report, never
+            # under-report. The walk can list a path the read no longer reaches,
+            # and that is the same non-evidence, not a reason to lose the run.
             continue
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call):

@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 from ..._paths import REPO_ROOT
-from ..dead_code import DeadCodeOutcome, run_dead_code_scan
+from ..dead_code import DeadCodeOutcome, offered_module_population, run_dead_code_scan
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -107,3 +107,45 @@ def test_vulture_detects_a_type_import_used_only_in_a_quoted_cast(tmp_path: Path
     assert completed.returncode == 3, completed.stderr
     assert f"{candidate}:" in completed.stdout
     assert "unused import '_Table'" in completed.stdout
+
+
+def test_a_repo_root_offering_no_module_refuses_before_launching_vulture(tmp_path: Path) -> None:
+    """An empty target set must not read as a clean tree.
+
+    Vulture exits 0 both for a tree it read and found clean and for targets
+    that offer it nothing, and that exit code was mapped straight to CLEAN.
+
+    The ordering is proved rather than assumed: a launched subprocess under
+    ``timeout=0.0`` would come back as the timeout reason. Getting the
+    offered-population reason instead is what shows the refusal is taken
+    first, so this case costs no vulture run.
+    """
+    result = run_dead_code_scan(tmp_path, timeout=0.0)
+
+    assert result.outcome is DeadCodeOutcome.ERROR
+    assert result.is_green is False
+    assert "would prove nothing about dead code" in result.reason
+    assert "0 Python module(s)" in result.reason
+
+
+def test_an_emptied_production_tree_refuses_though_one_target_file_survives(tmp_path: Path) -> None:
+    """The floor exists because a bare ``> 0`` could not see this shape.
+
+    ``_TARGETS`` names the production package and one whitelist file. If the
+    package is emptied but the whitelist survives, the offered population is
+    1, not 0 -- vulture is handed real paths, analyses nothing of substance,
+    and exits 0. An existence check would pass and the scan would read clean.
+    """
+    (tmp_path / "src" / "cadrumo").mkdir(parents=True)
+    whitelist = tmp_path / "dev" / "audit"
+    whitelist.mkdir(parents=True)
+    (whitelist / "vulture_whitelist.py").write_text("", encoding="utf-8")
+
+    assert offered_module_population(tmp_path) == 1
+
+    result = run_dead_code_scan(tmp_path, timeout=0.0)
+
+    assert result.outcome is DeadCodeOutcome.ERROR
+    assert result.is_green is False
+    assert "1 Python module(s)" in result.reason
+    assert "timeout" not in result.reason

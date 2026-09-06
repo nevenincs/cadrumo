@@ -130,7 +130,9 @@ def _stage_interrupted_verified_candidate(
     candidate_manifest = _tree_publication._verify_generated_export_package(candidate_export_root)
     staged_candidate_export_root = _tree_publication._stage_verified_candidate_package(
         candidate_export_root=candidate_export_root,
-        target_export_root=context.target_export_root,
+        target_root=context.target_root.resolve(),
+        modelo=_ISOLATED_TREE.modelo,
+        revision_id=_ISOLATED_TREE.revision,
         expected_manifest_sha256=_tree_publication._sha256(
             candidate_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME,
         ),
@@ -523,7 +525,7 @@ def test_publication_restores_live_export_after_staged_cutover_refusal(
     real_replace = os.replace
 
     def refuse_staged_cutover(source: str | os.PathLike[str], destination: str | os.PathLike[str]) -> None:
-        if Path(source).name.startswith(".export.generated-stage-") and Path(destination) == context.target_export_root:
+        if Path(source).name.startswith(".generated-export-stage-") and Path(destination) == context.target_export_root:
             raise OSError(17, "cross-device link")
         real_replace(source, destination)
 
@@ -542,7 +544,7 @@ def test_publication_restores_live_export_after_staged_cutover_refusal(
     assert _tree_bytes(context.target_export_root) == before
     assert _non_export_authority_bytes(context.target_export_root.parent) == before_authority
     assert candidate_export_root.exists()
-    assert not tuple(context.target_export_root.parent.glob(".export.generated-stage-*"))
+    assert not tuple(context.target_root.resolve().glob(".generated-export-stage-*"))
     assert not _rollback_siblings(context.target_export_root)
     assert not _tree_publication._journal_path(context).exists()
 

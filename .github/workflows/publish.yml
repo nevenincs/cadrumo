@@ -12,13 +12,51 @@ permissions:
   contents: read
 
 concurrency:
-  group: publish
+  # KEYED BY VERSION, not by ref. An unkeyed or ref-keyed release group means
+  # GitHub holds one running and one pending run, so a third release silently
+  # CANCELS the queued one - and a cancelled run reports `cancelled`, not
+  # `failed`, so a release that never happened raises no alarm.
+  group: publish-${{ inputs.tag || github.ref_name }}
   cancel-in-progress: false
 
 jobs:
+  runner-queue-watchdog:
+    # Mandatory now that the release path runs on the fleet: `smoke-test`
+    # targets macOS ARM64 and Windows X64, and a lane whose label set no online
+    # runner carries does NOT go red -- it queues silently until GitHub gives
+    # up. On this fleet that is the normal state rather than an outage, because
+    # the only macOS runner is a laptop whose battery and sleep gating is
+    # deliberate policy. A publish that never happened must fail loudly, not
+    # hang. Enforced by dev/ci/tests/test_runner_queue_watchdog.py, which
+    # refused this workflow until the job was added.
+    name: Cadrumo / runner queue watchdog
+    # Shares the smoke lane's dependencies deliberately. GitHub does not
+    # create a dependent job's record until its dependencies resolve, so an
+    # ungated watchdog would open and close its bounded window before
+    # `smoke-test` exists -- present, and watching nothing.
+    needs: [build, runtime-inventory]
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 20
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+
+      - name: Fail fast on a lane no online runner can serve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WATCHDOG_JOB_NAME: Cadrumo / runner queue watchdog
+          THRESHOLD_SECONDS: "300"
+          MAX_WATCH_SECONDS: "480"
+        run: python3 -m dev.ci.runner_queue_watchdog
+
   runtime-inventory:
     name: Validate stable runtime inventory
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     outputs:
       matrix: ${{ steps.emit-matrix.outputs.matrix }}
     steps:
@@ -45,7 +83,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          matrix="$(uv run --no-sync python -c 'import json; from dev.ci.python_runtime_matrix import load_runtime_inventory; inventory=load_runtime_inventory(); print(json.dumps({"include":[{"os":os,"runtime-id":row.identifier,"python-version":row.selector,"python-minor":row.minor,"phase":row.phase.value,"blocking":row.blocking} for row in inventory.stable for os in ("ubuntu-latest","macos-latest","windows-latest")]}, separators=(",",":")))')"
+          matrix="$(uv run --no-sync python -c 'import json; from dev.ci.python_runtime_matrix import load_runtime_inventory; inventory=load_runtime_inventory(); print(json.dumps({"include":[{"os":os,"runtime-id":row.identifier,"python-version":row.selector,"python-minor":row.minor,"phase":row.phase.value,"blocking":row.blocking} for row in inventory.stable for os in (["self-hosted","Linux","X64"],["self-hosted","macOS","ARM64"],["self-hosted","Windows","X64"])]}, separators=(",",":")))')"
           # `-n` passes on `{"include":[]}`, which expands to zero smoke jobs.
           # A matrix job with no combinations does not fail, so publication
           # would proceed having proved nothing on any platform. Count the
@@ -69,7 +107,7 @@ jobs:
     # cannot affect the artifact, and this repository is public. A release
     # must not depend on a self-hosted runner being free or a laptop being
     # on AC power.
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -162,7 +200,7 @@ jobs:
   publish-pypi:
     name: Publish to PyPI
     needs: smoke-test
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     environment:
       name: pypi
     permissions:

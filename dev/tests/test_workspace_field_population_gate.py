@@ -186,3 +186,20 @@ def test_a_file_being_rewritten_does_not_abort_the_scan(tmp_path: Path) -> None:
     found = {str(entry) for entry in scan_unfilled_workspace_fields(tmp_path, models)}
 
     assert found == {"Thing.never"}
+
+
+def test_a_file_the_walk_listed_but_cannot_read_does_not_abort_the_scan(tmp_path: Path) -> None:
+    """A file lost between the walk and the read is the same non-evidence.
+
+    The scan reads construction sites from across the tree, so an unreadable
+    one can only make a filled field look unfilled -- an over-report the module
+    accepts. Crashing instead costs every finding the run had left to make.
+    """
+    models = tmp_path / "workspace_models.py"
+    models.write_text("class Thing:\n    never: str | None = None\n", encoding="utf-8")
+    # A directory named like a module: the walk lists it and the read refuses it.
+    (tmp_path / "vanished.py").mkdir()
+
+    found = {str(entry) for entry in scan_unfilled_workspace_fields(tmp_path, models)}
+
+    assert found == {"Thing.never"}

@@ -112,7 +112,32 @@ def _row_flow(row: LedgerEvidenceRow) -> IvaFlowDirection | None:
 
 
 def ledger_evidence_row_missing_deductible_iva_evidence(row: LedgerEvidenceRow) -> bool:
-    """Return whether an evidence row claims deductible IVA without linked proof."""
+    """Return whether an evidence row claims deductible IVA without linked proof.
+
+    Four of the five paths below return ``False`` — "this row raises no gap" —
+    and only :func:`_row_has_linked_evidence` reaches that answer by evaluating
+    the question. The other three reach it because the row could not be judged:
+
+    ``lifecycle_state``, ``business_classification``, ``direction`` and
+    ``iva_category`` are persisted on :class:`LedgerEvidenceRow` as bare strings
+    so a frozen bundle round-trips through the strict persistence boundary. A
+    value this build's enums no longer recognise therefore becomes ``None``
+    through :func:`_enum_or_none`, and ``None is not ACTIVE`` and
+    ``None not in BUSINESS_BEARING_STATES`` are both true — so an
+    uninterpretable row leaves the gate as a clean one. An absent
+    ``iva_amount`` reads the same way, as a row claiming no deduction rather
+    than a row whose claim was never captured.
+
+    That direction is fail-OPEN on a refusal gate: the missing-evidence
+    diagnostic does not fire, and a Modelo 303 input-IVA deduction can reach
+    a filing with no documento justificativo behind it (LIVA art. 97).
+
+    It is recorded rather than closed, and deliberately so — the divergence note
+    above this module's ``_row_has_linked_evidence`` explains that tightening
+    this gate can strand a finalized revision with no recovery path. Which of
+    the two harms to prefer is an owner's decision, not this function's; what
+    should not happen is the choice being made silently by an enum lookup.
+    """
     lifecycle_state = _enum_or_none(TransactionLifecycleState, row.lifecycle_state)
     if lifecycle_state is not TransactionLifecycleState.ACTIVE:
         return False

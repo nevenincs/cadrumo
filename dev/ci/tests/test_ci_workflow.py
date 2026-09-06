@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import re
 import shlex
 from pathlib import Path
@@ -335,11 +336,36 @@ def test_the_test_unit_recipe_carries_the_substance_the_workflow_delegates() -> 
     # carries the marker the expression above excludes, so that is what is
     # asserted -- otherwise a marker dropped from that module would silently
     # pull a tool-dependent test into the offline unit lane.
-    parity_markers = _WORKBOOK_PARITY.read_text(encoding="utf-8")
-    assert "pytest.mark.external_tool" in parity_markers, (
+    parity_markers = _module_level_markers(_WORKBOOK_PARITY)
+    assert "external_tool" in parity_markers, (
         "test_workbook_parity.py no longer carries external_tool, so nothing holds it out of the "
-        "unit lane; either restore the marker or give the lane an explicit exclusion"
+        f"unit lane; either restore the marker or give the lane an explicit exclusion (found {sorted(parity_markers)})"
     )
+
+
+def _module_level_markers(module: Path) -> frozenset[str]:
+    """Return the marker names a module applies to every test it collects.
+
+    Read from the parsed `pytestmark` assignment rather than from the file's
+    bytes: a substring search is satisfied by the marker's name appearing in a
+    docstring, a comment, or a note explaining that the marker was REMOVED, so
+    the exact regression this gate exists to catch -- a dropped marker that
+    pulls a tool-dependent module into the offline unit lane -- would read as
+    green.
+    """
+    names: set[str] = set()
+    for node in ast.parse(module.read_text(encoding="utf-8")).body:
+        if not isinstance(node, ast.Assign):
+            continue
+        if not any(isinstance(target, ast.Name) and target.id == "pytestmark" for target in node.targets):
+            continue
+        elements = node.value.elts if isinstance(node.value, (ast.List, ast.Tuple)) else [node.value]
+        for element in elements:
+            if isinstance(element, ast.Call):
+                element = element.func
+            if isinstance(element, ast.Attribute):
+                names.add(element.attr)
+    return frozenset(names)
 
 
 def test_the_per_push_integration_gates_recipe_carries_the_substance_the_workflow_delegates() -> None:

@@ -1451,6 +1451,7 @@ tui:
     refusal:
       application_state: This area is unavailable in the current Ledger state.
       destination_pending: This area is not available in this version yet.
+      selection_required: Choose an entry first, then open this task for it.
       submission_unavailable: This task is unavailable until a prepared operation
         is supplied.
     review:

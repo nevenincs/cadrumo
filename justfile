@@ -294,6 +294,15 @@ check-unreachable-ratchet:
 check-unused-symbol-ratchet:
     @uv run --no-sync python -m dev.quality.unused_symbol_ratchet
 
+# A store nothing fills reads as empty rather than as absent, so a count
+# rendered from it reports zero forever and an aggregation contributes a zero
+# where the source is missing. Known gaps are declared with their kind and
+# rationale in dev/quality/secure_store_write_path.toml; a new one fails.
+# Verify every encrypted store the application reads has a production writer.
+[group('static-checks')]
+check-secure-store-write-path:
+    @uv run --no-sync python -m dev.quality.secure_store_write_path
+
 [group('static-checks')]
 check-docstring-reference-ratchet:
     @uv run --no-sync python -m dev.quality.docstring_reference_ratchet

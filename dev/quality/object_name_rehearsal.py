@@ -822,13 +822,22 @@ def rehearse_object_name_component(
     except Exception as exc:
         raise ObjectNameRehearsalError(f"rehearsal failed; retained rehearsal root: {temporary_root}") from exc
     finally:
+        # A raise here would REPLACE whatever is already propagating, so the gate
+        # A source-tree mutation must dominate: it invalidates the run outright, and
+        # test_live_tree_mutation_during_gate_is_refused_and_retains_root pins that in
+        # BOTH orderings, gate-passing and gate-failing. So this still raises. What it
+        # no longer does is drop the failure already in flight: that text is folded in
+        # ahead of the retained-root suffix, which callers parse off the end.
+        in_flight = sys.exception()
         try:
             final_source_unchanged = _snapshot(root, guarded_paths) == receipt_baseline_files
         except Exception as exc:
+            detail = f" while recovering from: {in_flight}" if in_flight is not None else ""
             raise ObjectNameRehearsalError(
-                f"cannot verify source immutability; retained rehearsal root: {temporary_root}"
+                f"cannot verify source immutability{detail}; retained rehearsal root: {temporary_root}"
             ) from exc
         if not final_source_unchanged:
+            detail = f" while recovering from: {in_flight}" if in_flight is not None else ""
             raise ObjectNameRehearsalError(
-                f"source tree changed during rehearsal; retained rehearsal root: {temporary_root}"
+                f"source tree changed during rehearsal{detail}; retained rehearsal root: {temporary_root}"
             )

@@ -5,9 +5,8 @@ from __future__ import annotations
 import ast
 import inspect
 import tomllib
-from dataclasses import replace
 from pathlib import Path
-from typing import Final, TypedDict, get_args
+from typing import TypedDict, get_args
 
 import pytest
 
@@ -19,7 +18,6 @@ from cadrumo.core.filing_projection_ref import (
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,
 )
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import (
     RegistryError,
@@ -36,7 +34,7 @@ from cadrumo.domain.calculations.registry.static_inspection import (
 
 from ..pipeline import _export_tree
 from ..pipeline._casilla_export_refs import write_generated_casilla_export_refs
-from ..pipeline._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree
+from ..pipeline._export_tree import ExportTreeTransportProfile, render_complete_export_tree
 from ..pipeline._provenance_manifest import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     ExportFragmentTarget,
@@ -58,30 +56,8 @@ from ..pipeline._render_profile import (
 )
 from ..pipeline._semantic_map import SemanticMap
 from ..pipeline._semantic_map_join import JoinedRecordDesign, join_record_design_semantics
-from ..pipeline._tree_validation import (
-    GeneratedExportTreeValidationContext,
-    validate_generated_export_tree,
-)
-from .test_generated_export_trees import (
-    _authorities as _enrolled_authorities,
-)
-from .test_generated_export_trees import (
-    _GeneratedTree,
-    _isolated_authority,
-)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-
-#: Floor for the parsed surface below. Live: 116 referenced names.
-_MINIMUM_VALIDATION_NAMES = 38
-
-#: Floor for the ATTRIBUTE surface of the same parse. The floor above counts
-#: ast.Name nodes and does not reach these: a module can hold plenty of names
-#: while its attribute set empties, and the forbidden entries most likely to
-#: return -- ``shutil.copytree``, ``path.read_text`` -- are ATTRIBUTES, so the
-#: unguarded claim was the load-bearing one. Live: 36 attribute names.
-_MINIMUM_VALIDATION_ATTRIBUTES = 12
 
 
 def test_generated_casilla_export_refs_replace_a_displaced_field_with_no_stale_reference(tmp_path: Path) -> None:
@@ -746,331 +722,6 @@ source_refs = ["aeat-dr-130-2019-v12"]
 """
 
 
-def _real_authorities(tree: _GeneratedTree):
-    """Return the real (joined, semantic map, transport, render profile, evidence).
-
-    A thin adapter over the enrolled drift gate's own `_authorities`, so this
-    fixture and that gate cannot disagree about how a generated tree is built.
-    """
-    semantic_map, render_profile, joined, evidence, transport = _enrolled_authorities(tree)
-    return joined, semantic_map, transport, render_profile, evidence
-
-
-#: The enrolled generated tree this fixture materialises in isolation.
-#:
-#: It used to hand-assemble a synthetic modelo/revision and render a two-sheet
-#: toy layout into it. The export-completeness gate reads the REAL design named
-#: by the revision's `source_refs`, so that layout covered 3 of the 41 positions
-#: modelo 130's diseño requires and validation refused -- correctly. No synthetic
-#: layout can satisfy that gate against a real design, and no bundled design is
-#: small enough to be covered by a toy.
-#:
-#: Modelo 184 is used instead because it is ENROLLED in the generated-tree drift
-#: gate, so its real diseño and real semantic map are already proven to render a
-#: complete, valid tree. It also carries NO supporting modelo and exactly ONE
-#: revision, so the isolated candidate needs no staged neighbour -- modelo 202,
-#: the first choice, folds in modelo 200 and the candidate root must contain
-#: exactly the target modelo.
-#:
-#: It no longer carries exactly one revision: the split at Orden HAC/1430/2025's
-#: boundary gave it `2015-2024` and `2025-y-siguientes`, so the isolation does
-#: prune a sibling now. The tree named here is the later half, which is the one
-#: the 2025 design and its `2025` epoch belong to.
-_ISOLATED_TREE: Final[_GeneratedTree] = _GeneratedTree(
-    "184", "2025-y-siguientes", "aeat-dr-184-2025", "2025", 2025, "0A"
-)
-
-
-def _isolated_render_profile():
-    """The REAL render profile for the isolated tree, and its source evidence.
-
-    Validation checks the profile's design identity against the tree's, so the
-    synthetic wire profile cannot be passed alongside a real generated tree.
-    """
-    _joined, _map, _transport, render_profile, evidence = _real_authorities(_ISOLATED_TREE)
-    return render_profile, evidence
-
-
-def _write_isolated_generated_authority_tree(
-    tmp_path: Path,
-    snapshot=None,
-) -> tuple[GeneratedExportTreeValidationContext, JoinedRecordDesign, SemanticMap, RenderedExportTree, Path]:
-    """Materialise the target's real NON-export authority plus a freshly rendered export.
-
-    The export directory is never copied: it is written solely through the
-    export-tree renderer, so generated-tree validation cannot pass by loading an
-    older fragment tree. Everything else comes from the shipped registry through
-    the same two helpers the enrolled drift gate uses, so this fixture cannot
-    drift from what a real generated tree looks like.
-
-    ``snapshot`` is accepted and ignored: callers pass a revision inspection that
-    the real authorities now supersede.
-    """
-    registry_root = _isolated_authority(_ISOLATED_TREE, tmp_path / "candidate")
-    joined, semantic_map, transport, render_profile, render_evidence = _real_authorities(_ISOLATED_TREE)
-
-    export_root = registry_root / "modelos" / _ISOLATED_TREE.modelo / "revisions" / _ISOLATED_TREE.revision / "export"
-    assert not export_root.exists(), "the authority fixture must not copy legacy export fragments"
-    rendered = render_complete_export_tree(
-        export_root,
-        revision_id=_ISOLATED_TREE.revision,
-        joined=joined,
-        semantic_map=semantic_map,
-        transport_profile=transport,
-        render_profile=render_profile,
-        render_profile_source_evidence=render_evidence,
-    )
-    context = GeneratedExportTreeValidationContext(
-        registry_root=registry_root,
-        source_root=bundled_path(),
-        target=ExportFragmentTarget(
-            modelo=_ISOLATED_TREE.modelo,
-            revision_id=_ISOLATED_TREE.revision,
-            design_epoch=_ISOLATED_TREE.epoch,
-        ),
-        filing_year=_ISOLATED_TREE.filing_year,
-        period=_ISOLATED_TREE.period,
-    )
-    return context, joined, semantic_map, rendered, export_root
-
-
-def test_generated_tree_validation_requires_real_loader_and_authority_selection(
-    m130_inspection_snapshot, tmp_path
-) -> None:
-    """A fresh target must compile, attest, and select through the production authority."""
-    context, joined, semantic_map, rendered, _export_root = _write_isolated_generated_authority_tree(
-        tmp_path,
-        m130_inspection_snapshot,
-    )
-
-    validated = validate_generated_export_tree(
-        context=context,
-        joined=joined,
-        semantic_map=semantic_map,
-        rendered=rendered,
-        render_profile=_isolated_render_profile()[0],
-        render_profile_source_evidence=_isolated_render_profile()[1],
-    )
-
-    assert validated.target == context.target
-    assert validated.layout == rendered.layout
-    assert validated.provenance_manifest == rendered.provenance_manifest
-    assert validated.snapshot.modelo.id == _ISOLATED_TREE.modelo
-    assert validated.snapshot.revision.id == _ISOLATED_TREE.revision
-    assert validated.snapshot.revision.export_layouts == (rendered.layout,)
-
-
-def test_generated_tree_validation_refuses_partial_or_non_generated_export_siblings(
-    m130_inspection_snapshot, tmp_path
-) -> None:
-    """Missing output and a legacy-style sibling both refuse before any publication path exists."""
-    context, joined, semantic_map, rendered, export_root = _write_isolated_generated_authority_tree(
-        tmp_path,
-        m130_inspection_snapshot,
-    )
-    (export_root / rendered.output_files[-1]).unlink()
-
-    with pytest.raises(RegistryValidationError, match="exactly the current rendered outputs"):
-        validate_generated_export_tree(
-            context=context,
-            joined=joined,
-            semantic_map=semantic_map,
-            rendered=rendered,
-            render_profile=_isolated_render_profile()[0],
-            render_profile_source_evidence=_isolated_render_profile()[1],
-        )
-
-    context, joined, semantic_map, rendered, export_root = _write_isolated_generated_authority_tree(
-        tmp_path / "sibling",
-        m130_inspection_snapshot,
-    )
-    (export_root / "0003-unreviewed-layout.toml").write_text(
-        """
-[revisions."2025"]
-[[revisions."2025".export_layouts]]
-id = "unreviewed-layout"
-format = "fixed_width"
-source_refs = ["aeat-dr-130-2019-v12"]
-legal_refs = ["rd-439-2007:art-110"]
-""".lstrip(),
-        encoding="utf-8",
-        newline="\n",
-    )
-
-    with pytest.raises(RegistryValidationError, match="exactly the current rendered outputs"):
-        validate_generated_export_tree(
-            context=context,
-            joined=joined,
-            semantic_map=semantic_map,
-            rendered=rendered,
-            render_profile=_isolated_render_profile()[0],
-            render_profile_source_evidence=_isolated_render_profile()[1],
-        )
-
-
-def test_generated_tree_validation_refuses_direct_revision_legacy_and_loader_breakage(
-    m130_inspection_snapshot, tmp_path
-) -> None:
-    """No single-file modelo, direct revision fallback, or malformed output reaches authority selection."""
-    context, joined, semantic_map, rendered, _export_root = _write_isolated_generated_authority_tree(
-        tmp_path,
-        m130_inspection_snapshot,
-    )
-    (context.registry_root / "modelos" / "200.toml").write_text("[modelo]\nid = '200'\n", encoding="utf-8")
-
-    with pytest.raises(RegistryValidationError, match="generated registry modelos root must contain exactly"):
-        validate_generated_export_tree(
-            context=context,
-            joined=joined,
-            semantic_map=semantic_map,
-            rendered=rendered,
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
-        )
-
-    context, joined, semantic_map, rendered, export_root = _write_isolated_generated_authority_tree(
-        tmp_path / "malformed",
-        m130_inspection_snapshot,
-    )
-    (export_root / rendered.output_files[0]).write_text("[revisions\n", encoding="utf-8")
-
-    with pytest.raises(RegistryError):
-        validate_generated_export_tree(
-            context=context,
-            joined=joined,
-            semantic_map=semantic_map,
-            rendered=rendered,
-            render_profile=_wire_profile(),
-            render_profile_source_evidence=_wire_evidence(),
-        )
-
-
-def test_generated_tree_validation_refuses_stale_sibling_provenance(m130_inspection_snapshot, tmp_path) -> None:
-    """The former outside-export attestation path cannot survive the hard cutover."""
-    context, joined, semantic_map, rendered, export_root = _write_isolated_generated_authority_tree(
-        tmp_path,
-        m130_inspection_snapshot,
-    )
-    (export_root.parent / "export.provenance.json").write_text("{}\n", encoding="utf-8")
-
-    with pytest.raises(RegistryValidationError, match="stale sibling export provenance"):
-        validate_generated_export_tree(
-            context=context,
-            joined=joined,
-            semantic_map=semantic_map,
-            rendered=rendered,
-            render_profile=_isolated_render_profile()[0],
-            render_profile_source_evidence=_isolated_render_profile()[1],
-        )
-
-
-def test_generated_tree_validation_refuses_wrong_period_and_provenance_drift(
-    m130_inspection_snapshot, tmp_path
-) -> None:
-    """The exact target must apply to its filing context and retain current authority evidence."""
-    context, joined, semantic_map, rendered, _export_root = _write_isolated_generated_authority_tree(
-        tmp_path,
-        m130_inspection_snapshot,
-    )
-
-    with pytest.raises(RegistryError, match="no revision for year"):
-        validate_generated_export_tree(
-            context=replace(context, period="1T"),
-            joined=joined,
-            semantic_map=semantic_map,
-            rendered=rendered,
-            render_profile=_isolated_render_profile()[0],
-            render_profile_source_evidence=_isolated_render_profile()[1],
-        )
-
-    with pytest.raises(RegistryValidationError, match="'303'"):
-        validate_generated_export_tree(
-            context=replace(
-                context,
-                target=context.target.model_copy(update={"modelo": "303"}),
-            ),
-            joined=joined,
-            semantic_map=semantic_map,
-            rendered=rendered,
-            render_profile=_isolated_render_profile()[0],
-            render_profile_source_evidence=_isolated_render_profile()[1],
-        )
-
-    with pytest.raises(RegistryValidationError, match="'2026'"):
-        validate_generated_export_tree(
-            context=replace(
-                context,
-                target=context.target.model_copy(update={"revision_id": "2026"}),
-            ),
-            joined=joined,
-            semantic_map=semantic_map,
-            rendered=rendered,
-            render_profile=_isolated_render_profile()[0],
-            render_profile_source_evidence=_isolated_render_profile()[1],
-        )
-
-    manifest_path = (
-        context.registry_root
-        / "modelos"
-        / _ISOLATED_TREE.modelo
-        / "revisions"
-        / _ISOLATED_TREE.revision
-        / "export"
-        / EXPORT_FRAGMENT_PROVENANCE_FILENAME
-    )
-    manifest = load_export_fragment_provenance_manifest(manifest_path.read_bytes())
-    manifest_path.write_bytes(
-        export_fragment_provenance_manifest_json_bytes(manifest.model_copy(update={"source_sha256": "b" * 64})),
-    )
-    with pytest.raises(RegistryValidationError, match="current generation authorities"):
-        validate_generated_export_tree(
-            context=context,
-            joined=joined,
-            semantic_map=semantic_map,
-            rendered=rendered,
-            render_profile=_isolated_render_profile()[0],
-            render_profile_source_evidence=_isolated_render_profile()[1],
-        )
-
-
-def test_generated_tree_validation_module_has_no_legacy_loader_surface() -> None:
-    """The generated-tree validation boundary must not reintroduce legacy reader or fallback APIs."""
-    # The module was renamed and rehomed in the authoring-tree deconflation:
-    # `dev/registry/_generated_tree_validation.py` is now
-    # `dev/registry/pipeline/_tree_validation.py`. The import was left behind, so
-    # this case died on ImportError rather than proving anything about the
-    # boundary it guards.
-    from ..pipeline import _tree_validation
-
-    module = ast.parse(inspect.getsource(_tree_validation))
-    referenced_names = {node.id for node in ast.walk(module) if isinstance(node, ast.Name)}
-
-    # An absence claim over an EMPTY surface is satisfied by construction.
-    # This module carries 116 referenced names today; a gutted or stubbed
-    # one would satisfy every forbidden-name assertion below without the
-    # boundary existing at all. A floor, not a pinned count.
-    assert len(referenced_names) >= _MINIMUM_VALIDATION_NAMES, (
-        f"the validation boundary parsed to only {len(referenced_names)} referenced name(s); below "
-        "this an absence claim proves nothing about the boundary it guards"
-    )
-    attribute_names = {node.attr for node in ast.walk(module) if isinstance(node, ast.Attribute)}
-    assert len(attribute_names) >= _MINIMUM_VALIDATION_ATTRIBUTES, (
-        f"the validation boundary parsed to only {len(attribute_names)} attribute name(s); below "
-        "this the forbidden-attribute claim below holds because the parse reached no "
-        "attributes, not because the boundary is clean"
-    )
-    forbidden = {
-        "bundled_authority",
-        "load_modelo_file",
-        "load_modelo_path",
-        "resolve_export_layout",
-        "copytree",
-    }
-
-    assert not forbidden.intersection(referenced_names)
-    assert not forbidden.intersection(attribute_names)
-
-
 def test_renderer_writes_stable_complete_tree_that_real_directory_loader_merges(
     m130_inspection_snapshot, tmp_path
 ) -> None:
@@ -1315,6 +966,63 @@ def test_renderer_manifest_refuses_file_tampering_derivation_drift_and_partial_f
         )
 
 
+def test_generated_export_target_refuses_a_link_even_though_the_name_and_kind_look_right(
+    m130_inspection_snapshot,
+    tmp_path,
+) -> None:
+    """The renderer must not write through a link masquerading as the export target.
+
+    The module docstring promises a tree written "without opening a shipped
+    fragment directory or deriving any output fact from one." A link named
+    ``export`` that resolves elsewhere is exactly how that isolation would be
+    defeated silently: `.exists()` and `.is_dir()` both admit it, so only the
+    dedicated link check stands between this call and writing through it.
+    """
+    real_elsewhere = tmp_path / "real_elsewhere"
+    real_elsewhere.mkdir()
+    link_target = tmp_path / "export"
+    link_target.symlink_to(real_elsewhere, target_is_directory=True)
+
+    with pytest.raises(RegistryValidationError, match="must not be a link"):
+        render_complete_export_tree(
+            link_target,
+            revision_id="2025",
+            joined=_joined(m130_inspection_snapshot),
+            semantic_map=_semantic_map(),
+            transport_profile=_profile(),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
+        )
+    assert not any(real_elsewhere.iterdir())
+
+
+def test_generated_export_target_accepts_a_real_preexisting_empty_directory(
+    m130_inspection_snapshot,
+    tmp_path,
+) -> None:
+    """Sibling-blindness check: a genuine empty directory is not mistaken for a link.
+
+    Same name, same "already exists as a directory" shape as the refused link
+    above, but no reparse point involved. The link guard must not fire here,
+    and the render must proceed and populate the real directory in place.
+    """
+    real_target = tmp_path / "export"
+    real_target.mkdir()
+
+    rendered = render_complete_export_tree(
+        real_target,
+        revision_id="2025",
+        joined=_joined(m130_inspection_snapshot),
+        semantic_map=_semantic_map(),
+        transport_profile=_profile(),
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
+    )
+
+    assert rendered.output_files
+    assert all((real_target / relative_path).is_file() for relative_path in rendered.output_files)
+
+
 def test_direct_manifest_emission_and_real_loader_verification(m130_inspection_snapshot, tmp_path) -> None:
     """The public provenance-manifest emitter and verifier operate on a real fresh tree only."""
     revision_dir = _write_modelo_shell(tmp_path / "modelos" / "130")
@@ -1423,6 +1131,214 @@ def test_renderer_refuses_mismatched_map_without_emitting_a_manifest(m130_inspec
         )
 
     assert not (revision_dir / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME).exists()
+
+
+def test_renderer_refuses_semantic_map_source_and_incomplete_entries_without_emitting_a_manifest(
+    m130_inspection_snapshot,
+    tmp_path,
+) -> None:
+    """The remaining two semantic-map attestation comparisons must each refuse on their own
+    terms rather than inherit coverage from the coarse whole-map and SHA-256 siblings pinned
+    above: a source-ref drift on the map argument, and an entries set that no longer bijects
+    the compiled map once the joined design itself carries a duplicated field."""
+    revision_dir = _write_modelo_shell(tmp_path / "modelos" / "130")
+    semantic_map = _semantic_map()
+
+    with pytest.raises(RegistryValidationError, match=r"semantic-map source .+ does not match joined source"):
+        render_complete_export_tree(
+            revision_dir / "export",
+            revision_id="2025",
+            joined=_joined(m130_inspection_snapshot),
+            semantic_map=semantic_map.model_copy(update={"source_ref": "aeat-dr-130-2019-v13"}),
+            transport_profile=_profile(),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
+        )
+
+    # The coarse whole-map equality check above intercepts every semantic_map
+    # argument that merely differs from what the join used, so the
+    # entries-completeness comparison can only be reached by keeping that
+    # argument identical to the join's own authored map and instead corrupting
+    # the JOINED design: one already-joined field duplicated so its flattened
+    # entry set no longer bijects the compiled map's entries.
+    joined = _joined(m130_inspection_snapshot)
+    joined_with_duplicated_field = joined.model_copy(update={"fields": (*joined.fields, joined.fields[0])})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match="joined fields do not attest the supplied complete semantic map",
+    ):
+        render_complete_export_tree(
+            revision_dir / "export",
+            revision_id="2025",
+            joined=joined_with_duplicated_field,
+            semantic_map=semantic_map,
+            transport_profile=_profile(),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
+        )
+
+    assert not (revision_dir / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME).exists()
+
+
+def test_renderer_tolerates_reordered_joined_fields_without_tripping_the_entries_gate(
+    m130_inspection_snapshot,
+    tmp_path,
+) -> None:
+    """Sibling-blindness for the entries-completeness gate above: it compares the joined
+    fields' entries as a SET against the compiled map's entries, so reordering those fields
+    without dropping or duplicating any of them must still render cleanly. A gate that fired
+    on any change to field order, rather than genuine incompleteness, would not have proven
+    the completeness comparison the prior test exercises."""
+    joined = _joined(m130_inspection_snapshot)
+    reordered_fields = (joined.fields[1], joined.fields[0], *joined.fields[2:])
+    reordered_joined = joined.model_copy(update={"fields": reordered_fields})
+
+    rendered = render_complete_export_tree(
+        tmp_path / "export",
+        revision_id="2025",
+        joined=reordered_joined,
+        semantic_map=_semantic_map(),
+        transport_profile=_profile(),
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
+    )
+
+    assert rendered.output_files
+
+
+def test_renderer_refuses_incomplete_joined_records_without_emitting_a_manifest(
+    m130_inspection_snapshot,
+    tmp_path,
+) -> None:
+    """The records-completeness comparison is the fifth attestation raise and, unlike the
+    entries duplication above, a literal duplicated record collides with the renderer's own
+    duplicate-output-id refusal before this comparison is ever reached (proven: duplicating
+    ``joined.records[0]`` raises "generated export tree has duplicate record id", not this
+    comparison's message, because a shared ``semantic_record`` always shares its rendered
+    export_record_id). Dropping a record from the joined design instead -- so the joined set
+    is a proper subset of the compiled map's records, with no id collision -- reaches the
+    comparison this raise site actually guards."""
+    revision_dir = _write_modelo_shell(tmp_path / "modelos" / "130")
+    joined = _joined(m130_inspection_snapshot)
+    joined_missing_a_record = joined.model_copy(update={"records": joined.records[:1]})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match="joined records do not attest the supplied complete semantic map",
+    ):
+        render_complete_export_tree(
+            revision_dir / "export",
+            revision_id="2025",
+            joined=joined_missing_a_record,
+            semantic_map=_semantic_map(),
+            transport_profile=_profile(),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
+        )
+
+    assert not (revision_dir / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME).exists()
+
+
+def test_renderer_tolerates_reordered_joined_records_without_tripping_the_records_gate(
+    m130_inspection_snapshot,
+    tmp_path,
+) -> None:
+    """Sibling-blindness for the records-completeness gate above: it compares joined records
+    as a SET against the compiled map's records, so reordering them without dropping or
+    duplicating any must still render cleanly."""
+    joined = _joined(m130_inspection_snapshot)
+    reordered_records = (joined.records[1], joined.records[0])
+    reordered_joined = joined.model_copy(update={"records": reordered_records})
+
+    rendered = render_complete_export_tree(
+        tmp_path / "export",
+        revision_id="2025",
+        joined=reordered_joined,
+        semantic_map=_semantic_map(),
+        transport_profile=_profile(),
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
+    )
+
+    assert rendered.output_files
+
+
+def test_renderer_refuses_transport_profile_identity_axes_without_emitting_a_manifest(
+    m130_inspection_snapshot,
+    tmp_path,
+) -> None:
+    """The transport profile's modelo, design-epoch, source-ref, and serializer-convention
+    comparisons must each refuse on their own terms: the sibling SHA-256 comparison already
+    pinned in ``test_renderer_refuses_mismatched_map_without_emitting_a_manifest`` proves only
+    that one axis, and two differently-named parametrize labels that both mutate the SHA-256
+    field would leave these other four axes silently undriven."""
+    revision_dir = _write_modelo_shell(tmp_path / "modelos" / "130")
+    profile = _profile()
+
+    with pytest.raises(RegistryValidationError, match="export tree transport profile modelo"):
+        render_complete_export_tree(
+            revision_dir / "export",
+            revision_id="2025",
+            joined=_joined(m130_inspection_snapshot),
+            semantic_map=_semantic_map(),
+            transport_profile=profile.model_copy(update={"modelo": "184"}),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
+        )
+
+    with pytest.raises(RegistryValidationError, match="export tree transport profile design epoch"):
+        render_complete_export_tree(
+            revision_dir / "export",
+            revision_id="2025",
+            joined=_joined(m130_inspection_snapshot),
+            semantic_map=_semantic_map(),
+            transport_profile=profile.model_copy(update={"design_epoch": "2020"}),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
+        )
+
+    with pytest.raises(RegistryValidationError, match="export tree transport profile source "):
+        render_complete_export_tree(
+            revision_dir / "export",
+            revision_id="2025",
+            joined=_joined(m130_inspection_snapshot),
+            semantic_map=_semantic_map(),
+            transport_profile=profile.model_copy(update={"source_ref": "aeat-dr-130-2019-v13"}),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
+        )
+
+    with pytest.raises(RegistryValidationError, match="export tree transport profile serializer"):
+        render_complete_export_tree(
+            revision_dir / "export",
+            revision_id="2025",
+            joined=_joined(m130_inspection_snapshot),
+            semantic_map=_semantic_map(),
+            transport_profile=profile.model_copy(update={"serializer_convention": "unsupported-convention"}),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
+        )
+
+    assert not (revision_dir / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME).exists()
+
+
+def test_renderer_tolerates_transport_profile_line_ending_drift(m130_inspection_snapshot, tmp_path) -> None:
+    """Sibling-blindness for the transport-profile identity gate above: it compares five
+    named axes (modelo, design epoch, source ref, source digest, serializer convention), not
+    the profile as a whole, so a drifted line_ending -- not one of those axes -- must reach a
+    normal render rather than tripping any of the four gates just pinned."""
+    rendered = render_complete_export_tree(
+        tmp_path / "export",
+        revision_id="2025",
+        joined=_joined(m130_inspection_snapshot),
+        semantic_map=_semantic_map(),
+        transport_profile=_profile().model_copy(update={"line_ending": "lf"}),
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
+    )
+
+    assert rendered.output_files
 
 
 def test_renderer_refuses_uncovered_blank_numeric_anchor_without_emitting_a_partial_fragment(

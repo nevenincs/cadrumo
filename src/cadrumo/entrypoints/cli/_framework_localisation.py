@@ -122,6 +122,24 @@ def _localised_invalid_value(rendered: str) -> str:
     )
 
 
+def _error_stream_color(exception: object) -> bool | None:
+    """Resolve error-output colour through the project rule, not Click's default.
+
+    ``_tty.should_use_color`` is documented as the rule every command uses, and
+    it honours ``--no-color``, ``NO_COLOR`` and ``CADRUMO_FORCE_COLOR``, none of
+    which Click's own ``show_color`` consults. The probe is stderr because that
+    is where a ClickException writes. An explicit ``show_color`` set on the
+    exception still wins, so a caller that has already decided is not overridden.
+    """
+    explicit = getattr(exception, "show_color", None)
+    if explicit is not None:
+        return bool(explicit)
+    from ...core.tty import stderr_is_tty
+    from ._tty import should_use_color
+
+    return should_use_color(stream_is_tty=stderr_is_tty)
+
+
 def localise_typer_parse_error_messages() -> None:
     """Bind Typer's vendored parser-error prefixes to the active locale.
 
@@ -181,7 +199,7 @@ def localise_typer_parse_error_messages() -> None:
         echo(
             f"{_localised_error_prefix()}: {self.format_message()}",
             file=file,
-            color=self.show_color,
+            color=_error_stream_color(self),
         )
 
     # ADAPTER-INTERNAL-ALIAS-RATIONALE-CLICK-SHOW: mirrors Click's own

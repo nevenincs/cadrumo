@@ -85,20 +85,23 @@ def _scan() -> tuple[list[str], int]:
                 continue
             try:
                 tree = ast.parse(path.read_text(encoding="utf-8"))
-            except SyntaxError as refusal:
+            except (OSError, SyntaxError) as refusal:
                 # A peer mid-edit in a shared worktree; their syntax error is
                 # their gate's to report, not a finding of this one. The loss
                 # still lands here: an unparsed module contributes no offence
                 # and reads as compliant. The floor below is post-swallow, but
                 # 6,906 modules parse against a floor of 1,000, so most of the
                 # tree could vanish before it fires.
+                # An UNREADABLE module is the same loss by another route: the
+                # walk can list a path a peer removes before the read reaches
+                # it, so it joins this announcement rather than ending the scan.
                 unparsed.append(f"{path} ({refusal})")
                 continue
             parsed += 1
             offences.extend(f"{path.relative_to(REPO_ROOT).as_posix()}:{line}" for line in _dunder_init_imports(tree))
     report_unread(
         "dunder-init import scan",
-        "these modules were not parsed, so a forbidden __init__ import inside one would "
+        "these modules were not read or parsed, so a forbidden __init__ import inside one would "
         "not appear in the offences below",
         unparsed,
     )

@@ -33,6 +33,8 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from cadrumo.core.atomic_write import atomic_write_text
+
 from .unread_inputs import report_unread
 
 SRC = Path("src/cadrumo")
@@ -287,7 +289,7 @@ def fix_pyproject() -> int:
             text = text.replace(f'"{v}"', f'"{pub.as_posix()}"')
         n += 1
     if apply and n:
-        p.write_text(text, encoding="utf-8", newline="\n")
+        atomic_write_text(p, text)
     return n
 
 

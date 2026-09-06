@@ -137,3 +137,30 @@ def test_a_readable_corpus_announces_nothing(
 
     assert collect_public_definitions(tmp_path)
     assert capsys.readouterr().err == ""
+
+
+def test_a_module_the_walk_listed_but_cannot_read_is_announced_too(
+    tmp_path: pathlib.Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The third read failure, which used to end the census instead of a row.
+
+    The sibling above is named for an unreadable module but feeds an
+    UNPARSABLE one, so the case where the read itself fails was driven by
+    nothing. It is the likelier of the two here: this walk runs over a tree
+    that is edited while it runs, and a file listed by the walk can be gone
+    before the read reaches it. That took the whole census down, which is
+    the outcome the stated policy exists to prevent.
+
+    The fixture is a DIRECTORY named ``*.py`` -- a walk lists it and a read
+    refuses it -- so no symlink privilege is required.
+    """
+    (tmp_path / "sound.py").write_text("def widen():" + chr(10) + "    return 1" + chr(10), encoding="utf-8")
+    (tmp_path / "unreadable.py").mkdir()
+
+    collected = collect_public_definitions(tmp_path)
+
+    assert [item.name for item in collected] == ["widen"]
+    error = capsys.readouterr().err
+    assert "cannot be reported as colliding" in error
+    assert "unreadable.py" in error

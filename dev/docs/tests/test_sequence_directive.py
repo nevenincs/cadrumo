@@ -412,6 +412,42 @@ def test_directive_refuses_live_aeat_in_an_executed_frame(tmp_path: Path, _isola
     assert "cadrumo-sequence" not in html
 
 
+_INDEX_PAYLOAD_LESS = "# List\n\n```{cli-sequence} payload-less-demo\n:verify: Confirm the listing.\n```\n"
+_CONTRACT_PAYLOAD_LESS = "@result aeat app modelo work list\n@expect exit_code == 0"
+
+
+def test_directive_refuses_a_payload_less_result_frame(tmp_path: Path, _isolated_sequence_storage: None) -> None:
+    """An enrolled @result frame asserting only exit_code is refused at build time.
+
+    This proves the WIRING, not just the refusal: the editorial payload contract
+    is only worth anything if the directive — the boundary that admits a sequence
+    as published documentation — actually calls it. The contract previously lived
+    only in a predicate whose sole caller was a test reading a committed baseline,
+    so when that baseline was deleted it stopped protecting anything silently.
+
+    Like the live-AEAT refusal above, it fires before the golden lookup, so the
+    author sees the real fault rather than a missing-golden error.
+    """
+    site = tmp_path / "site"
+    site.mkdir()
+    goldens_root = tmp_path / "goldens"
+    goldens_root.mkdir()
+    _write_site(
+        site,
+        index_body=_INDEX_PAYLOAD_LESS,
+        goldens_root=goldens_root,
+        sequence_id="payload-less-demo",
+        contract_body=_CONTRACT_PAYLOAD_LESS,
+    )
+
+    html, warnings = _build(site, warningiserror=False)
+
+    assert "must assert the result PAYLOAD" in warnings
+    assert "result.*" in warnings  # the remediation names the json-paths that satisfy it
+    assert "no committed golden" not in warnings  # refused before the golden lookup
+    assert "cadrumo-sequence" not in html
+
+
 # ---------------------------------------------------------------------------
 # Shell-aware wrapping, shell switcher metadata, and copy affordance
 # ---------------------------------------------------------------------------

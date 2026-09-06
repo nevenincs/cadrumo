@@ -663,6 +663,21 @@ ignore_imports =
     # receive and answer None for. isinstance is also subclass-inclusive where
     # a code comparison is exact-class. The narrow edge is the honest one.
     cadrumo.application.ledger.evidence_sweep -> cadrumo.adapters.outbound.storage.errors
+    # The sweep's input record. DriveFolderDocument is what the outbound
+    # resolver hands back for one folder entry, and the sweep annotates the
+    # sequence it walks and the fetch callable it is given with that exact
+    # type rather than restating its shape. Type-only, but grimp reads it as
+    # the import it is, so it is pinned rather than hidden behind
+    # TYPE_CHECKING -- a pin records the decision where hiding would only
+    # move the same edge out of the contract's sight.
+    cadrumo.application.ledger.evidence_sweep -> cadrumo.adapters.outbound.google.document_link_resolver
+    # The gate owns the draft and submission lifetimes for one work unit and
+    # constructs both repositories per bucket. The same encrypted-store reach
+    # every persistence pin in this ledger records; inverting one gate while
+    # its neighbours construct theirs directly would be the outlier, and the
+    # ADR defers that inversion repository-wide rather than per module.
+    cadrumo.application.modelo.workflow_gate -> cadrumo.adapters.persistence.profile.filing_drafts
+    cadrumo.application.modelo.workflow_gate -> cadrumo.adapters.persistence.profile.submission
     cadrumo.application.filing.history_repository -> cadrumo.adapters.persistence.**
     cadrumo.application.filing.persistence_wiring -> cadrumo.adapters.persistence.**
     cadrumo.application.inventory.service -> cadrumo.adapters.persistence.**

@@ -53,6 +53,8 @@ import sys
 from dataclasses import dataclass
 from typing import Final
 
+from cadrumo.core.atomic_write import atomic_write_text
+
 from .facade_retirement import imported_modules, resolve_relative
 
 __all__ = [
@@ -246,7 +248,7 @@ def apply_promotion(plan: PromotionPlan, *, new_stem: str) -> int:
         for edit in items:
             ending = "\r\n" if lines[edit.lineno - 1].endswith("\r\n") else "\n"
             lines[edit.lineno - 1] = edit.after + ending
-        path.write_text("".join(lines), encoding="utf-8", newline="\n")
+        atomic_write_text(path, "".join(lines))
     plan.module_file.rename(plan.module_file.with_name(f"{new_stem}.py"))
     return len(by_path)
 

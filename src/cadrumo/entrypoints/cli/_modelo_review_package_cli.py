@@ -327,6 +327,15 @@ def review_package_counter_sign(
         raise bad_parameter_from_error(exc) from exc
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(receipt.model_dump_json(indent=2), encoding=UTF_8_ENCODING, newline="\n")
+    # The counter-signer's bucket records that it signed this package.
+    from ...application.bucket_event_repository import bucket_event_history_repository
+    from ...application.modelo.review_package_collab_audit import emit_collab_package_counter_signed_event
+
+    emit_collab_package_counter_signed_event(
+        receipt,
+        bucket_id=resolved_bucket_id,
+        repository=bucket_event_history_repository(bucket_id=resolved_bucket_id),
+    )
     counter_public_key = review_package_signing_public_key(counter_signer_keypair)
     result, lines = review_package_counter_sign_result(
         package,
@@ -418,6 +427,16 @@ def review_package_encrypt_for_recipient(
         raise bad_parameter_from_error(exc) from exc
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(envelope.model_dump_json(indent=2), encoding=UTF_8_ENCODING, newline="\n")
+    # The collaboration event history is the audit trail for a package leaving
+    # this bucket; without this the encrypt succeeds and records nothing.
+    from ...application.bucket_event_repository import bucket_event_history_repository
+    from ...application.modelo.review_package_collab_audit import emit_collab_package_encrypted_event
+
+    emit_collab_package_encrypted_event(
+        envelope,
+        bucket_id=resolved_bucket_id,
+        repository=bucket_event_history_repository(bucket_id=resolved_bucket_id),
+    )
     result, lines = review_package_encrypt_for_recipient_result(
         package, output, recipient_id=recipient_id, recipient_public_key_hex=recipient.public_key_hex, envelope=envelope
     )
@@ -449,6 +468,15 @@ def review_package_decrypt(ctx: typer.Context, envelope_path: Path, output: Path
         decrypted = decrypt_review_package_for_recipient(envelope, recipient_private_key=keypair.private_key())
     except RecipientDecryptionError as exc:
         raise bad_parameter_from_error(exc) from exc
+    # The recipient's bucket records that it opened this package.
+    from ...application.bucket_event_repository import bucket_event_history_repository
+    from ...application.modelo.review_package_collab_audit import emit_collab_package_decrypted_event
+
+    emit_collab_package_decrypted_event(
+        envelope,
+        bucket_id=resolved_bucket_id,
+        repository=bucket_event_history_repository(bucket_id=resolved_bucket_id),
+    )
     replay_guard = RecipientReplayGuardRepository(bucket_id=resolved_bucket_id)
     try:
         replay_guard.mark_consumed(envelope.envelope_nonce_hex)

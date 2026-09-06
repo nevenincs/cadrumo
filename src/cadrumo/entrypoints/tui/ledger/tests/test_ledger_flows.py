@@ -33,7 +33,7 @@ from ..import_flow import LedgerImportScreen
 from ..models import LedgerClassificationSubmissionV1, LedgerFlowState, LedgerPreparedImportV1
 from ..routes import ledger_screen_factory, resolve_ledger_screen
 from ..workspace_injection import LedgerWorkspaceInjection
-from .test_ledger_workspace import _context, _projection, _review_action
+from .test_ledger_workspace import _context, _focused_context, _projection, _review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -128,12 +128,11 @@ async def test_classification_is_explicit_confirmable_cancelable_and_catalogue_a
     projection = _projection()
     door = _ClassificationDoor()
     controller = LedgerWorkspaceController(
-        _context(),
+        _focused_context(projection.entries[0].transaction_id),
         projection,
         LedgerWorkspaceInjection(
             review_action=_review_action(),
             classify_action=_classify_action(),
-            classification_target=projection.entries[0].transaction_id,
             classification_submitter=door,
         ),
     )
@@ -158,12 +157,11 @@ async def test_classification_is_explicit_confirmable_cancelable_and_catalogue_a
 
     success_door = _ClassificationDoor()
     success_controller = LedgerWorkspaceController(
-        _context(),
+        _focused_context(projection.entries[0].transaction_id),
         projection,
         LedgerWorkspaceInjection(
             review_action=_review_action(),
             classify_action=_classify_action(),
-            classification_target=projection.entries[0].transaction_id,
             classification_submitter=success_door,
         ),
     )
@@ -229,12 +227,11 @@ async def test_escape_is_refused_while_classification_submission_is_in_flight() 
     projection = _projection()
     door = _SlowClassificationDoor()
     controller = LedgerWorkspaceController(
-        _context(),
+        _focused_context(projection.entries[0].transaction_id),
         projection,
         LedgerWorkspaceInjection(
             review_action=_review_action(),
             classify_action=_classify_action(),
-            classification_target=projection.entries[0].transaction_id,
             classification_submitter=door,
         ),
     )
@@ -332,17 +329,19 @@ def test_factory_refuses_undeclared_or_drifted_classification_action() -> None:
 def test_controller_refuses_off_projection_classification_and_unsafe_or_duplicate_import_choices() -> None:
     projection = _projection()
     door = _ClassificationDoor()
+    controller = LedgerWorkspaceController(
+        _context(),
+        projection,
+        LedgerWorkspaceInjection(
+            review_action=_review_action(),
+            classify_action=_classify_action(),
+            classification_submitter=door,
+        ),
+    )
+    # The refusal now guards the selection itself rather than an injected
+    # target: an entry the operator cannot see is one they cannot have chosen.
     with pytest.raises(ValueError, match="absent from the visible Ledger projection"):
-        LedgerWorkspaceController(
-            _context(),
-            projection,
-            LedgerWorkspaceInjection(
-                review_action=_review_action(),
-                classify_action=_classify_action(),
-                classification_target=cast("TransactionId", "f" * 64),
-                classification_submitter=door,
-            ),
-        )
+        controller.with_transaction_focus(cast("TransactionId", "f" * 64))
     assert not door.calls
     command = LedgerSourceImportCommand(path=Path("C:/private/statement.csv"), provider="bank")
     with pytest.raises(ValueError, match="safe Ledger catalogue identities"):
@@ -386,12 +385,11 @@ async def test_flow_copy_is_localized_while_semantic_choices_are_invariant(local
         command=command,
     )
     controller = LedgerWorkspaceController(
-        _context(),
+        _focused_context(projection.entries[0].transaction_id),
         projection,
         LedgerWorkspaceInjection(
             review_action=_review_action(),
             classify_action=_classify_action(),
-            classification_target=projection.entries[0].transaction_id,
             classification_submitter=_ClassificationDoor(),
             prepared_imports=(prepared,),
             import_submitter=_ImportDoor(),
@@ -432,12 +430,11 @@ async def test_new_flows_have_exact_focus_and_real_compositor_geometry(screen_ki
         command=command,
     )
     controller = LedgerWorkspaceController(
-        _context(),
+        _focused_context(projection.entries[0].transaction_id),
         projection,
         LedgerWorkspaceInjection(
             review_action=_review_action(),
             classify_action=_classify_action(),
-            classification_target=projection.entries[0].transaction_id,
             classification_submitter=_ClassificationDoor(),
             prepared_imports=(prepared,),
             import_submitter=_ImportDoor(),
