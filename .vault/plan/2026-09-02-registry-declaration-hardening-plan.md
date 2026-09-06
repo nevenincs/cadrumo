@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:41028a0db32d5db8757ab83d7203b8650e48618e8e29cd071824f5a8a8bf989c'
+body_hash: 'sha256:c259cb17a462be89117fff40600bdaf3dff325771d24b9184e7935fbedc242fc'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -625,6 +625,9 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S743` - Floor the condition-exposure denominator and split its three-population conjunction so a narrowed walk fires and an emptied population names itself; `dev/registry/tests/test_filing_exposure.py`.
 - [x] `W02.P02.S744` - Separate the anti-vacuity guard from the claim it guards in the revision selection probe, where an empty selection and a resolution failure read identically; `dev/registry/tests/test_revision_selection_probe.py`.
 - [x] `W02.P02.S745` - Replace the palette concept fixture's tautological lifecycle assertion and its untrue invariant comment with a floor on the fixture it actually selects; `dev/docs/tests/test_palette_ranking.py`.
+- [x] `W02.P02.S746` - Separate the cleanup-injection premise from the evidence claim in the object-name replay test, where an unreached cleanup and a removed file read identically; `dev/quality/tests/test_object_name_replay.py`.
+- [x] `W02.P02.S747` - Assert each tree-digest derivation produced something before asserting they differ, so a collapsed digest is not reported as a distinctness failure; `dev/tests/test_registry_identity_enrolment.py`.
+- [x] `W02.P02.S748` - Assert the non-emptiness premise before the subset and inequality claims it protects at three sites, where each claim is vacuously true once the premise fails; `dev/quality/tests/test_repository_sources.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
