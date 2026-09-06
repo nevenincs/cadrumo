@@ -24,6 +24,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
+from ..conformance.manager import reset_conformance_cache
 from ..pipeline.casilla_tree_transaction import publish_verified_casilla_tree, recover_verified_casilla_tree
 from .m200_2024_blocker_adjudications import (
     S14_S15_EXPECTED_COUNT,
@@ -97,6 +98,10 @@ def publish_m200_2024_s14_s15(
             backup_prefix=_BACKUP_PREFIX,
             transaction_root=transaction_root,
         ):
+            # Recovery may have cut a candidate live or restored the backup --
+            # both outside what the conformance snapshot cache's key covers.
+            # See reset_conformance_cache.
+            reset_conformance_cache()
             raise RegistryValidationError(
                 "M200/2024 adjudication recovered an interrupted publication; run check again"
             )
@@ -123,6 +128,7 @@ def publish_m200_2024_s14_s15(
             backup_prefix=_BACKUP_PREFIX,
             transaction_root=transaction_root,
         )
+        reset_conformance_cache()
 
 
 def _registry_root(registry_root: Path | None) -> Path:

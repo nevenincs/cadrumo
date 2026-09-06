@@ -58,6 +58,7 @@ from ._provenance_manifest import (
     loader_semantic_digest,
     verify_export_fragment_provenance_manifest,
 )
+from ..conformance.manager import reset_conformance_cache
 from ._render_profile import RenderProfile, RenderProfileSourceEvidence
 from ._semantic_map import SemanticMap
 from ._semantic_map_join import JoinedRecordDesign
@@ -166,6 +167,11 @@ def publish_validated_generated_export_tree(
             render_profile_source_evidence=render_profile_source_evidence,
         )
         if recovery_completed:
+            # Recovery finalized (or re-finalized) a candidate as live and, on
+            # the target_is_verified path, wrote casilla export_refs -- both
+            # outside anything the conformance snapshot cache's key covers.
+            # See reset_conformance_cache.
+            reset_conformance_cache()
             return PublishedGeneratedExportTree(
                 validated=None,
                 export_root=target_export_root,
@@ -243,6 +249,7 @@ def publish_validated_generated_export_tree(
         if had_target:
             _delete_opaque_rollback_tree(backup_export_root)
         _delete_journal(journal_path)
+        reset_conformance_cache()
 
     return PublishedGeneratedExportTree(
         validated=validated,

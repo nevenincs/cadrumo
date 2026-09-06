@@ -152,7 +152,7 @@ def _candidate_sidecars(target: Path) -> tuple[Path, ...]:
     )
 
 
-def _real_corpus_fixtures() -> tuple[list[tuple[Path, Path]], list[str]]:
+def _real_corpus_fixtures(root: Path = SRC_CADRUMO) -> tuple[list[tuple[Path, Path]], list[str]]:
     """Every committed artefact whose sidecar declares real provenance.
 
     Walks the whole package, not one fixture directory. The module docstring
@@ -190,42 +190,74 @@ def _real_corpus_fixtures() -> tuple[list[tuple[Path, Path]], list[str]]:
     pairs: list[tuple[Path, Path]] = []
     unreadable: list[str] = []
     seen: set[Path] = set()
-    committed = scan_directory(
-        SRC_CADRUMO,
-        select=DirectoryEntryKind.FILES,
-        recursive=True,
-        prune_directories=("__pycache__",),
+    # A sidecar is always a SIBLING of what it describes, so the artefacts
+    # worth offering the forward rule all live in a directory that holds at
+    # least one JSON file. Finding those directories costs the same single
+    # ``*.json`` walk this scan always did; the per-directory listing that
+    # follows is shallow and reaches every artefact kind, not only ``.pdf``.
+    sidecars = frozenset(
+        path for path in scan_directory(root, pattern="*.json", recursive=True) if "__pycache__" not in path.parts
     )
-    # One walk, then membership: asking the filesystem whether each candidate
-    # sidecar exists costs a stat per artefact across a tree of this size.
-    committed_set = frozenset(committed)
-    for target in committed:
-        if target.suffix == ".json":
-            continue
-        sidecar_path = next(
-            (candidate for candidate in _candidate_sidecars(target) if candidate in committed_set),
-            None,
-        )
-        if sidecar_path is None or target in seen:
-            continue
-        try:
-            sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, UnicodeDecodeError) as refusal:
-            # A sidecar that will not parse cannot be asked whether its target is
-            # real corpus, so the pair silently leaves this scan entirely. With
-            # four fixtures in scope, one unreadable sidecar removes a quarter of
-            # the protected corpus and the gate still reports clean. These are
-            # committed files, so a broken one is a defect and is refused below
-            # rather than skipped.
-            unreadable.append(f"{sidecar_path}: {refusal}")
-            continue
-        if isinstance(sidecar, dict) and sidecar.get("provenance") == "real_corpus":
-            seen.add(target)
-            pairs.append((target, sidecar_path))
+    for directory in sorted({path.parent for path in sidecars}):
+        for target in scan_directory(directory, select=DirectoryEntryKind.FILES):
+            if target.suffix == ".json" or target in seen:
+                continue
+            sidecar_path = next(
+                (candidate for candidate in _candidate_sidecars(target) if candidate in sidecars),
+                None,
+            )
+            if sidecar_path is None:
+                continue
+            try:
+                sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, UnicodeDecodeError) as refusal:
+                # A sidecar that will not parse cannot be asked whether its target is
+                # real corpus, so the pair silently leaves this scan entirely. With
+                # four fixtures in scope, one unreadable sidecar removes a quarter of
+                # the protected corpus and the gate still reports clean. These are
+                # committed files, so a broken one is a defect and is refused below
+                # rather than skipped.
+                unreadable.append(f"{sidecar_path}: {refusal}")
+                continue
+            if isinstance(sidecar, dict) and sidecar.get("provenance") == "real_corpus":
+                seen.add(target)
+                pairs.append((target, sidecar_path))
     return pairs, unreadable
 
 
 _REAL_CORPUS_FIXTURES, _UNREADABLE_SIDECARS = _real_corpus_fixtures()
+
+
+def test_a_real_corpus_artefact_that_is_not_a_pdf_is_enrolled(tmp_path: Path) -> None:
+    """The scan reaches every artefact kind, not only ``.pdf``.
+
+    The teeth for the walk direction. While the scan inverted the plain
+    ``X.json`` convention by guessing ``.pdf``, an artefact of any other kind
+    was unreachable however its sidecar was stamped: the guessed name simply
+    did not exist, and the pair left the scan without a word. A JPEG carries
+    an identity in its metadata exactly as a PDF does in a content stream, so
+    that silence was a hole in the scope, not a narrowing of it.
+
+    Run against an isolated tree rather than the committed one: every
+    non-PDF plain-convention sidecar in the package declares synthetic
+    provenance today, so the committed corpus cannot show the difference,
+    and re-stamping one to prove a point is exactly the mis-declaration a
+    sibling gate exists to refuse.
+    """
+    (tmp_path / "specimen.xml").write_text("<x/>", encoding="utf-8")
+    plain = tmp_path / "specimen.json"
+    plain.write_text(json.dumps({"provenance": "real_corpus"}), encoding="utf-8")
+    (tmp_path / "scan.jpg").write_text("not really a jpeg", encoding="utf-8")
+    full = tmp_path / "scan.jpg.provenance.json"
+    full.write_text(json.dumps({"provenance": "real_corpus"}), encoding="utf-8")
+
+    pairs, unreadable = _real_corpus_fixtures(tmp_path)
+
+    assert not unreadable
+    assert dict(pairs) == {
+        tmp_path / "specimen.xml": plain,
+        tmp_path / "scan.jpg": full,
+    }
 
 
 def test_real_corpus_fixture_scope_is_not_empty() -> None:
