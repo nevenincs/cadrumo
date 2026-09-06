@@ -22,8 +22,10 @@ import pytest
 from ....domain.filing.schema import ModeloApprovalBasis, ModeloDraft
 from ....domain.submission.models import ModeloDraftStatus
 from ....tests.profile_capsule import open_test_profile_session
+from ...filing.draft_review import ModeloApprovalStaleReason, describe_stale_reason
 from .._adapters import drafts_pending
 from ..enums import ReviewSeverity
+from ..operator import project_review_queue
 from .test_adapters import (
     _PROFILE_ID,
     _build_settings,
@@ -97,3 +99,23 @@ def test_an_approval_with_no_metadata_is_not_reported_stale(tmp_path: Path) -> N
         items = drafts_pending(settings, bucket_id=_PROFILE_ID)
 
     assert all(item.summary != "review.filing.stale_approval_summary" for item in items)
+
+
+def test_the_stale_row_names_which_axis_moved(tmp_path: Path) -> None:
+    """The reasons ride as tokens, and the queue projection renders them.
+
+    An operator told only that an approval is stale has to go looking for which
+    of eight upstream things changed.
+    """
+    settings = _build_settings(tmp_path)
+    with open_test_profile_session(_PROFILE_ID):
+        _seed_active_profile()
+        _write_draft(settings, _approved(review_checksum=_B))
+        items = drafts_pending(settings, bucket_id=_PROFILE_ID)
+        assert items[0].stale_reasons == (ModeloApprovalStaleReason.REVIEW_CHECKSUM_MISMATCH,)
+        report = project_review_queue()
+
+    rows = [row for row in report.rows if row.severity is ReviewSeverity.HIGH]
+    assert len(rows) == 1
+    assert rows[0].reason != rows[0].summary
+    assert describe_stale_reason(ModeloApprovalStaleReason.REVIEW_CHECKSUM_MISMATCH) in rows[0].reason

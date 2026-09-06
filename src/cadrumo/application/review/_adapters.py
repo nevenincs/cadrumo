@@ -30,6 +30,7 @@ from ...domain.invoices.models import Invoice, InvoiceCatalogue
 from ...domain.submission.models import ModeloDraftStatus
 from ...domain.transactions.enums import BusinessClassification, is_classified
 from ...domain.transactions.models import Transaction, TransactionCatalogue
+from ..filing.draft_review import ModeloApprovalStaleReason
 from .enums import ReviewSeverity
 from .errors import ReviewSourceLoadError
 from .models import (
@@ -286,16 +287,25 @@ def drafts_pending(
     for path, stored in drafts:
         if (stored.profile_tax_id or "") != active_tax_id:
             continue
-        draft = _reviewed_against_current_state(stored, bucket_id=bucket_id)
+        draft, stale_reasons = _reviewed_against_current_state(stored, bucket_id=bucket_id)
         path_str = str(path)
         if draft.findings:
             items.extend(_draft_finding_review_items(draft, path_str=path_str, seen=seen))
         else:
-            _append_unready_draft_review_item(draft, path_str=path_str, items=items)
+            _append_unready_draft_review_item(
+                draft,
+                path_str=path_str,
+                items=items,
+                stale_reasons=stale_reasons,
+            )
     return tuple(items)
 
 
-def _reviewed_against_current_state(draft: ModeloDraft, *, bucket_id: str) -> ModeloDraft:
+def _reviewed_against_current_state(
+    draft: ModeloDraft,
+    *,
+    bucket_id: str,
+) -> tuple[ModeloDraft, tuple[ModeloApprovalStaleReason, ...]]:
     """Return ``draft`` with an aged-out approval reported as aged out.
 
     An approval is a claim about the inputs it was granted over, and the review
@@ -317,18 +327,26 @@ def _reviewed_against_current_state(draft: ModeloDraft, *, bucket_id: str) -> Mo
     the review queue.
     """
     if draft.status is not ModeloDraftStatus.APROBADO:
-        return draft
-    from ..filing.draft_review import refresh_review_status
+        return (draft, ())
+    from ..filing.draft_review import approval_stale_reasons, refresh_review_status
     from ..filing.runtime import build_runtime_schema_provider
 
-    return refresh_review_status(
-        draft,
-        bucket_id=bucket_id,
-        schema_provider=build_runtime_schema_provider(
-            filing_year=draft.period.filing_year,
-            period=draft.period,
-            modelos=(draft.modelo,),
-        ),
+    schema_provider = build_runtime_schema_provider(
+        filing_year=draft.period.filing_year,
+        period=draft.period,
+        modelos=(draft.modelo,),
+    )
+    refreshed = refresh_review_status(draft, bucket_id=bucket_id, schema_provider=schema_provider)
+    if refreshed.status is not ModeloDraftStatus.APROBACION_CADUCADA:
+        return (refreshed, ())
+    # Recomputed rather than returned by the refresh, which reports the
+    # transition and logs the reasons without carrying them. The second pass is
+    # paid only by a draft that HAS aged out, which is the rare case, and the
+    # alternative is a row that tells an operator something is wrong without
+    # telling them what moved.
+    return (
+        refreshed,
+        approval_stale_reasons(draft, bucket_id=bucket_id, schema_provider=schema_provider),
     )
 
 
@@ -361,6 +379,7 @@ def _append_unready_draft_review_item(
     *,
     path_str: str,
     items: list[FindingReviewItem],
+    stale_reasons: tuple[ModeloApprovalStaleReason, ...] = (),
 ) -> None:
     """Append one review item for a finding-free draft that is not yet ready to file.
 
@@ -372,7 +391,7 @@ def _append_unready_draft_review_item(
     if draft.status in {ModeloDraftStatus.BORRADOR, ModeloDraftStatus.VALIDADO}:
         items.append(_to_placeholder_item(draft=draft, path_str=path_str))
     elif draft.status is ModeloDraftStatus.APROBACION_CADUCADA:
-        items.append(_to_stale_approval_item(draft=draft, path_str=path_str))
+        items.append(_to_stale_approval_item(draft=draft, path_str=path_str, stale_reasons=stale_reasons))
 
 
 def _resolve_review_active_tax_id(settings: Settings) -> str | None:
@@ -469,8 +488,19 @@ def _to_placeholder_item(*, draft: ModeloDraft, path_str: str) -> FindingReviewI
     )
 
 
-def _to_stale_approval_item(*, draft: ModeloDraft, path_str: str) -> FindingReviewItem:
-    """Emit a high-severity item for drafts whose stored approval is stale."""
+def _to_stale_approval_item(
+    *,
+    draft: ModeloDraft,
+    path_str: str,
+    stale_reasons: tuple[ModeloApprovalStaleReason, ...] = (),
+) -> FindingReviewItem:
+    """Emit a high-severity item for drafts whose stored approval is stale.
+
+    The reasons ride as stable tokens. "This approval is stale" and "this
+    approval is stale because the transaction catalogue changed" ask the
+    operator for different next actions, and only the projection that renders
+    a row may turn the second into words.
+    """
     summary = tr("review.filing.stale_approval_summary")
     return FindingReviewItem(
         item_id=f"{draft.draft_id}:_status:APPROVAL_STALE",
@@ -482,4 +512,5 @@ def _to_stale_approval_item(*, draft: ModeloDraft, path_str: str) -> FindingRevi
         source=None,
         draft_id=draft.draft_id,
         draft_path=path_str,
+        stale_reasons=stale_reasons,
     )

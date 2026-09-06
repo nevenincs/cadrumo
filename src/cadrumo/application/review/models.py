@@ -34,6 +34,7 @@ from ...core.i18n import Translatable as tr
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.utc import validate_utc_aware
 from ...domain.filing.schema import ModeloValidationFinding
+from ..filing.draft_review import ModeloApprovalStaleReason
 from ...domain.invoices.models import Invoice
 from ...domain.transactions.models import Transaction
 from ..workflow.review_models import InvoiceReviewRecord, LedgerReviewRecord
@@ -116,12 +117,22 @@ class FindingReviewItem(_ReviewItemBase):
             placeholder row.
         draft_id: Identifier of the originating filing draft.
         draft_path: On-disk path of the originating filing draft.
+        stale_reasons: Why an approval aged out, empty for every other row.
     """
 
     kind: Literal[ReviewItemKind.FINDING] = ReviewItemKind.FINDING
     source: ModeloValidationFinding | None
     draft_id: str = Field(min_length=1)
     draft_path: str = Field(min_length=1)
+    stale_reasons: tuple[ModeloApprovalStaleReason, ...] = ()
+    """Which axes of the approval basis moved, as stable enum tokens.
+
+    Tokens rather than prose, because ``summary`` is a
+    :class:`~core.i18n.Translatable` -- an abstract catalogue key, not text --
+    so a rendered explanation cannot be folded into it without producing a
+    value no catalogue can translate. The projection that renders a row for an
+    operator is where these become words.
+    """
 
 
 ReviewItem = Annotated[

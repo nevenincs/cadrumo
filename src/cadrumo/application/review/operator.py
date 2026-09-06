@@ -20,10 +20,11 @@ from ...core.identity import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.utc import UtcInstant
 from ...domain.calculations.registry.ids import LegalRefId
+from ..filing.draft_review import describe_stale_reason
 from ._aggregator import ReviewQueue
 from .enums import ReviewItemKind, ReviewSeverity, ReviewState
 from .errors import ReviewError
-from .models import InvoiceReviewItem, ReviewItem, TransactionReviewItem
+from .models import FindingReviewItem, InvoiceReviewItem, ReviewItem, TransactionReviewItem
 
 
 class ReviewQueueRow(BaseModel):
@@ -235,6 +236,7 @@ def _to_row(item: ReviewItem, *, state: ReviewState, bucket_id: str) -> ReviewQu
         )
     else:
         legal_refs = item.source.references_rules if item.source is not None else ()
+        reason = _explained_reason(item)
         return ReviewQueueRow(
             item_id=item.item_id,
             kind="modelo_finding",
@@ -253,13 +255,30 @@ def _to_row(item: ReviewItem, *, state: ReviewState, bucket_id: str) -> ReviewQu
             severity=item.severity,
             state=state,
             blocking=item.severity in {ReviewSeverity.CRITICAL, ReviewSeverity.HIGH},
-            reason=_render_summary(item.summary),
+            reason=reason,
             current_owner_surface="app modelo",
             canonical_next_command=item.drill_command,
             since=item.since,
             summary=_render_summary(item.summary),
             legal_refs=tuple(legal_refs),
         )
+
+
+def _explained_reason(item: FindingReviewItem) -> str:
+    """Return the row's reason, naming what moved when an approval aged out.
+
+    This projection is where an abstract catalogue key becomes words, so it is
+    also the only place a stale reason may be rendered: the review item carries
+    the reasons as stable enum tokens precisely because its own ``summary`` is
+    a translation key that cannot absorb prose. An operator told only that an
+    approval is stale has to go looking for which of eight upstream things
+    changed; the vocabulary to say so already existed and had no caller.
+    """
+    rendered = _render_summary(item.summary)
+    if not item.stale_reasons:
+        return rendered
+    explained = "; ".join(describe_stale_reason(reason) for reason in item.stale_reasons)
+    return f"{rendered}: {explained}"
 
 
 def _render_summary(value: str) -> str:
