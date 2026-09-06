@@ -652,6 +652,17 @@ ignore_imports =
     # records a reviewed decision rather than suppressing something that would
     # otherwise have gone unnoticed.
     cadrumo.application.ledger.batch_ingest -> cadrumo.adapters.inbound.einvoice.shape
+    # The sweep classifier asks one question of a failure: is this a fact about
+    # THIS document, or about the transport. Only the outbound permission error
+    # answers the first, so the module names that class and dispatches on it.
+    # Pinned rather than inverted after checking the alternatives: the class
+    # cannot move inward because the outbound hierarchy is parameterised on
+    # application's own PreconditionVerdict, and classifying by the registry
+    # ErrorCode instead would raise ValueError on any unregistered exception --
+    # which is precisely the arbitrary input this classifier is contracted to
+    # receive and answer None for. isinstance is also subclass-inclusive where
+    # a code comparison is exact-class. The narrow edge is the honest one.
+    cadrumo.application.ledger.evidence_sweep -> cadrumo.adapters.outbound.storage.errors
     cadrumo.application.filing.history_repository -> cadrumo.adapters.persistence.**
     cadrumo.application.filing.persistence_wiring -> cadrumo.adapters.persistence.**
     cadrumo.application.inventory.service -> cadrumo.adapters.persistence.**

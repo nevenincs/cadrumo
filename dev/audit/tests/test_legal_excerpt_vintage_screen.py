@@ -15,6 +15,8 @@ failure that produced this rewrite.
 
 from __future__ import annotations
 
+import tomllib
+
 import pytest
 
 from cadrumo.core.corpus_text import resolve_anchored_extracted_unit
@@ -561,6 +563,54 @@ def test_the_loader_refuses_a_missing_catalogue_rather_than_reading_nothing() ->
     """An empty read would print a clean worklist for every screen in the package."""
     with pytest.raises(SystemExit, match="legal catalogue is missing"):
         load_legal_entries(_REPO_ROOT / "does-not-exist")
+
+
+#: Live, the catalogue's 64 authored TOMLs carry 704 entries under ``[legal]``.
+#: A floor, not a pin: entries are authored and retired and the screens over them
+#: must keep working. What it refuses is a COLLAPSE. The loader's contract is that
+#: a silent all-clear is the one output an audit instrument must never emit, and its
+#: own refusal covers only the whole directory vanishing -- a present directory that
+#: yields almost nothing reaches every screen in this package unchallenged.
+_MINIMUM_LEGAL_ENTRIES = 500
+
+#: The six authored TOMLs that declare something other than a ``[legal]`` table.
+#: Pinned by EQUALITY, not counted: a floor over the entry population cannot see a
+#: ``[legal]`` table renamed across a SUBSET of the catalogue, because the files that
+#: still carry one hold the total above any floor worth setting. This set growing is
+#: that migration, and it is the only shape that reports it.
+_FILES_WITHOUT_A_LEGAL_TABLE = frozenset(
+    {
+        "enrolled-forms-sources-b.toml",
+        "enrolled-forms-sources.toml",
+        "irpf-retencion-actividades.toml",
+        "irpf-retencion-administradores.toml",
+        "ley-58-2003-recargo-bands.toml",
+        "supported-filing-years.toml",
+    }
+)
+
+
+def test_the_catalogue_read_cannot_collapse_below_a_working_population() -> None:
+    """A present directory is not a present catalogue."""
+    entries = load_legal_entries(_REPO_ROOT)
+    assert len(entries) >= _MINIMUM_LEGAL_ENTRIES, (
+        f"the legal catalogue read returned {len(entries)} entries; every screen in this "
+        "package would print a near-clean worklist that says nothing about the catalogue"
+    )
+
+
+def test_only_the_known_non_entry_files_contribute_no_legal_entry() -> None:
+    """A ``[legal]`` rename across a subset survives any floor on the total."""
+    silent = {
+        path.name
+        for path in scan_directory(_REPO_ROOT / LEGAL_DIR, pattern="*.toml")
+        if not tomllib.loads(path.read_text(encoding="utf-8")).get("legal", {})
+    }
+    assert silent == _FILES_WITHOUT_A_LEGAL_TABLE, (
+        "the set of catalogue TOMLs contributing no legal entry has changed; unexpectedly "
+        f"silent: {sorted(silent - _FILES_WITHOUT_A_LEGAL_TABLE)}; now contributing: "
+        f"{sorted(_FILES_WITHOUT_A_LEGAL_TABLE - silent)}"
+    )
 
 
 def test_every_bundled_article_payload_states_one_redaction_in_force() -> None:
