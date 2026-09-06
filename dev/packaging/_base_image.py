@@ -9,7 +9,7 @@ one distribution by construction rather than by comment.
 
 The previous shape had the string written out twice: ``FROM python:3.13-slim``
 in the Dockerfile and ``--image python:3.13-slim`` as an argparse default in
-:mod:`dev.packaging.smoke_docker`, with a Dockerfile comment asserting the two
+``dev.packaging.smoke_docker``, with a Dockerfile comment asserting the two
 "stay on one Linux base convention" and nothing enforcing it. They drifted the
 moment either moved.
 """

@@ -1327,3 +1327,17 @@ area = "domain/calculations/registry"
 symbols = ["audit_registry_handoff_paths", "audit_registry_relation_handoff_applicability", "relation_is_consumed"]
 evidence = "An audit that classifies validated relation paths against the registry authority without inventing semantic repairs, its applicability sibling, and the predicate answering whether a formula or bound casilla consumes a relation. No production or dev caller runs any of them, so the classification the audit exists to produce is never produced and an unconsumed relation is never reported."
 remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "marriage fact helpers displaced by the profile binding"
+class = "superseded"
+area = "domain/contribuyente"
+symbols = ["marriage_derived_facts", "marriage_date_from_facts", "parse_marriage_date_flag"]
+evidence = "The domain-side persist and reload helpers for marriage_date, all three displaced by application/modelo/profile_binding.py, which is live and named here rather than guessed. It imports the individual predicates marriage_month_start and marriage_full_year directly and derives the facts inline, so the aggregate marriage_derived_facts is never called. It reads renta_taxpayer.marriage_date from the fact index already typed as a date, so neither the flat-dict reconstruction nor the CLI-flag parser is reached -- the --taxpayer-marriage-date option is declared and live, but its value is parsed upstream. Checked for a gap first: the registry declares bindings for marriage_full_year, marriage_month_start and marriage_month_end on modelo 100 revision 2024, and the live path sets all three, month_end at the constant 12, so nothing the registry asks for goes unproduced."
+
+[[symbol_cluster]]
+name = "OSS and IOSS regime substrate ahead of its modelo"
+class = "staged-capability"
+area = "domain/iva"
+symbols = ["IossFilerRole", "REGIME_PERIODICITY", "regime_allows_deduction"]
+evidence = "The regime substrate for the Modelo 369 autoliquidation chain: the filer-role enumeration, the regime to filing-periodicity mapping, and the LIVA-grounded deductibility predicate. Its own module docstring records that it closes a regime taxonomy gap surfaced by a Modelo 369 IVA centralization audit and is purely additive against the rest of domain/iva, leaving existing rates, classifier rules and consumers unaffected. No consumer exists because the modelo it serves is not yet in the registry, which is the declared state of a substrate landed ahead of its filing surface rather than a wiring gap."
