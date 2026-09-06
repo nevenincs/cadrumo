@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:82df609d16abfcea2583b5914a2388ce9e6a1225757a48df6d054a976bacfc37'
+body_hash: 'sha256:d6b20ff886a8c67c2e9b642beb70a7240d1a7985a4aa2c1c6316b58db8d2630b'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -1244,7 +1244,8 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S875` - Pin each post-allocation injection case to its own stage, so seven parametrised failure points stop resting on a suffix every rehearsal refusal carries; `dev/quality/tests/test_object_name_rehearsal.py`.
 - [x] `W06.P13.S876` - Stop the health report's shadowing dimension describing a pinned baseline and an enforcing gate that were both deleted, and an AMBER state its own loader makes unreachable; `dev/audit/report.py`.
 - [x] `W06.P13.S877` - Drive the semantic duplication detectors and the dispatch that names them, so seven detectors built for the blocker-class duplication jscpd cannot see stop being reachable by nothing; `dev/audit/tests/test_semantic_duplication.py`.
-- [ ] `W06.P13.S878` - Gate the size-budget re-band branch that reads as a contradiction: the anti-launder test proves a subject OVER its ceiling keeps that ceiling, but the neighbouring branch - a subject INSIDE its ceiling being re-derived UPWARD under accept_growth=False - had no gate, and misreading it caused a regeneration that lifted four pins including two outside dev; pin it against a plausible hardening that would freeze the ratchet by clamping every pin; `dev/audit/tests/test_size_budget_dev_corpus.py`.
+- [x] `W06.P13.S878` - Gate the size-budget re-band branch that reads as a contradiction: the anti-launder test proves a subject OVER its ceiling keeps that ceiling, but the neighbouring branch - a subject INSIDE its ceiling being re-derived UPWARD under accept_growth=False - had no gate, and misreading it caused a regeneration that lifted four pins including two outside dev; pin it against a plausible hardening that would freeze the ratchet by clamping every pin; `dev/audit/tests/test_size_budget_dev_corpus.py`.
+- [x] `W06.P13.S879` - Widen the canonical-definition gate's refusal channel from unparseable to unsearched so an UNREADABLE production module joins the refusal its own comment already argues for: the module reasons that an unparsed file is searched for nothing and a second definition inside it is invisible, but only SyntaxError reached the channel, so a path removed between the walk and the read - or a directory named *.py - crashed the gate with a raw traceback naming neither the loss nor its size; `dev/tests/test_canonical_definitions_stay_singular.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 
