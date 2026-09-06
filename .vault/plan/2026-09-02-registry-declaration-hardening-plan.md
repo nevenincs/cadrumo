@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:6b769d65303854e63a09589e756259cce02baf40721c6a0db54271f9561d0f65'
+body_hash: 'sha256:920a403dc37b60e205b1a83ad2deb6875c819798d922c626ed8122db096c4596'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -1251,6 +1251,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S882` - Route an unreadable module into the dunder-init import scan's existing unread channel, closing the gap its own comment sizes: an unparsed module contributes no offence and reads as compliant, the floor is post-swallow at 1000 against 6906 parsing modules so most of the tree could vanish before it fires, and an unreadable module was not swallowed at all but crashed the scan outright; `dev/quality/tests/test_no_dunder_init_module_imports.py`.
 - [x] `W06.P13.S883` - Refuse rather than crash when a shipped cohort module cannot be read: the transitional-marker sweep already refuses on an undecodable module because a marker inside one is never searched for, and says Strict of itself, but an unreadable module ended the run in a traceback instead of joining that refusal; widened the channel from undecodable to unsearched across all four occurrences so the refusal names the loss it was built to name; `dev/tests/test_modelo_workspace_fixed_point.py`.
 - [x] `W06.P13.S884` - Close the time-of-check window in the text-writer newline gate: the module already reports a tracked-but-absent module through its absent channel, having documented that such a file left the corpus without appearing in the scanned total or the unparseable list, but a file passing is_file() and then failing the read is that same disappearance one instant later and crashed the scan; routed to the absent channel whose notice already covers it verbatim; `dev/tests/test_text_writer_newline_pinning.py`.
+- [x] `W06.P13.S885` - Partition the record-design workbook floor per suffix so a legacy family leaving the walk cannot hide inside the slack: one floor of 50 against 116 live workbooks left 66 of headroom while .xls and .xlsm together are only 49, so both legacy families could stop being examined for sidecar pairing with the gate still green; the new floors are keyed independently of the walk's suffix set, so a suffix dropped from the walk keeps its floor and reds at zero rather than disappearing along with the check; `dev/corpus/tests/test_extraction_sidecar_freshness.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 
