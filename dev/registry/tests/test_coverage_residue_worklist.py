@@ -15,6 +15,32 @@ from ..analysis.coverage_residue_worklist import ResidueCell, collect_residue, r
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+def _heading_row_counts(rendered: str) -> list[tuple[str, int, int]]:
+    """Return ``(heading, declared count, rows printed beneath it)`` for every heading.
+
+    Both levels are read. The renderer derives a ``##`` count by summing across
+    its details and a ``###`` count by taking a plain length, so the two are two
+    different expressions and each needs its own comparison.
+    """
+    headings: list[str] = []
+    declared: list[int] = []
+    actual: list[int] = []
+    open_indexes: dict[int, int] = {}
+    for line in rendered.splitlines():
+        level = 3 if line.startswith("### ") else 2 if line.startswith("## ") else 0
+        if level:
+            if level == 2:
+                open_indexes.pop(3, None)
+            open_indexes[level] = len(headings)
+            headings.append(line)
+            declared.append(int(line.rsplit("(", 1)[1].rstrip(")")))
+            actual.append(0)
+        elif line.startswith("- "):
+            for index in open_indexes.values():
+                actual[index] += 1
+    return list(zip(headings, declared, actual, strict=True))
+
+
 def test_the_residue_is_finite_and_non_empty() -> None:
     """A residue of zero would make the completeness assertions vacuous."""
     residue = collect_residue()
@@ -53,14 +79,30 @@ def test_every_residue_cell_appears_in_the_render() -> None:
 
 
 def test_every_declared_group_count_matches_its_own_rows() -> None:
-    """A heading's count is derived from its rows, so the two cannot disagree."""
+    """Each heading's count must equal the rows printed beneath it.
+
+    The name promises a comparison this case did not make. It asserted only
+    that a declared count was positive, which every heading the renderer can
+    emit satisfies by construction, and it never read the ``##`` counts at
+    all -- the ones derived by a different expression, a sum across details.
+    A kind heading could disagree with its own rows with nothing here to say
+    so.
+    """
     rendered = render_worklist(collect_residue())
 
-    for line in rendered.splitlines():
-        if not line.startswith("### "):
-            continue
-        declared = int(line.rsplit("(", 1)[1].rstrip(")"))
-        assert declared > 0, f"a group declares zero rows: {line}"
+    groups = _heading_row_counts(rendered)
+    kinds = [heading for heading, _, _ in groups if not heading.startswith("### ")]
+    details = [heading for heading, _, _ in groups if heading.startswith("### ")]
+
+    # Both levels must be present or the comparison below reads nothing: an
+    # empty residue renders a header block carrying no heading at all, and
+    # the loop this replaces then ran zero times and reported clean.
+    assert kinds, "the render carries no kind heading, so the comparison below reads nothing"
+    assert details, "the render carries no detail heading, so the comparison below reads nothing"
+
+    disagreeing = [(heading, count, rows) for heading, count, rows in groups if count != rows]
+
+    assert disagreeing == [], f"heading(s) declaring a count their rows do not support: {disagreeing}"
 
 
 def test_the_render_groups_by_kind_and_detail() -> None:

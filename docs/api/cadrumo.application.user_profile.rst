@@ -67,3 +67,4 @@ Submodules
    cadrumo.application.user_profile.status_projection
    cadrumo.application.user_profile.usage_ratio_resolution
    cadrumo.application.user_profile.validation
+   cadrumo.application.user_profile.workbench_bootstrap

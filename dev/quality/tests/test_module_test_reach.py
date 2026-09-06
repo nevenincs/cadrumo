@@ -68,13 +68,31 @@ def test_a_module_imported_by_name_from_its_package_is_reached(
     package = _tree(relative_root)
     (package / "tests" / "test_reached.py").write_text("from .. import reached\n", encoding="utf-8")
 
-    assert "pkg.reached" not in {item.dotted for item in unreached_modules(relative_root)}
+    unreached = {item.dotted for item in unreached_modules(relative_root)}
+
+    assert "pkg.lonely" in unreached, (
+        "the report named nothing untested, so the claim below would hold because the walk found no modules at all"
+    )
+    assert "pkg.reached" not in unreached
 
 
 def test_a_package_initialiser_is_never_reported(relative_root: pathlib.Path) -> None:
-    """They are inert namespace markers here, so "no test imports it" says nothing."""
+    """They are inert namespace markers here, so "no test imports it" says nothing.
+
+    This tree carries no test at all, so both real modules are untested and
+    must be reported. Pinning that set is what stops the claim below being
+    satisfied by a walk that reported nothing: an empty report contains no
+    initialiser either.
+    """
     _tree(relative_root)
-    assert not [item for item in unreached_modules(relative_root) if item.dotted.endswith("__init__")]
+
+    reported = {item.dotted for item in unreached_modules(relative_root)}
+
+    assert reported == {"pkg.reached", "pkg.lonely"}, (
+        f"the walk must report both untested modules for the absence below to mean anything, "
+        f"but reported {sorted(reported)}"
+    )
+    assert not [name for name in reported if name.endswith("__init__")]
 
 
 def test_a_writing_module_is_ranked_above_a_reporting_one() -> None:

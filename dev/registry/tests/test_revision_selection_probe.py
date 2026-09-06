@@ -87,11 +87,23 @@ def test_a_year_outside_the_declared_window_is_reported_as_a_named_refusal(
     serves = probe_modelo(authority, "322", filing_year=2022)
     refuses = probe_modelo(authority, "322", filing_year=2015)
 
+    # The presence guard and the claim are asserted separately. ``all`` over an
+    # empty list is TRUE, so the guard is what stops a vacuous pass -- and
+    # conjoining the two makes a vacuous pass and a real resolution failure read
+    # identically. That matters here more than usual: an empty selection means
+    # the revision id stopped being returned at all, which is the wrong-artefact
+    # reading this test was written to replace, not the name-versus-window
+    # disagreement it exists to hold. Live each selection carries 12 probes of
+    # 48.
     named = [probe for probe in serves if probe.revision == "2008-2022"]
-    assert named and all(probe.resolves_to_itself for probe in named)
+    assert named, "no probe named revision 2008-2022 for 2022, so the resolution claim below is vacuous"
+    unresolved = [probe for probe in named if not probe.resolves_to_itself]
+    assert not unresolved, f"revision 2008-2022 serves 2022, so every probe must resolve to itself: {unresolved}"
 
     blocked = [probe for probe in refuses if probe.revision == "2008-2022"]
-    assert blocked and all(probe.resolved is None and probe.refusal for probe in blocked)
+    assert blocked, "no probe named revision 2008-2022 for 2015, so the refusal claim below is vacuous"
+    served = [probe for probe in blocked if probe.resolved is not None or not probe.refusal]
+    assert not served, f"2015 is outside the declared window, so every probe must refuse by name: {served}"
 
 
 def test_a_mid_year_split_resolves_rather_than_reporting_the_probes_own_ambiguity(

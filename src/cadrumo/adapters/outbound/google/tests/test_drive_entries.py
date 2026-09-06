@@ -32,14 +32,14 @@ from ....outbound.storage.errors import (
     OutboundStorageError,
     OutboundStorageValidationError,
 )
-from .._drive_entries import (
+from ..calc_sheets_apply import _ensure_folder, _find_folder, _find_spreadsheet
+from ..drive_entries import (
     OWNERSHIP_KEY,
     OWNERSHIP_VALUE,
     build_owned_entry_query,
     escape_drive_query_name,
     require_drive_entry_id,
 )
-from ..calc_sheets_apply import _ensure_folder, _find_folder, _find_spreadsheet
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

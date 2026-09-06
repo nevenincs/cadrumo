@@ -26,6 +26,7 @@ from ....application.operator_actions.models import ActionReference
 from ....core.i18n.render import tr
 from ....core.identity import InvoiceId, TransactionId
 from ..components.theme import BASE_CSS, tokenised
+from ..components.workspace_host import replace_workspace_body
 from ..navigation import TuiScreenContextV1
 from .models import (
     LedgerClassificationSubmissionV1,
@@ -414,6 +415,42 @@ class LedgerWorkspaceScreen(Screen[None]):
         """Ask the host to return; never terminate the application."""
         self.back_requested = True
         self.post_message(LedgerBackRequested())
+
+    def on_ledger_route_requested(self, event: LedgerRouteRequested) -> None:
+        """Resolve the requested area here and hand the finished body to the host.
+
+        Textual delivers a screen's own posted message to it before bubbling,
+        so the workspace answers its own navigation: it owns the controller and
+        the route catalogue, and the host owns only the screen stack.
+        """
+        # Imported at call time because the route catalogue imports this module
+        # for the shared shell; at module scope the two would form a cycle.
+        from .routes import resolve_ledger_screen
+
+        replace_workspace_body(self.app, resolve_ledger_screen(self.controller, event.target))
+
+    def on_ledger_back_requested(self, _: LedgerBackRequested) -> None:
+        """Leave the workspace by dismissing this child, as the siblings do."""
+        self.dismiss(None)
+
+    def on_ledger_review_requested(self, _: LedgerReviewRequested) -> None:
+        """Say that the selection led nowhere, rather than appearing to work.
+
+        Selecting a review row names a real query action, but no production
+        consumer executes one yet. Answering with the pending-area copy is the
+        honest state: an unhandled message is indistinguishable from a dead
+        keypress, and that silence is precisely how the workspace navigation
+        defect stayed invisible through the whole surface's construction.
+        """
+        self._refuse_pending_destination()
+
+    def on_ledger_evidence_review_requested(self, _: LedgerEvidenceReviewRequested) -> None:
+        """Report the same pending state for an evidence-row selection."""
+        self._refuse_pending_destination()
+
+    def _refuse_pending_destination(self) -> None:
+        """Surface the canonical pending-area copy on this screen's notice."""
+        self.query_one("#ledger-refusal", Static).update(ledger_copy("tui.ledger.refusal.destination_pending"))
 
 
 __all__ = [

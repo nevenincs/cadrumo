@@ -36,6 +36,7 @@ Submodules
    cadrumo.adapters.persistence.profile.modelos_filing
    cadrumo.adapters.persistence.profile.modelos_verification_reports
    cadrumo.adapters.persistence.profile.modelos_work_units
+   cadrumo.adapters.persistence.profile.notification_documents
    cadrumo.adapters.persistence.profile.participation_index
    cadrumo.adapters.persistence.profile.prorrata_register
    cadrumo.adapters.persistence.profile.recipient_replay_guard

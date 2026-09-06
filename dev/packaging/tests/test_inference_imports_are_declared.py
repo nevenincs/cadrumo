@@ -15,11 +15,20 @@ incidental transitive to be relied on directly will not announce itself, and
 nothing about an import statement reveals whether the package behind it was
 promised or inherited.
 
-**Declared means named in ``pyproject.toml``** -- in ``[project] dependencies``,
-in an optional-dependencies extra, or in a dependency group. It deliberately
-does NOT mean "resolves in the current environment", because everything
-resolves in the current environment; that is exactly the condition an incidental
-transitive satisfies and the reason this defect is invisible without a gate.
+**Declared means named in the metadata the built distribution carries** -- in
+``[project] dependencies`` or in an optional-dependencies extra. A
+``[dependency-groups]`` entry does NOT count: a PEP 735 group is a development
+convenience that never reaches a wheel's ``Requires-Dist``, so a shipped module
+resting on one rests on exactly the incidental presence this gate refuses. It
+also deliberately does NOT mean "resolves in the current environment", because
+everything resolves in the current environment; that is exactly the condition an
+incidental transitive satisfies and the reason this defect is invisible without
+a gate.
+
+Only shipped modules are scanned. Both build targets exclude
+``src/cadrumo/**/tests/**``, so a test module's ``import pytest`` is not a
+shipped reliance; folding those in would force the dev groups back into the
+declared set and reopen the hole above.
 
 Import names are mapped to distribution names through
 :func:`importlib.metadata.packages_distributions` rather than a hand-kept table,
@@ -53,7 +62,7 @@ _NOT_THIRD_PARTY = frozenset({"cadrumo", "cadrumo_data", "dev"})
 
 
 def _declared_distributions() -> set[str]:
-    """Every distribution named anywhere in ``pyproject.toml``.
+    """Every distribution the built distribution's own metadata promises.
 
     Normalised per PEP 503 so ``Pillow``, ``pillow`` and a hypothetical
     ``pil_low`` compare equal, which is how the packaging ecosystem itself
@@ -65,13 +74,14 @@ def _declared_distributions() -> set[str]:
 
     requirement_lists: list[list[str]] = [pyproject["project"].get("dependencies", [])]
     requirement_lists.extend(pyproject["project"].get("optional-dependencies", {}).values())
-    requirement_lists.extend(pyproject.get("dependency-groups", {}).values())
+    # `[dependency-groups]` is deliberately absent: it is not published in the
+    # distribution metadata, so it promises an installer of the wheel nothing.
 
     declared: set[str] = set()
     for requirements in requirement_lists:
         for requirement in requirements:
             if not isinstance(requirement, str):
-                # A dependency group may include another group as a table.
+                # Defensive: a non-string entry is not a requirement specifier.
                 continue
             name = requirement.split(";")[0].strip()
             for separator in ("[", "=", ">", "<", "!", "~", " "):
@@ -105,6 +115,9 @@ def _third_party_imports_under(root: Path) -> dict[str, list[str]]:
     stdlib_and_local = _NOT_THIRD_PARTY | _stdlib_names()
     found: dict[str, list[str]] = {}
     for path in scan_directory(root, pattern="*.py", recursive=True):
+        if "tests" in path.relative_to(root).parts:
+            # Not shipped by either build target, so not a shipped reliance.
+            continue
         for name in _top_level_imports(path):
             if name in stdlib_and_local:
                 continue
@@ -175,3 +188,23 @@ def test_the_scan_finds_imports_at_all() -> None:
     imports = _third_party_imports_under(_INFERENCE_PACKAGE)
     assert imports, "no third-party imports found under the inference path; the scan is not reading anything"
     assert _declared_distributions(), "no dependencies parsed out of pyproject; the declaration reader is broken"
+
+
+def test_a_development_group_entry_is_not_a_declaration() -> None:
+    """The hole this reader was widened by: a dev group promises the wheel nothing.
+
+    ``[dependency-groups]`` names roughly fifty distributions that no installer
+    of the wheel ever receives. While they counted as declarations, a shipped
+    inference module could ``import psutil`` -- present in this checkout, absent
+    from ``Requires-Dist`` -- and the gate reported clean, which is the exact
+    incidental-transitive reliance it was written to refuse.
+    """
+    declared = _declared_distributions()
+
+    assert "pytest" not in declared, (
+        "a [dependency-groups] entry is being counted as a declaration. Groups are development-only "
+        "and never reach the built distribution's metadata, so accepting one lets a shipped module "
+        "rely on a package the wheel does not require"
+    )
+    assert "anthropic" in declared, "the reader stopped seeing optional-dependencies extras"
+    assert "pydantic" in declared, "the reader stopped seeing [project] dependencies"

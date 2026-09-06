@@ -229,11 +229,22 @@ def test_ledger_payloads_do_not_redeclare_notice_or_recovery_prose() -> None:
     assert failures == []
 
 
+#: Floor for the parsed import-behaviour suite. Live it carries 2742 AST nodes.
+#: Its four siblings here each floor their corpus; this one parses a SINGLE file
+#: and floored nothing, so a gutted or renamed-away suite would satisfy every
+#: claim below by carrying no nodes to judge.
+_MINIMUM_IMPORT_UX_NODES = 1800
+
+
 def test_ledger_import_ux_has_no_rendered_message_or_forced_locale_assertions() -> None:
     """Import behavior tests bind machine contracts, not one rendered catalogue."""
     path = Path(inspect.getfile(_ledger_import_cli)).parent / "tests" / "test_ledger_import_ux.py"
     tree = ast.parse(path.read_text(encoding="utf-8"))
     failures: list[str] = []
+    assert sum(1 for _ in ast.walk(tree)) >= _MINIMUM_IMPORT_UX_NODES, (
+        f"{path.name} parsed to only {sum(1 for _ in ast.walk(tree))} node(s); below this "
+        "an empty failure list says the suite is gone, not that it is compliant"
+    )
     for node in ast.walk(tree):
         if (
             isinstance(node, ast.Call)
@@ -260,17 +271,25 @@ def test_ledger_import_ux_has_no_rendered_message_or_forced_locale_assertions() 
     assert failures == []
 
 
+#: Per-locale floor for the ledger catalogue surface. Each of the four locales
+#: carries 321 ``cli.ledger.*`` keys today. Stated per locale rather than as a
+#: total because the totals are equal: one catalogue could empty entirely and a
+#: combined floor would still clear on the other three.
+_MINIMUM_LEDGER_LOCALE_KEYS = 200
+
+
 def test_ledger_locale_values_do_not_redeclare_command_guidance() -> None:
     """Localized ledger facts cannot carry executable command identity."""
     manager = LocaleManager(_PACKAGE_ROOT, _LOCALES_DIR)
     failures: list[str] = []
     for locale in ("ca", "en", "es", "hu"):
         catalogue = manager.load_locale(_LOCALES_DIR / locale)
-        failures.extend(
-            f"{locale}:{key}"
-            for key, value in _iter_locale_leaves(catalogue)
-            if key.startswith("cli.ledger.") and _COMMAND_PROSE.search(value)
+        ledger_leaves = [(key, value) for key, value in _iter_locale_leaves(catalogue) if key.startswith("cli.ledger.")]
+        assert len(ledger_leaves) >= _MINIMUM_LEDGER_LOCALE_KEYS, (
+            f"locale {locale} carries only {len(ledger_leaves)} cli.ledger key(s); below this "
+            "the claim below holds because that catalogue emptied, not because it is clean"
         )
+        failures.extend(f"{locale}:{key}" for key, value in ledger_leaves if _COMMAND_PROSE.search(value))
     assert failures == []
 
 

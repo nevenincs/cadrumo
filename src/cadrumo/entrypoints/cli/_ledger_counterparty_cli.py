@@ -48,7 +48,6 @@ import typer
 
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...core.time.clock import now
 from ...domain.iva.classification import IvaTerritorialScope
 from ...domain.iva.schema import EUMemberState
 from ._common import active_bucket_id_or_refuse as _counterparty_bucket_id
@@ -116,32 +115,29 @@ def counterparty_confirm(
     actor: str | None = None,
 ) -> None:
     """Persist the operator's answer, or report the stored one unchanged."""
-    from ...application.ledger.counterparty_establishment import record_confirmed_counterparty_facts
+    from ...application.ledger.counterparty_establishment import (
+        ConfirmedCounterpartyFactsInputError,
+        confirm_counterparty_establishment,
+    )
 
-    if scope is None and identification_state is None:
-        raise bad(
-            tr("cli.ledger.counterparty.errors.nothing_asserted", identifier=tax_identifier),
-        )
     bucket_id = _counterparty_bucket_id()
     asserted_by = actor or bucket_id or "operator"
-    # The stamp is supplied rather than left to the writer's clock so this call
-    # can recognise its own write in what comes back. A pre-read of the store
-    # would answer the same question through a check-then-act window that a
-    # retrying caller can lose; comparing the returned stamp against the one
-    # handed in has no window at all, because the writer preserves the ORIGINAL
-    # stamp on a retry precisely so a repeat cannot look like a fresh answer.
-    stamped_at = now()
-    fact = record_confirmed_counterparty_facts(
-        bucket_id=bucket_id,
-        tax_identifier=tax_identifier,
-        territorial_scope=scope,
-        asserted_by=asserted_by,
-        identification_state=identification_state,
-        country_code=country_code,
-        note=note,
-        asserted_at=stamped_at,
-    )
-    recorded = fact.asserted_at == stamped_at
+    try:
+        outcome = confirm_counterparty_establishment(
+            bucket_id=bucket_id,
+            tax_identifier=tax_identifier,
+            asserted_by=asserted_by,
+            territorial_scope=scope,
+            identification_state=identification_state,
+            country_code=country_code,
+            note=note,
+        )
+    except ConfirmedCounterpartyFactsInputError as exc:
+        raise bad(
+            tr("cli.ledger.counterparty.errors.nothing_asserted", identifier=tax_identifier),
+        ) from exc
+    fact = outcome.facts
+    recorded = outcome.recorded
     notices: list[Notice] = []
     if not recorded:
         answered = _confirmed_answers(fact)

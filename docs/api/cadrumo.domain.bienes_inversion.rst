@@ -14,3 +14,4 @@ Submodules
    :maxdepth: 4
 
    cadrumo.domain.bienes_inversion.register
+   cadrumo.domain.bienes_inversion.regularizacion_parameters

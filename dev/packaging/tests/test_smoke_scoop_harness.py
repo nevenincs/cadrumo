@@ -133,7 +133,16 @@ def test_final_cleanup_routes_every_uninstall_through_the_retry_helper() -> None
 
 
 def _run_uninstall_retry(interpreter: str, *, app_root: Path, scoop_bin_dir: Path) -> subprocess.CompletedProcess[str]:
-    """Drive the SHIPPED retry helper against a real scripted scoop on PATH."""
+    """Drive the SHIPPED retry helper against a real scripted scoop on PATH.
+
+    The variable is spelled ``PATH``, in capitals, because PowerShell inherits
+    the platform's environment-variable case rules: on Windows ``$env:Path``
+    and ``$env:PATH`` are one variable, but on macOS and Linux they are two.
+    Writing ``$env:Path`` there created a second, unread variable and left the
+    real search path untouched, so the scripted scoop this test places on it
+    was never found and the shipped helper died on a missing command -- a
+    failure that looks exactly like the helper being broken.
+    """
     driver = f"""
 $source = Get-Content -Raw -LiteralPath '{_SCRIPT}'
 $tokens = $null; $errors = $null
@@ -145,7 +154,7 @@ foreach ($name in @('Stop-ProcessesUnderPath', 'Invoke-ScoopUninstallWithRetry')
     }}, $true)[0]
     Invoke-Expression $fn.Extent.Text
 }}
-$env:Path = '{scoop_bin_dir}' + [System.IO.Path]::PathSeparator + $env:Path
+$env:PATH = '{scoop_bin_dir}' + [System.IO.Path]::PathSeparator + $env:PATH
 $ErrorActionPreference = 'Stop'
 $retryArguments = @{{
     PackageName = 'cadrumo-scoop-acquisition'
@@ -230,7 +239,11 @@ def test_process_reap_is_separator_anchored_to_the_app_root(tmp_path: Path) -> N
     sibling_exe = sibling / holder_name
     for target in (under_exe, sibling_exe):
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source, target)
+        # copy, not copy2: copy2 replicates BSD file flags, and on macOS the
+        # system /bin/sleep carries the SIP `restricted` flag, which no user may
+        # set on the copy. The mode bits copy carries are all this needs -- the
+        # chmod below adds the execute bit either way.
+        shutil.copy(source, target)
         if not sys.platform.startswith("win"):
             target.chmod(target.stat().st_mode | stat.S_IEXEC)
     driver = f"""

@@ -143,17 +143,31 @@ def newest_activity(directory: Path) -> tuple[float, int]:
 
     It is used as the fallback for a directory holding no files at all, where
     it is the only timestamp that exists.
+
+    A file that cannot be stat'd is an unanswered question, and this module
+    answers those by sparing. Dropping it silently would take it out of the
+    maximum below, so an unreadable NEWEST entry makes a live session read as
+    idle: measured on a tree written five seconds earlier, the walk reported
+    100000 seconds of silence once its newest file refused to stat, which is
+    past every ceiling this reaper runs with. A refusal therefore reports the
+    current time, exactly as the empty-directory fallback below does. The byte
+    total still omits the unread file, because under-reporting what can be
+    reclaimed is the safe direction for that number.
     """
     newest = 0.0
     total = 0
+    refused = False
     for parent, _directories, files in os.walk(directory):
         for name in files:
             try:
                 stat = os.stat(os.path.join(parent, name))
             except OSError:
+                refused = True
                 continue
             total += stat.st_size
             newest = max(newest, stat.st_mtime)
+    if refused:
+        return time.time(), total
     if newest == 0.0:
         try:
             newest = directory.stat().st_mtime
@@ -271,6 +285,13 @@ def assess_claude_sessions(
     try:
         projects = scan_directory(root, require_root=True)
     except OSError:
+        if root.exists():
+            # An ABSENT root is a legitimate empty and stays absorbed. A root
+            # that exists and cannot be scanned is not: returning [] here
+            # prints 'spared: 0 of 0 sessions', which is exactly what a
+            # genuinely clean box prints, so a failed scan would read as
+            # nothing to reclaim.
+            raise
         return verdicts
     for project in projects:
         if is_link_like(project) or not project.is_dir():
@@ -307,7 +328,16 @@ def reclaim(verdicts: list[SessionVerdict]) -> int:
     for verdict in verdicts:
         if not verdict.reclaimable:
             continue
+        if not verdict.directory.exists():
+            continue
         shutil.rmtree(verdict.directory, ignore_errors=True)
+        if verdict.directory.exists():
+            # The absorbed failure above is deliberate, but its bytes are
+            # not reclaimed and must not be counted: this total is printed
+            # to the operator as 'removed'. A partial removal therefore
+            # under-reports rather than overstating, which is the only
+            # safe direction for that claim.
+            continue
         reclaimed += verdict.total_bytes or 0
     return reclaimed
 

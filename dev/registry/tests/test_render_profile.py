@@ -756,6 +756,13 @@ def test_profile_refuses_unknown_anchor_without_tolerating_partial_coverage() ->
         validate_render_profile(profile, _joined(), _source_evidence())
 
 
+#: Floors for the live modelo 200 eligibility this coverage test equates against
+#: the shipped profile. Live: 5682 fields, of which 5556 are width-17 and 126
+#: are smaller.
+_MINIMUM_M200_ELIGIBLE_FIELDS = 4000
+_MINIMUM_M200_SMALLER_FIELDS = 80
+
+
 def test_real_m200_profile_exactly_covers_source_eligibility_and_excludes_variable_envelope() -> None:
     """The committed profile validates exhaustively against the hash-verified source."""
     source_root = bundled_path()
@@ -798,6 +805,23 @@ def test_real_m200_profile_exactly_covers_source_eligibility_and_excludes_variab
         width_rules["N"].decimal_digits,
         width_rules["N"].sign_policy,
     ) == (14, 2, "n-prefix-negative-blank-nonnegative")
+
+    # Every coverage claim below equates two sets DERIVED from this one
+    # eligibility, so each holds when both sides are empty. This module's own
+    # sibling records that exact incident: with no eligible field, an empty
+    # render profile satisfied exhaustive coverage completely. The split is
+    # lopsided -- 5556 width-17 against 126 smaller -- so a single total would
+    # sit clear while the smaller branch, which the singleton equality covers,
+    # emptied entirely.
+    assert len(eligibility.all_fields) >= _MINIMUM_M200_ELIGIBLE_FIELDS, (
+        f"modelo 200 projected {len(eligibility.all_fields)} eligible field(s); the "
+        "coverage equalities below compare two empty sets and pass"
+    )
+    assert len(eligibility.smaller_fields) >= _MINIMUM_M200_SMALLER_FIELDS, (
+        f"only {len(eligibility.smaller_fields)} smaller field(s) of "
+        f"{len(eligibility.all_fields)}; the singleton-rule equality below is over this "
+        "branch alone, and the width-17 majority keeps any total floor clear"
+    )
 
     eligible_anchors = {
         RenderProfileAnchor(
@@ -1166,6 +1190,12 @@ def test_real_modelo_303_reserved_numeric_slots_are_excluded_from_eligibility() 
     assert eligibility.all_fields, "excluding reserved slots must not empty the eligible set"
 
 
+#: Floor for modelo 347's eligible fields. Live the design yields 22, and a
+#: narrowed naturaleza match once took the same set to ZERO. Two thirds of
+#: live, so ordinary design movement never fires it.
+_MINIMUM_ELIGIBLE_347_FIELDS = 15
+
+
 def _eligibility_for(source_ref: str, epoch: str, catalogue: str) -> tuple[object, ...]:
     """Return the eligible fields of one hash-verified design."""
     catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", catalogue))
@@ -1284,7 +1314,19 @@ def test_a_source_reserved_pdf_slot_stays_ineligible() -> None:
     """
     eligible = _eligibility_for("aeat-dr-347-2025", "2025", "operaciones-terceros.toml")
 
-    assert not [field for field in eligible if _is_source_reserved_field(field)]
+    # The claim is an ABSENCE, so it needs the population it is absent from.
+    # This has already happened here once: selecting on workbook abbreviations
+    # alone made every 347 field ineligible, and the sibling above records that
+    # "an EMPTY render profile satisfied exhaustive coverage completely" while
+    # the design shipped with no numeric format, sign policy or decimal
+    # placement. An emptied eligibility set satisfies the absence below the same
+    # way. Live the design yields 22 eligible fields, none of them reserved.
+    assert len(eligible) >= _MINIMUM_ELIGIBLE_347_FIELDS, (
+        f"only {len(eligible)} eligible field(s) for modelo 347; below this the reserved-slot "
+        "absence below holds because nothing was eligible, not because nothing was reserved"
+    )
+    reserved = [field for field in eligible if _is_source_reserved_field(field)]
+    assert not reserved, f"a slot the design reserves became eligible for a reviewed rule: {reserved}"
 
 
 def test_width_17_type_order_covers_every_declared_aeat_type() -> None:

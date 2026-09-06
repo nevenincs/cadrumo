@@ -535,6 +535,37 @@ def test_the_pass_argument_reader_refuses_an_argv_it_cannot_offset(argv: list[st
     assert "does not start with the pytest invocation prefix" in message, message
 
 
+#: Per-surface floors for the invocation census. Live: four justfile recipes
+#: and three campaign driver passes. Stated per surface because the census
+#: is the SUM of two independent readers -- a justfile parse and a campaign
+#: driver walk -- and either can stop yielding while the other carries the
+#: total past any combined floor.
+_MINIMUM_PACKAGING_RECIPES = 3
+_MINIMUM_CAMPAIGN_PASSES = 2
+
+
+def test_the_invocation_census_reaches_both_surfaces() -> None:
+    """The parametrized gates below vanish silently if this census empties.
+
+    Two cases are generated from ``packaging_pytest_invocations()`` at
+    COLLECTION time, and a filter and a loop read it again further down. An
+    empty census does not fail any of them: it produces no parametrized case
+    at all, so the gates stop existing rather than stop passing. The floor
+    therefore lives here, outside the parametrize it protects.
+    """
+    recipes = packaging_pytest_recipes()
+    passes = campaign_pytest_passes(None)
+
+    assert len(recipes) >= _MINIMUM_PACKAGING_RECIPES, (
+        f"only {len(recipes)} justfile pytest recipe(s) were read; the invocation gates "
+        "would parametrise over a surface that stopped being discovered"
+    )
+    assert len(passes) >= _MINIMUM_CAMPAIGN_PASSES, (
+        f"only {len(passes)} campaign driver pass(es) were read; the driver half of the "
+        "census can empty while the justfile half carries the total"
+    )
+
+
 @pytest.mark.parametrize("invocation", packaging_pytest_invocations(), ids=lambda invocation: invocation.name)
 def test_each_invocation_states_its_marker_selection_explicitly(invocation: Recipe) -> None:
     """No invocation over this mixed-marker directory may inherit the default expression."""

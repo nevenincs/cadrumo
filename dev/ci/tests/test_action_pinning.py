@@ -168,6 +168,13 @@ def test_the_gate_refuses_a_bare_directory_glob() -> None:
     assert not all(argument.endswith((".whl", ".tar.gz")) for argument in arguments)
 
 
+#: Below this the companion projects have moved out of the discovery root.
+#: The gate at `dev/release/readiness.py` names both companion pyprojects by
+#: literal path, so an empty walk here silently stops requiring the release
+#: tool to bump the very files that gate compares. Live: two companions.
+_MINIMUM_COMPANION_PROJECTS: Final = 2
+
+
 def test_release_please_bumps_every_version_surface_the_release_gate_compares() -> None:
     """The versioning tool and the readiness gate must agree on what a version is.
 
@@ -186,6 +193,13 @@ def test_release_please_bumps_every_version_surface_the_release_gate_compares() 
     companions = sorted(
         path.relative_to(REPO_ROOT).as_posix() for path in (REPO_ROOT / "packaging").glob("*/pyproject.toml")
     )
+
+    assert len(companions) >= _MINIMUM_COMPANION_PROJECTS, (
+        f"only {len(companions)} companion project(s) were discovered under packaging/; below "
+        "this the requirement set collapses to the two literal surfaces and this gate stops "
+        "asking release-please to bump the companions at all"
+    )
+
     required = {"src/cadrumo/__init__.py", "pyproject.toml", *companions}
 
     assert required <= extra_files, (

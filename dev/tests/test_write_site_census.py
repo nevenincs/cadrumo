@@ -110,6 +110,7 @@ def _constrained_at(source: str) -> bool:
         ("os.makedirs(path)", "makedirs"),
         ("target.replace(destination)", "replace"),
         ("workbook.save(path)", "save"),
+        ("os.open(path, flags, 0o600)", "os.open"),
     ],
 )
 def test_a_real_file_producing_call_is_counted(source: str, expected: str) -> None:
@@ -133,6 +134,8 @@ def test_a_real_file_producing_call_is_counted(source: str, expected: str) -> No
         ("open(path)", "the default mode is read"),
         ("path.exists()", "a predicate is not a write"),
         ("path.read_text()", "a read is not a write"),
+        ("pdfplumber.open(pdf_path)", "a library reader takes the PATH first, not a mode"),
+        ("zipfile.open(name)", "an archive member open is not a filesystem write"),
     ],
 )
 def test_a_lookalike_is_not_counted(source: str, why: str) -> None:

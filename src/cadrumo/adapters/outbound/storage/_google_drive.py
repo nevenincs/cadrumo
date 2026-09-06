@@ -50,6 +50,7 @@ from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.type_guards import is_object_dict, is_object_list, is_object_mapping, is_str_keyed_dict
+from ..google.drive_entries import OWNERSHIP_KEY, OWNERSHIP_VALUE
 from ._google_drive_metadata import (
     DriveStoragePreconditionCondition,
     drive_external_verdict,
@@ -82,8 +83,6 @@ _PROBE_NAMESPACE = "_probe"
 # Drive content from the app's mirror — a folder named `cadrumo-vault`
 # the operator created manually for unrelated work will be rejected
 # rather than silently adopted.
-_OWNERSHIP_KEY = "cadrumo_vault_app"
-_OWNERSHIP_VALUE = "cadrumo"
 _LOG = get_logger(__name__)
 
 
@@ -265,11 +264,11 @@ def _is_owned_drive_match(entry: dict[str, object], *, prefix: str, object_key_h
     app_properties = entry.get("appProperties")
     if not is_object_mapping(app_properties):
         return False
-    ownership = app_properties.get(_OWNERSHIP_KEY)
+    ownership = app_properties.get(OWNERSHIP_KEY)
     stored_hmac = app_properties.get("object_key_hmac")
     return (
         isinstance(ownership, str)
-        and ownership == _OWNERSHIP_VALUE
+        and ownership == OWNERSHIP_VALUE
         and isinstance(stored_hmac, str)
         and stored_hmac == object_key_hmac
     )
@@ -430,7 +429,7 @@ class GoogleDriveProvider:
             "name": self._vault_folder_name,
             "mimeType": _FOLDER_MIME,
             "parents": [self._root_folder_id],
-            "appProperties": {_OWNERSHIP_KEY: _OWNERSHIP_VALUE},
+            "appProperties": {OWNERSHIP_KEY: OWNERSHIP_VALUE},
         }
         created = self._execute(
             service.files().create(body=body, fields="id,appProperties"),
@@ -473,8 +472,8 @@ class GoogleDriveProvider:
         """
         raw_properties = entry.get("appProperties")
         existing: dict[str, object] = raw_properties if is_str_keyed_dict(raw_properties) else {}
-        existing_value = existing.get(_OWNERSHIP_KEY)
-        if existing_value == _OWNERSHIP_VALUE:
+        existing_value = existing.get(OWNERSHIP_KEY)
+        if existing_value == OWNERSHIP_VALUE:
             return
         if not existing:
             # Probably a folder we created in a prior session before
@@ -483,7 +482,7 @@ class GoogleDriveProvider:
             self._execute(
                 service.files().update(
                     fileId=entry["id"],
-                    body={"appProperties": {_OWNERSHIP_KEY: _OWNERSHIP_VALUE}},
+                    body={"appProperties": {OWNERSHIP_KEY: OWNERSHIP_VALUE}},
                     fields="id,appProperties",
                 ),
                 action=f"stamp_ownership_{kind}",
@@ -494,8 +493,8 @@ class GoogleDriveProvider:
             context={
                 "folder_id": entry["id"],
                 "folder_name": entry.get("name", ""),
-                "ownership_key": _OWNERSHIP_KEY,
-                "ownership_value": _OWNERSHIP_VALUE,
+                "ownership_key": OWNERSHIP_KEY,
+                "ownership_value": OWNERSHIP_VALUE,
             },
             translated_message="adapters.outbound.storage.google_drive.errors.folder_not_owned",
             precondition_verdict=drive_external_verdict(
@@ -547,7 +546,7 @@ class GoogleDriveProvider:
             "name": namespace,
             "mimeType": _FOLDER_MIME,
             "parents": [vault_id],
-            "appProperties": {_OWNERSHIP_KEY: _OWNERSHIP_VALUE},
+            "appProperties": {OWNERSHIP_KEY: OWNERSHIP_VALUE},
         }
         created = self._execute(
             service.files().create(body=body, fields="id,appProperties"),
@@ -684,7 +683,7 @@ class GoogleDriveProvider:
         from ..google.records import DriveAppProperties
 
         app_properties = DriveAppProperties(
-            cadrumo_vault_app=_OWNERSHIP_VALUE,
+            cadrumo_vault_app=OWNERSHIP_VALUE,
             namespace=namespace_clean,
             object_key_hmac=hmac_clean,
             content_hash=content_hash,

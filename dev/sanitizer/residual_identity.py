@@ -42,7 +42,6 @@ taxpayer identities.
 
 from __future__ import annotations
 
-import contextlib
 import io
 import re
 from collections.abc import Iterator
@@ -296,6 +295,11 @@ def decompressed_streams(pdf_bytes: bytes) -> bytes:
     return b"\n".join(chunks)
 
 
+#: How far into an artefact the PDF header may sit. Readers tolerate leading
+#: junk before ``%PDF``; no image in the corpus carries the marker at all.
+_PDF_HEADER_WINDOW = 1024
+
+
 def scan_for_residual_identities(
     pdf_bytes: bytes,
     sidecar: dict[str, Any],
@@ -317,10 +321,17 @@ def scan_for_residual_identities(
     selected = CHECKSUM_VERIFIED_KINDS if kinds is None else kinds
     accounted = accounted_for_values(sidecar)
     surfaces: list[tuple[str, bytes]] = [("raw", pdf_bytes)]
-    # A file that will not open is a different defect, owned by the structural
-    # half of the adversarial gate; the raw-byte surface is still scanned.
-    with contextlib.suppress(pikepdf.PdfError, RuntimeError):
+    # An artefact carrying no PDF header -- the real-provenance corpus also
+    # holds images -- has no stream surface, so skipping it loses nothing. A
+    # PDF-shaped artefact that will not decompress is the opposite case: its
+    # identities sit inside Flate streams, invisible on the raw surface, so
+    # absorbing the failure would return an empty finding tuple a caller
+    # cannot tell apart from a clean specimen. That one is raised.
+    try:
         surfaces.append(("stream", decompressed_streams(pdf_bytes)))
+    except (pikepdf.PdfError, RuntimeError):
+        if b"%PDF" in pdf_bytes[:_PDF_HEADER_WINDOW]:
+            raise
 
     findings: list[ResidualFinding] = []
     for surface_name, payload in surfaces:

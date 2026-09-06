@@ -995,5 +995,5 @@ def _remove_generated_rst(out_dir: Path, keep: frozenset[Path]) -> None:
 
 def _write_if_changed(path: Path, rst: str) -> None:
     """Write generated RST with LF endings only when its bytes changed."""
-    if not (path.is_file() and path.read_text(encoding=_UTF_8) == rst):
+    if not (path.is_file() and path.read_bytes() == rst.encode(_UTF_8)):
         path.write_text(rst, encoding=_UTF_8, newline="\n")

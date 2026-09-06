@@ -201,14 +201,20 @@ jobs:
           if ($run.conclusion -ne "success") {
             throw "source packaging run did not succeed"
           }
-          if ($run.head_branch -ne "main") {
-            throw "source packaging run must target main"
-          }
           if ($run.event -eq "workflow_dispatch") {
             # The full campaign is dispatch-only (ci-speed redesign,
             # 2026-07-20): a dispatch run is trusted only when its commit is
             # verified on main history via the compare API - equal-or-stronger
             # than the former push-event pin, which trusted the push router.
+            #
+            # The branch NAME is deliberately not tested here. It is redundant
+            # with the ancestry proof below, and strictly weaker: a ref name is
+            # mutable and says nothing about history, while `compare` settles
+            # whether these exact bytes are on main. Testing it unconditionally
+            # also made the evidence rows unobtainable, because the only commit
+            # carrying tag `v{version}` -- which `readiness.py` requires the
+            # cohort to be built at -- is reachable only as `--ref v{version}`,
+            # whose head_branch is the tag, not `main`.
             $ancestry = Invoke-RestMethod `
               -Headers $headers `
               -Uri "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/compare/main...$($run.head_sha)"
@@ -216,7 +222,14 @@ jobs:
               throw "dispatch-event source run commit is not on main history"
             }
           }
-          elseif ($run.event -ne "push") {
+          elseif ($run.event -eq "push") {
+            # A push run computes no ancestry, so the branch it targeted is the
+            # only evidence available that it came from main.
+            if ($run.head_branch -ne "main") {
+              throw "source packaging run must target main"
+            }
+          }
+          else {
             throw "source packaging run must be a push or dispatch run on main"
           }
           if ($run.head_repository.full_name -ne $env:GITHUB_REPOSITORY) {

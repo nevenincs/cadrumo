@@ -111,7 +111,9 @@ __all__ = [
     "default_fixtures_root",
     "execute_page_sequences",
     "execute_sequence",
+    "live_aeat_tokens",
     "m303_filing_evidence_fixture_name",
+    "refuse_live_frames",
     "sequence_sandbox",
 ]
 
@@ -418,7 +420,7 @@ def _record_frame_progress(
     )
 
 
-def _live_aeat_tokens(frame: SequenceFrame) -> tuple[str, ...]:
+def live_aeat_tokens(frame: SequenceFrame) -> tuple[str, ...]:
     """Return the argv tokens that mark ``frame`` as a live-AEAT invocation.
 
     A token immediately following an option token is treated as that option's
@@ -442,7 +444,7 @@ def _live_aeat_tokens(frame: SequenceFrame) -> tuple[str, ...]:
     return tuple(flagged)
 
 
-def _refuse_live_frames(sequence: ParsedSequence) -> None:
+def refuse_live_frames(sequence: ParsedSequence) -> None:
     """Refuse the whole sequence when any EXECUTED frame would contact live AEAT.
 
     A ``@static`` frame is the sanctioned way to DISPLAY a live-AEAT command
@@ -451,11 +453,11 @@ def _refuse_live_frames(sequence: ParsedSequence) -> None:
     """
     violations = [
         f"{_frame_at(frame)}: {frame.command_line!r} is a live-AEAT invocation "
-        f"(tokens {', '.join(_live_aeat_tokens(frame))}); pull verbs and the "
+        f"(tokens {', '.join(live_aeat_tokens(frame))}); pull verbs and the "
         "'app live' group cannot be executed. Run build/verify/export frames, "
         "or show the live command as a @static frame instead"
         for frame in sequence.executed_frames
-        if _live_aeat_tokens(frame)
+        if live_aeat_tokens(frame)
     ]
     if violations:
         raise SequenceExecutionError(sequence.sequence_id, "; ".join(violations))
@@ -1125,7 +1127,7 @@ def execute_sequence(
             "an all-@static sequence has no executed frames to run and no golden to build; "
             "the check/refresh path skips it (it is display-only)",
         )
-    _refuse_live_frames(sequence)
+    refuse_live_frames(sequence)
     if sandbox_root is not None:
         return _execute_in_root(sequence, sandbox_root, fixtures_root)
     # Engine handles on Windows can outlive the run despite the teardown's
@@ -1201,7 +1203,7 @@ def execute_page_sequences(
         caller aligns transcripts with the executable sequences.
     """
     for sequence in sequences:
-        _refuse_live_frames(sequence)
+        refuse_live_frames(sequence)
     if not sequences:
         return ()
     if sandbox_root is not None:

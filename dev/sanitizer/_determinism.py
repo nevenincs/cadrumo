@@ -66,11 +66,11 @@ def save_with_deterministic_flags(pdf: Pdf) -> tuple[bytes, DeterminismFlags]:
     buffer = io.BytesIO()
     pdf.save(
         buffer,
-        deterministic_id=True,
-        static_id=False,
-        object_stream_mode=ObjectStreamMode.preserve,
-        linearize=False,
-        recompress_flate=False,
-        compress_streams=True,
+        deterministic_id=_DETERMINISM_FLAGS.deterministic_id,
+        static_id=_DETERMINISM_FLAGS.static_id,
+        object_stream_mode=ObjectStreamMode[_DETERMINISM_FLAGS.object_stream_mode],
+        linearize=_DETERMINISM_FLAGS.linearize,
+        recompress_flate=_DETERMINISM_FLAGS.recompress_flate,
+        compress_streams=_DETERMINISM_FLAGS.compress_streams,
     )
     return buffer.getvalue(), _DETERMINISM_FLAGS

@@ -96,8 +96,8 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
         inconsistencies.add_column(ledger_copy("tui.ledger.reconciliation.direction"), width=30)
         for row in self.controller.projection.link_inconsistencies:
             direction_keys = {
-                "invoice-only": "tui.ledger.reconciliation.direction.invoice_only",
-                "transaction-only": "tui.ledger.reconciliation.direction.transaction_only",
+                "invoice-only": "tui.ledger.reconciliation.direction_state.invoice_only",
+                "transaction-only": "tui.ledger.reconciliation.direction_state.transaction_only",
             }
             direction_key = direction_keys.get(row.direction)
             if direction_key is None:

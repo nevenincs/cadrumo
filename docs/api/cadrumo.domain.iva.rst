@@ -32,6 +32,7 @@ Submodules
    cadrumo.domain.iva.oss
    cadrumo.domain.iva.place_of_supply
    cadrumo.domain.iva.prorrata
+   cadrumo.domain.iva.prorrata_especial_parameters
    cadrumo.domain.iva.rates
    cadrumo.domain.iva.recargo_equivalencia
    cadrumo.domain.iva.refund_eligibility

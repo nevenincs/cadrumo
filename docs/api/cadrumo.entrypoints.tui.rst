@@ -13,7 +13,9 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.entrypoints.tui.aeat_sync
    cadrumo.entrypoints.tui.components
+   cadrumo.entrypoints.tui.declarations
    cadrumo.entrypoints.tui.devtools
    cadrumo.entrypoints.tui.flows
    cadrumo.entrypoints.tui.ledger
@@ -29,7 +31,12 @@ Submodules
    :maxdepth: 4
 
    cadrumo.entrypoints.tui.__main__
+   cadrumo.entrypoints.tui.account
    cadrumo.entrypoints.tui.app
+   cadrumo.entrypoints.tui.bootstrap
    cadrumo.entrypoints.tui.destination_session
+   cadrumo.entrypoints.tui.home
+   cadrumo.entrypoints.tui.installed_session
    cadrumo.entrypoints.tui.launcher
    cadrumo.entrypoints.tui.navigation
+   cadrumo.entrypoints.tui.search

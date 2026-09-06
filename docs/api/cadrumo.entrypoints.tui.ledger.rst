@@ -13,6 +13,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.entrypoints.tui.ledger.action_guards
    cadrumo.entrypoints.tui.ledger.classification
    cadrumo.entrypoints.tui.ledger.controller
    cadrumo.entrypoints.tui.ledger.entries
@@ -23,3 +24,5 @@ Submodules
    cadrumo.entrypoints.tui.ledger.reconciliation
    cadrumo.entrypoints.tui.ledger.review
    cadrumo.entrypoints.tui.ledger.routes
+   cadrumo.entrypoints.tui.ledger.workspace_injection
+   cadrumo.entrypoints.tui.ledger.workspace_presentation

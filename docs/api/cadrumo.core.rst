@@ -188,6 +188,7 @@ Submodules
    cadrumo.core.type_adapters
    cadrumo.core.type_guards
    cadrumo.core.unit_proportion
+   cadrumo.core.url_validation
    cadrumo.core.validity_window
    cadrumo.core.windows_contention
    cadrumo.core.wizard_catalogue

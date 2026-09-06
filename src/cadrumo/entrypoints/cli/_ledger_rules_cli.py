@@ -9,11 +9,8 @@ from __future__ import annotations
 import typer
 
 from ...application.ledger.models import ApplyRulesResult
-from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...core.i18n.render import tr
-from ...domain.transactions.classification_rule import LedgerClassificationRule
-from ...domain.transactions.enums import BusinessClassification, TransactionLifecycleState
-from ...domain.transactions.models import Transaction
+from ...domain.transactions.enums import BusinessClassification
 from ._common import active_bucket_id_or_refuse as _rule_bucket_id
 from ._common import bad, emit_envelope
 
@@ -94,52 +91,24 @@ def rule_add(
     )
 
 
-def _rule_apply_transaction_is_candidate(transaction: Transaction, *, reaffirm: bool) -> bool:
-    if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
-        return False
-    if transaction.business_classification is BusinessClassification.NOT_YET_PROCESSED:
-        return True
-    return reaffirm and transaction.classified_by == CLASSIFIED_BY_MANUAL
-
-
-def _first_matching_rule(
-    transaction: Transaction,
-    rules: tuple[LedgerClassificationRule, ...],
-) -> LedgerClassificationRule | None:
-    for rule in rules:
-        if rule.matches(transaction.raw.description):
-            return rule
-    return None
-
-
 def _rule_apply_dry_run_matches(
     *,
     bucket_id: str,
     reaffirm: bool,
 ) -> list[dict[str, object]]:
-    from ...application.ledger.rule_repository import ledger_classification_rule_repository
-    from ...application.ledger.transaction_repository import transaction_catalogue_repository
+    """Preview through the same engine the apply uses, never a second copy."""
+    from ...application.ledger.actions_classification import plan_classification_rules
 
-    rule_repo = ledger_classification_rule_repository(bucket_id=bucket_id)
-    rules = rule_repo.list_rules()
-    tx_repo = transaction_catalogue_repository(bucket_id=bucket_id)
-    catalogue = tx_repo.load()
-    would_match: list[dict[str, object]] = []
-    for transaction in catalogue.transactions.values():
-        if not _rule_apply_transaction_is_candidate(transaction, reaffirm=reaffirm):
-            continue
-        rule = _first_matching_rule(transaction, rules)
-        if rule is None:
-            continue
-        would_match.append(
-            {
-                "transaction_id": transaction.transaction_id,
-                "description": transaction.raw.description,
-                "matched_rule_id": rule.rule_id,
-                "classification": rule.classification,
-            },
-        )
-    return would_match
+    plan = plan_classification_rules(bucket_id=bucket_id, reaffirm=reaffirm)
+    return [
+        {
+            "transaction_id": row.transaction_id,
+            "description": row.description,
+            "matched_rule_id": row.matched_rule_id,
+            "classification": row.classification,
+        }
+        for row in plan.matches
+    ]
 
 
 def _rule_apply_dry_run_payload(would_match: list[dict[str, object]]) -> dict[str, object]:

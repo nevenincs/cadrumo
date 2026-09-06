@@ -107,6 +107,34 @@ def test_a_session_root_can_read_stale_while_its_contents_are_being_written(tmp_
     assert total == len(b"scratch")
 
 
+def test_an_entry_the_walk_cannot_stat_leaves_the_tree_reading_active(tmp_path: Path) -> None:
+    """An unreadable entry spares the tree instead of ageing it.
+
+    ``os.walk`` lists a dangling symlink and ``os.stat`` then refuses it, which
+    is the real shape of the race this guard covers: an entry present in the
+    listing and gone, locked, or unreadable by the time it is measured. Dropping
+    it from the maximum silently takes the newest file out of the answer, so a
+    tree written moments ago reads as untouched. Measured before the guard: five
+    seconds of real activity reported as 100000 seconds of silence, past every
+    ceiling the reaper runs with, which is the state that makes a live session
+    reclaimable. The byte total still omits the unread entry, because
+    under-reporting what can be reclaimed is the safe direction for that number.
+    """
+    now = time.time()
+    stale = tmp_path / "stale.txt"
+    stale.write_bytes(b"old")
+    os.utime(stale, (now - 100000, now - 100000))
+    os.symlink(tmp_path / "no_such_target.txt", tmp_path / "vanished.txt")
+
+    with pytest.raises(OSError):
+        os.stat(tmp_path / "vanished.txt")
+
+    newest, total = newest_activity(tmp_path)
+
+    assert now - newest < 60, "a tree holding an unreadable entry must not read as idle"
+    assert total == len(b"old")
+
+
 def test_a_live_session_is_spared_even_though_its_root_looks_abandoned(tmp_path: Path) -> None:
     """The load-bearing guarantee: an active session's scratchpad is never taken.
 

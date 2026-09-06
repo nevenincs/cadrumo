@@ -45,17 +45,38 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 _BASELINE_PATH = Path(__file__).resolve().parent / "unconverted_static_baseline.json"
 
 
+#: Floors for the STATIC frame subset four gates iterate. Live: 156 frames on
+#: 22 of the 277 discovered pages, ranging from 2 to 33 frames per page.
+_MINIMUM_STATIC_FRAMES = 100
+_MINIMUM_STATIC_FRAME_PAGES = 15
+
+
 def _static_frames() -> list[tuple[str, str, object]]:
     """Return every ``(page, sequence_id, frame)`` triple of static frames."""
     discovered, problems = discover_sequences(docs_root=default_docs_root())
     assert not problems, "sequence discovery reported problems:\n  " + "\n  ".join(problems)
     assert discovered, "sequence discovery found no pages; a corpus-wide frame guarantee over nothing is vacuous"
-    return [
+    frames = [
         (item.page, item.sequence_id, frame)
         for item in discovered
         for frame in item.sequence.frames
         if frame.kind is FrameKind.STATIC
     ]
+    # The guard above proves DISCOVERY reached the corpus. It says nothing about
+    # this filtered subset, which is what every caller loops over: a STATIC
+    # classification that stopped matching returns an empty list while the 277
+    # discovered pages stand, and all four gates then report clean having judged
+    # no frame. Live: 156 static frames across 22 pages.
+    assert len(frames) >= _MINIMUM_STATIC_FRAMES, (
+        f"only {len(frames)} static frame(s) across {len(discovered)} discovered page(s); "
+        "the reason gates loop over this list and pass over an empty one"
+    )
+    carrying = {page for page, _sequence_id, _frame in frames}
+    assert len(carrying) >= _MINIMUM_STATIC_FRAME_PAGES, (
+        f"static frames survive on only {len(carrying)} page(s) ({sorted(carrying)}); the "
+        "frame total can stay high while the classification collapses to one page"
+    )
+    return frames
 
 
 def test_every_static_frame_states_a_blocked_reason() -> None:

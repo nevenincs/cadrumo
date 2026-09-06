@@ -29,6 +29,11 @@ from ...application.invoices.catalogue_lifecycle import (
     resolve_catalogue_invoice_from_repository,
     update_catalogue_invoice,
 )
+from ...application.invoices.simplificada_advisory import (
+    SimplificadaTaxIdAdvisory,
+    resolve_simplificada_tax_id_advisory,
+)
+from ...application.invoices.source_resolver import iva_category_for_operation_type
 from ...core.aggregation import IntracomOperationType
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.field_role import FieldRole
@@ -56,29 +61,6 @@ from ._ledger_catalogue_invoice_payloads import (
     CatalogueInvoiceWizardResult,
 )
 from ._ledger_support import ledger_invoice_validation_no_recovery
-
-_OPERATION_TYPE_TO_IVA_CATEGORY: dict[IntracomOperationType, IvaCategory] = {
-    IntracomOperationType.E: IvaCategory.INTRA_COMMUNITY_SUPPLY,
-    IntracomOperationType.A: IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-    IntracomOperationType.T: IvaCategory.INTRA_COMMUNITY_TRIANGULATION,
-    # The service claves. Before these existed the operator could pick S or I
-    # and the record came back with NO category at all, so an ordinary
-    # intracomunitaria de servicios was ungrounded to every consumer that reads
-    # the IVA treatment. They map to the service categories, not to the goods
-    # ones: a service is no sujeta by the art. 69 localisation rule, where an
-    # entrega de bienes is exempt under art. 25.
-    IntracomOperationType.S: IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY,
-    IntracomOperationType.ADQUISICION_SERVICIOS: (IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE),
-}
-
-
-def _catalogue_iva_category_for_operation_type(
-    operation_type: IntracomOperationType | None,
-) -> IvaCategory | None:
-    if operation_type is None:
-        return None
-    return _OPERATION_TYPE_TO_IVA_CATEGORY.get(operation_type)
-
 
 # The invoice fields every operator surface renders, declared once. Both
 # projections below read this tuple, so a field added to one surface cannot go
@@ -163,9 +145,9 @@ def _simplificada_tax_id_notices(invoice: Invoice) -> list[Notice]:
     """Surface RD 1619/2012 art. 6.1.d case 3.º as an advisory, never a refusal.
 
     Case 3.º asks for the destinatario's NIF on a DOMESTIC factura simplificada
-    whose issuer is established in the TAI. The predicate that evaluates it has
-    shipped, tested and exported, with no production caller -- so the operator
-    was never told. This is that caller.
+    whose issuer is established in the TAI. Whether it applies -- and whether
+    the issuing taxpayer could be resolved to decide at all -- is answered by
+    :func:`~application.invoices.simplificada_advisory.resolve_simplificada_tax_id_advisory`.
 
     Deliberately advisory. An ordinary domestic ticket with no identified
     customer is common and legitimate practice, and the predicate rests on a
@@ -174,31 +156,12 @@ def _simplificada_tax_id_notices(invoice: Invoice) -> list[Notice]:
     leaves a filer unaware of a real requirement. The Notice channel is the one
     that fits, which is what the predicate's own docstring instructs.
 
-    Returns no notice when the profile cannot be resolved: an advisory whose
-    premise could not be evaluated must not be asserted.
+    Emits nothing for ``ISSUER_UNKNOWN``: an advisory whose premise could not
+    be evaluated must not be asserted. That the check did not run is a distinct
+    fact the resolver preserves, and a surface with somewhere to report it can
+    say so; this channel has only "advise" and "do not".
     """
-    if invoice.counterparty_tax_id is not None:
-        return []
-    # Function-local for the cycle reason the sibling profile-backed advisories
-    # document: the profile package reaches back into this layer.
-    from ...application.invoices.issuer_establishment import simplificada_requires_tax_id_for_domestic_issuer
-    from ...application.user_profile.profile_record_repository import ProfileRecordRepository
-    from ...application.user_profile.projections import projection_for_taxpayer
-    from ...core.bucket_pointer import resolve_active_bucket_id
-    from ...domain.user_profile.errors import ProfileNotFoundError
-
-    bucket_id = resolve_active_bucket_id()
-    if bucket_id is None:
-        return []
-    try:
-        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
-    except ProfileNotFoundError:
-        return []
-    except (OSError, ValueError):
-        # A degraded profile read must not fail an invoice that is already
-        # recorded; the advisory simply goes unsaid.
-        return []
-    if not simplificada_requires_tax_id_for_domestic_issuer(invoice, projection_for_taxpayer(record)):
+    if resolve_simplificada_tax_id_advisory(invoice=invoice) is not SimplificadaTaxIdAdvisory.REQUIRED:
         return []
     return [
         Notice(
@@ -299,7 +262,7 @@ def invoice_add(
     # clave. The derivation exists so an intracomunitaria is not left
     # ungrounded when the operator only states the clave; it is a fallback, and
     # silently overriding a value the operator did state would be the reverse.
-    resolved_iva_category = iva_category or _catalogue_iva_category_for_operation_type(
+    resolved_iva_category = iva_category or iva_category_for_operation_type(
         operation_type,
     )
     try:
@@ -382,7 +345,7 @@ def invoice_wizard(
     from ...application.invoices.creation_wizard import create_invoice_via_wizard
 
     bucket_id = _business_invoice_bucket_id()
-    resolved_iva_category = iva_category or _catalogue_iva_category_for_operation_type(operation_type)
+    resolved_iva_category = iva_category or iva_category_for_operation_type(operation_type)
     try:
         wizard_result = create_invoice_via_wizard(
             bucket_id=bucket_id,

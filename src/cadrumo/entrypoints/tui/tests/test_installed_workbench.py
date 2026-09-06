@@ -23,6 +23,7 @@ import pytest
 
 from ....application.search.workbench import WorkbenchDestinationAdmissionState
 from ..launcher import main
+from ..ledger.controller import LedgerWorkspaceScreen
 from ..navigation import TUI_DESTINATION_CATALOGUE, TuiScreenContextV1
 from .workbench_session import WORKBENCH_PROFILE_LABEL, installed_workbench_root
 
@@ -69,6 +70,24 @@ async def test_every_admitted_destination_builds_its_own_screen(tmp_path: Path) 
             built.append(route.factory(TuiScreenContextV1(destination=destination)))
 
         assert len({id(screen) for screen in built}) == len(built)
+
+
+@pytest.mark.asyncio
+async def test_the_installed_ledger_route_admits_the_link_door(tmp_path: Path) -> None:
+    """A submitter the composition root never supplies is a door that cannot open.
+
+    The reconciliation body renders with or without one, so an unwired door
+    shows up only as a confirmation control that silently stays hidden. That is
+    how an application-side writer comes to be built and left unreachable, so
+    the assertion belongs here, against the real composed session.
+    """
+    async with installed_workbench_root(tmp_path) as root:
+        route = root.destination_catalogue.resolve("workbench.ledger")
+        assert route.factory is not None
+        ledger = route.factory(TuiScreenContextV1(destination="workbench.ledger"))
+
+        assert isinstance(ledger, LedgerWorkspaceScreen)
+        assert ledger.controller.can_submit_links(), "the installed Ledger route composed no link door"
 
 
 @pytest.mark.asyncio

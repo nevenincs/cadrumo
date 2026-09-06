@@ -21,10 +21,12 @@ shut.
 from __future__ import annotations
 
 import json
+import tomllib
 from pathlib import Path
 
 import pytest
 
+from ..._paths import REPO_ROOT
 from ..version_identity import (
     GATES,
     PUBLISH,
@@ -580,3 +582,34 @@ def test_publishing_at_the_recorded_floor_is_permitted() -> None:
 def test_sealing_ignores_the_floor_entirely() -> None:
     """A build writes nothing, so ordering against shipped releases is not its question."""
     assert gate_conflicts(SEAL, "0.3.9", floor="0.4.0") == ()
+
+
+#: The cohort has never been smaller than the root project plus its two data
+#: companions. A tuple that collapsed below this checks fewer destinations than
+#: the release actually uploads to.
+_MINIMUM_COHORT_PROJECTS: int = 3
+
+
+def _published_distribution_names() -> set[str]:
+    """Return every distribution name this repository is built to publish.
+
+    Read from the packaging sources that own the fact - the root project and
+    each companion project under ``packaging/`` - rather than restated here, so
+    the derivation fails when a distribution is added, renamed, or retired.
+    """
+    manifests = [REPO_ROOT / "pyproject.toml", *sorted((REPO_ROOT / "packaging").glob("*/pyproject.toml"))]
+    return {str(tomllib.loads(path.read_text(encoding="utf-8"))["project"]["name"]) for path in manifests}
+
+
+def test_the_cohort_names_every_distribution_the_repository_publishes() -> None:
+    """A destination missing from the tuple is a destination the guard never asks about.
+
+    The refusal cases above all pass a project list in, so they prove the rule
+    and not the roster: renaming one entry of the shipped tuple to a project
+    that does not exist leaves every one of them green while the real project
+    goes unchecked on the index. The roster is therefore proved against the
+    packaging sources, with a floor so an emptied tuple cannot satisfy a
+    comparison between two empty sides.
+    """
+    assert len(PYPI_PROJECTS) >= _MINIMUM_COHORT_PROJECTS
+    assert set(PYPI_PROJECTS) == _published_distribution_names()

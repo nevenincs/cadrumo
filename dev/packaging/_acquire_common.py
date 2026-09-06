@@ -47,10 +47,6 @@ PYTHON_COHORT_WHEEL_NAMES: Final[tuple[str, ...]] = (
     "cadrumo-data-official",
 )
 
-# The grounded Modelo 200 cuota íntegra the installed behaviour oracles must
-# reproduce; a divergent value means the acquired bytes are not the promoted
-# release. Mirrors ``installed_tax_oracle.EXPECTED_VALUE``.
-EXPECTED_ORACLE_TARGET_VALUE: Final[str] = "23000.00"
 
 _REFUSAL_PREFIX: Final[str] = "public reacquisition unavailable"
 _MISMATCH_PREFIX: Final[str] = "public reacquisition digest mismatch"
@@ -62,6 +58,25 @@ class AcquisitionError(SystemExit):
     Subclasses :class:`SystemExit` so a script exits non-zero with the rendered
     message, while remaining catchable as a distinct type by callers and tests.
     """
+
+
+def expected_oracle_target_value() -> str:
+    """Return the grounded cuota that the installed behaviour oracles must reproduce.
+
+    Read from the oracle that defines it rather than mirrored beside it. A
+    copy of a value whose whole job is to detect drift stops detecting it the
+    moment the oracle legitimately moves: the acquisition would refuse a
+    CORRECT release and name the stale expectation as the truth, which is a
+    false refusal at publication time rather than a missed one.
+
+    The import stays deferred because ``installed_tax_oracle`` is a
+    standalone probe that inserts the repository root into ``sys.path`` at
+    import time; importing it at module scope would give this module that
+    side effect for the sake of one string.
+    """
+    from .installed_tax_oracle import EXPECTED_VALUE
+
+    return str(EXPECTED_VALUE)
 
 
 def refuse_unavailable(
@@ -497,19 +512,19 @@ def run_installed_cli_oracle(
         cohort_root_wheel_sha256=cohort.sha256["cadrumo"],
         timeout_seconds=timeout_seconds,
     )
-    if tax_evidence.target_value != EXPECTED_ORACLE_TARGET_VALUE:
+    expected = expected_oracle_target_value()
+    if tax_evidence.target_value != expected:
         raise AcquisitionError(
-            f"installed CLI oracle target value drifted: expected {EXPECTED_ORACLE_TARGET_VALUE}, "
-            f"got {tax_evidence.target_value!r}",
+            f"installed CLI oracle target value drifted: expected {expected}, got {tax_evidence.target_value!r}",
         )
     return tax_evidence
 
 
 __all__ = [
-    "EXPECTED_ORACLE_TARGET_VALUE",
     "PYTHON_COHORT_WHEEL_NAMES",
     "AcquisitionError",
     "capture_owned_server_launch",
+    "expected_oracle_target_value",
     "match_downloaded_cohort_wheels",
     "refuse_digest_mismatch",
     "refuse_unavailable",

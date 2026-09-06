@@ -606,3 +606,34 @@ def test_an_authored_ignored_file_is_still_enumerated() -> None:
     assert enumerated, (
         "every ignored file in this tree is now skipped before it is opened, so the ignored sweep covers nothing at all"
     )
+
+def test_a_planted_identity_in_a_properties_payload_is_found(specimen_repository: Path) -> None:
+    """``.properties`` blocks like the ``.ini``/``.cfg`` it is the Java spelling of.
+
+    It was in neither suffix set before, so a payload in one was not read at all --
+    not blocked, not reported. The suffix set is the whole enumeration, so a class
+    missing from it is invisible rather than merely untested.
+    """
+    payload = specimen_repository / "application.properties"
+    payload.write_text(f"taxpayer.nif={_PLANTED_NIF}\n", encoding="utf-8")
+    _git("add", "application.properties", cwd=specimen_repository)
+
+    scan = scan_tree(specimen_repository)
+
+    assert [finding.path for finding in scan.findings] == ["application.properties"]
+    assert scan.findings[0].kind in BLOCKING_KINDS
+
+
+def test_a_planted_identity_in_a_locale_catalogue_is_reported(specimen_repository: Path) -> None:
+    """A ``.po`` catalogue is prose, so it is read and reported rather than blocking.
+
+    Advisory is the right tier for it, but NOT being read at all was not a tier: a
+    translator pasting a realistic-looking identity into a catalogue produced no
+    signal of any kind before this suffix was admitted.
+    """
+    catalogue = specimen_repository / "messages.po"
+    catalogue.write_text(f"msgid \"nif\"\nmsgstr \"{_PLANTED_NIF}\"\n", encoding="utf-8")
+    _git("add", "messages.po", cwd=specimen_repository)
+
+    assert scan_tree(specimen_repository).findings == ()
+    assert [finding.path for finding in advisory_findings(specimen_repository)] == ["messages.po"]

@@ -15,7 +15,6 @@ import typer
 from ...application.bienes_inversion.service import BienesInversionRegisterService
 from ...core.i18n.render import tr
 from ...domain.bienes_inversion.register import (
-    BienInversionDisposal,
     BienInversionDisposalRegime,
     BienInversionIvaRecord,
     BienInversionKind,
@@ -71,31 +70,39 @@ def bienes_inversion_declare(
     disposal_regime: str | None = None,
 ) -> None:
     """Persist one :class:`BienInversionIvaRecord`."""
-    bucket_id = _register_bucket_id()
-    disposal: BienInversionDisposal | None = None
-    if disposal_year is not None or disposal_regime is not None:
-        if disposal_year is None or disposal_regime is None:
-            raise bad(
-                tr(
-                    "cli.app.ledger.bienes_inversion.disposal_requires_both",
-                    default="--disposal-year and --disposal-regime must be supplied together.",
-                ),
-            )
-        disposal = BienInversionDisposal(year=disposal_year, regime=_parse_disposal_regime(disposal_regime))
-    record = BienInversionIvaRecord(
-        identifier=identifier,
-        description=description,
-        acquisition_year=acquisition_year,
-        cuota_soportada=parse_decimal_amount(cuota_soportada, label="cuota-soportada"),
-        prorrata_inicial_pct=parse_decimal_amount(prorrata_inicial_pct, label="prorrata-inicial"),
-        kind=_parse_kind(kind),
-        art108_elegible=art108_elegible,
-        asset_record_ref=asset_record_ref,
-        acquisition_ledger_id=acquisition_ledger_id,
-        prorrata_sector_id=prorrata_sector_id,
-        disposal=disposal,
+    from ...application.bienes_inversion.declare_command import (
+        BienInversionDeclarationCommand,
+        BienInversionDisposalIncompleteError,
+        declare_bien_inversion,
     )
-    register = BienesInversionRegisterService().declare(record)
+
+    bucket_id = _register_bucket_id()
+    try:
+        outcome = declare_bien_inversion(
+            BienInversionDeclarationCommand(
+                identifier=identifier,
+                description=description,
+                acquisition_year=acquisition_year,
+                acquisition_ledger_id=acquisition_ledger_id,
+                cuota_soportada=parse_decimal_amount(cuota_soportada, label="cuota-soportada"),
+                prorrata_inicial_pct=parse_decimal_amount(prorrata_inicial_pct, label="prorrata-inicial"),
+                kind=_parse_kind(kind),
+                art108_elegible=art108_elegible,
+                asset_record_ref=asset_record_ref,
+                prorrata_sector_id=prorrata_sector_id,
+                disposal_year=disposal_year,
+                disposal_regime=_parse_disposal_regime(disposal_regime) if disposal_regime is not None else None,
+            )
+        )
+    except BienInversionDisposalIncompleteError as exc:
+        raise bad(
+            tr(
+                "cli.app.ledger.bienes_inversion.disposal_requires_both",
+                default="--disposal-year and --disposal-regime must be supplied together.",
+            ),
+        ) from exc
+    record = outcome.record
+    register = outcome.updated_register
     payload = BienesInversionDeclareResult(
         bucket_id=bucket_id,
         record=_record_payload(record),

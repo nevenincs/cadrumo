@@ -23,7 +23,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
-from typing import ClassVar
+from typing import ClassVar, Final
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage.errors import (
@@ -977,4 +977,47 @@ def _invoice_provenance(invoice: Invoice, observation: InvoiceObservation) -> Ca
     )
 
 
-__all__ = ["InvoiceCatalogueSourceResolver", "invoice_direction_to_source_kind"]
+#: The forward reading of the same clave<->category relationship the inverse
+#: map above expresses: what IVA treatment an operator has stated by choosing a
+#: Modelo 349 clave. It lives beside its inverse deliberately. The two were
+#: declared in different layers, agreeing only because both were maintained by
+#: hand, and a clave added to one would have been invisible to the other.
+#:
+#: ``T`` appears here but not in the inverse map, and that asymmetry is real
+#: rather than an omission: triangulation is filed from either side of the
+#: operation, so it carries no kind and the kind-keyed inverse cannot express
+#: it. It is special-cased ahead of that lookup instead.
+_IVA_CATEGORY_BY_OPERATION_TYPE: Final[dict[IntracomOperationType, IvaCategory]] = {
+    IntracomOperationType.E: IvaCategory.INTRA_COMMUNITY_SUPPLY,
+    IntracomOperationType.A: IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+    IntracomOperationType.T: IvaCategory.INTRA_COMMUNITY_TRIANGULATION,
+    # Goods and services stay separate: a service declared under E would be
+    # filed as an entrega de bienes. A service is no sujeta by the art. 69
+    # localisation rule, where an entrega de bienes is exempt under art. 25.
+    IntracomOperationType.S: IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY,
+    IntracomOperationType.ADQUISICION_SERVICIOS: IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+}
+
+
+def iva_category_for_operation_type(operation_type: IntracomOperationType | None) -> IvaCategory | None:
+    """Return the IVA treatment an operator stated by choosing a 349 clave.
+
+    Args:
+        operation_type: The clave the operator selected, if any.
+
+    Returns:
+        The category that clave declares, or ``None`` when no clave was chosen.
+        A clave outside the invoice-sourced set also yields ``None`` rather than
+        a guess: the claves reporting call-off stock movements carry no invoice,
+        so no category can be inferred from them.
+    """
+    if operation_type is None:
+        return None
+    return _IVA_CATEGORY_BY_OPERATION_TYPE.get(operation_type)
+
+
+__all__ = [
+    "InvoiceCatalogueSourceResolver",
+    "invoice_direction_to_source_kind",
+    "iva_category_for_operation_type",
+]

@@ -8,11 +8,8 @@ from __future__ import annotations
 
 import typer
 
-from ...application.ledger.ratios import RatiosCensoOverrideWarning
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
-from ...core.time.clock import now
-from ...domain.buckets.event import BucketEventType
 from ...domain.categories.spending_category import SpendingCategory
 from ._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ._common import active_bucket_id_or_refuse as _ratios_bucket_id
@@ -26,69 +23,6 @@ def _ratios_bucket_and_profile() -> tuple[str, str | None]:
     from ...core.bucket_pointer import resolve_active_bucket_id
 
     return _ratios_bucket_id(), resolve_active_bucket_id()
-
-
-def _emit_ratios_event(
-    *,
-    bucket_id: str,
-    event_type: BucketEventType,
-    category: str,
-    prior: object,
-    new: object,
-) -> None:
-    """Append a ratios mutation event to the bucket-event-history catalogue."""
-    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-    from ...domain.buckets.event import BucketEventObjectType
-    from ...domain.buckets.event_repository import emit_bucket_event
-
-    occurred_at = now()
-    payload = {
-        "category": category,
-        "prior": "" if prior is None else str(prior),
-        "new": "" if new is None else str(new),
-    }
-    actor = "operator"
-    emit_bucket_event(
-        repository=BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id)),
-        bucket_id=bucket_id,
-        event_type=event_type,
-        occurred_at=occurred_at,
-        actor=actor,
-        object_type=BucketEventObjectType.PROFILE,
-        object_id=category,
-        payload=payload,
-        payload_version=1,
-    )
-
-
-def _emit_ratios_censo_override_warning(
-    *,
-    bucket_id: str,
-    warning: RatiosCensoOverrideWarning,
-) -> None:
-    """Append LEDGER_RATIOS_CENSO_OVERRIDE_WARNING to the bucket catalogue."""
-    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-    from ...domain.buckets.event import BucketEventObjectType
-    from ...domain.buckets.event_repository import emit_bucket_event
-
-    emit_bucket_event(
-        repository=BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id)),
-        bucket_id=bucket_id,
-        event_type=BucketEventType.LEDGER_RATIOS_CENSO_OVERRIDE_WARNING,
-        occurred_at=now(),
-        actor="operator",
-        object_type=BucketEventObjectType.PROFILE,
-        object_id=warning.category.value,
-        payload={
-            "category": warning.category.value,
-            "override_ratio": str(warning.override_ratio),
-            "censo_derived_ratio": str(warning.censo_derived_ratio),
-            "raw_afectacion_ratio": str(warning.raw_afectacion_ratio),
-        },
-        payload_version=1,
-    )
 
 
 def _resolved_ratio_year(year: int | None) -> int:
@@ -163,35 +97,25 @@ def ratios_set(
 ) -> None:
     """Set or replace one per-category usage-ratio override on the active bucket."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ...application.ledger.ratios import censo_override_warning, set_usage_ratio
+    from ...application.ledger.ratios import apply_usage_ratio_override
     from ...application.user_profile.censo_sync import CensoSyncService
     from ._ledger_payloads import RatiosSetResult
 
     parsed = parse_decimal_amount(ratio, label="ratio")
     bucket_id, profile_id = _ratios_bucket_and_profile()
-    prior = set_usage_ratio(bucket_id=bucket_id, category=category, ratio=parsed)
-    _emit_ratios_event(
-        bucket_id=bucket_id,
-        event_type=BucketEventType.LEDGER_RATIOS_SET,
-        category=category.value,
-        prior=prior,
-        new=parsed,
+    raw_afectacion = (
+        CensoSyncService(bucket_id=bucket_id).bound_raw_afectacion_ratio(profile_id=profile_id)
+        if profile_id is not None
+        else None
     )
-    if profile_id is not None:
-        sync_service = CensoSyncService(bucket_id=bucket_id)
-        raw_afectacion = sync_service.bound_raw_afectacion_ratio(profile_id=profile_id)
-        warning = (
-            censo_override_warning(
-                category=category,
-                override_ratio=parsed,
-                raw_afectacion_ratio=raw_afectacion,
-                year=_resolved_ratio_year(year),
-            )
-            if raw_afectacion is not None
-            else None
-        )
-        if warning is not None:
-            _emit_ratios_censo_override_warning(bucket_id=bucket_id, warning=warning)
+    apply_usage_ratio_override(
+        bucket_id=bucket_id,
+        category=category,
+        ratio=parsed,
+        year=_resolved_ratio_year(year),
+        profile_id=profile_id,
+        raw_afectacion_ratio=raw_afectacion,
+    )
     emit_envelope(
         ctx,
         command="ledger.ratios.set",
@@ -207,13 +131,13 @@ def ratios_unset(
 ) -> None:
     """Clear one per-category usage-ratio override from the active bucket."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ...application.ledger.ratios import unset_usage_ratio
+    from ...application.ledger.ratios import clear_usage_ratio_override
     from ...domain.usage_ratios.errors import UsageRatioValidationError
     from ._ledger_payloads import RatiosUnsetResult
 
     bucket_id = _ratios_bucket_id()
     try:
-        prior = unset_usage_ratio(bucket_id=bucket_id, category=category)
+        clear_usage_ratio_override(bucket_id=bucket_id, category=category)
     except UsageRatioValidationError as exc:
         raise bad(
             tr(
@@ -222,13 +146,6 @@ def ratios_unset(
                 bucket_id=bucket_id,
             ),
         ) from exc
-    _emit_ratios_event(
-        bucket_id=bucket_id,
-        event_type=BucketEventType.LEDGER_RATIOS_UNSET,
-        category=category.value,
-        prior=prior,
-        new=None,
-    )
     emit_envelope(
         ctx,
         command="ledger.ratios.unset",

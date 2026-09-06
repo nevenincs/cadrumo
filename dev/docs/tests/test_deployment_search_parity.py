@@ -65,7 +65,7 @@ from ...deploy.docs_static_site import (
     _site_build_environment,
 )
 from ..build import docs_build_language, resolve_record_injector
-from ..pagefind_index import build_search_index
+from ..pagefind_index import DECIDED_INJECTED_RECORD_KINDS, build_search_index
 from ..pagefind_inject import InjectionStats
 from ._http_serve_support import serve_directory
 
@@ -79,11 +79,12 @@ _PAGEFIND_YML = _REPO_ROOT / "docs" / "pagefind.yml"
 #: Record kinds the shipped index is required to carry. A kind absent from the
 #: built index means a reader cannot reach that surface at all.
 #:
-#: This set mirrors ``pagefind_index.DECIDED_INJECTED_RECORD_KINDS`` and is the
-#: deployment contract's inventory. It must grow with the emitted projection;
-#: LEGAL now travels through the generated legal-reference projection and must
-#: remain covered here as well.
-_DECIDED_RECORD_KINDS = frozenset({"concept", "casilla", "legal", "cli"})
+#: Read from the authority rather than mirrored beside it. The owning module
+#: is documented to GROW -- "when a new injector ships, add its kind here in
+#: the same change" -- and a copy kept here would not grow with it, leaving
+#: this deployment contract asserting the older, smaller inventory while the
+#: new kind travelled unverified. Every other consumer already imports it.
+_DECIDED_RECORD_KINDS = DECIDED_INJECTED_RECORD_KINDS
 
 #: Real records per kind for the bounded injection (see the module docstring).
 _SAMPLE_PER_KIND = 4

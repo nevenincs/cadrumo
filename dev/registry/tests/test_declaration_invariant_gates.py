@@ -28,6 +28,7 @@ what makes it evidence.
 
 from __future__ import annotations
 
+import ast
 import collections
 import pathlib
 from collections.abc import Iterable
@@ -679,6 +680,29 @@ def test_no_modelo_leaves_a_year_inside_its_span_unserved(
     assert not gapped, f"years inside a modelo's own span that no revision serves: {gapped}"
 
 
+def _statements_beyond_a_docstring(tree: ast.Module) -> list[str]:
+    """Return the node type name of every top-level statement that is not a docstring.
+
+    This predicate decides what ``inert`` means for a package initialiser,
+    and it was written out twice: once in the gate below and once again in
+    the case that proves the gate has teeth. Two copies agree until one of
+    them is edited, and the copy the teeth case held was the one that would
+    go on passing -- it never called the gate, so it could only ever attest
+    to itself. One owner means the proof and its subject cannot drift apart.
+
+    A bare constant expression counts as inert. That is wider than
+    ``docstring`` in the strict sense -- a second bare string, or a lone
+    number, also passes -- but none of those exports a name, forwards an
+    import, or runs a side effect, which is what the architecture rule
+    forbids.
+    """
+    return [
+        type(node).__name__
+        for node in tree.body
+        if not (isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant))
+    ]
+
+
 def test_every_package_initialiser_in_the_development_registry_tree_is_inert() -> None:
     """A package initialiser here declares a namespace and nothing else.
 
@@ -701,12 +725,7 @@ def test_every_package_initialiser_in_the_development_registry_tree_is_inert() -
     checked = 0
     for path in sorted(root.rglob("__init__.py")):
         checked += 1
-        tree = ast.parse(path.read_text(encoding=_UTF_8))
-        offending = [
-            type(node).__name__
-            for node in tree.body
-            if not (isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant))
-        ]
+        offending = _statements_beyond_a_docstring(ast.parse(path.read_text(encoding=_UTF_8)))
         if offending:
             offenders[str(path.relative_to(root))] = offending
 
@@ -724,18 +743,13 @@ def test_the_inert_initialiser_gate_detects_a_re_export() -> None:
     import ast
 
     facade = '"""A package."""\n\nfrom .thing import Thing\n\n__all__ = ["Thing"]\n'
-    tree = ast.parse(facade)
-    offending = [
-        type(node).__name__
-        for node in tree.body
-        if not (isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant))
-    ]
-    assert offending == ["ImportFrom", "Assign"], offending
+    inert = '"""A package."""\n'
 
-    inert = ast.parse('"""A package."""\n')
-    assert not [
-        node for node in inert.body if not (isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant))
+    assert _statements_beyond_a_docstring(ast.parse(facade)) == [
+        "ImportFrom",
+        "Assign",
     ]
+    assert _statements_beyond_a_docstring(ast.parse(inert)) == []
 
 
 _VAULT_CITATION_PATTERNS: tuple[tuple[str, str], ...] = (

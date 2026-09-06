@@ -34,6 +34,7 @@ See Also:
 
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import Never, Self, override
 
 from pydantic import BaseModel, Field, model_serializer, model_validator
@@ -46,6 +47,8 @@ from .preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 
 __all__ = [
     "EvidenceConsentToken",
+    "OffHostEvidenceReadOutcome",
+    "classify_off_host_evidence_read",
     "cloud_evidence_read_permitted",
     "mint_evidence_consent_token",
     "provider_reads_off_host",
@@ -63,6 +66,72 @@ def provider_reads_off_host(provider: LLMProvider) -> bool:
     that the newest transport is the one missing from it.
     """
     return provider is not LLMProvider.LOCAL
+
+
+class OffHostEvidenceReadOutcome(StrEnum):
+    """What an operator's provider-and-acknowledgement pair asks for.
+
+    Every answer a surface can get, including the two that proceed, so a caller
+    handles the refusals rather than falling through them.
+    """
+
+    #: Neither half supplied: the on-host default, and no token.
+    ON_HOST_DEFAULT = "on_host_default"
+    #: Both halves supplied against an off-host provider: mint a token.
+    OFF_HOST_CONSENTED = "off_host_consented"
+    #: An acknowledgement was taken but no provider named.
+    ACKNOWLEDGEMENT_WITHOUT_PROVIDER = "acknowledgement_without_provider"
+    #: A provider that never leaves this host was named for an off-host read.
+    PROVIDER_READS_ON_HOST = "provider_reads_on_host"
+    #: An off-host provider was named with no acknowledgement of the read.
+    PROVIDER_WITHOUT_ACKNOWLEDGEMENT = "provider_without_acknowledgement"
+
+
+def classify_off_host_evidence_read(
+    *,
+    provider: LLMProvider | None,
+    acknowledged: bool,
+) -> OffHostEvidenceReadOutcome:
+    """Decide whether an operator has asked for a well-formed off-host read.
+
+    The two halves are required TOGETHER. A provider without the
+    acknowledgement would send a taxpayer's document off-host on an input that
+    does not say so; an acknowledgement without a provider takes a consent and
+    then changes nothing, which is worse than not asking because it trains an
+    operator to believe the prompt is meaningless.
+
+    Naming an on-host provider is refused for that second reason. The
+    dispatch-point gate only inspects a token when
+    :func:`provider_reads_off_host` is true, so a token minted against a local
+    provider is silently ignored -- the acknowledgement is taken, recorded
+    against a surface, and covers a read that never leaves the host.
+
+    This lives beside :func:`mint_evidence_consent_token` rather than in the
+    surface that asks, because the minting path never sees the provider: it
+    cannot itself refuse a token bound to an on-host read, and a second
+    frontend re-deciding the pairing would be re-deciding it from scratch.
+
+    Args:
+        provider: The provider the operator named, or ``None``.
+        acknowledged: Whether the operator acknowledged this specific read.
+
+    Returns:
+        The outcome. Only :attr:`OffHostEvidenceReadOutcome.OFF_HOST_CONSENTED`
+        should proceed to mint a token; only
+        :attr:`OffHostEvidenceReadOutcome.ON_HOST_DEFAULT` should proceed
+        without one.
+    """
+    if provider is None:
+        if acknowledged:
+            return OffHostEvidenceReadOutcome.ACKNOWLEDGEMENT_WITHOUT_PROVIDER
+        return OffHostEvidenceReadOutcome.ON_HOST_DEFAULT
+    # Asked through the predicate the dispatch gate itself uses, so a second
+    # on-host transport added later is refused here without being listed.
+    if not provider_reads_off_host(provider):
+        return OffHostEvidenceReadOutcome.PROVIDER_READS_ON_HOST
+    if not acknowledged:
+        return OffHostEvidenceReadOutcome.PROVIDER_WITHOUT_ACKNOWLEDGEMENT
+    return OffHostEvidenceReadOutcome.OFF_HOST_CONSENTED
 
 
 def cloud_evidence_read_permitted(settings: Settings, *, profile_eligible: bool, acknowledged: bool) -> bool:

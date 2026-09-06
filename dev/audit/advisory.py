@@ -248,6 +248,12 @@ def build_advisory_report(repo_root: Path) -> tuple[AdvisoryDimension, ...]:
     Returns exactly the five dimensions `just audit-all` has always covered,
     in a fixed order: complexity, dead code, duplication, checkout drift,
     security.
+
+    Size budget is deliberately NOT here. It measures against flat defaults
+    with no baseline, so it cannot reach GREEN and cannot move a composed
+    verdict that is already RED -- a status-inert row costing a 90-second
+    scan. It is wired once its ratchet gives it a reachable GREEN; until then
+    `just audit-size-budget` is its honest surface, and that one exits 1.
     """
     return (
         _wrap(audit_complexity()),

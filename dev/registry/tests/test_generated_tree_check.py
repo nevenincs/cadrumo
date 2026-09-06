@@ -133,6 +133,13 @@ def _profile() -> ExportTreeTransportProfile:
 #: Floor for the parsed surface below. Live: 102 referenced names.
 _MINIMUM_CHECK_NAMES = 34
 
+#: Floor for the ATTRIBUTE surface of the same parse. The floor above counts
+#: ast.Name nodes and does not reach these: a module can hold plenty of names
+#: while its attribute set empties, and the forbidden entries most likely to
+#: return -- ``shutil.copytree``, ``path.read_text`` -- are ATTRIBUTES, so the
+#: unguarded claim was the load-bearing one. Live: 29 attribute names.
+_MINIMUM_CHECK_ATTRIBUTES = 10
+
 
 def test_check_regenerates_in_isolation_and_preserves_published_hashes(m130_inspection_snapshot, tmp_path) -> None:
     """A real candidate must match every current target member without target mutation."""
@@ -349,6 +356,11 @@ def test_check_module_has_no_migration_reader_or_publisher_surface() -> None:
         "this an absence claim proves nothing about the boundary it guards"
     )
     attribute_names = {node.attr for node in ast.walk(module) if isinstance(node, ast.Attribute)}
+    assert len(attribute_names) >= _MINIMUM_CHECK_ATTRIBUTES, (
+        f"the check API parsed to only {len(attribute_names)} attribute name(s); below "
+        "this the forbidden-attribute claim below holds because the parse reached no "
+        "attributes, not because the boundary is clean"
+    )
     imported_modules = {
         node.module for node in ast.walk(module) if isinstance(node, ast.ImportFrom) and node.module is not None
     }

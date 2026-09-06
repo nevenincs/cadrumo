@@ -1134,7 +1134,7 @@ tui:
       entry: '%{source}: %{availability}'
       joined: '%{entries}'
     value:
-      none: —
+      none: '-'
       unobserved: Nem megfigyelt
     zone:
       census: Nyilvántartás
@@ -1306,7 +1306,7 @@ tui:
       context_across_records: Minden nyilvántartásra
       label: Javasolt teendő megnyitása
       reason: A helyi áttekintés javaslata
-    action_context: '%{label} — %{reason} · %{context}'
+    action_context: '%{label} - %{reason} · %{context}'
     address: Modelo %{modelo} · %{filing_year} · %{period}
     aeat_evidence: 'AEAT-bizonyíték: %{state}'
     aeat_state:
@@ -1314,15 +1314,15 @@ tui:
       justificante_verified: AEAT-igazolás ellenőrizve
       not_observed: az AEAT-nál nem megfigyelt
       submitted_observed: benyújtás megfigyelve az AEAT-nál
-    agenda_evidence_row: '%{address} — %{evidence}'
+    agenda_evidence_row: '%{address} - %{evidence}'
     availability:
       available: Elérhető
-      available_empty: '%{label} — %{detail}'
-      locked: Zárolva — oldd fel a kiválasztott profilt az adatok megtekintéséhez
+      available_empty: '%{label} - %{detail}'
+      locked: Zárolva - oldd fel a kiválasztott profilt az adatok megtekintéséhez
       never_captured: Még nincs rögzítve
-      stale: Elavult — a legutóbbi helyi pillanatkép frissítést igényel
+      stale: Elavult - a legutóbbi helyi pillanatkép frissítést igényel
       stale_observed: '%{label}; utolsó megfigyelés: %{observed_at}'
-      unavailable: Nem elérhető — ez a forrás nem olvasható a jelenlegi munkamenetben
+      unavailable: Nem elérhető - ez a forrás nem olvasható a jelenlegi munkamenetben
     declaration_state:
       discarded: Elvetve
       draft: Piszkozat
@@ -1340,13 +1340,13 @@ tui:
       declarations: Bevallások
       ledger: Főkönyv készültsége
       messages: Üzenetek
-    ledger_summary: Elérhető — %{entries} tétel; %{requiring_review} ellenőrzésre
+    ledger_summary: Elérhető - %{entries} tétel; %{requiring_review} ellenőrzésre
       vár; %{unclassified} besorolatlan; %{missing_evidence} hiányzó bizonylat
     local_state:
       external_baseline_imported: külső benyújtási alap helyben tárolva
       not_ready_to_file: helyben még nem kész
       ready_to_file: helyben kész
-    messages_summary: Elérhető — %{count} igényel figyelmet
+    messages_summary: Elérhető - %{count} igényel figyelmet
     period_state:
       due: Esedékes
       filed: Benyújtva

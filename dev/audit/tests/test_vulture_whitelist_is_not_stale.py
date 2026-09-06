@@ -138,6 +138,16 @@ def test_a_parameter_removed_at_its_source_is_detected() -> None:
     assert stale == ["retired_parameter"]
 
 
+#: Floor for the mirrors the whitelist file defines. Live it carries six
+#: top-level functions and nothing else; the sibling citation gate floors
+#: its own table at five. Both claims below range over a parsed file and a
+#: fixture that an emptied whitelist would leave empty: no class is present
+#: in a file with nothing in it, and ``all`` over no names is True. The other
+#: tests here guard the fixture, but a guard in a sibling test does not reach
+#: this one, and nothing anywhere floors the PARSED surface.
+_MINIMUM_MIRROR_DEFINITIONS = 4
+
+
 def test_the_whitelist_holds_only_parameter_mirrors(declared: dict[str, tuple[str, ...]]) -> None:
     """Every entry is a parameter exemption, not a suppressed function or class.
 
@@ -148,6 +158,12 @@ def test_the_whitelist_holds_only_parameter_mirrors(declared: dict[str, tuple[st
     """
     source = pathlib.Path(vulture_whitelist.__file__).read_text(encoding="utf-8")
     tree = ast.parse(source)
+    mirrors = [node for node in tree.body if isinstance(node, ast.FunctionDef)]
 
+    assert len(mirrors) >= _MINIMUM_MIRROR_DEFINITIONS, (
+        f"the whitelist defines only {len(mirrors)} mirror(s); below this the absence "
+        "claim below holds because the file defines nothing, not because it defines no class"
+    )
+    assert declared, "the parsed whitelist declared no parameters, so the public-name claim below ranges over nothing"
     assert not [node for node in tree.body if isinstance(node, ast.ClassDef)]
     assert all(name.startswith("_") for name in declared), "a mirror is exported under a public name"

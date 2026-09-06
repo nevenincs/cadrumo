@@ -37,7 +37,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, Literal
 
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ..storage.errors import OutboundStorageConflictError, OutboundStorageError, OutboundStorageValidationError
@@ -49,7 +49,7 @@ if TYPE_CHECKING:
     from googleapiclient._apis.drive.v3.schemas import File
 
 OWNERSHIP_KEY: Final[str] = "cadrumo_vault_app"
-OWNERSHIP_VALUE: Final[str] = "cadrumo"
+OWNERSHIP_VALUE: Final[Literal["cadrumo"]] = "cadrumo"
 
 
 class DriveEntryPreconditionCondition(StrEnum):

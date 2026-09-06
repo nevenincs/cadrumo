@@ -6,7 +6,7 @@ wraps a full-tree semgrep scan that alone takes minutes -- too slow for the
 routine `dev/audit/tests` lane's per-test ceiling -- so its real-subprocess
 path is covered by ``test_security_scan.py`` (scoped to a small subtree) plus
 the fast unit coverage in ``test_advisory_report.py`` for the mapping logic;
-``build_advisory_report``'s full five-dimension composition was verified
+``build_advisory_report``'s full six-dimension composition was verified
 manually end-to-end (47-line dashboard, persisted summary.json/summary.md/
 security-findings.json, all inspected) rather than carried as an automated
 test that would routinely time out this lane.

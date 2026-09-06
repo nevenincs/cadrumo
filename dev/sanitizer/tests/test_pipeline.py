@@ -218,11 +218,19 @@ class TestSourceParseErrorHygiene:
             assert exc_info.value.__cause__ is None, case_id
             assert exc_info.value.__context__ is None, case_id
 
-            log_text = "\n".join(record.getMessage() for record in caplog.records)
+            # A handler renders a record through a Formatter, not through
+            # ``getMessage()``: ``exc_info`` carries the parser traceback - and
+            # the unredacted source path inside it - past a message-only window.
+            formatter = logging.Formatter()
+            log_text = "\n".join(formatter.format(record) for record in caplog.records)
             for fragment in forbidden_fragments:
                 assert fragment not in log_text, case_id
             assert "source=<input-pdf>" in log_text, case_id
             assert f"failure={failure}" in log_text, case_id
+            # Pin the whole log surface, mirroring the exact ``rendered`` pin
+            # above: a fragment scan cannot see a traceback appended by a
+            # future ``exc_info=`` on the debug call.
+            assert log_text == f"sanitize_pdf: source=<input-pdf> failure={failure}", case_id
 
 
 class TestRefuseIfSigned:

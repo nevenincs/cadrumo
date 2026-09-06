@@ -462,7 +462,6 @@ def _declarations_workspace_registrations() -> tuple[FStringKeyRegistration, ...
     from cadrumo.domain.deadlines.models import ObligationStatus
     from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
     from cadrumo.domain.modelos.work_unit import WorkUnitState
-
     from cadrumo.entrypoints.tui.declarations.models import DeclarationsCalendarScopeV1
 
     def _values(enum: type[Enum]) -> tuple[str, ...]:

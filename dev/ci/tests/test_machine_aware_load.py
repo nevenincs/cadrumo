@@ -22,7 +22,13 @@ import yaml
 
 from ..._paths import REPO_ROOT
 from ...packaging._command import run_command
-from ..lane_reachability import Lane, declared_lanes, expression_selects, marker_sets_in
+from ..lane_reachability import (
+    _JUST_CALL,
+    Lane,
+    declared_lanes,
+    expression_selects,
+    marker_sets_in,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -41,9 +47,6 @@ _RECIPE_PARAM: Final = re.compile(r"[a-zA-Z_]\w*(?:\s*=\s*(?:\"[^\"]*\"|'[^']*')
 _ENV_BACKED_VARIABLE: Final = re.compile(
     r'^(?P<name>[a-z_]\w*)\s*:=\s*env_var_or_default\(\s*"(?P<env>[A-Z_]\w*)"',
 )
-# A workflow `run:` line delegating to a justfile recipe, e.g.
-# `CADRUMO_PYTEST_WORKERS=8 just test-unit 50`.
-_JUST_CALL: Final = re.compile(r"\bjust\s+(?P<recipe>[a-z][\w-]*)")
 _TEMPLATE_REF: Final = re.compile(r"\{\{\s*(?P<name>[a-zA-Z_]\w*)\s*\}\}")
 
 

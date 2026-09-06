@@ -331,6 +331,136 @@ def _flow_confirmed_class_attribute_keys(tree: ast.AST, wrappers: frozenset[str]
     return findings
 
 
+def _flow_confirmed_local_key_names(tree: ast.AST, wrappers: frozenset[str] = frozenset()) -> set[str]:
+    """Return dotted literals held in a local that is then translated.
+
+    A surface that picks between two labels names the choice before rendering
+    it::
+
+        status_key = "tui.ledger.evidence.pending" if row.pending_review else "tui.ledger.evidence.reviewed"
+        table.add_row(..., ledger_copy(status_key))
+
+    The call site passes a NAME, so the literal resolver saw no key there, and
+    the value is a bare scalar rather than a registry, so the constant and
+    collection rules had nothing to match either. Both branches were invisible.
+
+    The candidate value is deliberately narrow -- a string constant or a
+    conditional between them, nothing else. A local bound to a dict, a call, or
+    a subscript is already the business of the registry and row-table rules,
+    and widening this to any expression would let it claim their shapes
+    without their confirmation.
+
+    Shape alone still does not collect: a dotted literal in a local is as
+    likely to be a route or a lookup token as copy, so the NAME must reach a
+    translator, which is the same bargain every other shape here strikes.
+    """
+    candidates: dict[str, set[str]] = {}
+    for node in ast.walk(tree):
+        target: ast.expr | None = None
+        value: ast.expr | None = None
+        if isinstance(node, ast.Assign) and len(node.targets) == 1:
+            target, value = node.targets[0], node.value
+        elif isinstance(node, ast.AnnAssign):
+            target, value = node.target, node.value
+        if not isinstance(target, ast.Name) or value is None:
+            continue
+        if not isinstance(value, ast.Constant | ast.IfExp):
+            continue
+        literals: set[str] = set()
+        _collect_dotted_literals(value, literals)
+        if literals:
+            candidates.setdefault(target.id, set()).update(literals)
+    if not candidates:
+        return set()
+
+    tr_names = _translation_call_names(tree) | wrappers
+    findings: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        for argument in _call_site_key_argument_exprs(node, tr_names):
+            if isinstance(argument, ast.Name) and argument.id in candidates:
+                findings |= candidates[argument.id]
+    return findings
+
+
+def _key_factory_returns(tree: ast.AST) -> dict[str, set[str]]:
+    """Return ``function name -> the dotted keys every one of its returns yields``.
+
+    A refusal that must name its own reason writes the choice as a function
+    rather than at the call site::
+
+        def session_refusal_translation_key(refusal):
+            return (
+                "cli.config.errors.profile_session_absent"
+                if refusal in _LOGGED_OUT_REFUSALS
+                else "cli.config.errors.profile_session_expired"
+            )
+
+    and the caller does ``key = session_refusal_translation_key(refusal)`` before
+    passing ``key`` on. The local rule declines that deliberately -- its
+    candidate value must be a key EXPRESSION, and a call is not one -- so both
+    literals were invisible.
+
+    A function qualifies only when EVERY return it makes is a key expression: a
+    string constant, or a conditional between them. One return of anything else
+    -- a computed name, a lookup, a formatted string -- and the function is not
+    a key factory and none of its literals count. That is what keeps this from
+    becoming "any function that mentions a dotted string".
+    """
+    factories: dict[str, set[str]] = {}
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+            continue
+        returns = [child for child in ast.walk(node) if isinstance(child, ast.Return)]
+        if not returns:
+            continue
+        literals: set[str] = set()
+        for statement in returns:
+            if not isinstance(statement.value, ast.Constant | ast.IfExp):
+                literals.clear()
+                break
+            found: set[str] = set()
+            _collect_dotted_literals(statement.value, found)
+            if not found:
+                literals.clear()
+                break
+            literals |= found
+        if literals:
+            factories[node.name] = literals
+    return factories
+
+
+def _flow_confirmed_key_factory_keys(tree: ast.AST, wrappers: frozenset[str] = frozenset()) -> set[str]:
+    """Return key-factory literals whose call result reaches a translator."""
+    factories = _key_factory_returns(tree)
+    if not factories:
+        return set()
+    bound: dict[str, set[str]] = {}
+    for node in ast.walk(tree):
+        target: ast.expr | None = None
+        value: ast.expr | None = None
+        if isinstance(node, ast.Assign) and len(node.targets) == 1:
+            target, value = node.targets[0], node.value
+        elif isinstance(node, ast.AnnAssign):
+            target, value = node.target, node.value
+        if not isinstance(target, ast.Name) or not isinstance(value, ast.Call):
+            continue
+        name = _callee_name(value.func)
+        if name in factories:
+            bound.setdefault(target.id, set()).update(factories[name])
+
+    tr_names = _translation_call_names(tree) | wrappers
+    findings: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        for argument in _call_site_key_argument_exprs(node, tr_names):
+            if isinstance(argument, ast.Name) and argument.id in bound:
+                findings |= bound[argument.id]
+    return findings
+
+
 def _extract_locale_constant_keys(tree: ast.AST, wrappers: frozenset[str] = frozenset()) -> set[str]:
     """Find dotted locale keys declared in explicit locale-key constants.
 
@@ -348,9 +478,16 @@ def _extract_locale_constant_keys(tree: ast.AST, wrappers: frozenset[str] = froz
     from being misread as a locale-key declaration.
     """
     findings: set[str] = _flow_confirmed_class_attribute_keys(tree, wrappers)
+    findings |= _flow_confirmed_local_key_names(tree, wrappers)
+    findings |= _flow_confirmed_key_factory_keys(tree, wrappers)
     flow_confirmed = _flow_confirmed_locale_key_dicts(tree, wrappers) | _flow_confirmed_locale_key_row_tables(
         tree, wrappers
     )
+    for name, value in flow_confirmed.items():
+        # A table written inline has no assignment for the walk below to match
+        # against, so its keys are taken from the confirmed expression itself.
+        if name.startswith(_ANONYMOUS_TABLE):
+            _collect_declared_locale_keys(value, findings)
     for node in ast.walk(tree):
         if isinstance(node, ast.Assign):
             named = any(_declares_locale_key_constant(target) for target in node.targets)
@@ -583,10 +720,12 @@ def _literal_row_grid(node: ast.expr | None) -> list[list[str | None]] | None:
     for element in node.elts:
         if not isinstance(element, ast.Tuple | ast.List) or not element.elts:
             return None
-        rows.append([
-            item.value if isinstance(item, ast.Constant) and isinstance(item.value, str) else None
-            for item in element.elts
-        ])
+        rows.append(
+            [
+                item.value if isinstance(item, ast.Constant) and isinstance(item.value, str) else None
+                for item in element.elts
+            ]
+        )
     width = len(rows[0])
     if any(len(row) != width for row in rows):
         return None
@@ -665,48 +804,122 @@ def _row_table_names_iterated_into_a_sink(
     string tuples that never reaches the translator.
     """
     tr_names = _translation_call_names(tree) | wrappers
+    # The alias pass runs FIRST because it registers inline tables into
+    # `candidates`, and a key-column map built before that would not carry them.
+    aliases = _parameters_bound_to_a_candidate_table(tree, candidates)
     key_columns = {name: _row_table_key_columns(value) for name, value in candidates.items()}
-    bound_to_table: dict[str, str] = {}
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.For | ast.AsyncFor):
-            continue
-        table = _iterated_candidate_name(node.iter, candidates)
-        if table is None:
-            continue
-        columns = key_columns[table]
-        if isinstance(node.target, ast.Name):
-            # A whole-row binding cannot say which column reaches the sink, so
-            # it stays confirmable as before.
-            bound_to_table[node.target.id] = table
-            continue
-        # Unpacked: only the KEY column binding confirms. A name bound to a
-        # prose column reaching a sink is the framework passing its English
-        # source string, which says nothing about whether the table holds keys.
-        for index, target in enumerate(getattr(node.target, "elts", [])):
-            if isinstance(target, ast.Name) and index in columns:
-                bound_to_table[target.id] = table
+    bound_to_table: dict[str, set[str]] = {}
+    for node in _iteration_bindings(tree):
+        for table in _iterated_candidate_tables(node.iter, candidates, aliases):
+            columns = key_columns[table]
+            if isinstance(node.target, ast.Name):
+                # A whole-row binding cannot say which column reaches the sink,
+                # so it stays confirmable as before.
+                bound_to_table.setdefault(node.target.id, set()).add(table)
+                continue
+            # Unpacked: only the KEY column binding confirms. A name bound to a
+            # prose column reaching a sink is the framework passing its English
+            # source string, which says nothing about whether the table holds
+            # keys.
+            for index, target in enumerate(getattr(node.target, "elts", [])):
+                if isinstance(target, ast.Name) and index in columns:
+                    bound_to_table.setdefault(target.id, set()).add(table)
     confirmed: set[str] = set()
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
             continue
         for argument in _call_site_key_argument_exprs(node, tr_names):
             if isinstance(argument, ast.Name) and argument.id in bound_to_table:
-                confirmed.add(bound_to_table[argument.id])
+                confirmed |= bound_to_table[argument.id]
                 continue
             # `for column in TABLE: tr(column[1])` -- the row is bound whole and
             # the key taken by index. The index must BE a key column: a prose
             # sibling reaching the sink says nothing about the table, exactly as
             # it does not when the row is unpacked.
-            subscripted = _row_subscript_source(argument, bound_to_table)
-            if subscripted is None:
-                continue
-            table, index = subscripted
-            if index in key_columns[table]:
-                confirmed.add(table)
+            for table, index in _row_subscript_sources(argument, bound_to_table):
+                if index in key_columns[table]:
+                    confirmed.add(table)
     return frozenset(confirmed)
 
 
-def _iterated_candidate_name(node: ast.expr, candidates: dict[str, ast.expr]) -> str | None:
+#: Prefix for a row table written inline at a call site, which has no name of
+#: its own to be registered under. Not a valid Python identifier, so it can
+#: never collide with a real assignment target.
+_ANONYMOUS_TABLE: Final[str] = "<inline row table>#"
+
+
+def _iteration_bindings(tree: ast.AST) -> Iterator[ast.For | ast.AsyncFor | ast.comprehension]:
+    """Yield every construct that binds names by iterating something.
+
+    A ``for`` statement and a comprehension's generator bind identically, and
+    reading only the statement form missed the table iterated inside a
+    generator expression -- which is how the widest screen sizes its columns.
+    """
+    for node in ast.walk(tree):
+        if isinstance(node, ast.For | ast.AsyncFor):
+            yield node
+        elif isinstance(node, ast.ListComp | ast.SetComp | ast.DictComp | ast.GeneratorExp):
+            yield from node.generators
+
+
+def _parameters_bound_to_a_candidate_table(tree: ast.AST, candidates: dict[str, ast.expr]) -> dict[str, frozenset[str]]:
+    """Map a local function's parameter name to the candidate table passed into it.
+
+    A screen shares its column-fitting rule rather than repeating it, so the
+    table is not iterated where it is declared -- it is handed to a helper::
+
+        _fit_columns(self.app.size.width, self._COLUMNS, self._VALUE_COLUMNS)
+
+    Inside that helper the parameter is iterated and its rows translated, but
+    the confirmation walk saw only a parameter name and could not tell it was
+    this table. One hop is enough here because the analysis is name-based
+    within the module, so a row bound in the helper is already followed into
+    the nested function it is handed to.
+
+    A parameter filled by SEVERAL tables confirms all of them, and that is
+    not a guess: one shared helper is called by every screen with its own
+    columns, so if the parameter's rows reach a translator then every table
+    handed to it is translated. Dropping the name as ambiguous would fail the
+    common case for being common.
+    """
+    parameters: dict[str, ast.arguments] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+            parameters[node.name] = node.args
+    seen: dict[str, set[str]] = {}
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        signature = parameters.get(_callee_name(node.func) or "")
+        if signature is None:
+            continue
+        positional = [*signature.posonlyargs, *signature.args]
+        for index, argument in enumerate(node.args):
+            if index >= len(positional):
+                break
+            tables = _iterated_candidate_tables(argument, candidates)
+            if not tables and _is_locale_key_row_table_literal(argument):
+                # Written INLINE at the call site. One screen builds its column
+                # table in the argument list rather than binding it first, so
+                # there is no name to be a candidate under -- and a table with
+                # no name was invisible to every rule here, though it is the
+                # same table doing the same job as its named siblings.
+                #
+                # It is admitted on the same terms as a named one: registered
+                # under a synthetic name so the parameter alias and the key
+                # column discipline both apply unchanged, and confirmed only if
+                # that parameter's rows actually reach a translator.
+                synthetic = f"{_ANONYMOUS_TABLE}{len(candidates)}"
+                candidates[synthetic] = argument
+                tables = frozenset({synthetic})
+            if tables:
+                seen.setdefault(positional[index].arg, set()).update(tables)
+    return {name: frozenset(tables) for name, tables in seen.items()}
+
+
+def _iterated_candidate_tables(
+    node: ast.expr, candidates: dict[str, ast.expr], aliases: dict[str, frozenset[str]] | None = None
+) -> frozenset[str]:
     """Resolve the candidate table a ``for`` statement iterates.
 
     A screen holds its column table as a ``ClassVar`` and reads it back as
@@ -716,21 +929,23 @@ def _iterated_candidate_name(node: ast.expr, candidates: dict[str, ast.expr]) ->
     already in this module.
     """
     if isinstance(node, ast.Name) and node.id in candidates:
-        return node.id
+        return frozenset({node.id})
     if isinstance(node, ast.Attribute) and node.attr in candidates:
-        return node.attr
-    return None
+        return frozenset({node.attr})
+    if aliases is not None and isinstance(node, ast.Name):
+        return aliases.get(node.id, frozenset())
+    return frozenset()
 
 
-def _row_subscript_source(node: ast.expr, bound_to_table: dict[str, str]) -> tuple[str, int] | None:
-    """Return ``(table, index)`` when ``node`` indexes a bound whole row."""
+def _row_subscript_sources(node: ast.expr, bound_to_table: dict[str, set[str]]) -> list[tuple[str, int]]:
+    """Return ``(table, index)`` pairs when ``node`` indexes a bound whole row."""
     if not isinstance(node, ast.Subscript):
-        return None
+        return []
     if not (isinstance(node.value, ast.Name) and node.value.id in bound_to_table):
-        return None
+        return []
     if not (isinstance(node.slice, ast.Constant) and isinstance(node.slice.value, int)):
-        return None
-    return bound_to_table[node.value.id], node.slice.value
+        return []
+    return [(table, node.slice.value) for table in bound_to_table[node.value.id]]
 
 
 def _flow_confirmed_locale_key_row_tables(tree: ast.AST, wrappers: frozenset[str] = frozenset()) -> dict[str, ast.expr]:
@@ -1249,6 +1464,96 @@ def _translation_wrapper_names(modules: list[tuple[Path, ast.Module]]) -> frozen
         known |= discovered
 
 
+def _translated_value_names(
+    modules: list[tuple[Path, ast.Module]], wrappers: frozenset[str] = frozenset()
+) -> frozenset[str]:
+    """Return the names whose value is passed to a translator somewhere in the tree.
+
+    ``ledger_copy(choice.source_label_key)`` proves that whatever
+    ``source_label_key`` holds is copy. The proof lives in the SCREEN, while
+    the values it can hold are declared in the model module beside it, so this
+    is collected across the whole tree rather than per module.
+
+    A name, not a value: this says nothing about what any particular
+    ``source_label_key`` contains, only that a value reaching a translator is
+    what that name is for.
+
+    The sink set carries the boundary wrappers, because every screen renders
+    through one. Reading only ``tr`` found nothing here at all -- the third
+    time in this campaign that following the project's own boundary convention
+    is what made a key invisible.
+    """
+    names: set[str] = set()
+    for _module, tree in modules:
+        tr_names = _translation_call_names(tree) | wrappers
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            for argument in _call_site_key_argument_exprs(node, tr_names):
+                if isinstance(argument, ast.Attribute):
+                    names.add(argument.attr)
+                elif isinstance(argument, ast.Name):
+                    names.add(argument.id)
+    return frozenset(names)
+
+
+def _membership_guard_keys(tree: ast.AST, translated_names: frozenset[str]) -> set[str]:
+    """Return dotted literals a guard admits for a name that is then translated.
+
+    A boundary that will not render an arbitrary string states the keys it
+    accepts and refuses everything else::
+
+        _SAFE_SOURCE_KEYS = frozenset({"tui.ledger.import.source.prepared"})
+        ...
+        if source_label_key not in _SAFE_SOURCE_KEYS:
+            raise ...
+
+    The admitted value is later rendered by the screen as
+    ``ledger_copy(choice.source_label_key)``. Nothing in the module that
+    DECLARES the keys translates them, and nothing in the module that
+    translates them mentions a literal, so each half looked inert on its own.
+
+    The link is a membership test, not a naming convention: the guarded name
+    must be one this tree actually passes to a translator, and the container
+    must be a collection of dotted literals. A guard over some other name --
+    an allow-list of choice ids, say -- proves nothing about copy and is not
+    admitted.
+    """
+    if not translated_names:
+        return set()
+    containers: dict[str, set[str]] = {}
+    for node in ast.walk(tree):
+        target: ast.expr | None = None
+        value: ast.expr | None = None
+        if isinstance(node, ast.Assign) and len(node.targets) == 1:
+            target, value = node.targets[0], node.value
+        elif isinstance(node, ast.AnnAssign):
+            target, value = node.target, node.value
+        if not isinstance(target, ast.Name) or value is None:
+            continue
+        if not isinstance(value, ast.Set | ast.List | ast.Tuple | ast.Call):
+            continue
+        literals: set[str] = set()
+        _collect_dotted_literals(value, literals)
+        if literals:
+            containers[target.id] = literals
+
+    findings: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Compare):
+            continue
+        if not any(isinstance(operator, ast.In | ast.NotIn) for operator in node.ops):
+            continue
+        guarded = node.left
+        name = guarded.attr if isinstance(guarded, ast.Attribute) else getattr(guarded, "id", None)
+        if name not in translated_names:
+            continue
+        for comparator in node.comparators:
+            if isinstance(comparator, ast.Name) and comparator.id in containers:
+                findings |= containers[comparator.id]
+    return findings
+
+
 def _translation_key_parameter_positions(
     modules: list[tuple[Path, ast.Module]],
 ) -> dict[str, frozenset[int]]:
@@ -1324,9 +1629,11 @@ def scan_source_tree(root: Path) -> set[str]:
     modules = list(_iter_parseable_python_modules(root))
     key_positions = _translation_key_parameter_positions(modules)
     wrappers = _translation_wrapper_names(modules)
+    translated_names = _translated_value_names(modules, wrappers)
     findings: set[str] = set()
     for _module, tree in modules:
         findings.update(_extract_error_constructor_keys(tree, wrappers))
+        findings.update(_membership_guard_keys(tree, translated_names))
         findings.update(_extract_locale_constant_keys(tree, wrappers))
         findings.update(_extract_positional_translation_key_arguments(tree, key_positions))
     return findings

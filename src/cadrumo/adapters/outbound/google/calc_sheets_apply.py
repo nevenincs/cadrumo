@@ -91,18 +91,18 @@ from ._calc_sheets_apply_values import (
 from ._calc_sheets_apply_values import (
     coerce_cell_value as coerce_cell_value,
 )
-from ._drive_entries import (
+from ._preconditions import google_terminal_refusal
+from .api import execute_request
+from .drive_entries import (
     OWNERSHIP_KEY as _OWNERSHIP_KEY,
 )
-from ._drive_entries import (
+from .drive_entries import (
     OWNERSHIP_VALUE as _OWNERSHIP_VALUE,
 )
-from ._drive_entries import (
+from .drive_entries import (
     find_owned_drive_entry,
     require_drive_entry_id,
 )
-from ._preconditions import google_terminal_refusal
-from .api import execute_request
 
 _FOLDER_MIME: Final[str] = "application/vnd.google-apps.folder"
 _SPREADSHEET_MIME: Final[str] = "application/vnd.google-apps.spreadsheet"
@@ -279,7 +279,7 @@ def _find_folder(
     #
     # Ownership acceptance, marker backfill, foreign-content refusal,
     # query-name escaping, and entry-id validation are the shared policy in
-    # ``_drive_entries``; only the MIME type and the action/error text are
+    # ``drive_entries``; only the MIME type and the action/error text are
     # folder-specific.
     return find_owned_drive_entry(
         drive,

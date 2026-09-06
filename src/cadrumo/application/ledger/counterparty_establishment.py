@@ -80,8 +80,10 @@ __all__ = [
     "ConfirmedCounterpartyFactsInputError",
     "ConfirmedCounterpartyFactsRepository",
     "ConfirmedCounterpartyResolution",
+    "CounterpartyConfirmationOutcomeV1",
     "CounterpartyEstablishmentConflictError",
     "CounterpartyEstablishmentContradiction",
+    "confirm_counterparty_establishment",
     "confirmed_counterparty_facts_key",
     "forget_confirmed_counterparty_facts",
     "record_confirmed_counterparty_facts",
@@ -618,3 +620,80 @@ def resolve_confirmed_counterparty_facts(
         fact=stored.declared_fact,
         identification=stored.declared_identification,
     )
+
+
+class CounterpartyConfirmationOutcomeV1(BaseModel):
+    """A confirmation and whether THIS call is the one that recorded it.
+
+    The distinction is the whole point of an idempotent writer: a repeat must
+    be able to say "your answer was already stored, by whom, and when" rather
+    than reporting a fresh confirmation. Callers used to derive this by handing
+    in their own timestamp and comparing it against the returned record, which
+    made every surface reconstruct knowledge the writer already had.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    facts: ConfirmedCounterpartyFacts
+    recorded: bool
+
+
+def confirm_counterparty_establishment(
+    *,
+    bucket_id: str,
+    tax_identifier: str,
+    asserted_by: str,
+    territorial_scope: IvaTerritorialScope | None = None,
+    identification_state: EUMemberState | None = None,
+    country_code: str | None = None,
+    note: str = "",
+    repository: ConfirmedCounterpartyFactsRepository | None = None,
+) -> CounterpartyConfirmationOutcomeV1:
+    """Confirm a counterparty's establishment and say whether this call wrote it.
+
+    Refuses a call answering neither axis, then records through
+    :func:`record_confirmed_counterparty_facts` and reports whether the stored
+    record is the one this call supplied.
+
+    The stamp is generated here rather than by the writer's own clock so the
+    comparison has no check-then-act window: a pre-read would let a concurrent
+    writer land between the read and the write, whereas comparing the returned
+    stamp against the one handed in cannot, because the writer preserves the
+    ORIGINAL stamp on a retry precisely so a repeat cannot look fresh.
+
+    Args:
+        bucket_id: The owning profile bucket.
+        tax_identifier: The counterparty being confirmed.
+        asserted_by: Who is answering.
+        territorial_scope: Where the party is established, when answered.
+        identification_state: Where it is IVA-identified, when answered.
+        country_code: Country context for canonicalising the identifier.
+        note: Free prose; carries no classification weight.
+        repository: Injected store; the active-profile one by default.
+
+    Returns:
+        The stored facts and whether this call recorded them.
+
+    Raises:
+        ConfirmedCounterpartyFactsInputError: When neither axis was answered.
+    """
+    if territorial_scope is None and identification_state is None:
+        # Reuses the module's storability refusal rather than minting a
+        # second code: an assertion answering neither axis is precisely an
+        # assertion that is not storable.
+        raise ConfirmedCounterpartyFactsInputError(
+            f"confirming {tax_identifier} requires a territorial scope, an identification state, or both",
+        )
+    stamped_at = now()
+    facts = record_confirmed_counterparty_facts(
+        bucket_id=bucket_id,
+        tax_identifier=tax_identifier,
+        asserted_by=asserted_by,
+        territorial_scope=territorial_scope,
+        identification_state=identification_state,
+        country_code=country_code,
+        note=note,
+        asserted_at=stamped_at,
+        repository=repository,
+    )
+    return CounterpartyConfirmationOutcomeV1(facts=facts, recorded=facts.asserted_at == stamped_at)

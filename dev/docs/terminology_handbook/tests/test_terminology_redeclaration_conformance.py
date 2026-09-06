@@ -182,6 +182,29 @@ def test_negative_fixture_passes_legitimate_prose() -> None:
         assert not found, f"false positive on legitimate prose: {snippet!r} -> {found}"
 
 
+#: Below this the prose walk has stopped reading the documentation. Live: 58
+#: user-docs files; 0 once the ``docs/`` root is renamed. A floor on the CORPUS,
+#: never on the findings -- the redeclaration count stays free to reach zero.
+_MINIMUM_USER_DOCS = 20
+
+
+def test_the_user_docs_corpus_is_actually_read() -> None:
+    """The gate drives off a non-empty doc corpus (guards a silent pass).
+
+    ``_user_docs()`` feeds the parametrize below, and an empty parameter set is
+    a SKIP rather than a failure: with the ``docs/`` root renamed the module
+    still exits 0 with every fixture green, so "no document redeclares a term"
+    and "no document was read" are the same verdict. The three floored legs
+    beside this one (the term set, and the two detector fixtures) all survive
+    that collapse, so none of them notices. This one does.
+    """
+    docs = _user_docs()
+    assert len(docs) >= _MINIMUM_USER_DOCS, (
+        f"scanned only {len(docs)} user-docs file(s) matching {_DOC_GLOBS}; "
+        "the prose walk is broken, not the documentation clean"
+    )
+
+
 @pytest.mark.parametrize("doc", _user_docs(), ids=lambda p: str(p.relative_to(_REPO_ROOT)))
 def test_no_inline_redeclaration_of_enrolled_terms(doc: Path) -> None:
     """No user-docs prose inline-redefines an approved enrolled term."""

@@ -41,12 +41,32 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _ARTEFACT_PATH = Path(__file__).resolve().parent.parent / "analysis" / "dp30302_field_matrix.toml"
 
 
+#: Floors for the corpus the two exhaustiveness gates below iterate. Every
+#: assertion in both runs INSIDE the loop over this mapping, so a shrunken
+#: load leaves them reporting green having judged nothing. The first gate is
+#: even named for the coverage it assumes -- 'across all five epochs' -- a
+#: claim the code never checked. Live: five epochs carrying 153, 153, 163,
+#: 166 and 166 fields. Both floors are needed: an epoch present but EMPTY
+#: satisfies a count of epochs while contributing no field to judge.
+_MINIMUM_DP30302_EPOCHS = 5
+_MINIMUM_DP30302_FIELDS_PER_EPOCH = 100
+
+
 def _dp30302_sheets() -> dict[str, tuple[RecordDesignIntermediateField, ...]]:
     """Load every epoch's real DP30302 field set through validated snapshots."""
     out: dict[str, tuple[RecordDesignIntermediateField, ...]] = {}
     for intermediate in load_dp30302_epoch_intermediates(bundled_authority()):
         sheet = next(sheet for sheet in intermediate.sheets if sheet.record_identity == "DP30302")
         out[intermediate.source.design_epoch] = sheet.fields
+    assert len(out) >= _MINIMUM_DP30302_EPOCHS, (
+        f"only {len(out)} DP30302 epoch(s) loaded ({sorted(out)}); the gates that iterate "
+        "this mapping assert nothing over the epochs it stopped reaching"
+    )
+    for epoch, fields in sorted(out.items()):
+        assert len(fields) >= _MINIMUM_DP30302_FIELDS_PER_EPOCH, (
+            f"epoch {epoch} carries only {len(fields)} DP30302 field(s); an epoch present "
+            "but empty passes an epoch count while giving both gates nothing to classify"
+        )
     return out
 
 

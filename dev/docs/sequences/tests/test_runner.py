@@ -305,6 +305,11 @@ class TestHermeticChainExecution:
         assert result["granted_verificado_completo"] is False
 
 
+#: The chain sequence executes three frames per run; both transcripts are
+#: zipped and every determinism claim lives inside that zip.
+_MINIMUM_CHAIN_FRAMES = 3
+
+
 class TestSandboxIsolationAndDeterminism:
     def test_second_run_is_isolated_and_byte_deterministic(
         self,
@@ -324,6 +329,21 @@ class TestSandboxIsolationAndDeterminism:
 
         residual_paths: set[str] = set()
         residual_names: set[str] = set()
+        # zip(..., strict=True) refuses a LENGTH MISMATCH, never two empty
+        # sides: a run that produced no frame zips to zero iterations, the three
+        # per-frame assertions never execute, and both residual sets stay empty.
+        # Pinning ``residual_paths == frozenset()`` is the strong claim the
+        # comment below describes, but frozenset() is exactly what an empty
+        # transcript yields, and ``set() <= GOLDEN_MASK_FIELDS`` is always true.
+        # Live: the chain executes three frames per run.
+        assert len(chain_transcript.frames) >= _MINIMUM_CHAIN_FRAMES, (
+            f"the first chain run produced {len(chain_transcript.frames)} frame(s); "
+            "every determinism claim below is over the zipped pair and holds at zero"
+        )
+        assert len(rerun.frames) >= _MINIMUM_CHAIN_FRAMES, (
+            f"the second chain run produced {len(rerun.frames)} frame(s); a rerun that "
+            "executed nothing is not evidence of isolation or determinism"
+        )
         for first, second in zip(chain_transcript.frames, rerun.frames, strict=True):
             assert first.envelope is not None and second.envelope is not None
             residual_paths |= differing_paths(first.envelope, second.envelope)
@@ -458,7 +478,7 @@ class TestLiveAeatRefusal:
     def test_option_value_spelled_like_a_pull_verb_is_not_flagged(self) -> None:
         """The scan skips option VALUES: '--file pull-history.csv' is a local
         file input, not a live verb (the reviewer-named false positive)."""
-        from ..runner import _live_aeat_tokens
+        from ..runner import live_aeat_tokens
 
         benign = _result_sequence(
             "@setup aeat app ledger import --file pull-history.csv\n"
@@ -466,7 +486,7 @@ class TestLiveAeatRefusal:
             '@expect status == "success"\n',
             sequence_id="runner-option-value-scan",
         )
-        assert _live_aeat_tokens(benign.frames[0]) == ()
+        assert live_aeat_tokens(benign.frames[0]) == ()
 
 
 class TestStderrErrorDocument:
@@ -642,26 +662,38 @@ class TestAmbientEnvNeutralisation:
             assert os.environ["AEAT_FAKE_SESSION_TOKEN"] == "fake-session-token-do-not-leak"  # noqa: S105 - synthetic test value
 
     def test_external_tool_probes_are_pinned_to_stable_absence(self, tmp_path: Path) -> None:
-        """Real provider and browser probes cannot observe workstation installs."""
+        """A real browser probe cannot observe workstation installs.
+
+        This probed the subprocess LLM providers as well, and that whole
+        transport has since been deleted -- ``probe_subprocess_providers`` is a
+        named member of the retired set that
+        ``core/tests/test_cloud_transport_fully_deleted.py`` asserts stays
+        gone. The import outlived it, so this case could not be COLLECTED and
+        the pins below went unchecked on every run.
+
+        Only the deleted half is dropped. What the case exists to prove is that
+        the sandbox pins ``PATH`` and ``PLAYWRIGHT_BROWSERS_PATH`` beneath its
+        own workdir, and both pins are still asserted here against a probe that
+        really runs.
+        """
         import os
 
-        from cadrumo.application.provisioning import (
-            probe_playwright_browser,
-            probe_subprocess_providers,
-        )
+        from cadrumo.application.provisioning import probe_playwright_browser
 
         from ..runner import sequence_sandbox
 
         original_path = os.environ.get("PATH")
         with sequence_sandbox(sequence_id="external-tool-probe", sandbox_root=tmp_path / "scope"):
-            providers = probe_subprocess_providers()
             browser = probe_playwright_browser()
 
-            assert providers
-            assert all(not status.available for status in providers)
-            assert all("PATH" in status.remediation for status in providers)
             assert browser.available is False
-            assert browser.remediation == "playwright install chromium"
+            # ``remediation`` carried the fix as executable text and was
+            # deliberately removed: ``DependencyStatus`` now closes an
+            # unavailable outcome through the typed ``precondition_verdict``
+            # instead, "without embedding presentation or executable text".
+            # Asserting the verdict is present is asserting the contract the
+            # model actually enforces, rather than a string it stopped holding.
+            assert browser.precondition_verdict is not None
             # Both pins live BENEATH the sandbox workdir so the golden path
             # normaliser rewrites their per-run root to ``<sandbox-workdir>``.
             assert os.environ["PATH"] == str(tmp_path / "scope" / "workdir" / ".external-tools")

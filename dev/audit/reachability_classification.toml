@@ -165,6 +165,12 @@ remedy_requires_decision = true
 # ---------------------------------------------------------------------------
 
 [[module]]
+name = "cadrumo.application.ledger.import_preparation"
+class = "should-be-live"
+evidence = "Validates an operator-entered import path and builds the canonical command; its docstring records that it was moved OUT of entrypoints/tui/ledger because the Ledger TUI boundary gate refuses adapter work there. Nothing in production calls it. The door it feeds cannot open either, and the root cause is one level above this module: the Ledger IMPORT area is reached only by a LedgerRouteRequested message posted at entrypoints/tui/ledger/controller.py, and no production class handles that message, so no workspace screen past Overview is reachable in the installed app. The Ledger controller additionally refuses the IMPORT area when prepared_imports is empty or import_submitter is None, and the only production caller of ledger_screen_factory (entrypoints/tui/launcher.py) passes neither. So the application-side preparation and the TUI-side carrier were both built and never connected. Deliberately NOT given an intentional entry in the module ratchet: a declared_by_contract disposition would quiet a module whose consumer does not yet exist. Remedy is the workspace route host, not a change here."
+remedy_requires_decision = true
+
+[[module]]
 name = "cadrumo.domain.contabilidad"
 class = "staged-capability"
 evidence = "Added by commit b0305f2c3a, feat(domain): add the contabilidad cuenta and direccion with their tests. Company accounting facts a Modelo 200 filing is built from; its only non-test consumer so far is the error registry at core/errors/registry/_application_part2.py, which registers its error codes. Capability under construction, not an orphan."
@@ -342,6 +348,7 @@ subjects = 1
 # ---------------------------------------------------------------------------
 
 [symbol_partition]
+measured = "2026-09-04"
 exact_total = 602
 test_only = 350
 unreferenced = 198
@@ -486,6 +493,7 @@ evidence = "AST sweep for module-level public-to-private aliases, cross-referenc
 # ---------------------------------------------------------------------------
 
 [test_only_triage]
+measured = "2026-09-04"
 population = 350
 retires_with_test = 341
 transitively_dead = 9
@@ -569,7 +577,7 @@ symbols = [
   "derive_calculation_completeness_casillas", "derive_diseno_coverage_casillas",
   "build_diseno_coverage_report",
 ]
-evidence = "These live in modules that ARE production-reachable -- entrypoints/cli/registry.py imports live_parity types and _validate_completeness imports record_design_coverage -- so the modules are dual-purpose rather than dead. The flagged symbols are the audit surface the design-time tooling consumes: dev/registry/parity/maintenance.py, dev/registry/analysis/load_census_classification.py, the dev conftest, and the packaging cohort script. Relocating individual functions out of a production module into dev/ would split a cohesive module and force dev/ to restate registry knowledge, so the surface stays where it is."
+evidence = "These live in modules that ARE production-reachable -- entrypoints/cli/registry.py imports live_parity types and _validate_completeness imports record_design_coverage -- so the modules are dual-purpose rather than dead. The flagged symbols are the audit surface the design-time tooling consumes: dev/registry/parity/maintenance.py, the dev conftest, and the packaging cohort script. The load-census classification module under dev/registry/analysis was dropped from that list: it names the record_design_coverage MODULE when classifying import-time load behaviour and consumes none of these symbols, so citing it overstated the readership. Relocating individual functions out of a production module into dev/ would split a cohesive module and force dev/ to restate registry knowledge, so the surface stays where it is."
 
 [[symbol_cluster]]
 name = "oracle parity entry points with no current caller"
@@ -623,6 +631,7 @@ evidence = "Seven private aliases to public imports, carrying the comment 'Kept 
 # ---------------------------------------------------------------------------
 
 [exported_unused]
+measured = "2026-09-04"
 declared_exports = 8534
 exported_and_unconsumed = 368
 method = "a name counts as consumed only when another module from-imports it FROM the declaring module; bare-name matching would count same-named symbols in unrelated packages"
@@ -990,7 +999,7 @@ class = "should-be-live"
 area = "application"
 resolved = false
 remedy_requires_decision = true
-symbols = ["create_inventory_ledger", "default_profile_secure_object_inventory", "profile_is_authentication_failure", "profile_advance_session_idle_deadline", "profile_is_persisted_session"]
+symbols = ["default_profile_secure_object_inventory", "profile_is_authentication_failure", "profile_advance_session_idle_deadline", "profile_is_persisted_session"]
 evidence = "Five of the eight one-line port-facade wrappers in the shipped tree are called by nothing; the other three are reached from tests or dev. The asymmetry is what makes this a finding rather than a dead layer: `profile_is_keyring_unavailable` sits directly beside `profile_is_authentication_failure` in custody_ports and IS used, so typed authentication refusals are being recognised somewhere WITHOUT the facade -- which means an adapter exception type is leaking into application code, the exact thing the docstring says the wrapper exists to prevent. The same reading applies to the session-receipt and inventory members. The remedy is to route the existing callers through the facade or to withdraw the unused members and record that the boundary is narrower than it looks; both are owner decisions about the application/adapter boundary rather than deletions of dead code."
 
 # ---------------------------------------------------------------------------
@@ -1009,7 +1018,7 @@ class = "should-be-live"
 area = "application"
 resolved = false
 remedy_requires_decision = true
-symbols = ["CertificateSourceNoActiveBucketError", "ModeloEditPermittedSurfacePageRequestV1", "ModeloEditPermittedSurfacePageV1", "ModeloWorkspaceVersionHeader", "ProfileImportResult", "SchemaModuleLoadFailure", "ModeloDraftBuilderAdapter", "ModeloWorkspaceAtomicProjectionPortV1"]
+symbols = ["CertificateSourceNoActiveBucketError", "ModeloEditPermittedSurfacePageRequestV1", "ModeloEditPermittedSurfacePageV1", "ModeloWorkspaceVersionHeader", "ProfileImportResult", "ModeloDraftBuilderAdapter", "ModeloWorkspaceAtomicProjectionPortV1"]
 evidence = "AttachmentCatalogue is deliberately excluded: it already carries its own staged-capability cluster, and the taxonomy admits exactly one class per finding. Each remaining symbol is exported and referenced nowhere outside the module that defines it, so nothing constructs, subclasses or annotates with it. Read as behaviour rather than as code, each names something the product does not do: AttachmentCatalogue verifies that every mapping key equals the embedded attachment_id so lookups cannot drift, and no lookup goes through it; SchemaModuleLoadFailure records a module and its error, and no schema load failure is recorded; ProfileImportResult is the declared outcome of importing a portable bundle, and portable import returns no such outcome; CertificateSourceNoActiveBucketError is raised by nothing, so that refusal is not detected. Deleting them would remove the record that the capability was designed, which is the same argument the unapplied threshold cluster records. The remedy is to wire each to the caller it was written for or to withdraw it deliberately, and both are owner decisions."
 
 [[symbol_cluster]]
@@ -1018,7 +1027,7 @@ class = "design-time-authority"
 area = "entrypoints"
 resolved = true
 symbols = ["LEDGER_CLI_COMMAND_CENSUS"]
-evidence = "An immutable projection of every executable Ledger command, built from the CommandSpec facts in its own module and read by dev/quality/clitui_ledger_capability_matrix.py to check the shipped surface against the declaration. Having a conformance gate as its only reader is how a locked design is enforced, and relocating the projection into dev/ would move the product's own declaration out of the product, so this is the design-time-authority shape rather than an unused constant. Recorded resolved: no wiring is missing and nothing is to be deleted."
+evidence = "An immutable projection of every executable Ledger command, built from the CommandSpec facts in its own module and read by src/cadrumo/entrypoints/cli/tests/test_command_specs.py to check the shipped surface against the declaration. Having a conformance gate as its only reader is how a locked design is enforced, and relocating the projection into dev/ would move the product's own declaration out of the product, so this is the design-time-authority shape rather than an unused constant. Recorded resolved: no wiring is missing and nothing is to be deleted."
 
 # ---------------------------------------------------------------------------
 # Parallel public-result projection displaced by the CLI payload schemas
@@ -1030,8 +1039,8 @@ class = "superseded"
 area = "application"
 resolved = false
 remedy_requires_decision = true
-symbols = ["project_modelo_work_verify_result", "project_modelo_export_result", "project_modelo_edit_apply_result", "ModeloWorkVerifyPublicResultV1", "ModeloExportPublicResultV1", "ModeloEditApplyPublicResultV1"]
-evidence = "Three projectors, each a one-line construction of a matching PublicResultV1 model, and none is called anywhere in production, dev/ or tests; the models themselves are touched only by tests asserting on model_fields, never constructed. The live discharger is named rather than guessed: the command table declares the verify leaf result schema as DeferredTarget(cadrumo.entrypoints.cli._modelo_payloads, WorkVerifyResult), so the CLI publishes its own payload type and never routes through this layer. The two shapes agree on the four identity and status fields and diverge deliberately -- the CLI payload carries the resolved and missing casilla ids, the findings, run_at and verified_by, where the PublicResultV1 carries only counts -- so the payload schema is the richer contract and this is displacement rather than duplication. Nothing is exposed unprojected: the CLI never returns the PublicResultV1 shape at all. The remedy is withdrawal of the displaced layer together with the field-shape tests that pin it, which is an owner decision because the types are shipped and exported."
+symbols = ["project_modelo_work_verify_result", "project_modelo_export_result", "project_modelo_edit_apply_result"]
+evidence = "The three PublicResultV1 models were moved out of this cluster: the audit stopped reporting them because the projectors below DO construct them, and a construction counts as a use even when the constructor is itself unreached -- transitive deadness the walk does not collapse. The projectors remain the finding. Three projectors, each a one-line construction of a matching PublicResultV1 model, and none is called anywhere in production, dev/ or tests; the models themselves are touched only by tests asserting on model_fields, never constructed. The live discharger is named rather than guessed: the command table declares the verify leaf result schema as DeferredTarget(cadrumo.entrypoints.cli._modelo_payloads, WorkVerifyResult), so the CLI publishes its own payload type and never routes through this layer. The two shapes agree on the four identity and status fields and diverge deliberately -- the CLI payload carries the resolved and missing casilla ids, the findings, run_at and verified_by, where the PublicResultV1 carries only counts -- so the payload schema is the richer contract and this is displacement rather than duplication. Nothing is exposed unprojected: the CLI never returns the PublicResultV1 shape at all. The remedy is withdrawal of the displaced layer together with the field-shape tests that pin it, which is an owner decision because the types are shipped and exported."
 
 [[symbol_cluster]]
 name = "asset ledger persistence with no production writer or reader"
@@ -1090,5 +1099,452 @@ class = "should-be-live"
 area = "domain"
 resolved = false
 remedy_requires_decision = true
-symbols = ["GeneratedArtifactInspection", "WizardFlowProtocol"]
+symbols = ["GeneratedArtifactInspection"]
 evidence = "The two protocols the same structural check leaves unmatched, and each fails differently. GeneratedArtifactInspection requires a sources member and NO class in the shipped tree provides it, so the contract has no implementer at all. WizardFlowProtocol is runtime_checkable and its docstring states that domain code reaches the descriptor through this core slot and never imports the application-layer WizardFlow class directly; it appears nowhere outside its own module and __all__, so no domain code annotates or isinstance-checks against it and the layering it describes is not in force. Its single required member is only an id, which is why the structural sweep matched nine unrelated classes and proved nothing either way - the module-level evidence is what settles it. The remedy is to implement the one and to route domain code through the other or withdraw both claims."
+
+[[symbol_cluster]]
+name = "process-cache reset seam: resolved paths"
+class = "test-support"
+area = "core"
+symbols = [
+  "clear_resolved_path_cache",
+]
+evidence = "The memoised path-resolution cache. Each clears or counts a module-level cache that is process-scoped by design. Two docstrings in this family name a production scenario beside the test one -- a settings reload, an operator resolving a quota -- so the claim was checked rather than assumed. There is no settings-reload path in the tree; load_settings builds process-wide settings once and the one long-running entrypoint (cadrumo-mcp) does not rebuild them. The context-local override_settings IS used in production, but by auth_operator_settings_scope over the closed _AUTH_OPERATOR_SETTINGS_SCOPE_FIELDS list (storage roots, profile, secret store, auth provider, certificates) and by credentials.py for cadrumo_active_profile alone, so no production override reaches the state these reset. A test changing one of these bounds within a single process must."
+
+[[symbol_cluster]]
+name = "process-cache reset seams: corpus text cache"
+class = "test-support"
+area = "domain/calculations/registry"
+symbols = [
+  "reset_corpus_text_cache",
+  "_disk_cache_write_count",
+]
+evidence = "The corpus-text disk cache and the write counter a test asserts against. Each clears or counts a module-level cache that is process-scoped by design. Two docstrings in this family name a production scenario beside the test one -- a settings reload, an operator resolving a quota -- so the claim was checked rather than assumed. There is no settings-reload path in the tree; load_settings builds process-wide settings once and the one long-running entrypoint (cadrumo-mcp) does not rebuild them. The context-local override_settings IS used in production, but by auth_operator_settings_scope over the closed _AUTH_OPERATOR_SETTINGS_SCOPE_FIELDS list (storage roots, profile, secret store, auth provider, certificates) and by credentials.py for cadrumo_active_profile alone, so no production override reaches the state these reset. A test changing one of these bounds within a single process must."
+
+[[symbol_cluster]]
+name = "process-cache reset seams: llm pacing and arena"
+class = "test-support"
+area = "llm"
+symbols = [
+  "reset_provider_pacing",
+  "reset_on_host_inference_arena",
+]
+evidence = "The armed rate-limit pauses and the on-host inference arena sized once per process from cadrumo_llm_local_inference_concurrency. Each clears or counts a module-level cache that is process-scoped by design. Two docstrings in this family name a production scenario beside the test one -- a settings reload, an operator resolving a quota -- so the claim was checked rather than assumed. There is no settings-reload path in the tree; load_settings builds process-wide settings once and the one long-running entrypoint (cadrumo-mcp) does not rebuild them. The context-local override_settings IS used in production, but by auth_operator_settings_scope over the closed _AUTH_OPERATOR_SETTINGS_SCOPE_FIELDS list (storage roots, profile, secret store, auth provider, certificates) and by credentials.py for cadrumo_active_profile alone, so no production override reaches the state these reset. A test changing one of these bounds within a single process must."
+
+[[symbol_cluster]]
+name = "port facade no caller reaches: inventory ledger"
+class = "should-be-live"
+area = "adapters/persistence/profile"
+symbols = ["create_inventory_ledger"]
+evidence = "Split out of the application-area port-facade cluster, which filed it under the wrong area: the symbol is reported in cadrumo.adapters.persistence.profile.inventory, so the ledger asserted a finding against a module the audit never names and the staleness check read it as a symbol the audit had stopped reporting. Same class and same reasoning as its siblings -- a one-line port facade exported and called by nothing -- recorded where the audit actually reports it."
+
+[[symbol_cluster]]
+name = "public type no caller constructs: schema module load failure"
+class = "should-be-live"
+area = "entrypoints/cli"
+symbols = ["SchemaModuleLoadFailure"]
+evidence = "Split out of the application-area public-types cluster for the same area error: the symbol is reported in cadrumo.entrypoints.cli._command_schema. It records a module and its error, and no schema load failure is recorded anywhere, so a declared failure mode no code can produce tells the operator nothing."
+
+[[symbol_cluster]]
+name = "protocol no implementer satisfies: wizard flow"
+class = "should-be-live"
+area = "core"
+symbols = ["WizardFlowProtocol"]
+evidence = "Split out of the domain-area protocol cluster, which recorded the wrong area: the symbol is reported in cadrumo.core.wizard_catalogue. Runtime-checkable, and its module docstring states that domain code reaches the descriptor through this core slot rather than importing the application-layer WizardFlow directly; it appears nowhere outside its own module and __all__, so no domain code annotates or isinstance-checks against it and the layering it describes is not in force."
+
+[[symbol_cluster]]
+name = "declared bound nothing enforces: profile custody record"
+class = "should-be-live"
+area = "adapters/persistence/storage/custody"
+symbols = ["PROFILE_CUSTODY_PROFILE_RECORD_MAX_BYTES"]
+evidence = "A 4 MiB ceiling on the profile record. Its siblings in the same package ARE enforced -- _capsule_data.py refuses a payload over PROFILE_CUSTODY_DATA_FILE_MAX_BYTES and reads the envelope with PROFILE_CUSTODY_ENVELOPE_MAX_BYTES as the cap -- and this one is compared against nothing, so the profile record is the single unbounded member of a family whose whole point is bounded reads. The asymmetry is what makes it a finding rather than an unused number; deleting it would remove the record that the bound was intended."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "checkpoint discard nothing reaches"
+class = "should-be-live"
+area = "application/flows"
+symbols = ["discard_checkpoint"]
+evidence = "Erases an in-progress flow run through the domain store. No production caller reaches it and no production code calls store.discard for a flow definition directly either, so a run can be checkpointed and resumed but never discarded. Not a superseded wrapper -- there is no other discard path that displaced it."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "portable profile import declared and unwired"
+class = "should-be-live"
+area = "application/user_profile"
+symbols = ["register_imported_profile_bundle", "censo_unadopted_evidence"]
+evidence = "Two halves of profile ingestion that nothing reaches. register_imported_profile_bundle registers an imported portable bundle against a target bucket, and pairs with ProfileImportResult in the public-types cluster, whose evidence already records that portable import returns no such outcome -- so the declared outcome and its registrar are both unreached, which is one capability, not two coincidences. censo_unadopted_evidence projects the certificate fields the cotejo deliberately does NOT adopt into divergence rows; nothing calls it, so those certified-but-unadopted statements are never surfaced, which is the silent under-declaration the project forbids."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "declared type distinctions nothing annotates"
+class = "should-be-live"
+area = "core"
+symbols = ["OptionalSourceUrl", "optional_extra_for_module"]
+evidence = "OptionalSourceUrl is a constrained alias whose own docstring explains why it is spelled separately from SourceUrl rather than as SourceUrl | None -- and no model field or signature annotates with it, so the distinction it draws is enforced nowhere while its sibling is in use. optional_extra_for_module answers 'is this missing module a capability package the operator may legitimately not have installed?' against the declared OPTIONAL_EXTRAS inventory, and nothing asks: a missing optional package therefore reaches the operator unclassified rather than as the install-this-extra remedy the inventory exists to give."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "sectoral retencion rate set no classifier consults"
+class = "should-be-live"
+area = "domain/transactions"
+symbols = ["sectoral_activity_retencion_rates"]
+evidence = "The art. 95.4/95.5/95.6.1 rate set, with any art. 95.1 figure subtracted so that a caller asking 'did this match ONLY sectoral rates?' cannot be weakened by a shared figure. That caller does not exist. A legal classification the registry can express and the product never performs; under the grounding rule the declared authority stays visible rather than being deleted."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "localizable field literal nothing annotates"
+class = "should-be-live"
+area = "domain/calculations/registry"
+symbols = ["ModeloLocalizationField"]
+evidence = "A Literal enumerating every localizable modelo field -- label, help, title, official name. Nothing annotates with it, so the closed set is asserted in prose and enforced by no signature, leaving the localization surface free to accept a kind outside the four this declares."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "registry declarations the dev pipeline reads"
+class = "design-time-authority"
+area = "domain/calculations/registry"
+symbols = ["AUXILIARY_ENVELOPE_HEADER_OFFSETS", "is_registry_id", "render_m303_annual_orden_manifest"]
+evidence = "Product knowledge with no runtime caller, each read by a named dev tool that checks a shipped surface against the declaration: AUXILIARY_ENVELOPE_HEADER_OFFSETS by dev/registry/pipeline/_record_design_ir.py, is_registry_id by dev/registry/parity/_workbook_parity.py, and render_m303_annual_orden_manifest by dev/registry/analysis/m303_orden_anual.py. Relocating any of them into dev/ would move the product's own declaration out of the product, which is the argument the ledger CLI command census already records for the same shape."
+
+[[symbol_cluster]]
+name = "filing export conformance proofs"
+class = "design-time-authority"
+area = "application/filing"
+symbols = ["prove_export_conformance", "prove_secure_export_replay"]
+evidence = "The product's own proofs that an export conforms and that a secure export replays, both read by dev/registry/filing_export_proof.py and the second additionally by dev/registry/tests/test_filing_export_two_channel_proof.py. No runtime path runs a conformance proof, which is correct -- a proof is design-time evidence, not filing behaviour -- but the proof must live beside the export it reasons about rather than in the harness that invokes it."
+
+[[symbol_cluster]]
+name = "profile command types the identity gate checks"
+class = "design-time-authority"
+area = "application/user_profile"
+symbols = ["ProfileSnapshot", "ProfileStaleCheckReport"]
+evidence = "Two public command types with no production constructor, read by dev/identity/tests/test_identifier_namespace_enrollment_gate.py, which checks that identifier namespaces are enrolled. The reader is a dev conformance gate over a declaration, not a unit test exercising behaviour -- the distinction that keeps this class from absorbing the much larger population whose only reader is an ordinary test."
+
+[[symbol_cluster]]
+name = "command path resolution the docs tree reads"
+class = "design-time-authority"
+area = "entrypoints/cli"
+symbols = ["resolve_command_path"]
+evidence = "Resolves a command path against the live Typer tree, with no runtime caller; read by dev/docs/cli_tree.py, dev/docs/sequence_directive.py and dev/docs/tests/test_cli_tree.py to generate and check the CLI reference. The generated reference is CLI-owned by rule, so the resolution it derives from belongs to the command surface rather than to the generator."
+
+[[symbol_cluster]]
+name = "logging reconfiguration seam for the documentation engine"
+class = "harness-code"
+area = "core"
+symbols = ["allow_logging_reconfiguration"]
+evidence = "Detaches the installed handlers and releases the configure-once latch. Its docstring names the consumer: a long-lived host that legitimately re-points the stream or file axis mid-process, specifically the documentation engine, which imports the application and only afterwards pins its isolated scratch storage. Read by dev/docs/build.py and dev/docs/sequences/runner.py and by nothing else. Classified harness-code because it exists for the harness, but the usual harness remedy -- relocate it beside its consumer -- does not apply: the latch and handler list it manipulates are module-globals private to core.logging, so the seam can only live here."
+
+# ---------------------------------------------------------------------------
+# Residue census, recounted by CODE reference rather than by word match.
+#
+# The earlier triage resolved a reference by searching file text, so a name
+# mentioned in an inert namespace docstring counted as a production consumer.
+# Those docstrings are navigational maps naming every contract in the package,
+# so the error was systematic and one-directional: it inflated the bucket that
+# looks healthiest. Counting only AST reference nodes -- Name loads, attribute
+# access, import aliases, and string constants that bind a name in a spec table
+# -- moves "referenced by live production code" from 66 to 17, and the residue
+# is 83% test-only rather than 69%.
+#
+# conftest.py counts as test infrastructure though it matches neither the
+# tests/ directory nor the test_ prefix; treating it as production made a
+# registry cache-reset seam look production-consumed.
+#
+# Of the 17 still referenced by production, the referrer is frequently itself
+# deferred -- the modelo edit services are reached only from edit_session,
+# which the module ratchet already reports as deferred behind a frozen cluster.
+# ---------------------------------------------------------------------------
+
+[residue_census]
+measured = "2026-09-06"
+unadjudicated_exact = 324
+test_only = 268
+test_and_dev_only = 24
+referenced_by_production = 17
+referenced_nowhere = 14
+dev_only = 1
+method = "a reference counts only when it appears as an ast.Name load, an attribute access, an import alias, or a string constant binding the name; prose in a docstring or comment does not vote"
+
+[[symbol_cluster]]
+name = "collaboration audit trail nothing writes"
+class = "should-be-live"
+area = "application/modelo"
+symbols = ["emit_collab_package_encrypted_event", "emit_collab_package_decrypted_event", "emit_collab_package_counter_signed_event", "emit_collab_recipient_registered_event", "emit_collab_recipient_removed_event", "emit_collab_review_only_workspace_opened_event"]
+evidence = "Six emitters covering the whole collaboration review-package lifecycle -- package encrypted and decrypted, counter-signature recorded, recipient registered and removed, review-only workspace opened -- each writing to the bucket event history. No production caller reaches any of them. The apparent references are Sphinx :func: cross-links inside sibling docstrings, which is prose rather than a call, so the collaboration flow currently produces no audit record at all. An event history that is declared and never written is worse than none, because the empty history reads as 'nothing happened'."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "sectoral prorrata calculation with no caller"
+class = "should-be-live"
+area = "domain/iva"
+symbols = ["compute_sectoral_prorrata", "requires_sectoral_separation", "classify_input_deduction", "sum_deductible_amounts"]
+evidence = "The sectoral prorrata path: the predicate deciding whether sectors must be separated, the calculator that runs once they are, the input-deduction classifier and the deductible summation. Referenced only from its own module's docstrings and __all__. A taxpayer with differentiated sectors therefore gets no sectoral separation, and under the calculation-grounding rule the declared legal capability stays visible rather than being deleted for being uncalled."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "registry source-connectivity projections with no consumer"
+class = "should-be-live"
+area = "application/registry"
+symbols = ["derive_registry_binding_records", "derive_registry_destination_records", "derive_registry_formula_records", "derive_registry_relation_records", "derive_registry_source_disposition_records"]
+evidence = "Five projections turning a validated RegistrySnapshot into connectivity records -- bindings, destinations, formulas, relations and source dispositions -- each documented as avoiding a re-parse of the expressions. Nothing in production or dev consumes them, so the source-connectivity view they exist to produce is never assembled."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "displaced CLI execution-policy declarations"
+class = "superseded"
+area = "entrypoints/cli/config"
+symbols = ["CALCULATION_WRITE", "PROFILE_WRITE", "GOOGLE_CALCULATION_WRITE", "GOOGLE_CALCULATION_HANDOFF", "GOOGLE_HANDOFF"]
+evidence = "Public execution-policy constants that no command spec imports. The live modelo command specs declare private equivalents inline, so the canonical home was displaced by copies. The declarations are EQUIVALENT, which took checking: the public CALCULATION_WRITE spells capabilities calculation, encrypted-facts and profile-custody while the private _CALCULATION_WRITE the specs use spells only the first two, but command_spec._IMPLIED_CAPABILITIES maps encrypted-facts onto profile-custody and every policy check runs against expanded_capabilities, so the shorter form expands to the longer one. The finding is therefore displacement alone -- five public constants nothing reads, beside private copies that say the same thing -- and not the under-declaration it first looked like."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "reserved-source-kind binding families"
+class = "staged-capability"
+area = "domain/calculations/registry"
+symbols = ["counterpart_binding_requirements", "resolve_counterpart_binding_row_values", "resolve_counterpart_binding_values", "invoice_binding_requirements", "validate_invoice_binding_definition", "_INVOICE_INDEPENDENT_QUANTITY_FACTS"]
+evidence = "The counterpart and invoice-shaped binding families. Their source kinds -- PURCHASE_INVOICE_EVIDENCE and LEDGER_TRANSACTION -- sit in RESERVED_SOURCE_KINDS in application/aggregation/_source_mesh.py, which the module's own comment defines as a member of the closed taxonomy carrying no registry binding and no resolver yet, recorded RESERVED so the source-kind parity gate accounts for every member. So the requirement builders and validators are written against a tier that is deliberately not routed, and nothing reaching them is the declared state rather than a gap. Deleting them would remove the headroom the reserved tier exists to hold."
+
+[[symbol_cluster]]
+name = "deferred withholding binding resolvers"
+class = "staged-capability"
+area = "domain/calculations/registry"
+symbols = ["WithholdingObservationRequirement", "compute_withholding_totals_parity", "resolve_withholding_binding_row_values"]
+evidence = "The withholding family beside the already-recorded deferred-source-kind resolvers. WITHHOLDING296 is a member of DEFERRED_SOURCE_KINDS in application/aggregation/_source_mesh.py -- known but with no resolver yet, so a calculate-path binding of the source raises a standing advisory instead of a silent blank. The requirement type, the totals-parity check and the row-value resolver are built and validated ahead of that enrolment, which is why no live mesh resolver reaches them."
+
+[[symbol_cluster]]
+name = "secure-object schema upgrade path with no registration"
+class = "staged-capability"
+area = "adapters/persistence/storage"
+symbols = ["register_secure_object_schema_upgrader", "deregister_secure_object_schema_upgrader", "SECURE_OBJECT_DURABILITY_FLOOR"]
+evidence = "The one-hop payload upgrader registry for a (namespace, from_version) pair, with the floor naming the oldest version every read path keeps readable. Only tests register an upgrader. The floor is 1 while six namespaces declare schema version 2 and one declares 4, so a row stored at an older version in those namespaces has no registered upgrade hop. It is not silent corruption: the row decode path is documented fail-closed and returns the typed error rather than a placeholder, so the missing hop surfaces as a refusal. Whether any such row EXISTS is deployment state the tree cannot answer, which is what an owner has to decide before the floor moves."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "registry handoff path audit nothing runs"
+class = "should-be-live"
+area = "domain/calculations/registry"
+symbols = ["audit_registry_handoff_paths", "audit_registry_relation_handoff_applicability", "relation_is_consumed"]
+evidence = "An audit that classifies validated relation paths against the registry authority without inventing semantic repairs, its applicability sibling, and the predicate answering whether a formula or bound casilla consumes a relation. No production or dev caller runs any of them, so the classification the audit exists to produce is never produced and an unconsumed relation is never reported."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "marriage fact helpers displaced by the profile binding"
+class = "superseded"
+area = "domain/contribuyente"
+symbols = ["marriage_derived_facts", "marriage_date_from_facts", "parse_marriage_date_flag"]
+evidence = "The domain-side persist and reload helpers for marriage_date, all three displaced by application/modelo/profile_binding.py, which is live and named here rather than guessed. It imports the individual predicates marriage_month_start and marriage_full_year directly and derives the facts inline, so the aggregate marriage_derived_facts is never called. It reads renta_taxpayer.marriage_date from the fact index already typed as a date, so neither the flat-dict reconstruction nor the CLI-flag parser is reached -- the --taxpayer-marriage-date option is declared and live, but its value is parsed upstream. Checked for a gap first: the registry declares bindings for marriage_full_year, marriage_month_start and marriage_month_end on modelo 100 revision 2024, and the live path sets all three, month_end at the constant 12, so nothing the registry asks for goes unproduced."
+
+[[symbol_cluster]]
+name = "OSS and IOSS regime substrate ahead of its modelo"
+class = "staged-capability"
+area = "domain/iva"
+symbols = ["IossFilerRole", "REGIME_PERIODICITY", "regime_allows_deduction"]
+evidence = "The regime substrate for the Modelo 369 autoliquidation chain: the filer-role enumeration, the regime to filing-periodicity mapping, and the LIVA-grounded deductibility predicate. Its own module docstring records that it closes a regime taxonomy gap surfaced by a Modelo 369 IVA centralization audit and is purely additive against the rest of domain/iva, leaving existing rates, classifier rules and consumers unaffected. No consumer exists because the modelo it serves is not yet in the registry, which is the declared state of a substrate landed ahead of its filing surface rather than a wiring gap."
+
+[[symbol_cluster]]
+name = "repair integrity reports displaced by diagnostics"
+class = "superseded"
+area = "application"
+symbols = ["build_repair_integrity_report", "build_repair_list_report", "build_repair_policy_command_surface_catalog"]
+evidence = "The metadata-only read side of the repair surface. The live holder is named rather than guessed: the config repair verb at entrypoints/cli/config/_repair_cli.py imports exclusively from application/diagnostics.py, and that module performs the same work these build -- it calls probe_namespace_integrity per namespace and assembles SecureObjectNamespaceIntegrity items. Nothing in production imports application/repair_integrity at all, so this is a second implementation of a surface that already has one."
+
+[[symbol_cluster]]
+name = "repair remediation decisions never recorded"
+class = "should-be-live"
+area = "application"
+symbols = ["RepairRemediationDecisionRepository"]
+evidence = "The repository for operator remediation decisions over damaged secure-object rows. Unlike the report half beside it, this has no replacement: application/diagnostics.py, which the live config repair verb uses, contains no remediation-decision handling at all. The persistence is declared -- adapters/persistence/storage/secure_object_namespaces.py registers the secure-object namespace cadrumo.application.repair_integrity.decisions for exactly this -- and nothing writes or reads it. So an encrypted store stands ready and an operator's decision about a damaged row leaves no record."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "censo lifecycle routing no censo path consults"
+class = "should-be-live"
+area = "domain/calculations/registry"
+symbols = ["is_active_censo_modelo", "censo_modelo_ownership_map", "resolve_censo_modelo_work_unit_foundation"]
+evidence = "The registry-owned foundation map resolving lifecycle routing for Modelo 036 as active and Modelo 037 as historical, deriving every decision from the ValidatedRegistryAuthority so the registry TOML stays the single authority for event periods and ownership. Modelo 036 is in the registry, so this serves a live modelo rather than a staged one. No production caller reaches any of the three, and the application censo path -- censal_operation, censo_sync, cotejo_apply and their siblings -- contains no reference to 037 or to active-versus-historical routing at all. The distinction is therefore declared and never consulted."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "column-level encryption decorators the ORM does not use"
+class = "staged-capability"
+area = "adapters/persistence/storage"
+symbols = ["EncryptedBytes", "EncryptedJSON"]
+evidence = "Two of the four SQLAlchemy TypeDecorators that wrap the AEAD primitives so an ORM model can declare encryption at the column level. The family is partly live and the split is what settles this: HashedLookup is consumed in production for row-key digests in profile snapshots and attachments, and EncryptedString is not reported. These two appear only in their own module and in the inert namespace docstrings, which are prose rather than re-exports. Not an unencrypted column: the sensitive payload path encrypts through the application-layer secure-object envelope with its own integrity and provenance metadata, so the column-level decorator is an alternative mechanism the persistence layer did not take up."
+
+[[symbol_cluster]]
+name = "envelope-level recovery entry points the artifact path bypasses"
+class = "superseded"
+area = "adapters/persistence/storage/custody"
+symbols = ["unlock_profile_custody_recovery", "parse_profile_custody_recovery_envelope"]
+evidence = "Two envelope-level conveniences over the recovery primitives, each appearing in production only in its own __all__. The live holder is named: recovery_artifact.py calls the field-level unlock_profile_custody_recovery_material from kdf_supervision.py and derives the wrapper AAD through profile_custody_recovery_aad_for, so it never routes through the envelope forms. Checked for a crypto divergence before recording this, because two AAD helpers in one module is the shape that hides one: the envelope form profile_custody_recovery_aad DELEGATES to the field-level _for helper, so there is a single canonical derivation and the bypass changes no bytes."
+
+[[symbol_cluster]]
+name = "committed custody read and replace side with no caller"
+class = "should-be-live"
+area = "adapters/persistence/storage/custody"
+symbols = ["load_committed_profile_custody_summary_witness", "replace_committed_profile_custody_data_file"]
+evidence = "What remains of the committed profile-custody data path after its reader trio was removed as inert: the summary-witness load and the data-file replace, each referenced in production only by its own __all__. The write side of the same package is live -- write_data_files and write_posix_data_files are reached -- so the product commits custody data and can neither read a summary witness back nor replace a committed file. That asymmetry is the finding, and it is the same shape recorded for the earlier reader trio rather than a new one."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "bucket output-language hint read by production and written by nothing"
+class = "should-be-live"
+area = "adapters/persistence/storage"
+symbols = ["write_bucket_output_language_hint", "clear_bucket_output_language_hint"]
+evidence = "The mirror of the write-with-no-reader shape recorded elsewhere in this ledger. Here the READ is live: adapters/persistence/storage/profile_custody.py calls read_bucket_output_language_hint, and neither the writer nor the clear is called anywhere in production. The reader is documented to fail soft on absence or drift -- it catches every exception, logs at DEBUG and returns None -- so the hint file never exists, the read always yields None, and every caller silently takes the default output language. A per-bucket language preference therefore cannot take effect, and nothing above DEBUG says so."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "profile inventory persistence pair with neither side wired"
+class = "should-be-live"
+area = "adapters/persistence/profile"
+symbols = ["load_inventory", "save_inventory"]
+evidence = "Both halves of the profile inventory persistence, and unlike the half-wired paths recorded elsewhere neither side is reached: load_inventory has no production reference at all, and save_inventory's single apparent one is a docstring sentence in domain/contribuyente/inventory/records.py describing an older save path, which is prose rather than a call. The module's create_inventory_ledger sibling carries its own port-facade cluster for the same reason, so the whole inventory persistence surface is unreached."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "provenance envelope wrappers callers build themselves"
+class = "superseded"
+area = "application/ledger"
+symbols = ["ground_anchored_value", "ground_self_reported_anchor"]
+evidence = "Two wrappers returning a FieldProvenance envelope, displaced by callers constructing it directly at grounded_reading.py:264 and confirmation_record.py:412. Worth stating what this is NOT: the module is the structural half of the anti-fabrication contract, and that half is live. evaluate_anchor, printed_excerpt_occurs, printed_excerpt_occurs_in_text, refused_anchor_of and ground_ambiguous_candidates are all imported by production modules -- grounded_reading, document_direction and identity_roles -- so an extracted value is still checked against the transcription. Only the envelope-building convenience went unused."
+
+[[symbol_cluster]]
+name = "invoice CLI query projections no CLI surface consumes"
+class = "should-be-live"
+area = "application/invoices"
+symbols = ["list_invoice_rows", "list_unmatched_invoice_rows"]
+evidence = "Two query projections whose module docstring states they exist for the invoice CLI surfaces, taking a catalogue the caller has already loaded so bucket scoping stays the caller's decision. No CLI reaches them. The module is partly live and the split is the evidence: check_query.py imports verify_invoice_repository_links from the same module, so the module is consumed while these two projections are not, and the listing surfaces they were written for either do not exist or read through another path."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "deudas read surface fail-closed pending a page specimen"
+class = "staged-capability"
+area = "adapters/outbound/aeat/sede"
+symbols = ["assert_deudas_landing", "deudas_read_path_prefixes"]
+evidence = "The landing guard and path prefixes for the AEAT deudas read. Not unwired capability: application/live/deudas.py states in its own module docstring that no specimen of AEAT's consulta page has been captured and that the adapter's read-landing guard therefore refuses every landing until one exists, so the service persists and reads only what a specimen would justify. The guard's own docstring confirms the mechanism -- it delegates to the shared assert_read_landing wall, where a surface declaring no read pages refuses everything. Nothing calls the guard because no live read is attempted, which is the fail-closed state the design intends. The Deuda model from the same module IS imported by that service, so the module is partly live."
+
+[[symbol_cluster]]
+name = "IVA remote state captured and never loaded back"
+class = "should-be-live"
+area = "application/live"
+symbols = ["load_iva_remote_state", "load_iva_remote_state_acquisition_manifest"]
+evidence = "The read side of the IVA remote-state capture. capture_iva_remote_state is reached by production while neither loader is, so the product captures remote IVA state and never reads it back, and the acquisition-manifest surface beside it -- the manifest loader here, with its persist and list siblings also unreached -- records nothing about what was acquired. This is the same write-with-no-reader shape recorded for the committed custody data and the ledger import door, distinguished from the deudas entry above by there being no fail-closed rationale: the capture succeeds and the state simply cannot be retrieved."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "recipient keypair accessors the ensure path subsumes"
+class = "superseded"
+area = "application/modelo"
+symbols = ["load_recipient_encryption_keypair", "recipient_encryption_public_key"]
+evidence = "The module is mostly live -- encrypt_review_package_for_recipient, decrypt_review_package_for_recipient, ensure_recipient_encryption_keypair and the package types are all reached by production. The named holder is ensure_recipient_encryption_keypair, documented as returning the bucket's X25519 keypair and minting one on first use, so it subsumes the plain loader, and the encrypt path takes the keypair rather than asking for a public key separately. This is a displaced accessor pair inside a working feature, not an unwired one."
+
+[[symbol_cluster]]
+name = "review-only workspace feature with no opener or guard"
+class = "should-be-live"
+area = "application/modelo"
+symbols = ["open_review_only_workspace", "assert_workspace_permits_official_action"]
+evidence = "The opener for a review-only workspace and the guard refusing an official action inside one. Neither is reached, and the ReviewOnlyWorkspace type they produce and check has exactly one production consumer: review_package_collab_audit.py, whose emit_collab_* emitters this ledger already records as reached by nothing. So the type is held alive only by code that is itself unreached, and the feature has no producer, no authority guard and no audit trail. The guard is the part that matters -- an official action inside a review-only workspace is refused by nothing."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "command spec projections the CLI reference generator reads"
+class = "design-time-authority"
+area = "entrypoints/cli"
+symbols = ["command_spec_nodes", "command_spec_for_path"]
+evidence = "The only two symbols command_api DEFINES; everything else in its __all__ is re-exported from the private modules that define it. Both are read by dev/docs/cli_reference.py and dev/docs/cli_tree.py to generate the CLI reference from the live command tree, which the documentation rule requires be generator-owned rather than hand-maintained. No runtime caller reaches them, which is the contract holding: a projection of the command surface exists so the generator need not restate the command tree, and the same shape is already recorded for resolve_command_path."
+
+[[symbol_cluster]]
+name = "filed-history producers replaced by constant defaults"
+class = "should-be-live"
+area = "application/live"
+symbols = ["classify_register_scoping_signal", "filed_period_selection_rows"]
+evidence = "Two producers in a module that is otherwise half live -- twelve of its twenty-four exports are reached -- whose outputs are consumed downstream from a constant instead. classify_register_scoping_signal says what the offered modelo set suggests about its own scoping; filed_history_operation reads that through run.scoping_signal, and BOTH FiledHistoryOnboardingRun construction sites pass RegisterScopingSignal.INCONCLUSIVE, matching the field default, so the signal is always inconclusive and the classification is never computed. filed_period_selection_rows is the only producer of FiledPeriodSelectionRow; the run field defaults to an empty tuple, neither construction site fills it, and filed_history_operation projects selection_rows from run.selection_rows, so the operator is always shown none. The types are live and the plumbing is complete in both cases -- only the producer is unreached, which is why neither shows up as a missing consumer."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "work-address resolvers displaced by the richer target resolution"
+class = "superseded"
+area = "application/modelo"
+symbols = ["resolve_modelo_work_unit_id", "project_modelo_work_target"]
+evidence = "The module is five-live to four-dead, and the live half names the holder. resolve_modelo_work_unit_for_operator_target and select_modelo_work_resolution are reached, and callers read the identifier off the resolved work unit rather than resolving it separately -- calculation_actions.py:801 and the m303 annual summary both pass work_unit_id=work_unit.work_unit_id into CalculationSourceContext. So the standalone id resolver and the target projector are displaced by a resolution that already carries what they return. Checked against the constant-default shape first: CalculationSourceContext.work_unit_id defaults to None, but two of its three construction sites pass a computed value, so the field is populated and this is ordinary supersession rather than a producer replaced by a literal."
+
+[[symbol_cluster]]
+name = "path-taking restore wrappers the shared authority displaced"
+class = "superseded"
+area = "application/user_profile"
+symbols = ["restore_profile_from_source_with_password", "restore_profile_from_source_with_recovery_artifact"]
+evidence = "Two wrappers that take a filesystem path and republish the capsule found there. The displacing holder states the arrangement itself: restore_profile_capsule_with_password is documented as the shared publication authority, where a directory restore and an archive import differ only in how they OBTAIN a ProfileCapsuleSource and both arrive at one place, and adding a second is called the fork the arrangement exists to prevent. The live callers follow that split -- entrypoints/cli/config/_restore_cli.py reads the source through read_profile_capsule_source and then publishes, and capsule_archive.py publishes too -- so these path-taking variants are the second thing the design refuses."
+
+[[symbol_cluster]]
+name = "manifest validators the atomic capture made unnecessary"
+class = "superseded"
+area = "application/modelo"
+symbols = ["validate_modelo_workspace_field_manifest", "validate_modelo_workspace_field_manifest_for_inspection"]
+evidence = "Each validator regenerates the manifest and refuses one that is not the current fixed point. The live capture pair makes that comparison unreachable by construction: capture_modelo_workspace_manifest documents that the walk is atomic, the sole generating authority runs once and its own digest becomes the observation, so no second walk can pair a manifest with a coordinate from different schema state. Every manifest in the tree therefore comes from the same walk that produced its coordinate, and a generate-then-compare check would always trivially pass. Note the generator itself is NOT a finding: capture calls it in the same module, which a cross-module reference count cannot see."
+
+[[symbol_cluster]]
+name = "error registry inspection surfaces"
+class = "test-support"
+area = "core"
+symbols = ["ERROR_REGISTRY", "declared_error_codes"]
+evidence = "A read-only MappingProxyType view over the registry and an accessor returning the declared (qualified name, ErrorCode) rows. Production never needs either: it reaches the registry through the typed accessors, which are heavily live -- register at twenty-two references, resolve_error_message at sixteen, get_registered_error_code at eight. The two views exist so a test can inspect registry state, and they are used that way at thirty-two and three test references with no dev consumer. Same shape as the process-cache reset seams: an inspection surface over state production already reaches by contract, not capability awaiting a caller."
+
+[[symbol_cluster]]
+name = "in-service resume selector policy the addressing facade displaced"
+class = "superseded"
+area = "application/workflow"
+symbols = ["resolve_modelo_exact_workflow_run_for_resume", "resolve_modelo_visible_workflow_run_for_resume"]
+evidence = "The exact and visible run resolvers for workflow resume. The live holder states the displacement directly: resolve_modelo_workflow_resume_target documents that exact run ids remain the direct path while work-unit ids, calculation-revision ids and visible modelo/year/period selectors resolve through the public modelo addressing facade before workflow run lookup, SO THAT this service does not duplicate modelo selector policy. These two are that duplicated policy. Contradictory selectors are still refused, by a WorkflowError raised in the live resolver rather than by the unused ambiguity error beside these."
+
+[[symbol_cluster]]
+name = "locale catalogue disk cache never read or written"
+class = "should-be-live"
+area = "core"
+symbols = ["read_catalogue_cache", "write_catalogue_cache"]
+evidence = "The cross-process half of the locale catalogue cache. Its own module docstring carries the measurement that justifies it: the packaged catalogues hold a large modelo.schema block of casilla labels and help text, and even the C-accelerated YAML loader costs about 800 ms per process because PyYAML's acceleration covers scanning and parsing while constructing Python objects from the node tree is always pure Python, whereas a JSON reload of the pre-flattened map costs single-digit tens of milliseconds. The in-process half IS live -- locale_catalogue.py imports compute_directory_source_digest and builds a (locale, digest) key from it at line 139 -- but neither the read nor the write of the persisted flat map is called anywhere, so every new process pays the parse the cache was written to avoid."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "default filing profile loader displaced by explicit identity"
+class = "superseded"
+area = "application/filing"
+symbols = ["load_default_filing_profile"]
+evidence = "Loads the active profile bucket implicitly for runtime filing commands. The live holder is filing_profile_from_taxpayer, reached twice, which takes a TaxpayerProfileIdentity the caller has already resolved. Same split as the capsule restore authority recorded in this ledger: the caller obtains the subject, then one builder turns it into the runtime shape, so the implicit loader is the second path."
+
+[[symbol_cluster]]
+name = "reset seam for an unreached fingerprint cache"
+class = "orphaned"
+area = "application/filing"
+symbols = ["clear_runtime_fingerprint_cache"]
+evidence = "Clears the time-based TTL cache for registry tree fingerprints and the canonical collector's own cache. The cache it resets has no live user: registry_tree_fingerprint, the function that would populate it, is itself unreached, and the live schema surface in this module -- RegistrySchemaAccessor at six references and build_runtime_schema_provider at five -- does not consult it. A reset seam for state nothing produces is not a test-support surface, because there is no live production path to the state."
+
+[[symbol_cluster]]
+name = "encrypted envelope tier held together by its own dead members"
+class = "orphaned"
+area = "adapters/persistence/storage/envelope"
+symbols = ["load_encrypted_envelope", "reencrypt_envelope_file"]
+evidence = "The encrypted tier of the envelope contract, unreached as a group. The plain tier beside it is live -- Envelope at eighteen references, save_envelope at two, load_envelope at one -- and the encrypted tier only appears reached because its members call each other: save_encrypted_envelope is invoked at line 594 inside reencrypt_envelope_file, which is itself unreached, which is why the audit reports the loader and not the saver. Sensitive payloads are encrypted through the application-layer secure-object envelope with its own integrity and provenance metadata, so this file-level encrypted tier is an alternative the persistence layer did not take up."
+
+[[symbol_cluster]]
+name = "mnemonic decoder the passphrase design does not need"
+class = "orphaned"
+area = "adapters/persistence/storage"
+symbols = ["decode_mnemonic"]
+evidence = "Turns a 24-word mnemonic back into entropy. Nothing calls it, and the reason is a design choice rather than a gap: application/user_profile/custody_ports.py records that the recovery secret IS the 24-word BIP-39 mnemonic over 256 bits of entropy, so the phrase is handed to the KDF as a passphrase and never decoded. The encoder is live by contrast, called at line 235 of the same module by generate_recovery_key, which profile_custody.py reaches -- so a mnemonic is issued, and recovery consumes the words themselves."
+
+[[symbol_cluster]]
+name = "document transcription cache that nothing populates"
+class = "should-be-live"
+area = "application/ledger"
+symbols = ["write_cached_transcription"]
+evidence = "The write half of the encrypted, content-addressed stage-S1 transcription cache. Its own module docstring states the premise this breaks: re-reading is the expensive half of ingestion, a vision transcription costs a model pass over every page, and the pipeline deliberately re-runs the cheap semantic stages when a model or prompt improves, which is ONLY AFFORDABLE IF THE TRANSCRIPTION IS KEPT. Nothing calls the writer, so the cache is never populated and every read misses. The loader beside it is NOT a finding -- an intra-module caller reaches it, which a cross-module reference count cannot see -- so only the writer is named here. The single live reader is telling: consent_withdrawal.py, which touches the cache to erase it rather than to serve a re-extraction. So the affordability the pipeline is designed around does not hold, and each re-extract, re-classify or re-draft pays the full per-page model pass again."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "standalone manifest writer the bundle builder subsumes"
+class = "superseded"
+area = "core"
+symbols = ["save_corpus_manifest"]
+evidence = "Writes a corpus manifest to a target path. The live holder is build_corpus_bundle, documented as building the manifest and then writing a new zip archive containing it, so the manifest reaches disk inside the bundle rather than through a separate sidecar write. build_corpus_bundle and verify_corpus_bundle are the module's only cross-module consumers, at one and two references; the manifest-level functions beside them are reached from inside the module by those two entry points."

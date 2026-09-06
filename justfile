@@ -788,7 +788,23 @@ test-integration:
 [doc('Run the dev/ tooling gates that no other lane reaches (audit, benchmarks, deploy, env, identity, locales, sanitizer, registry, docs, agent-eval, ingest-harness subsystems).')]
 [group('testing')]
 test-dev-tooling:
-    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "(unit or integration) and not resident_service and not external_tool" dev/audit/tests dev/benchmarks/cli/tests dev/corpus/tests dev/deploy/tests dev/docs/tests dev/env/tests dev/identity/tests dev/locales/tests dev/readme/tests dev/tests dev/sanitizer/tests dev/registry/tests dev/registry/newmodelo/tests dev/registry/aeip/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests dev/agent_eval/tests dev/ingest_harness/tests
+    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "(unit or integration) and not resident_service and not external_tool" dev/audit/tests dev/benchmarks/cli/tests dev/corpus/tests dev/deploy/tests dev/docs/tests dev/env/tests dev/identity/tests dev/locales/tests dev/readme/tests dev/tests dev/sanitizer/tests dev/registry/tests dev/registry/newmodelo/tests dev/registry/aeip/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests dev/agent_eval/tests dev/ingest_harness/tests dev/containers/tests dev/smoke/tests dev/tui/tests dev/registry/parity/tests
+
+# Run the registry conformance suite. It sits in its own lane rather than in
+# `test-dev-tooling` because of cost, not category: a sequential local run
+# measured roughly two minutes per test across 32 tests, where that whole
+# lane's other 24 directories finish in well under a minute. The composer
+# walks every revision in the bundled registry, which is the same reason
+# `dev/tests/test_registry_conformance_gate.py` records the real run as being
+# beyond the per-push budget.
+#
+# It is named here so the directory sits inside a lane at all. Left unnamed it
+# was one of six directories `dev/tests/test_lane_reachability.py` reported as
+# swept by nothing -- a suite that looks like coverage and reports to no one.
+[doc('Run the registry conformance suite (slow: walks every bundled revision).')]
+[group('testing')]
+test-registry-conformance:
+    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "(unit or integration) and not resident_service and not external_tool" --timeout=300 dev/registry/conformance/tests
 
 # Run the dev-tree workflow/tooling conformance gates that CI runs per-push
 # (workflow structural pins, evidence-transport conformance, shard-plugin
@@ -1119,6 +1135,20 @@ audit-health-report:
 [group('audits')]
 audit-health-report-json:
     @uv run --no-sync python -m dev.audit.report --json
+
+# Audit module and callable sizes across src/ and dev/ against the committed
+# ratchet in dev/audit/size_budget_baseline.json. Exits 1 only on MOVEMENT: a
+# subject that broke through its own ceiling, or a ceiling that outlived its
+# subject. Standing debt is declared in the baseline and does not fail, so this
+# is green until something grows.
+#
+# Pay debt down and re-run with --regenerate to lower the ceilings. Absorbing
+# growth needs --regenerate --accept-growth, so a broken ceiling can only be
+# raised deliberately and in a reviewable diff. Wired blocking in ci.yml.
+[doc('Audit module and callable sizes across src/ and dev/ against the declared band.')]
+[group('audits')]
+audit-size-budget:
+    @uv run --no-sync python -m dev.audit.size_budget
 
 # Audit module, class, enum, and function names across src/ and dev/.
 # Public production declarations must be singular and globally unique; private

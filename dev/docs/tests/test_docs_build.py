@@ -123,8 +123,10 @@ def test_docs_build_jobs_accepts_only_serial_or_auto_settings() -> None:
 
     assert docs_build_jobs({}) == "auto"
     assert docs_build_jobs({"CADRUMO_DOCS_JOBS": "1"}) == "1"
-    with pytest.raises(SystemExit, match="positive integer"):
+    with pytest.raises(SystemExit, match="must be a positive integer worker count"):
         docs_build_jobs({"CADRUMO_DOCS_JOBS": "0"})
+    with pytest.raises(SystemExit, match="must be 'auto' or a positive integer"):
+        docs_build_jobs({"CADRUMO_DOCS_JOBS": "two"})
 
 
 def test_pagefind_index_mode_defaults_to_full_and_accepts_pages() -> None:

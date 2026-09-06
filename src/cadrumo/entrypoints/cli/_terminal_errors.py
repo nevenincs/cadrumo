@@ -301,7 +301,13 @@ def _render_click_exception_text(exc: BaseException) -> None:
                 type(rich_error).__name__,
                 rich_error,
             )
-    show = getattr(exc, "view", None)
+    # The attribute is ``show``. Reading ``view`` found nothing on any click
+    # exception, so this funnel always fell through to the bare write below --
+    # and the whole localised renderer went with it: the ``Error:`` prefix, the
+    # usage block, the "Try ... for help" hint, and the parameter name the
+    # refusal is supposed to state. An operator saw a value rejected without
+    # being told which option had rejected it.
+    show = getattr(exc, "show", None)
     if callable(show):
         show()
     else:

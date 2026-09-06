@@ -49,7 +49,14 @@ _SELF_PACKAGING_SHIM = re.compile(r"^\s*__package__\s*=", re.MULTILINE)
 
 
 def _workflow_files() -> list[Path]:
-    return sorted((REPO_ROOT / ".github" / "workflows").glob("*.yml"))
+    """Return every workflow document, both suffixes Actions reads.
+
+    A "*.yml" glob skips a lane filed as .yaml, and this list feeds an
+    offender check asserted for ABSENCE -- so an unswept lane reads exactly
+    like a clean one. The self-hosted fleet gate already unions both.
+    """
+    workflows = REPO_ROOT / ".github" / "workflows"
+    return sorted(path for path in workflows.iterdir() if path.suffix in (".yml", ".yaml"))
 
 
 def _script_invocation_offenders(workflows: list[Path], *, repo_root: Path) -> list[str]:

@@ -47,7 +47,7 @@ def test_generated_page_is_fresh() -> None:
     """The committed page equals fresh generator output byte for byte."""
     path = target_path(_REPO_ROOT)
     assert path.is_file(), f"missing generated page: {path}; run python -m dev.docs.env_reference"
-    assert path.read_text(encoding="utf-8") == render_environment_reference(), (
+    assert path.read_bytes() == render_environment_reference().encode("utf-8"), (
         f"{path} is stale; regenerate with python -m dev.docs.env_reference"
     )
 

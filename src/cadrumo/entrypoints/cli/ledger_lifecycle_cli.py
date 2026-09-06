@@ -315,6 +315,8 @@ def ledger_evidence_pull_all(
     )
     from ...adapters.outbound.storage.factory import build_google_credentials
     from ...adapters.persistence.storage.attachment import AttachmentStore
+    from ...application.ledger.evidence_sweep import classify_evidence_sweep_failure
+    from ...core.errors.hierarchy import CadrumoError
     from ...domain.attachments.enums import AttachmentKind
     from ...domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
     from ._ledger_payloads import LedgerEvidencePullAllFilePayload, LedgerEvidencePullAllResult
@@ -334,30 +336,50 @@ def ledger_evidence_pull_all(
     refused_count = 0
     for document in listing.documents:
         reference = f"https://drive.google.com/file/d/{document.file_id}"
-        data = resolve_document_link(
-            source=AttachmentSource.GOOGLE_DRIVE,
-            reference=reference,
-            credentials=credentials,
-        )
-        attachment = add_attachment(
-            store,
-            content=AttachmentBytesContent(data=data),
-            request=AttachmentIngestionRequest(
-                kind=AttachmentKind.DRIVE_DOCUMENT,
+        try:
+            data = resolve_document_link(
                 source=AttachmentSource.GOOGLE_DRIVE,
-                source_reference=reference,
-                mime_type=document.mime_type or _sniff_document_mime_type(document.name, data),
-                captured_at=now(),
-                bucket_id=bucket_id,
-                metadata={
-                    "source": AttachmentSource.GOOGLE_DRIVE.value,
-                    "source_reference": reference,
-                    "drive_folder_id": folder_id,
-                    "drive_file_name": document.name,
-                },
-                notes=note,
-            ),
-        )
+                reference=reference,
+                credentials=credentials,
+            )
+            attachment = add_attachment(
+                store,
+                content=AttachmentBytesContent(data=data),
+                request=AttachmentIngestionRequest(
+                    kind=AttachmentKind.DRIVE_DOCUMENT,
+                    source=AttachmentSource.GOOGLE_DRIVE,
+                    source_reference=reference,
+                    mime_type=document.mime_type or _sniff_document_mime_type(document.name, data),
+                    captured_at=now(),
+                    bucket_id=bucket_id,
+                    metadata={
+                        "source": AttachmentSource.GOOGLE_DRIVE.value,
+                        "source_reference": reference,
+                        "drive_folder_id": folder_id,
+                        "drive_file_name": document.name,
+                    },
+                    notes=note,
+                ),
+            )
+        except CadrumoError as exc:
+            # Only a failure that is a fact about THIS document continues the
+            # sweep; the classifier answers None for anything else, and that
+            # one re-raises rather than fabricating a per-file cause for a
+            # transport problem affecting every remaining row.
+            refusal = classify_evidence_sweep_failure(exc)
+            if refusal is None:
+                raise
+            refused_count += 1
+            rows.append(
+                LedgerEvidencePullAllFilePayload(
+                    file_id=document.file_id,
+                    name=document.name,
+                    mime_type=document.mime_type,
+                    fetched=False,
+                    refusal_reason=refusal.value,
+                ),
+            )
+            continue
         fetched_count += 1
         rows.append(
             LedgerEvidencePullAllFilePayload(

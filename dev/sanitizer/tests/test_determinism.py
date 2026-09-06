@@ -14,6 +14,7 @@ import io
 
 import pikepdf
 import pytest
+from pikepdf import ObjectStreamMode
 
 from .._determinism import deterministic_save_flags, save_with_deterministic_flags
 
@@ -81,3 +82,33 @@ class TestDeterministicSave:
         output, _ = save_with_deterministic_flags(pdf)
         re_opened = pikepdf.Pdf.open(io.BytesIO(output))
         assert len(re_opened.pages) == 1
+
+    def test_the_reported_flags_are_the_flags_the_save_actually_applied(self) -> None:
+        """The record shipped with the bytes must describe the save that made them.
+
+        The flag set was declared twice — once as the audited
+        :class:`DeterminismFlags` record, once as literal keywords on the
+        ``Pdf.save`` call — and nothing compared the two. A save call edited
+        away from the record kept returning the unchanged record, so every
+        ``SanitizationResult`` would attest a flag set that never ran.
+
+        Saving the same PDF a second time with the keywords read back off the
+        REPORTED record reproduces the bytes only while the call still follows
+        it; a divergence in ``deterministic_id``, ``static_id``,
+        ``object_stream_mode``, ``linearize`` or ``compress_streams`` changes
+        the output and reddens here.
+        """
+        reported_bytes, flags = save_with_deterministic_flags(_new_one_page_pdf())
+
+        replayed = io.BytesIO()
+        _new_one_page_pdf().save(
+            replayed,
+            deterministic_id=flags.deterministic_id,
+            static_id=flags.static_id,
+            object_stream_mode=ObjectStreamMode[flags.object_stream_mode],
+            linearize=flags.linearize,
+            recompress_flate=flags.recompress_flate,
+            compress_streams=flags.compress_streams,
+        )
+
+        assert reported_bytes == replayed.getvalue(), "the save applied flags other than the ones it reported"

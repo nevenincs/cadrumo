@@ -29,8 +29,10 @@ from cadrumo.core.directory_scan import scan_directory
 from ..._paths import REPO_ROOT
 from ..runner_queue_watchdog import (
     JobView,
+    Verdict,
     _epoch_of,
     classify,
+    confirm_unschedulable,
     occupied_label_keys,
     parse_jobs,
 )
@@ -231,6 +233,63 @@ def test_the_discriminator_is_what_makes_the_silent_case_silent() -> None:
     assert same_lane.unschedulable is True, "occupancy is not load-bearing; the skip is inert"
 
 
+def _unschedulable(name: str) -> Verdict:
+    """One flagged verdict, the shape ``classify`` emits for an unserved lane."""
+    return Verdict(
+        job_name=name,
+        label_key=("Windows", "X64", "self-hosted"),
+        waited_seconds=3992.0,
+        unschedulable=True,
+        reason="no job anywhere in this repository is running on this label set",
+    )
+
+
+def test_a_lane_flagged_once_does_not_cancel_the_run() -> None:
+    """The exact shape that killed run 34016654501.
+
+    A label set falls empty for a moment between a finishing job and the queued
+    job that succeeds it. The successor had started three seconds before the
+    poll that read the gap, so a single observation cancelled seven lanes and
+    the evidence they were about to produce. One sample is not proof.
+    """
+    tally, confirmed = confirm_unschedulable([_unschedulable("windows oracle")], {}, required=2)
+
+    assert confirmed == ()
+    assert tally == {"windows oracle": 1}
+
+    # Anti-tautology: the same input under the pre-fix threshold must confirm,
+    # or this passes just as well against a function that confirms nothing.
+    _, unguarded = confirm_unschedulable([_unschedulable("windows oracle")], {}, required=1)
+    assert [verdict.job_name for verdict in unguarded] == ["windows oracle"]
+
+
+def test_a_lane_flagged_on_consecutive_polls_cancels_the_run() -> None:
+    """The other direction: a real unservable lane must still be caught.
+
+    Without this the debounce would be indistinguishable from a watchdog that
+    never fires, which is the failure it was added to prevent, inverted.
+    """
+    first, _ = confirm_unschedulable([_unschedulable("windows oracle")], {}, required=2)
+    _, confirmed = confirm_unschedulable([_unschedulable("windows oracle")], first, required=2)
+
+    assert [verdict.job_name for verdict in confirmed] == ["windows oracle"]
+
+
+def test_a_lane_that_recovers_starts_its_count_again() -> None:
+    """A gap that closes must not leave a count behind to be topped up later.
+
+    Counting down rather than rebuilding would let two unrelated handoff gaps,
+    minutes apart, add up to a cancellation neither one justified.
+    """
+    first, _ = confirm_unschedulable([_unschedulable("windows oracle")], {}, required=2)
+    recovered, _ = confirm_unschedulable([], first, required=2)
+    tally, confirmed = confirm_unschedulable([_unschedulable("windows oracle")], recovered, required=2)
+
+    assert recovered == {}
+    assert confirmed == ()
+    assert tally == {"windows oracle": 1}
+
+
 def test_watchdog_never_reports_its_own_queue_wait() -> None:
     """The watchdog is a job in the run it watches and must exclude itself.
 
@@ -252,11 +311,24 @@ def test_occupancy_counts_only_running_jobs() -> None:
     assert occupied_label_keys(parse_jobs(queued_only)) == frozenset()
 
 
+#: Floor for the workflow census three gates in this module iterate. The
+#: directory carries sixteen today; the sibling change-class module floors
+#: the same walk at eight and states why, so this matches it. A bare
+#: truthiness stood here, and every assertion in those three gates runs
+#: INSIDE the loop over this list: a walk narrowed to one document leaves
+#: each of them passing with almost nothing executed.
+_MINIMUM_WORKFLOW_DOCUMENTS = 8
+
+
 def _workflow_documents() -> list[tuple[Path, dict[str, Any]]]:
     paths = sorted(
         {*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")}
     )
-    assert paths, f"no workflows found to gate under {_WORKFLOWS_DIR}"
+    assert len(paths) >= _MINIMUM_WORKFLOW_DOCUMENTS, (
+        f"only {len(paths)} workflow(s) found under {_WORKFLOWS_DIR}; the gates that "
+        "iterate this census assert nothing at all over a walk that reached less than "
+        "the lanes this repository runs"
+    )
     return [(path, yaml.safe_load(path.read_text(encoding="utf-8"))) for path in paths]
 
 

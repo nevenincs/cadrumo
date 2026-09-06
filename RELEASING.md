@@ -155,23 +155,47 @@ gate refuses a release until every declared row is present and passing. Those ro
 from one place: the `Cadrumo Packaging Smoke` workflow, dispatched by hand. It never runs
 on push, because the three-OS matrix is the most expensive workflow in the repository.
 
-Dispatch it against the release PR's branch, not against `main`.
+Dispatch it after the release PR has merged, against the tag that merge created.
 
 ```console
-gh pr list --repo nevenincs/cadrumo --label "autorelease: pending" --json headRefName
-gh workflow run packaging-smoke.yml --repo nevenincs/cadrumo --ref <RELEASE_BRANCH>
+gh workflow run packaging-smoke.yml --repo nevenincs/cadrumo --ref v<VERSION>
 ```
 
-The branch is not a preference. The readiness gate binds every distribution-evidence row
+Then mint the acquisition rows from that run, naming the commit it built:
+
+```console
+gh workflow run packaging-homebrew.yml --repo nevenincs/cadrumo --ref main \
+  -f source_run_id=<SMOKE_RUN_ID> -f source_commit=<SMOKE_HEAD_SHA>
+gh workflow run packaging-scoop.yml --repo nevenincs/cadrumo --ref main \
+  -f source_run_id=<SMOKE_RUN_ID> -f source_commit=<SMOKE_HEAD_SHA>
+```
+
+The timing is not a preference. The readiness gate binds every distribution-evidence row
 to the cohort that produced it, and refuses unless that cohort's source commit equals the
-checked-out commit and its tag equals `v<VERSION>`. Both hold on the release branch, where
-the bump has landed and nothing has been published yet. A campaign dispatched against
-`main` mints evidence bound to a `main` commit, which is not the commit the release is cut
-from, so the gate reports the evidence set incomplete when it is run before the merge:
+checked-out commit and its tag equals `v<VERSION>`. Only the merged release commit
+satisfies both: release-please creates the tag when the PR MERGES, so on the release
+branch itself no tag points at the commit, the cohort records no tag at all, and the gate
+refuses every row:
+
+```text
+[BLOCK] distribution-evidence-complete: cohort tag None does not match version tag 'v<VERSION>'
+```
+
+A campaign dispatched against `main` after later commits have landed fails the other half,
+because the cohort's commit is no longer what is checked out:
 
 ```text
 [BLOCK] distribution-evidence-complete: cohort commit <COMMIT> does not match checked-out commit <COMMIT>
 ```
+
+The acquisition lanes agree independently: each resolves its source run's commit against
+main's history and refuses one that is not on it, so a release-branch commit is rejected
+there too, before any row is written.
+
+Run the readiness gate with the tag checked out, not `main`, or the commit comparison
+fails against a tree the cohort was never built from. All seven rows must come from ONE
+smoke run: the gate compares the whole cohort binding, so rows mixed across two campaigns
+are refused.
 
 The cohort seal itself does not refuse a version some destination already owns. Building a
 cohort uploads nothing, and between releases the commit legitimately declares the version

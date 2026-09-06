@@ -258,3 +258,39 @@ def test_a_readable_registry_tree_announces_nothing(
     load_census.module_level_importers("cadrumo.target")
 
     assert capsys.readouterr().err == ""
+
+
+def test_the_clean_property_reads_every_field_it_claims_to() -> None:
+    """The gate above asserts ``clean`` and never sees it answer False.
+
+    ``clean`` is a conjunction over three fields, and the corpus satisfies all
+    three, so a property that had stopped reading two of them would still
+    answer True on every live run and the assertion above would still pass. The
+    reports here are constructed because a False answer is not otherwise
+    reachable from the working tree, and each one holds exactly one field the
+    property must refuse on.
+    """
+    from ..analysis.load_census import CensusReport
+
+    settled = {
+        "universe": frozenset({_PLANTED}),
+        "closure": frozenset(),
+        "registry_modules": frozenset({_PLANTED}),
+        "unclassified": (),
+        "stale_rules": (),
+        "dead_candidates": frozenset(),
+        "undeclared_dead_candidates": (),
+        "unresolved_dynamic_sites": (),
+    }
+
+    assert CensusReport(**settled).clean, "a report with nothing outstanding must read clean"
+
+    assert not CensusReport(**{**settled, "unclassified": (_PLANTED,)}).clean
+    assert not CensusReport(**{**settled, "stale_rules": ("rule describing nothing",)}).clean
+    assert not CensusReport(
+        **{
+            **settled,
+            "dead_candidates": frozenset({_PLANTED}),
+            "undeclared_dead_candidates": (_PLANTED,),
+        }
+    ).clean

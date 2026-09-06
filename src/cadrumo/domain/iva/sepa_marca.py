@@ -38,6 +38,8 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Final
 
+from .establishment import SPAIN_COUNTRY_CODE
+
 
 class SepaMarca(StrEnum):
     """Diseño DR303 ``Marca SEPA`` indicator for the cuenta-devolución block.
@@ -57,7 +59,6 @@ class SepaMarca(StrEnum):
 
 
 #: ISO 3166-1 alpha-2 country code of Spain, the ``Marca SEPA = 1`` country.
-_SPAIN_COUNTRY_CODE: Final = "ES"
 
 #: The SEPA-zone country codes (excluding Spain, which is its own marca). A
 #: refund account whose country is in this set is ``Marca SEPA = 2`` (UE SEPA);
@@ -148,7 +149,7 @@ def derive_sepa_marca(*, iban: str | None, bank_country_code: str = "") -> SepaM
         The derived :class:`SepaMarca`.
     """
     country = _account_country_code(iban=iban, bank_country_code=bank_country_code)
-    if country == _SPAIN_COUNTRY_CODE:
+    if country == SPAIN_COUNTRY_CODE:
         return SepaMarca.ESPANA
     if country is not None and country in SEPA_ZONE_COUNTRY_CODES:
         return SepaMarca.UE_SEPA

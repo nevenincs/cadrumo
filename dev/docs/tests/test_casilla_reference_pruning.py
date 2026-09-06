@@ -26,6 +26,14 @@ from ..casilla_reference import generate_casilla_reference
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
+
+#: Floor for the modelo pages the live registry renders. Live it renders
+#: 58 pages beside the index, one per modelo. The sweep keeps the index
+#: whatever the render produced, so a collapsed registry leaves exactly
+#: one file standing -- which every existence check here accepted, and
+#: which no existence check can tell apart from a healthy tree.
+_MINIMUM_CASILLA_PAGES = 20
+
 _REPO_ROOT = REPO_ROOT
 
 
@@ -51,7 +59,13 @@ def test_a_page_the_registry_no_longer_produces_is_pruned(tmp_path: Path) -> Non
     generate_casilla_reference(tmp_path, repo_root=_REPO_ROOT)
 
     assert not stale.exists(), "a page no render owns survived, and Sphinx would read it"
-    assert any(iter_directory(out_dir, pattern="*.rst")), "the prune removed the pages it was meant to keep"
+    # ``any(...)`` was satisfied by index.rst alone, which the sweep keeps
+    # whatever the registry produced; count the survivors instead.
+    survivors = list(iter_directory(out_dir, pattern="*.rst"))
+    assert len(survivors) >= _MINIMUM_CASILLA_PAGES, (
+        f"the prune left only {len(survivors)} page(s); it was meant to keep the whole "
+        "rendered reference and remove just the unowned page"
+    )
 
 
 def test_the_index_and_every_rendered_modelo_page_survive_the_prune(tmp_path: Path) -> None:
@@ -64,7 +78,14 @@ def test_the_index_and_every_rendered_modelo_page_survive_the_prune(tmp_path: Pa
     result = generate_casilla_reference(tmp_path, repo_root=_REPO_ROOT)
     out_dir = _generated_casilla_dir(tmp_path)
 
-    assert result.pages, "the registry rendered no casilla pages, so this proves nothing"
+    # A count, not a truthiness test: an emptied registry is caught by
+    # ``assert result.pages``, but a registry narrowed to a handful of
+    # modelos is not, and the per-page loop below then proves almost
+    # nothing while reading as exhaustive.
+    assert len(result.pages) >= _MINIMUM_CASILLA_PAGES, (
+        f"the registry rendered only {len(result.pages)} casilla page(s), so the "
+        "per-page survival check below ranges over almost none of the reference"
+    )
     assert (out_dir / "index.rst").is_file()
     for page in result.pages:
         assert (tmp_path / page.output_relpath).is_file(), f"the prune removed a rendered page: {page.output_relpath}"
@@ -84,7 +105,13 @@ def test_regenerating_an_unchanged_registry_leaves_every_page_untouched(tmp_path
     generate_casilla_reference(tmp_path, repo_root=_REPO_ROOT)
     after = {path.name: path.stat().st_mtime_ns for path in scan_directory(out_dir, pattern="*.rst")}
 
-    assert before, "the registry rendered no pages, so this proves nothing"
+    # The sweep keeps the index unconditionally, so a collapsed registry
+    # leaves ``before`` holding index.rst alone and the mtime comparison
+    # below then holds over one file.
+    assert len(before) >= _MINIMUM_CASILLA_PAGES, (
+        f"the registry rendered only {len(before)} file(s), so the mtime comparison "
+        "below proves nothing about the pages it was meant to leave untouched"
+    )
     assert after == before
 
 

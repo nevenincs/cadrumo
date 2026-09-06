@@ -273,6 +273,30 @@ jobs:
         run: CADRUMO_PYTEST_WORKERS=8 just test-dev-tooling
         continue-on-error: true
 
+      - name: Registry conformance suite
+        # `dev/registry/conformance/tests` ran in no lane and no workflow: it
+        # was one of six directories `dev/tests/test_lane_reachability.py`
+        # reported as swept by nothing, which is coverage that reports to
+        # nobody. It is here rather than in the per-push lane on cost: the
+        # composer walks every revision in the bundled registry, and a
+        # sequential (-n0) local run measured roughly two minutes per test,
+        # so the 32 tests are an hour-scale suite rather than a per-push one.
+        #
+        # Non-blocking, and for a measured reason rather than a cautious one:
+        # a full sequential run on 2026-09-06 was 1 failed, 31 passed in
+        # 20m48s. The failure is real and predates this wiring --
+        # `test_real_live_filing_success_cannot_invent_a_complete_source_limb`
+        # dies on `AttributeError: 'LiveFilingExportProofAuthority' object has
+        # no attribute 'assess_for'`. Production calls that protocol method at
+        # `src/cadrumo/application/registry/filing_export_coverage.py:355`; the
+        # authority in `dev/registry/filing_export_proof.py` does not implement
+        # it, and the unit test beside the caller passes only because it uses a
+        # local stub that does. This suite is the only thing that exercises the
+        # real authority, which is why the gap survived in a directory no lane
+        # swept. Flip this step to blocking once that one test is green.
+        run: CADRUMO_PYTEST_WORKERS=8 just test-registry-conformance
+        continue-on-error: true
+
       - name: Channel artifact conformance (Homebrew formula and Scoop manifest)
         # These fourteen tests bind the generated formula and manifest to a real
         # built cohort, and until now NOTHING ran them: the per-push lanes scope

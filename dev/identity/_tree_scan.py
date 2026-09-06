@@ -102,8 +102,11 @@ _UTF_8: Final[str] = UTF_8
 #:
 #: ``.env`` here is the SUFFIXED spelling only, as in ``production.env``. The
 #: bare dotfile is not reachable by suffix at all and is matched by name below.
+#:
+#: ``.properties`` is the Java spelling of ``.ini``/``.cfg`` and carries the same
+#: kind of payload, so it blocks for the same reason those two do.
 DATA_SUFFIXES: frozenset[str] = frozenset(
-    {".json", ".csv", ".toml", ".yml", ".yaml", ".xml", ".txt", ".sql", ".ini", ".cfg", ".env"}
+    {".json", ".csv", ".toml", ".yml", ".yaml", ".xml", ".txt", ".sql", ".ini", ".cfg", ".env", ".properties"}
 )
 
 #: The environment-file family, matched by NAME because it has no suffix to
@@ -118,7 +121,14 @@ ENVIRONMENT_FILE_STEM: Final[str] = ".env"
 #: Suffixes carrying prose or source. Reported as advisory, never blocking: every
 #: occurrence measured in these is a format example, a docstring specimen or a
 #: demo command, and no declared convention separates those from a real leak.
-NARRATIVE_SUFFIXES: frozenset[str] = frozenset({".py", ".md", ".rst", ".html", ".sh", ".ps1", ".j2"})
+#:
+#: ``.po`` catalogues carry translated prose and ``.xsd`` schemas carry example
+#: values, so both belong here rather than in the blocking set. They were in
+#: NEITHER set before: 202 tracked plain-text files were not read at all, not even
+#: advisorily, which is the same shape as the exposure this canary was built for.
+#: All 202 were measured clean when they were admitted, so admitting them recorded
+#: a fact rather than accepting a backlog.
+NARRATIVE_SUFFIXES: frozenset[str] = frozenset({".py", ".md", ".rst", ".html", ".sh", ".ps1", ".j2", ".po", ".xsd"})
 
 #: Binaries are a different problem with a different detector: the sanitiser owns
 #: PDFs, and a spreadsheet or archive needs extraction before a pattern means

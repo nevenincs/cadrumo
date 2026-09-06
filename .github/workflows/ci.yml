@@ -247,6 +247,25 @@ jobs:
         #   uv run --no-sync python -m dev.registry.parity.maintenance_cli audit-oracles
         run: uv run --no-sync python -m dev.registry.parity.maintenance_cli audit-oracles
 
+      - name: Size budget ratchet
+        # Blocking, and this is the point of it. A quality module here grew from
+        # 628 lines to 6,060 in two days while every check stayed green, because
+        # the gate that measured module size had its enforcing test deleted on
+        # 2026-08-18 and was wired to nothing afterwards. Reporting was never the
+        # gap; blocking was.
+        #
+        # This fails only on MOVEMENT: a subject that broke through its own
+        # committed ceiling, or a ceiling that outlived its subject. Standing
+        # debt is declared in dev/audit/size_budget_baseline.json and does not
+        # fail, so the lane is green today and reddens for whoever causes the
+        # growth. Pay debt down and regenerate; absorbing growth needs an
+        # explicit --accept-growth, which is a reviewable diff rather than a
+        # side effect.
+        #
+        # Costs ~90s of the per-push budget: it walks every module in src/ and
+        # dev/ and AST-parses every shipped callable.
+        run: just audit-size-budget
+
       - name: Tooling and workflow conformance gates
         # The dev-tree unit AND integration gates (workflow structural pins,
         # evidence-transport conformance, shard-plugin partition proof). This is

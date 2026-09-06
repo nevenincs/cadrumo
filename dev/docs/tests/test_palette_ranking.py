@@ -109,14 +109,33 @@ def _casilla_and_cli_records() -> _Materialised:
     return _Materialised(records=[casilla, cli], casillas=1, cli_commands=1)
 
 
+#: Floor for the approved concept fixture. Live the projector emits 165 cards
+#: -- 49 approved, 101 draft, 11 deprecated, 4 retired -- and this selects the
+#: 49. Two thirds of that, so concepts moving lifecycle never fire it while the
+#: projection collapsing does.
+_MINIMUM_APPROVED_CONCEPT_CARDS = 30
+
+
 def _approved_concept_records() -> _Materialised:
-    """The approved concept cards the production injector ships (no drafts)."""
+    """The approved concept cards, selected as the fixture for the palette tests.
+
+    The projector emits EVERY lifecycle, so this selection is a fixture choice
+    rather than an invariant being checked. It previously claimed one -- that
+    nothing draft reaches a card -- and asserted it as
+    ``all(c.lifecycle is APPROVED for c in approved)`` over the list just
+    filtered on that predicate, which cannot fail. The projector emits 101
+    drafts of 165 cards, and ``dev/docs/pagefind_inject.py`` never reads a
+    lifecycle at all, so nothing here or downstream enforces such an invariant.
+    What is worth holding is the size of the fixture the ranking tests run on.
+    """
     from cadrumo.core.concept_lifecycle import ConceptLifecycle
 
     cards, _ = project_concept_cards()
     approved = [c for c in cards if c.lifecycle is ConceptLifecycle.APPROVED]
-    # The invariant the palette renders: nothing draft reaches a card.
-    assert approved and all(c.lifecycle is ConceptLifecycle.APPROVED for c in approved)
+    assert len(approved) >= _MINIMUM_APPROVED_CONCEPT_CARDS, (
+        f"only {len(approved)} approved concept card(s) of {len(cards)} projected; the palette "
+        "ranking below would be measured against a fraction of the concept surface"
+    )
     records = [to_search_record(c) for c in approved]
     return _Materialised(records=records, concepts=len(records))
 

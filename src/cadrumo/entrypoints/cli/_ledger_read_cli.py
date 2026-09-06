@@ -19,7 +19,6 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.export.tabular import ExportSerializationFormat
 from ...application.ledger.actions_export import export_ledger_transactions
@@ -30,6 +29,7 @@ from ...application.ledger.actions_manual import (
     ledger_transaction_tracking_payload,
     summarize_manual_transactions,
 )
+from ...application.ledger.list_query import LLM_DECISION_EVENT_TYPES
 from ...application.ledger.models import LedgerExportCommand
 from ...application.ledger.review_projection import ledger_transaction_review_status
 from ...application.operator_actions.models import ActionReference
@@ -46,13 +46,12 @@ from ...core.json_contract import (
 )
 from ...core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
-from ...core.period import Period
 from ...core.unit_proportion import is_unit_proportion
-from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.buckets.event import BucketEventType
 from ...domain.categories.spending_category import CATEGORY_FAMILY_MEMBERS, SpendingCategory, SpendingCategoryFamily
 from ...domain.invoices.service import LinkInconsistency
 from ...domain.transactions.irpf_categories import ledger_irpf_category_catalogue
-from ...domain.transactions.models import Transaction, TransactionCatalogue
+from ...domain.transactions.models import Transaction
 from ._common import (
     active_profile_label,
     bad,
@@ -62,10 +61,7 @@ from ._common import (
     transaction_catalogue_repo,
 )
 from ._decimal_parsing import optional_decimal_text
-from ._ledger_list import (
-    LLM_DECISION_EVENT_TYPES,
-    project_ledger_list,
-)
+from ._ledger_list import project_ledger_list
 from ._ledger_support import ledger_cli_no_recovery
 from .period_parsing import _canonical_period, _optional_canonical_period
 
@@ -75,8 +71,8 @@ if TYPE_CHECKING:
         LlmDiagnosticsReport,
         LlmUsageCostProviderMetrics,
     )
-    from ...application.ledger.preflight import LedgerPreflightIssue, LedgerPreflightReport
-    from ._ledger_payloads import LedgerLinkInconsistencyPayload
+    from ...application.ledger.preflight import LedgerPreflightIssue
+    from ...application.ledger.readiness_query import LedgerReadinessIssueV1
     from ._ledger_rule_payloads import LedgerLlmDiagnosticsResult
 
 
@@ -98,31 +94,6 @@ def resolve_ledger_transaction_id(
             condition=CliExceptionPrecondition.LEDGER_TRANSACTION_ID_RESOLVES,
             facts={"transaction_id_resolves": False},
         ) from None
-
-
-_LEDGER_HISTORY_EVENT_TYPES: tuple[BucketEventType, ...] = (
-    BucketEventType.LEDGER_TRANSACTION_CREATED,
-    BucketEventType.LEDGER_TRANSACTION_IMPORTED,
-    BucketEventType.LEDGER_TRANSACTION_UPDATED,
-    BucketEventType.LEDGER_TRANSACTION_CLASSIFIED,
-    BucketEventType.LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED,
-    BucketEventType.LEDGER_TRANSACTION_ALLOCATED,
-    BucketEventType.LEDGER_TRANSACTION_ARCHIVED,
-    BucketEventType.LEDGER_TRANSACTION_STASHED,
-    BucketEventType.LEDGER_TRANSACTION_RESTORED,
-    BucketEventType.LEDGER_TRANSACTION_REMOVED,
-    BucketEventType.LEDGER_TRANSACTION_EXPORTED,
-    BucketEventType.LEDGER_TRANSACTION_SPLIT,
-    BucketEventType.LEDGER_TRANSACTION_MERGED,
-    BucketEventType.LEDGER_TRANSACTION_INVOICE_LINKED,
-)
-_LEDGER_EVIDENCE_HISTORY_EVENT_TYPES: tuple[BucketEventType, ...] = (
-    BucketEventType.PURCHASE_INVOICE_EVIDENCE_ATTACHED,
-    BucketEventType.PURCHASE_INVOICE_EVIDENCE_REPLACED,
-    BucketEventType.PURCHASE_INVOICE_EVIDENCE_DETACHED,
-    BucketEventType.ATTACHMENT_LINKED,
-    BucketEventType.ATTACHMENT_REMOVED,
-)
 
 
 def ledger_llm_diagnostics(
@@ -368,202 +339,54 @@ def ledger_check(
     ctx: typer.Context, bucket_id_option: str | None = None, period: str | None = None, year: int | None = None
 ) -> None:
     """Surface ledger anomalies and broken invoice links without mutating state."""
-    from ...application.invoices.catalogue_reads import verify_invoice_repository_links
-    from ._ledger_payloads import LedgerLinkInconsistencyPayload
+    from ...application.ledger.check_query import read_ledger_check
+    from ._ledger_payloads import LedgerCheckResult, LedgerLinkInconsistencyPayload
 
     if bucket_id_option is not None:
         transaction_repository = TransactionCatalogueRepository(bucket_id=bucket_id_option)
     else:
         transaction_repository = transaction_catalogue_repo(current_workflow_state())
-    bucket_id = transaction_repository.bucket_id
-    catalogue = transaction_repository.load()
-    link_inconsistencies = verify_invoice_repository_links(bucket_id=bucket_id)
+
+    check = read_ledger_check(
+        bucket_id=transaction_repository.bucket_id,
+        transactions=transaction_repository.load(),
+        period=_optional_canonical_period(period, year=year),
+    )
     link_rows = [
         LedgerLinkInconsistencyPayload(
             invoice_id=row.invoice_id, transaction_id=row.transaction_id, direction=row.direction
         )
-        for row in link_inconsistencies
+        for row in check.link_inconsistencies
     ]
-    link_lines = [
-        f"link_inconsistency\t{row.invoice_id}\t{row.transaction_id}\t{row.direction.value}"
-        for row in link_inconsistencies
-    ]
-    link_notices = _link_inconsistency_notices(link_inconsistencies)
-    canonical_period = _optional_canonical_period(period, year=year)
-    if canonical_period is not None:
-        _emit_ledger_check_period(
-            ctx,
-            bucket_id=bucket_id,
-            period=canonical_period,
-            catalogue=catalogue,
-            link_rows=link_rows,
-            link_lines=link_lines,
-            link_notices=link_notices,
-        )
-        return
-    years = sorted(
-        {
-            # ``booked_date`` is required, so the fallback always yields a date.
-            (tx.raw.value_date or tx.raw.booked_date).year
-            for tx in catalogue.values()
-        }
-    )
-    if not years:
-        _emit_ledger_check_empty(
-            ctx, bucket_id=bucket_id, link_rows=link_rows, link_lines=link_lines, link_notices=link_notices
-        )
-        return
-    _emit_ledger_check_all_periods(
-        ctx,
-        bucket_id=bucket_id,
-        years=years,
-        catalogue=catalogue,
-        link_rows=link_rows,
-        link_lines=link_lines,
-        link_notices=link_notices,
-    )
-
-
-def _emit_ledger_check_period(
-    ctx: typer.Context,
-    *,
-    bucket_id: str,
-    period: Period,
-    catalogue: TransactionCatalogue,
-    link_rows: list[LedgerLinkInconsistencyPayload],
-    link_lines: list[str],
-    link_notices: list[Notice],
-) -> None:
-    from ...application.ledger.preflight import preflight_transaction_catalogue
-    from ._ledger_payloads import LedgerCheckResult
-
-    report = preflight_transaction_catalogue(
-        bucket_id=bucket_id,
-        period=period,
-        transactions=catalogue,
-    )
-    period_label = str(period)
-    ready = report.ready and not link_rows
-    payload = {
-        "bucket_id": bucket_id,
-        "periods": [period_label],
-        "checked_transaction_count": report.checked_transaction_count,
-        "issues": [issue.model_dump(mode="json") for issue in report.issues],
-        "link_inconsistencies": link_rows,
-        "ready": ready,
-    }
     lines = [
-        f"bucket\t{bucket_id}",
-        f"periods\t{period_label}",
-        f"checked\t{report.checked_transaction_count}",
-        f"issues\t{len(report.issues)}",
-        f"link_inconsistencies\t{len(link_rows)}",
-        f"ready\t{str(ready).lower()}",
-    ]
-    lines.extend(_ledger_check_issue_lines(report))
-    lines.extend(link_lines)
-    emit_envelope(
-        ctx,
-        command="ledger.check",
-        result=LedgerCheckResult.model_validate(payload),
-        lines=lines,
-        notices=link_notices,
-    )
-
-
-def _emit_ledger_check_empty(
-    ctx: typer.Context,
-    *,
-    bucket_id: str,
-    link_rows: list[LedgerLinkInconsistencyPayload],
-    link_lines: list[str],
-    link_notices: list[Notice],
-) -> None:
-    from ._ledger_payloads import LedgerCheckResult
-
-    ready = not link_rows
-    payload = {
-        "bucket_id": bucket_id,
-        "periods": [],
-        "checked_transaction_count": 0,
-        "issues": [],
-        "link_inconsistencies": link_rows,
-        "ready": ready,
-    }
-    lines = [
-        f"bucket\t{bucket_id}",
-        "periods\t",
-        "checked\t0",
-        "issues\t0",
-        f"link_inconsistencies\t{len(link_rows)}",
-        f"ready\t{str(ready).lower()}",
-        *link_lines,
+        f"bucket	{check.bucket_id}",
+        f"periods	{','.join(check.periods)}",
+        f"checked	{check.checked_transaction_count}",
+        f"issues	{len(check.issues)}",
+        f"link_inconsistencies	{len(link_rows)}",
+        f"ready	{str(check.ready).lower()}",
+        *_ledger_check_issue_lines_from_items(check.issues),
+        *(
+            f"link_inconsistency	{row.invoice_id}	{row.transaction_id}	{row.direction.value}"
+            for row in check.link_inconsistencies
+        ),
     ]
     emit_envelope(
         ctx,
         command="ledger.check",
-        result=LedgerCheckResult.model_validate(payload),
+        result=LedgerCheckResult.model_validate(
+            {
+                "bucket_id": check.bucket_id,
+                "periods": list(check.periods),
+                "checked_transaction_count": check.checked_transaction_count,
+                "issues": [issue.model_dump(mode="json") for issue in check.issues],
+                "link_inconsistencies": link_rows,
+                "ready": check.ready,
+            }
+        ),
         lines=lines,
-        notices=link_notices,
+        notices=_link_inconsistency_notices(check.link_inconsistencies),
     )
-
-
-def _emit_ledger_check_all_periods(
-    ctx: typer.Context,
-    *,
-    bucket_id: str,
-    years: list[int],
-    catalogue: TransactionCatalogue,
-    link_rows: list[LedgerLinkInconsistencyPayload],
-    link_lines: list[str],
-    link_notices: list[Notice],
-) -> None:
-    from ...application.ledger.preflight import preflight_transaction_catalogue
-    from ._ledger_payloads import LedgerCheckResult
-
-    aggregated_issues: list[LedgerPreflightIssue] = []
-    aggregated_payload_issues: list[dict[str, object]] = []
-    checked_total = 0
-    for year in years:
-        report = preflight_transaction_catalogue(
-            bucket_id=bucket_id,
-            period=Period.from_year_and_code(year, "0A"),
-            transactions=catalogue,
-        )
-        checked_total += report.checked_transaction_count
-        aggregated_issues.extend(report.issues)
-        aggregated_payload_issues.extend(issue.model_dump(mode="json") for issue in report.issues)
-
-    ready = not aggregated_issues and not link_rows
-    payload = {
-        "bucket_id": bucket_id,
-        "periods": [str(year) for year in years],
-        "checked_transaction_count": checked_total,
-        "issues": aggregated_payload_issues,
-        "link_inconsistencies": link_rows,
-        "ready": ready,
-    }
-    lines = [
-        f"bucket\t{bucket_id}",
-        f"periods\t{','.join(str(year) for year in years)}",
-        f"checked\t{checked_total}",
-        f"issues\t{len(aggregated_issues)}",
-        f"link_inconsistencies\t{len(link_rows)}",
-        f"ready\t{str(ready).lower()}",
-        *(_ledger_check_issue_lines_from_items(aggregated_issues)),
-        *link_lines,
-    ]
-    emit_envelope(
-        ctx,
-        command="ledger.check",
-        result=LedgerCheckResult.model_validate(payload),
-        lines=lines,
-        notices=link_notices,
-    )
-
-
-def _ledger_check_issue_lines(report: LedgerPreflightReport) -> list[str]:
-    return _ledger_check_issue_lines_from_items(report.issues)
 
 
 def _ledger_check_issue_lines_from_items(issues: Sequence[LedgerPreflightIssue]) -> list[str]:
@@ -614,18 +437,23 @@ def ledger_preflight(ctx: typer.Context, period: str, year: int) -> None:
 
 def ledger_history(ctx: typer.Context, transaction_id: str, include_split_siblings: bool = False) -> None:
     """Emit the chronological event chain for one ledger transaction id."""
+    from ...application.ledger.history_query import LedgerHistoryQuery, read_ledger_history
+
     transaction_repository = transaction_catalogue_repo(current_workflow_state())
     resolved_id = resolve_ledger_transaction_id(transaction_repository, transaction_id)
-    object_ids = _history_object_ids(
-        transaction_repository, resolved_id=resolved_id, include_split_siblings=include_split_siblings
+    history = read_ledger_history(
+        LedgerHistoryQuery(transaction_id=resolved_id, include_split_siblings=include_split_siblings),
+        bucket_id=transaction_repository.bucket_id,
+        transaction_repository=transaction_repository,
     )
-    matches = _collect_ledger_history_events(object_ids)
     lines = [
-        f"{tr('cli.ledger.labels.bucket')}\t{transaction_repository.bucket_id}",
-        f"{tr('cli.ledger.labels.id')}\t{resolved_id}",
-        f"{tr('cli.ledger.labels.event_count')}\t{len(matches)}",
+        f"{tr('cli.ledger.labels.bucket')}	{history.bucket_id}",
+        f"{tr('cli.ledger.labels.id')}	{history.transaction_id}",
+        f"{tr('cli.ledger.labels.event_count')}	{history.event_count}",
     ]
-    lines.extend(f"{event.occurred_at.isoformat()}\t{event.event_type.value}\t{event.event_id}" for event in matches)
+    lines.extend(
+        f"{event.occurred_at.isoformat()}	{event.event_type.value}	{event.event_id}" for event in history.events
+    )
     from ._ledger_payloads import LedgerHistoryResult
 
     emit_envelope(
@@ -633,10 +461,10 @@ def ledger_history(ctx: typer.Context, transaction_id: str, include_split_siblin
         command="ledger.history",
         result=LedgerHistoryResult.model_validate(
             {
-                "bucket_id": transaction_repository.bucket_id,
-                "transaction_id": resolved_id,
-                "event_count": len(matches),
-                "events": [event.model_dump(mode="json") for event in matches],
+                "bucket_id": history.bucket_id,
+                "transaction_id": history.transaction_id,
+                "event_count": history.event_count,
+                "events": [event.model_dump(mode="json") for event in history.events],
             }
         ),
         lines=lines,
@@ -841,43 +669,41 @@ def ledger_status(ctx: typer.Context, period: str | None = None, year: int | Non
                 f"{tr('cli.ledger.labels.ready')}\t{report.ready}",
             ]
         )
-        from ...application.ledger.preflight import preflight_ledger_tax_readiness
+        from ...application.ledger.readiness_query import read_ledger_readiness
 
-        preflight = preflight_ledger_tax_readiness(
-            bucket_id=transaction_repository.bucket_id,
-            period=report.period,
-            transaction_repository=transaction_repository,
-        )
-        for issue in preflight.issues:
-            transaction = transactions.get(issue.transaction_id)
-            if transaction is None:
-                continue
-            lines.append(
-                _ledger_status_readiness_issue_line(transaction, reason=issue.reason.value, detail=issue.detail)
+        lines.extend(
+            _ledger_status_readiness_issue_line(issue)
+            for issue in read_ledger_readiness(
+                bucket_id=transaction_repository.bucket_id,
+                period=report.period,
+                transaction_repository=transaction_repository,
             )
+        )
     from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ...application.aggregation.ledger_filing_snapshot import stale_filed_revisions
+    from ...application.ledger.stale_filing_query import read_stale_ledger_filings
 
-    revisions = CalculationRevisionCatalogueRepository().load().revisions
-    work_units = WorkUnitCatalogueRepository().load()
-    for revision, verdict in stale_filed_revisions(revisions=revisions, catalogue=transactions):
-        work_unit = work_units.get(revision.work_unit_id)
-        if work_unit is None or work_unit.bucket_id != transaction_repository.bucket_id:
-            continue
-        lines.append(
-            "\t".join(
-                (
-                    "ledger_filing_stale",
-                    f"modelo={work_unit.modelo}",
-                    f"year={work_unit.filing_year}",
-                    f"period={work_unit.period.registry_token}",
-                    f"revision={revision.calculation_revision_id}",
-                    f"changed={len(verdict.changed)}",
-                    f"removed={len(verdict.removed)}",
-                )
+    stale_filings = read_stale_ledger_filings(
+        bucket_id=transaction_repository.bucket_id,
+        revisions=CalculationRevisionCatalogueRepository().load().revisions,
+        work_units=WorkUnitCatalogueRepository().load(),
+        transactions=transactions,
+    )
+    lines.extend(
+        "	".join(
+            (
+                "ledger_filing_stale",
+                f"modelo={finding.modelo}",
+                f"year={finding.filing_year}",
+                f"period={finding.period}",
+                f"revision={finding.calculation_revision_id}",
+                f"changed={finding.changed_count}",
+                f"removed={finding.removed_count}",
             )
         )
+        for finding in stale_filings
+    )
+
     from ._ledger_payloads import LedgerStatusResult
 
     emit_envelope(ctx, command="ledger.status", result=strict_round_trip(LedgerStatusResult, report), lines=lines)
@@ -953,67 +779,6 @@ def _ledger_track_participated_in(
     ]
 
 
-def _history_object_ids(
-    transaction_repository: TransactionCatalogueRepository,
-    *,
-    resolved_id: str,
-    include_split_siblings: bool,
-) -> list[str]:
-    """Return every event-anchor id whose events belong to ``resolved_id``.
-
-    Always includes ``resolved_id`` plus every prior id in its edit-lineage
-    chain. An ``update`` that edits an id-affecting fact anchors the pre-edit
-    events (create, import) on the *old* id and the post-edit events on the
-    *new* id; walking the lineage means an operator who wrote down an old id
-    before the correction still sees the full chronological chain, and the
-    superseded id resolves to (and surfaces) the lineage rather than failing
-    with id-not-found. Split siblings are added only when the operator opts in.
-
-    The content-addressed id stays authoritative; this is a read-side
-    lineage lookup over the same edit-lineage chain the finalized-modelo
-    guard walks.
-    """
-    catalogue = transaction_repository.load()
-    transaction = catalogue.get(resolved_id)
-    object_ids: list[str] = [resolved_id]
-    if transaction is not None:
-        for entry in transaction.edit_lineage:
-            if entry.previous_transaction_id not in object_ids:
-                object_ids.append(entry.previous_transaction_id)
-    if not include_split_siblings:
-        return object_ids
-    if transaction is None or transaction.split_lineage is None:
-        return object_ids
-    for sibling in transaction.split_lineage.sibling_transaction_ids:
-        if sibling not in object_ids:
-            object_ids.append(sibling)
-    return object_ids
-
-
-def _collect_ledger_history_events(object_ids: list[str]) -> list[BucketEvent]:
-    """Return the chronological union of :class:`~cadrumo.domain.buckets.BucketEvent` rows across ``object_ids``."""
-    event_catalogue = BucketEventHistoryRepository().load()
-    object_id_set = set(object_ids)
-    matches: list[BucketEvent] = []
-    for object_id in object_ids:
-        matches.extend(
-            event
-            for event in event_catalogue.for_object(
-                object_type=BucketEventObjectType.LEDGER_TRANSACTION,
-                object_id=object_id,
-            )
-            if event.event_type in _LEDGER_HISTORY_EVENT_TYPES
-        )
-    matches.extend(
-        event
-        for event in event_catalogue.values()
-        if event.event_type in _LEDGER_EVIDENCE_HISTORY_EVENT_TYPES
-        and event.payload.get("transaction_id") in object_id_set
-    )
-    matches.sort(key=lambda event: event.occurred_at)
-    return matches
-
-
 def _latest_llm_rejection_notice(
     transaction_repository: TransactionCatalogueRepository,
     *,
@@ -1022,21 +787,24 @@ def _latest_llm_rejection_notice(
     """Return a notice when the row's most recent LLM decision was a rejection.
 
     Returns a :class:`~cadrumo.core.json_contract.Notice` derived from
-    :data:`~cadrumo.entrypoints.cli._ledger_list.LLM_DECISION_EVENT_TYPES`.
+    :data:`~cadrumo.application.ledger.list_query.LLM_DECISION_EVENT_TYPES`.
     Reads the bucket-event history for the transaction (and its edit lineage) and
     finds the latest LLM-decision event. When that is a rejection — i.e. the
     operator declined an LLM suggestion and has not since accepted one — `view`
     surfaces a one-line advisory carrying the recorded reason, so prior judgement
-    is visible without opening `history`
-    (``aeat-cli-contract``).
+    is visible without opening `history`.
     """
-    object_ids = _history_object_ids(transaction_repository, resolved_id=resolved_id, include_split_siblings=False)
-    decisions = [
-        event for event in _collect_ledger_history_events(object_ids) if event.event_type in LLM_DECISION_EVENT_TYPES
-    ]
+    from ...application.ledger.history_query import LedgerHistoryQuery, read_ledger_history
+
+    history = read_ledger_history(
+        LedgerHistoryQuery(transaction_id=resolved_id),
+        bucket_id=transaction_repository.bucket_id,
+        transaction_repository=transaction_repository,
+    )
+    decisions = [event for event in history.events if event.event_type in LLM_DECISION_EVENT_TYPES]
     if not decisions:
         return None
-    latest = decisions[-1]  # chronological order from _collect_ledger_history_events
+    latest = decisions[-1]  # the assembled history is already in occurrence order
     if latest.event_type is not BucketEventType.LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED:
         return None
     reason = latest.payload.get("operator_reason", "")
@@ -1053,23 +821,28 @@ def _latest_llm_rejection_notice(
     )
 
 
-def _ledger_status_readiness_issue_line(transaction: Transaction, *, reason: str, detail: str) -> str:
+def _ledger_status_readiness_issue_line(issue: LedgerReadinessIssueV1) -> str:
+    """Render one readiness issue, marking a row the catalogue no longer holds."""
+
     def _value(value: object) -> str:
         return "-" if value is None or value == "" else str(value)
 
-    return "\t".join(
-        (
-            "readiness_issue",
-            transaction.transaction_id,
-            f"classification={transaction.business_classification.value}",
-            f"category_id={_value(transaction.category_id)}",
-            f"taxable_base={_value(transaction.taxable_base)}",
-            f"iva_rate={_value(transaction.iva_rate)}",
-            f"iva_amount={_value(transaction.iva_amount)}",
-            f"reason={reason}",
-            f"detail={detail}",
-        ),
+    fields = (
+        "readiness_issue",
+        issue.transaction_id,
+        f"classification={_value(issue.business_classification)}",
+        f"category_id={_value(issue.category_id)}",
+        f"taxable_base={_value(issue.taxable_base)}",
+        f"iva_rate={_value(issue.iva_rate)}",
+        f"iva_amount={_value(issue.iva_amount)}",
+        f"reason={issue.reason}",
+        f"detail={issue.detail}",
     )
+    if issue.transaction_present:
+        return "	".join(fields)
+    # The row named by the issue is gone. Dropping the issue here would make the
+    # printed issues fewer than the count reported above them, with nothing said.
+    return "	".join((*fields, "transaction=absent"))
 
 
 def _ledger_track_lines(transaction_id: str, transaction: Transaction) -> list[str]:

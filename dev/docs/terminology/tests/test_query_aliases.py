@@ -183,8 +183,40 @@ def test_authority_rejects_held_out_aliases_and_surface_collisions() -> None:
     collision = _entry(
         query=next(query[2] for query in canonical if query[0] == "prorrata" and query[1] is OutputLanguage.ES)
     )
-    with pytest.raises(QueryAliasAuthorityError, match="collides"):
+    with pytest.raises(QueryAliasAuthorityError, match="collides with an existing Handbook query"):
         validate_query_alias_authority(_authority(collision), handbook=handbook, canonical_queries=canonical)
+
+
+def test_authority_refuses_one_query_surface_aliased_to_two_concepts() -> None:
+    # The authority model's own duplicate check keys on
+    # (concept_id, language, normalised query), so two entries that differ in
+    # concept but normalise to the SAME query surface sort to distinct keys and
+    # pass it. Only the surface-collision refusal sees them, and an ambiguous
+    # alias is what makes a search query resolve to two concepts at once.
+    handbook = load_terminology_handbook()
+    canonical = _canonical_queries()
+    first = _entry()
+    other_concept, _, other_canonical = next(
+        query for query in canonical if query[1] is OutputLanguage.ES and query[0] != first.concept_id
+    )
+    second = _entry(
+        concept_id=other_concept,
+        canonical_query=other_canonical,
+        query=first.query.upper().replace(" ", "   "),
+    )
+    assert second.query != first.query
+
+    ordered = tuple(
+        sorted(
+            (first, second),
+            key=lambda entry: (entry.concept_id, entry.language.value, " ".join(entry.query.split()).casefold()),
+        )
+    )
+    authority = _authority(*ordered)
+    assert len(authority.entries) == 2
+
+    with pytest.raises(QueryAliasAuthorityError, match="collides with another authority alias"):
+        validate_query_alias_authority(authority, handbook=handbook, canonical_queries=canonical)
 
 
 def test_authority_rejects_extra_fields_and_mutation() -> None:

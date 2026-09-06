@@ -44,6 +44,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
 _REPO_ROOT = REPO_ROOT
 _DOCS = _REPO_ROOT / "docs"
+#: Floor for the page catalogues this dash gate actually opens. Live all 57
+#: user-scope pages carry one in each of the three languages.
+_MINIMUM_READ_CATALOGUES = 38
 _LOCALES = _DOCS / "locales"
 
 
@@ -121,10 +124,12 @@ def test_translations_introduce_no_machine_text_dashes(language: str) -> None:
     pages = user_scope_source_pages(_DOCS)
     assert pages, f"no user-scope source pages found under {_DOCS}; this gate scanned nothing"
     failures: list[str] = []
+    examined = 0
     for page in pages:
         po_path = _catalogue_path(language, page)
         if not po_path.is_file():
             continue
+        examined += 1
         with po_path.open("rb") as handle:
             catalogue = read_po(handle)
         for message in catalogue:
@@ -135,6 +140,16 @@ def test_translations_introduce_no_machine_text_dashes(language: str) -> None:
             if translated > source:
                 excerpt = str(message.string)[:80].replace("\n", " ")
                 failures.append(f"{page}: +{translated - source} ({excerpt}...)")
+    # ``pages`` is guarded above, but this claim ranges over CATALOGUES, and a
+    # page whose ``.po`` is absent is skipped. Every one of the 57 pages carries
+    # a catalogue in all three languages today; a language whose tree moved or
+    # was never generated would skip every page and report clean. A floor rather
+    # than an equality, because a newly added page may legitimately await its
+    # first translation.
+    assert examined >= _MINIMUM_READ_CATALOGUES, (
+        f"{language}: only {examined} of {len(pages)} page catalogue(s) were opened; "
+        "the claim below says nothing about the pages whose catalogue was never read"
+    )
     assert not failures, (
         f"{language}: {len(failures)} msgstr(s) introduce em/en dashes absent from their msgid "
         f"(machine-text marker; rephrase with commas, parentheses, or colons):\n  " + "\n  ".join(failures)

@@ -44,6 +44,14 @@ from ..flows.definition import FlowChoice, FlowDefinition, FlowPage, FlowSection
 from ..flows.engine import FlowState
 from ..flows.validators import ValidationVerdict, register_answer_validator
 
+# Duplicated deliberately from the wizard package's format-hints leaf, one of four
+# leaves the wizard package keeps consumed only inside it, enforced by
+# test_private_wizard_leaves_have_no_cross_package_python_consumers.
+# Importing it here would breach that boundary; sharing these keys properly
+# needs a neutral home, which is a placement decision.
+_FORMAT_TAX_ID_LOCALE_KEY = "wizard.setup.format.tax-id"
+_NIF_INVALID_LOCALE_KEY = "wizard.errors.invalid_tax_id"
+
 #: Flow, section, and page ids. Answers key the canonical map by these bare page ids.
 APODERADO_FLOW_ID = "apoderado"
 _APODERADO_SECTION_ID = "apoderado"
@@ -61,8 +69,6 @@ _FLOW_TITLE_LOCALE_KEY = "cli.config.auth.apoderado.help"
 _FLOW_DESCRIPTION_LOCALE_KEY = "cli.config.auth.apoderado.configure_help"
 _REPRESENTED_NIF_PROMPT_LOCALE_KEY = "cli.config.auth.apoderado.configure.represented_nif_help"
 _SCOPES_PROMPT_LOCALE_KEY = "cli.config.auth.apoderado.configure.scope_help"
-_FORMAT_TAX_ID_LOCALE_KEY = "wizard.setup.format.tax-id"
-_NIF_INVALID_LOCALE_KEY = "wizard.errors.invalid_tax_id"
 
 #: Every locale key this module references, for the scaffold gate.
 APODERADO_FLOW_LOCALE_KEYS: tuple[str, ...] = (

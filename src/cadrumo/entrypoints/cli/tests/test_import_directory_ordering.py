@@ -41,4 +41,6 @@ def test_directory_import_returns_files_in_sorted_order(tmp_path: Path) -> None:
 def test_single_file_path_is_returned_as_is(tmp_path: Path) -> None:
     statement = tmp_path / "statement.csv"
     statement.write_text("date,amount\n", encoding="utf-8")
-    assert _resolve_import_paths(statement) == [statement]
+    # A tuple since the plan moved to the application layer: the resolved
+    # sources are a fixed plan, not a list the caller may amend.
+    assert _resolve_import_paths(statement) == (statement,)

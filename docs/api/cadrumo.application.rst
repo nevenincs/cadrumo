@@ -13,6 +13,7 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.application.aeat_sync
    cadrumo.application.aggregation
    cadrumo.application.auth
    cadrumo.application.bienes_inversion
@@ -76,3 +77,4 @@ Submodules
    cadrumo.application.repair_integrity
    cadrumo.application.state_projection
    cadrumo.application.storage_write_policy
+   cadrumo.application.workbench_generation

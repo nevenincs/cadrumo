@@ -19,6 +19,8 @@ Submodules
    cadrumo.entrypoints.tui.devtools.home_candidates
    cadrumo.entrypoints.tui.devtools.home_fixtures
    cadrumo.entrypoints.tui.devtools.journal
+   cadrumo.entrypoints.tui.devtools.modelo_fixtures
    cadrumo.entrypoints.tui.devtools.modelo_work_wizard
    cadrumo.entrypoints.tui.devtools.replay
    cadrumo.entrypoints.tui.devtools.surfaces
+   cadrumo.entrypoints.tui.devtools.workbench_fixtures

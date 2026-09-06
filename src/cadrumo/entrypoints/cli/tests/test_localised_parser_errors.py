@@ -15,6 +15,7 @@ exercised end to end.
 from __future__ import annotations
 
 from collections.abc import Iterator
+from typing import cast, override
 
 import pytest
 import typer
@@ -24,6 +25,7 @@ from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import clear_output_language_cache
 from .._date_parsing import _parse_iso_date
 from .._decimal_parsing import parse_decimal_amount
+from .._terminal_errors import _render_click_exception_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -81,3 +83,43 @@ def test_decimal_refusal_text_differs_across_locales() -> None:
 def test_date_refusal_text_differs_across_locales() -> None:
     rendered = {locale.value: _render_date_refusal(locale, "15/01/2026") for locale in _LOCALES}
     assert len({rendered["en"], rendered["es"], rendered["ca"], rendered["hu"]}) == 4, rendered
+
+
+def test_the_click_exception_funnel_calls_the_renderer_rather_than_writing_the_bare_message() -> None:
+    """The plain-text funnel must reach the exception's own renderer.
+
+    `_render_click_exception_text` read `getattr(exc, "view", None)`. No click
+    exception has a `view`, so the lookup always failed and every parse refusal
+    fell through to a bare `str(exc)` write -- losing the `Error:` prefix, the
+    usage block, the "Try ... for help" hint, and the parameter name. An
+    operator saw a value rejected with no statement of WHICH option rejected
+    it, and the localised `UsageError.show` reimplementation this project
+    installs was dead code in the text path.
+
+    The failure was silent by construction: `getattr` with a default returns
+    None rather than raising, and the fallback prints something plausible. So
+    this asserts the funnel drives the real method, by giving it an exception
+    whose renderer records that it ran.
+    """
+
+    class _Recording:
+        """A click-exception stand-in that records whether its renderer ran."""
+
+        def __init__(self) -> None:
+            self.rendered = False
+
+        def show(self) -> None:
+            self.rendered = True
+
+        @override
+        def __str__(self) -> str:
+            return "bare message"
+
+    exception = _Recording()
+
+    _render_click_exception_text(cast("BaseException", exception))
+
+    assert exception.rendered, (
+        "the funnel wrote the bare message instead of calling the exception's renderer, so "
+        "every parse refusal loses its prefix, usage block, hint, and parameter name"
+    )

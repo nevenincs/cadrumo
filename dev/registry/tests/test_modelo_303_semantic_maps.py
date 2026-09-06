@@ -1075,6 +1075,11 @@ def _integer_slot_widths(design_epoch: str) -> frozenset[int]:
     )
 
 
+#: Floors for the epoch/width census the note-grammar probes parametrise over.
+_MINIMUM_CONTRIBUTING_EPOCHS = 5
+_MINIMUM_WIDTHS_PER_EPOCH = 3
+
+
 def _epoch_width_pairs() -> list[tuple[str, int]]:
     """Every (epoch, width) the DESIGNS actually declare a pure-integer slot for.
 
@@ -1096,6 +1101,24 @@ def _epoch_width_pairs() -> list[tuple[str, int]]:
         (design_epoch, width) for design_epoch in _DESIGN_EPOCHS for width in sorted(_integer_slot_widths(design_epoch))
     ]
     assert pairs, "no design epoch declares a pure-integer DP30302 slot; the note-grammar probes would all vanish"
+    # The docstring above names the risk this list exists to keep visible: an
+    # epoch that LOSES a slot drops out of its own coverage. A truthiness check
+    # cannot see that -- one epoch falling to zero widths leaves sixteen pairs
+    # standing and the probes for that design simply stop being generated.
+    # Live: five contributing epochs (2022 declares none, by design) at four
+    # widths apiece.
+    contributing = {design_epoch for design_epoch, _ in pairs}
+    assert len(contributing) >= _MINIMUM_CONTRIBUTING_EPOCHS, (
+        f"only {len(contributing)} design epoch(s) contribute a pure-integer slot "
+        f"({sorted(contributing)}); an epoch that stopped declaring one would lose its "
+        "note-grammar probes without any case reporting the loss"
+    )
+    for design_epoch in sorted(contributing):
+        widths = [width for epoch, width in pairs if epoch == design_epoch]
+        assert len(widths) >= _MINIMUM_WIDTHS_PER_EPOCH, (
+            f"epoch {design_epoch} declares only {len(widths)} pure-integer width(s) "
+            f"({widths}); it stays in the census while most of its probes vanish"
+        )
     return pairs
 
 

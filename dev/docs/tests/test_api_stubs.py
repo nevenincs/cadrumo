@@ -1,6 +1,6 @@
 """Correspondence gate: every in-scope module has a stub, no stub is orphaned.
 
-Delegates all discovery and drift logic to :class:`dev.docs.apidocs.ApiStubManager`
+Delegates all discovery and drift logic to :class:`dev.docs.apidocs.manager.ApiStubManager`
 so this file is the single enforcement surface for module-to-stub correspondence.
 Run ``python -m dev.docs.apidocs scaffold`` to regenerate stubs; run
 ``python -m dev.docs.apidocs scaffold --check`` for a zero-drift gate.

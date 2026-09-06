@@ -31,6 +31,7 @@ sys.path.append(os.environ["AEAT_DEPENDENCY_SITE"])
 if editable_site := os.environ.get("AEAT_EDITABLE_SITE"):
     import site
     site.addsitedir(editable_site)
+from click.shell_completion import get_completion_class
 from click.testing import CliRunner
 from typer.main import get_command
 import cadrumo
@@ -55,14 +56,28 @@ schemas = command_schema_refs()
 inputs = build_verb_input_schemas(tuple(sorted(expected_results)))
 schema_types = command_schema_types()
 help_result = CliRunner().invoke(get_command(cli.app), ["--help"])
-completion_result = CliRunner().invoke(get_command(cli.app), ["--show-completion", "bash"])
+# Completion is rendered for a NAMED shell rather than through
+# `--show-completion`. That flag takes no shell argument: it detects the
+# calling shell from the process tree, so the "bash" passed beside it was
+# ignored and the leg asserted whatever shell happened to be the parent of
+# the test runner. Where detection found none it printed "Shell  not
+# supported." and exited 1 -- observed on a macOS runner, and reproduced on
+# Windows, so the leg was never platform-specific, only ambient. Click's
+# public generator takes the shell explicitly and builds against the real
+# command, which also makes this prove the tree is traversable.
+completion_command = get_completion_class("bash")(
+    get_command(cli.app), {}, "aeat", "_AEAT_COMPLETE"
+)
+completion_source = completion_command.source()
 payload = {
     "nodes": len(nodes),
     "paths": len({node.path for node in nodes}),
     "help_exit": help_result.exit_code,
     "help_has_roots": all(token in help_result.output for token in ("config", "app")),
-    "completion_exit": completion_result.exit_code,
-    "completion_content": "_AEAT_COMPLETE" in completion_result.output,
+    "completion_content": "_AEAT_COMPLETE" in completion_source,
+    # Carried so a failure names what was rendered instead of asserting a bare
+    # integer against nothing, which is how this leg last failed.
+    "completion_source": completion_source[:400],
     "schemas": len(schemas),
     "inputs": len(inputs),
     "schema_types": len(schema_types),
@@ -123,8 +138,7 @@ def _assert_complete_projection(payload: dict[str, object], *, checkout: Path) -
     assert payload["nodes"] == payload["paths"]
     assert payload["help_exit"] == 0
     assert payload["help_has_roots"] is True
-    assert payload["completion_exit"] == 0
-    assert payload["completion_content"] is True
+    assert payload["completion_content"] is True, payload["completion_source"]
     assert payload["schemas"] == payload["inputs"] == payload["schema_types"]
     assert payload["refs_exact"] is True
     assert payload["inputs_exact"] is True

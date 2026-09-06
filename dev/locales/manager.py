@@ -327,7 +327,7 @@ class LocaleManager:
         fixture payload or assertion literal can never inject a phantom
         required key that no production code requests.
 
-        Combines four discovery paths:
+        Combines five discovery paths:
 
         1. Regex scanner — ``tr("…")`` / ``t("…")`` literal call sites.
         2. AST scanner — programmatic emissions such as
@@ -336,7 +336,12 @@ class LocaleManager:
         3. F-string registry — bounded f-string patterns whose value sets
            are fully known at import time (e.g. wizard choice labels
            keyed by enum values). See :mod:`locales._fstring_registry`.
-        4. Registry scanner — keys declared as data by a committed registry
+        4. Command-spec scanner — the keys the live CLI registry declares in
+           its ``TranslationKey`` fields. A spec table builds an option's help
+           key from the option name, so no literal for it exists anywhere and
+           a text scan cannot tell it from a key nothing uses. See
+           :mod:`locales._command_spec_scanner`.
+        5. Registry scanner — keys declared as data by a committed registry
            rather than by a Python call site: named literally by the category
            profile registry, and derived from declared structure by the
            user-profile schema. The first three paths read Python source
@@ -351,6 +356,7 @@ class LocaleManager:
         """
         from ..quality.unread_inputs import report_unread
         from ._ast_scanner import scan_source_tree
+        from ._command_spec_scanner import scan_command_spec_keys
         from ._fstring_registry import get_registered_keys
 
         if self._codebase_keys is not None:
@@ -376,6 +382,7 @@ class LocaleManager:
                     keys.add(match.group(1))
             keys.update(scan_source_tree(root))
         keys.update(get_registered_keys())
+        keys.update(scan_command_spec_keys())
         keys.update(scan_registry_keys())
         keys.update(scan_profile_schema_keys())
         keys.update(scan_modelo_schema_keys())

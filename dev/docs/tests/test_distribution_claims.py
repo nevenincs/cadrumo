@@ -182,8 +182,8 @@ def claim_labels_in_line(line: str) -> tuple[str, ...]:
     return tuple(labels)
 
 
-_GENERATED_BEGIN = "vaultspec:generated:begin"
-_GENERATED_END = "vaultspec:generated:end"
+_GENERATED_BEGIN = "cadrumo:generated:begin"
+_GENERATED_END = "cadrumo:generated:end"
 
 
 def _hand_authored_lines(text: str) -> list[str]:

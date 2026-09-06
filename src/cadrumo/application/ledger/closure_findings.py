@@ -125,19 +125,29 @@ def _total_closure_finding(draft: InvoiceDraft) -> DraftDiscrepancyFinding | Non
 
 
 def _cash_closure_finding(draft: InvoiceDraft) -> DraftDiscrepancyFinding | None:
-    """Check ``cash = total - retencion`` for internal consistency.
+    """Check ``retencion = base * rate`` for internal consistency.
 
-    Only meaningful when the document states both a total and a retención: the
-    identity is what makes the withheld figure reconcilable against the money
-    that actually moved, and with either half missing there is nothing to check.
+    The withheld figure is what makes the cash actually paid reconcilable
+    against the invoice, so a retención that does not follow from the base it
+    is charged on is worth reporting.
+
+    All three terms the identity uses must be stated. An absent taxable base
+    was formerly coerced to zero, which did not silence the check -- it made it
+    accuse the document: a stated retención of 150 against a base the reader
+    never recovered produced "the stated retención 150 is not 15% of the
+    taxable base (0)". The zero was ours, not the document's, and the finding
+    reported a discrepancy where nothing had been verified. Absent and zero are
+    different states, and only one of them is evidence.
+
+    The grand total is deliberately NOT required. It appears nowhere in the
+    identity, and guarding on it skipped drafts whose three actual terms were
+    all present while admitting drafts missing the base -- exactly inverted
+    from what the computation needs.
     """
-    if draft.grand_total is None or draft.retencion_amount is None:
+    if draft.retencion_amount is None or draft.retencion_rate is None or draft.taxable_base is None:
         return None
 
-    if draft.retencion_rate is None:
-        return None
-
-    expected_retencion = (draft.taxable_base or Decimal("0")) * draft.retencion_rate / Decimal("100")
+    expected_retencion = draft.taxable_base * draft.retencion_rate / Decimal("100")
     difference = draft.retencion_amount - expected_retencion
     if within_rounding_allowance(difference, term_count=2):
         return None

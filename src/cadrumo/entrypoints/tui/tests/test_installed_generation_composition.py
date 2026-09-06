@@ -250,6 +250,7 @@ def _dependencies() -> InstalledWorkbenchFactoryDependenciesV1:
         ledger_review_action=_action("operator.ledger.review"),
         ledger_evidence_action=_action("operator.ledger.evidence.review.list"),
         ledger_classify_action=_action("operator.ledger.classify"),
+        ledger_link_action=_action("operator.ledger.link"),
         declarations_work_action=_action("operator.modelo.work.list"),
         declarations_revisions_action=_action("operator.modelo.work.revisions"),
         declarations_filing_action=_action("operator.modelo.filing_record.list"),

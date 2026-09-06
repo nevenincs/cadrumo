@@ -35,6 +35,7 @@ from pathlib import Path
 
 __all__ = [
     "DanglingReference",
+    "DocstringReferenceScanError",
     "collect_defined_names",
     "dangling_references",
     "docstring_references",
@@ -57,6 +58,18 @@ _ROLE = re.compile(r":(?:func|class|data|meth|attr|mod|obj|exc):`([^`]+)`")
 #: resume on the next line with no space between them -- which is how Sphinx
 #: reads it, and how it must be rejoined before resolving.
 _REWRAP = re.compile(r"\s*\n\s*")
+
+
+class DocstringReferenceScanError(Exception):
+    """The screen could not read a file its own walk listed.
+
+    The two tolerated read failures -- a file this Python cannot parse and one it
+    cannot decode -- are skipped deliberately: neither carries a docstring this
+    screen could check. An unreadable file is a different fact. It may have been
+    deleted between the walk and the read, be locked by another process, or be a
+    dangling symlink, and in every case the corpus reported on is smaller than the
+    corpus walked. Skipping it would report a clean screen over files never read.
+    """
 
 
 @dataclass(frozen=True, slots=True)
@@ -129,8 +142,19 @@ def collect_defined_names(root: Path) -> tuple[set[str], set[str], set[str]]:
         if "__pycache__" in path.parts:
             continue
         try:
-            tree = ast.parse(path.read_text(encoding="utf-8"))
-        except (SyntaxError, UnicodeDecodeError):
+            source = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        except OSError as exc:
+            unreadable = (
+                f"docstring reference screen could not read {path}, which its own walk listed: {exc}. "
+                "A file the walk saw and the read cannot reach means the corpus is not the one being "
+                "reported on, so the screen refuses rather than returning a result over a partial read."
+            )
+            raise DocstringReferenceScanError(unreadable) from exc
+        try:
+            tree = ast.parse(source)
+        except SyntaxError:
             continue
         relative = path.relative_to(root.parent).with_suffix("")
         parts = list(relative.parts)
@@ -149,8 +173,19 @@ def docstring_references(root: Path) -> list[tuple[str, str]]:
         if "__pycache__" in path.parts:
             continue
         try:
-            tree = ast.parse(path.read_text(encoding="utf-8"))
-        except (SyntaxError, UnicodeDecodeError):
+            source = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        except OSError as exc:
+            unreadable = (
+                f"docstring reference screen could not read {path}, which its own walk listed: {exc}. "
+                "A file the walk saw and the read cannot reach means the corpus is not the one being "
+                "reported on, so the screen refuses rather than returning a result over a partial read."
+            )
+            raise DocstringReferenceScanError(unreadable) from exc
+        try:
+            tree = ast.parse(source)
+        except SyntaxError:
             continue
         module = path.relative_to(root).as_posix()
         for node in ast.walk(tree):

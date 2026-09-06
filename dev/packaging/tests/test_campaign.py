@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import os
+import sys
 from pathlib import Path
 
 import pytest
@@ -14,7 +15,11 @@ from ..campaign import (
     _LANES,
     _PROFILES,
     _TEST_WORKERS_ENV,
+    PytestPass,
+    _attempt_step,
+    _run_step,
     _test_worker_count,
+    preflight_pass_failures,
     resolve_form,
 )
 
@@ -245,3 +250,78 @@ def test_lane_names_are_distinct_so_manifest_rows_stay_distinguishable() -> None
     names = [lane.name for lane in _LANES.values()]
     assert len(names) == len(set(names)), f"lane names must discriminate manifest rows: {names}"
     assert all(name and name.strip() == name for name in names), f"lane names must be non-empty: {names}"
+
+
+def test_a_failing_step_is_described_rather_than_raised(tmp_path: Path) -> None:
+    """`_attempt_step` reports a failure so a caller can keep going."""
+    failure = _attempt_step([sys.executable, "-c", "raise SystemExit(3)"], tmp_path, "probe")
+
+    assert failure is not None
+    assert "probe" in failure
+    assert "3" in failure
+
+
+def test_a_succeeding_step_reports_nothing(tmp_path: Path) -> None:
+    """The other direction: silence must mean success, not an inert check."""
+    assert _attempt_step([sys.executable, "-c", ""], tmp_path, "probe") is None
+
+
+def test_run_step_still_ends_the_campaign_on_a_failure(tmp_path: Path) -> None:
+    """Collecting failures must not weaken the steps that should abort.
+
+    Only the preflight passes are collected; every other step keeps fail-fast,
+    because a cohort built on a broken tree is worse than no cohort.
+    """
+    with pytest.raises(SystemExit) as excinfo:
+        _run_step([sys.executable, "-c", "raise SystemExit(4)"], tmp_path, "probe")
+
+    assert "probe" in str(excinfo.value)
+
+
+def _doomed_pass(label: str) -> PytestPass:
+    """A pass whose pytest invocation fails fast and for a real reason.
+
+    The target does not exist, so pytest exits non-zero within a second. No
+    stub or fake: a real interpreter runs a real pytest and really fails.
+    """
+    return PytestPass(
+        label=label,
+        markers="unit",
+        target="dev/packaging/tests/__no_such_target__.py",
+        parallel=False,
+    )
+
+
+def test_a_failing_pass_does_not_stop_the_passes_after_it(tmp_path: Path) -> None:
+    """The property the fix exists for, and the one the primitive cannot show.
+
+    Aborting on the first failure meant one wedged pass hid every later one,
+    so an invocation could surface at most one defect -- an hour of a
+    two-machine fleet per defect on CI. Both labels must come back.
+    """
+    failures = preflight_pass_failures((_doomed_pass("first"), _doomed_pass("second")), tmp_path, None)
+
+    assert [failure.split(" ")[0] for failure in failures] == ["first", "second"]
+
+
+def test_passes_that_all_succeed_report_nothing(tmp_path: Path) -> None:
+    """The other direction: an empty list must mean success, not an inert loop.
+
+    Without this the gate above would pass equally against a function that
+    collected every pass as a failure regardless of its outcome.
+    """
+    # NOT this module: pointing a real pytest run at the file containing this
+    # test re-enters it, and the run hangs until the ceiling kills it. A small
+    # sibling that parses yaml and spawns nothing is the honest fast target.
+    # The marker must MATCH the target: that file is integration-marked, and
+    # `-m unit` deselected everything, which pytest exits 5 for and the
+    # campaign correctly counts as a failure. A selection matching nothing is
+    # a failure here, not a pass.
+    healthy = PytestPass(
+        label="healthy",
+        markers="integration",
+        target="dev/packaging/tests/test_homebrew_workflow.py",
+        parallel=False,
+    )
+
+    assert preflight_pass_failures((healthy,), REPO_ROOT, None) == []

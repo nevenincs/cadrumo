@@ -405,7 +405,7 @@ def generate_glossary_reference(docs_root: Path, *, language: OutputLanguage | N
     rst, result = render_glossary(repo_root, handbook, language)
     output_path = docs_root / _GENERATED_RELPATH
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    if not (output_path.is_file() and output_path.read_text(encoding=_UTF_8) == rst):
+    if not (output_path.is_file() and output_path.read_bytes() == rst.encode(_UTF_8)):
         # Force LF so the generated page is byte-identical across platforms; the
         # default newline translation emits CRLF on Windows, which doc8's
         # CheckCarriageReturn (D004) then flags on every regeneration.

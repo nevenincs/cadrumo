@@ -203,7 +203,7 @@ ARGUMENT_PRIMITIVES: Final[dict[str, int | None]] = {
 }
 #: Method names shared with non-filesystem objects. A site using one of these is
 #: reported so a reader can clear it; it is never silently trusted.
-AMBIGUOUS_PRIMITIVES: Final[frozenset[str]] = frozenset({"save", "touch", "rename", "replace"})
+AMBIGUOUS_PRIMITIVES: Final[frozenset[str]] = frozenset({"save", "touch", "rename", "replace", "os.open"})
 #: Receiver-name fragments that make a bare ``.save(path)`` a real file write.
 WORKBOOK_RECEIVER_HINTS: Final[tuple[str, ...]] = ("workbook", "wb", "book", "fig", "canvas", "image", "doc")
 
@@ -519,6 +519,16 @@ def write_target(node: ast.Call) -> tuple[str, ast.AST | None] | None:
         # pass a bare ``len(args) == 1`` test. ``Path.rename`` / ``Path.replace``
         # never take keywords, so requiring their absence costs no true positive.
         return (name, func.value) if len(node.args) == 1 and not node.keywords else None
+    if name == "open" and origin_symbol(func.value) == "os":
+        # os.open takes FLAGS, not a mode string, and they are assembled at the
+        # call site (O_CREAT | O_WRONLY, frequently through a variable), so the
+        # mode test below cannot read them and answered None for every one --
+        # twenty sites under src/, among them bucket lock files, custody recovery
+        # artefacts and core/atomic_write. Reported as ambiguous rather than
+        # classified here: separating a writing flag set from O_RDONLY needs the
+        # reader this module already routes ambiguous primitives to, and dropping
+        # them was the only outcome that lost a write without saying so.
+        return ("os.open", node.args[0] if node.args else None)
     if name == "open":
         return ("open", func.value) if _opens_for_write(node, receiver_form=True) else None
     if name == "save":
