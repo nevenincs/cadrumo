@@ -878,7 +878,6 @@ def _evaluate_verification_predicates(
 
 
 evaluate_advisory_predicate_fires = _evaluate_advisory_predicate_fires
-evaluate_applicability_filter = _evaluate_applicability_filter
 evaluate_predicate_expression = _evaluate_predicate_expression
 evaluate_verification_predicates = _evaluate_verification_predicates
 M349_IMPORTE_RECTIFICACIONES_CASILLA = _M349_IMPORTE_RECTIFICACIONES_CASILLA

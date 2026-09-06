@@ -343,7 +343,7 @@ def _build_ledger_cli_command_census(
 
 
 LEDGER_CLI_COMMAND_CENSUS: Final[tuple[LedgerCliCommandCensusEntry, ...]] = _build_ledger_cli_command_census()
-"""Immutable projection of every executable Ledger command from CommandSpec facts."""
+"""Immutable S04 projection of every executable Ledger command from CommandSpec facts."""
 
 
 __all__ = [

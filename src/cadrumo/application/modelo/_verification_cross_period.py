@@ -788,8 +788,6 @@ def _iva_wallet_decision_covers_cross_period_dependency(
     return False
 
 
-CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS = _CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS
-CROSS_PERIOD_DEPENDENCY_LEGAL_REFS = _CROSS_PERIOD_DEPENDENCY_LEGAL_REFS
 IVA_COMPENSATION_CARRY_LEGAL_REF = _IVA_COMPENSATION_CARRY_LEGAL_REF
 cross_period_clean_state_findings = _cross_period_clean_state_findings
 cross_period_clean_state_verdict_for_work_unit = _cross_period_clean_state_verdict_for_work_unit
