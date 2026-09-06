@@ -56,6 +56,18 @@ from .._paths import REPO_ROOT
 SCHEMA_ROOT: Final[Path] = REPO_ROOT / "src" / "cadrumo" / "domain" / "calculations" / "registry"
 
 
+class ClosedVocabularyScanError(Exception):
+    """A schema module the walk listed could not be read.
+
+    This scan calls itself the authority for which fields still spell a closed
+    vocabulary inline, and the canonicalization gate asserts on its result. A
+    module skipped here is not a module with nothing to report -- it is one
+    nobody looked at, and its inline vocabularies leave the count the gate
+    checks. The two parse-time failures below are skipped deliberately; an
+    unreadable module is a different fact and the authority cannot stand on it.
+    """
+
+
 @dataclass(frozen=True)
 class VocabularyField:
     """One model field whose annotation admits a closed set of strings."""
@@ -93,7 +105,16 @@ def _module_trees() -> Iterator[tuple[Path, ast.AST]]:
         if "tests" in path.parts or "__pycache__" in path.parts:
             continue
         try:
-            yield path, ast.parse(path.read_text(encoding="utf-8"))
+            source = path.read_text(encoding="utf-8")
+        except OSError as exc:
+            unreadable = (
+                f"closed-vocabulary scan could not read {path}, which its own walk listed: {exc}. "
+                "This scan is the measurement the canonicalization gate asserts on, so a module "
+                "it never read would lower that count without lowering the vocabularies."
+            )
+            raise ClosedVocabularyScanError(unreadable) from exc
+        try:
+            yield path, ast.parse(source)
         except (SyntaxError, UnicodeDecodeError):
             continue
 

@@ -1153,20 +1153,18 @@ symbols = ["WizardFlowProtocol"]
 evidence = "Split out of the domain-area protocol cluster, which recorded the wrong area: the symbol is reported in cadrumo.core.wizard_catalogue. Runtime-checkable, and its module docstring states that domain code reaches the descriptor through this core slot rather than importing the application-layer WizardFlow directly; it appears nowhere outside its own module and __all__, so no domain code annotates or isinstance-checks against it and the layering it describes is not in force."
 
 [[symbol_cluster]]
-name = "declared bound nothing enforces: profile custody record"
-class = "should-be-live"
+name = "vestigial custody bound for a record this package does not hold"
+class = "orphaned"
 area = "adapters/persistence/storage/custody"
 symbols = ["PROFILE_CUSTODY_PROFILE_RECORD_MAX_BYTES"]
-evidence = "A 4 MiB ceiling on the profile record. Its siblings in the same package ARE enforced -- _capsule_data.py refuses a payload over PROFILE_CUSTODY_DATA_FILE_MAX_BYTES and reads the envelope with PROFILE_CUSTODY_ENVELOPE_MAX_BYTES as the cap -- and this one is compared against nothing, so the profile record is the single unbounded member of a family whose whole point is bounded reads. The asymmetry is what makes it a finding rather than an unused number; deleting it would remove the record that the bound was intended."
-remedy_requires_decision = true
+evidence = "A 4 MiB literal sitting in the block that re-exports the current public custody vocabulary after the inventory owner was split out. Re-tested against the live design and reversed: there is no profile-record FILE in the custody package for it to bound. Its neighbours in that block alias real owner constants and those owners enforce themselves -- the inventory entry cap is checked where entries are counted, and the data-file cap where file metadata is sized. The only profile_record in the tree is a record-format label on the user-profile secure-object namespace, which is an encrypted row in structured custody rather than a capsule file, so a file-read byte cap does not apply to it. Recorded first as the single unbounded member of a family built for bounded reads; that reading assumed a file this package does not have."
 
 [[symbol_cluster]]
 name = "checkpoint discard nothing reaches"
 class = "should-be-live"
 area = "application/flows"
 symbols = ["discard_checkpoint"]
-evidence = "Erases an in-progress flow run through the domain store. No production caller reaches it and no production code calls store.discard for a flow definition directly either, so a run can be checkpointed and resumed but never discarded. Not a superseded wrapper -- there is no other discard path that displaced it."
-remedy_requires_decision = true
+evidence = "Erases an in-progress flow run through the domain store. Now WIRED, and the gap it left was concrete: the line frontend offers save-and-exit, which writes a checkpoint, and its submit path returned the projection without clearing one, so an operator who saved, resumed and then submitted left the checkpoint on disk and a later run would offer to resume an already-submitted flow. The submit branch now discards it once submit eligibility has been asserted, guarded on the store being present exactly as save-and-exit is. Its siblings were live throughout -- CheckpointStore, checkpoint_available and save_checkpoint each at two references -- which is why only the discard half was missing."
 
 [[symbol_cluster]]
 name = "portable profile import declared and unwired"
