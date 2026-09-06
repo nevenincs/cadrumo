@@ -33,6 +33,7 @@ from ..hook import (
     adapt_outputs,
     build_for_source,
 )
+from ..sidecar import EXTRACTED_JSON_SUFFIX, matches_origin_name
 
 pytestmark = [pytest.mark.unit, pytest.mark.docs, pytest.mark.hex_core]
 
@@ -170,7 +171,11 @@ def test_hook_units_are_parity_with_committed_sidecars(pattern: str) -> None:
         text = unit["text"]
         assert isinstance(text, str)
         hook_texts.append(text)
-    sidecar_files = scan_directory(source.parent, pattern=f"{source.name}*.extracted.json")
+    sidecar_files = [
+        path
+        for path in scan_directory(source.parent, pattern=f"{source.name}*{EXTRACTED_JSON_SUFFIX}")
+        if matches_origin_name(path.name, source.name)
+    ]
     assert sidecar_files, f"no committed sidecar next to {source}"
     sidecar_texts: list[str] = []
     for candidate in sidecar_files:

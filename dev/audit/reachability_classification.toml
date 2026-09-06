@@ -1283,12 +1283,11 @@ evidence = "The sectoral prorrata path: the predicate deciding whether sectors m
 remedy_requires_decision = true
 
 [[symbol_cluster]]
-name = "registry source-connectivity projections with no consumer"
-class = "should-be-live"
+name = "snapshot-derived connectivity records the declared census displaced"
+class = "superseded"
 area = "application/registry"
 symbols = ["derive_registry_binding_records", "derive_registry_destination_records", "derive_registry_formula_records", "derive_registry_relation_records", "derive_registry_source_disposition_records"]
-evidence = "Five projections turning a validated RegistrySnapshot into connectivity records -- bindings, destinations, formulas, relations and source dispositions -- each documented as avoiding a re-parse of the expressions. Nothing in production or dev consumes them, so the source-connectivity view they exist to produce is never assembled."
-remedy_requires_decision = true
+evidence = "Five projections turning a validated RegistrySnapshot into connectivity records. Re-tested against the live path: the module HAS a consumer, and the source-connectivity view IS assembled -- the dev source-connectivity check imports load_source_connectivity_census from this module, which loads the canonical bundled census.toml and validates it against a closed typed contract. That declared census is the strategy in force; these five derive the same view from a snapshot instead, are called nowhere including inside their own module, and appear only in __all__. Recorded first as saying the view they exist to produce is never assembled, which was wrong -- it is produced, from a declaration rather than a derivation."
 
 [[symbol_cluster]]
 name = "displaced CLI execution-policy declarations"

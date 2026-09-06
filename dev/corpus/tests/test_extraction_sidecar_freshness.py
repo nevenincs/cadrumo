@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import re
 import sys
 from pathlib import Path
 
@@ -15,7 +14,11 @@ from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 
 from ...docs.preprocess.normatives_html import HTML_EXTRACTOR_ID, build_outputs
 from ...docs.preprocess.schema import PreprocessOutput
-from ...docs.preprocess.sidecar import EXTRACTED_JSON_SUFFIX, EXTRACTED_TEXT_SUFFIX
+from ...docs.preprocess.sidecar import (
+    EXTRACTED_JSON_SUFFIX,
+    EXTRACTED_TEXT_SUFFIX,
+    matches_origin_name,
+)
 from ..extract_manual_corpus_text import extract_raw_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -41,7 +44,6 @@ def _repository_root_resolved() -> None:
 _CORPUS_ROOT = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus"
 _MANUAL_CORPUS_TEXT_ROOT = _REPO_ROOT / "src" / "cadrumo" / "_data" / "manual_corpus_text"
 _CORPUS_TEXT_SUFFIX = ".corpus_text.json"
-_PART_SUFFIX = re.compile(r"\.part-\d+$")
 _SUPPORTED_CALENDAR_YEARS = range(2023, 2027)
 _SUPPORTED_MANUAL_YEARS = range(2023, 2026)
 _SUPPORTED_RENTA_PART2_YEARS = range(2024, 2026)
@@ -64,11 +66,6 @@ _PUBLICATION_BOUND_MANUAL_EXCEPTIONS = (
 
 def _sha256_of(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
-def _matches_origin_name(sidecar_name: str, origin_name: str) -> bool:
-    stand_in_name = sidecar_name.removesuffix(EXTRACTED_JSON_SUFFIX)
-    return stand_in_name == origin_name or _PART_SUFFIX.sub("", stand_in_name) == origin_name
 
 
 def _is_legal_citation_evidence_sidecar(json_path: Path) -> bool:
@@ -107,7 +104,7 @@ def test_normative_html_sidecars_equal_current_production_extraction() -> None:
         json_paths = [
             path
             for path in scan_directory(html_root, pattern=f"{source.name}*{EXTRACTED_JSON_SUFFIX}")
-            if _matches_origin_name(path.name, source.name)
+            if matches_origin_name(path.name, source.name)
         ]
         if not json_paths:
             continue
@@ -141,7 +138,7 @@ def test_committed_extraction_sidecars_match_current_sources() -> None:
             continue
         if not origin.is_relative_to(_CORPUS_ROOT):
             failures.append(f"{rel_json}: declared source escapes corpus root: {rel_origin}")
-        if json_path.parent != origin.parent or not _matches_origin_name(json_path.name, origin.name):
+        if json_path.parent != origin.parent or not matches_origin_name(json_path.name, origin.name):
             failures.append(f"{rel_json}: sidecar is not paired with declared sibling source {rel_origin}")
         if output.source_sha256 != _sha256_of(origin):
             failures.append(f"{rel_json}: source_sha256 does not match current source bytes for {rel_origin}")
@@ -316,8 +313,20 @@ def test_every_record_design_workbook_has_extraction_sidecars() -> None:
         if source.suffix.lower() not in workbook_suffixes:
             continue
         examined += 1
-        json_sidecars = scan_directory(source.parent, pattern=f"{source.name}*.extracted.json")
-        if not json_sidecars or any(not path.with_suffix(".md").is_file() for path in json_sidecars):
+        # Paired through the producer's own predicate rather than the bare
+        # glob prefix. A workbook's name is a prefix of its same-stem
+        # neighbour's (``design-xls.xls`` of ``design-xls.xlsx``), so a
+        # prefix match credits a workbook with a sidecar describing a
+        # different file and reports it complete once its own are gone.
+        json_sidecars = [
+            path
+            for path in scan_directory(source.parent, pattern=f"{source.name}*{EXTRACTED_JSON_SUFFIX}")
+            if matches_origin_name(path.name, source.name)
+        ]
+        if not json_sidecars or any(
+            not path.with_name(path.name.removesuffix(EXTRACTED_JSON_SUFFIX) + EXTRACTED_TEXT_SUFFIX).is_file()
+            for path in json_sidecars
+        ):
             missing.append(source.relative_to(_REPO_ROOT).as_posix())
 
     # The sibling freshness gates each guard their corpus; this one did not, so
