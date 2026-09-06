@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:e466196d7aa03a383226853bb31cc151e1f3879c4bfb635db57c3f1c86e60c8f'
+body_hash: 'sha256:d609a72382e74b70d95809ad4664dec7bd3fbaf42bf4af06482c71be376fc3c0'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -593,6 +593,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S711` - Tighten the project dependency floor on structural grounds and record why: project.dependencies is a single array of 31, so the optional-group degradation I had assumed cannot move this count at all; `dev/packaging/tests/test_dependency_surface.py`.
 - [x] `W02.P02.S712` - Floor the revision move candidate key count: > 0 sat against 397 keys, and the composition of 199 label plus 198 help means a renamer matching one suffix relocates half and still reads as one clean move; `dev/locales/tests/test_modelo_revision_locale_key_parity.py`.
 - [x] `W02.P02.S713` - Floor the harness scorable field count: > 0 accepted an oracle narrowed to a single field, against a live expected set of 15 decomposing as 11 matched plus 4 missed; `dev/ingest_harness/tests/test_driver.py`.
+- [x] `W02.P02.S714` - Floor the discovered m303 mapping epochs: a directory walk guarded only by truthiness parametrizes seven proofs, so a partial collapse shrank their coverage silently rather than failing anything; `dev/registry/tests/test_modelo_303_semantic_maps.py`.
+- [x] `W02.P02.S715` - Floor the golden scenario corpus the every-scenario sweep is parametrized over: a renamed directory or changed pattern yields zero cases, which deletes the gate rather than failing it; `dev/agent_eval/tests/test_modelo_130_golden.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

@@ -12,8 +12,8 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
-modified: '2026-09-05'
-body_hash: 'sha256:4c9f5a5a40979134673ff36a9782b9a02bc83ef36d4cf7248922e401aa339fc0'
+modified: '2026-09-06'
+body_hash: 'sha256:bfc09816dbb497773f99b4a97919e5694c70611a54c74defe0f257dfe52cd699'
 ---
 
 <!-- RETIRED: S370 -->
@@ -658,6 +658,8 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S442` - Restore the casilla help keys the label writes dropped, and establish why the rest of the locale parity drift must not be scaffolded away. Every casilla in the catalogue carries a help leaf beside its label; the labels written across this campaign carried none, so 156 keys the codebase references went missing. The remaining drift is not the same kind of problem: the 463 keys the scanner calls extra include enum-driven ones the runtime builds dynamically, and the scaffold verb prunes exactly that set, so running it would delete live keys.; `src/cadrumo/locales/*/modelo/schema/200.yml`.
 - [x] `W08.P30.S443` - Restore the required/optional badge keys to a constant the locale scanner can see. Both flow frontends selected the badge key behind a variable and handed that variable to tr(), so no literal reached the call site and neither key was collected; a catalogue strip would prune both as orphans and the badge would raise on a key with no visible reference. Centralise the pair in a module-level constant carrying the scanner's naming convention, in the shared copy module both frontends already import.; `src/cadrumo/application/flows/copy.py, src/cadrumo/application/flows/line_frontend.py, src/cadrumo/entrypoints/tui/flows/app.py`.
 - [x] `W08.P30.S444` - Review the full-screen session's output-language override into the sanctioned inventory. The gate offers two verdicts, ctx-scoped or reviewed with a reason, and this site is neither shape it names: there is no Typer context to hang the override on, and the ExitStack it uses is the shape the gate warns can outlive a callback. Establish from the code whether anything renders after that stack unwinds, and record the answer as the reason rather than assuming either verdict.; `dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
+- [x] `W08.P30.S445` - Separate naming the deferred create action from reaching for it, and give the calendar recovery invariant a home on its model. The TUI mention the gate reds on is a validator that REFUSES any recovery action other than the canonical create, which is the opposite of a leak. Move the same invariant onto the entry model so direct construction is checked too, keep the controller check because model_copy skips validators, and narrow the gate to an enumerated sanctioned mention rather than deleting a live refusal to make it green.; `src/cadrumo/application/modelo/declarations_calendar.py, src/cadrumo/entrypoints/tui/modelo/tests/test_create_deferred.py, src/cadrumo/application/modelo/tests/test_declarations_calendar.py`.
+- [x] `W08.P30.S446` - Give dev.locales a batch removal verb, and make it refuse the silent no-op its own batch remover allows. Deleting N keys through the single-key verb costs N interpreter starts, which turned a routine catalogue cleanup into half an hour of process startup. The plural manager method already existed and was simply unexposed; what it does NOT do is report a key it cannot find in a sharded catalogue, so a typo, a stale list or an already-applied manifest reads as success having done nothing.; `dev/locales/cli.py, dev/locales/manager.py, dev/locales/tests/test_remove_batch.py`.
 
 ## Parallelization
 
