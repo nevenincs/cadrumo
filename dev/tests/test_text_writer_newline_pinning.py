@@ -208,6 +208,13 @@ def _scan() -> tuple[list[Finding], int, list[str]]:
             # the mass-skip case is caught by the corpus floor below.
             unparseable.append(name)
             continue
+        except OSError:
+            # is_file() passed and the read still failed, so the file went
+            # between the check and the read. That is the same disappearance
+            # the branch above names, one instant later, and it joins the same
+            # channel rather than ending the run in a raw traceback.
+            absent.append(name)
+            continue
         scanned += 1
         findings.extend(unpinned_writers(name, tree))
     report_unread(

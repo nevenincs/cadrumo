@@ -187,6 +187,25 @@ symbols = []
 evidence = "CLOSED across three steps, each of which unblocked the next. Nothing wrote the encrypted filing-draft namespace, so the staleness lifecycle had no persisted approved draft to refresh; the workflow gate's draft builder now persists it (src/cadrumo/application/modelo/workflow_gate.py). With a subject in the store, drafts_pending recomputes an APROBADO draft's verdict before classifying it, reaching refresh_review_status and making the APROBACION_CADUCADA row reachable (src/cadrumo/application/review/_adapters.py). Finally the row carries the reasons as stable enum tokens and the queue projection renders them through describe_stale_reason (src/cadrumo/application/review/operator.py), so an operator is told WHICH of eight upstream axes moved rather than only that something did. The tokens ride on the item rather than being folded into its summary because FindingReviewItem.summary is a Translatable, an abstract catalogue key that cannot absorb rendered prose; the projection is the boundary where a key becomes words and is therefore the only place a reason may be described. Covered by src/cadrumo/application/review/tests/test_adapters_approval_staleness.py, whose detection case was A/B-confirmed to fail without the wiring and which pairs each assertion with a control."
 remedy_requires_decision = false
 
+[[symbol_cluster]]
+name = "dead duplicates of a name that is live elsewhere"
+class = "superseded"
+symbols = [
+  "load_transactions",
+  "_OPERATOR_SURFACE_RECONCILIATION_META_KEY",
+]
+evidence = "Both are dead duplicates of a name that is live elsewhere, deleted 2026-09-07. entrypoints/cli/_common.py defined load_transactions(state) with no caller anywhere, while the live load_transactions(settings, bucket_id=...) is a different function in src/cadrumo/application/review/_adapters.py, so a grep for the name returned a dead copy alongside the real one. _OPERATOR_SURFACE_RECONCILIATION_META_KEY was defined identically in _common.py and in src/cadrumo/entrypoints/cli/_operator_surface_reconciliation.py, which is the module that both writes and reads the Click ctx.meta entry. The constant-agreement screen reports one name with one value in two modules without judgement, which is right for ordinary repetition; it is not ordinary for a meta-key protocol, where writer and reader silently stop agreeing the moment one copy is edited. The unused copy is gone and the owning module keeps the only definition."
+remedy_requires_decision = false
+
+[[symbol_cluster]]
+name = "diagnostics-discarding calculate wrapper only tests reach"
+class = "test-support"
+symbols = [
+  "calculate_modelo_revision_from_bucket_aggregation",
+]
+evidence = "A diagnostics-DISCARDING wrapper that no production path calls. calculate_modelo_revision_from_bucket_aggregation at src/cadrumo/application/modelo/calculation_actions.py delegates straight to calculate_modelo_revision_from_bucket_aggregation_with_diagnostics and returns .revision, dropping the non-blocking source diagnostics. Its own docstring names the operator-facing CLI calculate surface as a caller of the diagnostics variant, and a grep confirms that: the wrapper's twenty-five call sites are all tests, across ten modules in application/modelo, application/aggregation, application/calculations and dev/ci. So it is test ergonomics living on the production API, and under no-silent-under-declaration its existence is the hazard rather than its disuse: a future caller that picks the shorter name silently drops advisories. The remedy is relocation to the shared test-support home at src/cadrumo/tests/ rather than deletion, since the tests exercise real behaviour. Not done in this step: the move carries roughly twenty-five type imports into test support and touches ten peer-visible test modules, and the machine could not run those suites to validate it."
+remedy_requires_decision = false
+
 # ---------------------------------------------------------------------------
 # Orphaned test modules
 #

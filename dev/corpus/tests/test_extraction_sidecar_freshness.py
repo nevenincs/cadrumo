@@ -6,6 +6,7 @@ import hashlib
 import json
 import sys
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -311,8 +312,35 @@ def test_pdf_corpus_text_sidecars_equal_current_production_extraction() -> None:
     assert not failures, "PDF corpus text differs from production extraction:\n" + "\n".join(failures)
 
 
-#: Below this the record-design walk has stopped covering the corpus.
-_MINIMUM_WORKBOOKS = 50
+#: Per-suffix floors over the record-design walk. This corpus is NOT one
+#: workbook kind: three extensions ship, and the legacy ``.xls`` reader is a
+#: different path through ``_workbook.build_workbook`` than the OOXML one that
+#: serves ``.xlsx``/``.xlsm``. Live: ``.xlsx`` 67, ``.xls`` 47, ``.xlsm`` 2.
+#:
+#: A floor over the UNION cannot see one extension leave the walk. Against 116
+#: workbooks a floor of 50 left 66 of slack -- more than ``.xls`` and ``.xlsm``
+#: put together (49). Narrow ``workbook_suffixes`` to the OOXML pair, or
+#: regress the membership test, and 49 workbooks stop being examined for
+#: sidecar pairing while the walked count reads 67 and this gate stays green.
+#:
+#: Nothing else pins that walk. The per-origin-kind floors in
+#: ``dev/docs/preprocess/tests/test_corpus_sidecar_freshness.py`` count
+#: SIDECARS, which a narrowed walk leaves untouched, and the record-design
+#: manifests are written by the sync script without a parity gate of their
+#: own. A family dropped from this loop is a family nothing checks for
+#: extraction sidecars at all.
+#:
+#: The floors are keyed independently of ``workbook_suffixes`` on purpose: a
+#: suffix removed from the walk still carries its floor, so it reds at zero
+#: rather than disappearing along with the check. Each sits near two thirds of
+#: its live figure, so ordinary corpus movement never fires the gate while a
+#: family losing most of itself always does. ``.xlsm`` has two members; one is
+#: the floor that still means present.
+_MINIMUM_WORKBOOKS_BY_SUFFIX: Final[dict[str, int]] = {
+    ".xls": 31,
+    ".xlsm": 1,
+    ".xlsx": 44,
+}
 
 
 def test_every_record_design_workbook_has_extraction_sidecars() -> None:
@@ -325,11 +353,12 @@ def test_every_record_design_workbook_has_extraction_sidecars() -> None:
         "and this gate would report every workbook sidecar-complete"
     )
 
-    examined = 0
+    examined: dict[str, int] = dict.fromkeys(_MINIMUM_WORKBOOKS_BY_SUFFIX, 0)
     for source in scan_directory(workbook_root, recursive=True, select=DirectoryEntryKind.FILES):
-        if source.suffix.lower() not in workbook_suffixes:
+        suffix = source.suffix.lower()
+        if suffix not in workbook_suffixes:
             continue
-        examined += 1
+        examined[suffix] = examined.get(suffix, 0) + 1
         # Paired through the producer's own predicate rather than the bare
         # glob prefix. A workbook's name is a prefix of its same-stem
         # neighbour's (``design-xls.xls`` of ``design-xls.xlsx``), so a
@@ -347,11 +376,17 @@ def test_every_record_design_workbook_has_extraction_sidecars() -> None:
             missing.append(source.relative_to(_REPO_ROOT).as_posix())
 
     # The sibling freshness gates each guard their corpus; this one did not, so
-    # an empty walk read exactly like a complete one. A floor, not a pinned
-    # count: 116 workbooks ship today.
-    assert examined >= _MINIMUM_WORKBOOKS, (
-        f"only {examined} record-design workbook(s) were walked, so an empty finding list "
-        "says nothing about whether the corpus carries its extraction sidecars"
+    # an empty walk read exactly like a complete one. Floors, not pinned counts:
+    # 116 workbooks ship today across the three suffixes.
+    starved = {
+        suffix: (examined[suffix], floor)
+        for suffix, floor in _MINIMUM_WORKBOOKS_BY_SUFFIX.items()
+        if examined[suffix] < floor
+    }
+    assert not starved, (
+        f"these record-design workbook families were walked below their floor {starved!r} "
+        f"(walked {sum(examined.values())} in total); an empty finding list says nothing "
+        "about whether a family the walk no longer reaches carries its extraction sidecars"
     )
     assert not missing, "record-design workbooks without extraction sidecars:\n" + "\n".join(missing)
 
