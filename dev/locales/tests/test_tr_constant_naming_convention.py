@@ -43,7 +43,7 @@ def test_no_tr_constant_naming_violations_repo_wide() -> None:
     and fails loudly, naming every offending ``path:line: 'CONSTANT'`` site,
     the moment a constant reference without the required suffix is passed to
     the translator. The one currently compliant production site
-    (``application/wizard/format_hints.py``'s
+    (``application/wizard/_format_hints.py``'s
     ``REGISTERED_NON_OFFICIAL_SUFFIX_LOCALE_KEY``, referenced from
     ``application/wizard/_registered_values.py``) is proof this is not a
     vacuous "nothing calls tr() with a constant" pass — the naming

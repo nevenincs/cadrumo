@@ -20,6 +20,15 @@ from ..legal_reference import LegalProvisionRecord, generate_legal_reference, re
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
+
+#: Floor for the legal pages the live catalogue renders. Live it renders
+#: 160 pages beside the index. Every live-corpus claim below reads a
+#: population an empty catalogue empties, and the generator prunes before
+#: it writes with the index always in its keep set -- so a render that
+#: produced no page leaves exactly one file standing, which is what an
+#: existence check accepts.
+_MINIMUM_LEGAL_PAGES = 100
+
 _REPO_ROOT = REPO_ROOT
 
 
@@ -225,6 +234,12 @@ def test_authoritative_legal_pages_are_docutils_clean() -> None:
         f"{page.output_relpath}: {messages}" for page in result.pages if (messages := _system_messages(page.rst))
     ]
 
+    # The comprehension above ranges over the live catalogue, so an empty
+    # one yields no failure and this absence claim holds over nothing.
+    assert len(result.pages) >= _MINIMUM_LEGAL_PAGES, (
+        f"the catalogue rendered only {len(result.pages)} pages, so the diagnostic claim "
+        "below reads almost none of the legal reference"
+    )
     assert not failures, "generated legal-reference RST has docutils diagnostics:\n" + "\n".join(failures)
 
 
@@ -249,7 +264,13 @@ def test_regenerating_an_unchanged_catalogue_leaves_every_page_untouched(tmp_pat
     generate_legal_reference(tmp_path, repo_root=_REPO_ROOT)
     after = {path.name: path.stat().st_mtime_ns for path in scan_directory(out_dir, pattern="*.rst")}
 
-    assert before, "the legal catalogue rendered no pages, so this proves nothing"
+    # A count, not a truthiness test: the prune keeps the index
+    # unconditionally, so a collapsed catalogue leaves ``before`` holding
+    # index.rst alone and both assertions here hold over one file.
+    assert len(before) >= _MINIMUM_LEGAL_PAGES, (
+        f"the catalogue rendered only {len(before)} files, so the mtime comparison "
+        "below proves nothing about the pages it was meant to leave untouched"
+    )
     assert after == before
 
 
@@ -267,4 +288,10 @@ def test_a_page_the_catalogue_no_longer_produces_is_still_pruned(tmp_path: Path)
     generate_legal_reference(tmp_path, repo_root=_REPO_ROOT)
 
     assert not stale.exists()
-    assert any(iter_directory(out_dir, pattern="*.rst")), "the prune removed the pages it was meant to keep"
+    # ``any(...)`` was satisfied by index.rst alone, which the sweep keeps
+    # whatever the catalogue produced; count the survivors instead.
+    survivors = list(iter_directory(out_dir, pattern="*.rst"))
+    assert len(survivors) >= _MINIMUM_LEGAL_PAGES, (
+        f"the prune left only {len(survivors)} page(s); it was meant to keep the whole "
+        "rendered catalogue and remove just the unowned page"
+    )

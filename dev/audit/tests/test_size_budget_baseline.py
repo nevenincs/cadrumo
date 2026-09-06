@@ -39,17 +39,35 @@ def _baseline(**overrides: object) -> SizeBudgetBaseline:
     return SizeBudgetBaseline(**fields)  # type: ignore[arg-type]
 
 
-def test_the_reader_grandfathers_nothing_whatever_path_it_is_given() -> None:
-    """The committed limit table was retired, so every read is empty.
+def test_the_reader_returns_the_committed_table(tmp_path: pathlib.Path) -> None:
+    """The reader reads. A reader that silently returned empty would disarm the ratchet.
 
-    Pinned because the signature still takes a path and a caller may reasonably
-    expect it to be read. A reader that started returning pinned ceilings again
-    would restore a ratchet this project deliberately removed, and nothing else
-    would say so.
+    This is the inverse of the contract that stood while the limit table was
+    retired: with the table restored, a reader that grandfathered everything
+    would report every subject against the flat default, which is the model the
+    accepted size-budget decision rejects -- an offender is a subject that broke
+    through its OWN ceiling, not merely a large file. Nothing else would say so,
+    because a disarmed ratchet fails loudly on debt rather than quietly on
+    nothing, and looks like a working gate while it does it.
     """
-    for path in (None, pathlib.Path("does-not-exist.json")):
-        loaded = load_size_budget_baseline() if path is None else load_size_budget_baseline(path)
-        assert (loaded.modules, loaded.callables, loaded.notes) == ({}, {}, {})
+    target = tmp_path / "budget.json"
+    write_size_budget_baseline(_baseline(), scanned_modules=2, scanned_callables=1, path=target)
+
+    loaded = load_size_budget_baseline(target)
+
+    assert loaded.modules == {"dev/a.py": 400, "dev/b.py": 200}
+    assert loaded.callables == {"dev/a.py::widen": 60}
+
+
+def test_an_absent_baseline_reads_empty_rather_than_raising(tmp_path: pathlib.Path) -> None:
+    """A missing table is the pre-seed state, not a crash.
+
+    Empty here means "nothing declared yet", so every subject is measured
+    against the default -- strictly the harshest reading, never a free pass.
+    """
+    loaded = load_size_budget_baseline(tmp_path / "does-not-exist.json")
+
+    assert (loaded.modules, loaded.callables, loaded.notes) == ({}, {}, {})
 
 
 def test_the_written_document_is_sorted_json_with_a_final_newline(
