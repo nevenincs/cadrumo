@@ -28,13 +28,13 @@ from ..errors import (
 )
 from ..kdf_supervision import (
     KDF_FRAME_CONTROL,
-    _posix_memory_bytes,
     KDF_FRAME_HEADER,
     KDF_FRAME_MAGIC,
     KDF_FRAME_VERSION,
     PROFILE_CUSTODY_KDF_CALIBRATION_VERSION,
     ProfileCustodyKdfCalibration,
     ProfileCustodyKdfResources,
+    _posix_memory_bytes,
     _select_profile_kdf_calibration,
     _SupervisedKdfWorker,
     calibrate_profile_kdf,
