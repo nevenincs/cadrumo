@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:4f8032e5ff8677f5d657b00bb90aba36022bf67599ce22e8065db3b91df11624'
+body_hash: 'sha256:772be8389729d97d9ac9a4471eb9ecad7749496d06d6186e03a37458b1f0b778'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -668,6 +668,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S786` - Floor the live legal catalogue at its three claim sites so a render that produces no page cannot pass: the docutils absence claim had no guard at all, and the idempotence and prune guards were existence checks satisfied by the index page the sweep keeps unconditionally; `dev/docs/tests/test_legal_reference.py`.
 - [x] `W02.P02.S787` - Floor the live casilla reference population at its three guard sites so a registry narrowed to a handful of modelos cannot pass: the prune survivor check and the idempotence guard were both satisfied by the index page the sweep keeps unconditionally, and the per-page survival loop was guarded only by truthiness; `dev/docs/tests/test_casilla_reference_pruning.py`.
 - [x] `W02.P02.S788` - Sweep every workflow document in the deploy lane isolation gate rather than only .yml: GitHub Actions reads .yaml too, so a publishing lane filed with that suffix was invisible to two claims that check their result for the absence of other publishers, and route both through one floored owner; `dev/deploy/tests/test_deploy_lane_isolation.py`.
+- [x] `W02.P02.S789` - Widen the two remaining yml-only workflow walks to both suffixes GitHub Actions reads: the relative-import offender check and the var-naming discovery surface each globbed only .yml while feeding an absence claim, so a lane filed as .yaml was invisible to both; `dev/packaging/tests/test_build_scratch_reclaim.py`.
+- [x] `W02.P02.S790` - Refuse a missing intentional-disposition table instead of defaulting to empty: the producer read data.get with a default, so a renamed or deleted table left all four disposition claims holding over an empty list, and a floor is the wrong instrument because the exemption list may legitimately shrink to zero; `dev/quality/tests/test_symbol_ratchet_dispositions.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

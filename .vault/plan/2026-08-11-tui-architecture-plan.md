@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-06'
-body_hash: 'sha256:ee41a50ec35dea14babaf5bb9c1022025705f8f1b6684339569edfc8bf463fe3'
+body_hash: 'sha256:ed7c274b184f4f96ed9bcba42d53509b6e8addd664533945a0fef874bbf17c9a'
 ---
 
 <!-- RETIRED: S370 -->
@@ -686,6 +686,8 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S470` - Restore the static frame reasons gate to running, promoting the live AEAT token helper to the public name its cross-package consumer and the packages own docstring already use and recovering the unconverted baseline an import refactor deleted alongside it; `dev/docs/sequences/runner.py dev/docs/sequences/tests/test_runner.py dev/docs/tests/unconverted_static_baseline.json`.
 - [x] `W08.P30.S471` - Drop the retired subprocess provider probe and the deleted remediation field from the sandbox external tool pin test, since both were removed with the cloud transport and the executable-text advice it carried, leaving the case uncollectable and its PATH and browser pins unchecked on every run; `dev/docs/sequences/tests/test_runner.py`.
 - [x] `W08.P30.S472` - Establish why the generated export tree gate is red and stop rather than regenerate: twenty-seven of twenty-nine enrolled trees drift only in their generation provenance with no record layout fragment differing, and the twenty-eighth is enrolled ahead of publication so publishing it would require authoring a filing-grade check-mode refusal reason; `dev/registry/tests/test_generated_export_trees.py`.
+- [x] `W08.P30.S473` - Close the reference walk target and correct how this campaign has been measuring, since the suite itself warns that a parallel run failure list is a subset of unknown size and every sweep behind the reported counts was run under xdist; `dev/audit dev/packaging dev/registry`.
+- [ ] `W08.P30.S474` - Characterise the export tree drift precisely and correct the earlier wording, since every record fragment differs in bytes while none differs in parsed meaning and the provenance reds only because it records byte digests, which makes the owed regeneration a serializer rewrite rather than a change to any declaration; `dev/registry`.
 
 ## Parallelization
 
