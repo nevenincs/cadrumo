@@ -78,13 +78,17 @@ def _entry_kinds() -> dict[str, str]:
     for fragment in sorted(_MAPPINGS.rglob("*.toml")):
         try:
             data = tomllib.loads(fragment.read_text(encoding="utf-8"))
-        except tomllib.TOMLDecodeError as refusal:
+        except (OSError, tomllib.TOMLDecodeError) as refusal:
             # Malformedness itself is another gate's subject, but its CONSEQUENCE
             # lands here: a fragment that does not parse contributes no entries,
             # so every export ref into it reads as ``kind is None`` below and is
             # skipped as a hand-authored layout rather than judged. A silent skip
             # therefore converts judged routings into unjudged ones, which is
             # indistinguishable from a clean result.
+            # An UNREADABLE fragment converts the same routings the same way:
+            # the walk can list a path a peer removes before the read reaches
+            # it. The corpus is shortened either way, so the loss is announced
+            # here rather than ending the run before any routing is judged.
             # Relative where it can be, absolute otherwise: the announcement must
             # never be more fragile than the walk it reports on.
             named = fragment.as_posix()
