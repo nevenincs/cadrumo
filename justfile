@@ -1136,12 +1136,15 @@ audit-health-report:
 audit-health-report-json:
     @uv run --no-sync python -m dev.audit.report --json
 
-# Audit module and callable sizes across src/ and dev/ against the declared
-# band. Exits 1 on any finding: there is no baseline, ceiling table, or accept
-# flag, so the remedy is to split the oversize subject. This scanner spent
-# weeks with no runner at all after the pytest gate that enforced it was
-# deleted with the shipped package's zero-awareness boundary; `audit-all`
-# now carries it as an advisory dimension, and this recipe runs it alone.
+# Audit module and callable sizes across src/ and dev/ against the committed
+# ratchet in dev/audit/size_budget_baseline.json. Exits 1 only on MOVEMENT: a
+# subject that broke through its own ceiling, or a ceiling that outlived its
+# subject. Standing debt is declared in the baseline and does not fail, so this
+# is green until something grows.
+#
+# Pay debt down and re-run with --regenerate to lower the ceilings. Absorbing
+# growth needs --regenerate --accept-growth, so a broken ceiling can only be
+# raised deliberately and in a reviewable diff. Wired blocking in ci.yml.
 [doc('Audit module and callable sizes across src/ and dev/ against the declared band.')]
 [group('audits')]
 audit-size-budget:
