@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:7fbd13eba166728be72bc3fc654f9b58deaf6e3383072939eee91a6e27745e0f'
+body_hash: 'sha256:9c3e64b68080c9a35562199993d5c7b459c9be138e1df6ad53486e44140a09f7'
 ---
 
 # `reachability-burndown` plan
@@ -157,6 +157,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S56` - Record the campaign's clearest cost finding and one supersession: the encrypted stage-S1 transcription cache is never populated, its own docstring stating that re-reading is the expensive half of ingestion at a vision model pass over every page and that re-running the cheap semantic stages is only affordable if the transcription is kept, while the single live reader is the consent-withdrawal path that touches the cache to erase it; and the standalone corpus manifest writer is subsumed by the bundle builder that writes the manifest inside the zip archive; `dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S57` - Sweep every cache-shaped module and bound that finding class at the two already recorded, since the other six are healthy with both halves live or reached intra-module; then adjudicate the domain attachment readers as displaced because the application layer reads the same store protocol directly while this service's write half stays live, and the M036 IAE subject sets as should-be-live because the field rule they encode, that only A-prefix codes carry an epigrafe, is enforced nowhere while the simplified-regime calculation separates agrarian rows by type instead; `dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S58` - Reclassify both of the campaign's cost findings after testing them against the live design rather than the finding's own docstring: the locale catalogue disk cache is superseded because locale_map returns a lazy shard catalogue whose full parse runs only from iteration, length and to-dict, none of which production calls, so the eight hundred millisecond figure is not a live cost; and the transcription cache is superseded because the CLI-facing extraction layer states that everything runs on-host in memory, that the evidence bytes, transcription and draft never touch disk, and that the module performs no filesystem write, so persisting a transcription would contradict the live posture rather than complete it; `dev/audit/reachability_classification.toml`.
+- [ ] `W05.P12.S59` - Begin re-testing the owner-decision backlog against the live design rather than adding to it, which reversed four entries in one pass: the certificate no-active-bucket error is superseded because the auth-configure error carries four production references including the certificate CLI beside a require-active-bucket helper at twenty-one; the two permitted-surface page types are superseded because the surface is carried whole as a bounded validated tuple of the live entry type rather than paginated; and the authentication-failure predicate is superseded because a port-boundary mapper collapses credential-shape and proof failures into a typed refusal across three modules, so the adapter-leak inference recorded earlier was wrong; `dev/audit/reachability_classification.toml`.
 
 ## Parallelization
 
