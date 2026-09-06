@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:c4ce8c63afdab5066b82f0f59c10ad98732fbdcb4232cf12d539e204558da929'
+body_hash: 'sha256:421126a5fcce81179a3f1dcd120df08004886cc22077a575eb7e90d1d6f92626'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -676,6 +676,9 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S794` - Stop the temp reaper reporting bytes it did not remove: reclaim absorbed a failed rmtree by design but still added the verdict's whole total_bytes, and main prints that figure to the operator as removed, so a directory held open by another handle survived on disk while its 4096 bytes were counted as reclaimed; `dev/env/temp_reaper.py`.
 - [x] `W02.P02.S795` - Absorb only an absent session root in the temp reaper, not one that cannot be scanned: any OSError from the root scan returned an empty verdict list, so a root that exists but is unscannable printed spared 0 of 0 sessions, exactly what a genuinely clean box prints, and the operator read a failed scan as nothing to reclaim; `dev/env/temp_reaper.py`.
 - [x] `W02.P02.S796` - Floor the nested group pages the CLI reference toctree gate walks: the enrolment claim asserted no missing pages without establishing the walk reached any page, and the module's two sibling anchors cover different populations, so a zero-page walk read exactly like a fully enrolled reference; live 16 nested group pages of 21; `dev/docs/tests/test_cli_reference_pages_are_not_stubs.py`.
+- [x] `W02.P02.S797` - Floor the companion projects the release-please version-surface gate discovers: the requirement set unioned two hard-coded literals with a live filesystem glob, so a relocated packaging root collapsed the discovered half and the subset check still passed while the companion claim evaporated, though dev/release/readiness.py keeps comparing both companions by literal path; `dev/ci/tests/test_action_pinning.py`.
+- [x] `W02.P02.S798` - Floor the production modules the command-spec authority gate walks: the loop body carried the entire claim with no non-empty check, so a relocated test file or renamed package root collapsed the rglob to zero and the gate returned green over no modules, while its sibling in the same file already anchored with assert nodes; live 2132 non-test modules; `dev/ci/tests/test_command_spec_authority_gate.py`.
+- [x] `W02.P02.S799` - Prove the load census clean property reads every field it claims: clean is a conjunction over unclassified, stale_rules and undeclared_dead_candidates, all three empty live, so degrading it to read only the first is indistinguishable from correct and the authoritative gate asserting report.clean never observed it False; `dev/registry/tests/test_load_census_classification.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

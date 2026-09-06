@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:4a18e523ea8ed3a8a8760d3d5de66b99f95e279a7dd24f8fee4580a79684a0a1'
+body_hash: 'sha256:0d5352a8d694b267df132e8b4252e83d0e2e836443dfab935414f3d6f0f66673'
 ---
 
 # `reachability-burndown` plan
@@ -145,6 +145,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S44` - Adjudicate the two custody families: the envelope-level recovery unlock and envelope parser are superseded because the live recovery artifact path calls the field-level unlock material primitive and derives the wrapper AAD through the field-level helper, and a crypto divergence was ruled out first by confirming the envelope AAD form delegates to that same helper so the bypass changes no bytes; and the summary-witness load with the data-file replace are what remains of the committed custody read side after its reader trio was removed, leaving a live write side that commits data the product can neither read back as a witness nor replace; `dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S45` - Record the inverse of the campaign's recurring persistence shape: the bucket output-language hint is READ by live production while nothing writes or clears it, and the reader is documented to fail soft, catching every exception and returning None at DEBUG, so the hint file never exists and every caller silently takes the default language; and the profile inventory pair where neither side is wired, since load has no production reference and save's single apparent one is a docstring sentence describing an older path rather than a call; `dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S46` - Adjudicate the grounding-anchor provenance wrappers and the invoice CLI query projections, and record what the first is NOT: the anti-fabrication contract's structural half is live, since evaluate anchor, the printed-excerpt predicates, the refusal constructor and the ambiguous-candidate grounder are all imported by production modules, so an extracted value is still checked against the transcription and only the envelope-building convenience is displaced by callers constructing the provenance directly; the two invoice projections declare themselves for CLI surfaces that never reach them, while a sibling in the same module is consumed; `dev/audit/reachability_classification.toml`.
+- [x] `W05.P12.S47` - Separate two unreached read paths that look identical and are not: the deudas landing guard and path prefixes are staged and fail-closed by design, because the live deudas service records that no specimen of the AEAT consulta page exists and the shared read-landing wall refuses every landing while a surface declares no read pages, so nothing calls the guard precisely because no live read is attempted; whereas the IVA remote-state loaders sit beside a capture that IS reached, so state is captured and cannot be retrieved and the acquisition-manifest surface records nothing, with no fail-closed rationale; `dev/audit/reachability_classification.toml`.
 
 ## Parallelization
 
