@@ -340,7 +340,20 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         the replacement keeps the same dismissal callback, and Escape from any
         internal body returns to Home exactly as it does from the entry body.
         The root never learns which body this is -- the workspace resolved it.
+
+        The swap is deferred onto this application's own message pump, and that
+        is load-bearing rather than tidiness. A screen's result callback is
+        dispatched through whichever pump was active when the screen was
+        pushed, so pushing directly from inside the outgoing screen's handler
+        registers the return journey against a screen that is about to be
+        popped. The callback then belongs to a stopped pump and never runs, and
+        Escape from an internal area strands the operator on an empty root with
+        no way back.
         """
+        self.call_next(self._replace_destination_for_workspace, screen)
+
+    def _replace_destination_for_workspace(self, screen: Screen[None]) -> None:
+        """Swap the workspace body from the root's pump so the return survives."""
         self._replace_destination(screen, return_to_home=True)
 
     def _replace_destination(self, screen: Screen[None], *, return_to_home: bool = False) -> None:

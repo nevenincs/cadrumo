@@ -433,6 +433,25 @@ class LedgerWorkspaceScreen(Screen[None]):
         """Leave the workspace by dismissing this child, as the siblings do."""
         self.dismiss(None)
 
+    def on_ledger_review_requested(self, _: LedgerReviewRequested) -> None:
+        """Say that the selection led nowhere, rather than appearing to work.
+
+        Selecting a review row names a real query action, but no production
+        consumer executes one yet. Answering with the pending-area copy is the
+        honest state: an unhandled message is indistinguishable from a dead
+        keypress, and that silence is precisely how the workspace navigation
+        defect stayed invisible through the whole surface's construction.
+        """
+        self._refuse_pending_destination()
+
+    def on_ledger_evidence_review_requested(self, _: LedgerEvidenceReviewRequested) -> None:
+        """Report the same pending state for an evidence-row selection."""
+        self._refuse_pending_destination()
+
+    def _refuse_pending_destination(self) -> None:
+        """Surface the canonical pending-area copy on this screen's notice."""
+        self.query_one("#ledger-refusal", Static).update(ledger_copy("tui.ledger.refusal.destination_pending"))
+
 
 __all__ = [
     "LedgerBackRequested",
