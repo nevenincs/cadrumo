@@ -11,7 +11,7 @@ related:
   - '[[2026-09-03-duplication-burndown-honest-clone-closure-research]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:468b3cffe6617d336ebd86223bad53d73ce6b36bbe87074dc761f4cf919e0386'
+body_hash: 'sha256:dea593424f0b7499950f7404c1b2cd34e7c11e6dfc629d2f9e1e241513df6b79'
 ---
 
 <!-- RETIRED: W05, W06, W07, P02, P03, P04, P06, P09, P12, P14, P16, P17, P19, P20, P21, P22, P23, P24, P25, P26, P27, S03, S06, S07 -->
@@ -103,6 +103,7 @@ Prove detector teeth and run focused, subsystem, and full repository gates.
 - [x] `W04.P18.S20` - Adjudicate the 35 identical-expression constant collisions the extended screen surfaces, merging each to a canonical home or recording why an existing decision keeps it local; `dev/quality/constant_value_agreement.py`.
 - [x] `W04.P18.S21` - Build a docstring cross-reference screen and burn down the references naming symbols the tree does not define, separating current drift from accurate statements about the past; `dev/quality/docstring_reference_targets.py`.
 - [x] `W04.P18.S22` - Remove constant-level duplication the clone detector structurally cannot see: 34 public module-level constants carry a private same-stem copy elsewhere and 21 are literal-identical, each far below the jscpd clone threshold so the scanner reports its adjudicated floor while they stand; replace the five whose canonical home is safely importable with imports of that home, and record why the rest are not simple imports; `src/cadrumo/adapters/outbound/google/calc_sheets_pull.py`.
+- [x] `W04.P18.S23` - Publish the drive-entries module so the duplicate it caused can become an import: the canonical OWNERSHIP_KEY and OWNERSHIP_VALUE lived in a private underscore module, which a cross-package consumer may not import, so the storage adapter carried its own copies and the duplicate was the symptom of a placement problem rather than laziness; rename the module public, update every referrer atomically including the generated api stubs, and replace the copies with an import of the canonical home; `src/cadrumo/adapters/outbound/google/drive_entries.py`.
 
 ## Parallelization
 

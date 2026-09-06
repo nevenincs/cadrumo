@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:acdaeb3ff8d96e469a213760704c8dc4e295272e253d82338fbdc504c329fadb'
+body_hash: 'sha256:701a18eebbf8561fd75416b7d3586a84668091f35828dd1e9a6284f828feef23'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -664,6 +664,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S782` - Floor both branches of the workbook parse behind the total-preserving projection claim, whose tuple equalities and strict zip are all satisfied by two empty sides; `dev/registry/tests/test_record_design_ir.py`.
 - [x] `W02.P02.S783` - Floor both chain transcripts behind the isolation and determinism claims, whose strict zip and pin to frozenset are both satisfied by a run that produced no frame; `dev/docs/sequences/tests/test_runner.py`.
 - [x] `W02.P02.S784` - Make the residue worklist group-count case assert the comparison its name promises: compare every heading's declared count against the rows printed beneath it at both levels, replacing a positivity check that never read the kind-level sum; `dev/registry/tests/test_coverage_residue_worklist.py`.
+- [x] `W02.P02.S785` - Anchor the api-stub manager claims to a real module corpus: pin the stale-stub removal to exactly the phantom and floor the written stub population, so a collapsed expected set that deletes the whole docs/api reference can no longer satisfy the removal, conformance and terminator cases; `dev/docs/apidocs/tests/test_manager.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
