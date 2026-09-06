@@ -1499,12 +1499,11 @@ symbols = ["resolve_modelo_exact_workflow_run_for_resume", "resolve_modelo_visib
 evidence = "The exact and visible run resolvers for workflow resume. The live holder states the displacement directly: resolve_modelo_workflow_resume_target documents that exact run ids remain the direct path while work-unit ids, calculation-revision ids and visible modelo/year/period selectors resolve through the public modelo addressing facade before workflow run lookup, SO THAT this service does not duplicate modelo selector policy. These two are that duplicated policy. Contradictory selectors are still refused, by a WorkflowError raised in the live resolver rather than by the unused ambiguity error beside these."
 
 [[symbol_cluster]]
-name = "locale catalogue disk cache never read or written"
-class = "should-be-live"
+name = "locale catalogue disk cache the lazy shard loader displaced"
+class = "superseded"
 area = "core"
 symbols = ["read_catalogue_cache", "write_catalogue_cache"]
-evidence = "The cross-process half of the locale catalogue cache. Its own module docstring carries the measurement that justifies it: the packaged catalogues hold a large modelo.schema block of casilla labels and help text, and even the C-accelerated YAML loader costs about 800 ms per process because PyYAML's acceleration covers scanning and parsing while constructing Python objects from the node tree is always pure Python, whereas a JSON reload of the pre-flattened map costs single-digit tens of milliseconds. The in-process half IS live -- locale_catalogue.py imports compute_directory_source_digest and builds a (locale, digest) key from it at line 139 -- but neither the read nor the write of the persisted flat map is called anywhere, so every new process pays the parse the cache was written to avoid."
-remedy_requires_decision = true
+evidence = "The whole-map half of the locale catalogue cache, displaced by the lazy shard catalogue. The module docstring justifies the cache with a measurement -- about 800 ms per process to parse the packaged catalogues -- and that cost is no longer paid: locale_map returns a LazyLocaleCatalogue which resolves a key by loading only the shard containing it, and its full parse runs solely from __iter__, __len__ and to_dict, none of which production calls. So the reader and writer serve a whole-map strategy the lazy loader superseded, not a cache that was forgotten. Recorded first as should-be-live with the 800 ms presented as a live cost; that reading was wrong and is corrected here."
 
 [[symbol_cluster]]
 name = "default filing profile loader displaced by explicit identity"
@@ -1535,12 +1534,11 @@ symbols = ["decode_mnemonic"]
 evidence = "Turns a 24-word mnemonic back into entropy. Nothing calls it, and the reason is a design choice rather than a gap: application/user_profile/custody_ports.py records that the recovery secret IS the 24-word BIP-39 mnemonic over 256 bits of entropy, so the phrase is handed to the KDF as a passphrase and never decoded. The encoder is live by contrast, called at line 235 of the same module by generate_recovery_key, which profile_custody.py reaches -- so a mnemonic is issued, and recovery consumes the words themselves."
 
 [[symbol_cluster]]
-name = "document transcription cache that nothing populates"
-class = "should-be-live"
+name = "transcription cache the in-memory extraction path rejects"
+class = "superseded"
 area = "application/ledger"
 symbols = ["write_cached_transcription"]
-evidence = "The write half of the encrypted, content-addressed stage-S1 transcription cache. Its own module docstring states the premise this breaks: re-reading is the expensive half of ingestion, a vision transcription costs a model pass over every page, and the pipeline deliberately re-runs the cheap semantic stages when a model or prompt improves, which is ONLY AFFORDABLE IF THE TRANSCRIPTION IS KEPT. Nothing calls the writer, so the cache is never populated and every read misses. The loader beside it is NOT a finding -- an intra-module caller reaches it, which a cross-module reference count cannot see -- so only the writer is named here. The single live reader is telling: consent_withdrawal.py, which touches the cache to erase it rather than to serve a re-extraction. So the affordability the pipeline is designed around does not hold, and each re-extract, re-classify or re-draft pays the full per-page model pass again."
-remedy_requires_decision = true
+evidence = "The write half of the encrypted stage-S1 transcription cache. Its own docstring argues for itself -- re-reading is the expensive half of ingestion, a vision transcription costs a model pass over every page -- but the live extraction path refuses that trade explicitly. application/ledger/invoice_draft_extraction.py, the CLI-facing wiring layer reached three times, states that everything there runs on-host and in-memory only, that the evidence bytes, the transcription and the draft NEVER TOUCH DISK, and that the module performs no filesystem write. Persisting a transcription would contradict that posture, and the transcription is the invoice in a shape a grep can read. So the writer is a superseded strategy, not a forgotten wire-up. Recorded first as should-be-live with the per-page model cost presented as a live loss; that reading was wrong and is corrected here. The one live reader remains consent_withdrawal.py, which touches the cache to erase it."
 
 [[symbol_cluster]]
 name = "standalone manifest writer the bundle builder subsumes"

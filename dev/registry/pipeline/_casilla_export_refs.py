@@ -124,12 +124,18 @@ def write_generated_casilla_export_refs(
     left untouched, and a differing one raises, because two disagreeing answers
     to "which field addresses this casilla" is a finding rather than something
     to silently union.
+
+    Every casilla file is read and validated before any file is written. A
+    conflicting declaration on one file, or an addressed casilla missing from
+    the whole directory, must be discoverable without first mutating the
+    casillas that sorted ahead of the file that failed: these ``.toml`` files
+    are the live registry tree, not a staging copy the caller can roll back.
     """
     casillas_root = revision_root / "casillas"
     if not casillas_root.is_dir():
         raise RegistryValidationError(f"generated export_refs write found no casillas directory: {casillas_root}")
 
-    written: list[Path] = []
+    pending: list[tuple[Path, str]] = []
     seen: set[str] = set()
     for path in scan_directory(casillas_root, pattern="*.toml"):
         original = path.read_text(encoding="utf-8")
@@ -182,12 +188,16 @@ def write_generated_casilla_export_refs(
             lines.insert(anchor + 1, _render(expected) + ending)
             changed = True
         if changed:
-            path.write_text("".join(lines), encoding="utf-8", newline="\n")
-            written.append(path)
+            pending.append((path, "".join(lines)))
 
     missing = sorted(set(export_refs_by_casilla) - seen)
     if missing:
         raise RegistryValidationError(
             f"generated layout addresses casillas the revision does not declare: {missing!r}",
         )
+
+    written: list[Path] = []
+    for path, content in pending:
+        path.write_text(content, encoding="utf-8", newline="\n")
+        written.append(path)
     return tuple(written)

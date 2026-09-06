@@ -233,6 +233,61 @@ source_refs = [
         )
 
 
+def test_generated_casilla_export_refs_refuses_before_writing_any_file(tmp_path: Path) -> None:
+    """A conflict discovered on one file must not leave an earlier file mutated.
+
+    These ``.toml`` files are the live registry tree, not a staging copy a
+    caller can roll back, so the completeness/conflict guard has to run before
+    the first write rather than after it. ``a.toml`` sorts ahead of ``b.toml``
+    under :func:`~cadrumo.core.directory_scan.scan_directory`'s deterministic
+    ordering, so it is the one that would have been written first.
+    """
+    casillas = tmp_path / "casillas"
+    casillas.mkdir()
+    a_path = casillas / "a.toml"
+    a_original = '[[revisions.current.casillas]]\nid = "010"\nsource_refs = ["source"]\n'
+    a_path.write_text(a_original, encoding="utf-8")
+    b_path = casillas / "b.toml"
+    b_original = (
+        '[[revisions.current.casillas]]\n'
+        'id = "020"\n'
+        'source_refs = ["source"]\n'
+        'export_refs = ["existing.other"]\n'
+    )
+    b_path.write_text(b_original, encoding="utf-8")
+
+    with pytest.raises(RegistryValidationError, match="020"):
+        write_generated_casilla_export_refs(
+            tmp_path,
+            export_refs_by_casilla={"010": ("generated.new",), "020": ("generated.conflict",)},
+        )
+
+    assert a_path.read_text(encoding="utf-8") == a_original, "the earlier file was written before the refusal"
+    assert b_path.read_text(encoding="utf-8") == b_original
+
+
+def test_generated_casilla_export_refs_missing_casilla_leaves_matched_files_unwritten(tmp_path: Path) -> None:
+    """A layout addressing an undeclared casilla must not partially apply.
+
+    Every other casilla the layout addresses is present and would otherwise
+    write cleanly; the completeness check still has to run before any of
+    those writes, not after.
+    """
+    casillas = tmp_path / "casillas"
+    casillas.mkdir()
+    path = casillas / "a.toml"
+    original = '[[revisions.current.casillas]]\nid = "010"\nsource_refs = ["source"]\n'
+    path.write_text(original, encoding="utf-8")
+
+    with pytest.raises(RegistryValidationError, match="does not declare"):
+        write_generated_casilla_export_refs(
+            tmp_path,
+            export_refs_by_casilla={"010": ("generated.new",), "absent": ("generated.absent",)},
+        )
+
+    assert path.read_text(encoding="utf-8") == original, "the matched file was written before the refusal"
+
+
 def _intermediate(
     *,
     first_record_declared_total: int | None = 4,
