@@ -29,6 +29,7 @@ from ...domain.categories.spending_category import HOME_OFFICE_FAMILIES, Spendin
 from ...domain.usage_ratios.errors import UsageRatioValidationError
 from ...domain.usage_ratios.model import ELIGIBLE_USAGE_RATIO_CATEGORIES, UsageRatioProfile
 from ...domain.usage_ratios.service import usage_ratio_bucket_lock
+from ..bucket_event_repository import bucket_event_history_repository
 from .usage_ratio_repository import load_usage_ratio_profile, save_usage_ratio_profile
 
 
@@ -377,14 +378,12 @@ def _emit_ratio_event(
     record's contract, not a display choice, so they are decided here rather
     than by whichever surface performed the mutation.
     """
-    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ...core.time.clock import now
     from ...domain.buckets.event import BucketEventObjectType
     from ...domain.buckets.event_repository import emit_bucket_event
 
     emit_bucket_event(
-        repository=BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id)),
+        repository=bucket_event_history_repository(bucket_id=bucket_id),
         bucket_id=bucket_id,
         event_type=event_type,
         occurred_at=now(),

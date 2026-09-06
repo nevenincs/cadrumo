@@ -169,6 +169,69 @@ def test_a_consistent_retencion_raises_nothing() -> None:
     assert closure_findings(draft) == ()
 
 
+def test_an_unread_taxable_base_reports_nothing_rather_than_accusing_the_document() -> None:
+    """The retención identity needs a base, and absent is not zero.
+
+    Coercing it produced a finding that read "the stated retención 150.00 is
+    not 15% of the taxable base (0)" — reporting a discrepancy against a figure
+    the reader never recovered. The zero was ours, and an operator sent to
+    correct their invoice would find nothing wrong with it.
+    """
+    draft = InvoiceDraft(
+        taxable_base=None,
+        grand_total=Decimal("1000.00"),
+        retencion_rate=Decimal("15"),
+        retencion_amount=Decimal("150.00"),
+    )
+
+    assert closure_findings(draft) == ()
+
+
+def test_a_genuine_zero_base_still_checks_the_retencion() -> None:
+    """Absent is silent; a stated zero is evidence and must not be.
+
+    Without this the two states are indistinguishable again, just in the other
+    direction: a document stating a zero base and a non-zero retención really
+    does contradict itself.
+    """
+    draft = InvoiceDraft(
+        taxable_base=Decimal("0.00"),
+        grand_total=Decimal("150.00"),
+        retencion_rate=Decimal("15"),
+        retencion_amount=Decimal("150.00"),
+    )
+
+    assert DraftDiscrepancyKind.RATE_INCONSISTENT in _closure_over(draft)
+
+
+def test_the_retencion_identity_does_not_need_the_grand_total() -> None:
+    """The total appears nowhere in ``retencion = base * rate``.
+
+    Requiring it skipped drafts whose three actual terms were all stated, so a
+    real inconsistency went unreported because an unrelated field was missing.
+    """
+    draft = InvoiceDraft(
+        taxable_base=Decimal("1000.00"),
+        grand_total=None,
+        retencion_rate=Decimal("15"),
+        retencion_amount=Decimal("90.00"),
+    )
+
+    assert DraftDiscrepancyKind.RATE_INCONSISTENT in _closure_over(draft)
+
+
+def test_a_retencion_amount_with_no_stated_rate_reports_nothing() -> None:
+    """No rate, no identity — the withheld figure alone proves nothing."""
+    draft = InvoiceDraft(
+        taxable_base=Decimal("1000.00"),
+        grand_total=Decimal("1000.00"),
+        retencion_rate=None,
+        retencion_amount=Decimal("150.00"),
+    )
+
+    assert closure_findings(draft) == ()
+
+
 def test_a_tier_whose_cuota_does_not_match_its_rate_is_reported() -> None:
     """Modelo 303 declares cuota devengada per tier, so a tier must close alone."""
     draft = InvoiceDraft(
