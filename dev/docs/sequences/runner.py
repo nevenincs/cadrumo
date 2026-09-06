@@ -113,6 +113,7 @@ __all__ = [
     "execute_sequence",
     "live_aeat_tokens",
     "m303_filing_evidence_fixture_name",
+    "refuse_live_frames",
     "sequence_sandbox",
 ]
 
@@ -443,7 +444,7 @@ def live_aeat_tokens(frame: SequenceFrame) -> tuple[str, ...]:
     return tuple(flagged)
 
 
-def _refuse_live_frames(sequence: ParsedSequence) -> None:
+def refuse_live_frames(sequence: ParsedSequence) -> None:
     """Refuse the whole sequence when any EXECUTED frame would contact live AEAT.
 
     A ``@static`` frame is the sanctioned way to DISPLAY a live-AEAT command
@@ -1126,7 +1127,7 @@ def execute_sequence(
             "an all-@static sequence has no executed frames to run and no golden to build; "
             "the check/refresh path skips it (it is display-only)",
         )
-    _refuse_live_frames(sequence)
+    refuse_live_frames(sequence)
     if sandbox_root is not None:
         return _execute_in_root(sequence, sandbox_root, fixtures_root)
     # Engine handles on Windows can outlive the run despite the teardown's
@@ -1202,7 +1203,7 @@ def execute_page_sequences(
         caller aligns transcripts with the executable sequences.
     """
     for sequence in sequences:
-        _refuse_live_frames(sequence)
+        refuse_live_frames(sequence)
     if not sequences:
         return ()
     if sandbox_root is not None:

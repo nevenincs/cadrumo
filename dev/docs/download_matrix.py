@@ -4,9 +4,9 @@ Reads the committed, schema-validated channel descriptor
 (``docs/_data/download_channels.toml``) — the single source of truth for the
 stable, version-agnostic facts about each install channel — and injects a
 rendered channel table plus per-channel install commands into the
-``vaultspec:generated`` marker zone of ``docs/download.md``. Hand-authored prose
-outside the marker zone is never touched, mirroring the
-``generated-reference-is-cli-owned`` discipline the CLI reference follows.
+``cadrumo:generated`` marker zone of ``docs/download.md``. Hand-authored prose
+outside the marker zone is never touched, following the same generated-zone
+discipline the CLI reference does.
 
 Sources of truth (never duplicated):
 
@@ -55,11 +55,16 @@ if TYPE_CHECKING:
 
 _UTF_8: Final[str] = UTF_8
 
-#: Marker slug for the generated zone in ``docs/download.md`` (the
-#: ``vaultspec:generated`` convention shared with the CLI reference).
+#: Marker slug for the generated zone in ``docs/download.md``.
+#:
+#: The namespace is the product's own. It previously read ``vaultspec:``, which
+#: named the development harness in a SHIPPED document -- a reader of
+#: ``docs/download.md`` has no such tool and no way to interpret the word, and
+#: the harness is removable scaffolding that the published artifact must not
+#: depend on for its meaning.
 _ZONE_SLUG: Final[str] = "download-matrix"
-_ZONE_BEGIN: Final[str] = f"<!-- vaultspec:generated:begin {_ZONE_SLUG} -->"
-_ZONE_END: Final[str] = f"<!-- vaultspec:generated:end {_ZONE_SLUG} -->"
+_ZONE_BEGIN: Final[str] = f"<!-- cadrumo:generated:begin {_ZONE_SLUG} -->"
+_ZONE_END: Final[str] = f"<!-- cadrumo:generated:end {_ZONE_SLUG} -->"
 
 _REGEN_HINT: Final[str] = "uv run --no-sync python -m dev.docs.download_matrix generate"
 

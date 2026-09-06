@@ -1356,3 +1356,18 @@ area = "application"
 symbols = ["RepairRemediationDecisionRepository"]
 evidence = "The repository for operator remediation decisions over damaged secure-object rows. Unlike the report half beside it, this has no replacement: application/diagnostics.py, which the live config repair verb uses, contains no remediation-decision handling at all. The persistence is declared -- adapters/persistence/storage/secure_object_namespaces.py registers the secure-object namespace cadrumo.application.repair_integrity.decisions for exactly this -- and nothing writes or reads it. So an encrypted store stands ready and an operator's decision about a damaged row leaves no record."
 remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "censo lifecycle routing no censo path consults"
+class = "should-be-live"
+area = "domain/calculations/registry"
+symbols = ["is_active_censo_modelo", "censo_modelo_ownership_map", "resolve_censo_modelo_work_unit_foundation"]
+evidence = "The registry-owned foundation map resolving lifecycle routing for Modelo 036 as active and Modelo 037 as historical, deriving every decision from the ValidatedRegistryAuthority so the registry TOML stays the single authority for event periods and ownership. Modelo 036 is in the registry, so this serves a live modelo rather than a staged one. No production caller reaches any of the three, and the application censo path -- censal_operation, censo_sync, cotejo_apply and their siblings -- contains no reference to 037 or to active-versus-historical routing at all. The distinction is therefore declared and never consulted."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "column-level encryption decorators the ORM does not use"
+class = "staged-capability"
+area = "adapters/persistence/storage"
+symbols = ["EncryptedBytes", "EncryptedJSON"]
+evidence = "Two of the four SQLAlchemy TypeDecorators that wrap the AEAD primitives so an ORM model can declare encryption at the column level. The family is partly live and the split is what settles this: HashedLookup is consumed in production for row-key digests in profile snapshots and attachments, and EncryptedString is not reported. These two appear only in their own module and in the inert namespace docstrings, which are prose rather than re-exports. Not an unencrypted column: the sensitive payload path encrypts through the application-layer secure-object envelope with its own integrity and provenance metadata, so the column-level decorator is an alternative mechanism the persistence layer did not take up."
