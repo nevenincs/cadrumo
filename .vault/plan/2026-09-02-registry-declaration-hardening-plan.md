@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:44c64df59a9aec148c7471d608d74c21490794b4004202342d4d4882d4ddc788'
+body_hash: 'sha256:25e1e6f7648707549dc9953d1c630da4391ef51f6ce41cf48a6a2a041b1c9b91'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -666,6 +666,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S784` - Make the residue worklist group-count case assert the comparison its name promises: compare every heading's declared count against the rows printed beneath it at both levels, replacing a positivity check that never read the kind-level sum; `dev/registry/tests/test_coverage_residue_worklist.py`.
 - [x] `W02.P02.S785` - Anchor the api-stub manager claims to a real module corpus: pin the stale-stub removal to exactly the phantom and floor the written stub population, so a collapsed expected set that deletes the whole docs/api reference can no longer satisfy the removal, conformance and terminator cases; `dev/docs/apidocs/tests/test_manager.py`.
 - [x] `W02.P02.S786` - Floor the live legal catalogue at its three claim sites so a render that produces no page cannot pass: the docutils absence claim had no guard at all, and the idempotence and prune guards were existence checks satisfied by the index page the sweep keeps unconditionally; `dev/docs/tests/test_legal_reference.py`.
+- [x] `W02.P02.S787` - Floor the live casilla reference population at its three guard sites so a registry narrowed to a handful of modelos cannot pass: the prune survivor check and the idempotence guard were both satisfied by the index page the sweep keeps unconditionally, and the per-page survival loop was guarded only by truthiness; `dev/docs/tests/test_casilla_reference_pruning.py`.
+- [ ] `W02.P02.S788` - Sweep every workflow document in the deploy lane isolation gate rather than only .yml: GitHub Actions reads .yaml too, so a publishing lane filed with that suffix was invisible to two claims that check their result for the absence of other publishers, and route both through one floored owner; `dev/deploy/tests/test_deploy_lane_isolation.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
