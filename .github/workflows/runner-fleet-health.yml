@@ -37,8 +37,20 @@ on:
       - "Dockerfile"
       - ".dockerignore"
       - ".devcontainer/**"
-      - "dev/containers/**"
-      - "dev/runners/**"
+      # Narrowed to what a PUSH-triggered job here can actually observe. Of
+      # `dev/containers/`, only `runner_capabilities.py` is read on push:
+      # `devcontainer_smoke.py` belongs to `dev-image`, which is dispatch-only,
+      # and `tests/` runs in ci.yml. Of `dev/runners/`, only these two are
+      # COPYed into the `runner` stage this workflow builds -- the macOS and
+      # Windows cleanup scripts and the README cannot change its verdict.
+      #
+      # The README is the reason this matters rather than being tidiness: it is
+      # a living document carrying the runner-move procedure, and every edit to
+      # it used to start a ~2 GB image build plus a three-runner capability
+      # matrix on the single contended Linux runner.
+      - "dev/containers/runner_capabilities.py"
+      - "dev/runners/runner-entry-linux.sh"
+      - "dev/runners/cleanup-linux.sh"
       - ".github/workflows/runner-fleet-health.yml"
 
 concurrency:
