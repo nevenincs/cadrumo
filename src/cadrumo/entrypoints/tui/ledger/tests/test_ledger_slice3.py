@@ -396,7 +396,17 @@ def _all_routes_controller() -> LedgerWorkspaceController:
     )
     projection = _reconciled_projection()
     return LedgerWorkspaceController(
-        TuiScreenContextV1(destination="workbench.ledger"),
+        # Focused on the first entry: this exercise walks every route including
+        # classification, which is reachable only once the operator has chosen
+        # a row. The selection lives in the focus channel, not in the injection.
+        TuiScreenContextV1(
+            destination="workbench.ledger",
+            focus=TuiFocusIdentityV1(
+                destination="workbench.ledger",
+                semantic_key="ledger.transaction",
+                restore_token=projection.entries[0].transaction_id,
+            ),
+        ),
         projection,
         LedgerWorkspaceInjection(
             review_action=_review_action(),

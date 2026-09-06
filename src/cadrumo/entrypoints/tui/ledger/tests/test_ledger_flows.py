@@ -32,7 +32,7 @@ from ..import_flow import LedgerImportScreen
 from ..models import LedgerClassificationSubmissionV1, LedgerFlowState, LedgerPreparedImportV1
 from ..routes import ledger_screen_factory, resolve_ledger_screen
 from ..workspace_injection import LedgerWorkspaceInjection
-from .test_ledger_workspace import _focused_context, _projection, _review_action
+from .test_ledger_workspace import _context, _focused_context, _projection, _review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -197,7 +197,7 @@ async def test_import_only_submits_injected_opaque_prepared_command_and_redacts_
         LedgerPreparedImportV1.__setattr__(prepared, "choice_id", "swapped")
     door = _ImportDoor()
     controller = LedgerWorkspaceController(
-        _focused_context(projection.entries[0].transaction_id),
+        _context(),
         _projection(),
         LedgerWorkspaceInjection(review_action=_review_action(), prepared_imports=(prepared,), import_submitter=door),
     )
@@ -263,7 +263,7 @@ async def test_escape_is_refused_while_import_submission_is_in_flight() -> None:
     )
     door = _SlowImportDoor()
     controller = LedgerWorkspaceController(
-        _focused_context(projection.entries[0].transaction_id),
+        _context(),
         _projection(),
         LedgerWorkspaceInjection(review_action=_review_action(), prepared_imports=(prepared,), import_submitter=door),
     )
@@ -295,7 +295,7 @@ async def test_import_failure_is_localized_and_never_leaks_exception_path_or_pro
         command=LedgerSourceImportCommand(path=Path(protected_path), provider=protected_provider),
     )
     controller = LedgerWorkspaceController(
-        _focused_context(projection.entries[0].transaction_id),
+        _context(),
         _projection(),
         LedgerWorkspaceInjection(
             review_action=_review_action(), prepared_imports=(prepared,), import_submitter=_FailingImportDoor()
@@ -328,16 +328,19 @@ def test_factory_refuses_undeclared_or_drifted_classification_action() -> None:
 def test_controller_refuses_off_projection_classification_and_unsafe_or_duplicate_import_choices() -> None:
     projection = _projection()
     door = _ClassificationDoor()
+    controller = LedgerWorkspaceController(
+        _context(),
+        projection,
+        LedgerWorkspaceInjection(
+            review_action=_review_action(),
+            classify_action=_classify_action(),
+            classification_submitter=door,
+        ),
+    )
+    # The refusal now guards the selection itself rather than an injected
+    # target: an entry the operator cannot see is one they cannot have chosen.
     with pytest.raises(ValueError, match="absent from the visible Ledger projection"):
-        LedgerWorkspaceController(
-            _focused_context(projection.entries[0].transaction_id),
-            projection,
-            LedgerWorkspaceInjection(
-                review_action=_review_action(),
-                classify_action=_classify_action(),
-                classification_submitter=door,
-            ),
-        )
+        controller.with_transaction_focus(cast("TransactionId", "f" * 64))
     assert not door.calls
     command = LedgerSourceImportCommand(path=Path("C:/private/statement.csv"), provider="bank")
     with pytest.raises(ValueError, match="safe Ledger catalogue identities"):
@@ -355,7 +358,7 @@ def test_controller_refuses_off_projection_classification_and_unsafe_or_duplicat
     )
     with pytest.raises(ValueError, match="must be unique"):
         LedgerWorkspaceController(
-            _focused_context(projection.entries[0].transaction_id),
+            _context(),
             projection,
             LedgerWorkspaceInjection(
                 review_action=_review_action(), prepared_imports=(prepared, prepared), import_submitter=_ImportDoor()
