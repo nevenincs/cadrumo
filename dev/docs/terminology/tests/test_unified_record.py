@@ -300,9 +300,21 @@ def test_per_kind_projection_agrees_with_the_derivation_authority() -> None:
 
     context_dependent = {SearchRecordKind.CONCEPT, SearchRecordKind.PAGE}
     checked = 0
-    for kind, projected in _KIND_TO_DISPLAY_CLASS.items():
+    # The traversal walks the KIND ENUM, not the projection map. Driven by the
+    # map, this loop could only ever confirm the rows already written: a sixth
+    # record kind reaching readers with no projection row would be invisible to
+    # it, because the map bounds the walk. The enum is the live population and
+    # the independent root - it is production-owned, and a kind cannot enter the
+    # product without joining it - so an unmapped kind fails here by name.
+    for kind in SearchRecordKind:
         if kind in context_dependent:
             continue
+        assert kind in _KIND_TO_DISPLAY_CLASS, (
+            f"{kind.value} is a live record kind with no row in the per-kind projection; "
+            f"records of this kind are stamped by {_display_class_for.__name__} on one path "
+            "and by nothing at all on the other, which is the drift this gate exists to catch"
+        )
+        projected = _KIND_TO_DISPLAY_CLASS[kind]
         checked += 1
         derived = _display_class_for(kind, None, "guides/overview.html")
         assert derived is projected, (

@@ -328,6 +328,19 @@ def test_default_enrolment_excludes_cli_verbs_and_is_bounded() -> None:
     # the way a narrowed definition scan or an unreadable registry root would
     # empty one -- always does.
     live = collections.Counter(candidate.domain for candidate in candidates.values())
+    # The floor loop below walks the ROSTER, so it can only confirm the families
+    # already listed: a fifth family entering the candidate set would clear no
+    # floor because it is asked about no floor. ``allowed`` bounds the set from
+    # above, but ``allowed`` is a second hand-authored literal, so the two could
+    # be widened apart. This walks the live families instead - derived from the
+    # registry through ``collect_enrolment_candidates`` - so an unfloored family
+    # fails by name whether or not ``allowed`` was widened to admit it.
+    unfloored = sorted(domain.value for domain in live if domain not in _MINIMUM_CANDIDATES_BY_DOMAIN)
+    assert not unfloored, (
+        f"these candidate families carry no floor: {unfloored}; the per-family floors "
+        "quantify over the families they list, so an unlisted one is counted by the "
+        "enrolment and floored by nobody"
+    )
     for domain, floor in _MINIMUM_CANDIDATES_BY_DOMAIN.items():
         assert live[domain] >= floor, (
             f"the {domain.value} family offers only {live[domain]} enrolment candidate(s) against a "
