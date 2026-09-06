@@ -20,6 +20,7 @@ from typing import Any
 
 import pytest
 
+from ....application.invoices.simplificada_advisory import SimplificadaTaxIdAdvisory
 from ....core.json_contract import NoticeSeverity
 from ....domain.invoices.enums import InvoiceClass, IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
@@ -84,14 +85,20 @@ def test_the_advisory_is_silent_when_no_profile_can_be_resolved() -> None:
     assert _simplificada_tax_id_notices(_invoice()) == []
 
 
-def test_the_builder_consults_the_predicate_rather_than_reimplementing_it() -> None:
-    """Pin the single authority for case 3.º.
+def test_the_builder_consults_the_resolver_rather_than_reimplementing_it() -> None:
+    """Pin the single authority for case 3.º, one link along.
 
     The condition is subtle -- domestic, ISSUED, simplificada, no tax id, issuer
     established, and an iva_category that does not already mandate the id. A CLI
     that re-derived any part of that would drift from the predicate the domain
     tests cover, and the drift would show up as an advisory that fires on the
     wrong invoices rather than as a failure here.
+
+    The evaluation now lives in
+    ``application.invoices.simplificada_advisory``, which resolves the issuing
+    profile and keeps "could not evaluate" apart from "nothing to advise"; the
+    sibling gate there pins that module onto the predicate itself. This asserts
+    the CLI end of the same chain.
 
     Asserted structurally because the alternative -- a reimplementation that
     happens to agree today -- passes every behavioural test until it does not.
@@ -103,10 +110,22 @@ def test_the_builder_consults_the_predicate_rather_than_reimplementing_it() -> N
     source = inspect.getsource(module._simplificada_tax_id_notices)
     tree = ast.parse(source.lstrip())
     called = {node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
-    assert "simplificada_requires_tax_id_for_domestic_issuer" in called, (
-        "the notice builder must delegate to the predicate; re-deriving case 3.o here "
-        "creates a second authority that drifts silently from the domain tests"
+    assert "resolve_simplificada_tax_id_advisory" in called, (
+        "the notice builder must delegate to the shared resolver; re-deriving case 3.o here "
+        "creates a second authority that drifts silently from the application tests"
     )
+
+
+def test_only_the_required_outcome_produces_a_notice() -> None:
+    """Silence on every other outcome, including the one that means "unknown".
+
+    An advisory whose premise could not be evaluated must not be asserted, so
+    ``ISSUER_UNKNOWN`` is silent here -- but silent BY DECISION at this channel,
+    not because the answer had already discarded the distinction.
+    """
+    advising = [outcome for outcome in SimplificadaTaxIdAdvisory if outcome is SimplificadaTaxIdAdvisory.REQUIRED]
+
+    assert advising == [SimplificadaTaxIdAdvisory.REQUIRED]
 
 
 def test_the_advisory_is_a_warning_and_never_blocks_the_write() -> None:

@@ -29,6 +29,10 @@ from ...application.invoices.catalogue_lifecycle import (
     resolve_catalogue_invoice_from_repository,
     update_catalogue_invoice,
 )
+from ...application.invoices.simplificada_advisory import (
+    SimplificadaTaxIdAdvisory,
+    resolve_simplificada_tax_id_advisory,
+)
 from ...application.invoices.source_resolver import iva_category_for_operation_type
 from ...core.aggregation import IntracomOperationType
 from ...core.external_constants import DEFAULT_CURRENCY
@@ -141,9 +145,9 @@ def _simplificada_tax_id_notices(invoice: Invoice) -> list[Notice]:
     """Surface RD 1619/2012 art. 6.1.d case 3.º as an advisory, never a refusal.
 
     Case 3.º asks for the destinatario's NIF on a DOMESTIC factura simplificada
-    whose issuer is established in the TAI. The predicate that evaluates it has
-    shipped, tested and exported, with no production caller -- so the operator
-    was never told. This is that caller.
+    whose issuer is established in the TAI. Whether it applies -- and whether
+    the issuing taxpayer could be resolved to decide at all -- is answered by
+    :func:`~application.invoices.simplificada_advisory.resolve_simplificada_tax_id_advisory`.
 
     Deliberately advisory. An ordinary domestic ticket with no identified
     customer is common and legitimate practice, and the predicate rests on a
@@ -152,31 +156,12 @@ def _simplificada_tax_id_notices(invoice: Invoice) -> list[Notice]:
     leaves a filer unaware of a real requirement. The Notice channel is the one
     that fits, which is what the predicate's own docstring instructs.
 
-    Returns no notice when the profile cannot be resolved: an advisory whose
-    premise could not be evaluated must not be asserted.
+    Emits nothing for ``ISSUER_UNKNOWN``: an advisory whose premise could not
+    be evaluated must not be asserted. That the check did not run is a distinct
+    fact the resolver preserves, and a surface with somewhere to report it can
+    say so; this channel has only "advise" and "do not".
     """
-    if invoice.counterparty_tax_id is not None:
-        return []
-    # Function-local for the cycle reason the sibling profile-backed advisories
-    # document: the profile package reaches back into this layer.
-    from ...application.invoices.issuer_establishment import simplificada_requires_tax_id_for_domestic_issuer
-    from ...application.user_profile.profile_record_repository import ProfileRecordRepository
-    from ...application.user_profile.projections import projection_for_taxpayer
-    from ...core.bucket_pointer import resolve_active_bucket_id
-    from ...domain.user_profile.errors import ProfileNotFoundError
-
-    bucket_id = resolve_active_bucket_id()
-    if bucket_id is None:
-        return []
-    try:
-        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
-    except ProfileNotFoundError:
-        return []
-    except (OSError, ValueError):
-        # A degraded profile read must not fail an invoice that is already
-        # recorded; the advisory simply goes unsaid.
-        return []
-    if not simplificada_requires_tax_id_for_domestic_issuer(invoice, projection_for_taxpayer(record)):
+    if resolve_simplificada_tax_id_advisory(invoice=invoice) is not SimplificadaTaxIdAdvisory.REQUIRED:
         return []
     return [
         Notice(
