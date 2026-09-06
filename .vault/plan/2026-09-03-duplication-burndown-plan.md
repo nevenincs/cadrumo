@@ -9,9 +9,9 @@ related:
   - '[[2026-07-17-duplication-evidence-repair-adr]]'
   - '[[2026-07-17-duplication-evidence-repair-plan]]'
   - '[[2026-09-03-duplication-burndown-honest-clone-closure-research]]'
-modified: '2026-09-05'
+modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:c75a413c89679457b02c8f8ee503b9aed6a55adfc9f7f37491f0a2ade37fb3dc'
+body_hash: 'sha256:468b3cffe6617d336ebd86223bad53d73ce6b36bbe87074dc761f4cf919e0386'
 ---
 
 <!-- RETIRED: W05, W06, W07, P02, P03, P04, P06, P09, P12, P14, P16, P17, P19, P20, P21, P22, P23, P24, P25, P26, P27, S03, S06, S07 -->
@@ -102,6 +102,7 @@ Prove detector teeth and run focused, subsystem, and full repository gates.
 - [x] `W04.P18.S18` - Run duplication, import, semantic, architecture, type, lint, focused, and full quality gates without threshold or exclusion changes; `dev/audit/.runs`.
 - [x] `W04.P18.S20` - Adjudicate the 35 identical-expression constant collisions the extended screen surfaces, merging each to a canonical home or recording why an existing decision keeps it local; `dev/quality/constant_value_agreement.py`.
 - [x] `W04.P18.S21` - Build a docstring cross-reference screen and burn down the references naming symbols the tree does not define, separating current drift from accurate statements about the past; `dev/quality/docstring_reference_targets.py`.
+- [x] `W04.P18.S22` - Remove constant-level duplication the clone detector structurally cannot see: 34 public module-level constants carry a private same-stem copy elsewhere and 21 are literal-identical, each far below the jscpd clone threshold so the scanner reports its adjudicated floor while they stand; replace the five whose canonical home is safely importable with imports of that home, and record why the rest are not simple imports; `src/cadrumo/adapters/outbound/google/calc_sheets_pull.py`.
 
 ## Parallelization
 

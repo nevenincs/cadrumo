@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:a12333bc819d487047d9ca81d433ca1475281614176239201aaa0a46c1b781a0'
+body_hash: 'sha256:098c55a6900411fe2b56e6f4ef5935f7b8760e48c12a197c5b9446b6b32028d1'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -659,6 +659,9 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S777` - Floor the live self-hosted fleet census and its gated remainder at the live call site, leaving the dual-purpose helper free for its five planted-workflow teeth cases; `dev/ci/tests/test_self_hosted_fleet.py`.
 - [x] `W02.P02.S778` - Floor the markdown documentation corpus by page count and area span in its single-purpose producer, replacing the truthiness six scanning gates relied on; `dev/docs/tests/test_docs.py`.
 - [x] `W02.P02.S779` - Floor the static-frame subset four reason gates iterate, which the producer guarded only at the unfiltered discovery level; `dev/docs/tests/test_static_frame_reasons.py`.
+- [x] `W02.P02.S780` - Floor the shortened-horizon coverage report, whose equality compares two sets derived from the same authority and holds when both are empty; `dev/registry/tests/test_temporal_coverage.py`.
+- [x] `W02.P02.S781` - Floor the m200 eligibility and its smaller branch, whose four coverage equalities each compare two sets derived from the same projection; `dev/registry/tests/test_render_profile.py`.
+- [x] `W02.P02.S782` - Floor both branches of the workbook parse behind the total-preserving projection claim, whose tuple equalities and strict zip are all satisfied by two empty sides; `dev/registry/tests/test_record_design_ir.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
