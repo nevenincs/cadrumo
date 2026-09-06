@@ -1483,3 +1483,39 @@ class = "superseded"
 area = "application/modelo"
 symbols = ["validate_modelo_workspace_field_manifest", "validate_modelo_workspace_field_manifest_for_inspection"]
 evidence = "Each validator regenerates the manifest and refuses one that is not the current fixed point. The live capture pair makes that comparison unreachable by construction: capture_modelo_workspace_manifest documents that the walk is atomic, the sole generating authority runs once and its own digest becomes the observation, so no second walk can pair a manifest with a coordinate from different schema state. Every manifest in the tree therefore comes from the same walk that produced its coordinate, and a generate-then-compare check would always trivially pass. Note the generator itself is NOT a finding: capture calls it in the same module, which a cross-module reference count cannot see."
+
+[[symbol_cluster]]
+name = "error registry inspection surfaces"
+class = "test-support"
+area = "core"
+symbols = ["ERROR_REGISTRY", "declared_error_codes"]
+evidence = "A read-only MappingProxyType view over the registry and an accessor returning the declared (qualified name, ErrorCode) rows. Production never needs either: it reaches the registry through the typed accessors, which are heavily live -- register at twenty-two references, resolve_error_message at sixteen, get_registered_error_code at eight. The two views exist so a test can inspect registry state, and they are used that way at thirty-two and three test references with no dev consumer. Same shape as the process-cache reset seams: an inspection surface over state production already reaches by contract, not capability awaiting a caller."
+
+[[symbol_cluster]]
+name = "in-service resume selector policy the addressing facade displaced"
+class = "superseded"
+area = "application/workflow"
+symbols = ["resolve_modelo_exact_workflow_run_for_resume", "resolve_modelo_visible_workflow_run_for_resume"]
+evidence = "The exact and visible run resolvers for workflow resume. The live holder states the displacement directly: resolve_modelo_workflow_resume_target documents that exact run ids remain the direct path while work-unit ids, calculation-revision ids and visible modelo/year/period selectors resolve through the public modelo addressing facade before workflow run lookup, SO THAT this service does not duplicate modelo selector policy. These two are that duplicated policy. Contradictory selectors are still refused, by a WorkflowError raised in the live resolver rather than by the unused ambiguity error beside these."
+
+[[symbol_cluster]]
+name = "locale catalogue disk cache never read or written"
+class = "should-be-live"
+area = "core"
+symbols = ["read_catalogue_cache", "write_catalogue_cache"]
+evidence = "The cross-process half of the locale catalogue cache. Its own module docstring carries the measurement that justifies it: the packaged catalogues hold a large modelo.schema block of casilla labels and help text, and even the C-accelerated YAML loader costs about 800 ms per process because PyYAML's acceleration covers scanning and parsing while constructing Python objects from the node tree is always pure Python, whereas a JSON reload of the pre-flattened map costs single-digit tens of milliseconds. The in-process half IS live -- locale_catalogue.py imports compute_directory_source_digest and builds a (locale, digest) key from it at line 139 -- but neither the read nor the write of the persisted flat map is called anywhere, so every new process pays the parse the cache was written to avoid."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "default filing profile loader displaced by explicit identity"
+class = "superseded"
+area = "application/filing"
+symbols = ["load_default_filing_profile"]
+evidence = "Loads the active profile bucket implicitly for runtime filing commands. The live holder is filing_profile_from_taxpayer, reached twice, which takes a TaxpayerProfileIdentity the caller has already resolved. Same split as the capsule restore authority recorded in this ledger: the caller obtains the subject, then one builder turns it into the runtime shape, so the implicit loader is the second path."
+
+[[symbol_cluster]]
+name = "reset seam for an unreached fingerprint cache"
+class = "orphaned"
+area = "application/filing"
+symbols = ["clear_runtime_fingerprint_cache"]
+evidence = "Clears the time-based TTL cache for registry tree fingerprints and the canonical collector's own cache. The cache it resets has no live user: registry_tree_fingerprint, the function that would populate it, is itself unreached, and the live schema surface in this module -- RegistrySchemaAccessor at six references and build_runtime_schema_provider at five -- does not consult it. A reset seam for state nothing produces is not a test-support surface, because there is no live production path to the state."
