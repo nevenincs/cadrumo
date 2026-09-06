@@ -5,16 +5,11 @@ tags:
 date: '2026-09-06'
 modified: '2026-09-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:03a644a9db97927141c45515c112916bd82f7e9ddfcf6549156e1b186c1b54f4'
+body_hash: 'sha256:ecf8d157cdff9f86d1d93ea7a4b2e668d724af601c3c7da5cbbf146001013dd6'
 step_id: 'S37'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Adjudicate the nine findings whose only reader is dev tooling, naming that reader in each, and make the naming falsifiable: the registry parity cluster cited a load-census classification module among the readers of eleven symbols when it names only the record_design_coverage module and consumes none of them, so the citation overstated the readership with nothing able to catch it because no gate reads evidence prose; gate that a cited path resolves and mentions a subject, while leaving an entry that cites no path alone since a legal default or an implementer class is a different honest shape
 

@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:fe5ccdac37640bb8b19108dd34e5fec51c67067a3317c08fd2ddb1d8da52f1e1'
+body_hash: 'sha256:e81362b64f3b79bc653d93a60a3c71b01fdfff48cce65e1566a7634bf844d448'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -643,6 +643,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S761` - Floor the two filtered sets the live casilla-claim relations range over, which the unfiltered pooled anchor left unguarded; `dev/registry/aeip/tests/test_cli_casilla_claims.py`.
 - [x] `W02.P02.S762` - Assert each aeip adjudication clears only the ambiguity it names, which the three absence claims left an over-clearing path free to satisfy; `dev/registry/aeip/tests/test_manager.py`.
 - [x] `W02.P02.S763` - Anchor the locale-move no-fabrication claim, the one case in the module with no positive lookup, against the subtree the move must carry; `dev/locales/tests/test_subtree_move.py`.
+- [x] `W02.P02.S764` - Floor the tracked census per suffix behind the workspace remnant absence claim, which a total floor could not protect against losing the whole Python family; `dev/tests/test_workspace_assembly_forbidden_paths.py`.
+- [x] `W02.P02.S765` - Floor the attribute surface in the three generated-tree boundary gates, whose existing floor counts only Name nodes while the forbidden entries are all attributes; `dev/registry/tests/test_generated_tree_publication.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

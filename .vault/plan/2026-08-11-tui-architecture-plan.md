@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-06'
-body_hash: 'sha256:eb54b0598063e9171b6c4d1ff18495ef8875e10d2fe2ac8356e56bfad1697480'
+body_hash: 'sha256:f56fb4516753d326f6546fbe2f618468361fa8c7ff6f0a447051da664aa74d4b'
 ---
 
 <!-- RETIRED: S370 -->
@@ -679,6 +679,8 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S463` - Confirm a column table written inline at the call site by registering it under a synthetic name so the parameter alias and key-column rule apply unchanged, and establish from the live error registry that the five application filing error keys are declared nowhere it owns; `dev/locales/_ast_scanner.py dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
 - [x] `W08.P30.S464` - Read the key a surface names in a local before rendering it, admitting only a string constant or a conditional between them so the rule cannot claim the registry and row-table shapes it does not confirm, and requiring the name to reach a translator so a route held the same way stays out; `dev/locales/_ast_scanner.py dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
 - [x] `W08.P30.S465` - Read the display keys a boundary guard admits, linking the module that declares them to the screen that renders them through the membership test on a name the tree proves translatable, so an identically shaped allow-list of identities stays out; `dev/locales/_ast_scanner.py dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
+- [x] `W08.P30.S466` - Call the click exceptions own renderer in the plain-text funnel, since it looked up an attribute named view that no click exception has so every parse refusal fell through to a bare message write and lost its prefix usage block hint and the parameter name, leaving the localised show reimplementation dead code in the text path; `src/cadrumo/entrypoints/cli/_terminal_errors.py src/cadrumo/entrypoints/cli/tests/test_localised_parser_errors.py`.
+- [ ] `W08.P30.S467` - Hold the error spine assertion to the envelope model that declares it, since the hand-written member list named a suggestion field the model never carried and forbids, and split the text-mode case so the usage block is asserted on an input that raises a usage error rather than on a domain refusal; `src/cadrumo/entrypoints/cli/tests/test_json_error_contract.py`.
 
 ## Parallelization
 
