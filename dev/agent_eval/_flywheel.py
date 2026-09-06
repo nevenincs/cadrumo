@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.core.external_constants import UTF_8_ENCODING as _UTF_8
 from cadrumo.core.hashing import sha256_hex
 
@@ -113,7 +114,7 @@ def write_promoted_scenario(
             return path
         raise ValueError(f"promotion identity collision at {path.name}; refusing to overwrite existing evidence")
     scenarios_dir.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding=_UTF_8, newline="\n")
+    atomic_write_text(path, text, encoding=_UTF_8)
     return path
 
 

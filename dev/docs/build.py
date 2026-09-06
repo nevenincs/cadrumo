@@ -26,7 +26,7 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 
 from .._paths import REPO_ROOT
-from .apidocs.manager import ApiStubManager
+from .apidocs.manager import API_SOURCE_PACKAGE, CLI_REFERENCE_SUBTREE, ApiStubManager
 from .cli_reference import generate_cli_reference
 from .download_matrix import descriptor_path as _download_descriptor_path
 from .download_matrix import inject_download_matrix
@@ -120,21 +120,41 @@ def changed_paths(repo_root: Path, base: str) -> list[Path]:
     return paths
 
 
-def _is_documentable_source(rel_path: Path) -> bool:
-    """Return whether a changed Python path participates in API stubs."""
+_SOURCE_PACKAGE_PARTS: Final[tuple[str, ...]] = ("src", API_SOURCE_PACKAGE)
+
+
+def _is_package_source(rel_path: Path) -> bool:
+    """Return whether a changed path is a Python file inside the source package."""
     parts = rel_path.parts
-    if len(parts) < 3 or parts[:2] != ("src", "aeat"):
+    depth = len(_SOURCE_PACKAGE_PARTS)
+    return len(parts) > depth and parts[:depth] == _SOURCE_PACKAGE_PARTS and rel_path.suffix == PY_SUFFIX
+
+
+def _is_documentable_source(repo_root: Path, rel_path: Path) -> bool:
+    """Return whether a changed Python path participates in API stubs.
+
+    The eligibility rule is the stub generator's own
+    :meth:`ApiStubManager.excludes_source`, applied FORWARD to the changed
+    path, rather than a second copy of it here. Restating the rule is what
+    let this planner keep addressing a source package the generator had
+    stopped emitting stubs for, so every changed source silently planned no
+    API target at all.
+    """
+    if not _is_package_source(rel_path):
         return False
-    package_parts = parts[2:]
-    if not package_parts or rel_path.suffix != PY_SUFFIX:
+    manager = ApiStubManager(
+        src_cadrumo=repo_root.joinpath(*_SOURCE_PACKAGE_PARTS),
+        docs_api=repo_root / "docs" / "api",
+    )
+    return not manager.excludes_source(repo_root / rel_path)
+
+
+def _is_cli_reference_source(rel_path: Path) -> bool:
+    """Return whether a changed path feeds the generated CLI command reference."""
+    if not _is_package_source(rel_path):
         return False
-    if rel_path.name in {"conftest.py"}:
-        return False
-    if rel_path.name.startswith(("test_", "_test_")):
-        return False
-    if package_parts[0] in {"tests", "_data"}:
-        return False
-    return package_parts[:2] != ("entrypoints", "cli")
+    package_parts = rel_path.parts[len(_SOURCE_PACKAGE_PARTS) :]
+    return package_parts[: len(CLI_REFERENCE_SUBTREE)] == CLI_REFERENCE_SUBTREE
 
 
 def _module_name_for_source(rel_path: Path) -> str:
@@ -188,16 +208,11 @@ def planned_doc_targets(repo_root: Path, paths: list[Path]) -> DocBuildPlan:
             download_matrix_required = True
         elif rel_path.parts[:1] == ("docs",) and rel_path.suffix in DOC_SUFFIXES and absolute.is_file():
             targets.append(absolute)
-        elif _is_documentable_source(rel_path):
+        elif _is_documentable_source(repo_root, rel_path):
             api_scaffold_required = True
             include_parents = rel_path.name == "__init__.py" or not (repo_root / rel_path).is_file()
             source_modules.append((_module_name_for_source(rel_path), include_parents))
-        elif (
-            rel_path.parts[:3] == ("src", "aeat", "entrypoints")
-            and len(rel_path.parts) > 3
-            and rel_path.parts[3] == "cli"
-            and rel_path.suffix == PY_SUFFIX
-        ):
+        elif _is_cli_reference_source(rel_path):
             cli_reference_required = True
 
     if api_scaffold_required:
@@ -753,7 +768,10 @@ def build_docs(
             temp_docs_root = temp_root / "docs-source"
             _copy_docs_source(docs_root, temp_docs_root)
             if plan.api_scaffold_required and scope != "user":
-                ApiStubManager(src_cadrumo=repo_root / "src" / "cadrumo", docs_api=temp_docs_root / "api").scaffold()
+                ApiStubManager(
+                    src_cadrumo=repo_root.joinpath(*_SOURCE_PACKAGE_PARTS),
+                    docs_api=temp_docs_root / "api",
+                ).scaffold()
             if plan.cli_reference_required:
                 generate_cli_reference(temp_docs_root)
             if plan.download_matrix_required:
