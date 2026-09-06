@@ -39,6 +39,7 @@ from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecordStatus
 from ....domain.modelos.work_unit import WorkUnitState
 from ..components.theme import BASE_CSS, tokenised
+from ..components.workspace_host import replace_workspace_body
 from ..navigation import TuiScreenContextV1
 from .models import (
     CalendarEntryHandoffV1,
@@ -270,6 +271,14 @@ class DeclarationsWorkspaceScreen(Screen[None]):
     def action_back(self) -> None:
         """Dismiss only this child screen."""
         self.dismiss(None)
+
+    def on_declarations_route_requested(self, event: DeclarationsRouteRequested) -> None:
+        """Resolve the requested internal body here and hand it to the host."""
+        # Imported at call time: the route catalogue imports this module for the
+        # shared shell, so a module-scope import would form a cycle.
+        from .routes import resolve_declarations_screen
+
+        replace_workspace_body(self.app, resolve_declarations_screen(self.controller, event.target))
 
 
 class DeclarationsRouteRequested(Message):

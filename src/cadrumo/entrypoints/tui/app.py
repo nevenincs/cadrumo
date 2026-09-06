@@ -333,6 +333,16 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
             self._workbench_search_service = refreshed
             self._workbench_search_refusal_code = None
 
+    def replace_workspace_body(self, screen: Screen[None], /) -> None:
+        """Show another body of the destination the operator is already inside.
+
+        The destination does not change, so the return journey does not either:
+        the replacement keeps the same dismissal callback, and Escape from any
+        internal body returns to Home exactly as it does from the entry body.
+        The root never learns which body this is -- the workspace resolved it.
+        """
+        self._replace_destination(screen, return_to_home=True)
+
     def _replace_destination(self, screen: Screen[None], *, return_to_home: bool = False) -> None:
         """Discard the inactive destination before mounting exactly one replacement."""
         while len(self.screen_stack) > 1:

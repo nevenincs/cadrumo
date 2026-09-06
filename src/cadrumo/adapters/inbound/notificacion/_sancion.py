@@ -54,12 +54,10 @@ from pydantic import BaseModel
 from ....core.decimal.printed_money import is_aeat_printed_money
 from ....core.i18n import tr
 from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.money.rounding import round_to_cents
+from ....core.money.rounding import CENT, round_to_cents
 from ....domain.notifications.sancion import SancionLiquidacion
 from ..pdf.label_regex import parse_spanish_decimal
 from .errors import SancionArithmeticError, SancionParseError
-
-_CENT: Final = Decimal("0.01")
 
 _STRICT_PERCENTAGE_RE: Final[re.Pattern[str]] = re.compile(r"^\d{1,3}(?:,\d{1,2})?$")
 """Anchored percentage shape, comma-decimal, at most two decimals."""
@@ -495,7 +493,7 @@ def _assert_printed_lines_reconcile(record: SancionLiquidacion) -> None:
     is the entire failure this refuses.
     """
     expected_sancion = round_to_cents(record.base_sancion * record.porcentaje_minimo / Decimal("100"))
-    if abs(expected_sancion - record.sancion_resultante) > _CENT:
+    if abs(expected_sancion - record.sancion_resultante) > CENT:
         raise SancionArithmeticError(
             "AEAT sanción document does not reconcile: base times porcentaje does not reproduce the printed "
             f"sanción resultante. base={record.base_sancion} porcentaje={record.porcentaje_minimo} "
@@ -511,7 +509,7 @@ def _assert_printed_lines_reconcile(record: SancionLiquidacion) -> None:
         )
 
     expected_payable = record.sancion_resultante - record.reducciones_total
-    if abs(expected_payable - record.importe_a_ingresar) > _CENT:
+    if abs(expected_payable - record.importe_a_ingresar) > CENT:
         raise SancionArithmeticError(
             "AEAT sanción document does not reconcile: sanción resultante less the printed reducciones does not "
             f"reproduce the payable amount. sancion={record.sancion_resultante} "

@@ -107,9 +107,7 @@ def _assert_shared_spine(document: dict[str, object]) -> dict[str, object]:
         "the typed action projection is what replaced free-text advice; "
         "without it this document cannot state a recovery"
     )
-    assert "suggestion" not in declared, (
-        "free-text suggestion was retired in favour of the typed action projection"
-    )
+    assert "suggestion" not in declared, "free-text suggestion was retired in favour of the typed action projection"
     return error
 
 

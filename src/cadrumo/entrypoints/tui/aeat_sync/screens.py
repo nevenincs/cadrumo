@@ -26,6 +26,7 @@ from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ..components.theme import BASE_CSS, tokenised
 from ..components.widgets import ContentDataTable, ContentScroll
+from ..components.workspace_host import replace_workspace_body
 from .controller import AeatSyncWorkspaceController
 from .models import AeatSyncOperationRequestV1, AeatSyncRouteTargetV1
 
@@ -426,6 +427,14 @@ class AeatSyncWorkspaceScreen(Screen[None]):
     def action_back(self) -> None:
         """Dismiss only this child; the installed root owns the return journey."""
         self.dismiss(None)
+
+    def on_aeat_sync_route_requested(self, event: AeatSyncRouteRequested) -> None:
+        """Resolve the requested zone here and hand the finished body to the host."""
+        # Imported at call time: the route catalogue imports this module for the
+        # concrete screens, so a module-scope import would form a cycle.
+        from .routes import resolve_aeat_sync_screen
+
+        replace_workspace_body(self.app, resolve_aeat_sync_screen(self.controller, event.target))
 
 
 class AeatSyncOverviewScreen(AeatSyncWorkspaceScreen):

@@ -44,6 +44,7 @@ from typing import Annotated, Final, Literal
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from ...core.config import Settings
+from ...core.external_constants import PDF_MIME_TYPE
 from ...core.hex import Hex64Str
 from ...core.identity import AeatCertificadoId, BucketId, ContentDigest
 from ...core.logging import get_logger
@@ -69,7 +70,6 @@ from .snapshot_base import SnapshotNotFoundError, SnapshotRepository
 
 log = get_logger(__name__)
 
-_PDF_MIME_TYPE = "application/pdf"
 _SOURCE_COMMAND = "app.live.notifications.document.pull"
 
 #: Persisted fields the CALLER supplies on every store. These are the match: a
@@ -402,7 +402,7 @@ class NotificationDocumentService:
                 kind=AttachmentKind.AEAT_NOTIFICATION_PDF,
                 source=AttachmentSource.URL,
                 source_reference=str(document.source_url),
-                mime_type=_PDF_MIME_TYPE,
+                mime_type=PDF_MIME_TYPE,
                 captured_at=now(),
                 bucket_id=bucket_id,
                 source_command=_SOURCE_COMMAND,
