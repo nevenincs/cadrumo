@@ -240,37 +240,26 @@ def dispatch_autosplit(
         raise bad(
             tr("cli.ledger.classify.auto_split_needs_evidence"),
         )
-    validated_transaction_id = _validate_classify_llm_options(
+    prologue = _llm_classify_prologue(
+        ctx,
+        suggest_fn=suggest_evidence_split,
         classification=classification,
         file=file,
-        reject=reject,
-        apply=apply,
         transaction_id=transaction_id,
-    )
-
-    state = current_workflow_state()
-    transaction_repository = transaction_catalogue_repo(state)
-    bucket_id = transaction_repository.bucket_id
-    resolved_id = resolve_id(transaction_repository, validated_transaction_id)
-    suggestion = suggest_evidence_split(
-        bucket_id=bucket_id,
-        transaction_id=resolved_id,
-        transaction_repository=transaction_repository,
+        apply=apply,
+        actor=actor,
+        # Unconditionally true: the guard above already refused otherwise, so
+        # passing the flag through would only offer a second way to disagree.
         read_evidence=True,
         vision_model=vision_model,
+        reject=reject,
+        reason=reason,
     )
-
-    if reject:
-        emit_llm_rejection(
-            ctx,
-            suggestion,
-            origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT,
-            bucket_id=bucket_id,
-            reason=reason,
-            actor=actor,
-            transaction_repository=transaction_repository,
-        )
+    if prologue is None:
         return
+    suggestion, transaction_repository = prologue
+    bucket_id = transaction_repository.bucket_id
+
     if suggestion.recommends_split:
         _emit_split(ctx, suggestion, bucket_id=bucket_id, apply=apply, actor=actor)
         return
@@ -595,7 +584,7 @@ def _render_saturate_llm_preview(
     emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines, notices=notices)
 
 
-def _llm_classify_prologue[SuggestionT: (LLMClassificationSuggestion, LLMSaturatedSuggestion)](
+def _llm_classify_prologue[SuggestionT: (LLMClassificationSuggestion, LLMSaturatedSuggestion, LLMSplitSuggestion)](
     ctx: typer.Context,
     *,
     suggest_fn: Callable[..., SuggestionT],
