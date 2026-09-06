@@ -19,7 +19,6 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.export.tabular import ExportSerializationFormat
 from ...application.ledger.actions_export import export_ledger_transactions
@@ -49,7 +48,7 @@ from ...core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
 from ...core.period import Period
 from ...core.unit_proportion import is_unit_proportion
-from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.buckets.event import BucketEventType
 from ...domain.categories.spending_category import CATEGORY_FAMILY_MEMBERS, SpendingCategory, SpendingCategoryFamily
 from ...domain.invoices.service import LinkInconsistency
 from ...domain.transactions.irpf_categories import ledger_irpf_category_catalogue
@@ -96,31 +95,6 @@ def resolve_ledger_transaction_id(
             condition=CliExceptionPrecondition.LEDGER_TRANSACTION_ID_RESOLVES,
             facts={"transaction_id_resolves": False},
         ) from None
-
-
-_LEDGER_HISTORY_EVENT_TYPES: tuple[BucketEventType, ...] = (
-    BucketEventType.LEDGER_TRANSACTION_CREATED,
-    BucketEventType.LEDGER_TRANSACTION_IMPORTED,
-    BucketEventType.LEDGER_TRANSACTION_UPDATED,
-    BucketEventType.LEDGER_TRANSACTION_CLASSIFIED,
-    BucketEventType.LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED,
-    BucketEventType.LEDGER_TRANSACTION_ALLOCATED,
-    BucketEventType.LEDGER_TRANSACTION_ARCHIVED,
-    BucketEventType.LEDGER_TRANSACTION_STASHED,
-    BucketEventType.LEDGER_TRANSACTION_RESTORED,
-    BucketEventType.LEDGER_TRANSACTION_REMOVED,
-    BucketEventType.LEDGER_TRANSACTION_EXPORTED,
-    BucketEventType.LEDGER_TRANSACTION_SPLIT,
-    BucketEventType.LEDGER_TRANSACTION_MERGED,
-    BucketEventType.LEDGER_TRANSACTION_INVOICE_LINKED,
-)
-_LEDGER_EVIDENCE_HISTORY_EVENT_TYPES: tuple[BucketEventType, ...] = (
-    BucketEventType.PURCHASE_INVOICE_EVIDENCE_ATTACHED,
-    BucketEventType.PURCHASE_INVOICE_EVIDENCE_REPLACED,
-    BucketEventType.PURCHASE_INVOICE_EVIDENCE_DETACHED,
-    BucketEventType.ATTACHMENT_LINKED,
-    BucketEventType.ATTACHMENT_REMOVED,
-)
 
 
 def ledger_llm_diagnostics(
@@ -612,18 +586,23 @@ def ledger_preflight(ctx: typer.Context, period: str, year: int) -> None:
 
 def ledger_history(ctx: typer.Context, transaction_id: str, include_split_siblings: bool = False) -> None:
     """Emit the chronological event chain for one ledger transaction id."""
+    from ...application.ledger.history_query import LedgerHistoryQuery, read_ledger_history
+
     transaction_repository = transaction_catalogue_repo(current_workflow_state())
     resolved_id = resolve_ledger_transaction_id(transaction_repository, transaction_id)
-    object_ids = _history_object_ids(
-        transaction_repository, resolved_id=resolved_id, include_split_siblings=include_split_siblings
+    history = read_ledger_history(
+        LedgerHistoryQuery(transaction_id=resolved_id, include_split_siblings=include_split_siblings),
+        bucket_id=transaction_repository.bucket_id,
+        transaction_repository=transaction_repository,
     )
-    matches = _collect_ledger_history_events(object_ids)
     lines = [
-        f"{tr('cli.ledger.labels.bucket')}\t{transaction_repository.bucket_id}",
-        f"{tr('cli.ledger.labels.id')}\t{resolved_id}",
-        f"{tr('cli.ledger.labels.event_count')}\t{len(matches)}",
+        f"{tr('cli.ledger.labels.bucket')}	{history.bucket_id}",
+        f"{tr('cli.ledger.labels.id')}	{history.transaction_id}",
+        f"{tr('cli.ledger.labels.event_count')}	{history.event_count}",
     ]
-    lines.extend(f"{event.occurred_at.isoformat()}\t{event.event_type.value}\t{event.event_id}" for event in matches)
+    lines.extend(
+        f"{event.occurred_at.isoformat()}	{event.event_type.value}	{event.event_id}" for event in history.events
+    )
     from ._ledger_payloads import LedgerHistoryResult
 
     emit_envelope(
@@ -631,10 +610,10 @@ def ledger_history(ctx: typer.Context, transaction_id: str, include_split_siblin
         command="ledger.history",
         result=LedgerHistoryResult.model_validate(
             {
-                "bucket_id": transaction_repository.bucket_id,
-                "transaction_id": resolved_id,
-                "event_count": len(matches),
-                "events": [event.model_dump(mode="json") for event in matches],
+                "bucket_id": history.bucket_id,
+                "transaction_id": history.transaction_id,
+                "event_count": history.event_count,
+                "events": [event.model_dump(mode="json") for event in history.events],
             }
         ),
         lines=lines,
@@ -951,67 +930,6 @@ def _ledger_track_participated_in(
     ]
 
 
-def _history_object_ids(
-    transaction_repository: TransactionCatalogueRepository,
-    *,
-    resolved_id: str,
-    include_split_siblings: bool,
-) -> list[str]:
-    """Return every event-anchor id whose events belong to ``resolved_id``.
-
-    Always includes ``resolved_id`` plus every prior id in its edit-lineage
-    chain. An ``update`` that edits an id-affecting fact anchors the pre-edit
-    events (create, import) on the *old* id and the post-edit events on the
-    *new* id; walking the lineage means an operator who wrote down an old id
-    before the correction still sees the full chronological chain, and the
-    superseded id resolves to (and surfaces) the lineage rather than failing
-    with id-not-found. Split siblings are added only when the operator opts in.
-
-    The content-addressed id stays authoritative; this is a read-side
-    lineage lookup over the same edit-lineage chain the finalized-modelo
-    guard walks.
-    """
-    catalogue = transaction_repository.load()
-    transaction = catalogue.get(resolved_id)
-    object_ids: list[str] = [resolved_id]
-    if transaction is not None:
-        for entry in transaction.edit_lineage:
-            if entry.previous_transaction_id not in object_ids:
-                object_ids.append(entry.previous_transaction_id)
-    if not include_split_siblings:
-        return object_ids
-    if transaction is None or transaction.split_lineage is None:
-        return object_ids
-    for sibling in transaction.split_lineage.sibling_transaction_ids:
-        if sibling not in object_ids:
-            object_ids.append(sibling)
-    return object_ids
-
-
-def _collect_ledger_history_events(object_ids: list[str]) -> list[BucketEvent]:
-    """Return the chronological union of :class:`~cadrumo.domain.buckets.BucketEvent` rows across ``object_ids``."""
-    event_catalogue = BucketEventHistoryRepository().load()
-    object_id_set = set(object_ids)
-    matches: list[BucketEvent] = []
-    for object_id in object_ids:
-        matches.extend(
-            event
-            for event in event_catalogue.for_object(
-                object_type=BucketEventObjectType.LEDGER_TRANSACTION,
-                object_id=object_id,
-            )
-            if event.event_type in _LEDGER_HISTORY_EVENT_TYPES
-        )
-    matches.extend(
-        event
-        for event in event_catalogue.values()
-        if event.event_type in _LEDGER_EVIDENCE_HISTORY_EVENT_TYPES
-        and event.payload.get("transaction_id") in object_id_set
-    )
-    matches.sort(key=lambda event: event.occurred_at)
-    return matches
-
-
 def _latest_llm_rejection_notice(
     transaction_repository: TransactionCatalogueRepository,
     *,
@@ -1020,21 +938,24 @@ def _latest_llm_rejection_notice(
     """Return a notice when the row's most recent LLM decision was a rejection.
 
     Returns a :class:`~cadrumo.core.json_contract.Notice` derived from
-    :data:`~cadrumo.entrypoints.cli._ledger_list.LLM_DECISION_EVENT_TYPES`.
+    :data:`~cadrumo.application.ledger.list_query.LLM_DECISION_EVENT_TYPES`.
     Reads the bucket-event history for the transaction (and its edit lineage) and
     finds the latest LLM-decision event. When that is a rejection — i.e. the
     operator declined an LLM suggestion and has not since accepted one — `view`
     surfaces a one-line advisory carrying the recorded reason, so prior judgement
-    is visible without opening `history`
-    (``aeat-cli-contract``).
+    is visible without opening `history`.
     """
-    object_ids = _history_object_ids(transaction_repository, resolved_id=resolved_id, include_split_siblings=False)
-    decisions = [
-        event for event in _collect_ledger_history_events(object_ids) if event.event_type in LLM_DECISION_EVENT_TYPES
-    ]
+    from ...application.ledger.history_query import LedgerHistoryQuery, read_ledger_history
+
+    history = read_ledger_history(
+        LedgerHistoryQuery(transaction_id=resolved_id),
+        bucket_id=transaction_repository.bucket_id,
+        transaction_repository=transaction_repository,
+    )
+    decisions = [event for event in history.events if event.event_type in LLM_DECISION_EVENT_TYPES]
     if not decisions:
         return None
-    latest = decisions[-1]  # chronological order from _collect_ledger_history_events
+    latest = decisions[-1]  # the assembled history is already in occurrence order
     if latest.event_type is not BucketEventType.LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED:
         return None
     reason = latest.payload.get("operator_reason", "")
