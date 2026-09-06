@@ -71,12 +71,12 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests import general_m303_filing_evidence
+from ....tests.bucket_aggregation_calculate import calculate_modelo_revision_from_bucket_aggregation
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ...calculations.observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
 from ...invoices.catalogue_creation import build_catalogue_invoice
 from ...invoices.transaction_linking import link_invoice_transaction_catalogues
-from ...modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation
 from ...modelo.filed_revision_observation import persist_filed_revision_observation
 from ...modelo.m303_regimen_simplificado_scope import active_taxpayer_profile
 from ...modelo.result_disposition_resolution import resolve_modelo_result_disposition
