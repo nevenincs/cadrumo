@@ -46,13 +46,12 @@ from ...core.json_contract import (
 )
 from ...core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
-from ...core.period import Period
 from ...core.unit_proportion import is_unit_proportion
 from ...domain.buckets.event import BucketEventType
 from ...domain.categories.spending_category import CATEGORY_FAMILY_MEMBERS, SpendingCategory, SpendingCategoryFamily
 from ...domain.invoices.service import LinkInconsistency
 from ...domain.transactions.irpf_categories import ledger_irpf_category_catalogue
-from ...domain.transactions.models import Transaction, TransactionCatalogue
+from ...domain.transactions.models import Transaction
 from ._common import (
     active_profile_label,
     bad,
@@ -72,8 +71,7 @@ if TYPE_CHECKING:
         LlmDiagnosticsReport,
         LlmUsageCostProviderMetrics,
     )
-    from ...application.ledger.preflight import LedgerPreflightIssue, LedgerPreflightReport
-    from ._ledger_payloads import LedgerLinkInconsistencyPayload
+    from ...application.ledger.preflight import LedgerPreflightIssue
     from ._ledger_rule_payloads import LedgerLlmDiagnosticsResult
 
 
@@ -340,202 +338,55 @@ def ledger_check(
     ctx: typer.Context, bucket_id_option: str | None = None, period: str | None = None, year: int | None = None
 ) -> None:
     """Surface ledger anomalies and broken invoice links without mutating state."""
-    from ...application.invoices.catalogue_reads import verify_invoice_repository_links
-    from ._ledger_payloads import LedgerLinkInconsistencyPayload
+    from ...application.ledger.check_query import read_ledger_check
+    from ._ledger_payloads import LedgerCheckResult, LedgerLinkInconsistencyPayload
 
     if bucket_id_option is not None:
         transaction_repository = TransactionCatalogueRepository(bucket_id=bucket_id_option)
     else:
         transaction_repository = transaction_catalogue_repo(current_workflow_state())
-    bucket_id = transaction_repository.bucket_id
-    catalogue = transaction_repository.load()
-    link_inconsistencies = verify_invoice_repository_links(bucket_id=bucket_id)
+
+    check = read_ledger_check(
+        bucket_id=transaction_repository.bucket_id,
+        transactions=transaction_repository.load(),
+        period=_optional_canonical_period(period, year=year),
+    )
     link_rows = [
         LedgerLinkInconsistencyPayload(
             invoice_id=row.invoice_id, transaction_id=row.transaction_id, direction=row.direction
         )
-        for row in link_inconsistencies
+        for row in check.link_inconsistencies
     ]
-    link_lines = [
-        f"link_inconsistency\t{row.invoice_id}\t{row.transaction_id}\t{row.direction.value}"
-        for row in link_inconsistencies
-    ]
-    link_notices = _link_inconsistency_notices(link_inconsistencies)
-    canonical_period = _optional_canonical_period(period, year=year)
-    if canonical_period is not None:
-        _emit_ledger_check_period(
-            ctx,
-            bucket_id=bucket_id,
-            period=canonical_period,
-            catalogue=catalogue,
-            link_rows=link_rows,
-            link_lines=link_lines,
-            link_notices=link_notices,
-        )
-        return
-    years = sorted(
-        {
-            # ``booked_date`` is required, so the fallback always yields a date.
-            (tx.raw.value_date or tx.raw.booked_date).year
-            for tx in catalogue.values()
-        }
-    )
-    if not years:
-        _emit_ledger_check_empty(
-            ctx, bucket_id=bucket_id, link_rows=link_rows, link_lines=link_lines, link_notices=link_notices
-        )
-        return
-    _emit_ledger_check_all_periods(
-        ctx,
-        bucket_id=bucket_id,
-        years=years,
-        catalogue=catalogue,
-        link_rows=link_rows,
-        link_lines=link_lines,
-        link_notices=link_notices,
-    )
-
-
-def _emit_ledger_check_period(
-    ctx: typer.Context,
-    *,
-    bucket_id: str,
-    period: Period,
-    catalogue: TransactionCatalogue,
-    link_rows: list[LedgerLinkInconsistencyPayload],
-    link_lines: list[str],
-    link_notices: list[Notice],
-) -> None:
-    from ...application.ledger.preflight import preflight_transaction_catalogue
-    from ._ledger_payloads import LedgerCheckResult
-
-    report = preflight_transaction_catalogue(
-        bucket_id=bucket_id,
-        period=period,
-        transactions=catalogue,
-    )
-    period_label = str(period)
-    ready = report.ready and not link_rows
-    payload = {
-        "bucket_id": bucket_id,
-        "periods": [period_label],
-        "checked_transaction_count": report.checked_transaction_count,
-        "issues": [issue.model_dump(mode="json") for issue in report.issues],
-        "link_inconsistencies": link_rows,
-        "ready": ready,
-    }
     lines = [
-        f"bucket\t{bucket_id}",
-        f"periods\t{period_label}",
-        f"checked\t{report.checked_transaction_count}",
-        f"issues\t{len(report.issues)}",
-        f"link_inconsistencies\t{len(link_rows)}",
-        f"ready\t{str(ready).lower()}",
-    ]
-    lines.extend(_ledger_check_issue_lines(report))
-    lines.extend(link_lines)
-    emit_envelope(
-        ctx,
-        command="ledger.check",
-        result=LedgerCheckResult.model_validate(payload),
-        lines=lines,
-        notices=link_notices,
-    )
-
-
-def _emit_ledger_check_empty(
-    ctx: typer.Context,
-    *,
-    bucket_id: str,
-    link_rows: list[LedgerLinkInconsistencyPayload],
-    link_lines: list[str],
-    link_notices: list[Notice],
-) -> None:
-    from ._ledger_payloads import LedgerCheckResult
-
-    ready = not link_rows
-    payload = {
-        "bucket_id": bucket_id,
-        "periods": [],
-        "checked_transaction_count": 0,
-        "issues": [],
-        "link_inconsistencies": link_rows,
-        "ready": ready,
-    }
-    lines = [
-        f"bucket\t{bucket_id}",
-        "periods\t",
-        "checked\t0",
-        "issues\t0",
-        f"link_inconsistencies\t{len(link_rows)}",
-        f"ready\t{str(ready).lower()}",
-        *link_lines,
+        f"bucket	{check.bucket_id}",
+        f"periods	{','.join(check.periods)}",
+        f"checked	{check.checked_transaction_count}",
+        f"issues	{len(check.issues)}",
+        f"link_inconsistencies	{len(link_rows)}",
+        f"ready	{str(check.ready).lower()}",
+        *_ledger_check_issue_lines_from_items(check.issues),
+        *(
+            f"link_inconsistency	{row.invoice_id}	{row.transaction_id}	{row.direction.value}"
+            for row in check.link_inconsistencies
+        ),
     ]
     emit_envelope(
         ctx,
         command="ledger.check",
-        result=LedgerCheckResult.model_validate(payload),
+        result=LedgerCheckResult.model_validate(
+            {
+                "bucket_id": check.bucket_id,
+                "periods": list(check.periods),
+                "checked_transaction_count": check.checked_transaction_count,
+                "issues": [issue.model_dump(mode="json") for issue in check.issues],
+                "link_inconsistencies": link_rows,
+                "ready": check.ready,
+            }
+        ),
         lines=lines,
-        notices=link_notices,
+        notices=_link_inconsistency_notices(check.link_inconsistencies),
     )
 
-
-def _emit_ledger_check_all_periods(
-    ctx: typer.Context,
-    *,
-    bucket_id: str,
-    years: list[int],
-    catalogue: TransactionCatalogue,
-    link_rows: list[LedgerLinkInconsistencyPayload],
-    link_lines: list[str],
-    link_notices: list[Notice],
-) -> None:
-    from ...application.ledger.preflight import preflight_transaction_catalogue
-    from ._ledger_payloads import LedgerCheckResult
-
-    aggregated_issues: list[LedgerPreflightIssue] = []
-    aggregated_payload_issues: list[dict[str, object]] = []
-    checked_total = 0
-    for year in years:
-        report = preflight_transaction_catalogue(
-            bucket_id=bucket_id,
-            period=Period.from_year_and_code(year, "0A"),
-            transactions=catalogue,
-        )
-        checked_total += report.checked_transaction_count
-        aggregated_issues.extend(report.issues)
-        aggregated_payload_issues.extend(issue.model_dump(mode="json") for issue in report.issues)
-
-    ready = not aggregated_issues and not link_rows
-    payload = {
-        "bucket_id": bucket_id,
-        "periods": [str(year) for year in years],
-        "checked_transaction_count": checked_total,
-        "issues": aggregated_payload_issues,
-        "link_inconsistencies": link_rows,
-        "ready": ready,
-    }
-    lines = [
-        f"bucket\t{bucket_id}",
-        f"periods\t{','.join(str(year) for year in years)}",
-        f"checked\t{checked_total}",
-        f"issues\t{len(aggregated_issues)}",
-        f"link_inconsistencies\t{len(link_rows)}",
-        f"ready\t{str(ready).lower()}",
-        *(_ledger_check_issue_lines_from_items(aggregated_issues)),
-        *link_lines,
-    ]
-    emit_envelope(
-        ctx,
-        command="ledger.check",
-        result=LedgerCheckResult.model_validate(payload),
-        lines=lines,
-        notices=link_notices,
-    )
-
-
-def _ledger_check_issue_lines(report: LedgerPreflightReport) -> list[str]:
-    return _ledger_check_issue_lines_from_items(report.issues)
 
 
 def _ledger_check_issue_lines_from_items(issues: Sequence[LedgerPreflightIssue]) -> list[str]:
