@@ -186,7 +186,7 @@ lxml = [
 
 [[package]]
 name = "cadrumo"
-version = "0.4.0"
+version = "0.5.0"
 source = { editable = "." }
 dependencies = [
     { name = "anyio" },
@@ -448,12 +448,12 @@ registry = [
 
 [[package]]
 name = "cadrumo-data-manuals"
-version = "0.4.0"
+version = "0.5.0"
 source = { directory = "packaging/cadrumo_data_manuals" }
 
 [[package]]
 name = "cadrumo-data-official"
-version = "0.4.0"
+version = "0.5.0"
 source = { directory = "packaging/cadrumo_data_official" }
 
 [[package]]
