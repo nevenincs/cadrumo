@@ -5,7 +5,7 @@ data, no mocking) cover overall-status precedence, JSON serialisation, text
 rendering, and the disk-persistence round trip. The two dimension functions
 cheap enough to run against the live tree per-test (dead code, checkout
 drift) are exercised for real in ``test_advisory_dimensions_scan``; the
-full five-dimension `build_advisory_report` composition -- which includes a
+full six-dimension `build_advisory_report` composition -- which includes a
 full-tree semgrep scan taking several minutes -- was verified manually
 end-to-end rather than carried as an automated test that would routinely
 time out this lane (see the module's own docstring in ``dev/audit/advisory.py``).

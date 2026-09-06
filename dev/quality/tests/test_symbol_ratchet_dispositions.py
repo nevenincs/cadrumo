@@ -97,8 +97,8 @@ def test_every_disposition_carries_a_substantive_rationale() -> None:
 
 def test_the_reader_pattern_matches_a_real_rationale() -> None:
     """Detector teeth: the pattern must find the file a rationale names."""
-    assert _READER.findall("read by dev/quality/clitui_ledger_capability_matrix.py to check") == [
-        "dev/quality/clitui_ledger_capability_matrix.py"
+    assert _READER.findall("read by src/cadrumo/entrypoints/cli/tests/test_command_specs.py to check") == [
+        "src/cadrumo/entrypoints/cli/tests/test_command_specs.py"
     ]
 
 

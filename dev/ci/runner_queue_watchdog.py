@@ -45,6 +45,17 @@ repository-scoped -- the account is a user, not an organisation, so no runner
 serves a second repository and "no job of ours is running on it" cannot be
 explained away by foreign work.
 
+*Occupancy is sampled, so one empty sample is not proof.* A label set falls
+briefly empty at the handoff between a finishing job and the queued job that
+succeeds it, and a poll landing in that gap sees a long-queued job and nothing
+running on its labels -- indistinguishable, from one observation, from a lane no
+runner serves. Run 34016654501 was cancelled that way: the Windows lane's
+successor had started three seconds before the poll that killed it. The verdict
+must therefore hold across consecutive polls before the run is cancelled, since
+a handoff gap closes on the next poll and a genuinely unservable lane never
+does. The cancel is destructive and unrecoverable, so it is the side that pays
+the extra poll.
+
 *A job blocked on ``needs:`` is not queued for a runner.* This was the largest
 suspected false-positive class and it turns out not to exist: GitHub does not
 create a dependent job's record until its dependencies resolve. Measured in the
@@ -86,7 +97,7 @@ import json
 import os
 import sys
 import time
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Final
@@ -212,6 +223,38 @@ def classify(
     return tuple(verdicts)
 
 
+def confirm_unschedulable(
+    verdicts: Sequence[Verdict],
+    previous: Mapping[str, int],
+    *,
+    required: int,
+) -> tuple[dict[str, int], tuple[Verdict, ...]]:
+    """Count how many CONSECUTIVE polls each verdict has held, and return the confirmed ones.
+
+    Occupancy is a sample, and one empty sample is not proof. A label set falls
+    briefly empty between a finishing job and the queued job that succeeds it,
+    and a poll landing in that gap cannot be told from a lane no runner serves.
+    Requiring the verdict to survive ``required`` consecutive polls separates
+    the two, because a handoff gap closes on the next poll and a genuinely
+    unservable lane never does.
+
+    The returned tally is rebuilt from THIS poll rather than decremented, so a
+    job that stops being flagged drops straight back to zero instead of
+    accumulating a count across unrelated observations minutes apart.
+
+    Args:
+        verdicts: This poll's classifications.
+        previous: The tally returned by the preceding poll.
+        required: Consecutive polls a verdict must hold before it is confirmed.
+
+    Returns:
+        The tally to carry into the next poll, and the confirmed verdicts.
+    """
+    tally = {verdict.job_name: previous.get(verdict.job_name, 0) + 1 for verdict in verdicts if verdict.unschedulable}
+    confirmed = tuple(verdict for verdict in verdicts if tally.get(verdict.job_name, 0) >= required)
+    return tally, confirmed
+
+
 def _epoch_of(stamp: object) -> float:
     """Parse a GitHub ISO-8601 ``Z`` timestamp to epoch seconds.
 
@@ -325,8 +368,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     threshold = float(os.environ.get("THRESHOLD_SECONDS", "300"))
     poll = float(os.environ.get("POLL_SECONDS", "15"))
     window = float(os.environ.get("MAX_WATCH_SECONDS", "900"))
+    required = int(os.environ.get("UNSCHEDULABLE_CONFIRMATIONS", "2"))
 
     started = time.monotonic()
+    confirmations: dict[str, int] = {}
     while True:
         payload = _request(f"/repos/{repository}/actions/runs/{run_id}/jobs", token)
         jobs = parse_jobs(payload)
@@ -341,11 +386,19 @@ def main(argv: Sequence[str] | None = None) -> int:
         queued = [job.name for job in jobs if job.status == "queued" and job.name != watchdog_job_name]
         print(f"poll +{time.monotonic() - started:.0f}s | queued={len(queued)} | occupied={sorted(occupied)}")
 
-        if any(verdict.unschedulable for verdict in verdicts):
+        confirmations, confirmed = confirm_unschedulable(verdicts, confirmations, required=required)
+        if confirmed:
             _announce(verdicts, threshold)
             _cancel(repository, run_id, token)
             return 1
         for verdict in verdicts:
+            if verdict.unschedulable:
+                seen = confirmations[verdict.job_name]
+                print(
+                    f"note: '{verdict.job_name}' looked unschedulable on {seen} of {required} "
+                    "consecutive polls; not cancelling yet"
+                )
+                continue
             print(f"note: skipping '{verdict.job_name}' - {verdict.reason}")
 
         run = _request(f"/repos/{repository}/actions/runs/{run_id}", token)

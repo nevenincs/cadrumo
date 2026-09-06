@@ -1120,6 +1120,17 @@ audit-health-report:
 audit-health-report-json:
     @uv run --no-sync python -m dev.audit.report --json
 
+# Audit module and callable sizes across src/ and dev/ against the declared
+# band. Exits 1 on any finding: there is no baseline, ceiling table, or accept
+# flag, so the remedy is to split the oversize subject. This scanner spent
+# weeks with no runner at all after the pytest gate that enforced it was
+# deleted with the shipped package's zero-awareness boundary; `audit-all`
+# now carries it as an advisory dimension, and this recipe runs it alone.
+[doc('Audit module and callable sizes across src/ and dev/ against the declared band.')]
+[group('audits')]
+audit-size-budget:
+    @uv run --no-sync python -m dev.audit.size_budget
+
 # Audit module, class, enum, and function names across src/ and dev/.
 # Public production declarations must be singular and globally unique; private
 # and test collisions remain visible as advisory findings.
