@@ -1083,7 +1083,15 @@ def test_cleanup_failure_does_not_mask_primary_apply_error(tmp_path: Path, monke
         )
 
     monkeypatch.setattr(replay_module, "_replace_staged", original_replace)
-    assert cleanup_paths and all(path.is_file() for path in cleanup_paths)
+    # The premise and the claim, separately. ``cleanup_paths`` starts EMPTY and
+    # is filled only when the patched ``_cleanup`` is actually reached, so an
+    # empty tuple means the injected scenario never happened and the claim below
+    # holds vacuously over nothing. That is a different repair from a path that
+    # cleanup removed: the first says this test stopped exercising its subject,
+    # the second says the subject regressed. Conjoined they read identically.
+    assert cleanup_paths, "cleanup was never reached, so this test exercised no cleanup-failure path"
+    removed = [path for path in cleanup_paths if not path.is_file()]
+    assert not removed, f"a failed cleanup must leave its staged evidence in place, but these are gone: {removed}"
     assert transaction.is_dir()
     assert any("cleanup also failed" in note for note in getattr(raised.value, "__notes__", ()))
 

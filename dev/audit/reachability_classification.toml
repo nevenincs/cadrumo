@@ -1092,3 +1092,17 @@ resolved = false
 remedy_requires_decision = true
 symbols = ["GeneratedArtifactInspection", "WizardFlowProtocol"]
 evidence = "The two protocols the same structural check leaves unmatched, and each fails differently. GeneratedArtifactInspection requires a sources member and NO class in the shipped tree provides it, so the contract has no implementer at all. WizardFlowProtocol is runtime_checkable and its docstring states that domain code reaches the descriptor through this core slot and never imports the application-layer WizardFlow class directly; it appears nowhere outside its own module and __all__, so no domain code annotates or isinstance-checks against it and the layering it describes is not in force. Its single required member is only an id, which is why the structural sweep matched nine unrelated classes and proved nothing either way - the module-level evidence is what settles it. The remedy is to implement the one and to route domain code through the other or withdraw both claims."
+
+[[symbol_cluster]]
+name = "process-cache reset seams"
+class = "test-support"
+area = "core, domain/calculations/registry, llm"
+symbols = [
+  "clear_resolved_path_cache",
+  "reset_corpus_text_cache",
+  "_disk_cache_write_count",
+  "reset_provider_pacing",
+  "reset_on_host_inference_arena",
+]
+evidence = "Each clears or counts a module-level cache that is process-scoped by design: the resolved-path memo, the corpus-text disk cache and its write counter, the armed rate-limit pauses, and the on-host inference arena sized once per process. Two of the docstrings name a production scenario beside the test one -- a settings reload, an operator resolving a quota -- so the cluster was checked against that claim rather than assumed. There is no settings-reload path in the tree; load_settings builds process-wide settings once, and the one long-running entrypoint (cadrumo-mcp) does not rebuild them. The context-local override_settings IS used in production, but by auth_operator_settings_scope over the closed _AUTH_OPERATOR_SETTINGS_SCOPE_FIELDS list (storage roots, profile, secret store, auth provider, certificates) and by credentials.py for cadrumo_active_profile alone -- none of which touches cadrumo_llm_local_inference_concurrency or the pacing configuration. So no production caller can need these, and a test that changes a bound within one process must."
+mechanism = "Process-scoped module state plus the closed override_settings field list, which together bound what a production caller could ever need to reset"

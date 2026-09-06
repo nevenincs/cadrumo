@@ -259,8 +259,11 @@ def test_planner_fails_closed_on_unadjudicated_ambiguity(inventory) -> None:
     plan = plan_chains(inventory)
     assert not plan.complete
     kinds = {ambiguity.kind for ambiguity in plan.ambiguities}
-    assert kinds <= {"gapped_span", "intra_revision_duplicate", "oversize_chain_id", "title_variant"}
+    # The premise first: an empty set is a subset of anything, so a planner
+    # that stopped reporting ambiguities satisfied the containment below.
     assert kinds, "the corpus is known to carry open ambiguities"
+    known = {"gapped_span", "intra_revision_duplicate", "oversize_chain_id", "title_variant"}
+    assert kinds <= known, f"an unrecognised ambiguity kind was reported: {sorted(kinds - known)}"
     # A blocked programme is never planned as a chain.
     blocked = {slug for ambiguity in plan.ambiguities for slug in ambiguity.slugs}
     planned_slugs = {entry.chain_id for entry in plan.entries}

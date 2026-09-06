@@ -123,8 +123,11 @@ def test_the_production_universe_is_a_subset_of_the_source_universe(revision: st
     universe = {path for path, _ in repository_sources(revision)}
     production = {path for path, _ in production_sources(revision)}
 
-    assert production <= universe
+    # The premise first: a subset claim is VACUOUSLY TRUE over an empty left
+    # side, so an emptied filter satisfied the containment below before this
+    # guard was reached.
     assert production, "the filter removed everything"
+    assert production <= universe, f"the filter reached files the read missed: {sorted(production - universe)}"
 
 
 def test_an_unknown_revision_fails_closed(revision: str) -> None:

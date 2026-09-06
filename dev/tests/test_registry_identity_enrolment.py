@@ -171,8 +171,18 @@ def test_the_two_digest_derivations_are_distinct_and_neither_is_reimplemented() 
         package_version="1.0.0",
     )
 
-    assert walked != installed
-    assert walked and installed
+    # Each derivation produced something, THEN they differ. The order matters:
+    # a derivation returning an empty digest is identity collapsing, and with
+    # the inequality first that reads as "not distinct" when both collapse, or
+    # passes outright when only one does -- an empty string differs from a real
+    # digest. The premise is asserted per derivation so the failure names which
+    # one stopped producing.
+    assert walked, "the walked derivation produced an empty digest, so tree identity collapsed"
+    assert installed, "the installed derivation produced an empty digest, so tree identity collapsed"
+    assert walked != installed, (
+        "the walked and installed derivations coincided, so an installed tree and an authoring "
+        f"tree would share a cache entry despite one being mutable: {walked}"
+    )
 
     definitions = {
         path.name

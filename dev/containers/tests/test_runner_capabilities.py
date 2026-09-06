@@ -117,8 +117,12 @@ def test_the_architecture_token_is_normalised_away_from_the_windows_spelling() -
     """
     architecture = _machine()
 
-    assert architecture != "AMD64"
-    assert architecture
+    # The premise first. An empty token is exactly the "nothing at all" the
+    # docstring warns about, and it PASSES the inequality below -- so ordered
+    # the other way the test reported a capability gap as no finding, which is
+    # the failure it exists to forbid.
+    assert architecture, "the machine token is empty, so the brew path table would be keyed on nothing"
+    assert architecture != "AMD64", "the Windows spelling reached the table key; the matrix legs say x86_64"
 
 
 def test_the_brew_table_is_keyed_on_normalised_tokens() -> None:
