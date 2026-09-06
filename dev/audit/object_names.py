@@ -341,6 +341,24 @@ def _last_noun(declaration: ObjectNameDeclaration) -> str | None:
     return words[-1].lower() if words else None
 
 
+def _module_holds_several(declaration: ObjectNameDeclaration, declarations: Sequence[ObjectNameDeclaration]) -> bool:
+    """Report whether a module defines two or more public declarations of its own.
+
+    A class names one instance, so a plural class name promises a collection the
+    object does not hold. A module is a namespace, and a plural module name
+    describes what it contains: ``errors`` holding eleven error classes is named
+    accurately, and renaming it to ``error`` would make it lie in the opposite
+    direction. The distinction is checkable rather than a matter of taste, so it
+    is checked -- a module named ``errors`` that defines a single class is still
+    reported, because there the plural is the same false promise.
+    """
+    owned = [
+        item
+        for item in declarations
+        if item.path == declaration.path and item.kind is not ObjectNameKind.MODULE and item.public
+    ]
+    return len(owned) > 1
+
 def _looks_plural(word: str | None, kind: ObjectNameKind) -> bool:
     if word is None or len(word) < 4 or word.endswith(_NON_PLURAL_SUFFIXES):
         return False
@@ -395,6 +413,8 @@ def analyse(
     for declaration in declarations:
         noun = _last_noun(declaration)
         if not declaration.enforced or not _looks_plural(noun, declaration.kind):
+            continue
+        if declaration.kind is ObjectNameKind.MODULE and _module_holds_several(declaration, declarations):
             continue
         findings.append(
             ObjectNameFinding(

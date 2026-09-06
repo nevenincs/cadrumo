@@ -236,6 +236,38 @@ def test_plural_public_module_stem_fails(tmp_path: Path) -> None:
     )
 
 
+def test_plural_module_holding_several_declarations_is_accurate(tmp_path: Path) -> None:
+    """A module named for what it contains is named correctly, not defectively.
+
+    ``errors.py`` holding eleven error classes is the ordinary Python
+    convention, and renaming it to ``error.py`` would make the name lie in the
+    other direction. A class promises one instance and so cannot be plural; a
+    module is a namespace and can be.
+    """
+    _write(
+        tmp_path,
+        "src/cadrumo/errors.py",
+        "class ParseError(Exception):\n    pass\n\n\nclass WriteError(Exception):\n    pass\n",
+    )
+    (tmp_path / "dev").mkdir()
+
+    result = scan((tmp_path / "src", tmp_path / "dev"), tmp_path)
+
+    assert not any(
+        item.kind is ObjectNameFindingKind.PLURAL and item.name == "errors" for item in result.enforced_findings
+    )
+
+
+def test_plural_module_holding_one_declaration_still_fails(tmp_path: Path) -> None:
+    """The exemption is about accuracy, so a single-occupant plural still lies."""
+    _write(tmp_path, "src/cadrumo/invoices.py", "class Invoice:\n    pass\n")
+    (tmp_path / "dev").mkdir()
+
+    result = scan((tmp_path / "src", tmp_path / "dev"), tmp_path)
+
+    assert any(
+        item.kind is ObjectNameFindingKind.PLURAL and item.name == "invoices" for item in result.enforced_findings
+    )
 def test_private_and_test_module_stems_are_advisory(tmp_path: Path) -> None:
     _write(tmp_path, "src/cadrumo/_support.py", "")
     _write(tmp_path, "dev/tests/_support.py", "")
