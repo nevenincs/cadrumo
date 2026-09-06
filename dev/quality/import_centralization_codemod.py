@@ -47,6 +47,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.core.directory_scan import scan_directory
 
 # Imported through the package rather than by inserting this directory on
@@ -245,7 +246,7 @@ def apply_plans_to_file(path: Path, plans: list[RewritePlan]) -> bool:
         changed = True
 
     if changed:
-        path.write_text("".join(lines), encoding=_UTF_8, newline="\n")
+        atomic_write_text(path, "".join(lines), encoding=_UTF_8)
     return changed
 
 
