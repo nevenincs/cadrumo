@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-06'
-body_hash: 'sha256:f8b49152cea53ecc4e42d12de5fc446c556dffd60a2950f45d6dffc979da71b0'
+body_hash: 'sha256:923a687e5a31e3aebbb7a3ba863dbc74ff38428e3c03986323e8035d730703b4'
 ---
 
 <!-- RETIRED: S370 -->
@@ -663,6 +663,7 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S447` - Stop the locale scanner claiming a registry's lookup tokens as translation keys, and reunite the storage error subtree with the module path the code cites. A locale-key mapping is keyed by whatever the runtime selects on -- a route identity, a catalogue action id -- and only its values are locale keys; collecting the whole literal demanded translations for identifiers no catalogue should carry. Separately, the storage factory error subtree lost a leading underscore, so seven keys were reported missing and their twins extra.; `dev/locales/_ast_scanner.py, dev/locales/tests/test_dynamic_prefix_registry_coverage.py, src/cadrumo/locales/*/`.
 - [x] `W08.P30.S448` - Confirm a locale-key row table through its key column rather than any unpacked name. The row-table rule identifies which column holds keys and then confirms the table if ANY loop name reaches a translator sink, so a guard table whose English refusal reaches a raise was read as a locale-key table and its canonical command keys were demanded as translations. Bind each unpacked name to its column index and confirm only on a key column, keeping the whole-row binding and the genuine key-column-reaches-tr shape working.; `dev/locales/_ast_scanner.py, dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
 - [x] `W08.P30.S449` - Give the reconciliation direction column a header key that is not also a namespace, and gate the shape. The code declared tui.ledger.reconciliation.direction as a leaf and as the parent of its two enum values, which a mapping cannot satisfy, so the catalogue kept the namespace and the column header had nothing to resolve to every time the table drew. Move the enum values to a sibling namespace in the house style, author the header, and add a check for a declared key that is also a prefix of another.; `src/cadrumo/locales/*/common.yml, src/cadrumo/entrypoints/tui/ledger/reconciliation.py, src/cadrumo/entrypoints/tui/ledger/controller.py, dev/locales/tests/test_no_key_shadows_a_namespace.py`.
+- [x] `W08.P30.S450` - Name the Home locale-key registries by the scanner's convention, and partition the locale parity extras by evidence instead of pruning them. Six dict constants carried a _KEYS suffix the registry naming gate refuses. Then establish what the remaining extras actually are: which carry no string literal anywhere in the tree, and which are referenced by code the scanner cannot read, since only the first group could ever be safe to remove and the two are indistinguishable in the gate's own output.; `src/cadrumo/entrypoints/tui/home.py`.
 
 ## Parallelization
 
