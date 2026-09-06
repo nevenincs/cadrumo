@@ -351,6 +351,11 @@ def _extract_locale_constant_keys(tree: ast.AST, wrappers: frozenset[str] = froz
     flow_confirmed = _flow_confirmed_locale_key_dicts(tree, wrappers) | _flow_confirmed_locale_key_row_tables(
         tree, wrappers
     )
+    for name, value in flow_confirmed.items():
+        # A table written inline has no assignment for the walk below to match
+        # against, so its keys are taken from the confirmed expression itself.
+        if name.startswith(_ANONYMOUS_TABLE):
+            _collect_declared_locale_keys(value, findings)
     for node in ast.walk(tree):
         if isinstance(node, ast.Assign):
             named = any(_declares_locale_key_constant(target) for target in node.targets)
@@ -665,8 +670,10 @@ def _row_table_names_iterated_into_a_sink(
     string tuples that never reaches the translator.
     """
     tr_names = _translation_call_names(tree) | wrappers
-    key_columns = {name: _row_table_key_columns(value) for name, value in candidates.items()}
+    # The alias pass runs FIRST because it registers inline tables into
+    # `candidates`, and a key-column map built before that would not carry them.
     aliases = _parameters_bound_to_a_candidate_table(tree, candidates)
+    key_columns = {name: _row_table_key_columns(value) for name, value in candidates.items()}
     bound_to_table: dict[str, set[str]] = {}
     for node in _iteration_bindings(tree):
         for table in _iterated_candidate_tables(node.iter, candidates, aliases):
@@ -699,6 +706,12 @@ def _row_table_names_iterated_into_a_sink(
                 if index in key_columns[table]:
                     confirmed.add(table)
     return frozenset(confirmed)
+
+
+#: Prefix for a row table written inline at a call site, which has no name of
+#: its own to be registered under. Not a valid Python identifier, so it can
+#: never collide with a real assignment target.
+_ANONYMOUS_TABLE: Final[str] = "<inline row table>#"
 
 
 def _iteration_bindings(tree: ast.AST) -> Iterator[ast.For | ast.AsyncFor | ast.comprehension]:
@@ -753,6 +766,20 @@ def _parameters_bound_to_a_candidate_table(
             if index >= len(positional):
                 break
             tables = _iterated_candidate_tables(argument, candidates)
+            if not tables and _is_locale_key_row_table_literal(argument):
+                # Written INLINE at the call site. One screen builds its column
+                # table in the argument list rather than binding it first, so
+                # there is no name to be a candidate under -- and a table with
+                # no name was invisible to every rule here, though it is the
+                # same table doing the same job as its named siblings.
+                #
+                # It is admitted on the same terms as a named one: registered
+                # under a synthetic name so the parameter alias and the key
+                # column discipline both apply unchanged, and confirmed only if
+                # that parameter's rows actually reach a translator.
+                synthetic = f"{_ANONYMOUS_TABLE}{len(candidates)}"
+                candidates[synthetic] = argument
+                tables = frozenset({synthetic})
             if tables:
                 seen.setdefault(positional[index].arg, set()).update(tables)
     return {name: frozenset(tables) for name, tables in seen.items()}

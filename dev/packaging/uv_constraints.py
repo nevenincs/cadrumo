@@ -22,22 +22,56 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+import tomllib
 from pathlib import Path
 
 from .._paths import UTF_8
 
 _UTF_8 = UTF_8
-#: The runtime install closure is ``cadrumo`` and the two data companions. All
-#: three install from bundle-local or index-resolved product wheels, so they are
-#: excluded from the pinned third-party constraint set; only their transitive
-#: dependency closure needs pinning.
-_LOCAL_PRODUCT_PACKAGES = ("cadrumo", "cadrumo-data-manuals", "cadrumo-data-official")
 #: The distribution whose resolution is exported.
 _EXPORTED_PACKAGE = "cadrumo"
 _CONSTRAINTS_HEADER = (
     "# Runtime dependency closure pinned from the tested uv.lock.\n"
     "# Generated at packaging time; do not edit by hand.\n"
 )
+
+
+def local_product_packages(*, repo_root: Path) -> tuple[str, ...]:
+    """Return the workspace-local package names, read from ``uv.lock``.
+
+    The runtime install closure is ``cadrumo`` and its two data companions.
+    All three install from bundle-local or index-resolved product wheels, so
+    they are excluded from the pinned third-party constraint set; only their
+    transitive dependency closure needs pinning.
+
+    Those three names were once written out by hand beside the lockfile that
+    already records them, and ``uv export --no-emit-package`` accepts a name it
+    does not recognise in silence -- a misspelled or drifted entry emitted the
+    same output as a correct one. The failure that shape allows is not a noisy
+    one: naming a genuine third-party package here drops exactly that row from
+    the pinned closure (measured: eighty rows became seventy-nine, with no
+    error and no cascade), and the installer then floats the dependency the
+    release tested. The lockfile marks a local package by giving it a source
+    that is not ``registry``, so asking it removes the restatement instead of
+    maintaining a second copy of it.
+    """
+    lock = repo_root / "uv.lock"
+    if not lock.is_file():
+        raise SystemExit(f"uv.lock not found at {lock}")
+    document = tomllib.loads(lock.read_text(encoding=_UTF_8))
+    names = tuple(
+        sorted(
+            str(entry["name"])
+            for entry in document.get("package", ())
+            if isinstance(entry, dict) and "name" in entry and "registry" not in (entry.get("source") or {})
+        )
+    )
+    if not names:
+        raise SystemExit(
+            f"no workspace-local package found in {lock}; with an empty exclusion set the "
+            "product's own bundle-local wheels would be pinned as index requirements"
+        )
+    return names
 
 
 def export_runtime_constraints(*, repo_root: Path) -> tuple[str, ...]:
@@ -70,7 +104,7 @@ def export_runtime_constraints(*, repo_root: Path) -> tuple[str, ...]:
         "--no-header",
         "--no-emit-project",
     ]
-    for package in _LOCAL_PRODUCT_PACKAGES:
+    for package in local_product_packages(repo_root=repo_root):
         command.extend(("--no-emit-package", package))
     result = subprocess.run(  # noqa: S603 - fixed uv argv against the repository lockfile
         command,

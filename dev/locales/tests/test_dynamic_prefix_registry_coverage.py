@@ -965,3 +965,60 @@ def test_a_column_table_handed_to_a_shared_fitter_is_still_confirmed() -> None:
     assert "tui.aeat_sync.column.field" not in scan_source_text(prose_fitter, filename="screens.py"), (
         "a fitter that indexes the prose column confirms nothing"
     )
+
+
+def test_a_row_table_written_inline_at_the_call_site_is_confirmed() -> None:
+    """Incident 14: a column table with no name of its own.
+
+    One screen builds its columns in the argument list rather than binding them
+    first. Every rule in this scanner registers a candidate under an assignment
+    target, so a table with no name was invisible -- although it is the same
+    table, handed to the same fitter, doing the same job as its named siblings
+    two screens away.
+
+    It is admitted on exactly the same terms as a named one: registered under a
+    synthetic name so the parameter alias and the key-column rule both apply
+    unchanged, and confirmed only when that parameter's rows actually reach a
+    translator. The negative arm is what proves the terms are the same -- an
+    inline table handed to a helper that never translates stays out, so being
+    anonymous buys no shortcut past confirmation.
+    """
+    from .._ast_scanner import scan_source_text
+
+    confirmed = chr(10).join((
+        "def _fit(width, standalone):",
+        "    return [tr(column[1]) for column in standalone]",
+        "def _measure(width, rows):",
+        "    return [column[2] for column in rows]",
+        "def render(self):",
+        "    return _fit(",
+        "        80,",
+        "        (",
+        '            ("declaration", "tui.aeat_sync.column.declaration", 20),',
+        '            ("resolution", "tui.aeat_sync.column.resolution", 14),',
+        "        ),",
+        "    )",
+    ))
+    never_translated = chr(10).join((
+        "def _measure(width, rows):",
+        "    return [column[2] for column in rows]",
+        "def render(self):",
+        "    return _measure(",
+        "        80,",
+        "        (",
+        '            ("declaration", "tui.aeat_sync.column.untranslated", 20),',
+        '            ("resolution", "tui.aeat_sync.column.also_untranslated", 14),',
+        "        ),",
+        "    )",
+    ))
+
+    keys = scan_source_text(confirmed, filename="screens.py")
+
+    assert "tui.aeat_sync.column.resolution" in keys, "an inline table reaching the translator is confirmed"
+    assert "tui.aeat_sync.column.declaration" in keys, "every key column entry in it comes with it"
+
+    unconfirmed = scan_source_text(never_translated, filename="screens.py")
+
+    assert "tui.aeat_sync.column.untranslated" not in unconfirmed, (
+        "an inline table handed to a helper that never translates must stay unconfirmed"
+    )

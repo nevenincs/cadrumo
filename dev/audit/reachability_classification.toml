@@ -165,6 +165,12 @@ remedy_requires_decision = true
 # ---------------------------------------------------------------------------
 
 [[module]]
+name = "cadrumo.application.ledger.import_preparation"
+class = "should-be-live"
+evidence = "Validates an operator-entered import path and builds the canonical command; its docstring records that it was moved OUT of entrypoints/tui/ledger because the Ledger TUI boundary gate refuses adapter work there. Nothing in production calls it. The door it feeds cannot open either: the Ledger controller refuses the IMPORT area when prepared_imports is empty or import_submitter is None, the only production caller of ledger_screen_factory (entrypoints/tui/launcher.py) passes neither, and LedgerPreparedImportV1 is constructed nowhere outside tests. So the application-side preparation and the TUI-side carrier were both built and never connected, while dev/quality/clitui_ledger_capability_matrix.py declares the function a required capability. Deliberately NOT given an intentional entry in the module ratchet: its only declarer is that dev matrix, and a declared_by_contract disposition would quiet a module whose contract is itself unsatisfiable."
+remedy_requires_decision = true
+
+[[module]]
 name = "cadrumo.domain.contabilidad"
 class = "staged-capability"
 evidence = "Added by commit b0305f2c3a, feat(domain): add the contabilidad cuenta and direccion with their tests. Company accounting facts a Modelo 200 filing is built from; its only non-test consumer so far is the error registry at core/errors/registry/_application_part2.py, which registers its error codes. Capability under construction, not an orphan."
@@ -990,7 +996,7 @@ class = "should-be-live"
 area = "application"
 resolved = false
 remedy_requires_decision = true
-symbols = ["create_inventory_ledger", "default_profile_secure_object_inventory", "profile_is_authentication_failure", "profile_advance_session_idle_deadline", "profile_is_persisted_session"]
+symbols = ["default_profile_secure_object_inventory", "profile_is_authentication_failure", "profile_advance_session_idle_deadline", "profile_is_persisted_session"]
 evidence = "Five of the eight one-line port-facade wrappers in the shipped tree are called by nothing; the other three are reached from tests or dev. The asymmetry is what makes this a finding rather than a dead layer: `profile_is_keyring_unavailable` sits directly beside `profile_is_authentication_failure` in custody_ports and IS used, so typed authentication refusals are being recognised somewhere WITHOUT the facade -- which means an adapter exception type is leaking into application code, the exact thing the docstring says the wrapper exists to prevent. The same reading applies to the session-receipt and inventory members. The remedy is to route the existing callers through the facade or to withdraw the unused members and record that the boundary is narrower than it looks; both are owner decisions about the application/adapter boundary rather than deletions of dead code."
 
 # ---------------------------------------------------------------------------
@@ -1009,7 +1015,7 @@ class = "should-be-live"
 area = "application"
 resolved = false
 remedy_requires_decision = true
-symbols = ["CertificateSourceNoActiveBucketError", "ModeloEditPermittedSurfacePageRequestV1", "ModeloEditPermittedSurfacePageV1", "ModeloWorkspaceVersionHeader", "ProfileImportResult", "SchemaModuleLoadFailure", "ModeloDraftBuilderAdapter", "ModeloWorkspaceAtomicProjectionPortV1"]
+symbols = ["CertificateSourceNoActiveBucketError", "ModeloEditPermittedSurfacePageRequestV1", "ModeloEditPermittedSurfacePageV1", "ModeloWorkspaceVersionHeader", "ProfileImportResult", "ModeloDraftBuilderAdapter", "ModeloWorkspaceAtomicProjectionPortV1"]
 evidence = "AttachmentCatalogue is deliberately excluded: it already carries its own staged-capability cluster, and the taxonomy admits exactly one class per finding. Each remaining symbol is exported and referenced nowhere outside the module that defines it, so nothing constructs, subclasses or annotates with it. Read as behaviour rather than as code, each names something the product does not do: AttachmentCatalogue verifies that every mapping key equals the embedded attachment_id so lookups cannot drift, and no lookup goes through it; SchemaModuleLoadFailure records a module and its error, and no schema load failure is recorded; ProfileImportResult is the declared outcome of importing a portable bundle, and portable import returns no such outcome; CertificateSourceNoActiveBucketError is raised by nothing, so that refusal is not detected. Deleting them would remove the record that the capability was designed, which is the same argument the unapplied threshold cluster records. The remedy is to wire each to the caller it was written for or to withdraw it deliberately, and both are owner decisions."
 
 [[symbol_cluster]]
@@ -1030,8 +1036,8 @@ class = "superseded"
 area = "application"
 resolved = false
 remedy_requires_decision = true
-symbols = ["project_modelo_work_verify_result", "project_modelo_export_result", "project_modelo_edit_apply_result", "ModeloWorkVerifyPublicResultV1", "ModeloExportPublicResultV1", "ModeloEditApplyPublicResultV1"]
-evidence = "Three projectors, each a one-line construction of a matching PublicResultV1 model, and none is called anywhere in production, dev/ or tests; the models themselves are touched only by tests asserting on model_fields, never constructed. The live discharger is named rather than guessed: the command table declares the verify leaf result schema as DeferredTarget(cadrumo.entrypoints.cli._modelo_payloads, WorkVerifyResult), so the CLI publishes its own payload type and never routes through this layer. The two shapes agree on the four identity and status fields and diverge deliberately -- the CLI payload carries the resolved and missing casilla ids, the findings, run_at and verified_by, where the PublicResultV1 carries only counts -- so the payload schema is the richer contract and this is displacement rather than duplication. Nothing is exposed unprojected: the CLI never returns the PublicResultV1 shape at all. The remedy is withdrawal of the displaced layer together with the field-shape tests that pin it, which is an owner decision because the types are shipped and exported."
+symbols = ["project_modelo_work_verify_result", "project_modelo_export_result", "project_modelo_edit_apply_result"]
+evidence = "The three PublicResultV1 models were moved out of this cluster: the audit stopped reporting them because the projectors below DO construct them, and a construction counts as a use even when the constructor is itself unreached -- transitive deadness the walk does not collapse. The projectors remain the finding. Three projectors, each a one-line construction of a matching PublicResultV1 model, and none is called anywhere in production, dev/ or tests; the models themselves are touched only by tests asserting on model_fields, never constructed. The live discharger is named rather than guessed: the command table declares the verify leaf result schema as DeferredTarget(cadrumo.entrypoints.cli._modelo_payloads, WorkVerifyResult), so the CLI publishes its own payload type and never routes through this layer. The two shapes agree on the four identity and status fields and diverge deliberately -- the CLI payload carries the resolved and missing casilla ids, the findings, run_at and verified_by, where the PublicResultV1 carries only counts -- so the payload schema is the richer contract and this is displacement rather than duplication. Nothing is exposed unprojected: the CLI never returns the PublicResultV1 shape at all. The remedy is withdrawal of the displaced layer together with the field-shape tests that pin it, which is an owner decision because the types are shipped and exported."
 
 [[symbol_cluster]]
 name = "asset ledger persistence with no production writer or reader"
@@ -1090,7 +1096,7 @@ class = "should-be-live"
 area = "domain"
 resolved = false
 remedy_requires_decision = true
-symbols = ["GeneratedArtifactInspection", "WizardFlowProtocol"]
+symbols = ["GeneratedArtifactInspection"]
 evidence = "The two protocols the same structural check leaves unmatched, and each fails differently. GeneratedArtifactInspection requires a sources member and NO class in the shipped tree provides it, so the contract has no implementer at all. WizardFlowProtocol is runtime_checkable and its docstring states that domain code reaches the descriptor through this core slot and never imports the application-layer WizardFlow class directly; it appears nowhere outside its own module and __all__, so no domain code annotates or isinstance-checks against it and the layering it describes is not in force. Its single required member is only an id, which is why the structural sweep matched nine unrelated classes and proved nothing either way - the module-level evidence is what settles it. The remedy is to implement the one and to route domain code through the other or withdraw both claims."
 
 [[symbol_cluster]]
@@ -1121,3 +1127,24 @@ symbols = [
   "reset_on_host_inference_arena",
 ]
 evidence = "The armed rate-limit pauses and the on-host inference arena sized once per process from cadrumo_llm_local_inference_concurrency. Each clears or counts a module-level cache that is process-scoped by design. Two docstrings in this family name a production scenario beside the test one -- a settings reload, an operator resolving a quota -- so the claim was checked rather than assumed. There is no settings-reload path in the tree; load_settings builds process-wide settings once and the one long-running entrypoint (cadrumo-mcp) does not rebuild them. The context-local override_settings IS used in production, but by auth_operator_settings_scope over the closed _AUTH_OPERATOR_SETTINGS_SCOPE_FIELDS list (storage roots, profile, secret store, auth provider, certificates) and by credentials.py for cadrumo_active_profile alone, so no production override reaches the state these reset. A test changing one of these bounds within a single process must."
+
+[[symbol_cluster]]
+name = "port facade no caller reaches: inventory ledger"
+class = "should-be-live"
+area = "adapters/persistence/profile"
+symbols = ["create_inventory_ledger"]
+evidence = "Split out of the application-area port-facade cluster, which filed it under the wrong area: the symbol is reported in cadrumo.adapters.persistence.profile.inventory, so the ledger asserted a finding against a module the audit never names and the staleness check read it as a symbol the audit had stopped reporting. Same class and same reasoning as its siblings -- a one-line port facade exported and called by nothing -- recorded where the audit actually reports it."
+
+[[symbol_cluster]]
+name = "public type no caller constructs: schema module load failure"
+class = "should-be-live"
+area = "entrypoints/cli"
+symbols = ["SchemaModuleLoadFailure"]
+evidence = "Split out of the application-area public-types cluster for the same area error: the symbol is reported in cadrumo.entrypoints.cli._command_schema. It records a module and its error, and no schema load failure is recorded anywhere, so a declared failure mode no code can produce tells the operator nothing."
+
+[[symbol_cluster]]
+name = "protocol no implementer satisfies: wizard flow"
+class = "should-be-live"
+area = "core"
+symbols = ["WizardFlowProtocol"]
+evidence = "Split out of the domain-area protocol cluster, which recorded the wrong area: the symbol is reported in cadrumo.core.wizard_catalogue. Runtime-checkable, and its module docstring states that domain code reaches the descriptor through this core slot rather than importing the application-layer WizardFlow directly; it appears nowhere outside its own module and __all__, so no domain code annotates or isinstance-checks against it and the layering it describes is not in force."

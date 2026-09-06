@@ -19,11 +19,16 @@ and a stand-in would prove something about the stand-in.
 from __future__ import annotations
 
 import pathlib
+import tomllib
 
 import pytest
 
 from ..._paths import REPO_ROOT
-from ..uv_constraints import export_runtime_constraints, render_constraints_file
+from ..uv_constraints import (
+    export_runtime_constraints,
+    local_product_packages,
+    render_constraints_file,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -54,10 +59,19 @@ def test_the_product_rows_are_excluded(exported: tuple[str, ...]) -> None:
 
     Only their transitive third-party closure needs pinning, which is what the
     module's ``--no-emit-package`` arguments are for.
+
+    The excluded names are read from the same owner the export passes to uv
+    rather than written out again here. A second hand-kept copy of the list
+    agrees with the first exactly until one of them drifts, and then this case
+    reports clean over the drift it exists to catch.
     """
     named = {row.split("==", 1)[0].strip().lower() for row in exported}
+    local = {name.lower() for name in local_product_packages(repo_root=REPO_ROOT)}
 
-    assert not named & {"cadrumo", "cadrumo-data-manuals", "cadrumo-data-official"}
+    assert local, "no local package was excluded, so the absence below is over an empty set"
+    assert not named & local, (
+        f"a bundle-local product wheel was pinned as an index requirement: {sorted(named & local)}"
+    )
 
 
 def test_the_closure_covers_the_agent_transport_stack(exported: tuple[str, ...]) -> None:
@@ -71,6 +85,52 @@ def test_the_closure_covers_the_agent_transport_stack(exported: tuple[str, ...])
     named = {row.split("==", 1)[0].strip().lower() for row in exported}
 
     assert "mcp" in named
+
+
+def test_the_excluded_names_are_the_lockfile_s_own_non_registry_packages() -> None:
+    """The exclusions must be derived, because uv accepts a wrong one in silence.
+
+    ``uv export --no-emit-package`` does not verify that the name it is given
+    exists: a nonexistent name changes nothing, and a name that IS a genuine
+    third-party dependency drops precisely that row with no error and no
+    cascade. Neither shape announces itself, so the only defence is to stop
+    writing the names down. This asserts the derivation reads the lockfile's
+    own marker rather than any list an author maintains.
+    """
+    document = tomllib.loads((REPO_ROOT / "uv.lock").read_text(encoding="utf-8"))
+    packages = [entry for entry in document.get("package", ()) if isinstance(entry, dict)]
+    expected = sorted(str(entry["name"]) for entry in packages if "registry" not in (entry.get("source") or {}))
+
+    assert len(packages) > 50, f"only {len(packages)} locked packages; the comparison below spans almost nothing"
+    assert expected, "the lockfile records no local package, so this proves nothing about the derivation"
+    assert list(local_product_packages(repo_root=REPO_ROOT)) == expected
+
+
+def test_a_lockfile_with_no_local_package_refuses(tmp_path: pathlib.Path) -> None:
+    """Teeth: an empty exclusion set pins the product's own bundle-local wheels.
+
+    That file installs, and it installs the wrong thing -- the wheels the
+    bundle already carries, fetched from an index instead. Returning an empty
+    tuple here would read as "nothing to exclude" rather than as a failure.
+    """
+    (tmp_path / "uv.lock").write_text(
+        "[[package]]"
+        + chr(10)
+        + 'name = "anyio"'
+        + chr(10)
+        + 'source = { registry = "https://pypi.org/simple" }'
+        + chr(10),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(SystemExit, match="no workspace-local package"):
+        local_product_packages(repo_root=tmp_path)
+
+
+def test_a_missing_lockfile_refuses_the_derivation_too(tmp_path: pathlib.Path) -> None:
+    """An unreadable lockfile must not silently yield an empty exclusion set."""
+    with pytest.raises(SystemExit, match=r"uv\.lock"):
+        local_product_packages(repo_root=tmp_path)
 
 
 def test_a_missing_lockfile_refuses_rather_than_exporting_nothing(
