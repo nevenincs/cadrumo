@@ -449,7 +449,7 @@ class CliSequenceDirective(Directive):
         from .sequences.contracts import read_sequence_contract
         from .sequences.errors import SequenceEngineError
         from .sequences.golden_store import read_golden
-        from .sequences.parser import parse_sequence
+        from .sequences.parser import parse_sequence, refuse_payload_less_result_frame
         from .sequences.runner import refuse_live_frames
 
         sequence_id = self.arguments[0].strip()
@@ -497,6 +497,12 @@ class CliSequenceDirective(Directive):
             # only at execution, so the author gets a clear error here rather
             # than an opaque missing-golden failure.
             refuse_live_frames(sequence)
+            # An enrolled sequence must prove the MEANING of its final output, not
+            # merely that the process exited. Refused here, at the boundary that
+            # admits a sequence as published documentation, so the contract cannot
+            # be declined by the build; a synthetic sequence built by a unit test is
+            # not documentation and is deliberately not subject to it.
+            refuse_payload_less_result_frame(sequence)
             # An all-@static sequence executes nothing, so it has no golden; it
             # renders from the parse alone. A sequence with executed frames reads
             # its committed golden (executed frames only).

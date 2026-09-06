@@ -60,7 +60,13 @@ from .schema import (
     VerifySentence,
 )
 
-__all__ = ["parse_frame_lines", "parse_sequence", "result_frame_asserts_result_payload"]
+__all__ = [
+    "RESULT_PAYLOAD_EXEMPT",
+    "parse_frame_lines",
+    "parse_sequence",
+    "refuse_payload_less_result_frame",
+    "result_frame_asserts_result_payload",
+]
 
 #: The sole human CLI executable; every frame command leads with this token.
 _EXECUTABLE: str = "aeat"
@@ -503,14 +509,13 @@ def parse_frame_lines(text: str, *, source: str) -> tuple[list[_FrameBuilder], l
     return builders, problems
 
 
-def _enforce_result_contract(builders: list[_FrameBuilder], problems: list[str], *, sequence_id: str) -> None:
+def _enforce_result_contract(builders: list[_FrameBuilder], problems: list[str]) -> None:
     """Enforce the @result contract, relaxed for ``@static`` frames.
 
     An all-``@static`` sequence runs nothing, so it must carry NO @result. A
     sequence with at least one executed frame must carry exactly one @result,
     which must be the LAST EXECUTED frame (``@static`` frames may follow it) and
-    carry at least one @expect, which must assert the result PAYLOAD unless
-    the sequence is named in :data:`_RESULT_PAYLOAD_EXEMPT`.
+    carry at least one @expect.
     """
     executed = [index for index, builder in enumerate(builders) if builder.kind is not FrameKind.STATIC]
     result_indices = [index for index, builder in enumerate(builders) if builder.kind is FrameKind.RESULT]
@@ -543,15 +548,6 @@ def _enforce_result_contract(builders: list[_FrameBuilder], problems: list[str],
             f"the @result frame ({_at(result.source, result.line_number)}) must carry at least one "
             "@expect assertion (e.g. '@expect result.status == \"verified_complete\"')",
         )
-        return
-    if sequence_id in _RESULT_PAYLOAD_EXEMPT:
-        return
-    if not _expects_assert_result_payload(result.command_line, tuple(result.expects)):
-        problems.append(
-            f"the @result frame ({_at(result.source, result.line_number)}) must assert the result "
-            "PAYLOAD with at least one @expect on a 'result.*' or 'error.*' json-path; asserting "
-            "only 'exit_code'/'status' proves the command ran, not that it produced the right answer",
-        )
 
 
 #: A json-path addressing the result PAYLOAD (the ``result`` object of the
@@ -562,11 +558,12 @@ _SEMANTIC_PAYLOAD_PREFIXES: tuple[str, ...] = ("result.", "result[", "error.", "
 
 #: Enrolled sequences whose ``@result`` frame is permitted to assert process
 #: success alone, each with the reason it is not yet convertible. The contract
-#: is enforced at the :func:`parse_sequence` boundary for every other sequence,
-#: so a NEW payload-less ``@result`` frame cannot be authored: it must be named
+#: is refused by :func:`refuse_payload_less_result_frame` at the enrolled-directive
+#: boundary for every other sequence, so a NEW payload-less ``@result`` frame
+#: cannot be documented: it must be named
 #: here, with a reason, in the same change. Entries are asserted to correspond
 #: to a genuinely payload-less frame, so a stale exemption cannot linger.
-_RESULT_PAYLOAD_EXEMPT: Mapping[str, str] = MappingProxyType(
+RESULT_PAYLOAD_EXEMPT: Mapping[str, str] = MappingProxyType(
     {
         "ledger-category-list": (
             "Residual pre-contract debt: the frame asserts only exit_code. Converting it "
@@ -583,8 +580,8 @@ _RESULT_PAYLOAD_EXEMPT: Mapping[str, str] = MappingProxyType(
 def _expects_assert_result_payload(command_line: str, expects: Sequence[ExpectAssertion]) -> bool:
     """Whether ``expects`` assert the result PAYLOAD for a frame running ``command_line``.
 
-    The single definition of the payload contract, shared by the
-    :func:`parse_sequence` boundary enforcement and the public
+    The single definition of the payload contract, shared by
+    :func:`refuse_payload_less_result_frame` and the public
     :func:`result_frame_asserts_result_payload` predicate, so the refusal and the
     report can never disagree.
     """
@@ -615,6 +612,38 @@ def result_frame_asserts_result_payload(sequence: ParsedSequence) -> bool:
     if frame is None:
         return True
     return _expects_assert_result_payload(frame.command_line, frame.expects)
+
+
+def refuse_payload_less_result_frame(sequence: ParsedSequence) -> None:
+    """Refuse an ENROLLED sequence whose ``@result`` frame asserts no result payload.
+
+    Called by the ``cli-sequence`` directive, the boundary that admits a sequence
+    as published documentation, beside :func:`refuse_live_frames`. A documented
+    sequence must prove the MEANING of its final output, not merely that the
+    process exited; a synthetic sequence built by a unit test is not documentation
+    and is deliberately not subject to this editorial contract.
+
+    The contract previously existed only as the predicate above, whose sole caller
+    was a test module reading a committed baseline. When that baseline was deleted
+    the contract stopped being enforced anywhere, and nothing announced it.
+
+    Raises:
+        SequenceParseError: The ``@result`` frame asserts neither a ``result.*``
+            nor an ``error.*`` json-path and the sequence is not named in
+            :data:`RESULT_PAYLOAD_EXEMPT`.
+    """
+    if sequence.sequence_id in RESULT_PAYLOAD_EXEMPT:
+        return
+    if result_frame_asserts_result_payload(sequence):
+        return
+    raise SequenceParseError(
+        sequence.sequence_id,
+        [
+            "the @result frame must assert the result PAYLOAD with at least one @expect on a "
+            "'result.*' or 'error.*' json-path; asserting only 'exit_code'/'status' proves the "
+            "command ran, not that it produced the right answer",
+        ],
+    )
 
 
 def _enforce_static_frames_state_a_reason(builders: list[_FrameBuilder], problems: list[str]) -> None:
@@ -711,7 +740,7 @@ def parse_sequence(
     if not builders:
         problems.append("a cli-sequence must contain at least one frame")
 
-    _enforce_result_contract(builders, problems, sequence_id=sequence_id.strip())
+    _enforce_result_contract(builders, problems)
     _enforce_static_frames_state_a_reason(builders, problems)
     _enforce_captures_and_placeholders(builders, problems)
 

@@ -8,7 +8,7 @@ gates own its exact text.
 
 The contract is REFUSED at the ``parse_sequence`` boundary, so a payload-less
 ``@result`` frame cannot be authored: it must be named in the parser's
-``_RESULT_PAYLOAD_EXEMPT`` map, with a reason, in the same change. This module
+``RESULT_PAYLOAD_EXEMPT`` map, with a reason, in the same change. This module
 closes the opposite direction, asserting the exemption set still equals the live
 payload-less set so a paid-down allowance cannot silently linger.
 """
@@ -24,7 +24,7 @@ from cadrumo.core.directory_scan import scan_directory
 
 from ..sequences.checks import default_docs_root, discover_sequences
 from ..sequences.golden_store import read_golden
-from ..sequences.parser import _RESULT_PAYLOAD_EXEMPT, result_frame_asserts_result_payload
+from ..sequences.parser import RESULT_PAYLOAD_EXEMPT, result_frame_asserts_result_payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -56,7 +56,7 @@ def test_result_payload_exemptions_match_the_live_offenders() -> None:
 
     The contract itself is enforced at the ``parse_sequence`` boundary, so a NEW
     payload-less ``@result`` frame cannot be authored at all: it fails the docs
-    build unless it is named in ``_RESULT_PAYLOAD_EXEMPT`` with a reason. This gate
+    build unless it is named in ``RESULT_PAYLOAD_EXEMPT`` with a reason. This gate
     closes the other direction — an exemption whose debt has been paid, or one
     naming a sequence that no longer exists, reds until it is removed, so the
     allowance can never silently outlive what it was granted for.
@@ -66,13 +66,13 @@ def test_result_payload_exemptions_match_the_live_offenders() -> None:
     that honours it and cannot go missing independently of it.
     """
     offenders = _offender_sequence_ids()
-    exempt = frozenset(_RESULT_PAYLOAD_EXEMPT)
+    exempt = frozenset(RESULT_PAYLOAD_EXEMPT)
     assert offenders == exempt, (
         "the payload-less @result frames and the boundary exemptions have diverged:\n"
         f"  exempt but no longer payload-less (remove the entry): {sorted(exempt - offenders)}\n"
         f"  payload-less but not exempt: {sorted(offenders - exempt)}"
     )
-    for sequence_id, reason in _RESULT_PAYLOAD_EXEMPT.items():
+    for sequence_id, reason in RESULT_PAYLOAD_EXEMPT.items():
         assert reason.strip(), f"exemption {sequence_id!r} must state why it is not yet convertible"
 
 
