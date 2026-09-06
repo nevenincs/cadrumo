@@ -22,5 +22,6 @@ Submodules
    cadrumo.application.invoices.creation_wizard
    cadrumo.application.invoices.issuer_establishment
    cadrumo.application.invoices.self_counterparty
+   cadrumo.application.invoices.simplificada_advisory
    cadrumo.application.invoices.source_resolver
    cadrumo.application.invoices.transaction_linking
