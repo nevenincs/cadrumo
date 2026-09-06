@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:8fe046252bdf17fe81be4a6b0829094447f0e069414abe7d6a54d17bdee7f70d'
+body_hash: 'sha256:dc25d98661618a9122d044352934076fbc60c936ef09db30656a4ae915d41f5d'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -621,6 +621,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S739` - Replace the pinned enrolment-candidate total with a floor per concept family, which the single number could not do while two families moved in opposite directions; `dev/docs/terminology_handbook/tests/test_curation.py`.
 - [x] `W02.P02.S740` - Name the drifted concepts and their actions in the handbook scaffold verdicts, which reported only that the tree had drifted; `dev/docs/terminology_handbook/tests/test_bootstrap.py`.
 - [x] `W02.P02.S741` - Size the nested-collection budget for real contention and make its expiry say the machine was loaded rather than the shard plugin broken; `dev/quality/tests/test_shard.py`.
+- [x] `W02.P02.S742` - Size the preflight collection budget for contention, which carried a third the headroom of one already shown too tight, and make its expiry legible; `dev/packaging/tests/test_preflight_recipe_selection.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
