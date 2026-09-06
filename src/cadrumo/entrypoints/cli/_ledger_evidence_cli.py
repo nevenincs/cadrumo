@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Protocol, TypedDict, cast
+from typing import Final, Protocol, TypedDict, cast
 
 import typer
 from pydantic import ValidationError
@@ -26,7 +26,12 @@ from ...domain.invoices.enums import InvoiceClass
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.supply_nature import SupplyNature
-from ...llm.consent import EvidenceConsentToken, mint_evidence_consent_token
+from ...llm.consent import (
+    EvidenceConsentToken,
+    OffHostEvidenceReadOutcome,
+    classify_off_host_evidence_read,
+    mint_evidence_consent_token,
+)
 from ...llm.models import LLMProvider
 from ._common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
 from ._date_parsing import _parse_iso_date, _parse_optional_iso_date_str
@@ -231,6 +236,18 @@ def evidence_remove(ctx: typer.Context, evidence_id: str, yes: bool = False) -> 
 #: acknowledged" and a whole-entrypoint label cannot.
 _EXTRACT_CONSENT_SURFACE = "cli:ledger.evidence.extract"
 
+#: The operator-facing wording for each refusal the shared classifier returns.
+#: The rules are decided in :mod:`~llm.consent`; only the phrasing is CLI-owned.
+_OFF_HOST_REFUSAL_LOCALE_KEYS: Final[dict[OffHostEvidenceReadOutcome, str]] = {
+    OffHostEvidenceReadOutcome.ACKNOWLEDGEMENT_WITHOUT_PROVIDER: (
+        "cli.app.ledger.evidence.extract_acknowledge_without_provider"
+    ),
+    OffHostEvidenceReadOutcome.PROVIDER_READS_ON_HOST: ("cli.app.ledger.evidence.extract_off_host_provider_is_local"),
+    OffHostEvidenceReadOutcome.PROVIDER_WITHOUT_ACKNOWLEDGEMENT: (
+        "cli.app.ledger.evidence.extract_provider_without_acknowledge"
+    ),
+}
+
 
 def _mint_extract_consent(
     *,
@@ -241,17 +258,12 @@ def _mint_extract_consent(
 ) -> EvidenceConsentToken | None:
     """Return the token authorising ONE off-host read, or ``None`` for the on-host default.
 
-    Both flags absent is the overwhelmingly common call and returns ``None``
-    immediately: no token, no provider override, behaviour identical to before
-    this option existed. Everything below runs only when an operator has
-    explicitly asked for an off-host read.
-
-    The two flags are required TOGETHER, and each missing half refuses rather
-    than being absorbed. A provider without the acknowledgement would send a
-    taxpayer's document off-host on a flag that does not say so; an
-    acknowledgement without a provider takes a consent and then changes nothing,
-    which is worse than not asking, because it trains an operator to believe the
-    prompt is meaningless.
+    Whether the two flags constitute a well-formed off-host request is decided
+    by :func:`~llm.consent.classify_off_host_evidence_read`, beside the minting
+    path it guards; this function supplies the operator-facing wording and the
+    binding to the document's content address. Both flags absent is the
+    overwhelmingly common call and returns ``None`` immediately: no token, no
+    provider override, behaviour identical to before this option existed.
 
     Nothing here is stored. There is no config key and no profile field behind
     either flag -- a stored acknowledgement would be exactly the standing
@@ -267,20 +279,12 @@ def _mint_extract_consent(
             content-addressable evidence record behind it, or when the consent
             gate refuses this invocation.
     """
-    if off_host_provider is None and not acknowledged:
+    outcome = classify_off_host_evidence_read(provider=off_host_provider, acknowledged=acknowledged)
+    if outcome is OffHostEvidenceReadOutcome.ON_HOST_DEFAULT:
         return None
-    if off_host_provider is None:
-        raise bad(
-            tr("cli.app.ledger.evidence.extract_acknowledge_without_provider"),
-        )
-    if off_host_provider is LLMProvider.LOCAL:
-        raise bad(
-            tr("cli.app.ledger.evidence.extract_off_host_provider_is_local"),
-        )
-    if not acknowledged:
-        raise bad(
-            tr("cli.app.ledger.evidence.extract_provider_without_acknowledge"),
-        )
+    refusal_key = _OFF_HOST_REFUSAL_LOCALE_KEYS.get(outcome)
+    if refusal_key is not None:
+        raise bad(tr(refusal_key))
 
     # The token binds to the BYTES, so a read with no content-addressable record
     # behind it cannot mint one. An attachment-only extract is exactly that case:
