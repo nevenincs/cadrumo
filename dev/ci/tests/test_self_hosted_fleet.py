@@ -55,41 +55,43 @@ _WORKFLOWS_DIR: Final = REPO_ROOT / ".github" / "workflows"
 #: the refusals are driven against the shape this repository actually ships.
 _RUNTIME_MATRIX_REFERENCE: Final = "${{ fromJSON(needs.inventory.outputs.matrix) }}"
 
-#: Workflows whose every job runs on a GitHub-hosted image.
-#:
-#: The release path belongs here for three standing reasons. The distributions
-#: are `py3-none-any`, so the build host cannot affect the artifact. The
-#: repository is public, so hosted runners cost nothing. And publication must
-#: not be gated on a self-hosted runner being free, which this fleet cannot
-#: guarantee: it carries one Linux x86-64 runner, and its macOS host serves
-#: only on mains power.
-#:
-#: Every other workflow proves behaviour on a real target platform and stays on
-#: the fleet.
 #: Workflows excused from the self-hosted mandate. EMPTY, deliberately: the
 #: release path was the only entry and its exemption is retired. Kept as a
 #: named seam rather than deleted, so a future exemption has to be added here
 #: with a reason instead of scattered through the census helpers.
+#:
+#: Empty is why the seam cannot prove itself from the live tree: with nothing
+#: excused, deleting the skip that reads this set changes no verdict in this
+#: module. So `_collect_violations` takes the excused set as an argument, and
+#: the keying case below drives it with a planted one.
 HOSTED_WORKFLOWS: Final[frozenset[str]] = frozenset()
 
 
 #: Floors for the workflow census this fleet gate reads. Two sibling modules
 #: floor the same directory at eight; this one carried only a truthiness.
-#: Live: sixteen workflows, of which fourteen are gated (publish and
-#: release-please run on hosted images by design).
+#: Live: sixteen workflows, all sixteen gated -- the release path included,
+#: since nothing is excused.
 _MINIMUM_FLEET_WORKFLOWS = 8
 _MINIMUM_GATED_WORKFLOWS = 6
 
 
-def _collect_violations(workflows_dir: Path) -> list[tuple[str, str, object]]:
-    """Return every (workflow, job, target) whose runner is not self-hosted."""
+def _collect_violations(
+    workflows_dir: Path, *, excused: frozenset[str] = HOSTED_WORKFLOWS
+) -> list[tuple[str, str, object]]:
+    """Return every (workflow, job, target) whose runner is not self-hosted.
+
+    ``excused`` defaults to the live set, which is empty. It is a parameter so
+    the keying case can hand in a non-empty one: the skip below is otherwise
+    unreachable, and an exemption seam nothing can reach is a seam nothing
+    proves works the day someone adds an entry to it.
+    """
     workflows = sorted(
         {*scan_directory(workflows_dir, pattern="*.yml"), *scan_directory(workflows_dir, pattern="*.yaml")}
     )
     assert workflows, f"no workflows found to gate under {workflows_dir}"
     violations: list[tuple[str, str, object]] = []
     for workflow in workflows:
-        if workflow.name in HOSTED_WORKFLOWS:
+        if workflow.name in excused:
             continue
         document = yaml.safe_load(workflow.read_text(encoding="utf-8"))
         violations.extend(_fleet_violations(workflow.name, document))
@@ -169,25 +171,52 @@ def test_every_workflow_job_runs_on_the_self_hosted_fleet() -> None:
     assert violations == [], f"hosted (or unresolvable) runner targets found: {violations}"
 
 
-def test_gate_refuses_a_hosted_job_outside_the_exemption(tmp_path: Path) -> None:
-    """The exemption is keyed to the workflow filename, not to the hosted label.
-
-    A job in some other workflow is not part of the release path, so the gate
-    must still refuse it. This is what stops the exemption widening into
-    "hosted runners are fine if you pick the right job name".
-    """
-    workflow = tmp_path / "other.yml"
-    workflow.write_text(
-        """name: other
-on: workflow_dispatch
-jobs:
-  campaign:
-    runs-on: ubuntu-latest
-    steps: []
-""",
+def _hosted_workflow(directory: Path, name: str) -> None:
+    """Plant one workflow at ``name`` whose single job runs on a hosted image."""
+    (directory / name).write_text(
+        f"name: {name.removesuffix('.yml')}"
+        + chr(10)
+        + "on: workflow_dispatch"
+        + chr(10)
+        + "jobs:"
+        + chr(10)
+        + "  campaign:"
+        + chr(10)
+        + "    runs-on: ubuntu-latest"
+        + chr(10)
+        + "    steps: []"
+        + chr(10),
         encoding="utf-8",
     )
-    assert _collect_violations(tmp_path) == [("other.yml", "campaign", "ubuntu-latest")]
+
+
+def test_the_exemption_is_keyed_to_the_workflow_filename_not_the_hosted_label(tmp_path: Path) -> None:
+    """Two identical hosted jobs, different filenames, different verdicts.
+
+    The contrast is the whole claim. Asserting only that a hosted job in some
+    unexcused file is refused reads identically whether the exemption is keyed
+    to the filename, keyed to the label, or absent altogether -- and with the
+    live set empty it is absent, so that case exercised the exemption not at
+    all. Deleting the skip outright left this module fully green.
+
+    So the excused set is planted rather than taken from the live constant:
+    both files carry the same `ubuntu-latest` job, and only the name differs.
+    The excused one is passed over and the other is refused, which is the
+    keying, and it is also the only run in which the skip executes.
+    """
+    _hosted_workflow(tmp_path, "excused.yml")
+    _hosted_workflow(tmp_path, "other.yml")
+
+    violations = _collect_violations(tmp_path, excused=frozenset({"excused.yml"}))
+
+    assert violations == [("other.yml", "campaign", "ubuntu-latest")]
+    # Same corpus, nothing excused: the excused file is refused on its own
+    # terms, so the line above is the skip firing and not the file being
+    # compliant.
+    assert _collect_violations(tmp_path) == [
+        ("excused.yml", "campaign", "ubuntu-latest"),
+        ("other.yml", "campaign", "ubuntu-latest"),
+    ]
 
 
 def test_gate_refuses_a_hosted_yaml_extension_workflow(tmp_path: Path) -> None:

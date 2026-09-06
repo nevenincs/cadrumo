@@ -82,9 +82,6 @@ from ..quality.import_hygiene_scan import (
     walk_module_imports,
 )
 from .complexity import (
-    _BASELINE_PATH as _COMPLEXITY_BASELINE_PATH,
-)
-from .complexity import (
     Baseline as ComplexityBaseline,
 )
 from .complexity import (
@@ -101,9 +98,6 @@ from .complexity import (
 from .duplication import DuplicationOutcome, run_duplication_scan
 
 _UTF_8: Final[str] = UTF_8
-_IMPORT_HYGIENE_BASELINE_PATH: Final[Path] = (
-    Path(__file__).resolve().parents[1] / "quality" / "import_hygiene_baseline.json"
-)
 _PRODUCT_SOURCE_ROOT: Final[Path] = Path("src/cadrumo")
 _PRODUCTION_EXCLUDE: Final[str] = (
     "src/cadrumo/test_*.py,src/cadrumo/**/test_*.py,src/cadrumo/**/_test_*.py,src/cadrumo/tests/*,src/cadrumo/_data/*"
@@ -347,7 +341,7 @@ def audit_complexity() -> DimensionReport:
     mi = collect_mi(_PRODUCTION_EXCLUDE)
     cog = collect_cog(_PRODUCT_SOURCE_ROOT, is_test_run=False, threshold=20)
 
-    baseline: ComplexityBaseline = load_complexity_baseline(is_test_run=False, path=_COMPLEXITY_BASELINE_PATH)
+    baseline: ComplexityBaseline = load_complexity_baseline(is_test_run=False)
     # No baseline and no reviewed-acceptance allowlist: every hotspot the
     # scanners report is classified on its own merits.
     cc_verdict = _classify_cc(cc, baseline.cyclomatic)

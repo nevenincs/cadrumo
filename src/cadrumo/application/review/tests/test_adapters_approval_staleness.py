@@ -23,9 +23,9 @@ from ....domain.filing.schema import ModeloApprovalBasis, ModeloDraft
 from ....domain.submission.models import ModeloDraftStatus
 from ....tests.profile_capsule import open_test_profile_session
 from ...filing.draft_review import ModeloApprovalStaleReason, describe_stale_reason
-from .._adapters import drafts_pending
-from ..enums import ReviewSeverity
-from ..operator import project_review_queue
+from .._adapters import _to_stale_approval_item, drafts_pending
+from ..enums import ReviewSeverity, ReviewState
+from ..operator import _to_row
 from .test_adapters import (
     _PROFILE_ID,
     _build_settings,
@@ -101,21 +101,40 @@ def test_an_approval_with_no_metadata_is_not_reported_stale(tmp_path: Path) -> N
     assert all(item.summary != "review.filing.stale_approval_summary" for item in items)
 
 
-def test_the_stale_row_names_which_axis_moved(tmp_path: Path) -> None:
-    """The reasons ride as tokens, and the queue projection renders them.
-
-    An operator told only that an approval is stale has to go looking for which
-    of eight upstream things changed.
-    """
+def test_the_adapter_records_which_axis_moved(tmp_path: Path) -> None:
+    """The reasons ride on the item as stable enum tokens."""
     settings = _build_settings(tmp_path)
     with open_test_profile_session(_PROFILE_ID):
         _seed_active_profile()
         _write_draft(settings, _approved(review_checksum=_B))
         items = drafts_pending(settings, bucket_id=_PROFILE_ID)
-        assert items[0].stale_reasons == (ModeloApprovalStaleReason.REVIEW_CHECKSUM_MISMATCH,)
-        report = project_review_queue()
 
-    rows = [row for row in report.rows if row.severity is ReviewSeverity.HIGH]
-    assert len(rows) == 1
-    assert rows[0].reason != rows[0].summary
-    assert describe_stale_reason(ModeloApprovalStaleReason.REVIEW_CHECKSUM_MISMATCH) in rows[0].reason
+    assert items[0].stale_reasons == (ModeloApprovalStaleReason.REVIEW_CHECKSUM_MISMATCH,)
+
+
+def test_the_queue_projection_renders_the_axis_that_moved() -> None:
+    """The projection is where a token becomes words, and it must use them.
+
+    Kept off the profile-session path deliberately: ``_to_row`` is pure, and
+    the assertion is about rendering rather than about storage.
+    """
+    stale = _to_stale_approval_item(
+        draft=_draft(status=ModeloDraftStatus.APROBACION_CADUCADA),
+        path_str="drafts/x",
+        stale_reasons=(ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED,),
+    )
+    row = _to_row(stale, state=ReviewState.PENDING, bucket_id=_PROFILE_ID)
+
+    assert describe_stale_reason(ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED) in row.reason
+    assert row.reason != row.summary
+
+
+def test_a_row_with_no_stale_reasons_keeps_the_bare_summary() -> None:
+    """The control: rows that are not stale approvals are left alone."""
+    placeholder = _to_stale_approval_item(
+        draft=_draft(status=ModeloDraftStatus.APROBACION_CADUCADA),
+        path_str="drafts/x",
+    )
+    row = _to_row(placeholder, state=ReviewState.PENDING, bucket_id=_PROFILE_ID)
+
+    assert row.reason == row.summary
