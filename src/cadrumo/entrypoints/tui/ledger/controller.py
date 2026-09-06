@@ -27,7 +27,7 @@ from ....core.i18n.render import tr
 from ....core.identity import InvoiceId, TransactionId
 from ..components.theme import BASE_CSS, tokenised
 from ..components.workspace_host import replace_workspace_body
-from ..navigation import TuiScreenContextV1
+from ..navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from .models import (
     LedgerClassificationSubmissionV1,
     LedgerDestinationIdV1,
@@ -142,13 +142,9 @@ class LedgerWorkspaceController:
             raise ValueError("unsupported Ledger workspace projection contract")
         self.context = context
         self.projection = projection
-        visible_ids = {row.transaction_id for row in projection.entries}
-        if injection.classification_target is not None and injection.classification_target not in visible_ids:
-            raise ValueError("classification target is absent from the visible Ledger projection")
         self.injection = injection
         self.review_action = injection.review_action
         self.classify_action = injection.classify_action
-        self.classification_target = injection.classification_target
         self.classification_submitter = injection.classification_submitter
         self.prepared_imports = injection.prepared_imports
         self.import_submitter = injection.import_submitter
@@ -186,13 +182,24 @@ class LedgerWorkspaceController:
                 availability=state.availability,
                 reason_key="tui.ledger.refusal.application_state",
             )
+        # Checked on its own, deliberately NOT folded into ``missing_door``
+        # below. A missing door is an absent INJECTED dependency — something
+        # the launcher failed to wire — and the wholly-wired doors gate reads
+        # this boolean to derive what the launcher owes. A selection is the
+        # operator's, made at runtime, so demanding it of the launcher is
+        # unsatisfiable; that unsatisfiable demand is why the classification
+        # door was removed rather than wired. Separating it also lets the
+        # operator hear the truth ("choose an entry") instead of being told
+        # submission is unavailable.
+        if area is LedgerWorkspaceArea.CLASSIFICATION and self.classification_target is None:
+            return LedgerRouteRefusalV1(
+                target=target,
+                availability=LedgerWorkspaceAvailability.UNAVAILABLE,
+                reason_key="tui.ledger.refusal.selection_required",
+            )
         missing_door = (
             area is LedgerWorkspaceArea.CLASSIFICATION
-            and (
-                self.classify_action is None
-                or self.classification_target is None
-                or self.classification_submitter is None
-            )
+            and (self.classify_action is None or self.classification_submitter is None)
         ) or (area is LedgerWorkspaceArea.IMPORT and (not self.prepared_imports or self.import_submitter is None))
         missing_door = missing_door or (
             area is LedgerWorkspaceArea.EVIDENCE and (self.evidence_action is None or self.evidence_items is None)
@@ -219,6 +226,50 @@ class LedgerWorkspaceController:
             )
             for row in self.projection.entries
         )
+
+    def with_transaction_focus(self, transaction_id: TransactionId) -> LedgerWorkspaceController:
+        """Re-address this workspace at one visible entry, carrying nothing else.
+
+        Selection travels in ``context.focus`` — the same channel
+        :meth:`restored_transaction_id` already reads for cursor restore — so
+        there is exactly one answer to "which entry is the operator on". A
+        second, mutable selection attribute beside it would let the cursor and
+        the classification target disagree.
+
+        Returns a NEW controller rather than mutating: the context is frozen,
+        and an internal area move resolves its next screen synchronously
+        against whatever controller the outgoing screen holds. Rebinding there
+        is what carries the selection across a body swap, with no extra screen
+        push and so no result-callback to strand.
+
+        The context is built explicitly rather than by ``model_copy`` because
+        ``model_copy`` skips validation, and ``_focus_belongs_to_destination``
+        is the check that keeps a focus from naming another workspace.
+
+        Raises:
+            ValueError: When the entry is not in the visible projection. A
+                target the operator cannot see is one they cannot have chosen.
+        """
+        if all(row.transaction_id != transaction_id for row in self.projection.entries):
+            raise ValueError("classification target is absent from the visible Ledger projection")
+        return LedgerWorkspaceController(
+            TuiScreenContextV1(
+                destination=self.context.destination,
+                focus=TuiFocusIdentityV1(
+                    destination=self.context.destination,
+                    semantic_key="ledger.transaction",
+                    restore_token=transaction_id,
+                ),
+                action_candidate_id=self.context.action_candidate_id,
+            ),
+            self.projection,
+            self.injection,
+        )
+
+    @property
+    def classification_target(self) -> TransactionId | None:
+        """The entry the operator selected, read from the one focus channel."""
+        return self.restored_transaction_id()
 
     def restored_transaction_id(self) -> TransactionId | None:
         """Resolve a transaction focus by semantic identity, never by row position."""
