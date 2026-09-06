@@ -13,6 +13,7 @@ from ..._paths import REPO_ROOT
 from ..campaign import (
     _COHORT_DIR,
     _LANES,
+    _PREFLIGHT_PASSES,
     _PROFILES,
     _TEST_WORKERS_ENV,
     PytestPass,
