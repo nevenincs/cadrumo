@@ -40,6 +40,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core.external_constants import OutputLanguage
+
 from ..._paths import REPO_ROOT
 from ..glossary_reference import generate_glossary_reference
 from ..pagefind_index import build_search_index
@@ -64,6 +66,45 @@ _LANGUAGE_PROBES = (
     ("ca", "prorrata sectors"),
     ("hu", "aranyositas"),
 )
+
+
+def test_the_language_probes_cover_every_published_output_language() -> None:
+    """The probe table names every language the product publishes, and only those.
+
+    The probe loop in the smoke gate below walks this table, so it proves that
+    the languages SOMEONE listed surface the prorrata card -- never that the
+    table is the language set. A fifth :class:`OutputLanguage` member would be
+    published, searched, and never probed, and the sweep would report four
+    languages clean out of five with nothing red.
+
+    Nothing else joins the two. A probe carries a hand-authored search term in
+    its own language, which is precisely the work that gets forgotten: the
+    build, the catalogue and the switcher all pick a new language up from the
+    enum automatically, and this table is the one place a human must type
+    something for it.
+
+    Independent roots: the probes are authored in this module, the enum is
+    production configuration in :mod:`cadrumo.core.external_constants`. It reads
+    a declaration and starts no browser, but the repository admits exactly one
+    tier marker per test and this module is integration, so it runs in the lane
+    that runs the gate it guards -- which is the lane where a missing probe
+    would otherwise have gone unnoticed.
+    """
+    probed = {language for language, _probe in _LANGUAGE_PROBES}
+    published = {member.value for member in OutputLanguage}
+
+    unprobed = sorted(published - probed)
+    assert not unprobed, (
+        f"these published languages have no prorrata probe: {unprobed}; the smoke gate "
+        "quantifies over the languages it probes, so an unlisted one is searched by "
+        "nobody while the gate reads clean"
+    )
+
+    unpublished = sorted(probed - published)
+    assert not unpublished, (
+        f"these probes name languages the product does not publish: {unpublished}; the "
+        "probe would search a site root that is never built"
+    )
 
 
 def _build_subset_site(out: Path) -> None:
