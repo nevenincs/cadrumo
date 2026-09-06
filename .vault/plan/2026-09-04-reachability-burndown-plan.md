@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:051b229a9a7c790e947818a03de548665873fb2cfc8d56458ffcfe99e8c2a540'
+body_hash: 'sha256:7fbd13eba166728be72bc3fc654f9b58deaf6e3383072939eee91a6e27745e0f'
 ---
 
 # `reachability-burndown` plan
@@ -156,6 +156,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S55` - Scan same-module read/write name pairs for a split half, which found five instances with no noise, and adjudicate the two that ground out as design rather than defect: the encrypted envelope tier is unreached as a group, appearing partly live only because its saver is called by a reencrypt helper that is itself unreached, while the plain tier beside it carries eighteen references and sensitive payloads encrypt through the application-layer secure-object envelope instead; and the mnemonic decoder is unnecessary because the custody design hands the twenty-four word phrase to the KDF as the recovery secret rather than decoding it to entropy; `dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S56` - Record the campaign's clearest cost finding and one supersession: the encrypted stage-S1 transcription cache is never populated, its own docstring stating that re-reading is the expensive half of ingestion at a vision model pass over every page and that re-running the cheap semantic stages is only affordable if the transcription is kept, while the single live reader is the consent-withdrawal path that touches the cache to erase it; and the standalone corpus manifest writer is subsumed by the bundle builder that writes the manifest inside the zip archive; `dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S57` - Sweep every cache-shaped module and bound that finding class at the two already recorded, since the other six are healthy with both halves live or reached intra-module; then adjudicate the domain attachment readers as displaced because the application layer reads the same store protocol directly while this service's write half stays live, and the M036 IAE subject sets as should-be-live because the field rule they encode, that only A-prefix codes carry an epigrafe, is enforced nowhere while the simplified-regime calculation separates agrarian rows by type instead; `dev/audit/reachability_classification.toml`.
+- [x] `W05.P12.S58` - Reclassify both of the campaign's cost findings after testing them against the live design rather than the finding's own docstring: the locale catalogue disk cache is superseded because locale_map returns a lazy shard catalogue whose full parse runs only from iteration, length and to-dict, none of which production calls, so the eight hundred millisecond figure is not a live cost; and the transcription cache is superseded because the CLI-facing extraction layer states that everything runs on-host in memory, that the evidence bytes, transcription and draft never touch disk, and that the module performs no filesystem write, so persisting a transcription would contradict the live posture rather than complete it; `dev/audit/reachability_classification.toml`.
 
 ## Parallelization
 

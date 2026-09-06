@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:6d5bced12af531ab3b052842a7764eb50e88d25287b17af81361c4bc69f0e10c'
+body_hash: 'sha256:1021377f2be6b5d70cbdb4001d785148881cf757ca07c06dc5fac1732f6edebf'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -313,6 +313,9 @@ Deliver one accessor returning a revision's complete resolved export casilla sur
 - [x] `W01.P01.S833` - Compare the Scoop manifest's own `description` value rather than testing membership of the canonical sentence among every string literal in the generator: renaming the emitted manifest key ships a manifest with no description while the sentence is still present verbatim and the assertion stays green; `dev/packaging/tests/test_distribution_description_consistency.py`.
 - [x] `W01.P01.S834` - Refuse an unreadable module at both constant-agreement collectors: the verdict is agreement ACROSS modules, so a module the walk listed and the read could not reach can turn a real conflict into a reported agreement -- a skip there does not lose a finding, it inverts one; `dev/quality/constant_value_agreement.py`.
 - [x] `W01.P01.S835` - Defer every generated export_refs write until after the addressed-casilla check: the refusal for a layout addressing casillas the revision does not declare ran after the loop had already rewritten every casilla file sorting ahead of it, and these TOML files are the live registry tree rather than a staging copy the caller can roll back; `dev/registry/pipeline/_casilla_export_refs.py dev/registry/tests/test_export_tree.py`.
+- [x] `W01.P01.S836` - Split the object-name manifest loader's two disjoint refusals and measure the half no test reached: `is_link_like(path) or not path.is_file()` shared one message, the only test driving it was the symlink case behind a skip, and a symlink satisfies `is_file()` so that message told an operator their regular file was not one; `dev/quality/object_name_manifest.py dev/quality/tests/test_object_name_manifest.py`.
+- [x] `W01.P01.S837` - Split `_receipt`'s two disjoint refusals and measure the half nothing reached: the same module already separates them thirty lines below in `_manifest_path`, a symlink satisfies `is_file()` so the shared message was false for the only input that reached it, and the not-a-regular-file half was driven by no test at all; `dev/quality/object_name_declustering.py dev/quality/tests/test_object_name_declustering.py`.
+- [ ] `W01.P01.S838` - Correct the query-vocabulary partition so alias validation sees every declared language row: the enumerator keyed on `(concept_id, casefold(query))` while the validator partitions on `(concept_id, language, query)`, collapsing 117 declared rows to 112 and refusing a shipped English alias for `casilla` under a message asserting no canonical query exists for it; `dev/docs/terminology/_sweep.py dev/docs/terminology/tests/test_query_aliases.py`.
 
 ## Wave `W02` - gate restoration and residue removal
 
