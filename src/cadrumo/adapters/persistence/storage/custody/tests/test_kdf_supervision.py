@@ -28,6 +28,7 @@ from ..errors import (
 )
 from ..kdf_supervision import (
     KDF_FRAME_CONTROL,
+    _posix_memory_bytes,
     KDF_FRAME_HEADER,
     KDF_FRAME_MAGIC,
     KDF_FRAME_VERSION,
@@ -594,3 +595,61 @@ def test_expired_deadline_refuses_and_releases_the_supervised_child_boundary(tmp
         )
 
     assert captured.value.refusal is ProfileCustodyRefusal.KDF_RESOURCE_LIMIT
+
+
+def _sysconf_stub(monkeypatch: pytest.MonkeyPatch, names: dict[str, int], values: dict[str, int]) -> None:
+    """Present a chosen sysconf surface, without touching the real host.
+
+    ``raising=False`` because neither attribute EXISTS on Windows, which is
+    also the point: these cases exercise the POSIX branch from any host, so
+    the macOS shape stays testable on a fleet whose only always-on machine
+    runs Windows.
+    """
+    monkeypatch.setattr(os, "sysconf_names", names, raising=False)
+    monkeypatch.setattr(os, "sysconf", lambda name: values[name], raising=False)
+
+
+def test_a_host_without_the_free_page_count_still_reports_memory(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The macOS shape, which refused profile custody on every Mac.
+
+    macOS omits ``SC_AVPHYS_PAGES`` from ``sysconf_names`` entirely, so asking
+    for it by name raises rather than answering. Measured on macOS 26.5.1: the
+    constant is absent while ``SC_PHYS_PAGES`` reports 8 GiB. The probe read it
+    unguarded, the ``ValueError`` was caught beside genuine probe failures, and
+    `config profile create` became impossible on every Mac at any load.
+    """
+    _sysconf_stub(
+        monkeypatch,
+        {"SC_PAGE_SIZE": 1, "SC_PHYS_PAGES": 2},
+        {"SC_PAGE_SIZE": 16384, "SC_PHYS_PAGES": 524288},
+    )
+
+    assert _posix_memory_bytes() == 16384 * 524288
+
+
+def test_the_free_page_count_is_preferred_where_the_host_offers_it(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Linux keeps the load-aware figure; the fallback must not displace it.
+
+    Without this the fix would be indistinguishable from one that always reads
+    total memory, silently discarding the tighter bound everywhere.
+    """
+    _sysconf_stub(
+        monkeypatch,
+        {"SC_PAGE_SIZE": 1, "SC_PHYS_PAGES": 2, "SC_AVPHYS_PAGES": 3},
+        {"SC_PAGE_SIZE": 4096, "SC_PHYS_PAGES": 1_000_000, "SC_AVPHYS_PAGES": 1_000},
+    )
+
+    assert _posix_memory_bytes() == 4096 * 1_000
+
+
+def test_a_host_that_reports_no_page_counts_still_refuses(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Fail closed. Unknowable memory must not be read as abundant memory."""
+    _sysconf_stub(monkeypatch, {"SC_PAGE_SIZE": 1}, {"SC_PAGE_SIZE": 4096})
+
+    assert _posix_memory_bytes() == 0
