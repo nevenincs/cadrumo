@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -42,6 +43,30 @@ def test_cutover_changes_only_the_predeclared_member(tmp_path: Path) -> None:
     )
 
     assert _tree(root) == expected
+    assert not (root.parent / ".journal.json").exists()
+    assert not tuple(root.parent.glob(".stage-*"))
+    assert not tuple(root.parent.glob(".backup-*"))
+
+
+def test_publish_refuses_a_canonical_tree_with_a_hard_linked_member(tmp_path: Path) -> None:
+    root = tmp_path / "revision" / "casillas"
+    root.mkdir(parents=True)
+    (root / "c00001.toml").write_bytes(b"old\n")
+    (root / "c00002.toml").write_bytes(b"unchanged\n")
+    os.link(root / "c00001.toml", tmp_path / "shadow.toml")
+    before = _tree(root)
+
+    with pytest.raises(RegistryValidationError, match="canonical casilla tree contains a non-regular or hard-linked member"):
+        subject.publish_verified_casilla_tree(
+            casillas_root=root,
+            rendered={root / "c00001.toml": "new\n"},
+            verifier=_verify({"c00001.toml": b"new\n", "c00002.toml": b"unchanged\n"}),
+            journal_name=".journal.json",
+            stage_prefix=".stage-",
+            backup_prefix=".backup-",
+        )
+
+    assert _tree(root) == before
     assert not (root.parent / ".journal.json").exists()
     assert not tuple(root.parent.glob(".stage-*"))
     assert not tuple(root.parent.glob(".backup-*"))
