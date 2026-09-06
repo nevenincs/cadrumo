@@ -228,8 +228,12 @@ def test_receipt_loader_refuses_linked_file(tmp_path: Path) -> None:
     except OSError as exc:
         pytest.skip(f"file links unavailable: {exc}")
 
-    with pytest.raises(cli.ObjectNameDeclusteringCliError, match="regular file"):
+    assert link.is_file(), "the link resolves to a regular file, which is why the wording matters"
+    with pytest.raises(cli.ObjectNameDeclusteringCliError) as caught:
         cli._receipt(link)
+
+    assert "must not be reached through a link" in str(caught.value)
+    assert "must be a regular file" not in str(caught.value)
 
 
 @pytest.mark.parametrize("supplied", [Path("../manifest.toml"), Path(".git/manifest.toml")])
@@ -569,3 +573,22 @@ def test_verify_returns_zero_for_clean_inventory(
     payload = json.loads(capsys.readouterr().out)
     assert payload["mode"] == "verify"
     assert payload["inventory"]["summary"]["enforced_findings"] == 0
+
+
+@pytest.mark.parametrize("shape", ("directory", "absent"))
+def test_receipt_refuses_a_path_that_is_not_a_regular_file(tmp_path: Path, shape: str) -> None:
+    """The half of `_receipt`'s guard nothing reached.
+
+    `_receipt` refused on two disjoint conditions under one message, and no
+    test in the repository drove either. Measured: a symlink to a receipt
+    satisfies ``is_file()`` and a directory is never link-like, so no input
+    can reach both. `_manifest_path`, thirty lines below in this same module,
+    already separates the two; this one had not. Neither shape below needs the
+    symlink privilege, so the guard is measured on every machine.
+    """
+    candidate = tmp_path / "receipt.json"
+    if shape == "directory":
+        candidate.mkdir()
+
+    with pytest.raises(cli.ObjectNameDeclusteringCliError, match="receipt must be a regular file"):
+        cli._receipt(candidate)

@@ -53,7 +53,16 @@ def _repo_root(start: Path) -> Path:
 
 def _receipt(path: Path) -> ObjectNameRehearsalReceipt:
     try:
-        if is_link_like(path) or not path.is_file():
+        if is_link_like(path):
+            # Separated for the same reason `_manifest_path` below already
+            # separates them: the two conditions are disjoint -- measured, a
+            # symlink to a receipt satisfies is_file() and a directory is never
+            # link-like -- so one message could not be true of both, and it told
+            # an operator holding a link to a perfectly regular receipt that
+            # their file was not one.
+            linked = f"receipt must not be reached through a link: {path}"
+            raise ObjectNameDeclusteringCliError(linked)
+        if not path.is_file():
             raise ObjectNameDeclusteringCliError(f"receipt must be a regular file: {path}")
         payload = path.read_bytes()
         decoded = cast("object", json.loads(payload))
