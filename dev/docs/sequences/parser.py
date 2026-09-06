@@ -560,18 +560,20 @@ _SEMANTIC_PAYLOAD_PREFIXES: tuple[str, ...] = ("result.", "result[", "error.", "
 #: success alone, each with the reason it is not yet convertible. The contract
 #: is refused by :func:`refuse_payload_less_result_frame` at the enrolled-directive
 #: boundary for every other sequence, so a NEW payload-less ``@result`` frame
-#: cannot be documented: it must be named
-#: here, with a reason, in the same change. Entries are asserted to correspond
-#: to a genuinely payload-less frame, so a stale exemption cannot linger.
+#: cannot be documented: it must be named here, with a reason, in the same
+#: change. Entries are asserted to correspond to a genuinely payload-less
+#: frame, so a stale exemption cannot linger.
 RESULT_PAYLOAD_EXEMPT: Mapping[str, str] = MappingProxyType(
     {
         "ledger-category-list": (
-            "Residual pre-contract debt: the frame asserts only exit_code. Converting it "
-            "needs a stable category-list payload assertion that survives catalogue growth."
+            "Residual pre-contract debt. The payload is a catalogue-sized "
+            "result.category_ids list, so a durable assertion needs a shape that "
+            "survives the catalogue growing."
         ),
         "modelo-349-applicability": (
-            "Residual pre-contract debt: the frame asserts only exit_code. Converting it "
-            "needs an applicability-explanation payload shape that is not yet settled."
+            "Residual pre-contract debt. The payload exposes a directly assertable "
+            "result.applicable, so this entry is cheap to retire; doing so is a "
+            "documentation edit under docs/, not made by the change that added this boundary."
         ),
     },
 )

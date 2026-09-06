@@ -1493,7 +1493,7 @@ def test_renderer_refuses_semantic_map_source_and_incomplete_entries_without_emi
     revision_dir = _write_modelo_shell(tmp_path / "modelos" / "130")
     semantic_map = _semantic_map()
 
-    with pytest.raises(RegistryValidationError, match="semantic-map source .+ does not match joined source"):
+    with pytest.raises(RegistryValidationError, match=r"semantic-map source .+ does not match joined source"):
         render_complete_export_tree(
             revision_dir / "export",
             revision_id="2025",
@@ -1542,6 +1542,63 @@ def test_renderer_tolerates_reordered_joined_fields_without_tripping_the_entries
     joined = _joined(m130_inspection_snapshot)
     reordered_fields = (joined.fields[1], joined.fields[0], *joined.fields[2:])
     reordered_joined = joined.model_copy(update={"fields": reordered_fields})
+
+    rendered = render_complete_export_tree(
+        tmp_path / "export",
+        revision_id="2025",
+        joined=reordered_joined,
+        semantic_map=_semantic_map(),
+        transport_profile=_profile(),
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
+    )
+
+    assert rendered.output_files
+
+
+def test_renderer_refuses_incomplete_joined_records_without_emitting_a_manifest(
+    m130_inspection_snapshot,
+    tmp_path,
+) -> None:
+    """The records-completeness comparison is the fifth attestation raise and, unlike the
+    entries duplication above, a literal duplicated record collides with the renderer's own
+    duplicate-output-id refusal before this comparison is ever reached (proven: duplicating
+    ``joined.records[0]`` raises "generated export tree has duplicate record id", not this
+    comparison's message, because a shared ``semantic_record`` always shares its rendered
+    export_record_id). Dropping a record from the joined design instead -- so the joined set
+    is a proper subset of the compiled map's records, with no id collision -- reaches the
+    comparison this raise site actually guards."""
+    revision_dir = _write_modelo_shell(tmp_path / "modelos" / "130")
+    joined = _joined(m130_inspection_snapshot)
+    joined_missing_a_record = joined.model_copy(update={"records": joined.records[:1]})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match="joined records do not attest the supplied complete semantic map",
+    ):
+        render_complete_export_tree(
+            revision_dir / "export",
+            revision_id="2025",
+            joined=joined_missing_a_record,
+            semantic_map=_semantic_map(),
+            transport_profile=_profile(),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
+        )
+
+    assert not (revision_dir / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME).exists()
+
+
+def test_renderer_tolerates_reordered_joined_records_without_tripping_the_records_gate(
+    m130_inspection_snapshot,
+    tmp_path,
+) -> None:
+    """Sibling-blindness for the records-completeness gate above: it compares joined records
+    as a SET against the compiled map's records, so reordering them without dropping or
+    duplicating any must still render cleanly."""
+    joined = _joined(m130_inspection_snapshot)
+    reordered_records = (joined.records[1], joined.records[0])
+    reordered_joined = joined.model_copy(update={"records": reordered_records})
 
     rendered = render_complete_export_tree(
         tmp_path / "export",
