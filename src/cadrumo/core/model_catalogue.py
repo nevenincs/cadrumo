@@ -54,6 +54,7 @@ from typing import Final
 from pydantic import BaseModel, Field, model_validator
 
 from .models import STRICT_FROZEN_CONFIG
+from .source_locator import OptionalSourceUrl
 
 __all__ = [
     "ANTHROPIC_COMMERCIAL_TERMS",
@@ -225,7 +226,7 @@ class ModelLicence(BaseModel):
     name: str = Field(min_length=1)
     commercial_use_permitted: bool
     verification: LicenceVerification
-    source_url: str = ""
+    source_url: OptionalSourceUrl = ""
     verified_quote: str = ""
 
     @model_validator(mode="after")
