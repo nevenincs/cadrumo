@@ -502,6 +502,29 @@ def _is_locale_key_row_table_literal(node: ast.expr | None) -> bool:
     return any(all(_is_dotted_literal(row[index]) for row in rows) for index in range(width))
 
 
+def _row_table_key_columns(node: ast.expr | None) -> frozenset[int]:
+    """Return the column indices where EVERY row carries a dotted key.
+
+    The shape test asks whether such a column exists; confirmation needs to
+    know WHICH, because the sibling columns are prose by design and a name
+    bound to one of those reaching a sink says nothing about the table.
+    """
+    if not isinstance(node, ast.Tuple | ast.List) or not node.elts:
+        return frozenset()
+    rows: list[list[str]] = []
+    for element in node.elts:
+        if not isinstance(element, ast.Tuple | ast.List) or not element.elts:
+            return frozenset()
+        values = [item.value for item in element.elts if isinstance(item, ast.Constant) and isinstance(item.value, str)]
+        if len(values) != len(element.elts):
+            return frozenset()
+        rows.append(values)
+    width = len(rows[0])
+    if any(len(row) != width for row in rows):
+        return frozenset()
+    return frozenset(index for index in range(width) if all(_is_dotted_literal(row[index]) for row in rows))
+
+
 def _shape_candidate_locale_key_row_tables(tree: ast.AST) -> dict[str, ast.expr]:
     """Return every ``Name -> row-table-literal`` pair shaped as a locale-key registry."""
     candidates: dict[str, ast.expr] = {}
@@ -519,7 +542,7 @@ def _shape_candidate_locale_key_row_tables(tree: ast.AST) -> dict[str, ast.expr]
     return candidates
 
 
-def _row_table_names_iterated_into_a_sink(tree: ast.AST, candidate_names: frozenset[str]) -> frozenset[str]:
+def _row_table_names_iterated_into_a_sink(tree: ast.AST, candidates: dict[str, ast.expr]) -> frozenset[str]:
     """Return the candidate row-table names whose loop variable reaches a translator.
 
     The dict sink tracks ``.get(...)``/subscript access. A row table is not
@@ -529,15 +552,24 @@ def _row_table_names_iterated_into_a_sink(tree: ast.AST, candidate_names: frozen
     string tuples that never reaches the translator.
     """
     tr_names = _translation_call_names(tree)
+    key_columns = {name: _row_table_key_columns(value) for name, value in candidates.items()}
     bound_to_table: dict[str, str] = {}
     for node in ast.walk(tree):
         if not isinstance(node, ast.For | ast.AsyncFor):
             continue
-        if not (isinstance(node.iter, ast.Name) and node.iter.id in candidate_names):
+        if not (isinstance(node.iter, ast.Name) and node.iter.id in candidates):
             continue
-        targets = [node.target] if isinstance(node.target, ast.Name) else list(getattr(node.target, "elts", []))
-        for target in targets:
-            if isinstance(target, ast.Name):
+        columns = key_columns[node.iter.id]
+        if isinstance(node.target, ast.Name):
+            # A whole-row binding cannot say which column reaches the sink, so
+            # it stays confirmable as before.
+            bound_to_table[node.target.id] = node.iter.id
+            continue
+        # Unpacked: only the KEY column binding confirms. A name bound to a
+        # prose column reaching a sink is the framework passing its English
+        # source string, which says nothing about whether the table holds keys.
+        for index, target in enumerate(getattr(node.target, "elts", [])):
+            if isinstance(target, ast.Name) and index in columns:
                 bound_to_table[target.id] = node.iter.id
     confirmed: set[str] = set()
     for node in ast.walk(tree):
@@ -552,7 +584,7 @@ def _row_table_names_iterated_into_a_sink(tree: ast.AST, candidate_names: frozen
 def _flow_confirmed_locale_key_row_tables(tree: ast.AST) -> dict[str, ast.expr]:
     """Return shape-candidate row tables actually iterated into a translator sink."""
     candidates = _shape_candidate_locale_key_row_tables(tree)
-    confirmed_names = _row_table_names_iterated_into_a_sink(tree, frozenset(candidates))
+    confirmed_names = _row_table_names_iterated_into_a_sink(tree, candidates)
     return {name: value for name, value in candidates.items() if name in confirmed_names}
 
 

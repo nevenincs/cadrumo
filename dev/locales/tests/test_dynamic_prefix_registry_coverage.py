@@ -460,6 +460,7 @@ def test_language_override_sites_match_the_sanctioned_inventory() -> None:
         f"they have silently become post-callback-unwind exposed: {sorted(unwrapped)}"
     )
 
+
 def test_a_locale_key_mapping_declares_its_values_and_not_its_lookup_tokens() -> None:
     """Incident 3: a registry's KEYS are what the runtime selects on, not translations.
 
@@ -476,15 +477,17 @@ def test_a_locale_key_mapping_declares_its_values_and_not_its_lookup_tokens() ->
     """
     from .._ast_scanner import scan_source_text
 
-    source = chr(10).join((
-        "_ROUTE_LOCALE_KEYS = {",
-        '    "workbench.home": "tui.search.destination.home",',
-        '    "operator.profile.edit": "tui.search.action.edit_profile",',
-        "}",
-        "_FLAT_LOCALE_KEYS = (",
-        '    "tui.search.refusal.unknown",',
-        ")",
-    ))
+    source = chr(10).join(
+        (
+            "_ROUTE_LOCALE_KEYS = {",
+            '    "workbench.home": "tui.search.destination.home",',
+            '    "operator.profile.edit": "tui.search.action.edit_profile",',
+            "}",
+            "_FLAT_LOCALE_KEYS = (",
+            '    "tui.search.refusal.unknown",',
+            ")",
+        )
+    )
 
     keys = scan_source_text(source, filename="probe.py")
 
@@ -493,3 +496,38 @@ def test_a_locale_key_mapping_declares_its_values_and_not_its_lookup_tokens() ->
     assert "tui.search.refusal.unknown" in keys, "a flat registry must still be collected whole"
     assert "workbench.home" not in keys, "a route identity is not a locale key"
     assert "operator.profile.edit" not in keys, "a catalogue action id is not a locale key"
+
+def test_a_row_table_is_confirmed_by_its_key_column_and_not_a_prose_sibling() -> None:
+    """Incident 4: which COLUMN reaches the sink decides whether a table holds keys.
+
+    A row table is confirmed by being iterated into a translator. Confirming on
+    ANY unpacked name is too loose: the sibling columns are prose by design, so
+    a table whose English refusal reaches ``raise ValueError(...)`` was read as
+    a locale-key table, and its key column -- canonical COMMAND keys like
+    ``ledger.review`` -- was collected as translations to demand.
+
+    The genuine shape must keep working, so both directions are pinned here:
+    the key column reaching ``tr`` still confirms.
+    """
+    from .._ast_scanner import scan_source_text
+
+    prose_sink = chr(10).join((
+        '_GUARDS = (("review_action", "ledger.review", "injected action is not canonical"),)',
+        "def guard(supplied):",
+        "    for attribute, command_key, refusal in _GUARDS:",
+        "        if supplied[attribute] != command_key:",
+        "            raise ValueError(refusal)",
+    ))
+    key_sink = chr(10).join((
+        '_ROWS = (("prefix", "flows.errors.blank_required", "English source"),)',
+        "def render():",
+        "    for prefix, key, default in _ROWS:",
+        "        tr(key)",
+    ))
+
+    assert "ledger.review" not in scan_source_text(prose_sink, filename="guards.py"), (
+        "a command key is not a translation key because its prose sibling reached a raise"
+    )
+    assert "flows.errors.blank_required" in scan_source_text(key_sink, filename="rows.py"), (
+        "a key column reaching tr must still confirm its table"
+    )

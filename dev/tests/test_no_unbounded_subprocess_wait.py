@@ -28,15 +28,42 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _DEV_ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 
+def _is_popen_call(node: ast.expr | None) -> bool:
+    """Is this ``subprocess.Popen(...)`` or a bare imported ``Popen(...)``?
+
+    Matching only the attribute spelling makes ``from subprocess import Popen``
+    invisible, and an invisible constructor means an invisible handle.
+    """
+    if not isinstance(node, ast.Call):
+        return False
+    callee = node.func
+    if isinstance(callee, ast.Attribute):
+        return callee.attr == "Popen"
+    return isinstance(callee, ast.Name) and callee.id == "Popen"
+
+
 def _popen_names(function: ast.FunctionDef | ast.AsyncFunctionDef) -> set[str]:
-    """Return the local names bound to a ``subprocess.Popen`` result."""
+    """Return the local names bound to a ``subprocess.Popen`` result.
+
+    Every binding form counts, not just the plain assignment this screen once
+    looked for. An annotated assignment is an ``AnnAssign`` and never an
+    ``Assign``; the form the standard library documentation recommends --
+    ``with subprocess.Popen(...) as child:`` -- is a ``With`` item; and a bare
+    imported ``Popen`` leaves a ``Name`` callee rather than an ``Attribute``.
+    A handle this screen cannot name is a ``child.wait()`` it cannot see, so
+    the gate below would report clean over precisely the wait it forbids.
+    """
     names: set[str] = set()
     for node in ast.walk(function):
-        if not isinstance(node, ast.Assign) or not isinstance(node.value, ast.Call):
-            continue
-        callee = node.value.func
-        if isinstance(callee, ast.Attribute) and callee.attr == "Popen":
+        if isinstance(node, ast.Assign) and _is_popen_call(node.value):
             names.update(target.id for target in node.targets if isinstance(target, ast.Name))
+        elif isinstance(node, ast.AnnAssign) and _is_popen_call(node.value):
+            if isinstance(node.target, ast.Name):
+                names.add(node.target.id)
+        elif isinstance(node, (ast.With, ast.AsyncWith)):
+            for item in node.items:
+                if _is_popen_call(item.context_expr) and isinstance(item.optional_vars, ast.Name):
+                    names.add(item.optional_vars.id)
     return names
 
 
@@ -45,18 +72,22 @@ def _unbounded_waits(tree: ast.Module) -> list[tuple[int, str]]:
     found: list[tuple[int, str]] = []
     for function in [n for n in ast.walk(tree) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))]:
         handles = _popen_names(function)
-        if not handles:
-            continue
         for node in ast.walk(function):
             if not isinstance(node, ast.Call):
                 continue
             callee = node.func
             if not (isinstance(callee, ast.Attribute) and callee.attr == "wait"):
                 continue
-            if not (isinstance(callee.value, ast.Name) and callee.value.id in handles):
+            if isinstance(callee.value, ast.Name) and callee.value.id in handles:
+                handle = callee.value.id
+            elif _is_popen_call(callee.value):
+                # A handle nobody bound still owns a child process; waiting on
+                # it unbounded costs the run just the same.
+                handle = "Popen(...)"
+            else:
                 continue
             if not any(keyword.arg == "timeout" for keyword in node.keywords) and not node.args:
-                found.append((node.lineno, callee.value.id))
+                found.append((node.lineno, handle))
     return found
 
 
@@ -97,6 +128,36 @@ def test_no_development_test_waits_unbounded_on_a_child_process() -> None:
         "this screen could not read every test module, so its clean result covers less "
         "than it appears to:\n" + "\n".join(unreadable)
     )
+
+
+def _planted(body: str) -> ast.Module:
+    """Parse a one-function module around a planted handler body."""
+    return ast.parse("import subprocess" + chr(10) + chr(10) + "def helper():" + chr(10) + "    " + body + chr(10))
+
+
+_BOUND_FORMS = {
+    "plain assignment": "child = subprocess.Popen(['x'])" + chr(10) + "    child.wait(",
+    "bare imported Popen": "child = Popen(['x'])" + chr(10) + "    child.wait(",
+    "annotated assignment": "child: object = subprocess.Popen(['x'])" + chr(10) + "    child.wait(",
+    "context manager": "with subprocess.Popen(['x']) as child:" + chr(10) + "        child.wait(",
+    "unnamed handle": "subprocess.Popen(['x']).wait(",
+}
+
+
+@pytest.mark.parametrize("label", sorted(_BOUND_FORMS))
+def test_the_screen_sees_a_child_handle_however_it_was_bound(label: str) -> None:
+    """Teeth: an absence claim is only as wide as the spellings it can parse.
+
+    Each of these is a real way to hold a child process, and each was once
+    invisible here -- the screen matched a plain assignment of an attribute
+    call and nothing else, so a wait bound any other way passed unread. The
+    bounded twin proves the case fails for the reason named rather than
+    because the form parses to nothing at all.
+    """
+    body = _BOUND_FORMS[label]
+
+    assert _unbounded_waits(_planted(body + ")")), f"an unbounded wait bound by {label} went unseen"
+    assert _unbounded_waits(_planted(body + "timeout=60)")) == [], f"a bounded wait bound by {label} was reported"
 
 
 def test_the_screen_detects_a_planted_unbounded_wait() -> None:

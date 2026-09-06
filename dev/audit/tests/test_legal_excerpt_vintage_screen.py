@@ -518,9 +518,7 @@ def test_zero_clause_findings_stay_confined_to_absent_oracles() -> None:
         f"{len(zero)} of {len(result.findings)} findings parsed zero clauses; the clause "
         "reader is returning nothing for a growing share of the catalogue"
     )
-    unexplained = sorted(
-        finding.entry_id for finding in zero if finding.verdict is not Verdict.NO_ORACLE
-    )
+    unexplained = sorted(finding.entry_id for finding in zero if finding.verdict is not Verdict.NO_ORACLE)
     # One entry reaches a verdict with no clauses to compare, which is a
     # standing oddity rather than a parser fault; a second would be new.
     assert len(unexplained) <= 1, unexplained
