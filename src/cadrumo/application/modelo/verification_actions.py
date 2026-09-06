@@ -1316,6 +1316,7 @@ def recapture_ledger_filing_evidence(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     transaction_repository: TransactionCatalogueRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     clock: datetime | None = None,
 ) -> LedgerEvidenceRecaptureResult:
     """Re-bundle a sealed revision's evidence from the live ledger, facts unchanged.
@@ -1342,10 +1343,11 @@ def recapture_ledger_filing_evidence(
 
     Args:
         calculation_revision_id: The sealed revision to re-bundle.
-        actor: Operator label; recorded by the caller's audit surface.
+        actor: Operator label recorded on the bucket-history event.
         work_unit_repository: Optional work-unit repository port.
         calculation_repository: Optional calculation-revision repository port.
         transaction_repository: Optional live transaction catalogue port.
+        bucket_event_repository: Optional bucket-event history repository port.
         clock: Optional timestamp override for deterministic runs.
 
     Returns:
@@ -1358,7 +1360,6 @@ def recapture_ledger_filing_evidence(
             ledger snapshot to re-bundle against.
         LedgerEvidenceRecaptureRefusedError: A contributing row's tax facts moved.
     """
-    del actor
     now = clock or _utc_now()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
@@ -1452,16 +1453,35 @@ def recapture_ledger_filing_evidence(
         (),
         expected_revision_id=revisions_revision_id,
     )
+    newly_evidenced = tuple(
+        sorted(
+            row.transaction_id
+            for row in recaptured.rows
+            if _row_carries_linked_evidence(row) and row.transaction_id not in previously_evidenced
+        ),
+    )
+    # The replaced bundle is not retained, so without this event the fact that
+    # a sealed revision's evidence changed at all would leave no trace -- the
+    # evidence chain would be edited rather than extended.
+    _emit_bucket_event(
+        repository=bucket_event_repository or BucketEventHistoryRepository(),
+        bucket_id=work_unit.bucket_id,
+        event_type=BucketEventType.MODELO_LEDGER_EVIDENCE_RECAPTURED,
+        occurred_at=now,
+        actor=actor,
+        object_type=BucketEventObjectType.CALCULATION_REVISION,
+        object_id=calculation_revision_id,
+        payload={
+            "work_unit_id": target.work_unit_id,
+            "snapshot_fingerprint": stored_snapshot.snapshot_fingerprint,
+            "row_count": str(len(recaptured.rows)),
+            "newly_evidenced_count": str(len(newly_evidenced)),
+        },
+    )
     return LedgerEvidenceRecaptureResult(
         calculation_revision_id=calculation_revision_id,
         row_count=len(recaptured.rows),
-        newly_evidenced_transaction_ids=tuple(
-            sorted(
-                row.transaction_id
-                for row in recaptured.rows
-                if _row_carries_linked_evidence(row) and row.transaction_id not in previously_evidenced
-            ),
-        ),
+        newly_evidenced_transaction_ids=newly_evidenced,
         recaptured_at=now,
     )
 

@@ -99,3 +99,49 @@ def test_re_verifying_the_same_revision_rewrites_one_row(repos: Repos) -> None:
 
     stored = tuple(drafts.iter_drafts())
     assert len(stored) == 1
+
+
+def test_a_freshly_approved_draft_is_not_immediately_stale(repos: Repos) -> None:
+    """The approval the gate stamps must survive its own first read.
+
+    The gate approves against a transient empty ``TransactionCatalogue`` because
+    persisted transaction evidence belongs to the calculation revision, while
+    the review queue recomputes the basis from whatever the bucket holds. If
+    those two disagree by construction, every draft the product stores reads as
+    an aged-out approval the moment anyone opens the queue, and a permanent
+    high-severity row that is always wrong is worse than no row at all.
+    """
+    from ...review._adapters import _reviewed_against_current_state
+
+    wu_repo, cr_repo, _, vr_repo, bv_repo = repos
+    work_unit = seed_work_unit(wu_repo, filing_year=2024)
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+        binding_values=DEFAULT_130_BINDING_VALUES,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=T1,
+    )
+    verify_revision(
+        revision.calculation_revision_id,
+        revision=revision,
+        work_unit=work_unit,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
+        clock=T2,
+    )
+
+    stored = tuple(ModeloDraftRepository(bucket_id=work_unit.bucket_id).iter_drafts())
+    assert len(stored) == 1
+    assert stored[0].status is ModeloDraftStatus.APROBADO
+
+    # Asserted through the refresh rather than through drafts_pending, whose
+    # empty result is the CORRECT answer for a healthy approved draft and so
+    # cannot distinguish a working invariant from a queue that saw nothing.
+    refreshed, reasons = _reviewed_against_current_state(stored[0], bucket_id=work_unit.bucket_id)
+    assert reasons == ()
+    assert refreshed.status is ModeloDraftStatus.APROBADO

@@ -144,6 +144,7 @@ class BucketEventType(StrEnum):
     MODELO_AMENDED = "modelo.amended"
     MODELO_FILING_IMPORTED = "modelo.filing.imported"
     MODELO_LIVE_EVIDENCE_STAMPED = "modelo.live_evidence.stamped"
+    MODELO_LEDGER_EVIDENCE_RECAPTURED = "modelo.ledger_evidence.recaptured"
     MODELO_RECONCILED = "modelo.reconciled"
     MODELO_EXPORTED = "modelo.exported"
     MODELO_IVA_WALLET_CORRECTED = "modelo.iva_wallet.corrected"
