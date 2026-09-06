@@ -265,11 +265,20 @@ def test_a_move_never_fabricates_a_value(
     replaced that failure with itself.
     """
     manager, locales_dir = catalogue_tree
+    before = {locale: _read_leaves(manager, locales_dir, locale) for locale in _LOCALES}
 
     manager.move_locale_subtree(_SOURCE, [_DESTINATION])
 
     for locale in _LOCALES:
         after = _read_leaves(manager, locales_dir, locale)
+        carried = [key for key in after if key.startswith(f"{_DESTINATION}.")]
+        expected = [key for key in before[locale] if key.startswith(f"{_SOURCE}.")]
+
+        assert len(carried) == len(expected), (
+            f"the move carried {len(carried)} of {len(expected)} leaf/leaves into {locale}; "
+            f"over a subtree that never arrived, the claim below holds because nothing was "
+            f"written, not because nothing echoes its own key"
+        )
         assert not [key for key, value in after.items() if value == key]
 
 

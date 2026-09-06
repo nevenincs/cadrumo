@@ -294,7 +294,13 @@ def test_gapped_programme_is_refused_until_split(inventory) -> None:
             ),
         ),
     )
+    adjudicated = {a for a in plan.ambiguities if a.kind == "gapped_span" and slug in a.slugs}
+
     assert not [a for a in resolved.ambiguities if a.kind == "gapped_span" and slug in a.slugs]
+    assert set(resolved.ambiguities) == set(plan.ambiguities) - adjudicated, (
+        "the adjudication must clear what it names and leave every other ambiguity standing; "
+        "one that cleared them all would satisfy the absence claim above just as well"
+    )
     # The earlier window keeps the clean id; only the later window is qualified.
     ids = {entry.chain_id for entry in resolved.entries}
     assert chain_id_for(slug) in ids
@@ -326,7 +332,13 @@ def test_exclusion_removes_an_intra_revision_duplicate(inventory, corpus) -> Non
         category_row_counts=category_counts,
     )
     resolved = plan_chains(resolved_inventory)
+    adjudicated = {a for a in plan.ambiguities if a.kind == "intra_revision_duplicate" and slug in a.slugs}
+
     assert not [a for a in resolved.ambiguities if a.kind == "intra_revision_duplicate" and slug in a.slugs]
+    assert set(resolved.ambiguities) == set(plan.ambiguities) - adjudicated, (
+        "the adjudication must clear what it names and leave every other ambiguity standing; "
+        "one that cleared them all would satisfy the absence claim above just as well"
+    )
     assert len(resolved_inventory.occurrences) == len(occurrences), "extraction is untouched by adjudication"
 
 
@@ -364,7 +376,13 @@ def test_distinct_variants_keeps_two_programmes_apart(inventory) -> None:
             distinct_variants=(VariantsDistinct(slugs=group.slugs, reason="test: successive designations"),),
         ),
     )
+    adjudicated = {a for a in plan.ambiguities if a.kind == "title_variant" and set(a.slugs) == set(group.slugs)}
+
     assert not [a for a in resolved.ambiguities if a.kind == "title_variant" and set(a.slugs) == set(group.slugs)]
+    assert set(resolved.ambiguities) == set(plan.ambiguities) - adjudicated, (
+        "the adjudication must clear what it names and leave every other ambiguity standing; "
+        "one that cleared them all would satisfy the absence claim above just as well"
+    )
 
 
 def test_retirement_is_planned_for_a_programme_that_left_the_form(inventory) -> None:

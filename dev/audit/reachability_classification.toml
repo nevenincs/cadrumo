@@ -577,7 +577,7 @@ symbols = [
   "derive_calculation_completeness_casillas", "derive_diseno_coverage_casillas",
   "build_diseno_coverage_report",
 ]
-evidence = "These live in modules that ARE production-reachable -- entrypoints/cli/registry.py imports live_parity types and _validate_completeness imports record_design_coverage -- so the modules are dual-purpose rather than dead. The flagged symbols are the audit surface the design-time tooling consumes: dev/registry/parity/maintenance.py, dev/registry/analysis/load_census_classification.py, the dev conftest, and the packaging cohort script. Relocating individual functions out of a production module into dev/ would split a cohesive module and force dev/ to restate registry knowledge, so the surface stays where it is."
+evidence = "These live in modules that ARE production-reachable -- entrypoints/cli/registry.py imports live_parity types and _validate_completeness imports record_design_coverage -- so the modules are dual-purpose rather than dead. The flagged symbols are the audit surface the design-time tooling consumes: dev/registry/parity/maintenance.py, the dev conftest, and the packaging cohort script. The load-census classification module under dev/registry/analysis was dropped from that list: it names the record_design_coverage MODULE when classifying import-time load behaviour and consumes none of these symbols, so citing it overstated the readership. Relocating individual functions out of a production module into dev/ would split a cohesive module and force dev/ to restate registry knowledge, so the surface stays where it is."
 
 [[symbol_cluster]]
 name = "oracle parity entry points with no current caller"
@@ -1199,3 +1199,38 @@ area = "domain/calculations/registry"
 symbols = ["ModeloLocalizationField"]
 evidence = "A Literal enumerating every localizable modelo field -- label, help, title, official name. Nothing annotates with it, so the closed set is asserted in prose and enforced by no signature, leaving the localization surface free to accept a kind outside the four this declares."
 remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "registry declarations the dev pipeline reads"
+class = "design-time-authority"
+area = "domain/calculations/registry"
+symbols = ["AUXILIARY_ENVELOPE_HEADER_OFFSETS", "is_registry_id", "render_m303_annual_orden_manifest"]
+evidence = "Product knowledge with no runtime caller, each read by a named dev tool that checks a shipped surface against the declaration: AUXILIARY_ENVELOPE_HEADER_OFFSETS by dev/registry/pipeline/_record_design_ir.py, is_registry_id by dev/registry/parity/_workbook_parity.py, and render_m303_annual_orden_manifest by dev/registry/analysis/m303_orden_anual.py. Relocating any of them into dev/ would move the product's own declaration out of the product, which is the argument the ledger CLI command census already records for the same shape."
+
+[[symbol_cluster]]
+name = "filing export conformance proofs"
+class = "design-time-authority"
+area = "application/filing"
+symbols = ["prove_export_conformance", "prove_secure_export_replay"]
+evidence = "The product's own proofs that an export conforms and that a secure export replays, both read by dev/registry/filing_export_proof.py and the second additionally by dev/registry/tests/test_filing_export_two_channel_proof.py. No runtime path runs a conformance proof, which is correct -- a proof is design-time evidence, not filing behaviour -- but the proof must live beside the export it reasons about rather than in the harness that invokes it."
+
+[[symbol_cluster]]
+name = "profile command types the identity gate checks"
+class = "design-time-authority"
+area = "application/user_profile"
+symbols = ["ProfileSnapshot", "ProfileStaleCheckReport"]
+evidence = "Two public command types with no production constructor, read by dev/identity/tests/test_identifier_namespace_enrollment_gate.py, which checks that identifier namespaces are enrolled. The reader is a dev conformance gate over a declaration, not a unit test exercising behaviour -- the distinction that keeps this class from absorbing the much larger population whose only reader is an ordinary test."
+
+[[symbol_cluster]]
+name = "command path resolution the docs tree reads"
+class = "design-time-authority"
+area = "entrypoints/cli"
+symbols = ["resolve_command_path"]
+evidence = "Resolves a command path against the live Typer tree, with no runtime caller; read by dev/docs/cli_tree.py, dev/docs/sequence_directive.py and dev/docs/tests/test_cli_tree.py to generate and check the CLI reference. The generated reference is CLI-owned by rule, so the resolution it derives from belongs to the command surface rather than to the generator."
+
+[[symbol_cluster]]
+name = "logging reconfiguration seam for the documentation engine"
+class = "harness-code"
+area = "core"
+symbols = ["allow_logging_reconfiguration"]
+evidence = "Detaches the installed handlers and releases the configure-once latch. Its docstring names the consumer: a long-lived host that legitimately re-points the stream or file axis mid-process, specifically the documentation engine, which imports the application and only afterwards pins its isolated scratch storage. Read by dev/docs/build.py and dev/docs/sequences/runner.py and by nothing else. Classified harness-code because it exists for the harness, but the usual harness remedy -- relocate it beside its consumer -- does not apply: the latch and handler list it manipulates are module-globals private to core.logging, so the seam can only live here."
