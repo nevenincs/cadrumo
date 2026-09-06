@@ -13,6 +13,26 @@ from ..components.widgets import ContentDataTable, ContentScroll
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen, ledger_copy
 from .models import LedgerFlowState
 
+#: The legal moves of a confirmed Ledger flow, as a state a caller can read.
+#:
+#: A state absent from this mapping is terminal and absorbing: ``SUCCEEDED``,
+#: ``FAILED`` and ``CANCELLED`` admit no move at all, so a screen cannot be
+#: driven back into an editable state after its command has settled.
+#:
+#: Two absences are the safety of the machine rather than gaps in it.
+#: ``EDITING`` cannot reach ``SUBMITTING``, so nothing is written without
+#: passing the confirmation step; and ``SUBMITTING`` cannot reach
+#: ``CANCELLED``, so a write already in flight cannot be abandoned — which is
+#: what :meth:`LedgerConfirmationFlowScreen.action_back` refuses out loud.
+#:
+#: Held here rather than rebuilt inside the transition method so the machine
+#: can be read and tested as the specification it is.
+ALLOWED_FLOW_TRANSITIONS: dict[LedgerFlowState, frozenset[LedgerFlowState]] = {
+    LedgerFlowState.EDITING: frozenset({LedgerFlowState.CONFIRMING, LedgerFlowState.CANCELLED}),
+    LedgerFlowState.CONFIRMING: frozenset({LedgerFlowState.SUBMITTING, LedgerFlowState.CANCELLED}),
+    LedgerFlowState.SUBMITTING: frozenset({LedgerFlowState.SUCCEEDED, LedgerFlowState.FAILED}),
+}
+
 
 @contextmanager
 def ledger_workspace_page() -> Generator[ContentDataTable[str]]:
@@ -53,12 +73,7 @@ class LedgerConfirmationFlowScreen(LedgerWorkspaceScreen):
         return self._flow_state
 
     def _transition(self, target: LedgerFlowState) -> None:
-        allowed = {
-            LedgerFlowState.EDITING: {LedgerFlowState.CONFIRMING, LedgerFlowState.CANCELLED},
-            LedgerFlowState.CONFIRMING: {LedgerFlowState.SUBMITTING, LedgerFlowState.CANCELLED},
-            LedgerFlowState.SUBMITTING: {LedgerFlowState.SUCCEEDED, LedgerFlowState.FAILED},
-        }
-        if target not in allowed.get(self._flow_state, set()):
+        if target not in ALLOWED_FLOW_TRANSITIONS.get(self._flow_state, frozenset()):
             raise RuntimeError(f"invalid {self.FLOW_NAME} flow transition")
         self._flow_state = target
 
