@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:41234db32e76d9410378372e6ccc993837095550ee32a4aa26684fda3af896df'
+body_hash: 'sha256:cccdad58270c1c14cabbd61e093b6546290216278203fef6c558306051b7b0e0'
 ---
 
 # `reachability-burndown` plan
@@ -130,7 +130,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S29` - Close the orphan-walk blind spot in which 239 of 3334 test modules name no shipped subject because they reach their code through a support module inside their own test package, so a dead test behind that hop can never be reported; traverse the hop without letting a live subject reached that way suppress an existing finding; `dev/audit/unreachable_code.py`.
 - [x] `W05.P12.S30` - Route the wiring backlog to its owners: of 457 gated findings only a small deletable fraction remains after the logger sweep, and the residue names capability that was built and never connected, including integrity checks nothing calls, a declared KDF warmup no measurement performs, and a locale-key convention whose scaffold gate does not exist; `dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S31` - Resolve spec-table CLI bindings in the reachability walk: command handlers are bound through DeferredTarget(module, f"work_{name}") so the handler name exists only as an f-string and never as a literal, which reports live commands as unused; aeat app modelo work create, discard, list and status are all live while their handlers are findings; `dev/audit/unreachable_code.py`.
-- [ ] `W05.P12.S32` - Refuse a workspace door wired in part: the Ledger launcher passed classify_action while never passing classification_target or classification_submitter, and no production implementation of LedgerClassificationSubmitterV1 exists, so the classification door was refused at runtime while the call site read as configured; correct the launcher and derive each area's required injection group from the controller's own guard; `dev/quality/tests/test_workspace_doors_are_wholly_wired.py`.
+- [x] `W05.P12.S32` - Refuse a workspace door wired in part: the Ledger launcher passed classify_action while never passing classification_target or classification_submitter, and no production implementation of LedgerClassificationSubmitterV1 exists, so the classification door was refused at runtime while the call site read as configured; correct the launcher and derive each area's required injection group from the controller's own guard; `dev/quality/tests/test_workspace_doors_are_wholly_wired.py`.
 
 ## Parallelization
 
