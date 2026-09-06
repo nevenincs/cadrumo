@@ -999,7 +999,6 @@ transactions:
 tui:
   aeat_sync:
     action:
-      pull_comparison: Recupera l'evidència de comparació
       pull_filed: Recupera les declaracions presentades
       pull_filed_all: Recupera totes les declaracions presentades
       review_census: Revisa el cens
@@ -1232,7 +1231,6 @@ tui:
       aeat_evidence: Evidència de l'AEAT
       availability: Disponibilitat
       calculation: Càlcul actual
-      calculation_revision: Revisió de càlcul creada
       current: Actual
       declaration: Declaració
       destination: Destinació
@@ -1310,7 +1308,6 @@ tui:
     account_fallback: Compte
     action:
       context_across_records: A tots els registres
-      label: Obre la tasca suggerida
       reason: Suggerida pel resum local
     action_context: '%{label} - %{reason} · %{context}'
     address: Model %{modelo} · %{filing_year} · %{period}
@@ -1435,7 +1432,6 @@ tui:
       cancel: Cancel·la
       confirm: Confirma la importació
       confirming: Confirma la importació preparada.
-      empty: No hi ha cap importació preparada disponible.
       failure: No s'ha pogut completar la importació.
       progress: Importació en curs…
       prompt: Tria una importació preparada.

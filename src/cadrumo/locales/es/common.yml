@@ -1010,7 +1010,6 @@ transactions:
 tui:
   aeat_sync:
     action:
-      pull_comparison: Obtener evidencia comparativa
       pull_filed: Obtener declaraciones presentadas
       pull_filed_all: Obtener todas las declaraciones presentadas
       review_census: Revisar el censo
@@ -1244,7 +1243,6 @@ tui:
       aeat_evidence: Evidencia de la AEAT
       availability: Disponibilidad
       calculation: Cálculo actual
-      calculation_revision: Revisión de cálculo creada
       current: Actual
       declaration: Declaración
       destination: Destino
@@ -1322,7 +1320,6 @@ tui:
     account_fallback: Cuenta
     action:
       context_across_records: En todos los registros
-      label: Abrir la tarea sugerida
       reason: Sugerida por el resumen local
     action_context: '%{label} - %{reason} · %{context}'
     address: Modelo %{modelo} · %{filing_year} · %{period}
@@ -1448,7 +1445,6 @@ tui:
       cancel: Cancelar
       confirm: Confirmar importación
       confirming: Confirma la importación preparada.
-      empty: No hay ninguna importación preparada disponible.
       failure: No se pudo completar la importación.
       progress: Importación en curso…
       prompt: Elige una importación preparada.

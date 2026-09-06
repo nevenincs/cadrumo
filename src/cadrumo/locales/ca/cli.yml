@@ -155,7 +155,6 @@ cli:
             perfil no té cap enviament extern registrat.'
           rederive_help: Torneu a llegir un artefacte en aquest equip des de la seva
             transcripció desada.
-          rederive_refused: 'Nova derivació rebutjada: {detail}'
           rederived: S'ha tornat a derivar {reference} en aquest equip. Abans tenia
             {previous}; ara té {current}. La lectura anterior queda substituïda, no
             esborrada.
@@ -1804,7 +1803,6 @@ cli:
           app_did_not_prompt, operator_did_not_check.'
         report_help: Registrar l'estat de l'app Cl@ve observat per l'operador per
           a un diagnòstic d'autenticació.
-        show_help: Mostra un diagnòstic d'autenticació xifrat i redactat.
         view_help: Mostra un diagnòstic d'autenticació xifrat pel seu identificador,
           amb els cossos sensibles ocults.
       file_help: Ruta al fitxer de credencials (certificat o clau)
@@ -1948,7 +1946,6 @@ cli:
       secrets_stdin_help: Llegeix els secrets com un únic objecte JSON limitat des
         de l'entrada estàndard en lloc de demanar-los.
     errors:
-      invalid_value: 'Valor no vàlid per a %{name}: %{value}'
       no_active_profile: No hi ha cap perfil actiu. Executa 'aeat config profile create
         NAME --tax-id <NIF>' primer.
       no_active_profile_registered: No hi ha cap perfil actiu. Executa 'aeat config
@@ -1957,11 +1954,6 @@ cli:
         per desbloquejar el teu perfil.
       profile_session_expired: La teva sessió de perfil ha caducat. Executa `aeat
         config login` per tornar a iniciar la sessió.
-      unknown_key: 'Clau de configuració desconeguda: %{name}. Executa ''aeat config
-        profile list'' per veure les claus disponibles.'
-    get:
-      help: Mostrar el valor actual d'una clau de configuració
-      key_help: Clau a llegir (ex. tax.id, iva.regime)
     google:
       client_json_help: Ruta al fitxer JSON del client OAuth Desktop de Cloud Console
       credential_source:
@@ -1984,8 +1976,6 @@ cli:
         scope_help: Abast OAuth sol·licitat per al testimoni suplantat (repetible;
           per defecte els abasts d'accés a dades de Sheets/Drive)
         set_help: Desa la selecció de font de credencials de Google del perfil actiu
-        show_help: Mostra la selecció de font de credencials de Google desada per
-          al perfil actiu
         subject_help: Correu de l'usuari de Workspace a suplantar mitjançant delegació
           a tot el domini (opcional)
         target_principal_help: Correu del compte de servei a suplantar (obligatori
@@ -1993,8 +1983,6 @@ cli:
         view_help: Mostra la selecció de font de credencials de Google desada per
           al perfil actiu.
       detail:
-        client_json_bad_wrapper: el JSON de client a {path} té un embolcall "installed"
-          que no és un objecte
         client_json_invalid: El JSON de client de {path} no és un JSON vàlid.
         client_json_not_desktop: el JSON de client a {path} no és un client d'escriptori
           de Cloud Console; calia una clau embolcall "installed"
@@ -2049,7 +2037,6 @@ cli:
         on'.
       folder:
         folder_id_help: Id de la carpeta de Google Drive
-        get_help: Mostra la carpeta arrel de Google Drive configurada
         help: Gestiona la carpeta arrel de Google Drive
         set_help: Vincula una carpeta de Google Drive al perfil actiu
         view_help: Mostra la carpeta arrel de Google Drive configurada per al perfil
@@ -2068,32 +2055,8 @@ cli:
         al perfil actiu
       status_help: Mostrar l'estat actual de la sessió OAuth de Google per al perfil
         actiu
-    init:
-      activity_help: Econòmic activity description (e.g. 761.1, programador)
-      auth_provider_help: Id del proveïdor d'autenticació que cal usar per al perfil
-      certificate_password_env_help: Nom de la variable d'entorn que conté la contrasenya
-        del certificat
-      certificate_path_help: Camí al fitxer de certificat .p12 o .pfx
-      drafts_dir_help: Directori on desar els esborranys de presentació locals
-      dry_run_help: Informa dels canvis sense modificar la configuració
-      from_help: Id del perfil d'origen del qual importar la configuració
-      help: Inicialitza un perfil actiu nou.
-      iva_regime_help: Règim d'IVA (general, simplificado, exento, etc.)
-      manuals_root_help: Directori arrel per als manuals tècnics de l'AEAT
-      non_interactive_help: Executa sense demanar cap entrada a l'usuari
-      output_language_help: Idioma principal de la sortida de la CLI (en, es, ca)
-      profile_name_help: Identificador únic d'aquest perfil de configuració
-      quiet_help: Amaga el missatge d'èxit després d'inicialitzar
-      submissions_dir_help: Directori on desar els rebuts de presentació enviats
-      success:
-        next_step: 'Següent pas: executa `aeat app overview status`'
-      tax_id_help: Spanish tax identifier (NIF/NIE/CIF)
-      tax_residence_ccaa_help: Comunitat autònoma de residència fiscal
     list:
       help: Llistar tots els perfils registrats i marcar l'actiu
-      setup_incomplete_notice: '%{count} perfil(s) encara estan completant la configuració
-        i encara no estan preparats per presentar: %{labels}. Reprèn la configuració
-        per poder treballar-hi.'
     login:
       help: Autentica un perfil i inicia una sessió reprenible
       name_help: UUID o etiqueta exacta del perfil; omet-lo per usar el perfil seleccionat
@@ -2108,8 +2071,6 @@ cli:
       passphrase_channel_absent: No hi ha cap canal de contrasenya disponible. Executeu
         aquest verb en un terminal o useu --secrets-stdin o --secrets-fd.
       passphrase_prompt: 'Contrasenya del perfil: '
-      refusal:
-        abandoned: S'ha cancel·lat l'inici de sessió; no s'ha obert cap perfil.
     logout:
       help: Tanca la sessió del perfil i esborra el seu punter local
       notices:
@@ -2129,8 +2090,6 @@ cli:
           res.
         section_help: Clau de la secció repetible del perfil.
         value_help: Camp de la fila com CAMP=VALOR; repetiu-lo per cada camp informat.
-      already_exists: El perfil %{name} ja existeix. Tria un altre identificador de
-        destinació.
       archive:
         export_help: Escriu la capsula del perfil indicat en un fitxer segellat a
           --to; el fitxer es xifra amb la contrasenya del perfil i no inclou l'etiqueta.
@@ -2192,8 +2151,6 @@ cli:
         no_active_profile: No hi ha cap perfil actiu; inicia la sessió en un amb 'aeat
           config login <nom>' abans de configurar una capacitat.
         set_help: Activa o desactiva una capacitat de servei per al perfil actiu.
-        show_help: Mostra l'estat resolt de cada capacitat de servei per al perfil
-          actiu.
         state_help: Si activar (on) o desactivar (off) la capacitat.
         state_label: estat
         view_help: Mostra l'estat resolt de cada capacitat de servei per al perfil
@@ -2201,15 +2158,9 @@ cli:
       censo:
         apply_help: Registra les dades censals analitzades al perfil actiu (per defecte
           només previsualitza).
-        compare_help: Compara camp a camp el cens AEAT amb aquest perfil
         divergencia_leaf_artefact_value: valor de l'AEAT
         divergencia_leaf_axis: camp
         divergencia_leaf_source: origen
-        dropped_fields_notice: 'El cens de l''AEAT ja no inclou camps que tenia la
-          teva darrera instantània: {dropped_fields}. Si no has canviat ni donat de
-          baixa aquestes dades, pot tractar-se d''una descàrrega parcial: torna a
-          executar la descàrrega del cens o reintrodueix els valors; la proporció
-          d''afectació de l''habitatge podria deixar de resoldre''s.'
         file_option_help: Ruta al PDF del Certificado de Situación Censal descarregat
           de la Seu (tràmit G313).
         help: Ingesta d'artefactes censals per al perfil actiu.
@@ -2235,22 +2186,12 @@ cli:
         pull_withheld_notice: 'Els valors de {count} camp(s) s''oculten a la sortida:
           {axes}. Compara''ls tu mateix amb l''autoritat censal; aquesta eina no els
           mostrarà.'
-        refresh_help: Descàrrega d'AEAT l'últim cens i desa un snapshot
-        show_help: Mostra l'últim cens informat per AEAT per a aquest perfil
-        snapshot_id_help: Id de snapshot concret (s'accepten prefixos)
       complete_setup:
         already_complete: El perfil ja estava declarat a punt; no s'ha escrit res.
         completed: Perfil declarat a punt per presentar.
         help: Declara que el perfil actiu està a punt per presentar.
         incomplete: 'Falten dades obligatòries al perfil: {paths}'
       create_confirm_passphrase_prompt: 'Confirma la contrasenya del nou perfil: '
-      create_epilog: 'Perfil mínim per a autònom: aeat config profile create PROFILE
-        --entity-type natural_person --tax-id <DNI/NIE/NIF> --name <NAME> --surnames
-        <SURNAMES> --activity <ACTIVITY> --irpf-income-categories actividad_economica
-        --tax-residence-jurisdiction-scope common_regime --iva-regime GENERAL --iva-m303-regime-composition
-        general --no-iva-redeme-enrolled --no-iva-cash-accounting-regime-enrolled
-        --no-iva-voluntary-sii-enrolled --no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled
-        --quiet --accept-defaults'
       create_help: Crea un perfil actiu amb recuperació obligatòria i verificada.
         La recuperació no es pot afegir després ni participa en l'inici de sessió
         amb contrasenya.
@@ -2299,14 +2240,6 @@ cli:
           active_profile: No pots eliminar el perfil actiu. Tanca la sessió amb 'aeat
             config logout' i torna-ho a provar.
         yes_help: Confirma explícitament l'eliminació
-      delete_active_cleared: El perfil eliminat era l'actiu; el punter de perfil actiu
-        s'ha esborrat. Executa aeat config login NAME o aeat config profile create
-        NAME per tornar a treballar.
-      delete_help: Elimina un perfil i el seu estat local; --yes confirma
-      delete_name_help: Nom del perfil que vols eliminar
-      delete_requires_yes: L'eliminació és destructiva. Torna a executar 'aeat config
-        profile delete %{name} --yes' per confirmar.
-      delete_yes_help: Confirma explícitament l'eliminació
       descendiente:
         add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
           Repetible. Executeu `aeat config profile descendiente` sense subcomandament
@@ -2326,47 +2259,7 @@ cli:
         list_help: Llista els descendents declarats al perfil actiu.
         remove_help: Elimina un descendent per índex (base 0) del perfil actiu.
         remove_index_help: Índex (base 0) del descendent a eliminar.
-      duplicate_display_name_help: Nom visible del nou perfil (per defecte l'id de
-        destinació)
-      duplicate_help: Copiar un perfil sota un id i nom visibles nous
-      duplicate_source_help: Id del perfil d'origen a duplicar
-      duplicate_target_help: Id del perfil de destinació per al duplicat
       edit_help: Torna a executar l'assistent sobre un perfil existent
-      edit_target_not_active: El perfil '%{name}' no és el perfil actiu, i 'profile
-        edit' només edita l'actiu. Inicia la sessió primer i després edita'l.
-      export_cleartext_local_help: Escriu JSON en clar només per a gestió local/SAR;
-        no és segur per a correu, sincronització ni transferència.
-      export_confirm_passphrase_prompt: 'Confirma la frase de contrasenya del paquet: '
-      export_encrypt_help: Xifra el paquet amb AEAD per a la transferència; la frase
-        de contrasenya es demana (oculta) o es llegeix amb --secrets-stdin, mai per
-        argv.
-      export_encrypted_info: Aquest paquet de perfil s'ha escrit a {out} amb xifratge
-        AEAD per frase de contrasenya. Només conté el paquet estructurat del perfil;
-        usa l'arxiu de recuperació xifrat per a una còpia completa amb evidències
-        adjuntes i auditoria.
-      export_help: Escriu un paquet portable de perfil xifrat per frase de contrasenya
-        a RUTA; el JSON en clar requereix --cleartext-local i només és per a ús local/SAR.
-      export_name_help: Perfil que vols exportar; per defecte, l'actiu
-      export_out_help: Ruta de destinació per al paquet de perfil
-      export_passphrase_mismatch: La frase de contrasenya del paquet i la seva confirmació
-        no coincideixen; no s'ha escrit res.
-      export_passphrase_prompt: 'Frase de contrasenya del paquet (mínim 8 caràcters): '
-      export_passphrase_too_short: La frase de contrasenya d'exportació del perfil
-        ha de tenir almenys 8 caràcters.
-      export_reconcile_incomplete_warning: No s'han pogut netejar {count} exportació(ns)
-        de perfil interrompudes d'una execució anterior. Pot quedar al disc un fitxer
-        temporal sense xifrar per a cadascuna.
-      export_requires_destination: Indica --to RUTA com a destinació del paquet, o
-        executa l'ordre en un terminal interactiu perquè se't pregunti.
-      export_requires_transport: Usa --encrypt per a un paquet xifrat de transferència,
-        o --cleartext-local només per a JSON local/SAR.
-      export_sensitivity_warning: 'Aquest paquet NO està xifrat i conté dades financeres
-        sensibles: el NIF en clar (sense ocultar), nom i cognoms, el llibre de moviments
-        complet, les revisions de càlcul i els registres de presentació. S''ha escrit
-        a {out}. Usa''l només per a gestió local/SAR; no l''enviïs per correu, no
-        el sincronitzis ni el transfereixis. Esborra''l quan acabi aquesta gestió
-        local/SAR.'
-      export_transport_conflict: Tria --encrypt o --cleartext-local, no tots dos.
       help: Gestionar valors de configuració del perfil actiu
       history:
         invalid_event_type: 'Tipus d''esdeveniment desconegut: {value}. Tipus d''esdeveniment
@@ -2387,87 +2280,25 @@ cli:
         marca ISO-8601 (p. ex. 2026-04-01T00:00:00+00:00)
       history_until_help: Filtrar l'historial a esdeveniments en o abans d'aquesta
         marca ISO-8601 (p. ex. 2026-04-30T23:59:59+00:00)
-      import_active_switch_info: El perfil importat {name} ara és el perfil ACTIU;
-        les ordres següents operen sobre ell.
-      import_encrypted_bundle_invalid: No s'ha pogut desxifrar o validar el paquet
-        de perfil xifrat. Comprova la frase de contrasenya i el fitxer.
-      import_help: Registra un paquet portable de perfil des d'un fitxer
-      import_invalid_bundle: 'Paquet de perfil no vàlid: el JSON no s''ajusta a l''esquema
-        del paquet de perfil.'
-      import_invalid_tax_id: L'identificador fiscal del paquet de perfil no és vàlid.
-        Corregeix-lo i torna a exportar, o importa un paquet vàlid.
-      import_label_help: Nom visible per al perfil importat; per defecte el nom desat
-        al paquet. Fes-lo servir quan l'etiqueta desada ja s'estigui utilitzant.
-      import_label_taken: Ja existeix un perfil amb el nom %{name}. Torna a executar
-        amb `--label NOM_NOU` per importar-lo amb un nom diferent.
-      import_label_taken_different_id: L'etiqueta de perfil %{name} ja s'està utilitzant.
-        Useu --label NOU_NOM per importar amb una etiqueta diferent.
-      import_missing_bundle: No s'ha trobat el paquet de perfil a %{path}
-      import_missing_filing_baseline: 'Al paquet de perfil li falten dades d''identitat
-        per presentar models. Corregeix el paquet o torna a exportar un perfil complet
-        amb aquests camps: %{missing_flags}.'
-      import_passphrase_prompt: 'Frase de contrasenya del paquet: '
-      import_path_help: Ruta al fitxer del paquet de perfil
-      import_requires_path: Indica l'argument RUTA del paquet, o executa l'ordre en
-        un terminal interactiu perquè se't pregunti.
-      import_uuid_collision: El UUID del paquet entra en conflicte amb un perfil existent.
       list:
         incoherent_observation_advisory: 'No s''ha pogut obtenir un llistat fiable
           de perfils (estat: {outcome}). Torneu a executar l''ordre; si persisteix,
           reviseu l''emmagatzematge de perfils.'
-      manager_closed: Els canvis a '{profile}' estan desats.
       manager_closed_created: Perfil '{profile}' creat. Declara que la configuració
         està completa amb `aeat config profile complete-setup` abans de treballar
         amb models. Torna a obrir-lo quan vulguis amb 'aeat config profile edit'.
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF>` first.
-      preflight:
-        per_operation_axis_not_assessed: No hi ha cap camp de perfil obligatori de
-          l'esquema declarat per al model {modelo}; la preparació només cobreix la
-          identitat i les comprovacions condicionals, no una avaluació completa del
-          model.
-      preflight_filing_year_help: Exercici de presentació (quatre dígits).
-      preflight_help: Informa quins camps del perfil falten per a un context de presentació
-        (model, revisió, exercici, període).
-      preflight_modelo_help: Identificador numèric del model (p. ex. 303).
-      preflight_period_help: Codi de període (p. ex. 1T, 1P, 0A, 01).
-      preflight_revision_ambiguous: 'Més d''una revisió del registre coincideix amb
-        el model %{modelo} període %{period}: %{candidates}. Torneu a executar amb
-        --revision-id indicant-ne una.'
-      preflight_revision_help: Id de revisió del registre.
-      preflight_revision_id_help: Anul-lació opcional de l'id de revisió del registre
-        per a reproducció exacta (p. ex. 2019-y-siguientes); per defecte fa servir
-        la revisió activa per al model, exercici i període.
-      preflight_revision_override_invalid: La revisió del registre no és vàlida per
-        al model {modelo} i l'exercici {filing_year}.
-      preflight_revision_unresolved: Cap revisió del registre cobreix el model %{modelo}
-        exercici %{filing_year} període %{period}. Executeu `aeat app modelo describe
-        %{modelo}` per veure els períodes i revisions vàlids.
-      preflight_year_help: Exercici fiscal.
-      registration_abandoned: No s'ha creat cap perfil.
-      remove_help: Marcar un perfil com a retirat (les snapshots immutables es conserven)
-      remove_name_help: Id del perfil a retirar
-      remove_requires_yes: La retirada és destructiva. Torna a executar 'aeat config
-        profile delete %{name} --yes' per confirmar.
-      remove_yes_help: Confirma explícitament l'operació de retirada
-      rename_display_name_help: Etiqueta visible per a l'operador; per defecte, l'existent
-      rename_help: Canvia el nom d'un perfil i mou el punter actiu automàticament
-      rename_source_help: Nom actual del perfil
-      rename_target_help: Nou nom del perfil
       sandbox:
         active_indicator_info: Estàs operant dins del sandbox %{label}, no en un perfil
           real; totes les ordres s'executen contra aquest bucket aïllat i descartable.
       show:
         summary_invalid: 'El registre del perfil no és vàlid: %{count} problema/es
           bloquejant/s.'
-        summary_tombstoned: El registre del perfil està marcat com a eliminat.
         summary_valid: El registre del perfil és vàlid.
-      show_help: Mostra les dades d'un perfil
       show_name_help: Id del perfil a mostrar (per defecte el perfil actiu)
       unknown_profile: 'Perfil desconegut: %{name}. Executa ''aeat config profile
         list'' per veure els perfils registrats.'
-      use_help: Seleccionar un perfil existent com a perfil actiu
-      use_name_help: Id del perfil que s'activarà
       validate_help: Valida un perfil contra l'esquema carregat (per defecte el perfil
         actiu).
       validate_name_help: Etiqueta opcional del perfil a validar; per defecte el perfil
@@ -2476,8 +2307,6 @@ cli:
     provision:
       help: 'Gestiona l''aprovisionament d''inferència local: informe, descàrrega
         de models i verificació.'
-      no_model: No hi ha cap model disponible per a aquesta funció en aquesta màquina.
-        Executeu 'aeat config provision report' per veure'n el motiu.
       pull:
         help: Descarrega un model al runtime local. Rebutja abans de descarregar si
           no es podria carregar.
@@ -2495,7 +2324,6 @@ cli:
           seleccionat per a la funció.
     repair:
       connectivity_help: Comprovar connectivitat del navegador i la Seu AEAT
-      connectivity_target_help: Objectiu de connectivitat que cal comprovar
       help: Diagnosticar i reparar configuració local, registre, perfil, autenticació
         i logs
       integrity:
@@ -2503,21 +2331,9 @@ cli:
         objects_namespace_help: Limita les comprovacions d'integritat d'objectes segurs
           a un espai de noms.
         registry_help: Comprova la integritat del registre de càlcul.
-      integrity_attribution_details_help: Inclou detalls de metadades segures per
-        fila
-      integrity_attribution_help: Agrupa les files d'objectes segurs no desxifrables
-        per metadades segures.
       integrity_help: Comprovar la integritat dels objectes segurs i del registre.
-      integrity_namespace_help: Restringeix la comprovació d'integritat a un sol espai
-        de noms.
-      integrity_objects_help: Comprova la verificació d'etiquetes AES-256-GCM en un
-        espai de noms (o en tots).
-      integrity_registry_help: Executa la validació completa del registre (la comprovació
-        d'integritat opcional entre dominis).
       logs_help: Mostrar la ruta del fitxer de logs i les línies recents
       logs_lines_help: Nombre de línies recents del fitxer de logs a mostrar
-      plan_help: Planificació de reparació en sec i amb preservació primer per a files
-        d'objectes segurs no llegibles.
       profile_clear_active_help: Netejar un perfil actiu de fitxer-punter només quan
         apunta a estat de perfil il·legible.
       profile_clear_active_mismatch: --clear-active només pot esborrar el punter del
@@ -2529,8 +2345,6 @@ cli:
         sense moure res
       quarantine_help: Previsualitza les files no desxifrables; la quarantena activa
         està desactivada per la política de reparació preserve-first
-      quarantine_preserve_first_refused: La política de reparació preserve-first rebutja
-        la quarantena activa. Executa la previsualització en sec i l'atribució d'integritat.
       quarantine_requires_yes: Aquesta operació és destructiva. Torna a executar amb
         --yes per confirmar.
       quarantine_yes_help: Confirmar explícitament l'operació de quarantena
@@ -2559,26 +2373,15 @@ cli:
         locals.
       yes_help: Confirma la supressió irreversible de tots els perfils emmagatzemats
         localment.
-    set:
-      help: Assignar un valor a una clau de configuració
-      key_help: Clau a assignar (ex. iva.regime)
-      value_help: Valor a assignar (text, true/false, import segons la clau)
     setup:
       accept_defaults_help: Omple amb els valors per defecte del descriptor tots els
         flags no indicats, sense preguntar. Usa'l amb --quiet, o per si sol per a
         una creació amb tot per defecte.
-      errors:
-        missing_required_flags: Falten banderes obligatòries per al mode --quiet;
-          proporciona un valor per a cada pregunta obligatòria.
       help: Configuració inicial guiada del perfil tributari
       profile_name_help: Nom del perfil on s'escriuen les respostes
       quiet_help: Executa sense interacció usant només els valors dels flags indicats;
         els flags requerits sense valor provoquen un error. Suficient per si sol;
         combina amb --accept-defaults per omplir la resta amb els valors per defecte.
-      success:
-        next_step: 'Següent pas: executa `aeat app overview status` per revisar l''espai
-          de treball.'
-        saved: Perfil '%{profile_name}' desat.
       tui_scripted_conflict: --tui no es pot combinar amb --quiet, --accept-defaults
         ni amb opcions de camps del perfil.
     status:
@@ -2653,9 +2456,6 @@ cli:
         area_help: Elimina el contingut regenerable d'una àrea d'emmagatzematge
         incomplete: Algunes entrades no s'han pogut eliminar i encara són al disc.
         yes_help: Confirma l'eliminació; sense aquesta opció l'ordre es rebutja
-      show:
-        area_argument_help: Àrea d'emmagatzematge que es vol mostrar
-        area_help: Mostra una àrea d'emmagatzematge completa
       values:
         area:
           cache: memòria cau
@@ -2675,9 +2475,6 @@ cli:
         area_argument_help: L'àrea d'emmagatzematge a consultar (state, logs, cache
           o exports).
         area_help: Mostra amb detall una ubicació d'emmagatzematge declarada.
-    unset:
-      help: Eliminar el valor assignat a una clau de configuració
-      key_help: Clau a netejar
     workflow_help: Mostrar ajuda del flux de configuració
   diagnostics:
     app_help: Diagnòstic local de l'estat de les execucions i de la sessió.
@@ -3546,7 +3343,6 @@ cli:
       active_profile_unavailable_message: Hi ha un perfil actiu seleccionat, però
         la seva etiqueta no està disponible.
       no_active_profile_message: No hi ha cap perfil actiu.
-      text_template: '%{message} Ordre suggerida: %{command}'
   overview:
     agenda:
       allow_incomplete_help: Generar l'agenda encara que les dades del perfil siguin

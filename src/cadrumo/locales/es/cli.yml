@@ -157,7 +157,6 @@ cli:
             no tiene ningún envío externo registrado.'
           rederive_help: Vuelva a leer un artefacto en este equipo desde su transcripción
             almacenada.
-          rederive_refused: 'Nueva derivación rechazada: {detail}'
           rederived: Se ha vuelto a derivar {reference} en este equipo. Antes tenía
             {previous}; ahora tiene {current}. La lectura anterior queda sustituida,
             no borrada.
@@ -1819,7 +1818,6 @@ cli:
           app_did_not_prompt, operator_did_not_check.'
         report_help: Registrar el estado de la app Cl@ve observado por el operador
           para un diagnóstico de autenticación.
-        show_help: Muestra un diagnóstico de autenticación cifrado y redactado.
         view_help: Muestra un diagnóstico de autenticación cifrado por su identificador,
           con los cuerpos sensibles ocultos.
       file_help: Ruta al archivo de credenciales (certificado o clave)
@@ -1965,7 +1963,6 @@ cli:
       secrets_stdin_help: Lee los secretos como un único objeto JSON acotado desde
         la entrada estándar en lugar de solicitarlos.
     errors:
-      invalid_value: 'Valor inválido para %{name}: %{value}'
       no_active_profile: No hay un perfil activo. Ejecuta 'aeat config profile create
         NAME --tax-id <NIF/CIF/DNI/NIE>' primero.
       no_active_profile_registered: No hay un perfil activo. Ejecuta 'aeat config
@@ -1974,11 +1971,6 @@ cli:
         para desbloquear tu perfil.
       profile_session_expired: Tu sesión de perfil ha caducado. Ejecuta `aeat config
         login` para volver a iniciar sesión.
-      unknown_key: 'Clave de configuración desconocida: %{name}. Ejecuta ''aeat config
-        profile list'' para ver las claves disponibles.'
-    get:
-      help: Mostrar el valor actual de una clave de configuración
-      key_help: Clave a leer (ej. tax.id, iva.regime)
     google:
       client_json_help: Ruta al archivo JSON del cliente OAuth Desktop de Cloud Console
       credential_source:
@@ -2002,8 +1994,6 @@ cli:
           por defecto los alcances de acceso a datos de Sheets/Drive)
         set_help: Guarda la selección de fuente de credenciales de Google del perfil
           activo
-        show_help: Muestra la selección de fuente de credenciales de Google guardada
-          para el perfil activo
         subject_help: Correo del usuario de Workspace a suplantar mediante delegación
           en todo el dominio (opcional)
         target_principal_help: Correo de la cuenta de servicio a suplantar (obligatorio
@@ -2011,8 +2001,6 @@ cli:
         view_help: Muestra la selección de fuente de credenciales de Google guardada
           para el perfil activo.
       detail:
-        client_json_bad_wrapper: el JSON de cliente en {path} tiene un envoltorio
-          "installed" que no es un objeto
         client_json_invalid: El JSON de cliente de {path} no es un JSON válido.
         client_json_not_desktop: el JSON de cliente en {path} no es un cliente de
           escritorio de Cloud Console; se esperaba una clave envoltorio "installed"
@@ -2066,7 +2054,6 @@ cli:
         perfil; actívala con 'aeat config profile capabilities set google_export on'.
       folder:
         folder_id_help: Id de la carpeta de Google Drive
-        get_help: Muestra la carpeta raíz de Google Drive configurada
         help: Gestiona la carpeta raíz de Google Drive
         set_help: Vincula una carpeta de Google Drive al perfil activo
         view_help: Muestra la carpeta raíz de Google Drive configurada para el perfil
@@ -2086,32 +2073,8 @@ cli:
         el perfil activo
       status_help: Mostrar el estado actual de la sesión OAuth de Google para el perfil
         activo
-    init:
-      activity_help: Descripción de la actividad económica (p. ej. 761.1, programador)
-      auth_provider_help: Id del proveedor de autenticación a usar para el perfil
-      certificate_password_env_help: Nombre de la variable de entorno que contiene
-        la contraseña del certificado
-      certificate_path_help: Ruta al archivo de certificado .p12 o .pfx
-      drafts_dir_help: Directorio donde guardar los borradores de presentación locales
-      dry_run_help: Informa de los cambios sin modificar la configuración
-      from_help: Id del perfil de origen desde el que importar la configuración
-      help: Inicializa un nuevo perfil activo.
-      iva_regime_help: Régimen de IVA (general, simplificado, exento, etc.)
-      manuals_root_help: Directorio raíz para los manuales técnicos de la AEAT
-      non_interactive_help: Ejecuta sin pedir datos al operador
-      output_language_help: Idioma principal de la salida de la CLI (en, es, ca)
-      profile_name_help: Identificador único de este perfil de configuración
-      quiet_help: Oculta el mensaje de éxito después de inicializar
-      submissions_dir_help: Directorio donde guardar los justificantes de presentación
-      success:
-        next_step: 'Próximo paso: ejecuta `aeat app overview status`'
-      tax_id_help: Identificador fiscal español (NIF/CIF/DNI/NIE)
-      tax_residence_ccaa_help: Comunidad autónoma de residencia fiscal
     list:
       help: Listar todos los perfiles registrados y marcar el activo
-      setup_incomplete_notice: '%{count} perfil(es) aún están completando la configuración
-        y todavía no están listos para presentar: %{labels}. Reanuda la configuración
-        para poder trabajarlos.'
     login:
       help: Autentica un perfil e inicia una sesión reanudable
       name_help: UUID o etiqueta exacta del perfil; omítelo para usar el perfil seleccionado
@@ -2126,8 +2089,6 @@ cli:
       passphrase_channel_absent: No hay ningún canal de contraseña disponible. Ejecute
         este verbo en un terminal o use --secrets-stdin o --secrets-fd.
       passphrase_prompt: 'Contraseña del perfil: '
-      refusal:
-        abandoned: Se ha cancelado el inicio de sesión; no se ha abierto ningún perfil.
     logout:
       help: Cierra la sesión del perfil y borra su puntero local
       notices:
@@ -2149,7 +2110,6 @@ cli:
           nada.
         section_help: Clave de la sección repetible del perfil.
         value_help: Campo de la fila como CAMPO=VALOR; repítalo por cada campo informado.
-      already_exists: El perfil %{name} ya existe. Elige otro identificador de destino.
       archive:
         export_help: Escribe la capsula del perfil indicado en un archivo sellado
           en --to; el archivo se cifra con la contrasena del perfil y no incluye la
@@ -2214,8 +2174,6 @@ cli:
         no_active_profile: No hay perfil activo; inicia sesión en uno con 'aeat config
           login <nombre>' antes de configurar una capacidad.
         set_help: Activa o desactiva una capacidad de servicio para el perfil activo.
-        show_help: Muestra el estado resuelto de cada capacidad de servicio para el
-          perfil activo.
         state_help: Si activar (on) o desactivar (off) la capacidad.
         state_label: estado
         view_help: Muestra el estado resuelto de cada capacidad de servicio para el
@@ -2223,15 +2181,9 @@ cli:
       censo:
         apply_help: Registra los datos censales analizados en el perfil activo (por
           defecto solo previsualiza).
-        compare_help: Compara campo a campo el censo AEAT con este perfil
         divergencia_leaf_artefact_value: valor de la AEAT
         divergencia_leaf_axis: campo
         divergencia_leaf_source: origen
-        dropped_fields_notice: 'El censo de la AEAT ya no incluye campos que tenia
-          tu última instantánea: {dropped_fields}. Si no has cambiado ni dado de baja
-          estos datos, puede tratarse de una descarga parcial: vuelve a ejecutar la
-          descarga del censo o reintroduce los valores; la proporción de afectación
-          de la vivienda podria dejar de resolverse.'
         file_option_help: Ruta al PDF del Certificado de Situación Censal descargado
           de la Sede (trámite G313).
         help: Ingesta de artefactos censales para el perfil activo.
@@ -2257,22 +2209,12 @@ cli:
         pull_withheld_notice: 'Los valores de {count} campo(s) se ocultan en la salida:
           {axes}. Compáralos tú mismo con la autoridad censal; esta herramienta no
           los mostrará.'
-        refresh_help: Descarga de AEAT el último censo y guarda un snapshot
-        show_help: Muestra el último censo informado por AEAT para este perfil
-        snapshot_id_help: Id de snapshot concreto (se aceptan prefijos)
       complete_setup:
         already_complete: El perfil ya estaba declarado listo; no se ha escrito nada.
         completed: Perfil declarado listo para presentar.
         help: Declara que el perfil activo está listo para presentar.
         incomplete: 'Faltan datos obligatorios en el perfil: {paths}'
       create_confirm_passphrase_prompt: 'Confirma la contraseña del nuevo perfil: '
-      create_epilog: 'Perfil mínimo para autónomo: aeat config profile create PROFILE
-        --entity-type natural_person --tax-id <DNI/NIE/NIF> --name <NAME> --surnames
-        <SURNAMES> --activity <ACTIVITY> --irpf-income-categories actividad_economica
-        --tax-residence-jurisdiction-scope common_regime --iva-regime GENERAL --iva-m303-regime-composition
-        general --no-iva-redeme-enrolled --no-iva-cash-accounting-regime-enrolled
-        --no-iva-voluntary-sii-enrolled --no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled
-        --quiet --accept-defaults'
       create_help: Crea un perfil activo con recuperación obligatoria y verificada.
         La recuperación no puede añadirse después ni participa en el inicio de sesión
         con contraseña.
@@ -2321,14 +2263,6 @@ cli:
           active_profile: No puedes eliminar el perfil activo. Cierra la sesión con
             'aeat config logout' y vuelve a intentarlo.
         yes_help: Confirma explícitamente la eliminación
-      delete_active_cleared: El perfil eliminado era el activo; el puntero de perfil
-        activo se ha borrado. Ejecuta aeat config login NAME o aeat config profile
-        create NAME para volver a trabajar.
-      delete_help: Elimina un perfil y su estado local; --yes confirma
-      delete_name_help: Nombre del perfil que quieres eliminar
-      delete_requires_yes: La eliminación es destructiva. Vuelve a ejecutar 'aeat
-        config profile delete %{name} --yes' para confirmar.
-      delete_yes_help: Confirma explícitamente la eliminación
       descendiente:
         add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
           Repetible. Ejecute `aeat config profile descendiente` sin subcomando para
@@ -2351,47 +2285,7 @@ cli:
         list_help: Listar los descendientes declarados en el perfil activo.
         remove_help: Eliminar un descendiente por índice (base 0) del perfil activo.
         remove_index_help: Índice (base 0) del descendiente a eliminar.
-      duplicate_display_name_help: Nombre visible para el nuevo perfil (por defecto
-        el id de destino)
-      duplicate_help: Copiar un perfil bajo un nuevo id y nombre visible
-      duplicate_source_help: Id del perfil de origen a duplicar
-      duplicate_target_help: Id del perfil de destino para el duplicado
       edit_help: Vuelve a ejecutar el asistente sobre un perfil existente
-      edit_target_not_active: El perfil '%{name}' no es el perfil activo, y 'profile
-        edit' solo edita el activo. Inicia sesión en él primero y luego edítalo.
-      export_cleartext_local_help: Escribe JSON en claro solo para gestión local/SAR;
-        no es seguro para correo, sincronización ni transferencia.
-      export_confirm_passphrase_prompt: 'Confirma la frase de contraseña del paquete: '
-      export_encrypt_help: Cifra el paquete con AEAD para la transferencia; la frase
-        de contraseña se solicita (oculta) o se lee con --secrets-stdin, nunca por
-        argv.
-      export_encrypted_info: Este paquete de perfil se escribió en {out} con cifrado
-        AEAD por frase de contraseña. Solo contiene el paquete estructurado del perfil;
-        usa el archivo de recuperación cifrado para una copia completa con evidencias
-        adjuntas y auditoría.
-      export_help: Escribe un paquete portátil de perfil cifrado por frase de contraseña
-        en RUTA; el JSON en claro requiere --cleartext-local y solo es para uso local/SAR.
-      export_name_help: Perfil que quieres exportar; por defecto, el activo
-      export_out_help: Ruta de destino para el paquete de perfil
-      export_passphrase_mismatch: La frase de contraseña del paquete y su confirmación
-        no coinciden; no se ha escrito nada.
-      export_passphrase_prompt: 'Frase de contraseña del paquete (mínimo 8 caracteres): '
-      export_passphrase_too_short: La frase de contraseña de exportación del perfil
-        debe tener al menos 8 caracteres.
-      export_reconcile_incomplete_warning: No se han podido limpiar {count} exportación(es)
-        de perfil interrumpidas de una ejecución anterior. Puede quedar en disco un
-        archivo temporal sin cifrar por cada una.
-      export_requires_destination: Indica --to RUTA como destino del paquete, o ejecuta
-        el comando en un terminal interactivo para que se te pregunte.
-      export_requires_transport: Usa --encrypt para un paquete cifrado de transferencia,
-        o --cleartext-local solo para JSON local/SAR.
-      export_sensitivity_warning: 'Este paquete NO está cifrado y contiene datos financieros
-        sensibles: el NIF en claro (sin ocultar), nombre y apellidos, el libro de
-        movimientos completo, las revisiones de cálculo y los registros de presentación.
-        Se escribió en {out}. Úsalo solo para gestión local/SAR; no lo envíes por
-        correo, no lo sincronices ni lo transfieras. Bórralo cuando termine esa gestión
-        local/SAR.'
-      export_transport_conflict: Elige --encrypt o --cleartext-local, no ambos.
       help: Gestionar valores de configuración del perfil activo
       history:
         invalid_event_type: 'Tipo de evento desconocido: {value}. Tipos de evento
@@ -2411,75 +2305,15 @@ cli:
         (p. ej. 2026-04-01T00:00:00+00:00)
       history_until_help: Filtrar el historial a eventos en o antes de esta marca
         ISO-8601 (p. ej. 2026-04-30T23:59:59+00:00)
-      import_active_switch_info: El perfil importado {name} es ahora el perfil ACTIVO;
-        las órdenes siguientes operan sobre él.
-      import_encrypted_bundle_invalid: No se pudo descifrar o validar el paquete de
-        perfil cifrado. Comprueba la frase de contraseña y el archivo.
-      import_help: Registra un paquete portátil de perfil desde un archivo
-      import_invalid_bundle: 'Paquete de perfil no válido: el JSON no se ajusta al
-        esquema del paquete de perfil.'
-      import_invalid_tax_id: El identificador fiscal del paquete de perfil no es válido.
-        Corrígelo y vuelve a exportar, o importa un paquete válido.
-      import_label_help: Nombre visible para el perfil importado; por defecto el nombre
-        guardado en el paquete. Úsalo cuando la etiqueta guardada ya esté en uso.
-      import_label_taken: Ya existe un perfil con el nombre %{name}. Vuelve a ejecutar
-        con `--label NUEVO_NOMBRE` para importarlo con un nombre distinto.
-      import_label_taken_different_id: La etiqueta de perfil %{name} ya está en uso.
-        Use --label NUEVO_NOMBRE para importar con una etiqueta distinta.
-      import_missing_bundle: No se encontró el paquete de perfil en %{path}
-      import_missing_filing_baseline: 'Al paquete de perfil le faltan datos de identidad
-        para presentar modelos. Corrige el paquete o vuelve a exportar un perfil completo
-        con estos campos: %{missing_flags}.'
-      import_passphrase_prompt: 'Frase de contraseña del paquete: '
-      import_path_help: Ruta al archivo del paquete de perfil
-      import_requires_path: Indica el argumento RUTA del paquete, o ejecuta el comando
-        en un terminal interactivo para que se te pregunte.
-      import_uuid_collision: El UUID del paquete entra en conflicto con un perfil
-        existente.
       list:
         incoherent_observation_advisory: 'No se pudo obtener un listado fiable de
           perfiles (estado: {outcome}). Vuelva a ejecutar el comando; si persiste,
           revise el almacenamiento de perfiles.'
-      manager_closed: Los cambios en '{profile}' están guardados.
       manager_closed_created: Perfil '{profile}' creado. Declara que la configuración
         está completa con `aeat config profile complete-setup` antes de trabajar con
         modelos. Vuelve a abrirlo cuando quieras con 'aeat config profile edit'.
       no_active_profile: No hay un perfil activo. Ejecuta `aeat config profile create
         NAME --tax-id <NIF/CIF/DNI/NIE>` primero.
-      preflight:
-        per_operation_axis_not_assessed: No hay ningún campo de perfil obligatorio
-          del esquema declarado para el modelo {modelo}; la preparación solo cubre
-          la identidad y las comprobaciones condicionales, no una evaluación completa
-          del modelo.
-      preflight_filing_year_help: Ejercicio de presentación (cuatro dígitos).
-      preflight_help: Informa qué campos del perfil faltan para un contexto de presentación
-        (modelo, revisión, ejercicio, periodo).
-      preflight_modelo_help: Identificador numérico del modelo (p. ej. 303).
-      preflight_period_help: Código de periodo (p. ej. 1T, 1P, 0A, 01).
-      preflight_revision_ambiguous: 'Mas de una revisión del registro coincide con
-        el modelo %{modelo} periodo %{period}: %{candidates}. Vuelva a ejecutar con
-        --revision-id indicando una de ellas.'
-      preflight_revision_help: Id de revisión del registro.
-      preflight_revision_id_help: Anulación opcional del id de revisión del registro
-        para reproducción exacta (p. ej. 2019-y-siguientes); por defecto usa la revisión
-        activa para el modelo, ejercicio y periodo.
-      preflight_revision_override_invalid: La revisión del registro no es válida para
-        el modelo {modelo} y el ejercicio {filing_year}.
-      preflight_revision_unresolved: Ninguna revisión del registro cubre el modelo
-        %{modelo} ejercicio %{filing_year} periodo %{period}. Ejecute `aeat app modelo
-        describe %{modelo}` para ver los periodos y revisiones válidos.
-      preflight_year_help: Ejercicio de presentación.
-      registration_abandoned: No se ha creado ningún perfil.
-      remove_help: Marcar un perfil como retirado (las snapshots inmutables se conservan)
-      remove_name_help: Id del perfil a retirar
-      remove_requires_yes: La retirada es destructiva. Ejecuta de nuevo 'aeat config
-        profile delete %{name} --yes' para confirmar.
-      remove_yes_help: Confirma explícitamente la operación de retirada
-      rename_display_name_help: Etiqueta visible para el operador; por defecto, la
-        existente
-      rename_help: Renombra un perfil y mueve el puntero activo automáticamente
-      rename_source_help: Nombre actual del perfil
-      rename_target_help: Nuevo nombre del perfil
       sandbox:
         active_indicator_info: Estás operando dentro del sandbox %{label}, no en un
           perfil real; todos los comandos se ejecutan contra este bucket aislado y
@@ -2487,14 +2321,10 @@ cli:
       show:
         summary_invalid: 'El registro del perfil no es válido: %{count} problema(s)
           bloqueante(s).'
-        summary_tombstoned: El registro del perfil está marcado como eliminado.
         summary_valid: El registro del perfil es válido.
-      show_help: Muestra los datos de un perfil
       show_name_help: Id del perfil a mostrar (por defecto el perfil activo)
       unknown_profile: 'Perfil desconocido: %{name}. Ejecuta ''aeat config profile
         list'' para ver los perfiles registrados.'
-      use_help: Seleccionar un perfil existente como perfil activo
-      use_name_help: Id del perfil que se activará
       validate_help: Valida un perfil contra el esquema cargado (por defecto el perfil
         activo).
       validate_name_help: Etiqueta opcional del perfil a validar; por defecto el perfil
@@ -2503,8 +2333,6 @@ cli:
     provision:
       help: 'Gestiona el aprovisionamiento de inferencia local: informe, descarga
         de modelos y verificación.'
-      no_model: No hay ningún modelo disponible para esa función en esta máquina.
-        Ejecute 'aeat config provision report' para ver por qué.
       pull:
         help: Descarga un modelo al runtime local. Rechaza antes de descargar si no
           podría cargarse.
@@ -2522,7 +2350,6 @@ cli:
           seleccionado para la función.
     repair:
       connectivity_help: Comprobar conectividad del navegador y la Sede AEAT
-      connectivity_target_help: Objetivo de conectividad que se debe comprobar
       help: Diagnosticar y reparar configuración local, registro, perfil, autenticación
         y logs
       integrity:
@@ -2530,21 +2357,9 @@ cli:
         objects_namespace_help: Limita las comprobaciones de integridad de objetos
           seguros a un espacio de nombres.
         registry_help: Comprueba la integridad del registro de cálculo.
-      integrity_attribution_details_help: Incluir detalles de metadatos seguros por
-        fila
-      integrity_attribution_help: Agrupa las filas de objetos seguros no descifrables
-        por metadatos seguros.
       integrity_help: Comprobar la integridad de los objetos seguros y del registro.
-      integrity_namespace_help: Restringe la comprobación de integridad a un único
-        espacio de nombres.
-      integrity_objects_help: Comprueba la verificación de etiquetas AES-256-GCM en
-        un espacio de nombres (o en todos).
-      integrity_registry_help: Ejecuta la validación completa del registro (la comprobación
-        de integridad opcional entre dominios).
       logs_help: Mostrar la ruta del archivo de logs y las líneas recientes
       logs_lines_help: Número de líneas recientes del archivo de logs a mostrar
-      plan_help: Planificación de reparación en seco y preservación primero para filas
-        de objetos seguros no legibles.
       profile_clear_active_help: Limpiar un perfil activo de archivo-puntero solo
         cuando apunta a estado de perfil ilegible.
       profile_clear_active_mismatch: --clear-active solo puede borrar el puntero del
@@ -2556,9 +2371,6 @@ cli:
         sin mover nada
       quarantine_help: Previsualizar filas no descifrables; la cuarentena activa está
         desactivada por la política de reparación preserve-first
-      quarantine_preserve_first_refused: La política de reparación preserve-first
-        rechaza la cuarentena activa. Ejecuta la previsualización en seco y la atribución
-        de integridad.
       quarantine_requires_yes: Esta operación es destructiva. Vuelve a ejecutar con
         --yes para confirmar.
       quarantine_yes_help: Confirmar explícitamente la operación de cuarentena
@@ -2587,27 +2399,16 @@ cli:
         locales.
       yes_help: Confirma el borrado irreversible de todos los perfiles almacenados
         localmente.
-    set:
-      help: Asignar un valor a una clave de configuración
-      key_help: Clave a asignar (ej. iva.regime)
-      value_help: Valor a asignar (texto, true/false, importe según la clave)
     setup:
       accept_defaults_help: Rellena con los valores por defecto del descriptor todos
         los flags no indicados, sin preguntar. Úsalo junto a --quiet, o por sí solo
         para una creación con todo por defecto.
-      errors:
-        missing_required_flags: Faltan banderas obligatorias para el modo --quiet;
-          proporciona un valor para cada pregunta obligatoria.
       help: Configuración inicial guiada del perfil tributario
       profile_name_help: Nombre del perfil donde guardar las respuestas
       quiet_help: Ejecuta sin interacción usando solo los valores de los flags indicados;
         los flags requeridos sin valor provocan un error. Suficiente por sí solo;
         combínalo con --accept-defaults para rellenar el resto con los valores por
         defecto.
-      success:
-        next_step: 'Próximo paso: ejecuta `aeat app overview status` para revisar
-          tu espacio de trabajo.'
-        saved: Perfil '%{profile_name}' guardado.
       tui_scripted_conflict: --tui no se puede combinar con --quiet, --accept-defaults
         ni con opciones de campos del perfil.
     status:
@@ -2681,9 +2482,6 @@ cli:
         area_help: Elimina el contenido regenerable de un área de almacenamiento
         incomplete: Algunas entradas no se han podido eliminar y siguen en el disco.
         yes_help: Confirma la eliminación; sin esta opción el comando se rechaza
-      show:
-        area_argument_help: Área de almacenamiento que se va a mostrar
-        area_help: Muestra un área de almacenamiento completa
       values:
         area:
           cache: caché
@@ -2703,9 +2501,6 @@ cli:
         area_argument_help: El área de almacenamiento a consultar (state, logs, cache
           o exports).
         area_help: Muestra en detalle una ubicación de almacenamiento declarada.
-    unset:
-      help: Eliminar el valor asignado a una clave de configuración
-      key_help: Clave a limpiar
     workflow_help: Mostrar ayuda del flujo de configuración
   diagnostics:
     app_help: Diagnóstico local del estado de las ejecuciones y de la sesión.
@@ -3583,7 +3378,6 @@ cli:
       active_profile_unavailable_message: Hay un perfil activo seleccionado, pero
         su etiqueta no está disponible.
       no_active_profile_message: No hay ningún perfil activo.
-      text_template: '%{message} Comando sugerido: %{command}'
   overview:
     agenda:
       allow_incomplete_help: Generar la agenda aunque los datos del perfil estén incompletos.

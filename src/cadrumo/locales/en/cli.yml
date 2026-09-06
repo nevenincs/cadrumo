@@ -141,7 +141,6 @@ cli:
           no_history: 'No evidence bytes have left this host: this profile has no
             recorded off-host dispatch.'
           rederive_help: Re-read one artefact on this host from its cached transcription.
-          rederive_refused: 'Re-derivation refused: {detail}'
           rederived: Re-derived {reference} on this host. It previously carried {previous};
             it now carries {current}. The earlier reading is superseded, not erased.
           transcriber_help: Cache key of the transcription to reuse.
@@ -1691,7 +1690,6 @@ cli:
         phone_state_help: 'One of: app_prompted_and_accepted, app_prompted_not_accepted,
           app_did_not_prompt, operator_did_not_check.'
         report_help: Record the operator-observed Cl@ve app state for one auth diagnostic.
-        show_help: Show one redacted encrypted auth diagnostic.
         view_help: Show one encrypted auth diagnostic by its identifier, with sensitive
           bodies redacted.
       file_help: Path to the credential file (certificate or key)
@@ -1820,7 +1818,6 @@ cli:
       secrets_stdin_help: Read the secrets as one bounded JSON object from standard
         input instead of prompting.
     errors:
-      invalid_value: 'Invalid value for %{name}: %{value}'
       no_active_profile: No active profile. Run 'aeat config profile create NAME --tax-id
         <NIF/CIF/DNI/NIE>' first.
       no_active_profile_registered: No active profile. Run 'aeat config login NAME'
@@ -1829,11 +1826,6 @@ cli:
         your profile.
       profile_session_expired: Your profile session has expired. Run `aeat config
         login` to sign in again.
-      unknown_key: 'Unknown configuration key: %{name}. Run ''aeat config profile
-        list'' to see the available keys.'
-    get:
-      help: Show the current value of one configuration key
-      key_help: Key to read (e.g. tax.id, iva.regime)
     google:
       client_json_help: Path to a Cloud Console Desktop OAuth client JSON file
       credential_source:
@@ -1853,15 +1845,12 @@ cli:
         scope_help: OAuth scope requested for the impersonated token (repeatable;
           defaults to the Sheets/Drive data-access scopes)
         set_help: Persist the active profile's Google credential-source selection
-        show_help: Show the active profile's persisted Google credential-source selection
         subject_help: Workspace user email to impersonate via domain-wide delegation
           (optional)
         target_principal_help: Service-account email to impersonate (required for
           --kind service_account_impersonation)
         view_help: Show the active profile's saved Google credential-source selection.
       detail:
-        client_json_bad_wrapper: client JSON at {path} has a non-object "installed"
-          wrapper
         client_json_invalid: The client JSON at {path} is not valid JSON.
         client_json_not_desktop: client JSON at {path} is not a Cloud Console Desktop
           client; expected an "installed" wrapper key
@@ -1907,7 +1896,6 @@ cli:
         it with 'aeat config profile capabilities set google_export on'.
       folder:
         folder_id_help: Google Drive folder id
-        get_help: Show the configured Google Drive root folder
         help: Manage the Google Drive root folder binding
         set_help: Bind a Google Drive folder id to the active profile
         view_help: Show the Google Drive root folder configured for the active profile.
@@ -1923,31 +1911,8 @@ cli:
       register_help: Register a Cloud Console Desktop OAuth client JSON for the active
         profile
       status_help: Show the current Google OAuth session state for the active profile
-    init:
-      activity_help: Economic activity description (e.g. 761.1, programador)
-      auth_provider_help: Authentication provider ID to use for the profile
-      certificate_password_env_help: Environment variable name containing the certificate
-        password
-      certificate_path_help: Path to the .p12 or .pfx certificate file
-      drafts_dir_help: Directory to store local filing drafts
-      dry_run_help: Report changes without modifying the configuration
-      from_help: Source profile ID to import settings from
-      help: Initialize a new active profile.
-      iva_regime_help: IVA regime (general, simplificado, exento, etc.)
-      manuals_root_help: Root directory for AEAT technical manuals
-      non_interactive_help: Run without prompting for user input
-      output_language_help: Primary language for CLI output (en, es, ca)
-      profile_name_help: Unique identifier for this configuration profile
-      quiet_help: Skip the success message after init
-      submissions_dir_help: Directory to store submitted filing receipts
-      success:
-        next_step: 'Next step: run `aeat app overview status`'
-      tax_id_help: Spanish tax identifier (NIF/CIF/DNI/NIE)
-      tax_residence_ccaa_help: Autonomous community of tax residence
     list:
       help: List every registered profile and mark the active one
-      setup_incomplete_notice: '%{count} profile(s) are still completing setup and
-        are not yet ready for filing: %{labels}. Resume setup to make them workable.'
     login:
       help: Authenticate a profile and start a resumable session
       name_help: Profile UUID or exact label to log in; omit to use the selected profile
@@ -1961,8 +1926,6 @@ cli:
       passphrase_channel_absent: No passphrase channel is available. Run this verb
         at a terminal, or pass --secrets-stdin or --secrets-fd.
       passphrase_prompt: 'Profile passphrase: '
-      refusal:
-        abandoned: Login was cancelled; no profile was opened.
     logout:
       help: Close the profile session and clear its local pointer
       notices:
@@ -1980,7 +1943,6 @@ cli:
         invalid_value: Each --value must use FIELD=VALUE syntax; nothing was written.
         section_help: Repeatable profile section key.
         value_help: Row field as FIELD=VALUE; repeat for each populated field.
-      already_exists: Profile %{name} already exists. Pick a different target id.
       archive:
         export_help: Write the named profile's capsule to a sealed archive at --to;
           the archive is encrypted under the profile password and carries no label.
@@ -2041,8 +2003,6 @@ cli:
         no_active_profile: No active profile; log in to one with 'aeat config login
           <name>' before setting a capability.
         set_help: Opt the active profile in or out of one service capability.
-        show_help: Show the resolved posture of every service capability for the active
-          profile.
         state_help: Whether to enable (on) or disable (off) the capability.
         state_label: state
         view_help: Show the resolved state of every service capability for the active
@@ -2050,14 +2010,9 @@ cli:
       censo:
         apply_help: Enroll the parsed censal facts onto the active profile (default
           is preview only).
-        compare_help: Compare AEAT censo and this profile field by field
         divergencia_leaf_artefact_value: AEAT value
         divergencia_leaf_axis: field
         divergencia_leaf_source: origin
-        dropped_fields_notice: 'AEAT''s censo no longer reports fields your last snapshot
-          carried: {dropped_fields}. If you did not change or close these registrations,
-          this may be a partial pull - re-run the censo pull or re-enter the values;
-          the home-office deduction ratio may stop resolving.'
         file_option_help: Path to the Certificado de Situación Censal PDF downloaded
           from Sede (procedure G313).
         help: Censal artefact ingestion for the active profile.
@@ -2081,22 +2036,12 @@ cli:
         pull_withheld_notice: 'The values for {count} field(s) are withheld from output:
           {axes}. Compare them yourself against the census authority; this tool will
           not print them.'
-        refresh_help: Download the latest censo from AEAT and save a snapshot
-        show_help: Show the latest censo AEAT reported for this profile
-        snapshot_id_help: Specific snapshot id (prefixes accepted)
       complete_setup:
         already_complete: The profile was already declared ready; nothing was written.
         completed: Profile declared ready to file from.
         help: Declare the active profile ready to file from.
         incomplete: 'The profile is still missing required data: {paths}'
       create_confirm_passphrase_prompt: 'Confirm new profile passphrase: '
-      create_epilog: 'Minimal freelancer profile: aeat config profile create PROFILE
-        --entity-type natural_person --tax-id <DNI/NIE/NIF> --name <NAME> --surnames
-        <SURNAMES> --activity <ACTIVITY> --irpf-income-categories actividad_economica
-        --tax-residence-jurisdiction-scope common_regime --iva-regime GENERAL --iva-m303-regime-composition
-        general --no-iva-redeme-enrolled --no-iva-cash-accounting-regime-enrolled
-        --no-iva-voluntary-sii-enrolled --no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled
-        --quiet --accept-defaults'
       create_help: Create an active profile with mandatory verified recovery. Recovery
         cannot be added later and never participates in password login.
       create_name_required: A profile name is required. Run 'aeat config profile create
@@ -2143,14 +2088,6 @@ cli:
           active_profile: Cannot delete the active profile. Close the session with
             'aeat config logout' and try again.
         yes_help: Explicitly confirm the deletion
-      delete_active_cleared: The deleted profile was the active one; the active-profile
-        pointer has been cleared. Run aeat config login NAME or aeat config profile
-        create NAME to resume work.
-      delete_help: Delete a profile and its on-disk state (--yes confirms)
-      delete_name_help: Profile name to delete
-      delete_requires_yes: Deletion is destructive. Re-run 'aeat config profile delete
-        %{name} --yes' to confirm.
-      delete_yes_help: Explicitly confirm the delete operation
       descendiente:
         add_flag_help: NACIMIENTO=YYYY-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
           Repeatable. Run `aeat config profile descendiente` with no subcommand to
@@ -2171,49 +2108,8 @@ cli:
         list_help: List descendants declared on the active profile.
         remove_help: Remove one descendant by 0-based index from the active profile.
         remove_index_help: 0-based index of the descendant to remove.
-      duplicate_display_name_help: Display name for the new profile (defaults to the
-        target id)
-      duplicate_help: Copy a profile under a new id and display name
-      duplicate_source_help: Source profile id to duplicate
-      duplicate_target_help: Target profile id for the duplicate
       edit_help: Re-run the wizard against an existing profile and update values in
         place
-      edit_target_not_active: Profile '%{name}' is not the active profile, and 'profile
-        edit' only edits the active one. Log in to it first, then edit.
-      export_cleartext_local_help: Write cleartext JSON for local/SAR handling only;
-        not safe for email, sync, or transfer.
-      export_confirm_passphrase_prompt: 'Confirm bundle passphrase: '
-      export_encrypt_help: AEAD-encrypt the bundle for transfer; the passphrase is
-        prompted (hidden) or read via --secrets-stdin, never argv.
-      export_encrypted_info: This profile bundle was written to {out} with AEAD passphrase
-        encryption. It carries the structured profile bundle only; use the encrypted
-        recovery archive for a complete backup with attachment evidence bytes and
-        audit trail.
-      export_help: Write a passphrase-encrypted portable profile bundle to PATH; cleartext
-        JSON requires --cleartext-local for local/SAR use only.
-      export_name_help: Profile to export; defaults to the active profile
-      export_out_help: Destination path for the profile bundle
-      export_passphrase_mismatch: The bundle passphrase and its confirmation do not
-        match; nothing was written.
-      export_passphrase_prompt: 'Bundle passphrase (min 8 characters): '
-      export_passphrase_too_short: The profile export passphrase must be at least
-        8 characters.
-      export_reconcile_incomplete_warning: '{count} interrupted profile-bundle export(s)
-        from an earlier run could not be cleared. An unencrypted staged file may remain
-        on disk for each.'
-      export_requires_destination: Provide --to PATH for the bundle destination, or
-        run in an interactive terminal to be prompted.
-      export_requires_transport: Use --encrypt for an encrypted transfer bundle, or
-        --cleartext-local for local/SAR JSON only.
-      export_sensitivity_warning: 'This bundle is UNENCRYPTED and contains sensitive
-        financial data: the raw tax id (not redacted), names/surnames, the full ledger,
-        calculation revisions, and filing records. It was written to {out}. Use it
-        only for local/SAR handling; do not email, sync, or transfer it. Delete it
-        after that local/SAR handling is complete. It is NOT a full backup: attachment
-        evidence bytes, AEAT captures, and the audit trail are excluded. Use the encrypted
-        recovery archive for a complete backup.'
-      export_transport_conflict: Choose either --encrypt or --cleartext-local, not
-        both.
       help: Manage active profile configuration values
       history:
         invalid_event_type: 'Unknown event type: {value}. Valid event types: {valid}.'
@@ -2231,86 +2127,24 @@ cli:
         (e.g. 2026-04-01T00:00:00+00:00)
       history_until_help: Filter the history to events at or before this ISO-8601
         timestamp (e.g. 2026-04-30T23:59:59+00:00)
-      import_active_switch_info: The imported profile {name} is now the ACTIVE profile;
-        subsequent commands operate on it.
-      import_encrypted_bundle_invalid: The encrypted profile bundle could not be decrypted
-        or validated. Check the passphrase and file.
-      import_help: Register a portable profile bundle from a file
-      import_invalid_bundle: 'Invalid profile bundle: the JSON does not conform to
-        the profile bundle schema.'
-      import_invalid_tax_id: The profile bundle's tax identifier is invalid. Correct
-        it and export again, or import a valid bundle.
-      import_label_help: Display name for the imported profile; defaults to the name
-        stored in the bundle. Use it when the stored label is already in use.
-      import_label_taken: A profile named %{name} already exists. Re-run with `--label
-        NEW_NAME` to import it under a different name.
-      import_label_taken_different_id: The profile label %{name} is already in use.
-        Pass --label NEW_NAME to import under a distinct label.
-      import_missing_bundle: Profile bundle not found at %{path}
-      import_missing_filing_baseline: 'The profile bundle is missing filing identity
-        details. Fix the bundle or re-export a complete profile with these fields:
-        %{missing_flags}.'
-      import_passphrase_prompt: 'Bundle passphrase: '
-      import_path_help: Path to the profile bundle file
-      import_requires_path: Provide the bundle PATH argument, or run in an interactive
-        terminal to be prompted.
-      import_uuid_collision: The UUID in the bundle conflicts with an existing profile.
       list:
         incoherent_observation_advisory: 'The profile listing could not be read coherently
           (outcome: {outcome}). Run the command again; if it persists, inspect the
           profile storage.'
-      manager_closed: Changes to '{profile}' are saved.
       manager_closed_created: Profile '{profile}' created. Declare setup complete
         with `aeat config profile complete-setup` before working with modelos. Reopen
         it any time with 'aeat config profile edit'.
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF/CIF/DNI/NIE>` first.
-      preflight:
-        per_operation_axis_not_assessed: No schema-required profile field is declared
-          for Modelo {modelo}; readiness covers identity and conditional checks only,
-          not a complete per-modelo assessment.
-      preflight_filing_year_help: Four-digit filing year.
-      preflight_help: Report which profile fields are missing for a given (modelo,
-        revision, filing-year, period) filing context.
-      preflight_modelo_help: Numeric modelo identifier (e.g. 303).
-      preflight_period_help: Period code (e.g. 1T, 1P, 0A, 01).
-      preflight_revision_ambiguous: 'More than one registry revision matches modelo
-        %{modelo} period %{period}: %{candidates}. Re-run with --revision-id naming
-        one of them.'
-      preflight_revision_help: Registry revision id.
-      preflight_revision_id_help: Optional registry revision id override for exact
-        replay (e.g. 2019-y-siguientes); defaults to the active revision for the modelo,
-        filing year, and period.
-      preflight_revision_override_invalid: The registry revision is not valid for
-        modelo {modelo} and filing year {filing_year}.
-      preflight_revision_unresolved: No registry revision covers modelo %{modelo}
-        filing year %{filing_year} period %{period}. Run `aeat app modelo describe
-        %{modelo}` to see the valid periods and revisions.
-      preflight_year_help: Filing year.
-      registration_abandoned: No profile was created.
-      remove_help: Tombstone a profile (immutable filing snapshots are retained)
-      remove_name_help: Profile id to tombstone
-      remove_requires_yes: Removal is destructive. Re-run 'aeat config profile delete
-        %{name} --yes' to confirm.
-      remove_yes_help: Explicitly confirm the tombstone operation
-      rename_display_name_help: Operator-visible label; defaults to the existing display
-        name
-      rename_help: Rename a profile in place; the active-profile pointer follows automatically
-      rename_source_help: Existing profile name
-      rename_target_help: New profile name
       sandbox:
         active_indicator_info: You are operating inside the sandbox %{label}, not
           a real profile; every command runs against this isolated, discardable bucket.
       show:
         summary_invalid: 'Profile record is invalid: %{count} blocking issue(s).'
-        summary_tombstoned: Profile record is tombstoned.
         summary_valid: Profile record is valid.
-      show_help: Show the live values of a profile (defaults to the active profile)
       show_name_help: Profile id to show (defaults to the active profile)
       unknown_profile: 'Unknown profile: %{name}. Run ''aeat config profile list''
         to see registered profiles.'
-      use_help: Select an existing profile as the active profile
-      use_name_help: Profile id to make active
       validate_help: Validate a profile against the loaded schema (defaults to the
         active profile).
       validate_name_help: Optional profile label to validate; defaults to the active
@@ -2318,8 +2152,6 @@ cli:
       view_help: Show one profile's facts (defaults to the active profile)
     provision:
       help: 'Manage local inference provisioning: report, pull models, verify readiness.'
-      no_model: No model is available for that role on this machine. Run 'aeat config
-        provision report' to see why.
       pull:
         help: Download a model into the local runtime. Refuses before downloading
           when it could not be loaded.
@@ -2337,25 +2169,15 @@ cli:
           selected for the role.
     repair:
       connectivity_help: Check browser and AEAT Sede connectivity
-      connectivity_target_help: Connectivity target to probe
       help: Diagnose and repair local configuration, registry, profile, auth, and
         logs
       integrity:
         objects_help: Check secure-object integrity.
         objects_namespace_help: Restrict secure-object integrity checks to one namespace.
         registry_help: Check calculation registry integrity.
-      integrity_attribution_details_help: Include per-row safe metadata details
-      integrity_attribution_help: Group undecryptable secure-object rows by safe metadata.
       integrity_help: Probe secure-object and registry integrity.
-      integrity_namespace_help: Restrict the integrity probe to one namespace.
-      integrity_objects_help: Probe AES-256-GCM tag verification across one namespace
-        (or all).
-      integrity_registry_help: Run full registry validation (the opt-in cross-domain
-        integrity probe).
       logs_help: Show the log file path and recent lines
       logs_lines_help: Number of recent log lines to show
-      plan_help: Dry-run preserve-first remediation planning for unreadable secure-object
-        rows.
       profile_clear_active_help: Clear a pointer-file active profile only when it
         points at unreadable profile state.
       profile_clear_active_mismatch: --clear-active can only clear the active profile
@@ -2367,8 +2189,6 @@ cli:
         moving anything
       quarantine_help: Preview undecryptable rows; active quarantine is disabled by
         preserve-first repair policy
-      quarantine_preserve_first_refused: Preserve-first repair policy refuses active
-        quarantine. Run the dry-run preview and integrity attribution instead.
       quarantine_requires_yes: This operation is destructive. Re-run with --yes to
         confirm.
       quarantine_yes_help: Explicitly confirm the quarantine operation
@@ -2392,25 +2212,15 @@ cli:
       start_help: Start a new irreversible reset of every locally stored profile.
       status_help: Show reset operation status without changing local data.
       yes_help: Confirm irreversible deletion of every locally stored profile.
-    set:
-      help: Assign a value to one configuration key
-      key_help: Key to assign (e.g. iva.regime)
-      value_help: Value to assign (text, true/false, amount depending on the key)
     setup:
       accept_defaults_help: Fill every unsupplied flag from the descriptor defaults,
         without prompting. Use alongside --quiet, or on its own for an all-defaults
         create.
-      errors:
-        missing_required_flags: Missing required flags for --quiet wizard run; supply
-          a value for every required question.
       help: Initialize the active tax profile
       profile_name_help: Profile name to write the answers into
       quiet_help: Run non-interactively using only the supplied flag values; required
         flags left unset cause an error. Sufficient on its own; combine with --accept-defaults
         to fill the rest from descriptor defaults.
-      success:
-        next_step: 'Next step: run `aeat app overview status` to review your workspace.'
-        saved: Profile '%{profile_name}' saved.
       tui_scripted_conflict: --tui cannot be combined with --quiet, --accept-defaults,
         or profile field options.
     status:
@@ -2481,9 +2291,6 @@ cli:
         area_help: Delete regenerable contents from a storage area
         incomplete: Some entries could not be removed and are still on disk.
         yes_help: Confirm the deletion; without it the command refuses
-      show:
-        area_argument_help: Storage area to show
-        area_help: Show one storage area in full
       values:
         area:
           cache: cache
@@ -2502,9 +2309,6 @@ cli:
       view:
         area_argument_help: The storage area to inspect (state, logs, cache, or exports).
         area_help: Show one declared storage location in full.
-    unset:
-      help: Clear the value of one configuration key
-      key_help: Key to clear
     workflow_help: Show config workflow help
   diagnostics:
     app_help: Local-only operator run-health and session diagnostics.
@@ -3320,9 +3124,6 @@ cli:
       active_profile_unavailable_message: An active profile is selected, but its display
         label is unavailable.
       no_active_profile_message: No active profile is configured.
-      text_template: '%{message}
-
-        Next: %{command}'
   overview:
     agenda:
       allow_incomplete_help: Render the agenda even when profile data is incomplete.

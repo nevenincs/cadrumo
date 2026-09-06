@@ -150,7 +150,6 @@ cli:
             profilhoz nincs rögzített gépen kívüli továbbítás.'
           rederive_help: Olvassa be újra az egyik eredményt ezen a gépen a tárolt
             átiratból.
-          rederive_refused: 'Az újraszármaztatás elutasítva: {detail}'
           rederived: A(z) {reference} újraszármaztatva ezen a gépen. Korábban {previous}
             volt; most {current}. A korábbi olvasás felülírásra került, de nem törlődött.
           transcriber_help: Az újrafelhasználandó átirat gyorsítótárkulcsa.
@@ -1797,7 +1796,6 @@ cli:
           app_did_not_prompt, operator_did_not_check.'
         report_help: Az üzemeltető által megfigyelt Cl@ve alkalmazás állapotának rögzítése
           egy hitelesítési diagnosztikához.
-        show_help: Egyetlen redaktált titkosított hitelesítési diagnosztika megjelenítése.
         view_help: Megjelenít egy titkosított hitelesítési diagnosztikát azonosító
           alapján, az érzékeny tartalmak elrejtésével.
       file_help: A hitelesítő fájl elérési útja (tanúsítvány vagy kulcs).
@@ -1934,7 +1932,6 @@ cli:
       secrets_stdin_help: A titkokat egyetlen korlátozott JSON objektumként olvassa
         a szabványos bemenetről, kérdés helyett.
     errors:
-      invalid_value: 'Érvénytelen érték a(z) %{name} mezőhöz: %{value}'
       no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
         NÉV --tax-id <NIF/CIF/DNI/NIE>`.'
       no_active_profile_registered: 'Nincs aktív profil. Futtassa: `aeat config login
@@ -1943,11 +1940,6 @@ cli:
         parancsot a profilod feloldásához.
       profile_session_expired: A profil-munkameneted lejárt. Futtasd az `aeat config
         login` parancsot az újbóli bejelentkezéshez.
-      unknown_key: 'Ismeretlen konfigurációs kulcs: %{name}. Futtassa: `aeat config
-        profile list` az elérhető kulcsok megjelenítéséhez.'
-    get:
-      help: Egy konfigurációs kulcs aktuális értékének megjelenítése.
-      key_help: A lekérendő kulcs (pl. tax.id, iva.regime).
     google:
       client_json_help: Egy Cloud Console asztali OAuth ügyfél JSON-fájljának elérési
         útja.
@@ -1972,8 +1964,6 @@ cli:
         scope_help: A megszemélyesített tokenhez kért OAuth hatókör (ismételhető;
           alapértelmezetten a Sheets/Drive adathozzáférési hatókörök)
         set_help: Mentése az aktív profil Google hitelesítőadat-forrás kiválasztásának
-        show_help: Az aktív profil mentett Google hitelesítőadat-forrás kiválasztásának
-          megjelenítése
         subject_help: A domainre kiterjedő delegalással megszemélyesítendő Workspace
           felhasználói e-mail cím (nem kötelező)
         target_principal_help: A megszemélyesítendő szolgáltatási fiók e-mail címe
@@ -1981,8 +1971,6 @@ cli:
         view_help: Megjeleníti az aktív profilhoz mentett Google hitelesítésiadat-forrás
           kiválasztását.
       detail:
-        client_json_bad_wrapper: A(z) {path} elérési útján lévő ügyfél JSON-ja nem
-          rendelkezik megfelelő "installed" wrapper objektummal.
         client_json_invalid: A(z) {path} helyen lévő ügyfél-JSON érvénytelen.
         client_json_not_desktop: A(z) {path} elérési útján lévő ügyfél JSON-ja nem
           Cloud Console asztali ügyfél; hiányzik az "installed" wrapper kulcs.
@@ -2034,7 +2022,6 @@ cli:
         engedélyezd a 'aeat config profile capabilities set google_export on' paranccsal.
       folder:
         folder_id_help: Google Drive mappa azonosítója.
-        get_help: A beállított Google Drive gyökérmappa megjelenítése.
         help: A Google Drive gyökérmappa-kötés kezelése.
         set_help: Google Drive mappa azonosítójának kötése az aktív profilhoz.
         view_help: Megjeleníti az aktív profilhoz beállított Google Drive gyökérmappát.
@@ -2053,31 +2040,8 @@ cli:
       register_help: Cloud Console asztali OAuth ügyfél JSON regisztrálása az aktív
         profilhoz.
       status_help: Az aktív profil aktuális Google OAuth-munkamenet állapotának megjelenítése.
-    init:
-      activity_help: Gazdasági tevékenység leírása (pl. 761.1, programozó).
-      auth_provider_help: A profilhoz használandó hitelesítési szolgáltató azonosítója.
-      certificate_password_env_help: A tanúsítvány jelszavát tartalmazó környezeti
-        változó neve.
-      certificate_path_help: A .p12 vagy .pfx tanúsítványfájl elérési útja.
-      drafts_dir_help: A helyi benyújtási tervezetek tárolási könyvtára.
-      dry_run_help: Változások jelentése a konfiguráció módosítása nélkül.
-      from_help: A beállítások importálásának forrásprofilazonosítója.
-      help: Új aktív profil inicializálása.
-      iva_regime_help: ÁFA-rezsim (general, simplificado, exento stb.).
-      manuals_root_help: Az AEAT műszaki kézikönyvek gyökérkönyvtára.
-      non_interactive_help: Futtatás felhasználói bevitel kérése nélkül.
-      output_language_help: A CLI kimenetének elsődleges nyelve (hu, en, es, ca).
-      profile_name_help: Egyedi azonosító ehhez a konfigurációs profilhoz.
-      quiet_help: Inicializálás utáni sikeres üzenet kihagyása.
-      submissions_dir_help: A benyújtott adóbevallás-visszaigazolások tárolási könyvtára.
-      success:
-        next_step: 'Következő lépés: futtassa: `aeat app overview status`'
-      tax_id_help: Spanyol adóazonosító (NIF/CIF/DNI/NIE).
-      tax_residence_ccaa_help: Az adóilletékesség autonóm közössége.
     list:
       help: Minden regisztrált profil listázása és az aktív megjelölése.
-      setup_incomplete_notice: '%{count} profil még a beállítást fejezi be, és még
-        nem áll készen a bevallásra: %{labels}. Folytassa a beállítást a használatukhoz.'
     login:
       help: Profil hitelesítése és folytatható munkamenet indítása
       name_help: A profil UUID-ja vagy pontos címkéje; hagyd el a kiválasztott profil
@@ -2093,8 +2057,6 @@ cli:
       passphrase_channel_absent: Nem érhető el jelszócsatorna. Futtassa ezt a parancsot
         terminálban, vagy használja a --secrets-stdin vagy --secrets-fd kapcsolót.
       passphrase_prompt: 'Profil jelszava: '
-      refusal:
-        abandoned: A bejelentkezés megszakadt; egyetlen profil sem nyílt meg.
     logout:
       help: A profil munkamenetének lezárása és helyi mutatójának törlése
       notices:
@@ -2114,7 +2076,6 @@ cli:
         section_help: Az ismételhető profilszakasz kulcsa.
         value_help: Sormező MEZŐ=ÉRTÉK alakban; minden kitöltött mezőhöz ismételje
           meg.
-      already_exists: A(z) %{name} profil már létezik. Válasszon másik célazonosítót.
       archive:
         export_help: A megadott profil kapszulajanak kiirasa lezart archivumba a --to
           helyre; az archivum a profil jelszavaval titkositott, es nem tartalmazza
@@ -2179,8 +2140,6 @@ cli:
         no_active_profile: Nincs aktív profil; jelentkezzen be egybe az 'aeat config
           login <név>' paranccsal a képesség beállítása előtt.
         set_help: Be- vagy kikapcsol egy szolgáltatás-képességet az aktív profilhoz.
-        show_help: Megjeleníti az aktív profil minden szolgáltatás-képességének feloldott
-          állapotát.
         state_help: A képesség engedélyezése (on) vagy letiltása (off).
         state_label: állapot
         view_help: Megjeleníti az aktív profil minden szolgáltatási képességének feloldott
@@ -2188,15 +2147,9 @@ cli:
       censo:
         apply_help: 'A beolvasott censal adatok rögzítése az aktív profilban (alapértelmezés:
           csak előnézet).'
-        compare_help: Az AEAT nyilvántartás és a profil mezőnkénti összehasonlítása.
         divergencia_leaf_artefact_value: AEAT-érték
         divergencia_leaf_axis: mező
         divergencia_leaf_source: eredet
-        dropped_fields_notice: 'Az AEAT censo már nem tartalmaz olyan mezőket, amelyek
-          a legutóbbi pillanatfelvételben szerepeltek: {dropped_fields}. Ha nem változtattad
-          meg és nem szüntetted meg ezeket a bejegyzéseket, előfordulhat, hogy részleges
-          letöltés történt: futtasd újra a censo letöltést, vagy add meg ismét az
-          értékeket; az otthoni iroda levonási aránya nem biztos, hogy feloldódik.'
         file_option_help: A Sede-ről letöltött Certificado de Situación Censal PDF
           elérési útja (G313 eljárás).
         help: Censal dokumentumok beolvasása az aktív profilhoz.
@@ -2222,11 +2175,6 @@ cli:
         pull_withheld_notice: 'A(z) {count} mező értéke ki van takarva a kimenetben:
           {axes}. Hasonlítsd össze őket a népesség-nyilvántartó hatóság adataival;
           ez az eszköz nem írja ki őket.'
-        refresh_help: A legfrissebb nyilvántartás letöltése az AEAT-ból és pillanatkép
-          mentése.
-        show_help: Az AEAT által legutóbb jelentett nyilvántartás megjelenítése erre
-          a profilra.
-        snapshot_id_help: Konkrét pillanatkép-azonosító (előtagok elfogadva).
       complete_setup:
         already_complete: A profil már készként volt nyilvántartva; semmi nem került
           mentésre.
@@ -2234,13 +2182,6 @@ cli:
         help: Nyilatkozat arról, hogy az aktív profil készen áll a beadásra.
         incomplete: 'A profilból még hiányoznak kötelező adatok: {paths}'
       create_confirm_passphrase_prompt: 'Erősítse meg az új profil jelszavát: '
-      create_epilog: 'Minimális önálló vállalkozói profil: aeat config profile create
-        PROFILE --entity-type natural_person --tax-id <DNI/NIE/NIF> --name <NAME>
-        --surnames <SURNAMES> --activity <ACTIVITY> --irpf-income-categories actividad_economica
-        --tax-residence-jurisdiction-scope common_regime --iva-regime GENERAL --iva-m303-regime-composition
-        general --no-iva-redeme-enrolled --no-iva-cash-accounting-regime-enrolled
-        --no-iva-voluntary-sii-enrolled --no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled
-        --quiet --accept-defaults'
       create_help: Hozzon létre aktív profilt kötelező, ellenőrzött helyreállítással.
         A helyreállítás később nem adható hozzá, és nem vesz részt a jelszavas bejelentkezésben.
       create_name_required: 'Profilnév szükséges. Futtassa: ''aeat config profile
@@ -2290,14 +2231,6 @@ cli:
           active_profile: Az aktív profil nem törölhető. Zárd le a munkamenetet az
             'aeat config logout' paranccsal, majd próbáld újra.
         yes_help: Kifejezetten megerősíti a törlést
-      delete_active_cleared: A törölt profil volt az aktív; az aktív profil mutató
-        törölve lett. Futtassa az aeat config login NÉV vagy az aeat config profile
-        create NÉV parancsot a folytatáshoz.
-      delete_help: Profil és lemezen lévő állapot törlése (--yes megerősíti).
-      delete_name_help: A törölni kívánt profil neve.
-      delete_requires_yes: 'A törlés visszafordíthatatlan. Futtassa újra: `aeat config
-        profile delete %{name} --yes` a megerősítéshez.'
-      delete_yes_help: Törlési művelet explicit megerősítése.
       descendiente:
         add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
           Ismételhető. Futtassa az `aeat config profile descendiente` parancsot alparancs
@@ -2320,47 +2253,8 @@ cli:
         remove_help: Egy leszármazott eltávolítása 0-alapú index szerint az aktív
           profilról.
         remove_index_help: Az eltávolítandó leszármazott 0-alapú indexe.
-      duplicate_display_name_help: 'Az új profil megjelenítési neve (alapértelmezés:
-        a célazonosító).'
-      duplicate_help: Profil másolása új azonosítóra és megjelenítési névre.
-      duplicate_source_help: A másolandó forrásprofilazonosító.
-      duplicate_target_help: A másolat célazonosítója.
       edit_help: A varázsló újrafuttatása meglévő profil ellen, értékek frissítése
         helyben.
-      edit_target_not_active: A(z) '%{name}' profil nem az aktív profil, és a 'profile
-        edit' csak az aktívat szerkeszti. Először jelentkezzen be rá, majd szerkessze.
-      export_cleartext_local_help: Titkosítatlan JSON írása csak helyi/SAR kezelésre;
-        nem biztonságos e-mailhez, szinkronizáláshoz vagy átvitelhez.
-      export_confirm_passphrase_prompt: 'Erősítsd meg a csomag jelmondatát: '
-      export_encrypt_help: A csomag AEAD-titkosítása átvitelhez; a jelmondatot rejtett
-        kérdés vagy a --secrets-stdin adja meg, soha nem argv.
-      export_encrypted_info: 'Ez a profilcsomag ide íródott: {out}, AEAD jelmondatos
-        titkosítással. Csak a strukturált profilcsomagot tartalmazza; teljes biztonsági
-        mentéshez a titkosított helyreállítási archívumot használd a csatolt bizonyítékokkal
-        és az auditnaplóval.'
-      export_help: Passphrase alatt titkosított hordozható profilcsomag írása ÚTVONALRA;
-        a titkosítatlan JSON-hoz --cleartext-local kell, és csak helyi/SAR célra való.
-      export_name_help: 'Az exportálandó profil; alapértelmezés: az aktív profil.'
-      export_out_help: A profilcsomag célútvonala.
-      export_passphrase_mismatch: A csomag jelmondata és a megerősítése nem egyezik;
-        semmi sem lett kiírva.
-      export_passphrase_prompt: 'A csomag jelmondata (legalább 8 karakter): '
-      export_passphrase_too_short: A profilexport passphrase legalább 8 karakter hosszú
-        legyen.
-      export_reconcile_incomplete_warning: Egy korábbi futásból {count} félbemaradt
-        profilcsomag-exportot nem sikerült kitakarítani. Mindegyikhez maradhat a lemezen
-        egy titkosítatlan ideiglenes fájl.
-      export_requires_destination: Add meg a --to ÚTVONAL célhelyet a csomagnak, vagy
-        futtasd interaktív terminálban, és a program bekéri.
-      export_requires_transport: Használd az --encrypt kapcsolót titkosított átviteli
-        csomaghoz, vagy a --cleartext-local kapcsolót csak helyi/SAR JSON-hoz.
-      export_sensitivity_warning: 'Ez a csomag NINCS titkosítva, és érzékeny pénzügyi
-        adatokat tartalmaz: a nyers adóazonosítót (kitakarás nélkül), nevet és vezetékneveket,
-        a teljes főkönyvet, a számítási revíziókat és a benyújtási rekordokat. Ide
-        íródott: {out}. Csak helyi/SAR kezelésre használd; ne küldd e-mailben, ne
-        szinkronizáld és ne továbbítsd. Töröld, amint a helyi/SAR kezelés befejeződött.'
-      export_transport_conflict: A --encrypt és a --cleartext-local közül csak az
-        egyiket add meg.
       help: Aktív profilkonfigurációs értékek kezelése.
       history:
         invalid_event_type: 'Ismeretlen eseménytípus: {value}. Érvényes eseménytípusok:
@@ -2381,90 +2275,25 @@ cli:
         korábbi eseményekre (pl. 2026-04-01T00:00:00+00:00).
       history_until_help: Az előzmények szűrése ennél az ISO-8601 időbélyegnél nem
         újabb eseményekre (pl. 2026-04-30T23:59:59+00:00).
-      import_active_switch_info: Az importált {name} profil mostantól az AKTÍV profil;
-        a további parancsok ezen működnek.
-      import_encrypted_bundle_invalid: A titkosított profilcsomag nem fejthető vissza
-        vagy nem validálható. Ellenőrizd a passphrase értéket és a fájlt.
-      import_help: Hordozható profilcsomag regisztrálása fájlból.
-      import_invalid_bundle: 'Érvénytelen profilcsomag: a JSON nem felel meg a profilcsomag-sémának.'
-      import_invalid_tax_id: A profilcsomag adóazonosítója érvénytelen. Javítsa, majd
-        exportálja újra, vagy importáljon érvényes csomagot.
-      import_label_help: 'Az importált profil megjelenítési neve; alapértelmezés:
-        a csomagban tárolt név. Akkor használja, ha a tárolt címke már foglalt.'
-      import_label_taken: Már létezik %{name} nevű profil. Futtassa újra `--label
-        ÚJ_NÉV` kapcsolóval más névvel való importáláshoz.
-      import_label_taken_different_id: A(z) %{name} profilcímke már használatban van.
-        Az importáláshoz adjon meg másik címkét a --label ÚJ_NÉV kapcsolóval.
-      import_missing_bundle: 'A profilcsomag nem található: %{path}'
-      import_missing_filing_baseline: 'A profilcsomagból hiányoznak a bevallási azonosító
-        adatok. Javítsa a csomagot, vagy exportáljon újra teljes profilt ezekkel a
-        mezőkkel: %{missing_flags}.'
-      import_passphrase_prompt: 'A csomag jelmondata: '
-      import_path_help: A profilcsomag fájljának elérési útja.
-      import_requires_path: Add meg a csomag ÚTVONAL argumentumát, vagy futtasd interaktív
-        terminálban, és a program bekéri.
-      import_uuid_collision: A csomagban lévő UUID ütközik egy meglévő profillal.
       list:
         incoherent_observation_advisory: 'A profillista nem volt megbízhatóan beolvasható
           (állapot: {outcome}). Futtassa újra a parancsot; ha továbbra is fennáll,
           ellenőrizze a profiltárolót.'
-      manager_closed: A(z) '{profile}' módosításai mentve.
       manager_closed_created: A(z) '{profile}' profil létrejött. A modellekkel végzett
         munka előtt jelentsd be a beállítás befejezését az `aeat config profile complete-setup`
         paranccsal. Bármikor újranyithatod az 'aeat config profile edit' paranccsal.
       no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
         NÉV --tax-id <NIF/CIF/DNI/NIE>`.'
-      preflight:
-        per_operation_axis_not_assessed: A(z) {modelo} modellhez nincs séma szerint
-          kötelező profilmező; a készenlét csak az identitás- és feltételes ellenőrzéseket
-          fedi le, nem a teljes modellenkénti értékelést.
-      preflight_filing_year_help: Bevallási év (négy számjegy).
-      preflight_help: Jelenti, mely profilmezők hiányoznak adott (modell, revízió,
-        év, időszak) bevallási kontextushoz.
-      preflight_modelo_help: Számozott modell azonosító (pl. 303).
-      preflight_period_help: Időszak kód (pl. 1T, 1P, 0A, 01).
-      preflight_revision_ambiguous: 'Egynél több registry-revízió illeszkedik a(z)
-        %{modelo} modellhez, %{period} időszakhoz: %{candidates}. Futtassa újra a
-        --revision-id kapcsolóval, egyiküket megadva.'
-      preflight_revision_help: Nyilvántartási revízió azonosítója.
-      preflight_revision_id_help: Opcionális registry-revízió-azonosító felülbírálás
-        pontos visszajátszáshoz (pl. 2019-y-siguientes); alapértelmezetten a modellhez,
-        bevallási évhez és időszakhoz tartozó aktív revíziót használja.
-      preflight_revision_override_invalid: A beállításjegyzék-változat nem érvényes
-        a(z) {modelo} modellhez és a(z) {filing_year} bevallási évhez.
-      preflight_revision_unresolved: Egyetlen registry-revízió sem fedi le a(z) %{modelo}
-        modellt, %{filing_year} bevallási évet, %{period} időszakot. Futtassa a `aeat
-        app modelo describe %{modelo}` parancsot az érvényes időszakok és revíziók
-        megtekintéséhez.
-      preflight_year_help: Benyújtási év.
-      registration_abandoned: Nem jött létre profil.
-      remove_help: Profil lezárása (a megváltoztathatatlan benyújtási pillanatképek
-        megmaradnak).
-      remove_name_help: A lezárandó profil azonosítója.
-      remove_requires_yes: 'Az eltávolítás visszafordíthatatlan. Futtassa újra: `aeat
-        config profile delete %{name} --yes` a megerősítéshez.'
-      remove_yes_help: A lezárási művelet explicit megerősítése.
-      rename_display_name_help: 'Az üzemeltető által látható felirat; alapértelmezés:
-        a meglévő megjelenítési név.'
-      rename_help: Profil helybeni átnevezése; az aktív-profil-mutató automatikusan
-        követi.
-      rename_source_help: A meglévő profilnév.
-      rename_target_help: Az új profilnév.
       sandbox:
         active_indicator_info: A(z) %{label} homokozóban dolgozol, nem egy valódi
           profilban; minden parancs ebben az elkülönített, eldobható tárolóban fut.
       show:
         summary_invalid: 'A profil rekordja érvénytelen: %{count} blokkoló probléma.'
-        summary_tombstoned: A profil rekordja törlésre van jelölve.
         summary_valid: A profil rekordja érvényes.
-      show_help: 'Egy profil élő értékeinek megjelenítése (alapértelmezés: az aktív
-        profil).'
       show_name_help: 'A megjelenítendő profil azonosítója (alapértelmezés: az aktív
         profil).'
       unknown_profile: 'Ismeretlen profil: %{name}. Futtassa: `aeat config profile
         list` a regisztrált profilok megtekintéséhez.'
-      use_help: Meglévő profil kiválasztása aktív profilként.
-      use_name_help: A kiválasztandó profil azonosítója.
       validate_help: 'Validálja a profilt a betöltött sémával szemben (alapértelmezett:
         aktív profil).'
       validate_name_help: 'A validálandó profil opcionális címkéje; alapértelmezett:
@@ -2473,8 +2302,6 @@ cli:
     provision:
       help: 'A helyi következtetés előkészítésének kezelése: jelentés, modellletöltés,
         készenlét-ellenőrzés.'
-      no_model: Ehhez a szerepkörhöz nincs elérhető modell ezen a gépen. Futtassa
-        az 'aeat config provision report' parancsot az okért.
       pull:
         help: Modell letöltése a helyi futtatókörnyezetbe. Letöltés előtt elutasít,
           ha nem lenne betölthető.
@@ -2492,7 +2319,6 @@ cli:
           a szerepkörhöz választott modell.
     repair:
       connectivity_help: Böngésző és AEAT Sede kapcsolhatóság ellenőrzése.
-      connectivity_target_help: A vizsgálandó kapcsolódási cél.
       help: Helyi konfiguráció, nyilvántartás, profil, hitelesítés és naplók diagnosztikája
         és javítása.
       integrity:
@@ -2500,19 +2326,9 @@ cli:
         objects_namespace_help: Biztonságos objektumok integritásának ellenőrzése
           egy névtérre korlátozva.
         registry_help: Ellenőrzi a számítási nyilvántartás épségét.
-      integrity_attribution_details_help: Soronkénti biztonságos metaadat-részletek
-        bevonása.
-      integrity_attribution_help: Visszafejthető biztonságos objektumsorok csoportosítása
-        biztonságos metaadatok szerint.
       integrity_help: Biztonságos objektumok és nyilvántartás integritásának vizsgálata.
-      integrity_namespace_help: Az integritásvizsgálat korlátozása egy névtérre.
-      integrity_objects_help: AES-256-GCM-tag ellenőrzés egy névtéren (vagy mindenen).
-      integrity_registry_help: Teljes nyilvántartás-érvényesítés futtatása (opcionális
-        tartományközi integritásvizsgálat).
       logs_help: A naplófájl elérési útjának és a legújabb sorainak megjelenítése.
       logs_lines_help: A megjelenítendő legújabb naplósorok száma.
-      plan_help: Száraz-futtatásos megőrzés-elsőbbségű helyreállítási terv az olvashatatlan
-        biztonságos-objektum-sorokhoz.
       profile_clear_active_help: A mutató-fájl aktív profilmutatójának törlése csak
         akkor, ha olvashatatlan profilállapotra mutat.
       profile_clear_active_mismatch: A --clear-active csak az aktív profilmutatót
@@ -2523,9 +2339,6 @@ cli:
       quarantine_dry_run_help: A karanténba kerülő sorok előnézete mozgatás nélkül.
       quarantine_help: Visszafejthető sorok előnézete; az aktív karantén le van tiltva
         a megőrzés-elsőbbségű javítási szabályzat miatt.
-      quarantine_preserve_first_refused: A megőrzés-elsőbbségű javítási szabályzat
-        elutasítja az aktív karantént. Futtassa a száraz-futtatásos előnézetet és
-        az integritásattribúciót.
       quarantine_requires_yes: Ez a művelet visszafordíthatatlan. Futtassa újra a
         --yes kapcsolóval a megerősítéshez.
       quarantine_yes_help: A karantén-művelet explicit megerősítése.
@@ -2554,26 +2367,15 @@ cli:
       status_help: A helyi adatok módosítása nélkül megjeleníti a visszaállítási művelet
         állapotát.
       yes_help: Megerősíti az összes helyben tárolt profil visszafordíthatatlan törlését.
-    set:
-      help: Érték hozzárendelése egy konfigurációs kulcshoz.
-      key_help: A hozzárendelendő kulcs (pl. iva.regime).
-      value_help: A hozzárendelendő érték (szöveg, igaz/hamis, összeg a kulcstól függően).
     setup:
       accept_defaults_help: Minden megadatlan kapcsolót az leíró alapértékeiből tölt
         ki kérdés nélkül. Kombinálja a --quiet kapcsolóval, vagy önállóan az összes-alapértékes
         létrehozáshoz.
-      errors:
-        missing_required_flags: Hiányzó kötelező kapcsolók a --quiet varázslóhoz;
-          adjon meg értéket minden kötelező kérdéshez.
       help: Az aktív adóprofil inicializálása.
       profile_name_help: Az adat írásának profilneve.
       quiet_help: Csak a megadott kapcsolóértékek alapján fut interakció nélkül; a
         megadatlan kötelező kapcsolók hibát okoznak. Önmagában elegendő; kombinálja
         az --accept-defaults kapcsolóval a többi alapértékből való kitöltéséhez.
-      success:
-        next_step: 'Következő lépés: futtassa: `aeat app overview status` a munkaterület
-          áttekintéséhez.'
-        saved: A(z) '%{profile_name}' profil mentve.
       tui_scripted_conflict: A --tui nem használható együtt a --quiet, a --accept-defaults
         vagy a profilmezők kapcsolóival.
     status:
@@ -2647,9 +2449,6 @@ cli:
         incomplete: Néhány bejegyzést nem sikerült eltávolítani, és még mindig a lemezen
           vannak.
         yes_help: Megerősíti a törlést; enélkül a parancs elutasít
-      show:
-        area_argument_help: A megjelenítendő tárolóterület
-        area_help: Egy tárolóterület teljes megjelenítése
       values:
         area:
           cache: gyorsítótár
@@ -2669,9 +2468,6 @@ cli:
         area_argument_help: A megtekintendő tárolási terület (state, logs, cache vagy
           exports).
         area_help: Részletesen megjelenít egy megadott tárolási helyet.
-    unset:
-      help: Egy konfigurációs kulcs értékének törlése.
-      key_help: A törlendő kulcs.
     workflow_help: Konfiguráció-munkafolyamat súgó megjelenítése.
   diagnostics:
     app_help: Helyi futásállapot- és munkamenet-diagnosztika.
@@ -3537,7 +3333,6 @@ cli:
       active_profile_unavailable_message: Van kijelölt aktív profil, de a megjelenítési
         címkéje nem érhető el.
       no_active_profile_message: Nincs aktív profil beállítva.
-      text_template: '%{message} Következő: %{command}'
   overview:
     agenda:
       allow_incomplete_help: A napirend megjelenítése akkor is, ha a profiladatok
