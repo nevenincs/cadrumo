@@ -25,6 +25,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ..review.filter import LedgerReviewFilterSpec
 from .actions_manual import list_manual_transactions, query_ledger_review_rows
+from .models import ManualLedgerTransactionResult
 from .review_filter import ledger_review_query_for_spec
 
 if TYPE_CHECKING:
@@ -32,7 +33,6 @@ if TYPE_CHECKING:
     from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
     from ...domain.transactions.models import Transaction
     from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-    from .models import ManualLedgerTransactionResult
 
 #: Sorts after every real group label, so ungrouped rows trail named groups.
 _UNGROUPED_SENTINEL: Final[str] = "￿"
