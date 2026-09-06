@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:713242024e249f906f5e0b8b486b8e2e9bbde2fb6baad848b19076fc47801a50'
+body_hash: 'sha256:6c7454551186ada245a6788059f02f7dcb304c0b90f237cea34e882d6789c391'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -1237,6 +1237,8 @@ plan should give that its own Phase from the start; this one records where it ac
 - [ ] `W06.P13.S382` - Complete the localization crossing across all five key-bearing declaration families and decline to gate the one carrying findings; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S383` - Measure the per-revision label restatement corpus-wide after the operator corrected the authoring framing; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S870` - Bind the dead-code scan's CLEAN outcome to a measured module population, so vulture's exit 0 cannot report green over a production tree it never read; `dev/audit/dead_code.py, dev/audit/tests/test_dead_code.py, dev/audit/tests/test_dead_code_scan.py`.
+- [x] `W06.P13.S871` - Collapse the ten-line system-temporary-root validation that stood character-for-character in both verified-copy paths, so a divergence between the two callers is unconstructable rather than discouraged; `dev/quality/object_name_replay.py`.
+- [x] `W06.P13.S872` - Carry the dead-code denominator into both the human headline and the machine-readable payload, so a green verdict states how much it read wherever it is consumed; `dev/audit/dead_code.py, dev/audit/tests/test_dead_code.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 
