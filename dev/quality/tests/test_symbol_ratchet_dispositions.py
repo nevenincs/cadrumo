@@ -32,9 +32,23 @@ _READER: Final[re.Pattern[str]] = re.compile(r"\b((?:dev|src)/[A-Za-z0-9_./-]+\.
 
 
 def _dispositions() -> list[dict[str, object]]:
-    """Return the recorded intentional symbol dispositions."""
+    """Return the recorded intentional symbol dispositions.
+
+    Raises:
+        AssertionError: When the baseline declares no ``[[intentional]]``
+            table at all.
+    """
     data = tomllib.loads(_BASELINE.read_text(encoding="utf-8"))
-    return list(data.get("intentional", ()))
+    # A defaulting ``get`` reads a renamed or deleted table as "no
+    # dispositions", and all four claims below then hold over an empty
+    # list. The list may legitimately empty as keeps are retired, so the
+    # guard belongs on the SOURCE rather than on the count: an empty list
+    # must mean the table declared nothing, not that it was never found.
+    assert "intentional" in data, (
+        f"{_BASELINE.name} declares no [[intentional]] table, so every disposition "
+        "claim in this module would hold over an empty list"
+    )
+    return list(data["intentional"])
 
 
 def test_every_disposition_declares_a_closed_kind() -> None:

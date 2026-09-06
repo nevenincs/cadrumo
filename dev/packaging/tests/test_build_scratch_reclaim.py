@@ -148,7 +148,12 @@ def _var_naming_surfaces() -> list[Path]:
     """
     return [
         *(path for path in REPO_ROOT.joinpath("dev").rglob("*.py") if path.name not in _DISCOVERY_EXCLUSIONS),
-        *sorted(REPO_ROOT.joinpath(".github", "workflows").glob("*.yml")),
+        # Both suffixes: Actions reads either, and a lane filed as .yaml
+        # would contribute its var/ names to no surface at all -- the
+        # fraction-of-its-real-inputs failure this widening exists to stop.
+        *sorted(
+            path for path in REPO_ROOT.joinpath(".github", "workflows").iterdir() if path.suffix in (".yml", ".yaml")
+        ),
         REPO_ROOT / "justfile",
     ]
 
