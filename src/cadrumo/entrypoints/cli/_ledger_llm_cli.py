@@ -261,7 +261,14 @@ def dispatch_autosplit(
     bucket_id = transaction_repository.bucket_id
 
     if suggestion.recommends_split:
-        _emit_split(ctx, suggestion, bucket_id=bucket_id, apply=apply, actor=actor)
+        _emit_split(
+            ctx,
+            suggestion,
+            bucket_id=bucket_id,
+            apply=apply,
+            actor=actor,
+            transaction_repository=transaction_repository,
+        )
         return
     _emit_single(
         ctx,
@@ -270,6 +277,7 @@ def dispatch_autosplit(
         apply=apply,
         actor=actor,
         result_models=(LedgerClassifyLlmSuggestResult, LedgerClassifySingleResult),
+        transaction_repository=transaction_repository,
     )
 
 
@@ -280,8 +288,16 @@ def _emit_split(
     bucket_id: str,
     apply: bool,
     actor: str | None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
 ) -> None:
-    """Preview or apply the multi-child evidence-driven split for the auto-split route."""
+    """Preview or apply the multi-child evidence-driven split for the auto-split route.
+
+    The caller's already-open repository is threaded through to the write. It
+    is not optional here: every other apply path in this module and in the
+    ``ledger split --llm`` route passes one, and omitting it made this the only
+    site that opened a second encrypted-storage repository for the bucket it
+    was already holding — and silently ignored an injected one.
+    """
     from ._ledger_payloads import LedgerSplitResult
 
     proposed_children = _autosplit_child_payloads(suggestion)
@@ -313,6 +329,7 @@ def _emit_split(
             decision=LlmReviewDecision.SPLIT,
             bucket_id=bucket_id,
             actor=actor or resolve_active_bucket_id() or "operator",
+            transaction_repository=transaction_repository,
         )
     except TransactionValidationError as exc:
         raise ledger_transaction_validation_no_recovery(exc) from None
@@ -350,8 +367,14 @@ def _emit_single(
     apply: bool,
     actor: str | None,
     result_models: tuple[type[BaseModel], type[BaseModel]],
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
 ) -> None:
-    """Preview or apply the in-place single-line classification (no-split verdict)."""
+    """Preview or apply the in-place single-line classification (no-split verdict).
+
+    Takes the caller's open repository for the same reason :func:`_emit_split`
+    does: the two branches of one route must not differ in whether the write
+    reaches the repository the suggestion was read from.
+    """
     suggest_model, single_model = result_models
     child = suggestion.children[0]
     if not apply:
@@ -384,6 +407,7 @@ def _emit_single(
             bucket_id=bucket_id,
             actor=actor or resolve_active_bucket_id() or "operator",
             source_command="aeat app ledger classify --read-evidence --auto-split --apply",
+            transaction_repository=transaction_repository,
         )
     except TransactionValidationError as exc:
         raise ledger_transaction_validation_no_recovery(exc) from None
