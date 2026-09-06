@@ -6,7 +6,12 @@ from typing import Any
 
 import pytest
 
-from ..workflow_permissions import effective_job_permissions, granted_level, jobs_granting
+from ..workflow_permissions import (
+    effective_job_permissions,
+    granted_level,
+    jobs_granting,
+    jobs_with_unsettled_grant,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -49,6 +54,8 @@ def test_an_undeclared_permission_set_is_unknown_rather_than_none() -> None:
     assert effective_job_permissions(document, "bare") is None
     assert granted_level(document, "bare", "contents") is None
     assert jobs_granting(document, "contents", "write") == ()
+    # And the unknown is named, so a gate need not read the silence as a denial.
+    assert jobs_with_unsettled_grant(document, "contents") == ("bare",)
 
 
 def test_scalar_shorthands_resolve_to_the_level_they_grant_everywhere() -> None:
@@ -91,3 +98,38 @@ def test_an_unknown_job_or_level_refuses_instead_of_answering() -> None:
         effective_job_permissions(document, "no-such-job")
     with pytest.raises(ValueError, match="unknown permission level"):
         jobs_granting(document, "actions", "admin")
+
+
+def test_an_unsettled_grant_is_distinguished_from_a_denied_one() -> None:
+    """The two-sided case a confinement gate cannot see through `jobs_granting`.
+
+    Both a workflow that denies a scope and one that never mentions it answer
+    `jobs_granting(...) == ()`. Only the first has actually denied anything; the
+    second defers to repository settings this file cannot read.
+    """
+    denied = {"jobs": {"sealed": {"permissions": {}, "steps": []}}}
+    silent = {"jobs": {"sealed": {"steps": []}}}
+    assert jobs_granting(denied, "contents", "write") == ()
+    assert jobs_granting(silent, "contents", "write") == ()
+
+    assert jobs_with_unsettled_grant(denied, "contents") == ()
+    assert jobs_with_unsettled_grant(silent, "contents") == ("sealed",)
+
+
+def test_a_declared_map_settles_every_scope_including_ones_it_omits() -> None:
+    """A declared block is an answer for scopes it never names: it grants them nothing."""
+    document = _document()
+    # `watchdog` declares a map naming neither id-token nor pages.
+    assert granted_level(document, "watchdog", "id-token") == "none"
+    assert jobs_with_unsettled_grant(document, "id-token") == ()
+    assert jobs_with_unsettled_grant(document, "contents") == ()
+
+    # Strip both levels and every job falls back to settings, unsettled.
+    document.pop("permissions")
+    for job in document["jobs"].values():
+        job.pop("permissions", None)
+    assert jobs_with_unsettled_grant(document, "contents") == (
+        "watchdog",
+        "acquisition",
+        "inheritor",
+    )

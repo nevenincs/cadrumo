@@ -24,7 +24,7 @@ import yaml
 from cadrumo.core.directory_scan import scan_directory
 
 from ..._paths import REPO_ROOT
-from ...ci.workflow_permissions import jobs_granting
+from ...ci.workflow_permissions import jobs_granting, jobs_with_unsettled_grant
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -75,7 +75,8 @@ def test_no_packaging_job_can_write_repository_contents(workflow: str) -> None:
     at all, so no packaging job may hold it — at workflow or job level.
     """
     document = _document(workflow)
-    assert (document.get("permissions") or {}).get("contents") != "write", workflow
+    unsettled = jobs_with_unsettled_grant(document, "contents")
+    assert unsettled == (), f"{workflow}: {', '.join(unsettled)} settle no permissions at either level"
     escalated = jobs_granting(document, "contents", "write")
     assert escalated == (), f"{workflow}: {', '.join(escalated)} still grants contents:write"
 

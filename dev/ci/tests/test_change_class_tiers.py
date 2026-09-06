@@ -21,6 +21,7 @@ import yaml
 from cadrumo.core.directory_scan import scan_directory
 
 from ..._paths import REPO_ROOT
+from ..workflow_permissions import granted_level
 from ..workflow_run_text import executed_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -234,7 +235,9 @@ def test_the_docs_verification_lane_never_publishes() -> None:
 
     job = document["jobs"]["cadrumo-docs"]
     assert "environment" not in job, "the verification lane must not enter the deploy environment"
-    assert "id-token" not in (job.get("permissions") or {}), "the verification lane needs no OIDC federation"
+    assert granted_level(document, "cadrumo-docs", "id-token") == "none", (
+        "the verification lane needs no OIDC federation"
+    )
     commands = "\n".join(str(step.get("run", "")) for step in job["steps"])
     for forbidden in ("docs_static_site", "publish", "--confirm"):
         assert forbidden not in commands, forbidden

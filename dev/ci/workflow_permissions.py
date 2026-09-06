@@ -35,6 +35,7 @@ __all__ = [
     "effective_job_permissions",
     "granted_level",
     "jobs_granting",
+    "jobs_with_unsettled_grant",
 ]
 
 #: Permission levels in increasing order of capability. ``none`` is a real
@@ -97,3 +98,22 @@ def jobs_granting(document: dict[str, Any], scope: str, level: str = "write") ->
         if held in LEVELS and LEVELS.index(held) >= floor:
             granted.append(job_name)
     return tuple(granted)
+
+
+def jobs_with_unsettled_grant(document: dict[str, Any], scope: str) -> tuple[str, ...]:
+    """Return every job whose grant for ``scope`` this file does not settle.
+
+    ``jobs_granting`` names the jobs that provably hold a capability, and a job
+    declaring no permissions at either level is not among them -- its grant comes
+    from repository settings no file here can read. Absence of proof is not proof
+    of absence, so a confinement gate asserting ``jobs_granting(...) == ()`` reads
+    the same green for a workflow that denies the capability and for one that says
+    nothing about it, and the second is only safe if the repository default is.
+
+    This names that second case so a gate can refuse it rather than inherit its
+    answer from settings. An explicit ``permissions: {}``, or a declared map that
+    omits ``scope``, is settled: both grant nothing, and both are answers.
+    """
+    return tuple(
+        str(job_name) for job_name in document.get("jobs") or {} if granted_level(document, job_name, scope) is None
+    )
