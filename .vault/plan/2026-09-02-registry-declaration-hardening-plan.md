@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:098c55a6900411fe2b56e6f4ef5935f7b8760e48c12a197c5b9446b6b32028d1'
+body_hash: 'sha256:03ef1ad04f87995ce35f3a20b42c6de0061e1e3d673e90843d9fdef012f6c726'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -662,6 +662,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S780` - Floor the shortened-horizon coverage report, whose equality compares two sets derived from the same authority and holds when both are empty; `dev/registry/tests/test_temporal_coverage.py`.
 - [x] `W02.P02.S781` - Floor the m200 eligibility and its smaller branch, whose four coverage equalities each compare two sets derived from the same projection; `dev/registry/tests/test_render_profile.py`.
 - [x] `W02.P02.S782` - Floor both branches of the workbook parse behind the total-preserving projection claim, whose tuple equalities and strict zip are all satisfied by two empty sides; `dev/registry/tests/test_record_design_ir.py`.
+- [x] `W02.P02.S783` - Floor both chain transcripts behind the isolation and determinism claims, whose strict zip and pin to frozenset are both satisfied by a run that produced no frame; `dev/docs/sequences/tests/test_runner.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
