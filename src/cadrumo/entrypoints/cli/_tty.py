@@ -19,6 +19,8 @@ into the process environment directly.
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from ...core.click_context import current_cli_flag
 from ...core.config import Settings
 from ...core.errors.hierarchy import CadrumoError
@@ -33,7 +35,7 @@ class NonTtyRefusedError(CadrumoError):
         super().__init__()
 
 
-def should_use_color(*, no_color: bool | None = None) -> bool:
+def should_use_color(*, no_color: bool | None = None, stream_is_tty: Callable[[], bool] | None = None) -> bool:
     """Resolve whether ANSI colour should be enabled for this invocation.
 
     Precedence: explicit ``--no-color`` (via either the active CLI flag
@@ -46,6 +48,10 @@ def should_use_color(*, no_color: bool | None = None) -> bool:
         no_color: Optional per-call override mirroring the
             ``--no-color`` CLI flag. Kept optional so commands can
             adopt the helper before any global flag is wired.
+        stream_is_tty: Interactivity probe for the stream being written.
+            Defaults to stdout. A caller writing to stderr passes
+            :func:`stderr_is_tty`, because a run with stdout piped and
+            stderr on a terminal should still colour its errors.
 
     Returns:
         ``True`` when colour output is appropriate.
@@ -56,7 +62,7 @@ def should_use_color(*, no_color: bool | None = None) -> bool:
         return False
     if settings.cadrumo_force_color:
         return True
-    return stdout_is_tty()
+    return (stream_is_tty or stdout_is_tty)()
 
 
 def should_show_rich_progress(
