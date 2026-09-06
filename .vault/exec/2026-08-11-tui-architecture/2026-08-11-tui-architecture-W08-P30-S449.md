@@ -5,11 +5,16 @@ tags:
 date: '2026-09-06'
 modified: '2026-09-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:9234b3543ee6141a03bf746ab901daee3f579644e4412efaac3c6665bb768e47'
+body_hash: 'sha256:d0260e632c1babc80f4188027641afcce144d73e79ccad06aeb6d97d0d011c33'
 step_id: 'S449'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
+
+<!-- Machine-owned: the filename, the frontmatter, the title heading and the
+     Scope list are all filled by `vaultspec-core vault add exec` from the
+     originating Step row; never hand-edit them. Add no frontmatter fields.
+     Wiki-links belong in `related:` only, never in the body. -->
 
 # Give the reconciliation direction column a header key that is not also a namespace, and gate the shape. The code declared tui.ledger.reconciliation.direction as a leaf and as the parent of its two enum values, which a mapping cannot satisfy, so the catalogue kept the namespace and the column header had nothing to resolve to every time the table drew. Move the enum values to a sibling namespace in the house style, author the header, and add a check for a declared key that is also a prefix of another.
 
@@ -21,6 +26,23 @@ related:
 - `dev/locales/tests/test_no_key_shadows_a_namespace.py`
 
 ## Changes
+
+<!-- MECHANICAL LOG. One line per path touched, nothing else:
+       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
+     Paths are repo-relative, in backticks. No prose, no sentences, no
+     narration of intent, outcome, or difficulty - the diff and the plan Step
+     already carry those. Example:
+
+       - `M` `src/vaultspec_core/cli/exec_cmd.py`
+       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
+       - `D` `src/legacy/shim.py`
+
+     Optional final line, only when a check was run:
+       - `verify:` `<command>` -> `pass` | `fail`
+
+     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
+     a scaffold left in code, or a persistent failure. Omit it otherwise -
+     an absent section is correct; an empty one is a check finding. -->
 
 Locale parity missing keys: 1 -> 0. The last one was not a scanner artefact like
 the four before it. It was a live rendering bug the gate had been reporting
@@ -63,3 +85,4 @@ catalogue holds that no scanner site claims -- and pruning them with scaffold
 would delete enum-driven keys the runtime builds by concatenation. That needs
 the dynamic namespaces declared, which is a decision about which prefixes are
 legitimately dynamic rather than a mechanical fix.
+
