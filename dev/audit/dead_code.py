@@ -49,6 +49,14 @@ _LINE: Final = re.compile(r"^(?P<path>.+):(?P<line>\d+): (?P<message>.+) \((?P<c
 _EXIT_CLEAN: Final = 0
 _EXIT_FINDINGS: Final = 3
 
+# The production tree offered 5893 modules when this floor was set, and the
+# whitelist file one more. A bare ``> 0`` check would be satisfied by that
+# single whitelist file alone, so it could not see src/cadrumo disappear --
+# which is the degradation that makes a clean scan vacuous. The floor sits
+# near half the live population, matching the sibling stub-population floor,
+# so ordinary churn cannot trip it and a wholesale loss cannot hide.
+_MINIMUM_OFFERED_MODULES: Final = 3000
+
 
 class DeadCodeOutcome(StrEnum):
     """The three honest states a vulture scan can land in."""
@@ -78,13 +86,17 @@ class DeadCodeResult:
     """
 
     outcome: DeadCodeOutcome
+    modules_offered: int = 0
     findings: tuple[DeadCodeFinding, ...] = ()
     reason: str = ""
 
     @classmethod
-    def clean(cls) -> DeadCodeResult:
-        """A scan that found no dead code."""
-        return cls(outcome=DeadCodeOutcome.CLEAN)
+    def clean(cls, *, modules_offered: int) -> DeadCodeResult:
+        """A scan that inspected ``modules_offered`` modules and found no dead code."""
+        if modules_offered <= 0:
+            msg = "clean requires a scan that demonstrably inspected modules"
+            raise ValueError(msg)
+        return cls(outcome=DeadCodeOutcome.CLEAN, modules_offered=modules_offered)
 
     @classmethod
     def from_findings(cls, findings: tuple[DeadCodeFinding, ...]) -> DeadCodeResult:
@@ -128,6 +140,31 @@ class DeadCodeResult:
         return f"{len(self.findings)} dead-code finding(s) past the reviewed whitelist ({breakdown})"
 
 
+def offered_module_population(repo_root: Path) -> int:
+    """Count the Python modules :data:`_TARGETS` actually offers vulture.
+
+    Vulture exits 0 both when it inspected the production tree and found
+    nothing and when it inspected nothing at all, so the exit code alone
+    cannot tell a clean scan from a vacuous one. This count is the
+    denominator that distinguishes them, exactly as the sibling duplication
+    and security scans use their tool-reported file counts.
+
+    It bounds the analysed population from above rather than measuring it:
+    vulture's own ``--config pyproject.toml`` exclusions are applied after
+    these paths are handed over, so an over-broad exclude is outside what
+    this can see. A target that has been emptied, moved, or never checked
+    out is inside it.
+    """
+    offered = 0
+    for target in _TARGETS:
+        candidate = repo_root / target
+        if candidate.is_file():
+            offered += 1 if candidate.suffix == ".py" else 0
+        elif candidate.is_dir():
+            offered += sum(1 for _ in candidate.rglob("*.py"))
+    return offered
+
+
 def vulture_command() -> list[str]:
     """Build the one vulture command line, matching today's `just audit-dead-code`."""
     return ["uv", "run", "--no-sync", "vulture", "--config", "pyproject.toml", *_TARGETS]
@@ -158,6 +195,14 @@ def run_dead_code_scan(repo_root: Path, *, timeout: float = _VULTURE_TIMEOUT_SEC
     ``just audit-dead-code`` and ``dev.audit.advisory`` call it, so there is
     deliberately no second vulture invocation anywhere in the tree.
     """
+    offered = offered_module_population(repo_root)
+    if offered < _MINIMUM_OFFERED_MODULES:
+        return DeadCodeResult.error(
+            f"vulture was offered {offered} Python module(s), under the "
+            f"{_MINIMUM_OFFERED_MODULES} the production tree must hold, so exit 0 "
+            "would prove nothing about dead code",
+        )
+
     try:
         completed = subprocess.run(  # noqa: S603 - fixed argv, no shell
             vulture_command(),
@@ -175,7 +220,7 @@ def run_dead_code_scan(repo_root: Path, *, timeout: float = _VULTURE_TIMEOUT_SEC
         return DeadCodeResult.error(f"vulture could not be launched ({exc})")
 
     if completed.returncode == _EXIT_CLEAN:
-        return DeadCodeResult.clean()
+        return DeadCodeResult.clean(modules_offered=offered)
 
     if completed.returncode == _EXIT_FINDINGS:
         findings = parse_vulture_output(completed.stdout)

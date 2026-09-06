@@ -14,6 +14,7 @@ import pytest
 from ..dead_code import (
     DeadCodeOutcome,
     DeadCodeResult,
+    offered_module_population,
     parse_vulture_output,
     render_console_report,
     vulture_command,
@@ -86,11 +87,40 @@ def test_from_findings_rejects_an_empty_tuple() -> None:
 
 
 def test_clean_result_is_green() -> None:
-    """A clean scan is the only honest GREEN."""
-    result = DeadCodeResult.clean()
+    """A clean scan is the only honest GREEN, and it carries what it inspected."""
+    result = DeadCodeResult.clean(modules_offered=1873)
 
     assert result.is_green is True
     assert result.outcome is DeadCodeOutcome.CLEAN
+    assert result.modules_offered == 1873
+
+
+def test_clean_refuses_a_scan_that_inspected_nothing() -> None:
+    """A GREEN bound to no evidence is the one outcome the class must not admit.
+
+    Vulture exits 0 both for a tree it read and found clean and for a target
+    set offering it nothing, so CLEAN without a denominator cannot tell those
+    apart. The sibling duplication and security results already refuse the
+    same shape on their own tool-reported counts.
+    """
+    with pytest.raises(ValueError, match="clean requires a scan that demonstrably inspected"):
+        DeadCodeResult.clean(modules_offered=0)
+
+
+def test_offered_population_counts_the_modules_the_targets_actually_hold(tmp_path) -> None:
+    """The denominator is read off the tree, not assumed from the target names."""
+    assert offered_module_population(tmp_path) == 0
+
+    package = tmp_path / "src" / "cadrumo" / "domain"
+    package.mkdir(parents=True)
+    (package / "one.py").write_text("", encoding="utf-8")
+    (package / "two.py").write_text("", encoding="utf-8")
+    (package / "notes.md").write_text("", encoding="utf-8")
+    whitelist = tmp_path / "dev" / "audit"
+    whitelist.mkdir(parents=True)
+    (whitelist / "vulture_whitelist.py").write_text("", encoding="utf-8")
+
+    assert offered_module_population(tmp_path) == 3
 
 
 def test_findings_result_is_not_green() -> None:

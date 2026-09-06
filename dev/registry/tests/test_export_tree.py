@@ -1315,6 +1315,63 @@ def test_renderer_manifest_refuses_file_tampering_derivation_drift_and_partial_f
         )
 
 
+def test_generated_export_target_refuses_a_link_even_though_the_name_and_kind_look_right(
+    m130_inspection_snapshot,
+    tmp_path,
+) -> None:
+    """The renderer must not write through a link masquerading as the export target.
+
+    The module docstring promises a tree written "without opening a shipped
+    fragment directory or deriving any output fact from one." A link named
+    ``export`` that resolves elsewhere is exactly how that isolation would be
+    defeated silently: `.exists()` and `.is_dir()` both admit it, so only the
+    dedicated link check stands between this call and writing through it.
+    """
+    real_elsewhere = tmp_path / "real_elsewhere"
+    real_elsewhere.mkdir()
+    link_target = tmp_path / "export"
+    link_target.symlink_to(real_elsewhere, target_is_directory=True)
+
+    with pytest.raises(RegistryValidationError, match="must not be a link"):
+        render_complete_export_tree(
+            link_target,
+            revision_id="2025",
+            joined=_joined(m130_inspection_snapshot),
+            semantic_map=_semantic_map(),
+            transport_profile=_profile(),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
+        )
+    assert not any(real_elsewhere.iterdir())
+
+
+def test_generated_export_target_accepts_a_real_preexisting_empty_directory(
+    m130_inspection_snapshot,
+    tmp_path,
+) -> None:
+    """Sibling-blindness check: a genuine empty directory is not mistaken for a link.
+
+    Same name, same "already exists as a directory" shape as the refused link
+    above, but no reparse point involved. The link guard must not fire here,
+    and the render must proceed and populate the real directory in place.
+    """
+    real_target = tmp_path / "export"
+    real_target.mkdir()
+
+    rendered = render_complete_export_tree(
+        real_target,
+        revision_id="2025",
+        joined=_joined(m130_inspection_snapshot),
+        semantic_map=_semantic_map(),
+        transport_profile=_profile(),
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
+    )
+
+    assert rendered.output_files
+    assert all((real_target / relative_path).is_file() for relative_path in rendered.output_files)
+
+
 def test_direct_manifest_emission_and_real_loader_verification(m130_inspection_snapshot, tmp_path) -> None:
     """The public provenance-manifest emitter and verifier operate on a real fresh tree only."""
     revision_dir = _write_modelo_shell(tmp_path / "modelos" / "130")
