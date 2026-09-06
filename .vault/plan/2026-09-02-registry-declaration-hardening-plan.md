@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:5ff0fbafdcf6f2c2ab7b06f67de6f83f5749827711cc1ddba8f72a89dc7a682a'
+body_hash: 'sha256:7c04e705a4c973cc4cb11bce66a2ecfd786132f2dc1e398bd9288ca0855af00c'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -1240,6 +1240,8 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S871` - Collapse the ten-line system-temporary-root validation that stood character-for-character in both verified-copy paths, so a divergence between the two callers is unconstructable rather than discouraged; `dev/quality/object_name_replay.py`.
 - [x] `W06.P13.S872` - Carry the dead-code denominator into both the human headline and the machine-readable payload, so a green verdict states how much it read wherever it is consumed; `dev/audit/dead_code.py, dev/audit/tests/test_dead_code.py`.
 - [x] `W06.P13.S873` - Name the third temp family in the reaper, so the object-name rehearsal roots nothing in the repository reclaims stop being invisible to the module whose job is bounding temp growth; `dev/env/temp_reaper.py, dev/tests/test_temp_reaper.py`.
+- [x] `W06.P13.S874` - Stop the rehearsal's finally block discarding the failure already in flight, so a run that fails and also mutates the source reports both causes instead of only the dominant one; `dev/quality/object_name_rehearsal.py`.
+- [x] `W06.P13.S875` - Pin each post-allocation injection case to its own stage, so seven parametrised failure points stop resting on a suffix every rehearsal refusal carries; `dev/quality/tests/test_object_name_rehearsal.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 
