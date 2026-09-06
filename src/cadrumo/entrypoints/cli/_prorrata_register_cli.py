@@ -85,17 +85,6 @@ _SEED_AUTHORITY = "local_prior_observation"
 #: The art. 105 provenances an operator may declare at election time. The
 #: art. 105.Cinco interrupted-activity percentage is computed by the seed walk
 #: over the register's own volumes, never operator-supplied.
-_ELECTABLE_PROVENANCES = (
-    ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
-    ProrrataProvisionalProvenance.AEAT_AUTORIZADA,
-    ProrrataProvisionalProvenance.INICIO_ACTIVIDAD,
-)
-_REFERENCED_PROVENANCES = frozenset(
-    {
-        ProrrataProvisionalProvenance.AEAT_AUTORIZADA,
-        ProrrataProvisionalProvenance.INICIO_ACTIVIDAD,
-    }
-)
 
 # Shared Typer option aliases for the two election verbs (``elect-especial`` and
 # ``elect-general``), which carry a byte-identical --ejercicio/--provenance/
@@ -142,36 +131,43 @@ def _resolve_provenance(
     ProrrataProvisionalProvenance,
     str | None,
 ]:
-    if raw not in _ELECTABLE_PROVENANCES:
-        accepted = ", ".join(member.value for member in _ELECTABLE_PROVENANCES)
-        raise bad(
-            tr(
-                "cli.app.ledger.prorrata.provenance_not_electable",
-                default=(
-                    "Provenance {provenance!r} is not operator-declarable; accepted: {accepted}. "
-                    "The art. 105.Cinco interrupted percentage is computed from the register."
+    """Check the election against art. 105, mapping each refusal to its message."""
+    from ...application.prorrata_register.election import (
+        ELECTABLE_PROVENANCES,
+        ProrrataElectionError,
+        ProrrataElectionRefusal,
+        validate_prorrata_election,
+    )
+
+    try:
+        return validate_prorrata_election(provenance=raw, reference=reference)
+    except ProrrataElectionError as exc:
+        if exc.refusal is ProrrataElectionRefusal.PROVENANCE_NOT_ELECTABLE:
+            raise bad(
+                tr(
+                    "cli.app.ledger.prorrata.provenance_not_electable",
+                    default=(
+                        "Provenance {provenance!r} is not operator-declarable; accepted: {accepted}. "
+                        "The art. 105.Cinco interrupted percentage is computed from the register."
+                    ),
+                    provenance=raw.value,
+                    accepted=", ".join(member.value for member in ELECTABLE_PROVENANCES),
                 ),
-                provenance=raw.value,
-                accepted=accepted,
-            ),
-        )
-    referenced = raw in _REFERENCED_PROVENANCES
-    if referenced and (reference is None or not reference.strip()):
-        raise bad(
-            tr(
-                "cli.app.ledger.prorrata.reference_required",
-                default="Provenance {provenance!r} (LIVA art. 105.Dos / 105.Tres) requires --reference.",
-                provenance=raw.value,
-            ),
-        )
-    if not referenced and reference is not None:
+            ) from exc
+        if exc.refusal is ProrrataElectionRefusal.REFERENCE_REQUIRED:
+            raise bad(
+                tr(
+                    "cli.app.ledger.prorrata.reference_required",
+                    default="Provenance {provenance!r} (LIVA art. 105.Dos / 105.Tres) requires --reference.",
+                    provenance=raw.value,
+                ),
+            ) from exc
         raise bad(
             tr(
                 "cli.app.ledger.prorrata.reference_not_permitted",
                 default="--reference is permitted only with an aeat_autorizada or inicio_actividad provenance.",
             ),
-        )
-    return raw, reference
+        ) from exc
 
 
 def _elect(
