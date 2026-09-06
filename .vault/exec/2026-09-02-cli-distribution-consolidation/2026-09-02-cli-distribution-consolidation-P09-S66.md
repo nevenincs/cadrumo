@@ -5,17 +5,11 @@ tags:
 date: '2026-09-06'
 modified: '2026-09-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:4a91c780ea4e58f5e53b1571a991e87e1c6c8d0a721b9dda8b1fc474ba9f2710'
+body_hash: 'sha256:320f374c799f422da76dec614f2349a01ee5d26247b1956d59989de382bf70ba'
 step_id: 'S66'
 related:
   - "[[2026-09-02-cli-distribution-consolidation-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
-
 # Make three cross-platform test legs assert their contract instead of the host that ran them
 
 ## Scope
@@ -24,19 +18,31 @@ related:
 
 ## Changes
 
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
+- `M` `dev/packaging/tests/test_smoke_scoop_harness.py`
+- `M` `dev/packaging/tests/test_command_spec_source_lanes.py`
+- `verify:` `pytest dev/packaging/tests/test_smoke_scoop_harness.py -n0 -m ''` -> `pass`
+- `verify:` `pytest dev/packaging/tests/test_command_spec_source_lanes.py -n0 -m ''` -> `pass`
+- `verify:` `ruff check` -> `pass`
+- `verify:` `python -m dev.quality.types` -> `pass`
 
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
+## Notes
 
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
+Both files were absorbed into commit `9f0f673c41`, authored by a concurrent
+session, whose message describes unrelated reachability work. The content is
+correct and present in `HEAD`; history was not rewritten. The rationale is
+recorded here because that commit message does not carry it.
 
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->
+Only two of the four macOS lane failures were macOS-specific. The completion
+leg used `--show-completion`, which takes no shell argument and detects the
+shell from the process tree, so it asserted whatever shell happened to be the
+runner's parent; it was reproduced failing on Windows, and now renders for a
+named shell through Click's public generator against the real command tree.
+
+Two defects in `src/cadrumo/tests/_marker_hook.py` were found and left
+untouched, that module belonging to another campaign: the serial holdout runs
+before pytest's own `-m` deselection, so a lane invoked with `not serial` still
+trips the hold and warns that tests it never selected did not execute; and
+`record_held_from_node` and `fail_session_on_held_serials` are called from no
+conftest, leaving the false-green they were written to close still open. Wiring
+that enforcement before fixing the ordering would fail every correctly
+configured lane. Both were relayed to the owning session.
