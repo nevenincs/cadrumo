@@ -118,7 +118,7 @@ def fix_dot_depth() -> int:
                     rf"\g<1>{'.' * (level - 1)}{module}",
                     lines[lineno - 1],
                 )
-            path.write_text("".join(lines), encoding="utf-8")
+            path.write_text("".join(lines), encoding="utf-8", newline="\n")
         fixed += 1
     report_unread(
         "namespace retirement sweep (fix_dot_depth)",
@@ -166,7 +166,7 @@ def fix_module_object_imports() -> int:
         if apply:
             for old, new in subs:
                 text = re.sub(rf"(?<![\w.]){re.escape(old)}\b", new, text)
-            path.write_text(text, encoding="utf-8")
+            path.write_text(text, encoding="utf-8", newline="\n")
         fixed += 1
     report_unread(
         "namespace retirement sweep (fix_module_object_imports)",
@@ -263,7 +263,7 @@ def fix_pins() -> int:
                 continue
             for old, new in subs:
                 t = t.replace(f'"{old}"', f'"{new}"').replace(f"'{old}'", f"'{new}'")
-            path.write_text(t, encoding="utf-8")
+            path.write_text(t, encoding="utf-8", newline="\n")
     return len(edits)
 
 
@@ -287,7 +287,7 @@ def fix_pyproject() -> int:
             text = text.replace(f'"{v}"', f'"{pub.as_posix()}"')
         n += 1
     if apply and n:
-        p.write_text(text, encoding="utf-8")
+        p.write_text(text, encoding="utf-8", newline="\n")
     return n
 
 
@@ -352,7 +352,7 @@ def fix_string_module_paths() -> int:
         if apply:
             for old, new in sorted(subs, key=lambda pair: -len(pair[0])):
                 text = text.replace(old, new)
-            path.write_text(text, encoding="utf-8")
+            path.write_text(text, encoding="utf-8", newline="\n")
         changed += 1
     report_unread(
         "namespace retirement sweep (fix_string_module_paths)",

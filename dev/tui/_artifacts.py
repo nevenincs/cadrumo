@@ -245,7 +245,7 @@ def write_manifest(directory: Path, manifest: Manifest) -> Path:
     """Persist ``manifest`` into ``directory`` and return its path."""
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / MANIFEST_NAME
-    path.write_text(manifest.model_dump_json(indent=2) + "\n", encoding=UTF_8)
+    path.write_text(manifest.model_dump_json(indent=2) + "\n", encoding=UTF_8, newline="\n")
     return path
 
 
@@ -388,7 +388,7 @@ def write_index(directory: Path, manifest: Manifest) -> Path:
     lines.append("")
 
     path = directory / INDEX_NAME
-    path.write_text("\n".join(lines), encoding=UTF_8)
+    path.write_text("\n".join(lines), encoding=UTF_8, newline="\n")
     return path
 
 

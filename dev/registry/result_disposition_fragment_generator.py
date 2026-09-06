@@ -132,7 +132,7 @@ def write_fragments(root: Path | None = None, *, apply: bool = False) -> tuple[G
     if apply:
         for fragment in planned:
             fragment.path.parent.mkdir(parents=True, exist_ok=True)
-            fragment.path.write_text(fragment.body, encoding="utf-8")
+            fragment.path.write_text(fragment.body, encoding="utf-8", newline="\n")
     return planned
 
 

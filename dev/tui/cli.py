@@ -374,7 +374,7 @@ def render_command(
 
                 captured, raster = outcome
                 text_path.parent.mkdir(parents=True, exist_ok=True)
-                text_path.write_text(captured.stable_text + "\n", encoding=UTF_8)
+                text_path.write_text(captured.stable_text + "\n", encoding=UTF_8, newline="\n")
                 frames.append(
                     RenderedFrame(
                         surface=name,
@@ -563,7 +563,7 @@ def diff_command(
             stem = entry.key.replace("/", "__")
             if entry.text_diff:
                 (destination_root / f"{stem}.diff").parent.mkdir(parents=True, exist_ok=True)
-                (destination_root / f"{stem}.diff").write_text(entry.text_diff + "\n", encoding=UTF_8)
+                (destination_root / f"{stem}.diff").write_text(entry.text_diff + "\n", encoding=UTF_8, newline="\n")
             produced = _diff.write_highlight(
                 baseline_root / baseline_frames[entry.key].png,
                 candidate_root / frames[entry.key].png,

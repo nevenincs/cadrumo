@@ -143,7 +143,20 @@ against concrete locale entries. No additional static registration is needed.
 #: would otherwise be silently invisible. Stated rather than left implied, so nobody
 #: later reads it as evidence that bare help kwargs exist.
 _TRANSLATION_KEY_KWARGS: frozenset[str] = frozenset(
-    {"translated_message", "message_key", "translation_key", "message_locale_key", "help_key"},
+    {
+        "translated_message",
+        "message_key",
+        "translation_key",
+        "message_locale_key",
+        "help_key",
+        # A navigation entry's operator-facing label and a zone's empty-state
+        # line are keys by the same convention as help_key: the parameter is
+        # named for the key it takes, and every value passed to one is a
+        # catalogue-rooted dotted literal. Both were reaching the catalogue
+        # through call sites nothing here read, so their keys looked orphaned.
+        "label_key",
+        "empty_key",
+    },
 )
 
 #: Single-argument constructors and helpers that WRAP a translation key without
@@ -698,9 +711,11 @@ def _collect_translation_key_kwargs(node: ast.Call, findings: set[str]) -> None:
     for kw in node.keywords:
         if kw.arg not in _TRANSLATION_KEY_KWARGS:
             continue
-        value = _dotted_literal_value(kw.value)
-        if value is not None:
-            findings.add(value)
+        # Recurse rather than reading one literal: a key is routinely
+        # supplied conditionally -- `empty_key="..." if not rows else None` --
+        # and the parameter is DECLARED to take a key, so any dotted literal
+        # that can reach it is one.
+        _collect_dotted_literals(kw.value, findings)
 
 
 def _collect_build_entry_keys(node: ast.Call, findings: set[str]) -> None:
