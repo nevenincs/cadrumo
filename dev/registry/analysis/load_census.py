@@ -181,10 +181,15 @@ def module_level_importers(module: str) -> frozenset[str]:
 
     Returns:
         The importing modules, empty when every import of ``module`` is deferred.
+
+    Raises:
+        OSError: ``REGISTRY_DIR`` is missing or not a directory. An empty
+            result here must mean every import is deferred, never that the
+            walk found nothing to read.
     """
     importers: set[str] = set()
     unread: list[str] = []
-    for path in sorted(REGISTRY_DIR.rglob("*.py")):
+    for path in scan_directory(REGISTRY_DIR, pattern="*.py", recursive=True, require_root=True):
         if "__pycache__" in path.parts or "tests" in path.parts:
             continue
         try:

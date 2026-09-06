@@ -1462,3 +1462,10 @@ area = "application/live"
 symbols = ["classify_register_scoping_signal", "filed_period_selection_rows"]
 evidence = "Two producers in a module that is otherwise half live -- twelve of its twenty-four exports are reached -- whose outputs are consumed downstream from a constant instead. classify_register_scoping_signal says what the offered modelo set suggests about its own scoping; filed_history_operation reads that through run.scoping_signal, and BOTH FiledHistoryOnboardingRun construction sites pass RegisterScopingSignal.INCONCLUSIVE, matching the field default, so the signal is always inconclusive and the classification is never computed. filed_period_selection_rows is the only producer of FiledPeriodSelectionRow; the run field defaults to an empty tuple, neither construction site fills it, and filed_history_operation projects selection_rows from run.selection_rows, so the operator is always shown none. The types are live and the plumbing is complete in both cases -- only the producer is unreached, which is why neither shows up as a missing consumer."
 remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "work-address resolvers displaced by the richer target resolution"
+class = "superseded"
+area = "application/modelo"
+symbols = ["resolve_modelo_work_unit_id", "project_modelo_work_target"]
+evidence = "The module is five-live to four-dead, and the live half names the holder. resolve_modelo_work_unit_for_operator_target and select_modelo_work_resolution are reached, and callers read the identifier off the resolved work unit rather than resolving it separately -- calculation_actions.py:801 and the m303 annual summary both pass work_unit_id=work_unit.work_unit_id into CalculationSourceContext. So the standalone id resolver and the target projector are displaced by a resolution that already carries what they return. Checked against the constant-default shape first: CalculationSourceContext.work_unit_id defaults to None, but two of its three construction sites pass a computed value, so the field is populated and this is ordinary supersession rather than a producer replaced by a literal."
