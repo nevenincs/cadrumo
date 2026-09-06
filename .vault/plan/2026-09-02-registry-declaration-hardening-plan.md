@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:24b051c997688adb40c3e6db49415a2e71a7da5979c5e7f7c00e93ff9dee5805'
+body_hash: 'sha256:23ff5e4d747d6974c72701b6f2c6bca45f399968e1b269e2e7631fe09990befe'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -672,6 +672,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S790` - Refuse a missing intentional-disposition table instead of defaulting to empty: the producer read data.get with a default, so a renamed or deleted table left all four disposition claims holding over an empty list, and a floor is the wrong instrument because the exemption list may legitimately shrink to zero; `dev/quality/tests/test_symbol_ratchet_dispositions.py`.
 - [x] `W02.P02.S791` - Resolve the two dangling :mod: roles in dev docstrings: demote the reference to the deleted dev.packaging.smoke_docker to a literal as its sibling already does, and correct the dev.harness collectability harness path that omitted its tests package; `dev/tests/test_every_test_module_is_collectable.py`.
 - [x] `W02.P02.S792` - Correct the dangling class role in the api-stub correspondence gate: the docstring named dev.docs.apidocs.ApiStubManager while the class lives in the manager module and the package initializer exports nothing, so the reference resolved nowhere even though the file's own import used the right path; `dev/docs/tests/test_api_stubs.py`.
+- [x] `W02.P02.S793` - Restore refuse_live_frames to the sequences runner public surface: a refactor privatised it without updating the cross-module caller in sequence_directive.py, so the Sphinx build hook raised ImportError at call time and five directive tests were red, while the package docstring still documented it as a public pair with live_aeat_tokens; `dev/docs/sequences/runner.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

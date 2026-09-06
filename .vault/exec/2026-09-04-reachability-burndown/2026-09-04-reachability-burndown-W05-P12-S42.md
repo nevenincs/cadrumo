@@ -5,7 +5,7 @@ tags:
 date: '2026-09-06'
 modified: '2026-09-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:684bcbacb37df04b6409f32781a82229d932b5e0667838e3915d6d841233cdfb'
+body_hash: 'sha256:9f7e79ce146df8b25d0665e3e4c3eae29932ba15b3a272335e1107cd57e9b21e'
 step_id: 'S42'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
@@ -25,7 +25,7 @@ related:
 ## Changes
 
 - `M` `dev/audit/reachability_classification.toml`
-- `verify:` `uv run --no-sync pytest dev/audit/tests/test_reachability_classification.py -m "" -n 0` -> `pass`
+- `verify:` `uv run --no-sync pytest dev/audit/tests/test_reachability_classification.py -m "" -n 0 -k "closed_taxonomy or evidence_behind or stopped_reporting"` -> `pass` (the three tests a new symbol cluster can affect, including the staleness check against the live audit; the full nine-test file was run twice and killed under machine contention before reporting)
 
 ## Notes
 
