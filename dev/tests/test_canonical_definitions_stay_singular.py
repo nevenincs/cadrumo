@@ -75,8 +75,11 @@ def _definition_sites(root: pathlib.Path) -> tuple[dict[str, list[str]], list[st
         except (OSError, SyntaxError) as refusal:
             # A module that does not parse is searched for nothing, so a SECOND
             # definition living in it is invisible and this gate still reports
-            # exactly one. All 2,121 production modules parse, so one that does
-            # not is a broken tracked file and is refused rather than skipped.
+            # exactly one. EVERY production module parses -- re-derived, not
+            # recalled -- so one that does not is a broken tracked file and is
+            # refused rather than skipped. The count that used to sit here said
+            # 2,121 against a live 2,136 and read as current while it drifted;
+            # the claim survives re-derivation, an exact figure in prose does not.
             # An UNREADABLE module is the same loss, so it joins the same
             # refusal: the walk can list a path a peer removes before the
             # read reaches it, and a directory named *.py answers rglob but

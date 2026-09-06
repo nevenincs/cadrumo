@@ -89,9 +89,12 @@ def _scan() -> tuple[list[str], int]:
                 # A peer mid-edit in a shared worktree; their syntax error is
                 # their gate's to report, not a finding of this one. The loss
                 # still lands here: an unparsed module contributes no offence
-                # and reads as compliant. The floor below is post-swallow, but
-                # 6,906 modules parse against a floor of 1,000, so most of the
-                # tree could vanish before it fires.
+                # and reads as compliant. The floor below is post-swallow, and
+                # weak by roughly seven to one: the walk reaches thousands of
+                # modules against a floor of 1,000, so most of the tree could
+                # vanish before it fires. The exact count is deliberately not
+                # restated -- the one recorded here had drifted from 6,906 to
+                # 6,993 unnoticed, and the ratio is what the argument needs.
                 # An UNREADABLE module is the same loss by another route: the
                 # walk can list a path a peer removes before the read reaches
                 # it, so it joins this announcement rather than ending the scan.

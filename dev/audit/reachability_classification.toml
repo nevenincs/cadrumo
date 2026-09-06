@@ -204,6 +204,23 @@ symbols = []
 evidence = "RESOLVED 2026-09-07 by relocation. calculate_modelo_revision_from_bucket_aggregation delegated straight to the _with_diagnostics variant and returned .revision, dropping the non-blocking source advisories, and all twenty-five of its call sites across ten modules were tests while the operator-facing CLI used the diagnostics variant. It now lives at src/cadrumo/tests/bucket_aggregation_calculate.py, so production has ONE way into the source mesh and that way returns the diagnostics with the revision rather than beside it. The hazard was its existence rather than its disuse: the shorter of two adjacent names is the one a future caller reaches for, and it was the one that silently lost the advisories. The shim forwards **kwargs instead of restating twenty-one parameters, because a second copy of the calculate signature could drift from the real one while still type-checking; the wrapper's own filing-repository default was redundant, since the diagnostics variant resolves the same default itself."
 remedy_requires_decision = false
 
+[[symbol_cluster]]
+name = "approval basis stamped against a catalogue the refresh never sees"
+class = "should-be-live"
+symbols = []
+evidence = "A defect this campaign CREATED, found by re-reading the two wirings together and proved by A/B. Persisting the approved draft gave the staleness lifecycle a subject, and recomputing the verdict in drafts_pending made the aged-out row reachable, but the workflow gate stamped the approval basis against a transient empty TransactionCatalogue while the review queue recomputes it from whatever the bucket holds. Those two disagree by construction in any bucket with a ledger, so every stored draft read as an aged-out approval the first time anyone opened the queue: a permanent high-severity row that is always wrong. The catalogue reaches approval as a fingerprint and nothing else, so approving against the bucket's own catalogue does not give the calculation revision's evidence a second owner; it makes the recorded digest mean what the refresh assumes it means. Fixed at src/cadrumo/application/modelo/workflow_gate.py and covered by test_a_freshly_approved_draft_is_not_immediately_stale in src/cadrumo/application/modelo/tests/test_file_flow_draft_persistence.py, which seeds a bucket transaction first: against an empty ledger the two digests agree by accident and the assertion holds however the basis is stamped. Reverting the fix reproduces TRANSACTION_CATALOGUE_CHANGED on a freshly approved draft."
+remedy_requires_decision = false
+
+[[symbol_cluster]]
+name = "empty-digest overrides for approvals against a sentinel bucket"
+class = "test-support"
+symbols = [
+  "empty_prior_filing_observations_fingerprint",
+  "empty_profile_activity_fingerprint",
+]
+evidence = "Deterministic-digest overrides whose only callers are src/cadrumo/application/filing/tests/test_approval_basis_integrity.py. Their own docstrings name the case they serve -- a test approving against a non-active or sentinel bucket with no prior observations -- so they are test ergonomics rather than product capability. Left where they are: unlike the calculate wrapper relocated earlier, these do not shadow a live entry point and cannot be reached by mistake in place of one, since compute_current_approval_basis and approve_draft take them only as explicit keyword overrides and self-load from the bucket otherwise."
+remedy_requires_decision = false
+
 # ---------------------------------------------------------------------------
 # Orphaned test modules
 #
