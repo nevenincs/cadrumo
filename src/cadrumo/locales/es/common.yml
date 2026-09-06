@@ -1496,6 +1496,8 @@ tui:
       application_state: Esta área no está disponible en el estado actual del libro
         contable.
       destination_pending: Esta área aún no está disponible en esta versión.
+      selection_required: Selecciona primero un asiento y abre después esta tarea
+        para él.
       submission_unavailable: Esta tarea no está disponible hasta que se proporcione
         una operación preparada.
     review:

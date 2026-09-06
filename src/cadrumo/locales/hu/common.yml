@@ -1475,6 +1475,7 @@ tui:
     refusal:
       application_state: Ez a terület a főkönyv jelenlegi állapotában nem érhető el.
       destination_pending: Ez a terület ebben a verzióban még nem érhető el.
+      selection_required: Előbb válassz ki egy tételt, majd nyisd meg rá ezt a feladatot.
       submission_unavailable: Ez a feladat előkészített művelet nélkül nem érhető
         el.
     review:
