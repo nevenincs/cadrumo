@@ -425,6 +425,108 @@ def add_classification_rule(
     return rule
 
 
+class ClassificationRulePlanRow(NamedTuple):
+    """One transaction the stored rules would classify, and the rule that wins."""
+
+    transaction_id: str
+    description: str
+    matched_rule_id: str
+    classification: BusinessClassification
+    category_id: str | None
+
+
+class ClassificationRulePlan(NamedTuple):
+    """What applying the stored rules right now would do, without doing it.
+
+    Carries the same counters the applied result reports, so a preview and the
+    run it previews describe the same scan rather than two different summaries.
+    """
+
+    rules_evaluated: int
+    transactions_scanned: int
+    skipped_already_classified: int
+    no_match: int
+    matches: tuple[ClassificationRulePlanRow, ...]
+
+
+def plan_classification_rules(
+    *,
+    bucket_id: str,
+    reaffirm: bool = False,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    rule_repository: LedgerClassificationRuleRepositoryProtocol | None = None,
+) -> ClassificationRulePlan:
+    """Resolve which stored rule would classify each in-scope transaction.
+
+    This is the ONE place scope and first-match are decided. ``apply`` writes
+    the plan it returns and a preview renders it, so a preview cannot promise
+    an outcome the run does not produce -- the failure mode of two engines that
+    agree only until one of them is edited.
+
+    Scope is ACTIVE transactions in ``NOT_YET_PROCESSED``; ``reaffirm`` widens
+    it to ACTIVE rows already classified manually. Rules are evaluated in
+    stored priority order and the first match wins.
+
+    Args:
+        bucket_id: The owning profile bucket.
+        reaffirm: Whether to re-run over manually classified rows.
+        transaction_repository: Injected catalogue; resolved when omitted.
+        rule_repository: Injected rule store; resolved when omitted.
+
+    Returns:
+        The planned matches and the counters describing the scan.
+    """
+    from .rule_repository import ledger_classification_rule_repository
+
+    tx_repo = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    rule_repo = (
+        rule_repository if rule_repository is not None else ledger_classification_rule_repository(bucket_id=bucket_id)
+    )
+    rules: tuple[LedgerClassificationRule, ...] = rule_repo.list_rules()
+    catalogue = tx_repo.load()
+
+    def _in_scope(tx: Transaction) -> bool:
+        if tx.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+            return False
+        if tx.business_classification is BusinessClassification.NOT_YET_PROCESSED:
+            return True
+        return reaffirm and tx.classified_by == CLASSIFIED_BY_MANUAL
+
+    in_scope = [tx for tx in catalogue.transactions.values() if _in_scope(tx)]
+    skipped_already_classified = sum(
+        1
+        for tx in catalogue.transactions.values()
+        if tx.lifecycle_state is TransactionLifecycleState.ACTIVE
+        and not _in_scope(tx)
+        and tx.business_classification is not BusinessClassification.NOT_YET_PROCESSED
+    )
+
+    matches: list[ClassificationRulePlanRow] = []
+    no_match = 0
+    for tx in in_scope:
+        winner = next((rule for rule in rules if rule.matches(tx.raw.description)), None)
+        if winner is None:
+            no_match += 1
+            continue
+        matches.append(
+            ClassificationRulePlanRow(
+                transaction_id=tx.transaction_id,
+                description=tx.raw.description,
+                matched_rule_id=winner.rule_id,
+                classification=winner.classification,
+                category_id=winner.category_id,
+            )
+        )
+
+    return ClassificationRulePlan(
+        rules_evaluated=len(rules),
+        transactions_scanned=len(in_scope),
+        skipped_already_classified=skipped_already_classified,
+        no_match=no_match,
+        matches=tuple(matches),
+    )
+
+
 def apply_classification_rules(
     *,
     bucket_id: str,
@@ -448,58 +550,28 @@ def apply_classification_rules(
 
     Returns an :class:`~application.ledger.models.ApplyRulesResult`.
     """
-    from .rule_repository import ledger_classification_rule_repository
-
     tx_repo = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     event_repo = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
-    rule_repo = (
-        rule_repository if rule_repository is not None else ledger_classification_rule_repository(bucket_id=bucket_id)
+    plan = plan_classification_rules(
+        bucket_id=bucket_id,
+        reaffirm=reaffirm,
+        transaction_repository=tx_repo,
+        rule_repository=rule_repository,
     )
-
-    rules: tuple[LedgerClassificationRule, ...] = rule_repo.list_rules()
-    catalogue = tx_repo.load()
 
     all_event_ids: list[str] = []
     applied_rows: list[ApplyRulesAppliedRow] = []
-
-    def _in_scope(tx: Transaction) -> bool:
-        if tx.lifecycle_state is not TransactionLifecycleState.ACTIVE:
-            return False
-        if tx.business_classification is BusinessClassification.NOT_YET_PROCESSED:
-            return True
-        return reaffirm and tx.classified_by == CLASSIFIED_BY_MANUAL
-
-    active_txs = [tx for tx in catalogue.transactions.values() if _in_scope(tx)]
-    transactions_scanned = len(active_txs)
-    skipped_already_classified = sum(
-        1
-        for tx in catalogue.transactions.values()
-        if tx.lifecycle_state is TransactionLifecycleState.ACTIVE
-        and not _in_scope(tx)
-        and tx.business_classification is not BusinessClassification.NOT_YET_PROCESSED
-    )
-
-    no_match = 0
-    for tx in active_txs:
-        rule_matched: LedgerClassificationRule | None = None
-        for rule in rules:
-            if rule.matches(tx.raw.description or ""):
-                rule_matched = rule
-                break
-        if rule_matched is None:
-            no_match += 1
-            continue
-
+    for row in plan.matches:
         patch = ManualLedgerTransactionPatch(
-            business_classification=rule_matched.classification,
-            category_id=rule_matched.category_id,
+            business_classification=row.classification,
+            category_id=row.category_id,
         )
         result = update_manual_transaction_fields(
             bucket_id=bucket_id,
-            transaction_id=tx.transaction_id,
+            transaction_id=row.transaction_id,
             patch=patch,
             actor=actor,
-            classified_by_override=f"rule:{rule_matched.rule_id}",
+            classified_by_override=f"rule:{row.matched_rule_id}",
             source_command=source_command,
             reaffirm=reaffirm,
             transaction_repository=tx_repo,
@@ -508,18 +580,18 @@ def apply_classification_rules(
         all_event_ids.extend(result.bucket_event_ids)
         applied_rows.append(
             ApplyRulesAppliedRow(
-                transaction_id=tx.transaction_id,
-                matched_rule_id=rule_matched.rule_id,
-                classification=rule_matched.classification,
+                transaction_id=row.transaction_id,
+                matched_rule_id=row.matched_rule_id,
+                classification=row.classification,
             ),
         )
 
     return ApplyRulesResult(
-        rules_evaluated=len(rules),
-        transactions_scanned=transactions_scanned,
+        rules_evaluated=plan.rules_evaluated,
+        transactions_scanned=plan.transactions_scanned,
         matched=len(applied_rows),
-        skipped_already_classified=skipped_already_classified,
-        no_match=no_match,
+        skipped_already_classified=plan.skipped_already_classified,
+        no_match=plan.no_match,
         applied=tuple(applied_rows),
         bucket_event_ids=tuple(all_event_ids),
     )

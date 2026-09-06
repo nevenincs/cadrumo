@@ -43,7 +43,14 @@ from ...domain.auth.apoderamientos.catalogue import ApoderamientosCatalogue
 from ..flows.definition import FlowChoice, FlowDefinition, FlowPage, FlowSection
 from ..flows.engine import FlowState
 from ..flows.validators import ValidationVerdict, register_answer_validator
-from ..wizard.format_hints import FORMAT_TAX_ID_LOCALE_KEY, NIF_INVALID_LOCALE_KEY
+
+# Duplicated deliberately from the wizard package's format-hints leaf, one of four
+# leaves the wizard package keeps consumed only inside it, enforced by
+# test_private_wizard_leaves_have_no_cross_package_python_consumers.
+# Importing it here would breach that boundary; sharing these keys properly
+# needs a neutral home, which is a placement decision.
+_FORMAT_TAX_ID_LOCALE_KEY = "wizard.setup.format.tax-id"
+_NIF_INVALID_LOCALE_KEY = "wizard.errors.invalid_tax_id"
 
 #: Flow, section, and page ids. Answers key the canonical map by these bare page ids.
 APODERADO_FLOW_ID = "apoderado"
@@ -69,8 +76,8 @@ APODERADO_FLOW_LOCALE_KEYS: tuple[str, ...] = (
     _FLOW_DESCRIPTION_LOCALE_KEY,
     _REPRESENTED_NIF_PROMPT_LOCALE_KEY,
     _SCOPES_PROMPT_LOCALE_KEY,
-    FORMAT_TAX_ID_LOCALE_KEY,
-    NIF_INVALID_LOCALE_KEY,
+    _FORMAT_TAX_ID_LOCALE_KEY,
+    _NIF_INVALID_LOCALE_KEY,
 )
 
 
@@ -112,7 +119,7 @@ def _validate_represented_nif(page: FlowPage, canonical: str) -> ValidationVerdi
     try:
         validate_identity(canonical)
     except IdentityError:
-        return ValidationVerdict.failed(NIF_INVALID_LOCALE_KEY, page_id=page.id)
+        return ValidationVerdict.failed(_NIF_INVALID_LOCALE_KEY, page_id=page.id)
     return ValidationVerdict.passed()
 
 
@@ -140,8 +147,8 @@ def build_apoderado_flow_definition(catalogue: ApoderamientosCatalogue) -> FlowD
         id=REPRESENTED_NIF_PAGE_ID,
         widget=FlowWidgetKind.TEXT,
         prompt=_locale_ref(_REPRESENTED_NIF_PROMPT_LOCALE_KEY),
-        format_hint=_locale_ref(FORMAT_TAX_ID_LOCALE_KEY),
-        failure_modes=(_locale_ref(NIF_INVALID_LOCALE_KEY),),
+        format_hint=_locale_ref(_FORMAT_TAX_ID_LOCALE_KEY),
+        failure_modes=(_locale_ref(_NIF_INVALID_LOCALE_KEY),),
         required=True,
         answer_type=str,
         domain_key=None,
