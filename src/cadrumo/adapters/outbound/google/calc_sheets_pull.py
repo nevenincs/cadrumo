@@ -96,7 +96,6 @@ from ..storage.errors import (
     OutboundStorageNetworkError,
     OutboundStorageValidationError,
 )
-from ._drive_entries import OWNERSHIP_KEY, OWNERSHIP_VALUE
 from ._preconditions import google_terminal_refusal
 from .api import execute_request
 from .calc_sheets_pull_records import (
@@ -129,6 +128,7 @@ from .calc_sheets_pull_records import (
 from .calc_sheets_pull_records import (
     as_value_range as _as_value_range,
 )
+from .drive_entries import OWNERSHIP_KEY, OWNERSHIP_VALUE
 
 _RELATION_METADATA_PREFIX: Final[str] = "cadrumo_relation:"
 _DUPLICATE_SENSITIVE_METADATA_KEYS: Final[frozenset[str]] = frozenset(
