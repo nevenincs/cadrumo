@@ -9,8 +9,14 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.export import resolved_export_endpoints
 
-from ..analysis.monetary_scale import scale_findings, screen_authority
+from ..analysis.monetary_scale import _SELF_SCALING_WIRE_TYPES, scale_findings, screen_authority
+
+#: Floor for the monetary endpoints the absence claim below is measured over.
+#: Live m303's 2025 revision resolves 150 of 174 endpoints to a monetary
+#: casilla; two thirds of that, so ordinary revision movement never fires it.
+_MINIMUM_MONETARY_ENDPOINTS = 100
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -20,13 +26,37 @@ def authority() -> ValidatedRegistryAuthority:
     return bundled_authority()
 
 
-def test_a_money_wire_type_is_not_reported_as_unscaled(authority: ValidatedRegistryAuthority) -> None:
-    """The money wire type scales inside the codec, so it settles the question itself.
+def test_a_self_scaling_wire_type_is_not_reported_as_unscaled(authority: ValidatedRegistryAuthority) -> None:
+    """A self-scaling wire type settles the scale question itself, so it is not reported.
 
-    Reporting it would be reporting a rule that already exists, and would have
+    Reporting one would be reporting a rule that already exists, and would have
     inflated this screen's finding count roughly twentyfold.
+
+    The claim is an ABSENCE, so it needs the population it is absent from. This
+    revision yields zero findings of ANY kind, and a screen that had stopped
+    reading it would yield zero too -- the assertion below cannot tell those
+    apart on its own. So the monetary endpoints are counted first: live m303's
+    2025 revision carries 150 of them, every one on the ``decimal`` wire.
+
+    Named for the self-scaling family rather than for ``money``. The test read
+    ``a_money_wire_type`` while the revision it loads carries no ``money`` wire
+    at all; both types are self-scaling so the assertion passed either way, and
+    the name described a case it never exercised.
     """
     revision = authority.modelo("303").revisions["2025"]
+    declared = {casilla.id: str(casilla.data_type) for casilla in revision.casillas}
+    monetary = [
+        endpoint
+        for endpoint in resolved_export_endpoints(revision)
+        if endpoint.field is not None and declared.get(endpoint.casilla_id) == "money"
+    ]
+    assert len(monetary) >= _MINIMUM_MONETARY_ENDPOINTS, (
+        f"only {len(monetary)} monetary endpoint(s) resolved for m303 2025; below this the screen "
+        "examined almost nothing and the absence below says nothing about scaling"
+    )
+    unscaled_wires = {str(endpoint.field.data_type) for endpoint in monetary} - _SELF_SCALING_WIRE_TYPES
+    assert not unscaled_wires, f"this revision no longer exercises a self-scaling wire: {sorted(unscaled_wires)}"
+
     findings = scale_findings(revision, modelo_id="303")
     assert not [item for item in findings if item.kind == "money_without_scale"]
 

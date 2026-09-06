@@ -296,6 +296,7 @@ def display_locale_keys() -> tuple[str, ...]:
     rather than listed, so adding a ``BindingSourceKind`` member or a
     ``data_type`` immediately demands its string instead of rendering nothing.
     """
+    from enum import Enum
     from typing import get_args
 
     from cadrumo.core.aggregation import BindingSourceKind
@@ -305,25 +306,46 @@ def display_locale_keys() -> tuple[str, ...]:
 
     from .legal_reference import load_legal_provisions
 
-    def _literal_values(
+    def _closed_values(
         model: type[CasillaDefinition | ModeloDefinition | CasillaConstraints],
         field: str,
     ) -> tuple[str, ...]:
+        """Every value a closed field admits, whether it is a Literal or an Enum.
+
+        This read ``get_args`` alone, which answers for ``Literal["money", ...]``
+        and returns an EMPTY TUPLE for an ``Enum`` annotation. All three fields
+        it is asked about have since become enums, so it had been quietly
+        yielding nothing -- and yielding nothing is indistinguishable here from
+        a family with no members, so the derivation this docstring calls a
+        guarantee ("adding a member immediately demands its string") had stopped
+        making any demand at all. Twenty-six shipped keys the surface renders on
+        every page were reported as stale copy.
+
+        An unreadable field raises rather than returning empty: silence is the
+        exact failure being repaired, and a family that yields nothing is never
+        a fact this function is entitled to assert.
+        """
         field_info = model.model_fields.get(field)
         if field_info is None:
-            return ()
-        return tuple(str(value) for value in get_args(field_info.annotation))
+            raise LookupError(f"{model.__name__} declares no field {field!r} to derive display keys from")
+        annotation = field_info.annotation
+        if isinstance(annotation, type) and issubclass(annotation, Enum):
+            return tuple(str(member.value) for member in annotation)
+        values = tuple(str(value) for value in get_args(annotation))
+        if not values:
+            raise LookupError(f"{model.__name__}.{field} is neither an Enum nor a Literal, so its values are unknown")
+        return values
 
     keys: list[str] = [f"{_DISPLAY_PREFIX}.{suffix}" for suffix in _UNENUMERATED_DISPLAY_KEYS]
     for member in InputKind:
         keys.append(f"{_DISPLAY_PREFIX}.input_kind.{member.value}")
         keys.append(f"{_DISPLAY_PREFIX}.input_kind_count.{member.value}")
     keys.extend(f"{_DISPLAY_PREFIX}.binding_source.{member.value}" for member in BindingSourceKind)
-    keys.extend(f"{_DISPLAY_PREFIX}.data_type.{value}" for value in _literal_values(CasillaDefinition, "data_type"))
-    keys.extend(f"{_DISPLAY_PREFIX}.cadence.{value}" for value in _literal_values(ModeloDefinition, "cadence"))
+    keys.extend(f"{_DISPLAY_PREFIX}.data_type.{value}" for value in _closed_values(CasillaDefinition, "data_type"))
+    keys.extend(f"{_DISPLAY_PREFIX}.cadence.{value}" for value in _closed_values(ModeloDefinition, "cadence"))
     keys.extend(
         f"{_DISPLAY_PREFIX}.value_range.{value}"
-        for value in _literal_values(CasillaConstraints, "sign")
+        for value in _closed_values(CasillaConstraints, "sign")
         if value != "any"
     )
     kinds = {provision.kind for provision in load_legal_provisions(_repo_root())}

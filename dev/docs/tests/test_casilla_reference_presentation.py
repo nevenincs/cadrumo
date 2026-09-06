@@ -21,6 +21,10 @@ renderer's behaviour, never a catalogue's current contents.
 
 from __future__ import annotations
 
+import inspect
+
+import importlib
+
 import re
 from typing import Any
 
@@ -478,3 +482,50 @@ def test_colliding_section_anchors_are_a_build_failure() -> None:
     )
     with pytest.raises(CasillaReferenceError):
         _render(records, OutputLanguage.EN)
+
+
+def test_display_locale_keys_derives_every_closed_family_it_claims() -> None:
+    """The derivation must actually enumerate, not quietly enumerate nothing.
+
+    ``display_locale_keys`` promises that adding a member to a closed field
+    "immediately demands its string instead of rendering nothing". It read
+    ``get_args`` alone, which answers for ``Literal[...]`` and returns an EMPTY
+    TUPLE for an ``Enum``. All three fields it asks about became enums, so the
+    guarantee had inverted: the families vanished from the declaration while
+    the surface went on rendering them, and twenty-six shipped keys were
+    reported as stale copy on that basis.
+
+    Nothing about the failure was visible -- an empty family and a family with
+    no members look identical downstream, which is why this asserts the
+    families are PRESENT rather than merely that the call succeeds.
+    """
+    keys = set(display_locale_keys())
+
+    families = {key.rsplit(".", 1)[0] for key in keys}
+    for family in ("docs.casilla.data_type", "docs.casilla.cadence", "docs.casilla.value_range"):
+        members = [key for key in keys if key.startswith(f"{family}.")]
+        assert members, f"{family} derived no members, so the surface renders keys nothing declares"
+
+    assert "docs.casilla.data_type.money" in keys, "a known data type must be derived from the enum"
+    assert "docs.casilla.cadence.quarterly" in keys, "a known cadence must be derived from the enum"
+    assert families >= {"docs.casilla.input_kind", "docs.casilla.binding_source"}, (
+        "the families that already worked must keep working"
+    )
+
+
+def test_a_closed_family_that_cannot_be_read_raises_rather_than_emptying() -> None:
+    """An unreadable field is a defect to report, never an empty family.
+
+    Returning ``()`` is what let the enum conversion pass unnoticed for as long
+    as it did. A family this function cannot enumerate is not a family with no
+    members, and it must not be reported as one.
+    """
+    from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
+    module = importlib.import_module(display_locale_keys.__module__)
+    source = inspect.getsource(module)
+
+    assert "raise LookupError" in source, "the derivation must refuse an unreadable field, not return empty"
+    assert CasillaDefinition.model_fields.get("data_type") is not None, (
+        "the field this gate reasons about must still exist, or the gate is asserting nothing"
+    )

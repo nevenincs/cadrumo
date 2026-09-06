@@ -1166,6 +1166,12 @@ def test_real_modelo_303_reserved_numeric_slots_are_excluded_from_eligibility() 
     assert eligibility.all_fields, "excluding reserved slots must not empty the eligible set"
 
 
+#: Floor for modelo 347's eligible fields. Live the design yields 22, and a
+#: narrowed naturaleza match once took the same set to ZERO. Two thirds of
+#: live, so ordinary design movement never fires it.
+_MINIMUM_ELIGIBLE_347_FIELDS = 15
+
+
 def _eligibility_for(source_ref: str, epoch: str, catalogue: str) -> tuple[object, ...]:
     """Return the eligible fields of one hash-verified design."""
     catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", catalogue))
@@ -1284,7 +1290,19 @@ def test_a_source_reserved_pdf_slot_stays_ineligible() -> None:
     """
     eligible = _eligibility_for("aeat-dr-347-2025", "2025", "operaciones-terceros.toml")
 
-    assert not [field for field in eligible if _is_source_reserved_field(field)]
+    # The claim is an ABSENCE, so it needs the population it is absent from.
+    # This has already happened here once: selecting on workbook abbreviations
+    # alone made every 347 field ineligible, and the sibling above records that
+    # "an EMPTY render profile satisfied exhaustive coverage completely" while
+    # the design shipped with no numeric format, sign policy or decimal
+    # placement. An emptied eligibility set satisfies the absence below the same
+    # way. Live the design yields 22 eligible fields, none of them reserved.
+    assert len(eligible) >= _MINIMUM_ELIGIBLE_347_FIELDS, (
+        f"only {len(eligible)} eligible field(s) for modelo 347; below this the reserved-slot "
+        "absence below holds because nothing was eligible, not because nothing was reserved"
+    )
+    reserved = [field for field in eligible if _is_source_reserved_field(field)]
+    assert not reserved, f"a slot the design reserves became eligible for a reviewed rule: {reserved}"
 
 
 def test_width_17_type_order_covers_every_declared_aeat_type() -> None:

@@ -69,11 +69,9 @@ def _collect(value: object, seen: set[int], keys: set[str]) -> None:
         for item in value:
             _collect(item, seen, keys)
         return
-    for field in dir(value):
-        if field.startswith("_"):
-            continue
+    for field in _KEY_FIELDS:
         text = _key_text(getattr(value, field, None))
-        if text is not None and "." in text:
+        if text is not None:
             keys.add(text)
     slots: Iterable[str] | None = getattr(type(value), "__slots__", None)
     if slots:
