@@ -37,7 +37,7 @@ from typing import TYPE_CHECKING
 from ...core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
 from ...core.i18n import tr
 from ...core.parsing import parse_bool
-from .format_hints import REGISTERED_NON_OFFICIAL_SUFFIX_LOCALE_KEY
+from ._format_hints import REGISTERED_NON_OFFICIAL_SUFFIX_LOCALE_KEY
 from .models import WizardQuestion
 
 if TYPE_CHECKING:

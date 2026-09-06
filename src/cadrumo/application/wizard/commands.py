@@ -63,6 +63,7 @@ from ..flows.engine import start_flow, visible_sequence
 from ..flows.errors import FlowAnswerError, FlowSubmitError
 from ..flows.scripted import run_scripted_flow
 from ..flows.wizard_projection import flow_definition_from_wizard_flow
+from ._format_hints import attach_format_hints
 from .catalogue import SETUP_FLOW
 from .descendant_group import attach_descendant_group
 from .errors import (
@@ -74,7 +75,6 @@ from .errors import (
     wizard_no_action_verdict,
 )
 from .flow_validators import attach_taxpayer_projection_validator
-from .format_hints import attachformat_hints
 from .models import WizardFlow, WizardQuestion, WizardWidget
 from .persistence import WizardPersistMode
 from .setup_legal_validators import attach_setup_legal_validators
@@ -739,7 +739,7 @@ def setup_flow_definition(
     """
     definition = attach_taxpayer_projection_validator(
         attach_setup_legal_validators(
-            attachformat_hints(flow_definition_from_wizard_flow(flow, checkpoint=_SETUP_CHECKPOINT)),
+            attach_format_hints(flow_definition_from_wizard_flow(flow, checkpoint=_SETUP_CHECKPOINT)),
         ),
     )
     if attach_descendants:

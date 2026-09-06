@@ -96,7 +96,7 @@ PAGE_WIDGET_KINDS: Mapping[str, FlowWidgetKind] = {
 }
 
 
-def attachformat_hints(definition: FlowDefinition) -> FlowDefinition:
+def attach_format_hints(definition: FlowDefinition) -> FlowDefinition:
     """Return ``definition`` decorated with format hints and widget kinds.
 
     One walk applies both overrides. A page in :data:`PAGE_FORMAT_HINTS`
@@ -148,5 +148,5 @@ __all__ = [
     "PAGE_FORMAT_HINTS",
     "PAGE_WIDGET_KINDS",
     "REGISTERED_NON_OFFICIAL_SUFFIX_LOCALE_KEY",
-    "attachformat_hints",
+    "attach_format_hints",
 ]

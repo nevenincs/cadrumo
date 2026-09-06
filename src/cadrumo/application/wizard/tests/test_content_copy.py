@@ -11,8 +11,8 @@ from ...flows.copy import assemble_page_copy
 from ...flows.definition import FlowPage
 from ...flows.engine import answer, start_flow
 from ...flows.wizard_projection import flow_definition_from_wizard_flow
+from .._format_hints import PAGE_FORMAT_HINTS, PAGE_WIDGET_KINDS, attach_format_hints
 from ..catalogue import SETUP_FLOW
-from ..format_hints import PAGE_FORMAT_HINTS, PAGE_WIDGET_KINDS, attachformat_hints
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -20,7 +20,7 @@ _LOCALES = ("en", "es", "ca", "hu")
 
 
 def _definition():
-    return attachformat_hints(
+    return attach_format_hints(
         flow_definition_from_wizard_flow(
             SETUP_FLOW,
             checkpoint={
@@ -67,7 +67,7 @@ def test_decision_pages_carry_choice_explainers() -> None:
                 assert not missing, (question.id, missing)
 
 
-def testformat_hints_attach_to_exactly_the_mapped_pages() -> None:
+def test_format_hints_attach_to_exactly_the_mapped_pages() -> None:
     definition = _definition()
     hinted: dict[str, str] = {}
     for section in definition.sections:
