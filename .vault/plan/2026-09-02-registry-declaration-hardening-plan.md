@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:90e7409addea0b44aa0c907a5f4b2b5249ecb795584daa5da1a2e7fe75979d69'
+body_hash: 'sha256:53c680fd470c1039d3d1535713bd63c0f4673972b69516c7592cd3f98bc29d87'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -681,6 +681,10 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S799` - Prove the load census clean property reads every field it claims: clean is a conjunction over unclassified, stale_rules and undeclared_dead_candidates, all three empty live, so degrading it to read only the first is indistinguishable from correct and the authoritative gate asserting report.clean never observed it False; `dev/registry/tests/test_load_census_classification.py`.
 - [x] `W02.P02.S800` - Compare generated documentation artefacts as bytes so the freshness gates detect line-ending drift they previously normalised away; `dev/docs/download_matrix.py`.
 - [x] `W02.P02.S801` - Floor the runner brew-capability table and prove it equals the legs the acquisition workflow declares; `dev/containers/tests/test_runner_capabilities.py`.
+- [x] `W02.P02.S802` - Spare a session scratchpad whose walk cannot stat an entry, so an unreadable newest file cannot make a live tree read as idle; `dev/env/temp_reaper.py`.
+- [x] `W02.P02.S803` - Compare committed corpus text sidecars as bytes so a translated terminator cannot read as fresh; `dev/corpus/tests/test_extraction_sidecar_freshness.py`.
+- [x] `W02.P02.S804` - Floor the PyPI cohort roster and derive it from the packaging sources so a drifted distribution name cannot leave a release destination unchecked; `dev/release/tests/test_version_identity.py`.
+- [x] `W02.P02.S805` - Refuse a cognitive-complexity scan whose root yields no Python files so a moved product tree cannot report clean over nothing; `dev/audit/complexity.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

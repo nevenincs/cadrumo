@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:13835a479ddc755443364db23badcb50fc14bb3a4621c2555a2c5e71980b0105'
+body_hash: 'sha256:564800ad88958d8fb2f16c17495384e044a7477d655c7504532fa2e3669c6030'
 ---
 
 # `reachability-burndown` plan
@@ -147,6 +147,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S46` - Adjudicate the grounding-anchor provenance wrappers and the invoice CLI query projections, and record what the first is NOT: the anti-fabrication contract's structural half is live, since evaluate anchor, the printed-excerpt predicates, the refusal constructor and the ambiguous-candidate grounder are all imported by production modules, so an extracted value is still checked against the transcription and only the envelope-building convenience is displaced by callers constructing the provenance directly; the two invoice projections declare themselves for CLI surfaces that never reach them, while a sibling in the same module is consumed; `dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S47` - Separate two unreached read paths that look identical and are not: the deudas landing guard and path prefixes are staged and fail-closed by design, because the live deudas service records that no specimen of the AEAT consulta page exists and the shared read-landing wall refuses every landing while a surface declares no read pages, so nothing calls the guard precisely because no live read is attempted; whereas the IVA remote-state loaders sit beside a capture that IS reached, so state is captured and cannot be retrieved and the acquisition-manifest surface records nothing, with no fail-closed rationale; `dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S48` - Adjudicate the recipient keypair accessors and the review-only workspace, using the module-surface split to separate a displaced accessor inside a working feature from a feature with nothing behind it: the encryption module is mostly live and its ensure path is documented to mint a keypair on first use, subsuming the plain loader; whereas the workspace opener and the guard refusing an official action are both unreached, and the type they produce has exactly one production consumer, the collaboration audit emitters this ledger already records as reached by nothing, so the type is held alive only by code that is itself dead and no guard refuses an official action inside a review-only workspace; `dev/audit/reachability_classification.toml`.
+- [x] `W05.P12.S49` - Correct an earlier wrong negative about transitive deadness and adjudicate what the corrected scan surfaced: the first attempt reported zero because it treated a module-level import as proof of life, which is exactly how the review-only workspace type looked consumed while its only consumer was a recorded finding; a two-pass scan over audit-reached symbols found three modules whose whole defined surface is findings, and eight symbols referred to only by them, but those eight resolve to a documented re-export boundary rather than dead code, leaving as the real finding the two command-spec projections that module actually defines, both read by the CLI reference and tree generators; `dev/audit/reachability_classification.toml`.
 
 ## Parallelization
 

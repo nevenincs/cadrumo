@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-06'
-body_hash: 'sha256:cf927b937c0e8f8da422a118e5ecbbdc1f364a05f2d5484630bda95e779175ac'
+body_hash: 'sha256:f036374627753fbdef5b78346240cbec8896d3aa6094880bc898acba7955b9a2'
 ---
 
 <!-- RETIRED: S370 -->
@@ -694,6 +694,9 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S478` - Seed the reset lifecycle profile the way production leaves one, recording the legal hold snapshot through the door that documents the opt-in and refreshing the filing retention snapshot the way persisting a filing does, since the fixture wrote the catalogue directly and produced a profile whose filing exists while its snapshot still says none; `src/cadrumo/entrypoints/cli/tests/test_config_reset_lifecycle.py`.
 - [x] `W08.P30.S479` - Establish that the two custody owner receipt cases fail on this host because the Windows credential store is unreachable from this logon session rather than on any defect, and leave them failing rather than pinning a null keyring that would defeat what they exercise; `src/cadrumo/application/user_profile/tests/test_custody_transactions.py`.
 - [x] `W08.P30.S480` - Record that the ledger reconciliation direction collision is resolved by the owning writer adopting the direction state spelling, which turns the shadow gate green and takes the missing side of parity to zero, leaving the parity and audit gates red on the extras alone; `dev/locales`.
+- [x] `W08.P30.S481` - Follow a key factory into its caller, since a refusal that names its own reason writes the choice as a function whose every return is a key expression and the local rule declines a call by design, and correct the extras partition to require a delimiter so a prefix of a longer key is not read as evidence the key is written down; `dev/locales/_ast_scanner.py dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
+- [x] `W08.P30.S482` - Correct the claim that the four remaining tui extras have no authority to consult, since the workbench naming authority declares fourteen operator actions and neither of the two action keys is among them while their live siblings are, and the declarations and ledger surfaces render every sibling column and import state literally at the call site without the other two; `dev/locales`.
+- [ ] `W08.P30.S483` - Re-verify every gate closed in this campaign still holds after the concurrent writers commits and confirm the export tree blocker is unchanged, since a rename on this worktree was reverted five times before and a closed gate is only closed until someone else edits its surface; `dev/locales dev/docs src/cadrumo/entrypoints src/cadrumo/domain`.
 
 ## Parallelization
 
