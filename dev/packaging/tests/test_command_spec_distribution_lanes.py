@@ -15,15 +15,18 @@ from typing import cast
 
 import pytest
 
+from ..python_cohort import _FORBIDDEN_COMMAND_ARTIFACT_NAMES
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
 _REPOSITORY = Path(__file__).resolve().parents[3]
-_FORBIDDEN_NAMES = {
-    "app_lazy_manifest.v1.json",
-    "command_registration_metadata.v1.json",
-    "generate_app_lazy_manifest.py",
-    "generate_command_registration_metadata.py",
-}
+#: Generated command artefacts that must never reach a distribution. Read from
+#: the cohort authority that also refuses them in the build projection, rather
+#: than copied. The two surfaces are different -- that gate reads the projection,
+#: this one reads the members of a real built wheel and sdist -- so a copy kept
+#: here would leave a newly forbidden artefact refused at build time and shipped
+#: unnoticed in the archive.
+_FORBIDDEN_NAMES = _FORBIDDEN_COMMAND_ARTIFACT_NAMES
 _PROBE = r"""
 import dataclasses
 import importlib

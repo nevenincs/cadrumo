@@ -1386,6 +1386,96 @@ def _translation_wrapper_names(modules: list[tuple[Path, ast.Module]]) -> frozen
         known |= discovered
 
 
+def _translated_value_names(
+    modules: list[tuple[Path, ast.Module]], wrappers: frozenset[str] = frozenset()
+) -> frozenset[str]:
+    """Return the names whose value is passed to a translator somewhere in the tree.
+
+    ``ledger_copy(choice.source_label_key)`` proves that whatever
+    ``source_label_key`` holds is copy. The proof lives in the SCREEN, while
+    the values it can hold are declared in the model module beside it, so this
+    is collected across the whole tree rather than per module.
+
+    A name, not a value: this says nothing about what any particular
+    ``source_label_key`` contains, only that a value reaching a translator is
+    what that name is for.
+
+    The sink set carries the boundary wrappers, because every screen renders
+    through one. Reading only ``tr`` found nothing here at all -- the third
+    time in this campaign that following the project's own boundary convention
+    is what made a key invisible.
+    """
+    names: set[str] = set()
+    for _module, tree in modules:
+        tr_names = _translation_call_names(tree) | wrappers
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            for argument in _call_site_key_argument_exprs(node, tr_names):
+                if isinstance(argument, ast.Attribute):
+                    names.add(argument.attr)
+                elif isinstance(argument, ast.Name):
+                    names.add(argument.id)
+    return frozenset(names)
+
+
+def _membership_guard_keys(tree: ast.AST, translated_names: frozenset[str]) -> set[str]:
+    """Return dotted literals a guard admits for a name that is then translated.
+
+    A boundary that will not render an arbitrary string states the keys it
+    accepts and refuses everything else::
+
+        _SAFE_SOURCE_KEYS = frozenset({"tui.ledger.import.source.prepared"})
+        ...
+        if source_label_key not in _SAFE_SOURCE_KEYS:
+            raise ...
+
+    The admitted value is later rendered by the screen as
+    ``ledger_copy(choice.source_label_key)``. Nothing in the module that
+    DECLARES the keys translates them, and nothing in the module that
+    translates them mentions a literal, so each half looked inert on its own.
+
+    The link is a membership test, not a naming convention: the guarded name
+    must be one this tree actually passes to a translator, and the container
+    must be a collection of dotted literals. A guard over some other name --
+    an allow-list of choice ids, say -- proves nothing about copy and is not
+    admitted.
+    """
+    if not translated_names:
+        return set()
+    containers: dict[str, set[str]] = {}
+    for node in ast.walk(tree):
+        target: ast.expr | None = None
+        value: ast.expr | None = None
+        if isinstance(node, ast.Assign) and len(node.targets) == 1:
+            target, value = node.targets[0], node.value
+        elif isinstance(node, ast.AnnAssign):
+            target, value = node.target, node.value
+        if not isinstance(target, ast.Name) or value is None:
+            continue
+        if not isinstance(value, ast.Set | ast.List | ast.Tuple | ast.Call):
+            continue
+        literals: set[str] = set()
+        _collect_dotted_literals(value, literals)
+        if literals:
+            containers[target.id] = literals
+
+    findings: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Compare):
+            continue
+        if not any(isinstance(operator, ast.In | ast.NotIn) for operator in node.ops):
+            continue
+        guarded = node.left
+        name = guarded.attr if isinstance(guarded, ast.Attribute) else getattr(guarded, "id", None)
+        if name not in translated_names:
+            continue
+        for comparator in node.comparators:
+            if isinstance(comparator, ast.Name) and comparator.id in containers:
+                findings |= containers[comparator.id]
+    return findings
+
+
 def _translation_key_parameter_positions(
     modules: list[tuple[Path, ast.Module]],
 ) -> dict[str, frozenset[int]]:
@@ -1461,9 +1551,11 @@ def scan_source_tree(root: Path) -> set[str]:
     modules = list(_iter_parseable_python_modules(root))
     key_positions = _translation_key_parameter_positions(modules)
     wrappers = _translation_wrapper_names(modules)
+    translated_names = _translated_value_names(modules, wrappers)
     findings: set[str] = set()
     for _module, tree in modules:
         findings.update(_extract_error_constructor_keys(tree, wrappers))
+        findings.update(_membership_guard_keys(tree, translated_names))
         findings.update(_extract_locale_constant_keys(tree, wrappers))
         findings.update(_extract_positional_translation_key_arguments(tree, key_positions))
     return findings
