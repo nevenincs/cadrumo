@@ -134,8 +134,8 @@ def test_portable_profile_matches_the_host_portable_aggregate() -> None:
     assert "browser/host-with-deps" not in _PROFILES["portable"]
 
 
-def test_ci_profile_is_the_ubuntu_superset() -> None:
-    """The ci profile covers every portable proof plus the Linux-only forms."""
+def test_ci_profile_adds_the_dev_lane_and_swaps_the_browser_form() -> None:
+    """The ci profile is no superset: it swaps the browser form rather than adding it."""
     ci = set(_PROFILES["ci"])
     assert {
         "dev/frozen-lock",

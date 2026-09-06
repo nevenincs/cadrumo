@@ -16,9 +16,9 @@ Profiles mirror the two workflow aggregates:
 
 - ``portable``: the host-portable lane set every OS leg runs
   (core / pip-core / sdist-core / extras / split / browser).
-- ``ci``: the Ubuntu superset (adds the dev-environment lane, the
-  ``--with-deps`` browser variant instead of the portable one, and the two
-  Docker lanes).
+- ``ci``: the Ubuntu lane set (adds the dev-environment lane and swaps the
+  portable browser form for the ``--with-deps`` variant). It is NOT a
+  superset of ``portable``: ``browser/host`` runs there and nowhere else.
 - ``quick``: the single per-push probe (core only) used by the quick
   workflow; it exists here so the lane registry is the one source of truth
   for what each profile proves.
@@ -163,7 +163,7 @@ _LANES: Final[dict[str, Lane]] = {
     # own metadata can settle that. The lane is host-portable — two stdlib venvs
     # and pip, no host package manager and no container — and the extra it
     # installs and removes is small, so it belongs in every OS leg rather than
-    # in the Linux-only superset alone.
+    # in the Linux-only ``ci`` profile alone.
     "inference-boundary": Lane(
         name="inference-boundary",
         invariant="the inference boundary refuses instructively without the llm extra, "
