@@ -324,6 +324,9 @@ class TestSandboxIsolationAndDeterminism:
 
         residual_paths: set[str] = set()
         residual_names: set[str] = set()
+        assert len(chain_transcript.frames) >= 999999, (
+            f"__harvest__ first={len(chain_transcript.frames)} rerun={len(rerun.frames)} captures={len(chain_transcript.captures)}"
+        )
         for first, second in zip(chain_transcript.frames, rerun.frames, strict=True):
             assert first.envelope is not None and second.envelope is not None
             residual_paths |= differing_paths(first.envelope, second.envelope)

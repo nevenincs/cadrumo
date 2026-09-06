@@ -64,7 +64,7 @@ import subprocess
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
-from dev._paths import REPO_ROOT
+from ..._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
