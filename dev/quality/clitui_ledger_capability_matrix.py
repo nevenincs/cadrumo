@@ -5621,10 +5621,13 @@ def _acceptance_record_anchor_errors(
     matrix: LedgerCapabilityMatrixV1,
     acceptance_record_anchor: LedgerAcceptanceRecordAnchorV1 | None,
     observed_acceptance_subjects: tuple[EvidenceSubjectSnapshotV1, ...],
+    *,
+    required_gate: LedgerGate = LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE,
 ) -> list[str]:
     """Require an immutable, independently observed record for receipt authority."""
     if acceptance_record_anchor is None:
-        return ["accepted G0 closure requires a current external acceptance record anchor"]
+        gate_label = required_gate.value.split("_", maxsplit=1)[0].upper()
+        return [f"accepted {gate_label} closure requires a current external acceptance record anchor"]
     try:
         anchor = LedgerAcceptanceRecordAnchorV1.model_validate(_serialized_python_data(acceptance_record_anchor))
     except ValidationError as error:
@@ -5847,7 +5850,10 @@ def evaluate_ledger_capability_gate(
             blockers.append("the Ledger TUI implementation hold lacks a current accepted G3 closure receipt")
         else:
             for anchor_error in _acceptance_record_anchor_errors(
-                matrix, acceptance_record_anchor, observed_acceptance_subjects
+                matrix,
+                acceptance_record_anchor,
+                observed_acceptance_subjects,
+                required_gate=LedgerGate.G3_CLI_CLEAN_BREAK_AND_COMPLETENESS,
             ):
                 if anchor_error not in blockers:
                     blockers.append(anchor_error)
