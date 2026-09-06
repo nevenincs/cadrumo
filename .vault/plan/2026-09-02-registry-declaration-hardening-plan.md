@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:15e640fb706f13a9b4c3a06d04e5bb7f73375d737e957f1cbe5d82ec072f297e'
+body_hash: 'sha256:426d21d245003c01219afac3b0dee39283c70a2d40fd2bd7118a0c26992a2972'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -316,6 +316,8 @@ Deliver one accessor returning a revision's complete resolved export casilla sur
 - [x] `W01.P01.S836` - Split the object-name manifest loader's two disjoint refusals and measure the half no test reached: `is_link_like(path) or not path.is_file()` shared one message, the only test driving it was the symlink case behind a skip, and a symlink satisfies `is_file()` so that message told an operator their regular file was not one; `dev/quality/object_name_manifest.py dev/quality/tests/test_object_name_manifest.py`.
 - [x] `W01.P01.S837` - Split `_receipt`'s two disjoint refusals and measure the half nothing reached: the same module already separates them thirty lines below in `_manifest_path`, a symlink satisfies `is_file()` so the shared message was false for the only input that reached it, and the not-a-regular-file half was driven by no test at all; `dev/quality/object_name_declustering.py dev/quality/tests/test_object_name_declustering.py`.
 - [x] `W01.P01.S838` - Correct the query-vocabulary partition so alias validation sees every declared language row: the enumerator keyed on `(concept_id, casefold(query))` while the validator partitions on `(concept_id, language, query)`, collapsing 117 declared rows to 112 and refusing a shipped English alias for `casilla` under a message asserting no canonical query exists for it; `dev/docs/terminology/_sweep.py dev/docs/terminology/tests/test_query_aliases.py`.
+- [x] `W01.P01.S839` - Announce an unreadable module in the name-collision census instead of ending it: the channel was already named `unread` and its notice already said the modules "could not be read", so the class it could not catch was the one its own vocabulary was written for, and the pre-existing test named for an unreadable module fed an unparsable one; `dev/quality/name_collision_census.py dev/quality/tests/test_name_collision_census.py`.
+- [ ] `W01.P01.S840` - Assert the licence and attribution CONTENT the gate's prose promises rather than `is_file()` and `st_size > 0`: all three LICENSE files and the root NOTICE could each be replaced by the single byte `x` -- destroying every Apache-2.0 text in the repository and the section 4(d) attribution -- while the suite stayed green at 5 passed; `dev/packaging/tests/test_license_attribution_chain.py`.
 
 ## Wave `W02` - gate restoration and residue removal
 
