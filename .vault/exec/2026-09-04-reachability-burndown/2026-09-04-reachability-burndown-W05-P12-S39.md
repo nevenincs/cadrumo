@@ -5,7 +5,7 @@ tags:
 date: '2026-09-06'
 modified: '2026-09-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:cbb49bf095df192824092fba411a0e674e7b8c94bb7c0ab8908a0db62b0d0747'
+body_hash: 'sha256:4f32df7173f16919b8841983a3801e933d6534eebbd4b8e071301dd819531f92'
 step_id: 'S39'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
@@ -29,10 +29,10 @@ related:
 
 ## Notes
 
-The execution-policy cluster carries a divergence, not just a duplication: the
-public `CALCULATION_WRITE` names capabilities `calculation`, `encrypted-facts`
-and `profile-custody`, while the private `_CALCULATION_WRITE` the live modelo
-command specs use names only the first two. Either the public constant is
-over-broad or the live specs under-declare a command that reaches profile
-custody. That is an owner decision and the second reading would be a silent
-under-declaration at a security-relevant boundary.
+The execution-policy cluster was first recorded as a capability divergence: the
+public `CALCULATION_WRITE` names `profile-custody` and the private
+`_CALCULATION_WRITE` the live specs use does not. That reading was wrong and is
+corrected in the ledger. `command_spec._IMPLIED_CAPABILITIES` maps
+`encrypted-facts` onto `profile-custody`, and every policy check runs against
+`expanded_capabilities`, so the two declarations are equivalent. The finding is
+displacement of a canonical home by private copies, not an under-declaration.

@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:afe3035f76bf75b7248f7882117d578c4d04e6ef51deff877dec50db59e9fe9d'
+body_hash: 'sha256:71d586e7241442425994a2f58737ef2e0c2d16b5e3aaba2ce831b8555ac67d98'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -654,6 +654,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S772` - Floor the DP30302 epoch corpus and its per-epoch fields in the helper, so two loop-only exhaustiveness gates cannot pass over a narrowed load; `dev/registry/tests/test_dp30302_field_matrix.py`.
 - [x] `W02.P02.S773` - Floor the relevance corpus inside the fixture seven gates read, whose existing guard proved the file present but never that it carried anything; `dev/docs/terminology/tests/test_relevance_data.py`.
 - [x] `W02.P02.S774` - Floor the footnote note corpus in its fixture, so the two gates whose results are identical over an empty mapping cannot pass on a sheet that stopped matching; `dev/registry/tests/test_footnote_pointer_notes.py`.
+- [x] `W02.P02.S775` - Floor both surfaces of the packaging invocation census outside the parametrize they feed, so an emptied census cannot delete two gates at collection time; `dev/packaging/tests/test_preflight_recipe_selection.py`.
+- [x] `W02.P02.S776` - Give the epoch/width census the per-epoch floors its own docstring implies, since a truthiness check cannot see an epoch losing its slot; `dev/registry/tests/test_modelo_303_semantic_maps.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
