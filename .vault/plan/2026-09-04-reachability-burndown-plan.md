@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:0bcce9a9a41f83cf367f64d0e8752e10ce9c612adf8e44680cdc9c46c6e5994a'
+body_hash: 'sha256:db8743f73c036debc4d5edccab757ddf0e8bae6c0905396042bb80814e64bb18'
 ---
 
 # `reachability-burndown` plan
@@ -142,6 +142,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S41` - Adjudicate the marriage-fact helpers and the OSS regime substrate: the three domain-side persist and reload helpers are displaced by the application profile binding, which derives the facts inline from the individual predicates and reads the marriage date already typed, and a gap check first confirmed the registry bindings for full-year, month-start and month-end on modelo 100 revision 2024 are all produced by the live path; the OSS and IOSS filer role, periodicity mapping and deductibility predicate are a substrate landed ahead of the Modelo 369 chain that is not yet in the registry; `dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S42` - Split the repair-integrity family, whose two halves differ: the metadata-only reports are superseded because the live config repair verb imports exclusively from application diagnostics, which already performs the same per-namespace integrity probe, and nothing in production imports repair integrity at all; but the remediation decision repository has no replacement, since diagnostics carries no remediation handling while the secure-object namespace registry declares an encrypted namespace for exactly those decisions, so the store stands ready and an operator decision about a damaged row leaves no record; `dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S43` - Adjudicate the censo lifecycle routing and the column-level encryption decorators: the registry-owned foundation map resolving Modelo 036 as active and 037 as historical serves a modelo that IS in the registry, yet no production caller reaches it and the whole application censo path contains no reference to 037 or to active-versus-historical routing, so the distinction is declared and never consulted; the two unused AEAD TypeDecorators are not an unencrypted column, since HashedLookup from the same family is live for row-key digests and the sensitive payload path encrypts through the application-layer secure-object envelope instead; `dev/audit/reachability_classification.toml`.
+- [x] `W05.P12.S44` - Adjudicate the two custody families: the envelope-level recovery unlock and envelope parser are superseded because the live recovery artifact path calls the field-level unlock material primitive and derives the wrapper AAD through the field-level helper, and a crypto divergence was ruled out first by confirming the envelope AAD form delegates to that same helper so the bypass changes no bytes; and the summary-witness load with the data-file replace are what remains of the committed custody read side after its reader trio was removed, leaving a live write side that commits data the product can neither read back as a witness nor replace; `dev/audit/reachability_classification.toml`.
 
 ## Parallelization
 

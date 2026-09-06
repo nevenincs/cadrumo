@@ -5,16 +5,11 @@ tags:
 date: '2026-09-06'
 modified: '2026-09-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:9f7e79ce146df8b25d0665e3e4c3eae29932ba15b3a272335e1107cd57e9b21e'
+body_hash: 'sha256:9fadee9029785a198d3a2eacae7942aced757db5559fdc33b280faa0313760ca'
 step_id: 'S42'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Split the repair-integrity family, whose two halves differ: the metadata-only reports are superseded because the live config repair verb imports exclusively from application diagnostics, which already performs the same per-namespace integrity probe, and nothing in production imports repair integrity at all; but the remediation decision repository has no replacement, since diagnostics carries no remediation handling while the secure-object namespace registry declares an encrypted namespace for exactly those decisions, so the store stands ready and an operator decision about a damaged row leaves no record
 

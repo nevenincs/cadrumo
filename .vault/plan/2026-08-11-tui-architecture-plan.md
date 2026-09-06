@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-06'
-body_hash: 'sha256:2499b906fb758cf0b723024b5f93b95813be991d4d935827d454555e6c7f21f9'
+body_hash: 'sha256:97b24bdd756960a9debf6d3074946fb2771739fe56a2194611801da76ac8973b'
 ---
 
 <!-- RETIRED: S370 -->
@@ -688,6 +688,9 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S472` - Establish why the generated export tree gate is red and stop rather than regenerate: twenty-seven of twenty-nine enrolled trees drift only in their generation provenance with no record layout fragment differing, and the twenty-eighth is enrolled ahead of publication so publishing it would require authoring a filing-grade check-mode refusal reason; `dev/registry/tests/test_generated_export_trees.py`.
 - [x] `W08.P30.S473` - Close the reference walk target and correct how this campaign has been measuring, since the suite itself warns that a parallel run failure list is a subset of unknown size and every sweep behind the reported counts was run under xdist; `dev/audit dev/packaging dev/registry`.
 - [x] `W08.P30.S474` - Characterise the export tree drift precisely and correct the earlier wording, since every record fragment differs in bytes while none differs in parsed meaning and the provenance reds only because it records byte digests, which makes the owed regeneration a serializer rewrite rather than a change to any declaration; `dev/registry`.
+- [x] `W08.P30.S475` - Recover the two documented-command ratchet baselines the import promotion sweep deleted, the third and fourth data file that commit removed while leaving the gates that read them, restoring the docs fence and inline span gates to running against the empty baselines that mean the doctrine is fully applied; `src/cadrumo/entrypoints/cli/tests/aeat_plain_fence_baseline.json src/cadrumo/entrypoints/cli/tests/inline_aeat_span_baseline.json`.
+- [x] `W08.P30.S476` - Admit the registry replay parity verb into the bootstrap exempt subtree it belongs to, deriving its qualification from the live spec rather than the family claim, since it declares the registry capability alone with no side effects no write route and profile authentication not applicable, the same posture as the verify and inspect leaves already there; `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`.
+- [x] `W08.P30.S477` - Reinstate the two Modelo 200 unadjudicated repeated slot entries that a re-authored export layout brought back, confirming against the design the revision actually cites that each slot carries a separate figure under its own label rather than a part of one value, so a part policy would be wrong and the question stays open; `src/cadrumo/domain/calculations/registry/tests/test_export_split_part_rendering.py`.
 
 ## Parallelization
 
