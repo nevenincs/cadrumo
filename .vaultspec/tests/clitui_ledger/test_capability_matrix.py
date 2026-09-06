@@ -2734,6 +2734,7 @@ def _acceptance_record_anchor(
     *,
     reviewer: str | None = None,
     observed_at: datetime = _OBSERVED_AT,
+    claim: str = "The external acceptance record freezes the accepted gate authority.",
 ) -> tuple[LedgerAcceptanceRecordAnchorV1, tuple[EvidenceSubjectSnapshotV1, ...]]:
     """Build an externally observed acceptance record for one frozen fixture state."""
     attestation = matrix.acceptance_attestation
@@ -2754,7 +2755,7 @@ def _acceptance_record_anchor(
                 EvidenceRole.INDEPENDENT_ENGINEERING_REVIEW,
                 frozenset(LedgerCapabilityAxis),
                 subject=subject,
-                claim="The external acceptance record freezes the accepted gate authority.",
+                claim=claim,
             ),
             acceptance_attestation_digest=attestation.calculated_digest,
             attestation_id=attestation.attestation_id,
@@ -2778,7 +2779,7 @@ def _acceptance_record_anchor(
             EvidenceRole.INDEPENDENT_ENGINEERING_REVIEW,
             frozenset(LedgerCapabilityAxis),
             subject=provisional_subject,
-            claim="The external acceptance record freezes the accepted gate authority.",
+            claim=claim,
         ),
         acceptance_attestation_digest=attestation.calculated_digest,
         attestation_id=attestation.attestation_id,
@@ -2801,6 +2802,47 @@ def _acceptance_record_anchor(
         locator=locator,
     )
     return make_anchor(subject), (subject,)
+
+
+def _reconstruct_published_g0_evaluation() -> tuple[
+    LedgerCapabilityMatrixV1,
+    LedgerLiveCensusReportV1,
+    LedgerAcceptanceRecordAnchorV1,
+    tuple[EvidenceSubjectSnapshotV1, ...],
+]:
+    """Rebuild the published sole-G0 acceptance shape around real matching live inputs."""
+    payload = _published_accepted_g0_payload()
+    published_attestation = cast(dict[str, object], payload["acceptance_attestation"])
+    published_receipt = LedgerGateClosureReceiptV1.model_validate_json(json.dumps(payload["g0_receipt"]))
+    published_anchor = cast(dict[str, object], payload["acceptance_record_anchor"])
+    published_coordinate = EvidenceCoordinateV1.model_validate_json(json.dumps(published_anchor["coordinate"]))
+    base = build_ledger_capability_matrix()
+    gate = LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE
+    assert published_receipt.gate is gate
+    attestation = base.acceptance_attestation.model_copy(
+        update={
+            "attestation_id": published_attestation["attestation_id"],
+            "reviewer": published_attestation["reviewer"],
+            "ruling": ReviewRuling.ACCEPT,
+            "closure_receipt_set_digest": LedgerCapabilityMatrixV1.calculate_gate_closure_receipt_set_digest(
+                ((published_receipt.receipt_id, gate),)
+            ),
+        }
+    )
+    attested = _matrix_with(base, acceptance_attestation=attestation)
+    receipt = LedgerGateClosureReceiptV1(
+        receipt_id=published_receipt.receipt_id,
+        gate=gate,
+        matrix_closure_basis_digest=attested.gate_closure_basis_digest(gate),
+        acceptance_attestation_digest=attested.acceptance_attestation.calculated_digest,
+    )
+    accepted = _matrix_with(attested, accepted_gate_closure_receipts=(receipt,))
+    anchor, acceptance_subjects = _acceptance_record_anchor(
+        accepted,
+        claim=published_coordinate.claim,
+    )
+    assert accepted.live_union is not None
+    return accepted, matrix_module._matrix_live_report(accepted.live_union), anchor, acceptance_subjects
 
 
 def _reminted_live_union() -> LedgerUnionDenominatorV1:
@@ -4976,11 +5018,28 @@ def test_s14_accepted_g0_publication_detector_rejects_missing_stale_and_field_mu
         _assert_published_accepted_g0_payload(candidate)
 
 
+def test_s14_published_g0_records_close_the_real_matrix_when_all_live_inputs_match() -> None:
+    """The publication becomes authority only through the typed G0 evaluator."""
+    matrix, report, anchor, acceptance_subjects = _reconstruct_published_g0_evaluation()
+
+    assessment = _evaluate(
+        matrix,
+        LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE,
+        report=report,
+        subjects=matrix.current_subjects,
+        union=matrix.live_union,
+        acceptance_anchor=anchor,
+        acceptance_subjects=acceptance_subjects,
+    )
+
+    assert assessment.closed
+    assert assessment.blockers == ()
+
+
 @pytest.mark.parametrize("mutation", ["missing", "stale", "reviewer"])
-def test_g0_refuses_missing_stale_or_altered_acceptance_anchor(mutation: str) -> None:
-    """G0 itself, not only G4, requires the independently observed anchor."""
-    matrix = _matrix_with_accepted_gate_receipts(_matrix())
-    anchor, subjects = _acceptance_record_anchor(matrix)
+def test_g0_refuses_missing_stale_or_altered_published_acceptance_anchor(mutation: str) -> None:
+    """G0 itself, not only G4, fails closed for typed external-anchor drift."""
+    matrix, report, anchor, subjects = _reconstruct_published_g0_evaluation()
     if mutation == "missing":
         anchor = None
         subjects = ()
@@ -4992,6 +5051,9 @@ def test_g0_refuses_missing_stale_or_altered_acceptance_anchor(mutation: str) ->
     assessment = _evaluate(
         matrix,
         LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE,
+        report=report,
+        subjects=matrix.current_subjects,
+        union=matrix.live_union,
         acceptance_anchor=anchor,
         acceptance_subjects=subjects,
     )
