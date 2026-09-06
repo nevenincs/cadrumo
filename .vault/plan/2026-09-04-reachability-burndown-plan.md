@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:676bb8d732100ae621ca1ce969bb43c89423f6bd68de1d240cf40b7ac4032c97'
+body_hash: 'sha256:5932ba978bdb1e6c5e4da3ca7d26bb72fdc04a2f6c18108a5dc5e3d653029db8'
 ---
 
 # `reachability-burndown` plan
@@ -149,6 +149,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S48` - Adjudicate the recipient keypair accessors and the review-only workspace, using the module-surface split to separate a displaced accessor inside a working feature from a feature with nothing behind it: the encryption module is mostly live and its ensure path is documented to mint a keypair on first use, subsuming the plain loader; whereas the workspace opener and the guard refusing an official action are both unreached, and the type they produce has exactly one production consumer, the collaboration audit emitters this ledger already records as reached by nothing, so the type is held alive only by code that is itself dead and no guard refuses an official action inside a review-only workspace; `dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S49` - Correct an earlier wrong negative about transitive deadness and adjudicate what the corrected scan surfaced: the first attempt reported zero because it treated a module-level import as proof of life, which is exactly how the review-only workspace type looked consumed while its only consumer was a recorded finding; a two-pass scan over audit-reached symbols found three modules whose whole defined surface is findings, and eight symbols referred to only by them, but those eight resolve to a documented re-export boundary rather than dead code, leaving as the real finding the two command-spec projections that module actually defines, both read by the CLI reference and tree generators; `dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S50` - Record a producer-replaced-by-constant shape the reachability signal cannot see as a missing consumer: the register scoping classifier and the filed period selection row projector are both unreached while their types and the whole downstream projection are live, because both onboarding run construction sites pass the inconclusive enum constant matching the field default and leave the selection rows at their empty tuple default, so the scoping signal is always inconclusive and the operator is always shown no selection rows even though the plumbing that would carry them is complete; `dev/audit/reachability_classification.toml`.
+- [x] `W05.P12.S51` - Test whether the producer-replaced-by-a-constant shape is gateable and record that it is not: matching a field annotation against an unreached producer's return type yields 3844 candidates when builtins are included and 227 when they are excluded, but the shape alone is not the defect, since the discriminating condition is that EVERY construction site passes the literal, and the leading candidate fails it because two of three sites pass a computed work unit id; adjudicate the work-address resolvers the investigation settled, displaced by a resolution that already carries what they return; `dev/audit/reachability_classification.toml`.
 
 ## Parallelization
 

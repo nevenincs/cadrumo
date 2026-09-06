@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:786fdf20f9c3f915c7c33bbfc902a4a66fe60d9b56db4691566e75451bd61767'
+body_hash: 'sha256:e52235430c427edd11c34e731972f839cfd45e5e2b324395bfa378cab1cba8c0'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -690,6 +690,10 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S808` - Re-raise when a PDF-shaped artefact cannot yield its decompressed stream surface so a residual identity cannot hide in a damaged stream; `dev/sanitizer/residual_identity.py`.
 - [x] `W02.P02.S809` - Refuse a radon complexity scan whose product tree is absent, since radon reports a missing path with empty output and exit zero; `dev/audit/complexity.py`.
 - [x] `W02.P02.S810` - Compare committed M200 2024 adjudication declarations as bytes so a line-ending corrupted declaration cannot read as compiler-identical; `dev/registry/analysis/m200_2024_unique_adjudications.py`.
+- [x] `W02.P02.S811` - Prove the canonical-receipt tamper changed the declaration content so the refusal cannot fire on injected line endings alone; `dev/registry/tests/test_m200_2024_unique_adjudications.py`.
+- [x] `W02.P02.S812` - Measure the system temporary directory when proving an embedded payload read spills no evidence to disk; `dev/sanitizer/tests/test_embedded_file_read_does_not_mutate.py`.
+- [x] `W02.P02.S813` - Read the formatted log record so a source path carried in an attached traceback cannot escape the hygiene gate; `dev/sanitizer/tests/test_pipeline.py`.
+- [x] `W02.P02.S814` - Treat only shipped distribution metadata as a dependency declaration and stop scanning unshipped test modules; `dev/packaging/tests/test_inference_imports_are_declared.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 

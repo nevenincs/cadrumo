@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-06'
-body_hash: 'sha256:76a6c638860bddbd3bcab5f2ca4745776d92efb9b31fd8ef4289eb5b00b52186'
+body_hash: 'sha256:e8b161b90f06ba247dc5d951867280d21cc6d44731f9d7858f1342550c8570a6'
 ---
 
 <!-- RETIRED: S370 -->
@@ -697,6 +697,7 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S481` - Follow a key factory into its caller, since a refusal that names its own reason writes the choice as a function whose every return is a key expression and the local rule declines a call by design, and correct the extras partition to require a delimiter so a prefix of a longer key is not read as evidence the key is written down; `dev/locales/_ast_scanner.py dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
 - [x] `W08.P30.S482` - Correct the claim that the four remaining tui extras have no authority to consult, since the workbench naming authority declares fourteen operator actions and neither of the two action keys is among them while their live siblings are, and the declarations and ledger surfaces render every sibling column and import state literally at the call site without the other two; `dev/locales`.
 - [x] `W08.P30.S483` - Re-verify every gate closed in this campaign still holds after the concurrent writers commits and confirm the export tree blocker is unchanged, since a rename on this worktree was reverted five times before and a closed gate is only closed until someone else edits its surface; `dev/locales dev/docs src/cadrumo/entrypoints src/cadrumo/domain`.
+- [x] `W08.P30.S484` - Sweep the packaging test root that neither earlier sweep reached and establish that both its suites pass, the scoop and homebrew builds simply exceeding the configured three hundred second timeout under host contention rather than failing; `packaging`.
 
 ## Parallelization
 
