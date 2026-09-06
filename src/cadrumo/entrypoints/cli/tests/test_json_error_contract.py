@@ -45,6 +45,7 @@ from typing import Final
 
 import pytest
 
+from ....core.errors.error_codes import ErrorEnvelope
 from ....core.json_contract import ENVELOPE_SCHEMA_VERSION
 from ....tests.cli_envelope import require_error_document
 from ....tests.cli_runner import invoke_cached_cli
@@ -75,13 +76,40 @@ def _object_member(document: dict[str, object], key: str) -> dict[str, object]:
 
 
 def _assert_shared_spine(document: dict[str, object]) -> dict[str, object]:
+    """Assert the shared spine, taking the error members from the model.
+
+    The member list was hand-written and named ``suggestion``, which
+    :class:`ErrorEnvelope` has never declared and, being ``extra="forbid"``,
+    could not carry. Free-text advice was replaced by the typed ``action``
+    projection, and ``core.json_contract._RESERVED_ACTION_CONTEXT_KEYS``
+    reserves the word ``suggestion`` precisely so it cannot come back through
+    ``context``. The list therefore asserted a member the contract had
+    deliberately not got.
+
+    It went unnoticed because the helper could not fail: it read the document
+    through a lenient parser, and the loop never reached a real member set.
+    Giving the helper teeth exposed the list, not a regression in the code.
+
+    Reading ``model_fields`` keeps that from recurring. The model is the
+    authority for what an error document carries, so a member added or removed
+    there changes this assertion with it.
+    """
     assert document["schema_version"] == ENVELOPE_SCHEMA_VERSION
     assert document["status"] == "error"
     assert "command" in document
     assert document["notices"] == []
     error = _object_member(document, "error")
-    for field in ("code", "category", "message", "suggestion", "retryable", "context"):
+    declared = set(ErrorEnvelope.model_fields)
+    assert declared, "the envelope model declared no fields, so this would assert nothing"
+    for field in sorted(declared):
         assert field in error, f"error member missing {field!r}"
+    assert "action" in declared, (
+        "the typed action projection is what replaced free-text advice; "
+        "without it this document cannot state a recovery"
+    )
+    assert "suggestion" not in declared, (
+        "free-text suggestion was retired in favour of the typed action projection"
+    )
     return error
 
 
@@ -122,12 +150,41 @@ def test_json_boundary_refusal_emits_shared_spine_document() -> None:
     assert context["option"] == "--reason"
 
 
-def test_text_mode_usage_error_keeps_human_rendering() -> None:
-    """Anti-regression: without --format json the human rendering survives."""
+def test_text_mode_domain_refusal_renders_for_a_human_not_as_json() -> None:
+    """Anti-regression: without ``--format json`` the human rendering survives.
+
+    This case was asserting ``Usage:`` on a DOMAIN refusal. A malformed
+    transaction id is rejected by the ledger boundary, not by argument parsing,
+    so no click ``UsageError`` is ever raised and there is no usage block for
+    anything to print -- the assertion described a rendering this input has no
+    reason to produce.
+
+    What the case is actually guarding is that text mode stays text: the
+    operator gets the localised refusal and its structured facts rather than a
+    JSON document. That is asserted here on its own terms, and the usage block
+    is asserted below on an input that genuinely provokes one.
+    """
     result = invoke_cached_cli(["app", "ledger", "view", "not-hex!"])
     assert result.exit_code == 2, result.output
-    assert "Usage:" in result.output
-    assert not result.output.lstrip().startswith("{")
+    assert not result.output.lstrip().startswith("{"), result.output
+    assert "not-hex!" in result.output, "the refusal must echo the value the operator typed"
+    assert "prefix:" in result.output, "the refusal's structured facts render for a human too"
+
+
+def test_text_mode_usage_error_keeps_its_usage_block() -> None:
+    """A real parse failure still renders click's usage block and hint.
+
+    The companion to the case above, and the one that needs a genuine
+    ``UsageError``: an unknown option. This is the rendering that was lost
+    entirely while the plain-text funnel looked up a method name no click
+    exception has, so it is worth an assertion of its own rather than riding on
+    an input that never produced it.
+    """
+    result = invoke_cached_cli(["app", "ledger", "view", "--nosuchoption"])
+    assert result.exit_code == 2, result.output
+    assert not result.output.lstrip().startswith("{"), result.output
+    assert "Usage:" in result.output, result.output
+    assert "--nosuchoption" in result.output, "the refusal must name the option it rejected"
 
 
 def test_vendored_context_stack_is_visible_to_json_probe() -> None:
