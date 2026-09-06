@@ -500,6 +500,32 @@ def test_a_written_ordinal_is_reported_unbound_and_never_misresolved() -> None:
     assert finding.clauses_total > 0
 
 
+def test_zero_clause_findings_stay_confined_to_absent_oracles() -> None:
+    """A finding with no clauses parsed has nothing to compare against.
+
+    Measured live: 328 findings, of which 50 parse zero clauses and 49 of
+    those carry NO_ORACLE - there is genuinely no bundled text to read. That
+    population is otherwise unguarded, and a clause parser that started
+    returning nothing would inflate it while every verdict assertion in this
+    module stayed green, because a comparison over zero clauses reports no
+    defect. Floors and a ceiling, not pinned counts.
+    """
+    result = screen(_REPO_ROOT)
+    zero = [finding for finding in result.findings if finding.clauses_total == 0]
+
+    assert len(result.findings) > 250, len(result.findings)
+    assert len(zero) < 90, (
+        f"{len(zero)} of {len(result.findings)} findings parsed zero clauses; the clause "
+        "reader is returning nothing for a growing share of the catalogue"
+    )
+    unexplained = sorted(
+        finding.entry_id for finding in zero if finding.verdict is not Verdict.NO_ORACLE
+    )
+    # One entry reaches a verdict with no clauses to compare, which is a
+    # standing oddity rather than a parser fault; a second would be new.
+    assert len(unexplained) <= 1, unexplained
+
+
 def test_only_the_shared_loader_walks_the_legal_catalogue() -> None:
     """The duplication the hoist removed must not grow back.
 

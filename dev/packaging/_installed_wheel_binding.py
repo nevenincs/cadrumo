@@ -94,17 +94,37 @@ def sealed_wheel_payload_sha256(wheel: Path) -> str:
     return _projection_digest(rows)
 
 
+def _existing_interpreter(interpreter: Path, *, cli: Path) -> Path:
+    """Accept an absolute, existing interpreter path without dereferencing it.
+
+    A POSIX environment's ``bin/python`` is an absolute symlink to the base
+    installation it was built from, and the link itself is the environment: the
+    interpreter behind it has no adjacent ``pyvenv.cfg``, so it starts on the
+    base ``sys.prefix`` and cannot see the environment's ``site-packages``.
+    Following that final link therefore swaps the installation under attestation
+    for the one that seeded it, and the probe reports an empty environment
+    rather than the installed payload. The link is also load-bearing on macOS,
+    where a copied python-build-standalone binary loses its
+    ``@executable_path``-relative ``libpython``, so the path is checked for
+    existence and otherwise left exactly as the launcher names it.
+    """
+    if not interpreter.is_absolute():
+        raise RuntimeError(f"installed CLI names a relative interpreter: {interpreter} ({cli})")
+    if not interpreter.is_file():
+        raise RuntimeError(f"installed CLI names a missing interpreter: {interpreter} ({cli})")
+    return interpreter
+
+
 def installed_python_for_cli(cli: Path) -> Path:
     """Resolve the interpreter that owns an installed console entry point."""
     resolved = cli.resolve(strict=True)
     if resolved.suffix.lower() == ".exe":
-        candidate = resolved.parent / "python.exe"
-        return candidate.resolve(strict=True)
+        return _existing_interpreter(resolved.parent / "python.exe", cli=resolved)
     first_line = resolved.read_bytes().splitlines()[0].decode(UTF_8)
     if not first_line.startswith("#!"):
         raise RuntimeError(f"installed CLI has no absolute Python shebang: {resolved}")
     interpreter = first_line[2:].strip().split(" ", 1)[0]
-    return Path(interpreter).resolve(strict=True)
+    return _existing_interpreter(Path(interpreter), cli=resolved)
 
 
 def installed_distribution_payload_sha256(cli: Path, distribution: str) -> str:

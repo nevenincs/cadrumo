@@ -152,8 +152,7 @@ def test_golden_scan_actually_reads_captured_output() -> None:
     # live the corpus holds 206 goldens and 16,043,894 captured characters,
     # a mean of about 78,000 each.
     assert len(corpus) > 150, (
-        f"only {len(corpus)} goldens were discovered; the gate below is measured over a "
-        "fraction of the recorded corpus"
+        f"only {len(corpus)} goldens were discovered; the gate below is measured over a fraction of the recorded corpus"
     )
     # Per carrier, because the total is 98% envelope: a floor on the sum
     # proves only that the envelope is read, and losing `text` entirely

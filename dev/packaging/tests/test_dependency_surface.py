@@ -14,15 +14,22 @@ from ..dependency_surface import _summary
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+#: Floors, not pinned counts, with the live figures recorded: the project
+#: declares 31 runtime dependencies and 51 development-only ones. `> 0` let
+#: a reader that parsed one dependency table and stopped report success.
+_MINIMUM_PROJECT_DEPENDENCIES = 20
+_MINIMUM_DEV_ONLY_DEPENDENCIES = 35
+
+
 def test_dependency_surface_summary_names_runtime_optional_registry() -> None:
     """The summary must expose the capability-gated optional extras."""
     summary = _summary()
 
     assert summary["ok"] is True
     assert summary["registry_extras"] == ["anthropic", "browser", "google", "llm", "ofx"]
-    assert summary["project_dependency_count"] > 0
+    assert summary["project_dependency_count"] > _MINIMUM_PROJECT_DEPENDENCIES, summary
     assert summary["optional_dependency_count"] >= len(summary["registry_extras"])
-    assert summary["dev_only_dependency_count"] > 0
+    assert summary["dev_only_dependency_count"] > _MINIMUM_DEV_ONLY_DEPENDENCIES, summary
 
 
 def test_dependency_surface_cli_json_contract() -> None:
@@ -38,8 +45,11 @@ def test_dependency_surface_cli_json_contract() -> None:
     payload = json.loads(result.stdout)
     assert payload["ok"] is True
     assert payload["registry_extras"] == ["anthropic", "browser", "google", "llm", "ofx"]
-    assert payload["project_dependency_count"] > 0
-    assert payload["dev_dependency_count"] >= payload["dev_only_dependency_count"] > 0
+    assert payload["project_dependency_count"] > _MINIMUM_PROJECT_DEPENDENCIES, payload
+    # Split from a chained comparison, which read as one claim but carried a
+    # `> 0` floor inside it that was easy to miss.
+    assert payload["dev_dependency_count"] >= payload["dev_only_dependency_count"]
+    assert payload["dev_only_dependency_count"] > _MINIMUM_DEV_ONLY_DEPENDENCIES, payload
 
 
 def test_dependency_surface_expands_included_registry_group() -> None:
