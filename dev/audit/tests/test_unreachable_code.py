@@ -78,6 +78,16 @@ class Modelo(StrEnum):
     M303 = "303"
 
 
+# Named as a binding target by the registry payload.
+class BoundByRegistry:
+    pass
+
+
+# Named only inside a sentence in the payload.
+class ProseOnlyModel:
+    pass
+
+
 class Config(StrEnum):
     VALUE_BOUND = "value_bound_key"
     PROSE_ONLY = "back"
@@ -189,7 +199,8 @@ _DATA = """
 field = "data_field"
 value = "DECLARED_IN_DATA"
 endpoint = "value_bound_key"
-note = "Records can be created and read back later."
+profile_model = "BoundByRegistry"
+note = "Records can be created and read back later. Mentions ProseOnlyModel in passing."
 """
 
 
@@ -317,6 +328,7 @@ def test_symbol_layer_reports_only_definitions_shipped_code_never_references(res
 
     assert set(by_qualname) == {
         "Color.BLUE",
+        "ProseOnlyModel",
         "Config",
         "Config.NEVER_ANYWHERE",
         "Config.PROSE_ONLY",
@@ -378,7 +390,7 @@ def test_shipped_data_naming_a_member_clears_it_but_never_a_top_level_symbol(
     assert "Config.DECLARED_IN_DATA" not in reported
     assert "Widget.hidden_field" in reported
     assert "Config.NEVER_ANYWHERE" in reported
-    assert result.data_cleared == 3
+    assert result.data_cleared == 4
 
 
 def test_a_test_reaching_dead_code_only_through_a_support_module_is_reported(
@@ -468,6 +480,29 @@ def test_a_string_method_the_reader_cannot_evaluate_contributes_nothing() -> Non
     source = chr(10).join(('KEY = "app_overview_pipeline"', 'NAME = KEY.replace("app", "x")'))
 
     assert set(assembled_reference_names(ast.parse(source))) == set()
+
+
+def test_a_class_named_as_a_registry_binding_target_is_cleared(
+    result: UnreachableCodeResult,
+) -> None:
+    """A declaration can name a CLASS the import graph never sees.
+
+    The registry binds a profile model by name, as in
+    ``profile_model = "TaxResidenceProfile"``, so the class is reached by data
+    while no Python statement spells it.
+    """
+    assert "BoundByRegistry" not in {finding.qualname for finding in result.symbols}
+
+
+def test_a_class_named_only_inside_payload_prose_stays_reported(
+    result: UnreachableCodeResult,
+) -> None:
+    """The guard: a passing sentence is not a binding.
+
+    The name is matched against PARSED values, so it must equal a whole declared
+    value; appearing inside a note does not clear the finding.
+    """
+    assert "ProseOnlyModel" in {finding.qualname for finding in result.symbols}
 
 
 def test_a_member_bound_by_its_declared_value_is_cleared(result: UnreachableCodeResult) -> None:
@@ -662,10 +697,10 @@ def test_console_report_and_json_carry_the_same_findings(result: UnreachableCode
 
     assert report.startswith(
         "unreachable code: 4 unreachable module(s), 3 module-exec-only, 1 type-only module(s), "
-        "8 unused symbol(s) in reachable modules, 2 orphaned test module(s)"
+        "9 unused symbol(s) in reachable modules, 2 orphaned test module(s)"
     )
     assert "roots: pkg.cli:main" in report
-    assert "3 data-shaped member(s) cleared" in report
+    assert "4 data-shaped member(s) cleared" in report
     assert "package  src/pkg/dead/  (3 modules)  [used by: dev, tests]" in report
     assert "module   src/pkg/loner.py  [used by: tests]" in report
     assert f"{orphan_line}  [exact]" in report
@@ -673,7 +708,7 @@ def test_console_report_and_json_carry_the_same_findings(result: UnreachableCode
     assert "enum-member Color.BLUE  [no use anywhere]  [name-match-data]" in report
     assert "function    orphan_fn  [used by: tests]  [exact]" in report
     assert payload["outcome"] == "findings"
-    assert payload["data_cleared"] == 3
+    assert payload["data_cleared"] == 4
     assert {entry["module"] for entry in payload["modules"]} == {
         "pkg.dead",
         "pkg.loner",
@@ -696,7 +731,7 @@ def test_console_report_caps_each_section_unless_full(result: UnreachableCodeRes
     capped = render_console_report(result, cap=1)
 
     assert "... 1 more (--full for all)" in capped
-    assert "... 7 more (--full for all)" in capped
+    assert "... 8 more (--full for all)" in capped
     assert "more (--full for all)" not in render_console_report(result, full=True, cap=1)
 
 
