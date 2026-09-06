@@ -57,6 +57,25 @@ from ...domain.modelos.ledger_filing_snapshot import (
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 
 # Tax-relevant projection: (label, accessor). Order is fixed and canonical.
+#
+# INCOMPLETE, and knowingly so. Several fields that move a casilla are absent:
+# ``recargo_amount`` (M303 recargo de equivalencia), ``deduction_fact_kind``,
+# the prorrata declarations (``art_104_tres_exclusion``,
+# ``input_classification``, ``prorrata_sector_id``, ``prorrata_reference``) and
+# ``usage_ratio_id``. Measured, not inferred: two rows differing only in
+# ``recargo_amount`` hash identically, so ``diff_ledger_fingerprints`` files
+# them under ``unchanged`` and the staleness verdict reports that a filed
+# return still matches a ledger whose surcharge has since moved.
+#
+# Extending this tuple is NOT a local change. ``LedgerFilingSnapshot`` stores
+# the computed hashes and carries no algorithm version, and
+# ``diff_ledger_fingerprints`` compares a stored hash against a freshly
+# recomputed one by equality. Adding a field therefore changes every recomputed
+# hash, so every already-sealed snapshot would report every row as changed and
+# every historical filing as stale at once. Closing the gap needs a versioned
+# fingerprint (old snapshots compared under the field set they were written
+# with), which is an owner's decision about persisted filing records rather
+# than a widening of this tuple.
 _FINGERPRINT_FIELDS: tuple[tuple[str, str], ...] = (
     ("booked_date", "raw.booked_date"),
     ("value_date", "raw.value_date"),
@@ -106,7 +125,13 @@ def _resolve(transaction: Transaction, path: str) -> object:
 
 
 def row_fingerprint(transaction: Transaction) -> str:
-    """Return the SHA-256 content fingerprint of one transaction's tax facts."""
+    """Return the SHA-256 content fingerprint of one transaction's tax facts.
+
+    Covers the fields listed in :data:`_FINGERPRINT_FIELDS`, which is a subset
+    of the facts that can move a casilla rather than all of them — see the
+    note above that tuple for what is missing and why extending it is a
+    persisted-schema decision rather than a local edit.
+    """
     canonical = "|".join(f"{label}={_normalise(_resolve(transaction, path))}" for label, path in _FINGERPRINT_FIELDS)
     return sha256_hex(canonical.encode("utf-8"))
 
