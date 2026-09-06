@@ -25,8 +25,25 @@ from ...core.decimal.coercion import coerce_finite_european_decimal
 __all__ = ["printed_iva_advisory"]
 
 # "IVA" followed (within a short gap) by a Spanish- or plain-formatted amount.
+#
+# Every alternative must capture the WHOLE numeric token. One that can stop
+# mid-token hands the parser a well-formed lie instead of the ambiguous string
+# it exists to judge: the plain alternative matched 8.00 out of a printed
+# 8.000, so the coercer -- which correctly drops 8.000 as an unsettleable
+# convention -- received an unambiguous eight euros and returned it. The
+# advisory then told the operator the document printed 8.00 when it printed
+# 8.000: a thousandfold error inside the message that exists to catch errors.
+#
+# Hence the third alternative (Spanish thousands with no decimal part) and the
+# negative lookahead on the fourth. The token now reaches the coercer intact
+# and is dropped there when its reading cannot be settled.
 _IVA_AMOUNT = re.compile(
-    r"\bIVA\b[^\d-]{0,12}(\d{1,3}(?:\.\d{3})*,\d{2}|\d+,\d{2}|\d+(?:\.\d{1,2})?)",
+    r"\bIVA\b[^\d-]{0,12}("
+    r"\d{1,3}(?:\.\d{3})*,\d{2}"  # 1.234,56
+    r"|\d+,\d{2}"  # 21,00
+    r"|\d{1,3}(?:\.\d{3})+(?!\d)"  # 8.000 -- ambiguous, left for the coercer to refuse
+    r"|\d+(?:\.\d{1,2})?(?!\d)"  # 10.50, or a bare 8
+    r")",
     re.IGNORECASE,
 )
 
