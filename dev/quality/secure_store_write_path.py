@@ -75,6 +75,8 @@ _MUTATOR_VERBS: Final = (
     "clear",
     "record",
     "append",
+    "replace",
+    "commit",
 )
 
 _READ_ONLY_KINDS: Final = frozenset({"custody_carry_only", "awaiting_writer"})

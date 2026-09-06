@@ -19,26 +19,4 @@
 # the gap is known and where it bites, so a reader of a zero can tell an empty
 # store from an unfilled one.
 
-[[read_only]]
-name = "RetencionObservationRepository"
-kind = "awaiting_writer"
-rationale = """
-Retenciones observations back a filing-grade aggregation source read at \
-application/aggregation/_modelo_bindings_retenciones.py, and the repository's \
-own save_observation has no caller anywhere in the tree. The aggregation \
-therefore reads an empty store and contributes zero withholding, which is the \
-absence-as-zero collapse the aggregation contract refuses: a missing source \
-and a proven zero are different states and must stay distinguishable through \
-the filing handoff.
-"""
-
-[[read_only]]
-name = "PercepcionObservationRepository"
-kind = "awaiting_writer"
-rationale = """
-The percepciones counterpart of the retenciones store, read at \
-application/aggregation/_withholding_source.py through the same \
-inject-or-default binding, with an equally uncalled save_observation. Same \
-consequence: a filing-grade withholding total assembled from a store nothing \
-fills.
-"""
+# No entries: every secure store the application reads has a production writer.

@@ -6,8 +6,9 @@ success or refusal payload through ``result.*`` or ``error.*``, not merely
 JSON envelope and instead proves successful help rendering; the CLI help snapshot
 gates own its exact text.
 
-The contract is REFUSED at the ``parse_sequence`` boundary, so a payload-less
-``@result`` frame cannot be authored: it must be named in the parser's
+The contract is REFUSED by the ``cli-sequence`` directive, the boundary that
+admits a sequence as published documentation, so a payload-less ``@result``
+frame cannot be published: it must be named in the parser's
 ``RESULT_PAYLOAD_EXEMPT`` map, with a reason, in the same change. This module
 closes the opposite direction, asserting the exemption set still equals the live
 payload-less set so a paid-down allowance cannot silently linger.
@@ -54,8 +55,8 @@ def _offender_sequence_ids() -> frozenset[str]:
 def test_result_payload_exemptions_match_the_live_offenders() -> None:
     """The exemption set equals the live payload-less set, exactly.
 
-    The contract itself is enforced at the ``parse_sequence`` boundary, so a NEW
-    payload-less ``@result`` frame cannot be authored at all: it fails the docs
+    The contract itself is enforced by the ``cli-sequence`` directive, so a NEW
+    payload-less ``@result`` frame cannot be published at all: it fails the docs
     build unless it is named in ``RESULT_PAYLOAD_EXEMPT`` with a reason. This gate
     closes the other direction — an exemption whose debt has been paid, or one
     naming a sequence that no longer exists, reds until it is removed, so the

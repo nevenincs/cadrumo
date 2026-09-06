@@ -474,7 +474,16 @@ def test_post_allocation_failures_retain_root_and_live_tree(
     }[stage]
     monkeypatch.setattr(rehearsal_module, target, fail)
 
-    with pytest.raises(ObjectNameRehearsalError, match=r"retained rehearsal root: .+") as raised:
+    # Every rehearsal refusal carries the retained-root suffix, so matching on it alone
+    # cannot show the refusal came from the stage this case injected at. Add one
+    # precondition that fails earlier and all seven cases still pass while six of the
+    # seven injection points are never reached: the parametrisation would read as
+    # seven-point coverage while measuring one. Naming the stage pins each case to its
+    # own injection.
+    with pytest.raises(
+        ObjectNameRehearsalError,
+        match=rf"injected {stage} failure.*retained rehearsal root: .+",
+    ) as raised:
         rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
 
     assert Path(str(raised.value).rsplit("retained rehearsal root: ", 1)[1]).is_dir()
