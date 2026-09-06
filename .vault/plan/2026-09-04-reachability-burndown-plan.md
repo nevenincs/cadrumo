@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:2addf7db6c6fc8fb1e670a86850e460dbb07080ba57d330eef39b8fe5515fb74'
+body_hash: 'sha256:22b16fba018f75f5d32f2a9424b0251e61ce939e1dde0c41aa1249921e2c2792'
 ---
 
 # `reachability-burndown` plan
@@ -139,6 +139,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S38` - Recount the residue by code reference rather than by word match, after finding that the triage resolved a consumer by searching file text and so counted names mentioned in inert-namespace docstrings as production consumers; those docstrings are navigational maps naming every contract in the package, making the error systematic and one-directional because it inflated the healthiest-looking bucket, and correcting it moves referenced-by-production from 66 to 17 and the residue from 69 to 83 percent test-only; also count conftest as test infrastructure, which it is despite matching neither the tests directory nor the test prefix; `dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S39` - Adjudicate the four largest coherent test-only families: six collaboration audit emitters covering the whole review-package lifecycle that no production caller reaches, so the flow writes no audit record and an empty event history reads as nothing happened; the sectoral prorrata predicate, calculator, classifier and summation, so a taxpayer with differentiated sectors gets no separation; five registry source-connectivity projections nothing assembles; and five public CLI execution-policy constants displaced by private inline copies that DISAGREE with them, the live private CALCULATION_WRITE omitting the profile-custody capability the public one declares; `dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S40` - Adjudicate four registry and persistence families against the mechanisms that govern them: the counterpart and invoice binding builders whose source kinds sit in RESERVED_SOURCE_KINDS as taxonomy headroom carrying no binding and no resolver by declaration; the withholding family whose kind sits in DEFERRED_SOURCE_KINDS and raises a standing advisory rather than a silent blank; the secure-object schema upgrader registry, where the durability floor is the from-birth version while six namespaces declare version two and one declares four, so an older row has no registered upgrade hop and the fail-closed decode path returns a typed refusal rather than a placeholder; and the registry handoff path audit nothing runs, so an unconsumed relation is never reported; `dev/audit/reachability_classification.toml`.
+- [ ] `W05.P12.S41` - Adjudicate the marriage-fact helpers and the OSS regime substrate: the three domain-side persist and reload helpers are displaced by the application profile binding, which derives the facts inline from the individual predicates and reads the marriage date already typed, and a gap check first confirmed the registry bindings for full-year, month-start and month-end on modelo 100 revision 2024 are all produced by the live path; the OSS and IOSS filer role, periodicity mapping and deductibility predicate are a substrate landed ahead of the Modelo 369 chain that is not yet in the registry; `dev/audit/reachability_classification.toml`.
 
 ## Parallelization
 
