@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:3e8b5d1a36c4c9975cfa091a7948bd7f102c05e3b1066cd62312ad9aa1c16d0f'
+body_hash: 'sha256:6d5bced12af531ab3b052842a7764eb50e88d25287b17af81361c4bc69f0e10c'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -309,6 +309,10 @@ Deliver one accessor returning a revision's complete resolved export casilla sur
 - [x] `W01.P01.S829` - Drive the two `_validate_scope` refusals no test in the repository referenced (modelo mismatch and design-epoch mismatch), which are reachable because the semantic map, intermediate and inspection objects are independently constructed with no type-level guarantee that they agree; `dev/registry/tests/test_semantic_map_validation.py`.
 - [x] `W01.P01.S830` - Drive the three specific `_load_fragment` refusals shadowed by a generic `model_validate` wrapper: four of the six parametrized cases collapsed onto the catch-all, leaving the legacy header_key, producer_key and canonical draft_attribute checks dark across the whole suite; `dev/registry/tests/test_semantic_map_loader.py`.
 - [x] `W01.P01.S831` - Announce and skip an unreadable module in the type-only runtime-use scan, the policy its own docstring already states for the other two read failures: a file deleted between the walk and the read took the whole sweep down, losing every finding from every module already scanned, which is the outcome those two skips exist to prevent; `dev/quality/type_checking_runtime_use_scan.py dev/tests/test_type_checking_runtime_use_gate.py`.
+- [x] `W01.P01.S832` - Report the pagefind sample bound's counters from the runs it actually carried: the cap partitioned by `record.kind` while the counters were derived in parallel, and because `CLI` covers commands and options alike the live tree reported four options carried when none were, against a docstring promising the counters are recut to what is carried; `dev/docs/pagefind_inject.py dev/docs/tests/test_pagefind_inject.py`.
+- [x] `W01.P01.S833` - Compare the Scoop manifest's own `description` value rather than testing membership of the canonical sentence among every string literal in the generator: renaming the emitted manifest key ships a manifest with no description while the sentence is still present verbatim and the assertion stays green; `dev/packaging/tests/test_distribution_description_consistency.py`.
+- [x] `W01.P01.S834` - Refuse an unreadable module at both constant-agreement collectors: the verdict is agreement ACROSS modules, so a module the walk listed and the read could not reach can turn a real conflict into a reported agreement -- a skip there does not lose a finding, it inverts one; `dev/quality/constant_value_agreement.py`.
+- [x] `W01.P01.S835` - Defer every generated export_refs write until after the addressed-casilla check: the refusal for a layout addressing casillas the revision does not declare ran after the loop had already rewritten every casilla file sorting ahead of it, and these TOML files are the live registry tree rather than a staging copy the caller can roll back; `dev/registry/pipeline/_casilla_export_refs.py dev/registry/tests/test_export_tree.py`.
 
 ## Wave `W02` - gate restoration and residue removal
 
