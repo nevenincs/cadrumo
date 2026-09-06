@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:62d77a3ad8c381035297d21c077fc2026bd7cbcb68330bb17e80b1ff74f9089d'
+body_hash: 'sha256:63edff0c9a68728c0a0d1c1bbc9394a6d210071a287e1f382b200f777ca7928d'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -600,6 +600,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S718` - Widen the unbounded-child-wait screen to every Popen binding form so its absence claim covers the spellings it could not parse; `dev/tests/test_no_unbounded_subprocess_wait.py`.
 - [x] `W02.P02.S719` - Read bare callees in the M200 identity CLI no-write absence claim so its forbidden builtin spellings become detectable, with a floor per callee shape; `dev/registry/tests/test_m200_semantic_casilla_candidates.py`.
 - [x] `W02.P02.S720` - Refuse the dunder-init submodule import in the plain-import spelling as well, which carries the identical double-execution hazard the gate names; `dev/quality/tests/test_no_dunder_init_module_imports.py`.
+- [x] `W02.P02.S721` - Give the write-call question one owner in module_test_reach so the evidence proof reads both branches that rank a write instead of restating only one; `dev/quality/module_test_reach.py`.
+- [x] `W02.P02.S722` - Screen async test definitions in the vacuity screen so the instrument that refuses silent green does not go silent on a whole function form; `dev/audit/vacuity_screen.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
