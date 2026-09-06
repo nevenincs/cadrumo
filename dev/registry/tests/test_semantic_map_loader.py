@@ -400,6 +400,30 @@ def test_refuses_design_epoch_only_fragment(tmp_path: Path, identity_line: str) 
             _fragment(fragment_id="nested", body=_ENTRY) + "unknown_anchor_fact = true\n",
             "invalid semantic-map fragment",
         ),
+        (
+            "0001-header-key.toml",
+            _fragment(fragment_id="header-key", body=_RECORD + _ENTRY).replace("producer_key", "header_key"),
+            "legacy header_key is not accepted",
+        ),
+        (
+            "0001-bad-producer-key.toml",
+            _fragment(fragment_id="bad-producer-key", body=_RECORD + _ENTRY).replace(
+                'producer_key = "presenter.tax_id"',
+                'producer_key = "not.a.canonical.key"',
+            ),
+            "is not a canonical producer_key",
+        ),
+        (
+            "0001-bad-draft-attribute.toml",
+            _fragment(
+                fragment_id="bad-draft-attribute",
+                body=_RECORD + _DRAFT_AND_COMPUTED_ENTRIES,
+            ).replace(
+                'draft_attribute = "filing_year"',
+                'draft_attribute = "not_a_real_attribute"',
+            ),
+            "is not a canonical draft_attribute",
+        ),
     ),
 )
 def test_refuses_noncanonical_fragment_files(

@@ -384,6 +384,40 @@ def test_validation_refuses_changed_or_mixed_semantic_map_source_identity(
         validate_semantic_map(semantic_map, intermediate, m200_inspection_snapshot)
 
 
+@pytest.mark.parametrize(
+    ("modelo", "design_epoch", "message"),
+    (
+        ("303", "2025", "semantic map modelo '303' does not match target revision modelo '200'"),
+        ("200", "2024", "semantic map design epoch '2024' does not match parser design epoch '2025'"),
+    ),
+)
+def test_validation_refuses_a_semantic_map_authored_for_the_wrong_modelo_or_design_epoch(
+    m200_inspection_snapshot,
+    modelo: str,
+    design_epoch: str,
+    message: str,
+) -> None:
+    """A map authored against a different modelo or design epoch cannot enter scope validation."""
+    intermediate_source_sha256 = _real_source_sha256(m200_inspection_snapshot)
+    intermediate = RecordDesignIntermediate.model_validate(
+        _intermediate_payload(source_sha256=intermediate_source_sha256),
+    )
+    semantic_map = SemanticMap.model_validate(
+        _semantic_map_payload(
+            modelo=modelo,
+            design_epoch=design_epoch,
+            source_sha256=intermediate_source_sha256,
+            entries=(
+                _entry(row=14, ordinal=1, field_id="generated.literal.one", literal="T"),
+                _entry(row=15, ordinal=2, field_id="generated.literal.two", literal="0"),
+            ),
+        ),
+    )
+
+    with pytest.raises(RegistryValidationError, match=message):
+        validate_semantic_map(semantic_map, intermediate, m200_inspection_snapshot)
+
+
 def test_validation_refuses_catalogued_parser_source_absent_from_selected_revision(m200_inspection_snapshot) -> None:
     """A source catalogue entry cannot implicitly select a different revision authority."""
     source_ref = "aeat-dr-200-2025"

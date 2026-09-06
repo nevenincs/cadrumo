@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 from ..docstring_reference_targets import (
+    DocstringReferenceScanError,
     collect_defined_names,
     dangling_references,
     docstring_references,
@@ -40,6 +41,49 @@ def test_a_reference_to_a_symbol_nothing_defines_is_reported(tmp_path: Path) -> 
         live='"""Points at :func:`resolve_read_id`, which nothing defines."""\n',
     )
     targets = [item.target for item in dangling_references(root)]
+    assert targets == ["resolve_read_id"]
+
+
+def test_a_file_the_walk_listed_but_cannot_read_refuses(tmp_path: Path) -> None:
+    """The observed failure: a listed path that is gone by the time it is read.
+
+    A real run of this screen died in pathlib internals on
+    ``FileNotFoundError`` for a test module that existed when the walk
+    enumerated it and had been deleted before the read reached it. The screen
+    already classifies two read failures as skippable -- a file this Python
+    cannot parse and one it cannot decode, neither of which can carry a
+    docstring worth checking -- so the crash was an unclassified third case,
+    not a decision. Skipping it instead would be worse: the screen would
+    report a clean result over a corpus smaller than the one it walked.
+
+    The fixture is a DIRECTORY named ``*.py``, which ``rglob`` lists and
+    ``read_text`` refuses. That needs no symlink privilege, so the proof
+    holds on a machine where this suite would otherwise skip it.
+    """
+    root = _package(tmp_path, live='"""Live module."""\n')
+    (root / "unreadable.py").mkdir()
+
+    with pytest.raises(DocstringReferenceScanError, match="could not read"):
+        dangling_references(root)
+
+
+def test_an_unparseable_or_undecodable_file_is_still_skipped(tmp_path: Path) -> None:
+    """The refusal must not swallow the two failures that were always tolerated.
+
+    Proving the new branch fires is only half the claim. A guard that also
+    reddened on a syntactically broken file would change what the screen
+    measures, so both tolerated classes are driven here against the real
+    function rather than assumed unaffected.
+    """
+    root = _package(
+        tmp_path,
+        live='"""Points at :func:`resolve_read_id`."""\n',
+        broken="def (" + chr(92) + "n",
+    )
+    (root / "undecodable.py").write_bytes(bytes([0xFF, 0xFE, 0x00, 0x41]))
+
+    targets = [item.target for item in dangling_references(root)]
+
     assert targets == ["resolve_read_id"]
 
 
