@@ -30,6 +30,11 @@ jobs:
     # hang. Enforced by dev/ci/tests/test_runner_queue_watchdog.py, which
     # refused this workflow until the job was added.
     name: Cadrumo / runner queue watchdog
+    # Shares the smoke lane's dependencies deliberately. GitHub does not
+    # create a dependent job's record until its dependencies resolve, so an
+    # ungated watchdog would open and close its bounded window before
+    # `smoke-test` exists -- present, and watching nothing.
+    needs: [build, runtime-inventory]
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 20
     permissions:
