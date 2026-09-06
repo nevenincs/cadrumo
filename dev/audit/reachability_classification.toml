@@ -180,6 +180,18 @@ name = "cadrumo.domain.is_compensation"
 class = "staged-capability"
 evidence = "Landed alongside the contabilidad package from the same concurrent work. Impuesto sobre Sociedades compensacion, the stock of losses a company carries forward; its only non-test consumer is the error registry at core/errors/registry/_application_part2.py."
 
+[[symbol_cluster]]
+name = "approval staleness with no persisted draft to go stale"
+class = "should-be-live"
+symbols = [
+  "refresh_review_status",
+  "describe_stale_reason",
+  "empty_prior_filing_observations_fingerprint",
+  "empty_profile_activity_fingerprint",
+]
+evidence = "Measured 2026-09-06 by the new dev/quality/secure_store_write_path.py gate, which walks the shipped tree for SecureBoundRepository subclasses and separates read sites from write sites. Four of twenty-four secure stores are read by production and written by nothing: ModeloDraftRepository, RetencionObservationRepository, PercepcionObservationRepository and PurchaseInvoiceEvidenceRepository. That is the root cause under this whole draft_review cluster. Filing drafts are approved but never persisted -- both approval sites build and approve in one call and return the draft to their caller -- so refresh_review_status, approval_stale_reasons, describe_stale_reason and compute_current_approval_basis have no persisted approved draft to refresh, and the APROBACION_CADUCADA branches at src/cadrumo/application/review/_adapters.py:336 and src/cadrumo/domain/submission/preflight.py:118 can never be taken. The two withholding observation stores are worse than unreached: they back filing-grade aggregation sources, so an empty store contributes a zero to a withholding total where the honest answer is that the source is absent. Whether the product should persist filing drafts, and where the withholding observations should be written from, are product decisions rather than wiring details, so the four are declared in dev/quality/secure_store_write_path.toml with their kind and rationale and the gate holds the line against a fifth appearing silently."
+remedy_requires_decision = true
+
 # ---------------------------------------------------------------------------
 # Orphaned test modules
 #

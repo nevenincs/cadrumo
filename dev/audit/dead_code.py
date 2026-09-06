@@ -135,7 +135,9 @@ class DeadCodeResult:
         if self.outcome is DeadCodeOutcome.ERROR:
             return f"dead-code signal unavailable this cycle: {self.reason}"
         if self.outcome is DeadCodeOutcome.CLEAN:
-            return "no dead code found"
+            # The denominator travels with the verdict: a green that does not say
+            # how much it read cannot be told from a green that read nothing.
+            return f"no dead code found across {self.modules_offered} module(s)"
         breakdown = ", ".join(f"{count} {label}" for label, count in self.count_by_confidence.items())
         return f"{len(self.findings)} dead-code finding(s) past the reviewed whitelist ({breakdown})"
 
@@ -275,6 +277,7 @@ def main() -> int:
                     "outcome": result.outcome.value,
                     "headline": result.headline(),
                     "count_by_confidence": result.count_by_confidence,
+                    "modules_offered": result.modules_offered,
                     "findings": [
                         {
                             "path": f.path,

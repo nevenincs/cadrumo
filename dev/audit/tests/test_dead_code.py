@@ -93,6 +93,7 @@ def test_clean_result_is_green() -> None:
     assert result.is_green is True
     assert result.outcome is DeadCodeOutcome.CLEAN
     assert result.modules_offered == 1873
+    assert "1873" in result.headline()
 
 
 def test_clean_refuses_a_scan_that_inspected_nothing() -> None:

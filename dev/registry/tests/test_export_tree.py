@@ -1482,6 +1482,157 @@ def test_renderer_refuses_mismatched_map_without_emitting_a_manifest(m130_inspec
     assert not (revision_dir / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME).exists()
 
 
+def test_renderer_refuses_semantic_map_source_and_incomplete_entries_without_emitting_a_manifest(
+    m130_inspection_snapshot,
+    tmp_path,
+) -> None:
+    """The remaining two semantic-map attestation comparisons must each refuse on their own
+    terms rather than inherit coverage from the coarse whole-map and SHA-256 siblings pinned
+    above: a source-ref drift on the map argument, and an entries set that no longer bijects
+    the compiled map once the joined design itself carries a duplicated field."""
+    revision_dir = _write_modelo_shell(tmp_path / "modelos" / "130")
+    semantic_map = _semantic_map()
+
+    with pytest.raises(RegistryValidationError, match="semantic-map source .+ does not match joined source"):
+        render_complete_export_tree(
+            revision_dir / "export",
+            revision_id="2025",
+            joined=_joined(m130_inspection_snapshot),
+            semantic_map=semantic_map.model_copy(update={"source_ref": "aeat-dr-130-2019-v13"}),
+            transport_profile=_profile(),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
+        )
+
+    # The coarse whole-map equality check above intercepts every semantic_map
+    # argument that merely differs from what the join used, so the
+    # entries-completeness comparison can only be reached by keeping that
+    # argument identical to the join's own authored map and instead corrupting
+    # the JOINED design: one already-joined field duplicated so its flattened
+    # entry set no longer bijects the compiled map's entries.
+    joined = _joined(m130_inspection_snapshot)
+    joined_with_duplicated_field = joined.model_copy(update={"fields": (*joined.fields, joined.fields[0])})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match="joined fields do not attest the supplied complete semantic map",
+    ):
+        render_complete_export_tree(
+            revision_dir / "export",
+            revision_id="2025",
+            joined=joined_with_duplicated_field,
+            semantic_map=semantic_map,
+            transport_profile=_profile(),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
+        )
+
+    assert not (revision_dir / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME).exists()
+
+
+def test_renderer_tolerates_reordered_joined_fields_without_tripping_the_entries_gate(
+    m130_inspection_snapshot,
+    tmp_path,
+) -> None:
+    """Sibling-blindness for the entries-completeness gate above: it compares the joined
+    fields' entries as a SET against the compiled map's entries, so reordering those fields
+    without dropping or duplicating any of them must still render cleanly. A gate that fired
+    on any change to field order, rather than genuine incompleteness, would not have proven
+    the completeness comparison the prior test exercises."""
+    joined = _joined(m130_inspection_snapshot)
+    reordered_fields = (joined.fields[1], joined.fields[0], *joined.fields[2:])
+    reordered_joined = joined.model_copy(update={"fields": reordered_fields})
+
+    rendered = render_complete_export_tree(
+        tmp_path / "export",
+        revision_id="2025",
+        joined=reordered_joined,
+        semantic_map=_semantic_map(),
+        transport_profile=_profile(),
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
+    )
+
+    assert rendered.output_files
+
+
+def test_renderer_refuses_transport_profile_identity_axes_without_emitting_a_manifest(
+    m130_inspection_snapshot,
+    tmp_path,
+) -> None:
+    """The transport profile's modelo, design-epoch, source-ref, and serializer-convention
+    comparisons must each refuse on their own terms: the sibling SHA-256 comparison already
+    pinned in ``test_renderer_refuses_mismatched_map_without_emitting_a_manifest`` proves only
+    that one axis, and two differently-named parametrize labels that both mutate the SHA-256
+    field would leave these other four axes silently undriven."""
+    revision_dir = _write_modelo_shell(tmp_path / "modelos" / "130")
+    profile = _profile()
+
+    with pytest.raises(RegistryValidationError, match="export tree transport profile modelo"):
+        render_complete_export_tree(
+            revision_dir / "export",
+            revision_id="2025",
+            joined=_joined(m130_inspection_snapshot),
+            semantic_map=_semantic_map(),
+            transport_profile=profile.model_copy(update={"modelo": "184"}),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
+        )
+
+    with pytest.raises(RegistryValidationError, match="export tree transport profile design epoch"):
+        render_complete_export_tree(
+            revision_dir / "export",
+            revision_id="2025",
+            joined=_joined(m130_inspection_snapshot),
+            semantic_map=_semantic_map(),
+            transport_profile=profile.model_copy(update={"design_epoch": "2020"}),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
+        )
+
+    with pytest.raises(RegistryValidationError, match="export tree transport profile source "):
+        render_complete_export_tree(
+            revision_dir / "export",
+            revision_id="2025",
+            joined=_joined(m130_inspection_snapshot),
+            semantic_map=_semantic_map(),
+            transport_profile=profile.model_copy(update={"source_ref": "aeat-dr-130-2019-v13"}),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
+        )
+
+    with pytest.raises(RegistryValidationError, match="export tree transport profile serializer"):
+        render_complete_export_tree(
+            revision_dir / "export",
+            revision_id="2025",
+            joined=_joined(m130_inspection_snapshot),
+            semantic_map=_semantic_map(),
+            transport_profile=profile.model_copy(update={"serializer_convention": "unsupported-convention"}),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
+        )
+
+    assert not (revision_dir / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME).exists()
+
+
+def test_renderer_tolerates_transport_profile_line_ending_drift(m130_inspection_snapshot, tmp_path) -> None:
+    """Sibling-blindness for the transport-profile identity gate above: it compares five
+    named axes (modelo, design epoch, source ref, source digest, serializer convention), not
+    the profile as a whole, so a drifted line_ending -- not one of those axes -- must reach a
+    normal render rather than tripping any of the four gates just pinned."""
+    rendered = render_complete_export_tree(
+        tmp_path / "export",
+        revision_id="2025",
+        joined=_joined(m130_inspection_snapshot),
+        semantic_map=_semantic_map(),
+        transport_profile=_profile().model_copy(update={"line_ending": "lf"}),
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
+    )
+
+    assert rendered.output_files
+
+
 def test_renderer_refuses_uncovered_blank_numeric_anchor_without_emitting_a_partial_fragment(
     m130_inspection_snapshot,
     tmp_path,
