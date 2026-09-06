@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:52bc47690979ad685a470092a310c6954ced3896770c9bd914ca4dc3ac1c45fb'
+body_hash: 'sha256:fe5ccdac37640bb8b19108dd34e5fec51c67067a3317c08fd2ddb1d8da52f1e1'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -641,6 +641,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S759` - Read the expected oracle cuota from the oracle that defines it, replacing the mirrored constant the acquisition lanes compared against; `dev/packaging/acquire_homebrew.py`.
 - [x] `W02.P02.S760` - Anchor the two module-promotion untouched-file claims that an empty plan satisfied, pinning the consumers the planner must still rewrite; `dev/quality/tests/test_module_promotion.py`.
 - [x] `W02.P02.S761` - Floor the two filtered sets the live casilla-claim relations range over, which the unfiltered pooled anchor left unguarded; `dev/registry/aeip/tests/test_cli_casilla_claims.py`.
+- [x] `W02.P02.S762` - Assert each aeip adjudication clears only the ambiguity it names, which the three absence claims left an over-clearing path free to satisfy; `dev/registry/aeip/tests/test_manager.py`.
+- [x] `W02.P02.S763` - Anchor the locale-move no-fabrication claim, the one case in the module with no positive lookup, against the subtree the move must carry; `dev/locales/tests/test_subtree_move.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
