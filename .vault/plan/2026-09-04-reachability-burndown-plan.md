@@ -7,9 +7,9 @@ tier: L3
 related:
   - '[[2026-09-04-reachability-burndown-adr]]'
   - '[[2026-09-04-reachability-burndown-reference]]'
-modified: '2026-09-05'
+modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:f0497d894d9fd39f886419b6f492d1b54b194b260b462aebd84194b117c3b9a9'
+body_hash: 'sha256:0ef90b9a16e03f45f106a226908b0adec0d1b8ecd6a6677af35f94e329c4582f'
 ---
 
 # `reachability-burndown` plan
@@ -128,7 +128,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S27` - Re-measure the orphaned test population against its anchors and resolve any test still reported after the module or symbol it covers has been resolved; `dev/audit`.
 - [ ] `W05.P12.S28` - Obtain the owner decisions the three blocked modules need, since classification is evidenced and none can be recorded without them: re-wire or withdraw the ledger import-preparation capability its contract still requires, and either record the decision the two staged domain packages are waiting on or withdraw them; `src/cadrumo/application/ledger/import_preparation.py`.
 - [x] `W05.P12.S29` - Close the orphan-walk blind spot in which 239 of 3334 test modules name no shipped subject because they reach their code through a support module inside their own test package, so a dead test behind that hop can never be reported; traverse the hop without letting a live subject reached that way suppress an existing finding; `dev/audit/unreachable_code.py`.
-- [ ] `W05.P12.S30` - Route the wiring backlog to its owners: of 457 gated findings only a small deletable fraction remains after the logger sweep, and the residue names capability that was built and never connected, including integrity checks nothing calls, a declared KDF warmup no measurement performs, and a locale-key convention whose scaffold gate does not exist; `dev/audit/reachability_classification.toml`.
+- [x] `W05.P12.S30` - Route the wiring backlog to its owners: of 457 gated findings only a small deletable fraction remains after the logger sweep, and the residue names capability that was built and never connected, including integrity checks nothing calls, a declared KDF warmup no measurement performs, and a locale-key convention whose scaffold gate does not exist; `dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S31` - Resolve spec-table CLI bindings in the reachability walk: command handlers are bound through DeferredTarget(module, f"work_{name}") so the handler name exists only as an f-string and never as a literal, which reports live commands as unused; aeat app modelo work create, discard, list and status are all live while their handlers are findings; `dev/audit/unreachable_code.py`.
 
 ## Parallelization
