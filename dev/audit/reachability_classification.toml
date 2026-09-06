@@ -1402,3 +1402,18 @@ area = "adapters/persistence/profile"
 symbols = ["load_inventory", "save_inventory"]
 evidence = "Both halves of the profile inventory persistence, and unlike the half-wired paths recorded elsewhere neither side is reached: load_inventory has no production reference at all, and save_inventory's single apparent one is a docstring sentence in domain/contribuyente/inventory/records.py describing an older save path, which is prose rather than a call. The module's create_inventory_ledger sibling carries its own port-facade cluster for the same reason, so the whole inventory persistence surface is unreached."
 remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "provenance envelope wrappers callers build themselves"
+class = "superseded"
+area = "application/ledger"
+symbols = ["ground_anchored_value", "ground_self_reported_anchor"]
+evidence = "Two wrappers returning a FieldProvenance envelope, displaced by callers constructing it directly at grounded_reading.py:264 and confirmation_record.py:412. Worth stating what this is NOT: the module is the structural half of the anti-fabrication contract, and that half is live. evaluate_anchor, printed_excerpt_occurs, printed_excerpt_occurs_in_text, refused_anchor_of and ground_ambiguous_candidates are all imported by production modules -- grounded_reading, document_direction and identity_roles -- so an extracted value is still checked against the transcription. Only the envelope-building convenience went unused."
+
+[[symbol_cluster]]
+name = "invoice CLI query projections no CLI surface consumes"
+class = "should-be-live"
+area = "application/invoices"
+symbols = ["list_invoice_rows", "list_unmatched_invoice_rows"]
+evidence = "Two query projections whose module docstring states they exist for the invoice CLI surfaces, taking a catalogue the caller has already loaded so bucket scoping stays the caller's decision. No CLI reaches them. The module is partly live and the split is the evidence: check_query.py imports verify_invoice_repository_links from the same module, so the module is consumed while these two projections are not, and the listing surfaces they were written for either do not exist or read through another path."
+remedy_requires_decision = true

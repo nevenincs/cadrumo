@@ -271,6 +271,13 @@ def assess_claude_sessions(
     try:
         projects = scan_directory(root, require_root=True)
     except OSError:
+        if root.exists():
+            # An ABSENT root is a legitimate empty and stays absorbed. A root
+            # that exists and cannot be scanned is not: returning [] here
+            # prints 'spared: 0 of 0 sessions', which is exactly what a
+            # genuinely clean box prints, so a failed scan would read as
+            # nothing to reclaim.
+            raise
         return verdicts
     for project in projects:
         if is_link_like(project) or not project.is_dir():
@@ -307,7 +314,16 @@ def reclaim(verdicts: list[SessionVerdict]) -> int:
     for verdict in verdicts:
         if not verdict.reclaimable:
             continue
+        if not verdict.directory.exists():
+            continue
         shutil.rmtree(verdict.directory, ignore_errors=True)
+        if verdict.directory.exists():
+            # The absorbed failure above is deliberate, but its bytes are
+            # not reclaimed and must not be counted: this total is printed
+            # to the operator as 'removed'. A partial removal therefore
+            # under-reports rather than overstating, which is the only
+            # safe direction for that claim.
+            continue
         reclaimed += verdict.total_bytes or 0
     return reclaimed
 

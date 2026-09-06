@@ -45,6 +45,13 @@ _LEAKED_KEY = re.compile(r"(?m)^\s+((?:cli|docs|flows|application|errors)\.[a-z0
 #: automation and schemas pages are a different shape and are checked separately.
 _FAMILY_PAGE = re.compile(r"^cli/(?!index|automation|schemas)[a-z0-9_-]+\.rst$")
 
+#: Below this the ``cli/<family>/<group>.rst`` walk has stopped reaching the
+#: generated group pages. A floor, not a tally: sixteen ship today across the two
+#: families, and only a collapse of the naming scheme -- a flattening rename, a
+#: family losing its groups -- drops the walk beneath it. Without it the toctree
+#: sweep below reads a zero-page walk exactly like a fully enrolled reference.
+_MINIMUM_NESTED_GROUP_PAGES = 10
+
 
 @pytest.fixture(scope="module")
 def rendered_pages() -> dict[str, str]:
@@ -114,13 +121,19 @@ def test_every_family_page_offers_a_way_back_to_the_index(rendered_pages: dict[s
 
 def test_every_nested_group_is_enrolled_in_its_family_toctree(rendered_pages: dict[str, str]) -> None:
     """Generated group pages must be reachable by Sphinx as well as prose links."""
+    examined = []
     missing = []
     for name in sorted(rendered_pages):
         match = re.fullmatch(r"cli/([^/]+)/([^/]+)\.rst", name)
         if match is None:
             continue
+        examined.append(name)
         family, group = match.groups()
         family_page = rendered_pages[f"cli/{family}.rst"]
         if f"   {family}/{group}\n" not in family_page:
             missing.append(name)
+    assert len(examined) >= _MINIMUM_NESTED_GROUP_PAGES, (
+        f"only {len(examined)} nested group page(s) were walked, so an empty finding list says "
+        "nothing about whether the generated group pages are enrolled in a family toctree"
+    )
     assert not missing, f"these generated CLI group pages are absent from their family toctree: {missing}"

@@ -56,6 +56,11 @@ def workbooks_verify(
     ``failed_count`` and returned 0 regardless, so a contributor scripting this
     verb got the same exit status whether every workbook verified or none did -
     while its sibling ``audit-oracles`` in this same file already refused.
+
+    It also exits non-zero when ``--root`` names a tree with no workbook to
+    scan: a moved or misspelled corpus path once reported ``workbook_count``
+    and ``failed_count`` both zero, which reads exactly like a clean audit of
+    a real corpus.
     """
     report = verify_registry_workbooks(
         root=root,
@@ -65,6 +70,8 @@ def workbooks_verify(
         output=output,
     )
     _json(report)
+    if not report.backend_exists:
+        raise typer.Exit(1)
     if report.failed_count:
         raise typer.Exit(1)
 
