@@ -96,6 +96,7 @@ from ..storage.errors import (
     OutboundStorageNetworkError,
     OutboundStorageValidationError,
 )
+from ._drive_entries import OWNERSHIP_KEY, OWNERSHIP_VALUE
 from ._preconditions import google_terminal_refusal
 from .api import execute_request
 from .calc_sheets_pull_records import (
@@ -129,8 +130,6 @@ from .calc_sheets_pull_records import (
     as_value_range as _as_value_range,
 )
 
-_OWNERSHIP_KEY: Final[str] = "cadrumo_vault_app"
-_OWNERSHIP_VALUE: Final[str] = "cadrumo"
 _RELATION_METADATA_PREFIX: Final[str] = "cadrumo_relation:"
 _DUPLICATE_SENSITIVE_METADATA_KEYS: Final[frozenset[str]] = frozenset(
     {
@@ -246,7 +245,7 @@ def _verify_ownership(drive_service: DriveResource, spreadsheet_id: str) -> None
             outcome=NoRecoveryOutcome.OPERATOR_DECISION,
         )
     app_properties: Mapping[str, object] = raw_app_properties if is_str_keyed_dict(raw_app_properties) else {}
-    if app_properties.get(_OWNERSHIP_KEY) != _OWNERSHIP_VALUE:
+    if app_properties.get(OWNERSHIP_KEY) != OWNERSHIP_VALUE:
         error = OutboundStorageConflictError(
             f"spreadsheet {spreadsheet_id!r} is not marked as app-owned; refusing "
             f"to read operator edits from a foreign Drive file",

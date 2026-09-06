@@ -640,6 +640,27 @@ def ledger_allocate(
     )
 
 
+def _link_refusal(exc: Exception) -> typer.BadParameter:
+    """Map one link refusal to the instructive message for its actual cause.
+
+    Only the two operator-caused refusals get a specific message. They are
+    identified by context keys the writer sets for those cases alone:
+    ``invoice_bucket_id`` names the bucket a resolved invoice really belongs
+    to, and ``bucket_id`` accompanies an invoice id that resolved to nothing.
+    Every other link failure -- an invoice missing after its own update, a
+    malformed digest, a catalogue validation error -- is an internal
+    inconsistency the operator cannot act on differently, and keeps the generic
+    message. Matching on ``invoice_id`` alone would be wrong: three unrelated
+    raise sites carry it.
+    """
+    context = getattr(exc, "context", None) or {}
+    if "invoice_bucket_id" in context:
+        return bad(tr("cli.ledger.link.errors.cross_bucket_invoice"))
+    if "bucket_id" in context:
+        return bad(tr("cli.ledger.link.errors.invoice_not_found"))
+    return invoice_link_error_bad_parameter()
+
+
 def ledger_link(
     ctx: typer.Context,
     transaction_id: str,
@@ -657,20 +678,7 @@ def ledger_link(
     bucket_id = transaction_repository.bucket_id
     actor_label = (actor or "operator").strip() or "operator"
 
-    # Pre-write instructive gate: the reconciliation InvoiceCatalogue is the only
-    # store `link` targets. A missing/cross-bucket id is refused with the typed
-    # localized message (the operator's first instructive surface) before the
-    # atomic writer runs.
     invoice_repo = InvoiceCatalogueRepository()
-    invoice_record = invoice_repo.load().invoices.get(invoice_id)
-    if invoice_record is None:
-        raise bad(
-            tr("cli.ledger.link.errors.invoice_not_found"),
-        )
-    if invoice_record.bucket_id not in (None, bucket_id):
-        raise bad(
-            tr("cli.ledger.link.errors.cross_bucket_invoice"),
-        )
     try:
         link_manual_transaction_invoice(
             bucket_id=bucket_id,
@@ -682,7 +690,14 @@ def ledger_link(
             invoice_repository=invoice_repo,
         )
     except InvoiceLinkError as exc:
-        raise invoice_link_error_bad_parameter() from exc
+        # The writer owns the missing/cross-bucket policy and refuses before it
+        # writes anything, so this adapter reads neither the catalogue nor the
+        # record: it maps the refusal it was given back to the instructive
+        # message the operator needs. The two cases are told apart by the
+        # context the writer already supplies -- an invoice that resolved but
+        # belongs elsewhere carries its owning bucket, one that never resolved
+        # cannot.
+        raise _link_refusal(exc) from exc
 
     payload: dict[str, object] = {
         "operation": "ledger.link",

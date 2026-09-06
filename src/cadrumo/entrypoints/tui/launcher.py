@@ -38,7 +38,6 @@ if TYPE_CHECKING:
     from ...application.operations.registry import OperationPublicContractSetV1
     from ...application.operator_actions.models import ActionReference
     from ...application.overview.home import HomeProjectionV1
-    from .ledger.models import LedgerLinkResultV1, LedgerLinkSubmissionV1, LedgerLinkSubmitterV1
     from ...application.user_profile.login_interaction import ProfileLoginAttempt, ProfileLoginChoice
     from ...application.user_profile.overview import ProfileOverview
     from ...core.credentials import ProfilePasswordAssessment
@@ -46,6 +45,7 @@ if TYPE_CHECKING:
     from ...core.period import Period
     from ...domain.modelos.work_unit import WorkUnit
     from .account import AccountFactoriesV1
+    from .ledger.models import LedgerLinkResultV1, LedgerLinkSubmissionV1, LedgerLinkSubmitterV1
     from .navigation import (
         TuiActionCandidateV1,
         TuiDestinationCatalogueV1,
