@@ -93,6 +93,21 @@ def test_reports_a_store_that_is_read_and_never_written(tmp_path: Path) -> None:
             "        self._repo.save(1)\n",
             id="instance-attribute",
         ),
+        pytest.param(
+            "def _store() -> ExampleRepository:\n"
+            "    return ExampleRepository()\n"
+            "def go():\n"
+            "    _store().save(1)\n",
+            id="module-accessor",
+        ),
+        pytest.param(
+            "class Holder:\n"
+            "    def _drafts(self) -> ExampleRepository:\n"
+            "        return ExampleRepository()\n"
+            "    def go(self):\n"
+            "        self._drafts().save(1)\n",
+            id="lazy-method-accessor",
+        ),
     ],
 )
 def test_stays_silent_when_some_production_path_writes(tmp_path: Path, writer: str) -> None:

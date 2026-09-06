@@ -20,23 +20,6 @@
 # store from an unfilled one.
 
 [[read_only]]
-name = "ModeloDraftRepository"
-kind = "awaiting_writer"
-rationale = """
-Filing drafts are approved but never persisted. Both approval sites build the \
-draft and approve it in the same call -- application/modelo/workflow_gate.py \
-and application/modelo/export.py -- and return it to their caller, so the \
-encrypted filing-drafts namespace has no writer at all. Three readers render \
-from it regardless: the review queue's draft rows in \
-application/review/_adapters.py, the drafts count in \
-application/state_projection.py, and the CLI overview. Each reports zero \
-permanently, which an operator reads as having no drafts rather than as the \
-application not storing them. The unreached approval-staleness lifecycle in \
-application/filing/draft_review.py follows from the same gap: there is no \
-persisted approved draft to go stale.
-"""
-
-[[read_only]]
 name = "RetencionObservationRepository"
 kind = "awaiting_writer"
 rationale = """
@@ -58,15 +41,4 @@ application/aggregation/_withholding_source.py through the same \
 inject-or-default binding, with an equally uncalled save_observation. Same \
 consequence: a filing-grade withholding total assembled from a store nothing \
 fills.
-"""
-
-[[read_only]]
-name = "PurchaseInvoiceEvidenceRepository"
-kind = "awaiting_writer"
-rationale = """
-Purchase-invoice evidence records are loaded in \
-application/ledger/actions_common.py to answer whether a manual ledger \
-transaction's evidence reference is accepted by either id space. Nothing \
-writes the store, so that consultation can only ever find nothing, and the \
-answer it returns is shaped by absence rather than by evidence.
 """

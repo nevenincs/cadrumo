@@ -181,16 +181,29 @@ def _construction_source(value: ast.expr, repositories: frozenset[str], bound: d
     return None
 
 
-def _bindings(tree: ast.Module, repositories: frozenset[str]) -> tuple[dict[str, str], dict[str, str]]:
-    """Return the local names and instance attributes bound to a repository."""
+def _bindings(
+    tree: ast.Module,
+    repositories: frozenset[str],
+) -> tuple[dict[str, str], dict[str, str], dict[str, str]]:
+    """Return the local names, instance attributes, and accessors bound to a repository.
+
+    An accessor is a function whose return annotation names a repository, so
+    ``self._drafts().save(draft)`` and ``_draft_repo().save(draft)`` resolve to
+    the store they hand back. Without it a lazily resolved repository -- the
+    shape used wherever construction must wait for a bucket -- is invisible on
+    both sides, and the gate reports a store that is written every run.
+    """
     names: dict[str, str] = {}
     attributes: dict[str, str] = {}
+    accessors: dict[str, str] = {}
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
             arguments = node.args
             for argument in (*arguments.posonlyargs, *arguments.args, *arguments.kwonlyargs):
                 for repository in _annotated_repositories(argument.annotation, repositories):
                     names[argument.arg] = repository
+            for repository in _annotated_repositories(node.returns, repositories):
+                accessors[node.name] = repository
         elif isinstance(node, ast.AnnAssign):
             for repository in _annotated_repositories(node.annotation, repositories):
                 if isinstance(node.target, ast.Name):
@@ -206,7 +219,7 @@ def _bindings(tree: ast.Module, repositories: frozenset[str]) -> tuple[dict[str,
                     names[target.id] = source
                 elif isinstance(target, ast.Attribute):
                     attributes[target.attr] = source
-    return names, attributes
+    return names, attributes, accessors
 
 
 def _receiver_repository(
@@ -215,11 +228,16 @@ def _receiver_repository(
     repositories: frozenset[str],
     names: dict[str, str],
     attributes: dict[str, str],
+    accessors: dict[str, str],
 ) -> str | None:
     """Return the repository a call's receiver refers to, if any."""
     if isinstance(receiver, ast.Call):
         called = _called_name(receiver.func)
-        return called if called is not None and called in repositories else None
+        if called is None:
+            return None
+        if called in repositories:
+            return called
+        return accessors.get(called)
     if isinstance(receiver, ast.Name):
         return names.get(receiver.id)
     if isinstance(receiver, ast.Attribute):
@@ -235,7 +253,7 @@ def collect_store_usage(root: Path = _SOURCE_ROOT) -> tuple[StoreUsage, ...]:
     reads: dict[str, set[str]] = {name: set() for name in repositories}
     writes: dict[str, set[str]] = {name: set() for name in repositories}
     for path, tree in trees.items():
-        names, attributes = _bindings(tree, repositories)
+        names, attributes, accessors = _bindings(tree, repositories)
         module = path.relative_to(root).as_posix()
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
@@ -245,6 +263,7 @@ def collect_store_usage(root: Path = _SOURCE_ROOT) -> tuple[StoreUsage, ...]:
                 repositories=repositories,
                 names=names,
                 attributes=attributes,
+                accessors=accessors,
             )
             if repository is None:
                 continue
