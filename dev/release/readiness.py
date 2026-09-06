@@ -672,4 +672,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-ALL_DISTRIBUTION_ROWS = ALL_DISTRIBUTION_ROWS[:-1]
