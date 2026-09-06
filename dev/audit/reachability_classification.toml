@@ -1148,3 +1148,51 @@ class = "should-be-live"
 area = "core"
 symbols = ["WizardFlowProtocol"]
 evidence = "Split out of the domain-area protocol cluster, which recorded the wrong area: the symbol is reported in cadrumo.core.wizard_catalogue. Runtime-checkable, and its module docstring states that domain code reaches the descriptor through this core slot rather than importing the application-layer WizardFlow directly; it appears nowhere outside its own module and __all__, so no domain code annotates or isinstance-checks against it and the layering it describes is not in force."
+
+[[symbol_cluster]]
+name = "declared bound nothing enforces: profile custody record"
+class = "should-be-live"
+area = "adapters/persistence/storage/custody"
+symbols = ["PROFILE_CUSTODY_PROFILE_RECORD_MAX_BYTES"]
+evidence = "A 4 MiB ceiling on the profile record. Its siblings in the same package ARE enforced -- _capsule_data.py refuses a payload over PROFILE_CUSTODY_DATA_FILE_MAX_BYTES and reads the envelope with PROFILE_CUSTODY_ENVELOPE_MAX_BYTES as the cap -- and this one is compared against nothing, so the profile record is the single unbounded member of a family whose whole point is bounded reads. The asymmetry is what makes it a finding rather than an unused number; deleting it would remove the record that the bound was intended."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "checkpoint discard nothing reaches"
+class = "should-be-live"
+area = "application/flows"
+symbols = ["discard_checkpoint"]
+evidence = "Erases an in-progress flow run through the domain store. No production caller reaches it and no production code calls store.discard for a flow definition directly either, so a run can be checkpointed and resumed but never discarded. Not a superseded wrapper -- there is no other discard path that displaced it."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "portable profile import declared and unwired"
+class = "should-be-live"
+area = "application/user_profile"
+symbols = ["register_imported_profile_bundle", "censo_unadopted_evidence"]
+evidence = "Two halves of profile ingestion that nothing reaches. register_imported_profile_bundle registers an imported portable bundle against a target bucket, and pairs with ProfileImportResult in the public-types cluster, whose evidence already records that portable import returns no such outcome -- so the declared outcome and its registrar are both unreached, which is one capability, not two coincidences. censo_unadopted_evidence projects the certificate fields the cotejo deliberately does NOT adopt into divergence rows; nothing calls it, so those certified-but-unadopted statements are never surfaced, which is the silent under-declaration the project forbids."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "declared type distinctions nothing annotates"
+class = "should-be-live"
+area = "core"
+symbols = ["OptionalSourceUrl", "optional_extra_for_module"]
+evidence = "OptionalSourceUrl is a constrained alias whose own docstring explains why it is spelled separately from SourceUrl rather than as SourceUrl | None -- and no model field or signature annotates with it, so the distinction it draws is enforced nowhere while its sibling is in use. optional_extra_for_module answers 'is this missing module a capability package the operator may legitimately not have installed?' against the declared OPTIONAL_EXTRAS inventory, and nothing asks: a missing optional package therefore reaches the operator unclassified rather than as the install-this-extra remedy the inventory exists to give."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "sectoral retencion rate set no classifier consults"
+class = "should-be-live"
+area = "domain/transactions"
+symbols = ["sectoral_activity_retencion_rates"]
+evidence = "The art. 95.4/95.5/95.6.1 rate set, with any art. 95.1 figure subtracted so that a caller asking 'did this match ONLY sectoral rates?' cannot be weakened by a shared figure. That caller does not exist. A legal classification the registry can express and the product never performs; under the grounding rule the declared authority stays visible rather than being deleted."
+remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "localizable field literal nothing annotates"
+class = "should-be-live"
+area = "domain/calculations/registry"
+symbols = ["ModeloLocalizationField"]
+evidence = "A Literal enumerating every localizable modelo field -- label, help, title, official name. Nothing annotates with it, so the closed set is asserted in prose and enforced by no signature, leaving the localization surface free to accept a kind outside the four this declares."
+remedy_requires_decision = true

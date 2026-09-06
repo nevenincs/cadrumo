@@ -1022,3 +1022,85 @@ def test_a_row_table_written_inline_at_the_call_site_is_confirmed() -> None:
     assert "tui.aeat_sync.column.untranslated" not in unconfirmed, (
         "an inline table handed to a helper that never translates must stay unconfirmed"
     )
+
+
+def test_a_key_held_in_a_local_is_confirmed_by_the_translator_that_reads_it() -> None:
+    """Incident 15: the surface names its choice before rendering it.
+
+    A screen picking between two labels writes the choice down first::
+
+        status_key = "tui.ledger.evidence.pending" if pending else "tui.ledger.evidence.reviewed"
+        table.add_row(..., ledger_copy(status_key))
+
+    The call site passes a NAME, so the literal resolver saw no key there, and
+    the value is a bare scalar rather than a registry, so the constant and
+    collection rules had nothing to match either. BOTH branches were invisible.
+
+    The negative arm is the one this scanner keeps having to relearn: a dotted
+    literal in a local is as likely to be a route or a lookup token as copy.
+    `destination = "workbench.home"` handed to a router is not a translation,
+    and only the name reaching a TRANSLATOR admits its literals.
+    """
+    from .._ast_scanner import scan_source_text
+
+    source = chr(10).join((
+        "def render(self, pending, rows):",
+        '    status_key = "tui.ledger.evidence.pending" if pending else "tui.ledger.evidence.reviewed"',
+        '    destination = "workbench.home"',
+        "    self.navigate(destination)",
+        "    return tr(status_key)",
+    ))
+
+    keys = scan_source_text(source, filename="evidence.py")
+
+    assert "tui.ledger.evidence.pending" in keys, "the branch that renders when pending is a key"
+    assert "tui.ledger.evidence.reviewed" in keys, "so is the other branch, which no run exercises first"
+    assert "workbench.home" not in keys, "a local handed to a router is a route, not copy"
+
+
+def test_a_local_bound_to_a_registry_is_left_to_the_registry_rules() -> None:
+    """The local rule must not claim a shape it does not confirm.
+
+    A local bound to a dict or a subscript is already the business of the
+    registry and row-table rules, which confirm it by how it is READ. Widening
+    the local rule to any expression would let it collect those shapes without
+    that confirmation, so its candidate value stays a string constant or a
+    conditional between them.
+    """
+    import ast
+
+    from .._ast_scanner import _flow_confirmed_local_key_names, scan_source_text
+
+    source = chr(10).join((
+        "_ROUTES = {",
+        '    "home": "workbench.routes.home",',
+        "}",
+        "def render(self, token):",
+        "    chosen = _ROUTES[token]",
+        "    return tr(chosen)",
+    ))
+
+    assert not _flow_confirmed_local_key_names(ast.parse(source)), (
+        "the local rule must not claim a name bound to a registry; its value is not a key expression"
+    )
+
+    # The restriction earns its place on this shape. A local bound to a CALL
+    # can carry a dotted literal that is not a key at all -- a module path is
+    # the form this campaign has already been bitten by -- and admitting any
+    # expression would collect it the moment the name is translated.
+    derived = chr(10).join((
+        "def render(self):",
+        '    label = _humanise("cadrumo.core.wizard_catalogue")',
+        "    return tr(label)",
+    ))
+
+    assert not _flow_confirmed_local_key_names(ast.parse(derived)), (
+        "a local bound to a call is not a key expression, whatever literals the call mentions"
+    )
+
+    # The key is still collected here -- by the DICT rule, which confirmed the
+    # registry through the subscript that reads it. That is the point: the two
+    # rules do not overlap, and this one is not doing the other's work.
+    assert "workbench.routes.home" in scan_source_text(source, filename="router.py"), (
+        "the registry rule still confirms the dict it owns"
+    )

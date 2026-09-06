@@ -24,6 +24,7 @@ from __future__ import annotations
 import shutil
 import subprocess
 import tomllib
+from collections.abc import Container
 from pathlib import Path
 from typing import Final
 
@@ -70,9 +71,43 @@ def _tracked_python_trees(repo_root: Path) -> set[str]:
     return found
 
 
+def _git(repository: Path, *arguments: str) -> None:
+    """Run one git command inside a throwaway fixture repository.
+
+    Collected here so the interpreter-safety waiver is stated once, over a
+    fixed argv, rather than repeated at every call site.
+    """
+    git = shutil.which("git")
+    assert git is not None, "git is required to establish which trees carry tracked Python"
+    subprocess.run(  # noqa: S603 - fixed git argv against a pytest-owned temporary directory
+        [git, "-C", str(repository), *arguments],
+        check=True,
+        capture_output=True,
+    )
+
+
 def _carries_python(tree: Path) -> bool:
-    """Whether a tree exists and holds at least one Python file (fixture use)."""
+    """Whether a tree exists and holds at least one Python file.
+
+    For fixture trees only. The live gate asks git instead, via
+    :func:`_tracked_python_trees`, for the reasons given there.
+    """
     return tree.is_dir() and any(tree.rglob("*.py"))
+
+
+def _unscoped_trees(carrying_python: Container[str], excluded: Container[str]) -> list[str]:
+    """Return the scaffolding trees that carry Python and are still linted.
+
+    This decision was written out three times -- once in the gate and once
+    in each of the two cases that prove the gate has teeth -- so neither
+    teeth case ever called the gate. Three copies agree until one is edited,
+    and the copies the teeth held were the ones that would go on passing.
+
+    Discovery is the caller's to supply, because it legitimately differs:
+    the live gate asks git which trees carry TRACKED Python, while a
+    fixture tree has no history to ask and is read from disk.
+    """
+    return sorted(name for name in _SCAFFOLDING_TREES if name in carrying_python and name not in excluded)
 
 
 def test_the_scaffolding_trees_are_named_correctly() -> None:
@@ -84,7 +119,7 @@ def test_the_scaffolding_trees_are_named_correctly() -> None:
 def test_every_scaffolding_tree_with_python_is_out_of_lint_scope() -> None:
     """The direction the gate exists for: a tree gains Python, scope does not."""
     excluded = _excluded(REPO_ROOT / "pyproject.toml")
-    unscoped = sorted(name for name in _SCAFFOLDING_TREES if _carries_python(REPO_ROOT / name) and name not in excluded)
+    unscoped = _unscoped_trees(_tracked_python_trees(REPO_ROOT), excluded)
     assert not unscoped, (
         "these scaffolding trees carry Python but are still linted with the "
         f"product's rules; add them to [tool.ruff] extend-exclude: {unscoped}"
@@ -97,8 +132,9 @@ def test_the_gate_catches_a_tree_left_in_scope(tmp_path: Path) -> None:
     (tmp_path / ".vaultspec" / "tests" / "test_thing.py").write_text("x = 1\n", encoding="utf-8")
     (tmp_path / "pyproject.toml").write_text('[tool.ruff]\nextend-exclude = [".vault"]\n', encoding="utf-8")
     excluded = _excluded(tmp_path / "pyproject.toml")
-    unscoped = [name for name in _SCAFFOLDING_TREES if _carries_python(tmp_path / name) and name not in excluded]
-    assert unscoped == [".vaultspec"]
+    walked = {name for name in _SCAFFOLDING_TREES if _carries_python(tmp_path / name)}
+
+    assert _unscoped_trees(walked, excluded) == [".vaultspec"]
 
 
 def test_the_gate_stays_silent_on_a_tree_without_python(tmp_path: Path) -> None:
@@ -107,5 +143,39 @@ def test_the_gate_stays_silent_on_a_tree_without_python(tmp_path: Path) -> None:
     (tmp_path / ".vault" / "adr" / "x.md").write_text("# a record\n", encoding="utf-8")
     (tmp_path / "pyproject.toml").write_text("[tool.ruff]\nextend-exclude = []\n", encoding="utf-8")
     excluded = _excluded(tmp_path / "pyproject.toml")
-    unscoped = [name for name in _SCAFFOLDING_TREES if _carries_python(tmp_path / name) and name not in excluded]
-    assert unscoped == []
+    walked = {name for name in _SCAFFOLDING_TREES if _carries_python(tmp_path / name)}
+
+    assert _unscoped_trees(walked, excluded) == []
+
+
+def test_the_live_gate_reads_only_tracked_python(tmp_path: Path) -> None:
+    """The reason the gate asks git rather than walking the tree.
+
+    An untracked scratch file dropped in the decision corpus is not part of
+    the repository, so demanding a lint exclusion for it would be a finding
+    about one contributor's working directory rather than about the project.
+    A walk cannot tell tracked content from scratch; ``git ls-files`` answers
+    for tracked content only. The module argued this in prose while the gate
+    still walked, so the argument went untested and the walk stayed live.
+    """
+    _git(tmp_path, "init", "-q")
+    _git(tmp_path, "config", "user.email", "gate@example.invalid")
+    _git(tmp_path, "config", "user.name", "scope gate")
+    (tmp_path / ".vaultspec" / "rules").mkdir(parents=True)
+    (tmp_path / ".vaultspec" / "rules" / "gate.py").write_text("x = 1\n", encoding="utf-8")
+    _git(tmp_path, "add", ".vaultspec")
+    _git(tmp_path, "commit", "-qm", "tracked")
+    (tmp_path / ".vault" / "adr").mkdir(parents=True)
+    (tmp_path / ".vault" / "adr" / "scratch.py").write_text("y = 2\n", encoding="utf-8")
+
+    tracked = _tracked_python_trees(tmp_path)
+    walked = {name for name in _SCAFFOLDING_TREES if _carries_python(tmp_path / name)}
+
+    assert walked == {".vault", ".vaultspec"}, (
+        "the walk must see the scratch file, or the divergence below proves nothing"
+    )
+    assert tracked == {".vaultspec"}, f"git reported an untracked tree as carrying Python: {sorted(tracked)}"
+    assert _unscoped_trees(tracked, [".vaultspec"]) == []
+    assert _unscoped_trees(walked, [".vaultspec"]) == [".vault"], (
+        "the walk-based verdict must differ here, or switching the gate to git changed nothing"
+    )

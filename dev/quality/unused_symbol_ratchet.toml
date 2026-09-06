@@ -73,7 +73,6 @@
 "cadrumo.application.flows.engine" = 1
 "cadrumo.application.invoices.catalogue_reads" = 2
 "cadrumo.application.invoices.bulk_import" = 1
-"cadrumo.application.ledger.confirmation_record" = 1
 "cadrumo.application.ledger.extracted_document_cache" = 1
 "cadrumo.application.ledger.extraction_draft_store" = 1
 "cadrumo.application.ledger.grounding_anchor" = 2
@@ -84,14 +83,12 @@
 "cadrumo.application.live.iva_remote_state" = 2
 "cadrumo.application.live.notification_documents" = 2
 "cadrumo.application.modelo._calculation_modelo_adjustments" = 1
-"cadrumo.application.modelo._registry_helpers" = 1
 "cadrumo.application.modelo._review_package_review_only_workspace" = 2
 "cadrumo.application.modelo._row_source_identity_replay" = 1
 "cadrumo.application.modelo.calculation_actions" = 2
 "cadrumo.application.modelo.calculation_route" = 1
 "cadrumo.application.modelo.edit_models" = 5
 "cadrumo.application.modelo.edit_services" = 3
-"cadrumo.application.modelo.iva_wallet_gate" = 1
 "cadrumo.application.modelo.local_observation_spreadsheet" = 1
 "cadrumo.application.modelo.m145_communication_records" = 1
 "cadrumo.application.modelo.m303_regimen_simplificado_scope" = 1
@@ -109,7 +106,6 @@
 "cadrumo.application.operations.registry" = 1
 "cadrumo.application.operations.secret_submission" = 1
 "cadrumo.application.operator_surface.contract" = 2
-"cadrumo.application.operator_surface.help" = 1
 "cadrumo.application.operator_surface.manifest" = 1
 "cadrumo.application.operator_surface.models" = 1
 "cadrumo.application.overview.calendar" = 1
@@ -119,7 +115,7 @@
 "cadrumo.application.registry.source_connectivity" = 6
 "cadrumo.application.repair_integrity" = 4
 "cadrumo.application.review.enums" = 1
-"cadrumo.application.state_projection" = 2
+"cadrumo.application.state_projection" = 1
 "cadrumo.application.storage.calc_sheets.workbook_export" = 1
 "cadrumo.application.storage_management.service" = 1
 "cadrumo.application.user_profile.acquisition_sources" = 1
@@ -133,13 +129,12 @@
 "cadrumo.application.user_profile.login_session_port" = 3
 "cadrumo.application.user_profile.presentation" = 1
 "cadrumo.application.user_profile.repository" = 1
-"cadrumo.application.wizard._format_hints" = 2
+"cadrumo.application.wizard._format_hints" = 1
 "cadrumo.application.wizard.descendant_door" = 1
 "cadrumo.application.wizard.descendant_group" = 1
 "cadrumo.application.wizard.persistence" = 2
 "cadrumo.application.workbench_generation" = 1
 "cadrumo.application.workflow.adapters" = 3
-"cadrumo.application.workflow.engine_helpers" = 1
 "cadrumo.application.workflow.persistence" = 1
 "cadrumo.application.workflow.resume" = 2
 "cadrumo.application.workflow.state_models" = 1
@@ -171,7 +166,6 @@
 "cadrumo.core.result_disposition" = 1
 "cadrumo.core.setup_answers" = 1
 "cadrumo.core.source_locator" = 1
-"cadrumo.core.spanish_postcode" = 1
 "cadrumo.core.storage_taxonomy" = 1
 "cadrumo.core.time.clock" = 1
 "cadrumo.core.tipos_actividad" = 2
@@ -193,10 +187,9 @@
 "cadrumo.domain.calculations.registry.checker_oracle_flow" = 2
 "cadrumo.domain.calculations.registry.corpus_catalogue" = 1
 "cadrumo.domain.calculations.registry.counterpart_bindings" = 3
-"cadrumo.domain.calculations.registry.design_constant_bindings" = 1
 "cadrumo.domain.calculations.registry.detail_record_bindings" = 2
 "cadrumo.domain.calculations.registry.donativo_bindings" = 1
-"cadrumo.domain.calculations.registry.export" = 2
+"cadrumo.domain.calculations.registry.export" = 1
 "cadrumo.domain.calculations.registry.external_grounding" = 1
 "cadrumo.domain.calculations.registry.fixed_width_codec" = 1
 "cadrumo.domain.calculations.registry.gasto193_bindings" = 2
@@ -230,7 +223,7 @@
 "cadrumo.domain.filing.protocols" = 1
 "cadrumo.domain.invoices.decomposition" = 2
 "cadrumo.domain.invoices.enums" = 2
-"cadrumo.domain.invoices.validators" = 2
+"cadrumo.domain.invoices.validators" = 1
 "cadrumo.domain.iva.classification" = 1
 "cadrumo.domain.iva.establishment" = 1
 "cadrumo.domain.iva.flow" = 2
@@ -252,7 +245,7 @@
 "cadrumo.domain.submission.models" = 2
 "cadrumo.domain.submission.protocols" = 1
 "cadrumo.domain.transactions.irpf_categories" = 1
-"cadrumo.domain.transactions.llm" = 2
+"cadrumo.domain.transactions.llm" = 1
 "cadrumo.domain.transactions.model_tier" = 1
 "cadrumo.domain.transactions.retencion_parameters" = 1
 "cadrumo.domain.transactions.service" = 1
@@ -266,15 +259,13 @@
 "cadrumo.entrypoints.cli._command_schema" = 1
 "cadrumo.entrypoints.cli._common" = 5
 "cadrumo.entrypoints.cli._modelo_behavior_support" = 1
-"cadrumo.entrypoints.cli._modelo_cli_support" = 1
 
-"cadrumo.entrypoints.cli._profile_session_gate" = 2
 "cadrumo.entrypoints.cli._tty" = 3
 "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap" = 1
 "cadrumo.entrypoints.cli.command_api" = 2
 "cadrumo.entrypoints.cli.command_suggestions" = 3
 "cadrumo.entrypoints.cli.config._censo_transport" = 1
-"cadrumo.entrypoints.cli.config._spec_policies" = 6
+"cadrumo.entrypoints.cli.config._spec_policies" = 5
 "cadrumo.entrypoints.cli.config.google" = 1
 "cadrumo.entrypoints.cli.config_payloads" = 1
 "cadrumo.entrypoints.cli.period_parsing" = 1

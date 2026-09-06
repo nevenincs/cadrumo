@@ -331,6 +331,59 @@ def _flow_confirmed_class_attribute_keys(tree: ast.AST, wrappers: frozenset[str]
     return findings
 
 
+def _flow_confirmed_local_key_names(tree: ast.AST, wrappers: frozenset[str] = frozenset()) -> set[str]:
+    """Return dotted literals held in a local that is then translated.
+
+    A surface that picks between two labels names the choice before rendering
+    it::
+
+        status_key = "tui.ledger.evidence.pending" if row.pending_review else "tui.ledger.evidence.reviewed"
+        table.add_row(..., ledger_copy(status_key))
+
+    The call site passes a NAME, so the literal resolver saw no key there, and
+    the value is a bare scalar rather than a registry, so the constant and
+    collection rules had nothing to match either. Both branches were invisible.
+
+    The candidate value is deliberately narrow -- a string constant or a
+    conditional between them, nothing else. A local bound to a dict, a call, or
+    a subscript is already the business of the registry and row-table rules,
+    and widening this to any expression would let it claim their shapes
+    without their confirmation.
+
+    Shape alone still does not collect: a dotted literal in a local is as
+    likely to be a route or a lookup token as copy, so the NAME must reach a
+    translator, which is the same bargain every other shape here strikes.
+    """
+    candidates: dict[str, set[str]] = {}
+    for node in ast.walk(tree):
+        target: ast.expr | None = None
+        value: ast.expr | None = None
+        if isinstance(node, ast.Assign) and len(node.targets) == 1:
+            target, value = node.targets[0], node.value
+        elif isinstance(node, ast.AnnAssign):
+            target, value = node.target, node.value
+        if not isinstance(target, ast.Name) or value is None:
+            continue
+        if not isinstance(value, ast.Constant | ast.IfExp):
+            continue
+        literals: set[str] = set()
+        _collect_dotted_literals(value, literals)
+        if literals:
+            candidates.setdefault(target.id, set()).update(literals)
+    if not candidates:
+        return set()
+
+    tr_names = _translation_call_names(tree) | wrappers
+    findings: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        for argument in _call_site_key_argument_exprs(node, tr_names):
+            if isinstance(argument, ast.Name) and argument.id in candidates:
+                findings |= candidates[argument.id]
+    return findings
+
+
 def _extract_locale_constant_keys(tree: ast.AST, wrappers: frozenset[str] = frozenset()) -> set[str]:
     """Find dotted locale keys declared in explicit locale-key constants.
 
@@ -348,6 +401,7 @@ def _extract_locale_constant_keys(tree: ast.AST, wrappers: frozenset[str] = froz
     from being misread as a locale-key declaration.
     """
     findings: set[str] = _flow_confirmed_class_attribute_keys(tree, wrappers)
+    findings |= _flow_confirmed_local_key_names(tree, wrappers)
     flow_confirmed = _flow_confirmed_locale_key_dicts(tree, wrappers) | _flow_confirmed_locale_key_row_tables(
         tree, wrappers
     )
