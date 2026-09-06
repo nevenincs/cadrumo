@@ -4,6 +4,14 @@ on:
   push:
     branches:
       - main
+  # Dispatchable as well as push-driven. release-please keeps its state in the
+  # release PR's labels, and a release published by hand leaves that state
+  # stale: the run then reports SUCCESS while aborting with "there are
+  # untagged, merged release PRs outstanding", and opens no release PR. That
+  # sat undetected for three days and 121 releasable commits, because the only
+  # way to re-run the automation after repairing the label was to push
+  # something. Recovery should not require a commit.
+  workflow_dispatch:
 
 permissions:
   contents: write
