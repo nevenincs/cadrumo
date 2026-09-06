@@ -609,7 +609,6 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
 
 # This mapping is the operator-facing wizard vocabulary used by application
 # refusals to name flags the CLI can actually parse.
-SETUP_OPTION_INFOS = _SETUP_OPTION_INFOS
 
 # Guard against future catalogue / dict drift: every question id that
 # the SETUP_FLOW catalogue exposes must have a matching OptionInfo entry.
@@ -2037,7 +2036,6 @@ def build_wizard_command(
 
 __all__ = [
     "DEFAULT_PROFILE_NEXT_COMMAND",
-    "SETUP_OPTION_INFOS",
     "build_wizard_command",
     "next_step_command_for_profile_values",
     "profile_next_step_modelo",

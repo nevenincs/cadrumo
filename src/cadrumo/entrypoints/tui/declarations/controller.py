@@ -301,6 +301,7 @@ class DeclarationsCalendarController:
         self.projection = projection
         self.entry_handoff = entry_handoff
         self.recovery_handoff = recovery_handoff
+        _validate_calendar_recovery_actions(projection)
 
     def source(self, source: DeclarationsCalendarSource) -> DeclarationsCalendarSourceStateV1:
         """Return one explicit source state."""
@@ -310,6 +311,7 @@ class DeclarationsCalendarController:
         """Accept a fresh injected snapshot without performing a read."""
         if projection.contract_version != DECLARATIONS_CALENDAR_CONTRACT_VERSION:
             raise ValueError("unsupported Declarations calendar projection contract")
+        _validate_calendar_recovery_actions(projection)
         self.projection = projection
 
     def visible_entries(
@@ -346,6 +348,25 @@ class DeclarationsCalendarController:
 def _calendar_identity(row: DeclarationsCalendarEntryRefV1) -> str:
     modelo, year, period = row.semantic_key()
     return f"{modelo}|{year}|{period}"
+
+
+def _validate_calendar_recovery_actions(projection: DeclarationsCalendarProjectionV1) -> None:
+    for row in projection.entries:
+        action = row.recovery_action
+        if action is None:
+            continue
+        if (
+            action.action.action_id != "operator.modelo.work.create"
+            or lookup_action(action.action.action_id).target_command_key != "modelo.work.create"
+        ):
+            raise ValueError("calendar recovery action is not the canonical create action")
+        bindings = {item.argument_name: item.value for item in action.argument_bindings}
+        if bindings != {
+            "modelo": str(row.modelo),
+            "year": row.filing_year,
+            "period": row.period.registry_token,
+        }:
+            raise ValueError("calendar recovery action contradicts its natural address")
 
 
 def calendar_focus_key(row: DeclarationsCalendarEntryRefV1) -> str:

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...wizard.commands import SETUP_OPTION_INFOS
+from ...wizard.commands import _SETUP_OPTION_INFOS
 from ..filing_baseline import _profile_path_flag, missing_filing_baseline_flags
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -32,7 +32,7 @@ def test_the_refusal_names_only_flags_the_cli_accepts() -> None:
     """Every flag this refusal emits parses as a real wizard option."""
     emitted = missing_filing_baseline_flags(_IVA_BLOCK_OWED)
     assert emitted, "fixture no longer reproduces an incomplete IVA block"
-    unknown = sorted(flag for flag in emitted if flag not in SETUP_OPTION_INFOS)
+    unknown = sorted(flag for flag in emitted if flag not in _SETUP_OPTION_INFOS)
     assert not unknown, f"refusal would name flags the CLI does not accept: {unknown}"
 
 

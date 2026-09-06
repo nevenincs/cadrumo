@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import cast
 
 import pytest
+from pydantic import ValidationError
 
 from ....core.identity import CalculationRevisionId, FilingRecordId, WorkUnitId
 from ....core.period import Period
@@ -28,6 +29,7 @@ from ...overview.evidence import CalendarEvidenceProjection
 from ...overview.home import HomeAvailability, HomeZoneState
 from ...overview.next_actions import declare_next_action
 from ..declarations_calendar import (
+    DeclarationsCalendarEntryRefV1,
     DeclarationsCalendarProjectionError,
     DeclarationsCalendarSource,
     DeclarationsCalendarSourceObservationV1,
@@ -387,3 +389,52 @@ def test_defining_module_has_no_io_adapter_entrypoint_or_network_import() -> Non
         for forbidden in ("adapters", "entrypoints", "pathlib", "requests", "httpx", "socket")
     )
     assert calls.isdisjoint({"open", "print", "input", "read", "write"})
+
+
+
+def _entry_ref_payload() -> dict[str, object]:
+    """One valid entry ref, taken from a real projection."""
+    evidence = _filing_evidence(local=OverviewLocalFilingState.READY_TO_FILE)
+    entry = _entry(evidence=evidence)
+    action = declare_next_action("operator.modelo.work.create", modelo="303", year=2026, period="1T")
+    entry = entry.model_copy(update={"recovery": object(), "recovery_action": action})
+    projection = project_declarations_calendar(
+        calendar=_calendar(entry),
+        evidence=_provider(evidence),
+        as_of=date(2026, 3, 1),
+        schedule_observation=_schedule(),
+    )
+    return projection.entries[0].model_dump()
+
+
+def test_a_directly_built_entry_refuses_a_foreign_recovery_action() -> None:
+    """The invariant has to hold on the MODEL, not only in the projector.
+
+    A frontend receives the entry, never the projector, so a projection built
+    by hand -- a fixture, a cache reload, a test double -- reached the screen
+    with no check at all. Everything else here goes through
+    project_declarations_calendar, which is exactly why this case was
+    uncovered: the projector's own check masks the model's.
+    """
+    payload = _entry_ref_payload()
+    payload["recovery_action"] = declare_next_action("operator.profile.create")
+
+    with pytest.raises(ValidationError, match="not the canonical create action"):
+        DeclarationsCalendarEntryRefV1.model_validate(payload)
+
+
+def test_a_directly_built_entry_refuses_a_recovery_bound_to_another_address() -> None:
+    """The right action against the wrong obligation is the sharper defect.
+
+    It names the operation the operator expects, so nothing reads as wrong,
+    and acting on it creates a declaration for a period they were not looking
+    at.
+    """
+    payload = _entry_ref_payload()
+    payload["recovery_action"] = declare_next_action(
+        "operator.modelo.work.create", modelo="100", year=1999, period="1T"
+    )
+
+    with pytest.raises(ValidationError, match="contradicts its natural address"):
+        DeclarationsCalendarEntryRefV1.model_validate(payload)
+

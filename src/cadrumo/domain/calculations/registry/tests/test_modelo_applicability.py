@@ -18,7 +18,7 @@ from ....deadlines.models import (
     TaxpayerProfile,
 )
 from ..applicability import (
-    MODELO_APPLICABILITY_RULES,
+    _MODELO_APPLICABILITY_RULES,
     ApplicabilityVerdict,
     ModeloApplicability,
     ModeloApplicabilityRule,
@@ -76,7 +76,7 @@ def test_seed_modelo_applicability_rules_are_registry_owned() -> None:
     }
     assert authored, "no modelo authors an applicability rule, so this assertion would be vacuous"
 
-    still_literal = {str(modelo) for modelo in MODELO_APPLICABILITY_RULES}
+    still_literal = {str(modelo) for modelo in _MODELO_APPLICABILITY_RULES}
     exposed = {rule.modelo for rule in iter_modelo_applicability_rules()}
 
     assert exposed == authored | still_literal, {

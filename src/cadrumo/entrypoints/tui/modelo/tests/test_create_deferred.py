@@ -58,20 +58,46 @@ def test_create_is_not_listed_as_a_pending_c4_mutation() -> None:
     assert _CREATE not in MODELO_ACTIONS_WITHOUT_REGISTERED_OPERATIONS
 
 
+#: TUI modules permitted to NAME the create action, each with the reason it
+#: does not constitute reaching for it. A mention that REFUSES the action is
+#: the opposite of a leak, and the companion AST gate below is what actually
+#: bounds invocation. Any module not listed here still reds.
+_SANCTIONED_CREATE_MENTIONS: frozenset[str] = frozenset(
+    {
+        # Refuses a calendar recovery action that is anything OTHER than the
+        # canonical create action bound to its own address. It never invokes
+        # it. The equivalent invariant lives on the entry model, but pydantic's
+        # model_copy(update=) skips validators, so a projection mutated that
+        # way reaches the controller unchecked and this is the only thing that
+        # catches it.
+        "declarations/controller.py",
+    },
+)
+
+
 def test_no_tui_module_names_the_create_action() -> None:
     """A deferral leaks the moment some surface reaches for the action.
 
     Scanned over the whole shipped TUI package rather than the dispatch table
     alone, because a route, a screen or a direct import could invoke the
     operation without ever appearing in the table.
-    """
-    offenders: list[str] = []
-    for path in _tui_modules():
-        text = path.read_text(encoding="utf-8", errors="ignore")
-        if _CREATE in text:
-            offenders.append(str(path.relative_to(_TUI_ROOT)))
 
-    assert not offenders, f"TUI modules naming the deferred create action: {offenders}"
+    Naming is a PROXY for reaching, and the proxy has a known false positive:
+    a validator that names the action in order to refuse everything else. Those
+    are enumerated with their reason rather than exempted by pattern, so the
+    list stays short and each entry has to argue for itself.
+    """
+    offenders = sorted(
+        str(path.relative_to(_TUI_ROOT)).replace("\\", "/")
+        for path in _tui_modules()
+        if _CREATE in path.read_text(encoding="utf-8", errors="ignore")
+    )
+
+    unexpected = [name for name in offenders if name not in _SANCTIONED_CREATE_MENTIONS]
+    assert not unexpected, f"TUI modules naming the deferred create action: {unexpected}"
+
+    stale = sorted(_SANCTIONED_CREATE_MENTIONS - set(offenders))
+    assert not stale, f"sanctioned create mentions that no longer exist: {stale}"
 
 
 def test_no_tui_module_imports_a_work_unit_creation_writer() -> None:
