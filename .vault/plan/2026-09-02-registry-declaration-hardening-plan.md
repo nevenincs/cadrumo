@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:b11a35abbde06cd1ea29cf26dea1fd4dea4943b173f383bfd9e86e7b4675dbeb'
+body_hash: 'sha256:939d9fcf92204e598f625ce4ae182a0a960e37a4213140da9af72c13e62019c3'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -614,6 +614,9 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S732` - Reconcile the regulatory-prose channel after the record-design decomposition and derive its coverage anchor instead of pinning a filename; `dev/registry/analysis/regulatory_prose_parser_channel.toml`.
 - [x] `W02.P02.S733` - Repoint the roundtrip-coverage inventory at the bucket boundary's real test and collapse the duplicated docstring listing that had drifted from it; `dev/tests/test_roundtrip_coverage.py`.
 - [x] `W02.P02.S734` - Correct the two live surfaces that still describe the retired clean-Linux smoke lane as present, one of them calling it the live instance of a degradation that now has none; `dev/packaging/_proof_ledger.py`.
+- [x] `W02.P02.S735` - Correct the load-census cross-references that cite each other one package level too shallow after the move into the analysis package; `dev/registry/analysis/load_census.py`.
+- [x] `W02.P02.S736` - Repoint the development cross-references that still name core symbols through the package facade the import-centralization refactor emptied; `dev/registry/conformance/_stamp.py`.
+- [x] `W02.P02.S737` - Establish that development cross-reference roles sit outside the documented scope, so the remaining unresolved ones are reader-facing rather than docs-build failures; `dev/docs/apidocs/manager.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
