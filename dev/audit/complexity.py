@@ -173,6 +173,15 @@ def collect_cog(root: Path, is_test_run: bool, threshold: int) -> list[CogHit]:
             if is_production(path)
         )
 
+    if not files:
+        # scan_directory returns empty for a root that does not exist, so a moved or
+        # misspelled tree yields no files, no hits, and a result indistinguishable from
+        # a genuinely clean scan: measured at 101 hits for src/cadrumo against 0 for
+        # src/cadrumo_moved_away. The findings count itself must stay free to reach
+        # zero, so the guard belongs on the SOURCE rather than on the count.
+        message = f"no Python files under {root}: a complexity scan of nothing is not a clean scan"
+        raise FileNotFoundError(message)
+
     hits: list[CogHit] = []
     for path in files:
         try:

@@ -1447,3 +1447,10 @@ area = "application/modelo"
 symbols = ["open_review_only_workspace", "assert_workspace_permits_official_action"]
 evidence = "The opener for a review-only workspace and the guard refusing an official action inside one. Neither is reached, and the ReviewOnlyWorkspace type they produce and check has exactly one production consumer: review_package_collab_audit.py, whose emit_collab_* emitters this ledger already records as reached by nothing. So the type is held alive only by code that is itself unreached, and the feature has no producer, no authority guard and no audit trail. The guard is the part that matters -- an official action inside a review-only workspace is refused by nothing."
 remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "command spec projections the CLI reference generator reads"
+class = "design-time-authority"
+area = "entrypoints/cli"
+symbols = ["command_spec_nodes", "command_spec_for_path"]
+evidence = "The only two symbols command_api DEFINES; everything else in its __all__ is re-exported from the private modules that define it. Both are read by dev/docs/cli_reference.py and dev/docs/cli_tree.py to generate the CLI reference from the live command tree, which the documentation rule requires be generator-owned rather than hand-maintained. No runtime caller reaches them, which is the contract holding: a projection of the command surface exists so the generator need not restate the command tree, and the same shape is already recorded for resolve_command_path."

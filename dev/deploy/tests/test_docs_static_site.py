@@ -12,11 +12,11 @@ import textwrap
 import threading
 from collections.abc import Iterator
 from pathlib import Path
-from typing import override
+from typing import Final, override
 
 import pytest
 
-from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.tests.env_scope import scoped_env_var
 
@@ -44,6 +44,17 @@ from ..docs_static_site import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+#: An index page, an error page, a sitemap, and the four-file Pagefind
+#: bundle: the floor below which a published root is not a usable site.
+#: Asserted before the set equality so an emptied fixture and an emptied
+#: production tuple cannot satisfy each other.
+_MINIMUM_REQUIRED_ARTIFACTS: Final[int] = 7
+
+#: Pagefind writes these two trees with generated, content-derived file
+#: names, so they are checked for substance rather than by name and are
+#: not part of the fixed required-artifact set.
+_GENERATED_INDEX_PREFIXES: Final[tuple[str, ...]] = ("pagefind/index/", "pagefind/fragment/")
 
 
 @contextlib.contextmanager
@@ -284,6 +295,32 @@ def test_validate_language_roots_refuses_each_missing_required_artifact(tmp_path
     (tmp_path / target_language / missing_artifact).unlink()
     with pytest.raises(SystemExit, match="required artifacts are missing"):
         _validate_language_roots(tmp_path)
+
+
+def test_every_artifact_a_valid_root_carries_is_a_required_artifact(tmp_path: Path) -> None:
+    """The required-artifact tuple itself is pinned, not only the rule that reads it.
+
+    Every check above draws its cases FROM ``_REQUIRED_ARTIFACTS``: the
+    parametrized refusal iterates it, and the roots the fixture builds are
+    accepted precisely because they carry it. That proves the rule and
+    leaves the roster unverified -- dropping one entry deletes both the
+    publish requirement and the case that would have missed it, and the
+    suite stays green with one silently fewer test.
+
+    So the roster is compared against the independently spelled root that
+    ``_materialise_site_root`` writes, which is what a deployable root
+    actually contains. Removing an artifact from the publish contract now
+    has to be a deliberate edit on both sides rather than a silent one.
+    """
+    _materialise_site_root(tmp_path, canonical_base=CANONICAL_DOCS_BASE_URL)
+    carried = {
+        path.relative_to(tmp_path).as_posix()
+        for path in scan_directory(tmp_path, pattern="*", recursive=True, select=DirectoryEntryKind.FILES)
+    }
+    named = {artifact for artifact in carried if not artifact.startswith(_GENERATED_INDEX_PREFIXES)}
+
+    assert len(named) >= _MINIMUM_REQUIRED_ARTIFACTS, named
+    assert set(_REQUIRED_ARTIFACTS) == named
 
 
 def test_validate_language_roots_refuses_a_sitemap_rooted_at_the_wrong_url(tmp_path: Path) -> None:

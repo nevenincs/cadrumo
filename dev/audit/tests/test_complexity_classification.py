@@ -15,6 +15,8 @@ same way as the other two would report every genuine regression as allowed.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from ..complexity import (
@@ -27,6 +29,7 @@ from ..complexity import (
     _classify_mi,
     _cog_key,
     build_baseline,
+    collect_cog,
     load_baseline,
 )
 
@@ -143,3 +146,22 @@ def test_the_retired_baseline_loads_empty_for_both_scopes() -> None:
     for is_test_run in (False, True):
         baseline = load_baseline(is_test_run)
         assert (baseline.cyclomatic, baseline.maintainability, baseline.cognitive) == ({}, {}, {})
+
+
+def test_a_root_holding_no_python_files_refuses_instead_of_reporting_clean(tmp_path: Path) -> None:
+    """A scan of nothing is not a clean scan.
+
+    ``scan_directory`` returns empty for a root that does not exist, so a moved or
+    misspelled product tree produced no files, no hits, and a result the report could
+    not tell apart from a genuinely clean one -- measured at 101 hits for
+    ``src/cadrumo`` against 0 for a name one character different. The hit count itself
+    must stay free to reach zero, which is why the refusal is on the source.
+    """
+    with pytest.raises(FileNotFoundError):
+        collect_cog(tmp_path / "absent", is_test_run=False, threshold=20)
+
+    populated = tmp_path / "tree"
+    populated.mkdir()
+    (populated / "module.py").write_text("def f():\n    return 1\n", encoding="utf-8")
+
+    assert collect_cog(populated, is_test_run=False, threshold=20) == []
