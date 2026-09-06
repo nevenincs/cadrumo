@@ -68,7 +68,20 @@ def test_driving_a_real_document_produces_a_quotable_row(key: CorpusKey) -> None
 
     assert row.doc_id == document.doc_id
     assert row.key_sha256 == key.sha256
-    assert row.outcome.scorable_field_count > 0
+    # Scorable is the oracle's expected field set - live 15, decomposing as 11
+    # matched plus 4 missed against a draft of 26 keys. `> 0` accepted an
+    # oracle narrowed to a single field, which would make the row quotable
+    # while measuring almost nothing. The floor sits below the smallest
+    # plausible real field set rather than just under 15, because the test
+    # takes the FIRST READABLE document and a different one may legitimately
+    # carry fewer fields; it therefore does not catch a narrowing to the 11
+    # matched alone, which a per-document expectation would be needed for.
+    # This is a corpus-size floor, not the acceptance floor the route test
+    # below rightly refuses to draw from a parser.
+    assert row.outcome.scorable_field_count > 8, (
+        f"the oracle scored only {row.outcome.scorable_field_count} fields for "
+        f"{document.doc_id}, so this row quotes a measurement over almost nothing"
+    )
 
 
 def test_the_row_names_the_route_and_tier_it_actually_ran_under(key: CorpusKey) -> None:

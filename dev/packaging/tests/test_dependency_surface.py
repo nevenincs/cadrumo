@@ -17,7 +17,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 #: Floors, not pinned counts, with the live figures recorded: the project
 #: declares 31 runtime dependencies and 51 development-only ones. `> 0` let
 #: a reader that parsed one dependency table and stopped report success.
-_MINIMUM_PROJECT_DEPENDENCIES = 20
+#:
+#: The thresholds follow the file's SHAPE. `project.dependencies` is a
+#: single array, so there is no partial-group degradation to sit just above:
+#: any truncated read drops far below 31, and the optional extras and
+#: dependency-groups live under separate keys that cannot move this count.
+_MINIMUM_PROJECT_DEPENDENCIES = 25
 _MINIMUM_DEV_ONLY_DEPENDENCIES = 35
 
 

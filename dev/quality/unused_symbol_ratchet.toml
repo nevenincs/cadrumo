@@ -91,7 +91,6 @@
 "cadrumo.application.modelo.calculation_route" = 1
 "cadrumo.application.modelo.edit_models" = 5
 "cadrumo.application.modelo.edit_services" = 3
-"cadrumo.application.modelo.export" = 1
 "cadrumo.application.modelo.iva_wallet_gate" = 1
 "cadrumo.application.modelo.local_observation_spreadsheet" = 1
 "cadrumo.application.modelo.m145_communication_records" = 1
@@ -101,7 +100,6 @@
 "cadrumo.application.modelo.review_package_collab_audit" = 6
 "cadrumo.application.modelo.review_package_recipient_encryption" = 2
 "cadrumo.application.modelo.review_package_signing" = 1
-"cadrumo.application.modelo.verification_actions" = 1
 "cadrumo.application.modelo.work_addressing" = 2
 "cadrumo.application.modelo.workspace" = 2
 "cadrumo.application.modelo.workspace_manifest" = 2
@@ -136,7 +134,6 @@
 "cadrumo.application.user_profile.presentation" = 1
 "cadrumo.application.user_profile.repository" = 1
 "cadrumo.application.wizard._format_hints" = 2
-"cadrumo.application.wizard.commands" = 1
 "cadrumo.application.wizard.descendant_door" = 1
 "cadrumo.application.wizard.descendant_group" = 1
 "cadrumo.application.wizard.persistence" = 2
@@ -189,8 +186,7 @@
 "cadrumo.domain.calculations.registry._source_evidence_fingerprint" = 1
 "cadrumo.domain.calculations.registry._validate_cross_revision" = 1
 "cadrumo.domain.calculations.registry._validate_evidence" = 2
-"cadrumo.domain.calculations.registry._validate_semantic_role_required" = 1
-"cadrumo.domain.calculations.registry.applicability" = 2
+"cadrumo.domain.calculations.registry.applicability" = 1
 "cadrumo.domain.calculations.registry.authority" = 3
 "cadrumo.domain.calculations.registry.bindings" = 1
 "cadrumo.domain.calculations.registry.censo_modelos" = 3
@@ -198,7 +194,7 @@
 "cadrumo.domain.calculations.registry.corpus_catalogue" = 1
 "cadrumo.domain.calculations.registry.counterpart_bindings" = 3
 "cadrumo.domain.calculations.registry.design_constant_bindings" = 1
-"cadrumo.domain.calculations.registry.detail_record_bindings" = 3
+"cadrumo.domain.calculations.registry.detail_record_bindings" = 2
 "cadrumo.domain.calculations.registry.donativo_bindings" = 1
 "cadrumo.domain.calculations.registry.export" = 2
 "cadrumo.domain.calculations.registry.external_grounding" = 1

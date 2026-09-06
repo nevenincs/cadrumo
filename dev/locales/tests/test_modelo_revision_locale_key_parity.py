@@ -129,6 +129,13 @@ def test_an_unmoved_rename_is_reported_as_a_move_with_its_invocation(
     assert len(candidates) == 1, f"expected exactly one move candidate for {modelo}/{old_revision}: {candidates}"
     (candidate,) = candidates
     assert candidate.destination_revisions == (new_revision,)
-    assert candidate.key_count > 0
+    # The move carries 397 keys live, and the composition says what a partial
+    # rename looks like: 199 `.label` and 198 `.help`, so a renamer matching
+    # one suffix relocates about half and `> 0` would still call that one
+    # clean move. A floor below the half, not a pinned count.
+    assert candidate.key_count > 300, (
+        f"the move candidate carries only {candidate.key_count} keys against a revision "
+        "holding 397, so the rename reached part of the surface"
+    )
     assert candidate.invocation == f"python -m dev.locales move-revision {modelo} {old_revision} {new_revision}"
     assert report.accounted_extra, "the moved keys must be accounted for rather than reported as removals"
