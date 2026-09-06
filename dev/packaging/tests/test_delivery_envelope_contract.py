@@ -84,6 +84,29 @@ def test_warning_status_passes_the_spine_but_fails_the_clean_notice_gate() -> No
     with pytest.raises(InstalledTaxOracleError) as excinfo:
         assert_no_diagnostic_notices(warned, command=_COMMAND, error=InstalledTaxOracleError)
 
+    # The NOTICE is what refuses this envelope, not the status. With nothing
+    # excused, any diagnostic raises before the status branch is reached, and
+    # that branch additionally requires ``not diagnostics`` - so for an
+    # envelope carrying one it cannot fire at all. Asserting the status
+    # message here named a refusal this input can never produce.
+    assert "unexpected diagnostic notices" in str(excinfo.value)
+
+
+def test_a_non_success_status_without_diagnostics_is_refused_on_the_status() -> None:
+    """The other branch: nothing to report, yet the run did not succeed.
+
+    Reached only when no diagnostic notice exists, which is why no case above
+    exercises it - each carries a notice that refuses first. Without this the
+    status branch had no proof at all, and the message it raises was asserted
+    nowhere the helper could produce it.
+    """
+    with pytest.raises(InstalledTaxOracleError) as excinfo:
+        assert_no_diagnostic_notices(
+            _envelope(status="warning", notices=[]),
+            command=_COMMAND,
+            error=InstalledTaxOracleError,
+        )
+
     assert "expected success status" in str(excinfo.value)
 
 

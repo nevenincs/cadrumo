@@ -28,10 +28,7 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, field_validator
 
-from .logging import get_logger
 from .models import STRICT_FROZEN_CONFIG
-
-_log = get_logger(__name__)
 
 
 class BindingAggregationOp(StrEnum):

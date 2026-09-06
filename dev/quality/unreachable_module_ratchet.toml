@@ -103,3 +103,15 @@ rationale = "The locked CRUD design for the operator CLI, read by dev/quality/cr
 module = "cadrumo.domain.calculations.registry.record_spec"
 kind = "design_time_authority"
 rationale = "Single authoritative home for constants governing how registry record declarations are validated and normalised, sited outside the schema module to avoid a circular import; read by dev/registry/pipeline/_export_tree.py and the analysis census."
+
+[[intentional]]
+module = "cadrumo.domain.contabilidad"
+kind = "declared_by_contract"
+declared_by = "src/cadrumo/core/errors/registry/_application_part2.py"
+rationale = "Company accounting facts a Modelo 200 filing is built from. The production error registry declares REFUSED_CONTABILIDAD_AJUSTE_EXTRACONTABLE_SHAPE, REFUSED_CONTABILIDAD_SALDO_CUENTA_BALANCE and REFUSED_CONTABILIDAD_SUMAS_Y_SALDOS_PRE_CLOSE against this package's error classes, so deleting it would break a live contract; no calculate path raises them yet, which is the wiring the owner still has to decide on."
+
+[[intentional]]
+module = "cadrumo.domain.is_compensation"
+kind = "declared_by_contract"
+declared_by = "src/cadrumo/core/errors/registry/_application_part2.py"
+rationale = "Impuesto sobre Sociedades compensacion, the stock of losses a company carries forward. The production error registry declares REFUSED_IS_BIN_CARRY_FORWARD_POLICY and REFUSED_IS_BIN_COHORT_SHAPE against this package's error classes; the declaration is what keeps the package, and no calculate path raises them yet."

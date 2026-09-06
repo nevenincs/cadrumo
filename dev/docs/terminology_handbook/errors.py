@@ -1,8 +1,8 @@
 """Errors raised by the Terminology Handbook loader.
 
-These errors are deliberately NOT part of the :class:`cadrumo.core.errors.CadrumoError`
+These errors are deliberately NOT part of the :class:`cadrumo.core.errors.hierarchy.CadrumoError`
 hierarchy. That hierarchy exists for operator-facing runtime failures
-that need a registered :class:`~cadrumo.core.errors.ErrorCode`, a translated
+that need a registered :class:`~cadrumo.core.errors.error_codes.ErrorCode`, a translated
 message, and JSON-envelope redaction at the CLI boundary. The Handbook
 loader is build-time documentation tooling: a malformed fragment is a
 developer/CI failure surfaced as a stack trace, exactly like the

@@ -3,38 +3,13 @@
 Tracks the persistence boundaries the codebase exposes; each has at
 least one roundtrip test (per aeat-quality-gates.md).
 
-  Boundary -> roundtrip test file:
-  - SecureObjectRepository (SQL encrypted storage)
-      -> src/cadrumo/adapters/persistence/storage/sql/test_archive_bundle_roundtrip.py
-      -> src/cadrumo/adapters/persistence/storage/envelope/test_secure_bound_repository.py
-      -> src/cadrumo/adapters/persistence/storage/envelope/test_secure_bound_repository_contract.py
-  - JsonlRunSink (observability JSONL)
-      -> src/cadrumo/core/observability/test_sink_redaction.py
-      -> src/cadrumo/core/observability/test_sink.py
-  - AEAT fichero-BOE export bytes
-      -> src/cadrumo/application/filing/tests/test_fixed_width_codec_conformance.py
-  - Session store (AEAT auth)
-      -> src/cadrumo/adapters/outbound/aeat/auth/test_session_store_roundtrip.py
-  - Google session store
-      -> src/cadrumo/adapters/outbound/google/test_session_store_roundtrip.py
-  - Google worksheet export/pull
-      -> src/cadrumo/adapters/outbound/google/test_worksheet_export_pull_roundtrip.py
-  - Observation store (AEAT sede)
-      -> src/cadrumo/adapters/outbound/aeat/sede/test_observation_store_roundtrip.py
-  - Corpus sidecar (justificante inbound)
-      -> src/cadrumo/adapters/inbound/justificante/test_corpus_sidecar_roundtrip.py
-  - Sanitizer pipeline (fixture-preparation tooling)
-      -> dev/sanitizer/tests/test_round_trip.py
-  - RunTrace persistence
-      -> src/cadrumo/application/workflow/test_run_persistence_roundtrip.py
-  - Filing history repository
-      -> src/cadrumo/application/filing/test_history_repository_roundtrip.py
-  - Domain filing secure storage
-      -> src/cadrumo/domain/filing/test_secure_storage_roundtrip.py
-  - Domain modelos secure storage
-      -> src/cadrumo/domain/modelos/test_secure_storage_roundtrip.py
-  - Registry corpus round-trip gate
-      -> src/cadrumo/domain/calculations/registry/test_corpus_round_trip_gate.py
+The inventory itself is ``_BOUNDARY_ROUNDTRIP_INVENTORY`` below, and it is
+the only place the boundaries are listed. This docstring used to restate
+the whole table, and the copy drifted: fifteen of its seventeen paths named
+files that no longer exist, because the tests moved into the ``tests/``
+directories their packages own. A reader consulting the prose was told the
+coverage lived somewhere it does not. One list, read by the gate below, is
+the only kind that cannot go stale unnoticed.
 
 This file provides the real-behavior test that asserts every
 declared boundary has its roundtrip test file present on disk.  New
@@ -156,8 +131,8 @@ _BOUNDARY_ROUNDTRIP_INVENTORY: tuple[tuple[str, str], ...] = (
         "src/cadrumo/adapters/persistence/profile/tests/test_inventory_roundtrip.py",
     ),
     (
-        "Bucket manifest roundtrip",
-        "src/cadrumo/adapters/persistence/storage/bucket/tests/test_manifest_roundtrip.py",
+        "Bucket sealed-archive roundtrip (carries the manifest digest)",
+        "src/cadrumo/adapters/persistence/storage/bucket/tests/test_sealed_archive_roundtrip.py",
     ),
 )
 

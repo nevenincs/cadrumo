@@ -165,19 +165,18 @@ def test_the_unambiguous_write_calls_still_rank() -> None:
 def _evidence_for(capability: str, tree: ast.Module) -> list[ast.AST]:
     """Return the syntax the report must be able to point at for ``capability``.
 
-    Deliberately not a second implementation of the detector: it reads the same
-    trees back and asks whether the evidence exists, so a disagreement means a
-    capability was attributed from somewhere invisible rather than that two
-    detectors happen to differ.
+    Not a second implementation of the detector: it calls the same predicate
+    over a freshly parsed tree and asks whether the evidence is still there, so
+    a disagreement means a capability was attributed to a module whose source
+    does not carry it. Re-stating the predicate here instead is what made this
+    read only one of the two branches that rank a write, so a module ranked by
+    a bare ``*write_text`` helper would have been reported as evidence-free by
+    the very check meant to confirm it.
     """
-    from ..module_test_reach import _WRITE_CALLS
+    from ..module_test_reach import is_write_call
 
     if capability == "writes":
-        return [
-            node
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr in _WRITE_CALLS
-        ]
+        return [node for node in ast.walk(tree) if is_write_call(node)]
     if capability == "applies":
         return [node for node in ast.walk(tree) if isinstance(node, ast.Constant) and node.value == "--apply"]
     return [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name == "main"]

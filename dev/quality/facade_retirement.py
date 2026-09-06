@@ -478,7 +478,7 @@ def apply_reference_rewrites(package: FacadePackage, root: pathlib.Path = DEV_RO
         original = path.read_text(encoding="utf-8")
         rewritten, count = reference_rewrites(original, package)
         if count:
-            path.write_text(rewritten, encoding="utf-8")
+            path.write_text(rewritten, encoding="utf-8", newline="\n")
             files += 1
             references += count
     return files, references
@@ -507,7 +507,7 @@ def apply_rewrites(sites: tuple[ImportSite, ...], packages: tuple[FacadePackage,
             changed = True
             rewritten += 1
         if changed:
-            path.write_text("".join(lines), encoding="utf-8")
+            path.write_text("".join(lines), encoding="utf-8", newline="\n")
             files += 1
     return files, rewritten
 

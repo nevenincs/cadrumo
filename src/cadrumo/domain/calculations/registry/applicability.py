@@ -750,7 +750,6 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     ),
 }
 
-MODELO_APPLICABILITY_RULES = _MODELO_APPLICABILITY_RULES
 """Seed modelo-applicability rules — core persona coverage.
 
 A modelo absent from this table has no derived rule yet: its

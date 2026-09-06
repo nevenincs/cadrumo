@@ -11,11 +11,11 @@ label vocabulary at the term level (``term_status`` from
 ``hiddenLabel``).
 
 Every model is strict, frozen, and forbids extra fields
-(:data:`~cadrumo.core.STRICT_FROZEN_CONFIG`). The four-language
+(:data:`~cadrumo.core.models.STRICT_FROZEN_CONFIG`). The four-language
 axis reuses the canonical
 :class:`~cadrumo.core.external_constants.OutputLanguage`; the
 Handbook-local closed axes (:class:`~dev.docs.terminology_handbook.enums.ConceptDomain`,
-:class:`~cadrumo.core.ConceptLifecycle`,
+:class:`~cadrumo.core.concept_lifecycle.ConceptLifecycle`,
 :class:`~dev.docs.terminology_handbook.enums.TermStatus`) live beside this schema.
 
 The ``narrower`` field is intentionally NOT settable from a fragment:

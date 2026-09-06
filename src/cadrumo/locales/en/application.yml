@@ -875,6 +875,10 @@ application:
         modelo calculation cannot continue.
       calculation_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
         filing year %{filing_year}, period %{period} could not be resolved.
+      calculation_revision_id_is_discarded_work_unit: Identifier %{calculation_revision_id}
+        is a discarded work unit, not a calculation revision.
+      calculation_revision_id_is_work_unit: Identifier %{calculation_revision_id}
+        is a work unit, not a calculation revision; use --work-unit-id %{work_unit_id}.
       calculation_revision_not_found: No calculation revision found with id=%{calculation_revision_id}.
       calculation_revision_parent_work_unit_discarded: Calculation revision %{calculation_revision_id}
         belongs to discarded work unit %{work_unit_id}.

@@ -215,7 +215,8 @@ modelo:
           casilla:
             vinculada-1-fjo:
               help: null
-              label: 'Kapcsolt vállalkozás 1: Külföldi azonosító'
+              label: 'Kapcsolt vállalkozás 1: F/J/O (természetes személy, jogi személy
+                vagy egyéb)'
             vinculada-1-importe:
               help: null
               label: 'Kapcsolt vállalkozás 1: Összeg'
@@ -242,7 +243,8 @@ modelo:
               label: 'Kapcsolt vállalkozás 1: Kapcsolat típusa'
             vinculada-2-fjo:
               help: null
-              label: 'Kapcsolt vállalkozás 2: Külföldi azonosító'
+              label: 'Kapcsolt vállalkozás 2: F/J/O (természetes személy, jogi személy
+                vagy egyéb)'
             vinculada-2-importe:
               help: null
               label: 'Kapcsolt vállalkozás 2: Összeg'
@@ -269,7 +271,8 @@ modelo:
               label: 'Kapcsolt vállalkozás 2: Kapcsolat típusa'
             vinculada-3-fjo:
               help: null
-              label: 'Kapcsolt vállalkozás 3: Külföldi azonosító'
+              label: 'Kapcsolt vállalkozás 3: F/J/O (természetes személy, jogi személy
+                vagy egyéb)'
             vinculada-3-importe:
               help: null
               label: 'Kapcsolt vállalkozás 3: Összeg'
@@ -296,7 +299,8 @@ modelo:
               label: 'Kapcsolt vállalkozás 3: Kapcsolat típusa'
             vinculada-4-fjo:
               help: null
-              label: 'Kapcsolt vállalkozás 4: Külföldi azonosító'
+              label: 'Kapcsolt vállalkozás 4: F/J/O (természetes személy, jogi személy
+                vagy egyéb)'
             vinculada-4-importe:
               help: null
               label: 'Kapcsolt vállalkozás 4: Összeg'
@@ -323,7 +327,8 @@ modelo:
               label: 'Kapcsolt vállalkozás 4: Kapcsolat típusa'
             vinculada-5-fjo:
               help: null
-              label: 'Kapcsolt vállalkozás 5: Külföldi azonosító'
+              label: 'Kapcsolt vállalkozás 5: F/J/O (természetes személy, jogi személy
+                vagy egyéb)'
             vinculada-5-importe:
               help: null
               label: 'Kapcsolt vállalkozás 5: Összeg'

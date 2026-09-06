@@ -88,17 +88,32 @@ def test_an_enrolment_must_name_its_corpus_and_reason(tmp_path: Path) -> None:
         load_ledger(ledger)
 
 
-def test_the_shipped_record_design_authority_is_enrolled() -> None:
-    """Fixture anchor: the largest shipped prose parser is named, not silently absent.
+def test_the_largest_shipped_prose_parser_is_enrolled() -> None:
+    """Anchor: the heaviest prose reader is enrolled, not silently absent.
 
-    Without this, a derivation that stopped yielding the record-design authority
-    would make the enrolment assertion pass while the module this gate most needs
-    to cover went unwatched.
+    Without this, a derivation that stopped yielding its biggest reader would
+    make the reconciliation above pass while the module this gate most needs to
+    cover went unwatched.
+
+    The anchor is DERIVED rather than named. It was a pinned filename, and that
+    pin broke the moment the record-design authority was decomposed into a PDF
+    half and a workbook half: the file it named still exists and no longer
+    reads prose at all, so the anchor failed while nothing was actually
+    unwatched. Asking the derivation which module carries the most patterns
+    survives a rename and a split, and still refuses an empty derivation.
     """
+    derived = derive_prose_parsers()
     rows = load_ledger()
 
-    assert "src/cadrumo/domain/calculations/registry/record_design.py" in rows
-    assert rows["src/cadrumo/domain/calculations/registry/record_design.py"].corpus
+    assert derived, "the derivation yielded nothing, so this anchor would hold over an empty set"
+    largest = max(derived, key=lambda parser: parser.pattern_count)
+
+    assert largest.pattern_count > 1, (
+        f"the heaviest prose reader compiles only {largest.pattern_count} pattern(s); below this "
+        "the derivation is not reaching the shipped grammars this channel exists to declare"
+    )
+    assert largest.module in rows, f"the heaviest prose reader is unenrolled: {largest.module}"
+    assert rows[largest.module].corpus.strip()
 
 
 def test_an_unreadable_module_is_announced_as_a_missing_prose_parser(

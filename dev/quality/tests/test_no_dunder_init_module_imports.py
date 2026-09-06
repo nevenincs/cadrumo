@@ -18,12 +18,19 @@ binds the same object from the one canonical module -- so this forbids it
 outright rather than trying to judge which package bodies are safe to run
 twice.
 
-SCOPE, deliberately narrow. Only the submodule form is refused. The sibling
-spelling ``from .. import __init__ as pkg`` is a different expression: every
-module object already has an ``__init__`` METHOD, so it binds a method-wrapper
-and imports nothing at all. That is useless and misleading, but it is not the
-double-execution hazard this gate exists for, and widening a gate to cover a
-second concern is how a sharp rule becomes a vague one.
+SCOPE, deliberately narrow. The submodule is refused in BOTH spellings that
+reach it. ``import cadrumo.entrypoints.cli.config.__init__`` names the same
+submodule as the ``from`` form and carries the identical hazard -- run against
+a package whose body prints, it prints twice and leaves two distinct module
+objects in ``sys.modules`` -- so reading only ``ImportFrom`` left this gate
+reporting no offence over one of the two ways to commit the offence.
+
+The sibling spelling ``from .. import __init__ as pkg`` stays legal, and that
+is a different judgement rather than an oversight: every module object already
+has an ``__init__`` METHOD, so it binds a method-wrapper and imports nothing at
+all. That is useless and misleading, but it is not the double-execution hazard
+this gate exists for, and widening a gate to cover a second concern is how a
+sharp rule becomes a vague one.
 """
 
 from __future__ import annotations
@@ -43,14 +50,26 @@ _ROOTS: Final = ("src", "dev")
 _EXCLUDED_SEGMENT: Final = ".baseline-source-snapshot"
 
 
+def _names_a_dunder_init_submodule(dotted: str) -> bool:
+    """Does this dotted path address a submodule literally named ``__init__``?"""
+    return dotted == "__init__" or dotted.endswith(".__init__")
+
+
 def _dunder_init_imports(tree: ast.AST) -> list[int]:
-    """Return the line of every ``from ...__init__ import`` in one module."""
+    """Return the line of every import addressing an ``__init__`` submodule.
+
+    Both spellings reach it. ``from pkg.__init__ import name`` puts the package
+    path on the ``ImportFrom`` node, while ``import pkg.__init__`` puts it on an
+    alias of an ``Import`` node; the interpreter treats them alike, so a gate
+    reading one node type refuses half the hazard and reports clean over the
+    rest.
+    """
     lines: list[int] = []
     for node in ast.walk(tree):
-        if not isinstance(node, ast.ImportFrom):
-            continue
-        module = node.module or ""
-        if module == "__init__" or module.endswith(".__init__"):
+        if isinstance(node, ast.ImportFrom):
+            if _names_a_dunder_init_submodule(node.module or ""):
+                lines.append(node.lineno)
+        elif isinstance(node, ast.Import) and any(_names_a_dunder_init_submodule(alias.name) for alias in node.names):
             lines.append(node.lineno)
     return lines
 
@@ -107,9 +126,13 @@ def test_the_detector_recognises_the_spelling_it_forbids() -> None:
     """
     relative = ast.parse("from ..__init__ import app")
     absolute = ast.parse("from cadrumo.entrypoints.cli.config.__init__ import app")
+    plain = ast.parse("import cadrumo.entrypoints.cli.config.__init__")
+    aliased = ast.parse("import cadrumo.entrypoints.cli.config.__init__ as config")
 
     assert _dunder_init_imports(relative) == [1]
     assert _dunder_init_imports(absolute) == [1]
+    assert _dunder_init_imports(plain) == [1], "the plain-import spelling reaches the same submodule"
+    assert _dunder_init_imports(aliased) == [1], "an alias renames the binding, not the module executed"
 
 
 def test_the_correct_spellings_are_not_flagged() -> None:

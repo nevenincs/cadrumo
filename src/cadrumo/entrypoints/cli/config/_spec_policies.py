@@ -103,9 +103,6 @@ CALCULATION_WRITE = _policy(
     "compute",
     write_route=CommandWriteRoute.PROFILE_BOUND,
 )
-GOOGLE_CALCULATION_READ = _policy(
-    frozenset({"google", "calculation", "encrypted-facts"}), frozenset({"google"}), "external-io"
-)
 GOOGLE_CALCULATION_WRITE = _policy(
     frozenset({"google", "calculation", "encrypted-facts", "profile-custody"}),
     frozenset({"google", "local-state"}),
@@ -139,7 +136,6 @@ __all__ = [
     "ENCRYPTED_READ",
     "ENCRYPTED_WRITE",
     "GOOGLE_CALCULATION_HANDOFF",
-    "GOOGLE_CALCULATION_READ",
     "GOOGLE_CALCULATION_WRITE",
     "GOOGLE_DESTRUCTIVE",
     "GOOGLE_HANDOFF",

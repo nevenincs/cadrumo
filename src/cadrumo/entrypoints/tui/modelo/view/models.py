@@ -39,10 +39,8 @@ from .....application.modelo.workspace_models import (
     ModeloWorkspaceCapabilityV1,
     ModeloWorkspaceConstraintReferenceV1,
     ModeloWorkspaceLocalizedTextV1,
-    ModeloWorkspaceProvenanceRecordV1,
     ModeloWorkspaceRecordLabelV1,
     ModeloWorkspaceRefusalV1,
-    ModeloWorkspaceRepeatedRowMaterializationV1,
     ModeloWorkspaceScalarMaterializationV1,
     ModeloWorkspaceVersionRefusalV1,
 )
@@ -156,22 +154,6 @@ class ModeloWorkspaceScalarRowV1:
 
 
 @dataclass(frozen=True, slots=True)
-class ModeloWorkspaceRepeatedRowV1:
-    """One repeated binding row, keyed by its canonical (binding, index) identity.
-
-    The identity is NOT flattened into a synthetic casilla id. The producer
-    keeps the pair distinct because a repeated row is not addressable as a
-    casilla, and collapsing it here would invent an address the registry
-    never declared.
-    """
-
-    binding_id: str
-    row_index: int
-    values: tuple[ModeloWorkspaceScalarRowV1, ...]
-    source: ModeloWorkspaceRepeatedRowMaterializationV1
-
-
-@dataclass(frozen=True, slots=True)
 class ModeloWorkspaceSectionV1:
     """One schema record-family label, presented as a grouping key.
 
@@ -180,24 +162,6 @@ class ModeloWorkspaceSectionV1:
     """
 
     path: tuple[str, ...]
-
-
-@dataclass(frozen=True, slots=True)
-class ModeloWorkspaceProvenanceRowV1:
-    """One flat attribution row: which source fed a subject, if it named one.
-
-    ``subject`` is ``None`` exactly when the producer's record carries no
-    linked casilla identity, preserving the distinction between an
-    unattributed contributing source and a record that was never surfaced.
-    This model carries NO depth and NO cycle marker: the producer supplies
-    neither, and deriving either here would author a causal claim no
-    producer made.
-    """
-
-    subject: str | None
-    resolver_id: str
-    source_ref: str
-    source: ModeloWorkspaceProvenanceRecordV1
 
 
 class ModeloWorkspaceCompletePageV1(_ViewModel):
@@ -348,33 +312,6 @@ def constraint_disclosure(
     return "declared" if constraints else "none_declared"
 
 
-@dataclass(frozen=True, slots=True)
-class ModeloWorkspaceConstraintRowV1:
-    """One casilla's declared constraints, presented without re-evaluating them.
-
-    C2 is a read cohort: constraints are DISPLAYED as the registry declared
-    them and are never evaluated against a value here. Evaluation is the
-    edit cohort's concern and belongs to the application layer even then.
-    """
-
-    casilla_id: str
-    disclosure: ModeloWorkspaceConstraintDisclosureV1
-
-
-@dataclass(frozen=True, slots=True)
-class ModeloWorkspaceActionRowV1:
-    """One safe recovery action a producer already attached to its record.
-
-    Callback-free by construction: this names an action, it does not hold
-    one. Dispatch is the host screen's concern, and a view model that
-    carried a callable would let a renderer invoke a mutation the read
-    cohort has no authority to perform.
-    """
-
-    action_id: str
-    label: ModeloWorkspaceDisplayTextV1
-
-
 class ModeloWorkspaceChromeV1(_ViewModel):
     """The frame around one destination: which it is, and what it is showing.
 
@@ -398,21 +335,17 @@ class ModeloWorkspaceChromeV1(_ViewModel):
 
 
 __all__ = [
-    "ModeloWorkspaceActionRowV1",
     "ModeloWorkspaceBoundedPageV1",
     "ModeloWorkspaceCapabilityRowV1",
     "ModeloWorkspaceChromeV1",
     "ModeloWorkspaceCompletePageV1",
     "ModeloWorkspaceConstraintDisclosureV1",
-    "ModeloWorkspaceConstraintRowV1",
     "ModeloWorkspaceDestinationIdV1",
     "ModeloWorkspaceDisplayTextV1",
     "ModeloWorkspaceDispositionGlyphV1",
     "ModeloWorkspacePageCompletenessV1",
-    "ModeloWorkspaceProvenanceRowV1",
     "ModeloWorkspaceRefusalKindV1",
     "ModeloWorkspaceRefusalViewV1",
-    "ModeloWorkspaceRepeatedRowV1",
     "ModeloWorkspaceScalarRowV1",
     "ModeloWorkspaceSectionV1",
     "capability_row",

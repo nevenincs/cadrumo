@@ -17,7 +17,7 @@ never authored on a fragment.
 
 Closed value sets are typed: the four output languages reuse the
 canonical :class:`~cadrumo.core.external_constants.OutputLanguage` and the
-concept lifecycle reuses :class:`~cadrumo.core.ConceptLifecycle` (shared
+concept lifecycle reuses :class:`~cadrumo.core.concept_lifecycle.ConceptLifecycle` (shared
 with the shipped product terminology search), while the Handbook-local axes
 :class:`ConceptDomain` and :class:`TermStatus` live in this package beside
 the schema they constrain.

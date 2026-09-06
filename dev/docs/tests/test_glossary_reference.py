@@ -438,4 +438,13 @@ def test_the_live_catalogue_still_grounds_every_reference() -> None:
     """The success path, so the refusals are not satisfied by refusing everything."""
     from ..glossary_reference import _legal_permalinks
 
-    assert len(_legal_permalinks(_REPO_ROOT)) > 0
+    # This is the positive control the refusals above lean on, so its floor
+    # decides how much 'refusing everything' the module can still hide. `> 0`
+    # only ruled out a catalogue that grounds NOTHING; a partial collapse left
+    # the refusals satisfied by refusing almost everything. A floor, not a
+    # pinned count: the live catalogue grounds 704 legal permalinks.
+    permalinks = _legal_permalinks(_REPO_ROOT)
+    assert len(permalinks) > 500, (
+        f"the live catalogue grounds only {len(permalinks)} legal permalinks, so the "
+        "refusal cases above are no longer held apart from refusing everything"
+    )

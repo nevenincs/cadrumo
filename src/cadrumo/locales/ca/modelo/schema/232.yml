@@ -190,7 +190,7 @@ modelo:
           casilla:
             vinculada-1-fjo:
               help: null
-              label: 'Part vinculada 1: Identificació estrangera'
+              label: 'Part vinculada 1: F/J/O (física, jurídica o altra)'
             vinculada-1-importe:
               help: null
               label: 'Part vinculada 1: Import'
@@ -217,7 +217,7 @@ modelo:
               label: 'Part vinculada 1: Tipus de vinculació'
             vinculada-2-fjo:
               help: null
-              label: 'Part vinculada 2: Identificació estrangera'
+              label: 'Part vinculada 2: F/J/O (física, jurídica o altra)'
             vinculada-2-importe:
               help: null
               label: 'Part vinculada 2: Import'
@@ -244,7 +244,7 @@ modelo:
               label: 'Part vinculada 2: Tipus de vinculació'
             vinculada-3-fjo:
               help: null
-              label: 'Part vinculada 3: Identificació estrangera'
+              label: 'Part vinculada 3: F/J/O (física, jurídica o altra)'
             vinculada-3-importe:
               help: null
               label: 'Part vinculada 3: Import'
@@ -271,7 +271,7 @@ modelo:
               label: 'Part vinculada 3: Tipus de vinculació'
             vinculada-4-fjo:
               help: null
-              label: 'Part vinculada 4: Identificació estrangera'
+              label: 'Part vinculada 4: F/J/O (física, jurídica o altra)'
             vinculada-4-importe:
               help: null
               label: 'Part vinculada 4: Import'
@@ -298,7 +298,7 @@ modelo:
               label: 'Part vinculada 4: Tipus de vinculació'
             vinculada-5-fjo:
               help: null
-              label: 'Part vinculada 5: Identificació estrangera'
+              label: 'Part vinculada 5: F/J/O (física, jurídica o altra)'
             vinculada-5-importe:
               help: null
               label: 'Part vinculada 5: Import'

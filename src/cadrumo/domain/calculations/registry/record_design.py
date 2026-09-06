@@ -28,7 +28,6 @@ from ....core.external_constants import PDF_EXTENSION as _PDF_EXTENSION
 from ....core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
 from ....core.external_constants import XLSM_EXTENSION as _XLSM_EXTENSION
 from ....core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
-from ....core.logging import get_logger
 from ....core.paths import path_stat_fingerprint
 from .errors import RegistryValidationError
 from .record_design_pdf_orchestration import extract_record_design_pdf_cached, extract_record_design_pdf_stream
@@ -42,8 +41,6 @@ from .record_design_sources import (
     load_declared_non_record_sheet_reasons,
 )
 from .record_design_workbook import extract_sheet, extract_xls_sheet
-
-_log = get_logger(__name__)
 
 _OPENPYXL_HEADER_FOOTER_WARNING = "Cannot parse header or footer so it will be ignored"
 _OPENPYXL_PRINT_AREA_WARNING = r"Print area cannot be set to Defined name: .*"

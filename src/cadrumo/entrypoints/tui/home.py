@@ -60,38 +60,38 @@ class HomeBackRequested(Message):
     """Ask the host to return without making a business call."""
 
 
-_AVAILABILITY_KEYS: Final = {
+_AVAILABILITY_LOCALE_KEYS: Final = {
     HomeAvailability.AVAILABLE: "tui.home.availability.available",
     HomeAvailability.LOCKED: "tui.home.availability.locked",
     HomeAvailability.STALE: "tui.home.availability.stale",
     HomeAvailability.NEVER_CAPTURED: "tui.home.availability.never_captured",
     HomeAvailability.UNAVAILABLE: "tui.home.availability.unavailable",
 }
-_SESSION_KEYS: Final = {
+_SESSION_LOCALE_KEYS: Final = {
     HomeSessionPosture.NO_PROFILE: "tui.home.session.no_profile",
     HomeSessionPosture.LOCKED: "tui.home.session.locked",
     HomeSessionPosture.ACTIVE: "tui.home.session.active",
     HomeSessionPosture.EXPIRED: "tui.home.session.expired",
 }
-_DECLARATION_KEYS: Final = {
+_DECLARATION_LOCALE_KEYS: Final = {
     HomeDeclarationState.DRAFT: "tui.home.declaration_state.draft",
     HomeDeclarationState.NEEDS_REVIEW: "tui.home.declaration_state.needs_review",
     HomeDeclarationState.READY: "tui.home.declaration_state.ready",
     HomeDeclarationState.FILED: "tui.home.declaration_state.filed",
     HomeDeclarationState.DISCARDED: "tui.home.declaration_state.discarded",
 }
-_PERIOD_KEYS: Final = {
+_PERIOD_LOCALE_KEYS: Final = {
     OverviewPeriodState.DUE: "tui.home.period_state.due",
     OverviewPeriodState.LATE: "tui.home.period_state.late",
     OverviewPeriodState.FILED: "tui.home.period_state.filed",
     OverviewPeriodState.UNKNOWN: "tui.home.period_state.unknown",
 }
-_LOCAL_KEYS: Final = {
+_LOCAL_LOCALE_KEYS: Final = {
     OverviewLocalFilingState.NOT_READY_TO_FILE: "tui.home.local_state.not_ready_to_file",
     OverviewLocalFilingState.READY_TO_FILE: "tui.home.local_state.ready_to_file",
     OverviewLocalFilingState.EXTERNAL_BASELINE_IMPORTED: "tui.home.local_state.external_baseline_imported",
 }
-_AEAT_KEYS: Final = {
+_AEAT_LOCALE_KEYS: Final = {
     OverviewAeatSubmissionState.NOT_OBSERVED: "tui.home.aeat_state.not_observed",
     OverviewAeatSubmissionState.SUBMITTED_OBSERVED: "tui.home.aeat_state.submitted_observed",
     OverviewAeatSubmissionState.ACCEPTED: "tui.home.aeat_state.accepted",
@@ -101,7 +101,7 @@ _AEAT_KEYS: Final = {
 
 def _state_copy(state: HomeZoneState, *, empty_key: str | None = None) -> str:
     """Render one zone's availability as words, never as colour alone."""
-    label = tr(_AVAILABILITY_KEYS[state.availability])
+    label = tr(_AVAILABILITY_LOCALE_KEYS[state.availability])
     if state.availability is HomeAvailability.STALE and state.observed_at is not None:
         return tr(
             "tui.home.availability.stale_observed",
@@ -163,7 +163,7 @@ def _declaration_cells(item: HomeDeclarationResume) -> tuple[str, str, str]:
     return (
         home_address(item.modelo, item.filing_year, item.period.registry_token),
         item.name,
-        tr(_DECLARATION_KEYS[item.state]),
+        tr(_DECLARATION_LOCALE_KEYS[item.state]),
     )
 
 
@@ -171,15 +171,15 @@ def _agenda_cells(item: HomeAgendaEntry) -> tuple[str, str, str]:
     return (
         item.due_on.strftime("%d/%m"),
         f"M{item.modelo} {item.period.registry_token}",
-        tr(_PERIOD_KEYS[item.period_state]),
+        tr(_PERIOD_LOCALE_KEYS[item.period_state]),
     )
 
 
 def _evidence_copy(item: HomeAgendaEntry) -> str:
     return tr(
         "tui.home.evidence",
-        local=tr(_LOCAL_KEYS[item.local_filing_state]),
-        aeat=tr(_AEAT_KEYS[item.aeat_submission_state]),
+        local=tr(_LOCAL_LOCALE_KEYS[item.local_filing_state]),
+        aeat=tr(_AEAT_LOCALE_KEYS[item.aeat_submission_state]),
     )
 
 
@@ -237,7 +237,7 @@ class HomeScreen(Screen[None]):
             tr(
                 "tui.home.session_line",
                 label=projection.account.profile_label or tr("tui.home.account_fallback"),
-                status=tr(_SESSION_KEYS[projection.account.posture]),
+                status=tr(_SESSION_LOCALE_KEYS[projection.account.posture]),
             ),
             id="home-session",
             classes="home-state",

@@ -960,6 +960,10 @@ application:
         el cálculo del modelo no puede continuar.
       calculation_registry_snapshot_unresolved: No se pudo resolver el snapshot de
         registro para el modelo {modelo}, ejercicio {filing_year}, periodo {period}.
+      calculation_revision_id_is_discarded_work_unit: El identificador %{calculation_revision_id}
+        es una unidad de trabajo descartada, no una revisión de cálculo.
+      calculation_revision_id_is_work_unit: El identificador %{calculation_revision_id}
+        es una unidad de trabajo, no una revisión de cálculo; use --work-unit-id %{work_unit_id}.
       calculation_revision_not_found: No existe ninguna revisión de cálculo con id=%{calculation_revision_id}.
       calculation_revision_parent_work_unit_discarded: La revisión de cálculo {calculation_revision_id}
         pertenece a la unidad de trabajo descartada {work_unit_id}.

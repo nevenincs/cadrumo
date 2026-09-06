@@ -192,6 +192,8 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             storage_area_disposition=StorageAreaDisposition,
             storage_occupancy=StorageOccupancy,
         ),
+        *_aeat_sync_label_registrations(),
+        *_declarations_workspace_registrations(),
         *_modelo_review_filter_registrations(),
         *_generated_docs_registrations(),
         FStringKeyRegistration(
@@ -366,6 +368,156 @@ def _modelo_work_help_registrations() -> tuple[FStringKeyRegistration, ...]:
             description="cli.app.modelo.work.*_help (MODELO_WORK_COMMAND_SPECS parameters)",
             key_factory=lambda name: f"{prefix}{name}",
             values=tuple(names),
+        ),
+    )
+
+
+def _aeat_sync_label_registrations() -> tuple[FStringKeyRegistration, ...]:
+    """Register the enum labels the AEAT Sync workspace renders through one helper.
+
+    The screen module does not write these keys at its call sites. It declares
+    a table of prefixes keyed by enum class name, selects one, and appends the
+    member value::
+
+        return aeat_sync_copy(f"{prefix}.{value.value}")
+
+    The tail is always a member value, so the space is bounded by the enum
+    definitions and scaffold can expand it exactly rather than tolerating the
+    namespace.
+
+    The prefixes are held here as literals rather than imported from the
+    screen: that table is module-private to a view, and the registry should not
+    deepen a private reach into one -- the same call already made for the
+    work-select column keys. The coverage gate is what keeps the two in step.
+    """
+    from cadrumo.application.aeat_sync.workspace import (
+        AeatSyncAeatObservationState,
+        AeatSyncCensusCategory,
+        AeatSyncCensusStatus,
+        AeatSyncDiscrepancyKind,
+        AeatSyncDocumentCustodyState,
+        AeatSyncJustificanteState,
+        AeatSyncLocalFilingState,
+        AeatSyncNotificationCategory,
+        AeatSyncNotificationReadState,
+        AeatSyncOverviewArea,
+        AeatSyncReconciliationState,
+        AeatSyncSourceState,
+        AeatSyncWorkspaceAvailability,
+        AeatSyncWorkspaceSource,
+        AeatSyncWorkspaceZone,
+    )
+
+    labelled: tuple[tuple[str, type[Enum]], ...] = (
+        ("tui.aeat_sync.zone", AeatSyncWorkspaceZone),
+        ("tui.aeat_sync.availability", AeatSyncWorkspaceAvailability),
+        ("tui.aeat_sync.source", AeatSyncWorkspaceSource),
+        ("tui.aeat_sync.area", AeatSyncOverviewArea),
+        ("tui.aeat_sync.source_state", AeatSyncSourceState),
+        ("tui.aeat_sync.discrepancy", AeatSyncDiscrepancyKind),
+        ("tui.aeat_sync.census_category", AeatSyncCensusCategory),
+        ("tui.aeat_sync.census_status", AeatSyncCensusStatus),
+        ("tui.aeat_sync.local_filing_state", AeatSyncLocalFilingState),
+        ("tui.aeat_sync.aeat_observation_state", AeatSyncAeatObservationState),
+        ("tui.aeat_sync.justificante_state", AeatSyncJustificanteState),
+        ("tui.aeat_sync.notification_category", AeatSyncNotificationCategory),
+        ("tui.aeat_sync.notification_read_state", AeatSyncNotificationReadState),
+        ("tui.aeat_sync.document_custody_state", AeatSyncDocumentCustodyState),
+        ("tui.aeat_sync.reconciliation_state", AeatSyncReconciliationState),
+    )
+    return tuple(
+        FStringKeyRegistration(
+            description=f"{prefix}.* ({enum.__name__})",
+            key_factory=lambda value, prefix=prefix: f"{prefix}.{value}",
+            values=tuple(member.value for member in enum),
+        )
+        for prefix, enum in labelled
+    )
+
+
+def _declarations_workspace_registrations() -> tuple[FStringKeyRegistration, ...]:
+    """Register the declarations workspace labels whose tail is an enum value.
+
+    Every one of these call sites writes its prefix as a literal, so the
+    namespace markers were always derivable -- the root allowlist was what
+    withheld them. Registering rather than merely tolerating means scaffold
+    re-materialises each concrete key, so a new enum member arrives as a
+    missing catalogue entry instead of disappearing under a wildcard.
+
+    The two ``calendar.local`` / ``calendar.aeat`` sets carry an extra
+    ``unknown`` member: the call site maps ``None`` to that literal rather
+    than to a member value, and leaving it out would report the shipped key
+    as an orphan.
+    """
+    from cadrumo.application.modelo.declarations_calendar import DeclarationsCalendarSource
+    from cadrumo.application.modelo.declarations_workspace import (
+        DeclarationsLifecycleKind,
+        DeclarationsWorkspaceAvailability,
+    )
+    from cadrumo.application.overview.calendar_models import (
+        OverviewAeatSubmissionState,
+        OverviewLocalFilingState,
+        OverviewPeriodState,
+    )
+    from cadrumo.domain.deadlines.models import ObligationStatus
+    from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
+    from cadrumo.domain.modelos.work_unit import WorkUnitState
+
+    from cadrumo.entrypoints.tui.declarations.models import DeclarationsCalendarScopeV1
+
+    def _values(enum: type[Enum]) -> tuple[str, ...]:
+        return tuple(str(member.value) for member in enum)
+
+    return (
+        FStringKeyRegistration(
+            description="tui.declarations.availability.* (DeclarationsWorkspaceAvailability)",
+            key_factory=lambda v: f"tui.declarations.availability.{v}",
+            values=_values(DeclarationsWorkspaceAvailability),
+        ),
+        FStringKeyRegistration(
+            description="tui.declarations.lifecycle.* (DeclarationsLifecycleKind)",
+            key_factory=lambda v: f"tui.declarations.lifecycle.{v}",
+            values=_values(DeclarationsLifecycleKind),
+        ),
+        FStringKeyRegistration(
+            description="tui.declarations.work_state.* (WorkUnitState)",
+            key_factory=lambda v: f"tui.declarations.work_state.{v}",
+            values=_values(WorkUnitState),
+        ),
+        FStringKeyRegistration(
+            description="tui.declarations.revision_state.* (CalculationRevisionState)",
+            key_factory=lambda v: f"tui.declarations.revision_state.{v}",
+            values=_values(CalculationRevisionState),
+        ),
+        FStringKeyRegistration(
+            description="tui.declarations.calendar.scope.* (DeclarationsCalendarScopeV1)",
+            key_factory=lambda v: f"tui.declarations.calendar.scope.{v}",
+            values=_values(DeclarationsCalendarScopeV1),
+        ),
+        FStringKeyRegistration(
+            description="tui.declarations.calendar.source.* (DeclarationsCalendarSource)",
+            key_factory=lambda v: f"tui.declarations.calendar.source.{v}",
+            values=_values(DeclarationsCalendarSource),
+        ),
+        FStringKeyRegistration(
+            description="tui.declarations.calendar.legal.* (ObligationStatus, lowercased)",
+            key_factory=lambda v: f"tui.declarations.calendar.legal.{v.lower()}",
+            values=_values(ObligationStatus),
+        ),
+        FStringKeyRegistration(
+            description="tui.declarations.calendar.user.* (OverviewPeriodState)",
+            key_factory=lambda v: f"tui.declarations.calendar.user.{v}",
+            values=_values(OverviewPeriodState),
+        ),
+        FStringKeyRegistration(
+            description="tui.declarations.calendar.local.* (OverviewLocalFilingState plus the None sentinel)",
+            key_factory=lambda v: f"tui.declarations.calendar.local.{v}",
+            values=(*_values(OverviewLocalFilingState), "unknown"),
+        ),
+        FStringKeyRegistration(
+            description="tui.declarations.calendar.aeat.* (OverviewAeatSubmissionState plus the None sentinel)",
+            key_factory=lambda v: f"tui.declarations.calendar.aeat.{v}",
+            values=(*_values(OverviewAeatSubmissionState), "unknown"),
         ),
     )
 

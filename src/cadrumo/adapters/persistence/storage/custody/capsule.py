@@ -18,12 +18,6 @@ from .....core.profile_publication import ProfilePublicationKindValue
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_location
 from ._capsule_data import (
-    read_committed_data_file_posix as _read_committed_data_file_posix,
-)
-from ._capsule_data import (
-    read_committed_data_file_windows as _read_committed_data_file_windows,
-)
-from ._capsule_data import (
     read_password_envelope as _read_password_envelope,
 )
 from ._capsule_data import (
@@ -40,9 +34,6 @@ from ._capsule_data import (
 )
 from ._capsule_data import (
     replace_data_file as _replace_data_file,
-)
-from ._capsule_data import (
-    validate_committed_data_member as _validate_committed_data_member,
 )
 from ._capsule_data import (
     validate_data_file_inventory as _validate_data_file_inventory,
@@ -929,36 +920,6 @@ def load_committed_profile_custody_summary_witness(
     return ProfileCustodyCapsuleSummaryWitness(capsule_path=capsule_path, commit=commit, label=label)
 
 
-def load_committed_profile_custody_data_file(
-    profile_id: UUID,
-    relative_name: str,
-    *,
-    maximum_bytes: int = PROFILE_CUSTODY_PROFILE_RECORD_MAX_BYTES,
-    settings: Settings | None = None,
-    root: Path | None = None,
-) -> bytes:
-    """Read one regular capsule ``data/`` member after current-marker proof."""
-    parts = _validate_committed_data_member(relative_name, maximum_bytes=maximum_bytes)
-    capsule_path = recognize_current_profile_capsule(profile_id, settings=settings, root=root)
-    if capsule_path is None:
-        raise ProfileCustodyRecordError("profile capsule is not committed")
-    data_path = capsule_path / "data"
-    member_path = data_path.joinpath(*parts)
-    if os.name != "nt":
-        return _read_committed_data_file_posix(
-            capsule_path,
-            parts,
-            member_path=member_path,
-            maximum_bytes=maximum_bytes,
-        )
-    return _read_committed_data_file_windows(
-        capsule_path,
-        parts,
-        member_path=member_path,
-        maximum_bytes=maximum_bytes,
-    )
-
-
 def replace_committed_profile_custody_data_file(
     profile_id: UUID,
     relative_name: str,
@@ -1215,7 +1176,6 @@ __all__ = [
     "inventory_committed_profile_custody_capsule",
     "list_current_profile_custody_capsule_ids",
     "list_current_profile_custody_capsule_summary_witnesses",
-    "load_committed_profile_custody_data_file",
     "load_committed_profile_custody_label_record",
     "load_committed_profile_custody_summary_witness",
     "load_committed_profile_password_material",

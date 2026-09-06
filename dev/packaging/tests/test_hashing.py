@@ -34,21 +34,38 @@ def test_sha256_path_hashes_real_multichunk_bytes(tmp_path: Path) -> None:
     assert sha256_path(artifact) == hashlib.sha256(payload).hexdigest()
 
 
-def _streams_sha256(function: ast.FunctionDef) -> bool:
-    """Report whether ``function`` builds its own ``hashlib.sha256`` accumulator.
+#: Both spellings of a function definition. A private digest helper written
+#: ``async def`` is a duplicate exactly as a sync one is, and reading only the
+#: sync form leaves the absence claim below satisfied because the helper was
+#: never looked at.
+_FUNCTION_DEFINITIONS: Final = (ast.FunctionDef, ast.AsyncFunctionDef)
+
+
+def _builds_sha256_digest(node: ast.AST) -> bool:
+    """Is this a ``sha256(...)`` call, however the name was imported?
+
+    ``hashlib.sha256(...)`` leaves an attribute callee; ``from hashlib import
+    sha256`` leaves a bare name. Matching only the attribute form let the
+    second spelling build a private accumulator invisibly, and it is the
+    spelling a helper reaches for when it wants one line instead of two.
+    """
+    if not isinstance(node, ast.Call):
+        return False
+    callee = node.func
+    if isinstance(callee, ast.Attribute):
+        return callee.attr == "sha256" and isinstance(callee.value, ast.Name) and callee.value.id == "hashlib"
+    return isinstance(callee, ast.Name) and callee.id == "sha256"
+
+
+def _streams_sha256(function: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
+    """Report whether ``function`` builds its own ``sha256`` accumulator.
 
     A hash of in-memory bytes or text is not a duplicate of the streamed-file
-    owner. The duplicate requires both a ``hashlib.sha256`` call and a file
-    handle ``read`` in the same helper.
+    owner. The duplicate requires both a ``sha256`` call and a file handle
+    ``read`` in the same helper, and that conjunction is what keeps the bare
+    spelling above from matching an unrelated function of the same name.
     """
-    builds_digest = any(
-        isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Attribute)
-        and node.func.attr == "sha256"
-        and isinstance(node.func.value, ast.Name)
-        and node.func.value.id == "hashlib"
-        for node in ast.walk(function)
-    )
+    builds_digest = any(_builds_sha256_digest(node) for node in ast.walk(function))
     streams_file = any(
         isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "read"
         for node in ast.walk(function)
@@ -59,6 +76,64 @@ def _streams_sha256(function: ast.FunctionDef) -> bool:
 #: Floor for the parsed surface behind the absence claim below. Live: the
 #: three re-homed sites define 8, 20 and 21 functions. A floor, not a count.
 _MINIMUM_SITE_FUNCTIONS = 3
+
+
+_PLANTED_PRIVATE_HELPERS: Final = {
+    "attribute callee": "def _digest(path):"
+    + chr(10)
+    + "    d = hashlib.sha256()"
+    + chr(10)
+    + "    d.update(path.read())"
+    + chr(10)
+    + "    return d",
+    "bare imported callee": "def _digest(path):"
+    + chr(10)
+    + "    d = sha256()"
+    + chr(10)
+    + "    d.update(path.read())"
+    + chr(10)
+    + "    return d",
+    "async attribute callee": "async def _digest(path):"
+    + chr(10)
+    + "    d = hashlib.sha256()"
+    + chr(10)
+    + "    d.update(path.read())"
+    + chr(10)
+    + "    return d",
+    "async bare callee": "async def _digest(path):"
+    + chr(10)
+    + "    d = sha256()"
+    + chr(10)
+    + "    d.update(path.read())"
+    + chr(10)
+    + "    return d",
+}
+
+
+@pytest.mark.parametrize("label", sorted(_PLANTED_PRIVATE_HELPERS))
+def test_a_private_streamed_digest_helper_is_detected_however_it_is_written(label: str) -> None:
+    """Teeth: the absence claim is only as wide as the spellings it can parse.
+
+    Each of these is a private streamed-file digest helper, the exact duplicate
+    the gate forbids, and each was once invisible: the walk read only ``def``
+    and the accumulator matched only ``hashlib.sha256``.
+    """
+    tree = ast.parse(_PLANTED_PRIVATE_HELPERS[label] + chr(10))
+    defined = [node for node in ast.walk(tree) if isinstance(node, _FUNCTION_DEFINITIONS)]
+
+    assert [node.name for node in defined if _streams_sha256(node)] == ["_digest"], label
+
+
+def test_an_in_memory_digest_is_not_a_streamed_duplicate() -> None:
+    """The conjunction is what keeps the bare spelling from over-matching.
+
+    Hashing bytes already in hand is not the streamed-file owner's job, so a
+    helper with no file read must stay unflagged however it names sha256.
+    """
+    tree = ast.parse("def _digest(payload):" + chr(10) + "    return sha256(payload).hexdigest()" + chr(10))
+    defined = [node for node in ast.walk(tree) if isinstance(node, _FUNCTION_DEFINITIONS)]
+
+    assert [node.name for node in defined if _streams_sha256(node)] == []
 
 
 @pytest.mark.parametrize("relative_path", _REHOMED_STREAMED_DIGEST_SITES)
@@ -73,7 +148,7 @@ def test_rehomed_digest_site_declares_no_private_digest_helper(relative_path: st
     """
     repository_root = REPO_ROOT
     tree = ast.parse((repository_root / relative_path).read_text(encoding="utf-8"))
-    defined = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
+    defined = [node for node in ast.walk(tree) if isinstance(node, _FUNCTION_DEFINITIONS)]
 
     assert len(defined) >= _MINIMUM_SITE_FUNCTIONS, (
         f"{relative_path} defines only {len(defined)} function(s); below this it declares no "

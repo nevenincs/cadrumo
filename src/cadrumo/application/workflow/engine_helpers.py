@@ -27,11 +27,6 @@ class FilingWindowState(StrEnum):
     CLOSED = "closed"
 
 
-def registry_period_token(period: Period) -> tuple[int, str]:
-    """Resolve a :class:`~core.Period` to ``(filing_year, registry_period)``."""
-    return period.filing_year, period.registry_token
-
-
 def registry_filing_year(period: Period) -> int:
     """Return the filing year from a typed :class:`~core.Period`."""
     return period.filing_year
@@ -61,5 +56,4 @@ __all__ = [
     "FilingWindowState",
     "classify_cert_expiry",
     "registry_filing_year",
-    "registry_period_token",
 ]

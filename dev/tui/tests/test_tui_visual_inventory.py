@@ -680,7 +680,14 @@ def test_rasterising_the_status_page_reports_its_untranslatable_glyph(tmp_path: 
             result = _raster.rasterise(svg, tmp_path / "status.png")
             assert "\u24d8" in result.missing_glyphs
             return
-    pytest.skip("no rendered status frame carried the notice glyph")
+    # Frames WERE rendered, so this is not a missing precondition like the
+    # skip above: the status page has stopped carrying the glyph this proof is
+    # about, and skipping would retire the end-to-end coverage silently while
+    # the run still reads green. Live: 2 status frames, both carrying it.
+    pytest.fail(
+        f"{len(candidates)} status frame(s) rendered but none carried the notice glyph, "
+        "so the untranslatable-glyph proof no longer runs"
+    )
 
 
 def test_a_harness_refusal_is_told_apart_from_a_harness_crash() -> None:

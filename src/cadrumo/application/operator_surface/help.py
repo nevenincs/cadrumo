@@ -105,17 +105,6 @@ def render_help_text(document: HelpDocument) -> str:
     return "\n".join(lines)
 
 
-def render_root_landing_text(report: RootLandingReport) -> str:
-    """Render the compact single-line view of a :class:`RootLandingReport`.
-
-    New root CLI output uses a multi-line entrypoint renderer for the text half
-    of the ``root.status`` envelope. This helper remains the application-level
-    plain-text formatter for callers that need the compact message /
-    next-command template.
-    """
-    return tr("cli.operator_surface.landing.text_template", message=report.message, command=report.command)
-
-
 def _root_help() -> HelpDocument:
     return HelpDocument(
         surface=HelpSurface.ROOT,
@@ -684,5 +673,4 @@ __all__ = [
     "build_help_document",
     "build_root_landing_report",
     "render_help_text",
-    "render_root_landing_text",
 ]

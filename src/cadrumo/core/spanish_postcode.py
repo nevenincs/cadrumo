@@ -42,9 +42,6 @@ passed as a Spanish postcode with a province that does not exist.
 SPANISH_POSTCODE_PATTERN: Final[str] = SPANISH_PROVINCE_CODE_PATTERN + r"[0-9]{3}"
 """Five digits whose leading pair is a province code in 01..52, unanchored."""
 
-SpanishPostcode = Annotated[str, StringConstraints(pattern=rf"^{SPANISH_POSTCODE_PATTERN}$")]
-"""A declared Spanish postcode."""
-
 OptionalSpanishPostcode = Annotated[str, StringConstraints(pattern=rf"^$|^{SPANISH_POSTCODE_PATTERN}$")]
 """A postcode field an operator may legitimately have left undeclared."""
 
@@ -65,6 +62,5 @@ __all__ = [
     "SPANISH_POSTCODE_PATTERN",
     "SPANISH_PROVINCE_CODE_PATTERN",
     "OptionalSpanishPostcode",
-    "SpanishPostcode",
     "is_spanish_postcode",
 ]

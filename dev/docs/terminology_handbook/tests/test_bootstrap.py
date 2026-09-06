@@ -17,7 +17,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_authority
 
 from .._curation import audit_handbook
 from .._enrolment import collect_enrolment_candidates
-from .._scaffold import build_scaffold_plan
+from .._scaffold import ScaffoldAction, build_scaffold_plan
 from .._serialize import serialise_concept
 from ..loader import load_bundled_terminology_handbook, terminology_concepts_dir
 from ..validators import default_handbook_validators
@@ -66,6 +66,26 @@ def test_every_migrated_legal_ref_resolves_in_the_catalogue() -> None:
             assert ref in legal_ids, f"{concept.concept_id}: {ref}"
 
 
+def _drift_summary(plan) -> str:
+    """Name the entries a scaffold plan would act on, and how.
+
+    ``is_empty`` answers whether the tree drifted; alone it withholds WHICH
+    concepts moved and in WHICH direction, and those are different repairs. A
+    handful of retirements after the registry dropped some modelos is an
+    editorial decision about the glossary; a plan full of rewrites is a bug in
+    the scaffolder. A bare ``assert plan.is_empty`` reads the same either way,
+    and the cheapest response to an unactionable verdict is to re-scaffold
+    blindly over curated prose.
+    """
+    acting = [entry for entry in plan.entries if entry.action is not ScaffoldAction.UNCHANGED]
+    if not acting:
+        return "no entry would be acted on"
+    grouped: dict[str, list[str]] = {}
+    for entry in acting:
+        grouped.setdefault(entry.action.value, []).append(entry.concept_id)
+    return "; ".join(f"{action} ({len(ids)}): {', '.join(sorted(ids))}" for action, ids in sorted(grouped.items()))
+
+
 def test_rescaffold_does_not_clobber_migrated_prose() -> None:
     # Re-scaffolding the committed tree against the live sources must be a
     # complete no-op: every curated concept is UNCHANGED, so no migrated
@@ -76,7 +96,7 @@ def test_rescaffold_does_not_clobber_migrated_prose() -> None:
     candidates = collect_enrolment_candidates()
     existing = dict(handbook.by_id)
     plan = build_scaffold_plan(candidates, existing, today=handbook.concepts[0].updated_at)
-    assert plan.is_empty, "re-scaffold drifted; a curated concept would be rewritten"
+    assert plan.is_empty, f"re-scaffold drifted; a curated concept would be rewritten: {_drift_summary(plan)}"
 
     # The plan carries the existing records unchanged; serialising them must
     # reproduce the curated prose byte-for-byte.
@@ -90,7 +110,8 @@ def test_scaffold_check_is_green_against_the_bootstrapped_tree() -> None:
     candidates = collect_enrolment_candidates()
     handbook = load_bundled_terminology_handbook()
     plan = build_scaffold_plan(candidates, dict(handbook.by_id), today=handbook.concepts[0].updated_at)
-    assert plan.is_empty
+
+    assert plan.is_empty, f"the committed tree drifted from the enrolment sources: {_drift_summary(plan)}"
 
 
 def test_audit_reports_structurally_clean_with_a_tracked_backlog() -> None:

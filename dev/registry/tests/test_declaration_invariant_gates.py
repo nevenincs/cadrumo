@@ -1125,18 +1125,45 @@ def _names_imported_by_tests(root: pathlib.Path) -> set[str]:
     return names
 
 
+#: Per-root floors for the public-module walk below. Live: analysis 48,
+#: pipeline 19, conformance 5. One floor over the 72 would be carried by
+#: analysis alone - it is two thirds of them - so conformance could vanish
+#: whole and the total would still clear any threshold a growing tree
+#: tolerates. A root that stops contributing is the silent direction here:
+#: fewer modules found means fewer checked, and the gate still reports clean.
+_MINIMUM_PUBLIC_MODULES_BY_ROOT: Final[dict[str, int]] = {
+    "analysis": 30,
+    "pipeline": 12,
+    "conformance": 3,
+}
+
+
 def _public_modules(roots: tuple[pathlib.Path, ...]) -> list[pathlib.Path]:
-    """Return modules declaring at least one public function or class."""
+    """Return modules declaring at least one public function or class.
+
+    A missing root refuses rather than contributing nothing: ``glob`` over a
+    directory that is not there yields an empty sequence and no error, so a
+    renamed or moved tooling root would quietly remove every module it held
+    from this gate's reach.
+
+    ``async def`` counts as a public surface too. A module whose only exported
+    entry point is a coroutine is exactly as untested as any other when no test
+    imports it, and reading only the sync form would exempt it silently.
+    """
     import ast
 
     found: list[pathlib.Path] = []
     for root in roots:
+        if not root.is_dir():
+            raise AssertionError(f"tooling root is missing, so its modules would be silently exempt: {root}")
         for path in sorted(root.glob("*.py")):
             if path.name in {"__init__.py", "__main__.py"}:
                 continue
             tree = ast.parse(path.read_text(encoding=_UTF_8))
             if any(
-                isinstance(node, ast.FunctionDef | ast.ClassDef) and not node.name.startswith("_") for node in tree.body
+                isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef)
+                and not node.name.startswith("_")
+                for node in tree.body
             ):
                 found.append(path)
     return found
@@ -1161,7 +1188,16 @@ def test_every_public_module_in_the_registry_tooling_is_imported_by_a_test() -> 
     imported = _names_imported_by_tests(registry)
     modules = _public_modules(roots)
 
-    assert modules, "no public module was found, so this gate checked nothing"
+    for root in roots:
+        contributed = len(_public_modules((root,)))
+        floor = _MINIMUM_PUBLIC_MODULES_BY_ROOT[root.name]
+        assert contributed >= floor, (
+            f"{root.name} contributed only {contributed} public module(s) against a floor of {floor}; "
+            "a root that stops contributing leaves this gate reporting clean over everything it held"
+        )
+    # No floor on `imported`: it is the right-hand side of a membership test, so
+    # a set that shrinks reports MORE unimported modules and fails loudly. Only
+    # `modules` can shrink silently, which is why the floors sit on that side.
     assert imported, "no test imports were read, so every module would look untested"
 
     unimported = sorted(path.stem for path in modules if path.stem not in imported)

@@ -499,9 +499,6 @@ def _iva_wallet_decision_export_provenance(
     )
 
 
-iva_wallet_decision_export_provenance = _iva_wallet_decision_export_provenance
-
-
 def _raise_if_ledger_export_evidence_missing(revision: CalculationRevision) -> None:
     """Refuse ledger-derived exports that lack bundled evidence or a reference."""
     if not revision.source_transaction_ids:
@@ -1550,5 +1547,4 @@ __all__ = [
     "ModeloIvaWalletDecisionProvenance",
     "_raise_if_ledger_export_evidence_missing",
     "export_modelo_revision",
-    "iva_wallet_decision_export_provenance",
 ]

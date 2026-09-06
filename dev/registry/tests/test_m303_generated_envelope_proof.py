@@ -8,7 +8,6 @@ export tree into a positive authority.
 from __future__ import annotations
 
 import shutil
-from datetime import date as _prov_date
 from decimal import Decimal
 from hashlib import sha256
 from pathlib import Path
@@ -23,7 +22,7 @@ from cadrumo.application.filing.export import render_filing_envelope
 from cadrumo.application.filing.export_envelope import FilingEnvelopeRenderRequest, FilingEnvelopeRenderResult
 from cadrumo.application.filing.projection import _project_record
 from cadrumo.application.filing.tests import test_m303_did_account_wire_isolated_authority as m303_did
-from cadrumo.application.filing.tests.test_producer_snapshot import _m303_exonerado_evidence
+from cadrumo.application.filing.tests.test_producer_snapshot import _m303_exonerado_evidence, _params_for
 from cadrumo.core.filing_projection_ref import (
     M303DifferentiatedDeductionProjectionRef,
     M303Exonerado390ActivityProjectionRef,
@@ -41,7 +40,6 @@ from cadrumo.core.prorrata_register import (
 )
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.result_disposition import ResultDisposition
-from cadrumo.domain.bienes_inversion.regularizacion_parameters import BienesInversionParameterProvenance
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry._supplementary_orden import compile_supplementary_ordenes
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
@@ -91,12 +89,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 #: Provenance stamped onto directly-constructed projections in this module. A
 #: result must name the registry declaration its figures came from; these tests
 #: build results by hand rather than by projection, so they state it explicitly.
-_PROVENANCE = BienesInversionParameterProvenance(
-    modelo_id="303",
-    revision_id="2025",
-    parameter_ids=("m303-bien-inversion-ventana-anos-mueble",),
-    resolved_on=_prov_date(2025, 6, 1),
-)
+#: It is taken from the bundle rather than restated: the facts model refuses a
+#: regularisation result whose provenance differs from the bundle it travels
+#: with, and a bundle pinned to one date cannot serve a per-year filing.
 
 
 def _m303_2026_tree():
@@ -201,7 +196,12 @@ def _m303_2026_prorrata_and_differentiated_producer(*, snapshot, catalogues):
     )
     regimen_evidence = _m303_2026_6919_regimen_evidence(snapshot, catalogues=catalogues)
     period = Period.from_year_and_code(filing_year, "1T")
+    # From the module that owns the bundle rather than rebuilt here; the
+    # projection refuses one resolved for another filing year, so it is asked
+    # for THIS year, and the regularisation result below reuses its provenance.
+    bienes_parameters = _params_for(filing_year)
     facts = m303_did.M303FilingFacts(
+        bienes_parameters=bienes_parameters,
         joint_return_elected=False,
         annual_volume_nonzero=False,
         insolvency=None,
@@ -229,7 +229,7 @@ def _m303_2026_prorrata_and_differentiated_producer(*, snapshot, catalogues):
             computed_count=0,
             pending_percentage_count=0,
             sector_contributions=(),
-            parameters_provenance=_PROVENANCE,
+            parameters_provenance=bienes_parameters.provenance,
         ),
     )
     taxpayer = m303_did._taxpayer_profile()

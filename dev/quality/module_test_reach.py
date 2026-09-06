@@ -85,6 +85,25 @@ def _is_test(path: pathlib.Path) -> bool:
     return "tests" in path.parts or path.name.startswith("test_") or path.name == "conftest.py"
 
 
+def is_write_call(node: ast.AST) -> bool:
+    """Whether this node is a call that writes to the tree.
+
+    The one owner of that question. A write reaches the tree by two spellings:
+    a method on a path-like receiver, and a bare helper whose name ends in
+    ``write_text``. Anything checking only the first agrees with this detector
+    on most modules and disagrees precisely on the ones the second branch
+    ranked -- which is how a proof meant to confirm an attribution ends up
+    contradicting it.
+    """
+    if not isinstance(node, ast.Call):
+        return False
+    if isinstance(node.func, ast.Attribute):
+        return node.func.attr in _WRITE_CALLS
+    if isinstance(node.func, ast.Name):
+        return node.func.id.endswith("write_text")
+    return False
+
+
 def module_capabilities(tree: ast.Module) -> tuple[str, ...]:
     """Return what running the parsed module can do, worst first.
 
@@ -95,9 +114,7 @@ def module_capabilities(tree: ast.Module) -> tuple[str, ...]:
     found: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.Call):
-            attribute = node.func.attr if isinstance(node.func, ast.Attribute) else None
-            name = node.func.id if isinstance(node.func, ast.Name) else None
-            if (attribute or "") in _WRITE_CALLS or (name or "").endswith("write_text"):
+            if is_write_call(node):
                 found.add("writes")
         elif isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value == "--apply":
             found.add("applies")

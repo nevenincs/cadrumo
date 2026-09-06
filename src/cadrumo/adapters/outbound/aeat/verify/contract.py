@@ -41,7 +41,6 @@ from .....core.aeat_csv import normalise_aeat_csv as _normalise_aeat_csv
 from .....core.async_cleanup import close_async_resources as _close_async_resources
 from .....core.config import Settings as _Settings
 from .....core.errors.hierarchy import CadrumoError as _CadrumoError
-from .....core.logging import get_logger as _get_logger
 from .....domain.calculations.registry.remote_state_guard import RemoteOperation as _RemoteOperation
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy as _RemoteStateGuardPolicy
 from .....domain.calculations.registry.remote_state_guard import (
@@ -52,8 +51,6 @@ from .....domain.justificante import JustificanteVerificationError as _Justifica
 from .._html import parse_html as _parse_html
 from .._playwright import PlaywrightError as _PlaywrightError
 from ..sede.errors import BrowserAdapterTypeError as _BrowserAdapterTypeError
-
-_logger = _get_logger(__name__)
 
 _VERIFY_EXTERNAL = _Settings.external_constants()
 _VERIFY_URL = f"{_VERIFY_EXTERNAL.aeat.domains.www2}{_VERIFY_EXTERNAL.aeat.sede_paths.cotejo_query}"

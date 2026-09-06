@@ -44,7 +44,6 @@ from ...domain.calculations.registry.errors import (
 from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ...domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ...domain.modelos.calculation_revision import CalculationRevision, derive_calculation_revision_id_from_revision
 from ._registry_resources import (
     registry_root,
@@ -523,29 +522,6 @@ def required_input_casilla_ids_for_revision(
     return tuple(required), tuple(optional)
 
 
-def verification_predicates_for_revision(
-    *,
-    modelo: str,
-    filing_year: int,
-    period: Period,
-) -> tuple[VerificationPredicateDefinition, ...]:
-    """Return verification predicate rows for the selected revision.
-
-    The rows are
-    :class:`~cadrumo.domain.calculations.registry.VerificationPredicateDefinition`
-    instances. Missing registry roots or unresolved
-    :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot` instances
-    produce an empty tuple so callers can degrade to their existing verification
-    paths.
-    """
-    try:
-        snapshot = _resolve_registry_snapshot(modelo=modelo, filing_year=filing_year, period=period)
-    except (FileNotFoundError, RegistrySnapshotError):
-        return ()
-
-    return snapshot.revision.verification_predicates
-
-
 def assert_revision_content_integrity(revision: CalculationRevision) -> None:
     """Check revision integrity; raise stored-calculation drift on mismatch.
 
@@ -596,5 +572,4 @@ __all__ = [
     "reject_unknown_revision",
     "required_input_casilla_ids_for_revision",
     "validate_casilla_input_ids",
-    "verification_predicates_for_revision",
 ]

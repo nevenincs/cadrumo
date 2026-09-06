@@ -133,7 +133,7 @@ adapters:
         Nyissa meg a székhelyen és ellenőrizze kézzel.
   outbound:
     storage:
-      factory:
+      _factory:
         errors:
           drive_root_missing: 'Nincs Google Drive gyökérmappa-azonosító beállítva
             az aktív profilhoz. Futtassa először: `aeat config google folder set <id>`.'

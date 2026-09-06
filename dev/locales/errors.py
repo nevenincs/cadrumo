@@ -13,7 +13,7 @@ class LocaleError(Exception):
     """Raised on locale management and parsing errors.
 
     A contributor-tool exception, never operator-facing: it carries no
-    registered :class:`~cadrumo.core.errors.ErrorCode` and is not part of the
+    registered :class:`~cadrumo.core.errors.error_codes.ErrorCode` and is not part of the
     translated-error-message machinery.
     """
 

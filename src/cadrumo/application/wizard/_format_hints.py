@@ -42,14 +42,6 @@ _FORMAT_POSTCODE_LOCALE_KEY = "wizard.setup.format.postcode"
 FORMAT_UNITS_LOCALE_KEY = "wizard.setup.format.units-count"
 NIF_INVALID_LOCALE_KEY = "wizard.errors.invalid_tax_id"
 
-FORMAT_HINT_LOCALE_KEYS: tuple[str, ...] = (
-    FORMAT_TAX_ID_LOCALE_KEY,
-    FORMAT_DATE_LOCALE_KEY,
-    FORMAT_AMOUNT_LOCALE_KEY,
-    _FORMAT_POSTCODE_LOCALE_KEY,
-    FORMAT_UNITS_LOCALE_KEY,
-)
-
 #: Registered-value provenance suffix (consumed by the registered-values
 #: projection when a fact carries the censo-artefact provenance token).
 REGISTERED_NON_OFFICIAL_SUFFIX_LOCALE_KEY = "wizard.setup.review.registered-non-official-suffix"
@@ -150,7 +142,6 @@ def _page_overrides(item: object) -> dict[str, object]:
 __all__ = [
     "FORMAT_AMOUNT_LOCALE_KEY",
     "FORMAT_DATE_LOCALE_KEY",
-    "FORMAT_HINT_LOCALE_KEYS",
     "FORMAT_TAX_ID_LOCALE_KEY",
     "FORMAT_UNITS_LOCALE_KEY",
     "NIF_INVALID_LOCALE_KEY",

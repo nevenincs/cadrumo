@@ -203,7 +203,7 @@ stage each, one base image declaration each.
 | ------- | ----------- | ---- | -------- |
 | Self-hosted Linux runner | `--target runner` | `ARG RUNNER_BASE_IMAGE` (`ghcr.io/actions/actions-runner`, pinned) | `just runner-image-build` |
 | Contributor devcontainer | `--target dev` | `ARG PYTHON_BASE_IMAGE` (`python:3.13-slim-trixie`) | `just devcontainer-build` |
-| Clean-Linux wheel proof | `dev/packaging/smoke_docker.py` | reads `ARG PYTHON_BASE_IMAGE` back from the Dockerfile | the packaging campaign |
+| Base-image reader | `dev/packaging/_base_image.py` | reads `ARG PYTHON_BASE_IMAGE` back from the Dockerfile | consumed by the packaging gates |
 
 The chain at CI time runs top to bottom: a workflow job labelled
 `[self-hosted, Linux, X64]` lands in a **runner container**, which mounts the

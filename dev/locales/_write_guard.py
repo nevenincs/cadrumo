@@ -18,7 +18,7 @@ mechanism that actually fits it:
   catalogues serialises the whole read-modify-write, not just the write, so a
   second writer reads the first one's result rather than racing it. A holder
   that died leaves a lock reclaimed on the next attempt via
-  :func:`~cadrumo.core.pid_is_alive`.
+  :func:`~cadrumo.core.pid_liveness.pid_is_alive`.
 
 - **Writers that never took the lock** -- a hand edit, an editor save, a bulk
   sweep. No lock can exclude those, so :class:`CatalogueWriteGuard` digests each
@@ -246,7 +246,7 @@ def _acquire(lock: Path, *, wait_seconds: float) -> None:
 def _release(lock: Path) -> None:
     """Drop the catalogue lock, never removing one stamped by another process.
 
-    The removal goes through :func:`~cadrumo.core.unlink_lockfile`, the shared
+    The removal goes through :func:`~cadrumo.core.lockfile_unlink.unlink_lockfile`, the shared
     primitive the bucket and auth-acquisition locks use for the same reason:
     Windows refuses to delete a file while any handle is open, and every waiting
     writer opens the lockfile to read its holder PID. Failing to release would

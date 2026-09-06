@@ -39,7 +39,6 @@ from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
-from ...core.logging import get_logger
 from ...core.modelo import Modelo
 from ...domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
 from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
@@ -78,8 +77,6 @@ from ._modelo_rendering import (
 from ._modelo_rendering import (
     verification_report_payload as _verification_report_payload,
 )
-
-_log = get_logger(__name__)
 
 
 def work_compare_taxation(

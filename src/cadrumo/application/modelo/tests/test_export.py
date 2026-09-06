@@ -40,9 +40,9 @@ from ..export import (
     ModeloExportNoActiveBucketError,
     ModeloExportResult,
     ModeloIvaWalletDecisionProvenance,
+    _iva_wallet_decision_export_provenance,
     _modelo_export_layout_readiness_refusal,
     export_modelo_revision,
-    iva_wallet_decision_export_provenance,
 )
 from ._export_test_support import (
     _M130_RENDIMIENTO_NETO_CASILLA,
@@ -190,7 +190,7 @@ def test_iva_wallet_export_provenance_redacts_taxpayer_amounts_and_source_locato
         decided_at=decided_at,
     )
 
-    provenance = iva_wallet_decision_export_provenance(decision)
+    provenance = _iva_wallet_decision_export_provenance(decision)
 
     assert provenance is not None
     payload_text = provenance.model_dump_json()

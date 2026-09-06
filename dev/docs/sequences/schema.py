@@ -7,7 +7,7 @@ on: the sandbox runner (``_runner.py``) executes each :class:`SequenceFrame`'s
 live output, and the golden store / comparison layers persist and diff the
 result. The parser (``_parser.py``) is the sole producer of these records; every
 model is strict, frozen, and forbids extra fields
-(:data:`~cadrumo.core.STRICT_FROZEN_CONFIG`).
+(:data:`~cadrumo.core.models.STRICT_FROZEN_CONFIG`).
 
 The grammar these records model is a body of plain frame lines where a bare
 ``aeat ...`` line is a visible command frame, ``@setup aeat ...`` an

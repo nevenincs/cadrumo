@@ -1452,7 +1452,8 @@ tui:
       confirm: Kapcsolat megerősítése
       confirming: Erősítse meg ezt a helyi kapcsolatot.
       counterparty_match: Partner egyezik
-      direction:
+      direction: Irány
+      direction_state:
         invoice_only: Csak a számla hivatkozik a tételre
         transaction_only: Csak a tétel hivatkozik a számlára
       empty: Nincs elérhető helyi egyeztetési feladat.

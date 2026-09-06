@@ -16,7 +16,6 @@ from decimal import Decimal
 from pathlib import Path
 
 from ...core.identity import canonical_bucket_id
-from ...core.logging import get_logger
 from ..categories.proportionality import effective_usage_ratio
 from ..categories.registry import resolve_category_profiles
 from ..categories.spending_category import HOME_OFFICE_FAMILIES, SpendingCategory, categories_for_family
@@ -28,8 +27,6 @@ __all__ = [
     "usage_ratio_bucket_lock",
     "usage_ratios_object_key",
 ]
-
-_LOGGER = get_logger(__name__)
 
 
 def _canonical_bucket_id(bucket_id: str) -> str:

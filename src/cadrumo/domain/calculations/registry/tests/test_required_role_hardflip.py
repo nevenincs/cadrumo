@@ -16,7 +16,7 @@ from datetime import date
 import pytest
 
 from .._validate_semantic_role_required import (
-    REQUIRED_ROLE_LABEL_PATTERNS,
+    _REQUIRED_ROLE_LABEL_PATTERNS,
     collect_casillas_by_semantic_role,
     required_role_declaration_failures,
 )
@@ -80,7 +80,7 @@ def _registry_modelo(modelo_id: str, revision_id: str, casillas: list[CasillaDef
 
 class TestRequiredRoleLabelPatterns:
     def test_pattern_set_is_non_empty(self) -> None:
-        assert len(REQUIRED_ROLE_LABEL_PATTERNS) >= 1
+        assert len(_REQUIRED_ROLE_LABEL_PATTERNS) >= 1
 
 
 class TestRequiredRoleHardflip:

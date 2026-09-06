@@ -20,7 +20,6 @@ from .filesystem import (
 from .filesystem_primitives import (
     ProfileCustodyPasswordReadOperation,
     anchor_directory,
-    posix_directory_fd,
     posix_open_child_directory,
     write_exclusive_fsynced,
     write_exclusive_fsynced_fd,
@@ -256,74 +255,12 @@ def replace_capsule_file(
     fsync_directory(directory)
 
 
-def validate_committed_data_member(relative_name: str, *, maximum_bytes: int) -> tuple[str, ...]:
-    """Validate one slash-delimited committed capsule data member."""
-    if maximum_bytes < 1:
-        raise ValueError("profile custody data read maximum must be positive")
-    parts = tuple(relative_name.split("/"))
-    if not parts or any(part in {"", ".", ".."} for part in parts):
-        raise ProfileCustodyRecordError("profile custody data member path is invalid")
-    return parts
-
-
-def read_committed_data_file_posix(
-    capsule_path: Path,
-    parts: tuple[str, ...],
-    *,
-    member_path: Path,
-    maximum_bytes: int,
-) -> bytes:
-    """Read one committed data member through anchored POSIX descriptors."""
-    with posix_directory_fd(capsule_path) as capsule_fd:
-        data_fd = posix_open_child_directory(capsule_fd, "data")
-        directory_fd = data_fd
-        try:
-            for segment in parts[:-1]:
-                child_fd = posix_open_child_directory(directory_fd, segment)
-                if directory_fd != data_fd:
-                    os.close(directory_fd)
-                directory_fd = child_fd
-            return read_regular_file_fd(
-                directory_fd,
-                parts[-1],
-                display_path=member_path,
-                maximum_bytes=maximum_bytes,
-                trace=[],
-            )
-        finally:
-            if directory_fd != data_fd:
-                os.close(directory_fd)
-            os.close(data_fd)
-
-
-def read_committed_data_file_windows(
-    capsule_path: Path,
-    parts: tuple[str, ...],
-    *,
-    member_path: Path,
-    maximum_bytes: int,
-) -> bytes:
-    """Read one committed data member through anchored Windows paths."""
-    data_path = capsule_path / "data"
-    with ExitStack() as anchors:
-        anchor_directory(anchors, capsule_path)
-        anchor_directory(anchors, data_path)
-        parent = data_path
-        for segment in parts[:-1]:
-            parent = parent / segment
-            anchor_directory(anchors, parent)
-        return read_regular_file(member_path, maximum_bytes=maximum_bytes, trace=[])
-
-
 __all__ = [
-    "read_committed_data_file_posix",
-    "read_committed_data_file_windows",
     "read_password_envelope",
     "read_password_envelope_fd",
     "read_sentinel",
     "read_sentinel_fd",
     "replace_data_file",
-    "validate_committed_data_member",
     "validate_data_file_inventory",
     "validated_data_path",
     "write_data_files",

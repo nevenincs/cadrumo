@@ -16,7 +16,8 @@ page never renders a silent blank or a raw key leak.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
+from typing import Final
 
 from pydantic import BaseModel
 
@@ -32,6 +33,25 @@ type CopySourceResolver = Callable[[str], "str | None"]
 _UNRESOLVED_SENTINEL = "\x00cadrumo-flows-copy-unresolved\x00"
 
 _SOURCE_RESOLVERS: dict[CopyRefKind, list[CopySourceResolver]] = {}
+
+
+PAGE_REQUIREMENT_LOCALE_KEYS: Final[Mapping[bool, str]] = {
+    True: "flows.progress.required",
+    False: "flows.progress.optional",
+}
+"""The required/optional badge keys, keyed by whether the page is required.
+
+Both frontends pick one of these behind a variable and hand it to ``tr()``, so
+no literal reaches the call site and the static scanner cannot see either key
+there. A catalogue strip would then prune both as orphans and the badge would
+raise at render time on a key nobody could find a reference to.
+
+The scanner does read module-level constants whose name carries the
+``_LOCALE_KEYS`` suffix, so centralising the pair here is what keeps them
+visible. That makes the name load-bearing rather than descriptive: renaming this
+constant to something outside the convention silently removes both keys from the
+scan.
+"""
 
 
 def register_copy_source(kind: CopyRefKind, resolver: CopySourceResolver) -> None:

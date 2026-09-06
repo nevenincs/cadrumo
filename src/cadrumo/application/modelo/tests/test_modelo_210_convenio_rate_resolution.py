@@ -40,7 +40,7 @@ from ....domain.calculations.registry.schema_verification import VerificationPre
 from ....domain.deadlines.models import FiscalResidency, IVARegime, TaxpayerProfile
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from .._m210_rate import resolve_m210_rate as _resolve_m210_rate
-from .._verification_predicates import evaluate_applicability_filter, evaluate_predicate_expression
+from .._verification_predicates import _evaluate_applicability_filter, evaluate_predicate_expression
 from ..action_errors import ModeloApplicabilityFilterError
 from ..verification_actions import (
     _evaluate_verification_predicates,
@@ -499,4 +499,4 @@ def test_applicability_filter_unknown_name_raises_value_error() -> None:
 
     profile = _irnr_profile("AR")
     with pytest.raises(ModeloApplicabilityFilterError, match="Unknown applicability filter"):
-        evaluate_applicability_filter("non_resident_irnr_eea_only", profile)
+        _evaluate_applicability_filter("non_resident_irnr_eea_only", profile)

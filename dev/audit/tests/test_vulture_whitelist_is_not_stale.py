@@ -91,6 +91,15 @@ def test_every_mirror_function_carries_a_citation(declared: dict[str, tuple[str,
     it, an exemption could be added here and this file would go on passing
     while checking nothing about it.
     """
+    # The equality catches a ONE-SIDED collapse - a citation added without a
+    # whitelist entry, or the reverse. It cannot catch both emptying
+    # together, which would also reduce the parametrize below to zero cases
+    # and retire that gate in silence. A floor, not a pinned count: the
+    # whitelist declares 6 mirrored parameters.
+    assert len(_CITATIONS) >= 5, (
+        f"only {len(_CITATIONS)} citations remain, so the per-mirror gate below runs "
+        "over almost nothing and this equality is close to vacuous"
+    )
     assert set(declared) == set(_CITATIONS)
 
 

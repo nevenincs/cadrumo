@@ -11,6 +11,7 @@ double.
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from ..quality.modelo_workspace_action_denominator import (
     MODELO_ACTION_CLASSIFICATIONS,
@@ -34,8 +35,18 @@ def test_current_head_denominator_is_green() -> None:
 
 def test_every_live_candidate_is_classified_never_omitted() -> None:
     live = discover_live_modelo_action_signatures()
+
     assert set(live) == set(MODELO_ACTION_CLASSIFICATIONS)
-    assert len(live) > 0
+    # The equality above catches a ONE-SIDED collapse: discovery returning
+    # nothing no longer matches a populated table. It cannot catch the two
+    # sides shrinking together, which is what happens when discovery narrows
+    # and the table is trimmed to make this pass. `> 0` allowed that down to
+    # a single surviving action. A floor, not a pinned count: live the
+    # denominator holds 79 classified action signatures.
+    assert len(live) > 60, (
+        f"the modelo action denominator has fallen to {len(live)} signatures, so the "
+        "classification coverage below is measured over a fraction of the surface"
+    )
 
 
 def test_unclassified_action_candidate_reds() -> None:
@@ -110,7 +121,10 @@ def test_drifted_command_key_signature_reds() -> None:
 
 
 def test_placeholder_reason_is_refused_at_construction() -> None:
-    with pytest.raises(Exception, match="real, bounded reason"):
+    # `Exception` accepted a TypeError from a wrong keyword just as readily
+    # as the model's own refusal, so the validation under test could stop
+    # running without this case noticing.
+    with pytest.raises(ValidationError, match="real, bounded reason"):
         ModeloWorkspaceActionClassificationV1(
             action_identity="modelo.work.review",
             disposition=ModeloWorkspaceActionDisposition.C1_BOUNDED_REVIEW,
@@ -126,7 +140,7 @@ def test_placeholder_reason_is_refused_at_construction() -> None:
 
 
 def test_out_of_scope_identity_is_refused_at_construction() -> None:
-    with pytest.raises(Exception, match="outside the Modelo action denominator"):
+    with pytest.raises(ValidationError, match="outside the Modelo action denominator"):
         ModeloWorkspaceActionClassificationV1(
             action_identity="config.auth.login",
             disposition=ModeloWorkspaceActionDisposition.DEFERRED,

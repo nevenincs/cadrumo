@@ -44,30 +44,6 @@ _log = get_logger(__name__)
 PRORRATA_REGISTER_FILENAME = "prorrata-register.secure-object"
 
 
-def load_prorrata_register() -> ProrrataRegister:
-    """Load the register, returning an empty register when absent.
-
-    Returns:
-        Persisted :class:`ProrrataRegister`, or an empty one when no envelope
-        exists.
-    """
-    return ProrrataRegisterRepository().load()
-
-
-def save_prorrata_register(register: ProrrataRegister) -> Path:
-    """Persist ``register`` as a governed FINANCIAL-class encrypted envelope.
-
-    Args:
-        register: Register document to encrypt and write.
-
-    Returns:
-        Logical secure-object marker for the persisted register.
-    """
-    repository = ProrrataRegisterRepository()
-    repository.save(register)
-    return repository.envelope_path
-
-
 def declare_prorrata_entry(entry: ProrrataRegisterEntry) -> ProrrataRegister:
     """Atomically add or replace ``entry`` in the encrypted register by its key.
 
@@ -78,11 +54,6 @@ def declare_prorrata_entry(entry: ProrrataRegisterEntry) -> ProrrataRegister:
         The updated :class:`ProrrataRegister` including the entry.
     """
     return ProrrataRegisterRepository().upsert_entry(entry)
-
-
-def declare_prorrata_activity_row(row: ProrrataActivityRow) -> ProrrataRegister:
-    """Atomically add or replace a canonical activity row by stable identity."""
-    return ProrrataRegisterRepository().upsert_activity_row(row)
 
 
 class ProrrataRegisterRepository:
@@ -301,8 +272,5 @@ class ProrrataRegisterRepository:
 
 __all__ = [
     "ProrrataRegisterRepository",
-    "declare_prorrata_activity_row",
     "declare_prorrata_entry",
-    "load_prorrata_register",
-    "save_prorrata_register",
 ]

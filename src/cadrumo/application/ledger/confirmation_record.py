@@ -65,7 +65,6 @@ __all__ = [
     "field_assertions",
     "load_confirmation_records",
     "re_stamped_provenance",
-    "read_confirmation_record",
     "write_confirmation_record",
 ]
 
@@ -297,17 +296,6 @@ def load_confirmation_records(bucket_id: str, settings: Settings | None = None) 
     """Load a bucket's confirmation records, or an empty document when none exist."""
     document = _repository(bucket_id, settings).load(bucket_id)
     return document if document is not None else ConfirmationRecordDocument(bucket_id=bucket_id)
-
-
-def read_confirmation_record(
-    *,
-    bucket_id: str,
-    confirmation_id: str,
-    settings: Settings | None = None,
-) -> InvoiceConfirmationRecord | None:
-    """Return one confirmation record by its derived id, or ``None``."""
-    document = load_confirmation_records(bucket_id, settings)
-    return next((row for row in document.records if row.confirmation_id == confirmation_id), None)
 
 
 def write_confirmation_record(

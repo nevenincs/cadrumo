@@ -1471,7 +1471,8 @@ tui:
       confirm: Confirmar enlace
       confirming: Confirma este enlace local.
       counterparty_match: Coincide la contraparte
-      direction:
+      direction: Dirección
+      direction_state:
         invoice_only: Solo la factura cita el apunte
         transaction_only: Solo el apunte cita la factura
       empty: No hay tareas locales de conciliación disponibles.

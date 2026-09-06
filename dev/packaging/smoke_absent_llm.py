@@ -378,7 +378,9 @@ def _drive_surfaces(work_dir: Path, venv_path: Path, calls: str, *, leaf: str) -
 import json
 
 from cadrumo.application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
-from cadrumo.core import FieldOrigin, ImageMediaType, MissingOptionalExtraError
+from cadrumo.core.field_origin import FieldOrigin
+from cadrumo.core.image_media_type import ImageMediaType
+from cadrumo.core.optional_extras import MissingOptionalExtraError
 from cadrumo.llm.models import MultimodalImageInput
 {_surface_imports()}
 
@@ -540,7 +542,7 @@ def _distributions_providing(import_name: str) -> set[str]:
 def _assert_extra_probes_absent(work_dir: Path, venv_path: Path) -> None:
     """Verify the installed core venv reports the extra as absent."""
     code = f"""
-from cadrumo.core import LLM_EXTRA, optional_extra_available
+from cadrumo.core.optional_extras import LLM_EXTRA, optional_extra_available
 
 if optional_extra_available(LLM_EXTRA):
     raise SystemExit(
@@ -574,7 +576,9 @@ def _assert_inference_surfaces_refuse(work_dir: Path, venv_path: Path) -> None:
 import json
 
 from cadrumo.application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
-from cadrumo.core import FieldOrigin, ImageMediaType, MissingOptionalExtraError
+from cadrumo.core.field_origin import FieldOrigin
+from cadrumo.core.image_media_type import ImageMediaType
+from cadrumo.core.optional_extras import MissingOptionalExtraError
 from cadrumo.llm.models import MultimodalImageInput
 {_surface_imports()}
 

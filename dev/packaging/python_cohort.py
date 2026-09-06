@@ -624,16 +624,58 @@ def _probe_installed_command_specs(*, site_root: Path, work_root: Path) -> dict[
     return projection
 
 
+def _install_relative_probe_reads(
+    projection: dict[str, Any],
+    *,
+    site_root: Path,
+) -> dict[str, Any]:
+    """Return the projection with everything the probe read named as an install member.
+
+    The probe reports its module origins and the packaged data it resolved as
+    absolute paths, and the tree it probes is a per-build scratch directory: its
+    name carries the building process and a fresh random discriminator, and it
+    sits inside a temporary clone whose own name is minted per build. Sealing
+    those strings makes the envelope -- and so the cohort identifier every
+    release evidence row binds to -- a function of WHERE a build ran rather than
+    of what it built. Two builds of one commit then agree on every artifact byte
+    and still publish two identifiers, which is the property an immutable cohort
+    exists to deny.
+
+    A relative POSIX member is the form the wheel listing is expressed in and
+    the form an installation actually carries, so this is also the form the
+    member check below compares against. Containment is PROVED here, by the
+    parent performing the rewrite, rather than trusted from the probe's own
+    assertion across a process boundary.
+
+    Returns:
+        The projection with install-relative ``origins`` and ``packaged_resources``.
+    """
+    root = site_root.resolve()
+
+    def member_of(label: str, path: str) -> str:
+        try:
+            return Path(path).relative_to(root).as_posix()
+        except ValueError:
+            raise SystemExit(f"CommandSpec attestation {label} escaped its probe tree: {path}") from None
+
+    return {
+        **projection,
+        "origins": [[name, member_of(f"origin {name}", origin)] for name, origin in projection["origins"]],
+        "packaged_resources": [
+            member_of("packaged resource", resource) for resource in projection["packaged_resources"]
+        ],
+    }
+
+
 def _assert_probe_reads_are_wheel_members(
     projection: dict[str, Any],
     artifact_projection: tuple[tuple[str, str], ...],
-    *,
-    site_root: Path,
 ) -> None:
     """Refuse an attestation describing anything the root wheel does not ship.
 
-    The probe already proves everything it read resolved inside ``site_root``.
-    This adds the second half: that ``site_root``'s copy of each of those files
+    Reads the install-relative projection :func:`_install_relative_probe_reads`
+    produced, which has already proved every read resolved inside the probed
+    tree. This adds the second half: that the tree's copy of each of those files
     is also carried by the wheel. The build tree deliberately holds more than
     the wheel does -- the wheel target excludes the test payload -- so a
     projection taken over the tree without this check could describe files no
@@ -650,24 +692,13 @@ def _assert_probe_reads_are_wheel_members(
     the opposite.
     """
     wheel_members = {member for kind, member in artifact_projection if kind == "wheel"}
-    root = site_root.resolve()
-
-    def member_of(label: str, path: str) -> str:
-        try:
-            return Path(path).relative_to(root).as_posix()
-        except ValueError:
-            raise SystemExit(f"CommandSpec attestation {label} escaped its probe tree: {path}") from None
-
     resources: list[str] = list(projection["packaged_resources"])
     if not resources:
         # Vacuity, not absence: the locale completeness check the probe runs
         # passes trivially over an empty catalogue, so an attestation reporting
         # no resource read cannot have sealed the projection it claims to.
         raise SystemExit("CommandSpec attestation sealed a locale projection over no packaged resource file")
-    read: list[str] = [
-        *(member_of(f"origin {name}", origin) for name, origin in projection["origins"]),
-        *(member_of("packaged resource", resource) for resource in resources),
-    ]
+    read: list[str] = [*(origin for _name, origin in projection["origins"]), *resources]
     unshipped = sorted({member for member in read if member not in wheel_members})
     if unshipped:
         raise SystemExit(
@@ -956,12 +987,14 @@ def attest_command_specs(
 ) -> dict[str, object]:
     """Probe one importable Cadrumo tree and seal the attestation it supports.
 
-    The single composition of the four steps a cohort attestation takes: probe
-    the tree, project the artifact members, prove everything the probe read is
-    something the root wheel ships, and seal the envelope. The cohort builder
-    and every fixture that assembles a cohort from real artifacts call this
-    rather than reproducing the ordering, since a caller that skipped the third
-    step would seal a projection describing files no installation has.
+    The single composition of the five steps a cohort attestation takes: probe
+    the tree, name what the probe read as install members, project the artifact
+    members, prove everything the probe read is something the root wheel ships,
+    and seal the envelope. The cohort builder and every fixture that assembles a
+    cohort from real artifacts call this rather than reproducing the ordering,
+    since a caller that skipped the second step would seal its own build
+    location into the identifier, and one that skipped the fourth would seal a
+    projection describing files no installation has.
 
     Args:
         site_root: The importable tree to probe -- the ``src`` directory of the
@@ -982,7 +1015,10 @@ def attest_command_specs(
     Returns:
         The validated attestation envelope.
     """
-    projection = _probe_installed_command_specs(site_root=site_root, work_root=work_root)
+    projection = _install_relative_probe_reads(
+        _probe_installed_command_specs(site_root=site_root, work_root=work_root),
+        site_root=site_root,
+    )
     resolved = digests or (sha256_path(root_wheel), sha256_path(root_sdist), sha256_path(source_archive))
     artifact_projection = _cached_artifact_command_projection(
         root_wheel,
@@ -990,7 +1026,7 @@ def attest_command_specs(
         source_archive,
         digests=resolved,
     )
-    _assert_probe_reads_are_wheel_members(projection, artifact_projection, site_root=site_root)
+    _assert_probe_reads_are_wheel_members(projection, artifact_projection)
     return _command_spec_attestation(
         projection,
         artifact_projection,

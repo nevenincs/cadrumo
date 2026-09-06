@@ -58,7 +58,7 @@ import googleapiclient.discovery
 import playwright.async_api
 import playwright_stealth
 
-from cadrumo.core import ANTHROPIC_EXTRA, BROWSER_EXTRA, GOOGLE_EXTRA, require_optional_extra
+from cadrumo.core.optional_extras import ANTHROPIC_EXTRA, BROWSER_EXTRA, GOOGLE_EXTRA, require_optional_extra
 
 for extra in (GOOGLE_EXTRA, BROWSER_EXTRA, ANTHROPIC_EXTRA):
     require_optional_extra(extra)

@@ -48,7 +48,6 @@ from ....application.user_profile.acquisition_sources import (
 from ....application.user_profile.presentation import notice_presentation, profile_field_shape_hint
 from ....core.i18n.render import tr
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from ....entrypoints.tui.components.host import ScreenHostApp
 from ....entrypoints.tui.components.status import PinnedStatusBar
 from ....entrypoints.tui.components.theme import (
     BASE_CSS,
@@ -936,17 +935,6 @@ class ProfileManagerScreen(TypedAppAccess, Screen[None]):
         toggle_appearance(self.app)
 
 
-def run_profile_manager_tui(
-    overview: ProfileOverview,
-    *,
-    persist: Callable[[str, str], ProfileOverview],
-    validate: Callable[[str, str], str | None] | None = None,
-) -> None:
-    """Run the manager to completion against an already-built overview."""
-    ScreenHostApp(ProfileManagerScreen(overview, persist=persist, validate=validate)).run()
-
-
 __all__ = [
     "ProfileManagerScreen",
-    "run_profile_manager_tui",
 ]

@@ -84,6 +84,15 @@ def _catalogue_payload(locale: str) -> dict[str, object]:
 # This allowlist ratchets: adding a line is a reviewed edit that must state why
 # the namespace is genuinely open-ended.
 OPEN_ENDED_NAMESPACES: dict[str, str] = {
+    "tui.home.reason": (
+        "tui.home.reason.{item.reason_code} -- the reason code travels on a "
+        "projected workbench item, not an enum the scanner can import, and the "
+        "call site is written to survive that: it renders the key, compares the "
+        "result against the key, and falls back to the generic action line when "
+        "nothing resolved. An unregistered code degrades to honest copy rather "
+        "than to a leaked identifier, so the space cannot be closed at import "
+        "time and does not need to be."
+    ),
     "profile.keys": (
         "profile.keys.{question.profile_key} — keyed by the wizard question's "
         "profile fact path (application/wizard/compiler.py). The fact-path "
@@ -364,6 +373,14 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         ("entrypoints/cli/_root_cli.py", "root_command"),
         ("entrypoints/cli/_common.py", "activate_subcommand_output_language"),
         ("entrypoints/cli/config/custody.py", "_pin_render_language_to_target_bucket"),
+        # Scope-closed before return, with nothing rendering afterwards: the
+        # override is entered on an ExitStack that unwinds at the end of the
+        # function body, and the only work after it is render_outcome(), which
+        # is json.dumps over prose the session already produced INSIDE the
+        # scope. There is no ctx here to hang the override on -- this is a
+        # full-screen session subprocess entrypoint, not a Typer callback -- so
+        # the ctx-scoped requirement below deliberately does not cover it.
+        ("entrypoints/tui/destination_session.py", "run_requested_destination"),
     },
 )
 
@@ -450,4 +467,449 @@ def test_language_override_sites_match_the_sanctioned_inventory() -> None:
     assert not unwrapped, (
         "ctx-scoped override sites no longer enter through ctx.with_resource(...) - "
         f"they have silently become post-callback-unwind exposed: {sorted(unwrapped)}"
+    )
+
+
+def test_a_locale_key_mapping_declares_its_values_and_not_its_lookup_tokens() -> None:
+    """Incident 3: a registry's KEYS are what the runtime selects on, not translations.
+
+    A locale-key mapping is keyed by whatever picks the entry -- an enum value,
+    a route identity, a catalogue action id -- and only its values are locale
+    keys. Those tokens are dotted often enough to pass for keys:
+    ``workbench.home`` is a TUI route and ``operator.profile.edit`` a catalogue
+    action, and collecting them made the parity gate demand translations for
+    24 identifiers no catalogue should ever have carried.
+
+    The distinction only exists for a mapping. A tuple or list under the same
+    naming convention is a flat set of keys and is still collected whole, which
+    is the half this must not break.
+    """
+    from .._ast_scanner import scan_source_text
+
+    source = chr(10).join(
+        (
+            "_ROUTE_LOCALE_KEYS = {",
+            '    "workbench.home": "tui.search.destination.home",',
+            '    "operator.profile.edit": "tui.search.action.edit_profile",',
+            "}",
+            "_FLAT_LOCALE_KEYS = (",
+            '    "tui.search.refusal.unknown",',
+            ")",
+        )
+    )
+
+    keys = scan_source_text(source, filename="probe.py")
+
+    assert "tui.search.destination.home" in keys
+    assert "tui.search.action.edit_profile" in keys
+    assert "tui.search.refusal.unknown" in keys, "a flat registry must still be collected whole"
+    assert "workbench.home" not in keys, "a route identity is not a locale key"
+    assert "operator.profile.edit" not in keys, "a catalogue action id is not a locale key"
+
+
+def test_a_row_table_is_confirmed_by_its_key_column_and_not_a_prose_sibling() -> None:
+    """Incident 4: which COLUMN reaches the sink decides whether a table holds keys.
+
+    A row table is confirmed by being iterated into a translator. Confirming on
+    ANY unpacked name is too loose: the sibling columns are prose by design, so
+    a table whose English refusal reaches ``raise ValueError(...)`` was read as
+    a locale-key table, and its key column -- canonical COMMAND keys like
+    ``ledger.review`` -- was collected as translations to demand.
+
+    The genuine shape must keep working, so both directions are pinned here:
+    the key column reaching ``tr`` still confirms.
+    """
+    from .._ast_scanner import scan_source_text
+
+    prose_sink = chr(10).join(
+        (
+            '_GUARDS = (("review_action", "ledger.review", "injected action is not canonical"),)',
+            "def guard(supplied):",
+            "    for attribute, command_key, refusal in _GUARDS:",
+            "        if supplied[attribute] != command_key:",
+            "            raise ValueError(refusal)",
+        )
+    )
+    key_sink = chr(10).join(
+        (
+            '_ROWS = (("prefix", "flows.errors.blank_required", "English source"),)',
+            "def render():",
+            "    for prefix, key, default in _ROWS:",
+            "        tr(key)",
+        )
+    )
+
+    assert "ledger.review" not in scan_source_text(prose_sink, filename="guards.py"), (
+        "a command key is not a translation key because its prose sibling reached a raise"
+    )
+    assert "flows.errors.blank_required" in scan_source_text(key_sink, filename="rows.py"), (
+        "a key column reaching tr must still confirm its table"
+    )
+
+
+def test_a_positional_translation_key_needs_every_same_named_helper_to_agree(tmp_path) -> None:
+    """Incident 5: resolving a key by parameter NAME collides on function name.
+
+    A command spec fills its help key positionally into a helper defined in
+    another module, so the key is invisible without the callee signature.
+    Resolving it by bare function name collides: eight ``_leaf`` helpers ship
+    here, carrying ``help_key`` at index 3, 1 or 2, and one whose index 1 is
+    ``module``. Taking the union collected module import paths as translation
+    keys, and the parity gate reported them as missing translations.
+
+    A position counts only when EVERY definition of that name carries a
+    translation-key parameter there. Both halves are pinned here: the agreeing
+    name resolves, the disagreeing one yields nothing rather than guessing.
+    """
+    from .._ast_scanner import scan_source_tree
+
+    (tmp_path / "helpers.py").write_text(
+        chr(10).join(
+            (
+                "def option(name, flags, help_key):",
+                "    return (name, flags, help_key)",
+                "def leaf(token, help_key, handler):",
+                "    return (token, help_key, handler)",
+            )
+        ),
+        encoding="utf-8",
+    )
+    (tmp_path / "other.py").write_text(
+        chr(10).join(
+            (
+                "def leaf(token, module, parameters):",
+                "    return (token, module, parameters)",
+            )
+        ),
+        encoding="utf-8",
+    )
+    (tmp_path / "specs.py").write_text(
+        chr(10).join(
+            (
+                'option("note", ("--note",), "cli.app.ledger.note_help")',
+                'leaf("calculate", "cadrumo.entrypoints.cli._work_cli", "handler")',
+            )
+        ),
+        encoding="utf-8",
+    )
+
+    keys = scan_source_tree(tmp_path)
+
+    assert "cli.app.ledger.note_help" in keys, "an agreeing helper must resolve its positional key"
+    assert "cadrumo.entrypoints.cli._work_cli" not in keys, (
+        "definitions that disagree on the position must collect nothing there"
+    )
+
+def test_a_local_translator_wrapper_is_followed_but_only_when_it_forwards_its_key(tmp_path) -> None:
+    """Incident 6: every TUI surface routes copy through its own boundary helper.
+
+    `def aeat_sync_copy(key, **values): return tr(key, **values)` means the call
+    sites read `aeat_sync_copy("tui.aeat_sync.column.area")` and never `tr(...)`.
+    The scanner resolved aliased IMPORTS of tr but not a wrapper defined as a
+    function, so every key reaching the catalogue through one of these
+    boundaries read as an orphan -- 89 of them.
+
+    The shape is deliberately tight, and the negative case is what keeps it so:
+    the function must forward its OWN first parameter. A helper that calls tr on
+    something else is not a key channel, and its arguments are not keys.
+    """
+    from .._ast_scanner import scan_source_tree
+
+    (tmp_path / "boundary.py").write_text(
+        chr(10).join((
+            "def copy(key, **values):",
+            "    return tr(key, **values)",
+            "def shout(text):",
+            '    return tr("ui.fixed.banner") + text',
+        )),
+        encoding="utf-8",
+    )
+    (tmp_path / "screen.py").write_text(
+        chr(10).join((
+            'copy("tui.aeat_sync.column.area")',
+            'shout("tui.aeat_sync.column.not_a_key")',
+        )),
+        encoding="utf-8",
+    )
+
+    keys = scan_source_tree(tmp_path)
+
+    assert "tui.aeat_sync.column.area" in keys, "a wrapper forwarding its key must be followed"
+    assert "ui.fixed.banner" in keys, "the non-forwarding helper still declares its own literal"
+    assert "tui.aeat_sync.column.not_a_key" not in keys, (
+        "a helper that does not forward its first parameter is not a key channel"
+    )
+
+
+def test_a_translation_key_kwarg_is_read_through_a_conditional(tmp_path) -> None:
+    """Incident 7: a key chosen by a conditional is still a key.
+
+    `empty_key="a.b" if not rows else None` is how a surface says "this label
+    depends on state". The collector read only a bare literal, so BOTH arms
+    vanished -- and the failure is asymmetric in the worst direction: the key
+    that ships is the one behind the condition, so the catalogue looks complete
+    on the path a developer happens to exercise and is missing on the other.
+
+    The negative arm matters as much: `None` is not a key, and a value that is
+    not a dotted literal must not be invented into one.
+    """
+    from .._ast_scanner import scan_source_text
+
+    source = chr(10).join((
+        "def render(rows):",
+        "    return table(",
+        '        label_key="flows.progress.rows_present",',
+        '        empty_key="flows.progress.rows_absent" if not rows else None,',
+        "    )",
+    ))
+
+    keys = scan_source_text(source, filename="table.py")
+
+    assert "flows.progress.rows_present" in keys, "a plain key kwarg must be collected"
+    assert "flows.progress.rows_absent" in keys, (
+        "a key inside a conditional is the key that ships on that branch"
+    )
+    assert not any(key.endswith("None") for key in keys), "a non-literal arm is not a key"
+
+
+def test_a_key_registry_is_flow_confirmed_through_a_boundary_wrapper(tmp_path) -> None:
+    """Incident 8: the same wrapper blindness as Incident 6, one layer down.
+
+    A dict shaped as a key registry is admitted only when it is proved to
+    REACH a translator -- shape alone is deliberately insufficient, because
+    same-shaped lookup tables exist that never translate. That proof consulted
+    only `tr` and its import aliases, so a registry read through the boundary
+    helper every surface is asked to use was never confirmed, and every key in
+    it read as an orphan.
+
+    Shape alone must still not be enough, which is what the second registry
+    pins: a same-shaped table nothing reads stays unconfirmed even in a module
+    that has a wrapper in it.
+    """
+    from .._ast_scanner import scan_source_tree
+
+    (tmp_path / "boundary.py").write_text(
+        chr(10).join(("def screen_copy(key, **values):", "    return tr(key, **values)")),
+        encoding="utf-8",
+    )
+    (tmp_path / "controller.py").write_text(
+        chr(10).join((
+            "_AVAILABILITY_KEYS = {",
+            '    Availability.STALE: "tui.declarations.availability.stale",',
+            "}",
+            "_ROUTING_TABLE = {",
+            '    Notice.RETRY: "notice.machine.retry",',
+            "}",
+            "def label(value):",
+            "    return screen_copy(_AVAILABILITY_KEYS[value])",
+        )),
+        encoding="utf-8",
+    )
+
+    keys = scan_source_tree(tmp_path)
+
+    assert "tui.declarations.availability.stale" in keys, (
+        "a registry read through a boundary wrapper reaches the translator and is confirmed"
+    )
+    assert "notice.machine.retry" not in keys, (
+        "shape alone must still not confirm a table nothing reads into a translator"
+    )
+
+
+def test_a_dynamic_namespace_is_read_when_its_prefix_is_selected_from_a_table() -> None:
+    """Incident 9: a screen that renders every enum through one helper.
+
+    The namespace rule required the f-string's HEAD to be the dotted literal.
+    A workspace that renders each public enum through one helper does not write
+    the prefix at the call site -- it declares a table of prefixes, selects one
+    by the enum's class name, and appends the member value. The head is then an
+    interpolation, so no namespace was declared at all and every key the helper
+    builds read as an orphan.
+
+    The tail is an enum member value, so the key space is bounded by the enum
+    definition -- the same criterion the wizard namespaces already qualify
+    under.
+
+    The negative arm is what keeps the rule from becoming "any f-string that
+    starts with a variable": the segment after the interpolation must begin
+    with the dot, which is what proves the name is being used AS a dotted
+    prefix rather than as ordinary leading text.
+    """
+    from .._ast_scanner import scan_namespace_markers_in_text
+
+    source = chr(10).join((
+        "_LABEL_PREFIXES = {",
+        '    "AeatSyncCensusStatus": "tui.aeat_sync.census_status",',
+        "}",
+        "_GREETINGS = {",
+        '    "morning": "cli.greeting.morning",',
+        "}",
+        "def label(value):",
+        "    prefix = _LABEL_PREFIXES.get(type(value).__name__)",
+        '    return copy(f"{prefix}.{value.value}")',
+        "def greet(slot):",
+        "    greeting = _GREETINGS.get(slot)",
+        '    return f"{greeting} and welcome"',
+    ))
+
+    markers = scan_namespace_markers_in_text(source, filename="screens.py")
+
+    assert "tui.aeat_sync.census_status.*" in markers, (
+        "a prefix selected from a declared table and dotted onto is a namespace"
+    )
+    assert "cli.greeting.morning.*" not in markers, (
+        "an interpolation not followed by a dot is not being used as a prefix"
+    )
+
+
+def test_a_column_table_is_read_as_an_attribute_and_confirmed_by_its_key_index() -> None:
+    """Incident 10: the screen column table, held as a ClassVar and indexed.
+
+    Three things stood between this table and the scanner, and each alone was
+    enough to hide every heading key in it:
+
+    * the row carries a WIDTH, and the shape test demanded all-string rows, so
+      the table was never even a candidate;
+    * it is read back as `self._COLUMNS`, an attribute, while confirmation
+      required a bare name to be iterated;
+    * the row is bound whole and the key taken as `column[1]`, while
+      confirmation looked for an unpacked name.
+
+    The key-column discipline is unchanged and is what the negative arm pins:
+    indexing a PROSE sibling into the translator says nothing about the table,
+    exactly as it says nothing when the row is unpacked. A width is no more a
+    key than prose is, which is why a non-string cell is carried as a position
+    that can never be a key column rather than as grounds to reject the table.
+    """
+    from .._ast_scanner import scan_source_text
+
+    key_index = chr(10).join((
+        "class Screen:",
+        "    _COLUMNS = (",
+        '        ("date", "tui.ledger.column.date", 10),',
+        '        ("amount", "tui.ledger.column.amount", 14),',
+        "    )",
+        "    def render(self):",
+        "        for column in self._COLUMNS:",
+        "            yield tr(column[1])",
+    ))
+    prose_index = key_index.replace("tr(column[1])", "tr(column[0])")
+
+    collected = scan_source_text(key_index, filename="entries.py")
+
+    assert "tui.ledger.column.date" in collected, "a width sibling must not disqualify the table"
+    assert "tui.ledger.column.amount" in collected, "the attribute read and the key index both confirm"
+    assert "tui.ledger.column.amount" not in scan_source_text(prose_index, filename="entries.py"), (
+        "indexing a prose column into the translator does not confirm the table"
+    )
+
+    # A sibling need not be a literal at all. The choice table pairs its key
+    # with the ENUM member the choice sets, and demanding literal constants
+    # rejected that table as surely as demanding strings rejected the one
+    # above -- same shape, different sibling.
+    enum_sibling = chr(10).join((
+        "_CHOICES = (",
+        '    (BusinessClassification.BUSINESS, "tui.ledger.classification.business"),',
+        '    (BusinessClassification.PERSONAL, "tui.ledger.classification.personal"),',
+        ")",
+        "for classification, key in _CHOICES:",
+        "    table.add_row(tr(key), key=classification.value)",
+    ))
+
+    assert "tui.ledger.classification.business" in scan_source_text(enum_sibling, filename="classification.py"), (
+        "an enum member sibling must not disqualify the table either"
+    )
+
+
+def test_a_class_attribute_key_is_confirmed_by_the_attribute_the_base_renders(tmp_path) -> None:
+    """Incident 11: a screen family names its banner on the subclass.
+
+    The subclass declares `heading = "tui.aeat_sync.census.title"` and the base
+    renders `aeat_sync_copy(self.heading)`. That declaration is not a call, a
+    suffixed registry constant, or a collection, so every rule in the scanner
+    looked straight past it and each subclass banner read as an orphan.
+
+    The negative arm is the one this scanner has already been bitten by: a
+    class attribute holding a dotted literal is just as likely to be a route or
+    an action id as a translation key, and `workbench.home` is a lookup token,
+    not copy. The attribute NAME must be read into a translator for its
+    literals to count -- the same bargain the dict and row-table shapes strike.
+    """
+    from .._ast_scanner import scan_source_tree
+
+    (tmp_path / "boundary.py").write_text(
+        chr(10).join(("def screen_copy(key, **values):", "    return tr(key, **values)")),
+        encoding="utf-8",
+    )
+    (tmp_path / "screens.py").write_text(
+        chr(10).join((
+            "class Base:",
+            "    def compose(self):",
+            "        yield Static(screen_copy(self.heading))",
+            "class Census(Base):",
+            '    heading = "tui.aeat_sync.census.title"',
+            '    route = "workbench.census.home"',
+        )),
+        encoding="utf-8",
+    )
+
+    keys = scan_source_tree(tmp_path)
+
+    assert "tui.aeat_sync.census.title" in keys, "the attribute the base renders carries a real key"
+    assert "workbench.census.home" not in keys, (
+        "a class attribute nothing renders is a route or an action id, not copy"
+    )
+
+
+def test_every_translation_key_annotated_parameter_is_declared_a_key_kwarg() -> None:
+    """Incident 12: the kwarg set was grown one orphan at a time.
+
+    `_TRANSLATION_KEY_KWARGS` decides which keyword arguments carry a locale
+    key, and every entry in it arrived because somebody chased a key that had
+    gone missing. That is discovery by casualty: a parameter is only added
+    after its keys have already been invisible for a while.
+
+    The codebase states the answer in the type. A parameter annotated
+    `TranslationKey` IS a translation key, so the annotation -- not a
+    maintainer's memory -- is what the set must agree with. Three names were
+    missing when this gate was written (`reason_key`, `short_help_key`,
+    `prompt_key`, `confirmation_prompt_key`).
+
+    The set stays hand-written rather than derived, deliberately: it is read at
+    five sites and an explicit list is auditable, while a set computed from a
+    tree walk hides the surface it admits. The gate is what makes the list
+    honest.
+    """
+    import ast
+
+    from .._ast_scanner import _TRANSLATION_KEY_KWARGS
+
+    def _names_the_translation_key_type(annotation: ast.expr | None) -> bool:
+        if isinstance(annotation, ast.Name):
+            return annotation.id == "TranslationKey"
+        if isinstance(annotation, ast.Constant) and isinstance(annotation.value, str):
+            return annotation.value.split("|")[0].strip() == "TranslationKey"
+        if isinstance(annotation, ast.BinOp) and isinstance(annotation.op, ast.BitOr):
+            return _names_the_translation_key_type(annotation.left) or _names_the_translation_key_type(
+                annotation.right
+            )
+        return False
+
+    annotated: set[str] = set()
+    for module in scan_directory(SRC_DIR, pattern="*.py", recursive=True):
+        if "TranslationKey" not in module.read_text(encoding="utf-8"):
+            continue
+        tree = ast.parse(module.read_text(encoding="utf-8"), filename=str(module))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+                if _names_the_translation_key_type(node.annotation):
+                    annotated.add(node.target.id)
+            elif isinstance(node, ast.arg) and _names_the_translation_key_type(node.annotation):
+                annotated.add(node.arg)
+
+    assert annotated, "no TranslationKey-annotated parameter was found, so this proved nothing"
+    undeclared = sorted(annotated - set(_TRANSLATION_KEY_KWARGS))
+    assert not undeclared, (
+        "these parameters are annotated TranslationKey but are not declared translation-key "
+        f"kwargs, so every dotted literal passed to one is invisible to the scanner: {undeclared}"
     )

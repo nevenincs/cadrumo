@@ -147,14 +147,14 @@ def _drive_surfaces(work_dir: Path, python: Path) -> dict[str, object]:
 
         import cadrumo
         from cadrumo.application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
-        from cadrumo.core import (
-            FieldOrigin,
-            ImageMediaType,
+        from cadrumo.core.field_origin import FieldOrigin
+        from cadrumo.core.image_media_type import ImageMediaType
+        from cadrumo.core.optional_extras import (
             LLM_EXTRA,
-            LOCAL_TRANSPORT_LABEL,
             MissingOptionalExtraError,
             optional_extra_available,
         )
+        from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
         from cadrumo.llm import (
 {llm_imports}
         )

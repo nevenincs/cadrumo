@@ -99,6 +99,7 @@ _DYNAMIC_TRANSLATION_ROOTS = frozenset(
         "profile",
         "sheets",
         "topic",
+        "tui",
         "wizard",
     },
 )
@@ -128,6 +129,20 @@ the ``"wizard"`` root entry:
 These patterns are picked up by :func:`_extract_fstring_prefixes` and emitted
 as ``wizard.setup.*`` namespace markers, which the parity check validates
 against concrete locale entries. No additional static registration is needed.
+
+The ``"tui"`` entry earns its place by the same criterion, through a different
+shape. A workspace screen renders every public enum on it with one helper that
+selects a prefix from a declared table and appends the member value::
+
+    _LABEL_PREFIXES = {"AeatSyncCensusStatus": "tui.aeat_sync.census_status", ...}
+    return aeat_sync_copy(f"{prefix}.{value.value}")
+
+The tail is an enum member value, so the key space is bounded by the enum
+definitions exactly as the wizard patterns above are. Admitting the root does
+NOT tolerate ``tui.*`` at large: a marker is still emitted only where a
+concrete dotted prefix is written down in source and used as one, which
+:func:`_interpolated_head_prefixes` requires by demanding the segment after the
+interpolation begin with the dot.
 """
 
 
@@ -143,7 +158,30 @@ against concrete locale entries. No additional static registration is needed.
 #: would otherwise be silently invisible. Stated rather than left implied, so nobody
 #: later reads it as evidence that bare help kwargs exist.
 _TRANSLATION_KEY_KWARGS: frozenset[str] = frozenset(
-    {"translated_message", "message_key", "translation_key", "message_locale_key", "help_key"},
+    {
+        "translated_message",
+        "message_key",
+        "translation_key",
+        "message_locale_key",
+        "help_key",
+        # A navigation entry's operator-facing label and a zone's empty-state
+        # line are keys by the same convention as help_key: the parameter is
+        # named for the key it takes, and every value passed to one is a
+        # catalogue-rooted dotted literal. Both were reaching the catalogue
+        # through call sites nothing here read, so their keys looked orphaned.
+        "label_key",
+        "empty_key",
+        # These three are not a judgement call: the parameter is DECLARED
+        # `TranslationKey`, so the type states what the value is. They were
+        # missing because this set was grown one orphan at a time, which is
+        # why `test_every_translation_key_annotated_parameter_is_declared_here`
+        # now holds the set to the annotations rather than to whoever last
+        # chased a key.
+        "reason_key",
+        "short_help_key",
+        "prompt_key",
+        "confirmation_prompt_key",
+    },
 )
 
 #: Single-argument constructors and helpers that WRAP a translation key without
@@ -202,7 +240,7 @@ def _is_dynamic_translation_prefix(prefix: str) -> bool:
     return root in _DYNAMIC_TRANSLATION_ROOTS
 
 
-def _extract_error_constructor_keys(tree: ast.AST) -> set[str]:
+def _extract_error_constructor_keys(tree: ast.AST, extra_translators: frozenset[str] = frozenset()) -> set[str]:
     """Find translation keys declared anywhere in the module.
 
     Collects positional translation keys passed to classes whose name
@@ -215,7 +253,7 @@ def _extract_error_constructor_keys(tree: ast.AST) -> set[str]:
     ``translated_message``/``message_key``/``translation_key`` parameters.
     """
     findings: set[str] = set()
-    tr_names = _translation_call_names(tree)
+    tr_names = _translation_call_names(tree) | extra_translators
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef):
             _collect_kwonly_default_keys(node, findings)
@@ -243,7 +281,57 @@ def _translation_call_names(tree: ast.AST) -> frozenset[str]:
     return frozenset(names)
 
 
-def _extract_locale_constant_keys(tree: ast.AST) -> set[str]:
+def _flow_confirmed_class_attribute_keys(tree: ast.AST, wrappers: frozenset[str] = frozenset()) -> set[str]:
+    """Return dotted literals a class declares as an attribute and reads into a translator.
+
+    A screen family names its own banner on the subclass and lets the base
+    render it::
+
+        class AeatSyncCensusScreen(AeatSyncWorkspaceScreen):
+            heading = "tui.aeat_sync.census.title"
+        ...
+            yield Static(aeat_sync_copy(self.heading), ...)
+
+    Nothing about that declaration is a call, a registry constant, or a
+    collection, so every rule here looked past it and each subclass banner read
+    as an orphan.
+
+    Shape alone is again insufficient, and here the counter-example is one this
+    scanner has already been bitten by: a class attribute holding a dotted
+    literal is just as likely to be a route or an action id as a key. The
+    attribute NAME must be read into a translator somewhere for its literals to
+    count, which is the same bargain the dict and row-table shapes strike.
+    """
+    candidates: dict[str, set[str]] = {}
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ClassDef):
+            continue
+        for statement in node.body:
+            target: ast.expr | None = None
+            value: ast.expr | None = None
+            if isinstance(statement, ast.Assign) and len(statement.targets) == 1:
+                target, value = statement.targets[0], statement.value
+            elif isinstance(statement, ast.AnnAssign):
+                target, value = statement.target, statement.value
+            if not isinstance(target, ast.Name) or not isinstance(value, ast.Constant):
+                continue
+            if isinstance(value.value, str) and _is_dotted_literal(value.value):
+                candidates.setdefault(target.id, set()).add(value.value)
+    if not candidates:
+        return set()
+
+    tr_names = _translation_call_names(tree) | wrappers
+    findings: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        for argument in _call_site_key_argument_exprs(node, tr_names):
+            if isinstance(argument, ast.Attribute) and argument.attr in candidates:
+                findings |= candidates[argument.attr]
+    return findings
+
+
+def _extract_locale_constant_keys(tree: ast.AST, wrappers: frozenset[str] = frozenset()) -> set[str]:
     """Find dotted locale keys declared in explicit locale-key constants.
 
     Recognizes two independent declaration shapes: a constant NAMED as a
@@ -259,8 +347,10 @@ def _extract_locale_constant_keys(tree: ast.AST) -> set[str]:
     one dotted identifier to another without ever reaching the translator —
     from being misread as a locale-key declaration.
     """
-    findings: set[str] = set()
-    flow_confirmed = _flow_confirmed_locale_key_dicts(tree) | _flow_confirmed_locale_key_row_tables(tree)
+    findings: set[str] = _flow_confirmed_class_attribute_keys(tree, wrappers)
+    flow_confirmed = _flow_confirmed_locale_key_dicts(tree, wrappers) | _flow_confirmed_locale_key_row_tables(
+        tree, wrappers
+    )
     for node in ast.walk(tree):
         if isinstance(node, ast.Assign):
             named = any(_declares_locale_key_constant(target) for target in node.targets)
@@ -268,13 +358,34 @@ def _extract_locale_constant_keys(tree: ast.AST) -> set[str]:
                 isinstance(target, ast.Name) and flow_confirmed.get(target.id) is node.value for target in node.targets
             )
             if named or shaped:
-                _collect_dotted_literals(node.value, findings)
+                _collect_declared_locale_keys(node.value, findings)
         elif isinstance(node, ast.AnnAssign):
             named = _declares_locale_key_constant(node.target)
             shaped = isinstance(node.target, ast.Name) and flow_confirmed.get(node.target.id) is node.value
             if named or shaped:
-                _collect_dotted_literals(node.value, findings)
+                _collect_declared_locale_keys(node.value, findings)
     return findings
+
+
+def _collect_declared_locale_keys(value: ast.expr, findings: set[str]) -> None:
+    """Collect the locale keys a declared registry holds, and not its lookup tokens.
+
+    A locale-key MAPPING is keyed by whatever the runtime selects on -- an enum
+    value, a route identity, an action id -- and only its VALUES are locale
+    keys. Sweeping the whole literal in claims those tokens as keys too, and
+    they are dotted often enough to look the part: `workbench.home` and
+    `operator.profile.edit` are a TUI route and a catalogue action, and the
+    parity gate reported all of them as missing translations that no catalogue
+    should ever have carried.
+
+    Every other shape -- a tuple, list or set of keys, or a bare string -- has
+    no such distinction, so it is collected whole as before.
+    """
+    if isinstance(value, ast.Dict):
+        for item in value.values:
+            _collect_dotted_literals(item, findings)
+        return
+    _collect_dotted_literals(value, findings)
 
 
 _LOCALE_KEY_CONSTANT_SUFFIXES: tuple[str, str] = ("_LOCALE_KEY", "_LOCALE_KEYS")
@@ -390,7 +501,9 @@ def _call_site_key_argument_exprs(node: ast.Call, tr_names: frozenset[str]) -> l
     return exprs
 
 
-def _locale_key_dict_names_read_into_a_sink(tree: ast.AST, candidate_names: frozenset[str]) -> frozenset[str]:
+def _locale_key_dict_names_read_into_a_sink(
+    tree: ast.AST, candidate_names: frozenset[str], wrappers: frozenset[str] = frozenset()
+) -> frozenset[str]:
     """Return the candidate dict names actually read into a recognized locale-key sink.
 
     Tracks the ``local = SOME_DICT.get(...)`` / ``local = SOME_DICT[...]``
@@ -409,7 +522,7 @@ def _locale_key_dict_names_read_into_a_sink(tree: ast.AST, candidate_names: froz
     textual order): the first pass fully populates the local-to-dict map,
     the second checks every call against it.
     """
-    tr_names = _translation_call_names(tree)
+    tr_names = _translation_call_names(tree) | wrappers
     confirmed: set[str] = set()
     for func in ast.walk(tree):
         if not isinstance(func, ast.FunctionDef | ast.AsyncFunctionDef):
@@ -432,7 +545,7 @@ def _locale_key_dict_names_read_into_a_sink(tree: ast.AST, candidate_names: froz
     return frozenset(confirmed)
 
 
-def _flow_confirmed_locale_key_dicts(tree: ast.AST) -> dict[str, ast.expr]:
+def _flow_confirmed_locale_key_dicts(tree: ast.AST, wrappers: frozenset[str] = frozenset()) -> dict[str, ast.expr]:
     """Return shape-candidate locale-key dicts actually read into a translator sink.
 
     Combines :func:`_shape_candidate_locale_key_dicts` (structural
@@ -443,8 +556,41 @@ def _flow_confirmed_locale_key_dicts(tree: ast.AST) -> dict[str, ast.expr]:
     candidates.
     """
     candidates = _shape_candidate_locale_key_dicts(tree)
-    confirmed_names = _locale_key_dict_names_read_into_a_sink(tree, frozenset(candidates))
+    confirmed_names = _locale_key_dict_names_read_into_a_sink(tree, frozenset(candidates), wrappers)
     return {name: value for name, value in candidates.items() if name in confirmed_names}
+
+
+def _literal_row_grid(node: ast.expr | None) -> list[list[str | None]] | None:
+    """Return the table's cells by position, or ``None`` when it is not a literal grid.
+
+    A cell need not be a string, or even a literal. These are all one shape::
+
+        ("date", "tui.ledger.column.date", 10)
+        (BusinessClassification.BUSINESS, "tui.ledger.classification.business")
+
+    Demanding all-string rows rejected the first outright and demanding literal
+    constants rejected the second, so in both cases the keys were never even
+    candidates. Anything that is not a string literal is carried as ``None``,
+    a position that can never BE a key column: the positional signal the shape
+    test relies on is unchanged, and a width or an enum member is no more a key
+    than a prose sibling is. What keeps this from over-firing is not the cell
+    types but the confirmation that follows -- the table must be iterated into
+    a translator, and the bound name must sit at a key column.
+    """
+    if not isinstance(node, ast.Tuple | ast.List) or not node.elts:
+        return None
+    rows: list[list[str | None]] = []
+    for element in node.elts:
+        if not isinstance(element, ast.Tuple | ast.List) or not element.elts:
+            return None
+        rows.append([
+            item.value if isinstance(item, ast.Constant) and isinstance(item.value, str) else None
+            for item in element.elts
+        ])
+    width = len(rows[0])
+    if any(len(row) != width for row in rows):
+        return None
+    return rows
 
 
 def _is_locale_key_row_table_literal(node: ast.expr | None) -> bool:
@@ -465,20 +611,29 @@ def _is_locale_key_row_table_literal(node: ast.expr | None) -> bool:
     qualify. Prose does not collide with the key shape in any case, since
     :data:`_KEY_LITERAL_RE` admits no spaces.
     """
-    if not isinstance(node, ast.Tuple | ast.List) or not node.elts:
+    rows = _literal_row_grid(node)
+    if rows is None:
         return False
-    rows: list[list[str]] = []
-    for element in node.elts:
-        if not isinstance(element, ast.Tuple | ast.List) or not element.elts:
-            return False
-        values = [item.value for item in element.elts if isinstance(item, ast.Constant) and isinstance(item.value, str)]
-        if len(values) != len(element.elts):
-            return False
-        rows.append(values)
-    width = len(rows[0])
-    if any(len(row) != width for row in rows):
-        return False
-    return any(all(_is_dotted_literal(row[index]) for row in rows) for index in range(width))
+    return any(
+        all(cell is not None and _is_dotted_literal(cell) for cell in column) for column in zip(*rows, strict=True)
+    )
+
+
+def _row_table_key_columns(node: ast.expr | None) -> frozenset[int]:
+    """Return the column indices where EVERY row carries a dotted key.
+
+    The shape test asks whether such a column exists; confirmation needs to
+    know WHICH, because the sibling columns are prose by design and a name
+    bound to one of those reaching a sink says nothing about the table.
+    """
+    rows = _literal_row_grid(node)
+    if rows is None:
+        return frozenset()
+    return frozenset(
+        index
+        for index, column in enumerate(zip(*rows, strict=True))
+        if all(cell is not None and _is_dotted_literal(cell) for cell in column)
+    )
 
 
 def _shape_candidate_locale_key_row_tables(tree: ast.AST) -> dict[str, ast.expr]:
@@ -498,7 +653,9 @@ def _shape_candidate_locale_key_row_tables(tree: ast.AST) -> dict[str, ast.expr]
     return candidates
 
 
-def _row_table_names_iterated_into_a_sink(tree: ast.AST, candidate_names: frozenset[str]) -> frozenset[str]:
+def _row_table_names_iterated_into_a_sink(
+    tree: ast.AST, candidates: dict[str, ast.expr], wrappers: frozenset[str] = frozenset()
+) -> frozenset[str]:
     """Return the candidate row-table names whose loop variable reaches a translator.
 
     The dict sink tracks ``.get(...)``/subscript access. A row table is not
@@ -507,17 +664,27 @@ def _row_table_names_iterated_into_a_sink(tree: ast.AST, candidate_names: frozen
     separates a genuine locale-key table from a same-shaped table of unrelated
     string tuples that never reaches the translator.
     """
-    tr_names = _translation_call_names(tree)
+    tr_names = _translation_call_names(tree) | wrappers
+    key_columns = {name: _row_table_key_columns(value) for name, value in candidates.items()}
     bound_to_table: dict[str, str] = {}
     for node in ast.walk(tree):
         if not isinstance(node, ast.For | ast.AsyncFor):
             continue
-        if not (isinstance(node.iter, ast.Name) and node.iter.id in candidate_names):
+        table = _iterated_candidate_name(node.iter, candidates)
+        if table is None:
             continue
-        targets = [node.target] if isinstance(node.target, ast.Name) else list(getattr(node.target, "elts", []))
-        for target in targets:
-            if isinstance(target, ast.Name):
-                bound_to_table[target.id] = node.iter.id
+        columns = key_columns[table]
+        if isinstance(node.target, ast.Name):
+            # A whole-row binding cannot say which column reaches the sink, so
+            # it stays confirmable as before.
+            bound_to_table[node.target.id] = table
+            continue
+        # Unpacked: only the KEY column binding confirms. A name bound to a
+        # prose column reaching a sink is the framework passing its English
+        # source string, which says nothing about whether the table holds keys.
+        for index, target in enumerate(getattr(node.target, "elts", [])):
+            if isinstance(target, ast.Name) and index in columns:
+                bound_to_table[target.id] = table
     confirmed: set[str] = set()
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
@@ -525,13 +692,51 @@ def _row_table_names_iterated_into_a_sink(tree: ast.AST, candidate_names: frozen
         for argument in _call_site_key_argument_exprs(node, tr_names):
             if isinstance(argument, ast.Name) and argument.id in bound_to_table:
                 confirmed.add(bound_to_table[argument.id])
+                continue
+            # `for column in TABLE: tr(column[1])` -- the row is bound whole and
+            # the key taken by index. The index must BE a key column: a prose
+            # sibling reaching the sink says nothing about the table, exactly as
+            # it does not when the row is unpacked.
+            subscripted = _row_subscript_source(argument, bound_to_table)
+            if subscripted is None:
+                continue
+            table, index = subscripted
+            if index in key_columns[table]:
+                confirmed.add(table)
     return frozenset(confirmed)
 
 
-def _flow_confirmed_locale_key_row_tables(tree: ast.AST) -> dict[str, ast.expr]:
+def _iterated_candidate_name(node: ast.expr, candidates: dict[str, ast.expr]) -> str | None:
+    """Resolve the candidate table a ``for`` statement iterates.
+
+    A screen holds its column table as a ``ClassVar`` and reads it back as
+    ``self._COLUMNS``, so requiring a bare name saw no iteration at all and
+    left every heading key in the table unconfirmed. The attribute's own name
+    is what identifies the candidate; the declaration it was collected from is
+    already in this module.
+    """
+    if isinstance(node, ast.Name) and node.id in candidates:
+        return node.id
+    if isinstance(node, ast.Attribute) and node.attr in candidates:
+        return node.attr
+    return None
+
+
+def _row_subscript_source(node: ast.expr, bound_to_table: dict[str, str]) -> tuple[str, int] | None:
+    """Return ``(table, index)`` when ``node`` indexes a bound whole row."""
+    if not isinstance(node, ast.Subscript):
+        return None
+    if not (isinstance(node.value, ast.Name) and node.value.id in bound_to_table):
+        return None
+    if not (isinstance(node.slice, ast.Constant) and isinstance(node.slice.value, int)):
+        return None
+    return bound_to_table[node.value.id], node.slice.value
+
+
+def _flow_confirmed_locale_key_row_tables(tree: ast.AST, wrappers: frozenset[str] = frozenset()) -> dict[str, ast.expr]:
     """Return shape-candidate row tables actually iterated into a translator sink."""
     candidates = _shape_candidate_locale_key_row_tables(tree)
-    confirmed_names = _row_table_names_iterated_into_a_sink(tree, frozenset(candidates))
+    confirmed_names = _row_table_names_iterated_into_a_sink(tree, candidates, wrappers)
     return {name: value for name, value in candidates.items() if name in confirmed_names}
 
 
@@ -645,9 +850,11 @@ def _collect_translation_key_kwargs(node: ast.Call, findings: set[str]) -> None:
     for kw in node.keywords:
         if kw.arg not in _TRANSLATION_KEY_KWARGS:
             continue
-        value = _dotted_literal_value(kw.value)
-        if value is not None:
-            findings.add(value)
+        # Recurse rather than reading one literal: a key is routinely
+        # supplied conditionally -- `empty_key="..." if not rows else None` --
+        # and the parameter is DECLARED to take a key, so any dotted literal
+        # that can reach it is one.
+        _collect_dotted_literals(kw.value, findings)
 
 
 def _collect_build_entry_keys(node: ast.Call, findings: set[str]) -> None:
@@ -748,6 +955,59 @@ dot and carries at least one word segment before it (e.g. ``topic.``,
 ``cli.registry.metrics.``)."""
 
 
+def _dotted_prefix_tables(tree: ast.AST) -> dict[str, frozenset[str]]:
+    """Return ``name -> dotted prefixes`` for tables that hold ONLY prefix literals.
+
+    A surface that renders many enums through one helper does not write the
+    prefix at the call site; it declares a table of them and selects one. The
+    literals are still written down, which is what makes this readable without
+    guessing.
+    """
+    tables: dict[str, frozenset[str]] = {}
+    for node in ast.walk(tree):
+        target: ast.expr | None = None
+        value: ast.expr | None = None
+        if isinstance(node, ast.Assign) and len(node.targets) == 1:
+            target, value = node.targets[0], node.value
+        elif isinstance(node, ast.AnnAssign):
+            target, value = node.target, node.value
+        if not isinstance(target, ast.Name) or not isinstance(value, ast.Dict) or not value.values:
+            continue
+        literals = [
+            item.value for item in value.values if isinstance(item, ast.Constant) and isinstance(item.value, str)
+        ]
+        if len(literals) == len(value.values) and all(_is_dotted_literal(literal) for literal in literals):
+            tables[target.id] = frozenset(literals)
+    return tables
+
+
+def _names_selected_from_a_prefix_table(tree: ast.AST, tables: dict[str, frozenset[str]]) -> dict[str, frozenset[str]]:
+    """Return the local names bound by reading one prefix out of such a table."""
+    bound: dict[str, frozenset[str]] = {}
+    for node in ast.walk(tree):
+        target: ast.expr | None = None
+        value: ast.expr | None = None
+        if isinstance(node, ast.Assign) and len(node.targets) == 1:
+            target, value = node.targets[0], node.value
+        elif isinstance(node, ast.AnnAssign):
+            target, value = node.target, node.value
+        if not isinstance(target, ast.Name) or value is None:
+            continue
+        base: str | None = None
+        if isinstance(value, ast.Subscript) and isinstance(value.value, ast.Name):
+            base = value.value.id
+        elif (
+            isinstance(value, ast.Call)
+            and isinstance(value.func, ast.Attribute)
+            and value.func.attr == "get"
+            and isinstance(value.func.value, ast.Name)
+        ):
+            base = value.func.value.id
+        if base is not None and base in tables:
+            bound[target.id] = tables[base]
+    return bound
+
+
 def _extract_fstring_prefixes(tree: ast.AST) -> set[str]:
     """Walk f-string literals and emit ``<prefix>.*`` namespace markers.
 
@@ -778,6 +1038,43 @@ def _extract_fstring_prefixes(tree: ast.AST) -> set[str]:
         if not _is_dynamic_translation_prefix(prefix):
             continue
         findings.add(f"{prefix}.*")
+    findings |= _interpolated_head_prefixes(tree)
+    return findings
+
+
+def _interpolated_head_prefixes(tree: ast.AST) -> set[str]:
+    """Emit markers for ``f"{prefix}.{value}"`` where ``prefix`` is a declared literal.
+
+    The literal-head rule cannot see this shape at all: the head is an
+    interpolation, so a helper that renders every enum on a screen through one
+    selected prefix declares no namespace, and every key it builds reads as an
+    orphan.
+
+    The next segment must begin with the dot. That is what proves the
+    interpolated name is being used AS a dotted prefix rather than as ordinary
+    text, and it keeps the rule from firing on any f-string that happens to
+    start with a variable.
+    """
+    tables = _dotted_prefix_tables(tree)
+    if not tables:
+        return set()
+    bound = _names_selected_from_a_prefix_table(tree, tables)
+    if not bound:
+        return set()
+    findings: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.JoinedStr) or len(node.values) < 2:
+            continue
+        head, following = node.values[0], node.values[1]
+        if not (isinstance(head, ast.FormattedValue) and isinstance(head.value, ast.Name)):
+            continue
+        if not (isinstance(following, ast.Constant) and isinstance(following.value, str)):
+            continue
+        if not following.value.startswith("."):
+            continue
+        for prefix in bound.get(head.value.id, ()):
+            if _is_dynamic_translation_prefix(prefix):
+                findings.add(f"{prefix}.*")
     return findings
 
 
@@ -904,6 +1201,116 @@ def _iter_parseable_python_modules(root: Path) -> Iterator[tuple[Path, ast.Modul
     )
 
 
+def _translation_wrapper_names(modules: list[tuple[Path, ast.Module]]) -> frozenset[str]:
+    """Return functions that forward their own first parameter to a translator.
+
+    Every TUI surface routes its copy through one boundary helper --
+    ``def aeat_sync_copy(key, **values): return tr(key, **values)`` -- so the
+    call sites read ``aeat_sync_copy("tui.aeat_sync.column.area")`` and never
+    ``tr(...)``. The scanner resolved aliased IMPORTS of ``tr`` but not a
+    wrapper defined as a function, so every key reaching the catalogue through
+    one of these boundaries read as an orphan.
+
+    The shape is deliberately tight: the function must pass its OWN first
+    parameter as the first positional argument to something already known to
+    translate. A helper that merely calls ``tr`` on some other value is not a
+    key channel and does not qualify.
+
+    Resolved to a fixpoint across the whole tree, because a wrapper may be
+    imported from another module and may itself wrap a wrapper.
+    """
+    definitions: list[tuple[str, str, ast.AST]] = []
+    for _path, tree in modules:
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+                continue
+            parameters = [*node.args.posonlyargs, *node.args.args]
+            if parameters and parameters[0].arg in {"self", "cls"}:
+                parameters = parameters[1:]
+            if parameters:
+                definitions.append((node.name, parameters[0].arg, node))
+
+    known = {"tr", "t"}
+    while True:
+        discovered = set()
+        for name, first, node in definitions:
+            if name in known:
+                continue
+            for inner in ast.walk(node):
+                if not isinstance(inner, ast.Call) or not inner.args:
+                    continue
+                callee = getattr(inner.func, "id", getattr(inner.func, "attr", None))
+                argument = inner.args[0]
+                if callee in known and isinstance(argument, ast.Name) and argument.id == first:
+                    discovered.add(name)
+                    break
+        if not discovered:
+            return frozenset(known - {"tr", "t"})
+        known |= discovered
+
+
+def _translation_key_parameter_positions(
+    modules: list[tuple[Path, ast.Module]],
+) -> dict[str, frozenset[int]]:
+    """Map a function name to the CALL-SITE indices that carry a translation key.
+
+    Built across every scanned module, because the helper that names its
+    parameter ``help_key`` and the command spec that fills it positionally are
+    routinely in different files. A per-module view sees the call and not the
+    signature, which is why 192 live keys read as orphans.
+
+    Keyed by bare function name, which collides: eight different ``_leaf``
+    helpers ship here, carrying ``help_key`` at index 3, 1 or 2, and one whose
+    index 1 is ``module``. Taking the union of those positions and applying it
+    to every ``_leaf`` call collected module import paths as translation keys.
+
+    So a position counts only when EVERY definition of that name carries a
+    translation-key parameter there. A name whose definitions disagree yields
+    nothing, which loses the keys it would have contributed rather than
+    inventing keys it would not -- the safe direction, because an uncollected
+    key reads as an unused catalogue entry while an invented one reads as a
+    missing translation somebody has to chase.
+
+    ``self`` and ``cls`` are dropped, since a bound call omits them and the
+    index would otherwise be off by one for every method.
+    """
+    per_definition: dict[str, list[set[int]]] = {}
+    for _path, tree in modules:
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+                continue
+            parameters = [*node.args.posonlyargs, *node.args.args]
+            if parameters and parameters[0].arg in {"self", "cls"}:
+                parameters = parameters[1:]
+            per_definition.setdefault(node.name, []).append(
+                {index for index, arg in enumerate(parameters) if arg.arg in _TRANSLATION_KEY_KWARGS},
+            )
+    agreed: dict[str, frozenset[int]] = {}
+    for name, definitions in per_definition.items():
+        shared = set.intersection(*definitions) if definitions else set()
+        if shared:
+            agreed[name] = frozenset(shared)
+    return agreed
+
+
+def _extract_positional_translation_key_arguments(
+    tree: ast.AST,
+    positions: dict[str, frozenset[int]],
+) -> set[str]:
+    """Collect dotted literals filled positionally into a translation-key parameter."""
+    findings: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        name = getattr(node.func, "id", getattr(node.func, "attr", None))
+        if not isinstance(name, str):
+            continue
+        for index in positions.get(name, frozenset()):
+            if index < len(node.args):
+                _collect_dotted_literals(node.args[index], findings)
+    return findings
+
+
 def scan_source_tree(root: Path) -> set[str]:
     """Walk ``root`` for `.py` files and emit concrete dotted locale keys.
 
@@ -914,10 +1321,14 @@ def scan_source_tree(root: Path) -> set[str]:
     separate parity check that asserts at least one concrete locale
     entry exists under each declared namespace prefix.
     """
+    modules = list(_iter_parseable_python_modules(root))
+    key_positions = _translation_key_parameter_positions(modules)
+    wrappers = _translation_wrapper_names(modules)
     findings: set[str] = set()
-    for _module, tree in _iter_parseable_python_modules(root):
-        findings.update(_extract_error_constructor_keys(tree))
-        findings.update(_extract_locale_constant_keys(tree))
+    for _module, tree in modules:
+        findings.update(_extract_error_constructor_keys(tree, wrappers))
+        findings.update(_extract_locale_constant_keys(tree, wrappers))
+        findings.update(_extract_positional_translation_key_arguments(tree, key_positions))
     return findings
 
 

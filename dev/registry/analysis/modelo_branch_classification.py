@@ -20,7 +20,7 @@ regulatory rule survives outside the registry: it looks like routing. So the
 SET is derived mechanically here and the classification is authored in the
 ledger beside this file. What the ledger cannot do is stay silent.
 
-Derivation keys on :class:`cadrumo.core.Modelo`, so adding a modelo to the enum
+Derivation keys on :class:`cadrumo.core.modelo.Modelo`, so adding a modelo to the enum
 widens the detector with no edit here. A branch is any ``if``/``elif`` test or
 ``match`` subject/pattern that reads a concrete ``Modelo.M###`` member, in a
 module under ``src/cadrumo`` that is neither inside the registry package (which

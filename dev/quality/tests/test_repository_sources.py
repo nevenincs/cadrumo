@@ -71,8 +71,20 @@ def test_the_universe_is_every_tracked_source_file_and_no_fewer(
 
 
 def test_the_universe_is_not_empty(revision: str) -> None:
-    """A denominator of zero makes every consumer trivially clean."""
-    assert len(repository_sources(revision)) > 0
+    """A denominator of zero makes every consumer trivially clean.
+
+    A PARTIAL collapse does the same thing more quietly. `> 0` caught only the
+    total case, so a narrowed root or a tightened filter could drop this
+    universe from tens of thousands to a handful and every consumer would
+    still read clean. A floor, not a pinned count: live it holds 27,717
+    sources at HEAD.
+    """
+    universe = repository_sources(revision)
+
+    assert len(universe) > 20000, (
+        f"the repository source universe holds only {len(universe)} entries, so every "
+        "consumer reading it is close to trivially clean"
+    )
 
 
 def test_every_source_is_returned_as_decoded_text(revision: str) -> None:

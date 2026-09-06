@@ -43,8 +43,37 @@ def test_shard_assignment_is_a_deterministic_partition() -> None:
     assert assignments == {path: shard_of(path, 2) for path in files}
 
 
+#: Wall-clock bound for one nested collection. The three this module runs cost
+#: about 1.2s each unloaded, and the previous 120s already carried a hundredfold
+#: margin -- yet it EXPIRED inside a twenty-three-minute concurrent suite, which
+#: is the only condition it has ever failed under. The bound cannot simply go:
+#: an unbounded wait on a child is what ``test_no_unbounded_subprocess_wait``
+#: forbids, because the per-test ceiling cannot interrupt one and the worker
+#: dies taking every sibling's result with it. So it is a bound sized for real
+#: contention rather than for an idle machine, matching the repository's other
+#: long-running budget.
+_NESTED_COLLECTION_TIMEOUT_SECONDS = 600
+
+
 def _collect_ids(sample_dir: Path, shard_args: list[str]) -> set[str]:
-    result = subprocess.run(
+    try:
+        result = _run_nested_collection(sample_dir, shard_args)
+    except subprocess.TimeoutExpired as expiry:
+        # Chained deliberately: the expiry carries the argv and the elapsed
+        # budget, and none of it is sensitive here. Reading it as a sharding
+        # defect is the wrong first move, so the message says so.
+        message = (
+            f"the nested collection did not finish within {_NESTED_COLLECTION_TIMEOUT_SECONDS}s. "
+            "It costs about 1.2s unloaded, so an expiry means the machine was contended, "
+            "not that the shard plugin misbehaved"
+        )
+        raise AssertionError(message) from expiry
+    assert result.returncode in (0, 5), result.stdout + result.stderr
+    return {line.strip() for line in result.stdout.splitlines() if "::" in line and not line.startswith("=")}
+
+
+def _run_nested_collection(sample_dir: Path, shard_args: list[str]) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
         [
             sys.executable,
             "-m",
@@ -64,10 +93,8 @@ def _collect_ids(sample_dir: Path, shard_args: list[str]) -> set[str]:
         capture_output=True,
         text=True,
         check=False,
-        timeout=120,
+        timeout=_NESTED_COLLECTION_TIMEOUT_SECONDS,
     )
-    assert result.returncode in (0, 5), result.stdout + result.stderr
-    return {line.strip() for line in result.stdout.splitlines() if "::" in line and not line.startswith("=")}
 
 
 def test_two_shards_partition_a_real_collection() -> None:

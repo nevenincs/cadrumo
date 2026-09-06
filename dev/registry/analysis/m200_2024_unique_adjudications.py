@@ -277,6 +277,16 @@ def render_canonical_declaration(authority: CompiledM200UniqueAuthority, casilla
     )
 
 
+def unique_declaration_path(root: Path, casilla_id: str) -> Path:
+    """Return the declaration file a unique casilla is written to.
+
+    One owner for the convention. Three tests rebuilt this expression by
+    hand to lay out their fixtures, so a change here would have left them
+    writing files under the old name while the gate looked for the new one.
+    """
+    return root / f"c{casilla_id.replace(':', '+')}.toml"
+
+
 def verify_canonical_declarations(authority: CompiledM200UniqueAuthority, *, casillas_root: Path | None = None) -> None:
     """Require current declaration bytes to match the fresh S13 receipt."""
     root = (
@@ -285,7 +295,7 @@ def verify_canonical_declarations(authority: CompiledM200UniqueAuthority, *, cas
         else casillas_root
     )
     for row in authority.adjudications:
-        path = root / f"c{row.casilla_id.replace(':', '+')}.toml"
+        path = unique_declaration_path(root, row.casilla_id)
         if not path.is_file() or path.read_text(encoding="utf-8") != render_canonical_declaration(
             authority, row.casilla_id
         ):

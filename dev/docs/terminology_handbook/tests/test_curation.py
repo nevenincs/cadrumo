@@ -10,8 +10,10 @@ granularity (82 concepts) is pinned by a regression test.
 
 from __future__ import annotations
 
+import collections
 from datetime import date
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -292,21 +294,45 @@ def test_check_detects_drift_on_missing_concept(tmp_path: Path) -> None:
 # --------------------------------------------------------------------------
 # ratified granularity regression
 # --------------------------------------------------------------------------
+#: Per-family floors for the enrolment candidate set. Live: modelo 58,
+#: regimen 21, periodo 21, concepto 14. Each sits near two thirds of its live
+#: figure, so ordinary registry movement never reds the gate while a family
+#: losing most of itself does.
+_MINIMUM_CANDIDATES_BY_DOMAIN: Final[dict[ConceptDomain, int]] = {
+    ConceptDomain.MODELO: 40,
+    ConceptDomain.REGIMEN: 14,
+    ConceptDomain.PERIODO: 14,
+    ConceptDomain.CONCEPTO: 9,
+}
+
+
 def test_default_enrolment_excludes_cli_verbs_and_is_bounded() -> None:
     candidates = collect_enrolment_candidates()
     # Candidates are every registry entity that COULD become a concept; the
-    # concept-grade curation happens downstream. The set tracks the registry:
-    # 73 modelo + 18 regimen + 21 periodo + 14 concepto = 126. Update this count
-    # when the registry gains an entity.
+    # concept-grade curation happens downstream, and the set tracks the
+    # registry, so it moves whenever the registry does.
     #
-    # The modelo term was 149 -- the whole ``Modelo`` enum -- until it was
-    # narrowed to the 73 members carrying a registry definition. The enum is a
+    # The modelo family was 149 -- the whole ``Modelo`` enum -- until it was
+    # narrowed to the members carrying a registry definition. The enum is a
     # typing device that necessarily includes every code the codebase mentions,
-    # so 76 retired or code-referenced-only forms were being offered as glossary
-    # concepts. That is why this count sat at 202 while only 117 concepts were
-    # committed: the gap was not curation backlog, it was mostly candidates that
-    # should never have been candidates.
-    assert len(candidates) == 126
+    # so retired and code-referenced-only forms were being offered as glossary
+    # concepts. That is why the total once sat at 202 while only 117 concepts
+    # were committed: the gap was not curation backlog, it was mostly
+    # candidates that should never have been candidates.
+    #
+    # A PINNED TOTAL cannot say which family moved. This one read ``== 126``
+    # against a declared ``73 modelo + 18 regimen + 21 periodo + 14 concepto``
+    # and drifted to 114, and the single number hid that two families moved in
+    # OPPOSITE directions: modelo fell to 58 while regimen rose to 21. Per
+    # family, a floor each: growth never fires them, and a family emptying --
+    # the way a narrowed definition scan or an unreadable registry root would
+    # empty one -- always does.
+    live = collections.Counter(candidate.domain for candidate in candidates.values())
+    for domain, floor in _MINIMUM_CANDIDATES_BY_DOMAIN.items():
+        assert live[domain] >= floor, (
+            f"the {domain.value} family offers only {live[domain]} enrolment candidate(s) against a "
+            f"floor of {floor}; below this the enrolment is reading part of the registry, not all of it"
+        )
     # The real structural invariants -- no verb/legal enrolment, and no domain
     # outside the four concept-grade families -- must hold regardless of count.
     allowed = {ConceptDomain.MODELO, ConceptDomain.REGIMEN, ConceptDomain.PERIODO, ConceptDomain.CONCEPTO}

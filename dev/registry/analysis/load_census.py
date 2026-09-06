@@ -48,7 +48,7 @@ What this cannot see, stated rather than assumed away:
 
 A module the reference map finds nowhere is therefore a dead CANDIDATE, never a
 dead verdict; :func:`unreferenced_modules` returns candidates, and the reviewed
-call lives in :mod:`dev.registry.load_census_classification`. The first run of
+call lives in :mod:`dev.registry.analysis.load_census_classification`. The first run of
 this scanner produced two candidates -- ``_constructs`` and ``_handoff_paths`` --
 and both turned out to be consumed by registry gates importing them through the
 facade, which module-level importer counting could not see. That is the whole

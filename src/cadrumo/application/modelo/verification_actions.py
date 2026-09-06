@@ -1831,9 +1831,6 @@ def _missing_required_casilla_finding(
     )
 
 
-missing_required_casilla_finding = _missing_required_casilla_finding
-
-
 def _iva_wallet_error_verification_finding(error: ModeloIvaWalletReconciliationBlocked) -> ModeloVerificationFinding:
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,

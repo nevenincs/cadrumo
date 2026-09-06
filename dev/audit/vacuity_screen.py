@@ -53,6 +53,13 @@ _UTF_8: Final[str] = UTF_8
 #: silently walked nothing would be the very defect it hunts.
 SCREENED_TREES = ("src/cadrumo/tests", "dev")
 
+#: Both spellings of a function definition. A screen reading only the sync form
+#: reports clean over every ``async def test_...`` in its corpus - not because
+#: those tests prove they scanned anything, but because it never looked at
+#: them. An instrument whose whole purpose is refusing silent green cannot
+#: itself go silent on a whole function form.
+_FUNCTION_DEFINITIONS: Final = (ast.FunctionDef, ast.AsyncFunctionDef)
+
 
 #: Builtins whose no-argument call constructs an empty collection. ``set()`` has
 #: no literal spelling at all, so a screen reading only literals is structurally
@@ -221,7 +228,7 @@ def module_proofs_by_corpus(parsed: ast.AST) -> list[frozenset[str]]:
     """
     proofs: list[frozenset[str]] = []
     for node in ast.walk(parsed):
-        if not isinstance(node, ast.FunctionDef):
+        if not isinstance(node, _FUNCTION_DEFINITIONS):
             continue
         for statement in ast.walk(node):
             if proves_it_scanned(statement) and isinstance(statement, ast.Assert):
@@ -283,10 +290,10 @@ def screen(root: Path) -> tuple[int, list[tuple[str, str, int]], list[str]]:
             helpers = {
                 node.name: list(ast.walk(node))
                 for node in ast.walk(parsed)
-                if isinstance(node, ast.FunctionDef) and not node.name.startswith("test_")
+                if isinstance(node, _FUNCTION_DEFINITIONS) and not node.name.startswith("test_")
             }
             for func in ast.walk(parsed):
-                if not isinstance(func, ast.FunctionDef) or not func.name.startswith("test_"):
+                if not isinstance(func, _FUNCTION_DEFINITIONS) or not func.name.startswith("test_"):
                     continue
                 body = list(ast.walk(func))
                 if not any(asserts_emptiness(n) for n in body):

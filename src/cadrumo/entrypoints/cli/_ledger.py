@@ -28,7 +28,6 @@ from ...core.i18n.render import tr
 from ...core.irnr import M210PayerMode
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.json_contract import Notice, NoticeSeverity
-from ...core.logging import get_logger
 from ...core.prorrata_exclusions import Art104TresExclusion
 from ...core.prorrata_register import ProrrataRegisterRegime
 from ...domain.iva.prorrata import InputClassification
@@ -71,8 +70,6 @@ from .ledger_lifecycle_cli import (
     ledger_split,
     ledger_stash,
 )
-
-_log = get_logger(__name__)
 
 __all__ = [
     "ledger_archive",

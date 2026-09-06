@@ -55,7 +55,6 @@ from .credentials import (
     CredentialAttempt,
     CredentialScreen,
     assessment_copy,
-    run_credential_screen,
 )
 
 if TYPE_CHECKING:
@@ -73,7 +72,6 @@ __all__ = [
     "RegistrationRefusal",
     "RegistrationScreen",
     "build_profile_registration_attempt",
-    "run_registration_tui",
 ]
 
 
@@ -655,23 +653,3 @@ def build_profile_registration_attempt(
             )
         )
     return RegistrationAttempt(outcome=outcome)
-
-
-def run_registration_tui(
-    *,
-    assess: Callable[[str], ProfilePasswordAssessment],
-    register: Callable[
-        [str, str, str, Callable[[ProfileRecoveryEnrollment], str]],
-        RegistrationAttempt,
-    ],
-    suggested_name: str | None = None,
-) -> ProfileRegistrationOutcome | None:
-    """Run the registration screen and return the created profile, or ``None``.
-
-    ``None`` means the operator abandoned the screen — an ordinary outcome,
-    not an error, so the caller decides what to do rather than catching an
-    exception to find out.
-    """
-    return run_credential_screen(
-        RegistrationScreen(assess=assess, register=register, suggested_name=suggested_name),
-    )

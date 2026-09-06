@@ -909,6 +909,11 @@ application:
         a modell számítás nem folytatható.
       calculation_registry_snapshot_unresolved: A(z) %{modelo} modell, %{filing_year}
         bevallási év, %{period} időszak registry-pillanatképe nem oldható fel.
+      calculation_revision_id_is_discarded_work_unit: A(z) %{calculation_revision_id}
+        azonosító selejtezett munkaegység, nem számítási revízió.
+      calculation_revision_id_is_work_unit: A(z) %{calculation_revision_id} azonosító
+        munkaegység, nem számítási revízió; használja a --work-unit-id %{work_unit_id}
+        kapcsolót.
       calculation_revision_not_found: Nem található számítás-revízió id=%{calculation_revision_id}
         azonosítóval.
       calculation_revision_parent_work_unit_discarded: A(z) %{calculation_revision_id}

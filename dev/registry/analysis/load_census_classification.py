@@ -1,6 +1,6 @@
 """Reviewed classification of every module a sanctioned registry load reaches.
 
-The census in :mod:`dev.registry.load_census` derives WHICH modules must be
+The census in :mod:`dev.registry.analysis.load_census` derives WHICH modules must be
 classified; this file records WHAT each one was classified as and WHY. Splitting
 them is the point: the derived side can never be shortened by omission, and the
 reviewed side is a diff a person reads.
@@ -23,7 +23,7 @@ Three classifications, and no fourth:
     Nothing reaches it. There are no such modules at the revision this file was
     written, and the empty set is deliberate rather than unexamined -- two
     candidates surfaced and both survived review, for the reason recorded in
-    :func:`dev.registry.load_census.unreferenced_modules`.
+    :func:`dev.registry.analysis.load_census.unreferenced_modules`.
 
 Two measurement facts shape almost every entry below and are easy to misread:
 

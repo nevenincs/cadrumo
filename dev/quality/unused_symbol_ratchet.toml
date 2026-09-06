@@ -23,7 +23,6 @@
 
 [symbols]
 "cadrumo.application.user_profile.capsule_restore" = 2
-"cadrumo.entrypoints.cli._modelo" = 1
 "cadrumo.adapters.inbound.financial.providers.detection" = 1
 "cadrumo.adapters.inbound.pdf.label_regex" = 1
 "cadrumo.adapters.outbound.aeat.auth.certificate" = 1
@@ -36,11 +35,10 @@
 "cadrumo.adapters.outbound.aeat.sede.deudas" = 2
 "cadrumo.adapters.outbound.aeat.sede.iva_compensation_wallet" = 1
 "cadrumo.adapters.outbound.aeat.sede.notifications" = 1
-"cadrumo.adapters.outbound.aeat.verify.contract" = 1
 "cadrumo.adapters.outbound.google.impersonation" = 1
 "cadrumo.adapters.persistence.profile.assets" = 2
 "cadrumo.adapters.persistence.profile.inventory" = 3
-"cadrumo.adapters.persistence.profile.prorrata_register" = 4
+"cadrumo.adapters.persistence.profile.prorrata_register" = 1
 "cadrumo.adapters.persistence.storage.bucket.directory_layout" = 1
 "cadrumo.adapters.persistence.storage.bucket.output_language_hint" = 2
 "cadrumo.adapters.persistence.storage.crypto.encrypted_columns" = 2
@@ -50,7 +48,6 @@
 "cadrumo.adapters.persistence.storage.custody.recovery" = 2
 "cadrumo.adapters.persistence.storage.envelope.contract" = 2
 "cadrumo.adapters.persistence.storage.master_key._live_sessions" = 1
-"cadrumo.adapters.persistence.storage.master_key.master_key" = 1
 "cadrumo.adapters.persistence.storage.recovery_key" = 1
 "cadrumo.adapters.persistence.storage.schema_lineage" = 3
 "cadrumo.adapters.persistence.storage.secure_object_namespaces" = 1
@@ -59,7 +56,6 @@
 "cadrumo.application.aggregation._counterpart" = 1
 "cadrumo.application.aggregation._evidence_advisory" = 2
 "cadrumo.application.aggregation._retenciones" = 1
-"cadrumo.application.aggregation._source_mesh" = 1
 "cadrumo.application.aggregation.ledger_filing_snapshot" = 1
 "cadrumo.application.auth.apoderado_flow" = 1
 "cadrumo.application.auth.catalogue" = 1
@@ -95,7 +91,6 @@
 "cadrumo.application.modelo.calculation_route" = 1
 "cadrumo.application.modelo.edit_models" = 5
 "cadrumo.application.modelo.edit_services" = 3
-"cadrumo.application.modelo.export" = 1
 "cadrumo.application.modelo.iva_wallet_gate" = 1
 "cadrumo.application.modelo.local_observation_spreadsheet" = 1
 "cadrumo.application.modelo.m145_communication_records" = 1
@@ -105,9 +100,7 @@
 "cadrumo.application.modelo.review_package_collab_audit" = 6
 "cadrumo.application.modelo.review_package_recipient_encryption" = 2
 "cadrumo.application.modelo.review_package_signing" = 1
-"cadrumo.application.modelo.verification_actions" = 6
 "cadrumo.application.modelo.work_addressing" = 2
-"cadrumo.application.modelo.work_create_policy" = 1
 "cadrumo.application.modelo.workspace" = 2
 "cadrumo.application.modelo.workspace_manifest" = 2
 "cadrumo.application.modelo.workspace_models" = 2
@@ -141,25 +134,20 @@
 "cadrumo.application.user_profile.presentation" = 1
 "cadrumo.application.user_profile.repository" = 1
 "cadrumo.application.wizard._format_hints" = 2
-"cadrumo.application.wizard.commands" = 1
 "cadrumo.application.wizard.descendant_door" = 1
 "cadrumo.application.wizard.descendant_group" = 1
 "cadrumo.application.wizard.persistence" = 2
 "cadrumo.application.workbench_generation" = 1
-"cadrumo.application.workflow.adapters" = 4
+"cadrumo.application.workflow.adapters" = 3
 "cadrumo.application.workflow.engine_helpers" = 1
 "cadrumo.application.workflow.persistence" = 1
 "cadrumo.application.workflow.resume" = 2
-"cadrumo.application.workflow.run_models" = 1
 "cadrumo.application.workflow.state_models" = 1
 "cadrumo.core.access_gate.authorization" = 1
-"cadrumo.core.aggregation" = 1
 "cadrumo.core.amendment_kind_regime" = 1
 "cadrumo.core.atomic_write" = 1
 "cadrumo.core.classification.policies" = 1
-"cadrumo.core.config" = 1
 "cadrumo.core.corpus_manifest.manifest" = 3
-"cadrumo.core.decimal.formatting" = 1
 "cadrumo.core.document_shape" = 1
 "cadrumo.core.errors.error_codes" = 3
 "cadrumo.core.external_constants" = 9
@@ -198,8 +186,7 @@
 "cadrumo.domain.calculations.registry._source_evidence_fingerprint" = 1
 "cadrumo.domain.calculations.registry._validate_cross_revision" = 1
 "cadrumo.domain.calculations.registry._validate_evidence" = 2
-"cadrumo.domain.calculations.registry._validate_semantic_role_required" = 1
-"cadrumo.domain.calculations.registry.applicability" = 2
+"cadrumo.domain.calculations.registry.applicability" = 1
 "cadrumo.domain.calculations.registry.authority" = 3
 "cadrumo.domain.calculations.registry.bindings" = 1
 "cadrumo.domain.calculations.registry.censo_modelos" = 3
@@ -207,7 +194,7 @@
 "cadrumo.domain.calculations.registry.corpus_catalogue" = 1
 "cadrumo.domain.calculations.registry.counterpart_bindings" = 3
 "cadrumo.domain.calculations.registry.design_constant_bindings" = 1
-"cadrumo.domain.calculations.registry.detail_record_bindings" = 3
+"cadrumo.domain.calculations.registry.detail_record_bindings" = 2
 "cadrumo.domain.calculations.registry.donativo_bindings" = 1
 "cadrumo.domain.calculations.registry.export" = 2
 "cadrumo.domain.calculations.registry.external_grounding" = 1
@@ -224,7 +211,7 @@
 "cadrumo.domain.calculations.registry.modelo_localization" = 1
 "cadrumo.domain.calculations.registry.quantity_screen_enrolment" = 1
 "cadrumo.domain.calculations.registry.rate_box_partition" = 1
-"cadrumo.domain.calculations.registry.record_design" = 2
+"cadrumo.domain.calculations.registry.record_design" = 1
 "cadrumo.domain.calculations.registry.record_design_coverage" = 5
 "cadrumo.domain.calculations.registry.record_design_schema" = 1
 "cadrumo.domain.calculations.registry.remote_state_guard" = 1
@@ -240,7 +227,6 @@
 "cadrumo.domain.contribuyente.constants" = 1
 "cadrumo.domain.contribuyente.keys" = 3
 "cadrumo.domain.contribuyente.marriage_facts" = 3
-"cadrumo.domain.contribuyente.tax_residence" = 1
 "cadrumo.domain.filing.protocols" = 1
 "cadrumo.domain.invoices.decomposition" = 2
 "cadrumo.domain.invoices.enums" = 2
@@ -259,23 +245,18 @@
 "cadrumo.domain.iva_compensation.carry_forward" = 1
 "cadrumo.domain.manuals.fetch" = 2
 "cadrumo.domain.manuals.verify" = 1
-"cadrumo.domain.modelos.calculation_repository" = 1
 "cadrumo.domain.modelos.calculation_revision_amendment" = 1
-"cadrumo.domain.modelos.filing_repository" = 1
 "cadrumo.domain.modelos.protocols" = 1
 "cadrumo.domain.modelos.repository" = 1
-"cadrumo.domain.modelos.verification_repository" = 1
 "cadrumo.domain.renta._first_slice_routing" = 2
 "cadrumo.domain.submission.models" = 2
 "cadrumo.domain.submission.protocols" = 1
-"cadrumo.domain.transactions.classification_rule" = 1
 "cadrumo.domain.transactions.irpf_categories" = 1
-"cadrumo.domain.transactions.llm" = 3
+"cadrumo.domain.transactions.llm" = 2
 "cadrumo.domain.transactions.model_tier" = 1
 "cadrumo.domain.transactions.retencion_parameters" = 1
 "cadrumo.domain.transactions.service" = 1
 "cadrumo.domain.transactions.tipo_actividad_partitions" = 1
-"cadrumo.domain.usage_ratios.service" = 1
 "cadrumo.domain.user_profile.labels" = 1
 "cadrumo.domain.user_profile.values" = 1
 "cadrumo.entrypoints.cli" = 2
@@ -284,19 +265,9 @@
 "cadrumo.entrypoints.cli._command_runtime" = 1
 "cadrumo.entrypoints.cli._command_schema" = 1
 "cadrumo.entrypoints.cli._common" = 5
-"cadrumo.entrypoints.cli._ledger" = 1
-"cadrumo.entrypoints.cli._ledger_ratios_cli" = 1
 "cadrumo.entrypoints.cli._modelo_behavior_support" = 1
 "cadrumo.entrypoints.cli._modelo_cli_support" = 1
 
-"cadrumo.entrypoints.cli._modelo_work_calculate_cli" = 1
-"cadrumo.entrypoints.cli._modelo_work_lifecycle_cli" = 5
-"cadrumo.entrypoints.cli._modelo_work_revision_cli" = 3
-"cadrumo.entrypoints.cli._modelo_work_runs_cli" = 4
-"cadrumo.entrypoints.cli._modelo_work_select_cli" = 1
-"cadrumo.entrypoints.cli._modelo_work_verification_cli" = 3
-"cadrumo.entrypoints.cli._modelo_work_wizard_cli" = 1
-"cadrumo.entrypoints.cli._overview" = 2
 "cadrumo.entrypoints.cli._profile_session_gate" = 2
 "cadrumo.entrypoints.cli._tty" = 3
 "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap" = 1
@@ -340,3 +311,12 @@ modules = [
   "cadrumo.entrypoints.cli.tests.test_resolution_defers_capabilities",
   "cadrumo.entrypoints.cli.tests.test_state_free_capability_isolation",
 ]
+
+# A symbol kept deliberately, admitted only with the closed kind the module
+# ratchet defines and a rationale naming its live reader. Excluded from the
+# comparison AND printed on every run, so the keep stays reviewable.
+[[intentional]]
+module = "cadrumo.entrypoints.cli._app_ledger_command_specs"
+symbol = "LEDGER_CLI_COMMAND_CENSUS"
+kind = "design_time_authority"
+rationale = "Immutable projection of every executable Ledger command, built from the CommandSpec facts in its own module and read by dev/quality/clitui_ledger_capability_matrix.py to check the shipped surface against the declaration. A conformance gate as its only reader is how a locked design is enforced; relocating the projection into dev/ would move the product own declaration out of the product."

@@ -131,9 +131,31 @@ def test_cli_rejects_retired_output_arguments_before_loading_worklist(monkeypatc
         assert error.value.code == 2
 
 
-#: Floor for the parsed surface behind the absence claims below. Live: the
-#: subject module makes 15 attribute calls across 184 referenced names.
-_MINIMUM_SUBJECT_CALLS = 5
+def _called_attribute_names(tree: ast.Module) -> set[str]:
+    """Return every attribute a call in ``tree`` targets, as in ``p.write_text()``."""
+    return {
+        node.func.attr for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+    }
+
+
+def _called_bare_names(tree: ast.Module) -> set[str]:
+    """Return every bare name a call in ``tree`` targets, as in ``open()``.
+
+    The absence claim below forbids ``open``, which is a builtin and therefore
+    almost always spelled bare. Read through attribute callees alone it was a
+    name the gate could never see: the commonest way in Python to open a file
+    for writing sits in this set and in no other.
+    """
+    return {node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
+
+
+#: Floors for the parsed surface behind the absence claims below, one per
+#: callee shape. Live: the subject module makes 15 attribute calls and 45 bare
+#: calls. They are counted separately on purpose - a single floor over the
+#: union is satisfied by either shape alone, so the collection of the other
+#: could collapse to nothing while every absence below still held.
+_MINIMUM_SUBJECT_ATTRIBUTE_CALLS = 5
+_MINIMUM_SUBJECT_BARE_CALLS = 15
 
 
 def test_identity_cli_has_no_filesystem_write_surface() -> None:
@@ -154,16 +176,19 @@ def test_identity_cli_has_no_filesystem_write_surface() -> None:
         "write_bytes",
         "write_text",
     }
-    called_attributes = {
-        node.func.attr for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
-    }
+    called_attributes = _called_attribute_names(tree)
+    called_bare = _called_bare_names(tree)
 
-    assert len(called_attributes) >= _MINIMUM_SUBJECT_CALLS, (
+    assert len(called_attributes) >= _MINIMUM_SUBJECT_ATTRIBUTE_CALLS, (
         f"the subject module makes only {len(called_attributes)} attribute call(s); below "
         "this the absence claims below hold because the module does nothing, not because "
         "it refrains from writing"
     )
-    assert filesystem_writes.isdisjoint(called_attributes)
+    assert len(called_bare) >= _MINIMUM_SUBJECT_BARE_CALLS, (
+        f"the subject module makes only {len(called_bare)} bare call(s); the builtin "
+        "spellings among the forbidden names are only visible in this set"
+    )
+    assert filesystem_writes.isdisjoint(called_attributes | called_bare)
     assert not hasattr(subject, "_write_review_output")
     assert not hasattr(subject, "_resolve_review_output_path")
 

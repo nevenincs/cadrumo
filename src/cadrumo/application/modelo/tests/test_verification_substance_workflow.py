@@ -519,7 +519,7 @@ def test_missing_required_casilla_finding_carries_registry_provenance() -> None:
     hand-copied list. The companion refusal test proves a missing registry
     definition is a hard error, not an empty-provenance finding.
     """
-    from ..verification_actions import missing_required_casilla_finding
+    from ..verification_actions import _missing_required_casilla_finding
 
     snapshot = bundled_authority().snapshot("130", filing_year=2026, period="1T")
     casilla_02 = next(c for c in snapshot.revision.casillas if c.id == _CASILLA_02)
@@ -528,7 +528,7 @@ def test_missing_required_casilla_finding_carries_registry_provenance() -> None:
     assert expected_legal_refs, "registry casilla 02 must declare legal_refs (oracle precondition)"
     assert expected_source_refs, "registry casilla 02 must declare source_refs (oracle precondition)"
 
-    finding = missing_required_casilla_finding(_CASILLA_02, casilla_def=casilla_02)
+    finding = _missing_required_casilla_finding(_CASILLA_02, casilla_def=casilla_02)
 
     assert finding.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA
     assert finding.casilla_id == _CASILLA_02
@@ -543,7 +543,7 @@ def test_missing_required_casilla_finding_carries_registry_provenance() -> None:
 
 def test_missing_casilla_finding_refuses_absent_registry_definition() -> None:
     """Missing-required findings must not be emitted without registry provenance."""
-    from ..verification_actions import missing_required_casilla_finding
+    from ..verification_actions import _missing_required_casilla_finding
 
     with pytest.raises(ModeloValidationError, match="requires registry casilla definition provenance"):
-        missing_required_casilla_finding(_ABSENT_REGISTRY_CASILLA, casilla_def=None)
+        _missing_required_casilla_finding(_ABSENT_REGISTRY_CASILLA, casilla_def=None)

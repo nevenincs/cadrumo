@@ -17,13 +17,50 @@ built on.
 
 from __future__ import annotations
 
+import ast
 import pathlib
 
 import pytest
 
-from ..namespace_retirement_sweep import _constants, _read, apply
+from .. import namespace_retirement_sweep
+from ..namespace_retirement_sweep import _constants, _exists, _read, apply
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def test_importing_the_sweep_runs_no_pass() -> None:
+    """Importing must not SWEEP either, which the flag alone cannot tell us.
+
+    The flag being False only means no pass would write. It stayed False while
+    the module still ran all five passes at import, so the suite paid for a
+    whole-tree sweep just to collect, and one unusable candidate path could
+    abort collection outright on a platform where the check raises. The passes
+    now live behind ``main()``, and this asserts that: the module body binds
+    the entry point without calling it.
+    """
+    source = pathlib.Path(namespace_retirement_sweep.__file__).read_text(encoding="utf-8")
+    module = ast.parse(source)
+    called_at_import = [
+        node
+        for node in module.body
+        if not isinstance(node, ast.FunctionDef | ast.ClassDef | ast.If)
+        for descendant in ast.walk(node)
+        if isinstance(descendant, ast.Call)
+        and isinstance(descendant.func, ast.Name)
+        and descendant.func.id.startswith("fix_")
+    ]
+    assert called_at_import == [], "a fix pass runs at import; the sweep is armed by collection alone"
+
+
+def test_an_unusable_candidate_name_reads_as_absent() -> None:
+    """A name the operating system rejects is not an existing path.
+
+    Every string constant mentioning a slash and ``cadrumo`` becomes a
+    candidate, including a module docstring that quotes a data path. macOS
+    raises ``ENAMETOOLONG`` on such a name where Windows answers False, so
+    without this the sweep died on one platform and not the other.
+    """
+    assert _exists(pathlib.Path("src/cadrumo/" + "x" * 4096)) is False
 
 
 def test_importing_the_sweep_does_not_arm_it() -> None:

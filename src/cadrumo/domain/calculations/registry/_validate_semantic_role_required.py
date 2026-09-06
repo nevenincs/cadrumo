@@ -151,4 +151,3 @@ def collect_casillas_by_semantic_role(
 
 
 required_role_declaration_failures = _validate_required_role_declarations
-REQUIRED_ROLE_LABEL_PATTERNS = _REQUIRED_ROLE_LABEL_PATTERNS

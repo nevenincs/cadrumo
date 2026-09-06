@@ -28,6 +28,15 @@ def test_legacy_registry_and_generated_cache_sources_are_physically_absent() -> 
         root / "dev/quality/generate_app_lazy_manifest.py",
         root / "dev/quality/generate_command_registration_metadata.py",
     )
+    # An absence claim proves retirement only while the directory that WOULD
+    # hold the file still exists. The cli/ entries are anchored by the reads
+    # below, which raise on a wrong base, but the two dev/quality entries are
+    # not: nothing else here touches that tree, so a rename would satisfy
+    # their absence over a directory that no longer exists.
+    for path in absent:
+        assert path.parent.is_dir(), (
+            f"{path.parent} is gone, so the absence of {path.name} proves nothing about retirement"
+        )
     assert all(not path.exists() for path in absent)
     for path in (cli / "_command_schema.py", cli / "_verb_input_schema.py"):
         source = path.read_text(encoding="utf-8")

@@ -299,6 +299,45 @@ def test_a_guard_inside_a_called_helper_clears_the_hit(tmp_path: Path) -> None:
     assert _flagged_names(tmp_path) == set()
 
 
+def test_an_unguarded_async_corpus_scan_is_flagged(tmp_path: Path) -> None:
+    """An ``async def`` test is a test; skipping it is the screen going quiet.
+
+    The sync twin of this shape is flagged, so a screen that reads only
+    ``ast.FunctionDef`` does not judge this one differently - it never reaches
+    it, and its silence is indistinguishable from a clean verdict.
+    """
+    _write_screened_tree(
+        tmp_path,
+        "test_probe.py",
+        """
+        async def test_no_async_offenders_anywhere() -> None:
+            failures = [path for path in walk_the_tree() if is_bad(path)]
+            assert failures == []
+        """,
+    )
+
+    assert "test_no_async_offenders_anywhere" in _flagged_names(tmp_path)
+
+
+def test_a_guard_inside_a_called_async_helper_clears_the_hit(tmp_path: Path) -> None:
+    """Credit follows the proof, not the spelling of the helper holding it."""
+    _write_screened_tree(
+        tmp_path,
+        "test_probe.py",
+        """
+        async def _pages():
+            found = await discover()
+            assert found
+            return found
+
+        async def test_no_offenders() -> None:
+            assert [p for p in await _pages() if is_bad(p)] == []
+        """,
+    )
+
+    assert _flagged_names(tmp_path) == set()
+
+
 def test_a_guard_in_an_uncalled_helper_does_not_clear_the_hit(tmp_path: Path) -> None:
     """Helper credit is for helpers the test actually calls, not any helper.
 

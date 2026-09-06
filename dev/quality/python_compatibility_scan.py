@@ -618,7 +618,7 @@ def main(argv: list[str] | None = None) -> int:
             }
             for item in findings
         ]
-        args.json_path.write_text(json.dumps(payload, indent=2) + "\n", encoding=UTF_8)
+        args.json_path.write_text(json.dumps(payload, indent=2) + "\n", encoding=UTF_8, newline="\n")
         print(f"Wrote {len(payload)} compatibility finding(s) to {args.json_path}")
 
     return 1 if findings else 0
