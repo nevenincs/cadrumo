@@ -1,4 +1,4 @@
-"""Serving-path latency benchmark and acceptance gate (mcp-call-latency P05).
+"""Serving-path latency benchmark and acceptance gate for MCP call latency.
 
 Measures the research call table against isolated encrypted state and asserts the
 projected end-state as acceptance gates. Dual-use: a CLI entrypoint emitting a
@@ -13,10 +13,11 @@ Two environments are measured and EVERY number is labelled with its
   installed-cohort projections. Only the cliff-gone gate binds here (first-touch
   work create far under the former 49.6 s). The installed-cohort subprocess
   targets (warm calculate <= 3 s, first-touch <= 5 s) are NOT asserted on the
-  editable tree; they are S19/S20's to prove against the built cohort.
-- ``server`` drives the warm in-process runtime (D4), which pays interpreter,
+  editable tree; the installed-cohort acquisition lanes prove those against the
+  built cohort.
+- ``server`` drives the warm in-process runtime, which pays interpreter,
   import, and registry once per process and then serves steady-state calls. This
-  is the campaign's real, current-tree-verifiable win: reads and simple writes
+  is the real, current-tree-verifiable win: reads and simple writes
   are sub-second and the heaviest calculation is low single-digit seconds.
 
 On the server warm-calculate bound: the research projected ~1.5 s for a lighter
@@ -93,8 +94,8 @@ _SUBPROCESS_FIRST_TOUCH_CLIFF_MAX_CPU_S: Final[float] = 35.0
 # is self-describing and cross-environment claims stay explicitly labelled.
 _RESEARCH_PROJECTIONS: Final[dict[str, str]] = {
     "server_warm_calculate_projection_s": "1.5 (installed-cohort, research lighter-baseline)",
-    "subprocess_warm_calculate_target_s": "3.0 (installed-cohort, proven by S19/S20)",
-    "subprocess_first_touch_target_s": "5.0 (installed-cohort, proven by S19/S20)",
+    "subprocess_warm_calculate_target_s": "3.0 (installed-cohort, proven by the acquisition lanes)",
+    "subprocess_first_touch_target_s": "5.0 (installed-cohort, proven by the acquisition lanes)",
     "subprocess_first_touch_former_cliff_s": "49.6 (installed v0.2.1 pre-fix)",
 }
 
@@ -200,7 +201,7 @@ def measure_subprocess(cli: Path, *, work_dir: Path, storage_root: Path, timeout
             _SUBPROCESS_FIRST_TOUCH_CLIFF_MAX_CPU_S,
             first_touch_cpu <= _SUBPROCESS_FIRST_TOUCH_CLIFF_MAX_CPU_S,
             "cliff-gone gate in child CPU seconds (the 49.6 s cliff was compute, not waiting); "
-            "the installed-cohort <= 5 s target is proven by S19/S20",
+            "the installed-cohort <= 5 s target is proven by the acquisition lanes",
         )
     )
     work_unit_id = str(json.loads(create_stdout)["result"]["work_unit_id"])
@@ -213,7 +214,7 @@ def measure_subprocess(cli: Path, *, work_dir: Path, storage_root: Path, timeout
             "work create (warm)",
             warm_create_wall,
             warm_create_cpu,
-            "editable-tree per-process import floor; installed-cohort target proven by S19/S20",
+            "editable-tree per-process import floor; installed-cohort target proven by the acquisition lanes",
         )
     )
 
@@ -225,7 +226,7 @@ def measure_subprocess(cli: Path, *, work_dir: Path, storage_root: Path, timeout
             "work calculate (warm)",
             calculate_wall,
             calculate_cpu,
-            "editable-tree per-process import floor; installed-cohort <= 3 s target proven by S19/S20",
+            "editable-tree per-process import floor; installed-cohort <= 3 s target proven by the lanes",
         )
     )
 
@@ -321,10 +322,10 @@ def _timed_build_server_read(command_key: str, *, timeout_s: float) -> tuple[flo
 
 
 def measure_server_mode(*, storage_root: Path, acquire_timeout_s: float) -> list[CallMeasurement]:
-    """Measure warm server-mode calls through the D4 in-process runtime.
+    """Measure warm server-mode calls through the in-process runtime.
 
     One process pays interpreter, import, and registry once; the reads, simple
-    write, and steady-state calculation are then the campaign's real serving
+    write, and steady-state calculation are then the real serving
     cost. A final read is driven through the full ``build_server`` memory
     transport to confirm the MCP-surface framing overhead is negligible.
     """

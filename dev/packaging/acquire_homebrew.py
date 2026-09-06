@@ -6,8 +6,7 @@ and repeats the grounded installed CLI tax-work oracle against the
 tap-installed command. The formula is CLI-only by scope: ``cadrumo-mcp`` ships
 shipped by the same wheel, but this lane exercises the command surface only.
 It refuses instructively when ``brew`` is unavailable or the public tap does
-not yet carry the formula (implements post-release-distribution plan row
-P03.S17).
+not yet carry the formula.
 """
 
 from __future__ import annotations

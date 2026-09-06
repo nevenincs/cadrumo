@@ -3,7 +3,7 @@
     Reacquire Cadrumo through the PUBLIC Scoop bucket and repeat installed work.
 
 .DESCRIPTION
-    Post-publication reacquisition for post-release-distribution plan row P03.S16.
+    Post-publication reacquisition through the PUBLIC Scoop bucket.
     Adds the published Scoop bucket, installs the app from it, verifies every
     installed cohort artifact digest against the promoted cohort, and repeats the
     grounded installed CLI tax-work oracle. The manifest is CLI-only by scope:

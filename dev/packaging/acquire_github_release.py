@@ -4,9 +4,9 @@ This post-publication check downloads every asset attached to the ``v<version>``
 GitHub release via ``gh release download``, then proves the promoted release
 cohort is served completely and byte-for-byte: every one of the eleven declared
 cohort artifacts must be present with its exact manifest size and SHA-256. It is
-digest-only — no installed behaviour is repeated here (that is the channel-
-specific rows) — and refuses instructively when the tag or an asset is absent
-(implements post-release-distribution plan row P03.S15).
+digest-only — no installed behaviour is repeated here (that is the per-channel
+acquisition lanes' work) — and refuses instructively when the tag or an asset
+is absent.
 """
 
 from __future__ import annotations
