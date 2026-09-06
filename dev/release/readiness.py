@@ -167,18 +167,24 @@ def _read_manifest_version(repo_root: Path) -> str:
     return str(payload.get(".", ""))
 
 
-#: Every row any channel can produce, whether or not this release claims it.
-#: Derived from the channel descriptor so a channel's proof obligation is
-#: declared in exactly one place.
-ALL_DISTRIBUTION_ROWS: Final[tuple[str, ...]] = tuple(
-    sorted({row for channel in load_descriptor().channel for row in channel.evidence_rows}),
-)
+#: Every distribution-evidence row the channel descriptor declares, derived
+#: once through the descriptor's own helper. Both public names below bind to
+#: this one derivation: an earlier arrangement open-coded the helper's body
+#: here and called the helper two lines down, so a later narrowing of the
+#: helper would have moved one name and left the other on the old meaning.
+_DECLARED_DISTRIBUTION_ROWS: Final[tuple[str, ...]] = required_evidence_rows(load_descriptor())
+
+#: Every row any channel can produce. The descriptor cannot express a channel
+#: the release declines to claim -- a channel that cannot be proven is removed
+#: from the inventory rather than left declared -- so this is the same set as
+#: the required rows by construction, not by coincidence.
+ALL_DISTRIBUTION_ROWS: Final[tuple[str, ...]] = _DECLARED_DISTRIBUTION_ROWS
 
 #: The rows this release must prove: every row the inventory declares. A channel
 #: is listed because the product publishes to it, so each one owes its rows; a
 #: channel that cannot be proven is removed from the inventory rather than left
 #: declared and unproven.
-REQUIRED_DISTRIBUTION_ROWS: Final[tuple[str, ...]] = required_evidence_rows(load_descriptor())
+REQUIRED_DISTRIBUTION_ROWS: Final[tuple[str, ...]] = _DECLARED_DISTRIBUTION_ROWS
 
 
 def _require_json_object(payload: object, *, surface: str) -> dict[str, object]:
