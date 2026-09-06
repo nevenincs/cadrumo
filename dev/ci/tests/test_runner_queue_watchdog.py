@@ -252,11 +252,24 @@ def test_occupancy_counts_only_running_jobs() -> None:
     assert occupied_label_keys(parse_jobs(queued_only)) == frozenset()
 
 
+#: Floor for the workflow census three gates in this module iterate. The
+#: directory carries sixteen today; the sibling change-class module floors
+#: the same walk at eight and states why, so this matches it. A bare
+#: truthiness stood here, and every assertion in those three gates runs
+#: INSIDE the loop over this list: a walk narrowed to one document leaves
+#: each of them passing with almost nothing executed.
+_MINIMUM_WORKFLOW_DOCUMENTS = 8
+
+
 def _workflow_documents() -> list[tuple[Path, dict[str, Any]]]:
     paths = sorted(
         {*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")}
     )
-    assert paths, f"no workflows found to gate under {_WORKFLOWS_DIR}"
+    assert len(paths) >= _MINIMUM_WORKFLOW_DOCUMENTS, (
+        f"only {len(paths)} workflow(s) found under {_WORKFLOWS_DIR}; the gates that "
+        "iterate this census assert nothing at all over a walk that reached less than "
+        "the lanes this repository runs"
+    )
     return [(path, yaml.safe_load(path.read_text(encoding="utf-8"))) for path in paths]
 
 
