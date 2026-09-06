@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from unittest import mock
 
 import pytest
 
@@ -58,6 +59,27 @@ def test_scaffold_writes_full_skeleton_and_is_idempotent(tmp_path: Path) -> None
     assert not second.written
     assert second.already_present
     assert set(second.already_present) == set(first.written)
+
+
+def test_scaffold_invalidates_the_conformance_snapshot_cache_only_when_it_writes(tmp_path: Path) -> None:
+    """A write must drop the conformance snapshot cache; a pure no-op must not.
+
+    The cache is keyed only on ``validate``, never on registry source state
+    (see :func:`dev.registry.conformance.manager.reset_conformance_cache`), so
+    nothing notices this scaffold's write on its own. A scaffold-then-audit
+    call chain in one process would otherwise see the pre-scaffold profile.
+    """
+    manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
+
+    with mock.patch("dev.registry.newmodelo.manager.reset_conformance_cache") as spy:
+        first = manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID, title="Throwaway test modelo")
+    assert first.written
+    spy.assert_called_once_with()
+
+    with mock.patch("dev.registry.newmodelo.manager.reset_conformance_cache") as spy:
+        second = manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID, title="Throwaway test modelo")
+    assert not second.written
+    spy.assert_not_called()
 
 
 def test_scaffold_force_overwrites_existing_placeholders(tmp_path: Path) -> None:
