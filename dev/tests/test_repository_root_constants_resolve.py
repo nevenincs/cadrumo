@@ -88,16 +88,20 @@ def _declared_repository_roots() -> tuple[tuple[Path, str, Path | None], ...]:
                 continue
             try:
                 module = ast.parse(path.read_text(encoding="utf-8"))
-            except (SyntaxError, UnicodeDecodeError) as refusal:  # pragma: no cover
+            except (OSError, SyntaxError, UnicodeDecodeError) as refusal:  # pragma: no cover
                 # Unparseability is owned elsewhere; its consequence is owned here.
                 # A module that never parses contributes no root constant, so a
                 # wrong parents[N] inside it is never resolved and never reported.
                 # The floor below counts constants FOUND, and forty-seven are found
                 # against a floor of thirty: seventeen could vanish this way before
                 # anything fired, and nothing would say why.
+                # An UNREADABLE module loses the same constant by a different
+                # route: the walk can list a path a peer removes before the read
+                # reaches it. Announced here rather than ending the run in a
+                # traceback that names neither the module nor the shortfall.
                 report_unread(
                     "repository-root constant scan",
-                    "this module was not parsed, so a repository-root constant inside it was "
+                    "this module was not read or parsed, so a repository-root constant inside it was "
                     "not resolved and cannot appear in the findings below",
                     [f"{path} ({type(refusal).__name__})"],
                 )

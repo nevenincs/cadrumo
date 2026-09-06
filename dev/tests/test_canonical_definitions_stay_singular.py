@@ -66,18 +66,22 @@ def _definition_sites(root: pathlib.Path) -> tuple[dict[str, list[str]], list[st
     regression.
     """
     sites: dict[str, list[str]] = {name: [] for name in _CANONICAL_DEFINITIONS}
-    unparseable: list[str] = []
+    unsearched: list[str] = []
     for path in sorted(root.rglob("*.py")):
         if "__pycache__" in path.parts or "tests" in path.parts:
             continue
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"))
-        except SyntaxError as refusal:
+        except (OSError, SyntaxError) as refusal:
             # A module that does not parse is searched for nothing, so a SECOND
             # definition living in it is invisible and this gate still reports
             # exactly one. All 2,121 production modules parse, so one that does
             # not is a broken tracked file and is refused rather than skipped.
-            unparseable.append(f"{path.as_posix()}: {refusal}")
+            # An UNREADABLE module is the same loss, so it joins the same
+            # refusal: the walk can list a path a peer removes before the
+            # read reaches it, and a directory named *.py answers rglob but
+            # not read_text. Neither may crash the gate with a raw traceback.
+            unsearched.append(f"{path.as_posix()}: {refusal}")
             continue
         for node in tree.body:
             defined: str | None = None
@@ -89,17 +93,17 @@ def _definition_sites(root: pathlib.Path) -> tuple[dict[str, list[str]], list[st
                 defined = node.target.id
             if defined in sites:
                 sites[defined].append(path.as_posix())
-    return sites, unparseable
+    return sites, unsearched
 
 
 def test_every_collapsed_concept_still_has_exactly_one_definition() -> None:
     """A concept collapsed onto one definition has not grown a second."""
     root = pathlib.Path(__file__).resolve().parents[2] / "src" / "cadrumo"
-    sites, unparseable = _definition_sites(root)
+    sites, unsearched = _definition_sites(root)
 
-    assert not unparseable, (
-        "these production modules could not be parsed, so a second definition inside one "
-        f"would not appear in the sites below: {unparseable}"
+    assert not unsearched, (
+        "these production modules could not be read or parsed, so a second definition inside one "
+        f"would not appear in the sites below: {unsearched}"
     )
 
     missing = sorted(name for name, found in sites.items() if not found)
