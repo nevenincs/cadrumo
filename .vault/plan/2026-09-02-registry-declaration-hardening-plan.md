@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:2832b306b443d802da19f13f8e517dd2b6d5de93b5e0ac131a671818be7fc33a'
+body_hash: 'sha256:0ff97760cd4e2de872078ee05a5a3da1d002076be361a829a92cec7d8fb84756'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -603,6 +603,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S721` - Give the write-call question one owner in module_test_reach so the evidence proof reads both branches that rank a write instead of restating only one; `dev/quality/module_test_reach.py`.
 - [x] `W02.P02.S722` - Screen async test definitions in the vacuity screen so the instrument that refuses silent green does not go silent on a whole function form; `dev/audit/vacuity_screen.py`.
 - [x] `W02.P02.S723` - Floor the registry tooling import-coverage gate per root and refuse a missing root, so a tooling tree that disappears cannot silently exempt every module it held; `dev/registry/tests/test_declaration_invariant_gates.py`.
+- [x] `W02.P02.S724` - Read a returned tag and a parameter default as base-image bindings so the singularity gate cannot be restated through the two spellings it never parsed; `dev/packaging/tests/test_container_base_image_singularity.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
