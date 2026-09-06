@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:f8296d08c3ebf37f183bb1edb991a8a26c00ad33361ccadb48bd2b51530058f5'
+body_hash: 'sha256:1daf17916732ec483e93fc5905f1080200d54a9910b6cb30b5ebdf6b44b5982e'
 ---
 
 <!-- RETIRED: S39 -->
@@ -126,7 +126,7 @@ Build every declared distribution and channel artifact from one command and prov
 - [x] `P09.S61` - Stop every packaging lane from re-running the whole packaging suite before it starts; `dev/packaging/campaign.py`.
 - [ ] `P09.S62` - Give the campaign preflight an explicit selection the recipe guard can see; `dev/packaging/campaign.py`.
 - [ ] `P09.S63` - Stop a quality sweep from running a repository rewrite when its test module is imported; `dev/quality/namespace_retirement_sweep.py`.
-- [ ] `P09.S64` - Make the installed payload attestation find the distribution it just installed; `dev/packaging/_installed_wheel_binding.py`.
+- [x] `P09.S64` - Make the installed payload attestation find the distribution it just installed; `dev/packaging/_installed_wheel_binding.py`.
 
 ### Phase `P10` - Prune the release and packaging surfaces without consumers
 

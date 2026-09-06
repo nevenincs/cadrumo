@@ -5,16 +5,11 @@ tags:
 date: '2026-09-06'
 modified: '2026-09-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:dd2a214fd4c7d1437552365e107823d99c0c8ed4d9aa8eb685b9e276912fd507'
+body_hash: 'sha256:61d9454e1863456e98571f7daa6ac7e2fd2486593ebca08e9d1ab25c96893485'
 step_id: 'S446'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Give dev.locales a batch removal verb, and make it refuse the silent no-op its own batch remover allows. Deleting N keys through the single-key verb costs N interpreter starts, which turned a routine catalogue cleanup into half an hour of process startup. The plural manager method already existed and was simply unexposed; what it does NOT do is report a key it cannot find in a sharded catalogue, so a typo, a stale list or an already-applied manifest reads as success having done nothing.
 
@@ -25,23 +20,6 @@ related:
 - `dev/locales/tests/test_remove_batch.py`
 
 ## Changes
-
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
-
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
-
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->
 
 18 passed. The verb exists because deleting 176 keys through the single-key
 `remove` cost 176 interpreter starts -- about half an hour of process startup to
@@ -82,4 +60,3 @@ raise would be the deeper fix, but it is a behaviour change for every existing
 caller of a shipped method, which is more than this target asked for. The
 compensation is at the CLI boundary, where the operator is, and the docstring
 says which layer is doing it.
-

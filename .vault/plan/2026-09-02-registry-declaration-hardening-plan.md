@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:d609a72382e74b70d95809ad4664dec7bd3fbaf42bf4af06482c71be376fc3c0'
+body_hash: 'sha256:bd40df52776b29332ebfc7e1c69cf9abf700d20c862795641d4e764900662b30'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -595,6 +595,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S713` - Floor the harness scorable field count: > 0 accepted an oracle narrowed to a single field, against a live expected set of 15 decomposing as 11 matched plus 4 missed; `dev/ingest_harness/tests/test_driver.py`.
 - [x] `W02.P02.S714` - Floor the discovered m303 mapping epochs: a directory walk guarded only by truthiness parametrizes seven proofs, so a partial collapse shrank their coverage silently rather than failing anything; `dev/registry/tests/test_modelo_303_semantic_maps.py`.
 - [x] `W02.P02.S715` - Floor the golden scenario corpus the every-scenario sweep is parametrized over: a renamed directory or changed pattern yields zero cases, which deletes the gate rather than failing it; `dev/agent_eval/tests/test_modelo_130_golden.py`.
+- [x] `W02.P02.S716` - Floor the registry locale key scan without restoring the pinned count its docstring refuses: truthiness left the negative shape assertions trivially true and let the 360-case per-key parity gate shrink silently; `dev/locales/tests/test_registry_locale_key_parity.py`.
+- [x] `W02.P02.S717` - Floor the shipped module walk from its own shape: > 100 sat against 2,110 modules, so 95 percent of the shipped tree could go unscanned while the no-dev-dependency gate still reported clean; `dev/packaging/tests/test_shipped_code_carries_no_dev_dependency.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
