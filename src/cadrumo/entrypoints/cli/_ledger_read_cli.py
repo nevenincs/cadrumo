@@ -72,6 +72,7 @@ if TYPE_CHECKING:
         LlmUsageCostProviderMetrics,
     )
     from ...application.ledger.preflight import LedgerPreflightIssue
+    from ...application.ledger.readiness_query import LedgerReadinessIssueV1
     from ._ledger_rule_payloads import LedgerLlmDiagnosticsResult
 
 
@@ -388,7 +389,6 @@ def ledger_check(
     )
 
 
-
 def _ledger_check_issue_lines_from_items(issues: Sequence[LedgerPreflightIssue]) -> list[str]:
     return [f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}" for issue in issues]
 
@@ -669,20 +669,16 @@ def ledger_status(ctx: typer.Context, period: str | None = None, year: int | Non
                 f"{tr('cli.ledger.labels.ready')}\t{report.ready}",
             ]
         )
-        from ...application.ledger.preflight import preflight_ledger_tax_readiness
+        from ...application.ledger.readiness_query import read_ledger_readiness
 
-        preflight = preflight_ledger_tax_readiness(
-            bucket_id=transaction_repository.bucket_id,
-            period=report.period,
-            transaction_repository=transaction_repository,
-        )
-        for issue in preflight.issues:
-            transaction = transactions.get(issue.transaction_id)
-            if transaction is None:
-                continue
-            lines.append(
-                _ledger_status_readiness_issue_line(transaction, reason=issue.reason.value, detail=issue.detail)
+        lines.extend(
+            _ledger_status_readiness_issue_line(issue)
+            for issue in read_ledger_readiness(
+                bucket_id=transaction_repository.bucket_id,
+                period=report.period,
+                transaction_repository=transaction_repository,
             )
+        )
     from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ...application.ledger.stale_filing_query import read_stale_ledger_filings
@@ -825,23 +821,28 @@ def _latest_llm_rejection_notice(
     )
 
 
-def _ledger_status_readiness_issue_line(transaction: Transaction, *, reason: str, detail: str) -> str:
+def _ledger_status_readiness_issue_line(issue: LedgerReadinessIssueV1) -> str:
+    """Render one readiness issue, marking a row the catalogue no longer holds."""
+
     def _value(value: object) -> str:
         return "-" if value is None or value == "" else str(value)
 
-    return "\t".join(
-        (
-            "readiness_issue",
-            transaction.transaction_id,
-            f"classification={transaction.business_classification.value}",
-            f"category_id={_value(transaction.category_id)}",
-            f"taxable_base={_value(transaction.taxable_base)}",
-            f"iva_rate={_value(transaction.iva_rate)}",
-            f"iva_amount={_value(transaction.iva_amount)}",
-            f"reason={reason}",
-            f"detail={detail}",
-        ),
+    fields = (
+        "readiness_issue",
+        issue.transaction_id,
+        f"classification={_value(issue.business_classification)}",
+        f"category_id={_value(issue.category_id)}",
+        f"taxable_base={_value(issue.taxable_base)}",
+        f"iva_rate={_value(issue.iva_rate)}",
+        f"iva_amount={_value(issue.iva_amount)}",
+        f"reason={issue.reason}",
+        f"detail={issue.detail}",
     )
+    if issue.transaction_present:
+        return "	".join(fields)
+    # The row named by the issue is gone. Dropping the issue here would make the
+    # printed issues fewer than the count reported above them, with nothing said.
+    return "	".join((*fields, "transaction=absent"))
 
 
 def _ledger_track_lines(transaction_id: str, transaction: Transaction) -> list[str]:
