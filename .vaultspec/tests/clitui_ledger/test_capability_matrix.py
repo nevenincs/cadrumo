@@ -163,9 +163,7 @@ _FROZEN_G0_ACCEPTED_MATRIX_DIGEST: Final[str] = (
 _FROZEN_G0_ACCEPTANCE_ATTESTATION_DIGEST: Final[str] = (
     "sha256:d680107325ede5c108d35d58adf0ea64560f203e1618e5b2eb68c539e937d3fe"
 )
-_FROZEN_G0_CLOSURE_BASIS_DIGEST: Final[str] = (
-    "sha256:23f4c180707765054bae7ddb1a358fc2b2d9d159a7f81b3b6d22f7e218d81dbd"
-)
+_FROZEN_G0_CLOSURE_BASIS_DIGEST: Final[str] = "sha256:23f4c180707765054bae7ddb1a358fc2b2d9d159a7f81b3b6d22f7e218d81dbd"
 _FROZEN_G0_ACCEPTANCE_SUBJECT_DIGEST: Final[str] = (
     "sha256:1ce7ea53db4c50c24040d771bf7b8c7a8cea186aa30d4251d9d091ff7dc0d682"
 )
@@ -273,9 +271,7 @@ def _published_accepted_g0_payload(path: Path = _REFERENCE_PATH) -> dict[str, ob
 def _assert_published_accepted_g0_payload(path: Path = _REFERENCE_PATH) -> None:
     """Validate cross-record bindings that a JSON parser alone cannot establish."""
     payload = _published_accepted_g0_payload(path)
-    attestation = LedgerMatrixAcceptanceAttestationV1.model_validate_json(
-        json.dumps(payload["acceptance_attestation"])
-    )
+    attestation = LedgerMatrixAcceptanceAttestationV1.model_validate_json(json.dumps(payload["acceptance_attestation"]))
     receipt = LedgerGateClosureReceiptV1.model_validate_json(json.dumps(payload["g0_receipt"]))
     subject = EvidenceSubjectSnapshotV1.model_validate_json(json.dumps(payload["acceptance_subject"]))
     anchor = LedgerAcceptanceRecordAnchorV1.model_validate_json(json.dumps(payload["acceptance_record_anchor"]))
@@ -5328,6 +5324,28 @@ def test_g0_refuses_missing_stale_or_altered_published_acceptance_anchor(mutatio
         )
     else:
         assert "acceptance record anchor validation failed" in " ".join(assessment.blockers)
+
+
+def test_missing_acceptance_anchor_names_the_gate_that_requires_it() -> None:
+    """G0 and post-hold G4 report their distinct receipt dependencies."""
+    matrix = _matrix_with_authorized_hold_lift(_matrix())
+
+    g0 = _evaluate(
+        matrix,
+        LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE,
+        acceptance_anchor=None,
+        acceptance_subjects=(),
+    )
+    g4 = _evaluate(
+        matrix,
+        LedgerGate.G4_TUI_ADMISSION_AND_PARITY,
+        acceptance_anchor=None,
+        acceptance_subjects=(),
+    )
+
+    assert "accepted G0 closure requires a current external acceptance record anchor" in g0.blockers
+    assert "accepted G3 closure requires a current external acceptance record anchor" in g4.blockers
+    assert "accepted G0 closure requires a current external acceptance record anchor" not in g4.blockers
 
 
 def test_s14_reference_rejects_mojibake_and_the_detector_has_teeth(tmp_path: Path) -> None:

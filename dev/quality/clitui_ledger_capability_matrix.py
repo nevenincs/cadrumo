@@ -5621,10 +5621,13 @@ def _acceptance_record_anchor_errors(
     matrix: LedgerCapabilityMatrixV1,
     acceptance_record_anchor: LedgerAcceptanceRecordAnchorV1 | None,
     observed_acceptance_subjects: tuple[EvidenceSubjectSnapshotV1, ...],
+    *,
+    required_gate: LedgerGate,
 ) -> list[str]:
     """Require an immutable, independently observed record for receipt authority."""
     if acceptance_record_anchor is None:
-        return ["accepted G0 closure requires a current external acceptance record anchor"]
+        gate_name = required_gate.name.partition("_")[0]
+        return [f"accepted {gate_name} closure requires a current external acceptance record anchor"]
     try:
         anchor = LedgerAcceptanceRecordAnchorV1.model_validate(_serialized_python_data(acceptance_record_anchor))
     except ValidationError as error:
@@ -5675,6 +5678,7 @@ def _gate_reopening_blockers(
     observed_union: LedgerUnionDenominatorV1 | None,
     acceptance_record_anchor: LedgerAcceptanceRecordAnchorV1 | None,
     observed_acceptance_subjects: tuple[EvidenceSubjectSnapshotV1, ...],
+    required_anchor_gate: LedgerGate = LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE,
 ) -> list[str]:
     """Return currentness defects that relock every accepted gate dependency.
 
@@ -5698,7 +5702,12 @@ def _gate_reopening_blockers(
     blockers.extend(_matrix_acceptance_errors(matrix))
     if matrix.accepted_gate_closure_receipts:
         blockers.extend(
-            _acceptance_record_anchor_errors(matrix, acceptance_record_anchor, observed_acceptance_subjects)
+            _acceptance_record_anchor_errors(
+                matrix,
+                acceptance_record_anchor,
+                observed_acceptance_subjects,
+                required_gate=required_anchor_gate,
+            )
         )
     return list(dict.fromkeys(blockers))
 
@@ -5757,6 +5766,11 @@ def evaluate_ledger_capability_gate(
         observed_union=observed_union,
         acceptance_record_anchor=acceptance_record_anchor,
         observed_acceptance_subjects=observed_acceptance_subjects,
+        required_anchor_gate=(
+            LEDGER_TUI_HOLD_UNTIL_GATE
+            if gate is LedgerGate.G4_TUI_ADMISSION_AND_PARITY
+            else LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE
+        ),
     )
     if gate is LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE:
         if not matrix.controls.tui_implementation_hold_recorded or not matrix.controls.tui_implementation_hold_active:
@@ -5764,7 +5778,12 @@ def evaluate_ledger_capability_gate(
         if matrix.acceptance_attestation.ruling is not ReviewRuling.ACCEPT:
             blockers.append("independent review has not issued an ACCEPT attestation for the frozen matrix")
         blockers.extend(
-            _acceptance_record_anchor_errors(matrix, acceptance_record_anchor, observed_acceptance_subjects)
+            _acceptance_record_anchor_errors(
+                matrix,
+                acceptance_record_anchor,
+                observed_acceptance_subjects,
+                required_gate=LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE,
+            )
         )
         for row in matrix.rows:
             for assessment in row.assessments:
@@ -5847,7 +5866,10 @@ def evaluate_ledger_capability_gate(
             blockers.append("the Ledger TUI implementation hold lacks a current accepted G3 closure receipt")
         else:
             for anchor_error in _acceptance_record_anchor_errors(
-                matrix, acceptance_record_anchor, observed_acceptance_subjects
+                matrix,
+                acceptance_record_anchor,
+                observed_acceptance_subjects,
+                required_gate=LEDGER_TUI_HOLD_UNTIL_GATE,
             ):
                 if anchor_error not in blockers:
                     blockers.append(anchor_error)
@@ -5920,7 +5942,10 @@ def evaluate_ledger_capability_gates(
             and assessment.blockers == ("the Ledger TUI implementation hold is not recorded and active",)
         ):
             anchor_errors = _acceptance_record_anchor_errors(
-                matrix, acceptance_record_anchor, observed_acceptance_subjects
+                matrix,
+                acceptance_record_anchor,
+                observed_acceptance_subjects,
+                required_gate=LedgerGate.G0_DENOMINATOR_AND_OWNERSHIP_FREEZE,
             )
             assessment = (
                 GateAssessmentV1(gate=gate, closed=True)
