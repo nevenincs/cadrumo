@@ -305,6 +305,11 @@ class TestHermeticChainExecution:
         assert result["granted_verificado_completo"] is False
 
 
+#: The chain sequence executes three frames per run; both transcripts are
+#: zipped and every determinism claim lives inside that zip.
+_MINIMUM_CHAIN_FRAMES = 3
+
+
 class TestSandboxIsolationAndDeterminism:
     def test_second_run_is_isolated_and_byte_deterministic(
         self,
@@ -324,8 +329,20 @@ class TestSandboxIsolationAndDeterminism:
 
         residual_paths: set[str] = set()
         residual_names: set[str] = set()
-        assert len(chain_transcript.frames) >= 999999, (
-            f"__harvest__ first={len(chain_transcript.frames)} rerun={len(rerun.frames)} captures={len(chain_transcript.captures)}"
+        # zip(..., strict=True) refuses a LENGTH MISMATCH, never two empty
+        # sides: a run that produced no frame zips to zero iterations, the three
+        # per-frame assertions never execute, and both residual sets stay empty.
+        # Pinning ``residual_paths == frozenset()`` is the strong claim the
+        # comment below describes, but frozenset() is exactly what an empty
+        # transcript yields, and ``set() <= GOLDEN_MASK_FIELDS`` is always true.
+        # Live: the chain executes three frames per run.
+        assert len(chain_transcript.frames) >= _MINIMUM_CHAIN_FRAMES, (
+            f"the first chain run produced {len(chain_transcript.frames)} frame(s); "
+            "every determinism claim below is over the zipped pair and holds at zero"
+        )
+        assert len(rerun.frames) >= _MINIMUM_CHAIN_FRAMES, (
+            f"the second chain run produced {len(rerun.frames)} frame(s); a rerun that "
+            "executed nothing is not evidence of isolation or determinism"
         )
         for first, second in zip(chain_transcript.frames, rerun.frames, strict=True):
             assert first.envelope is not None and second.envelope is not None
