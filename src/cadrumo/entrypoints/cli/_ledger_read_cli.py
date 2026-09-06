@@ -834,27 +834,29 @@ def ledger_status(ctx: typer.Context, period: str | None = None, year: int | Non
             )
     from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ...application.aggregation.ledger_filing_snapshot import stale_filed_revisions
+    from ...application.ledger.stale_filing_query import read_stale_ledger_filings
 
-    revisions = CalculationRevisionCatalogueRepository().load().revisions
-    work_units = WorkUnitCatalogueRepository().load()
-    for revision, verdict in stale_filed_revisions(revisions=revisions, catalogue=transactions):
-        work_unit = work_units.get(revision.work_unit_id)
-        if work_unit is None or work_unit.bucket_id != transaction_repository.bucket_id:
-            continue
-        lines.append(
-            "\t".join(
-                (
-                    "ledger_filing_stale",
-                    f"modelo={work_unit.modelo}",
-                    f"year={work_unit.filing_year}",
-                    f"period={work_unit.period.registry_token}",
-                    f"revision={revision.calculation_revision_id}",
-                    f"changed={len(verdict.changed)}",
-                    f"removed={len(verdict.removed)}",
-                )
+    stale_filings = read_stale_ledger_filings(
+        bucket_id=transaction_repository.bucket_id,
+        revisions=CalculationRevisionCatalogueRepository().load().revisions,
+        work_units=WorkUnitCatalogueRepository().load(),
+        transactions=transactions,
+    )
+    lines.extend(
+        "	".join(
+            (
+                "ledger_filing_stale",
+                f"modelo={finding.modelo}",
+                f"year={finding.filing_year}",
+                f"period={finding.period}",
+                f"revision={finding.calculation_revision_id}",
+                f"changed={finding.changed_count}",
+                f"removed={finding.removed_count}",
             )
         )
+        for finding in stale_filings
+    )
+
     from ._ledger_payloads import LedgerStatusResult
 
     emit_envelope(ctx, command="ledger.status", result=strict_round_trip(LedgerStatusResult, report), lines=lines)
