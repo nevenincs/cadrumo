@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:a96ad202483c9879c5448a903fc5c62981f751ba443b580648c2e3d254f31c5b'
+body_hash: 'sha256:73dbcfc0563de540fc07a6c0427a346e15e88307a65424b393909738585380e4'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -1243,6 +1243,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S874` - Stop the rehearsal's finally block discarding the failure already in flight, so a run that fails and also mutates the source reports both causes instead of only the dominant one; `dev/quality/object_name_rehearsal.py`.
 - [x] `W06.P13.S875` - Pin each post-allocation injection case to its own stage, so seven parametrised failure points stop resting on a suffix every rehearsal refusal carries; `dev/quality/tests/test_object_name_rehearsal.py`.
 - [x] `W06.P13.S876` - Stop the health report's shadowing dimension describing a pinned baseline and an enforcing gate that were both deleted, and an AMBER state its own loader makes unreachable; `dev/audit/report.py`.
+- [x] `W06.P13.S877` - Drive the semantic duplication detectors and the dispatch that names them, so seven detectors built for the blocker-class duplication jscpd cannot see stop being reachable by nothing; `dev/audit/tests/test_semantic_duplication.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 
