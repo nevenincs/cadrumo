@@ -7,7 +7,7 @@ encounter — source-parse failure, signature-present refusal,
 already-sanitised guard, and unhandled PII surfaces.
 
 The root is a bare :class:`Exception` rather than
-:class:`cadrumo.core.errors.CadrumoError`. That hierarchy binds every
+:class:`cadrumo.core.errors.hierarchy.CadrumoError`. That hierarchy binds every
 subclass to the product's operator-facing error-code registry at class
 creation and expects a locale-catalogue message key per code; this
 package is fixture-preparation tooling with no operator-facing surface,

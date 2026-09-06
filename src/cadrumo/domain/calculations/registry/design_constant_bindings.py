@@ -45,16 +45,9 @@ if TYPE_CHECKING:
     from .schema import DataBindingDefinition
 
 __all__ = [
-    "DESIGN_CONSTANT_RECORD_SHAPE_KEYS",
     "DesignConstantSelector",
     "validate_design_constant_binding",
 ]
-
-#: The record-field coordinate keys a design constant must declare. Mirrors the
-#: manual_input record shape deliberately: the constant occupies a byte run in
-#: exactly the same coordinate space, and a second spelling of the same shape
-#: would be a place for the two to drift.
-DESIGN_CONSTANT_RECORD_SHAPE_KEYS: frozenset[str] = frozenset(("record", "field", "offset", "length"))
 
 
 class DesignConstantSelector(BaseModel):

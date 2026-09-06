@@ -42,7 +42,6 @@ __all__ = [
     "resolve_withholding_binding_row_values",
     "resolve_withholding_binding_values",
     "validate_withholding_binding_selector_shape",
-    "withholding_binding_requirements",
 ]
 
 _WithholdingRowField = Literal[
@@ -614,30 +613,6 @@ def _validated_withholding_selector(binding: DataBindingDefinition) -> _Withhold
         if selector.grouping is None:
             raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'grouping' selector key")
     return selector
-
-
-def withholding_binding_requirements(
-    revision: ModeloRevision,
-) -> tuple[WithholdingObservationRequirement, ...]:
-    """Return :class:`WithholdingObservationRequirement` slices needed by ``revision``'s withholding bindings.
-
-    The :class:`ModeloRevision` is introspected for withholding bindings and
-    grouped by the clave filters their selectors declare.
-    """
-    grouped: dict[tuple[RetencionClave, ...], set[BindingId]] = {}
-    for binding in revision.bindings:
-        if binding.source != BindingSourceKind.WITHHOLDING:
-            continue
-        selector = _validated_withholding_selector(binding)
-        key = tuple(sorted(RetencionClave(clave) for clave in selector.claves))
-        grouped.setdefault(key, set()).add(binding.id)
-    return tuple(
-        WithholdingObservationRequirement(
-            binding_ids=tuple(sorted(binding_ids)),
-            claves=claves,
-        )
-        for claves, binding_ids in sorted(grouped.items())
-    )
 
 
 def _filter_withholding_observations(

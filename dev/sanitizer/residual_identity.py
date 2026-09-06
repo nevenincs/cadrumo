@@ -29,7 +29,7 @@ mod-97.
 
 Both checksums are the project's existing authorities, imported rather than
 restated: :func:`~cadrumo.core.identity.validate_identity` for NIF/NIE/CIF and
-:func:`~cadrumo.core.iban_mod_97` with :data:`~cadrumo.core.IBAN_SHAPE_RE` for
+:func:`~cadrumo.core.iban.iban_mod_97` with :data:`~cadrumo.core.iban.IBAN_SHAPE_RE` for
 IBAN. Re-deriving either here would be a second authority for the same rule.
 
 HANDLING RULE, ABSOLUTE. A finding NEVER carries the matched text. It carries

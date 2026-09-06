@@ -642,30 +642,6 @@ def load_persisted_iva_compensation_decision_for_work_unit(
     )
 
 
-def caller_supplied_prior_compensation_value(
-    *,
-    binding_values: Mapping[BindingId, Decimal] | None,
-    backend_binding_values: Mapping[BindingId, Decimal] | None,
-    casilla_inputs: Mapping[CasillaId, Decimal] | None,
-    backend_casilla_inputs: Mapping[CasillaId, Decimal] | None,
-) -> bool:
-    """Return whether a Modelo 303 prior-compensation value was explicitly supplied.
-
-    The lazy local reconciliation must not fire when the operator or a backend
-    resolver explicitly asserts the prior-compensation binding/casilla. That
-    value needs reconciliation against a real wallet/seed decision, and the
-    seed-verb guidance must surface.
-    """
-    return bool(
-        _supplied_prior_compensation_amounts(
-            binding_values=binding_values,
-            backend_binding_values=backend_binding_values,
-            casilla_inputs=casilla_inputs,
-            backend_casilla_inputs=backend_casilla_inputs,
-        ),
-    )
-
-
 def _supplied_prior_compensation_amounts(
     *,
     binding_values: Mapping[BindingId, Decimal] | None,
@@ -1217,7 +1193,6 @@ __all__ = [
     "ModeloIvaWalletReconciliationBlocked",
     "ModeloIvaWalletReconciliationBlockedError",
     "apply_iva_compensation_decision_binding",
-    "caller_supplied_prior_compensation_value",
     "lazily_reconcile_local_iva_compensation_for_work_unit",
     "load_persisted_iva_compensation_decision_for_work_unit",
     "require_persisted_iva_compensation_decision_for_work_unit",

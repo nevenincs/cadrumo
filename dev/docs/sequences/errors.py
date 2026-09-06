@@ -1,9 +1,9 @@
 """Errors raised by the ``cli-sequence`` execution engine.
 
 These errors are deliberately NOT part of the
-:class:`cadrumo.core.errors.CadrumoError` hierarchy. That hierarchy exists for
+:class:`cadrumo.core.errors.hierarchy.CadrumoError` hierarchy. That hierarchy exists for
 operator-facing runtime failures that need a registered
-:class:`~cadrumo.core.errors.ErrorCode`, a translated message, and
+:class:`~cadrumo.core.errors.error_codes.ErrorCode`, a translated message, and
 JSON-envelope redaction at the CLI boundary. The sequence engine is build-time
 documentation tooling: a malformed ``cli-sequence`` directive is an author / CI
 failure surfaced as a stack trace, exactly like the docs build itself. Subclassing

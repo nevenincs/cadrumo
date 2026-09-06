@@ -26,7 +26,6 @@ from .errors import InvoiceValidationError
 __all__ = [
     "EU_MEMBER_STATE_CODES",
     "assert_eu_member_state_code",
-    "assert_non_domestic_country_code",
     "is_eu_member_state_code",
     "validate_counterparty_tax_id",
     "validate_country_code",
@@ -112,37 +111,6 @@ def assert_eu_member_state_code(value: str) -> str:
         raise InvoiceValidationError(
             f"country code {normalized!r} is not one of the 27 EU Member States; "
             "use validate_country_code if a non-EU counterparty is acceptable",
-        )
-    return normalized
-
-
-def assert_non_domestic_country_code(value: str) -> str:
-    """Validate ``value`` and assert it does not name Spain.
-
-    An entrega intracomunitaria exenta (LIVA art. 25) is, by its own legal
-    definition, a delivery TO another territory: Spain can never be its own
-    destination. Deliberately narrower than requiring EU membership --
-    Northern Ireland (``XI``) is a legitimate M349 goods destination under
-    the Windsor Framework despite not being one of the 27 Member States
-    :func:`assert_eu_member_state_code` recognises, and a non-EU destination
-    (e.g. ``GB``) is a real declared fact this helper does not itself judge;
-    downstream M349 classification decides which non-Spanish destinations
-    are declarable, not this construction-time check.
-
-    Args:
-        value: Raw country code to validate.
-
-    Returns:
-        The uppercased two-letter country code.
-
-    Raises:
-        InvoiceValidationError: If the input is malformed or names Spain.
-    """
-    normalized = validate_country_code(value)
-    if normalized == "ES":
-        raise InvoiceValidationError(
-            "an entrega intracomunitaria exenta must name a destination other than Spain "
-            "(LIVA art. 25); Spain cannot be its own intra-community destination",
         )
     return normalized
 

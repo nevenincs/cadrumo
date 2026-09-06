@@ -11,7 +11,7 @@ Why an agent may not stamp ``operator_reviewed``
 ------------------------------------------------
 
 :data:`StampableReviewStatus` carries exactly two members, and
-:attr:`~cadrumo.core.RevisionReviewStatus.OPERATOR_REVIEWED` is not one of them.
+:attr:`~cadrumo.core.revision_review.RevisionReviewStatus.OPERATOR_REVIEWED` is not one of them.
 This CLI is driven by agents. An agent writing "the operator reviewed this" is
 precisely the dishonesty the whole conformance feature exists to detect, and no
 flag can fix it: an ``--i-am-the-operator`` switch is as assertable by an agent
@@ -29,7 +29,7 @@ The paragraph above is a claim about what this module refuses, so it is only
 true if something refuses. For a while nothing did: the narrowed vocabulary was
 a TYPE HINT on :func:`stamp_revision` and every line downstream read
 ``.value`` off whatever object it was handed. The core
-:class:`~cadrumo.core.RevisionReviewStatus` is one import away, carries a
+:class:`~cadrumo.core.revision_review.RevisionReviewStatus` is one import away, carries a
 ``.value``, and is the enum a caller reaches for first because it lives in
 ``cadrumo.core`` — so a three-line driver written to spare somebody ninety
 manifest edits wrote a completed operator signoff naming an agent, and neither
@@ -167,7 +167,7 @@ through raw bytes makes the sentence true, and the successful write now touches
 the governance lines only rather than rewriting the file's every terminator.
 
 See Also:
-    :class:`~cadrumo.core.RevisionReviewStatus`
+    :class:`~cadrumo.core.revision_review.RevisionReviewStatus`
         Closed review vocabulary this writer narrows for agent use.
     :class:`~domain.calculations.registry.ModeloRevision`
         Schema whose validator adjudicates every stamp before it is written.
@@ -213,7 +213,7 @@ __all__ = [
 class StampableReviewStatus(StrEnum):
     """Review statuses this CLI is willing to WRITE.
 
-    A deliberate narrowing of :class:`~cadrumo.core.RevisionReviewStatus`, not a
+    A deliberate narrowing of :class:`~cadrumo.core.revision_review.RevisionReviewStatus`, not a
     second vocabulary: every member's value is byte-identical to its core
     counterpart, and a test pins that correspondence together with the
     deliberate absence of ``operator_reviewed``. The narrowing is what makes the
@@ -619,7 +619,7 @@ def _assert_review_axis_is_writable(
     would refuse that honest write for a reason unrelated to it.
 
     The predicate is the VOCABULARY, never the single value ``operator_reviewed``,
-    so a fourth status added to :class:`~cadrumo.core.RevisionReviewStatus`
+    so a fourth status added to :class:`~cadrumo.core.revision_review.RevisionReviewStatus`
     without being added here enrols itself in the refusal instead of escaping
     it.
 

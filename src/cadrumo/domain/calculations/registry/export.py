@@ -441,14 +441,6 @@ def _justification_for_binding_data_type(data_type: BindingExportDataType) -> Ex
     return ExportJustification.LEFT
 
 
-def export_fields_for_casilla(
-    resolved: ResolvedExportLayout,
-    casilla_id: CasillaId,
-) -> tuple[ExportFieldDefinition, ...]:
-    """Return all :class:`ExportFieldDefinition` entries mapped to ``casilla_id``."""
-    return resolved.fields_by_casilla.get(casilla_id, ())
-
-
 def _verify_layout_evidence(snapshot: RegistrySnapshot, layout: ExportLayoutDefinition) -> None:
     missing_legal = sorted(ref for ref in layout.legal_refs if ref not in snapshot.legal)
     missing_sources = sorted(ref for ref in layout.source_refs if ref not in snapshot.sources)
@@ -605,7 +597,6 @@ __all__ = [
     "ResolvedExportLayout",
     "clasificar_casillas_oficiales",
     "derive_export_layouts_from_bindings",
-    "export_fields_for_casilla",
     "fixed_width_record_casilla_ids",
     "resolve_export_layout",
     "resolved_export_casillas",

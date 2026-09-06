@@ -10,7 +10,7 @@ makes a classification arguable, and reconciles both against the checked-in
 adjudication ledger beside this file.
 
 Derivation uses three independent signals, all keyed on
-:class:`cadrumo.core.Modelo` so that adding a modelo to the enum widens the
+:class:`cadrumo.core.modelo.Modelo` so that adding a modelo to the enum widens the
 detector with no edit here:
 
 ``module_name``

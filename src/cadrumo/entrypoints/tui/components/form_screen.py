@@ -368,17 +368,11 @@ def presenting_forms_through(presenter: FormPresenter) -> Generator[None]:
         _ACTIVE_FORM_PRESENTER.reset(token)
 
 
-def active_form_presenter() -> FormPresenter | None:
-    """The presenter bound for this context, or ``None`` to start an application."""
-    return _ACTIVE_FORM_PRESENTER.get()
-
-
 __all__ = [
     "FormApp",
     "FormPresenter",
     "FormScreen",
     "FormTranslator",
-    "active_form_presenter",
     "presenting_forms_through",
     "run_form_tui",
 ]

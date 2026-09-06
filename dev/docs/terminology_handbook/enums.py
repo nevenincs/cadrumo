@@ -5,7 +5,7 @@ the concept-oriented schema (TBX / ISO 30042 three-tier model, SKOS
 relation vocabulary) declares. They live here, beside the schema they
 constrain, rather than in :mod:`cadrumo.core`, because they are
 Handbook-internal vocabulary with no consumer outside the terminology
-surface: unlike :class:`~cadrumo.core.Modelo` (a cross-cutting AEAT
+surface: unlike :class:`~cadrumo.core.modelo.Modelo` (a cross-cutting AEAT
 identifier referenced across domain, application, and CLI layers), a
 concept's ``domain`` or ``term_status`` is meaningful only inside the
 Handbook. The two closed axes that ARE cross-cutting are NOT redeclared
@@ -13,7 +13,7 @@ here: the schema reuses the canonical four-language
 :class:`~cadrumo.core.external_constants.OutputLanguage`, and the concept
 lifecycle -- read by the shipped product terminology search as well as by
 the glossary and Pagefind projectors here -- is the core-owned
-:class:`~cadrumo.core.ConceptLifecycle`. Because ``dev/`` is not shipped in
+:class:`~cadrumo.core.concept_lifecycle.ConceptLifecycle`. Because ``dev/`` is not shipped in
 the wheel, ``cadrumo.core`` is the only home both sides can import.
 
 Provenance of each axis:

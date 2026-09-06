@@ -416,10 +416,6 @@ class ProjectionModeloBindingRequirement(BaseModel):
         return value
 
 
-MODELO_READINESS_MISSING_PROFILE_ACTION = OperatorActionAxis.SET_PROFILE_FACT
-"""Action spine for every profile requirement in readiness ``missing``."""
-
-
 CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS: Mapping[
     BindingSourceKind,
     str,
@@ -1336,7 +1332,6 @@ def capture_modelo_readiness(
 
 __all__ = [
     "CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS",
-    "MODELO_READINESS_MISSING_PROFILE_ACTION",
     "OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE",
     "OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE",
     "ModeloReadinessRequest",

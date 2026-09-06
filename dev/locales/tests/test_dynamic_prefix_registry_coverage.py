@@ -84,6 +84,15 @@ def _catalogue_payload(locale: str) -> dict[str, object]:
 # This allowlist ratchets: adding a line is a reviewed edit that must state why
 # the namespace is genuinely open-ended.
 OPEN_ENDED_NAMESPACES: dict[str, str] = {
+    "tui.home.reason": (
+        "tui.home.reason.{item.reason_code} -- the reason code travels on a "
+        "projected workbench item, not an enum the scanner can import, and the "
+        "call site is written to survive that: it renders the key, compares the "
+        "result against the key, and falls back to the generic action line when "
+        "nothing resolved. An unregistered code degrades to honest copy rather "
+        "than to a leaked identifier, so the space cannot be closed at import "
+        "time and does not need to be."
+    ),
     "profile.keys": (
         "profile.keys.{question.profile_key} — keyed by the wizard question's "
         "profile fact path (application/wizard/compiler.py). The fact-path "
@@ -704,4 +713,50 @@ def test_a_key_registry_is_flow_confirmed_through_a_boundary_wrapper(tmp_path) -
     )
     assert "notice.machine.retry" not in keys, (
         "shape alone must still not confirm a table nothing reads into a translator"
+    )
+
+
+def test_a_dynamic_namespace_is_read_when_its_prefix_is_selected_from_a_table() -> None:
+    """Incident 9: a screen that renders every enum through one helper.
+
+    The namespace rule required the f-string's HEAD to be the dotted literal.
+    A workspace that renders each public enum through one helper does not write
+    the prefix at the call site -- it declares a table of prefixes, selects one
+    by the enum's class name, and appends the member value. The head is then an
+    interpolation, so no namespace was declared at all and every key the helper
+    builds read as an orphan.
+
+    The tail is an enum member value, so the key space is bounded by the enum
+    definition -- the same criterion the wizard namespaces already qualify
+    under.
+
+    The negative arm is what keeps the rule from becoming "any f-string that
+    starts with a variable": the segment after the interpolation must begin
+    with the dot, which is what proves the name is being used AS a dotted
+    prefix rather than as ordinary leading text.
+    """
+    from .._ast_scanner import scan_namespace_markers_in_text
+
+    source = chr(10).join((
+        "_LABEL_PREFIXES = {",
+        '    "AeatSyncCensusStatus": "tui.aeat_sync.census_status",',
+        "}",
+        "_GREETINGS = {",
+        '    "morning": "cli.greeting.morning",',
+        "}",
+        "def label(value):",
+        "    prefix = _LABEL_PREFIXES.get(type(value).__name__)",
+        '    return copy(f"{prefix}.{value.value}")',
+        "def greet(slot):",
+        "    greeting = _GREETINGS.get(slot)",
+        '    return f"{greeting} and welcome"',
+    ))
+
+    markers = scan_namespace_markers_in_text(source, filename="screens.py")
+
+    assert "tui.aeat_sync.census_status.*" in markers, (
+        "a prefix selected from a declared table and dotted onto is a namespace"
+    )
+    assert "cli.greeting.morning.*" not in markers, (
+        "an interpolation not followed by a dot is not being used as a prefix"
     )

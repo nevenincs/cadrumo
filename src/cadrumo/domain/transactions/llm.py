@@ -271,16 +271,6 @@ _DEFAULT_CLASSIFICATION_HINTS: dict[BusinessClassification, str] = {
     BusinessClassification.PROCESSED_UNCLASSIFIED: ("you looked at it carefully but cannot decide either way"),
 }
 
-# Pipeline-internal states the LLM must never pick. Any classification in
-# this set in an LLM response is rejected as a hallucination.
-PIPELINE_ONLY_CLASSIFICATIONS: frozenset[BusinessClassification] = frozenset(
-    {
-        BusinessClassification.NOT_YET_PROCESSED,
-        BusinessClassification.SKIPPED_BY_RULE,
-        BusinessClassification.FAILED_VALIDATION,
-    },
-)
-
 
 def default_classification_choices() -> tuple[ClassificationChoice, ...]:
     """Return the default allowed-classifications tuple used by the prompt.
@@ -883,7 +873,6 @@ def parse_split_response(stdout: str, *, spec: PromptSpec | None = None) -> LLMS
 
 __all__ = [
     "MINIMUM_CLASSIFICATION_TIER",
-    "PIPELINE_ONLY_CLASSIFICATIONS",
     "CategoryChoice",
     "ClassificationChoice",
     "IvaCategoryChoice",

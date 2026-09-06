@@ -217,27 +217,9 @@ def _interactive_authentication(ctx: typer.Context, *, bucket_id: str) -> bool:
     return False
 
 
-def authenticate_profile_for_manager(ctx: typer.Context, *, bucket_id: str) -> bool:
-    """Use the canonical interactive gate for a manager-selected profile."""
-    return _interactive_authentication(ctx, bucket_id=bucket_id)
-
-
-def resume_registered_profile_for_manager(ctx: typer.Context, *, bucket_id: str) -> None:
-    """Resume and bind a profile just registered by the manager frontend."""
-    from ...adapters.persistence.storage.master_key.active_session import active_bucket_session_serves
-    from ...application.user_profile.login_session import bind_resumed_profile_session
-
-    refusal = bind_resumed_profile_session(bucket_id=bucket_id)
-    if refusal is not None or not active_bucket_session_serves(bucket_id):
-        raise RuntimeError("registered profile session could not be resumed")
-    bind_profile_target(ctx, bucket_id=bucket_id)
-
-
 __all__ = [
     "activate_profile_session",
-    "authenticate_profile_for_manager",
     "bind_profile_target",
     "normalize_ambient_profile",
-    "resume_registered_profile_for_manager",
     "session_refusal_translation_key",
 ]
