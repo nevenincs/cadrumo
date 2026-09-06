@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-06'
-body_hash: 'sha256:a5f1ac3c0dffe0b12cecd5969cc606c8906ba733a8141bb4a8b98ce04d871688'
+body_hash: 'sha256:f045c6d0b98b4e4f65e67fc5cb33b9460383e0d4cbd85be8c5a34f0d69e36a5b'
 ---
 
 <!-- RETIRED: S370 -->
@@ -668,6 +668,7 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [ ] `W08.P30.S452` - Re-apply the reconciliation direction key rename the concurrent writer reverted, and record why nothing caught it. The catalogue kept the corrected shape while the committed source went back to the old keys, so the surface asked for keys the catalogue no longer holds. It rendered anyway: tr() humanises an unknown key into title-cased prose from its last segment, so a missing key reads as a plausible English label in every locale while the authored translation sits unused. CLITUI_LEDGER_DISPOSITION: DISPLACED_AND_HELD_UNTIL_G3; clitui-ledger is the sole owner of this row's Ledger production slice; do not implement that slice in this plan; re-admit only after clitui-ledger G3 closes.; `src/cadrumo/entrypoints/tui/ledger/reconciliation.py, src/cadrumo/entrypoints/tui/ledger/controller.py`.
 - [x] `W08.P30.S453` - Follow the per-surface translator boundary helpers the locale scanner could not see. Every TUI surface routes its copy through a local wrapper that forwards its key to tr, so the call sites never name the translator and every key reaching the catalogue through one read as an orphan. Resolve wrapper names across the tree to a fixpoint, admitting only a function that forwards its own first parameter, so a helper that merely calls the translator on something else is not mistaken for a key channel.; `dev/locales/_ast_scanner.py, dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
 - [x] `W08.P30.S454` - Read a translation key supplied through a conditional, since `empty_key="..." if not rows else None` is how a surface states a state-dependent label and the collector read only a bare literal, so both arms vanished and the catalogue looked complete on whichever branch a developer happened to exercise; two genuinely missing error messages surfaced once the arms were read, closing the missing side of codebase-to-locale parity to zero; `dev/locales/_ast_scanner.py dev/locales/tests/test_dynamic_prefix_registry_coverage.py src/cadrumo/locales`.
+- [x] `W08.P30.S455` - Confirm a locale-key registry through the boundary wrapper that reads it, since flow confirmation consulted only tr and its import aliases while every surface is asked to route copy through its own helper, so a registry read through declarations_copy or aeat_sync_copy was never confirmed and every key in it read as an orphan; shape alone still does not confirm; `dev/locales/_ast_scanner.py dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
 
 ## Parallelization
 

@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:0b3002ea45d9810d091f18695a3bb67d5ba66a263cd4d7349a770ed3dc52efcb'
+body_hash: 'sha256:b11a35abbde06cd1ea29cf26dea1fd4dea4943b173f383bfd9e86e7b4675dbeb'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -612,6 +612,8 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S730` - Measure the five remaining unmeasured development directories against the per-test ceiling and adjudicate the decorator-spelling axis as a null vector; `dev/release`.
 - [x] `W02.P02.S731` - Read every spelling of a private streamed-digest helper in the re-homed digest sites so the absence claim covers the bare sha256 import and the async definition; `dev/packaging/tests/test_hashing.py`.
 - [x] `W02.P02.S732` - Reconcile the regulatory-prose channel after the record-design decomposition and derive its coverage anchor instead of pinning a filename; `dev/registry/analysis/regulatory_prose_parser_channel.toml`.
+- [x] `W02.P02.S733` - Repoint the roundtrip-coverage inventory at the bucket boundary's real test and collapse the duplicated docstring listing that had drifted from it; `dev/tests/test_roundtrip_coverage.py`.
+- [x] `W02.P02.S734` - Correct the two live surfaces that still describe the retired clean-Linux smoke lane as present, one of them calling it the live instance of a degradation that now has none; `dev/packaging/_proof_ledger.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
