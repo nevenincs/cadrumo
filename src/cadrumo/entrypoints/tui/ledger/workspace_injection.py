@@ -19,7 +19,6 @@ from dataclasses import dataclass
 
 from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.operator_actions.models import ActionReference
-from ....core.identity import TransactionId
 from .action_guards import require_canonical_ledger_actions
 from .models import (
     LedgerClassificationSubmitterV1,
@@ -40,7 +39,6 @@ class LedgerWorkspaceInjection:
 
     review_action: ActionReference
     classify_action: ActionReference | None = None
-    classification_target: TransactionId | None = None
     classification_submitter: LedgerClassificationSubmitterV1 | None = None
     prepared_imports: tuple[LedgerPreparedImportV1, ...] = ()
     import_submitter: LedgerImportSubmitterV1 | None = None

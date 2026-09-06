@@ -401,7 +401,6 @@ def _all_routes_controller() -> LedgerWorkspaceController:
         LedgerWorkspaceInjection(
             review_action=_review_action(),
             classify_action=_classify_action(),
-            classification_target=projection.entries[0].transaction_id,
             classification_submitter=_ClassificationDoor(),
             prepared_imports=(prepared,),
             import_submitter=_ImportDoor(),

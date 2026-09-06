@@ -12,7 +12,6 @@ from textual.widgets import DataTable, Static
 from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.workspace import LedgerWorkspaceArea, LedgerWorkspaceProjectionV1
 from ....application.operator_actions.models import ActionReference
-from ....core.identity import TransactionId
 from ..navigation import TuiScreenContextV1, TuiScreenFactoryV1
 from .classification import LedgerClassificationScreen
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen, ledger_copy
@@ -130,7 +129,6 @@ def ledger_screen_factory(
     *,
     review_action: ActionReference,
     classify_action: ActionReference | None = None,
-    classification_target: TransactionId | None = None,
     classification_submitter: LedgerClassificationSubmitterV1 | None = None,
     prepared_imports: tuple[LedgerPreparedImportV1, ...] = (),
     import_submitter: LedgerImportSubmitterV1 | None = None,
@@ -143,7 +141,6 @@ def ledger_screen_factory(
     injection = LedgerWorkspaceInjection(
         review_action=review_action,
         classify_action=classify_action,
-        classification_target=classification_target,
         classification_submitter=classification_submitter,
         prepared_imports=prepared_imports,
         import_submitter=import_submitter,

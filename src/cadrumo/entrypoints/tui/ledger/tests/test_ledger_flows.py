@@ -23,7 +23,6 @@ from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
 from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
-from .....core.identity import TransactionId
 from .....domain.transactions.enums import BusinessClassification
 from ....tui.components.host import ScreenHostApp
 from ....tui.devtools.frame import geometry_band
@@ -33,7 +32,7 @@ from ..import_flow import LedgerImportScreen
 from ..models import LedgerClassificationSubmissionV1, LedgerFlowState, LedgerPreparedImportV1
 from ..routes import ledger_screen_factory, resolve_ledger_screen
 from ..workspace_injection import LedgerWorkspaceInjection
-from .test_ledger_workspace import _context, _projection, _review_action
+from .test_ledger_workspace import _focused_context, _projection, _review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -128,12 +127,11 @@ async def test_classification_is_explicit_confirmable_cancelable_and_catalogue_a
     projection = _projection()
     door = _ClassificationDoor()
     controller = LedgerWorkspaceController(
-        _context(),
+        _focused_context(projection.entries[0].transaction_id),
         projection,
         LedgerWorkspaceInjection(
             review_action=_review_action(),
             classify_action=_classify_action(),
-            classification_target=projection.entries[0].transaction_id,
             classification_submitter=door,
         ),
     )
@@ -158,12 +156,11 @@ async def test_classification_is_explicit_confirmable_cancelable_and_catalogue_a
 
     success_door = _ClassificationDoor()
     success_controller = LedgerWorkspaceController(
-        _context(),
+        _focused_context(projection.entries[0].transaction_id),
         projection,
         LedgerWorkspaceInjection(
             review_action=_review_action(),
             classify_action=_classify_action(),
-            classification_target=projection.entries[0].transaction_id,
             classification_submitter=success_door,
         ),
     )
@@ -200,7 +197,7 @@ async def test_import_only_submits_injected_opaque_prepared_command_and_redacts_
         LedgerPreparedImportV1.__setattr__(prepared, "choice_id", "swapped")
     door = _ImportDoor()
     controller = LedgerWorkspaceController(
-        _context(),
+        _focused_context(projection.entries[0].transaction_id),
         _projection(),
         LedgerWorkspaceInjection(review_action=_review_action(), prepared_imports=(prepared,), import_submitter=door),
     )
@@ -229,12 +226,11 @@ async def test_escape_is_refused_while_classification_submission_is_in_flight() 
     projection = _projection()
     door = _SlowClassificationDoor()
     controller = LedgerWorkspaceController(
-        _context(),
+        _focused_context(projection.entries[0].transaction_id),
         projection,
         LedgerWorkspaceInjection(
             review_action=_review_action(),
             classify_action=_classify_action(),
-            classification_target=projection.entries[0].transaction_id,
             classification_submitter=door,
         ),
     )
@@ -267,7 +263,7 @@ async def test_escape_is_refused_while_import_submission_is_in_flight() -> None:
     )
     door = _SlowImportDoor()
     controller = LedgerWorkspaceController(
-        _context(),
+        _focused_context(projection.entries[0].transaction_id),
         _projection(),
         LedgerWorkspaceInjection(review_action=_review_action(), prepared_imports=(prepared,), import_submitter=door),
     )
@@ -299,7 +295,7 @@ async def test_import_failure_is_localized_and_never_leaks_exception_path_or_pro
         command=LedgerSourceImportCommand(path=Path(protected_path), provider=protected_provider),
     )
     controller = LedgerWorkspaceController(
-        _context(),
+        _focused_context(projection.entries[0].transaction_id),
         _projection(),
         LedgerWorkspaceInjection(
             review_action=_review_action(), prepared_imports=(prepared,), import_submitter=_FailingImportDoor()
@@ -334,12 +330,11 @@ def test_controller_refuses_off_projection_classification_and_unsafe_or_duplicat
     door = _ClassificationDoor()
     with pytest.raises(ValueError, match="absent from the visible Ledger projection"):
         LedgerWorkspaceController(
-            _context(),
+            _focused_context(projection.entries[0].transaction_id),
             projection,
             LedgerWorkspaceInjection(
                 review_action=_review_action(),
                 classify_action=_classify_action(),
-                classification_target=cast("TransactionId", "f" * 64),
                 classification_submitter=door,
             ),
         )
@@ -360,7 +355,7 @@ def test_controller_refuses_off_projection_classification_and_unsafe_or_duplicat
     )
     with pytest.raises(ValueError, match="must be unique"):
         LedgerWorkspaceController(
-            _context(),
+            _focused_context(projection.entries[0].transaction_id),
             projection,
             LedgerWorkspaceInjection(
                 review_action=_review_action(), prepared_imports=(prepared, prepared), import_submitter=_ImportDoor()
@@ -386,12 +381,11 @@ async def test_flow_copy_is_localized_while_semantic_choices_are_invariant(local
         command=command,
     )
     controller = LedgerWorkspaceController(
-        _context(),
+        _focused_context(projection.entries[0].transaction_id),
         projection,
         LedgerWorkspaceInjection(
             review_action=_review_action(),
             classify_action=_classify_action(),
-            classification_target=projection.entries[0].transaction_id,
             classification_submitter=_ClassificationDoor(),
             prepared_imports=(prepared,),
             import_submitter=_ImportDoor(),
@@ -432,12 +426,11 @@ async def test_new_flows_have_exact_focus_and_real_compositor_geometry(screen_ki
         command=command,
     )
     controller = LedgerWorkspaceController(
-        _context(),
+        _focused_context(projection.entries[0].transaction_id),
         projection,
         LedgerWorkspaceInjection(
             review_action=_review_action(),
             classify_action=_classify_action(),
-            classification_target=projection.entries[0].transaction_id,
             classification_submitter=_ClassificationDoor(),
             prepared_imports=(prepared,),
             import_submitter=_ImportDoor(),

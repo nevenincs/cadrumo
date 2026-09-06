@@ -182,15 +182,15 @@ class LedgerWorkspaceController:
                 availability=state.availability,
                 reason_key="tui.ledger.refusal.application_state",
             )
-        # Checked on its own, deliberately NOT folded into ``missing_door``
-        # below. A missing door is an absent INJECTED dependency — something
-        # the launcher failed to wire — and the wholly-wired doors gate reads
-        # this boolean to derive what the launcher owes. A selection is the
-        # operator's, made at runtime, so demanding it of the launcher is
-        # unsatisfiable; that unsatisfiable demand is why the classification
-        # door was removed rather than wired. Separating it also lets the
-        # operator hear the truth ("choose an entry") instead of being told
-        # submission is unavailable.
+        # Deliberately its own statement rather than a term in ``missing_door``.
+        # A missing door is an absent INJECTED dependency — something the
+        # launcher failed to wire — and the wholly-wired-doors gate derives what
+        # the launcher owes by reading that boolean. A selection is the
+        # operator's, made at runtime, so folding it in demanded an operator
+        # value from the launcher; that unsatisfiable demand is why the
+        # classification door was removed rather than wired. Separating it also
+        # lets the operator hear what is actually true — choose an entry —
+        # instead of being told submission is unavailable.
         if area is LedgerWorkspaceArea.CLASSIFICATION and self.classification_target is None:
             return LedgerRouteRefusalV1(
                 target=target,
@@ -230,25 +230,26 @@ class LedgerWorkspaceController:
     def with_transaction_focus(self, transaction_id: TransactionId) -> LedgerWorkspaceController:
         """Re-address this workspace at one visible entry, carrying nothing else.
 
-        Selection travels in ``context.focus`` — the same channel
+        Selection travels in ``context.focus`` — the channel
         :meth:`restored_transaction_id` already reads for cursor restore — so
-        there is exactly one answer to "which entry is the operator on". A
-        second, mutable selection attribute beside it would let the cursor and
-        the classification target disagree.
+        there is one answer to "which entry is the operator on". A separate
+        mutable attribute beside it would let the restored cursor and the
+        classification target disagree about the same question.
 
-        Returns a NEW controller rather than mutating: the context is frozen,
-        and an internal area move resolves its next screen synchronously
-        against whatever controller the outgoing screen holds. Rebinding there
-        is what carries the selection across a body swap, with no extra screen
-        push and so no result-callback to strand.
+        Returns a NEW controller rather than mutating, because the context is
+        frozen. An internal area move resolves its next screen synchronously
+        against whatever controller the outgoing screen holds, so rebinding
+        there is what carries the selection across a body swap — with no extra
+        screen push, and therefore no result callback left registered against a
+        pump that is about to stop.
 
-        The context is built explicitly rather than by ``model_copy`` because
-        ``model_copy`` skips validation, and ``_focus_belongs_to_destination``
-        is the check that keeps a focus from naming another workspace.
+        The context is constructed explicitly rather than by ``model_copy``:
+        ``model_copy`` skips validation, and the focus/destination agreement
+        check is the thing stopping a focus from naming another workspace.
 
         Raises:
-            ValueError: When the entry is not in the visible projection. A
-                target the operator cannot see is one they cannot have chosen.
+            ValueError: When the entry is not in the visible projection. An
+                entry the operator cannot see is one they cannot have chosen.
         """
         if all(row.transaction_id != transaction_id for row in self.projection.entries):
             raise ValueError("classification target is absent from the visible Ledger projection")
@@ -466,6 +467,26 @@ class LedgerWorkspaceScreen(Screen[None]):
         """Ask the host to return; never terminate the application."""
         self.back_requested = True
         self.post_message(LedgerBackRequested())
+
+    def on_ledger_entry_selected(self, event: LedgerEntrySelected) -> None:
+        """Re-address the workspace at the chosen entry and repaint navigation.
+
+        Lives on the shared base rather than on the entries screen because the
+        controller is shared: review and reconciliation restore their cursor
+        from the same focus, so a selection made anywhere is the selection
+        everywhere.
+
+        The controller is REBOUND, not mutated — ``with_transaction_focus``
+        returns a new one — so the next area move, which resolves its screen
+        against ``self.controller``, carries the selection across the body swap
+        without any extra push. The navigation table is rebuilt because
+        classification's reachability has just changed, and a stale row would
+        keep offering the old refusal.
+        """
+        self.controller = self.controller.with_transaction_focus(event.transaction_id)
+        table = cast("DataTable[str]", self.query_one("#ledger-navigation", DataTable))
+        table.clear(columns=True)
+        self.populate_navigation()
 
     def on_ledger_route_requested(self, event: LedgerRouteRequested) -> None:
         """Resolve the requested area here and hand the finished body to the host.
