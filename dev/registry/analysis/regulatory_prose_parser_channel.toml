@@ -26,14 +26,33 @@
 ##
 
 [[parser]]
-module = "src/cadrumo/domain/calculations/registry/record_design.py"
-corpus = "AEAT diseños de registro (PDF and XLSX)"
+module = "src/cadrumo/domain/calculations/registry/record_design_pdf_repairs.py"
+corpus = "AEAT diseños de registro (PDF)"
 reason = """\
-The registry's own record-design authority. Turns published diseño tables into \
-typed position/width/nature facts, absorbing the PDF extraction damage those \
+The PDF half of the record-design authority, which was decomposed out of \
+``record_design.py``. Turns published diseño tables into typed \
+position/width/naturaleza facts, absorbing the extraction damage those \
 documents arrive with -- reversed rows, stuttered rows, glued ordinals, orphan \
-measures. This is the canonical reader; a second one would fork the layout \
-authority."""
+measures. This is the canonical reader for that damage; a second one would \
+fork the layout authority."""
+
+[[parser]]
+module = "src/cadrumo/domain/calculations/registry/record_design_workbook.py"
+corpus = "AEAT diseños de registro (XLSX)"
+reason = """\
+The workbook half of the same decomposition. Reads the footnote markers a \
+diseño workbook carries beside its table -- numbered ``Nota`` rows and their \
+symbol variants -- so a measure qualified by a footnote is not read as \
+unqualified."""
+
+[[parser]]
+module = "src/cadrumo/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py"
+corpus = "AEAT borrador renta summary (extracted PDF text)"
+reason = """\
+Reads the taxpayer's own borrador summary, which AEAT publishes as prose \
+rather than as a machine format: the casilla ordinals it lists and the \
+ejercicio it declares. An imported borrador figure is an external value \
+compared against the engine's own, never a substitute for one."""
 
 [[parser]]
 module = "src/cadrumo/domain/calculations/registry/record_design_schema.py"

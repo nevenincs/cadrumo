@@ -85,6 +85,32 @@ def test_the_scanned_population_is_not_empty() -> None:
     assert len(_shipped_sources()) > 500
 
 
+def test_the_gate_still_recognises_consumer_claims() -> None:
+    """A population floor is not a matches floor.
+
+    If the claim pattern stopped matching, every symbol would pass this
+    silently at once and the empty offender list would read as green.
+    Counting the claims examined distinguishes nothing-is-wrong from
+    nothing-was-looked-at.
+    """
+    seen = 0
+    for text in _shipped_sources().values():
+        try:
+            tree = ast.parse(text)
+        except SyntaxError:
+            continue
+        seen += sum(
+            1
+            for node in tree.body
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+            and _CONSUMER_CLAIM.search(ast.get_docstring(node) or "")
+        )
+    assert seen > 120, (
+        f"the reader recognised only {seen} consumer claim(s); below this the "
+        "pattern has drifted and this gate is inert rather than satisfied"
+    )
+
+
 def test_no_unconsumed_symbol_claims_a_consumer() -> None:
     """The direction the gate exists for."""
     adjudicated = _adjudicated()

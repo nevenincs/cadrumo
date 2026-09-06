@@ -77,6 +77,27 @@ def test_the_scanned_population_is_not_empty() -> None:
     assert len(_shipped_modules()) > 500
 
 
+def test_the_gate_still_recognises_logger_bindings() -> None:
+    """A population floor is not a matches floor.
+
+    The offender list is empty either because no module binds a logger it
+    never uses, or because the factory names drifted and the reader now
+    recognises nothing. Those read identically. Counting the bindings the
+    gate can see separates satisfied from inert.
+    """
+    seen = 0
+    for path in _shipped_modules():
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+        except (OSError, SyntaxError, UnicodeDecodeError):
+            continue
+        seen += len(_logger_bindings(tree))
+    assert seen > 100, (
+        f"the reader recognised only {seen} logger binding(s); below this the "
+        "factory names have drifted and this gate is inert rather than satisfied"
+    )
+
+
 def test_no_shipped_module_binds_a_logger_it_never_uses() -> None:
     """The direction the gate exists for."""
     offenders: list[str] = []
