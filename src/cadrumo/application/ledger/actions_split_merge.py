@@ -110,11 +110,7 @@ def split_transaction(
     now = normalise_timestamp(occurred_at)
     trimmed_actor = require_actor(actor, operation="ledger split")
     trimmed_source_command = require_source_command(source_command, operation="ledger split")
-    if len(children) < 2:
-        raise TransactionValidationError(
-            "ledger split requires at least two children",
-            context={"bucket_id": bucket_id, "transaction_id": transaction_id, "child_count": len(children)},
-        )
+    require_splittable_child_count(bucket_id=bucket_id, transaction_id=transaction_id, children=children)
     repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
     catalogue = repository.load()
@@ -318,11 +314,7 @@ def split_transaction_with_classified_children(
     now = normalise_timestamp(occurred_at)
     trimmed_actor = require_actor(actor, operation="ledger classified split")
     trimmed_source_command = require_source_command(source_command, operation="ledger classified split")
-    if len(children) < 2:
-        raise TransactionValidationError(
-            "ledger split requires at least two children",
-            context={"bucket_id": bucket_id, "transaction_id": transaction_id, "child_count": len(children)},
-        )
+    require_splittable_child_count(bucket_id=bucket_id, transaction_id=transaction_id, children=children)
     if len(children) != len(child_classifications):
         raise TransactionValidationError(
             "each split child must carry exactly one classification patch",
@@ -467,6 +459,34 @@ def _reject_split_with_finalized_modelo_blockers(
             operation="ledger split",
             transaction_ids=transaction_ids,
             blockers=blockers,
+        )
+
+
+def require_splittable_child_count(
+    *,
+    bucket_id: str,
+    transaction_id: str,
+    children: tuple[SplitChildCommand, ...],
+) -> None:
+    """Refuse a split that does not divide the parent into at least two rows.
+
+    Fewer than two children is not a split: one child reproduces the parent
+    under a new id and marks the original SPLIT, leaving a lineage group whose
+    only member restates what it came from.
+
+    Checked here rather than inside :func:`_build_split_state` even though the
+    builder owns every other child-shape rule, because this one is answerable
+    from the caller's own arguments. Deferring it would make an operator pay an
+    encrypted-storage load, and would let a missing-parent or finalized-revision
+    refusal answer first when the count is the thing they can actually fix.
+
+    Raises:
+        TransactionValidationError: When fewer than two children are supplied.
+    """
+    if len(children) < 2:
+        raise TransactionValidationError(
+            "ledger split requires at least two children",
+            context={"bucket_id": bucket_id, "transaction_id": transaction_id, "child_count": len(children)},
         )
 
 
@@ -980,6 +1000,7 @@ def _resolve_merge_parent(
 
 __all__ = [
     "merge_transactions",
+    "require_splittable_child_count",
     "split_transaction",
     "split_transaction_with_classified_children",
 ]
