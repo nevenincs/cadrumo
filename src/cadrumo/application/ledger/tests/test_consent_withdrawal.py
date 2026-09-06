@@ -14,6 +14,8 @@ or invoked anywhere in this module.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 import pytest
 
 from ....tests.consent_profile_fixture import consent_profile
@@ -24,6 +26,7 @@ from ....core.field_origin import FieldOrigin
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ....tests.secure_sql import TestRuntimeProfile
 from ..consent_withdrawal import (
+    ConsentedDispatch,
     ConsentRederivationError,
     artefact_is_cloud_derived,
     provenance_stamp_transport,
@@ -352,3 +355,58 @@ def test_re_derivation_refuses_an_unknown_artefact(profile: TestRuntimeProfile) 
     assert verdict is not None
     assert verdict.failed_condition_id == "ledger.consent_rederivation.artefact_available"
     assert verdict.evidence[0].values == {"artefact_available": False}
+
+
+def _dispatch(*, bucket_id: str, address: str = _DIGEST) -> ConsentedDispatch:
+    """One recorded off-host dispatch, stamped with the profile it ran under."""
+    return ConsentedDispatch(
+        profile_bucket_id=bucket_id,
+        evidence_content_address=address,
+        provider="openai",
+        model="gpt-4.1",
+        surface="cli",
+        recorded_at=datetime(2026, 3, 10, 9, 30, tzinfo=UTC),
+    )
+
+
+def test_the_survey_lists_a_dispatch_recorded_under_this_profile(profile: TestRuntimeProfile) -> None:
+    """The baseline the scoping case is measured against."""
+    survey = survey_cloud_consent(
+        bucket_id=profile.bucket_id,
+        settings=profile.settings,
+        consent_entries=(_dispatch(bucket_id=profile.bucket_id),),
+    )
+
+    assert [row.evidence_content_address for row in survey.consented_dispatches] == [_DIGEST]
+
+
+def test_the_survey_drops_a_dispatch_recorded_under_another_profile(profile: TestRuntimeProfile) -> None:
+    """One profile must never see another's off-host history.
+
+    The survey holds the bucket being surveyed and already scopes its artefacts
+    that way, so scoping the dispatches here means a composition root cannot
+    disclose by forgetting to filter. Provider, model, surface and timestamp
+    are all in that row; leaking it says where someone else's documents went.
+    """
+    survey = survey_cloud_consent(
+        bucket_id=profile.bucket_id,
+        settings=profile.settings,
+        consent_entries=(
+            _dispatch(bucket_id=profile.bucket_id),
+            _dispatch(bucket_id="other-profile-bucket", address="e" * 64),
+        ),
+    )
+
+    addresses = [row.evidence_content_address for row in survey.consented_dispatches]
+    assert addresses == [_DIGEST], "a foreign profile's dispatch reached this profile's survey"
+
+
+def test_a_survey_of_only_foreign_dispatches_reports_none(profile: TestRuntimeProfile) -> None:
+    """Scoping to nothing is an empty history, not the caller's whole ledger."""
+    survey = survey_cloud_consent(
+        bucket_id=profile.bucket_id,
+        settings=profile.settings,
+        consent_entries=(_dispatch(bucket_id="other-profile-bucket"),),
+    )
+
+    assert survey.consented_dispatches == ()

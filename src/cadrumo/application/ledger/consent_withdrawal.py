@@ -120,6 +120,10 @@ class ConsentedDispatch(BaseModel):
     direction forbids the import anyway. Mapping is the caller's one line.
 
     Attributes:
+        profile_bucket_id: The profile the dispatch ran under. Carried rather
+            than dropped so the survey can scope its own input: without it the
+            survey has to trust that a caller filtered, and a caller that did
+            not would show one profile another profile's off-host history.
         evidence_content_address: SHA-256 address of the document transmitted.
             The address, never the bytes -- the same line the ledger draws.
         provider: The off-host provider the request dispatched at.
@@ -130,6 +134,7 @@ class ConsentedDispatch(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
+    profile_bucket_id: str = Field(min_length=1)
     evidence_content_address: str = Field(min_length=1)
     provider: str = Field(min_length=1)
     model: str = Field(min_length=1)
@@ -268,9 +273,10 @@ def survey_cloud_consent(
     Args:
         bucket_id: The profile bucket to survey.
         settings: Deployment settings resolving the storage route.
-        consent_entries: The profile's consent history, projected by the caller
-            from the adapter-side ledger this layer does not import. Required:
-            see above.
+        consent_entries: Consent history projected by the caller from the
+            adapter-side ledger this layer does not import. Required: see
+            above. Entries recorded under another profile are dropped here, so
+            a caller may pass the whole ledger without scoping it first.
         resolve_content_address: Optional resolver from an evidence reference to
             the document's content address. Without it, re-derivability is
             reported as unknown rather than guessed.
@@ -300,7 +306,12 @@ def survey_cloud_consent(
         if artefact_is_cloud_derived(stored.read_transports)
     )
     return ConsentWithdrawalSurvey(
-        consented_dispatches=consent_entries,
+        # Scoped HERE rather than trusted from the caller. The artefacts above
+        # are already bucket-scoped by their own load, and leaving the
+        # dispatches on trust made the two halves of one survey disagree about
+        # who is responsible for scoping -- the half that trusted being the one
+        # that would disclose another profile's history.
+        consented_dispatches=tuple(entry for entry in consent_entries if entry.profile_bucket_id == bucket_id),
         cloud_derived_artefacts=artefacts,
     )
 

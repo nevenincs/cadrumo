@@ -79,9 +79,7 @@ def _no_history_notice() -> Notice:
 def consent_list(ctx: typer.Context) -> None:
     """List off-host dispatches and the artefacts derived from them."""
     bucket_id = transaction_catalogue_repo(current_workflow_state()).bucket_id
-    survey = survey_cloud_consent(
-        bucket_id=bucket_id, settings=load_settings(), consent_entries=_recorded_dispatches(bucket_id)
-    )
+    survey = survey_cloud_consent(bucket_id=bucket_id, settings=load_settings(), consent_entries=_recorded_dispatches())
     payload = {
         "bucket_id": bucket_id,
         "transmitted_bytes_are_unrecallable": survey.transmitted_bytes_are_unrecallable,
@@ -116,8 +114,8 @@ def consent_list(ctx: typer.Context) -> None:
     )
 
 
-def _recorded_dispatches(bucket_id: str) -> tuple[ConsentedDispatch, ...]:
-    """Project the profile's consent ledger onto the shape the survey enumerates.
+def _recorded_dispatches() -> tuple[ConsentedDispatch, ...]:
+    """Project the adapter-side consent ledger onto the shape the survey reads.
 
     This composition is the CLI's job and nowhere else's. The application layer
     that owns the survey deliberately does not import the ledger -- it lives on
@@ -128,11 +126,11 @@ def _recorded_dispatches(bucket_id: str) -> tuple[ConsentedDispatch, ...]:
     but an affirmative false statement: the verb tells an operator nothing left
     their machine.
 
-    Filtered on the entry's own recorded bucket rather than trusted from the
-    ambient session, because the survey is scoped to ``bucket_id`` and a row
-    belonging to another profile must never appear under this one. The ledger
-    stamps every entry with the bucket it ran under precisely so this
-    comparison is possible.
+    Every entry is projected, including those recorded under other profiles.
+    Scoping is the survey's, because it holds the bucket being surveyed and
+    already scopes its other input the same way; a filter here would have to be
+    repeated by every future composition root, and forgotten once is a
+    disclosure.
 
     Deferred import, matching the on-host reader below: this module must stay
     loadable on an install without the inference extra.
@@ -141,6 +139,7 @@ def _recorded_dispatches(bucket_id: str) -> tuple[ConsentedDispatch, ...]:
 
     return tuple(
         ConsentedDispatch(
+            profile_bucket_id=entry.profile_bucket_id,
             evidence_content_address=entry.evidence_content_address,
             provider=entry.provider,
             model=entry.model,
@@ -148,7 +147,6 @@ def _recorded_dispatches(bucket_id: str) -> tuple[ConsentedDispatch, ...]:
             recorded_at=entry.recorded_at,
         )
         for entry in EvidenceConsentLedger().load_entries()
-        if entry.profile_bucket_id == bucket_id
     )
 
 
