@@ -1234,3 +1234,34 @@ class = "harness-code"
 area = "core"
 symbols = ["allow_logging_reconfiguration"]
 evidence = "Detaches the installed handlers and releases the configure-once latch. Its docstring names the consumer: a long-lived host that legitimately re-points the stream or file axis mid-process, specifically the documentation engine, which imports the application and only afterwards pins its isolated scratch storage. Read by dev/docs/build.py and dev/docs/sequences/runner.py and by nothing else. Classified harness-code because it exists for the harness, but the usual harness remedy -- relocate it beside its consumer -- does not apply: the latch and handler list it manipulates are module-globals private to core.logging, so the seam can only live here."
+
+# ---------------------------------------------------------------------------
+# Residue census, recounted by CODE reference rather than by word match.
+#
+# The earlier triage resolved a reference by searching file text, so a name
+# mentioned in an inert namespace docstring counted as a production consumer.
+# Those docstrings are navigational maps naming every contract in the package,
+# so the error was systematic and one-directional: it inflated the bucket that
+# looks healthiest. Counting only AST reference nodes -- Name loads, attribute
+# access, import aliases, and string constants that bind a name in a spec table
+# -- moves "referenced by live production code" from 66 to 17, and the residue
+# is 83% test-only rather than 69%.
+#
+# conftest.py counts as test infrastructure though it matches neither the
+# tests/ directory nor the test_ prefix; treating it as production made a
+# registry cache-reset seam look production-consumed.
+#
+# Of the 17 still referenced by production, the referrer is frequently itself
+# deferred -- the modelo edit services are reached only from edit_session,
+# which the module ratchet already reports as deferred behind a frozen cluster.
+# ---------------------------------------------------------------------------
+
+[residue_census]
+measured = "2026-09-06"
+unadjudicated_exact = 324
+test_only = 268
+test_and_dev_only = 24
+referenced_by_production = 17
+referenced_nowhere = 14
+dev_only = 1
+method = "a reference counts only when it appears as an ast.Name load, an attribute access, an import alias, or a string constant binding the name; prose in a docstring or comment does not vote"

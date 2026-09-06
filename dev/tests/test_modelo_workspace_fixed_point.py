@@ -130,8 +130,14 @@ def test_no_action_or_route_symbol_is_re_exported_by_a_namespace() -> None:
     offenders: list[str] = []
     for package in (_TUI_MODELO, _TUI_MODELO / "action"):
         init = package / "__init__.py"
-        if not init.is_file():
-            continue
+        # Refused rather than skipped: a missing initialiser is exactly the state
+        # in which this gate reports both namespaces inert without reading either.
+        # The two packages named here are the whole subject, so one of them moving
+        # under a rename must fail loudly, not quietly satisfy the claim below.
+        assert init.is_file(), (
+            f"{init.relative_to(_ROOT)} is missing, so the inertness claim below would "
+            "hold by never reading this namespace at all"
+        )
         tree = ast.parse(init.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom) and node.module == "__future__":
