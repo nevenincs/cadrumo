@@ -18,7 +18,8 @@
         "pyproject.toml",
         "packaging/cadrumo_data_manuals/pyproject.toml",
         "packaging/cadrumo_data_official/pyproject.toml"
-      ]
+      ],
+      "component": ""
     }
   },
   "changelog-sections": [
