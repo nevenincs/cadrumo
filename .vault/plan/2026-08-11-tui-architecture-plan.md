@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-06'
-body_hash: 'sha256:a244451755ed4dc1170e1fe619db2f4b6cb28b209aca3ec953c08588da2ccc2b'
+body_hash: 'sha256:06f2f2b2b7343108a3389b0204220093afea0f1c8f1c17b0b95e36b79abf906b'
 ---
 
 <!-- RETIRED: S370 -->
@@ -667,6 +667,7 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S451` - Resolve a translation key filled positionally into a helper defined in another module, and make the resolution refuse a name whose definitions disagree. The CLI command specs pass their help key by position to a helper whose parameter the scanner already recognises by name, but only as a keyword and only within one module, so the keys read as orphaned catalogue entries. Collect the callee signatures across the tree first, and count a position only where every definition of that name agrees it carries a key.; `dev/locales/_ast_scanner.py, dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
 - [x] `W08.P30.S452` - Re-apply the reconciliation direction key rename the concurrent writer reverted, and record why nothing caught it. The catalogue kept the corrected shape while the committed source went back to the old keys, so the surface asked for keys the catalogue no longer holds. It rendered anyway: tr() humanises an unknown key into title-cased prose from its last segment, so a missing key reads as a plausible English label in every locale while the authored translation sits unused.; `src/cadrumo/entrypoints/tui/ledger/reconciliation.py, src/cadrumo/entrypoints/tui/ledger/controller.py`.
 - [x] `W08.P30.S453` - Follow the per-surface translator boundary helpers the locale scanner could not see. Every TUI surface routes its copy through a local wrapper that forwards its key to tr, so the call sites never name the translator and every key reaching the catalogue through one read as an orphan. Resolve wrapper names across the tree to a fixpoint, admitting only a function that forwards its own first parameter, so a helper that merely calls the translator on something else is not mistaken for a key channel.; `dev/locales/_ast_scanner.py, dev/locales/tests/test_dynamic_prefix_registry_coverage.py`.
+- [x] `W08.P30.S454` - Read a translation key supplied through a conditional, since `empty_key="..." if not rows else None` is how a surface states a state-dependent label and the collector read only a bare literal, so both arms vanished and the catalogue looked complete on whichever branch a developer happened to exercise; two genuinely missing error messages surfaced once the arms were read, closing the missing side of codebase-to-locale parity to zero; `dev/locales/_ast_scanner.py dev/locales/tests/test_dynamic_prefix_registry_coverage.py src/cadrumo/locales`.
 
 ## Parallelization
 
