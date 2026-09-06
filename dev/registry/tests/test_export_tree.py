@@ -256,7 +256,7 @@ def test_generated_casilla_export_refs_refuses_before_writing_any_file(tmp_path:
     )
     b_path.write_text(b_original, encoding="utf-8")
 
-    with pytest.raises(RegistryValidationError, match="020"):
+    with pytest.raises(RegistryValidationError, match="disagreeing answers"):
         write_generated_casilla_export_refs(
             tmp_path,
             export_refs_by_casilla={"010": ("generated.new",), "020": ("generated.conflict",)},
