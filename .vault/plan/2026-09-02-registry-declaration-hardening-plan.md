@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:03ef1ad04f87995ce35f3a20b42c6de0061e1e3d673e90843d9fdef012f6c726'
+body_hash: 'sha256:acdaeb3ff8d96e469a213760704c8dc4e295272e253d82338fbdc504c329fadb'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -663,6 +663,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S781` - Floor the m200 eligibility and its smaller branch, whose four coverage equalities each compare two sets derived from the same projection; `dev/registry/tests/test_render_profile.py`.
 - [x] `W02.P02.S782` - Floor both branches of the workbook parse behind the total-preserving projection claim, whose tuple equalities and strict zip are all satisfied by two empty sides; `dev/registry/tests/test_record_design_ir.py`.
 - [x] `W02.P02.S783` - Floor both chain transcripts behind the isolation and determinism claims, whose strict zip and pin to frozenset are both satisfied by a run that produced no frame; `dev/docs/sequences/tests/test_runner.py`.
+- [x] `W02.P02.S784` - Make the residue worklist group-count case assert the comparison its name promises: compare every heading's declared count against the rows printed beneath it at both levels, replacing a positivity check that never read the kind-level sum; `dev/registry/tests/test_coverage_residue_worklist.py`.
 
 ### Phase `W02.P03` - release predicate relocation
 
