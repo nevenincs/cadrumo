@@ -132,3 +132,32 @@ jobs:
             -f "ref=${TAG}" \
             -f "inputs[source_commit]=${SHA}"
           echo "Dispatched docs-publish.yml for ${TAG} at ${SHA}" >> "$GITHUB_STEP_SUMMARY"
+
+      # A release-please run that finds a merged, untagged release PR aborts
+      # and exits ZERO. That green abort is why this repository went six months
+      # without completing a release: nothing was ever red, so nothing was ever
+      # investigated, while the automation reported success and created
+      # nothing. The abort is only visible by reading a job log on a passing
+      # run, which nobody does.
+      #
+      # Asserted at the END of the run, which is what makes it a discriminator
+      # rather than a race: by this point a healthy run has tagged the release
+      # and advanced its pull request to `autorelease: tagged`, so a merged one
+      # still carrying `autorelease: pending` means this run aborted. Every
+      # later run will abort the same way until a human intervenes, so failing
+      # here is the difference between a deadlock that surfaces in minutes and
+      # one that survives for months.
+      - name: Refuse a deadlocked release state
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          stuck="$(gh pr list --repo "${GITHUB_REPOSITORY}" --state merged \
+            --label 'autorelease: pending' --limit 20 --json number,title \
+            --jq '.[] | "#\(.number) \(.title)"')"
+          if [ -n "${stuck}" ]; then
+            echo "::error::release-please left a merged release pull request untagged; every later run aborts in green until this is repaired"
+            printf '%s\n' "${stuck}"
+            exit 1
+          fi
+          echo "no merged release pull request is waiting for a tag"
