@@ -959,6 +959,11 @@ application:
         existeix; el càlcul del model no pot continuar.
       calculation_registry_snapshot_unresolved: No s'ha pogut resoldre la instantània
         del registre per al model %{modelo}, exercici %{filing_year}, període %{period}.
+      calculation_revision_id_is_discarded_work_unit: L'identificador %{calculation_revision_id}
+        és una unitat de treball descartada, no una revisió de càlcul.
+      calculation_revision_id_is_work_unit: L'identificador %{calculation_revision_id}
+        és una unitat de treball, no una revisió de càlcul; feu servir --work-unit-id
+        %{work_unit_id}.
       calculation_revision_not_found: No s'ha trobat cap revisió de càlcul amb id=%{calculation_revision_id}.
       calculation_revision_parent_work_unit_discarded: La revisió de càlcul %{calculation_revision_id}
         pertany a la unitat de treball descartada %{work_unit_id}.
