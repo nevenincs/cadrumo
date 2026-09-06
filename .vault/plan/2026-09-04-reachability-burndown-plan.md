@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:d0f48a6aef2649e488fe3e82c670e857763035b8df9e12e14afb8cf70f3bc75d'
+body_hash: 'sha256:051b229a9a7c790e947818a03de548665873fb2cfc8d56458ffcfe99e8c2a540'
 ---
 
 # `reachability-burndown` plan
@@ -155,6 +155,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S54` - Record a measured performance consequence and two filing-runtime dispositions: the locale catalogue's cross-process disk cache is never read or written although its in-process half is live, so every new process pays the roughly 800 millisecond YAML parse the cache was written to avoid according to the measurement in its own module docstring; the default filing profile loader is displaced by the builder that takes an already-resolved taxpayer identity; and the fingerprint cache reset seam is orphaned rather than test support, because the function that would populate the cache is itself unreached and the live schema surface never consults it; `dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S55` - Scan same-module read/write name pairs for a split half, which found five instances with no noise, and adjudicate the two that ground out as design rather than defect: the encrypted envelope tier is unreached as a group, appearing partly live only because its saver is called by a reencrypt helper that is itself unreached, while the plain tier beside it carries eighteen references and sensitive payloads encrypt through the application-layer secure-object envelope instead; and the mnemonic decoder is unnecessary because the custody design hands the twenty-four word phrase to the KDF as the recovery secret rather than decoding it to entropy; `dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S56` - Record the campaign's clearest cost finding and one supersession: the encrypted stage-S1 transcription cache is never populated, its own docstring stating that re-reading is the expensive half of ingestion at a vision model pass over every page and that re-running the cheap semantic stages is only affordable if the transcription is kept, while the single live reader is the consent-withdrawal path that touches the cache to erase it; and the standalone corpus manifest writer is subsumed by the bundle builder that writes the manifest inside the zip archive; `dev/audit/reachability_classification.toml`.
+- [x] `W05.P12.S57` - Sweep every cache-shaped module and bound that finding class at the two already recorded, since the other six are healthy with both halves live or reached intra-module; then adjudicate the domain attachment readers as displaced because the application layer reads the same store protocol directly while this service's write half stays live, and the M036 IAE subject sets as should-be-live because the field rule they encode, that only A-prefix codes carry an epigrafe, is enforced nowhere while the simplified-regime calculation separates agrarian rows by type instead; `dev/audit/reachability_classification.toml`.
 
 ## Parallelization
 

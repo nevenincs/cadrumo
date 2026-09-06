@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-06'
 body_schema: body-v2
-body_hash: 'sha256:ff5ad0ce7bbc57767e060cde622e7876590dc0683e740b84b020310bf6dc6b0a'
+body_hash: 'sha256:3e8b5d1a36c4c9975cfa091a7948bd7f102c05e3b1066cd62312ad9aa1c16d0f'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -305,6 +305,10 @@ Deliver one accessor returning a revision's complete resolved export casilla sur
 - [x] `W01.P01.S825` - Drive the export-tree renderer's generic ambiguous-official-constant branch: all four parametrized cases reached the alternative-constants branch, leaving `_export_tree.py`'s fallback refusal unexercised while `match="official constant"` passed; `dev/registry/tests/test_export_tree.py`.
 - [x] `W01.P01.S826` - Floor the legal catalogue read and pin the files that carry no `[legal]` table by equality: the loader refuses a missing directory but a present directory yielding almost nothing reached every screen in the package unchallenged; `dev/audit/tests/test_legal_excerpt_vintage_screen.py`.
 - [x] `W01.P01.S827` - Classify the unreadable file at the docstring-reference screen's two walk-and-read sites: `SyntaxError` and `UnicodeDecodeError` were tolerated deliberately while `OSError` was left unclassified, so a listed path that cannot be read crashed in pathlib internals instead of refusing, and skipping it would have reported a clean screen over a corpus smaller than the one walked; `dev/quality/docstring_reference_targets.py dev/quality/tests/test_docstring_reference_targets.py`.
+- [x] `W01.P01.S828` - Refuse a screened tree that moves under the vacuity walk: the screen already separates `unreadable` from the findings because "one number answering two questions is what this screen exists to stop", but an `OSError` reached neither channel, so a tracked file lost mid-walk crashed instead of refusing, leaving `scanned` a denominator over a population that no longer exists; `dev/audit/vacuity_screen.py`.
+- [x] `W01.P01.S829` - Drive the two `_validate_scope` refusals no test in the repository referenced (modelo mismatch and design-epoch mismatch), which are reachable because the semantic map, intermediate and inspection objects are independently constructed with no type-level guarantee that they agree; `dev/registry/tests/test_semantic_map_validation.py`.
+- [x] `W01.P01.S830` - Drive the three specific `_load_fragment` refusals shadowed by a generic `model_validate` wrapper: four of the six parametrized cases collapsed onto the catch-all, leaving the legacy header_key, producer_key and canonical draft_attribute checks dark across the whole suite; `dev/registry/tests/test_semantic_map_loader.py`.
+- [x] `W01.P01.S831` - Announce and skip an unreadable module in the type-only runtime-use scan, the policy its own docstring already states for the other two read failures: a file deleted between the walk and the read took the whole sweep down, losing every finding from every module already scanned, which is the outcome those two skips exist to prevent; `dev/quality/type_checking_runtime_use_scan.py dev/tests/test_type_checking_runtime_use_gate.py`.
 
 ## Wave `W02` - gate restoration and residue removal
 
