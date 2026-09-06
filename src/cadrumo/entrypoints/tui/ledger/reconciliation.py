@@ -8,10 +8,27 @@ from textual.app import ComposeResult
 from textual.widgets import Button, DataTable, Static
 
 from ....core.identity import InvoiceId, TransactionId
+from ....core.invoice_link import LinkInconsistencyDirection
 from ..components.widgets import ContentDataTable
 from .controller import LedgerWorkspaceController, ledger_copy
 from .models import LedgerFlowState
 from .workspace_presentation import LedgerConfirmationFlowScreen, ledger_workspace_page
+
+#: Operator copy for each one-sided link direction, keyed by the canonical
+#: value rather than a hand-typed string.
+#:
+#: The workspace projection flattens
+#: :class:`~core.invoice_link.LinkInconsistencyDirection` to a bare ``str``
+#: before it reaches this screen, so this mapping is the only place the
+#: membership survives on the TUI side. A direction added to the enum and not
+#: to this map reaches ``on_mount`` unrenderable and raises while the
+#: reconciliation table is being built — the operator's screen fails to open
+#: rather than showing the row it could not label. Keying off the enum keeps
+#: that a red test instead of a render-time refusal.
+DIRECTION_STATE_COPY_KEYS: dict[str, str] = {
+    LinkInconsistencyDirection.INVOICE_ONLY.value: "tui.ledger.reconciliation.direction_state.invoice_only",
+    LinkInconsistencyDirection.TRANSACTION_ONLY.value: "tui.ledger.reconciliation.direction_state.transaction_only",
+}
 
 
 class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
@@ -95,11 +112,7 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
         inconsistencies.add_column(ledger_copy("tui.ledger.reconciliation.invoice"), width=12)
         inconsistencies.add_column(ledger_copy("tui.ledger.reconciliation.direction"), width=30)
         for row in self.controller.projection.link_inconsistencies:
-            direction_keys = {
-                "invoice-only": "tui.ledger.reconciliation.direction_state.invoice_only",
-                "transaction-only": "tui.ledger.reconciliation.direction_state.transaction_only",
-            }
-            direction_key = direction_keys.get(row.direction)
+            direction_key = DIRECTION_STATE_COPY_KEYS.get(row.direction)
             if direction_key is None:
                 raise ValueError("unsupported canonical link inconsistency direction")
             inconsistencies.add_row(
