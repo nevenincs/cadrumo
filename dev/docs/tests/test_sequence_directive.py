@@ -227,8 +227,31 @@ def test_stale_golden_frame_count_is_refused() -> None:
     """A golden whose frame count disagrees with the body is refused (stale golden)."""
     sequence = _parsed_sequence()
     truncated = SequenceGolden(sequence_id=_SEQUENCE_ID, frames=_golden().frames[:2])
-    with pytest.raises(ValueError, match="refresh the golden"):
+    with pytest.raises(
+        ValueError,
+        match=r"has 2 frames but the directive body parses to 4 executed frames; refresh the golden",
+    ):
         build_sequence_payload(sequence, truncated)
+
+
+def test_stale_golden_frame_kind_is_refused() -> None:
+    """A golden matching the body's frame COUNT but diverging on a frame KIND is refused.
+
+    The count guard and the per-frame kind guard are two distinct refusals that
+    share the "refresh the golden" remedy, so a loose match on that fragment lets
+    the count case stand in for both. This drives the kind guard directly.
+    """
+    sequence = _parsed_sequence()
+    frames = list(_golden().frames)
+    frames[3] = frames[3].model_copy(update={"kind": FrameKind.COMMAND})
+    divergent = SequenceGolden(sequence_id=_SEQUENCE_ID, frames=tuple(frames))
+    assert len(divergent.frames) == len(_golden().frames), "the count guard must not fire first"
+
+    with pytest.raises(
+        ValueError,
+        match=r"frame 3 of .* is 'result' in the body but 'command' in the golden; refresh the golden",
+    ):
+        build_sequence_payload(sequence, divergent)
 
 
 # ---------------------------------------------------------------------------

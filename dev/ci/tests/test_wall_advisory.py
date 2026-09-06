@@ -4,8 +4,10 @@ Converting a perf gate from wall-clock to CPU-time is the right instrument
 choice on this co-resident fleet, but it is also the change that silently
 deletes the only bound able to see a test blocked on a wedged mount: a blocked
 test burns no CPU however long it stalls, so a CPU ceiling can never fire on
-it. :func:`~dev.ci.perf_measurement.wall_advisory_message` is what the two
-converted budgets keep in that gap.
+it. :func:`~dev.ci.perf_measurement.wall_advisory_message` is what a
+converted budget keeps in that gap. One such budget survives; the second
+conversion's site was replaced wholesale and its advisory went with it,
+which is why the coverage assertion at the foot of this module exists.
 
 This gate exists because the advisory has two ways to be worthless and both
 pass a green suite. It can be unfalsifiable -- never fire, so the wedge class
@@ -244,3 +246,70 @@ def test_a_drifted_copy_is_reported_even_in_a_file_named_like_this_module(tmp_pa
     assert checked == 1, "the file was skipped by name, so the exemption is back"
     assert len(drifted) == 1
     assert "_COLD_START_WALL_ADVISORY_S" in drifted[0]
+
+
+#: The pinned names a live consumer actually declares, asserted as an EQUALITY
+#: against what the scan finds. The drift check above is one-directional: it
+#: reports no drift for a threshold nobody declares exactly as it does for one
+#: every consumer agrees on, and its census floor is a total across all four
+#: names, so a whole site can vanish while the remaining site keeps the count
+#: non-zero. The two cold-start names are in that state today -- the budget
+#: they were copied from was replaced wholesale by a same-named import gate,
+#: taking its advisory with it -- so this set records which half of the pinned
+#: vocabulary is still enforced against real code. Restoring that advisory adds
+#: its names here; losing the surviving one removes them. Either move is
+#: deliberate and visible rather than a silently emptier scan.
+_CONSUMER_BACKED_THRESHOLDS: Final[frozenset[str]] = frozenset(
+    {"_P95_WALL_ADVISORY_SECONDS", "_P95_WEDGE_WALL_TO_CPU_RATIO"}
+)
+
+
+def _declared_threshold_names(root: Path) -> set[str]:
+    """Return every pinned threshold name some consumer under ``root`` declares."""
+    declaration = re.compile(rf"^({'|'.join(_PINNED_THRESHOLDS)})\s*(?::[^=]+)?=\s*\S+", re.MULTILINE)
+    return {
+        name
+        for source in sorted(root.rglob("*.py"))
+        for name in declaration.findall(source.read_text(encoding="utf-8"))
+    }
+
+
+def test_every_pinned_threshold_is_backed_by_a_live_consumer() -> None:
+    """A threshold no consumer declares is a deleted advisory, not agreement.
+
+    The gate above proves the classifier behaves correctly at all four pinned
+    figures and then asserts consumers carry them. For half the vocabulary
+    there is no consumer to carry anything: the cold-start pair is validated
+    in the abstract while the site that once emitted the advisory is gone,
+    and the total-count floor cannot see it because the surviving site keeps
+    the count above zero. An equality against the live scan says which
+    thresholds are still enforced and reddens the moment that changes.
+    """
+    declared = _declared_threshold_names(REPO_ROOT / "dev")
+
+    assert declared == _CONSUMER_BACKED_THRESHOLDS, (
+        "pinned thresholds without a live consumer: "
+        f"{sorted(set(_PINNED_THRESHOLDS) - declared)}; "
+        f"declared but not recorded as consumer-backed: "
+        f"{sorted(declared - _CONSUMER_BACKED_THRESHOLDS)}"
+    )
+
+
+def test_a_threshold_whose_only_consumer_vanishes_is_reported(tmp_path: Path) -> None:
+    """The teeth: the scan distinguishes a declared name from an orphaned one.
+
+    Driven over an isolated tree holding one consumer that declares a single
+    pinned name, so the clean reading above and this proof of detection run
+    in the same suite.
+    """
+    (tmp_path / "consumer.py").write_text(
+        f"_P95_WALL_ADVISORY_SECONDS = {_LEDGER_WALL_S}\n",
+        encoding="utf-8",
+    )
+
+    declared = _declared_threshold_names(tmp_path)
+
+    assert declared == {"_P95_WALL_ADVISORY_SECONDS"}
+    assert declared != _CONSUMER_BACKED_THRESHOLDS, (
+        "a consumer that dropped one of its two thresholds must not read as complete"
+    )

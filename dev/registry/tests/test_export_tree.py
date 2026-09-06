@@ -1613,6 +1613,7 @@ def test_renderer_refuses_profile_hash_drift_literal_extent_and_nonempty_target(
         'Constante "<T". o "ZZ"',
         'Constante "E". o "S". rentas.',
         'Constante "E". rentas.\no "S".',
+        'Constante "<T',
     ),
 )
 def test_renderer_refuses_missing_or_ambiguous_official_literal_without_output(
