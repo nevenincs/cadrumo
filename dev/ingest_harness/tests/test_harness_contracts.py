@@ -31,6 +31,7 @@ from .._result import (
     build_result_row,
 )
 from .._runner import HarnessReport, format_report, require_model_tier, verify_decimal_comparison_path
+from .._scoring import FieldOutcome, FieldScoring, FieldVerdict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -542,3 +543,43 @@ def test_the_answer_is_the_same_before_and_after_slot_expansion() -> None:
     assert raw == expanded == ("category",)
     # The composite really is present, or the equivalence above is vacuous.
     assert "issuer.tax_id" in expand_document_slots(document).scorable_fields
+
+
+def test_a_scored_outcome_refuses_totals_that_exceed_their_own_denominator() -> None:
+    """Coherence is enforced, not assumed: accuracy cannot be driven above one.
+
+    ``accuracy`` divides ``matched`` by ``scorable_field_count``. Without this
+    validator a row claiming more matches than there are scorable fields would be
+    accepted and quote a rate above 1.0. The refusal existed but nothing drove it,
+    so deleting the validator would have broken no test.
+    """
+    with pytest.raises(ValidationError, match="exceeds the scorable field count"):
+        Scored(scorable_field_count=1, matched=1, wrong=1, fabricated=0)
+
+
+def test_field_scoring_refuses_a_field_scored_more_than_once() -> None:
+    """A slot counted twice inflates the totals against the key's own field count.
+
+    The module says so itself: the ambiguity would surface as a total that quietly
+    exceeds the field count rather than as an error, which is why the refusal is
+    here rather than left to the reader.
+    """
+    outcome = FieldOutcome(field_name="total", verdict=FieldVerdict.MATCHED)
+
+    with pytest.raises(ValidationError, match="fields scored more than once"):
+        FieldScoring(doc_id="DOC-1", outcomes=(outcome, outcome), undeclared=())
+
+
+def test_a_document_with_no_scorable_truth_refuses_to_project_a_rate() -> None:
+    """An accuracy over nothing is undefined, not zero, and must not be projected.
+
+    A key authoring no non-null truth gives a zero denominator. Returning 0.0 here
+    would read as a perfect failure and a 1.0 as a perfect pass; both are fictions
+    about a document nothing was scored on. The caller wants ``EmittedOnly``,
+    which carries no rate at all.
+    """
+    empty = FieldScoring(doc_id="DOC-1", outcomes=(), undeclared=())
+    assert empty.scorable_field_count == 0, "the fixture must really have no scorable truth"
+
+    with pytest.raises(HarnessRefusalError, match="there is no denominator"):
+        empty.as_scored()

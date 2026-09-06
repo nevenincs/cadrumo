@@ -1519,3 +1519,17 @@ class = "orphaned"
 area = "application/filing"
 symbols = ["clear_runtime_fingerprint_cache"]
 evidence = "Clears the time-based TTL cache for registry tree fingerprints and the canonical collector's own cache. The cache it resets has no live user: registry_tree_fingerprint, the function that would populate it, is itself unreached, and the live schema surface in this module -- RegistrySchemaAccessor at six references and build_runtime_schema_provider at five -- does not consult it. A reset seam for state nothing produces is not a test-support surface, because there is no live production path to the state."
+
+[[symbol_cluster]]
+name = "encrypted envelope tier held together by its own dead members"
+class = "orphaned"
+area = "adapters/persistence/storage/envelope"
+symbols = ["load_encrypted_envelope", "reencrypt_envelope_file"]
+evidence = "The encrypted tier of the envelope contract, unreached as a group. The plain tier beside it is live -- Envelope at eighteen references, save_envelope at two, load_envelope at one -- and the encrypted tier only appears reached because its members call each other: save_encrypted_envelope is invoked at line 594 inside reencrypt_envelope_file, which is itself unreached, which is why the audit reports the loader and not the saver. Sensitive payloads are encrypted through the application-layer secure-object envelope with its own integrity and provenance metadata, so this file-level encrypted tier is an alternative the persistence layer did not take up."
+
+[[symbol_cluster]]
+name = "mnemonic decoder the passphrase design does not need"
+class = "orphaned"
+area = "adapters/persistence/storage"
+symbols = ["decode_mnemonic"]
+evidence = "Turns a 24-word mnemonic back into entropy. Nothing calls it, and the reason is a design choice rather than a gap: application/user_profile/custody_ports.py records that the recovery secret IS the 24-word BIP-39 mnemonic over 256 bits of entropy, so the phrase is handed to the KDF as a passphrase and never decoded. The encoder is live by contrast, called at line 235 of the same module by generate_recovery_key, which profile_custody.py reaches -- so a mnemonic is issued, and recovery consumes the words themselves."
