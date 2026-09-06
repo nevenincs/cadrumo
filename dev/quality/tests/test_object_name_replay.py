@@ -882,10 +882,15 @@ def test_receipt_allowlist_shape_drift_refuses_before_live_write(
     # regenerated-evidence comparison upstream already includes
     # `changed_paths`, so every mutation here trips that check first and the
     # dedicated allowlist refusal never fires. Pinning the refusal states
-    # which check actually holds the line. The allowlist branch is reachable
-    # only when the rehearsal AGREES with the receipt while the manifest's
-    # reviewed set does not - a shape this parametrize cannot construct, so
-    # that branch remains uncovered rather than falsely claimed.
+    # which check actually holds the line. That branch is unreachable for
+    # every receipt this API can produce, not merely unconstructed here: the
+    # rehearsal derives the receipt's changed_paths as the sorted union of
+    # changed_paths over the component's operations, and replay recomputes
+    # its allowlist as that same union over the same manifest and component,
+    # which the digest and identity guards above have already pinned. The two
+    # sides are one derivation, so they cannot disagree. Its post-apply
+    # sibling IS reachable, because that one compares the paths actually
+    # written against the receipt - two roots rather than one.
     with pytest.raises(ObjectNameReplayError, match="regenerated transformation or verification differs"):
         replay_object_name_component(
             manifest, inventory=inventory, component=component, receipt=candidate, repo_root=repo

@@ -139,7 +139,7 @@ def test_the_cold_start_ratio_admits_the_spawn_wait_it_must() -> None:
     assert _LEDGER_RATIO < 6.75 / 1.45, "the spawn reading no longer demonstrates why the ratio is per-site"
 
 
-def test_the_cold_start_site_still_catches_a_wedged_spawn() -> None:
+def test_the_cold_start_ratio_still_catches_a_wedged_spawn() -> None:
     """The looser ratio is loose, not vacuous: a stalled spawn still fires."""
     with pytest.warns(WallClockAdvisory):
         assert (
@@ -274,7 +274,7 @@ def _declared_threshold_names(root: Path) -> set[str]:
     }
 
 
-def test_every_pinned_threshold_is_backed_by_a_live_consumer() -> None:
+def test_only_the_recorded_half_of_the_pinned_thresholds_has_a_live_consumer() -> None:
     """A threshold no consumer declares is a deleted advisory, not agreement.
 
     The gate above proves the classifier behaves correctly at all four pinned

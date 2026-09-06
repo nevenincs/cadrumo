@@ -440,12 +440,18 @@ def test_claim_row_ids_are_real_distribution_rows() -> None:
     Guards against a typo in the mapping table that would silently skip the
     evidence check for a real distribution row.
 
-    Anchored on :data:`~dev.release.readiness.ALL_DISTRIBUTION_ROWS`, not the
-    claimed subset. This gate exists to stop documentation advertising a channel
-    ahead of its proof, so it must keep teeth for exactly the channels the
-    release does NOT claim — anchoring it on the claimed set would let a doc
-    claim an unclaimed channel with no row at all, which is the failure it is
-    built to prevent.
+    The teeth come from the two sides having independent roots, not from the
+    choice of anchor name. ``_CLAIM_PATTERNS`` is hand-authored in this module;
+    :data:`~dev.release.readiness.ALL_DISTRIBUTION_ROWS` is derived from
+    ``docs/_data/download_channels.toml``. A row renamed in the descriptor
+    therefore moves one side only, and this gate reds.
+
+    There is no "claimed subset" to anchor on instead:
+    :class:`~dev.docs.download_matrix.DownloadChannel` forbids extra fields and
+    declares no claimed/unclaimed notion, so a channel that cannot be proven is
+    removed from the inventory rather than left declared. ``ALL_`` and
+    ``REQUIRED_DISTRIBUTION_ROWS`` are consequently bound to one derivation and
+    are the same object; picking between them changes nothing here.
     """
     known_rows: frozenset[str] = frozenset(ALL_DISTRIBUTION_ROWS)
     invalid: list[str] = []

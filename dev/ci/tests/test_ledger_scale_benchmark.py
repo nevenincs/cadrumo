@@ -19,7 +19,7 @@ contract names:
    :func:`aggregate_iva_ledger_observations_from_repositories`, the
    partitioned period-scoped path covered by the latency decision.
 4. **Modelo calculate diagnostic** —
-   :func:`~cadrumo.application.modelo.calculate_modelo_revision_from_bucket_aggregation`
+   :func:`~cadrumo.tests.bucket_aggregation_calculate.calculate_modelo_revision_from_bucket_aggregation`
    for a real M130 quarter, exercising the full registry engine over the
    ledger-backed income resolver.
 
@@ -87,7 +87,6 @@ from cadrumo.application.aggregation import (
 )
 from cadrumo.application.aggregation.tests.iva_authority_support import aggregate_iva_ledger_observations
 from cadrumo.application.calculations.observations_repository import CalculationObservationRepository
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation
 from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -104,6 +103,7 @@ from cadrumo.domain.transactions.enums import (
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.tests.bucket_aggregation_calculate import calculate_modelo_revision_from_bucket_aggregation
 from cadrumo.tests.profile_capsule import seed_test_profile_record
 from cadrumo.tests.registry_observations import registry_grounded_observations
 from cadrumo.tests.secure_sql import isolated_runtime_profile
