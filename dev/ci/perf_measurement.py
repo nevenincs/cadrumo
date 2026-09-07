@@ -288,30 +288,3 @@ def timed_subprocess(
         stdout=stdout,
         stderr=stderr,
     )
-
-
-def min_subprocess_cpu_seconds(
-    argv: Sequence[str],
-    *,
-    samples: int,
-    env: Mapping[str, str] | None = None,
-    cwd: Path | None = None,
-    timeout_s: float,
-) -> tuple[float, float, SubprocessTiming]:
-    """Spawn ``argv`` ``samples`` times; return (min CPU s, min wall s, last run).
-
-    ``min`` is the conservative cold-start estimate on a shared machine:
-    contention only ever ADDS CPU (SMT and cache pressure) and wall time, so the
-    minimum is the closest available reading of the unloaded cost and filters
-    transient scheduler spikes. Taking the minimum of each clock independently
-    is deliberate -- the two are reported separately and never subtracted from
-    one another.
-    """
-    if samples < 1:
-        raise ProcessCpuMeasurementError(f"samples must be >= 1, got {samples}")
-    runs = [timed_subprocess(argv, env=env, cwd=cwd, timeout_s=timeout_s) for _ in range(samples)]
-    return (
-        min(run.cpu_seconds for run in runs),
-        min(run.wall_seconds for run in runs),
-        runs[-1],
-    )
