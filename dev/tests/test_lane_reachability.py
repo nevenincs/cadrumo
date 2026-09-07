@@ -334,6 +334,11 @@ def test_the_path_check_catches_what_the_per_test_check_cannot(tmp_path: Path) -
     assert report.unnamed == ("outside/tests/test_no_tests_at_all.py",)
 
 
+#: How many tracked test files may be unreadable before the reachability
+#: measurement is judged incomplete rather than merely racing a peer.
+_TOLERATED_MID_EDIT_SKIPS: int = 10
+
+
 def test_the_gate_measured_a_real_corpus() -> None:
     """A parser that found nothing would report perfect coverage.
 
@@ -346,9 +351,20 @@ def test_the_gate_measured_a_real_corpus() -> None:
 
     assert len(lanes) > 10, "lane discovery collapsed; the gate would be measuring nothing"
     assert report.analysed > 1000, f"only {report.analysed} files analysed; the reader has stopped matching"
-    assert len(report.skipped) < report.analysed // 10, (
-        f"{len(report.skipped)} tracked files were unreadable against {report.analysed} analysed; "
-        "that is mass-skip, not a peer mid-edit"
+    # An absolute cap, not a proportion of the corpus. The condition this
+    # tolerance exists for is a peer mid-edit -- one or two files caught
+    # between writes -- while a tenth of the corpus is four hundred files at
+    # today's size, and it grows as the tree does. That headroom is the gap
+    # the class lives in: a skipped file contributes no entries at all, so
+    # every test inside it goes unmeasured while `unreachable` stays empty
+    # and the gate reads clean. Live skips are zero, so the cap costs
+    # nothing and is forty times tighter than the ratio it replaces. The
+    # skipped paths are named whatever the count, because a tolerated skip
+    # that nobody sees is the same silence one file smaller.
+    assert len(report.skipped) <= _TOLERATED_MID_EDIT_SKIPS, (
+        f"{len(report.skipped)} tracked files were unreadable against {report.analysed} analysed, "
+        f"over a cap of {_TOLERATED_MID_EDIT_SKIPS}; that is mass-skip, not a peer mid-edit: "
+        + ", ".join(report.skipped)
     )
 
 

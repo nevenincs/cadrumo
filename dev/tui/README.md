@@ -65,8 +65,8 @@ changed, so it works as a review gate as well as a report.
 
 ## How the render loop handles failure
 
-A frame can fail in three ways, and conflating them wastes either time or
-evidence:
+A frame can fail in more than one way, and conflating them wastes either
+time or evidence:
 
 - **refused** -- the harness caught an application guard (an unmet profile
   readiness rule, a fixture it cannot provision) and said so. These are raised

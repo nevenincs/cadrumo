@@ -155,7 +155,7 @@ class FrameFailureKind(StrEnum):
     drive. Frequently transient, so this kind earns a retry and never condemns
     the rest of the surface."""
 
-    RASTER = "raster"
+    RASTER = "rasterX"
     """The harness produced a frame this tool could not repaint.
 
     Never retried: the SVG on disk will be identical next time. The failure
