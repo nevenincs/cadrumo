@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import ClassVar, Final, Protocol, cast, override
+from typing import TYPE_CHECKING, ClassVar, Final, Protocol, cast, override
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -12,10 +12,22 @@ from textual.screen import Screen
 from textual.widgets import Button, DataTable, Static
 
 from ....application.aeat_sync.workspace import (
+    AeatSyncAeatObservationState,
+    AeatSyncCensusCategory,
+    AeatSyncCensusStatus,
+    AeatSyncDiscrepancyKind,
+    AeatSyncDocumentCustodyState,
+    AeatSyncJustificanteState,
+    AeatSyncLocalFilingState,
+    AeatSyncNotificationCategory,
     AeatSyncNotificationReadState,
     AeatSyncOverviewArea,
+    AeatSyncReconciliationState,
+    AeatSyncSourceState,
+    AeatSyncWorkspaceAvailability,
     AeatSyncWorkspaceNotificationRowV1,
     AeatSyncWorkspaceProjectionV1,
+    AeatSyncWorkspaceSource,
     AeatSyncWorkspaceZone,
 )
 from ....application.operations.models import OperationDefinitionId
@@ -30,22 +42,33 @@ from ..components.workspace_host import replace_workspace_body
 from .controller import AeatSyncWorkspaceController
 from .models import AeatSyncOperationRequestV1, AeatSyncRouteTargetV1
 
-_LABEL_PREFIXES: Final = {
-    "AeatSyncWorkspaceZone": "tui.aeat_sync.zone",
-    "AeatSyncWorkspaceAvailability": "tui.aeat_sync.availability",
-    "AeatSyncWorkspaceSource": "tui.aeat_sync.source",
-    "AeatSyncOverviewArea": "tui.aeat_sync.area",
-    "AeatSyncSourceState": "tui.aeat_sync.source_state",
-    "AeatSyncDiscrepancyKind": "tui.aeat_sync.discrepancy",
-    "AeatSyncCensusCategory": "tui.aeat_sync.census_category",
-    "AeatSyncCensusStatus": "tui.aeat_sync.census_status",
-    "AeatSyncLocalFilingState": "tui.aeat_sync.local_filing_state",
-    "AeatSyncAeatObservationState": "tui.aeat_sync.aeat_observation_state",
-    "AeatSyncJustificanteState": "tui.aeat_sync.justificante_state",
-    "AeatSyncNotificationCategory": "tui.aeat_sync.notification_category",
-    "AeatSyncNotificationReadState": "tui.aeat_sync.notification_read_state",
-    "AeatSyncDocumentCustodyState": "tui.aeat_sync.document_custody_state",
-    "AeatSyncReconciliationState": "tui.aeat_sync.reconciliation_state",
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+#: Which catalogue prefix names each rendered enum's members.
+#:
+#: Keyed by the enum CLASS, not by its name as a string. The string form made a
+#: rename silently unmappable: nothing referenced the class, so the name drifted
+#: while the key stayed, and the first symptom was ``_label`` raising at mount
+#: and taking the whole workspace down. A class key is a real reference -- a
+#: rename updates it, and a deletion fails the import here rather than a render
+#: later.
+_LABEL_PREFIXES: Final[Mapping[type[Enum], str]] = {
+    AeatSyncWorkspaceZone: "tui.aeat_sync.zone",
+    AeatSyncWorkspaceAvailability: "tui.aeat_sync.availability",
+    AeatSyncWorkspaceSource: "tui.aeat_sync.source",
+    AeatSyncOverviewArea: "tui.aeat_sync.area",
+    AeatSyncSourceState: "tui.aeat_sync.source_state",
+    AeatSyncDiscrepancyKind: "tui.aeat_sync.discrepancy",
+    AeatSyncCensusCategory: "tui.aeat_sync.census_category",
+    AeatSyncCensusStatus: "tui.aeat_sync.census_status",
+    AeatSyncLocalFilingState: "tui.aeat_sync.local_filing_state",
+    AeatSyncAeatObservationState: "tui.aeat_sync.aeat_observation_state",
+    AeatSyncJustificanteState: "tui.aeat_sync.justificante_state",
+    AeatSyncNotificationCategory: "tui.aeat_sync.notification_category",
+    AeatSyncNotificationReadState: "tui.aeat_sync.notification_read_state",
+    AeatSyncDocumentCustodyState: "tui.aeat_sync.document_custody_state",
+    AeatSyncReconciliationState: "tui.aeat_sync.reconciliation_state",
 }
 _OPERATION_LABEL_KEYS: Final = {
     ("operator.profile.edit", "user-profile.censo-review"): "tui.aeat_sync.action.review_census",
@@ -62,7 +85,7 @@ def _label(value: Enum | None) -> str:
     """Render a public enum through its authored semantic catalogue key."""
     if value is None:
         return aeat_sync_copy("tui.aeat_sync.value.none")
-    prefix = _LABEL_PREFIXES.get(type(value).__name__)
+    prefix = _LABEL_PREFIXES.get(type(value))
     if prefix is None:
         raise ValueError("unsupported AEAT Sync operator label")
     return aeat_sync_copy(f"{prefix}.{value.value}")
