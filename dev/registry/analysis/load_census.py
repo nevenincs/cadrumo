@@ -381,11 +381,16 @@ def _iter_source_files() -> Iterable[Path]:
         yield from scan_directory(root, pattern="*.py", recursive=True, prune_directories=("__pycache__",))
 
 
-def _parse(path: Path) -> ast.Module | None:
-    try:
-        return ast.parse(path.read_text(encoding="utf-8"))
-    except (OSError, SyntaxError):
-        return None
+def _parse(path: Path) -> ast.Module:
+    """Parse one source file. Raises on any read, decode, or syntax failure.
+
+    Unlike the earlier swallowing form, the failure is not absorbed here: both
+    callers scan a REFERENCE_SCAN_ROOTS file that resolved to an in-scope
+    module name, and a file they cannot parse must be announced the same way
+    :func:`module_level_importers` announces an unreadable registry module,
+    not silently subtracted from the population they report.
+    """
+    return ast.parse(path.read_text(encoding="utf-8"))
 
 
 def _absolute(target: str, package: str | None) -> str | None:
@@ -544,10 +549,16 @@ def dynamic_import_sites(*, production_only: bool = True) -> tuple[DynamicImport
         One record per resolved target, or one per unresolved call site.
     """
     sites: list[DynamicImportSite] = []
+    unread: list[str] = []
     for path in _iter_source_files():
         module = _module_name_for(path)
-        tree = _parse(path)
-        if module is None or tree is None:
+        try:
+            tree = _parse(path)
+        except (OSError, SyntaxError, UnicodeDecodeError) as error:
+            if module is not None:
+                unread.append(f"{path}: {type(error).__name__}: {error}")
+            continue
+        if module is None:
             continue
         if production_only and is_test_module(module):
             continue
@@ -561,6 +572,11 @@ def dynamic_import_sites(*, production_only: bool = True) -> tuple[DynamicImport
                 sites.extend(DynamicImportSite(module, node.lineno, _absolute(member, package)) for member in members)
                 continue
             sites.append(DynamicImportSite(module, node.lineno, _literal_dynamic_target(node, package)))
+    report_unread(
+        "registry load census dynamic import harvest",
+        "an import_module call site in one of them would be missing from the census",
+        unread,
+    )
     return tuple(sites)
 
 
@@ -623,10 +639,16 @@ def build_reference_map() -> ReferenceMap:
     """
     production: dict[str, set[str]] = {}
     tests: dict[str, set[str]] = {}
+    unread: list[str] = []
     for path in _iter_source_files():
         module = _module_name_for(path)
-        tree = _parse(path)
-        if module is None or tree is None:
+        try:
+            tree = _parse(path)
+        except (OSError, SyntaxError, UnicodeDecodeError) as error:
+            if module is not None:
+                unread.append(f"{path}: {type(error).__name__}: {error}")
+            continue
+        if module is None:
             continue
         # The package's own production modules reach siblings by direct import,
         # which the graph already records. Its TESTS reach them by relative
@@ -641,6 +663,12 @@ def build_reference_map() -> ReferenceMap:
             owner = _imported_registry_module(node, module)
             if owner is not None:
                 bucket.setdefault(owner, set()).add(module)
+    report_unread(
+        "registry load census reference map",
+        "a registry consumer named only in one of them would be missing from the reference map, "
+        "and its module could be misclassified dead",
+        unread,
+    )
     return ReferenceMap(
         production={k: frozenset(v) for k, v in production.items()},
         tests={k: frozenset(v) for k, v in tests.items()},

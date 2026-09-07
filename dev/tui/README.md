@@ -26,6 +26,8 @@ uv run --no-sync python -m dev.tui viewports          # the geometries a render 
 uv run --no-sync python -m dev.tui inventory          # every interface, and its coverage
 uv run --no-sync python -m dev.tui render             # every surface, default matrix
 uv run --no-sync python -m dev.tui render -s status -v tall -t dark
+uv run --no-sync python -m dev.tui runs               # the review runs on disk, newest first
+uv run --no-sync python -m dev.tui snapshot baseline  # keep the current review under a name
 uv run --no-sync python -m dev.tui rasterise --run latest --cell-height 32
 uv run --no-sync python -m dev.tui diff baseline --against latest
 ```
@@ -35,6 +37,17 @@ without driving the harness at all. Those SVGs are the harness's own output
 and stay valid however this tool's rasteriser changes, so fixing a rendering
 defect -- or just wanting the frames at a different resolution -- costs
 seconds instead of another full matrix at minutes per frame.
+
+`render` always targets the canonical review at `runs/current`. `snapshot`
+copies that review aside under a name of your choosing, and is the only way a
+second run directory comes to exist -- so it is what makes the `diff` above
+possible. A name already taken is refused rather than overwritten: a full
+matrix costs about twenty-five minutes and runs are gitignored, so the
+snapshot is the only copy of the review it holds. `--replace` is how an
+operator says the older review is finished with.
+
+`runs` lists what is on disk, newest first, marking any run that is partial
+and any whose manifest cannot be read.
 
 A run whose `manifest.json` was written by an older schema is refused rather
 than upgraded, with a message naming both versions. Runs are gitignored and

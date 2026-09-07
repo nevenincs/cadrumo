@@ -90,7 +90,7 @@
 "cadrumo.application.modelo.local_observation_spreadsheet" = 1
 "cadrumo.application.modelo.m145_communication_records" = 1
 "cadrumo.application.modelo.m303_regimen_simplificado_scope" = 1
-"cadrumo.application.modelo.operation_definitions" = 5
+"cadrumo.application.modelo.operation_definitions" = 2
 "cadrumo.application.modelo.result_disposition_resolution" = 1
 "cadrumo.application.modelo.review_package_collab_audit" = 1
 "cadrumo.application.modelo.review_package_recipient_encryption" = 2
