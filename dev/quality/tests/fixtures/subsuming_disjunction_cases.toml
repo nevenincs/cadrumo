@@ -1,0 +1,47 @@
+[residual_rows]
+source = '''assert '"rows"' in output or 'rows' in output
+'''
+
+[attribute_haystack]
+source = '''assert "a" in source.value or "ba" in source.value
+'''
+
+[utf8_accented]
+source = '''assert 'é' in output or 'café' in output
+'''
+
+[distinct_needles]
+source = '''assert 'rows' in output or 'columns' in output
+'''
+
+[different_haystacks]
+source = '''assert '"rows"' in stdout or 'rows' in stderr
+'''
+
+[effectful_repeated_haystack]
+source = '''assert "a" in next(stream) or "ba" in next(stream)
+'''
+
+[unsupported_operand]
+source = '''assert '"rows"' in output or result.ok
+'''
+
+[conjunction]
+source = '''assert '"rows"' in output and 'rows' in output
+'''
+
+[dynamic_needle]
+source = '''assert needle in output or 'rows' in output
+'''
+
+[preceding_conjunction]
+source = '''assert left and right
+'''
+
+[preceding_unsupported_operand]
+source = '''assert result.ok or 'rows' in output
+'''
+
+[preceding_different_haystacks]
+source = '''assert '"rows"' in stdout or 'rows' in stderr
+'''
