@@ -21,7 +21,10 @@ from ..pipeline._tree_publication import (
     GeneratedExportTreeTargetStateReceipt,
     _require_expected_target_state,
 )
-from ..pipeline.candidate_staging import retarget_bootstrap_construct_export_layout
+from ..pipeline.candidate_staging import (
+    retarget_bootstrap_construct_export_layout,
+    stage_continuity_metadata,
+)
 from ..pipeline.cli import (
     _bootstrap_target,
     _check,
@@ -213,6 +216,18 @@ def test_every_bootstrap_target_still_names_a_tree_awaiting_publication() -> Non
         f"bootstrap target(s) name a tree already published, so the row can never fire again: "
         f"{already_bootstrapped}; prune it once its tree is committed"
     )
+
+
+def test_m390_continuity_witness_closes_the_full_predecessor_chain(tmp_path: Path) -> None:
+    """A 2025 target carries 2024, 2023, and 2022 continuity facts."""
+    metadata_root = stage_continuity_metadata(
+        bundled_path("registry", "aeat", "modelos", "390"),
+        tmp_path,
+        revision="2025",
+    )
+
+    assert metadata_root is not None
+    assert {path.name for path in (metadata_root / "revisions").iterdir()} == {"2022", "2023", "2024"}
 
 
 def _publication_context_for_target(

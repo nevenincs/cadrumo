@@ -10,7 +10,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
   - '[[2026-08-31-aeat-export-fragment-generator-authority-source-defect-adjudication-adr]]'
 modified: '2026-09-07'
-body_hash: 'sha256:dc2db5d5ae56351434388f9a7d94513a18f4229d55312e95babc7670f510230b'
+body_hash: 'sha256:466a12abcdf005caf7485495c23eda31ce8f1a86d7ec1e2a2fbca7f81e239181'
 ---
 
 <!-- RETIRED: S19, S26, S65, S93 -->
@@ -179,6 +179,7 @@ Regenerate the highest-priority calculation-model revisions and discharge the he
 - [x] `W04.P07.S128` - Centralize hash-pinned source-defect declarations in one public pipeline-owned module, wire the operator CLI and generated-tree gate to that catalogue, prove the Modelo 390 render seam, extend temporal-coverage S32 to detect in-file revision enrolment lists, and reconcile S79's landed map and enrolment state without claiming publication.; `dev/registry/pipeline/, dev/registry/tests/, .vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md, .vault/plan/2026-08-14-registry-temporal-coverage-plan.md`.
 - [x] `W04.P07.S129` - Define one shared candidate-staging boundary that excludes both generated export and superseded manual export_layouts authority, stages the required supplementary Orden closure, applies only an explicit count-pinned bootstrap retargeting of superseded construct members, and expands the authored M390 2022 construct to the generated layout's exact legal-reference closure; use the boundary in the operator CLI and enrolled drift gate, and prove the real bootstrap candidate validates without consulting either tree; `dev/registry/pipeline/, dev/registry/tests/, src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/constructs/`.
 - [x] `W04.P07.S130` - Declare the three remaining Modelo 390 generated-export bootstrap targets for revisions 2023, 2024, and 2025 through exact modelo, revision, record-design source, source digest, generated layout, CRLF transport, superseded manual layout identity, and one-reference construct pins, and prove wrong-source and supersession-count drift refuse before S21 publication; `dev/registry/pipeline/generated_export_bootstrap_targets.toml, dev/registry/tests/test_generated_tree_cli.py`.
+- [x] `W04.P07.S131` - Make generated-export continuity witnesses close transitively over every source-declared predecessor instead of copying only the target revision immediate predecessors, centralize that staging boundary for the operator CLI and enrolled gate, and expand the Modelo 390 2023 through 2025 constructs to the exact legal-reference unions required by their generated layouts before S21 publication; `dev/registry/pipeline/candidate_staging.py, dev/registry/pipeline/cli.py, dev/registry/tests/test_generated_export_trees.py, dev/registry/tests/test_generated_tree_cli.py, src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/constructs/0001-constructs.toml, src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/constructs/0001-constructs.toml, src/cadrumo/_data/registry/aeat/modelos/390/revisions/2025/constructs/0001-constructs.toml`.
 
 ### Phase `W04.P08` - campaign integration and release
 

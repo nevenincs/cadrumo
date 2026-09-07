@@ -54,6 +54,7 @@ from ..pipeline._tree_check import GeneratedExportTreeCheckContext, check_genera
 from ..pipeline._tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
 from ..pipeline.candidate_staging import (
     generated_export_bootstrap_target,
+    stage_continuity_metadata,
     stage_generated_export_candidate,
 )
 from ..pipeline.render_check import parsed_tree_file
@@ -203,38 +204,6 @@ def _supporting_modelos(tree: _GeneratedTree) -> frozenset[str]:
     return frozenset(
         modelo for modelo in referenced - {tree.modelo} if bundled_path("registry", "aeat", "modelos", modelo).is_dir()
     )
-
-
-def _stage_continuity_metadata(tree: _GeneratedTree, root: Path) -> Path | None:
-    """Copy only the sibling facts the strict continuity validator reads.
-
-    The generated candidate stays a one-revision authority.  A landing
-    revision's continuity declarations nevertheless name real predecessor
-    revisions, so the generic validator receives a separate directory-mode
-    witness containing those predecessors' scalar metadata, continuity
-    surfaces, and evolution declarations -- never their bindings, formulas,
-    layouts, or generated exports.
-    """
-    source_modelo_root = bundled_path("registry", "aeat", "modelos", tree.modelo)
-    definition = load_modelo_directory(source_modelo_root)
-    target = definition.revisions[tree.revision]
-    predecessors = sorted({str(evolution.from_revision) for evolution in target.casilla_continuidad_evolutions})
-    if not predecessors:
-        return None
-
-    metadata_modelo_root = root / "continuity-metadata" / tree.modelo
-    metadata_modelo_root.mkdir(parents=True)
-    shutil.copy2(source_modelo_root / "manifest.toml", metadata_modelo_root / "manifest.toml")
-    for predecessor in predecessors:
-        source_revision_root = source_modelo_root / "revisions" / predecessor
-        target_revision_root = metadata_modelo_root / "revisions" / predecessor
-        target_revision_root.mkdir(parents=True)
-        shutil.copy2(source_revision_root / "revision.toml", target_revision_root / "revision.toml")
-        for member in ("casillas", "casilla_continuidad_evolutions"):
-            source_member = source_revision_root / member
-            if source_member.is_dir():
-                shutil.copytree(source_member, target_revision_root / member)
-    return metadata_modelo_root
 
 
 def _referenced_modelos(modelo_root: Path) -> frozenset[str]:
@@ -522,7 +491,11 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
 
     candidate_root = tmp_path / "candidate"
     registry_root = _isolated_authority(tree, candidate_root)
-    continuity_metadata_modelo_root = _stage_continuity_metadata(tree, candidate_root)
+    continuity_metadata_modelo_root = stage_continuity_metadata(
+        bundled_path("registry", "aeat", "modelos", tree.modelo),
+        candidate_root,
+        revision=tree.revision,
+    )
     published_modelo_root: Path | None = None
     revisions_root = bundled_path("registry", "aeat", "modelos", tree.modelo, "revisions")
     if len(tuple(revisions_root.iterdir())) > 1:
@@ -656,7 +629,11 @@ def test_target_only_continuity_metadata_requires_real_declared_m303_siblings(tm
     semantic_map, render_profile, joined, evidence, transport = _authorities(tree)
     candidate_root = tmp_path / "candidate"
     registry_root = _isolated_authority(tree, candidate_root)
-    metadata_modelo_root = _stage_continuity_metadata(tree, candidate_root)
+    metadata_modelo_root = stage_continuity_metadata(
+        bundled_path("registry", "aeat", "modelos", tree.modelo),
+        candidate_root,
+        revision=tree.revision,
+    )
     assert metadata_modelo_root is not None
     assert set(child.name for child in (metadata_modelo_root / "revisions").iterdir()) == {
         "2022",
