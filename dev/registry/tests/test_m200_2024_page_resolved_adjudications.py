@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.core.hashing import sha256_hex
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..analysis import m200_2024_page_resolved_adjudications as subject
@@ -43,18 +44,48 @@ def test_refuses_a_recorded_digest_that_the_design_does_not_produce(tmp_path) ->
         subject.compile_m200_2024_page_resolved_authority(target)
 
 
-def test_refuses_a_member_whose_declared_section_its_design_cell_contradicts(tmp_path) -> None:
+def test_refuses_a_member_whose_declared_section_its_design_cell_contradicts(monkeypatch, tmp_path) -> None:
     """Corroboration is the part a page cannot supply on its own.
 
     Resolving to one cell says WHICH cell the design puts the number in. It does
-    not say the declaration agrees, and casilla 00067 is the standing proof that
-    it sometimes does not. A member is admitted only when its declared section
-    appears in the resolved cell's own path.
+    not say the declaration agrees. A member is admitted only when its declared
+    section appears in the resolved cell's own path, so this pins a declared
+    section the resolved design cell does not carry -- a record-qualified id
+    that resolves cleanly is not itself proof the box is right.
     """
+    cells = subject._design_cells()
+    label = subject._resolve("DP200024:00067", cells)
+    digest = sha256_hex(label.encode("utf-8"))
+    sections = subject._declared_sections()
+    monkeypatch.setattr(
+        subject,
+        "_declared_sections",
+        lambda: {**sections, "DP200024:00067": ("an_unrelated_section_the_cell_does_not_carry",)},
+    )
     body = subject.ADJUDICATION_PATH.read_text(encoding="utf-8")
     target = tmp_path / "foreign.toml"
-    # 00067 is the known contradiction: declared under an AIE/UTE section 6 the
-    # 2024 design does not put it in.
+    target.write_text(
+        body.replace(
+            '[[adjudications]]\ncasilla_id = "',
+            f'[[adjudications]]\ncasilla_id = "DP200024:00067"\nofficial_label_sha256 = "{digest}"\n\n'
+            '[[adjudications]]\ncasilla_id = "',
+            1,
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RegistryValidationError, match="declares a section its own design cell contradicts"):
+        subject.compile_m200_2024_page_resolved_authority(target)
+
+
+def test_refuses_a_bare_number_that_carries_no_record_page(tmp_path) -> None:
+    """A member missing its page qualifier is refused before corroboration runs.
+
+    Every member must be record-qualified (see the compiling test above); this
+    proves the compiler itself enforces that rather than merely documenting it.
+    """
+    body = subject.ADJUDICATION_PATH.read_text(encoding="utf-8")
+    target = tmp_path / "bare-number.toml"
     target.write_text(
         body.replace(
             '[[adjudications]]\ncasilla_id = "',
@@ -66,7 +97,7 @@ def test_refuses_a_member_whose_declared_section_its_design_cell_contradicts(tmp
         encoding="utf-8",
     )
 
-    with pytest.raises(RegistryValidationError, match=r"no record page|contradicts"):
+    with pytest.raises(RegistryValidationError, match="carries no record page"):
         subject.compile_m200_2024_page_resolved_authority(target)
 
 

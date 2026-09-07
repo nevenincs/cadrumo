@@ -89,3 +89,38 @@ def test_modules_sharing_no_collaborator_are_not_reported(tmp_path: Path) -> Non
     _module(package, "right.py", _DISJOINT)
 
     assert run(package, ["import_overlap"]) == []
+
+
+def test_a_corpus_with_no_production_module_refuses_rather_than_reporting_clean(tmp_path: Path) -> None:
+    """Every detector would report clean over nothing, so the load refuses first.
+
+    Coverage showed all three of this module's refusals unexercised: they were
+    added, proved once by hand, and never pinned. A refusal nothing drives is
+    indistinguishable from one that has stopped firing.
+    """
+    with pytest.raises(SystemExit, match=r"no production modules found under"):
+        run(tmp_path, list(_DETECTORS))
+
+
+def test_an_unparsable_module_refuses_rather_than_shortening_the_corpus(tmp_path: Path) -> None:
+    """A module that does not parse would leave the corpus short by exactly it."""
+    (tmp_path / "bad.py").write_text("def (:" + chr(10), encoding="utf-8")
+
+    with pytest.raises(SystemExit, match=r"could not be parsed, so the duplication corpus"):
+        run(tmp_path, list(_DETECTORS))
+
+
+def test_an_unreadable_module_refuses_for_its_own_reason(tmp_path: Path) -> None:
+    """The read failure is refused separately from the parse failure.
+
+    The module raises the two for distinct reasons precisely so a caller matching
+    on one cause cannot be satisfied by the other, so this asserts the read
+    wording and would fail if the two refusals were merged. The unreadable module
+    is a DIRECTORY named ``*.py``: rglob lists it and ``read_text`` raises, which
+    needs no symlink privilege.
+    """
+    (tmp_path / "ok.py").write_text("x = 1" + chr(10), encoding="utf-8")
+    (tmp_path / "broken.py").mkdir()
+
+    with pytest.raises(SystemExit, match=r"could not be read, so the duplication corpus"):
+        run(tmp_path, list(_DETECTORS))

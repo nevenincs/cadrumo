@@ -240,6 +240,25 @@ symbols = [
 evidence = "Reached only by three test modules, and deliberately kept. It is the REQUIRED half of a symmetric pair whose OPTIONAL half, optional_profile_keys, is consumed in production by src/cadrumo/application/user_profile/keys_validation.py. Deleting one side of a symmetric filtered view leaves a registry that can report its optional keys and not its required ones, which is a worse surface than an unused function."
 remedy_requires_decision = false
 
+[[symbol_cluster]]
+name = "shared scenario validator body two harnesses reach"
+class = "harness-code"
+symbols = [
+  "hydrate_scenario_filing_period",
+]
+evidence = "The shared pydantic mode=before validator body its docstring describes, and both named consumers exist: dev/registry/parity/_parity_tapes.py:82 and src/cadrumo/domain/calculations/registry/tests/_scenarios.py:127. They are a dev harness and a registry scenario harness that cannot import each other, so the body is sited in core/period.py precisely to be reachable from both. The audit reports it because neither consumer is a declared entrypoint, which is the expected shape for a symbol whose whole purpose is to be shared by harnesses. Keep as sited. Worth recording that a first pass concluded it had no non-test consumer at all: the grep was truncated by head -4 and the four lines shown were all from one test module."
+remedy_requires_decision = false
+
+[[symbol_cluster]]
+name = "period vocabulary enumerators kept symmetric"
+class = "test-support"
+symbols = [
+  "accepted_period_codes",
+  "accepted_period_patterns",
+]
+evidence = "A coherent two-by-two family -- {registry, filing} x {codes, patterns} -- enumerating the period vocabulary. Consumers are cross-package tests: the declaracion parser's administrative-period routing test, core's own period test, and the registry selector token-parity test, which enumerates through accepted_period_codes so its coverage cannot drift from the accepted set. Kept whole. Deleting the members with the fewest callers would leave a vocabulary that can enumerate its registry codes but not its filing patterns, and the same asymmetry argument that kept required_profile_keys applies: half a symmetric view is a worse surface than an unused function."
+remedy_requires_decision = false
+
 # ---------------------------------------------------------------------------
 # Orphaned test modules
 #

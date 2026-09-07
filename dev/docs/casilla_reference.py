@@ -152,7 +152,9 @@ class CasillaPage:
     rst: str
     #: The ``casilla-<slug>`` anchor id emitted for each casilla, in page order.
     anchors: tuple[str, ...]
-    #: ``anchor -> the legal_refs rendered on that entry`` (grounding coverage).
+    #: ``anchor -> the legal_refs read back out of the markup that entry
+    #: emitted`` (grounding coverage). Never the record's own ``legal_refs``:
+    #: an echoed input cannot witness a ref the renderer dropped.
     rendered_legal_refs: dict[str, tuple[str, ...]]
 
 
@@ -924,7 +926,17 @@ def _render_entry(
     lines.extend(legal_lines)
     lines.extend(_internals_block(record, box_number, language))
     lines.append("</article>")
-    return _raw_html(lines), anchor, tuple(record.legal_refs), resolved
+    # Read the grounding inventory back OUT of the markup just emitted, never
+    # from ``record.legal_refs``. Echoing the input would make the inventory
+    # agree with the record by construction, so a ref the renderer silently
+    # dropped would still be reported as rendered.
+    legal_markup = "\n".join(legal_lines)
+    rendered_refs = tuple(
+        ref
+        for ref in record.legal_refs
+        if html.escape(ref) in legal_markup or html.escape(ref, quote=True) in legal_markup
+    )
+    return _raw_html(lines), anchor, rendered_refs, resolved
 
 
 # ── Page rendering ───────────────────────────────────────────────────────────

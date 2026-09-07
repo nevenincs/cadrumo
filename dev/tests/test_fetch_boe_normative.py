@@ -31,6 +31,7 @@ from ..corpus.fetch_boe_normative import (
     NormativeAcquisitionError,
     assert_boe_holds_no_consolidated_text,
     assert_served_by_the_requested_endpoint,
+    assert_serves_the_article_in_force,
     assert_serves_the_published_document,
     assert_serves_the_text_in_force,
     canonical_lf_bytes,
@@ -45,6 +46,13 @@ _MULTI_BLOCK: Final[str] = "boe-a-2024-12944-rdl-4-2024-iva-alimentos.html"
 #: The as-published shape: BOE holds no consolidated text for a corrección
 #: de errores, so this is the only view of it that exists.
 _AS_PUBLISHED: Final[str] = "correccion-errores-real-decreto-ley-6-2024.html"
+#: The API-envelope shape, which the two payloads above do not carry. The
+#: acquirer's in-force assertion matches on <code>, <bloque id> and <version>,
+#: none of which appear in an act.php page, so nothing here reached it until
+#: this payload was used. Still a bundled payload, not synthetic markup: the
+#: refusals below are driven by asking for a block this real document does
+#: not describe, or by changing exactly one token of it.
+_REDACCIONES: Final[str] = "boe-a-1972-1469-a1-2-redacciones.html"
 
 
 def _payload(name: str) -> str:
@@ -332,3 +340,41 @@ def test_every_bundled_normative_is_already_canonical() -> None:
     noncanonical = [path.name for path in walked if canonical_lf_bytes(payload := path.read_bytes()) != payload]
 
     assert not noncanonical, f"bundled normatives carry CRLF line endings: {noncanonical!r}"
+
+
+def test_the_in_force_assertion_accepts_the_bundled_redactions_payload() -> None:
+    """The positive control: the real payload satisfies the assertion unmutated.
+
+    Without this the refusals below would prove only that the assertion rejects
+    things, not that it accepts the shape BOE actually serves.
+    """
+    payload = _payload(_REDACCIONES)
+
+    redaction = assert_serves_the_article_in_force(payload, document_id="BOE-A-1972-1469", block="a1-2")
+
+    assert redaction.vigencia
+
+
+def test_a_payload_describing_another_block_is_refused() -> None:
+    """A served block that is not the requested one is refused.
+
+    Driven with NO mutation at all: the bundled document really describes
+    a1-2, so asking it for another block is a genuine mismatch rather than a
+    constructed one.
+    """
+    payload = _payload(_REDACCIONES)
+
+    with pytest.raises(NormativeAcquisitionError, match=r"describes block .a1-2., not the requested"):
+        assert_serves_the_article_in_force(payload, document_id="BOE-A-1972-1469", block="a99")
+
+
+def test_an_envelope_reporting_a_non_200_code_is_refused() -> None:
+    """The envelope carries its own status, and HTTP 200 does not vouch for it.
+
+    One token of the real payload is changed, so every other aspect of the
+    shape stays as BOE emits it.
+    """
+    payload = _payload(_REDACCIONES).replace("<code>200</code>", "<code>404</code>", 1)
+
+    with pytest.raises(NormativeAcquisitionError, match=r"envelope reports code .404., not 200"):
+        assert_serves_the_article_in_force(payload, document_id="BOE-A-1972-1469", block="a1-2")
