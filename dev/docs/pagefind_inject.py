@@ -153,6 +153,39 @@ class SearchRecordProjection:
                 f"search-record projection counters describe {described} records while it carries {len(self.records)}",
             )
 
+    def require_complete(self) -> None:
+        """Refuse a projection that is not the COMPLETE authoritative corpus.
+
+        Completeness is a different invariant from the census coherence
+        :meth:`__post_init__` enforces: a projection whose CLI walk was skipped
+        is perfectly coherent -- its counters honestly describe the narrowed
+        record set it carries -- and must still not be consumed as the corpus
+        its readers believe they are reading.
+
+        The invariant lives on the value object rather than in one consumer
+        because the object reaches several. The terminology sweep filters its
+        relevance targets to the ids this projection emitted, so a sweep over a
+        CLI-skipped projection does not fail: it drops every CLI target and
+        reports a clean result, which is exactly the silent narrowing
+        :func:`materialise_search_records` preserves the outcome to let a caller
+        refuse. A consumer that may legitimately hold an incomplete projection
+        because it SURFACES the shortfall rather than consuming it as complete
+        simply does not call this.
+
+        Raises:
+            SearchInjectionError: When the casilla projection is empty, or when
+                the CLI projection was skipped.
+        """
+        if self.casillas == 0:
+            raise SearchInjectionError(
+                "search-record projection is not the complete corpus because its casilla projection is empty",
+            )
+        if self.cli_skipped_reason is not None:
+            raise SearchInjectionError(
+                "search-record projection is not the complete corpus because its CLI projection "
+                f"was skipped: {self.cli_skipped_reason}",
+            )
+
 
 def load_relevance_weights(repo_root: Path) -> dict[str, float]:
     """Load the committed sweep's per-record relevance boost map, or empty.

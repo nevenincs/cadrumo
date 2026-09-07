@@ -1679,3 +1679,10 @@ class = "deferred-by-ownership"
 evidence = "The per-action enrolment package a concurrent migration is moving the modelo actions into, seven modules covering amend, discard, export, file, rename and verify. Its sibling src/cadrumo/entrypoints/tui/modelo/actions.py still owns MODELO_ACTION_DISPATCH and is what every consumer imports, so both the source and the destination of the move are dark at once: the new package has no caller yet and the old one is only reached at design time. src/cadrumo/entrypoints/tui/modelo/action/rename.py names the module it is moving from and the door it expects to be presented through, so the direction is settled and the wiring is the owning contributor's to finish. Classifying either side further now would describe a shape mid-move."
 remedy_requires_decision = true
 
+[[symbol_cluster]]
+name = "registry cache invalidation only a suite needs"
+class = "test-support"
+area = "domain/calculations/registry"
+symbols = ["clear_registry_tree_cache", "clear_source_evidence_fingerprint_cache", "_SNAPSHOT_CACHE"]
+evidence = "Three registry cache seams reached only from the test tree, and each has to live beside the cache it touches because the state is module-private. src/cadrumo/conftest.py imports and calls clear_registry_tree_cache so a suite does not inherit a tree another test loaded; src/cadrumo/domain/calculations/registry/tests/test_source_evidence_fingerprint_bound.py calls clear_source_evidence_fingerprint_cache before each bound it measures; and src/cadrumo/tests/registry_snapshot.py reads and writes _SNAPSHOT_CACHE directly to share one compiled snapshot across a suite. Production never invalidates any of them: a process holds one registry generation for its lifetime by design, and a runtime caller reaching for a reset would be defeating that. Relocating them into the test tree is not available, since each mutates state its owning module keeps private."
+

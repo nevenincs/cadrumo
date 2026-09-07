@@ -22,6 +22,14 @@ from .._colocation_ceiling import CeilingOutcome, colocation_ceiling
 from .._key import CORPUS_ROOT, EXPECTED_KEY_BYTES, EXPECTED_KEY_SHA256, CorpusKey, CorpusKeyError, load_corpus_key
 from .._reference_points import SONNET_4_6_REC_DOM_IMG_008, reference_points_with_key_context
 
+_MINIMUM_CORPUS_DOCUMENTS = 200
+"""A floor the live corpus clears comfortably, sized to catch collapse not churn.
+
+Set below the corpus as it stands so ordinary curation cannot redden it, and far
+enough above zero that a reader returning a handful of documents refuses instead
+of reporting a clean partition over the remnant.
+"""
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 
@@ -186,6 +194,18 @@ def test_the_colocation_ceiling_is_measurable_and_every_failure_is_explained() -
     much.
     """
     documents = json.loads((CORPUS_ROOT / "GROUND_TRUTH.json").read_text(encoding="utf-8"))["documents"]
+
+    # The partition assertion below compares two figures that both come out of
+    # one `colocation_ceiling` call, so a corpus that quietly shrank moves both
+    # sides together and the check still agrees. The document count is the only
+    # figure here the report does not derive, which makes it the one usable
+    # independent guard -- and `> 0` is not one: measured against a corpus of
+    # this size, that tolerates losing nearly all of it.
+    assert len(documents) >= _MINIMUM_CORPUS_DOCUMENTS, (
+        f"the anchor corpus reached {len(documents)} document(s) against a floor of "
+        f"{_MINIMUM_CORPUS_DOCUMENTS}; the ceiling below would still partition cleanly over "
+        "whatever survived, so this refuses before the measurement is quoted"
+    )
 
     report = colocation_ceiling(documents)
 

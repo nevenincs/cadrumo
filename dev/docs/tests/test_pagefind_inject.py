@@ -18,6 +18,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 
 from ..pagefind_inject import (
     InjectionStats,
@@ -33,7 +34,8 @@ from ..pagefind_inject import (
     load_relevance_weights,
 )
 from ..terminology._cli_projection import project_cli_search_records
-from ..terminology.unified_record import to_search_record
+from ..terminology.casilla_projection import project_casilla_search_records
+from ..terminology.unified_record import SearchRecord, to_search_record
 from ._pagefind_inject_support import concept_records
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -198,8 +200,9 @@ _NEGATIVE_FRAGMENT = "negative counter"
 def test_an_empty_projection_carries_no_contradiction() -> None:
     """Empty-parameter control: an empty record set with a zero census is legal.
 
-    Completeness is a later boundary (``_require_complete_projection``); the
-    value object refuses only a census that disagrees with its own records.
+    Completeness is a separate boundary (:meth:`SearchRecordProjection.require_complete`,
+    and ``_require_complete_projection`` on the injector's own type); construction
+    refuses only a census that disagrees with its own records.
     """
     empty = SearchRecordProjection(
         records=(),
@@ -289,3 +292,114 @@ def test_a_negative_counter_is_refused_even_when_the_census_still_sums() -> None
     assert _NEGATIVE_FRAGMENT in message, message
     assert _PARTITION_FRAGMENT not in message, f"the partition arm covered for the negative arm: {message}"
     assert "casillas=-5" in message, message
+
+
+#: The distinguishing fragment of each COMPLETENESS refusal, so neither arm can
+#: pass by raising the other's error. Both differ from the census fragments
+#: above, so a coherence refusal cannot stand in for a completeness one either.
+_CASILLA_GAP_FRAGMENT = "casilla projection is empty"
+_CLI_GAP_FRAGMENT = "CLI projection was skipped"
+
+
+@pytest.fixture(scope="module")
+def _real_casilla_record() -> SearchRecord:
+    """One real projected casilla record, so a complete census is not a fiction."""
+    records, _stats = project_casilla_search_records(bundled_authority())
+    assert records, "the casilla projection carried nothing, so this proves nothing"
+    return to_search_record(records[0])
+
+
+def test_an_empty_projection_is_not_the_complete_corpus() -> None:
+    """Empty-parameter control: an empty projection is coherent and NOT complete.
+
+    Construction admits it -- nothing contradicts nothing -- so the completeness
+    boundary is the only thing standing between "the corpus projected nothing"
+    and "the corpus is fully present". A control that merely constructed the
+    value would report the first as the second.
+    """
+    empty = SearchRecordProjection(
+        records=(),
+        concepts=0,
+        casillas=0,
+        legal_provisions=0,
+        cli_commands=0,
+        cli_options=0,
+    )
+
+    with pytest.raises(SearchInjectionError) as excinfo:
+        empty.require_complete()
+
+    assert _CASILLA_GAP_FRAGMENT in str(excinfo.value), str(excinfo.value)
+
+
+def test_a_projection_with_both_arms_satisfied_is_admitted(_real_casilla_record: SearchRecord) -> None:
+    """Anti-noise: real records with a populated casilla arm and no skip pass."""
+    concepts = tuple(concept_records().records)
+    assert concepts, "the concept projection carried nothing, so this admits nothing"
+
+    complete = SearchRecordProjection(
+        records=(*concepts, _real_casilla_record),
+        concepts=len(concepts),
+        casillas=1,
+        legal_provisions=0,
+        cli_commands=0,
+        cli_options=0,
+    )
+
+    complete.require_complete()
+
+
+def test_an_empty_casilla_arm_is_refused_by_the_value_object() -> None:
+    """Teeth, casilla arm: the invariant is on the type, not on one consumer.
+
+    ``_require_complete_projection`` refuses the same shortfall on the
+    injector's own ``_Materialised``, but the public value object reaches the
+    terminology sweep too, and the sweep filters its relevance targets to the
+    ids the projection emitted -- so a narrowed projection there does not fail,
+    it silently drops the missing kind and reports a clean run.
+    """
+    records = tuple(concept_records().records)
+    projection = SearchRecordProjection(
+        records=records,
+        concepts=len(records),
+        casillas=0,
+        legal_provisions=0,
+        cli_commands=0,
+        cli_options=0,
+    )
+
+    with pytest.raises(SearchInjectionError) as excinfo:
+        projection.require_complete()
+
+    message = str(excinfo.value)
+    assert _CASILLA_GAP_FRAGMENT in message, message
+    assert _CLI_GAP_FRAGMENT not in message, f"the CLI arm covered for the casilla arm: {message}"
+
+
+def test_a_skipped_cli_arm_is_refused_even_with_casillas_present(
+    _real_casilla_record: SearchRecord,
+) -> None:
+    """Teeth, CLI arm: a coherent census and a populated casilla arm are not enough.
+
+    The casilla arm demonstrably cannot catch this one: ``casillas=1`` clears it.
+    A skipped CLI walk leaves every counter honest about the rows carried, which
+    is precisely why coherence cannot stand in for completeness.
+    """
+    concepts = tuple(concept_records().records)
+    projection = SearchRecordProjection(
+        records=(*concepts, _real_casilla_record),
+        concepts=len(concepts),
+        casillas=1,
+        legal_provisions=0,
+        cli_commands=0,
+        cli_options=0,
+        cli_skipped_reason="RuntimeError: the live CLI tree could not be walked",
+    )
+
+    with pytest.raises(SearchInjectionError) as excinfo:
+        projection.require_complete()
+
+    message = str(excinfo.value)
+    assert _CLI_GAP_FRAGMENT in message, message
+    assert _CASILLA_GAP_FRAGMENT not in message, f"the casilla arm covered for the CLI arm: {message}"
+    assert "the live CLI tree could not be walked" in message, message

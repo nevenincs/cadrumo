@@ -541,6 +541,14 @@ def run_sweep(
     from ..pagefind_inject import materialise_search_records
 
     projection = search_record_projection if search_record_projection is not None else materialise_search_records(root)
+    # Refuse an incomplete projection at the point of acquisition, whether it
+    # was supplied or materialised here. Without this the mapping boundary
+    # below cannot fail on one: it filters targets to the ids the projection
+    # emitted, so a CLI-skipped projection silently drops every CLI target and
+    # this function returns a clean SweepResult -- and SweepResult carries no
+    # field that would name the shortfall, unlike the degraded-retrieval run it
+    # reports through failed_query_count.
+    projection.require_complete()
     target_resolver = resolver if resolver is not None else TargetResolver(search_record_projection=projection)
 
     # The mapping boundary may only ship ids emitted by the complete projection
