@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from ...tui_capability import TuiCapability
 from ..command_spec import (
     CommandNodeKind,
     CommandSpec,
@@ -14,6 +13,7 @@ from ..command_spec import (
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
+    TuiCapability,
     ValueContract,
 )
 from ._spec_policies import CALCULATION_READ, PROFILE_READ

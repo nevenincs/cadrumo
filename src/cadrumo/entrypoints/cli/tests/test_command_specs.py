@@ -10,7 +10,6 @@ from pathlib import Path
 
 import pytest
 
-from ...tui_capability import TuiCapability
 from .._app_ledger_command_specs import (
     _LEDGER_CLI_CENSUS_ANNOTATIONS,
     LEDGER_CLI_COMMAND_CENSUS,
@@ -26,6 +25,7 @@ from ..command_spec import (
     LazyBinding,
     ResultSchemaSpec,
     SchemaState,
+    TuiCapability,
     translation_key,
 )
 from ..command_specs import COMMAND_GRAPH, COMMAND_SPECS

@@ -306,28 +306,36 @@ def resolve_business_pct_with_censo(
     operator_supplied: Decimal | None,
     year: int,
 ) -> Decimal | None:
-    """Stamp the censo-derived business_pct for ``year`` when the operator omits one.
+    """Read the censo fact this session can reach and stamp the resolved share.
+
+    Which share a row gets, and why it gets none, is decided by
+    :func:`~application.ledger.ratios.resolve_business_share_pct`: an operator
+    statement outranks the censo, a row with no category has nothing to
+    apportion, an unapplied censo leaves the ratio unknown, and a category
+    outside the home-office families is never apportioned at all. Those are
+    facts about the taxpayer and answer the same way for any frontend.
+
+    What is genuinely this session's is WHICH profile is active and whether
+    one is: without an active profile there is no censo to read, so the ratio
+    is passed as unknown and the resolution reports the censo as the reason.
 
     ``year`` is the filing year whose category profiles supply the statutory
     multiplier, taken from the transaction's own booked date rather than a
     pinned literal: the multiplier is year-versioned regulatory data.
     """
-    from ...application.ledger.ratios import censo_business_pct_for
+    from ...application.ledger.ratios import resolve_business_share_pct
     from ...application.user_profile.censo_sync import CensoSyncService
 
-    if operator_supplied is not None:
-        return operator_supplied
-    if category_id is None or active_profile is None:
-        return operator_supplied
-    try:
-        category_enum = SpendingCategory(category_id.strip())
-    except ValueError:
-        return operator_supplied
-    sync_service = CensoSyncService(bucket_id=bucket_id)
-    raw_afectacion: Decimal | None = sync_service.bound_raw_afectacion_ratio(profile_id=active_profile)
-    if raw_afectacion is None:
-        return operator_supplied
-    return censo_business_pct_for(category_enum, raw_afectacion, year=year)
+    category = None if category_id is None else SpendingCategory(category_id)
+    ratio: Decimal | None = None
+    if category is not None and active_profile is not None:
+        ratio = CensoSyncService(bucket_id=bucket_id).bound_raw_afectacion_ratio(profile_id=active_profile)
+    return resolve_business_share_pct(
+        operator_supplied=operator_supplied,
+        category=category,
+        censo_afectacion_ratio=ratio,
+        year=year,
+    ).business_pct
 
 
 def ledger_validation_bad(error: ValidationError) -> typer.BadParameter:

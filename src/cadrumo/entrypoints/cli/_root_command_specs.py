@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from ..tui_capability import TuiCapability
 from .command_spec import (
     FLAG_VALUE,
     TEXT_VALUE,
@@ -22,6 +21,7 @@ from .command_spec import (
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
+    TuiCapability,
     ValueContract,
 )
 

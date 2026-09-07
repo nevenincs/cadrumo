@@ -6,8 +6,7 @@ from typing import cast
 
 import typer
 
-from ..tui_capability import TuiCapability
-from .command_spec import CommandSpec
+from .command_spec import CommandSpec, TuiCapability
 
 
 def tui_was_requested(ctx: typer.Context) -> bool:

@@ -26,7 +26,7 @@ See Also:
     :func:`~domain.iva.validate_prorrata_reference`
         Parser whose canonical reference grammar must not accept the register's
         ``ninguna`` state.
-    :func:`~application.prorrata_register.seed_carried_prior_definitiva_entry`
+    :func:`~application.prorrata_register.evaluate_carried_prior_definitiva_seed`
         Application seed path that writes the normal art. 105.Uno carried
         provenance into the register.
 """

@@ -14,9 +14,10 @@ close the discoverability and pre-calculate readiness gaps:
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Annotated
+from enum import StrEnum
+from typing import Annotated, Self
 
-from pydantic import BaseModel, Field, NonNegativeInt
+from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from ...core.identity import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -293,6 +294,110 @@ def censo_business_pct_for(
     return effective_usage_ratio(rule, raw_afectacion_ratio)
 
 
+class BusinessSharePctOutcome(StrEnum):
+    """Why a row did or did not receive a censo-derived business share.
+
+    Five members because the four ways of NOT deriving one are different
+    facts about the taxpayer, and a caller that could only see ``None`` had
+    to guess which. Only two of them are anything the operator can act on.
+    """
+
+    #: The operator supplied a share; no profile fact is consulted.
+    STATED = "stated"
+    #: The censo fact and the category's statutory rule produced one.
+    DERIVED_FROM_CENSO = "derived_from_censo"
+    #: No category, so there is nothing to apportion against.
+    NO_CATEGORY = "no_category"
+    #: No censo has been applied yet, so the afectación ratio is unknown.
+    NO_CENSO_APPLIED = "no_censo_applied"
+    #: The category is outside the home-office families and is never
+    #: apportioned by censo, whatever the taxpayer declared.
+    CATEGORY_NOT_APPORTIONED = "category_not_apportioned"
+
+
+#: The outcomes that carry a share. Derived once so the model below and any
+#: reader agree on which they are.
+_OUTCOMES_CARRYING_A_SHARE = frozenset(
+    {BusinessSharePctOutcome.STATED, BusinessSharePctOutcome.DERIVED_FROM_CENSO},
+)
+
+
+class BusinessSharePctResolution(BaseModel):
+    """One resolution: what decided the share, and the share if there is one."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    outcome: BusinessSharePctOutcome
+    business_pct: Decimal | None = None
+
+    @model_validator(mode="after")
+    def _a_share_exists_exactly_when_the_outcome_produces_one(self) -> Self:
+        """Refuse a resolution whose share disagrees with its own outcome.
+
+        A "no share" outcome carrying a number invites a caller to stamp a
+        proportion nothing derived; a deriving outcome carrying none leaves
+        the caller with a success it cannot use.
+        """
+        carries = self.outcome in _OUTCOMES_CARRYING_A_SHARE
+        if carries != (self.business_pct is not None):
+            raise ValueError("business share resolution disagrees with its own outcome")
+        return self
+
+
+def resolve_business_share_pct(
+    *,
+    operator_supplied: Decimal | None,
+    category: SpendingCategory | None,
+    censo_afectacion_ratio: Decimal | None,
+    year: int,
+) -> BusinessSharePctResolution:
+    """Decide the business share a row is stamped with, and say why.
+
+    The legal arithmetic is :func:`censo_business_pct_for`; this is the
+    precedence around it, which was a chain of early returns at a command
+    boundary and is therefore the half a second frontend had to reproduce.
+
+    The order is the rule. An operator statement wins over every profile
+    fact, because it is the specific claim and the censo is only ever a
+    default. Absence of a category is asked before absence of a censo: a row
+    with no category has nothing to apportion whether or not a censo exists,
+    and reporting the censo as the obstacle would send the operator to fix
+    the wrong thing.
+
+    ``censo_afectacion_ratio`` is passed in rather than read here so this
+    stays a decision about facts. WHICH profile is active, and whether one is
+    active at all, is a session question the caller already answers.
+
+    Args:
+        operator_supplied: The share the operator stated, or ``None``.
+        category: The row's spending category, or ``None`` when unset.
+        censo_afectacion_ratio: The bound ``office_m2 / total_m2`` from the
+            applied censo, or ``None`` when none has been applied.
+        year: The filing year whose category profiles supply the statutory
+            multiplier. Year-versioned regulatory data, so it comes from the
+            row's own booked date rather than a pinned literal.
+
+    Returns:
+        The resolution, carrying a share only where one was decided.
+    """
+    if operator_supplied is not None:
+        return BusinessSharePctResolution(
+            outcome=BusinessSharePctOutcome.STATED,
+            business_pct=operator_supplied,
+        )
+    if category is None:
+        return BusinessSharePctResolution(outcome=BusinessSharePctOutcome.NO_CATEGORY)
+    if censo_afectacion_ratio is None:
+        return BusinessSharePctResolution(outcome=BusinessSharePctOutcome.NO_CENSO_APPLIED)
+    derived = censo_business_pct_for(category, censo_afectacion_ratio, year=year)
+    if derived is None:
+        return BusinessSharePctResolution(outcome=BusinessSharePctOutcome.CATEGORY_NOT_APPORTIONED)
+    return BusinessSharePctResolution(
+        outcome=BusinessSharePctOutcome.DERIVED_FROM_CENSO,
+        business_pct=derived,
+    )
+
+
 def censo_override_warning(
     *,
     category: SpendingCategory,
@@ -339,6 +444,8 @@ def censo_override_warning(
 
 
 __all__ = [
+    "BusinessSharePctOutcome",
+    "BusinessSharePctResolution",
     "EligibleCategoryRow",
     "RatiosCensoOverrideWarning",
     "RatiosValidationFinding",
@@ -347,6 +454,7 @@ __all__ = [
     "censo_override_warning",
     "eligible_ratio_categories",
     "list_eligible_ratios_for_bucket",
+    "resolve_business_share_pct",
     "set_usage_ratio",
     "unset_usage_ratio",
     "validate_ratios_for_bucket",

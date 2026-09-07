@@ -70,7 +70,7 @@ def test_tui_is_global_only() -> None:
 
 
 def test_only_implemented_cli_tui_routes_are_enrolled() -> None:
-    from ...tui_capability import TuiCapability
+    from ..command_spec import TuiCapability
     from ..command_specs import COMMAND_GRAPH
 
     specs = COMMAND_GRAPH.by_key()
