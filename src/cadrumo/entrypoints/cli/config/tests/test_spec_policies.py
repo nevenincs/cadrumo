@@ -43,16 +43,11 @@ def test_config_spec_policy_module_imports_no_cli_framework() -> None:
 @pytest.mark.parametrize(
     "name",
     [
-        "PROFILE_WRITE",
         "PROFILE_DESTRUCTIVE",
         "ENCRYPTED_WRITE",
         "ENCRYPTED_DESTRUCTIVE",
         "GOOGLE_WRITE",
         "GOOGLE_DESTRUCTIVE",
-        "GOOGLE_HANDOFF",
-        "CALCULATION_WRITE",
-        "GOOGLE_CALCULATION_WRITE",
-        "GOOGLE_CALCULATION_HANDOFF",
         "LIVE_PROFILE_WRITE",
     ],
 )

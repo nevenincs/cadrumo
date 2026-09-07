@@ -119,6 +119,7 @@ def test_the_named_and_active_paths_agree_about_the_same_record(tmp_path: Path) 
     disk, so which answer an operator got depended on whether they named the
     profile or relied on the active pointer.
     """
+    require_os_credential_store()
     profile_id = _register_profile_for_cold_run(tmp_path, _LABEL, **_FACTS)
 
     by_name = _run_cli_cold(tmp_path, ["--format", "json", "config", "profile", "view", _LABEL])
