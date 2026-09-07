@@ -134,6 +134,18 @@ class KindCoverage(BaseModel):
     covered: int = Field(ge=0)
     uncovered_ids: tuple[str, ...] = ()
 
+    @model_validator(mode="after")
+    def _coverage_partition_is_valid(self) -> KindCoverage:
+        if self.covered > self.total:
+            raise ValueError(f"{self.kind.value} coverage cannot exceed total")
+        if self.covered + len(self.uncovered_ids) != self.total:
+            raise ValueError(
+                f"{self.kind.value} coverage must partition total into covered and uncovered_ids",
+            )
+        if len(self.uncovered_ids) != len(set(self.uncovered_ids)):
+            raise ValueError(f"{self.kind.value} uncovered_ids must be unique")
+        return self
+
     @property
     def coverage_fraction(self) -> float:
         """Fraction of the derivable surface with an inbound mapping entry.

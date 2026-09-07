@@ -89,7 +89,8 @@ def _run_against_synthetic_interpreter(
     if os.name == "nt":
         launcher.write_text(
             f'@echo off\r\n"{sys.executable}" "{script}"\r\n',
-            encoding="utf-8", newline="",
+            encoding="utf-8",
+            newline="",
         )
     else:
         launcher.write_text(

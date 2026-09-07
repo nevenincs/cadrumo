@@ -82,7 +82,8 @@ else:
         launcher = bin_dir / "brew.bat"
         launcher.write_text(
             f'@echo off\r\n"{sys.executable}" "{script}" %*\r\nexit /b %errorlevel%\r\n',
-            encoding="utf-8", newline="",
+            encoding="utf-8",
+            newline="",
         )
     else:
         launcher = bin_dir / "brew"

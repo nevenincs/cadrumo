@@ -15,11 +15,12 @@ partly built.
 
 from __future__ import annotations
 
+import math
 from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..._paths import UTF_8
 from ._sweep import SweepResult
@@ -118,6 +119,19 @@ class MissRateEvaluation(BaseModel):
     compiled_failed_query_count: int = Field(ge=0)
     compiled_targeted_query_count: int = Field(ge=0)
     rows: tuple[MissRateRow, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _outcome_partition_is_valid(self) -> MissRateEvaluation:
+        if self.case_count != len(self.rows):
+            raise ValueError("case_count must equal the number of measured rows")
+        if self.hit_count + self.miss_count != self.case_count:
+            raise ValueError("hit_count and miss_count must partition case_count")
+        if self.hit_count != sum(1 for row in self.rows if row.hit):
+            raise ValueError("hit_count must equal the number of rows recorded as a hit")
+        expected_rate = self.miss_count / self.case_count
+        if not math.isclose(self.miss_rate, expected_rate, rel_tol=1e-9, abs_tol=1e-12):
+            raise ValueError("miss_rate must equal miss_count divided by case_count")
+        return self
 
 
 def relevance_mapping_path() -> Path:

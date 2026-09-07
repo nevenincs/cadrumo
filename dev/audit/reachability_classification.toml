@@ -1667,3 +1667,9 @@ name = "cadrumo.entrypoints.tui.components._safe_text"
 class = "staged-capability"
 evidence = "Validation and visible elision for pre-redacted component prose, reached only through the two panels that stage with it: src/cadrumo/entrypoints/tui/components/errors.py imports bounded_pre_redacted_text from it. Transitively dark rather than separately undecided; it becomes live with the first panel a screen composes."
 
+[[module]]
+name = "cadrumo.entrypoints.tui.profile.sync_review"
+class = "staged-capability"
+evidence = "CensalFieldReviewScreen and the CensalFieldReviewRowV1 projection for per-field ADOPT/PRESERVE review of an AEAT censal proposal. The product declares the gap to the operator rather than hiding it: src/cadrumo/entrypoints/tui/profile/app.py renders profile.journey.review.placeholder at the journey's Review stage, and the English catalogue gives that key the text 'Provenance and conflict review is not yet available on this journey.' Not fixturable as it stands, either: the screen takes five already-localized strings -- title, stale message, apply-all, reject and confirm labels -- and no catalogue key or production caller supplies them, so a devtools surface would have to invent operator-facing copy and would report on the harness rather than the product. The remedy is a caller that owns the copy, not a fixture. Its row type is already cited as a public contract by src/cadrumo/entrypoints/tui/modelo/view/models.py."
+remedy_requires_decision = true
+
