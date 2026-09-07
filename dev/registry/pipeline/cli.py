@@ -357,7 +357,7 @@ def _run(
                 _result, rendered, target_state = _check(prepared)
                 _publish(prepared, rendered, target_state)
     except (RegistryError, ValueError) as error:
-        typer.echo(f"refused: {error}", err=True)
+        typer.echo(f"refused: {error}", err=False)
         raise typer.Exit(code=1) from error
 
 

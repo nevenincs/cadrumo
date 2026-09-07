@@ -58,7 +58,8 @@ def test_pipeline_cli_refuses_a_bootstrap_source_absent_from_the_catalogue() -> 
     )
 
     assert result.exit_code == 1
-    assert "no source 'not-a-declared-source' exists for bootstrap target selection" in result.output
+    assert result.stdout == ""
+    assert "no source 'not-a-declared-source' exists for bootstrap target selection" in result.stderr
 
 
 def test_pipeline_cli_refuses_a_catalogued_source_undeclared_as_this_revisions_record_design() -> None:
@@ -78,9 +79,10 @@ def test_pipeline_cli_refuses_a_catalogued_source_undeclared_as_this_revisions_r
     )
 
     assert result.exit_code == 1
+    assert result.stdout == ""
     assert (
         "200/2025-y-siguientes does not declare record-design source 'aeat-modelo-200-manual-2025'"
-        in result.output
+        in result.stderr
     )
 
 

@@ -43,6 +43,7 @@ from ..quality.unreachable_module_ratchet import (
     BASELINE_PATH,
     IntentionalReachabilityDisposition,
     IntentionalReachabilityKind,
+    RatchetVerdict,
     UnreachableBaseline,
     evaluate,
     run_gate,
@@ -571,3 +572,33 @@ def test_every_intentional_rationale_names_a_reader_that_still_reads_it() -> Non
     )
 
     assert not unread, "intentional dispositions whose stated reader is gone: " + "; ".join(unread)
+
+
+def test_a_clean_verdict_still_names_what_the_tree_carries() -> None:
+    """Green is not empty, and the clean path must say so.
+
+    The intentional dispositions and the derived deferrals are carried debt.
+    They are excluded from both failure directions by design, which means the
+    ONLY path that can report them to an operator is the passing one -- and
+    that path printed nothing at all, so a green ratchet read as a zero
+    backlog. The mutation that must trip this is dropping the intentional or
+    derived section from ``report``.
+    """
+    carried = IntentionalReachabilityDisposition(
+        module="cadrumo.example.declared",
+        kind=IntentionalReachabilityKind.DESIGN_TIME_AUTHORITY,
+        rationale="read by dev/example/reader.py",
+    )
+    verdict = RatchetVerdict(regressions=(), stale=(), frozen=(), intentional=(carried,))
+
+    assert verdict.is_clean
+    rendered = verdict.report()
+    assert "cadrumo.example.declared" in rendered
+    assert "read by dev/example/reader.py" in rendered
+
+
+def test_a_clean_verdict_carrying_nothing_says_that_plainly() -> None:
+    """The control: with nothing carried the clean report is still a sentence."""
+    rendered = RatchetVerdict(regressions=(), stale=(), frozen=()).report()
+
+    assert "matches the baseline" in rendered
