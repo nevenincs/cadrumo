@@ -3001,6 +3001,8 @@ cli:
         son una vista previa de lo que una importación real añadiría y omitiría.'
       empty_directory: 'No se encontraron ficheros de extracto importables en el directorio:
         {path}'
+      file_refused: 'Extracto rechazado y omitido: {file}. El resto de la carpeta se
+        ha importado.'
       file_help: Ruta al archivo del extracto bancario o directorio
       help: Importar extractos bancarios o registros al libro contable
       likely_duplicates: '{count} fila(s) importada(s) comparten fecha e importe con

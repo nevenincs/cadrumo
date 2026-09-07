@@ -378,11 +378,6 @@ def _historical_037_ownership_from_registry(authority: ValidatedRegistryAuthorit
     )
 
 
-def is_active_censo_modelo(modelo: str) -> bool:
-    """Return whether a censo modelo may create active work units."""
-    return censo_modelo_ownership(modelo).active_work_unit_allowed
-
-
 def resolve_censo_modelo_foundation(command: CensoModeloFoundationCommand) -> CensoModeloFoundationResult:
     """Resolve one censo modelo foundation command and return a :class:`CensoModeloFoundationResult`."""
     ownership = censo_modelo_ownership(command.modelo)
@@ -444,7 +439,6 @@ __all__ = [
     "censo_modelo_ownership",
     "censo_modelo_ownership_map",
     "get_censo_modelo_foundation_contract",
-    "is_active_censo_modelo",
     "resolve_censo_modelo_foundation",
     "resolve_censo_modelo_work_unit_foundation",
 ]

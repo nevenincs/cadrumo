@@ -2765,6 +2765,7 @@ cli:
       dry_run_preview: 'Dry run: no rows were saved. The counts above are a preview
         of what a real import would add and skip.'
       empty_directory: 'No importable statement files found in directory: {path}'
+      file_refused: 'Statement refused and skipped: {file}. The rest of the folder was imported.'
       file_help: Path to the bank statement file or directory
       help: Import bank statements or records into the accounting ledger
       likely_duplicates: '{count} imported row(s) share a date and amount with a transaction

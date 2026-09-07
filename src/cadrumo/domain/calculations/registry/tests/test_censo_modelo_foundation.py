@@ -26,7 +26,6 @@ from ..censo_modelos import (
     censo_modelo_ownership,
     censo_modelo_ownership_map,
     get_censo_modelo_foundation_contract,
-    is_active_censo_modelo,
     resolve_censo_modelo_foundation,
     resolve_censo_modelo_work_unit_foundation,
 )
@@ -85,7 +84,7 @@ def test_modelo_036_is_active_event_triggered_foundation() -> None:
     assert record.event_kinds == ("alta", "modificacion", "baja")
     assert record.active_work_unit_allowed is True
     assert record.superseded_by is None
-    assert is_active_censo_modelo("036") is True
+    assert censo_modelo_ownership("036").active_work_unit_allowed is True
 
 
 def test_modelo_036_foundation_event_kinds_are_registry_backed(_m036_2025_alta_revision) -> None:
@@ -195,7 +194,7 @@ def test_modelo_037_is_historical_metadata_superseded_by_036() -> None:
     assert record.event_kinds == ()
     assert record.active_work_unit_allowed is False
     assert record.superseded_by == "036"
-    assert is_active_censo_modelo("037") is False
+    assert censo_modelo_ownership("037").active_work_unit_allowed is False
 
 
 def test_modelo_145_registry_presence_does_not_change_censo_036_037_contracts() -> None:

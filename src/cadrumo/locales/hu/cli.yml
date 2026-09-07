@@ -2953,6 +2953,8 @@ cli:
       dry_run_preview: 'Próba futtatás: nem mentett sorok. A fenti számok azt mutatják,
         mi történne valódi importálásnál.'
       empty_directory: 'Nem találhatók importálható kivonatfájlok a könyvtárban: {path}'
+      file_refused: 'Elutasított és kihagyott kivonat: {file}. A mappa többi része
+        importálva lett.'
       file_help: A bankikivonati fájl vagy könyvtár elérési útja.
       help: Bankikivonatok vagy nyilvántartások importálása a könyvelési főkönyvbe.
       likely_duplicates: '{count} importált sor dátuma és összege megegyezik egy már
