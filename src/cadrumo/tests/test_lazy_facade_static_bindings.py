@@ -1,39 +1,34 @@
-"""A lazily-exposed facade name must also be bound statically, or it types as ``object``.
+"""No shipped module resolves a name through ``__getattr__``, and the one that may stays honest.
 
-Several package facades resolve their public surface through a module-level
-``__getattr__`` keyed by a name-to-submodule map. The mechanism is being
-RETIRED, not defended: the consolidation campaign ruled that a contract is
-reached at its own defining module and that a package namespace is inert, and
-the maps are being removed one package at a time.
+Several package facades once resolved their public surface through a
+module-level ``__getattr__`` keyed by a name-to-submodule map. The
+consolidation campaign ruled that a contract is reached at its own defining
+module and that a package namespace is inert, and the maps were removed one
+package at a time. That retirement is now COMPLETE for shipped code, and the
+first gate below is what keeps it complete.
 
-This gate is therefore transitional and its job is to keep the remaining maps
-honest until the last one goes, not to bless them. The original argument for
-laziness was real -- the ledger facade re-exported 185 names across 20
-submodules, and importing it eagerly pulled the whole transitive graph for
-whichever single symbol a CLI process wanted -- but the retirement answers that
-better, because a consumer importing the one defining module pulls nothing else
-at all.
-
-When the last map is gone this file has nothing to scan. That is the intended
-end state and it should be DELETED then rather than left passing over an empty
-population, which is the vacuity this campaign has found in several other gates.
+This file used to police the retreating mechanism instead, and it had quietly
+outlived its subject. Its non-vacuity guard asserted only that SOME lazy facade
+was found, which stayed true after the last shipped one went because the test
+package keeps a deliberate facade of its own. A gate written to protect shipped
+code was passing on a test helper, and the docstring's own warning -- that when
+the last map is gone the file has nothing to scan and should be deleted rather
+than left passing over an empty population -- had come true without anyone
+noticing. Asserting the ABSENCE is what cannot go vacuous.
 
 PEP 562 resolution is invisible to a type checker. It reads ``__getattr__``'s
 own return annotation -- ``object`` -- so every symbol reached that way degrades
 to ``object`` at every consumer: annotations built from it are rejected as type
 forms, functions become non-callable, and attribute reads on results resolve to
-nothing. The convention that repairs it is a ``TYPE_CHECKING`` block importing
-the same names from the same submodules; it never executes, so it costs no
-import time and cannot reintroduce the cycle the laziness broke.
+nothing. That is the substance of the ruling, not a style preference.
 
-Nothing enforced that the two lists agreed. They drifted twice: the ``llm``
-facade's interchange DTOs, and then all ten ``_batch_ingest`` names, which
-landed in the map and in ``__all__`` but not in the static block -- silently
-erasing the batch CLI's entire type surface. The failure is quiet by
-construction, because the runtime path is completely correct.
-
-Structural on purpose: an import-time assertion would prove only that the names
-resolve, which they already did.
+``cadrumo.tests`` keeps one facade, deliberately and permanently: two
+domain-bearing fixtures whose import cost the rest of the facade must not pay,
+each documented at the dispatch site as not a template. The second and third
+gates below are the original checks, kept because the same drift is still
+possible there: a name in the dispatch map with no ``TYPE_CHECKING`` binding
+types as ``object`` at every consumer, and a binding that names the wrong
+submodule is worse than none because it type-checks.
 """
 
 from __future__ import annotations
@@ -48,6 +43,47 @@ from ..core.directory_scan import scan_directory
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _SRC = Path("src/cadrumo")
+
+#: The one package permitted a dispatch map, and the only one exempt below.
+_PERMITTED_LAZY_PACKAGE = "src/cadrumo/tests/__init__.py"
+
+
+def _module_getattr(tree: ast.Module) -> ast.FunctionDef | ast.AsyncFunctionDef | None:
+    """Return the module-level ``__getattr__`` definition, if the module has one."""
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and node.name == "__getattr__":
+            return node
+    return None
+
+
+def _shipped_modules() -> list[Path]:
+    """Every module that ships, which is every module outside a test tree."""
+    return [
+        path
+        for path in scan_directory(_SRC, pattern="*.py", recursive=True)
+        if "tests" not in path.parts and "__pycache__" not in path.parts and not path.name.startswith("test_")
+    ]
+
+
+def test_no_shipped_module_resolves_a_name_through_getattr() -> None:
+    """The retirement is complete; this is what keeps it complete.
+
+    Mutation that must trip this: add a module-level ``__getattr__`` to any
+    module under ``src/cadrumo`` outside a test tree.
+    """
+    shipped = _shipped_modules()
+    assert len(shipped) > 500, "the shipped-module scan found almost nothing; it would pass vacuously"
+
+    offenders = [
+        f"{path.as_posix()}:{node.lineno}"
+        for path in shipped
+        if (node := _module_getattr(ast.parse(path.read_text(encoding="utf-8"), filename=str(path)))) is not None
+    ]
+    assert offenders == [], (
+        "these shipped modules resolve names through a module-level __getattr__, which types every "
+        "consumer's view of them as `object` and reintroduces the lazy surface the consolidation "
+        "retired:\n" + "\n".join(f"  {entry}" for entry in offenders)
+    )
 
 
 def _lazy_export_map(tree: ast.Module) -> dict[str, str]:
@@ -91,37 +127,31 @@ def _static_bindings(tree: ast.Module) -> set[str]:
     return bound
 
 
-def _lazy_facades() -> list[tuple[Path, dict[str, str], set[str]]]:
-    """Return every package facade that dispatches through ``__getattr__``."""
-    facades: list[tuple[Path, dict[str, str], set[str]]] = []
-    for path in scan_directory(_SRC, pattern="__init__.py", recursive=True):
-        source = path.read_text(encoding="utf-8")
-        if "__getattr__" not in source:
-            continue
-        tree = ast.parse(source, filename=str(path))
-        mapping = _lazy_export_map(tree)
-        if mapping:
-            facades.append((path, mapping, _static_bindings(tree)))
-    return facades
+def _permitted_facade() -> tuple[Path, dict[str, str], set[str]]:
+    """Return the one permitted lazy facade, refusing if it has stopped being one."""
+    path = Path(_PERMITTED_LAZY_PACKAGE)
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    mapping = _lazy_export_map(tree)
+    assert mapping, (
+        f"{_PERMITTED_LAZY_PACKAGE} no longer dispatches through a map. If its last lazy name is "
+        "gone, delete the exemption and the two checks below with it rather than leaving them "
+        "passing over nothing."
+    )
+    return (path, mapping, _static_bindings(tree))
 
 
 def test_every_lazily_exposed_name_is_also_bound_for_the_type_checker() -> None:
-    """The gate: a name in the dispatch map must appear in the TYPE_CHECKING block.
+    """A name in the dispatch map must appear in the ``TYPE_CHECKING`` block.
 
-    Mutation that must trip this: delete any line from a facade's
+    Mutation that must trip this: delete any line from the facade's
     ``TYPE_CHECKING`` import block while leaving its dispatch-map entry.
     """
-    facades = _lazy_facades()
-    assert facades, "no lazy facade was found; this gate would pass vacuously"
-
-    unbound = {
-        path.as_posix(): sorted(set(mapping) - static) for path, mapping, static in facades if set(mapping) - static
-    }
-
-    assert unbound == {}, (
-        "these names resolve through __getattr__ but have no TYPE_CHECKING binding, so every "
-        "consumer sees them as `object` while the runtime stays correct:\n"
-        + "\n".join(f"  {path}: {', '.join(names)}" for path, names in sorted(unbound.items()))
+    path, mapping, static = _permitted_facade()
+    unbound = sorted(set(mapping) - static)
+    assert unbound == [], (
+        f"these names resolve through __getattr__ in {path.as_posix()} but have no TYPE_CHECKING "
+        f"binding, so every consumer sees them as `object` while the runtime stays correct: "
+        f"{', '.join(unbound)}"
     )
 
 
@@ -133,27 +163,26 @@ def test_a_static_binding_names_the_submodule_the_map_dispatches_to() -> None:
     symbol than the one the runtime resolves -- which is worse than no binding,
     because it type-checks.
     """
+    path, mapping, _static = _permitted_facade()
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     divergent: list[str] = []
-    for path, mapping, _static in _lazy_facades():
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.If):
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.If):
+            continue
+        test = node.test
+        if not (isinstance(test, ast.Name) and test.id == "TYPE_CHECKING"):
+            continue
+        for sub in ast.walk(node):
+            if not isinstance(sub, ast.ImportFrom):
                 continue
-            test = node.test
-            if not (isinstance(test, ast.Name) and test.id == "TYPE_CHECKING"):
-                continue
-            for sub in ast.walk(node):
-                if not isinstance(sub, ast.ImportFrom):
-                    continue
-                declared = "." * sub.level + (sub.module or "")
-                for alias in sub.names:
-                    name = alias.asname or alias.name
-                    expected = mapping.get(name)
-                    if expected is not None and expected != declared:
-                        divergent.append(
-                            f"{path.as_posix()}: {name} maps to {expected} but is imported from {declared}"
-                        )
+            declared = "." * sub.level + (sub.module or "")
+            for alias in sub.names:
+                name = alias.asname or alias.name
+                expected = mapping.get(name)
+                if expected is not None and expected != declared:
+                    divergent.append(f"{name} maps to {expected} but is imported from {declared}")
 
     assert divergent == [], (
-        "a static binding disagrees with the dispatch map about which submodule owns the name:\n" + "\n".join(divergent)
+        f"a static binding in {path.as_posix()} disagrees with the dispatch map about which "
+        "submodule owns the name:\n" + "\n".join(f"  {entry}" for entry in divergent)
     )
