@@ -145,6 +145,37 @@ class ServingPathEvidence:
         }
 
 
+def subprocess_failure_message(returncode: int, argv: tuple[str, ...], stdout: str, stderr: str) -> str:
+    """Name the product's own refusal ahead of the raw child detail.
+
+    A measured child that refuses returns the typed CLI envelope, and that
+    envelope is the diagnosis. Reported as a bare return code in front of a
+    full argv dump, a named boundary refusal reads instead as an unexplained
+    subprocess failure -- and because the caller runs under a module-scoped
+    fixture, that same unreadable text is what EVERY test in the module
+    reports at setup, none of them naming a cause.
+
+    BOTH streams are read, because a refusal is written to stderr while a
+    successful envelope is written to stdout. Reading only stdout finds an
+    empty string on exactly the failures this exists to explain.
+
+    The summary is added, never substituted: argv, stdout, and stderr all
+    survive behind it, so a failure carrying no envelope loses nothing.
+    """
+    summary = f"subprocess call failed ({returncode})"
+    for stream in (stderr, stdout):
+        try:
+            error = json.loads(stream).get("error")
+        except (ValueError, AttributeError):
+            continue
+        if isinstance(error, dict) and (error.get("code") or error.get("message")):
+            named = error.get("code") or "unnamed refusal"
+            detail = error.get("message") or "no message"
+            summary = f"{summary}: {named} - {detail}"
+            break
+    return f"{summary}\nargv: {argv!r}\n{stdout}\n{stderr}"
+
+
 def _timed_subprocess(
     argv: tuple[str, ...], *, env: dict[str, str], cwd: Path, timeout_s: float
 ) -> tuple[float, float, str]:
@@ -158,7 +189,7 @@ def _timed_subprocess(
     timing = timed_subprocess(argv, env=env, cwd=cwd, timeout_s=timeout_s)
     if timing.returncode != 0:
         raise ServingPathBenchmarkError(
-            f"subprocess call failed ({timing.returncode}): {argv!r}\n{timing.stdout}\n{timing.stderr}",
+            subprocess_failure_message(timing.returncode, argv, timing.stdout, timing.stderr),
         )
     return timing.wall_seconds, timing.cpu_seconds, timing.stdout
 

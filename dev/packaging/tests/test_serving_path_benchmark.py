@@ -30,6 +30,8 @@ serial`` selector, and the serial passes that WOULD collect it carry
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from ..serving_path_benchmark import (
@@ -37,6 +39,7 @@ from ..serving_path_benchmark import (
     ServingPathEvidence,
     assert_acceptance,
     run_serving_path_benchmark,
+    subprocess_failure_message,
 )
 
 pytestmark = [pytest.mark.perf, pytest.mark.integration, pytest.mark.serial, pytest.mark.hex_entrypoint]
@@ -130,3 +133,85 @@ def test_subprocess_first_touch_cliff_is_gone(evidence: ServingPathEvidence) -> 
     )
     assert first_touch.gated and first_touch.within_threshold, first_touch
     assert first_touch.cpu_seconds is not None and first_touch.cpu_seconds <= 35.0, first_touch
+
+
+_ARGV = ("aeat.exe", "--format", "json", "config", "profile", "create")
+_REFUSAL = json.dumps(
+    {
+        "command": "config.profile.create",
+        "error": {
+            "category": "REFUSED",
+            "code": "REFUSED_CLI_BOUNDARY",
+            "message": "No passphrase channel is available. Run this verb at a terminal.",
+        },
+        "status": "error",
+    },
+)
+
+
+@pytest.mark.parametrize("stream", ["stderr", "stdout"])
+def test_a_typed_refusal_is_named_ahead_of_the_raw_child_detail(stream: str) -> None:
+    """The cause, not the symptom, is the first thing a reader sees.
+
+    Every measured call runs under this module's module-scoped fixture, so one
+    refusing child errors every test here at setup with identical text. A bare
+    return code followed by a full argv dump names nothing, and the reader has
+    to reconstruct the boundary refusal the product already reported.
+
+    Parametrised over both streams because the product writes a refusal to
+    STDERR and leaves stdout empty -- measured against the live CLI. A summary
+    that read stdout alone would name nothing on precisely the failures this
+    exists to explain, and would look correct in a test that fed it stdout.
+    """
+    stdout, stderr = (_REFUSAL, "") if stream == "stdout" else ("", _REFUSAL)
+
+    message = subprocess_failure_message(2, _ARGV, stdout, stderr)
+
+    summary = message.splitlines()[0]
+    assert "REFUSED_CLI_BOUNDARY" in summary, message
+    assert "No passphrase channel is available" in summary, message
+    assert "argv" not in summary, f"the argv dump displaced the named cause: {message}"
+
+
+def test_the_named_summary_never_replaces_the_raw_child_detail() -> None:
+    """Naming the refusal must add to the report, not censor it.
+
+    A summary that swallowed stdout would trade one unreadable failure for a
+    lossy one, and the raw envelope is what a reader needs once the name is not
+    enough.
+    """
+    message = subprocess_failure_message(2, _ARGV, _REFUSAL, "stderr detail")
+
+    assert _REFUSAL in message
+    assert "stderr detail" in message
+    assert repr(_ARGV) in message
+
+
+def test_a_child_that_returns_no_envelope_still_reports_everything_it_had() -> None:
+    """Not every failing child speaks the envelope; that one must not be degraded.
+
+    A crash writes a traceback to stderr and nothing parseable to stdout. The
+    summary falls back to the return code and carries the raw streams intact,
+    rather than raising while trying to explain a failure.
+    """
+    message = subprocess_failure_message(9, _ARGV, "not json at all", "Traceback (most recent call last)")
+
+    assert "subprocess call failed (9)" in message.splitlines()[0]
+    assert "not json at all" in message
+    assert "Traceback (most recent call last)" in message
+
+
+@pytest.mark.parametrize(
+    "stdout",
+    ["[]", '{"error": null}', '{"error": {}}', '{"error": "opaque"}', ""],
+)
+def test_a_payload_carrying_no_named_refusal_is_reported_plainly(stdout: str) -> None:
+    """Shapes that carry no name must not be dressed up as one.
+
+    A JSON list, a null or empty error, a non-mapping error, and an empty
+    stdout each reach this differently; none of them names a refusal, so the
+    summary must stay the plain return code rather than inventing a cause.
+    """
+    message = subprocess_failure_message(1, _ARGV, stdout, "")
+
+    assert message.splitlines()[0] == "subprocess call failed (1)", message
