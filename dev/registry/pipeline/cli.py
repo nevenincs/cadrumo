@@ -35,6 +35,7 @@ from ._tree_publication import (
 )
 from ._tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
 from .render_check import GeneratedExportBootstrapTransport, RevisionRenderInputs, revision_render_inputs
+from .source_defects import source_defects_for
 
 app = typer.Typer(
     name="pipeline",
@@ -254,6 +255,7 @@ def _render_candidate(prepared: _PreparedInvocation) -> RenderedExportTree:
         transport_profile=prepared.inputs.transport_profile,
         render_profile=prepared.inputs.render_profile,
         render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
+        source_defects=source_defects_for(prepared.invocation.source_ref),
     )
     write_generated_casilla_export_refs(
         candidate_export_root.parent,
@@ -298,6 +300,7 @@ def _check(
         transport_profile=prepared.inputs.transport_profile,
         render_profile=prepared.inputs.render_profile,
         render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
+        source_defects=source_defects_for(prepared.invocation.source_ref),
     )
     return "matched", checked.rendered, target_state
 

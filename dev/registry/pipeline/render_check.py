@@ -69,6 +69,7 @@ from ._render_profile import (
 from ._semantic_map import SemanticMap
 from ._semantic_map_join import JoinedRecordDesign, join_record_design_semantics
 from ._semantic_map_loader import load_semantic_map
+from .source_defects import source_defects_for
 
 __all__ = [
     "GeneratedExportBootstrapTransport",
@@ -390,6 +391,7 @@ def compare_revision_against_committed(
             transport_profile=inputs.transport_profile,
             render_profile=inputs.render_profile,
             render_profile_source_evidence=inputs.render_profile_source_evidence,
+            source_defects=source_defects_for(str(inputs.transport_profile.source_ref)),
         )
         rendered = _tree_bytes(target)
 

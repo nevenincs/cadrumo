@@ -45,6 +45,7 @@ if TYPE_CHECKING:
 __all__ = [
     "SourceDefectDeclaration",
     "adjudicated_literal_for",
+    "source_defects_for",
     "validate_source_defect_declarations",
 ]
 
@@ -70,6 +71,37 @@ class SourceDefectDeclaration(BaseModel):
     """The literal the document's own surviving half supports."""
     evidence: str = Field(min_length=1)
     """How the reading was established, in terms a later reviewer can re-check."""
+
+
+_SOURCE_DEFECTS_BY_REF: dict[str, tuple[SourceDefectDeclaration, ...]] = {
+    "aeat-dr-390-2022": (
+        SourceDefectDeclaration(
+            source_ref="aeat-dr-390-2022",
+            source_sha256="7c6554f3182df51daaec37284dd891eb925e1f92df7e69bc01b8ccfb8e4f26fe",
+            sheet="Pág. 7",
+            source_cell="A53",
+            published_content='Constante "</T3900700>"',
+            adjudicated_literal="</T39007000>",
+            evidence=(
+                "Cell A53 states two facts that cannot both hold: the close constant it prints is eleven "
+                "characters, and the slot the same cell declares for it is twelve bytes. Read straight out "
+                "of xl/sharedStrings.xml, bypassing project code, the workbook carries </T39001000> through "
+                "</T39006000> and </T39008000> at twelve characters each and </T3900700> at eleven, so the "
+                "short form is in the AEAT file and no parser is implicated. Three independent signals "
+                "converge on </T39007000>: the seven sibling pages all follow </T3900N000> for page N, that "
+                "value is the only one filling the twelve-byte slot A53 itself declares, and it is the value "
+                "the reviewed committed layout already carries. The published reading is unusable rather than "
+                "merely disfavoured, since an eleven-byte literal is refused by the slot-width guard that "
+                "follows this substitution regardless of how the byte comparison is settled."
+            ),
+        ),
+    ),
+}
+
+
+def source_defects_for(source_ref: str) -> tuple[SourceDefectDeclaration, ...]:
+    """Return the complete adjudication set declared for one official source."""
+    return _SOURCE_DEFECTS_BY_REF.get(source_ref, ())
 
 
 def validate_source_defect_declarations(

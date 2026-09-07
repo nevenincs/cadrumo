@@ -48,6 +48,16 @@ def test_a_reproducing_revision_is_reported_conclusively(authority: ValidatedReg
     assert comparison.only_committed == () and comparison.only_rendered == ()
 
 
+def test_an_unpublished_revision_uses_its_source_defect_adjudication(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """The read-only comparison reaches M390 output instead of failing on its official typo."""
+    comparison = compare_revision_against_committed(authority, modelo="390", revision="2022")
+
+    assert comparison.only_committed == ()
+    assert comparison.only_rendered
+
+
 def test_a_stale_attestation_is_separated_from_record_drift(authority: ValidatedRegistryAuthority) -> None:
     """A tree differing only in its manifest ships correct records.
 

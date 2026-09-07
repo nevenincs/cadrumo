@@ -21,7 +21,16 @@ from ..pipeline._tree_publication import (
     GeneratedExportTreeTargetStateReceipt,
     _require_expected_target_state,
 )
-from ..pipeline.cli import _bootstrap_target, _check, _Invocation, _PreparedInvocation, _publish, app
+from ..pipeline.cli import (
+    _bootstrap_target,
+    _check,
+    _Invocation,
+    _prepare,
+    _PreparedInvocation,
+    _publish,
+    _render_candidate,
+    app,
+)
 from ..pipeline.render_check import (
     GeneratedExportBootstrapTransport,
     RevisionRenderInputs,
@@ -324,3 +333,21 @@ def test_modelo_200_bootstrap_assembly_reaches_the_real_join_and_renderer(tmp_pa
 
     assert inputs.layout_id == "generated-modelo-200-2025-y-siguientes-fichero"
     assert rendered.output_files
+
+
+def test_modelo_390_cli_assembly_uses_the_pipeline_source_defect_catalogue(tmp_path: Path) -> None:
+    """The operator path renders the adjudicated source typo through its shared catalogue."""
+    prepared = _prepare(
+        _Invocation("390", "2022", "aeat-dr-390-2022", 2022, "0A"),
+        tmp_path,
+    )
+
+    rendered = _render_candidate(prepared)
+    close = next(
+        field
+        for record in rendered.layout.records
+        for field in record.fields
+        if str(field.id) == "modelo-390-page-07-close"
+    )
+
+    assert close.literal == "</T39007000>"

@@ -32,13 +32,13 @@ from ._provenance_manifest import (
 from ._render_profile import RenderProfile, RenderProfileSourceEvidence
 from ._semantic_map import SemanticMap
 from ._semantic_map_join import JoinedRecordDesign
-from ._source_defects import SourceDefectDeclaration
 from ._tree_paths import contains, require_existing_non_link
 from ._tree_validation import (
     GeneratedExportTreeValidationContext,
     ValidatedGeneratedExportTree,
     validate_generated_export_tree,
 )
+from .source_defects import SourceDefectDeclaration
 
 __all__ = [
     "CheckedGeneratedExportTree",

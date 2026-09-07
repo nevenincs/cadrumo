@@ -34,9 +34,10 @@ from ..pipeline._export_tree import ExportTreeTransportProfile, _literal_derivat
 from ..pipeline._record_design_ir import RecordDesignIntermediate, RecordDesignWorkbookFormat
 from ..pipeline._semantic_map import SemanticMapEntry
 from ..pipeline._semantic_map_join import JoinedRecordDesignField
-from ..pipeline._source_defects import (
+from ..pipeline.source_defects import (
     SourceDefectDeclaration,
     adjudicated_literal_for,
+    source_defects_for,
     validate_source_defect_declarations,
 )
 
@@ -56,6 +57,23 @@ _OTHER_SHA: Final = "58f731b0c72eff7fd23484000c74e73e0ac803a5167065176d78cac8712
 _PUBLISHED: Final = 'Constante "</T3900700>"'
 #: The reading the siblings, the tag grammar and the declared width all support.
 _ADJUDICATED: Final = "</T39007000>"
+
+
+def test_pipeline_catalogue_owns_the_hash_pinned_m390_adjudication() -> None:
+    declarations = source_defects_for("aeat-dr-390-2022")
+
+    assert len(declarations) == 1
+    declaration = declarations[0]
+    assert (
+        declaration.source_ref,
+        declaration.source_sha256,
+        declaration.sheet,
+        declaration.source_cell,
+        declaration.published_content,
+        declaration.adjudicated_literal,
+    ) == ("aeat-dr-390-2022", _SHA, "Pág. 7", "A53", _PUBLISHED, _ADJUDICATED)
+    assert declaration.evidence.strip()
+    assert source_defects_for("aeat-dr-390-2023") == ()
 
 
 def _declaration(**overrides: object) -> SourceDefectDeclaration:
