@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:4bf27e556862dbbf8d3eb1104e7403188f83f743eca824f9fae34d91311e6c0b'
+body_hash: 'sha256:81acee95e34cad29eb99c0df545d78bf0cf7a3282f6405755340ec949197b524'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -1397,6 +1397,9 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S1028` - Distinguish an uncaptured session from an idle one in the agent-eval measurement report, so a PASS verdict cannot render on evidence that never arrived; `dev/agent_eval/_report.py`.
 - [x] `W06.P13.S1029` - Pin the reason on the checkout-drift screen's empty-tree refusal, which passed on a git ls-tree plumbing failure and never reached the tracked-file guard it was named for; `dev/audit/tests/test_checkout_drift_screen.py`.
 - [x] `W06.P13.S1030` - Make the unreachable-module ratchet's declared_by check structural, so a module name surviving only in a comment or a docstring can no longer keep a spent disposition alive; `dev/quality/unreachable_module_ratchet.py`.
+- [x] `W06.P13.S1031` - Strip three decayed corpus figures from dev prose, re-derived against each module's own population, removing the precision rather than resetting it; `dev/tests/test_every_source_file_parses.py, dev/audit/write_site_census.py, dev/quality/name_collision_census.py`.
+- [x] `W06.P13.S1032` - Strip four decayed figures from module_test_reach prose, including a headline unreached count that had fallen from forty-two to twelve and a self-contradicting module population quoted as both 352 and 356 in one file; `dev/quality/module_test_reach.py`.
+- [x] `W06.P13.S1033` - Remove the duplicated stale corpus pair from the write-site census test, closing the second home of a figure already proven decayed at its first; `dev/tests/test_write_site_census.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

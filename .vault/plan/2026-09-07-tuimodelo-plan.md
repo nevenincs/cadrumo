@@ -15,7 +15,7 @@ related:
   - '[[2026-09-07-tuimodelo-adapter-migration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:fa701aa5ae0070b428d73de3d85aa4b35c6b710a37778a2e3d494f2835a44cee'
+body_hash: 'sha256:2b7c467d1c4e24d3913683c0576c38091131a284a23a931bf45411b414298a97'
 ---
 
 # `tuimodelo` plan
@@ -101,7 +101,7 @@ Make both adapters pure consumers OF THE MODELO LANE. This wave does not make th
 
 Share the capability declaration both adapters need. The frontend already authorizes a session and admits per surface without any verb path, so authorization is not the blocker; the capability posture is, because it is declared inside the command-line package and the frontend is forbidden by import contract from reaching it.
 
-- [ ] `W02.P04.S15` - Prove the per-surface admission path refuses and admits correctly for a modelo destination, since session authorization already works without a verb path and needs no change; `src/cadrumo/entrypoints/tui/launcher.py`.
+- [x] `W02.P04.S15` - Prove the per-surface admission path refuses and admits correctly for a modelo destination, since session authorization already works without a verb path and needs no change; `src/cadrumo/entrypoints/tui/launcher.py`.
 
 ### Phase `W02.P05` - relocate blocking read policy
 
