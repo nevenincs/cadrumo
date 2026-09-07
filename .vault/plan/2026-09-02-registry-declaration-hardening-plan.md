@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:b6b7778d29c25e5ec3eb5aee432147fd9d1ee236647e7cddf4b6dea06bf8e0c6'
+body_hash: 'sha256:c1c95a6678299f82397fdb580da03ae031f154364a3ff87d6e88fa3f3280f6be'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -1287,6 +1287,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S918` - Correct the homebrew smoke driver's false claim that the formula installs a single executable: the packaging declaration lists both console scripts under one distribution and the install block links every script it lands, so both reach the user, and a sibling module in the same directory already stated that correctly; the two false statements and the install-path conclusion they carried are replaced with the declared fact; `dev/packaging/smoke_homebrew.py`.
 - [x] `W06.P13.S919` - Narrow the scratch-reclaim module's claim that every test it carries is a paired sweep, which held for seven of twenty-seven functions measured per function: the single-sided name-classification, mint-identity and discovery gates are now named rather than folded into a quantifier that excluded them; `dev/packaging/tests/test_build_scratch_reclaim.py`.
 - [x] `W06.P13.S920` - Narrow the twice-stated claim that every gate in the evidence release transport module walks the workflow directory, when the directory walk feeds two of five gates and the other three parametrise over a hardcoded workflow tuple read by name; `dev/packaging/tests/test_evidence_release_transport.py`.
+- [x] `W06.P13.S921` - Assert that a review fixture identity is injective over the concrete TUI census, closing a gate whose sensitivity had no lower bound at all: the existing checks proved each identity was present and slug-shaped without ever reading its value, and the surrounding counts and set equalities range over interfaces rather than identities, so rewriting every fixtureless identity to one shared literal left the module fully green; reuse stays sanctioned for the host-and-screen pair as a rule about the pair rather than a list of the live ones, under a vacuity floor on the concrete census; `dev/tui/tests/test_tui_visual_inventory.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 
