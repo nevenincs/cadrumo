@@ -74,7 +74,6 @@ __all__ = [
     "assess_model_load_contention",
     "binding_free_bytes",
     "cadrumo_selected_models",
-    "clear_ollama_vision_probe_cache",
     "probe_hardware_profile",
     "probe_local_inference_hardware",
     "probe_local_model_provisioning",
@@ -194,8 +193,7 @@ def probe_ollama_vision(settings: Settings | None = None) -> DependencyStatus:
     :data:`OLLAMA_PROBE_CACHE_TTL_S`, so a caller that asks once per document
     asks the endpoint once instead. Keying on the endpoint keeps a suite that
     stands up its own reader on an ephemeral port unaffected: a different URL is
-    a different question. Use :func:`clear_ollama_vision_probe_cache` where a
-    test needs the next call to reach the endpoint again.
+    a different question, and an entry ages out after the TTL above.
     """
     resolved = settings if settings is not None else load_settings()
     model = resolved.cadrumo_llm_ollama_vision_model
@@ -213,11 +211,6 @@ def probe_ollama_vision(settings: Settings | None = None) -> DependencyStatus:
 #: reading time. Monotonic, not wall clock, so a clock adjustment cannot make an
 #: entry look arbitrarily fresh or stale.
 _OLLAMA_VISION_PROBE_CACHE: dict[tuple[str, str], tuple[float, DependencyStatus]] = {}
-
-
-def clear_ollama_vision_probe_cache() -> None:
-    """Drop every cached probe answer, so the next call reaches the endpoint."""
-    _OLLAMA_VISION_PROBE_CACHE.clear()
 
 
 def _probe_ollama_vision_uncached(*, url: str, model: str) -> DependencyStatus:

@@ -433,7 +433,12 @@ def test_exonerado_evidence_requires_every_explicit_s56_field(missing_field: str
 def test_every_calculation_revision_constructor_declares_filing_evidence_explicitly() -> None:
     source_root = Path(__file__).parents[4]
     omissions: list[str] = []
-    for path in scan_directory(source_root, pattern="*.py", recursive=True):
+    swept = scan_directory(source_root, pattern="*.py", recursive=True, require_root=True)
+    assert swept, (
+        f"the sweep of {source_root} matched no module; a walk that reads nothing reports no "
+        "constructor omitting its filing evidence because it reports no constructor at all"
+    )
+    for path in swept:
         if path.relative_to(source_root).as_posix() == "cadrumo/core/tests/test_period.py":
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
@@ -458,7 +463,12 @@ def test_production_revision_id_derivations_name_the_single_annual_summary_input
     """
     source_root = Path(__file__).parents[4]
     direct_derivations: dict[str, list[ast.Call]] = {}
-    for path in scan_directory(source_root, pattern="*.py", recursive=True):
+    swept = scan_directory(source_root, pattern="*.py", recursive=True, require_root=True)
+    assert swept, (
+        f"the sweep of {source_root} matched no module; a walk that reads nothing reports no "
+        "constructor omitting its filing evidence because it reports no constructor at all"
+    )
+    for path in swept:
         relative = path.relative_to(source_root).as_posix()
         if "/tests/" in relative:
             continue

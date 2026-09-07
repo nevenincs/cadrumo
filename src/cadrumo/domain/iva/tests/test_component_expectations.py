@@ -88,7 +88,12 @@ def _bundled_legal_ref_ids() -> frozenset[str]:
     """
     legal_root = bundled_path("registry", "aeat", "legal")
     ids: set[str] = set()
-    for path in scan_directory(legal_root, pattern="*.toml"):
+    swept = scan_directory(legal_root, pattern="*.toml", require_root=True)
+    assert swept, (
+        f"the sweep of {legal_root} matched no catalogue; a walk that reads nothing resolves "
+        "no legal_ref, which is indistinguishable from every legal_ref resolving"
+    )
+    for path in swept:
         with path.open("rb") as handle:
             payload = tomllib.load(handle)
         legal_table = payload.get("legal")
