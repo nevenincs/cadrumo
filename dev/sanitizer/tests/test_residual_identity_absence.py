@@ -87,7 +87,12 @@ from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
 from .._pipeline import sanitize_pdf
 from .._records import IbanReplacement, NameReplacement, NifReplacement, TokenMap
-from ..residual_identity import CHECKSUM_VERIFIED_KINDS, ResidualKind, scan_for_residual_identities
+from ..residual_identity import (
+    CHECKSUM_VERIFIED_KINDS,
+    ResidualKind,
+    accounted_for_values,
+    scan_for_residual_identities,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -535,6 +540,81 @@ def test_the_end_to_end_control_depends_on_a_complete_manifest() -> None:
         "dropping the NIF row from the manifest left the scan clean, so the end-to-end control "
         "above is not actually checking the output against the manifest"
     )
+
+
+def test_a_no_op_rewrite_cannot_account_for_the_value_it_left_standing() -> None:
+    """The manifest is the scan's suppression set, and it is self-asserted.
+
+    Every other proof here varies what the manifest OMITS. This one varies what
+    it CLAIMS, which is the direction that inflates the clean set: a rewrite
+    whose ``real`` equals its ``synthetic`` changes nothing in the document, yet
+    lands a ``replacements_applied`` row naming the surviving cleartext. The
+    real value is then both present in the output and declared accounted for,
+    and the specimen scans clean against its own sidecar while scanning dirty
+    against an empty one -- a residual talked out of existence by the artefact
+    under verification.
+
+    Nothing refuses the no-op at its source: the replacement records validate
+    the synthetic's SHAPE, never that it differs from the cleartext, so the
+    construction below is one production accepts today. The row does contradict
+    itself, though -- ``real_sha256`` is the digest of the cleartext, and here it
+    is also the digest of the synthetic -- and that is the join the scan now
+    makes before admitting a value into the accounted set.
+    """
+    identity_rewrite = NifReplacement(
+        real=SecretStr(_PLANTED_NIF),
+        synthetic=_PLANTED_NIF,
+        surface_label="taxpayer NIF",
+    )
+    assert identity_rewrite.synthetic == _PLANTED_NIF, (
+        "production must still accept a real==synthetic replacement for this gate to be "
+        "about a reachable state; if it now refuses one, the refusal belongs in the "
+        "replacement records and this gate should assert that instead"
+    )
+    token_map = TokenMap(
+        nif=(identity_rewrite,),
+        name=(
+            NameReplacement(real=SecretStr(_PLANTED_NAME), synthetic=_SYNTHETIC_NAME, surface_label="taxpayer name"),
+        ),
+        iban=(
+            IbanReplacement(
+                real=SecretStr(_PLANTED_IBAN), synthetic=_SYNTHETIC_IBAN, surface_label="domiciliacion IBAN"
+            ),
+        ),
+    )
+
+    result = sanitize_pdf(_pre_sanitisation_specimen(), token_map)
+    rows = [row.model_dump() for row in result.replacements_applied]
+    self_rows = [row for row in rows if row["synthetic"] == _PLANTED_NIF]
+    assert self_rows, (
+        "the sanitiser recorded no row for the no-op rewrite, so this gate is not "
+        "exercising the self-accounting path it claims to"
+    )
+
+    unaccounted = scan_for_residual_identities(result.output_bytes, {"replacements_applied": []})
+    assert ResidualKind.NIF_NIE in {finding.kind for finding in unaccounted}, (
+        "the cleartext NIF did not survive the no-op rewrite, so the clean-vs-dirty contrast below would prove nothing"
+    )
+
+    findings = scan_for_residual_identities(result.output_bytes, {"replacements_applied": rows})
+
+    assert ResidualKind.NIF_NIE in {finding.kind for finding in findings}, (
+        "a row claiming a value was replaced by itself was admitted into the accounted "
+        "set, so it suppressed the very cleartext it left standing. Values are "
+        "deliberately not shown; see the surviving finding classes: "
+        + ", ".join(sorted({finding.kind.value for finding in findings}))
+    )
+    assert _CANONICAL_PLANTED_NIF not in accounted_for_values({"replacements_applied": rows})
+    assert _CANONICAL_SYNTHETIC_IBAN in accounted_for_values({"replacements_applied": rows}), (
+        "the join must cut only the self-contradicting row: a genuine replacement's "
+        "synthetic still has to be accounted for, or the scan becomes a noise generator"
+    )
+
+
+#: Canonicalised forms the accounted-set assertions above compare against,
+#: matching :func:`dev.sanitizer.residual_identity.accounted_for_values`.
+_CANONICAL_PLANTED_NIF = _PLANTED_NIF.replace(" ", "").upper()
+_CANONICAL_SYNTHETIC_IBAN = _SYNTHETIC_IBAN.replace(" ", "").upper()
 
 
 def _pre_sanitisation_specimen() -> bytes:

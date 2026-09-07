@@ -29,6 +29,7 @@ from __future__ import annotations
 import json
 import re
 import subprocess
+from collections.abc import Iterable
 from pathlib import Path
 
 import pytest
@@ -106,6 +107,30 @@ _DEPLOY_IN_WORKFLOW = (
     re.compile(r"dev\.deploy\.docs_static_site"),
     re.compile(r"--confirm\s+(?:publish|provision)-cadrumo-\w+"),
 )
+
+#: The site publishers this repository may name. Membership is read rather
+#: than trusted, so a second publisher cannot arrive unobserved.
+_PUBLISHER_MODULES = ("docs_static_site", "frontend_static_site")
+
+
+def _publisher_modules_invoked(documents: Iterable[str]) -> set[str]:
+    """Return the publisher modules an EXECUTED workflow line names.
+
+    Executed, because a workflow document is YAML with comments in it and a
+    ``run:`` block is a script with comments in it -- and both spell a comment
+    the same way, so one rule reads both.
+
+    The rule this replaces was spelled ``^\\s*(?!#).*`` and did not implement
+    that rule at all. ``\\s*`` is greedy and backtracks: offered an indented
+    comment it gives back one space, the lookahead then reads that space
+    instead of the ``#``, and the line matches. Every comment in a workflow is
+    indented, so the guard was inert across the whole corpus -- measured, not
+    supposed. What that costs is the membership half of the claim below:
+    comment out this repository's single live publisher invocation and the
+    assertion stays green while nothing publishes at all.
+    """
+    executed = executed_text(documents)
+    return {module for module in _PUBLISHER_MODULES if f"dev.deploy.{module}" in executed}
 
 
 def _recipes_invoked_in(text: str, names: frozenset[str] | set[str]) -> set[str]:
@@ -353,9 +378,9 @@ def test_only_the_delivery_workflow_runs_a_publisher() -> None:
         document = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
         for job_name, job in (document.get("jobs") or {}).items():
             for step in job.get("steps") or []:
-                command = str(step.get("run", "") or "")
-                if _recipes_invoked_in(executed_text(command), _DEPLOY_RECIPES) or any(
-                    pattern.search(command) for pattern in _DEPLOY_IN_WORKFLOW
+                executed = executed_text(step.get("run"))
+                if _recipes_invoked_in(executed, _DEPLOY_RECIPES) or any(
+                    pattern.search(executed) for pattern in _DEPLOY_IN_WORKFLOW
                 ):
                     publishing.setdefault(path.name, []).append(job_name)
 
@@ -373,15 +398,28 @@ def test_only_the_delivery_workflow_runs_a_publisher() -> None:
 
 def test_no_publisher_here_reaches_the_site_root() -> None:
     """Only the documentation publisher may be reachable from this repository."""
-    text = "\n".join(path.read_text(encoding="utf-8") for path in _workflow_documents())
-    invoked = {
-        module
-        for module in ("docs_static_site", "frontend_static_site")
-        if re.search(rf"^\s*(?!#).*dev\.deploy\.{module}", text, re.MULTILINE)
-    }
+    invoked = _publisher_modules_invoked(path.read_text(encoding="utf-8") for path in _workflow_documents())
     assert invoked == {"docs_static_site"}, (
         f"workflow-invoked publishers: {sorted(invoked)}; only the documentation publisher lives here"
     )
     assert not (_REPO_ROOT / "dev" / "deploy" / "frontend_static_site.py").exists(), (
         "an external-site publisher entered the product repository"
     )
+
+
+def test_the_publisher_reader_does_not_read_a_commented_invocation() -> None:
+    """Teeth for the rule the assertion above depends on.
+
+    The retired spelling is exercised here rather than described, because the
+    whole finding is that it refused nothing: it must be seen matching the
+    commented line before the replacement's refusal means anything.
+    """
+    live = "      - run: uv run --no-sync python -m dev.deploy.docs_static_site\n"
+    commented = "      # - run: uv run --no-sync python -m dev.deploy.docs_static_site\n"
+    retired = re.compile(r"^\s*(?!#).*dev\.deploy\.docs_static_site", re.MULTILINE)
+
+    assert retired.search(commented) is not None, (
+        "the retired rule is being credited with a refusal it never made; this teeth test proves nothing"
+    )
+    assert _publisher_modules_invoked([commented]) == set(), "a commented publisher was read as an invocation"
+    assert _publisher_modules_invoked([live]) == {"docs_static_site"}, "the real invocation stopped being seen"

@@ -466,12 +466,6 @@ anchor = "cadrumo.domain.contribuyente.constants"
 subjects = 1
 
 [[test_module]]
-name = "cadrumo.entrypoints.cli.tests.test_cli_resolution_cost_budget"
-follows = "symbol"
-anchor = "cadrumo.entrypoints.cli"
-subjects = 1
-
-[[test_module]]
 name = "cadrumo.entrypoints.cli.tests.test_machine_secret_channels_subprocess"
 follows = "symbol"
 anchor = "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap"
@@ -481,18 +475,6 @@ subjects = 1
 name = "cadrumo.entrypoints.cli.tests.test_overview_explain_verb"
 follows = "symbol"
 anchor = "cadrumo.entrypoints.cli.command_api"
-subjects = 1
-
-[[test_module]]
-name = "cadrumo.entrypoints.cli.tests.test_resolution_defers_capabilities"
-follows = "symbol"
-anchor = "cadrumo.entrypoints.cli"
-subjects = 1
-
-[[test_module]]
-name = "cadrumo.entrypoints.cli.tests.test_state_free_capability_isolation"
-follows = "symbol"
-anchor = "cadrumo.entrypoints.cli"
 subjects = 1
 
 [[test_module]]
@@ -1610,3 +1592,61 @@ class = "superseded"
 area = "application/modelo"
 symbols = ["ModeloWorkspaceVersionHeader", "ModeloDraftBuilderAdapter"]
 evidence = "Two types re-tested against the live design and reversed. The version header is a minimal pre-dispatch shape carrying contract_version bounded only at one or more; the concrete workspace models each pin their own contract_version as a single-value Literal and one cross-checks a baseline against itself, which is a stronger guarantee than the shared header offers, so the pre-dispatch sniff is superseded by per-model pinning. The draft adapter is one implementer of the modelo draft-builder Protocol and a different one is live: the workflow gate constructs _RevisionDraftBuilder, documented as building and locally approving the draft backed by the target work unit, and passes it as the filing_draft_builder the adapter factory requires. A Protocol with a live implementer under another name is supersession, not an unwired capability."
+
+[[module]]
+name = "cadrumo.entrypoints.tui.devtools.modelo_fixtures"
+class = "design-time-authority"
+evidence = "Deterministic, storage-free visual fixtures for the production Modelo screens, so a developer can render them without a configured profile or an encrypted store. The devtools package is read at design time by dev/tui/_coverage.py, which enumerates its screens, and dev/tui/_harness.py, which states that the package owns surface construction. No runtime entrypoint reaches it, which is the intent: a fixture module wired into the shipped TUI would put synthetic taxpayer data one keystroke from an operator."
+
+[[module]]
+name = "cadrumo.entrypoints.tui.modelo.actions"
+class = "deferred-by-ownership"
+evidence = "The modelo action dispatch table, being migrated into the sibling `action/` package under a concurrent L3 plan; src/cadrumo/entrypoints/tui/modelo/action/rename.py already names this module as the surface it is moving from. Its MODELO_ACTION_DISPATCH is read at design time by dev/quality/modelo_workspace_action_denominator.py, which uses it as the denominator for action classification coverage. Not classified further while another contributor owns the migration: the reachability answer changes when they finish, and a classification written now would describe a shape that is mid-move."
+
+[[test_module]]
+name = "cadrumo.domain.contabilidad.tests.test_ajuste"
+follows = "module"
+anchor = "cadrumo.domain.contabilidad"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.domain.contabilidad.tests.test_saldo"
+follows = "module"
+anchor = "cadrumo.domain.contabilidad"
+subjects = 3
+
+[[test_module]]
+name = "cadrumo.domain.fincas.tests.test_amortization_ledger"
+follows = "module"
+anchor = "cadrumo.domain.fincas"
+subjects = 5
+
+[[test_module]]
+name = "cadrumo.domain.fincas.tests.test_expense_rollup"
+follows = "module"
+anchor = "cadrumo.domain.fincas"
+subjects = 3
+
+[[test_module]]
+name = "cadrumo.domain.fincas.tests.test_imputacion_regime"
+follows = "module"
+anchor = "cadrumo.domain.fincas"
+subjects = 3
+
+[[test_module]]
+name = "cadrumo.domain.fincas.tests.test_tier_resolver"
+follows = "module"
+anchor = "cadrumo.domain.fincas"
+subjects = 5
+
+[[test_module]]
+name = "cadrumo.entrypoints.tui.devtools.tests.test_modelo_fixtures"
+follows = "module"
+anchor = "cadrumo.entrypoints.tui.devtools.modelo_fixtures"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.entrypoints.tui.modelo.tests.test_create_deferred"
+follows = "module"
+anchor = "cadrumo.entrypoints.tui.modelo.actions"
+subjects = 1

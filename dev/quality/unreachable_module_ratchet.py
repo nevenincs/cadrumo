@@ -77,6 +77,7 @@ nothing from the test tree says nothing about whether anything can reach it.
 
 from __future__ import annotations
 
+import ast
 import sys
 import tomllib
 from dataclasses import dataclass
@@ -236,8 +237,47 @@ def _require_declaration(*, module: str, declared_by: str, root: Path) -> None:
     source = root / declared_by
     if not source.is_file():
         raise ValueError(f"{module}: declared_by names no file: {declared_by}")
-    if module not in source.read_text(encoding=UTF_8, errors="ignore"):
+    if not _declares_in_code(source.read_text(encoding=UTF_8, errors="ignore"), module):
         raise ValueError(f"{module}: {declared_by} no longer declares it; the disposition is spent")
+
+
+def _declares_in_code(source: str, module: str) -> bool:
+    """Whether the declaration NAMES the module in code rather than only in prose.
+
+    A raw substring search over the file cannot tell a live declaration from
+    the comment left behind when one was removed. Both readings were measured
+    against this check: a file naming the module only in a trailing comment,
+    and one whose docstring says it "was required", each satisfied the old
+    containment test and kept the disposition alive -- the precise state
+    ``_require_declaration`` says is spent. Only total absence refused.
+
+    Imports and string constants count because that is how a contract names a
+    module. Docstrings do not, because prose about a module is what survives
+    its removal.
+    """
+    tree = ast.parse(source)
+    prose = {
+        docstring
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Module | ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef)
+        for docstring in (ast.get_docstring(node),)
+        if docstring is not None
+    }
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            if any(module in alias.name for alias in node.names):
+                return True
+        elif isinstance(node, ast.ImportFrom):
+            if node.module is not None and module in node.module:
+                return True
+        elif (
+            isinstance(node, ast.Constant)
+            and isinstance(node.value, str)
+            and node.value not in prose
+            and module in node.value
+        ):
+            return True
+    return False
 
 
 @dataclass(frozen=True, slots=True)

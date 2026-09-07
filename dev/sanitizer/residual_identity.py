@@ -51,6 +51,7 @@ from typing import Any
 
 import pikepdf
 
+from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.iban import IBAN_SHAPE_RE, iban_mod_97
 from cadrumo.core.identity import IdentityDocument, IdentityError, validate_identity
 
@@ -270,9 +271,41 @@ def accounted_for_values(sidecar: dict[str, Any]) -> frozenset[str]:
     values: set[str] = set()
     for replacement in sidecar.get("replacements_applied", ()) or ():
         synthetic = replacement.get("synthetic")
-        if isinstance(synthetic, str) and synthetic:
-            values.add(_canonical(synthetic))
+        if not isinstance(synthetic, str) or not synthetic:
+            continue
+        if _is_self_replacement(replacement, synthetic):
+            continue
+        values.add(_canonical(synthetic))
     return frozenset(values)
+
+
+def _is_self_replacement(replacement: dict[str, Any], synthetic: str) -> bool:
+    """Whether the entry claims a value was replaced by itself.
+
+    The row carries both halves of its own claim: ``synthetic`` is the text
+    the sanitiser says it wrote, and ``real_sha256`` is the digest of the
+    cleartext it says it wrote over -- ``sha256_hex(real.encode("utf-8"))``,
+    the same derivation :mod:`dev.sanitizer._streams` uses when it builds the
+    row. When the two agree, the entry is asserting that the cleartext and
+    the replacement are the SAME string, which is not a replacement at all.
+
+    Admitting such a row is the one way this scan can be talked out of a
+    genuine finding. The suppression set is read from the artefact under
+    verification, so a no-op rewrite -- a ``TokenMap`` entry whose ``real``
+    equals its ``synthetic``, which the replacement records accept today --
+    leaves the real identity standing in the output AND lands a row that
+    accounts for it. The document then scans clean against its own sidecar
+    while scanning dirty against an empty one. Refusing the row here is the
+    only join available without the cleartext, and it is exactly the join
+    that case needs.
+
+    A row carrying no ``real_sha256`` makes no such claim and is admitted
+    unchanged; only a row whose own two fields contradict each other is cut.
+    """
+    real_sha256 = replacement.get("real_sha256")
+    if not isinstance(real_sha256, str):
+        return False
+    return sha256_hex(synthetic.encode("utf-8")) == real_sha256
 
 
 def _canonical(value: str) -> str:
