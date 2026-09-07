@@ -27,8 +27,18 @@ def _modelo_registry_test_ids() -> set[str]:
     batch2_registry.py``) contributes no id token and is harmless to
     include here since no real modelo id ever collides with one.
     """
+    scanned = scan_directory(_TEST_ROOT, pattern="test_modelo_*_registry.py", require_root=True)
+    # Measured: with `_TEST_ROOT` pointed at a directory that does not exist this
+    # returned 0 ids silently, against 51 healthy, so the parity comparison held
+    # over an empty set -- a modelo with no registry test would look covered.
+    if not scanned:
+        message = (
+            f"the parity census reached no modelo registry test under {_TEST_ROOT}; "
+            "an empty id set makes every modelo look covered"
+        )
+        raise AssertionError(message)
     ids: set[str] = set()
-    for path in scan_directory(_TEST_ROOT, pattern="test_modelo_*_registry.py"):
+    for path in scanned:
         stem = path.stem.removeprefix("test_modelo_").removesuffix("_registry")
         ids.update(stem.split("_"))
     return ids
