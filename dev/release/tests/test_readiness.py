@@ -387,7 +387,7 @@ def _write_probe_gh(bin_dir: Path, *, issues_json: str, exit_code: int = 0) -> P
     bin_dir.mkdir(parents=True, exist_ok=True)
     if sys.platform.startswith("win"):
         script = bin_dir / "gh.bat"
-        script.write_text(f"@echo off\r\necho {issues_json}\r\nexit /b {exit_code}\r\n", encoding="utf-8")
+        script.write_text(f"@echo off\r\necho {issues_json}\r\nexit /b {exit_code}\r\n", encoding="utf-8", newline="")
     else:
         script = bin_dir / "gh"
         script.write_text(f"#!/usr/bin/env bash\necho '{issues_json}'\nexit {exit_code}\n", encoding="utf-8")

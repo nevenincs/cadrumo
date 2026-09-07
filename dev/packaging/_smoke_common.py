@@ -373,10 +373,10 @@ def run_checked_marker(
 
 
 #: SGR colour sequences `uv export` emits when it judges the stream a terminal.
-#: They precede the payload, so a comment line reads as `[32m# ...` and never
+#: They precede the payload, so a comment line reads as `\x1b[32m# ...` and never
 #: matches a bare `#` prefix test. The export parser strips them rather than
 #: depending on the producer's colour decision.
-_ANSI_SGR = re.compile(r"\[[0-9;]*m")
+_ANSI_SGR = re.compile(r"\x1b\[[0-9;]*m")
 
 
 def requirement_name(requirement: str) -> str:

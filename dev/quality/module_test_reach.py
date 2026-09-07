@@ -2,9 +2,10 @@
 
 A module no test imports is not necessarily wrong - a thin CLI wrapper over a
 tested library is fine - but nothing distinguishes that case from a module whose
-behaviour nobody asserts until somebody looks. Forty-two of this tree's 352
-modules are in that position, and the useful question is not the count but which
-of them can do damage.
+behaviour nobody asserts until somebody looks. Some of this tree's modules are
+in that position, and the useful question is not the count but which of them can
+do damage -- which is why no count is quoted here: it moves with every commit,
+and a decayed figure still reads as measured.
 
 So each unreached module is reported with what it can do:
 
@@ -137,8 +138,8 @@ def unreached_modules(root: pathlib.Path = _DEV_ROOT) -> tuple[UnreachedModule, 
     work. A skipped MODULE is dropped from the result entirely, so a genuinely
     unreached module becomes invisible - the finding disappears instead.
 
-    Measured over this tree: 520 test modules and 356 modules, none
-    unparsable. Both skips are announced rather than fatal, because a tree
+    Measured over this tree: every test module and every module walked was
+    parsable. Both skips are announced rather than fatal, because a tree
     edited concurrently can present a half-written file and one bad file must
     not cost the report.
     """

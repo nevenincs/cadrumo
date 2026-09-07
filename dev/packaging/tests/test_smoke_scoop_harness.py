@@ -205,7 +205,7 @@ raise SystemExit(1)
         launcher = scoop_bin_dir / "scoop.cmd"
         launcher.write_text(
             f'@echo off\r\n"{sys.executable}" "{script}" %*\r\nexit /b %errorlevel%\r\n',
-            encoding="utf-8",
+            encoding="utf-8", newline="",
         )
     else:
         launcher = scoop_bin_dir / "scoop"

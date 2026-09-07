@@ -102,8 +102,10 @@ def collect_public_definitions(root: Path) -> tuple[PublicDefinition, ...]:
     collide with anything, and the census reports fewer collisions than exist.
 
     Not fatal, because the tree is edited while this runs and one half-written
-    file must not cost the whole census. Measured over the shipped tree: 2118
-    modules walked, none unparsable, 4534 public definitions collected.
+    file must not cost the whole census. Measured over the shipped tree: every
+    module walked was parsable, so the corpus is the whole public surface. The
+    counts are not quoted: they move with every commit, and a decayed figure
+    still reads as measured.
     """
     found: list[PublicDefinition] = []
     unread: list[str] = []

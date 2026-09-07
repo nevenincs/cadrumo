@@ -574,6 +574,17 @@ def _validate_records(records: tuple[object, ...]) -> None:
             path=Path("<rendered records>"),
             legal_id=record.legal_id,
         )
+        if (
+            record.effective_from is not None
+            and record.effective_to is not None
+            and record.effective_to < record.effective_from
+        ):
+            raise LegalReferenceError(
+                f"legal entry {record.legal_id!r} declares an effectivity window that closes before "
+                f"it opens: effective_from {record.effective_from.isoformat()} is later than "
+                f"effective_to {record.effective_to.isoformat()}; the rendered in-force sentence "
+                "would assert a span no reader can act on",
+            )
         if record.legal_id in seen_ids:
             raise LegalReferenceError(f"duplicate legal provision id {record.legal_id!r}; refusing to merge rows")
         seen_ids.add(record.legal_id)

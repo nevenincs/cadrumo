@@ -285,12 +285,20 @@ jobs:
         # is collapsed, the unused-symbol ratchet when its stale entries are
         # removed.
         #
+        # The unconsumed-export ratchet was wired here and then withdrawn
+        # within the hour, which is the most useful thing this step learned.
+        # It was green when measured and red when re-measured, because a
+        # concurrent lane published two names nothing imports in between. A
+        # gate is only wirable if it is STABLY green, not green at one instant:
+        # seven worktrees are live against this repository, so a point-in-time
+        # reading says nothing about the next push. It becomes wirable when the
+        # full-screen lane stops carrying unconsumed exports.
+        #
         # The import architecture check is already wired above and is not
         # repeated here.
         run: |
           just check-modelo-action-denominator
           just check-unreachable-ratchet
-          just check-unconsumed-export-ratchet
           just check-docstring-reference-ratchet
 
       - name: Tooling and workflow conformance gates

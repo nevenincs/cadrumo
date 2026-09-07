@@ -632,8 +632,7 @@ def test_an_unparsable_module_refuses_rather_than_shrinking_the_census() -> None
     writing to the tree, where a missing module is a missing writer.
 
     Driven through the real git read against a tracked file that is not Python,
-    because every tracked module DOES parse at HEAD (2117 production, 3722
-    test, none unparsable) - so a constructed defect is the only way to reach
+    because every tracked module DOES parse at HEAD - so a constructed defect is the only way to reach
     the branch.
     """
     from ..audit.write_site_census import _parse_module

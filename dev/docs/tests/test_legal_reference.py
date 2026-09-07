@@ -16,7 +16,13 @@ from docutils.core import publish_doctree
 from cadrumo.core.directory_scan import iter_directory, scan_directory
 
 from ..._paths import REPO_ROOT
-from ..legal_reference import LegalProvisionRecord, generate_legal_reference, render_legal_reference
+from ..legal_reference import (
+    LegalProvisionRecord,
+    LegalReferenceError,
+    generate_legal_reference,
+    load_legal_provisions,
+    render_legal_reference,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -295,3 +301,80 @@ def test_a_page_the_catalogue_no_longer_produces_is_still_pruned(tmp_path: Path)
         f"the prune left only {len(survivors)} page(s); it was meant to keep the whole "
         "rendered catalogue and remove just the unowned page"
     )
+
+
+def _windowed_record(*, effective_from: date | None, effective_to: date | None) -> LegalProvisionRecord:
+    """One catalogue row carrying only the declared effectivity window."""
+    return LegalProvisionRecord(
+        legal_id="ley-37-1992:art-96",
+        kind="ley",
+        document_id="BOE-A-1992-28740",
+        corpus_ref="corpus/normatives/html/ley-37-1992.html#a96",
+        permalink="https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a96",
+        article="96",
+        effective_from=effective_from,
+        effective_to=effective_to,
+    )
+
+
+def test_an_effectivity_window_that_closes_before_it_opens_is_refused() -> None:
+    """The rendered in-force sentence must not assert a span that runs backwards.
+
+    Both endpoints are authored catalogue data, so each corroborates the
+    other: a closing date earlier than the opening one is self-refuting on
+    the record's own evidence, and the page would otherwise publish it as a
+    legal-force claim about BOE authority.
+    """
+    record = _windowed_record(effective_from=date(2020, 1, 1), effective_to=date(2018, 1, 1))
+
+    with pytest.raises(LegalReferenceError, match="closes before it opens"):
+        render_legal_reference(_REPO_ROOT, records=(record,))
+
+
+def test_a_well_ordered_effectivity_window_still_renders_its_span() -> None:
+    """The refusal must not cost the surface a legitimately bounded provision."""
+    record = _windowed_record(effective_from=date(2018, 1, 1), effective_to=date(2020, 1, 1))
+
+    page = render_legal_reference(_REPO_ROOT, records=(record,)).pages[0]
+
+    assert "2018-01-01" in page.rst
+    assert "2020-01-01" in page.rst
+
+
+def test_a_window_closing_on_the_day_it_opens_is_admitted() -> None:
+    """A provision in force for a single day is bounded, not contradictory."""
+    record = _windowed_record(effective_from=date(2019, 6, 1), effective_to=date(2019, 6, 1))
+
+    assert render_legal_reference(_REPO_ROOT, records=(record,)).pages
+
+
+def test_a_record_declaring_no_closing_date_is_admitted_unchanged() -> None:
+    """Records the check cannot speak to keep their existing behaviour.
+
+    Most of the live catalogue declares an opening date and no closing one;
+    an open-ended provision carries no second endpoint to contradict the
+    first, so the window check must stay silent rather than invent one.
+    """
+    assert render_legal_reference(
+        _REPO_ROOT, records=(_windowed_record(effective_from=date(2020, 1, 1), effective_to=None),)
+    ).pages
+    assert render_legal_reference(_REPO_ROOT, records=(_windowed_record(effective_from=None, effective_to=None),)).pages
+
+
+def test_the_live_catalogue_declares_no_inverted_effectivity_window() -> None:
+    """The live corpus passes the check, over a population that makes it mean something."""
+    records = load_legal_provisions(_REPO_ROOT)
+    bounded = [
+        (record.legal_id, record.effective_from, record.effective_to)
+        for record in records
+        if record.effective_from is not None and record.effective_to is not None
+    ]
+
+    # Without a floor this passes vacuously on a catalogue that declares no
+    # closing dates at all; the check only speaks to two-endpoint records.
+    assert len(bounded) >= 20, (
+        f"only {len(bounded)} of {len(records)} provisions declare both endpoints, so the "
+        "assertion below would prove almost nothing about the live catalogue"
+    )
+    inverted = [legal_id for legal_id, opens, closes in bounded if closes < opens]
+    assert inverted == []

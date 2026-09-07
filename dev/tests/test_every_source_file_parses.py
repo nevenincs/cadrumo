@@ -141,8 +141,8 @@ def test_every_source_file_parses() -> None:
     # longer reaches. That exact loss is on record in this repository -- a
     # census whose roster was filtered the same way silently became one root
     # when the top-level tests tree moved under src. An aggregate guard cannot
-    # catch it either: measured here the roots hold 5928, 1015 and 6 modules,
-    # so the largest alone keeps any total-based check satisfied.
+    # catch it either: the roots differ by orders of magnitude, so the largest
+    # alone keeps any total-based check satisfied however far the others fall.
     missing = tuple(str(root) for root in _PARSED_ROOTS if not root.is_dir())
     assert not missing, (
         "declared parse root(s) no longer exist, so this gate would report a clean parse "
