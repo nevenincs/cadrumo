@@ -5,11 +5,13 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:89dfff0b75d9a7b57dfbe9b0128920eb60c066732295dd8e529fb0ca4f9715f5'
+body_hash: 'sha256:4676d0a7aa24d6d9561a3d636531f58ecebff5203d85de0783356a7528f0fa9a'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
   - "[[2026-06-05-calendar-filing-semantics-adr]]"
+  - "[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]"
+  - "[[2026-09-04-tui-architecture-authenticated-tui-visibility-adr]]"
 ---
 
 # `tuimodelo` adr: `filing lifecycle, history and status surfacing` | (**status:** `proposed`)
@@ -51,8 +53,11 @@ preconditions.
   taxonomy and filtering policy inside the CLI handler, so no service exists for a second
   surface to call (`2026-09-07-tuimodelo-reference`).
 - A blocker-to-operator-action projection with an import-time totality check already exists
-  and answers "what do I do next" for all 22 cross-period blockers
+  and answers "what do I do next" for all 21 cross-period blockers
   (`2026-09-07-tuimodelo-reference`).
+- The host workspace for filing history is already decided: an accepted decision places history
+  under Declarations, so this record adopts that placement rather than choosing one
+  (`2026-09-02-unreachable-capability-tui-navigation-join-adr`).
 - The action denominator classifies 13 work-family reads and six work-family mutations as
   pending, and reds immediately if a new command appears
   (`2026-09-07-tuimodelo-reference`).
@@ -81,15 +86,20 @@ preconditions.
   handler. This ADR does not authorise a second implementation in the frontend.
 - Depends on the accepted calendar-filing semantics remaining in force; if that decision is
   ever superseded, the two-axis presentation must be revisited with it.
-- Depends on the accepted modelo workspace interface decision for destination admission and
-  on the surviving action denominator as the admission criterion. Both are stable: the
-  denominator is a standing green gate, and the workspace decision is accepted and
-  unamended in the areas this record relies on.
+- Depends on the accepted modelo workspace interface decision for destination admission, which
+  is accepted and unamended in the areas this record relies on.
+- The action denominator enumerates this record's scope but does not yet prove admission: its
+  drift check observes four mechanical signature fields and neither the recorded disposition
+  nor the interface capability is among them. Extending it so that a delivered surface and its
+  classification must agree is a prerequisite of this record, not a property it may assume.
 - The retired exit-receipt family must not be reintroduced as a gating mechanism for these
-  surfaces; the denominator is the only admission gate.
-- Amounts are not currently available on the safe filing projection, and settled results
-  are absent for at least two high-traffic modelos, so a money column cannot be promised in
-  the first delivery.
+  surfaces.
+- A money column is deferred on a data ground only: the filing reference projection carries no
+  monetary field and settled results are absent for at least two high-traffic modelos. It is
+  not deferred on a redaction ground — the accepted authenticated-visibility decision retired
+  that posture and ordered the affected projections re-derived, so an authenticated operator
+  sees their own amounts in full once the projection carries them
+  (`2026-09-04-tui-architecture-authenticated-tui-visibility-adr`).
 - No live-write capability may be added, implied, or labelled by any surface this record
   governs.
 
@@ -168,10 +178,13 @@ geometries, which the acceptance matrix already exercises across three widths. O
 accustomed to a single status word will see two, and the interface must teach that
 distinction through labelling rather than assume it.
 
-A money column is deferred. Because amounts are absent from the safe projection and settled
-results are missing for at least two high-traffic modelos, promising a total in the first
-delivery would either show blanks that read as zero or force a second computation path.
-Both are refused; the column arrives when the projection carries the value.
+A money column is deferred, and the reason matters because the obvious one is wrong. Nothing
+about operator privacy withholds it: the accepted authenticated-visibility posture shows an
+authenticated operator their own data in full. It is deferred because the projection carries no
+monetary field and settled results are missing for at least two high-traffic modelos, so
+promising a total now would either show blanks that read as zero or force a second computation
+path. Both are refused. The column arrives when the projection carries the value, which is a
+scheduled data change rather than a policy question.
 
 Deleting the dead history module removes a trap but touches a module another campaign may
 still reference by name, so the deletion is sequenced with the migration wave rather than

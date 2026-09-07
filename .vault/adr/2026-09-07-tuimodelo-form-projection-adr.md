@@ -5,7 +5,7 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:f12d04a955c990b4eb3c8e4cbd060b5705b0507ac193de7d049c92800a2ec100'
+body_hash: 'sha256:3aabb302bf83a717dbc934a792f52632fd6892430ab4c7d99e8af72570947962'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
   - "[[2026-08-05-arch-remediation-registry-format-casilla-section-order-adr]]"
@@ -44,25 +44,34 @@ coverage are settled.
 
 ## Considerations
 
-- Offset order reproduces the official form where offsets exist. Against the official record
-  design shipped in the corpus, modelo 303 for 2025 scores a perfect rank correlation with
-  zero inversions over 165 casillas, while section-plus-declaration order is
-  indistinguishable from shuffling (`2026-09-07-tuimodelo-reference`).
+- Offset order tracks the official form closely where offsets exist, and section-plus-declaration
+  order does not. A probe against the official record design shipped in the corpus reported a
+  perfect rank correlation for modelo 303 in 2025 against a near-zero one for the alternative.
+  An independent pass could not reproduce the probe's casilla population, so the exact
+  correlation figure is not yet established and this record does not rest on it; re-measuring it
+  is an open item. The qualitative ordering — offsets close, declaration order uncorrelated — is
+  corroborated separately by section contiguity at every modelo measured
+  (`2026-09-07-tuimodelo-reference`).
 - Declaration order is a filename sort. Modelo 390 compiles as 716, 717, 683, 684, 21, 22
   and modelo 303 similarly; it works for two modelos by naming accident
   (`2026-09-07-tuimodelo-reference`).
-- Offsets place 11,250 of 29,678 casillas. Of the 18,428 unplaced, only 97 carry any
+- Offsets place 11,268 of 29,678 casillas. Of the 18,410 unplaced, only 97 carry any
   classification, so 61.8 per cent would vanish with no diagnostic across 101 of 128
   revisions (`2026-09-07-tuimodelo-reference`).
 - Modelo 100 declares an export layout with zero records, zero fields and zero offsets on all
   six revisions, and no casilla carries an export reference. The flagship consumer form gets
   total fallback (`2026-09-07-tuimodelo-reference`).
 - Modelo 100 nevertheless has a better source already in the tree: RentaWeb dictionaries and
-  schema definitions covering 2,215 of 2,249 casillas with a deep path tree and 568 official
-  group headings, read by nothing today (`2026-09-07-tuimodelo-reference`).
+  schema definitions covering 2,215 of 2,249 casillas with a deep path tree and a large set of
+  official group headings. Those dictionaries are already production inputs — the registry
+  treats them as layout authority evidence and carries a dictionary-path override mechanism
+  against them — but nothing reads them for presentation order or grouping, and that override
+  seam is the natural home for the seed this record proposes
+  (`2026-09-07-tuimodelo-reference`).
 - The official section headings exist and are joinable. The record-design corpus is 749 files
-  over 40 modelos with extracted sidecars, and 95.9 per cent of casillas join to a verbatim
-  official description; the extraction module is production code, not a development script
+  across 58 modelo directories, 56 of them carrying extracted sidecars, and a large majority of
+  casillas join to a verbatim official description; the extraction module is production code,
+  not a development script. The precise join rate is an open measurement
   (`2026-09-07-tuimodelo-reference`).
 - An accepted decision names explicit data on the casilla or its export layout as the
   sanctioned way to express a presentation sequence, and records that the official record
@@ -80,11 +89,12 @@ coverage are settled.
 - 812 casillas in modelo 200 are addressed on between two and eleven pages, and 1,062 resolve
   to multiple export fields corpus-wide (`2026-09-07-tuimodelo-reference`).
 - Hiding computed and internal casillas does not reduce the surface at scale: modelo 200's
-  input surface is 3,418 of 3,462 (`2026-09-07-tuimodelo-reference`).
+  input surface is 3,452 of 3,462 (`2026-09-07-tuimodelo-reference`).
 - Casilla labels are complete — all 29,678 resolve in all four locales — but a shipped
-  workspace path bypasses the continuity tier and renders 97 per cent of modelo 303 as bare
-  identifiers (`2026-09-07-tuimodelo-reference`).
-- The value parser returns raw text for 13 of 19 data types, so 4,715 filing-bound casillas
+  workspace path bypasses the continuity tier and degrades them to bare identifiers, at 97 per
+  cent on the two worst modelo 303 revisions and 74 per cent across that modelo overall
+  (`2026-09-07-tuimodelo-reference`).
+- The value parser returns raw text for 12 of 19 data types, so 4,715 filing-bound casillas
   including identity and bank-account fields accept any string, and the declared
   unsupported-kind refusal is constructed nowhere
   (`2026-09-07-tuimodelo-reference`).
@@ -204,8 +214,8 @@ seed.
 ## Rationale
 
 Coverage is the knockout, not governance. Runtime offset interpretation is the option the
-evidence most flatters — a perfect rank correlation against the official design for modelo
-303 — and it still fails, because offsets place barely a third of the corpus by casilla
+evidence most flatters — the closest match to the official design of anything measured — and it
+still fails, because offsets place barely a third of the corpus by casilla
 weight, place nothing at all for the flagship consumer form, and would drop the remainder with
 no diagnostic. An ordering mechanism that is exact where it applies and silent where it does
 not is not a mechanism for a filing-grade product.

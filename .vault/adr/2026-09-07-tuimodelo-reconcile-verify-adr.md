@@ -5,10 +5,12 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:1e9dc7f11e2fa7e2fa3ea994a0f263102dc15825cbdf40b041bcc5d34cdbd49d'
+body_hash: 'sha256:c03a1aa22b6acbd96d7af34e3707d354e93a5a714df0fa4a3e691de22252d354'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
   - "[[2026-08-24-modelo-edit-contract-adr]]"
+  - "[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]"
+  - "[[2026-08-10-casilla-schema-read-model-adr]]"
 ---
 
 # `tuimodelo` adr: `reconciliation and verification surfacing` | (**status:** `proposed`)
@@ -35,13 +37,16 @@ them as they stand would freeze both defects into the product.
 
 ## Considerations
 
-- Four comparison surfaces exist and differ materially: revision against an operator
-  document, revision against pulled justificante bytes, revision against an AEAT-pulled
-  filing, and the modelo 303 to modelo 349 intracommunity check
-  (`2026-09-07-tuimodelo-reference`).
+- Four comparison mechanisms exist, at two different levels, and the distinction matters. The
+  reconciliation service itself accepts two closed evidence kinds — a justificante and a filed
+  declaración — through two entry points, and returns a reconciliation report. Two further
+  mechanisms live outside that service and return verification findings rather than a report:
+  the divergence check against an authority-pulled filing, and the modelo 303 to modelo 349
+  intracommunity check. A surface that presents all four as one verb would be conflating two
+  result types as well as four questions (`2026-09-07-tuimodelo-reference`).
 - The reconciliation report yields a binary verdict derived purely as match-if-no-diffs,
   with no severity gradation (`2026-09-07-tuimodelo-reference`).
-- Reconciliation advisories carry four codes with no severity field, no resolution action,
+- Reconciliation advisories carry three constructed codes with no severity field, no resolution action,
   and an English prose message rather than a locale key — so they cannot be rendered in a
   localized surface as they stand (`2026-09-07-tuimodelo-reference`).
 - Diffs are grounded: a validator refuses a value diff that lacks legal or source
@@ -89,7 +94,14 @@ them as they stand would freeze both defects into the product.
   authored English prose. This is a backend change and a prerequisite for the surface, not
   a frontend workaround.
 - Advisories carry no severity and no resolution action, so the surface cannot rank or
-  action them until the backend model gains those fields.
+  action them until the backend model gains those fields. It must still declare their
+  existence; withholding is disclosed, never silent.
+- The host workspace is already decided: an accepted decision places reconciliation under the
+  authority-sync workspace, so this record adopts that placement rather than choosing one
+  (`2026-09-02-unreachable-capability-tui-navigation-join-adr`).
+- Diagnostics are captured into the accepted modelo work review read model rather than a second
+  projection authored for this surface
+  (`2026-08-10-casilla-schema-read-model-adr`).
 - Diagnostics must be captured at calculation time; a design that reads them back off a
   stored revision is unbuildable for 36 of the 38 reasons.
 - The two in-source non-operational admissions must be resolved or explicitly labelled;
@@ -116,8 +128,11 @@ never the only thing shown, because match-if-no-diffs collapses "nothing differs
 "nothing was comparable" into one word.
 
 Advisories gain a severity and a resolution action in the backend model, and their prose is
-replaced by locale keys, before they are surfaced. Until then the surface omits them rather
-than rendering untranslated English into a localized product.
+replaced by locale keys. Until that lands the surface renders them as explicitly withheld,
+stating that advisories exist, how many, and why they are not shown. It does not omit them:
+omission would collapse "withheld pending localization" into "none found", which is the exact
+substitution the no-silent-under-declaration rule forbids, and doing it in a reconciliation
+surface would mean reporting a clean comparison that was not clean.
 
 Verification renders the complete finding: message, severity, kind, casilla, legal
 grounding, and — for blocking findings only — the recovery action that the precondition
@@ -126,7 +141,7 @@ absence of a recovery action is derived from the finding's own type rather than 
 frontend conditional. The existing finding-kind to operator-action mapping supplies the
 action vocabulary, and the existing locale keys supply the copy.
 
-Diagnostics are captured at calculation time into the surface's own projection rather than
+Diagnostics are captured at calculation time into the accepted work review read model rather than
 read back from the revision, because the revision does not carry them. This means the
 verify surface and the calculate action are joined: a verification view that was not
 produced from a calculation in the same session shows what the revision holds and says so,

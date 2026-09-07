@@ -5,7 +5,7 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:7225d407da973bcf1079b2cd737ac38e5afa94c7f950edd52dc495c49f4a03b8'
+body_hash: 'sha256:9a0655e60f234681dabda41027843b0a425cb2b9f3755152a7b67a85610c9fb5'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
@@ -72,7 +72,7 @@ that something must first create, and today only a separate command-line process
   revision identifier is an assertion rather than a selector
   (`2026-09-07-tuimodelo-reference`).
 - 91 of 149 modelo enum members have no registry definition and must refuse creation;
-  54 revisions refuse a filing-grade snapshot (`2026-09-07-tuimodelo-reference`).
+  59 revisions refuse a filing-grade snapshot (`2026-09-07-tuimodelo-reference`).
 - Period legality is per modelo and per schedule, and at least one high-traffic modelo
   carries separate quarterly and monthly schedules
   (`2026-09-07-tuimodelo-reference`).
@@ -216,7 +216,7 @@ largest usability gain in the campaign and a precondition for demonstrating any 
 surface end to end.
 
 The creator will refuse more often than a naive form would, and visibly so: 91 modelos have
-no registry definition, 54 revisions cannot produce a filing-grade result, and discarded
+no registry definition, 59 revisions cannot produce a filing-grade result, and discarded
 coordinates cannot be reused. Those refusals are correct and are better surfaced at the
 point of choice, but they will make the offered set look narrow, and the copy must explain
 narrowness rather than merely enforce it.

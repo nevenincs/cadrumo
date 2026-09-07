@@ -5,10 +5,12 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:12241a1cc24545b9abf2751029d4c1b9d435e1c17d0e112a286eef9bf663f93f'
+body_hash: 'sha256:d6b5cac81b0d8be652cbc1b6969332facff9953ef07dc51d782151d2566fc1ac'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
   - "[[2026-08-11-tui-architecture-adr]]"
+  - "[[2026-09-02-tui-architecture-out-of-process-destination-protocol-adr]]"
+  - "[[2026-08-19-registry-export-layout-coverage-adr]]"
 ---
 
 # `tuimodelo` adr: `export destinations and import surfaces` | (**status:** `proposed`)
@@ -54,6 +56,13 @@ would otherwise be wired into the product.
 - Interactive authorization for the one remote destination refuses a non-terminal host and
   blocks a loopback receiver for up to five minutes, so a full-screen surface cannot host
   it in-process (`2026-09-07-tuimodelo-reference`).
+- The protocol for leaving and re-entering the full-screen session is already fixed by an
+  accepted decision, so this record consumes it rather than designing failure and cancellation
+  semantics of its own
+  (`2026-09-02-tui-architecture-out-of-process-destination-protocol-adr`).
+- The registry side of the missing-layout question is owned by a separate open record; this
+  record decides only how the surface behaves when a layout is absent
+  (`2026-08-19-registry-export-layout-coverage-adr`).
 - Two importers carry real logic inside command handlers with no application service, so no
   second surface can reach them (`2026-09-07-tuimodelo-reference`).
 - The ledger side already has the contracts the modelo side lacks: a dry-run flag on the
@@ -109,8 +118,9 @@ would otherwise be wired into the product.
 - The export elections defect must be fixed before the export surface is wired, or the
   product will emit different declaration types depending on which surface the operator
   used.
-- Remote authorization must be delegated to a child process; an in-process implementation
-  is impossible given the terminal refusal and the blocking receiver.
+- Remote authorization must leave the session under the accepted crossing protocol; an
+  in-process implementation is impossible given the terminal refusal and the blocking receiver,
+  and a bespoke crossing would duplicate a decided one.
 - Byte-level export correctness cannot currently be proven by fixture, because no golden
   fixtures exist and the proof roster is empty. Any claim that an export is byte-correct
   must be qualified until that changes.
@@ -128,8 +138,9 @@ destination names a transport and the artefact family it accepts, carries its ow
 capability gate, and reports its own availability, so a surface can render the set of
 destinations that are actually usable for a given declaration rather than a static list
 with runtime failures. The frontend's existing use of the word for screen routing is left
-alone and the new contract takes a distinct name, because two meanings of one word in one
-codebase is how the next reader is misled.
+alone and the new contract takes a distinct name. The word is already overloaded twice — the
+frontend's screen routing and the accepted out-of-process crossing protocol both use it — and a
+third meaning is how the next reader is misled.
 
 The single byte producer remains the single byte producer. Destinations differ in where the
 bytes go and in what wrapper they carry, never in how a declaration is rendered. The
@@ -216,9 +227,11 @@ touches a registry that other campaigns also extend. In exchange, every import g
 cancellation, journalling and progress for free, and the import surface becomes as thin as
 the export one.
 
-Remote authorization through a child process introduces a process boundary in an otherwise
-in-process application, with its own failure and cancellation semantics to design. There is
-no alternative: the existing flow refuses a non-terminal host outright.
+Remote authorization leaves the full-screen session, which the existing flow forces by refusing
+a non-terminal host outright. That crossing is not new ground: an accepted decision already
+fixes the protocol for leaving and re-entering, so this record inherits its failure and
+cancellation semantics instead of inventing them, and the cost is adopting a protocol rather
+than designing one.
 
 Declining to offer binding authoring will disappoint the reading of the brief that expected
 it. The inspector delivers the diagnostic value; the authoring path stays where filing-grade

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:f87bc6f49618ddce0143f5877368c8205024704bf008ed01fd9d811bf401cbe9'
+body_hash: 'sha256:9b784034d5247d4ae033147f0870f42519470ac0566d29b8d2eb934770c4f839'
 related:
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -35,8 +35,8 @@ Three independent measurements agree.
 | Registered operations | 20 |
 | Registered operations reachable from the TUI | 2 |
 | Modelo workspace destination screens built | 6 |
-| Those reachable by an operator | 0 |
-| Modelo action request builders built | 7 |
+| Those reachable by an operator | 1 (overview only) |
+| Modelo action request builders built | 6 (7 views) |
 | Those with a production caller | 0 |
 
 The two TUI-routed commands are `app_modelo_work_review` and `app_modelo_work_select`.
@@ -110,7 +110,7 @@ least one source reference, and an `absent_by_design` marker
 is Decimal-only, so text-family casillas disappear from it.
 
 Overrides run on two independent axes. The disposition ladder at
-`src/cadrumo/application/modelo/_source_mesh.py:359` marks 12 sources LOCK — all ledger
+`src/cadrumo/application/aggregation/_source_mesh.py:359` marks 12 sources LOCK — all ledger
 aggregations, invoices, modelo 347, modelo 303 régimen simplificado, and inventory —
 where an operator override is refused outright by
 `calculation_actions.py:1772`. Four sources are CARRY, where the override wins. The
@@ -121,7 +121,7 @@ that it happened. Editor writability must derive from the same lock set the engi
 (`src/cadrumo/application/modelo/edit_services.py:160`).
 
 There are 38 machine-verified diagnostic reasons on
-`src/cadrumo/application/modelo/_source_mesh.py:524`, of which 36 are not persisted onto
+`src/cadrumo/application/aggregation/_source_mesh.py:524`, of which 36 are not persisted onto
 the revision. A surface that reads a stored revision loses them; they must be captured at
 calculation time. The CLI structured calculate result carries none at all.
 
@@ -157,13 +157,13 @@ filed and not-applicable. There is no domain concept corresponding to "projected
 two projections by natural address.
 
 `OPERATOR_ACTION_BY_CROSS_PERIOD_CLEAN_STATE_BLOCKER` at
-`src/cadrumo/domain/filing/cross_period_models.py:104` maps all 22 blockers to an
+`src/cadrumo/application/calculations/cross_period_models.py:102` maps all 21 blockers to an
 operator-action axis with an import-time totality check, and is a ready-made
 "what to do next" projection.
 
 Discard is terminal: `DESCARTADO` has no undo and re-creation is refused; the source
 comment explaining recovery is truncated mid-sentence at
-`src/cadrumo/domain/modelos/work_lifecycle.py:360`.
+`src/cadrumo/application/modelo/work_lifecycle.py:360`.
 
 ## Reconciliation and verification
 
@@ -182,7 +182,7 @@ prose message rather than a locale key.
 
 Verification exposes 30 verify-time gates plus 9 raising gates; registry predicates
 divide as 103 advisory and 78 blocking. The frontend contract is the invariant at
-`src/cadrumo/domain/modelos/verification_preconditions.py:29`: blocking findings carry a
+`src/cadrumo/application/modelo/verification_preconditions.py:29`: blocking findings carry a
 typed precondition failure with a recovery action, warnings carry none.
 
 ## Edit contract
@@ -280,8 +280,26 @@ candidate set from production imports only, never a filesystem walk, and diffs t
 candidate set against a closed hand-reviewed table. A new modelo command reds the gate
 immediately rather than inheriting a mechanical classification. Its dispositions are
 bounded review, read pending, mutation pending, flow owned, deferred, and a reserved
-non-visual case. Measured green at 11 passing tests. This is the campaign's admission
-criterion.
+non-visual case. Measured green at 11 passing tests, with 79 classifications over 79 live
+identities and zero violations: 43 read pending, 31 mutation pending, 2 flow owned, 2 bounded
+review, 1 deferred.
+
+It is a scope enumerator, not an admission gate, and the distinction is load-bearing. Its
+drift check compares only the four fields named in `_SIGNATURE_FIELDS` at
+`dev/quality/modelo_workspace_action_denominator.py:1178` — command key, write route, side
+effects, and action-catalogue membership. Neither the recorded disposition nor the interface
+capability is observed, so moving a row's disposition, enrolling its operation, or wiring a
+route changes no gate outcome. The closed taxonomy also offers no arm a delivered mutation can
+occupy: the only completed arm is read-only, leaving all 31 mutation rows without a
+destination. Two review-package rows compound this by declaring no write route while carrying
+local-state side effects, a contradiction the drift check cannot see because it compares
+against the spec's own declaration.
+
+Making it an admission gate requires observing interface capability and dispatchability
+alongside the mechanical fields, adding delivered arms, and failing when a recorded disposition
+contradicts the observed shape — applied to the intersection of the command graph and the
+dispatch table only, which is the boundary the module's own comment at `:1203` draws and
+explains.
 
 Five enrolment registries exist and none is aware of the others: the modelo workspace
 destination table, the shell destination catalogue, the visual-verification surface list,
@@ -305,3 +323,107 @@ surface. Text-family casillas receive a structural zero. Six workspace titles in
 English flow catalogue carry a trailing carriage return. The modelo history CLI verb
 bypasses the application layer and instantiates a persistence repository directly, and the
 spreadsheet calculate verb calls an outbound adapter directly.
+
+## Measured figures
+
+Every figure the decision records cite is recorded here so that the decisions cite grounding
+rather than restate it. Measurements were taken against the working tree during the campaign's
+research phase and re-checked by an independent pass; where the two disagreed the re-checked
+value is given and the discrepancy noted.
+
+### Registry population and coverage
+
+Casillas 29,678 across 58 modelos and 128 revisions, with 1,457 formulas, 9,230 bindings, 121
+relations and 516 parameters. Authority grades divide 69 filing, 54 applicability, 5
+calculation; a filing-grade snapshot is therefore refused for 59 revisions, being the
+applicability and calculation grades together. The modelo enumeration carries 149 members, so 91
+have no registry definition.
+
+Export layouts number 94 across 47 of the 58 modelos, comprising 88 fixed-width and 6
+xml-dictionary layouts, with completeness manifests for 34 modelos. Every modelo 100 revision
+declares an xml-dictionary layout carrying zero records, zero fields and zero offsets, and no
+modelo 100 casilla carries an export reference.
+
+### Placement and ordering
+
+Export offsets place 11,268 of the 29,678 casillas. Of the 18,410 unplaced, exactly 97 carry a
+classification, so the remainder would disappear without a diagnostic under a placement scheme
+that omits rather than declares them. Coverage by casilla weight is roughly one third.
+
+Modelo 200 addresses 812 casillas on between two and eleven pages; corpus-wide 1,062 casillas
+resolve to more than one export field. Modelo 200's input surface is 3,452 of its 3,462
+casillas, so suppressing computed and internal casillas does not materially reduce the editable
+surface at scale. Its slotted records resolve into 14 rectangular tables.
+
+Constructs do not partition a modelo: 109 of 128 revisions declare exactly one construct for the
+whole modelo, and modelo 200's single construct holds 3,215 casillas.
+
+An ordering probe reported a perfect rank correlation between export-offset order and the
+official record design for modelo 303 in 2025, against a near-zero correlation for
+section-plus-declaration order. An independent pass could not reproduce the probe's casilla
+population, so the precise correlation figure is unestablished and is recorded here as an open
+measurement. The qualitative finding is separately corroborated by section contiguity.
+
+### Metadata density
+
+Constraints are present on 909 casillas, 3.1 per cent of the population, leaving 96.9 per cent
+where absent constraints cannot be distinguished from unmeasured ones. Spanish help text covers
+11.47 per cent; `form_number` covers 0.465 per cent; aliases cover none. Section tokens number
+1,448 distinct values with no catalogue entries, and modelo 200 alone declares 618 sections.
+
+Labels resolve for all 29,678 casillas in all four locales. Untranslated English is 25.8 per
+cent corpus-wide and 43.5 per cent for modelo 303 in 2025. The continuity-tier bypass degrades
+885 of 1,203 modelo 303 labels and 1,068 of 1,450 modelo 390 labels to bare identifiers; that is
+97 per cent on the two worst modelo 303 revisions and 74 per cent across the modelo overall.
+
+### Value handling
+
+The scalar parser returns raw text for 12 of the 19 data types, and 4,715 casillas fall under
+those types, of which 1,941 carry an export reference and 219 are required. The declared
+unsupported-kind refusal is never constructed. Corpus-wide casilla counts sum the same casilla
+across revisions and should be read accordingly.
+
+### Diagnostics, gates and verification
+
+Diagnostic reasons number 38, of which 36 are not persisted onto the revision. Registry
+predicates divide 103 advisory to 78 blocking. Verification findings carry 37 locale keys. The
+source disposition ladder marks 12 sources locked against operator override and 4 as carrying
+it. Cross-period blockers number 21, each mapped to an operator-action axis.
+
+### Reconciliation
+
+The reconciliation service accepts two closed evidence kinds, a justificante and a filed
+declaración, through two entry points, and returns a reconciliation report. Two further
+comparison mechanisms live outside that service and return verification findings instead: the
+divergence check against an authority-pulled filing, and the modelo 303 to modelo 349
+intracommunity check. Reconciliation advisories are three constructed codes carrying no severity
+field, no resolution action, and authored English prose rather than locale keys.
+
+### Action denominator
+
+79 live action identities, 79 classifications, zero violations, 11 passing tests. Dispositions
+divide 43 read pending, 31 mutation pending, 2 flow owned, 2 bounded review and 1 deferred; the
+work family alone contributes 13 reads and 6 mutations. Seven modelo operations are registered,
+and the frontend dispatch table is keyed to the same seven, so every other mutation writes
+outside the supervisor.
+
+### Official source material
+
+The record-design corpus holds 749 files across 58 modelo directories, 56 of which carry
+extracted sidecars. Twenty-eight generation-provenance files across 13 modelos pre-join official
+section descriptions to casilla identity and export offset. The modelo 100 RentaWeb dictionaries
+and schema definitions cover 2,215 of that modelo's 2,249 casillas. The legal source catalogue
+holds 499 official artefacts, each with a local corpus path, a digest and an authority URL, none
+missing locally. Printed forms exist for two modelos only. The precise casilla-to-description
+join rate and the official heading count are open measurements; independently reproduced figures
+varied with the counting definition.
+
+### Adapter migration
+
+The command-line tree holds 159 identified violations of the adapter boundary across 224 modules
+and roughly 77,000 lines: 71 blocking a frontend surface, 61 correctness, 27 hygiene. By lane
+the split is 62 ledger, 52 configuration and profile, 26 live and overview, 18 modelo, 1
+cross-lane. Direct adapter imports appear in 46 modules over 122 import lines, repositories are
+instantiated in 43 handler sites, and repositories are injected from the command line into
+application functions at 68 call sites. Only 7 modules touch decimal arithmetic, so the
+violations are classification and routing rather than computation.
