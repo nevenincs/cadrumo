@@ -80,10 +80,7 @@ def test_pipeline_cli_refuses_a_catalogued_source_undeclared_as_this_revisions_r
 
     assert result.exit_code == 1
     assert result.stdout == ""
-    assert (
-        "200/2025-y-siguientes does not declare record-design source 'aeat-modelo-200-manual-2025'"
-        in result.stderr
-    )
+    assert "200/2025-y-siguientes does not declare record-design source 'aeat-modelo-200-manual-2025'" in result.stderr
 
 
 def test_bootstrap_target_refuses_unenrolled_source_digest() -> None:

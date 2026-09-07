@@ -225,10 +225,7 @@ def test_generated_casilla_export_refs_refuses_before_writing_any_file(tmp_path:
     a_path.write_text(a_original, encoding="utf-8")
     b_path = casillas / "b.toml"
     b_original = (
-        '[[revisions.current.casillas]]\n'
-        'id = "020"\n'
-        'source_refs = ["source"]\n'
-        'export_refs = ["existing.other"]\n'
+        '[[revisions.current.casillas]]\nid = "020"\nsource_refs = ["source"]\nexport_refs = ["existing.other"]\n'
     )
     b_path.write_text(b_original, encoding="utf-8")
 
