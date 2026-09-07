@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:91b95f3fe51ebb63cab1fa91e9b229a7956f602c41d0e7280244359d07c4d95f'
+body_hash: 'sha256:7e2a8f0687ad18b9b798073bbe631c96083e83cb7fad49241c4b6e4f4ca4f9fa'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -1368,6 +1368,12 @@ plan should give that its own Phase from the start; this one records where it ac
 - [ ] `W06.P13.S999` - Record the diagnosis of a protocol drift that has been an open operator item all campaign, refined to the class that actually carries it: the development-tree filing export proof module defines two authorities, a canonical two-channel one that implements the assessment method the production protocol names, and a live one that implements a differently named proof method instead, so the drift is per class rather than per module and only the live authority is affected, which is why the failing conformance gate names that class specifically. The gate was proven pre-existing in isolation with its file untouched for three days before this session, the protocol side lies in the production tree outside every working scope here, and the decision the operator faces is whether the live authority should be brought onto the protocol's method name or the protocol widened, the former being suggested by its sibling in the same module already conforming; `dev/registry/filing_export_proof.py`.
 - [x] `W06.P13.S1000` - Correct this session's own silent-handler census on one entry: the repository source reader was recorded as dropping an undecodable file without announcement, and that is true within the module but not in effect, because its gate asserts set equality between the archive-derived universe and an independent listing taken straight from version control, so a dropped file shrinks one side and the equality refuses loudly. The suffix filters on the two sides are restated rather than shared, which would ordinarily be the two-implementations-of-one-rule defect, but here it is safe by construction since a divergence in either direction changes exactly one side of the equality and fails, making the duplicate itself the check; both sets were compared and are identical today. The lesson for the remaining entries in that census is that a handler silent in its module may be covered by an off-module equality, so each remaining site needs its consumer examined rather than its own body; `dev/quality/repository_sources.py`.
 - [x] `W06.P13.S1001` - Refuse an unlistable dev tree in the import-hygiene prose scan instead of returning an empty roster; `dev/quality/import_hygiene_scan.py`.
+- [x] `W06.P13.S1002` - Replace the dunder-init scan's aggregate module floor with per-root floors, so a vanished tree cannot pass; `dev/quality/tests/test_no_dunder_init_module_imports.py`.
+- [x] `W06.P13.S1003` - Remove the drifted constant count from the repository-root headroom argument, keeping the ratio; `dev/tests/test_repository_root_constants_resolve.py`.
+- [x] `W06.P13.S1004` - Floor what the privacy scan's pathspecs reach, so an exclusion grown to cover the tree is refused rather than read as clean; `dev/quality/tests/test_doc_privacy.py`.
+- [x] `W06.P13.S1005` - Floor the cross-project privacy scan alongside its sibling, leaving the untracked scan unfloored with the reason stated; `dev/quality/tests/test_doc_privacy.py`.
+- [x] `W06.P13.S1006` - Floor the tautology sweep per root instead of guarding it on mere non-emptiness; `dev/tests/test_tautological_assertion_gate.py`.
+- [x] `W06.P13.S1007` - Refuse a missing parse root instead of filtering it out of the source-parse gate; `dev/tests/test_every_source_file_parses.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 
