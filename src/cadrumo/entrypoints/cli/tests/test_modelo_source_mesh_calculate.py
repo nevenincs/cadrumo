@@ -977,6 +977,8 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
     # the cuota-less supply stays advisory-free on both transports).
     text_result = invoke_cached_cli(
         [
+            "--language",
+            "en",
             "app",
             "modelo",
             "work",
@@ -987,6 +989,10 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
         ],
     )
     assert text_result.exit_code == 0, text_result.output
+    # Pinned to English because "ADVISORY:" is the ENGLISH prefix. The ambient
+    # test locale is Spanish, which renders the same notice as "AVISO:", so
+    # this absence claim was satisfied by every run whether or not an
+    # advisory was surfaced -- the one thing the test exists to detect.
     assert "ADVISORY:" not in text_result.output
 
 
@@ -1045,6 +1051,8 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed(tmp_path: Path) 
     # observation produces one, and every observation here was consumed.
     text_result = invoke_cached_cli(
         [
+            "--language",
+            "en",
             "app",
             "modelo",
             "work",
@@ -1055,4 +1063,8 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed(tmp_path: Path) 
         ],
     )
     assert text_result.exit_code == 0, text_result.output
+    # Pinned to English because "ADVISORY:" is the ENGLISH prefix. The ambient
+    # test locale is Spanish, which renders the same notice as "AVISO:", so
+    # this absence claim was satisfied by every run whether or not an
+    # advisory was surfaced -- the one thing the test exists to detect.
     assert "ADVISORY:" not in text_result.output

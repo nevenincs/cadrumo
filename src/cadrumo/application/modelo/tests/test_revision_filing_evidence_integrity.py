@@ -80,11 +80,34 @@ def test_changed_m303_evidence_with_stored_identity_is_rejected() -> None:
         assert_revision_content_integrity(changed)
 
 
+#: The shipped tree both gates below walk. Module-level so the offender
+#: formatting and the funnel cannot disagree about which root they mean.
+_SOURCE_ROOT = Path(__file__).parents[3]
+
+
+def _identity_caller_modules() -> tuple[Path, ...]:
+    """Every shipped module an identity caller could live in, refusing an empty walk.
+
+    Both gates below assert `omissions == []` over this same walk, and it was
+    duplicated inline in each. Measured: with the root pointed at a directory
+    that does not exist, `scan_directory` returns 0 modules silently against
+    5,940 healthy, so both gates held over nothing -- a revision-id call
+    omitting its filing evidence or its source provenance would pass unseen.
+    """
+    modules = scan_directory(_SOURCE_ROOT, pattern="*.py", recursive=True, require_root=True)
+    if not modules:
+        message = (
+            f"the identity-caller walk reached no module under {_SOURCE_ROOT}; "
+            "a walk matching nothing cannot find an omitted revision-id selector"
+        )
+        raise AssertionError(message)
+    return modules
+
+
 def test_all_revision_id_calls_explicitly_select_filing_evidence() -> None:
     """Omission syntax is forbidden across production and test identity callers."""
-    source_root = Path(__file__).parents[3]
     omissions: list[str] = []
-    for path in scan_directory(source_root, pattern="*.py", recursive=True):
+    for path in _identity_caller_modules():
         if path.name == "calculation_revision.py":
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
@@ -95,7 +118,7 @@ def test_all_revision_id_calls_explicitly_select_filing_evidence() -> None:
             if name != "derive_calculation_revision_id":
                 continue
             if not any(keyword.arg == "filing_instance_evidence" for keyword in node.keywords):
-                omissions.append(f"{path.relative_to(source_root)}:{node.lineno}")
+                omissions.append(f"{path.relative_to(_SOURCE_ROOT)}:{node.lineno}")
 
     assert omissions == []
 
@@ -116,9 +139,8 @@ def test_revision_id_filing_evidence_has_no_default_and_cannot_be_omitted() -> N
 
 def test_all_revision_id_calls_explicitly_select_source_provenance() -> None:
     """Every identity caller records either the canonical trace or explicit emptiness."""
-    source_root = Path(__file__).parents[3]
     omissions: list[str] = []
-    for path in scan_directory(source_root, pattern="*.py", recursive=True):
+    for path in _identity_caller_modules():
         if path.name == "calculation_revision.py":
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
@@ -129,7 +151,7 @@ def test_all_revision_id_calls_explicitly_select_source_provenance() -> None:
             if name != "derive_calculation_revision_id":
                 continue
             if not any(keyword.arg == "source_provenance" for keyword in node.keywords):
-                omissions.append(f"{path.relative_to(source_root)}:{node.lineno}")
+                omissions.append(f"{path.relative_to(_SOURCE_ROOT)}:{node.lineno}")
 
     assert omissions == []
 
