@@ -182,8 +182,16 @@ def test_no_feature_module_redeclares_the_administrador_rates_as_literals() -> N
         )
     )
     package_root = bundled_path().parent
+    scanned = scan_directory(package_root, pattern="*.py", recursive=True, require_root=True)
+    # Floored for the same reason as the sibling retencion gate: the assertion
+    # below is `offenders == []`, so an empty walk reports the same green as a
+    # package carrying no reintroduced literal.
+    assert scanned, (
+        f"the retired-literal scan reached no module under {package_root}; "
+        "a walk matching nothing cannot find a reintroduced administrador retencion rate"
+    )
     offenders: list[str] = []
-    for path in scan_directory(package_root, pattern="*.py", recursive=True):
+    for path in scanned:
         text = path.read_text(encoding="utf-8")
         offenders.extend(str(path.relative_to(package_root)) for pattern in retired_patterns if pattern.search(text))
     assert offenders == [], f"retired administrador retención-rate literal reintroduced in: {offenders}"

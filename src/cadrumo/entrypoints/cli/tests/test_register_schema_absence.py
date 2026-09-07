@@ -12,10 +12,19 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 def test_cli_production_has_no_runtime_schema_registration() -> None:
     cli_root = Path(__file__).parents[1]
+    if not cli_root.is_dir():
+        message = f"the CLI production root does not exist: {cli_root}"
+        raise AssertionError(message)
+    scanned = [path for path in sorted(cli_root.rglob("*.py")) if "tests" not in path.parts]
+    # Measured: `rglob` returns zero paths for a missing root without raising,
+    # so a moved CLI package would leave `violations == []` holding over
+    # nothing. The healthy walk reaches 290 production modules.
+    assert scanned, (
+        f"the schema-registration scan reached no production module under {cli_root}; "
+        "a walk matching nothing cannot find a runtime register_schema call"
+    )
     violations: list[str] = []
-    for path in sorted(cli_root.rglob("*.py")):
-        if "tests" in path.parts:
-            continue
+    for path in scanned:
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for node in ast.walk(tree):
             if isinstance(node, (ast.Import, ast.ImportFrom)) and any(
