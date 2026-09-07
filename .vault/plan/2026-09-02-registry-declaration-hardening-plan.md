@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:e66ca0a5726ef286a3de5356b3ef284bc8a950c20b9eb6725c4b025f3d979480'
+body_hash: 'sha256:21693b72c2351f683df798dd773af1f6d9fd6f0049875d533964655bcd4355ec'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -1395,6 +1395,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S1026` - Record the retired generated-evidence population instead of leaving its vacuity guard permanently red, keeping the watch for the next artefact; `dev/tests/test_generated_evidence_is_gated.py`.
 - [x] `W06.P13.S1027` - Scope the invoice validation census to the module family after a peer split, instead of deleting the fourteen rows whose raises had moved; `dev/tests/test_invoice_iva_validation_owner_census.py`.
 - [x] `W06.P13.S1028` - Distinguish an uncaptured session from an idle one in the agent-eval measurement report, so a PASS verdict cannot render on evidence that never arrived; `dev/agent_eval/_report.py`.
+- [x] `W06.P13.S1029` - Pin the reason on the checkout-drift screen's empty-tree refusal, which passed on a git ls-tree plumbing failure and never reached the tracked-file guard it was named for; `dev/audit/tests/test_checkout_drift_screen.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 
