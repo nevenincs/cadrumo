@@ -90,6 +90,15 @@ def _declaring_surfaces() -> list[tuple[Path, Path]]:
     declared tag describes the declaration, and treating a description as a
     second declaration would make the gate unpassable without deleting the
     documentation that explains it.
+
+    Container declarations are not all Python, YAML, or Dockerfiles. The tree
+    holds a second container definition -- ``.devcontainer/devcontainer.json``
+    -- and until this walk read ``.json`` it was outside the population
+    entirely: the one other file in the repository whose whole job is to say
+    which image to run could have pinned a rival tag and this gate would have
+    stayed green. It derives correctly today (it builds the repository-root
+    ``Dockerfile``'s ``dev`` stage), which is exactly why the omission was
+    invisible.
     """
     surfaces: list[tuple[Path, Path]] = []
     for directory, subdirectories, filenames in os.walk(_REPO_ROOT):
@@ -103,7 +112,7 @@ def _declaring_surfaces() -> list[tuple[Path, Path]]:
             if not (
                 filename.startswith("Dockerfile")
                 or filename == "justfile"
-                or filename.endswith((".py", ".yml", ".yaml"))
+                or filename.endswith((".py", ".yml", ".yaml", ".json"))
             ):
                 continue
             candidate = Path(directory) / filename
@@ -170,9 +179,16 @@ def _base_image_bindings(surface: Path) -> list[tuple[int, str]]:
             {(node.lineno, lines[node.lineno - 1].strip()) for node in bound if _BARE_LITERAL.search(str(node.value))}
         )
     offenders: list[tuple[int, str]] = []
+    # `//` is a comment in the JSON WITH COMMENTS the devcontainer spec uses,
+    # and `.devcontainer/devcontainer.json` is full of them. Reading only `#`
+    # would file a rationale note describing the derived image as a rival
+    # declaration -- the gate flagging the prose that explains it. The prefix
+    # is per format on purpose: `//` opens nothing in YAML or a Dockerfile,
+    # and honouring it there would blind those surfaces for no reason.
+    comment_prefixes = ("#", "//") if surface.suffix == ".json" else ("#",)
     for line_number, line in enumerate(lines, start=1):
         stripped = line.strip()
-        if not _BARE_LITERAL.search(line) or stripped.startswith("#"):
+        if not _BARE_LITERAL.search(line) or stripped.startswith(comment_prefixes):
             continue
         # The one sanctioned occurrence is the declaration itself.
         if surface.name.startswith("Dockerfile") and stripped.startswith("ARG PYTHON_BASE_IMAGE="):
@@ -267,6 +283,46 @@ def test_prose_naming_the_tag_is_not_a_redeclaration(tmp_path: Path) -> None:
         "\n"
         "def check(value: str) -> None:\n"
         '    assert value, "expected python:3.13-slim-trixie"\n',
+        encoding="utf-8",
+    )
+
+    assert _base_image_bindings(surface) == []
+
+
+def test_the_devcontainer_is_inside_the_walked_population() -> None:
+    """The tree's other container definition must be a subject, not an omission.
+
+    ``.devcontainer/devcontainer.json`` is the only file besides the Dockerfile
+    whose job is to say which image to run, and until the walk read ``.json``
+    it was outside the population entirely. Pinned to the path rather than to a
+    count of JSON surfaces, so re-narrowing the extension filter fails here.
+    """
+    walked = {relative.as_posix() for _, relative in _declaring_surfaces()}
+
+    assert ".devcontainer/devcontainer.json" in walked, (
+        "the walk does not visit the devcontainer definition, so it could pin a base image "
+        "other than the one the Dockerfile declares and this gate would stay green"
+    )
+
+
+def test_a_devcontainer_pinning_its_own_image_is_detected(tmp_path: Path) -> None:
+    """Teeth on the format, written to an isolated file rather than the tree."""
+    surface = tmp_path / "devcontainer.json"
+    surface.write_text('{\n  "image": "python:3.13-slim-trixie"\n}\n', encoding="utf-8")
+
+    assert [line for line, _ in _base_image_bindings(surface)] == [2]
+
+
+def test_a_devcontainer_comment_naming_the_tag_is_not_a_declaration(tmp_path: Path) -> None:
+    """`//` opens a comment in the JSON-with-comments the devcontainer spec uses.
+
+    The live file is full of them, and several explain which image the build
+    resolves to. Reading only `#` would report that prose as a rival
+    declaration -- the gate flagging the note that documents it.
+    """
+    surface = tmp_path / "devcontainer.json"
+    surface.write_text(
+        '{\n  // derives python:3.13-slim-trixie from the root Dockerfile\n  "name": "dev"\n}\n',
         encoding="utf-8",
     )
 
