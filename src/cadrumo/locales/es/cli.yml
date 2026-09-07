@@ -2841,6 +2841,12 @@ cli:
       deduction_fact_kind_help: Origen exacto de la deducción de IVA soportado (p.
         ej. domestic_current). Obligatorio para que la cuota soportada se deduzca;
         la taxonomía no se infiere.
+      derive_non_derivable: '{category} no tiene un tipo español simple que derivar:
+        {note} Indique --taxable-base, --iva-rate e --iva-amount a mano para esta
+        categoría.'
+      derive_substrate_incomplete: '{category} se declaró derivable pero no produjo
+        ninguna base de IVA. Indique --taxable-base, --iva-rate e --iva-amount a mano
+        para esta categoría.'
       file_exclusive: --file no puede combinarse con un id de transacción ni --classification.
       file_help: Ruta a un archivo CSV con columnas transaction_id, classification[,
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,

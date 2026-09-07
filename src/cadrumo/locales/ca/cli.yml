@@ -2814,6 +2814,12 @@ cli:
       deduction_fact_kind_help: Origen exacte de la deducció d'IVA suportat (per exemple
         domestic_current). Obligatori perquè la quota suportada es dedueixi; la taxonomia
         no s'infereix.
+      derive_non_derivable: '{category} no té un tipus espanyol simple que es pugui
+        derivar: {note} Indiqueu --taxable-base, --iva-rate i --iva-amount a mà per a
+        aquesta categoria.'
+      derive_substrate_incomplete: '{category} es va declarar derivable però no ha
+        produït cap base d''IVA. Indiqueu --taxable-base, --iva-rate i --iva-amount a mà
+        per a aquesta categoria.'
       file_exclusive: --file no pot combinar-se amb un id de transacció ni --classification.
       file_help: Ruta a un fitxer CSV amb columnes transaction_id, classification[,
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,

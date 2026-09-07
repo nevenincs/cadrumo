@@ -2616,6 +2616,11 @@ cli:
       deduction_fact_kind_help: Exact source of the input-IVA deduction (for example
         domestic_current). Required for the input cuota to be deducted; the taxonomy
         is not inferred.
+      derive_non_derivable: '{category} has no simple Spanish rate to derive: {note}
+        Supply --taxable-base, --iva-rate and --iva-amount by hand for this category.'
+      derive_substrate_incomplete: '{category} was reported derivable but produced no
+        IVA substrate. Supply --taxable-base, --iva-rate and --iva-amount by hand for
+        this category.'
       file_exclusive: --file cannot be combined with a transaction id or --classification.
       file_help: Path to a CSV file with columns transaction_id, classification[,
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,

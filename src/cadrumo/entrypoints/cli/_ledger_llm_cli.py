@@ -886,18 +886,26 @@ def ledger_operator_iva_derive(
 
     if not derivation.derivable:
         raise bad(
-            f"{iva_category.value} has no simple Spanish rate to derive: {derivation.note} "
-            "Supply --taxable-base, --iva-rate, and --iva-amount by hand for this category.",
+            tr(
+                "cli.ledger.classify.derive_non_derivable",
+                category=iva_category.value,
+                note=derivation.note,
+            ),
         )
 
     result = derivation.result
     taxable_base = derivation.taxable_base
     iva_rate = derivation.iva_rate
     iva_amount = derivation.iva_amount
+    # Narrowing, not a second opinion. `OperatorIvaDerivationResult` couples
+    # `derivable` to its whole substrate, so a derivable result reaching here
+    # without one is a broken contract rather than an operator mistake -- and
+    # the model refuses to be built that way. The branch stays because the
+    # fields are typed optional for the non-derivable case, and it is worded
+    # rather than left as an English f-string so no locale can leak one.
     if result is None or taxable_base is None or iva_rate is None or iva_amount is None:
         raise bad(
-            f"{iva_category.value} was reported derivable but produced no IVA substrate; "
-            "supply --taxable-base, --iva-rate, and --iva-amount by hand for this category.",
+            tr("cli.ledger.classify.derive_substrate_incomplete", category=iva_category.value),
         )
 
     transaction_payload = ledger_transaction_payload(result.transaction)

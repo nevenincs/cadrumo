@@ -64,8 +64,9 @@ See Also:
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import Self
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ..application.ledger.models import ManualLedgerTransactionResult
 from ..core.field_origin import FieldOrigin
@@ -127,7 +128,14 @@ class LLMSaturatedSuggestion(BaseModel):
 
 
 class OperatorIvaDerivationResult(BaseModel):
-    """Result of an operator-initiated IVA derivation for one transaction."""
+    """Result of an operator-initiated IVA derivation for one transaction.
+
+    ``derivable`` and the substrate are ONE answer, not a flag beside four
+    optional numbers. A category the registry can rate yields a rate, a base,
+    an amount and the persisted write; one it cannot yields none of them and a
+    note saying why. The four fields are optional because the second case
+    exists, not because either case is partial.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -139,6 +147,29 @@ class OperatorIvaDerivationResult(BaseModel):
     iva_amount: Decimal | None = None
     note: str = ""
     result: ManualLedgerTransactionResult | None = None
+
+    @model_validator(mode="after")
+    def _the_substrate_agrees_with_derivability(self) -> Self:
+        """Refuse a result whose substrate disagrees with its own flag.
+
+        Both directions are wrong, and only one of them was ever checked. A
+        derivable result missing its substrate leaves a caller with a success
+        it cannot use -- the command that reads this had to hand-check for
+        exactly that. A NON-derivable result CARRYING a substrate was checked
+        nowhere: a consumer trusting the numbers over the flag would persist a
+        rate the derivation explicitly declined to make, which is the more
+        dangerous direction and the reason this is stated on the model rather
+        than at whichever surface remembers to ask.
+
+        Raises:
+            ValueError: When the flag and the substrate disagree.
+        """
+        substrate = (self.iva_rate, self.taxable_base, self.iva_amount, self.result)
+        if self.derivable and any(value is None for value in substrate):
+            raise ValueError("a derivable IVA derivation must carry its whole substrate")
+        if not self.derivable and any(value is not None for value in substrate):
+            raise ValueError("a non-derivable IVA derivation must carry no substrate")
+        return self
 
 
 class LLMSplitChildSuggestion(BaseModel):
