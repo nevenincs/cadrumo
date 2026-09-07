@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:d3a31732223055cf7c9614d84947780f31a4a5ea706f6cef9bf41d0c03635157'
+body_hash: 'sha256:028e37fd7e34e059d4dd4ff788bba494b5cd6223982a03e81d67a99d8ea8f2b9'
 ---
 
 # `reachability-burndown` plan
@@ -187,6 +187,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S86` - Sweep the shipped tree for the read-never-written shape the secure-store gate structurally cannot see, since a file-backed artefact is not a repository and the output-language hint slipped past it: pair same-module functions across seven verb oppositions and report where production uses one side only. Five pairs, four already carrying matching evidence in this ledger and the fifth not an exact finding at all, so the sweep found no unrecorded debt and no gate is warranted -- a fail-closed check over that population could only report symbols already adjudicated.; `dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S87` - Run the ledger's OWNING gates instead of the hand-rolled validation script this campaign had been substituting for them, and repair what they found: thirteen clusters authored here were missing the required area key, three clusters whose work was finished were never marked resolved, five had their symbols emptied although a cluster must name one, and two were step notes rather than symbol adjudications. Correct the collaboration-audit prose, whose claim that six emitters are unreached went stale when five were wired, and narrow the citation gate that had become unsatisfiable for a resolved entry.; `dev/audit/reachability_classification.toml,dev/audit/tests/test_ledger_citations_resolve.py`.
 - [x] `W05.P12.S88` - Close the orphaned-test coverage gap the owning gate reported once the schema repair let it run: fourteen test modules were neither entered nor under a classified module, so nobody had decided their fate, and each names in the audit output the module or symbol finding it exercises. Enter all fourteen as derivative entries anchored to what they follow, four of them under the compatibility-lifecycle module and two under the CRUD contract, the rest following an unused symbol.; `dev/audit/reachability_classification.toml`.
+- [x] `W05.P12.S89` - Apply the run-the-owning-gate rule to every artefact this campaign edits, which found all of them green, then re-test the root CLI tty cluster and split it: the interactivity refusal is in force through a richer construct that weighs stdout and the terminal type as well as stdin, and the entry's colour claim went stale when this campaign fixed the localised error path earlier while the prose kept the old sentence. The progress rule is waiting on a widget no entrypoint renders.; `dev/audit/reachability_classification.toml`.
 
 ## Parallelization
 

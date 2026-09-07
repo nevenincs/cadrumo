@@ -5,16 +5,11 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:c3da27c1d3ed02c36757c37df04e4a92d1a056c887c28757d6040d843e0345f0'
+body_hash: 'sha256:ac726140ebf168baa1676bc4eb435e072a1a3495cfa4a4137b78814d11aef254'
 step_id: 'S88'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Close the orphaned-test coverage gap the owning gate reported once the schema repair let it run: fourteen test modules were neither entered nor under a classified module, so nobody had decided their fate, and each names in the audit output the module or symbol finding it exercises. Enter all fourteen as derivative entries anchored to what they follow, four of them under the compatibility-lifecycle module and two under the CRUD contract, the rest following an unused symbol.
 

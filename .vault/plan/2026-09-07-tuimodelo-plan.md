@@ -15,7 +15,7 @@ related:
   - '[[2026-09-07-tuimodelo-adapter-migration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:74b5c418e459702bc7f2cc99472178d27ee8c322f089aae7e7d9dfac28c21d1d'
+body_hash: 'sha256:4ecae2f4a0085f2d3e8f88ef4b34419ba3b1a60178bc4ed3ea43a4c0e544a813'
 ---
 
 # `tuimodelo` plan
@@ -71,7 +71,7 @@ Extend the denominator so a delivered surface and its recorded classification mu
 - [ ] `W01.P02.S05` - Add delivered dispositions for reads and for mutations to the closed taxonomy, which today offers no arm a delivered mutation can occupy; `dev/quality/modelo_workspace_action_denominator.py`.
 - [ ] `W01.P02.S06` - Red the gate when a recorded disposition contradicts the observed shape, applying the rule to the command-graph and dispatch intersection only; `dev/quality/modelo_workspace_action_denominator.py`.
 - [ ] `W01.P02.S07` - Correct the two review-package specs that declare no write route while carrying local-state side effects and emitting events; `src/cadrumo/entrypoints/cli`.
-- [ ] `W01.P02.S172` - Confirm the fixed-point gate's time ceiling is adequate for the corpus this campaign grows, and constrain its untracked-file ingestion; `dev/tests`.
+- [ ] `W01.P02.S172` - Confirm the fixed-point gate's time ceiling remains adequate for the corpus this campaign grows; `dev/tests`.
 
 ### Phase `W01.P03` - record campaign scope and outstanding decisions
 
@@ -218,7 +218,7 @@ Bring the modelo action family under the supervisor and thread the elections the
 - [ ] `W04.P15.S62` - Thread the refund, payment, prior-domiciliation and product-identity elections through the export operation so both adapters emit the same declaration type; `src/cadrumo/application/modelo/operation_definitions.py`.
 - [ ] `W04.P15.S63` - Route modelo mutations through the host operation modal rather than submitting inline; `src/cadrumo/entrypoints/tui/modelo/action`.
 - [ ] `W04.P15.S64` - Register an operation for calculation, which the reconcile and projection surfaces both depend on; `src/cadrumo/application/modelo/operation_definitions.py`.
-- [ ] `W04.P15.S151` - Update the dispatch table and the twenty-five-entry unregistered-operations authority for this wave's registrations, which the fixed-point test pins as single-module authorities; `src/cadrumo/entrypoints/tui/modelo/actions.py`.
+- [ ] `W04.P15.S151` - Record the atomicity obligation binding every later registration, and reconcile the twenty-five-entry unregistered-operations authority once this wave's registrations land; `src/cadrumo/entrypoints/tui/modelo/actions.py`.
 - [ ] `W04.P15.S173` - Reconcile the companion assertion that dispatch and the command graph deliberately do not converge, which this campaign's registrations move toward convergence; `dev/tests`.
 
 ### Phase `W04.P16` - unstub and instrument
@@ -231,8 +231,9 @@ Populate the filing-history and evidence zones the frontend hardcodes as unavail
 - [ ] `W04.P16.S68` - Prove the reachable destination set equals the destination and dispatch tables, an invariant no test asserts today; `src/cadrumo/entrypoints/tui/modelo/tests`.
 - [ ] `W04.P16.S145` - Author the locale catalogue entries for the surfaces delivered up to this point, and record the co-landing obligation that binds every step in the campaign; `src/cadrumo/locales`.
 - [ ] `W04.P16.S146` - Add coverage classification entries for the surfaces delivered up to this point, and record the per-step obligation that binds every step in the campaign; `dev/tui/_coverage.py`.
-- [ ] `W04.P16.S147` - Enrol the surfaces this wave itself delivers and update the four exact-count visual-inventory assertions, and record the standing obligation that binds every later step adding a surface; `dev/tui/tests`.
-- [ ] `W04.P16.S159` - Prove every admitted destination resolves to a screen factory the route table can call, which the alias totality check does not cover; `src/cadrumo/entrypoints/tui/modelo/tests`.
+- [ ] `W04.P16.S147` - Update the four exact-count visual-inventory assertions for the surfaces this wave delivers, and record the standing obligation that binds every later step adding one; `dev/tui/tests`.
+- [ ] `W04.P16.S159` - Prove every admitted destination still resolves through the route table once the factory signature changes, which the existing mount test cannot cover after that change; `src/cadrumo/entrypoints/tui/modelo/tests`.
+- [ ] `W04.P16.S175` - Enrol the surfaces this wave delivers in the devtools surface catalogue and the coverage classification, which live outside the visual-inventory tests; `src/cadrumo/entrypoints/tui/devtools/surfaces.py`.
 
 ### Phase `W04.P32` - filing history and lifecycle presentation
 
@@ -482,7 +483,7 @@ enters through the supervisor.
 W05 through W09 close when their surfaces are reachable, their refusals are rendered rather than
 discarded, and their denominator rows carry a delivered disposition the gate accepts.
 
-Every wave additionally closes only if the four per-change obligations held throughout it: each
+Every wave additionally closes only if the six per-change obligations held throughout it: each
 step that added a full-screen class carried its own coverage classification, each step that
 authored operator-visible copy carried all four locale entries in the same commit - an obligation
 that binds on its own terms, because the hook meant to enforce it cannot currently fire and is
