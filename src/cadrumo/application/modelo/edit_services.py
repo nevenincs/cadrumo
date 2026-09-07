@@ -74,6 +74,9 @@ from .edit_models import (
     ModeloEditWritableDetailRowSurfaceEntryV1,
     ModeloEditWritableRowGroupSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
+    ModeloMutationCapabilityProjectionV1,
+    ModeloMutationCapabilityRequestV1,
+    ModeloMutationCapabilityRowV1,
 )
 from .work_addressing import (
     ModeloWorkAddressNotFoundError,
@@ -83,6 +86,7 @@ from .work_addressing import (
     resolve_modelo_work_address_unit,
     work_address_for_modelo_target,
 )
+from .workspace_models import ModeloWorkspaceCapabilityDisposition
 
 _BASELINE_VALIDITY_WINDOW = timedelta(minutes=15)
 RESPONSIBLE_OWNER = "modelo.edit"
@@ -648,6 +652,62 @@ def preflight_modelo_edit(
     return ModeloEditPreflightEvaluatedV1(baseline_id=baseline.baseline_id, findings=tuple(findings))
 
 
+# The capability projection lives here rather than in a module of its own.
+# It is the read-only half of the edit contract -- it re-resolves a target and
+# projects a closed row for it -- which is exactly what this module owns, and
+# a public symbol may not sit in a leading-underscore module that no consumer
+# outside this package is allowed to import.
+#
+# Every row is UNMEASURED: the mutation projected here has no registered
+# operation definition, and the row model refuses an AVAILABLE row carrying
+# none, so availability follows from registration rather than from anything
+# asserted here. The condition this projection once waited on was a dependency
+# receipt from a retired family whose module was deleted, so it could never be
+# satisfied and the row read as pending while being permanently stuck.
+
+
+def project_modelo_edit_mutation_capability(
+    request: ModeloMutationCapabilityRequestV1,
+    *,
+    bucket_id: str,
+    work_catalogue: WorkUnitCatalogue,
+) -> ModeloMutationCapabilityProjectionV1:
+    """Project the closed CALCULATE mutation-capability row for one edit target.
+
+    Independently re-resolves the target exactly as
+    :func:`~._edit_services.admit_modelo_edit` does; an unresolved target
+    projects an empty capability set rather than a fabricated row. A
+    resolved target always projects ``UNMEASURED`` in this V1 -- see the
+    module docstring.
+    """
+    domain_target = request.target.target
+    try:
+        work_unit = resolve_modelo_work_address_unit(
+            work_address_for_modelo_target(domain_target),
+            catalogue=work_catalogue,
+            bucket_id=bucket_id,
+        )
+    except (ModeloWorkAddressNotFoundError, ModeloWorkUnitNotFoundError):
+        return ModeloMutationCapabilityProjectionV1(rows=())
+
+    law_selected_revision_id = law_selected_revision_for_work_target(
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        stored_revision_id=work_unit.revision_id,
+    )
+    row = ModeloMutationCapabilityRowV1(
+        mutation_id="calculate",
+        owning_producer=RESPONSIBLE_OWNER,
+        revision_id=law_selected_revision_id,
+        disposition=ModeloWorkspaceCapabilityDisposition.UNMEASURED,
+        reconsideration_condition=(
+            "becomes AVAILABLE once a calculate operation is registered and this row can carry "
+            "its operation definition"
+        ),
+    )
+    return ModeloMutationCapabilityProjectionV1(rows=(row,))
+
 __all__ = [
     "admit_modelo_edit",
     "detail_row_identity_components",
@@ -656,6 +716,7 @@ __all__ = [
     "modelo_edit_result_schema_identity",
     "parse_modelo_edit_value",
     "preflight_modelo_edit",
+    "project_modelo_edit_mutation_capability",
     "reconfirm_modelo_edit_baseline",
     "validate_scalar_intent",
     "writable_scalar_entry",

@@ -34,9 +34,9 @@ from ...core.i18n import Translatable as tr
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.utc import validate_utc_aware
 from ...domain.filing.schema import ModeloValidationFinding
-from ..filing.draft_review import ModeloApprovalStaleReason
 from ...domain.invoices.models import Invoice
 from ...domain.transactions.models import Transaction
+from ..filing.draft_review import ModeloApprovalStaleReason
 from ..workflow.review_models import InvoiceReviewRecord, LedgerReviewRecord
 from .enums import ReviewItemKind, ReviewSeverity
 

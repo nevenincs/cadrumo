@@ -10,7 +10,7 @@ register entries.
 
 The one place a sector's lifecycle diverges from the whole-entity one is the
 seed SOURCE. The whole-entity carried seed reads the prior-year Modelo 303
-settlement observation (:func:`seed_carried_prior_definitiva_entry`), but a
+settlement observation (:func:`evaluate_carried_prior_definitiva_seed`), but a
 sectorized taxpayer files one whole-entity Modelo 303 that carries a single
 percentage — it cannot supply a per-sector definitive. A sector's prior-year
 definitive lives in the register's own ``(ejercicio-1, sector_id)`` entry
@@ -18,7 +18,7 @@ definitive lives in the register's own ``(ejercicio-1, sector_id)`` entry
 the register, not the observation catalogue.
 
 See Also:
-    :func:`~application.prorrata_register.seed_carried_prior_definitiva_entry`
+    :func:`~application.prorrata_register.evaluate_carried_prior_definitiva_seed`
         Whole-entity carried seed sourced from the prior Modelo 303 observation.
     :func:`~application.calculations._prorrata_regularizacion.build_interrumpida_tres_ultimos_seed`
         The art. 105.Cinco interrupted-activity seed, already sector-parameterised.

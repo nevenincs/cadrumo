@@ -361,7 +361,14 @@ def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
 
     refused = _invoke(["app", "ledger", "update", tx, "--notes", "tweak"])
     assert refused.exit_code != 0, refused.output
-    assert "finalized modelo" in refused.output.lower() or "modelo" in refused.output.lower()
+    # WHICH finalized revision blocks the edit, in the transport form the
+    # refusal context carries. The word "modelo" alone is rendered by every
+    # ledger refusal in every locale, so accepting it asserted only the exit
+    # code; these facts are what an operator needs to go and unlock the row.
+    assert f"work_unit_id: {work_unit_id}" in refused.output
+    assert f"calculation_revision_id: {revision_id}" in refused.output
+    assert "modelo: 303" in refused.output
+    assert "blocking_reference_count: 1" in refused.output
 
 
 # --- Drive document-link fetch-and-encrypt-or-refuse -------------------------------

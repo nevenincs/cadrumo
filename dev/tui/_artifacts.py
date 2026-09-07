@@ -22,9 +22,11 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Final
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .._paths import REPO_ROOT, UTF_8
+from ._inventory import InterfaceKind
+from ._viewports import VIEWPORTS, Orientation, ViewportName
 
 RUN_ROOT: Final[Path] = REPO_ROOT / ".tmp-tui-visual-inventory"
 """Where runs land. Gitignored: these are review artefacts, never durable."""
@@ -71,17 +73,40 @@ one that is never ordinary -- a run whose matrix SHRANK, which strands the
 frames of every surface it no longer asks for."""
 
 
+class ThemeName(StrEnum):
+    """The appearances a frame may be reviewed under.
+
+    The one definition of the vocabulary. It was previously a bare tuple of
+    strings in the command line, checked only where the command line parsed
+    its own ``--theme`` option: every record that CARRIED a theme typed it
+    ``str``, so a manifest read back from disk, or a frame built by hand,
+    could name an appearance that has never been rendered and be reported as
+    a reviewed one.
+
+    The values are the renderable subset of the application's own
+    :class:`~cadrumo.core.config_support.TuiAppearance`. ``AUTO`` is excluded
+    deliberately: it defers the choice to the host terminal, so a frame
+    recorded under it would name no appearance at all, and a review has to
+    know which one it is looking at. The join to that vocabulary is asserted
+    by this package's tests rather than derived here, so the two spellings
+    cannot drift apart unnoticed.
+    """
+
+    DARK = "dark"
+    LIGHT = "light"
+
+
 class RenderedFrame(BaseModel):
     """One surface rendered at one viewport under one theme."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     surface: str
-    viewport: str
+    viewport: ViewportName
     columns: int
     rows: int
-    orientation: str
-    theme: str
+    orientation: Orientation
+    theme: ThemeName
     png: str
     svg: str
     text: str
@@ -105,6 +130,28 @@ class RenderedFrame(BaseModel):
     """Characters the pinned raster font could not draw; a blank box in the
     PNG at one of these is a font gap, never a defect in the surface."""
 
+    @model_validator(mode="after")
+    def _geometry_matches_the_named_viewport(self) -> RenderedFrame:
+        """Refuse a frame whose grid contradicts the viewport it names.
+
+        ``columns``, ``rows`` and ``orientation`` are a SECOND statement of
+        what :data:`~dev.tui._viewports.VIEWPORTS` already decides for the
+        named viewport, kept in the record so the index reads without
+        resolving anything. A second statement with no owner is free to
+        disagree with the first, and a manifest saying ``small`` at 200x50
+        is a claim that no frame on disk supports.
+        """
+        shape = VIEWPORTS[self.viewport]
+        recorded = (self.columns, self.rows, self.orientation)
+        owned = (shape.columns, shape.rows, shape.orientation)
+        if recorded != owned:
+            message = (
+                f"frame {self.surface}/{self.viewport}/{self.theme} records {recorded}, "
+                f"but viewport {self.viewport} is {owned}"
+            )
+            raise ValueError(message)
+        return self
+
     @property
     def key(self) -> str:
         """The identity a diff matches frames on across two runs."""
@@ -117,7 +164,7 @@ class InterfaceRecord(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     qualname: str
-    kind: str
+    kind: InterfaceKind
     locator: str
     rendered_by: tuple[str, ...] = ()
     note: str = ""
@@ -169,8 +216,8 @@ class FailedFrame(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     surface: str
-    viewport: str
-    theme: str
+    viewport: ViewportName
+    theme: ThemeName
     kind: FrameFailureKind
     attempts: int = 1
     detail: str = ""
@@ -192,8 +239,8 @@ class SkippedFrame(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     surface: str
-    viewport: str
-    theme: str
+    viewport: ViewportName
+    theme: ThemeName
     reason: str
 
     @property
@@ -684,7 +731,6 @@ def write_index(directory: Path, manifest: Manifest) -> Path:
 __all__ = [
     "DEFAULT_RUN_NAME",
     "FRAME_ARTEFACT_KINDS",
-    "FrameFailureKind",
     "INDEX_NAME",
     "MANIFEST_NAME",
     "MANIFEST_SCHEMA_VERSION",
@@ -694,12 +740,15 @@ __all__ = [
     "RUN_ROOT",
     "SCRATCH_DIR",
     "FailedFrame",
+    "FrameFailureKind",
+    "InterfaceKind",
     "InterfaceRecord",
     "Manifest",
     "ManifestVersionError",
     "RenderedFrame",
     "SkippedFrame",
     "StaleArtifactPurgeRefusedError",
+    "ThemeName",
     "commit_staged_run",
     "digest",
     "known_runs",

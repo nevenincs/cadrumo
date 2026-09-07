@@ -38,7 +38,15 @@ def test_preflight_empty_catalogue_is_ready() -> None:
     assert "issues\t0" in result.output
     assert "ready\ttrue" in result.output
     assert "advisory\tempty_ledger" in result.output
-    assert "No active ledger transactions were checked for this period." in result.output
+    # The advisory's CODE, not its sentence. The sentence renders in the
+    # operator's language, so matching English asserted the ambient locale
+    # rather than the advisory. That it carries wording at all is asserted
+    # below, so dropping the prose match loses nothing.
+    assert "notice	ledger.preflight.empty_period" in result.output
+    advisory = next(
+        line for line in result.output.splitlines() if line.startswith("notice	ledger.preflight.empty_period	")
+    )
+    assert advisory.split("	", 2)[2].strip(), "the empty-period advisory carries no wording"
 
 
 def test_preflight_empty_catalogue_json_notice_marks_warning() -> None:
@@ -106,8 +114,12 @@ def test_status_period_readiness_issues_include_tax_diagnostic_fields() -> None:
     result = _invoke(["app", "ledger", "status", "--period", "05", "--year", "2026"])
 
     assert result.exit_code == 0, result.output
-    assert "Ready\tFalse" in result.output or "ready\tFalse" in result.output
-    assert "readiness_issue\t" in result.output
+    # Not-ready is asserted through the ISSUES rather than the summary
+    # label, which is localised: a row carrying a readiness issue is by
+    # definition not ready, and the label matched only under an English
+    # ambient locale while naming no issue at all.
+    readiness_issue_lines = [line for line in result.output.splitlines() if line.startswith("readiness_issue	")]
+    assert readiness_issue_lines, result.output
     assert "classification=BUSINESS" in result.output or "classification=business" in result.output
     assert "category_id=-" in result.output
     assert "taxable_base=-" in result.output

@@ -260,7 +260,7 @@ class NewModeloScaffoldManager:
             hint = _SECTION_CHECKLIST_HINTS[section]
             entries.append(
                 ScaffoldPlanEntry(
-                    Path("revisions") / revision_id / section / f"0001-{section}.toml",
+                    Path("revisions") / revision_id / section / f"0001-{section.replace('_', '-')}.toml",
                     _section_fragment_toml(revision_id, section, hint),
                 ),
             )

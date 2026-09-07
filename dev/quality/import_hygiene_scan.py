@@ -790,11 +790,17 @@ def scan_canonical_authority(
     candidates = tracked_live_files() if paths is None else tuple(paths)
     violations: list[CanonicalAuthorityViolation] = []
     definitions: dict[str, list[tuple[Path, int]]] = defaultdict(list)
+    unread: list[str] = []
     for path in candidates:
         if path.suffix.lower() in spec.text_suffixes and spec.forbidden_text_references:
             try:
                 text = path.read_text(encoding=_UTF_8, errors="replace")
-            except OSError:
+            except OSError as refusal:
+                # An empty string here is not an absence of forbidden references,
+                # it is a manufactured one: every `reference in text` below then
+                # answers False, so a retired authority string sitting in this
+                # file is reported as not present rather than as not looked at.
+                unread.append(f"{path} ({refusal})")
                 text = ""
             for reference in spec.forbidden_text_references:
                 if reference in text:
@@ -803,7 +809,8 @@ def scan_canonical_authority(
             continue
         try:
             tree = ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
-        except (FileNotFoundError, SyntaxError, UnicodeDecodeError):
+        except (FileNotFoundError, SyntaxError, UnicodeDecodeError) as refusal:
+            unread.append(f"{path} ({refusal})")
             continue
         for node in tree.body:
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
@@ -828,6 +835,12 @@ def scan_canonical_authority(
                         detail=symbol,
                     )
                 )
+    report_unread(
+        "canonical authority scan",
+        "these files were not read or parsed, so a retired authority string or a duplicate "
+        "canonical definition inside one is missing from the violations below",
+        unread,
+    )
     return sorted(violations, key=lambda item: (item.path.as_posix(), item.lineno, item.kind, item.detail))
 
 

@@ -27,7 +27,7 @@ import textwrap
 import pytest
 from pydantic import TypeAdapter
 
-from ....entrypoints.cli import command_graph
+from ....entrypoints.cli.command_specs import COMMAND_GRAPH
 from ....tests.cli_performance import IMPORT_FAMILY_PREFIXES
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -59,7 +59,7 @@ _PROBE = textwrap.dedent(
 
 
 def _state_free_paths() -> list[list[str]]:
-    return [list(node.path[1:]) for node in command_graph.nodes() if "state-free" in node.spec.policy.capabilities]
+    return [list(node.path[1:]) for node in COMMAND_GRAPH.nodes() if "state-free" in node.spec.policy.capabilities]
 
 
 def _probe(paths: list[list[str]]) -> dict[str, list[str]]:

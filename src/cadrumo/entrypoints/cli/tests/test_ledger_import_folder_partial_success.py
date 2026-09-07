@@ -68,7 +68,12 @@ def test_one_poisoned_file_does_not_discard_the_rest_of_the_folder(tmp_path: Pat
     # The poisoned file sorts FIRST, so under the old comprehension it aborted
     # the run before either good file was reached.
     assert "a_poisoned.csv" in result.output, result.output
-    assert "rows" in result.output.lower()
+    # The two good files still imported, asserted on the COUNT rather than
+    # on the word 'rows': that label is localised, so matching it tested the
+    # ambient locale and would have passed on a run that reported a total of
+    # zero. Two good files of two rows each is the claim.
+    assert result.exit_code == 0, result.output
+    assert re.search(r"\b4\b", result.output), result.output
 
 
 def test_a_folder_of_good_files_still_imports_every_one(tmp_path: Path) -> None:

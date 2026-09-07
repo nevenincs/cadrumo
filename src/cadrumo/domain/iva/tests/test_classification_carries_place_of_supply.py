@@ -37,7 +37,7 @@ from ..classification import (
     classify_iva,
 )
 from ..errors import IvaCatalogueError
-from ..place_of_supply import required_supply_nature_for_rule
+from ..place_of_supply import place_of_supply_rule
 from ..schema import EUMemberState, IvaCategory, IvaRateKind
 from ..supply_nature import SupplyNature
 
@@ -104,10 +104,10 @@ def test_cross_border_result_carries_its_governing_article_and_nature() -> None:
     # The stamped nature is the table's, not a second opinion assembled in the
     # classifier: it must equal what the owning module answers for the same
     # rule on the same day.
-    assert grounding.supply_nature == required_supply_nature_for_rule(
+    assert grounding.supply_nature == place_of_supply_rule(
         result.matched_rule_id,
         on=_GROUNDED_DAY,
-    )
+    ).supply_nature
 
 
 def test_a_silent_nature_is_present_and_grounded_rather_than_missing() -> None:

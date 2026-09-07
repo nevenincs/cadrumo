@@ -30,7 +30,6 @@ from ....tests.profile_capsule import seed_modelo_ready_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...operations.registry import OperationSchemaIdentityV1
 from .._edit_execution import apply_modelo_edit
-from .._edit_facade import project_modelo_edit_mutation_capability
 from ..edit_contract import ModeloEditCompatibilityTupleV1
 from ..edit_models import (
     ModeloEditAdmissionRequestV1,
@@ -45,7 +44,12 @@ from ..edit_models import (
     ModeloMutationCapabilityRequestV1,
     ModeloScalarEditIntentV1,
 )
-from ..edit_services import admit_modelo_edit, modelo_edit_request_schema_identity, modelo_edit_result_schema_identity
+from ..edit_services import (
+    admit_modelo_edit,
+    modelo_edit_request_schema_identity,
+    modelo_edit_result_schema_identity,
+    project_modelo_edit_mutation_capability,
+)
 from ..work_addressing import ModeloExactWorkUnitTarget
 from ..workspace_models import (
     ModeloWorkspaceCapabilityDisposition,
@@ -145,7 +149,7 @@ def _admit(
 
 
 def test_mutation_capability_is_unmeasured_for_a_resolvable_target() -> None:
-    """The V1 facade never advertises AVAILABLE without a green C3 receipt."""
+    """The facade never advertises AVAILABLE without a registered operation definition."""
     work_unit = _work_unit()
     work_catalogue = WorkUnitCatalogue.from_work_units((work_unit,))
     projection = project_modelo_edit_mutation_capability(
@@ -156,6 +160,33 @@ def test_mutation_capability_is_unmeasured_for_a_resolvable_target() -> None:
     assert len(projection.rows) == 1
     assert projection.rows[0].disposition is ModeloWorkspaceCapabilityDisposition.UNMEASURED
     assert projection.rows[0].operation_definition_id is None
+
+
+def test_the_unmeasured_row_names_a_condition_that_can_actually_be_met() -> None:
+    """An unmeasured row must be waiting on something reachable, not something deleted.
+
+    The row previously waited on a dependency receipt whose family had been
+    retired and whose module was deleted, so the condition could never be
+    satisfied: the row read as pending while being permanently stuck, which is
+    indistinguishable from a row nobody has considered. The surviving mechanism
+    is operation registration, which the row model already enforces by refusing
+    an available row that carries no operation definition.
+    """
+    work_unit = _work_unit()
+    projection = project_modelo_edit_mutation_capability(
+        ModeloMutationCapabilityRequestV1(target=_target_for(work_unit)),
+        bucket_id=_BUCKET_ID,
+        work_catalogue=WorkUnitCatalogue.from_work_units((work_unit,)),
+    )
+
+    condition = projection.rows[0].reconsideration_condition
+    assert condition is not None
+    assert "receipt" not in condition.lower(), (
+        f"the reconsideration condition still names a retired mechanism: {condition!r}"
+    )
+    assert "operation" in condition.lower(), (
+        f"the reconsideration condition must name the surviving mechanism: {condition!r}"
+    )
 
 
 def test_mutation_capability_is_empty_for_an_unresolvable_target() -> None:

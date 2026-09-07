@@ -28,7 +28,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.period import Period
-from ....domain import iva as _iva_module
+from ....domain.iva import rates as _iva_rates_module
 from ....domain.iva.rates import load_iva_rate_table
 from ....domain.iva.schema import EUMemberState, IvaCategory
 from ....tests.attribute_scope import scoped_attribute
@@ -82,8 +82,12 @@ class TestTheResolverFollowsTheRateAuthority:
                 "effective_until": None,
             },
         )
+        # Patched on the DEFINING module, which is where the resolver reaches
+        # it. The ``cadrumo.domain.iva`` package re-exported its surface once
+        # and that map is retired -- patching the package now sets an attribute
+        # nothing reads, and setting one that does not exist raises instead.
         with scoped_attribute(
-            _iva_module,
+            _iva_rates_module,
             "load_iva_rate_table",
             lambda: dict(real_table) | {EUMemberState.ES: (*spain, planted)},
         ):

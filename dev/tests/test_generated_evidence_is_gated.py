@@ -55,12 +55,31 @@ def _naming_modules(stem: str) -> tuple[Path, ...]:
     )
 
 
-def test_the_search_population_is_not_empty() -> None:
-    """A glob that matched nothing would make every assertion below vacuous."""
-    assert _generated_evidence_files(), (
-        f"no generated evidence artefacts found under {_GENERATED_EVIDENCE_DIR}, so this gate "
-        "is asserting enrolment over an empty set and would stay green if the whole directory "
-        "were deleted"
+def test_the_search_population_is_empty_because_the_artefacts_were_retired() -> None:
+    """The population is zero, and that is a recorded state rather than a broken glob.
+
+    This asserted the population was NON-empty until the last artefact went. That
+    was the right guard while any existed -- an empty glob makes the enrolment
+    check below vacuous -- but every path-keyed evidence file under
+    ``dev/quality`` has since been deliberately retired: four in the commit that
+    closed the private-to-public module promotion, two more when the error-code
+    and exec-outcome ledgers were withdrawn. Left as it was, this gate sat
+    permanently red over a subject nobody intends to restore, and a gate that is
+    always failing is read exactly as one that is never run.
+
+    Inverted rather than deleted, because the module's reason survives its
+    subject: the danger it names is "the next artefact someone generates, which
+    arrives with no detector". Asserting emptiness keeps that watch -- the first
+    new ``dev/quality/*.json`` turns this red, which is precisely the moment a
+    human should decide whether it needs a drift gate. The parametrised check
+    below then does the real work, and the predicate control proves it can fail.
+    """
+    found = _generated_evidence_files()
+    assert found == (), (
+        "generated evidence artefacts have reappeared under "
+        f"{_GENERATED_EVIDENCE_DIR}: {[path.name for path in found]}. Each is keyed by source "
+        "path, so a relocation invalidates it silently. Give each one a drift gate that "
+        "regenerates and compares, then record the new population here."
     )
 
 

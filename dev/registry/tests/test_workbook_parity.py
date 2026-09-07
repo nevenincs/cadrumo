@@ -14,6 +14,7 @@ Run them through ``just test-workbook-parity``.
 from __future__ import annotations
 
 import re
+import shutil
 import subprocess
 import zipfile
 from datetime import date
@@ -609,6 +610,38 @@ def test_libreoffice_runner_rejects_explicit_missing_executable(tmp_path: Path) 
 
 def test_binary_xls_conversion_error_code_is_registered() -> None:
     assert issubclass(_BinaryXlsConversionError, RuntimeError)
+
+
+def test_convert_binary_xls_with_libreoffice_reports_failed_status_on_conversion_error(tmp_path: Path) -> None:
+    """A real (unmocked) conversion failure must resolve to the same failed report the
+    prior code only reached through a "timed out" wording check. ``WorkbookConversionStatus``
+    has no distinct timed-out member, so a failing runner -- whatever the failure wording --
+    proves the single collapsed return path, not a special-cased timeout arm.
+    """
+    workbook_path = tmp_path / "modelo_111" / "files" / "broken.xls"
+    workbook_path.parent.mkdir(parents=True, exist_ok=True)
+    workbook_path.write_bytes(b"not a real binary XLS workbook")
+
+    # A real executable, correctly named for `_resolve_libreoffice_runner` to accept it,
+    # that is not LibreOffice and always exits non-zero against these argv -- a genuine
+    # subprocess failure, not a monkeypatched one.
+    fake_soffice = tmp_path / "soffice.exe"
+    shutil.copy(r"C:\Windows\System32\where.exe", fake_soffice)
+
+    report = convert_binary_xls_with_libreoffice(workbook_path, root=tmp_path, executable=str(fake_soffice))
+
+    assert report.conversion_status == "failed"
+    assert report.error is not None
+    assert "LibreOffice binary XLS conversion failed" in report.error
+    assert report.workbook_kind == "unreadable"
+    assert report.evidence_tier is None
+    assert report.converted_extension is None
+    assert set(report.not_evidence_for) == {
+        "legal_authority",
+        "official_source_guidance",
+        "executable_parity_evidence",
+        "layout_authority",
+    }
 
 
 def _write_workbook_with_poisoned_row_attribute(path: Path, *, poisoned: str) -> None:

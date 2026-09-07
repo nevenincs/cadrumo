@@ -8,6 +8,7 @@ import json
 import tarfile
 import zipfile
 from pathlib import Path
+from typing import Final
 
 from .._hashing import sha256_path
 from ..python_cohort import _artifact_command_projection, _projection_digest
@@ -75,21 +76,47 @@ def add_test_runtime_wheelhouse(
     return path
 
 
+#: The declared stand-in for a member digest that provably could not be computed.
+#:
+#: Reaching for it is never a fallback. A caller that plants bytes which are not
+#: archives states so, and this value records that the projection was refused
+#: rather than computed -- the two are otherwise indistinguishable downstream,
+#: because the envelope digest closes over whatever sits in this field and a
+#: fabricated value verifies exactly as well as a real one.
+_UNREADABLE_MEMBERS: Final = "0" * 64
+
+
 def make_test_command_spec_attestation(
     directory: Path,
     artifacts: dict[str, str],
     *,
     source_commit: str,
+    artifacts_are_unreadable: bool = False,
 ) -> dict[str, object]:
-    """Build the strict envelope around real planted fixture artifacts."""
+    """Build the strict envelope around real planted fixture artifacts.
+
+    ``artifacts_are_unreadable`` is the caller's declaration that it planted
+    placeholder bytes rather than archives, because its subject is a gate the
+    cohort reaches before the member projection. The declaration is checked in
+    both directions: without it an unreadable artifact raises instead of
+    becoming a plausible digest, and with it a readable artifact raises instead
+    of letting the stand-in displace a projection that could have been computed.
+    """
     root_wheel = directory / artifacts["cadrumo"]
     root_sdist = directory / artifacts["cadrumo-sdist"]
-    try:
-        member_digest = _projection_digest(
-            _artifact_command_projection(root_wheel, root_sdist, directory / artifacts["source-archive"])
-        )
-    except (OSError, tarfile.TarError, zipfile.BadZipFile):
-        member_digest = "0" * 64
+    source_archive = directory / artifacts["source-archive"]
+    if not artifacts_are_unreadable:
+        member_digest = _projection_digest(_artifact_command_projection(root_wheel, root_sdist, source_archive))
+    else:
+        try:
+            _artifact_command_projection(root_wheel, root_sdist, source_archive)
+        except (OSError, tarfile.TarError, zipfile.BadZipFile):
+            member_digest = _UNREADABLE_MEMBERS
+        else:
+            raise AssertionError(
+                "artifacts_are_unreadable was declared but the member projection succeeded; "
+                "drop the declaration so the computed digest is attested"
+            )
     value: dict[str, object] = {
         "schema": "cadrumo.command-spec-cohort.v1",
         "node_count": 1,

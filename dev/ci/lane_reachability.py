@@ -497,8 +497,25 @@ def _justfile_lanes(text: str, *, default_paths: tuple[str, ...]) -> list[Lane]:
 
 
 def _recipes_invoked_by(text: str) -> set[str]:
-    """Return every recipe name a ``just <recipe>`` call in ``text`` names."""
-    return {match.group("recipe") for match in _JUST_CALL.finditer(text)}
+    """Return every recipe name an EXECUTED ``just <recipe>`` call in ``text`` names.
+
+    Executed, because this reads justfile recipe BODIES as well as workflow
+    ``run:`` blocks, and a body is a script with prose in it. Six comment lines
+    in this justfile name a real recipe inside an explanatory sentence --
+    "Verify the result with `just playwright-doctor`" -- and harvesting the raw
+    text counted every one of them as an invocation. Five were also invoked for
+    real, so they cost nothing; ``check-rag`` was reached by nothing else and
+    was reported CI-invoked on the strength of a sentence mentioning it.
+
+    The error runs the dangerous way. A recipe wrongly counted as reached makes
+    the lanes it declares read as covered by CI, which is precisely the
+    reassurance :func:`ci_invoked_lanes` exists to withhold; a recipe wrongly
+    counted as unreached would at least say so out loud. The workflow side of
+    this was already closed -- ``run:`` blocks are read out of parsed YAML, so
+    step names and workflow comments never reach here -- and the justfile side
+    was not.
+    """
+    return {match.group("recipe") for line in executed_lines(text) for match in _JUST_CALL.finditer(line)}
 
 
 def _recipe_bodies(text: str) -> dict[str, str]:

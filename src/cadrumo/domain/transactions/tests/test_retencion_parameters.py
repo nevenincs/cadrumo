@@ -145,9 +145,15 @@ def test_no_feature_module_redeclares_the_retencion_rates_as_literals() -> None:
     """
     retired_literal = "_MAX_SUPPORTED_ACTIVITY" + "_WITHHOLDING_RATE"
     package_root = bundled_path().parent
+    scanned = scan_directory(package_root, pattern="*.py", recursive=True, require_root=True)
+    # Floored because the assertion below is `offenders == []`: an empty walk
+    # reports the same green as a package with no reintroduced literal, so a
+    # moved package root would retire this gate without a word.
+    assert scanned, (
+        f"the retired-literal scan reached no module under {package_root}; "
+        "a walk matching nothing cannot find a reintroduced retencion rate"
+    )
     offenders = [
-        str(path.relative_to(package_root))
-        for path in scan_directory(package_root, pattern="*.py", recursive=True)
-        if retired_literal in path.read_text(encoding="utf-8")
+        str(path.relative_to(package_root)) for path in scanned if retired_literal in path.read_text(encoding="utf-8")
     ]
     assert offenders == [], f"retired retención-rate literal reintroduced in: {offenders}"

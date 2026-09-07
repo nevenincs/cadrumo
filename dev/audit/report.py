@@ -130,6 +130,23 @@ class DimensionReport:
 # ---------------------------------------------------------------------------
 
 
+def _verdict_of(line: str) -> str | None:
+    """Return "KEPT"/"BROKEN" for a contract result line, else ``None``.
+
+    import-linter writes `<contract name> KEPT` and appends
+    `(N ignored imports)` whenever the contract ignores anything, so the
+    verdict is the last word before that optional parenthetical rather than
+    the end of the line.
+    """
+    text = line.strip()
+    if text.endswith(")") and "(" in text:
+        text = text[: text.rindex("(")].strip()
+    for verdict in ("KEPT", "BROKEN"):
+        if text.endswith(verdict) and text != verdict:
+            return verdict
+    return None
+
+
 def _load_import_hygiene_baseline() -> dict[str, object]:
     """Return an empty shell: no symbol is tolerated as a pinned duplicate.
 
@@ -265,8 +282,12 @@ def audit_layering(repo_root: Path) -> DimensionReport:
         )
 
     output = result.stdout + result.stderr
-    broken = [line.strip() for line in output.splitlines() if line.strip().endswith("BROKEN")]
-    kept = [line.strip() for line in output.splitlines() if line.strip().endswith("KEPT")]
+    # A contract line is `<name> KEPT` or `<name> BROKEN`, optionally followed
+    # by `(N ignored imports)`. Matching on endswith() therefore saw only the
+    # contracts that ignore nothing -- 3 of 12 here -- and the evaluated-vs-
+    # declared comparison below then read a perfectly healthy run as an abort.
+    broken = [line.strip() for line in output.splitlines() if _verdict_of(line) == "BROKEN"]
+    kept = [line.strip() for line in output.splitlines() if _verdict_of(line) == "KEPT"]
 
     # A run that ABORTED is not a run that found violations, and the two must
     # not share a report. import-linter aborts before evaluating anything when

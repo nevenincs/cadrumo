@@ -39,15 +39,6 @@ def _carry_material(
     )
 
 
-def serialize_carried_objects(
-    *,
-    bucket_id: str,
-    profile: StorageCustodyProfile,
-) -> tuple[CarriedSecureObject, ...]:
-    """Serialize every generic secure-object row selected by ``profile``."""
-    return _carry_material(bucket_id=bucket_id, profile=profile).carried_objects
-
-
 def build_secure_object_custody_payload(
     *,
     bucket_id: str,
@@ -93,5 +84,4 @@ __all__ = [
     "build_secure_object_custody_payload",
     "normalize_storage_custody_profile",
     "restore_carried_objects",
-    "serialize_carried_objects",
 ]

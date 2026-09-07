@@ -55,7 +55,7 @@ from cadrumo.core.external_constants import UTF_8_ENCODING
 from .._paths import REPO_ROOT
 from ._ast_scanner import declares_locale_keys, scan_source_text
 from .errors import LocaleError
-from .manager import LocaleManager, _parse_locale
+from .manager import LocaleManager, _parse_locale, discover_locale_codes, locale_catalogue_source
 
 #: The change to compare when the caller names none. ``staged`` is the useful
 #: default because the index is the only place a change exists before it lands.
@@ -192,18 +192,38 @@ def _held_family_namespaces() -> frozenset[str]:
 
 
 def _catalogue_key_sets(manager: LocaleManager, repo_root: Path, revision: str) -> dict[str, set[str]]:
-    """Return each catalogue's key set as the change leaves it.
+    """Return each LOCALE's key set as the change leaves it.
 
     Read from the revision rather than the working tree on purpose: the question
     is whether the key lands with its call site, and an unstaged catalogue edit
     sitting in the checkout is not part of the change being judged.
+
+    KEYED BY LOCALE, NEVER BY FILE. A catalogue ships as a shard directory of
+    many files, and a key lives in exactly one of them, so a per-file key set
+    would report every key as absent from every file but its own. The invariant
+    this feeds is per locale -- a key must land in all four -- so each locale's
+    shards are unioned into one set.
+
+    Discovery goes through the canonical pair rather than a glob. A glob for the
+    shape the tree does not carry returns an empty result, and an empty result
+    reads as a clean pass: this function previously globbed the flat shape after
+    the catalogues were resharded, so it matched nothing, produced no key sets,
+    and every co-landing check passed vacuously.
     """
     key_sets: dict[str, set[str]] = {}
-    for locale_path in sorted(manager.locales_dir.glob("*.yml")):
-        content = _blob(repo_root, revision, locale_path.relative_to(repo_root).as_posix())
-        if not content.strip():
+    for locale in sorted(discover_locale_codes(manager.locales_dir)):
+        source = locale_catalogue_source(manager.locales_dir, locale)
+        if source is None:
             continue
-        key_sets[locale_path.name] = manager.get_yaml_keys(_parse_locale(content))
+        shards = sorted(source.rglob("*.yml")) if source.is_dir() else [source]
+        keys: set[str] = set()
+        for shard in shards:
+            content = _blob(repo_root, revision, shard.relative_to(repo_root).as_posix())
+            if not content.strip():
+                continue
+            keys |= manager.get_yaml_keys(_parse_locale(content))
+        if keys:
+            key_sets[locale] = keys
     return key_sets
 
 

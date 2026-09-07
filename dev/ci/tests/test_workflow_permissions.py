@@ -133,3 +133,28 @@ def test_a_declared_map_settles_every_scope_including_ones_it_omits() -> None:
         "acquisition",
         "inheritor",
     )
+
+
+def test_a_document_declaring_no_jobs_is_refused_rather_than_answered_as_confinement() -> None:
+    """The enumerating answers cannot come out empty because the key was not there.
+
+    Both are read as confinement -- an empty tuple says no job holds the
+    capability -- so a document whose `jobs` mapping is missing, null or
+    restructured would confine every scope at once while nothing had been read.
+    The healthy document beside it is the other half: the refusal has to be
+    about the absent mapping, not about the functions having stopped answering.
+    """
+    jobless = {"permissions": {"contents": "read"}}
+    nulled = {"jobs": None, "permissions": {"contents": "read"}}
+
+    for document in (jobless, nulled):
+        with pytest.raises(KeyError, match="declares no jobs mapping"):
+            jobs_granting(document, "contents", "read")
+        with pytest.raises(KeyError, match="declares no jobs mapping"):
+            jobs_with_unsettled_grant(document, "contents")
+        with pytest.raises(KeyError, match="declares no jobs mapping"):
+            effective_job_permissions(document, "watchdog")
+
+    healthy = _document()
+    assert jobs_granting(healthy, "actions", "write") == ("watchdog",)
+    assert jobs_with_unsettled_grant(healthy, "contents") == ()

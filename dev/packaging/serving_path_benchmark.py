@@ -48,6 +48,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import atexit
 import json
 import os
 import platform
@@ -473,7 +474,16 @@ def run_serving_path_benchmark(
 ) -> ServingPathEvidence:
     """Run the full benchmark and return the measured table plus gate failures."""
     resolved_cli = (cli or _resolve_cli()).expanduser().resolve(strict=True)
-    resolved_work_dir = (work_dir or Path(tempfile.mkdtemp(prefix="serving-benchmark-"))).resolve()
+    if work_dir is None:
+        # Reclaimed at exit and named under the swept `cadrumo-` stem, because
+        # neither held here before: the family was invisible to the scratch
+        # gate (whose subject it fell outside) and disposed of by nothing, so
+        # every benchmark run left a work tree of measured state behind.
+        minted = Path(tempfile.mkdtemp(prefix="cadrumo-serving-benchmark-"))
+        atexit.register(shutil.rmtree, minted, ignore_errors=True)
+        resolved_work_dir = minted.resolve()
+    else:
+        resolved_work_dir = work_dir.resolve()
     resolved_work_dir.mkdir(parents=True, exist_ok=True)
 
     measurements: list[CallMeasurement] = []

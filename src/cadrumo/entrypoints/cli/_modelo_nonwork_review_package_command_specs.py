@@ -396,7 +396,7 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
             _REVIEW_PACKAGE_BUCKET_ID_OPTION,
         ),
-        policy=_CRYPTO_FACT_FILE_WRITE,
+        policy=_CRYPTO_PROFILE_WRITE,
         handler=LazyBinding.available(
             DeferredTarget("cadrumo.entrypoints.cli._modelo_review_package_cli", "review_package_encrypt_for_recipient")
         ),

@@ -39,9 +39,6 @@ TRANSIENT_TREE_SEGMENTS: Final[tuple[str, ...]] = (".baseline-source-snapshot",)
 DECLARED_NAMING_SITES: Final[dict[str, str]] = {
     "dev/quality/fixture_census.py": "prunes the snapshot from its walk, with a stated reason",
     "dev/quality/tests/test_no_dunder_init_module_imports.py": "excludes the snapshot from its import scan",
-    "src/cadrumo/application/modelo/tests/test_workspace_producers.py": (
-        "asserts the snapshot stays out of its producer walk"
-    ),
     "src/cadrumo/domain/calculations/registry/tests/test_public_api_boundaries.py": (
         "excludes the snapshot from its boundary scan"
     ),

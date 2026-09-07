@@ -381,6 +381,36 @@ symbols = [
 evidence = "The operator-facing corpus-drift assertion at src/cadrumo/core/corpus_manifest/manifest.py, reached only by its own package test. Its docstring called it the assertion USED BY the CI gate; no gate calls it, and that false half is corrected 2026-09-09 to say it is the assertion a gate would call. Staged rather than orphaned: build_corpus_bundle and verify_corpus_manifest beside it are the live manifest surface, and this is the one-call form a drift gate would use over them. Whether to mount such a gate is an owner's call; the sentence no longer asserts one exists."
 remedy_requires_decision = true
 
+[[symbol_cluster]]
+name = "findings-discarding prorrata seed variant"
+area = "application/prorrata_register"
+class = "superseded"
+resolved = true
+symbols = [
+  "seed_carried_prior_definitiva_entry",
+]
+evidence = "A findings-DISCARDING variant, deleted 2026-09-09. seed_carried_prior_definitiva_entry in src/cadrumo/application/prorrata_register/seed.py delegated to evaluate_carried_prior_definitiva_seed and returned only the seed, dropping the operator-facing blocker and advisory findings that explain why a seed did or did not resolve. Its own docstring said to call the other one when those findings are needed. Nothing called it -- not production, not dev, not tests -- while the evaluator carries three production references and is invoked by the register CLI, so the live path already keeps the findings. The two production docstrings that pointed readers at the discarding variant now name the evaluator. Same class as the calculate wrapper relocated earlier in this campaign: under no-silent-under-declaration the hazard is the existence of a shorter name that silently drops diagnostics, not its disuse. Found by a sweep for unreached one-line delegators whose target is reached elsewhere."
+
+[[symbol_cluster]]
+name = "place-of-supply nature narrowing its rule resolver displaced"
+area = "domain/iva"
+class = "superseded"
+resolved = true
+symbols = [
+  "required_supply_nature_for_rule",
+]
+evidence = "A one-line narrowing of a live sibling, deleted 2026-09-09. required_supply_nature_for_rule in src/cadrumo/domain/iva/place_of_supply.py returned place_of_supply_rule(rule_id, on=on).supply_nature and nothing else, while that rule resolver carries six production references. Its four consumers were all tests, now reading the field at the call site. Worth recording how it was nearly missed: a previous pass read its docstring, saw a Raises clause distinguishing a rule that is not grounded from one grounded and silent, and concluded it added behaviour. The clause documents what the CALLEE raises. Reading the body settled in one line what the docstring had argued the other way -- the same trap this campaign recorded when a module docstring argued for a duplicate guard the action already performed. Found by a sweep for unreached functions returning only part of a sibling's result, the body shape shared by three deletions before it."
+
+[[symbol_cluster]]
+name = "coverage-discarding custody carry serializer"
+area = "application/user_profile"
+class = "superseded"
+resolved = true
+symbols = [
+  "serialize_carried_objects",
+]
+evidence = "A coverage-DISCARDING variant, deleted 2026-09-09, and the strongest instance of that shape this campaign has found. serialize_carried_objects in src/cadrumo/application/user_profile/custody_carry.py returned _carry_material(...).carried_objects, dropping the coverage manifest AND the refusal beside it: the live entry point build_secure_object_custody_payload returns the rows with their exact namespace-coverage fact and raises ProfileExportError when a FULL profile carries unclassified namespaces. A caller reaching for the shorter name got rows back where the product refuses. The live one carries two production references through src/cadrumo/application/user_profile/bundle.py while this had none, and its five consumers were all in one roundtrip test, now calling the payload builder and discarding the manifest explicitly at the call site. Note the target it narrowed, _carry_material, is private: deleting the wrapper without a public alternative would have pushed tests onto a private name, which is why the payload builder rather than the private helper is where they now point."
+
 [[test_module]]
 name = "cadrumo.adapters.persistence.storage.sql.tests.test_secure_objects_schema_lineage"
 follows = "symbol"
@@ -1279,11 +1309,24 @@ remedy_requires_decision = true
 
 [[symbol_cluster]]
 name = "registry handoff path audit nothing runs"
-class = "should-be-live"
 area = "domain/calculations/registry"
-symbols = ["audit_registry_handoff_paths", "audit_registry_relation_handoff_applicability", "relation_is_consumed"]
-evidence = "An audit that classifies validated relation paths against the registry authority without inventing semantic repairs, its applicability sibling, and the predicate answering whether a formula or bound casilla consumes a relation. No production or dev caller runs any of them, so the classification the audit exists to produce is never produced and an unconsumed relation is never reported."
+class = "should-be-live"
+symbols = [
+  "audit_registry_handoff_paths",
+  "audit_registry_relation_handoff_applicability",
+]
+evidence = "An audit that classifies validated relation paths against the registry authority without inventing semantic repairs, and its applicability sibling, in src/cadrumo/domain/calculations/registry/handoffs.py. No production or dev caller runs either, so the classification the audit exists to produce is never produced and an unconsumed relation is never reported. Re-tested 2026-09-09 by sibling comparison, which also split this cluster: relation_consumption_index and relation_consumption_channels in the same module carry six production references each, so relation consumption IS computed live -- what is missing is the audit over it, not the ability to compute it. Running the audit somewhere is a capability decision and stays open."
 remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "relation consumption predicate the channels function displaced"
+area = "domain/calculations/registry"
+class = "superseded"
+resolved = true
+symbols = [
+  "relation_is_consumed",
+]
+evidence = "A one-line convenience over a live sibling: relation_is_consumed returned bool(relation_consumption_channels(relation, index)) and had no production caller, while relation_consumption_channels itself carries six -- relation_prefill, work_review and source_connectivity each need the CHANNELS rather than a boolean, which is why the predicate collected only tests. Deleted 2026-09-09 with its __all__ entry, and the two registry tests that used it now call the function it wrapped. It was carried inside the handoff-audit cluster and is a different class from the two audits beside it, which is worth recording: a cluster's class can hide a member that belongs elsewhere."
 
 [[symbol_cluster]]
 name = "marriage fact helpers displaced by the profile binding"
@@ -1318,8 +1361,8 @@ remedy_requires_decision = true
 name = "censo lifecycle routing no censo path consults"
 class = "should-be-live"
 area = "domain/calculations/registry"
-symbols = ["is_active_censo_modelo", "censo_modelo_ownership_map", "resolve_censo_modelo_work_unit_foundation"]
-evidence = "The registry-owned foundation map resolving lifecycle routing for Modelo 036 as active and Modelo 037 as historical, deriving every decision from the ValidatedRegistryAuthority so the registry TOML stays the single authority for event periods and ownership. Modelo 036 is in the registry, so this serves a live modelo rather than a staged one. No production caller reaches any of the three, and the application censo path -- censal_operation, censo_sync, cotejo_apply and their siblings -- contains no reference to 037 or to active-versus-historical routing at all. The distinction is therefore declared and never consulted."
+symbols = ["censo_modelo_ownership_map", "resolve_censo_modelo_work_unit_foundation"]
+evidence = "The registry-owned foundation map resolving lifecycle routing for Modelo 036 as active and Modelo 037 as historical, deriving every decision from the ValidatedRegistryAuthority so the registry TOML stays the single authority for event periods and ownership. Modelo 036 is in the registry, so this serves a live modelo rather than a staged one. No production caller reaches either, and the application censo path -- censal_operation, censo_sync, cotejo_apply and their siblings -- contains no reference to 037 or to active-versus-historical routing at all. The distinction is therefore declared and never consulted. A third member, is_active_censo_modelo, was removed rather than kept open: its whole body returned the ownership record's active_work_unit_allowed and discarded superseded_by, the pointer naming WHICH modelo replaced the historical one, so a caller reaching for the shorter name lost the remediation fact along with the routing answer. The two that remain carry the routing decision itself and need an owner, not a deletion."
 remedy_requires_decision = true
 
 [[symbol_cluster]]

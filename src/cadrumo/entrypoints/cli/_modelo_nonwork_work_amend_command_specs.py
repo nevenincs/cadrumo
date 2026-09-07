@@ -4,7 +4,6 @@
 
 from __future__ import annotations
 
-from ..tui_capability import TuiCapability
 from ._modelo_nonwork_command_spec_policies import _INTERACTIVE_MODEL_WRITE
 from ._modelo_work_command_specs import _ADDRESS, _LANGUAGE, _a, _o
 from .command_spec import (
@@ -16,6 +15,7 @@ from .command_spec import (
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
+    TuiCapability,
 )
 
 MODELO_NONWORK_WORK_AMEND_COMMAND_SPECS: tuple[CommandSpec, ...] = (

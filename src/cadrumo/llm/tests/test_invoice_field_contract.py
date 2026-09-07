@@ -30,7 +30,7 @@ import pytest
 
 from ...core.field_origin import FieldOrigin
 from ...core.period import Period
-from ...domain import iva as _iva_module
+from ...domain.iva import rates as _iva_rates_module
 from ...domain.iva.rates import load_iva_rate_table
 from ...domain.iva.schema import NO_PRINTED_TAX_IVA_CATEGORIES, EUMemberState, IvaCategory
 from ...domain.transactions.retencion_parameters import statutory_activity_retencion_rates
@@ -190,7 +190,10 @@ class TestTheAntiDriftGateBitesInBothDirections:
             },
         )
         mutated = dict(real_table) | {EUMemberState.ES: (*spain, extra)}
-        with scoped_attribute(_iva_module, "load_iva_rate_table", lambda: mutated):
+        # Patched on the DEFINING module: ``cadrumo.domain.iva`` retired its
+        # re-export map, so the package carries no such attribute and the
+        # prompt builder reaches the table at ``domain.iva.rates``.
+        with scoped_attribute(_iva_rates_module, "load_iva_rate_table", lambda: mutated):
             after = build_invoice_extraction_prompt(period=_ANNUAL_2026)
 
             assert planted in after.iva_rate_pcts

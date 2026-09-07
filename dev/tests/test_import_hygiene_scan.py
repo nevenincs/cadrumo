@@ -112,20 +112,38 @@ def test_dunder_all_assignment_value_ignores_bare_annotation_with_no_value() -> 
     assert dunder_all_assignment_value(node) is None
 
 
-def test_discover_facades_registers_annotated_all_init_as_a_facade() -> None:
-    """``cadrumo.core`` declares ``__all__`` in the annotated form and must be discovered.
+def test_discover_facades_walks_the_live_tree_and_finds_core_inert() -> None:
+    """The live-tree walk still runs, and ``cadrumo.core`` is correctly NOT a facade.
 
-    Exercises the real ``discover_facades`` walk over the actual ``src/cadrumo``
-    tree (no fixtures, no mocks) so the regression -- ``cadrumo.core`` silently
-    absent from the facade set -- is caught against the live source tree.
+    This asserted the opposite until now: that ``cadrumo.core`` carries a real
+    ``__all__`` exporting ``Modelo`` and ``CasillaId``. That was true when it was
+    written and is now forbidden -- the initialiser was emptied deliberately
+    (``cadrumo/core has none left``), and the architecture rule requires package
+    initialisers to be inert namespace markers whose consumers import from the
+    defining module. So the old assertion could only pass while the facade it
+    demanded still existed: its green depended on the very state the project set
+    out to remove, and it went red the moment that work landed rather than when
+    anything broke.
+
+    Inverted rather than deleted, because the live-tree exercise is the part
+    worth keeping: the annotated ``__all__`` FORM is already proven on
+    constructed input by the two ``dunder_all_assignment_value`` cases above,
+    but nothing else walks the real ``src/cadrumo`` tree. The floor keeps that
+    walk honest -- a collapsed walk would satisfy an emptiness check about
+    ``cadrumo.core`` without having looked at anything.
     """
     facades = discover_facades()
 
-    assert "cadrumo.core" in facades
+    assert len(facades) > 100, f"the facade walk reached only {len(facades)} initialisers; it collapsed"
+    assert any(info.has_real_all for info in facades.values()), (
+        "no initialiser anywhere carries a real __all__, so this walk cannot tell an inert "
+        "package from one it failed to parse"
+    )
     core_facade = facades["cadrumo.core"]
-    assert core_facade.has_real_all is True
-    assert "Modelo" in core_facade.all_names
-    assert "CasillaId" in core_facade.all_names
+    assert core_facade.has_real_all is False, (
+        "cadrumo.core declares a non-empty __all__ again; package initialisers are inert "
+        "namespace markers and consumers import from the defining module: {core_facade.all_names}"
+    )
 
 
 def test_find_shim_modules_excludes_dunder_main_entrypoint_modules() -> None:

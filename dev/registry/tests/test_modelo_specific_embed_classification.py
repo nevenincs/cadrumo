@@ -91,6 +91,44 @@ def test_derivation_catches_a_newly_written_module_by_each_signal(
     assert signal in {str(item) for item in derived_here[0].signals}
 
 
+def test_an_unparsable_sibling_module_is_announced_not_crashed(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The census must not let one unparsable module take the whole run down.
+
+    ``census`` used to run ``ast.parse`` outside any guard, unlike its sibling
+    ``importer_index`` in the same module, which announces a syntax error
+    through ``report_unread`` and keeps walking. A single half-written module
+    anywhere under the scanned tree used to raise out of ``census`` entirely,
+    losing every OTHER module's evidence along with it -- not a silent drop,
+    but a silent-adjacent one: the caller learns nothing about which module
+    broke the run, only that the whole census failed.
+    """
+    (tmp_path / "_healthy_m303.py").write_text('"""docstring."""\n\nOWNER = "m303"\n', encoding="utf-8")
+    (tmp_path / "_broken_m210.py").write_bytes(b"def broken(:\n    pass\n")
+
+    derived_here = census(tmp_path)
+    error = capsys.readouterr().err
+
+    assert [Path(record.path).name for record in derived_here] == ["_healthy_m303.py"]
+    assert "hiding regulatory-literal evidence is absent from this census" in error
+    assert "_broken_m210.py" in error
+
+
+def test_a_parsable_tree_announces_nothing(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A clean tree must stay quiet, so the notice above means something."""
+    (tmp_path / "_healthy_m303.py").write_text('"""docstring."""\n\nOWNER = "m303"\n', encoding="utf-8")
+    (tmp_path / "_plain_surface.py").write_text('"""No modelo anywhere."""\n\nVALUE = 1\n', encoding="utf-8")
+
+    census(tmp_path)
+
+    assert capsys.readouterr().err == ""
+
+
 def test_an_unadjudicated_derived_module_refuses() -> None:
     """Dropping one adjudication reds the reconciliation, naming the module."""
     dropped = ANCHOR_EMBED

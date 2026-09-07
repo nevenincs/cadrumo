@@ -16,7 +16,6 @@ from pydantic import ValidationError
 
 from ....application.export.tabular import ExportSerializationFormat
 from ....application.ledger.models import LedgerExportResult, LedgerExportRow
-from ....core.operator_action_enums import OperatorActionAxis
 from ....domain.categories.proportionality import ProportionalityKind
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.transactions.enums import BusinessClassification
@@ -94,10 +93,19 @@ def _period_payload(**overrides: object) -> dict[str, object]:
 def test_readiness_issue_payloads_keep_the_domain_detail_requirement() -> None:
     """Both operator projections refuse an issue the ledger preflight model rejects."""
     shared = {"transaction_id": "a" * 64, "reason": "missing_category", "detail": "category required"}
-    # The readiness projection additionally carries the typed operator action
-    # the envelope contract requires; the preflight projection does not. The
-    # detail requirement under test is what they still share.
-    readiness = {**shared, "operator_action": OperatorActionAxis.IMPORT_LEDGER_DATA}
+    # The two projections mirror ONE domain concept from two modules, and
+    # they carry the same three fields. An earlier note here claimed the
+    # readiness side additionally carried a typed operator action; it does
+    # not, and passing one made this test die on `extra_forbidden` before
+    # reaching the requirement it is named for. The action axis is a
+    # cross-period blocker concern and lives nowhere on a ledger issue.
+    readiness = dict(shared)
+
+    # Stated, not assumed. The two are separate classes in separate
+    # modules, so nothing but this stops one gaining a field the other
+    # lacks -- which is exactly how the stale note above came to describe
+    # a shape that had never existed on either.
+    assert set(LedgerIssuePayload.model_fields) == set(LedgerPreflightIssuePayload.model_fields)
 
     assert LedgerPreflightIssuePayload.model_validate(shared).detail == "category required"
     assert LedgerIssuePayload.model_validate(readiness).detail == "category required"

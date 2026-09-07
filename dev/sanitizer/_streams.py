@@ -10,7 +10,7 @@ emits literal form on round-trip; that is acceptable for the
 sanitiser because layout cues (``Tm``, ``Td``, fonts, colours) are
 preserved by-reference and only the *string content* is rewritten.
 
-Five text-show operators are handled (PDF 32000-2 §9.4.3):
+The text-show operators of PDF 32000-2 §9.4.3 are handled:
 
 * ``Tj`` — show one string.
 * ``TJ`` — show an array of strings + kerning numbers.

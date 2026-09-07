@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Final
 
 from .._paths import REPO_ROOT, UTF_8
-from ._artifacts import FrameFailureKind
+from ._artifacts import FrameFailureKind, ThemeName
 from ._viewports import Viewport
 
 HARNESS_MODULE: Final[str] = "cadrumo.entrypoints.tui.devtools"
@@ -77,7 +77,7 @@ class Capture:
 
     surface: str
     viewport: Viewport
-    theme: str
+    theme: ThemeName
     svg_path: Path
     frame_text: str
 
@@ -196,7 +196,7 @@ def capture(
     surface: str,
     viewport: Viewport,
     *,
-    theme: str,
+    theme: ThemeName,
     svg_path: Path,
     locale: str | None = None,
     workspace: str = "visual-inventory",
@@ -228,6 +228,7 @@ __all__ = [
     "FrameFailureKind",
     "HarnessError",
     "Surface",
+    "ThemeName",
     "capture",
     "classify",
     "coverage",

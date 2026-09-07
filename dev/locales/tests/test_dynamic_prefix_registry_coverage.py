@@ -1232,7 +1232,8 @@ def test_a_function_whose_every_return_is_a_key_is_followed_into_its_caller() ->
     source = chr(10).join(
         (
             "def refusal_key(reason):",
-            '    return "cli.config.errors.profile_session_absent" if reason else "cli.config.errors.profile_session_expired"',
+            '    return "cli.config.errors.profile_session_absent"'
+            ' if reason else "cli.config.errors.profile_session_expired"',
             "def route_for(reason):",
             "    if reason:",
             '        return "workbench.routes.home"',

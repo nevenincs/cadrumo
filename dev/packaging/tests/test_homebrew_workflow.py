@@ -42,9 +42,9 @@ def test_homebrew_workflow_declares_every_generated_target_row() -> None:
     }
     assert job["strategy"]["fail-fast"] is False
     preflight = next(step for step in job["steps"] if step["name"] == "Verify declared Homebrew release row")
-    assert 'test "$(uname -s)" = "$EXPECTED_OS"' in preflight["run"]
-    assert 'test "$(uname -m)" = "$EXPECTED_ARCH"' in preflight["run"]
-    assert 'test -x "$BREW_PATH"' in preflight["run"]
+    assert 'test "$(uname -s)" = "$EXPECTED_OS"' in _executable_lines(preflight["run"])
+    assert 'test "$(uname -m)" = "$EXPECTED_ARCH"' in _executable_lines(preflight["run"])
+    assert 'test -x "$BREW_PATH"' in _executable_lines(preflight["run"])
 
 
 def _executable_lines(script: str) -> str:
@@ -70,9 +70,9 @@ def test_homebrew_workflow_consumes_one_successful_commit_bound_cohort() -> None
     )
     commands = "\n".join(str(step.get("run", "")) for step in steps)
 
-    assert 'test "$(jq -r .name <<<"$run_json")" = "Cadrumo Packaging Smoke"' in source_gate["run"]
-    assert ".github/workflows/packaging-smoke.yml" in source_gate["run"]
-    assert 'test "$(jq -r .conclusion <<<"$run_json")" = "success"' in source_gate["run"]
+    assert 'test "$(jq -r .name <<<"$run_json")" = "Cadrumo Packaging Smoke"' in _executable_lines(source_gate["run"])
+    assert ".github/workflows/packaging-smoke.yml" in _executable_lines(source_gate["run"])
+    assert 'test "$(jq -r .conclusion <<<"$run_json")" = "success"' in _executable_lines(source_gate["run"])
     # Trusted-source predicate: a run is on main by HISTORY for a dispatch, and
     # by branch name for a push. The two arms are asserted separately because
     # they are not interchangeable -- a dispatch computes ancestry and a push
@@ -82,11 +82,11 @@ def test_homebrew_workflow_consumes_one_successful_commit_bound_cohort() -> None
     # cohort to be built at the commit carrying tag `v{version}`, which is
     # reachable only as `--ref v{version}`, so the unconditional name test made
     # every homebrew evidence row unobtainable.
-    assert '"$event" = "workflow_dispatch"' in source_gate["run"]
-    assert "/compare/main..." in source_gate["run"]
-    assert 'test "$ancestry" = "identical" -o "$ancestry" = "behind"' in source_gate["run"]
-    assert 'test "$event" = "push"' in source_gate["run"]
-    assert 'test "$(jq -r .head_branch <<<"$run_json")" = "main"' in source_gate["run"]
+    assert '"$event" = "workflow_dispatch"' in _executable_lines(source_gate["run"])
+    assert "/compare/main..." in _executable_lines(source_gate["run"])
+    assert 'test "$ancestry" = "identical" -o "$ancestry" = "behind"' in _executable_lines(source_gate["run"])
+    assert 'test "$event" = "push"' in _executable_lines(source_gate["run"])
+    assert 'test "$(jq -r .head_branch <<<"$run_json")" = "main"' in _executable_lines(source_gate["run"])
     # ...and the name test is INSIDE the push arm, not ahead of the branch.
     # Asserting only its presence would pass against the very bug this fixes.
     dispatch_arm, _, push_arm = _executable_lines(source_gate["run"]).partition("else")
@@ -98,9 +98,9 @@ def test_homebrew_workflow_consumes_one_successful_commit_bound_cohort() -> None
     # that run by construction; the source-identity gate above is the whole
     # provenance check. Every leg consumes the LINUX-built python cohort
     # (wheels are py3-none-any) plus the sealed full release cohort.
-    assert "gh run download" in download["run"]
-    assert "--name cadrumo-python-cohort-linux" in download["run"]
-    assert "--name cadrumo-release-cohort" in download["run"]
+    assert "gh run download" in _executable_lines(download["run"])
+    assert "--name cadrumo-python-cohort-linux" in _executable_lines(download["run"])
+    assert "--name cadrumo-release-cohort" in _executable_lines(download["run"])
     # Least privilege as the RUNTIME reads it: a job-level `permissions:` block
     # REPLACES the workflow-level map rather than merging into it, so the
     # declared map below settles nothing about what any job holds. `actions:
@@ -131,11 +131,11 @@ def test_homebrew_workflow_mints_every_row_from_the_immutable_cohort() -> None:
     emit = next(
         step for step in steps if step.get("name") == "Emit the sanctioned Homebrew distribution-evidence record"
     )
-    assert "dev.packaging.distribution_evidence_emit" in emit["run"]
-    assert '--row-id "$ROW_ID"' in emit["run"]
-    assert "--release-cohort-dir " in emit["run"]
-    assert '--tax-evidence "$tax"' in emit["run"]
-    assert 'if [[ -z "$tax" ]]' in emit["run"]
+    assert "dev.packaging.distribution_evidence_emit" in _executable_lines(emit["run"])
+    assert '--row-id "$ROW_ID"' in _executable_lines(emit["run"])
+    assert "--release-cohort-dir " in _executable_lines(emit["run"])
+    assert '--tax-evidence "$tax"' in _executable_lines(emit["run"])
+    assert 'if [[ -z "$tax" ]]' in _executable_lines(emit["run"])
     # All three legs publish their rows (distinct {row_id}-{evidence_id}.json
     # basenames) and per-leg bundles as their OWN artifacts. Draft tags raced
     # on creation and needed a dedicated single-creator job; artifacts do not
@@ -144,7 +144,7 @@ def test_homebrew_workflow_mints_every_row_from_the_immutable_cohort() -> None:
     # job at all.
     publish = next(step for step in steps if step.get("name") == "Stage the Homebrew evidence bundle")
     assert "gh release" not in publish["run"]
-    assert "cadrumo-homebrew-acquisition-${MATRIX_ID}.tar.gz" in publish["run"]
+    assert "cadrumo-homebrew-acquisition-${MATRIX_ID}.tar.gz" in _executable_lines(publish["run"])
 
     artifact_names = [
         str((step.get("with") or {}).get("name")) for step in steps if "upload-artifact" in str(step.get("uses", ""))
@@ -157,9 +157,9 @@ def test_homebrew_workflow_mints_every_row_from_the_immutable_cohort() -> None:
     # never under a .json row-namespace name.
     diagnostics = next(step for step in steps if step.get("name") == "Stage build-failure diagnostics")
     assert diagnostics["if"] == "failure() && steps.initialize.outputs.ready == 'true'"
-    assert "brew-install.log" in diagnostics["run"]
-    assert "debug-brew-install-${MATRIX_ID}-${GITHUB_RUN_ID}.log" in diagnostics["run"]
-    assert "debug-homebrew-diagnostics-${MATRIX_ID}-${GITHUB_RUN_ID}.tar.gz" in diagnostics["run"]
+    assert "brew-install.log" in _executable_lines(diagnostics["run"])
+    assert "debug-brew-install-${MATRIX_ID}-${GITHUB_RUN_ID}.log" in _executable_lines(diagnostics["run"])
+    assert "debug-homebrew-diagnostics-${MATRIX_ID}-${GITHUB_RUN_ID}.tar.gz" in _executable_lines(diagnostics["run"])
     assert "gh release" not in diagnostics["run"]
     assert steps.index(diagnostics) < steps.index(
         next(step for step in steps if step.get("name") == "Clean up the retained Homebrew install"),
@@ -176,12 +176,12 @@ def test_homebrew_workflow_runs_the_real_source_install_and_oracles() -> None:
     publish = next(step for step in steps if step["name"] == "Stage the Homebrew evidence bundle")
 
     assert initialize["id"] == "initialize"
-    assert "GITHUB_RUN_ATTEMPT" in initialize["run"]
-    assert "run-context.json" in initialize["run"]
-    assert "dev.packaging.python_cohort verify" in generate["run"]
-    assert "packaging/homebrew/generate.py" in generate["run"]
-    assert "dev/packaging/smoke_homebrew.py" in smoke["run"]
-    assert '--tap-name "cadrumo-smoke/${MATRIX_ID}"' in smoke["run"]
+    assert "GITHUB_RUN_ATTEMPT" in _executable_lines(initialize["run"])
+    assert "run-context.json" in _executable_lines(initialize["run"])
+    assert "dev.packaging.python_cohort verify" in _executable_lines(generate["run"])
+    assert "packaging/homebrew/generate.py" in _executable_lines(generate["run"])
+    assert "dev/packaging/smoke_homebrew.py" in _executable_lines(smoke["run"])
+    assert '--tap-name "cadrumo-smoke/${MATRIX_ID}"' in _executable_lines(smoke["run"])
     assert publish["if"] == "always() && steps.initialize.outputs.ready == 'true'"
 
 

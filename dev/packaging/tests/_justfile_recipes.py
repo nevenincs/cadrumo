@@ -35,9 +35,23 @@ TARGET_DIRECTORY: Final[str] = "dev/packaging/tests"
 
 _JUSTFILE: Final[Path] = REPO_ROOT / "justfile"
 
-#: A recipe header: a name at column zero followed by `:`, but not `:=`, which
+#: A recipe header: a name at column zero, then just's parameter grammar --
+#: each parameter optionally variadic (`*ARGS`, `+ARGS`), exported (`$VAR`),
+#: or defaulted (`workers="auto"`) -- and then a bare `:`, never `:=`, which
 #: is a variable assignment rather than a recipe.
-_RECIPE_HEADER: Final[re.Pattern[str]] = re.compile(r"^(?P<name>[a-z][\w-]*)\s*:(?![=])")
+#:
+#: The parameter region is modelled rather than skipped with a wildcard,
+#: because the name here is harvested out of free text and a wildcard would
+#: also accept a column-zero line that is no header at all. Omitting the
+#: region entirely -- which this pattern did -- is worse still: a
+#: parameterised header does not fail LOUDLY, it simply does not match, and
+#: every body line beneath it is then attributed to the PRECEDING recipe.
+#: Sixteen of this justfile's 111 recipes carry parameters, so a pytest
+#: invocation moving under any one of them would have been measured under
+#: another lane's name while both consuming gates stayed green.
+_RECIPE_HEADER: Final[re.Pattern[str]] = re.compile(
+    r"""^(?P<name>[a-z][\w-]*)(?:\s+[*+$]?[A-Za-z_]\w*(?:\s*=\s*(?:"[^"]*"|'[^']*'))?)*\s*:(?![=])""",
+)
 
 
 class Recipe(NamedTuple):
@@ -83,5 +97,10 @@ def packaging_pytest_recipes(*, justfile: Path | None = None) -> tuple[Recipe, .
         tokens = shlex.split(line.lstrip("@"))
         if "pytest" not in tokens:
             continue
+        assert current, (
+            f"a pytest invocation over {TARGET_DIRECTORY} was read before any recipe header "
+            f"matched: {raw_line.strip()!r}. Filing it under an empty name would put a real "
+            "lane where no gate looks for it, which reads exactly like a lane that is not there."
+        )
         recipes.append(Recipe(name=current, arguments=tuple(tokens[tokens.index("pytest") + 1 :])))
     return tuple(recipes)

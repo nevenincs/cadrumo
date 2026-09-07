@@ -14,7 +14,6 @@ from types import MappingProxyType
 from typing import Final, Literal
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
-from ..tui_capability import TuiCapability
 
 
 class CommandNodeKind(StrEnum):
@@ -85,7 +84,14 @@ class CommandWriteRoute(StrEnum):
     """
 
     NONE = "none"
-    """Writes nothing; the command is safe against an uninitialised installation."""
+    """Writes nothing into profile-bound storage.
+
+    The claim is about WRITES only. A command declaring this route may still
+    read bucket-scoped encrypted storage and may still refuse without an
+    active profile; most of the read surface does exactly that. Reading it as
+    a promise of uninitialised-installation safety would mis-describe the
+    majority of the commands that carry it.
+    """
 
     PROFILE_BOUND = "profile-bound"
     """Writes only inside the active profile's own storage."""
@@ -723,6 +729,13 @@ class SchemaState(Enum):
     UNAVAILABLE = "unavailable"
 
 
+class TuiCapability(Enum):
+    """Closed TUI routing posture for one command-graph node."""
+
+    NOT_IMPLEMENTED = "not-implemented"
+    AVAILABLE = "available"
+
+
 @dataclass(frozen=True, slots=True)
 class ResultSchemaSpec:
     """Explicit result-schema target or intentional absence/unavailability."""
@@ -1020,5 +1033,6 @@ __all__ = [
     "ResultSchemaSpec",
     "SchemaState",
     "TranslationKey",
+    "TuiCapability",
     "ValueContract",
 ]

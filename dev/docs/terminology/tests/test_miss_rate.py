@@ -6,6 +6,8 @@ import pytest
 
 from .._miss_rate import (
     HeldOutCaseKind,
+    HeldOutQueryCase,
+    HeldOutQuerySet,
     MissReason,
     evaluate_held_out_miss_rate,
     held_out_query_set_path,
@@ -110,3 +112,176 @@ def test_the_relevance_artifact_records_no_failed_sweep_queries() -> None:
     evaluation = evaluate_held_out_miss_rate()
 
     assert evaluation.compiled_failed_query_count == 0
+
+
+# ---------------------------------------------------------------------------
+# The expected ids must name records production can actually emit
+# ---------------------------------------------------------------------------
+#
+# ``expected_record_ids`` is the only place this corpus states WHAT a query
+# should retrieve, and nothing joined it to the record space the search surface
+# actually emits. The evaluator cannot: an id no projection can produce is
+# indistinguishable, at the point of measurement, from a genuine retrieval
+# failure -- it scores as ``target-mismatch`` and is counted into the miss
+# rate, which is the figure the materiality line reads. So a fabricated or
+# unshippable expectation does not fail; it silently argues for work.
+#
+# The two gates below close that. Existence catches a fabricated id outright.
+# Satisfiability catches the subtler shape: a case whose every expectation
+# names something the surface can never emit is unsatisfiable by construction,
+# and its miss measures the corpus, not retrieval.
+
+
+def _live_record_ids() -> tuple[frozenset[str], frozenset[str]]:
+    """Return (every id production defines, the subset it can emit).
+
+    Concept ids come from the same projection the search surface indexes; only
+    APPROVED cards reach that surface, so the emittable subset is narrower than
+    the defined one. Legal ids are composed from the production loader and the
+    production id function -- the two halves ``project_legal_search_records``
+    itself composes -- rather than from that projection directly, because it
+    also builds a full search record and so carries failure modes unrelated to
+    record identity.
+    """
+    from ...._paths import REPO_ROOT
+    from ...legal_reference import load_legal_provisions
+    from ...terminology_handbook.loader import load_terminology_handbook
+    from .._concept_cards import project_concept_cards
+    from .._legal_projection import legal_target_record_id
+    from ..unified_record import to_search_record
+
+    cards, _stats = project_concept_cards(load_terminology_handbook())
+    defined = {to_search_record(card).id for card in cards}
+    emittable = {to_search_record(card).id for card in cards if card.is_approved}
+    legal = {legal_target_record_id(record.legal_id) for record in load_legal_provisions(REPO_ROOT)}
+    return frozenset(defined | legal), frozenset(emittable | legal)
+
+
+@pytest.fixture(scope="module")
+def live_record_ids() -> tuple[frozenset[str], frozenset[str]]:
+    """The live record-id space, derived once for every gate below."""
+    return _live_record_ids()
+
+
+def _undefined_expected_ids(query_set: HeldOutQuerySet, defined: frozenset[str]) -> list[str]:
+    """Return every expected id naming no record production defines at all."""
+    return sorted(
+        {
+            f"{case.query} -> {record_id}"
+            for case in query_set.cases
+            for record_id in case.expected_record_ids
+            if record_id not in defined
+        },
+    )
+
+
+def _unsatisfiable_cases(query_set: HeldOutQuerySet, emittable: frozenset[str]) -> list[str]:
+    """Return every case no expectation of which the search surface can emit."""
+    return sorted(
+        f"{case.query} -> {sorted(case.expected_record_ids)}"
+        for case in query_set.cases
+        if not any(record_id in emittable for record_id in case.expected_record_ids)
+    )
+
+
+def test_every_expected_record_id_names_a_record_production_defines(
+    live_record_ids: tuple[frozenset[str], frozenset[str]],
+) -> None:
+    """No expectation may name a record id no projection produces.
+
+    A typo'd or invented id costs nothing at evaluation time and inflates the
+    miss rate, so it argues for retrieval work the measurement never justified.
+    """
+    defined, _emittable = live_record_ids
+
+    undefined = _undefined_expected_ids(load_held_out_query_set(), defined)
+
+    assert not undefined, "held-out expectation(s) name no record production defines:\n" + "\n".join(
+        f"  - {row}" for row in undefined
+    )
+
+
+def test_every_held_out_case_is_satisfiable_by_the_shipped_surface(
+    live_record_ids: tuple[frozenset[str], frozenset[str]],
+) -> None:
+    """Every case must carry at least one expectation the surface can emit.
+
+    A case whose expectations are all unshippable -- an unapproved concept
+    card, say -- can never hit however good retrieval becomes. Its miss is a
+    corpus fact wearing a retrieval fact's clothes.
+    """
+    _defined, emittable = live_record_ids
+
+    unsatisfiable = _unsatisfiable_cases(load_held_out_query_set(), emittable)
+
+    assert not unsatisfiable, "held-out case(s) no shipped surface can satisfy:\n" + "\n".join(
+        f"  - {row}" for row in unsatisfiable
+    )
+
+
+def _synthetic_case(query: str, *expected: str) -> HeldOutQueryCase:
+    """Build one synthetic held-out case for the detector-teeth gates."""
+    return HeldOutQueryCase(
+        query=query,
+        concept_id="prorrata",
+        expected_record_ids=tuple(expected),
+        source="synthetic case built in this test to prove the join detects a defect",
+        kind=HeldOutCaseKind.VOCABULARY,
+    )
+
+
+def _synthetic_query_set(*cases: HeldOutQueryCase) -> HeldOutQuerySet:
+    """Wrap synthetic cases in a valid corpus, so only the join is under test."""
+    return HeldOutQuerySet(
+        version=1,
+        description="synthetic held-out corpus built in this test; never committed",
+        cases=cases,
+    )
+
+
+def test_the_existence_join_detects_a_fabricated_id_and_clears_a_real_one(
+    live_record_ids: tuple[frozenset[str], frozenset[str]],
+) -> None:
+    """Teeth, both directions, over an isolated synthetic corpus.
+
+    A join that never fires proves nothing, and one that always fires proves
+    less. The clearing id is drawn from the live space, so the negative
+    direction cannot pass by accident.
+    """
+    defined, _emittable = live_record_ids
+    real = sorted(record_id for record_id in defined if record_id.startswith("concept:"))[0]
+
+    fabricated = _undefined_expected_ids(
+        _synthetic_query_set(_synthetic_case("q", "concept:no-such-concept-ever")),
+        defined,
+    )
+    assert len(fabricated) == 1, fabricated
+    assert "concept:no-such-concept-ever" in fabricated[0]
+
+    assert not _undefined_expected_ids(_synthetic_query_set(_synthetic_case("q", real)), defined)
+
+
+def test_the_satisfiability_join_detects_an_unshippable_case_and_clears_a_shippable_one(
+    live_record_ids: tuple[frozenset[str], frozenset[str]],
+) -> None:
+    """Teeth, both directions, over the emittable subset.
+
+    The positive control is a DEFINED-but-unemittable id -- the shape the
+    existence gate above cannot see -- so the two gates are shown to catch
+    different defects rather than the same one twice.
+    """
+    defined, emittable = live_record_ids
+    unemittable = sorted(defined - emittable)
+    assert unemittable, "no unapproved concept card exists, so this control cannot be built"
+
+    caught = _unsatisfiable_cases(
+        _synthetic_query_set(_synthetic_case("q", unemittable[0])),
+        emittable,
+    )
+    assert len(caught) == 1, caught
+
+    shippable = sorted(emittable)[0]
+    assert not _unsatisfiable_cases(
+        _synthetic_query_set(_synthetic_case("q", unemittable[0], shippable)),
+        emittable,
+    )

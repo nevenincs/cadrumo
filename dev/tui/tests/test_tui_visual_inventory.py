@@ -12,6 +12,7 @@ from pathlib import Path
 
 import pytest
 from PIL import Image
+from pydantic import ValidationError
 
 from ..._paths import REPO_ROOT, UTF_8
 from .. import _coverage, _diff, _inventory, _raster
@@ -31,6 +32,7 @@ from .._artifacts import (
 from .._artifacts import (
     digest as _artifacts_digest,
 )
+from .._inventory import InterfaceKind
 from .._viewports import DEFAULT_VIEWPORTS, VIEWPORTS, resolve
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -175,6 +177,38 @@ def test_import_aliases_and_same_named_bases_cannot_escape_the_inventory(
     assert found["Shared"].module.endswith(".first")
     with pytest.raises(_coverage.CoverageError, match="unclassified interface"):
         _coverage.check(interfaces, (), classifications={}, rendered_table={})
+
+
+def test_a_manifest_naming_a_kind_of_interface_that_does_not_exist_is_refused() -> None:
+    """The inventory vocabulary against a manifest read back from disk.
+
+    ``kind`` was typed ``str`` with the two permitted words spelled only as
+    prose in the field docstring, so the reader accepted any string and
+    branched on none of it -- ``"modal"``, ``"Screen"`` and even the
+    ``"REFUSED"`` that belongs to the frame-failure vocabulary all validated
+    and rendered into the coverage table as themselves. Both directions are
+    asserted here: an out-of-domain word is refused, and every word the enum
+    does declare still survives the round trip.
+    """
+    for kind in InterfaceKind:
+        record = InterfaceRecord(qualname="pkg.Surface", kind=kind, locator="a.py:1")
+        assert record.kind is kind
+        assert InterfaceRecord.model_validate_json(record.model_dump_json()).kind is kind
+
+    for absent in ("modal", "Screen", "APP", "REFUSED", "widget", ""):
+        with pytest.raises(ValidationError):
+            InterfaceRecord(qualname="pkg.Surface", kind=absent, locator="a.py:1")
+
+
+def test_every_interface_the_real_tree_declares_carries_a_declared_kind() -> None:
+    """The producer against the vocabulary, over the live source tree.
+
+    The single site that assigns ``kind`` picks between two enum members, so
+    a third kind of surface appearing in the tree cannot be represented and
+    must be a visible failure rather than a quietly mislabelled row.
+    """
+    for interface in _inventory.scan():
+        assert interface.kind in frozenset(InterfaceKind), interface.qualname
 
 
 def test_the_inventory_excludes_test_trees_and_locates_real_source() -> None:
@@ -335,12 +369,19 @@ def _manifest(frames=(), failures=(), skipped=()) -> Manifest:
 
 
 def _rendered(surface: str, viewport: str, theme: str) -> RenderedFrame:
+    """A frame whose grid is the one the named viewport owns.
+
+    Resolved rather than written down. This helper used to state 120x40 --
+    the medium grid -- under whatever viewport its caller named, so a frame
+    it built was a record the renderer could never have produced.
+    """
+    shape = resolve(viewport)
     return RenderedFrame(
         surface=surface,
-        viewport=viewport,
-        columns=120,
-        rows=40,
-        orientation="landscape",
+        viewport=shape.name,
+        columns=shape.columns,
+        rows=shape.rows,
+        orientation=shape.orientation,
         theme=theme,
         png="png/a.png",
         svg="svg/a.svg",
@@ -470,13 +511,15 @@ def test_rasterising_a_document_that_is_not_a_terminal_refuses(tmp_path: Path) -
 
 
 def _frame(key: str, *, png_digest: str, text_digest: str) -> RenderedFrame:
+    """The frame a ``surface/viewport/theme`` key names, at its own grid."""
     surface, viewport, theme = key.split("/")
+    shape = resolve(viewport)
     return RenderedFrame(
         surface=surface,
-        viewport=viewport,
-        columns=80,
-        rows=24,
-        orientation="landscape",
+        viewport=shape.name,
+        columns=shape.columns,
+        rows=shape.rows,
+        orientation=shape.orientation,
         theme=theme,
         png=f"png/{surface}.png",
         svg=f"svg/{surface}.svg",
@@ -772,7 +815,9 @@ def test_a_harness_refusal_is_told_apart_from_a_harness_crash() -> None:
 
     assert classify(refusal) is FrameFailureKind.REFUSED
     assert classify(crash) is FrameFailureKind.CRASHED
-    assert classify("") is FrameFailureKind.CRASHED, "an unreadable failure must not be mistaken for a considered refusal"
+    assert classify("") is FrameFailureKind.CRASHED, (
+        "an unreadable failure must not be mistaken for a considered refusal"
+    )
 
 
 def test_a_refusal_that_follows_a_traceback_still_reads_as_a_crash() -> None:

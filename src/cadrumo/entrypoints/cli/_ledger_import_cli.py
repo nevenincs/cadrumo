@@ -107,24 +107,53 @@ def _import_bucket_context(*, dry_run: bool) -> _ImportBucketContext:
     )
 
 
+@dataclass(frozen=True, slots=True)
+class _RefusedImportFile:
+    """One statement in a folder that could not be read, and the refusal it raised."""
+
+    path: Path
+    error: TransactionValidationError
+
+
+@dataclass(frozen=True, slots=True)
+class _ImportedFolder:
+    """What a folder import produced: the statements read, and the ones refused."""
+
+    results: list[LedgerSourceImportResult]
+    refusals: list[_RefusedImportFile]
+
+
 def _imported_files(
     import_paths: Sequence[Path],
     *,
     command: Callable[[Path], LedgerSourceImportCommand],
     transaction_repository: TransactionCatalogueRepositoryProtocol | None,
     currency_normalizer: CurrencyNormalizationService,
-) -> list[LedgerSourceImportResult]:
-    """Import each statement file without flattening typed failures.
+) -> _ImportedFolder:
+    """Import each statement file, containing a per-file failure to that file.
 
-    Caught per FILE, so one unreadable statement cannot discard the results
-    already produced for the rest of the folder. Only the project's own failure
-    taxonomy is caught: a TypeError here is a defect and must still crash rather
-    than be reported as a bad statement.
+    The guard here used to catch a file's refusal and immediately re-raise it,
+    which converted the error's type without containing it: the first
+    unreadable statement still ended the run and discarded every result already
+    produced. An operator importing a quarter of statements lost the whole run
+    to one bad file.
+
+    A LONE unreadable file must still be a hard refusal — reporting an import
+    that imported nothing as a success is worse than refusing — but that is NOT
+    decided here. Collecting its refusal leaves ``results`` empty, and the
+    caller refuses on exactly that: there is a total to report only if
+    something was read. One rule covers the lone file and the folder whose
+    every statement is unreadable, so this loop needs no special case for
+    either.
+
+    Only the project's own failure taxonomy is caught. A ``TypeError`` here is
+    a defect and must still crash rather than be reported as a bad statement.
     """
-    file_results: list[LedgerSourceImportResult] = []
+    results: list[LedgerSourceImportResult] = []
+    refusals: list[_RefusedImportFile] = []
     for file_path in import_paths:
         try:
-            file_results.append(
+            results.append(
                 import_ledger_source(
                     command(file_path),
                     transaction_repository=transaction_repository,
@@ -132,8 +161,33 @@ def _imported_files(
                 ),
             )
         except TransactionValidationError as exc:
-            raise ledger_transaction_validation_no_recovery(exc) from None
-    return file_results
+            refusals.append(_RefusedImportFile(path=file_path, error=exc))
+    return _ImportedFolder(results=results, refusals=refusals)
+
+
+def _refused_file_report(refusals: Sequence[_RefusedImportFile]) -> _ImportReport:
+    """Render every refused statement so a folder never loses one silently.
+
+    Both channels, because they reach different readers: a machine line for the
+    terminal, keyed by the file's own name so an operator can find it, and a
+    notice so the refusal survives ``--format json`` rather than existing only
+    in prose.
+    """
+    lines: list[str] = []
+    notices: list[Notice] = []
+    for refusal in refusals:
+        # MACHINE-FORMAT-RATIONALE-LEDGER-IMPORT-REFUSED-FILE: tab-separated
+        # machine record (name, reason), matching the bulk-classify failure line.
+        lines.append(f"  refused	{refusal.path.name}	{refusal.error}")
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="ledger.import.file_refused",
+                message=tr("cli.ledger.import.file_refused", file=refusal.path.name),
+                context={"file": refusal.path.name},
+            ),
+        )
+    return _ImportReport(lines=lines, notices=notices)
 
 
 def _import_report(result: LedgerSourceImportResult, *, verbose: bool, verify: bool) -> _ImportReport:
@@ -202,7 +256,7 @@ def ledger_import(
 
     currency_normalizer = CurrencyNormalizationService(rate_provider=default_ecb_rate_provider())
     canonical_period = _optional_canonical_period(period, year=year)
-    file_results = _imported_files(
+    imported = _imported_files(
         _resolve_import_paths(file),
         command=lambda file_path: LedgerSourceImportCommand(
             bucket_id=context.bucket_id,
@@ -218,8 +272,17 @@ def ledger_import(
         transaction_repository=context.transaction_repository,
         currency_normalizer=currency_normalizer,
     )
-    result = file_results[0] if len(file_results) == 1 else aggregate_ledger_import_results(file_results)
+    if not imported.results:
+        # Nothing was read, so there is no total to report. Refusing with the
+        # first file's own error keeps the operator pointed at a cause rather
+        # than at an aggregate of zero.
+        raise ledger_transaction_validation_no_recovery(imported.refusals[0].error) from None
+    results = imported.results
+    result = results[0] if len(results) == 1 else aggregate_ledger_import_results(results)
     report = _import_report(result, verbose=verbose, verify=verify)
+    refused = _refused_file_report(imported.refusals)
+    report.lines.extend(refused.lines)
+    report.notices.extend(refused.notices)
     from ._ledger_payloads import LedgerImportPayload
 
     emit_envelope(

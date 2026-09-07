@@ -108,7 +108,6 @@
 "cadrumo.application.operator_surface.models" = 1
 "cadrumo.application.overview.calendar" = 1
 "cadrumo.application.overview.calendar_warnings" = 1
-"cadrumo.application.prorrata_register.seed" = 1
 "cadrumo.application.provisioning" = 2
 "cadrumo.application.registry.source_connectivity" = 6
 "cadrumo.application.repair_integrity" = 4
@@ -122,7 +121,6 @@
 "cadrumo.application.user_profile.capsule_record" = 1
 "cadrumo.application.user_profile.commands" = 3
 "cadrumo.application.user_profile.cotejo_apply" = 1
-"cadrumo.application.user_profile.custody_carry" = 1
 "cadrumo.application.user_profile.custody_ports" = 2
 "cadrumo.application.user_profile.login_session_port" = 3
 "cadrumo.application.user_profile.presentation" = 1
@@ -189,7 +187,7 @@
 "cadrumo.domain.calculations.registry.external_grounding" = 1
 "cadrumo.domain.calculations.registry.fixed_width_codec" = 1
 "cadrumo.domain.calculations.registry.gasto193_bindings" = 2
-"cadrumo.domain.calculations.registry.handoffs" = 3
+"cadrumo.domain.calculations.registry.handoffs" = 2
 "cadrumo.domain.calculations.registry.ids" = 1
 "cadrumo.domain.calculations.registry.invoice_bindings" = 3
 "cadrumo.domain.calculations.registry.legal" = 1
@@ -225,7 +223,6 @@
 "cadrumo.domain.iva.flow" = 2
 "cadrumo.domain.iva.lookup" = 1
 "cadrumo.domain.iva.oss" = 3
-"cadrumo.domain.iva.place_of_supply" = 1
 "cadrumo.domain.iva.prorrata" = 4
 "cadrumo.domain.iva.recargo_equivalencia" = 1
 "cadrumo.domain.iva.refund_eligibility" = 1

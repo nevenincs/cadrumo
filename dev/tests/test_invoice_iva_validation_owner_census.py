@@ -14,7 +14,19 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _ROOT = Path(__file__).resolve().parents[2]
-_INVOICE_MODELS = _ROOT / "src/cadrumo/domain/invoices/models.py"
+#: The invoice validation family spans TWO modules, not one. Scoping only
+#: ``models.py`` lost 14 of the 36 declared raise sites when the coercion
+#: helpers were split out into ``normalization.py``: the roster stayed correct
+#: and the census stopped looking where half of it lives, so the exactness
+#: assertion read as 14 spent adjudications. Deleting those rows -- the obvious
+#: reading of the failure -- would have dropped coverage of validations that
+#: still raise, which is the silent under-declaration this census exists to
+#: prevent. A module family is the scope; a single file is an accident of how
+#: it is currently split.
+_INVOICE_MODELS: tuple[Path, ...] = (
+    _ROOT / "src/cadrumo/domain/invoices/models.py",
+    _ROOT / "src/cadrumo/domain/invoices/normalization.py",
+)
 _IVA_CLASSIFICATION = _ROOT / "src/cadrumo/domain/iva/classification.py"
 _BULK_IMPORT = _ROOT / "src/cadrumo/application/invoices/bulk_import.py"
 _LEDGER_SUPPORT = _ROOT / "src/cadrumo/entrypoints/cli/_ledger_support.py"
@@ -256,7 +268,11 @@ def test_invoice_validation_family_census_is_exact_and_dispositioned() -> None:
     expected = Counter((family.owner, expression) for family in _INVOICE_FAMILIES for expression in family.expressions)
     assert len(_INVOICE_FAMILIES) == 34
     assert sum(expected.values()) == 36
-    assert _raises(_INVOICE_MODELS, "InvoiceValidationError") == expected
+    observed: Counter[tuple[str, str]] = Counter()
+    for module in _INVOICE_MODELS:
+        assert module.is_file(), f"declared invoice module is gone, so its raises vanish silently: {module}"
+        observed += _raises(module, "InvoiceValidationError")
+    assert observed == expected
     assert {disposition for family in _INVOICE_FAMILIES for disposition in family.dispositions} == {
         _LEDGER_TERMINAL,
         _BULK_ROW,

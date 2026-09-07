@@ -574,7 +574,10 @@ def test_passphrase_change_resolves_target_before_reading_machine_secrets(tmp_pa
     )
     output = _combined_output(result)
     assert result.returncode == 2, output
-    assert "No active profile" in output or "active profile" in output
+    # "active profile" is a substring of "No active profile", so the old
+    # disjunction required only the weaker half -- and an output that named an
+    # active profile rather than its ABSENCE would have satisfied it.
+    assert "No active profile" in output
     assert "JSON" not in output
 
 

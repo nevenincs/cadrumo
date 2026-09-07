@@ -48,6 +48,24 @@ _SHORTHAND: Final = {"read-all": "read", "write-all": "write", "none": "none"}
 _ABSENT: Final = object()
 
 
+def _declared_jobs(document: dict[str, Any]) -> dict[str, Any]:
+    """Return the workflow's ``jobs`` mapping, refusing a document that has none.
+
+    ``jobs`` is mandatory in a workflow, so its absence is a broken or
+    misidentified document, never a workflow that runs nothing. Defaulting it
+    to an empty map is the same collapse this module refuses for
+    ``permissions``, one level up: the enumerating answers below are read as
+    confinement -- "no job holds this capability" -- and an empty map produces
+    exactly that sentence for a document nobody could read. A renamed or
+    restructured key would empty every one of those answers at once and every
+    gate over them would stay green.
+    """
+    jobs = document.get("jobs")
+    if not isinstance(jobs, dict):
+        raise KeyError(f"workflow declares no jobs mapping; `jobs` is {type(jobs).__name__}")
+    return jobs
+
+
 def effective_job_permissions(document: dict[str, Any], job_name: str) -> dict[str, str] | str | None:
     """Return the permission declaration the runtime applies to ``job_name``.
 
@@ -56,7 +74,7 @@ def effective_job_permissions(document: dict[str, Any], job_name: str) -> dict[s
     neither level declared anything, so the grant comes from repository
     settings and is not knowable from the workflow file.
     """
-    jobs = document.get("jobs") or {}
+    jobs = _declared_jobs(document)
     if job_name not in jobs:
         raise KeyError(f"no job named {job_name!r} in this workflow")
     declared = (jobs[job_name] or {}).get("permissions", _ABSENT)
@@ -93,7 +111,7 @@ def jobs_granting(document: dict[str, Any], scope: str, level: str = "write") ->
         raise ValueError(f"unknown permission level {level!r}; expected one of {LEVELS}")
     floor = LEVELS.index(level)
     granted: list[str] = []
-    for job_name in document.get("jobs") or {}:
+    for job_name in _declared_jobs(document):
         held = granted_level(document, job_name, scope)
         if held in LEVELS and LEVELS.index(held) >= floor:
             granted.append(job_name)
@@ -115,5 +133,5 @@ def jobs_with_unsettled_grant(document: dict[str, Any], scope: str) -> tuple[str
     omits ``scope``, is settled: both grant nothing, and both are answers.
     """
     return tuple(
-        str(job_name) for job_name in document.get("jobs") or {} if granted_level(document, job_name, scope) is None
+        str(job_name) for job_name in _declared_jobs(document) if granted_level(document, job_name, scope) is None
     )

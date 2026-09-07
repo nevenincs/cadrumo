@@ -167,11 +167,24 @@ def _production_modules() -> list[Path]:
     the positive controls above) and non-Python assets. Nothing else is skipped
     -- the walk is the whole ``src/cadrumo`` tree.
     """
-    return [
+    modules = [
         path
-        for path in scan_directory(_PRODUCTION_ROOT, pattern="*.py", recursive=True)
+        for path in scan_directory(_PRODUCTION_ROOT, pattern="*.py", recursive=True, require_root=True)
         if "/tests/" not in f"/{path.relative_to(_PRODUCTION_ROOT).as_posix()}"
     ]
+    if not modules:
+        # Measured: with `_PRODUCTION_ROOT` pointed at a directory that does not
+        # exist, all eight tests in this module passed. `scan_directory` returns
+        # empty for a missing root rather than raising, so the eligibility bar
+        # swept nothing and every `assert offenders == []` below held vacuously.
+        # `require_root=True` covers the missing root; this covers a root that
+        # exists and yields nothing.
+        message = (
+            f"the cloud-evidence sweep reached no production module under {_PRODUCTION_ROOT}; "
+            "a scan matching nothing cannot find an ineligible minting call site"
+        )
+        raise AssertionError(message)
+    return modules
 
 
 def _minting_call_sites() -> list[tuple[str, int, ast.Call]]:

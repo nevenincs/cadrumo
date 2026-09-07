@@ -1016,8 +1016,15 @@ def _read_m200_2024_casilla_records_at(casillas_root: Path) -> dict[str, _M200Ca
 
 def _parse_source_refs(path: Path, declaration_tail: str) -> tuple[str, ...]:
     match = _SOURCE_REFS_BLOCK.search(declaration_tail)
-    if match is None:  # pragma: no cover - caller selected this line through the same expression
-        raise RegistryValidationError(f"{path}: source_refs line lost its anchor")
+    if match is None:
+        # REACHABLE. The caller locates this line with ``_SOURCE_REFS_LINE``,
+        # whose value group is ``.*?`` and admits any single-line spelling; this
+        # block's match requires the value to open with ``[``. A ``source_refs``
+        # line that is not array-shaped -- ``source_refs = "x"`` rather than
+        # ``source_refs = ["x"]`` -- satisfies the caller's anchor and fails
+        # here. Proved by feeding exactly that shape through
+        # ``_read_m200_2024_casilla_records_at``.
+        raise RegistryValidationError(f"{path}: direct source_refs anchor is not a TOML array")
     try:
         value = rtoml.loads(f"source_refs = {match.group('value')}")["source_refs"]
     except rtoml.TomlParsingError as exc:

@@ -161,10 +161,38 @@ def test_the_committed_blob_map_carries_every_tracked_path(repository: pathlib.P
 def test_a_tree_with_nothing_committed_refuses_rather_than_reporting_clean(
     tmp_path: pathlib.Path,
 ) -> None:
-    """A screen that scanned an empty tree reports what a healthy one reports."""
+    """A screen that scanned an empty tree reports what a healthy one reports.
+
+    The empty commit is deliberate and the reason is pinned. A bare ``git init``
+    leaves the repository with no HEAD at all, so ``measure`` dies in its
+    ``git ls-tree`` plumbing long before reaching the tracked-file guard this
+    test is named for -- and a bare type assertion is satisfied by that failure
+    just as well, which means the guard could be deleted and this would still
+    pass. Confirmed in both directions against the live screen: without the
+    commit the message is "Not a valid object name HEAD", and only with it does
+    the guard below fire.
+    """
+    _run(tmp_path, "init", "-q")
+    _run(tmp_path, "config", "user.email", "screen@example.invalid")
+    _run(tmp_path, "config", "user.name", "screen")
+    _run(tmp_path, "commit", "-q", "--allow-empty", "-m", "empty")
+
+    with pytest.raises(SystemExit, match="no tracked files found at HEAD"):
+        measure(tmp_path)
+
+
+def test_a_repository_without_a_head_refuses_as_plumbing_rather_than_as_drift(
+    tmp_path: pathlib.Path,
+) -> None:
+    """The pre-HEAD state is its own refusal and must not stand in for the other.
+
+    Keeping it as a separate named case is what stops the two from answering for
+    each other: both leave the screen raising ``SystemExit``, so whichever one is
+    asserted bare silently accepts the other.
+    """
     _run(tmp_path, "init", "-q")
 
-    with pytest.raises(SystemExit):
+    with pytest.raises(SystemExit, match="Not a valid object name HEAD"):
         measure(tmp_path)
 
 

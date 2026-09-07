@@ -22,7 +22,10 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 def test_callback_policy_attachment_authority_is_physically_absent() -> None:
     cli_root = Path(__file__).parents[1]
     policy_source = (cli_root / "_command_policy.py").read_text(encoding="utf-8")
-    suggestions_source = (cli_root / "_command_suggestions.py").read_text(encoding="utf-8")
+    # `command_suggestions.py`, not `_command_suggestions.py`: the private-to-public
+    # promotion renamed it and this reference was not followed, so the gate raised
+    # FileNotFoundError instead of checking that no callback attaches a policy.
+    suggestions_source = (cli_root / "command_suggestions.py").read_text(encoding="utf-8")
     forbidden = {"command_execution_policy", "execution_policy_for"}
     violations: list[str] = []
     for path in sorted(cli_root.rglob("*.py")):

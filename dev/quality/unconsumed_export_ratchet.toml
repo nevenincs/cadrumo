@@ -65,7 +65,7 @@
 "application/modelo/local_observation_spreadsheet.py" = 1
 "application/modelo/m145_communication_records.py" = 1
 "application/modelo/m303_regimen_simplificado_scope.py" = 1
-"application/modelo/operation_definitions.py" = 4
+"application/modelo/operation_definitions.py" = 1
 "application/modelo/result_disposition_resolution.py" = 1
 "application/modelo/review_package_collab_audit.py" = 1
 "application/modelo/review_package_recipient_encryption.py" = 2
@@ -79,7 +79,6 @@
 "application/operations/registry.py" = 1
 "application/operations/secret_submission.py" = 1
 "application/overview/calendar_warnings.py" = 1
-"application/prorrata_register/seed.py" = 1
 "application/provisioning.py" = 1
 "application/registry/source_connectivity.py" = 6
 "application/repair_integrity.py" = 4
@@ -93,7 +92,6 @@
 "application/user_profile/capsule_restore.py" = 2
 "application/user_profile/commands.py" = 3
 "application/user_profile/cotejo_apply.py" = 1
-"application/user_profile/custody_carry.py" = 1
 "application/user_profile/custody_ports.py" = 2
 "application/user_profile/login_session_port.py" = 3
 "application/user_profile/presentation.py" = 1
@@ -134,14 +132,14 @@
 "domain/calculations/registry/_validate_parameter_temporal.py" = 1
 "domain/calculations/registry/applicability.py" = 1
 "domain/calculations/registry/bindings.py" = 1
-"domain/calculations/registry/censo_modelos.py" = 3
+"domain/calculations/registry/censo_modelos.py" = 2
 "domain/calculations/registry/counterpart_bindings.py" = 3
 "domain/calculations/registry/detail_record_bindings.py" = 2
 "domain/calculations/registry/donativo_bindings.py" = 1
 "domain/calculations/registry/export.py" = 1
 "domain/calculations/registry/fixed_width_codec.py" = 1
 "domain/calculations/registry/gasto193_bindings.py" = 2
-"domain/calculations/registry/handoffs.py" = 3
+"domain/calculations/registry/handoffs.py" = 2
 "domain/calculations/registry/invoice_bindings.py" = 2
 "domain/calculations/registry/legal.py" = 1
 "domain/calculations/registry/live_parity.py" = 5
@@ -168,7 +166,6 @@
 "domain/iva/flow.py" = 2
 "domain/iva/lookup.py" = 1
 "domain/iva/oss.py" = 3
-"domain/iva/place_of_supply.py" = 1
 "domain/iva/prorrata.py" = 4
 "domain/iva/recargo_equivalencia.py" = 1
 "domain/iva/supply_nature.py" = 1
@@ -182,7 +179,6 @@
 "domain/transactions/retencion_parameters.py" = 1
 "domain/transactions/tipo_actividad_partitions.py" = 1
 "domain/user_profile/labels.py" = 1
-"entrypoints/cli/__init__.py" = 1
 "entrypoints/cli/_app_ledger_command_specs.py" = 1
 "entrypoints/cli/_bootstrap_exempt.py" = 1
 "entrypoints/cli/_command_runtime.py" = 1
@@ -191,7 +187,6 @@
 "entrypoints/cli/_windows_profile_secret_bootstrap.py" = 1
 "entrypoints/cli/command_api.py" = 2
 "entrypoints/cli/command_suggestions.py" = 3
-"entrypoints/cli/config/_spec_policies.py" = 5
 "entrypoints/cli/period_parsing.py" = 1
 "entrypoints/tui/components/form_screen.py" = 1
 "entrypoints/tui/components/theme.py" = 2

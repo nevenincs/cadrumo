@@ -28,7 +28,14 @@ from ...core.external_constants import (
 )
 from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
-from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, TransactionId, WorkUnitId
+from ...core.identity import (
+    BucketId,
+    CalculationRevisionId,
+    ContentDigest,
+    TransactionId,
+    TransactionIdReference,
+    WorkUnitId,
+)
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.parsing import (
@@ -791,7 +798,12 @@ class BulkClassifyRow(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: TransactionId
+    #: What the operator typed, not a resolved id. A CSV names rows the way a
+    #: terminal does -- by the short display id ``ledger list`` prints -- and
+    #: typing this as the resolved 64-character id refused every such row at
+    #: parse time, before ``resolve_transaction_id`` in the apply path could
+    #: resolve it. The single-row verb has always accepted a prefix.
+    transaction_id: TransactionIdReference
     classification: BusinessClassification
     category_id: str | None = None
     business_pct: Decimal | None = None

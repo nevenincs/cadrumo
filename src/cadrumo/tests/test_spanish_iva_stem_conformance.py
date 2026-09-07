@@ -66,20 +66,45 @@ _EXTERNAL_SOURCE_PREFIXES = ("http://", "https://", "/Sede/")
 
 
 def _source_files() -> tuple[Path, ...]:
-    return tuple(
-        sorted(path for path in scan_directory(_PACKAGE_ROOT, pattern="*.py", recursive=True) if path != Path(__file__))
+    """Every shipped Python module, refusing an empty walk.
+
+    Measured: with `_PACKAGE_ROOT` pointed at a directory that does not exist
+    this returned 0 files silently, against 5,938 in the healthy tree, so every
+    `assert offenders == []` over it held vacuously. This gate exists to keep a
+    retired English `vat` stem out of shipped names -- a walk matching nothing
+    cannot find one.
+    """
+    files = tuple(
+        sorted(
+            path
+            for path in scan_directory(_PACKAGE_ROOT, pattern="*.py", recursive=True, require_root=True)
+            if path != Path(__file__)
+        )
     )
+    if not files:
+        message = f"the stem-conformance source walk reached no module under {_PACKAGE_ROOT}"
+        raise AssertionError(message)
+    return files
 
 
 def _package_files() -> tuple[Path, ...]:
-    return tuple(
+    """Every shipped file of any type, refusing an empty walk.
+
+    Same measurement as above: 0 silently on a bad root against 29,188 healthy.
+    """
+    files = tuple(
         scan_directory(
             _PACKAGE_ROOT,
             recursive=True,
             select=DirectoryEntryKind.FILES,
             prune_directories=("__pycache__",),
+            require_root=True,
         )
     )
+    if not files:
+        message = f"the stem-conformance package walk reached no file under {_PACKAGE_ROOT}"
+        raise AssertionError(message)
+    return files
 
 
 def _declared_names(tree: ast.AST) -> tuple[tuple[int, str], ...]:

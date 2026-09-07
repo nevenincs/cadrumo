@@ -139,41 +139,6 @@ def evaluate_carried_prior_definitiva_seed(
     return ProrrataPriorDefinitivaSeedEvaluation(seed=None, findings=())
 
 
-def seed_carried_prior_definitiva_entry(
-    *,
-    ejercicio: int,
-    observation_repository: CalculationObservationRepository | None = None,
-    sector_id: str | None = None,
-) -> ProrrataPriorDefinitivaSeed | None:
-    """Build a carried-prior-definitive register entry from a stamped prior observation.
-
-    The seed is available only when the prior ejercicio has a Modelo 303
-    settlement-period observation carrying ``iva.prorrata-porcentaje`` and that
-    observation's ``stamped_revision_id`` still matches the law-determined
-    revision selected for its source ``(M303, ejercicio - 1, settlement period)``.
-    Divergent or unreconfirmable observations are not trusted. Call
-    :func:`evaluate_carried_prior_definitiva_seed` when the caller needs the
-    operator-facing blocker/advisory findings that explain why a seed did or did
-    not resolve.
-
-    Args:
-        ejercicio: Ejercicio whose provisional prorrata entry is being seeded.
-        observation_repository: Observation repository to scan. Defaults to the
-            active runtime repository.
-        sector_id: Optional sector axis for future sectores-diferenciados
-            entries. ``None`` seeds the whole-entity register entry.
-
-    Returns:
-        A :class:`ProrrataPriorDefinitivaSeed` when a stamped prior settlement
-        observation re-confirms, otherwise ``None``.
-    """
-    return evaluate_carried_prior_definitiva_seed(
-        ejercicio=ejercicio,
-        observation_repository=observation_repository,
-        sector_id=sector_id,
-    ).seed
-
-
 def cross_check_prorrata_entry_against_prior_observation(
     entry: ProrrataRegisterEntry,
     *,
@@ -406,5 +371,4 @@ __all__ = [
     "ProrrataSeedFinding",
     "cross_check_prorrata_entry_against_prior_observation",
     "evaluate_carried_prior_definitiva_seed",
-    "seed_carried_prior_definitiva_entry",
 ]
