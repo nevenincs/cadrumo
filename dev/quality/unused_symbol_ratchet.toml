@@ -85,12 +85,12 @@
 "cadrumo.application.modelo._row_source_identity_replay" = 1
 "cadrumo.application.modelo.calculation_actions" = 1
 "cadrumo.application.modelo.calculation_route" = 1
-"cadrumo.application.modelo.edit_models" = 5
-"cadrumo.application.modelo.edit_services" = 3
+"cadrumo.application.modelo.edit_models" = 3
+"cadrumo.application.modelo.edit_services" = 1
 "cadrumo.application.modelo.local_observation_spreadsheet" = 1
 "cadrumo.application.modelo.m145_communication_records" = 1
 "cadrumo.application.modelo.m303_regimen_simplificado_scope" = 1
-"cadrumo.application.modelo.operation_definitions" = 2
+"cadrumo.application.modelo.operation_definitions" = 1
 "cadrumo.application.modelo.result_disposition_resolution" = 1
 "cadrumo.application.modelo.review_package_collab_audit" = 1
 "cadrumo.application.modelo.review_package_recipient_encryption" = 2
@@ -177,7 +177,7 @@
 "cadrumo.domain.calculations.registry.applicability" = 1
 "cadrumo.domain.calculations.registry.authority" = 3
 "cadrumo.domain.calculations.registry.bindings" = 1
-"cadrumo.domain.calculations.registry.censo_modelos" = 3
+"cadrumo.domain.calculations.registry.censo_modelos" = 2
 "cadrumo.domain.calculations.registry.checker_oracle_flow" = 2
 "cadrumo.domain.calculations.registry.corpus_catalogue" = 1
 "cadrumo.domain.calculations.registry.counterpart_bindings" = 3
@@ -245,7 +245,7 @@
 "cadrumo.domain.transactions.tipo_actividad_partitions" = 1
 "cadrumo.domain.user_profile.labels" = 1
 "cadrumo.domain.user_profile.values" = 1
-"cadrumo.entrypoints.cli" = 2
+"cadrumo.entrypoints.cli" = 1
 "cadrumo.entrypoints.cli._app_live" = 1
 "cadrumo.entrypoints.cli._bootstrap_exempt" = 1
 "cadrumo.entrypoints.cli._command_runtime" = 1
@@ -288,11 +288,8 @@ modules = [
   "cadrumo.domain.fincas.tests.test_imputacion_regime",
   "cadrumo.domain.fincas.tests.test_tier_resolver",
   "cadrumo.domain.is_compensation.tests.test_bin_carry_forward",
-  "cadrumo.entrypoints.cli.tests.test_cli_resolution_cost_budget",
   "cadrumo.entrypoints.cli.tests.test_machine_secret_channels_subprocess",
   "cadrumo.entrypoints.cli.tests.test_overview_explain_verb",
-  "cadrumo.entrypoints.cli.tests.test_resolution_defers_capabilities",
-  "cadrumo.entrypoints.cli.tests.test_state_free_capability_isolation",
 ]
 
 # A symbol kept deliberately, admitted only with the closed kind the module
