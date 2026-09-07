@@ -300,6 +300,34 @@ def stale_artifacts(directory: Path, manifest: Manifest) -> tuple[Path, ...]:
     return tuple(found)
 
 
+def missing_artifacts(directory: Path, manifest: Manifest) -> tuple[str, ...]:
+    """Files this run's manifest names that the directory does not hold.
+
+    The inverse walk of :func:`stale_artifacts`, and the one nothing else
+    performs. The sweep asks which files the manifest fails to claim; this
+    asks which claims fail to find a file, and the two go wrong for
+    different reasons. A claim outlives its file whenever a removal and the
+    record of it are undone separately: `purge_stale_artifacts` skips a path
+    that vanished under it, `commit_staged_run` leaves a two-call window in
+    which a snapshot is gone and its replacement not yet in place, and
+    `rasterise` deliberately keeps the record of a frame whose SVG has
+    disappeared. Each is correct on its own; each can leave the manifest
+    asserting bytes that are not there.
+
+    Nothing surfaced it, because the manifest is the only thing anyone
+    reads: the index links a PNG that 404s, and :func:`_diff.compare` opens
+    the recorded text path directly and dies with a `FileNotFoundError`
+    naming a file rather than a run.
+
+    Returns:
+        The manifest-relative names, sorted, that no file backs.
+    """
+    named = sorted(
+        {name for frame in manifest.frames for name in (frame.png, frame.svg, frame.text)},
+    )
+    return tuple(name for name in named if not (directory / name).is_file())
+
+
 def purge_stale_artifacts(
     directory: Path,
     manifest: Manifest,
@@ -574,6 +602,7 @@ __all__ = [
     "commit_staged_run",
     "digest",
     "known_runs",
+    "missing_artifacts",
     "now",
     "purge_stale_artifacts",
     "read_manifest",
