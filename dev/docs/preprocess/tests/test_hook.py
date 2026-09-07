@@ -58,6 +58,23 @@ def _smallest(pattern: str) -> Path:
     return candidates[0]
 
 
+def _hook_emission(pattern: str) -> dict[str, object]:
+    """Return the hook's own record for the smallest committed file ``pattern`` matches.
+
+    The extractor family is identified by what it emits rather than by a map
+    kept in this module, so the rule file and the dispatch cannot be edited
+    into agreement with each other through a single side.
+    """
+    suffix = Path(pattern).suffix.lower()
+    if pattern.startswith(_TERMINOLOGY_PATTERN_PREFIX):
+        candidates = sorted(iter_directory(_TERMINOLOGY, pattern=f"*{suffix}"), key=lambda path: path.stat().st_size)
+        assert candidates, f"no Handbook concept file matches the terminology rule {pattern!r}"
+        source = candidates[0]
+    else:
+        source = _smallest(f"*{suffix}")
+    return adapt_outputs(build_for_source(source, repo_root=_REPO_ROOT), source=source, repo_root=_REPO_ROOT)
+
+
 def test_rule_file_is_wellformed_and_targets_the_hook() -> None:
     """Every rule routes a corpus pattern through the hook adapter command."""
     data = tomllib.loads(_RULE_FILE.read_text(encoding="utf-8"))
@@ -89,26 +106,41 @@ def test_every_rule_owns_the_code_index_and_versions_its_extractor() -> None:
     ``extractor_version`` must equal the declared version of the extractor
     family that owns its suffix, so an extractor bump invalidates the
     upstream preprocess cache instead of serving stale extractions.
-    """
-    from .._pdf import PDF_EXTRACTOR_VERSION
-    from .._terminology import TERMINOLOGY_EXTRACTOR_VERSION
-    from .._workbook import WORKBOOK_EXTRACTOR_VERSION
-    from ..normatives_html import HTML_EXTRACTOR_VERSION
 
-    owning_version = {
-        ".html": HTML_EXTRACTOR_VERSION,
-        ".pdf": PDF_EXTRACTOR_VERSION,
-        ".xls": WORKBOOK_EXTRACTOR_VERSION,
-        ".xlsm": WORKBOOK_EXTRACTOR_VERSION,
-        ".xlsx": WORKBOOK_EXTRACTOR_VERSION,
-        ".toml": TERMINOLOGY_EXTRACTOR_VERSION,
-    }
+    The owning family is RUN, not restated. The previous form compared each
+    rule against a suffix-to-version map authored in this module -- the test's
+    own copy of ``hook._builders`` -- so both sides of the ownership assertion
+    traced back here and it could not fail for the reason it names. Reassigning
+    ``.xls`` to the PDF family in ``_builders`` left this module, and the whole
+    preprocess package, green: per-kind sidecar parity is the only other check
+    over that family and no committed ``.xls`` source carries a sidecar for it
+    to run against.
+
+    Now each rule is answered by the hook itself on a real file the rule
+    matches, so the two sides are independent roots: the declaration is in the
+    rule file, the emission comes from whichever extractor ``_builders``
+    actually dispatches. A family that cannot read its own suffix raises here
+    rather than passing.
+    """
     rules = tomllib.loads(_RULE_FILE.read_text(encoding="utf-8"))["rule"]
+    versions_by_family: dict[str, set[str]] = {}
     for rule in rules:
         pattern = cast(str, rule["pattern"])
         assert rule["target"] == "code", pattern
-        suffix = Path(pattern).suffix.lower()
-        assert rule["extractor_version"] == owning_version[suffix], pattern
+        emitted = _hook_emission(pattern)
+        declared = cast(str, rule["extractor_version"])
+        assert declared == emitted["preprocessor_version"], (
+            f"{pattern}: the rule declares extractor_version {declared!r} but the hook "
+            f"emits {emitted['preprocessor_version']!r}; bumping the extractor would not "
+            "invalidate the upstream preprocess cache for this family"
+        )
+        versions_by_family.setdefault(cast(str, emitted["preprocessor_id"]), set()).add(declared)
+    assert versions_by_family, "no rule produced an extraction, so the sweep above measured nothing"
+    split = {family: sorted(seen) for family, seen in versions_by_family.items() if len(seen) > 1}
+    assert not split, (
+        f"one extractor family is declared at two versions across its rules: {split}; "
+        "the family bumps as a whole, so the lower rules would serve cached stale text"
+    )
 
 
 def test_every_rule_pattern_matches_committed_sources() -> None:

@@ -761,9 +761,17 @@ def article_payloads(corpus: Path) -> dict[str, tuple[ArticlePayload, ...]]:
     comparable population without editing this module.
     """
     grouped: dict[str, list[ArticlePayload]] = {}
+    unparsed: list[str] = []
     for path in scan_directory(corpus, pattern="*-redacciones.html"):
         match = _REDACTION_PAYLOAD.match(path.name.removesuffix(".html"))
         if match is None:
+            # The glob and the pattern name the same class of file two ways, so a
+            # name the glob admits and the pattern rejects is a disagreement, not a
+            # file to pass over. Dropping it here would shrink the comparable
+            # population silently, and this screen reports a count -- a smaller
+            # corpus reads as a smaller finding set, never as a narrower scan. All
+            # 58 bundled payloads parse today; nothing was making that stay true.
+            unparsed.append(path.name)
             continue
         document_id = match.group("document_id").upper()
         payload = path.read_text(encoding=_UTF_8)
@@ -774,6 +782,11 @@ def article_payloads(corpus: Path) -> dict[str, tuple[ArticlePayload, ...]]:
                 block=match.group("block"),
                 title=article_block_title(payload),
             ),
+        )
+    if unparsed:
+        raise SystemExit(
+            "these payload filenames match the corpus glob but not the document-id pattern, so "
+            f"they would be dropped from a population this screen reports a count of: {sorted(unparsed)}"
         )
     return {document_id: tuple(items) for document_id, items in grouped.items()}
 

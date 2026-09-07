@@ -260,6 +260,130 @@ def test_a_readable_registry_tree_announces_nothing(
     assert capsys.readouterr().err == ""
 
 
+def test_an_unparsable_reference_scan_file_is_announced_not_dropped(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: pathlib.Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The reference map must not silently lose a consumer to a syntax error.
+
+    ``build_reference_map`` used to let an unparsable file vanish from the
+    population with no notice at all, unlike its sibling
+    ``module_level_importers``. A registry module whose only consumer lives in
+    that file would then read as unreferenced and misclassify as a dead
+    candidate, so the drop must be announced the same way.
+    """
+    from ..analysis import load_census
+
+    root = tmp_path / "cadrumo"
+    root.mkdir()
+    (root / "sound_consumer.py").write_text(
+        "from cadrumo.domain.calculations.registry.module_a import Thing" + chr(10),
+        encoding="utf-8",
+    )
+    (root / "broken_consumer.py").write_text(
+        "from cadrumo.domain.calculations.registry.module_b import Thing" + chr(10) + "def broken(" + chr(10),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(load_census, "REFERENCE_SCAN_ROOTS", (root,))
+
+    reference_map = load_census.build_reference_map()
+    error = capsys.readouterr().err
+
+    assert "cadrumo.domain.calculations.registry.module_a" in reference_map.production
+    assert "cadrumo.domain.calculations.registry.module_b" not in reference_map.production
+    assert "would be missing from the reference map" in error
+    assert "broken_consumer.py" in error
+
+
+def test_a_parsable_reference_scan_tree_announces_nothing(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: pathlib.Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A clean reference scan must stay quiet, so the notice above means something."""
+    from ..analysis import load_census
+
+    root = tmp_path / "cadrumo"
+    root.mkdir()
+    (root / "sound_consumer.py").write_text(
+        "from cadrumo.domain.calculations.registry.module_a import Thing" + chr(10),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(load_census, "REFERENCE_SCAN_ROOTS", (root,))
+
+    load_census.build_reference_map()
+
+    assert capsys.readouterr().err == ""
+
+
+def test_an_unparsable_dynamic_import_file_is_announced_not_dropped(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: pathlib.Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A dynamic ``import_module`` call must not vanish because its file has a syntax error.
+
+    ``dynamic_import_sites`` used to drop an unparsable file's call sites with
+    no notice, so a real dynamic edge could go missing from the census the
+    same way an unreadable registry module used to, silently.
+    """
+    from ..analysis import load_census
+
+    root = tmp_path / "cadrumo"
+    root.mkdir()
+    (root / "sound_dynamic.py").write_text(
+        "import importlib"
+        + chr(10)
+        + "importlib.import_module('cadrumo.domain.calculations.registry.module_c')"
+        + chr(10),
+        encoding="utf-8",
+    )
+    (root / "broken_dynamic.py").write_text(
+        "import importlib"
+        + chr(10)
+        + "importlib.import_module('cadrumo.domain.calculations.registry.module_d')"
+        + chr(10)
+        + "def broken("
+        + chr(10),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(load_census, "REFERENCE_SCAN_ROOTS", (root,))
+
+    sites = load_census.dynamic_import_sites(production_only=False)
+    error = capsys.readouterr().err
+    modules_seen = {site.module for site in sites}
+
+    assert "cadrumo.sound_dynamic" in modules_seen
+    assert "cadrumo.broken_dynamic" not in modules_seen
+    assert "would be missing from the census" in error
+    assert "broken_dynamic.py" in error
+
+
+def test_a_parsable_dynamic_import_tree_announces_nothing(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: pathlib.Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A clean dynamic-import scan must stay quiet, so the notice above means something."""
+    from ..analysis import load_census
+
+    root = tmp_path / "cadrumo"
+    root.mkdir()
+    (root / "sound_dynamic.py").write_text(
+        "import importlib"
+        + chr(10)
+        + "importlib.import_module('cadrumo.domain.calculations.registry.module_c')"
+        + chr(10),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(load_census, "REFERENCE_SCAN_ROOTS", (root,))
+
+    load_census.dynamic_import_sites(production_only=False)
+
+    assert capsys.readouterr().err == ""
+
+
 def test_the_clean_property_reads_every_field_it_claims_to() -> None:
     """The gate above asserts ``clean`` and never sees it answer False.
 

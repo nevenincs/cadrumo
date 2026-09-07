@@ -18,12 +18,16 @@ These call the real resolver with real enum members; nothing is stubbed.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 import typer
+import yaml
 
+from ....application.ledger.source_jurisdiction import OUTCOMES_REQUIRING_AN_OPERATOR_STATEMENT
 from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.models import IrpfSpecialRegime
-from .._ledger_support import resolve_source_jurisdiction
+from .._ledger_support import _SOURCE_JURISDICTION_REFUSAL_LOCALE_KEYS, resolve_source_jurisdiction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -97,3 +101,44 @@ def test_the_impatriado_refusal_outranks_the_undeclared_residency_path() -> None
             fiscal_residency=None,
             irpf_special_regime=IrpfSpecialRegime.IMPATRIADO,
         )
+
+
+_LOCALES = ("en", "es", "ca", "hu")
+_LOCALES_ROOT = Path(__file__).resolve().parents[3] / "locales"
+
+
+def test_every_obligation_the_rule_can_raise_has_a_sentence_here() -> None:
+    """What keeps this command's fail-closed branch unreachable.
+
+    The application rule decides WHICH conditions oblige a statement; this
+    command owns the sentence for each. An obligation with no sentence falls to
+    the catch-all refusal, which is safe but tells the operator about the wrong
+    regime -- so the honest place to notice a new one is here, at build time.
+    """
+    unworded = [
+        outcome
+        for outcome in OUTCOMES_REQUIRING_AN_OPERATOR_STATEMENT
+        if outcome not in _SOURCE_JURISDICTION_REFUSAL_LOCALE_KEYS
+    ]
+
+    assert not unworded, f"no refusal wording for: {[outcome.value for outcome in unworded]}"
+
+
+def test_no_wording_is_kept_for_an_outcome_that_does_not_oblige_one() -> None:
+    """The other direction: a sentence nobody can reach is a sentence that misleads."""
+    assert frozenset(_SOURCE_JURISDICTION_REFUSAL_LOCALE_KEYS) == OUTCOMES_REQUIRING_AN_OPERATOR_STATEMENT
+
+
+@pytest.mark.parametrize("locale", _LOCALES)
+def test_each_refusal_is_worded_in_this_locale(locale: str) -> None:
+    """``tr`` humanises a missing key rather than raising, so absence is silent."""
+    catalogue = yaml.safe_load((_LOCALES_ROOT / locale / "cli.yml").read_text(encoding="utf-8"))
+    add = catalogue["cli"]["ledger"]["add"]
+
+    missing = [
+        key
+        for key in _SOURCE_JURISDICTION_REFUSAL_LOCALE_KEYS.values()
+        if not str(add.get(key.rsplit(".", 1)[-1], "")).strip()
+    ]
+
+    assert not missing, f"{locale} has no wording for: {missing}"

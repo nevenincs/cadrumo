@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from decimal import Decimal
-from typing import Protocol
+from typing import Final, Protocol
 
 import typer
 from pydantic import ValidationError
@@ -22,6 +22,12 @@ from ...application.cli_exception_preconditions import CliExceptionPrecondition,
 from ...application.ledger.actions_manual import ledger_transaction_payload, list_manual_transactions
 from ...application.ledger.id_resolution import resolve_transaction_id
 from ...application.ledger.review_projection import ledger_transaction_review_status
+from ...application.ledger.source_jurisdiction import (
+    SourceJurisdictionOutcome,
+)
+from ...application.ledger.source_jurisdiction import (
+    resolve_source_jurisdiction as resolve_source_jurisdiction_requirement,
+)
 from ...core.decimal.formatting import format_decimal
 from ...core.errors.hierarchy import CadrumoError
 from ...core.i18n.render import tr
@@ -247,36 +253,49 @@ def validate_category_id(category_id: str | None) -> str | None:
         ) from exc
 
 
+#: How this command words each condition that obliges the operator to state a
+#: source jurisdiction. The rule lives in the application layer; only the
+#: sentence is CLI-owned.
+_SOURCE_JURISDICTION_REFUSAL_LOCALE_KEYS: Final[dict[SourceJurisdictionOutcome, str]] = {
+    SourceJurisdictionOutcome.REQUIRED_NON_RESIDENT_IRNR: "cli.ledger.add.source_jurisdiction_required_irnr",
+    SourceJurisdictionOutcome.REQUIRED_IMPATRIADO: "cli.ledger.add.source_jurisdiction_required_beckham",
+}
+
+
 def resolve_source_jurisdiction(
     operator_value: str | None,
     *,
     fiscal_residency: FiscalResidency | None,
     irpf_special_regime: IrpfSpecialRegime | None,
 ) -> str | None:
-    """Stamp the profile-conditional default for ``--source-jurisdiction``.
+    """Word the application's source-jurisdiction decision for this command.
 
-    Defaults to ``ES`` only on a DECLARED residency. An undeclared residency
-    resolves to ``None`` — the unresolved state the impatriado aggregation
-    already handles explicitly, segregating such a row out of the base with a
-    typed unresolved-jurisdiction issue rather than admitting it.
+    Which conditions oblige a statement, and when Spain may be defaulted, is
+    tax law about the taxpayer and is decided by
+    :func:`~application.ledger.source_jurisdiction.resolve_source_jurisdiction`.
+    What is left here is the part that is genuinely a property of this surface:
+    the two refusals an operator can act on, and returning the value in the
+    shape ``--source-jurisdiction`` is stamped from.
 
-    That aggregation documents the invariant this function must not break: an
-    unresolved jurisdiction "is NEVER silently coerced to ``ES``". Returning
-    ``ES`` here for a profile that has declared no residency performed exactly
-    that coercion at the boundary, so the ``None`` never reached the layer built
-    to refuse it, and foreign-source income folded into the Spanish base. The
-    stamp is persisted on the transaction, so it outlived the profile later
-    being completed.
+    ``None`` is returned unchanged and is not a refusal: it is the unresolved
+    state the impatriado aggregation segregates rather than admitting, on the
+    invariant that an unresolved jurisdiction is never coerced to ``ES``.
     """
-    if operator_value is not None:
-        return operator_value
-    if fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR:
+    resolution = resolve_source_jurisdiction_requirement(
+        operator_value,
+        fiscal_residency=fiscal_residency,
+        irpf_special_regime=irpf_special_regime,
+    )
+    refusal_key = _SOURCE_JURISDICTION_REFUSAL_LOCALE_KEYS.get(resolution.outcome)
+    if refusal_key is not None:
+        raise bad(tr(refusal_key))
+    # Anything still demanding a statement has no sentence here, and the
+    # default for an unworded obligation is to refuse rather than to stamp:
+    # falling through would persist a jurisdiction the taxpayer's conditions
+    # said had to be stated, and the stamp outlives the profile.
+    if resolution.requires_operator_statement:
         raise bad(tr("cli.ledger.add.source_jurisdiction_required_irnr"))
-    if irpf_special_regime is IrpfSpecialRegime.IMPATRIADO:
-        raise bad(tr("cli.ledger.add.source_jurisdiction_required_beckham"))
-    if fiscal_residency is None:
-        return None
-    return "ES"
+    return resolution.jurisdiction
 
 
 def resolve_business_pct_with_censo(

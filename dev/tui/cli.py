@@ -1,9 +1,9 @@
 """The TUI visual inventory command line.
 
-Five verbs. ``inventory`` answers what interfaces exist and which of them a
-render reaches; ``render`` produces the images; ``rasterise`` repaints an
-existing run without re-driving the harness; ``diff`` compares one run against
-another; ``viewports`` prints the geometries a render covers.
+The package README carries the verb inventory, and a test joins it to the
+registrations below, so this docstring deliberately does not restate it: an
+enumeration kept in two places drifted in one of them, which is how ``runs``
+and ``snapshot`` came to be undocumented verbs.
 
 Rendering shells out to the in-boundary devtool harness once per frame, so a
 full matrix is minutes rather than seconds -- each frame rebuilds its app

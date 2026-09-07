@@ -37,7 +37,12 @@ def _retired_identifier_from_single_refusal_assertion() -> str:
 def _cutover_surface_files() -> tuple[Path, ...]:
     """Return executable, test, fixture, and locale surfaces outside registry data."""
     package_files = package_python_files()
-    locale_files = scan_directory(SRC_CADRUMO / "locales", pattern="*.yml")
+    # Recursive: `locales/` is a directory of locale directories, so the
+    # non-recursive default returned nothing and the locale half of this
+    # cutover scan was dead -- a retired M303 revision id left in a catalogue
+    # was invisible. The Python half still worked, so this was half-blind
+    # rather than wholly so.
+    locale_files = scan_directory(SRC_CADRUMO / "locales", pattern="*.yml", recursive=True, require_root=True)
     return tuple(sorted((*package_files, *locale_files)))
 
 

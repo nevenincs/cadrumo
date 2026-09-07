@@ -152,6 +152,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     stays import-error-safe. If a domain import fails, ``get_registered_keys``
     will propagate the error with full context rather than a silent empty set.
     """
+    from cadrumo.application.review.filter import LedgerReviewStatus
     from cadrumo.application.storage_management.models import StorageAreaDisposition, StorageOccupancy
     from cadrumo.application.wizard.catalogue import WIZARD_FLOWS
     from cadrumo.core.errors.error_codes import ErrorCategory
@@ -196,6 +197,14 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         *_declarations_workspace_registrations(),
         *_modelo_review_filter_registrations(),
         *_generated_docs_registrations(),
+        FStringKeyRegistration(
+            # Bounded enumeration: LedgerReviewStatus is a closed catalogue of
+            # ledger ``status=`` filter values, expanded into the controller's
+            # copy map in entrypoints/tui/ledger/controller.py.
+            description="tui.ledger.review_status.* (LedgerReviewStatus)",
+            key_factory=lambda v: f"tui.ledger.review_status.{v}",
+            values=tuple(status.value for status in LedgerReviewStatus),
+        ),
         FStringKeyRegistration(
             description="errors.prefix.* (ErrorCategory)",
             key_factory=lambda v: f"errors.prefix.{v}",
