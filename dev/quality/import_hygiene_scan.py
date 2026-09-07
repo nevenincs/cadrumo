@@ -3059,6 +3059,26 @@ class FixClassification:
     consumer_count: int
     consumer_modules: list[str]
 
+    def __post_init__(self) -> None:
+        """Refuse a consumer count that disagrees with the modules listed.
+
+        Both fields are built from one set at the single construction site --
+        ``consumer_count=len(consumers)`` beside ``consumer_modules=sorted(
+        consumers)`` -- so equality is universal by construction rather than a
+        property of today's data. Nothing enforced it: this is a plain
+        dataclass and every field is a free parameter. The count is what the
+        operator-facing batch summary prints as "N consumer site(s)", the
+        figure a refactor is sized against, while ``consumer_modules`` is the
+        list of files actually edited. A disagreement misstates the workload
+        while the list beside it says otherwise.
+        """
+        if self.consumer_count != len(self.consumer_modules):
+            message = (
+                f"consumer_count is {self.consumer_count} but {len(self.consumer_modules)} consumer "
+                "module(s) are listed; both are derived from one set and cannot disagree"
+            )
+            raise ValueError(message)
+
 
 def classify_fix_strategy(
     priv_violations: list[PrivateImportViolation], facades: dict[str, FacadeInfo]

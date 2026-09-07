@@ -15,7 +15,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 
-from ..pipeline.render_check import compare_revision_against_committed
+from ..pipeline.render_check import compare_revision_against_committed, revision_render_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -119,6 +119,44 @@ def test_a_revision_without_a_generated_layout_is_refused_by_name(
     modelo, revision_id = without_layout[0]
     with pytest.raises(ValueError, match="no export layout"):
         compare_revision_against_committed(authority, modelo=modelo, revision=revision_id)
+
+
+def test_a_cited_source_of_the_wrong_kind_is_refused_by_name_not_treated_as_the_design(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """An explicit ``source_ref`` that exists but is not a record-design source refuses.
+
+    A revision cites more than the record design: procedure instructions, the
+    printed form, the taxpayer calendar. Every one of those is a real row in
+    ``catalogues.sources`` and a real member of the revision's own
+    ``source_refs`` -- so a caller passing one by mistake is not naming a typo,
+    it is naming a source that genuinely exists and genuinely belongs to this
+    revision, just not as its record design. Accepting it silently would derive
+    an epoch, root and record shape from the wrong document; the guard must
+    name what is actually wrong (wrong kind) rather than fail later on a
+    downstream symptom (no design epoch) that does not say why.
+
+    The coordinate is derived rather than named, for the same reason as the
+    sibling refusal above: a corpus where no revision cites a non-design
+    source alongside its design would make this refusal unreachable, and that
+    must fail loudly rather than pass over nothing.
+    """
+    from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
+
+    sources = authority.catalogues.sources
+    candidates = [
+        (modelo, revision_id, str(ref))
+        for modelo in sorted(str(code) for code in registry_modelo_codes())
+        for revision_id, revision in authority.modelo(modelo).revisions.items()
+        for ref in revision.source_refs
+        if (source := sources.get(ref)) is not None and source.kind != "record_design"
+    ]
+
+    assert candidates, "no revision cites a non-record-design source, so this refusal cannot be exercised"
+
+    modelo, revision_id, wrong_kind_ref = candidates[0]
+    with pytest.raises(ValueError, match="does not declare record-design source"):
+        revision_render_inputs(authority, modelo=modelo, revision=revision_id, source_ref=wrong_kind_ref)
 
 
 def test_every_record_drifting_tree_is_dispositioned_and_every_disposition_is_live(

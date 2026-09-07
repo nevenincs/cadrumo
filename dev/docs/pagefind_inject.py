@@ -119,6 +119,40 @@ class SearchRecordProjection:
     cli_options: int
     cli_skipped_reason: str | None = None
 
+    def __post_init__(self) -> None:
+        """Refuse a projection whose census contradicts the records it carries.
+
+        ``records`` is the concatenation of the five projection runs and each
+        counter is that run's length, so the census accounts for the tuple
+        rather than making an independent claim about it. A drifting counter
+        goes on reporting a full complement of rows that never reached the
+        index, and every consumer - the injector, the Rung-2 manifest, the
+        terminology sweep's resolver - reads the census and the tuple as one
+        fact. :func:`_bounded_to_sample` already refuses the same drift on its
+        own path; the value object owes its consumers the same refusal.
+
+        Raises:
+            SearchInjectionError: When a counter is negative, or when the
+                counters do not account for exactly the records carried.
+        """
+        counters = (
+            ("concepts", self.concepts),
+            ("casillas", self.casillas),
+            ("legal_provisions", self.legal_provisions),
+            ("cli_commands", self.cli_commands),
+            ("cli_options", self.cli_options),
+        )
+        negative = [f"{name}={value}" for name, value in counters if value < 0]
+        if negative:
+            raise SearchInjectionError(
+                "search-record projection carries a negative counter: " + ", ".join(negative),
+            )
+        described = sum(value for _name, value in counters)
+        if described != len(self.records):
+            raise SearchInjectionError(
+                f"search-record projection counters describe {described} records while it carries {len(self.records)}",
+            )
+
 
 def load_relevance_weights(repo_root: Path) -> dict[str, float]:
     """Load the committed sweep's per-record relevance boost map, or empty.

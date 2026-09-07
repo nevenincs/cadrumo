@@ -22,6 +22,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from ..pagefind_inject import (
     InjectionStats,
     SearchInjectionError,
+    SearchRecordProjection,
     _bounded_to_sample,
     _effective_weight,
     _filters_for,
@@ -186,3 +187,105 @@ def test_the_bounded_sample_reports_exactly_the_records_it_carries() -> None:
     assert len(bounded.records) == bounded.cli_commands + bounded.cli_options
     carried_options = sum(1 for record in bounded.records if record.id.startswith("cli-option:"))
     assert carried_options == bounded.cli_options
+
+
+#: The distinguishing fragment of each refusal, so neither arm can pass by
+#: raising the other's error.
+_PARTITION_FRAGMENT = "counters describe"
+_NEGATIVE_FRAGMENT = "negative counter"
+
+
+def test_an_empty_projection_carries_no_contradiction() -> None:
+    """Empty-parameter control: an empty record set with a zero census is legal.
+
+    Completeness is a later boundary (``_require_complete_projection``); the
+    value object refuses only a census that disagrees with its own records.
+    """
+    empty = SearchRecordProjection(
+        records=(),
+        concepts=0,
+        casillas=0,
+        legal_provisions=0,
+        cli_commands=0,
+        cli_options=0,
+    )
+
+    assert empty.records == ()
+
+
+def test_a_census_matching_the_records_carried_is_admitted() -> None:
+    """Anti-noise: a coherent projection over real records is not refused."""
+    records = tuple(concept_records().records)
+    assert records, "the concept projection carried nothing, so this admits nothing"
+
+    coherent = SearchRecordProjection(
+        records=records,
+        concepts=len(records),
+        casillas=0,
+        legal_provisions=0,
+        cli_commands=0,
+        cli_options=0,
+    )
+    skipped = SearchRecordProjection(
+        records=records,
+        concepts=len(records),
+        casillas=0,
+        legal_provisions=0,
+        cli_commands=0,
+        cli_options=0,
+        cli_skipped_reason="the CLI tree could not be walked",
+    )
+
+    assert coherent.concepts == len(coherent.records)
+    assert skipped.cli_skipped_reason == "the CLI tree could not be walked"
+
+
+def test_a_census_claiming_records_the_projection_never_carried_is_refused() -> None:
+    """Teeth, partition arm: the census may not outrun the tuple.
+
+    ``_bounded_to_sample`` already refuses this drift on its own path. The
+    resolver and the Rung-2 manifest read the census and the tuple as one fact,
+    so a counter reporting a row that never reached the index is a silent
+    under-delivery dressed as a full complement.
+    """
+    records = tuple(concept_records().records)
+
+    with pytest.raises(SearchInjectionError) as excinfo:
+        SearchRecordProjection(
+            records=records,
+            concepts=len(records) + 1,
+            casillas=0,
+            legal_provisions=0,
+            cli_commands=0,
+            cli_options=0,
+        )
+
+    message = str(excinfo.value)
+    assert _PARTITION_FRAGMENT in message, message
+    assert _NEGATIVE_FRAGMENT not in message, f"the negative arm covered for the partition arm: {message}"
+    assert str(len(records)) in message, message
+
+
+def test_a_negative_counter_is_refused_even_when_the_census_still_sums() -> None:
+    """Teeth, negative arm: a cancelled counter sums correctly and is still a lie.
+
+    ``casillas=-5`` against ``concepts=len(records) + 5`` totals exactly the
+    records carried, so the partition arm demonstrably cannot catch it; only a
+    per-counter check can.
+    """
+    records = tuple(concept_records().records)
+
+    with pytest.raises(SearchInjectionError) as excinfo:
+        SearchRecordProjection(
+            records=records,
+            concepts=len(records) + 5,
+            casillas=-5,
+            legal_provisions=0,
+            cli_commands=0,
+            cli_options=0,
+        )
+
+    message = str(excinfo.value)
+    assert _NEGATIVE_FRAGMENT in message, message
+    assert _PARTITION_FRAGMENT not in message, f"the partition arm covered for the negative arm: {message}"
+    assert "casillas=-5" in message, message
