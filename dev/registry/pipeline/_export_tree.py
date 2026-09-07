@@ -1473,8 +1473,17 @@ def _render_toml_bytes(relative_path: str, payload: Mapping[str, object]) -> byt
     try:
         rendered = rtoml.dumps(_order_toml_values_before_tables(payload), pretty=True, none_value=None)
     except (TypeError, ValueError) as exc:
+        # rtoml raises TomlSerializationError (a ValueError subclass) whose sole
+        # ``args[0]`` bakes the offending value's own ``repr`` into the message,
+        # with no structured field that omits it -- measured:
+        # ``rtoml.dumps({"bad": Foo()})`` produces "<Foo object at 0x...> (Foo)
+        # is not serializable to TOML". Unlike ``json.dumps``'s purely
+        # positional "Object of type X is not JSON serializable", there is no
+        # accessor here that separates the offending value from the message, so
+        # this refusal names only the exception's type, never its rendered text.
         raise RegistryValidationError(
-            f"cannot serialize generated export TOML {relative_path!r}: {exc}",
+            f"cannot serialize generated export TOML {relative_path!r}: "
+            f"{type(exc).__name__} refused the payload",
         ) from exc
     return rendered.encode("utf-8")
 

@@ -525,6 +525,7 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
         "cadrumo.domain.calculations.registry.errors",
         "cadrumo.domain.calculations.registry.export_semantics",
         "cadrumo.domain.calculations.registry.ids",
+        "_pydantic_error_detail",
         "_semantic_map",
     }
     imported_names_by_module = {
@@ -540,6 +541,7 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
             "cadrumo.domain.calculations.registry.errors",
             "cadrumo.domain.calculations.registry.export_semantics",
             "cadrumo.domain.calculations.registry.ids",
+            "_pydantic_error_detail",
             "_semantic_map",
         }
     }

@@ -27,6 +27,7 @@ from cadrumo.domain.calculations.registry.ids import (
     SourceRefId,
 )
 
+from ._pydantic_error_detail import validation_error_detail
 from ._semantic_map import SemanticMap, SemanticMapEntry, SemanticMapRecord, VariableEnvelopeSemantic
 
 __all__ = [
@@ -138,7 +139,12 @@ def _load_fragment(path: Path) -> SemanticMapFragment:
         if raw_projection_ref is not None:
             try:
                 entry["projection_ref"] = compile_filing_projection_ref(raw_projection_ref)
-            except (ValidationError, ValueError) as exc:
+            except ValidationError as exc:
+                raise RegistryValidationError(
+                    f"invalid semantic-map fragment {path.name!r}: "
+                    f"projection_ref is not canonical: {validation_error_detail(exc)}",
+                ) from exc
+            except ValueError as exc:
                 raise RegistryValidationError(
                     f"invalid semantic-map fragment {path.name!r}: projection_ref is not canonical: {exc}",
                 ) from exc
@@ -160,7 +166,7 @@ def _load_fragment(path: Path) -> SemanticMapFragment:
         fragment = SemanticMapFragment.model_validate(data)
     except ValidationError as exc:
         raise RegistryValidationError(
-            f"invalid semantic-map fragment {path.name!r}: {exc}",
+            f"invalid semantic-map fragment {path.name!r}: {validation_error_detail(exc)}",
         ) from exc
     filename_match = _FRAGMENT_FILENAME.fullmatch(path.stem)
     if filename_match is None or filename_match.group("fragment_id") != fragment.fragment_id:
