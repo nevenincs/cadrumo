@@ -92,6 +92,13 @@ def unresolved_citations(data: dict[str, Any], root: Path) -> list[str]:
                     continue
                 text = path.read_text(encoding="utf-8", errors="ignore")
                 on_subject = on_subject or any(subject in text for subject in subjects)
+            # A RESOLVED entry is a historical record, and one resolved by
+            # deletion cannot name its subjects in any live file -- the same
+            # impossibility the empty-symbols case has, arriving by a different
+            # route. Existence is still required of every citation; only the
+            # subject rule steps aside, and only once the entry says it is done.
+            if entry.get("resolved"):
+                continue
             if subjects and cited_paths and not on_subject:
                 broken.append(
                     f"{entry.get('name')} -> no cited file names any subject of the entry ({', '.join(cited_paths)})",
@@ -188,6 +195,31 @@ def test_one_on_subject_citation_admits_a_supporting_consumer_citation(tmp_path:
 def test_a_resolved_cluster_with_no_symbols_still_needs_its_files_to_exist(tmp_path: Path) -> None:
     """The bound on the exemption: emptying ``symbols`` does not licence a dead path."""
     data = {"symbol_cluster": [{"name": "c", "symbols": [], "evidence": "fixed in dev/gone.py"}]}
+
+    assert unresolved_citations(data, tmp_path) == ["c -> dev/gone.py (no such file)"]
+
+
+def test_a_resolved_entry_may_cite_a_file_its_deleted_symbols_no_longer_name(tmp_path: Path) -> None:
+    """Resolution by deletion leaves a citation no live file can satisfy."""
+    reader = tmp_path / "dev" / "tool.py"
+    reader.parent.mkdir(parents=True)
+    reader.write_text("nothing here\n", encoding="utf-8")
+    data = {
+        "symbol_cluster": [
+            {"name": "c", "symbols": ["deleted_thing"], "resolved": True, "evidence": "deleted from dev/tool.py"},
+        ],
+    }
+
+    assert unresolved_citations(data, tmp_path) == []
+
+
+def test_a_resolved_entry_still_needs_its_cited_file_to_exist(tmp_path: Path) -> None:
+    """The bound: resolution excuses the subject rule, never a dead path."""
+    data = {
+        "symbol_cluster": [
+            {"name": "c", "symbols": ["deleted_thing"], "resolved": True, "evidence": "deleted from dev/gone.py"},
+        ],
+    }
 
     assert unresolved_citations(data, tmp_path) == ["c -> dev/gone.py (no such file)"]
 

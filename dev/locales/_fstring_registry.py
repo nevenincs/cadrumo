@@ -152,6 +152,10 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     stays import-error-safe. If a domain import fails, ``get_registered_keys``
     will propagate the error with full context rather than a silent empty set.
     """
+    from cadrumo.application.operations.frontend_contracts import (
+        OperationCancellationRefusalCode,
+        OperationResponseControlRefusalCode,
+    )
     from cadrumo.application.review.filter import LedgerReviewStatus
     from cadrumo.application.storage_management.models import StorageAreaDisposition, StorageOccupancy
     from cadrumo.application.wizard.catalogue import WIZARD_FLOWS
@@ -197,6 +201,19 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         *_declarations_workspace_registrations(),
         *_modelo_review_filter_registrations(),
         *_generated_docs_registrations(),
+        FStringKeyRegistration(
+            # Bounded union: the operations modal derives its refusal copy key
+            # from the code's own value across BOTH refusal enums, so the enums
+            # decide which keys must exist (entrypoints/tui/operations/modal.py).
+            description="operation.modal.refusal.* (Operation{ResponseControl,Cancellation}RefusalCode)",
+            key_factory=lambda v: f"operation.modal.refusal.{v}",
+            values=tuple(
+                dict.fromkeys(
+                    [code.value for code in OperationResponseControlRefusalCode]
+                    + [code.value for code in OperationCancellationRefusalCode]
+                )
+            ),
+        ),
         FStringKeyRegistration(
             # Bounded enumeration: LedgerReviewStatus is a closed catalogue of
             # ledger ``status=`` filter values, expanded into the controller's
