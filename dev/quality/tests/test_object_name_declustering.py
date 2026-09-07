@@ -20,7 +20,7 @@ from .. import object_name_rehearsal as rehearsal_module
 from ..object_name_rehearsal import ObjectNameRehearsalReceipt
 from ..object_name_replay import ObjectNameReplayResult
 from .test_object_name_rehearsal import _TEST_MANDATORY_GATES, _fixture, _live_bytes
-from .test_object_name_replay import _case, _generated_case
+from .test_object_name_replay import _case, _generated_case, _retained_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -173,7 +173,7 @@ def test_receipt_arguments_are_apply_only(
     assert cli.main([mode, argument]) == 2
     captured = capsys.readouterr()
     assert captured.out == ""
-    assert "receipt arguments are valid only in apply mode" in captured.err
+    assert "receipt arguments are valid only in apply or dispose mode" in captured.err
 
 
 @pytest.mark.parametrize(
@@ -190,6 +190,58 @@ def test_apply_requires_both_receipt_arguments(
 
     assert cli.main(["apply", *arguments]) == 2
     assert capsys.readouterr().out == ""
+
+
+@pytest.mark.parametrize(
+    "arguments",
+    [[], ["--receipt=receipt.json"], ["--receipt-id=sha256:nope"]],
+)
+def test_dispose_requires_both_receipt_arguments(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    arguments: list[str],
+) -> None:
+    monkeypatch.chdir(_repository(tmp_path))
+
+    assert cli.main(["dispose", *arguments]) == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "dispose requires both --receipt and --receipt-id" in captured.err
+
+
+def test_dispose_is_manifest_independent_and_emits_verified_action(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root, _inventory, _manifest, _component, receipt = _case(tmp_path)
+    transaction = _retained_transaction(root, receipt)
+    receipt_path = root / "receipt.json"
+    _write_receipt(receipt_path, receipt)
+    monkeypatch.chdir(root)
+    monkeypatch.setattr(cli, "_manifest_path", lambda *_args: pytest.fail("dispose resolved a manifest"))
+    monkeypatch.setattr(cli, "_context", lambda *_args: pytest.fail("dispose built rename context"))
+
+    assert (
+        cli.main(
+            [
+                "dispose",
+                f"--receipt={receipt_path}",
+                f"--receipt-id={receipt.receipt_id}",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    payload = json.loads(capsys.readouterr().out)
+    assert payload == {
+        "mode": "dispose",
+        "result": {
+            "backup_paths": list(receipt.changed_paths),
+            "disposed_root": str(transaction),
+            "receipt_id": receipt.receipt_id,
+        },
+    }
+    assert not transaction.exists()
 
 
 def test_apply_refuses_invalid_receipt_before_context(

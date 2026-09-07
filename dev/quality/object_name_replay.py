@@ -37,6 +37,8 @@ from .object_name_rehearsal import (
 __all__ = [
     "ObjectNameReplayError",
     "ObjectNameReplayResult",
+    "ObjectNameTransactionDisposition",
+    "dispose_object_name_transaction",
     "replay_object_name_component",
 ]
 
@@ -57,6 +59,15 @@ class ObjectNameReplayResult:
     post_tree_digest: str
     generator_outcomes: tuple[ObjectNameGateOutcome, ...]
     gate_outcomes: tuple[ObjectNameGateOutcome, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ObjectNameTransactionDisposition:
+    """Evidence that one inert retained transaction root was removed."""
+
+    receipt_id: str
+    disposed_root: str
+    backup_paths: tuple[str, ...]
 
 
 def _digest(payload: bytes) -> str:
@@ -329,6 +340,108 @@ def transaction_root_for(root: Path, receipt_id: str) -> Path:
     """
     suffix = receipt_id.removeprefix("sha256:")
     return root.parent / f".{root.name}.object-name-transaction-{suffix}"
+
+
+def _transaction_inventory(transaction_root: Path) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """Return exact unlinked directory and file members without following links."""
+    directories: list[str] = []
+    files: list[str] = []
+    pending = [transaction_root]
+    while pending:
+        directory = pending.pop()
+        try:
+            entries = tuple(os.scandir(directory))
+        except OSError as exc:
+            raise ObjectNameReplayError(f"cannot inspect retained transaction root: {transaction_root}") from exc
+        for entry in entries:
+            path = Path(entry.path)
+            relative = path.relative_to(transaction_root).as_posix()
+            if is_link_like(path) or entry.is_symlink():
+                raise ObjectNameReplayError(f"retained transaction member is link-like: {relative}")
+            if entry.is_dir(follow_symlinks=False):
+                directories.append(relative)
+                pending.append(path)
+            elif entry.is_file(follow_symlinks=False):
+                files.append(relative)
+            else:
+                raise ObjectNameReplayError(f"retained transaction member is not a regular file: {relative}")
+    return tuple(sorted(directories)), tuple(sorted(files))
+
+
+def _verify_inert_transaction(
+    *, root: Path, transaction_root: Path, receipt: ObjectNameRehearsalReceipt
+) -> tuple[str, ...]:
+    marker = transaction_root / ".absent-paths"
+    expected_paths = tuple(sorted(receipt.changed_paths))
+    expected_files = (".absent-paths", *expected_paths)
+    expected_directories = tuple(
+        sorted(
+            {
+                PurePosixPath(*PurePosixPath(relative).parts[:index]).as_posix()
+                for relative in expected_paths
+                for index in range(1, len(PurePosixPath(relative).parts))
+            }
+        )
+    )
+    actual_directories, actual_files = _transaction_inventory(transaction_root)
+    if actual_directories != expected_directories or actual_files != expected_files:
+        raise ObjectNameReplayError(
+            "retained transaction members differ from the receipt: "
+            f"directories={actual_directories!r}, files={actual_files!r}"
+        )
+    if marker.read_bytes() != canonical_json_bytes([]):
+        raise ObjectNameReplayError("retained transaction contains paths that were absent at replay start")
+
+    baseline_digests = dict(receipt.baseline_files)
+    for relative in expected_paths:
+        expected_digest = baseline_digests.get(relative)
+        if expected_digest is None:
+            raise ObjectNameReplayError(f"receipt has no file baseline for retained backup: {relative}")
+        backup = transaction_root.joinpath(*PurePosixPath(relative).parts)
+        live = _safe_path(root, relative)
+        if not backup.is_file() or is_link_like(backup):
+            raise ObjectNameReplayError(f"retained backup is not a regular unlinked file: {relative}")
+        if not live.is_file() or is_link_like(live):
+            raise ObjectNameReplayError(f"live transaction member is not a regular unlinked file: {relative}")
+        backup_payload = backup.read_bytes()
+        live_payload = live.read_bytes()
+        if _digest(backup_payload) != expected_digest:
+            raise ObjectNameReplayError(f"retained backup differs from the receipt baseline: {relative}")
+        if live_payload != backup_payload:
+            raise ObjectNameReplayError(f"live transaction member differs from the retained backup: {relative}")
+    return expected_paths
+
+
+def dispose_object_name_transaction(
+    receipt: ObjectNameRehearsalReceipt, *, repo_root: Path
+) -> ObjectNameTransactionDisposition:
+    """Remove retained replay evidence only after proving that it is inert."""
+    _validate_receipt_integrity(receipt)
+    raw_root = Path(repo_root)
+    if is_link_like(raw_root):
+        raise ObjectNameReplayError(f"transaction repository root is link-like: {raw_root}")
+    root = raw_root.resolve()
+    if not (root / ".git").exists() or not (root / "src").is_dir() or not (root / "dev").is_dir():
+        raise ObjectNameReplayError(f"transaction repository root is not a worktree: {root}")
+    transaction_root = transaction_root_for(root, receipt.receipt_id)
+    if transaction_root.parent != root.parent or is_link_like(transaction_root) or not transaction_root.is_dir():
+        raise ObjectNameReplayError(f"retained transaction root is not an unlinked directory: {transaction_root}")
+
+    backup_paths = _verify_inert_transaction(root=root, transaction_root=transaction_root, receipt=receipt)
+    if _verify_inert_transaction(root=root, transaction_root=transaction_root, receipt=receipt) != backup_paths:
+        raise ObjectNameReplayError("retained transaction changed during disposition verification")
+    try:
+        shutil.rmtree(transaction_root)
+        fsync_parent_dir(transaction_root)
+    except OSError as exc:
+        raise ObjectNameReplayError(f"verified transaction disposition failed: {transaction_root}") from exc
+    if transaction_root.exists() or is_link_like(transaction_root):
+        raise ObjectNameReplayError(f"verified transaction still exists after disposition: {transaction_root}")
+    return ObjectNameTransactionDisposition(
+        receipt_id=receipt.receipt_id,
+        disposed_root=str(transaction_root),
+        backup_paths=backup_paths,
+    )
 
 
 def _create_transaction_root(path: Path) -> None:

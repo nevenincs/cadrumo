@@ -27,11 +27,12 @@ from .object_name_rehearsal import (
 from .object_name_replay import (
     ObjectNameReplayError,
     _validate_receipt_integrity,  # pyright: ignore[reportPrivateUsage]
+    dispose_object_name_transaction,
     replay_object_name_component,
 )
 
 _DEFAULT_MANIFEST: Final[str] = "dev/quality/object_name_rename_manifest.toml"
-_MODES: Final[tuple[str, ...]] = ("inventory", "plan", "rehearse", "apply", "verify")
+_MODES: Final[tuple[str, ...]] = ("inventory", "plan", "rehearse", "apply", "dispose", "verify")
 
 
 class ObjectNameDeclusteringCliError(RuntimeError):
@@ -133,17 +134,24 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
         root = _repo_root(Path.cwd())
-        if args.mode == "apply" and (args.receipt is None or not args.receipt_id):
-            raise ObjectNameDeclusteringCliError("apply requires both --receipt and --receipt-id")
-        if args.mode != "apply" and (args.receipt is not None or args.receipt_id is not None):
-            raise ObjectNameDeclusteringCliError("receipt arguments are valid only in apply mode")
+        receipt_mode = args.mode in {"apply", "dispose"}
+        if receipt_mode and (args.receipt is None or not args.receipt_id):
+            raise ObjectNameDeclusteringCliError(f"{args.mode} requires both --receipt and --receipt-id")
+        if not receipt_mode and (args.receipt is not None or args.receipt_id is not None):
+            raise ObjectNameDeclusteringCliError("receipt arguments are valid only in apply or dispose mode")
         apply_receipt = None
-        if args.mode == "apply":
+        if receipt_mode:
             if args.receipt is None or args.receipt_id is None:
-                raise ObjectNameDeclusteringCliError("apply receipt arguments became unavailable")
+                raise ObjectNameDeclusteringCliError(f"{args.mode} receipt arguments became unavailable")
             apply_receipt = _receipt(args.receipt)
             if apply_receipt.receipt_id != args.receipt_id:
                 raise ObjectNameDeclusteringCliError("explicit receipt identity does not match the receipt file")
+        if args.mode == "dispose":
+            if apply_receipt is None:
+                raise ObjectNameDeclusteringCliError("dispose receipt was not validated")
+            result = dispose_object_name_transaction(apply_receipt, repo_root=root)
+            _emit({"mode": "dispose", "result": asdict(result)}, as_json=args.json)
+            return 0
         if args.mode == "inventory":
             _emit(to_json(scan((root / "src", root / "dev"), root)), as_json=args.json)
             return 0

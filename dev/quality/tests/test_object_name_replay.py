@@ -24,7 +24,11 @@ from ..object_name_graph import (
 )
 from ..object_name_manifest import ObjectNameRenameManifest
 from ..object_name_rehearsal import ObjectNameRehearsalReceipt, rehearse_object_name_component
-from ..object_name_replay import ObjectNameReplayError, replay_object_name_component
+from ..object_name_replay import (
+    ObjectNameReplayError,
+    dispose_object_name_transaction,
+    replay_object_name_component,
+)
 from .test_object_name_rehearsal import _TEST_MANDATORY_GATES, _digest, _fixture, _git, _live_bytes, _write
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -48,6 +52,187 @@ def _case(tmp_path: Path) -> tuple[Path, Any, Any, Any, ObjectNameRehearsalRecei
 def _retag(receipt: ObjectNameRehearsalReceipt) -> ObjectNameRehearsalReceipt:
     identified = replace(receipt, receipt_id=replay_module._receipt_digest(receipt, evidence=False))
     return replace(identified, evidence_digest=replay_module._receipt_digest(identified, evidence=True))
+
+
+def _retained_transaction(repo: Path, receipt: ObjectNameRehearsalReceipt) -> Path:
+    transaction = replay_module.transaction_root_for(repo, receipt.receipt_id)
+    transaction.mkdir()
+    for relative in receipt.changed_paths:
+        target = transaction / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((repo / relative).read_bytes())
+    (transaction / ".absent-paths").write_bytes(canonical_json_bytes([]))
+    return transaction
+
+
+def _disposition_case(tmp_path: Path) -> tuple[Path, ObjectNameRehearsalReceipt]:
+    repo, _inventory, _manifest, _component, receipt = _case(tmp_path)
+    extra = "dev/second.py"
+    (repo / extra).write_bytes(b"SECOND = True\n")
+    changed_paths = tuple(sorted((*receipt.changed_paths, extra)))
+    expanded = replace(
+        receipt,
+        baseline_files=tuple(sorted((*receipt.baseline_files, (extra, _digest((repo / extra).read_bytes()))))),
+        changed_paths=changed_paths,
+        changed_path_digest=_digest(canonical_json_bytes(list(changed_paths))),
+    )
+    return repo, _retag(expanded)
+
+
+def _tree_bytes(root: Path) -> dict[str, bytes]:
+    return {path.relative_to(root).as_posix(): path.read_bytes() for path in root.rglob("*") if path.is_file()}
+
+
+def test_verified_disposition_removes_exact_inert_transaction_and_reports_members(tmp_path: Path) -> None:
+    repo, _inventory, _manifest, _component, receipt = _case(tmp_path)
+    transaction = _retained_transaction(repo, receipt)
+    foreign = replay_module.transaction_root_for(repo, f"sha256:{'1' * 64}")
+    foreign.mkdir()
+    (foreign / "foreign-evidence").write_bytes(b"keep\n")
+
+    result = dispose_object_name_transaction(receipt, repo_root=repo)
+
+    assert result.receipt_id == receipt.receipt_id
+    assert result.disposed_root == str(transaction)
+    assert result.backup_paths == receipt.changed_paths
+    assert not transaction.exists(), "the positive control must remove the transaction root it created"
+    assert (foreign / "foreign-evidence").read_bytes() == b"keep\n"
+
+
+@pytest.mark.parametrize("kind", ["backup", "live"])
+@pytest.mark.parametrize("position", [0, 1])
+def test_disposition_checks_every_backup_against_receipt_and_live_bytes(
+    tmp_path: Path, kind: str, position: int
+) -> None:
+    repo, receipt = _disposition_case(tmp_path)
+    transaction = _retained_transaction(repo, receipt)
+    relative = receipt.changed_paths[position]
+    if kind == "backup":
+        (transaction / relative).write_bytes(b"not the receipt baseline\n")
+        refusal = "backup differs from the receipt baseline"
+    else:
+        (repo / relative).write_bytes(b"newer live work\n")
+        refusal = "live transaction member differs from the retained backup"
+    before_transaction = _tree_bytes(transaction)
+    before_live = {path: (repo / path).read_bytes() for path in receipt.changed_paths}
+
+    with pytest.raises(ObjectNameReplayError, match=refusal):
+        dispose_object_name_transaction(receipt, repo_root=repo)
+
+    assert _tree_bytes(transaction) == before_transaction
+    assert {path: (repo / path).read_bytes() for path in receipt.changed_paths} == before_live
+
+
+@pytest.mark.parametrize(
+    ("defect", "refusal"),
+    [
+        ("absent", "contains paths that were absent"),
+        ("missing-marker", "members differ from the receipt"),
+        ("missing-backup", "members differ from the receipt"),
+        ("unexpected-file", "members differ from the receipt"),
+        ("unexpected-directory", "members differ from the receipt"),
+    ],
+)
+def test_disposition_refuses_non_exact_transaction_shape_without_removal(
+    tmp_path: Path, defect: str, refusal: str
+) -> None:
+    repo, _inventory, _manifest, _component, receipt = _case(tmp_path)
+    transaction = _retained_transaction(repo, receipt)
+    relative = receipt.changed_paths[0]
+    if defect == "absent":
+        (transaction / ".absent-paths").write_bytes(canonical_json_bytes([relative]))
+    elif defect == "missing-marker":
+        (transaction / ".absent-paths").unlink()
+    elif defect == "missing-backup":
+        (transaction / relative).unlink()
+    elif defect == "unexpected-file":
+        (transaction / "foreign-evidence").write_bytes(b"keep\n")
+    else:
+        (transaction / "foreign-directory").mkdir()
+    before = _tree_bytes(transaction)
+
+    with pytest.raises(ObjectNameReplayError, match=refusal):
+        dispose_object_name_transaction(receipt, repo_root=repo)
+
+    assert transaction.is_dir()
+    assert _tree_bytes(transaction) == before
+
+
+def test_disposition_second_verification_catches_drift_before_removal(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo, _inventory, _manifest, _component, receipt = _case(tmp_path)
+    transaction = _retained_transaction(repo, receipt)
+    relative = receipt.changed_paths[0]
+    original_verify = replay_module._verify_inert_transaction
+    calls = 0
+    removal_attempts: list[Path] = []
+
+    def drift_between_checks(**kwargs: Any) -> tuple[str, ...]:
+        nonlocal calls
+        calls += 1
+        result = original_verify(**kwargs)
+        if calls == 1:
+            (repo / relative).write_bytes(b"concurrent live work\n")
+        return result
+
+    monkeypatch.setattr(replay_module, "_verify_inert_transaction", drift_between_checks)
+    monkeypatch.setattr(replay_module.shutil, "rmtree", lambda path: removal_attempts.append(Path(path)))
+
+    with pytest.raises(ObjectNameReplayError, match="live transaction member differs from the retained backup"):
+        dispose_object_name_transaction(receipt, repo_root=repo)
+
+    assert calls == 2, "the complete inertness proof must run again immediately before removal"
+    assert removal_attempts == []
+    assert transaction.is_dir()
+
+
+def test_disposition_refuses_link_like_transaction_member(tmp_path: Path) -> None:
+    repo, _inventory, _manifest, _component, receipt = _case(tmp_path)
+    transaction = _retained_transaction(repo, receipt)
+    link = transaction / "foreign-link"
+    try:
+        link.symlink_to(transaction / ".absent-paths")
+    except OSError as exc:
+        pytest.skip(f"symlinks unavailable: {exc}")
+
+    with pytest.raises(ObjectNameReplayError, match="member is link-like"):
+        dispose_object_name_transaction(receipt, repo_root=repo)
+
+    assert link.is_symlink()
+
+
+def test_disposition_missing_exact_root_never_touches_foreign_sibling(tmp_path: Path) -> None:
+    repo, _inventory, _manifest, _component, receipt = _case(tmp_path)
+    foreign = replay_module.transaction_root_for(repo, f"sha256:{'2' * 64}")
+    foreign.mkdir()
+    sentinel = foreign / "foreign-evidence"
+    sentinel.write_bytes(b"keep\n")
+
+    with pytest.raises(ObjectNameReplayError, match="root is not an unlinked directory"):
+        dispose_object_name_transaction(receipt, repo_root=repo)
+
+    assert sentinel.read_bytes() == b"keep\n"
+
+
+def test_disposition_removal_failure_is_reported_and_retains_evidence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo, _inventory, _manifest, _component, receipt = _case(tmp_path)
+    transaction = _retained_transaction(repo, receipt)
+    removal_attempts: list[Path] = []
+
+    def refuse_removal(path: Path) -> None:
+        removal_attempts.append(Path(path))
+        raise OSError(145, "The directory is not empty")
+
+    monkeypatch.setattr(replay_module.shutil, "rmtree", refuse_removal)
+
+    with pytest.raises(ObjectNameReplayError, match="verified transaction disposition failed"):
+        dispose_object_name_transaction(receipt, repo_root=repo)
+
+    assert removal_attempts == [transaction], "strict removal was not exercised"
+    assert transaction.is_dir()
 
 
 def _module_case(tmp_path: Path) -> tuple[Path, Any, Any, Any, ObjectNameRehearsalReceipt]:
@@ -637,6 +822,40 @@ def test_invalid_receipt_integrity_refuses_before_any_live_write(
 
     assert writes == []
     assert (repo / "src/example/contracts.py").read_bytes() == b"class Widgets:\n    pass\n"
+
+
+@pytest.mark.parametrize("field", tuple(_REFUSAL_BY_FIELD))
+def test_disposition_validates_each_receipt_integrity_field_before_removal(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, field: str
+) -> None:
+    repo, _inventory, _manifest, _component, receipt = _case(tmp_path)
+    transaction = _retained_transaction(repo, receipt)
+    if field == "schema":
+        candidate = replace(receipt, schema_version=99)
+    elif field == "source-unchanged":
+        candidate = replace(receipt, source_tree_unchanged=False)
+    elif field == "receipt-id":
+        candidate = replace(receipt, receipt_id=_digest(b"wrong"))
+    elif field == "evidence-digest":
+        candidate = replace(receipt, evidence_digest=_digest(b"wrong"))
+    elif field == "changed-path-digest":
+        corrupted = replace(receipt, changed_path_digest=_digest(b"wrong"))
+        candidate = replace(
+            corrupted,
+            receipt_id=replay_module._receipt_digest(corrupted, evidence=False),
+            evidence_digest=replay_module._receipt_digest(corrupted, evidence=True),
+        )
+    else:
+        failed = replace(receipt.gate_outcomes[0], return_code=7)
+        candidate = replace(receipt, gate_outcomes=(failed,))
+    removal_attempts: list[Path] = []
+    monkeypatch.setattr(replay_module.shutil, "rmtree", lambda path: removal_attempts.append(Path(path)))
+
+    with pytest.raises(ObjectNameReplayError, match=_REFUSAL_BY_FIELD[field]):
+        dispose_object_name_transaction(candidate, repo_root=repo)
+
+    assert removal_attempts == []
+    assert transaction.is_dir()
 
 
 #: The refusal each drift must produce, so no case can pass on another

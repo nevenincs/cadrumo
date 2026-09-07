@@ -6,7 +6,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:6d4697270bf3ff1d9452d003846493c6b14acdc408c8ffc7cbe4e8a21f0dd118'
+body_hash: 'sha256:3d00d0231076c6f8f3dad4fb9f25a8ce8492535d3b52338ef61490cfcf7ea584'
 related:
   - '[[2026-09-02-object-name-declustering-W01-P01-S01]]'
   - '[[2026-09-02-object-name-declustering-W01-P01-S02]]'
@@ -70,6 +70,7 @@ related:
   - '[[2026-09-02-object-name-declustering-s24-scoped-receipt-review-audit]]'
   - '[[2026-09-03-object-name-declustering-final-code-review-audit]]'
   - '[[2026-09-03-object-name-declustering-s25-graph-cache-review-audit]]'
+  - '[[2026-09-07-object-name-declustering-audit]]'
   - '[[2026-09-07-object-name-declustering-receipt-inventory-freshness-conflict-audit]]'
   - '[[2026-09-07-object-name-declustering-receipt-scope-and-teardown-authority-audit]]'
   - '[[2026-09-07-object-name-declustering-receipt-validity-window-measurement-audit]]'
@@ -111,6 +112,7 @@ Auto-generated index of all documents tagged with `#object-name-declustering`.
 - `2026-09-02-object-name-declustering-s24-scoped-receipt-review-audit` - `object-name-declustering` audit: `S24 scoped receipt review`
 - `2026-09-03-object-name-declustering-final-code-review-audit` - `object-name-declustering` audit: `final code review`
 - `2026-09-03-object-name-declustering-s25-graph-cache-review-audit` - `object-name-declustering` audit: `S25 graph cache review`
+- `2026-09-07-object-name-declustering-audit` - `object-name-declustering` audit: `Object name declustering S32 transaction disposition implementation review`
 - `2026-09-07-object-name-declustering-receipt-inventory-freshness-conflict-audit` - `object-name-declustering` audit: `receipt inventory freshness conflict`
 - `2026-09-07-object-name-declustering-receipt-scope-and-teardown-authority-audit` - `object-name-declustering` audit: `receipt scope and teardown authority`
 - `2026-09-07-object-name-declustering-receipt-validity-window-measurement-audit` - `object-name-declustering` audit: `receipt validity window measurement`
