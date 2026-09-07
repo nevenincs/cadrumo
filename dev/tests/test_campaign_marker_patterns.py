@@ -100,13 +100,26 @@ def test_no_development_tree_test_name_carries_a_step_id() -> None:
     count belongs in the record, not in an assertion that would go stale on
     somebody else's schedule.
     """
-    carrying = sorted(
-        f"{str(path.relative_to(REPO_ROOT)).replace(chr(92), '/')}::{name}"
+    examined = [
+        (str(path.relative_to(REPO_ROOT)).replace(chr(92), "/"), name)
         for path in _tracked_test_modules()
         if str(path.relative_to(REPO_ROOT)).replace(chr(92), "/").startswith("dev/")
         for name in _test_symbol_names(path)
-        if _STEP_ID_CASE.pattern.search(name)
+    ]
+    # Checked BEFORE the emptiness assertion, and deliberately so. The
+    # expectation below is the empty set, which this module's own opening
+    # paragraph identifies as the dangerous shape: a pattern that has stopped
+    # being checked is indistinguishable from one that matches nothing. A walk
+    # that reached no test names, or a name reader that stopped returning them,
+    # would satisfy the gate exactly as a clean tree does. The floor sits far
+    # below the live population rather than beside it, so ordinary churn never
+    # touches it and only a collapse does.
+    assert len(examined) > 2000, (
+        f"only {len(examined)} development-tree test name(s) were examined, so an "
+        "empty result below would mean the walk reached almost nothing rather "
+        "than that the tree is clean"
     )
+    carrying = sorted(f"{rel}::{name}" for rel, name in examined if _STEP_ID_CASE.pattern.search(name))
     assert not carrying, (
         "a step id returned to a development-tree test name. Rename the symbol to describe what it "
         "asserts; do not add the coordinate to an exemption, and do not rename only the test when its "

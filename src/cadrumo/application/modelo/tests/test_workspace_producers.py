@@ -424,3 +424,46 @@ def test_workspace_producer_docs_and_active_tree_reach_the_public_module_fixed_p
     assert not remnants
     assert (repository / "docs" / "api" / f"cadrumo.application.modelo.{public_module}.rst").is_file()
     assert public_module in (repository / "docs" / "api" / "cadrumo.application.modelo.rst").read_text(encoding="utf-8")
+
+
+def test_every_port_realization_satisfies_the_atomic_projection_port() -> None:
+    """The port the envelopes exist for must actually describe them.
+
+    The comment above the realizations says every envelope is a thin adapter
+    that exists BECAUSE the port binds its projection to a pydantic model.
+    Nothing checked that: no annotation names the port and no isinstance
+    reaches it, so a realization could drop or rename a member and the claim
+    would keep reading true. Structural typing does not fail loudly on its own
+    -- it fails by the contract quietly ceasing to describe anything.
+    """
+    import inspect
+
+    from .. import workspace_producers
+
+    realizations = [
+        value
+        for name, value in vars(workspace_producers).items()
+        if inspect.isclass(value)
+        and name.endswith("PortV1")
+        and name != "ModeloWorkspaceAtomicProjectionPortV1"
+        and value.__module__ == workspace_producers.__name__
+    ]
+
+    assert len(realizations) >= 6, "the realization scan found too few ports; it would pass vacuously"
+
+    # derived from the Protocol, never restated: a copied member list is a
+    # second declaration of the same contract and drifts the moment the port
+    # gains or renames a member, which is the failure this exists to refuse
+    port = workspace_producers.ModeloWorkspaceAtomicProjectionPortV1
+    required = tuple(sorted(name for name in vars(port) if not name.startswith("_")))
+    assert len(required) >= 3, "the port declares fewer members than expected; the derivation broke"
+    missing = {
+        realization.__name__: [member for member in required if not hasattr(realization, member)]
+        for realization in realizations
+        if any(not hasattr(realization, member) for member in required)
+    }
+
+    assert missing == {}, (
+        "these port realizations do not satisfy ModeloWorkspaceAtomicProjectionPortV1, "
+        f"which is the contract the module says they exist to realize: {missing}"
+    )

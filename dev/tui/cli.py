@@ -392,6 +392,7 @@ def render_command(
                         text=_relative(text_path, directory),
                         png_sha256=digest(png_path),
                         text_sha256=digest(text_path),
+                        cell_height=cell_height,
                         elapsed_ms=captured.elapsed_ms,
                         geometry_findings=captured.geometry_findings,
                         missing_glyphs=raster.missing_glyphs,
@@ -566,6 +567,7 @@ def rasterise_command(
                 update={
                     "png_sha256": digest(png_path),
                     "missing_glyphs": raster.missing_glyphs,
+                    "cell_height": cell_height,
                 },
             ),
         )
@@ -578,6 +580,10 @@ def rasterise_command(
     _echo(f"repainted {len(manifest.frames) - len(missing_svgs)} frames at cell height {cell_height}")
     if missing_svgs:
         _echo(f"{len(missing_svgs)} frames had no SVG and were left as recorded")
+        _echo(
+            "their PNGs are still at the cell height they were painted at, which the "
+            "manifest records per frame: " + ", ".join(sorted(missing_svgs))
+        )
         raise typer.Exit(code=1)
 
 

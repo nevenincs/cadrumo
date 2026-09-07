@@ -71,24 +71,46 @@ def _tracked_text_files() -> tuple[str, ...]:
     )
 
 
-def _offending_files() -> dict[str, str]:
+def _offending_files() -> tuple[dict[str, str], tuple[str, ...]]:
+    """Return the offending files, and the tracked files that would not read.
+
+    The population floor below counts what the walk LISTED, not what it
+    read, so a file that fails to open still counts toward it while
+    contributing nothing to the scan. The floor is blind to this by
+    construction -- it measures the wrong stage -- and an unread file is
+    exactly where a recorded transient path would sit unnoticed."""
     offenders: dict[str, str] = {}
+    unread: list[str] = []
     for entry in _tracked_text_files():
         if entry in DECLARED_NAMING_SITES or entry.startswith(_PROSE_ROOT):
             continue
         try:
-            content = (REPO_ROOT / entry).read_text(encoding=UTF_8)
-        except (OSError, UnicodeDecodeError):
+            raw = (REPO_ROOT / entry).read_bytes()
+        except OSError:
+            unread.append(entry)
             continue
+        # Decoded lossily on purpose. The segments searched for are ASCII, and
+        # a replacement character cannot forge or hide one, so a lossy decode
+        # answers this scan’s question exactly. Refusing the file instead
+        # would drop a tracked corpus document that is simply not UTF-8 -- one
+        # such BOE text is tracked today -- and that is the file the scan was
+        # silently skipping before.
+        content = raw.decode(UTF_8, errors="replace")
         for segment in TRANSIENT_TREE_SEGMENTS:
             if segment in content:
                 offenders[entry] = segment
                 break
-    return offenders
+    return offenders, tuple(unread)
 
 
 def test_no_tracked_file_records_a_transient_tree_path() -> None:
-    assert _offending_files() == {}
+    offenders, unread = _offending_files()
+
+    assert offenders == {}
+    assert not unread, (
+        "these tracked files would not read, so a transient tree path recorded "
+        f"in one of them was never scanned for: {list(unread)}"
+    )
 
 
 def test_every_declared_naming_site_still_names_a_transient_tree() -> None:

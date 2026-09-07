@@ -231,7 +231,6 @@ CAMPAIGN_METADATA_CASES: tuple[PatternCase, ...] = (
         ("Step discovery reads the registry", "the difficult Step-by-step tutorial walkthrough"),
     ),
 )
-CAMPAIGN_METADATA_PATTERNS = tuple(case.pattern for case in CAMPAIGN_METADATA_CASES)
 #: The production-scoped subset, DERIVED from the one table rather than listed.
 #:
 #: A hand-maintained second list would drift from the scope each case declares,
@@ -241,7 +240,6 @@ CAMPAIGN_METADATA_PATTERNS = tuple(case.pattern for case in CAMPAIGN_METADATA_CA
 PRODUCTION_SCOPED_CAMPAIGN_METADATA_CASES: tuple[PatternCase, ...] = tuple(
     case for case in CAMPAIGN_METADATA_CASES if case.scope is MarkerScanScope.TEST_AND_PRODUCTION_MODULES
 )
-PRODUCTION_SCOPED_CAMPAIGN_METADATA_PATTERNS = tuple(case.pattern for case in PRODUCTION_SCOPED_CAMPAIGN_METADATA_CASES)
 #: Ruff writes suppressions in two shapes and both carry rule codes that look
 #: exactly like a campaign step id. The trailing form suppresses one line and
 #: puts the directive straight after the hash; the file-level form sits at
@@ -306,7 +304,6 @@ PROCESS_SYMBOL_METADATA_CASES: tuple[PatternCase, ...] = (
         ("test_s3_client_retries",),
     ),
 )
-PROCESS_SYMBOL_METADATA_PATTERNS = tuple(case.pattern for case in PROCESS_SYMBOL_METADATA_CASES)
 
 #: The pattern the plan entry replaced. Concatenating ``"pa" + "ln"`` to keep the
 #: token out of the file's own scan transposed it, so the compiled pattern was

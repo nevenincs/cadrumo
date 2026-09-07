@@ -95,3 +95,38 @@ def test_the_copy_carries_the_member_its_protocol_declares() -> None:
     verifier actually calls was absent.
     """
     assert callable(getattr(StaticGeneratedArtifactSource, "applies_across", None))
+
+
+def test_every_inspection_shape_satisfies_the_generated_artifact_contract() -> None:
+    """The contract both inspection shapes are written to must still describe them.
+
+    ``GeneratedArtifactInspection`` is the structural contract over a generated
+    artifact's identity, sources and id sets. Two shapes in its own module are
+    written to it -- the static projection and the revision inspection -- and
+    nothing checked that they still matched: structural typing means they
+    conform without naming it, so a renamed or dropped member would leave the
+    Protocol describing neither while every import kept working.
+
+    The required members are derived FROM the Protocol rather than restated. A
+    copied list is a second declaration of the same contract, and it drifts the
+    first time the Protocol gains a member.
+    """
+    from ..static_inspection import (
+        GeneratedArtifactInspection,
+        RegistryRevisionInspection,
+        StaticGeneratedArtifactInspection,
+    )
+
+    required = tuple(sorted(name for name in vars(GeneratedArtifactInspection) if not name.startswith("_")))
+    assert len(required) >= 6, "the contract declares fewer members than expected; the derivation broke"
+
+    missing = {
+        shape.__name__: [member for member in required if member not in shape.model_fields]
+        for shape in (StaticGeneratedArtifactInspection, RegistryRevisionInspection)
+        if any(member not in shape.model_fields for member in required)
+    }
+
+    assert missing == {}, (
+        "these inspection shapes no longer satisfy GeneratedArtifactInspection, which is the "
+        f"contract they are written to: {missing}"
+    )

@@ -21,7 +21,7 @@ from __future__ import annotations
 import pytest
 from textual.screen import Screen
 
-from ....application.search.workbench import WorkbenchDestinationAdmissionState
+from ....application.search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
 from ..navigation import (
     TUI_DESTINATION_CATALOGUE,
     DestinationAdmissionError,
@@ -30,7 +30,9 @@ from ..navigation import (
     TuiDestinationIdV1,
     TuiDestinationRouteV1,
     TuiScreenContextV1,
+    build_destination_catalogue,
 )
+from .test_navigation import _admissions, _catalogue, _factories, _search_result
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -133,3 +135,67 @@ def test_an_unavailable_destination_with_no_candidates_is_accepted() -> None:
 
     assert route.admission.state is WorkbenchDestinationAdmissionState.LOCKED
     assert route.action_candidates == ()
+
+
+def _workbench_admission(
+    destination: TuiDestinationIdV1,
+    *,
+    state: WorkbenchDestinationAdmissionState = WorkbenchDestinationAdmissionState.AVAILABLE,
+    reason_code: str | None = None,
+) -> WorkbenchDestinationAdmission:
+    """The application-side admission a search result carries."""
+    return WorkbenchDestinationAdmission(destination=destination, state=state, reason_code=reason_code)
+
+
+def test_a_search_result_carrying_a_stale_admission_is_refused() -> None:
+    """A result records reachability as it was WHEN THE SEARCH RAN.
+
+    If the route's admission has moved since, navigating on the result would
+    act on a judgement the workbench has already revised -- opening a
+    destination that is now locked, or refusing one that has since opened.
+    Comparing the two is what keeps a stale result from deciding.
+    """
+    catalogue = _catalogue()
+    stale = _workbench_admission(
+        _HOME.destination,
+        state=WorkbenchDestinationAdmissionState.LOCKED,
+        reason_code="search.stale",
+    )
+
+    with pytest.raises(DestinationAdmissionError, match="does not match the current route admission"):
+        catalogue.target_for_search_result(_search_result(admission=stale))
+
+
+def test_a_search_result_agreeing_with_the_route_navigates() -> None:
+    """The control: the comparison must not refuse every search result."""
+    catalogue = _catalogue()
+
+    target = catalogue.target_for_search_result(_search_result(admission=_workbench_admission(_HOME.destination)))
+
+    assert target.destination == _HOME.destination
+
+
+def test_an_admissions_mapping_whose_key_and_value_disagree_is_refused() -> None:
+    """The key is how the catalogue addresses it; the value is what it says.
+
+    A caller that files one destination's admission under another's key would
+    build a catalogue whose every lookup returned a judgement about a
+    different workspace, and the destination set would still be complete.
+    """
+    admissions = dict(_admissions())
+    admissions[_HOME.destination] = admissions[_OTHER.destination]
+
+    with pytest.raises(DestinationAdmissionError, match="key and value must name the same destination"):
+        build_destination_catalogue(admissions=admissions)
+
+
+def test_a_consistent_admissions_mapping_builds_the_catalogue() -> None:
+    """The control: the key/value check must not reject an ordinary mapping.
+
+    Factories are supplied because an AVAILABLE destination requires one --
+    a separate refusal that fires AFTER the key/value check, so the test
+    above passes without them while this one would not.
+    """
+    catalogue = build_destination_catalogue(admissions=_admissions(), factories=_factories())
+
+    assert catalogue.resolve(_HOME.destination).admission.destination == _HOME.destination

@@ -28,7 +28,7 @@ from .._artifacts import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-class _InterruptedCopy(RuntimeError):
+class _InterruptedCopyError(RuntimeError):
     """Stands in for anything that can end a copy part way."""
 
 
@@ -70,9 +70,9 @@ def test_a_failure_raised_between_the_two_steps_costs_nothing(tmp_path: Path) ->
     staging = tmp_path / "staging"
     before = _contents(destination)
 
-    with pytest.raises(_InterruptedCopy):
+    with pytest.raises(_InterruptedCopyError):
         stage_run_copy(source, staging)
-        raise _InterruptedCopy("interrupted before the swap")
+        raise _InterruptedCopyError("interrupted before the swap")
 
     assert _contents(destination) == before
     assert _contents(staging) == _contents(source)
@@ -106,6 +106,31 @@ def test_the_residual_window_parks_a_complete_copy_that_a_retry_commits(tmp_path
         "frames/2.png": "new-2",
         "frames/3.png": "new-3",
     }
+
+
+def test_the_old_order_leaves_a_partial_tree_that_still_looks_like_a_run(tmp_path: Path) -> None:
+    """The defect the split exists to prevent, reproduced in isolation.
+
+    Remove-then-copy, against the same trees, interrupted at the same point.
+    Nothing production is patched: the retired sequence is written out here
+    so its cost can be measured beside the staged one. What stands at the
+    named path afterwards is neither the old review nor the new one, and it
+    carries a manifest, which is the whole of what makes `known_runs` call
+    a directory a run.
+    """
+    source = _run_tree(tmp_path / "current", "new")
+    destination = _run_tree(tmp_path / "keep", "old")
+    kept = _contents(destination)
+
+    with pytest.raises(_InterruptedCopyError):
+        shutil.rmtree(destination)
+        destination.mkdir()
+        shutil.copy2(source / MANIFEST_NAME, destination / MANIFEST_NAME)
+        raise _InterruptedCopyError("interrupted part way through the copy")
+
+    assert _contents(destination) != kept
+    assert _contents(destination) == {"manifest.json": "new-manifest"}
+    assert not (destination / "frames").exists()
 
 
 def test_committing_replaces_the_destination_and_consumes_the_staging_path(tmp_path: Path) -> None:
