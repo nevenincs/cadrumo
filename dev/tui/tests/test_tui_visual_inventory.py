@@ -349,6 +349,7 @@ def _rendered(surface: str, viewport: str, theme: str) -> RenderedFrame:
         text="text/a.txt",
         png_sha256="0" * 64,
         text_sha256="0" * 64,
+        cell_height=22,
     )
 
 
@@ -484,6 +485,7 @@ def _frame(key: str, *, png_digest: str, text_digest: str) -> RenderedFrame:
         text=f"text/{surface}.txt",
         png_sha256=png_digest,
         text_sha256=text_digest,
+        cell_height=22,
     )
 
 
@@ -594,12 +596,13 @@ def test_a_manifest_roundtrips_through_disk_with_every_field_populated(tmp_path:
         text="text/status.txt",
         png_sha256="a" * 64,
         text_sha256="b" * 64,
+        cell_height=26,
         elapsed_ms=1234.5,
         geometry_findings=("ContentScroll overflows but cannot scroll",),
         missing_glyphs=("ⓘ",),
     )
     manifest = Manifest(
-        schema_version=2,
+        schema_version=3,
         source_revision=_REVISION,
         source_revision_at_end=_REVISION,
         generated_at="2026-01-01T00:00:00+00:00",
@@ -832,6 +835,7 @@ def test_a_blocked_surface_is_named_from_failures_and_skips_together() -> None:
                 text="t",
                 png_sha256="a" * 64,
                 text_sha256="b" * 64,
+                cell_height=22,
             ),
         ),
         failures=(
@@ -951,6 +955,7 @@ def test_repainting_a_run_rewrites_only_the_raster_derived_fields(tmp_path: Path
         text="text/frame.txt",
         png_sha256="0" * 64,
         text_sha256="1" * 64,
+        cell_height=22,
         elapsed_ms=987.0,
         geometry_findings=("something the harness measured",),
     )
@@ -1257,3 +1262,111 @@ def test_the_source_fingerprint_follows_the_code_that_renders_the_frames(tmp_pat
 
     (tmp_path / "c.txt").write_text("not python\n", encoding="utf-8")
     assert source_fingerprint(tmp_path) == before, "a non-source file moved the fingerprint"
+
+
+def _painted_png(target: Path, *, rows: int, columns: int, cell_height: int) -> None:
+    """Write a PNG whose pixel size is a real terminal grid at that cell height."""
+    target.parent.mkdir(parents=True, exist_ok=True)
+    width = max(columns * (cell_height // 2), 1)
+    Image.new("RGB", (width, rows * cell_height), (0, 0, 0)).save(target)
+
+
+def test_a_partly_repainted_run_records_the_height_each_frame_is_actually_at(tmp_path: Path) -> None:
+    """A repaint that reaches only some frames must not be recorded as reaching all.
+
+    `rasterise` keeps any frame whose SVG has gone missing exactly as it
+    was, then stamps the requested cell height onto the manifest. While the
+    height lived only at run level that stamp covered the kept frames too,
+    so the record asserted a resolution their pixels were never repainted
+    to. No ordering fixes it: the run genuinely produces frames at two
+    heights, and one scalar cannot say two things.
+
+    Both readings are exercised here against the same run. The retired one
+    is the run-level scalar applied to every frame; it contradicts the
+    bytes on disk. The current one is each frame's own record; it matches.
+    """
+    kept = RenderedFrame(
+        surface="status",
+        viewport="small",
+        columns=80,
+        rows=24,
+        orientation="landscape",
+        theme="dark",
+        png="png/kept.png",
+        svg="svg/kept.svg",
+        text="text/kept.txt",
+        png_sha256="0" * 64,
+        text_sha256="1" * 64,
+        cell_height=22,
+    )
+    repainted = kept.model_copy(update={"surface": "ledger", "png": "png/ledger.png", "cell_height": 14})
+
+    _painted_png(tmp_path / kept.png, rows=kept.rows, columns=kept.columns, cell_height=22)
+    _painted_png(
+        tmp_path / repainted.png,
+        rows=repainted.rows,
+        columns=repainted.columns,
+        cell_height=14,
+    )
+
+    manifest = Manifest(
+        source_revision=_REVISION,
+        source_revision_at_end=_REVISION,
+        generated_at="2026-01-01T00:00:00+00:00",
+        cell_height=14,
+        frames=(kept, repainted),
+    )
+    write_manifest(tmp_path, manifest)
+    reloaded = read_manifest(tmp_path)
+
+    # The disagreement survives the real write and read, and is named.
+    assert reloaded.frames_at_a_foreign_cell_height == (kept.key,)
+
+    for frame in reloaded.frames:
+        measured = Image.open(tmp_path / frame.png).height // frame.rows
+        assert measured == frame.cell_height, (
+            f"{frame.key}: the frame records {frame.cell_height}px but its PNG is at {measured}px"
+        )
+
+    # The retired reading, on the same run, interrupted at the same point:
+    # one number for every frame. It is false about the frame that was kept.
+    retired = Image.open(tmp_path / kept.png).height // kept.rows
+    assert retired != reloaded.cell_height, (
+        f"the retired run-level reading would have claimed {reloaded.cell_height}px for pixels that are at {retired}px"
+    )
+
+    # A reviewer reading the index is told, rather than shown one number.
+    index = write_index(tmp_path, reloaded).read_text(encoding=UTF_8)
+    assert "14px requested" in index
+    assert "22px" in index
+    assert "1 frame(s) not at the requested height" in index
+
+
+def test_a_coherent_run_still_reports_one_cell_height(tmp_path: Path) -> None:
+    """The normal path: every frame at the requested height, banner unchanged in shape."""
+    frame = RenderedFrame(
+        surface="status",
+        viewport="small",
+        columns=80,
+        rows=24,
+        orientation="landscape",
+        theme="dark",
+        png="png/status.png",
+        svg="svg/status.svg",
+        text="text/status.txt",
+        png_sha256="0" * 64,
+        text_sha256="1" * 64,
+        cell_height=22,
+    )
+    manifest = Manifest(
+        source_revision=_REVISION,
+        source_revision_at_end=_REVISION,
+        generated_at="2026-01-01T00:00:00+00:00",
+        cell_height=22,
+        frames=(frame,),
+    )
+
+    assert manifest.frames_at_a_foreign_cell_height == ()
+    index = write_index(tmp_path, manifest).read_text(encoding=UTF_8)
+    assert "cell height 22px" in index
+    assert "requested" not in index

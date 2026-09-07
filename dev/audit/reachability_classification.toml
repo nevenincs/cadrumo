@@ -979,12 +979,12 @@ evidence = "Five of the eight one-line port-facade wrappers in the shipped tree 
 
 [[symbol_cluster]]
 name = "public types no caller constructs"
-class = "should-be-live"
-area = "application"
-resolved = false
-remedy_requires_decision = true
-symbols = ["ModeloWorkspaceAtomicProjectionPortV1"]
-evidence = "AttachmentCatalogue is deliberately excluded: it already carries its own staged-capability cluster, and the taxonomy admits exactly one class per finding. Each remaining symbol is exported and referenced nowhere outside the module that defines it, so nothing constructs, subclasses or annotates with it. Read as behaviour rather than as code, each names something the product does not do: AttachmentCatalogue verifies that every mapping key equals the embedded attachment_id so lookups cannot drift, and no lookup goes through it; SchemaModuleLoadFailure records a module and its error, and no schema load failure is recorded; Three symbols were removed from this cluster on re-test against the live design and are recorded separately as superseded; the claim that the certificate refusal goes undetected was wrong. Deleting them would remove the record that the capability was designed, which is the same argument the unapplied threshold cluster records. The remedy is to wire each to the caller it was written for or to withdraw it deliberately, and both are owner decisions."
+area = "application/modelo"
+class = "design-time-authority"
+symbols = [
+  "ModeloWorkspaceAtomicProjectionPortV1",
+]
+evidence = "The cluster went from seven symbols to one across this campaign, and every reversal had the same shape: a different construct covered the ground. The last member is not that shape. ModeloWorkspaceAtomicProjectionPortV1 at src/cadrumo/application/modelo/workspace_producers.py is the port its own module says the eight envelope realizations exist to satisfy -- the comment above them states each is a thin adapter that exists BECAUSE the port binds its projection to a pydantic model. Structural typing means the realizations conform without naming it, which is why no annotation reaches it, and also why nothing noticed that the claim was unchecked: a realization could rename a member and the comment would keep reading true. Resolved 2026-09-09 by giving the contract a conformance gate in src/cadrumo/application/modelo/tests/test_workspace_producers.py, which derives the required members FROM the Protocol rather than restating them -- a copied member list is a second declaration that drifts -- and asserts every realization satisfies it. Renaming a port member fails it and names all eight realizations. The symbol stays an audit finding because a test is not production reach, and that is the correct end state for a design-time contract: a conformance gate as its only reader is how a locked design is enforced."
 
 [[symbol_cluster]]
 name = "ledger command census read only by its conformance gate"

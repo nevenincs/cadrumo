@@ -46,6 +46,7 @@ def _frame(surface: str, viewport: str, theme: str) -> RenderedFrame:
         text=f"text/{stem}.txt",
         png_sha256="0" * 64,
         text_sha256="0" * 64,
+        cell_height=22,
     )
 
 

@@ -50,7 +50,7 @@ name the last session happened to invent.
 RENDER_LOG_NAME: Final[str] = "render.log"
 
 MANIFEST_NAME: Final[str] = "manifest.json"
-MANIFEST_SCHEMA_VERSION: Final[int] = 2
+MANIFEST_SCHEMA_VERSION: Final[int] = 3
 """Bumped whenever the manifest shape changes. Older runs are refused rather
 than upgraded -- see :func:`read_manifest`."""
 INDEX_NAME: Final[str] = "index.md"
@@ -81,6 +81,16 @@ class RenderedFrame(BaseModel):
     text: str
     png_sha256: str
     text_sha256: str
+    cell_height: int
+    """Pixel height of one terminal cell in THIS frame's PNG.
+
+    Carried per frame rather than once per run because a repaint can
+    reach only part of a run: `rasterise` keeps any frame whose SVG has
+    gone missing exactly as recorded, so its pixels stay at the height
+    they were painted at while the rest move. One run-level number
+    cannot say that, and stamping the new one over a mixed run claims a
+    resolution the images do not have."""
+
     elapsed_ms: float | None = None
     """Cold-build cost of this frame, lifted out of the diffed text so a
     timing wobble is not reported as a visual change."""
@@ -178,6 +188,13 @@ class Manifest(BaseModel):
     `spans_a_source_change` reports and what the writer refuses on.
     """
     cell_height: int
+    """The cell height this run was INVOKED with.
+
+    A statement about the request, not about the pixels: each frame
+    records the height it was actually painted at. On a coherent run
+    every frame agrees with this value, and
+    `frames_at_a_foreign_cell_height` reports the ones that do not."""
+
     frames: tuple[RenderedFrame, ...] = ()
     interfaces: tuple[InterfaceRecord, ...] = ()
     failures: tuple[FailedFrame, ...] = Field(default=())
@@ -190,6 +207,11 @@ class Manifest(BaseModel):
     def spans_a_source_change(self) -> bool:
         """Whether the tree changed while this run was rendering."""
         return self.source_revision != self.source_revision_at_end
+
+    @property
+    def frames_at_a_foreign_cell_height(self) -> tuple[str, ...]:
+        """Frames whose pixels are not at the height this run asked for."""
+        return tuple(sorted(frame.key for frame in self.frames if frame.cell_height != self.cell_height))
 
     @property
     def blocked_surfaces(self) -> tuple[str, ...]:
@@ -460,12 +482,26 @@ def read_manifest(directory: Path) -> Manifest:
     return Manifest.model_validate(payload)
 
 
+def _index_header(manifest: Manifest) -> str:
+    """The index banner, naming a mixed repaint rather than averaging it away."""
+    foreign = manifest.frames_at_a_foreign_cell_height
+    height = f"cell height {manifest.cell_height}px"
+    if foreign:
+        painted = sorted({frame.cell_height for frame in manifest.frames})
+        height = (
+            f"cell height {manifest.cell_height}px requested; frames painted at "
+            + "px, ".join(str(value) for value in painted)
+            + f"px ({len(foreign)} frame(s) not at the requested height)"
+        )
+    return f"Generated {manifest.generated_at} · {height}"
+
+
 def write_index(directory: Path, manifest: Manifest) -> Path:
     """Write the human review index: what to look at, and what is missing."""
     lines = [
         "# TUI visual inventory",
         "",
-        f"Generated {manifest.generated_at} · cell height {manifest.cell_height}px",
+        _index_header(manifest),
         "",
         "## Frames",
         "",
