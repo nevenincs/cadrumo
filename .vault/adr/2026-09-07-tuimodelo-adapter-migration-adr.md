@@ -5,12 +5,13 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:cf09b51ad2a67ac4ebfd7c172094528d7a9eff8f5a165cedfda1fb6b85525465'
+body_hash: 'sha256:117078ceb7444aa757c0130991ea09b58991fa2981a6a0eb6893e2bc35d1281e'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
   - "[[2026-08-11-tui-architecture-adr]]"
   - "[[2026-09-07-tuimodelo-filing-lifecycle-adr]]"
   - "[[2026-09-07-tuimodelo-export-destinations-adr]]"
+  - "[[2026-09-07-tuimodelo-satellite-families-adr]]"
 ---
 
 # `tuimodelo` adr: `adapter to backend migration boundary` | (**status:** `proposed`)
@@ -107,11 +108,21 @@ condition. A payload builder projects; the moment it derives a fact, it has beco
 command specification declares transport; the moment it carries a value the application would
 otherwise choose, it has become policy.
 
-This campaign takes three groups. The modelo lane, being the eighteen violations in the surfaces
+This campaign takes four groups, and the fourth is named because an earlier reading of this
+decision omitted it and left a whole phase unchartered. The modelo lane, being the eighteen violations in the surfaces
 the interface renders. The shared capability declaration, which both adapters need and only one
-can currently reach. And the frontend-side violations, being its duplicated composition and its
+can currently reach. The frontend-side violations, being its duplicated composition and its
 own direct persistence imports, because a boundary that binds one adapter and not the other is
-not a boundary.
+not a boundary. And a small set of correctness divergences that cross lane lines - a coerced
+zero, a hardcoded availability, a period-token rule - which are taken here rather than deferred
+because each of them is reachable from a modelo surface and would otherwise produce two different
+answers to one question.
+
+The arithmetic is stated rather than approximated, because an approximate residual is how work
+goes missing. There are 159 identified violations. This campaign takes the eighteen modelo-lane
+rows, the shared capability declaration, the frontend-side duplication, and the named
+cross-lane correctness rows. Everything else is residual, and the residual is what the count in
+the chartering step must equal after the crossings above are subtracted, not a round number.
 
 The residual — the ledger, configuration and live lanes — is chartered as a sibling campaign at
 the start of this one, with the note that the ledger portion was orphaned by an archived

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:effbfff996ba1739375987a4e6e1816805584c7de7846db57dc85b597fe76614'
+body_hash: 'sha256:6a9b0ba39b025efd7c8e80cf511ad430e876159aa2810823c68ca6d3b9c7f457'
 related:
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -313,8 +313,14 @@ their own test, so the six modelo destinations, the editor and the selection sur
 not drivable from the harness. Every new full-screen class additionally requires a
 classification entry or the coverage gate refuses.
 
-Acceptance for a modelo surface requires four locales, two themes and three geometries
-with synthetic sentinel data, and an omitted cell is never a pass.
+Acceptance for a modelo surface runs through two distinct gates, and conflating them produces a
+matrix that does not exist. Raster artefacts are identified by surface, viewport and theme
+(`dev/tui/_artifacts.py:85`) over the four default viewports declared at
+`dev/tui/_viewports.py:68`; that identity carries no locale axis. Locale is proven separately by
+`src/cadrumo/entrypoints/tui/tests/test_localized_surfaces.py:80`, which asserts the locale axis
+actually moves across the four shipped catalogues. A third constant,
+`src/cadrumo/tests/terminal_sizes.py`, declares four supported terminal sizes for in-process
+size tests. An omitted cell is never a pass in any of the three.
 
 ## Known defects carried into the campaign
 

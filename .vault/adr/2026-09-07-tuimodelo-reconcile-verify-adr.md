@@ -11,6 +11,7 @@ related:
   - "[[2026-08-24-modelo-edit-contract-adr]]"
   - "[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]"
   - "[[2026-08-10-casilla-schema-read-model-adr]]"
+  - "[[2026-09-07-tuimodelo-adapter-migration-adr]]"
 ---
 
 # `tuimodelo` adr: `reconciliation and verification surfacing` | (**status:** `proposed`)

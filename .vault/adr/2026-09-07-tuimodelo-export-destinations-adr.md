@@ -11,6 +11,7 @@ related:
   - "[[2026-08-11-tui-architecture-adr]]"
   - "[[2026-09-02-tui-architecture-out-of-process-destination-protocol-adr]]"
   - "[[2026-08-19-registry-export-layout-coverage-adr]]"
+  - "[[2026-09-07-tuimodelo-adapter-migration-adr]]"
 ---
 
 # `tuimodelo` adr: `export destinations and import surfaces` | (**status:** `proposed`)

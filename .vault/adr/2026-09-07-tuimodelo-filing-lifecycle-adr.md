@@ -5,13 +5,14 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:2be6ba8640354ecd9ff42ef1514c626ae0aa3df0a68c66577cef532b2d98aefe'
+body_hash: 'sha256:d7817f6884e5ad7af66d07dd3a652980c8aa1f83cff482eca15c4c1c22119938'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
   - "[[2026-06-05-calendar-filing-semantics-adr]]"
   - "[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]"
   - "[[2026-09-04-tui-architecture-authenticated-tui-visibility-adr]]"
+  - "[[2026-09-07-tuimodelo-adapter-migration-adr]]"
 ---
 
 # `tuimodelo` adr: `filing lifecycle, history and status surfacing` | (**status:** `proposed`)
@@ -46,9 +47,10 @@ preconditions.
   terminal with no undo (`2026-09-07-tuimodelo-reference`).
 - A superseded revision must never render as current; a dedicated current-sealed state set
   exists for exactly this (`2026-09-07-tuimodelo-reference`).
-- One history-shaped module in the application tree is dead code with an untyped status
-  field, and is a trap for an implementer searching by name
-  (`2026-09-07-tuimodelo-reference`).
+- One history-shaped module in the application tree has no production writer and an untyped
+  status field, which makes it a trap for an implementer searching by name, but it is not dead:
+  the custody-carry resolver reaches it from production, so retiring it would need a stored-data
+  migration (`2026-09-07-tuimodelo-reference`).
 - The modelo history command bypasses the application layer entirely and owns its event
   taxonomy and filtering policy inside the CLI handler, so no service exists for a second
   surface to call (`2026-09-07-tuimodelo-reference`).
@@ -137,9 +139,11 @@ product transmits a declaration.
 Discard is presented as terminal and is confirmed accordingly; rename is presented as
 cosmetic because identity is content-addressed and does not move.
 
-The dead history module in the application tree is deleted rather than left as a naming
-trap, and the modelo history policy relocated out of the CLI becomes the single service
-both surfaces call.
+The history-shaped module that has no production writer is adjudicated rather than deleted: it is
+reachable from production through the custody-carry resolver, so the choice is between retiring it
+with a stored-data migration and keeping it with a typed status, and this record does not presume
+which. The modelo history policy relocated out of the adapter becomes the single service both
+surfaces call.
 
 ## Rationale
 
@@ -186,6 +190,7 @@ promising a total now would either show blanks that read as zero or force a seco
 path. Both are refused. The column arrives when the projection carries the value, which is a
 scheduled data change rather than a policy question.
 
-Deleting the dead history module removes a trap but touches a module another campaign may
-still reference by name, so the deletion is sequenced with the migration wave rather than
-taken opportunistically.
+Adjudicating the writer-less history module rather than deleting it costs a decision this record
+does not make. That is deliberate: the module is imported by a production custody path, so a
+deletion taken on the assumption that it was dead would have broken that import, and the campaign
+came close to scheduling exactly that.
