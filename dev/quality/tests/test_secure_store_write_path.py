@@ -80,9 +80,7 @@ def test_reports_a_store_that_is_read_and_never_written(tmp_path: Path) -> None:
             id="inject-or-default-conditional",
         ),
         pytest.param(
-            "def go(repo=None):\n"
-            "    resolved = repo or ExampleRepository()\n"
-            "    resolved.save(1)\n",
+            "def go(repo=None):\n    resolved = repo or ExampleRepository()\n    resolved.save(1)\n",
             id="inject-or-default-boolop",
         ),
         pytest.param(
@@ -94,10 +92,7 @@ def test_reports_a_store_that_is_read_and_never_written(tmp_path: Path) -> None:
             id="instance-attribute",
         ),
         pytest.param(
-            "def _store() -> ExampleRepository:\n"
-            "    return ExampleRepository()\n"
-            "def go():\n"
-            "    _store().save(1)\n",
+            "def _store() -> ExampleRepository:\n    return ExampleRepository()\ndef go():\n    _store().save(1)\n",
             id="module-accessor",
         ),
         pytest.param(

@@ -29,19 +29,18 @@ from __future__ import annotations
 import ast
 import functools
 import re
-import shlex
 import subprocess
 import sys
-from typing import Final, NamedTuple
+from typing import Final
 
 import pytest
 
 from ..._paths import REPO_ROOT
+from ._justfile_recipes import packaging_pytest_recipes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _REPO_ROOT: Final = REPO_ROOT
-_JUSTFILE: Final = _REPO_ROOT / "justfile"
 _TARGET_DIRECTORY: Final = "dev/packaging/tests"
 _UTF_8: Final = "utf-8"
 
@@ -60,7 +59,6 @@ _EXECUTION_MARKERS: Final = ("unit", "integration", "aeat_live")
 #: The scheduler argument that pins a run to the controller process.
 _NO_WORKERS: Final = "-n0"
 
-_RECIPE_HEADER: Final = re.compile(r"^(?P<name>[a-z][\w-]*)\s*:(?![=])")
 _NODE_ID: Final = re.compile(r"^(?P<node_id>\S+\.py::\S.*)$")
 _COLLECTED: Final = re.compile(r"(?:^|\s)(?P<count>\d+)(?:/\d+)? tests? collected")
 _NO_TESTS_COLLECTED: Final = re.compile(r"(?:^|\s)no tests collected")
@@ -70,35 +68,6 @@ _NO_TESTS_COLLECTED: Final = re.compile(r"(?:^|\s)no tests collected")
 #: marker expression here that must select nothing; reading it as a failure
 #: would turn the load-bearing negative cases into errors.
 _COLLECTION_STATUSES: Final = frozenset({0, 5})
-
-
-class Recipe(NamedTuple):
-    """One pytest invocation over this directory, read off the justfile."""
-
-    name: str
-    arguments: tuple[str, ...]
-
-
-def packaging_pytest_recipes() -> tuple[Recipe, ...]:
-    """Discover every justfile recipe invoking pytest over this directory.
-
-    Returns:
-        One entry per matching recipe body line, in justfile order.
-    """
-    recipes: list[Recipe] = []
-    current = ""
-    for raw_line in _JUSTFILE.read_text(encoding=_UTF_8).splitlines():
-        header = _RECIPE_HEADER.match(raw_line)
-        if header is not None:
-            current = header.group("name")
-            continue
-        if not raw_line[:1].isspace() or _TARGET_DIRECTORY not in raw_line:
-            continue
-        tokens = shlex.split(raw_line.strip().lstrip("@"))
-        if "pytest" not in tokens:
-            continue
-        recipes.append(Recipe(name=current, arguments=tuple(tokens[tokens.index("pytest") + 1 :])))
-    return tuple(recipes)
 
 
 @functools.cache

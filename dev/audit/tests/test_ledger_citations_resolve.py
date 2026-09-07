@@ -94,8 +94,7 @@ def unresolved_citations(data: dict[str, Any], root: Path) -> list[str]:
                 on_subject = on_subject or any(subject in text for subject in subjects)
             if subjects and cited_paths and not on_subject:
                 broken.append(
-                    f"{entry.get('name')} -> no cited file names any subject of the entry "
-                    f"({', '.join(cited_paths)})",
+                    f"{entry.get('name')} -> no cited file names any subject of the entry ({', '.join(cited_paths)})",
                 )
     return broken
 

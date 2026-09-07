@@ -126,6 +126,7 @@ from cadrumo.core.directory_scan import scan_directory
 
 from .._paths import UTF_8
 from .workflow_job_gates import job_gate, narrowed_events
+from .workflow_run_text import executed_lines
 
 _UTF_8: Final[str] = UTF_8
 
@@ -439,9 +440,8 @@ def _pytest_invocations(text: str, *, source: str, default_paths: tuple[str, ...
     the spelling, and this repository uses it in the same files.
     """
     lanes: list[Lane] = []
-    for raw in text.splitlines():
-        line = raw.strip()
-        if "pytest" not in line or line.startswith("#"):
+    for line in executed_lines(text):
+        if "pytest" not in line:
             continue
         # Drop shell continuations and interpolations that shlex cannot parse.
         cleaned = line.rstrip("\\").replace("${{", "").replace("}}", "")
@@ -892,11 +892,7 @@ def resolved_recipe_commands(root: Path, recipe: str) -> tuple[str, ...]:
     # part of THIS one until the next non-comment line. A real command line is
     # never a bare comment, so it is filtered here rather than by widening the
     # shared boundary rule other callers already depend on.
-    return tuple(
-        line.strip().removeprefix("@")
-        for line in body.splitlines()
-        if line.strip() and not line.lstrip().startswith("#")
-    )
+    return tuple(line.removeprefix("@") for line in executed_lines(body))
 
 
 def declared_lanes(root: Path) -> tuple[Lane, ...]:

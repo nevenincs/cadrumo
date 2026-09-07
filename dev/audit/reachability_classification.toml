@@ -371,6 +371,16 @@ transitively_dead = 9
 live_seams = 0
 rule = "a production module reaches a symbol only when it from-imports the name, the import source is the defining module, and the name appears in its body"
 
+[[symbol_cluster]]
+name = "corpus drift assertion no gate calls"
+area = "core/corpus_manifest"
+class = "staged-capability"
+symbols = [
+  "assert_corpus_clean",
+]
+evidence = "The operator-facing corpus-drift assertion at src/cadrumo/core/corpus_manifest/manifest.py, reached only by its own package test. Its docstring called it the assertion USED BY the CI gate; no gate calls it, and that false half is corrected 2026-09-09 to say it is the assertion a gate would call. Staged rather than orphaned: build_corpus_bundle and verify_corpus_manifest beside it are the live manifest surface, and this is the one-call form a drift gate would use over them. Whether to mount such a gate is an owner's call; the sentence no longer asserts one exists."
+remedy_requires_decision = true
+
 [[test_module]]
 name = "cadrumo.adapters.persistence.storage.sql.tests.test_secure_objects_schema_lineage"
 follows = "symbol"
@@ -1042,12 +1052,13 @@ evidence = "Its docstring calls it a convenience wrapper used by the cross-perio
 
 [[symbol_cluster]]
 name = "live filing token no mounted command family reads"
-class = "should-be-live"
-area = "application"
-resolved = false
+area = "application/operator_surface"
+class = "staged-capability"
+symbols = [
+  "FilingStatus",
+]
+evidence = "A one-member StrEnum at src/cadrumo/application/operator_surface/models.py. Its docstring called it the canonical live-read filing token USED by mounted live command families; no family reads it, and outside its own module the only true reference is the locale-contract test importing it alongside the other operator-surface models. The false half is corrected 2026-09-09: the docstring now says the token is declared and not yet read, because a sentence asserting a wiring the tree does not have is a claim a reader has no way to check and it outranked the code for as long as it stood. The remaining question -- route the live families through the token or withdraw it -- is an owner's call and stays open, but it no longer waits on a lie. Staged rather than orphaned: the vocabulary the token declares is the one a live family would report against, and its single member names the only status such a family could report today."
 remedy_requires_decision = true
-symbols = ["FilingStatus"]
-evidence = "A one-member StrEnum whose docstring calls it the canonical live-read filing token used by mounted live command families. No mounted family reads it: the only true reference outside its module is dev/locales/tests/test_contract.py, which imports it alongside the other operator-surface models to check the locale contract, and the remaining occurrence is a string fixture in an object-names test rather than a use. So a dev contract test exercises the token while the production surface it names ignores it, and the docstring asserts the opposite. The remedy is to route the live command families through the token or to withdraw it and correct the sentence; the enum carries a single member, so the choice is about whether the filing state belongs in this vocabulary at all."
 
 [[symbol_cluster]]
 name = "protocols satisfied structurally by a named implementer"
