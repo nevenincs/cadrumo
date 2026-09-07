@@ -8,81 +8,55 @@ their per-machine sizing env, and the Homebrew matrix is parallelism-bounded.
 
 The invariant holds at any runner count, so this gate names none.
 """
-
 from __future__ import annotations
-
 import re
 import sys
 from dataclasses import replace
 from pathlib import Path
 from textwrap import dedent
 from typing import Any, Final
-
 import pytest
 import yaml
-
 from ..._paths import REPO_ROOT
 from ...packaging._command import run_command
-from ..lane_reachability import (
-    _JUST_CALL,
-    Lane,
-    declared_lanes,
-    expression_selects,
-    marker_sets_in,
-)
+from ..lane_reachability import _JUST_CALL, Lane, declared_lanes, expression_selects, marker_sets_in
 from ..workflow_run_text import executed_lines
-
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
 _REPOSITORY_ROOT: Final = REPO_ROOT
-_WORKFLOWS_DIR: Final = _REPOSITORY_ROOT / ".github" / "workflows"
-_JUSTFILE: Final = _REPOSITORY_ROOT / "justfile"
-_EXPLICIT_WORKERS: Final = re.compile(r"pytest\b[^\n]*\s-n\s*\d+")
-# A justfile recipe header: `name`, optional params/attributes, then a bare
-# `:` (not `:=`, which is a variable assignment). Must handle parameterized
-# recipes (`test-unit durations="":`) as well as bare ones (`foo:`).
-_RECIPE_HEADER: Final = re.compile(r"^(?P<name>[a-z][\w-]*)\b(?P<params>[^:]*):(?![=])")
-# A single justfile recipe parameter, e.g. `workers="auto"` or `*run_ids`.
-_RECIPE_PARAM: Final = re.compile(r"[a-zA-Z_]\w*(?:\s*=\s*(?:\"[^\"]*\"|'[^']*'))?")
-# A top-level justfile variable backed by an env var, e.g.
-# `pytest_workers := env_var_or_default("CADRUMO_PYTEST_WORKERS", "auto")`.
-_ENV_BACKED_VARIABLE: Final = re.compile(
-    r'^(?P<name>[a-z_]\w*)\s*:=\s*env_var_or_default\(\s*"(?P<env>[A-Z_]\w*)"',
-)
-_TEMPLATE_REF: Final = re.compile(r"\{\{\s*(?P<name>[a-zA-Z_]\w*)\s*\}\}")
-
+_WORKFLOWS_DIR: Final = _REPOSITORY_ROOT / '.github' / 'workflows'
+_JUSTFILE: Final = _REPOSITORY_ROOT / 'justfile'
+_EXPLICIT_WORKERS: Final = re.compile('pytest\\b[^\\n]*\\s-n\\s*\\d+')
+_RECIPE_HEADER: Final = re.compile('^(?P<name>[a-z][\\w-]*)\\b(?P<params>[^:]*):(?![=])')
+_RECIPE_PARAM: Final = re.compile('[a-zA-Z_]\\w*(?:\\s*=\\s*(?:\\"[^\\"]*\\"|\'[^\']*\'))?')
+_ENV_BACKED_VARIABLE: Final = re.compile('^(?P<name>[a-z_]\\w*)\\s*:=\\s*env_var_or_default\\(\\s*"(?P<env>[A-Z_]\\w*)"')
+_TEMPLATE_REF: Final = re.compile('\\{\\{\\s*(?P<name>[a-zA-Z_]\\w*)\\s*\\}\\}')
 
 def _document(name: str) -> dict[str, Any]:
-    return yaml.safe_load((_WORKFLOWS_DIR / name).read_text(encoding="utf-8"))
-
+    return yaml.safe_load((_WORKFLOWS_DIR / name).read_text(encoding='utf-8'))
 
 def _justfile_recipe_bodies() -> dict[str, list[str]]:
     """Return every justfile recipe name -> its indented body lines."""
     bodies: dict[str, list[str]] = {}
     current: str | None = None
-    for raw_line in _JUSTFILE.read_text(encoding="utf-8").splitlines():
+    for raw_line in _JUSTFILE.read_text(encoding='utf-8').splitlines():
         header = _RECIPE_HEADER.match(raw_line)
         if header is not None:
-            current = header.group("name")
+            current = header.group('name')
             bodies.setdefault(current, [])
             continue
         if current is not None and raw_line[:1].isspace():
             bodies[current].extend(executed_lines(raw_line))
     return bodies
 
-
 def _justfile_recipe_params() -> dict[str, list[str]]:
     """Return every justfile recipe name -> its ordered parameter names."""
     params: dict[str, list[str]] = {}
-    for raw_line in _JUSTFILE.read_text(encoding="utf-8").splitlines():
+    for raw_line in _JUSTFILE.read_text(encoding='utf-8').splitlines():
         header = _RECIPE_HEADER.match(raw_line)
         if header is None:
             continue
-        params[header.group("name")] = [
-            match.group(0).split("=")[0].strip().lstrip("*") for match in _RECIPE_PARAM.finditer(header.group("params"))
-        ]
+        params[header.group('name')] = [match.group(0).split('=')[0].strip().lstrip('*') for match in _RECIPE_PARAM.finditer(header.group('params'))]
     return params
-
 
 def _justfile_env_backed_variables() -> dict[str, str]:
     """Return every top-level justfile variable name -> its backing env var.
@@ -92,21 +66,13 @@ def _justfile_env_backed_variables() -> dict[str, str]:
     absent, and an absent mapping resolves as unpinned (fails the gate).
     """
     variables: dict[str, str] = {}
-    for raw_line in _JUSTFILE.read_text(encoding="utf-8").splitlines():
+    for raw_line in _JUSTFILE.read_text(encoding='utf-8').splitlines():
         match = _ENV_BACKED_VARIABLE.match(raw_line.strip())
         if match is not None:
-            variables[match.group("name")] = match.group("env")
+            variables[match.group('name')] = match.group('env')
     return variables
 
-
-def _resolve_recipe_line(
-    body_line: str,
-    *,
-    params: list[str],
-    call_args: list[str],
-    env_prefix: str,
-    env_backed_variables: dict[str, str],
-) -> str:
+def _resolve_recipe_line(body_line: str, *, params: list[str], call_args: list[str], env_prefix: str, env_backed_variables: dict[str, str]) -> str:
     """Substitute every `{{name}}` template in a recipe body line for one call site.
 
     A template resolves two ways, matching how `just` itself resolves it: a
@@ -120,26 +86,19 @@ def _resolve_recipe_line(
     """
 
     def _substitute(match: re.Match[str]) -> str:
-        name = match.group("name")
+        name = match.group('name')
         if name in params:
             index = params.index(name)
             return call_args[index] if index < len(call_args) else match.group(0)
         env_var = env_backed_variables.get(name)
         if env_var is not None:
-            found = re.search(rf"\b{re.escape(env_var)}=(\S+)", env_prefix)
+            found = re.search(f'\\b{re.escape(env_var)}=(\\S+)', env_prefix)
             if found is not None:
                 return found.group(1)
         return match.group(0)
-
     return _TEMPLATE_REF.sub(_substitute, body_line)
 
-
-def _pytest_lines(
-    document: dict[str, Any],
-    recipe_bodies: dict[str, list[str]],
-    recipe_params: dict[str, list[str]],
-    env_backed_variables: dict[str, str],
-) -> list[str]:
+def _pytest_lines(document: dict[str, Any], recipe_bodies: dict[str, list[str]], recipe_params: dict[str, list[str]], env_backed_variables: dict[str, str]) -> list[str]:
     """Resolve every pytest invocation a workflow reaches, following `just <recipe>` delegation.
 
     A workflow step's `run:` line either carries `pytest` directly, or
@@ -159,37 +118,27 @@ def _pytest_lines(
     equally fail a workflow whose prose merely mentions `-n auto`.
     """
     lines: list[str] = []
-    for job in document["jobs"].values():
-        for step in job.get("steps") or []:
-            for line in executed_lines(step.get("run")):
-                if "pytest" in line:
+    for job in document['jobs'].values():
+        for step in job.get('steps') or []:
+            for line in executed_lines(step.get('run')):
+                if 'pytest' in line:
                     lines.append(line)
                     continue
                 match = _JUST_CALL.search(line)
                 if match is None:
                     continue
-                recipe = match.group("recipe")
-                env_prefix = line[: match.start()]
-                call_args = line[match.end() :].split()
-                for raw_body_line in recipe_bodies.get(recipe, []):
-                    body_line = next(iter(executed_lines(raw_body_line)), "")
-                    if "pytest" not in body_line:
+                recipe = match.group('recipe')
+                env_prefix = line[:match.start()]
+                call_args = line[match.end():].split()
+                for raw_body_line in _dp_get('dev/ci/tests/test_machine_aware_load.py:174:get', recipe_bodies, recipe, []):
+                    body_line = _dp_next('dev/ci/tests/test_machine_aware_load.py:175:next', iter(executed_lines(raw_body_line)), '')
+                    if 'pytest' not in body_line:
                         continue
-                    resolved = _resolve_recipe_line(
-                        body_line,
-                        params=recipe_params.get(recipe, []),
-                        call_args=call_args,
-                        env_prefix=env_prefix,
-                        env_backed_variables=env_backed_variables,
-                    )
-                    lines.append(f"{env_prefix}{resolved}")
+                    resolved = _resolve_recipe_line(body_line, params=_dp_get('dev/ci/tests/test_machine_aware_load.py:180:get', recipe_params, recipe, []), call_args=call_args, env_prefix=env_prefix, env_backed_variables=env_backed_variables)
+                    lines.append(f'{env_prefix}{resolved}')
     return lines
 
-
-@pytest.mark.parametrize(
-    "workflow",
-    ("ci.yml", "ci-full.yml", "agent-harness-eval.yml", "aeat-drift-detector.yml"),
-)
+@pytest.mark.parametrize('workflow', ('ci.yml', 'ci-full.yml', 'agent-harness-eval.yml', 'aeat-drift-detector.yml'))
 def test_ci_pytest_invocations_carry_explicit_worker_counts(workflow: str) -> None:
     """Every CI pytest run line declares an explicit ``-n <int>``.
 
@@ -197,17 +146,11 @@ def test_ci_pytest_invocations_carry_explicit_worker_counts(workflow: str) -> No
     through an unpinned `just <recipe>` delegation — must never reach a
     shared machine from CI.
     """
-    lines = _pytest_lines(
-        _document(workflow),
-        _justfile_recipe_bodies(),
-        _justfile_recipe_params(),
-        _justfile_env_backed_variables(),
-    )
-    assert lines, f"{workflow} carries no pytest invocation to gate"
+    lines = _pytest_lines(_document(workflow), _justfile_recipe_bodies(), _justfile_recipe_params(), _justfile_env_backed_variables())
+    assert lines, f'{workflow} carries no pytest invocation to gate'
     for line in lines:
-        assert "-n auto" not in line, (workflow, line)
-        assert _EXPLICIT_WORKERS.search(line) or re.search(r"pytest\b[^\n]*\s-n0\b", line), (workflow, line)
-
+        assert '-n auto' not in line, (workflow, line)
+        assert _EXPLICIT_WORKERS.search(line) or re.search('pytest\\b[^\\n]*\\s-n0\\b', line), (workflow, line)
 
 def test_campaign_legs_pass_machine_share_sizing() -> None:
     """Each packaging-smoke campaign step sets the per-machine sizing env.
@@ -217,20 +160,11 @@ def test_campaign_legs_pass_machine_share_sizing() -> None:
     leg. The campaign driver turns CADRUMO_TEST_WORKERS into an explicit
     `-n N` on its preflight pytest pass.
     """
-    document = _document("packaging-smoke.yml")
-    campaign_steps = [
-        step
-        for job in document["jobs"].values()
-        for step in job.get("steps") or []
-        if "packaging campaign" in str(step.get("name", ""))
-    ]
-    assert len(campaign_steps) == 3, [step.get("name") for step in campaign_steps]
-    sizes = sorted(
-        (step["env"]["CADRUMO_TEST_WORKERS"], step["env"]["CADRUMO_PACKAGING_LANE_CONCURRENCY"])
-        for step in campaign_steps
-    )
-    assert sizes == [("2", "2"), ("8", "2"), ("8", "3")], sizes
-
+    document = _document('packaging-smoke.yml')
+    campaign_steps = [step for job in document['jobs'].values() for step in job.get('steps') or [] if 'packaging campaign' in str(_dp_get('dev/ci/tests/test_machine_aware_load.py:225:get', step, 'name', ''))]
+    assert len(campaign_steps) == 3, [step.get('name') for step in campaign_steps]
+    sizes = sorted(((step['env']['CADRUMO_TEST_WORKERS'], step['env']['CADRUMO_PACKAGING_LANE_CONCURRENCY']) for step in campaign_steps))
+    assert sizes == [('2', '2'), ('8', '2'), ('8', '3')], sizes
 
 def test_homebrew_matrix_is_parallelism_bounded_with_per_leg_make_jobs() -> None:
     """Two of the three homebrew legs share the MacBook: bound them.
@@ -238,59 +172,17 @@ def test_homebrew_matrix_is_parallelism_bounded_with_per_leg_make_jobs() -> None
     ``max-parallel: 2`` caps co-landing legs, and brew's build-from-source
     parallelism is sized per leg via ``HOMEBREW_MAKE_JOBS``.
     """
-    document = _document("packaging-homebrew.yml")
-    strategy = document["jobs"]["cadrumo-homebrew-acquisition"]["strategy"]
-    assert strategy["max-parallel"] == 2
-    rows = strategy["matrix"]["include"]
-    jobs_by_id = {row["id"]: row["make_jobs"] for row in rows}
-    assert jobs_by_id == {
-        "macos-arm64": "2",
-        "linux-arm64": "2",
-        "linux-x86_64": "8",
-    }
-    audit = next(
-        step
-        for job in document["jobs"].values()
-        for step in job.get("steps") or []
-        if step.get("name") == "Audit install and exercise Cadrumo through Homebrew"
-    )
-    assert audit["env"]["HOMEBREW_MAKE_JOBS"] == "${{ matrix.make_jobs }}"
-
-
-# ── Outer-serial harness lane: the multiplicative-cost boundary ──────────────
-#
-# The harness proofs reach their subject by spawning a real child pytest -- one
-# boots a full xdist worker pool, the other recursively collects the entire
-# first-party corpus. Their cost inside another lane's pool is multiplicative,
-# not additive: N outer workers each boot an inner pool, so a box sized for N
-# processes gets N*M. Holding them out is therefore a machine-load contract,
-# which is why it is gated here rather than beside the recipe's shape pins.
-#
-# The exclusion is by explicit path, never by a runtime-cost marker competing
-# with the execution and hexagonal taxonomies. That costs a restated member list
-# at each lane, so the list is not trusted: both sides are DERIVED from the one
-# justfile lane authority (`lane_reachability.declared_lanes`, which already
-# resolves `{{harness_members}}` and `--ignore=` templates the way `just` itself
-# does) -- the enrolled members from the recipe that runs them, the excluded
-# members from each lane -- and proven exactly equal.
-#
-# Which lanes are in scope is measured against `Lane.covers()` and
-# `expression_selects()`, the same predicates the reachability authority itself
-# uses, rather than a subprocess replay: a lane reaches a member only when its
-# path scope covers it AND its marker expression would select the member's own
-# markers. Path scope alone overstates reach -- the unit lane's pathless
-# invocation covers `src/cadrumo/tests` with no `--ignore` of its own, yet never
-# collects an `integration`-only harness member, because its marker expression
-# excludes it. One control still runs real pytest collection, so the static
-# model is proven against ground truth rather than trusted on its own say-so.
-
-_HARNESS_RECIPE: Final = "test-harness"
+    document = _document('packaging-homebrew.yml')
+    strategy = document['jobs']['cadrumo-homebrew-acquisition']['strategy']
+    assert strategy['max-parallel'] == 2
+    rows = strategy['matrix']['include']
+    jobs_by_id = {row['id']: row['make_jobs'] for row in rows}
+    assert jobs_by_id == {'macos-arm64': '2', 'linux-arm64': '2', 'linux-x86_64': '8'}
+    audit = next((step for job in document['jobs'].values() for step in job.get('steps') or [] if step.get('name') == 'Audit install and exercise Cadrumo through Homebrew'))
+    assert audit['env']['HOMEBREW_MAKE_JOBS'] == '${{ matrix.make_jobs }}'
+_HARNESS_RECIPE: Final = 'test-harness'
 _COLLECTION_TIMEOUT_SECONDS: Final = 300
-# A directory containing the harness members, so collection walks to them the
-# way a path-unrestricted lane does. Passing the member FILES directly would not
-# test the contract: an explicit path argument overrides `--ignore`.
-_MEMBER_PARENT: Final = "src/cadrumo/tests"
-
+_MEMBER_PARENT: Final = 'src/cadrumo/tests'
 
 def _harness_members(root: Path) -> tuple[str, ...]:
     """Return the member paths the enrolling ``test-harness`` recipe runs.
@@ -311,7 +203,6 @@ def _harness_members(root: Path) -> tuple[str, ...]:
                 members.setdefault(path, None)
     return tuple(members)
 
-
 def _member_markers(root: Path, members: tuple[str, ...]) -> dict[str, frozenset[str]]:
     """Return each member's effective test markers, keyed by its path.
 
@@ -330,42 +221,26 @@ def _member_markers(root: Path, members: tuple[str, ...]) -> dict[str, frozenset
     markers: dict[str, frozenset[str]] = {}
     for member in members:
         target = root / member
-        modules = sorted(target.glob("test_*.py")) if target.is_dir() else [target]
-        entries = tuple(entry for module in modules for entry in (marker_sets_in(module) or ()))
-        assert entries, f"{member} holds no test to resolve markers from"
+        modules = sorted(target.glob('test_*.py')) if target.is_dir() else [target]
+        entries = tuple((entry for module in modules for entry in marker_sets_in(module) or ()))
+        assert entries, f'{member} holds no test to resolve markers from'
         markers[member] = entries[0].markers
     return markers
 
-
 def _corpus_lanes(root: Path) -> tuple[Lane, ...]:
     """Return every declared lane outside the enrolling recipe."""
-    return tuple(lane for lane in declared_lanes(root) if lane.recipe != _HARNESS_RECIPE)
-
+    return tuple((lane for lane in declared_lanes(root) if lane.recipe != _HARNESS_RECIPE))
 
 def _reaches(lane: Lane, member: str, member_markers: frozenset[str], *, ignore_exclusions: bool) -> bool:
     """Return whether ``lane`` would select ``member``, by path scope AND marker."""
     candidate = replace(lane, exclusions=()) if ignore_exclusions else lane
     return candidate.covers(member) and expression_selects(candidate.marker_expression, member_markers)
 
-
-def _lanes_reaching_members_with_exclusions_dropped(
-    root: Path,
-    members: tuple[str, ...],
-    member_markers: dict[str, frozenset[str]],
-) -> tuple[Lane, ...]:
+def _lanes_reaching_members_with_exclusions_dropped(root: Path, members: tuple[str, ...], member_markers: dict[str, frozenset[str]]) -> tuple[Lane, ...]:
     """Return lanes that would select a harness member once ``--ignore`` is dropped."""
-    return tuple(
-        lane
-        for lane in _corpus_lanes(root)
-        if any(_reaches(lane, member, member_markers[member], ignore_exclusions=True) for member in members)
-    )
+    return tuple((lane for lane in _corpus_lanes(root) if any((_reaches(lane, member, member_markers[member], ignore_exclusions=True) for member in members))))
 
-
-def _unreached_members(
-    lanes: tuple[Lane, ...],
-    members: tuple[str, ...],
-    member_markers: dict[str, frozenset[str]],
-) -> dict[str, tuple[str, ...]]:
+def _unreached_members(lanes: tuple[Lane, ...], members: tuple[str, ...], member_markers: dict[str, frozenset[str]]) -> dict[str, tuple[str, ...]]:
     """Return each member no lane selects, mapped to the lanes covering its path.
 
     The mapping is the diagnosis, not a detail. A member no lane reaches is
@@ -377,13 +252,10 @@ def _unreached_members(
     """
     unreached: dict[str, tuple[str, ...]] = {}
     for member in members:
-        if any(_reaches(lane, member, member_markers[member], ignore_exclusions=True) for lane in lanes):
+        if any((_reaches(lane, member, member_markers[member], ignore_exclusions=True) for lane in lanes)):
             continue
-        unreached[member] = tuple(
-            f"{lane.source}/{lane.recipe}" for lane in lanes if replace(lane, exclusions=()).covers(member)
-        )
+        unreached[member] = tuple((f'{lane.source}/{lane.recipe}' for lane in lanes if replace(lane, exclusions=()).covers(member)))
     return unreached
-
 
 def test_a_lane_reaching_the_harness_members_is_measurable_at_all() -> None:
     """Anti-vacuity: the exclusion checks must quantify over something real.
@@ -405,19 +277,11 @@ def test_a_lane_reaching_the_harness_members_is_measurable_at_all() -> None:
     member_markers = _member_markers(_REPOSITORY_ROOT, members)
     lanes = _corpus_lanes(_REPOSITORY_ROOT)
     reaching = _lanes_reaching_members_with_exclusions_dropped(_REPOSITORY_ROOT, members, member_markers)
-
-    assert members, "the enrolling recipe declares no harness member"
-    assert reaching, (
-        "no lane reaches a harness member even with its exclusions dropped; the declared-lane "
-        "authority is no longer resolving real lane scopes, so the exclusion checks would be vacuous"
-    )
+    assert members, 'the enrolling recipe declares no harness member'
+    assert reaching, 'no lane reaches a harness member even with its exclusions dropped; the declared-lane authority is no longer resolving real lane scopes, so the exclusion checks would be vacuous'
     unreached = _unreached_members(lanes, members, member_markers)
     marker_only = {member: covering for member, covering in unreached.items() if covering}
-    assert not marker_only, (
-        "these harness members sit inside a lane's path scope yet no lane would collect them even with "
-        f"exclusions dropped, so their `--ignore` entries prove nothing: {marker_only}"
-    )
-
+    assert not marker_only, f"these harness members sit inside a lane's path scope yet no lane would collect them even with exclusions dropped, so their `--ignore` entries prove nothing: {marker_only}"
 
 def test_the_gate_refuses_a_member_held_out_by_marker_alone() -> None:
     """Proof the classification above can fail, on a lane built to fail it.
@@ -428,19 +292,12 @@ def test_the_gate_refuses_a_member_held_out_by_marker_alone() -> None:
     """
     members = _harness_members(_REPOSITORY_ROOT)
     member_markers = _member_markers(_REPOSITORY_ROOT, members)
-    member = next(candidate for candidate in members if candidate.startswith(f"{_MEMBER_PARENT}/"))
-    covering = Lane(
-        source="synthetic",
-        paths=(_MEMBER_PARENT,),
-        marker_expression="unit",
-        recipe="synthetic-unit",
-    )
-    selecting = replace(covering, marker_expression="integration", recipe="synthetic-integration")
-
-    assert "integration" in member_markers[member], f"{member} is no longer an integration proof"
-    assert _unreached_members((covering,), (member,), member_markers) == {member: ("synthetic/synthetic-unit",)}
+    member = next((candidate for candidate in members if candidate.startswith(f'{_MEMBER_PARENT}/')))
+    covering = Lane(source='synthetic', paths=(_MEMBER_PARENT,), marker_expression='unit', recipe='synthetic-unit')
+    selecting = replace(covering, marker_expression='integration', recipe='synthetic-integration')
+    assert 'integration' in member_markers[member], f'{member} is no longer an integration proof'
+    assert _unreached_members((covering,), (member,), member_markers) == {member: ('synthetic/synthetic-unit',)}
     assert _unreached_members((selecting,), (member,), member_markers) == {}
-
 
 def test_every_lane_reaching_the_members_excludes_exactly_the_declared_set() -> None:
     """Each restatement of the member list is proven equal to the enrolling one.
@@ -453,17 +310,8 @@ def test_every_lane_reaching_the_members_excludes_exactly_the_declared_set() -> 
     members = _harness_members(_REPOSITORY_ROOT)
     member_markers = _member_markers(_REPOSITORY_ROOT, members)
     declared = sorted(members)
-    mismatched = {
-        lane.source: sorted(lane.exclusions)
-        for lane in _lanes_reaching_members_with_exclusions_dropped(_REPOSITORY_ROOT, members, member_markers)
-        if sorted(lane.exclusions) != declared
-    }
-
-    assert not mismatched, (
-        "every lane that can reach the harness members must exclude exactly the members the "
-        f"enrolling recipe runs\nrecipe declares: {declared}\nlanes disagreeing: {mismatched}"
-    )
-
+    mismatched = {lane.source: sorted(lane.exclusions) for lane in _lanes_reaching_members_with_exclusions_dropped(_REPOSITORY_ROOT, members, member_markers) if sorted(lane.exclusions) != declared}
+    assert not mismatched, f'every lane that can reach the harness members must exclude exactly the members the enrolling recipe runs\nrecipe declares: {declared}\nlanes disagreeing: {mismatched}'
 
 def test_no_lane_collects_an_outer_serial_harness_member_as_it_actually_runs() -> None:
     """No lane may nest a harness proof's child pytest inside its own pool.
@@ -474,17 +322,8 @@ def test_no_lane_collects_an_outer_serial_harness_member_as_it_actually_runs() -
     """
     members = _harness_members(_REPOSITORY_ROOT)
     member_markers = _member_markers(_REPOSITORY_ROOT, members)
-    offenders = [
-        (lane.source, lane.recipe, member)
-        for lane in _corpus_lanes(_REPOSITORY_ROOT)
-        for member in members
-        if _reaches(lane, member, member_markers[member], ignore_exclusions=False)
-    ]
-
-    assert not offenders, (
-        f"these lanes collect an outer-serial harness member, nesting its child pytest pool: {offenders}"
-    )
-
+    offenders = [(lane.source, lane.recipe, member) for lane in _corpus_lanes(_REPOSITORY_ROOT) for member in members if _reaches(lane, member, member_markers[member], ignore_exclusions=False)]
+    assert not offenders, f'these lanes collect an outer-serial harness member, nesting its child pytest pool: {offenders}'
 
 def test_dropping_the_exclusion_lets_a_real_lane_actually_collect_a_member() -> None:
     """Ground the static exclusion model in one real pytest collection.
@@ -499,38 +338,16 @@ def test_dropping_the_exclusion_lets_a_real_lane_actually_collect_a_member() -> 
     members = _harness_members(_REPOSITORY_ROOT)
     member_markers = _member_markers(_REPOSITORY_ROOT, members)
     reaching = _lanes_reaching_members_with_exclusions_dropped(_REPOSITORY_ROOT, members, member_markers)
-    assert reaching, "no lane reaches a harness member even with exclusions dropped"
+    assert reaching, 'no lane reaches a harness member even with exclusions dropped'
     lane = reaching[0]
-    assert lane.marker_expression, f"lane `{lane.source}/{lane.recipe}` carries no marker expression to replay"
-
-    result = run_command(
-        [
-            sys.executable,
-            "-m",
-            "pytest",
-            "-q",
-            "--collect-only",
-            "-n0",
-            "-p",
-            "no:cacheprovider",
-            "-m",
-            lane.marker_expression,
-            _MEMBER_PARENT,
-        ],
-        cwd=_REPOSITORY_ROOT,
-        timeout_seconds=_COLLECTION_TIMEOUT_SECONDS,
-    )
-    collected = result.stdout.replace("\\", "/")
-    assert any(member in collected for member in members), (
-        f"dropping `{lane.source}/{lane.recipe}`'s exclusion did not make real pytest collect a "
-        f"harness member\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
-    )
-
+    assert lane.marker_expression, f'lane `{lane.source}/{lane.recipe}` carries no marker expression to replay'
+    result = run_command([sys.executable, '-m', 'pytest', '-q', '--collect-only', '-n0', '-p', 'no:cacheprovider', '-m', lane.marker_expression, _MEMBER_PARENT], cwd=_REPOSITORY_ROOT, timeout_seconds=_COLLECTION_TIMEOUT_SECONDS)
+    collected = result.stdout.replace('\\', '/')
+    assert any((member in collected for member in members)), f"dropping `{lane.source}/{lane.recipe}`'s exclusion did not make real pytest collect a harness member\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
 
 def _synthetic_workflow(run: str) -> dict[str, Any]:
     """One job, one step, running ``run`` -- the smallest gateable document."""
-    return {"jobs": {"lane": {"steps": [{"name": "Test", "run": run}]}}}
-
+    return {'jobs': {'lane': {'steps': [{'name': 'Test', 'run': run}]}}}
 
 def test_a_commented_out_pytest_invocation_is_not_counted_as_one() -> None:
     """Teeth: the vacuity guard must not be satisfiable by prose.
@@ -539,12 +356,10 @@ def test_a_commented_out_pytest_invocation_is_not_counted_as_one() -> None:
     this gate sizes; commented it is a workflow that runs no pytest, and a
     reader that still counted it would report a gated lane where nothing runs.
     """
-    command = "uv run --no-sync pytest -n 8 dev -q"
+    command = 'uv run --no-sync pytest -n 8 dev -q'
     empty: dict[str, list[str]] = {}
-
     assert _pytest_lines(_synthetic_workflow(command), empty, {}, {}) == [command]
-    assert _pytest_lines(_synthetic_workflow("# " + command), empty, {}, {}) == []
-
+    assert _pytest_lines(_synthetic_workflow('# ' + command), empty, {}, {}) == []
 
 def test_a_commented_out_pytest_line_in_a_recipe_is_not_counted_either() -> None:
     """The delegated half of the same rule.
@@ -553,31 +368,17 @@ def test_a_commented_out_pytest_line_in_a_recipe_is_not_counted_either() -> None
     invocation inside the recipe would reach the gate by the longer route if
     the body reader did not apply the same rule.
     """
-    live = _pytest_lines(
-        _synthetic_workflow("just test-lane"),
-        {"test-lane": ["pytest -n 8 dev"]},
-        {"test-lane": []},
-        {},
-    )
-    commented = _pytest_lines(
-        _synthetic_workflow("just test-lane"),
-        {"test-lane": ["# pytest -n 8 dev"]},
-        {"test-lane": []},
-        {},
-    )
-
-    assert live == ["pytest -n 8 dev"]
+    live = _pytest_lines(_synthetic_workflow('just test-lane'), {'test-lane': ['pytest -n 8 dev']}, {'test-lane': []}, {})
+    commented = _pytest_lines(_synthetic_workflow('just test-lane'), {'test-lane': ['# pytest -n 8 dev']}, {'test-lane': []}, {})
+    assert live == ['pytest -n 8 dev']
     assert commented == []
-
 
 def test_the_recipe_body_reader_drops_a_commented_line() -> None:
     """Read from the real justfile, so the rule is proven where it is used."""
     bodies = _justfile_recipe_bodies()
-
-    assert bodies, "the justfile parsed to no recipe at all"
-    commented = {recipe: line for recipe, body in bodies.items() for line in body if line.startswith("#")}
+    assert bodies, 'the justfile parsed to no recipe at all'
+    commented = {recipe: line for recipe, body in bodies.items() for line in body if line.startswith('#')}
     assert commented == {}
-
 
 def test_marker_resolution_reads_both_spellings_of_the_same_pytest_marker(tmp_path: Path) -> None:
     """A marker written ``mark.NAME`` resolves exactly as ``pytest.mark.NAME`` does.
@@ -589,43 +390,14 @@ def test_marker_resolution_reads_both_spellings_of_the_same_pytest_marker(tmp_pa
     negates the marker. The last assertion is that consequence stated directly
     -- drop ``serial`` and ``integration and not serial`` claims the test.
     """
-    lane = "integration and not serial"
-    modules = {
-        "test_dotted.py": dedent("""\
-            import pytest
-
-
-            @pytest.mark.integration
-            @pytest.mark.serial
-            def test_case():
-                pass
-            """),
-        "test_imported.py": dedent("""\
-            from pytest import mark
-
-
-            @mark.integration
-            @mark.serial
-            def test_case():
-                pass
-            """),
-        "test_module_level.py": dedent("""\
-            from pytest import mark
-
-            pytestmark = [mark.integration, mark.serial]
-
-
-            def test_case():
-                pass
-            """),
-    }
+    lane = 'integration and not serial'
+    modules = {'test_dotted.py': dedent('            import pytest\n\n\n            @pytest.mark.integration\n            @pytest.mark.serial\n            def test_case():\n                pass\n            '), 'test_imported.py': dedent('            from pytest import mark\n\n\n            @mark.integration\n            @mark.serial\n            def test_case():\n                pass\n            '), 'test_module_level.py': dedent('            from pytest import mark\n\n            pytestmark = [mark.integration, mark.serial]\n\n\n            def test_case():\n                pass\n            ')}
     for name, text in modules.items():
         module = tmp_path / name
-        module.write_text(text, encoding="utf-8")
+        module.write_text(text, encoding='utf-8')
         entries = marker_sets_in(module)
         assert entries is not None, name
-        assert [entry.test for entry in entries] == ["test_case"], name
-        assert entries[0].markers == frozenset({"integration", "serial"}), name
+        assert [entry.test for entry in entries] == ['test_case'], name
+        assert entries[0].markers == frozenset({'integration', 'serial'}), name
         assert not expression_selects(lane, entries[0].markers), name
-
-    assert expression_selects(lane, frozenset({"integration"}))
+    assert expression_selects(lane, frozenset({'integration'}))

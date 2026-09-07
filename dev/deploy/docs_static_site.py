@@ -1,7 +1,5 @@
 """Provision and publish the Cadrumo documentation site from a local AWS session."""
-
 from __future__ import annotations
-
 import argparse
 import contextlib
 import json
@@ -18,111 +16,66 @@ from http.client import HTTPException, HTTPSConnection
 from pathlib import Path
 from typing import Final
 from urllib.parse import urlsplit
-
 from defusedxml import ElementTree
-
 from cadrumo.core.directory_scan import scan_directory
-
 from .._paths import REPO_ROOT, UTF_8
 from ..docs.i18n import DEFAULT_SITE_LANGUAGE, DEFAULT_SOURCE_LANGUAGE, SITE_ROOT_LANGUAGES
 from ..docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
-
-CANONICAL_DOCS_BASE_URL = "https://cadrumo.neve.md/docs"
-CANONICAL_SITE_DOMAIN = "cadrumo.neve.md"
-STACK_NAME = "cadrumo-docs"
-STACK_REGION = "us-east-1"
-_BUCKET_NAME_RE = re.compile(r"[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])?")
-_DISTRIBUTION_ID_RE = re.compile(r"[A-Z0-9]+")
-_CACHE_CONTROL = "public, max-age=300, must-revalidate"
+CANONICAL_DOCS_BASE_URL = 'https://cadrumo.neve.md/docs'
+CANONICAL_SITE_DOMAIN = 'cadrumo.neve.md'
+STACK_NAME = 'cadrumo-docs'
+STACK_REGION = 'us-east-1'
+_BUCKET_NAME_RE = re.compile('[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])?')
+_DISTRIBUTION_ID_RE = re.compile('[A-Z0-9]+')
+_CACHE_CONTROL = 'public, max-age=300, must-revalidate'
 _UTF_8: Final[str] = UTF_8
-_REQUIRED_ARTIFACTS = (
-    "index.html",
-    "404.html",
-    "sitemap.xml",
-    "pagefind/pagefind-entry.json",
-    "pagefind/pagefind.js",
-    "pagefind/pagefind-ui.js",
-    "pagefind/pagefind-ui.css",
-)
-_DOCTREE_EXCLUDES = (".doctrees/*", "*/.doctrees/*")
-# Automation markers every hosted and self-hosted runner sets.
-_CI_MARKERS = ("CI", "GITHUB_ACTIONS")
-# The delivery role identifier, published to the job by the protected
-# environment. Its presence is what distinguishes the sanctioned automated
-# publish from any other automated run on a shared fleet.
-_DEPLOY_ROLE_VARIABLE = "CADRUMO_DOCS_DEPLOY_ROLE"
+_REQUIRED_ARTIFACTS = ('index.html', '404.html', 'sitemap.xml', 'pagefind/pagefind-entry.json', 'pagefind/pagefind.js', 'pagefind/pagefind-ui.js', 'pagefind/pagefind-ui.css')
+_DOCTREE_EXCLUDES = ('.doctrees/*', '*/.doctrees/*')
+_CI_MARKERS = ('CI', 'GITHUB_ACTIONS')
+_DEPLOY_ROLE_VARIABLE = 'CADRUMO_DOCS_DEPLOY_ROLE'
 _ENDPOINT_TIMEOUT_SECONDS = 20
-_LEGACY_DOCS_URL = "https://neve.md/cadrumo/docs"
-_MISSING_DOCS_PATH = "__cadrumo-delivery-missing__.html"
-
-#: The runtime download payload the docs download page enhances with
-#: (``initDownloadCards`` in ``docs/_static/cadrumo-docs.js``). It is pulled —
-#: version agnostically — from the latest release into ``docs/_static`` before
-#: the site build so the served ``_static/download-latest.json`` reflects the
-#: current release once a release attaches it. Absent it (no release has
-#: attached one yet), the offline Tier-1 channel table is the floor and the
-#: site build proceeds unchanged.
-_DOWNLOAD_LATEST_URL = "https://github.com/nevenincs/cadrumo/releases/latest/download/download-latest.json"
-_DOWNLOAD_LATEST_SCHEMA = "cadrumo.download-latest.v1"
-_DOWNLOAD_LATEST_STATIC_PATH = ("docs", "_static", "download-latest.json")
+_LEGACY_DOCS_URL = 'https://neve.md/cadrumo/docs'
+_MISSING_DOCS_PATH = '__cadrumo-delivery-missing__.html'
+_DOWNLOAD_LATEST_URL = 'https://github.com/nevenincs/cadrumo/releases/latest/download/download-latest.json'
+_DOWNLOAD_LATEST_SCHEMA = 'cadrumo.download-latest.v1'
+_DOWNLOAD_LATEST_STATIC_PATH = ('docs', '_static', 'download-latest.json')
 _DOWNLOAD_LATEST_TIMEOUT_SECONDS = 20
-
 
 @dataclass(frozen=True)
 class DeploymentTarget:
     """Stack-owned destination for the documentation deployment."""
-
     bucket: str
     distribution_id: str
-
 
 def _repo_root() -> Path:
     """Return the repository root."""
     return REPO_ROOT
 
-
 def _command_label(command: Sequence[str]) -> str:
     """Return a readable command without invoking a shell."""
     return subprocess.list2cmdline(list(command))
 
-
-def _run(
-    command: Sequence[str],
-    *,
-    cwd: Path,
-    env: dict[str, str] | None = None,
-    stream_output: bool = False,
-) -> subprocess.CompletedProcess[str]:
+def _run(command: Sequence[str], *, cwd: Path, env: dict[str, str] | None=None, stream_output: bool=False) -> subprocess.CompletedProcess[str]:
     """Run one local command and stop on its real exit status."""
-    print(f"+ {_command_label(command)}", flush=True)
-    # Callers build fixed Python/AWS command vectors; externally supplied IDs are validated.
-    completed = subprocess.run(  # noqa: S603
-        list(command),
-        cwd=cwd,
-        env=env,
-        text=True,
-        capture_output=not stream_output,
-        check=False,
-    )
+    print(f'+ {_command_label(command)}', flush=True)
+    completed = subprocess.run(list(command), cwd=cwd, env=env, text=True, capture_output=not stream_output, check=False)
     if not stream_output:
         if completed.stdout:
-            print(completed.stdout, end="" if completed.stdout.endswith("\n") else "\n", flush=True)
+            print(completed.stdout, end='' if completed.stdout.endswith('\n') else '\n', flush=True)
         if completed.stderr:
-            print(completed.stderr, end="" if completed.stderr.endswith("\n") else "\n", file=sys.stderr, flush=True)
+            print(completed.stderr, end='' if completed.stderr.endswith('\n') else '\n', file=sys.stderr, flush=True)
     if completed.returncode != 0:
         raise SystemExit(completed.returncode)
     return completed
-
 
 def _required_executable(name: str) -> str:
     """Return an executable on PATH or stop before deployment."""
     executable = shutil.which(name)
     if executable is None:
-        raise SystemExit(f"Required executable not found on PATH: {name}")
+        raise SystemExit(f'Required executable not found on PATH: {name}')
     return executable
 
-
-def _site_build_environment(*, base_environment: Mapping[str, str] | None = None) -> dict[str, str]:
+def _site_build_environment(*, base_environment: Mapping[str, str] | None=None) -> dict[str, str]:
     """Return the deployment-specific strict docs build environment.
 
     The Pagefind contract is pinned to ``full`` on every deploy root, English
@@ -145,13 +98,7 @@ def _site_build_environment(*, base_environment: Mapping[str, str] | None = None
             without mutating real process state.
     """
     base = base_environment if base_environment is not None else os.environ
-    return {
-        **base,
-        "CADRUMO_DOCS_BASE_URL": CANONICAL_DOCS_BASE_URL,
-        "CADRUMO_DOCS_JOBS": "1",
-        "CADRUMO_DOCS_PAGEFIND_MODE": "full",
-    }
-
+    return {**base, 'CADRUMO_DOCS_BASE_URL': CANONICAL_DOCS_BASE_URL, 'CADRUMO_DOCS_JOBS': '1', 'CADRUMO_DOCS_PAGEFIND_MODE': 'full'}
 
 def _invalidate_download_latest(destination: Path, reason: str) -> None:
     """Remove a stale ``download-latest.json`` (if any) and report why.
@@ -167,10 +114,9 @@ def _invalidate_download_latest(destination: Path, reason: str) -> None:
     """
     with contextlib.suppress(OSError):
         destination.unlink(missing_ok=True)
-    print(f"{reason}; serving the offline channel table.", flush=True)
+    print(f'{reason}; serving the offline channel table.', flush=True)
 
-
-def _refresh_download_latest(repo_root: Path, *, source_url: str = _DOWNLOAD_LATEST_URL) -> None:
+def _refresh_download_latest(repo_root: Path, *, source_url: str=_DOWNLOAD_LATEST_URL) -> None:
     """Pull the latest release's ``download-latest.json`` into ``docs/_static``.
 
     Fetches the version-agnostic latest-release asset, validates it is the
@@ -187,48 +133,36 @@ def _refresh_download_latest(repo_root: Path, *, source_url: str = _DOWNLOAD_LAT
     socket instead of faking the response.
     """
     destination = repo_root.joinpath(*_DOWNLOAD_LATEST_STATIC_PATH)
-    request = urllib.request.Request(  # noqa: S310 — fixed HTTPS GitHub release URL (or test-supplied local URL)
-        source_url,
-        headers={"User-Agent": "cadrumo-docs-delivery"},
-    )
+    request = urllib.request.Request(source_url, headers={'User-Agent': 'cadrumo-docs-delivery'})
     try:
-        with urllib.request.urlopen(request, timeout=_DOWNLOAD_LATEST_TIMEOUT_SECONDS) as response:  # noqa: S310
+        with urllib.request.urlopen(request, timeout=_DOWNLOAD_LATEST_TIMEOUT_SECONDS) as response:
             body = response.read()
     except (urllib.error.URLError, HTTPException, TimeoutError, OSError) as exc:
-        _invalidate_download_latest(destination, f"download-latest.json unavailable ({exc})")
+        _invalidate_download_latest(destination, f'download-latest.json unavailable ({exc})')
         return
     try:
         payload = json.loads(body)
     except json.JSONDecodeError:
-        _invalidate_download_latest(destination, "download-latest.json response was not JSON")
+        _invalidate_download_latest(destination, 'download-latest.json response was not JSON')
         return
-    if not isinstance(payload, dict) or payload.get("schema_name") != _DOWNLOAD_LATEST_SCHEMA:
-        _invalidate_download_latest(destination, "download-latest.json was not the expected payload")
+    if not isinstance(payload, dict) or payload.get('schema_name') != _DOWNLOAD_LATEST_SCHEMA:
+        _invalidate_download_latest(destination, 'download-latest.json was not the expected payload')
         return
     try:
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_bytes(body)
     except OSError as exc:
-        _invalidate_download_latest(destination, f"download-latest.json could not be written ({exc})")
+        _invalidate_download_latest(destination, f'download-latest.json could not be written ({exc})')
         return
-    print(f"Refreshed {destination.relative_to(repo_root)} from the latest release.", flush=True)
-
+    print(f'Refreshed {destination.relative_to(repo_root)} from the latest release.', flush=True)
 
 def _build_site(repo_root: Path) -> Path:
     """Build the complete strict site at the canonical Cadrumo URL."""
     try:
-        _run(
-            [sys.executable, "-m", "dev.docs.build", "--strict", "docs/conf.py"],
-            cwd=repo_root,
-            env=_site_build_environment(),
-            stream_output=True,
-        )
+        _run([sys.executable, '-m', 'dev.docs.build', '--strict', 'docs/conf.py'], cwd=repo_root, env=_site_build_environment(), stream_output=True)
     except SystemExit as exc:
-        raise SystemExit(
-            f"Strict docs build failed; refusing to publish site or Pagefind output ({exc.code}).",
-        ) from exc
-    return repo_root / "docs" / "_build" / "html"
-
+        raise SystemExit(f'Strict docs build failed; refusing to publish site or Pagefind output ({exc.code}).') from exc
+    return repo_root / 'docs' / '_build' / 'html'
 
 def _require_artifacts_present(html_root: Path, *, root_label: str) -> None:
     """Require every artifact in :data:`_REQUIRED_ARTIFACTS` at ``html_root``.
@@ -239,9 +173,8 @@ def _require_artifacts_present(html_root: Path, *, root_label: str) -> None:
     """
     missing = [artifact for artifact in _REQUIRED_ARTIFACTS if not (html_root / artifact).is_file()]
     if missing:
-        joined = ", ".join(missing)
-        raise SystemExit(f"{root_label} is not deployable; required artifacts are missing: {joined}")
-
+        joined = ', '.join(missing)
+        raise SystemExit(f'{root_label} is not deployable; required artifacts are missing: {joined}')
 
 def _require_valid_sitemap(html_root: Path, *, expected_base_url: str, root_label: str) -> None:
     """Require a valid, canonically-rooted ``sitemap.xml`` at ``html_root``.
@@ -253,31 +186,26 @@ def _require_valid_sitemap(html_root: Path, *, expected_base_url: str, root_labe
     rooted at its own language sub-path, not the English canonical root.
     """
     try:
-        sitemap = ElementTree.parse(html_root / "sitemap.xml")
+        sitemap = ElementTree.parse(html_root / 'sitemap.xml')
     except OSError as exc:
-        raise SystemExit(
-            f"{root_label} did not produce a sitemap at {html_root / 'sitemap.xml'}; "
-            "set CADRUMO_DOCS_BASE_URL so the build writes one.",
-        ) from exc
+        raise SystemExit(f"{root_label} did not produce a sitemap at {html_root / 'sitemap.xml'}; set CADRUMO_DOCS_BASE_URL so the build writes one.") from exc
     except ElementTree.ParseError as exc:
-        raise SystemExit(f"{root_label} sitemap is not valid XML.") from exc
-    locations = [(element.text or "").strip() for element in sitemap.iter() if element.tag.endswith("loc")]
+        raise SystemExit(f'{root_label} sitemap is not valid XML.') from exc
+    locations = [(element.text or '').strip() for element in sitemap.iter() if element.tag.endswith('loc')]
     if not locations:
-        raise SystemExit(f"{root_label} sitemap has no URLs.")
-    canonical_root = f"{expected_base_url}/"
+        raise SystemExit(f'{root_label} sitemap has no URLs.')
+    canonical_root = f'{expected_base_url}/'
     if canonical_root not in locations:
-        raise SystemExit(f"{root_label} sitemap is missing the canonical docs root: {canonical_root}")
-    unexpected = [location for location in locations if not location.startswith(f"{expected_base_url}/")]
+        raise SystemExit(f'{root_label} sitemap is missing the canonical docs root: {canonical_root}')
+    unexpected = [location for location in locations if not location.startswith(f'{expected_base_url}/')]
     if unexpected:
-        raise SystemExit(f"{root_label} sitemap contains a non-canonical URL: " + unexpected[0])
-
+        raise SystemExit(f'{root_label} sitemap contains a non-canonical URL: ' + unexpected[0])
 
 def _validate_site_artifacts(html_root: Path) -> None:
     """Require the rendered site and its Pagefind search bundle."""
-    _require_artifacts_present(html_root, root_label="Docs build")
-    _require_valid_sitemap(html_root, expected_base_url=CANONICAL_DOCS_BASE_URL, root_label="Docs build")
-    _require_search_index(html_root, root_label="Docs build")
-
+    _require_artifacts_present(html_root, root_label='Docs build')
+    _require_valid_sitemap(html_root, expected_base_url=CANONICAL_DOCS_BASE_URL, root_label='Docs build')
+    _require_search_index(html_root, root_label='Docs build')
 
 def _require_search_index(site_root: Path, *, root_label: str) -> None:
     """Refuse a site root whose Pagefind index is empty OR carries no records.
@@ -295,26 +223,13 @@ def _require_search_index(site_root: Path, *, root_label: str) -> None:
     publish preflight and the gate cannot drift apart.
     """
     from ..docs.pagefind_index import DECIDED_INJECTED_RECORD_KINDS, injected_record_kinds_in_index
-
-    index_chunks = [
-        chunk
-        for chunk in scan_directory(site_root / "pagefind" / "index", pattern="*.pf_index", recursive=True)
-        if chunk.stat().st_size > 0
-    ]
+    index_chunks = [chunk for chunk in scan_directory(site_root / 'pagefind' / 'index', pattern='*.pf_index', recursive=True) if chunk.stat().st_size > 0]
     if not index_chunks:
-        raise SystemExit(f"{root_label} Pagefind index has no substantive generated index data.")
-
+        raise SystemExit(f'{root_label} Pagefind index has no substantive generated index data.')
     present = injected_record_kinds_in_index(site_root)
     missing = sorted(DECIDED_INJECTED_RECORD_KINDS - present)
     if missing:
-        raise SystemExit(
-            f"{root_label} Pagefind index carries no records of kind(s) {', '.join(missing)} "
-            f"(found: {', '.join(sorted(present)) or 'none'}). The index holds rendered pages only, "
-            "so a reader could not search that surface at all. This is a pages-only index: confirm the "
-            "build ran with the record-injecting contract (CADRUMO_DOCS_PAGEFIND_MODE=full) for this "
-            f"root, then rebuild before publishing. Index read at {site_root / 'pagefind'}.",
-        )
-
+        raise SystemExit(f"{root_label} Pagefind index carries no records of kind(s) {', '.join(missing)} (found: {', '.join(sorted(present)) or 'none'}). The index holds rendered pages only, so a reader could not search that surface at all. This is a pages-only index: confirm the build ran with the record-injecting contract (CADRUMO_DOCS_PAGEFIND_MODE=full) for this root, then rebuild before publishing. Index read at {site_root / 'pagefind'}.")
 
 def _localized_languages() -> tuple[str, ...]:
     """Return the per-language deploy roots, English included.
@@ -326,11 +241,9 @@ def _localized_languages() -> tuple[str, ...]:
     """
     return SITE_ROOT_LANGUAGES
 
-
 def _language_site_url(language: str) -> str:
     """Return the canonical deploy URL for one localized site root."""
-    return f"{CANONICAL_DOCS_BASE_URL}/{language}"
-
+    return f'{CANONICAL_DOCS_BASE_URL}/{language}'
 
 def _language_build_command(language: str, out_dir: Path) -> list[str]:
     """Return the build-driver command for one site root.
@@ -342,13 +255,12 @@ def _language_build_command(language: str, out_dir: Path) -> list[str]:
     carries ``api/`` inside its own root, while every translated root is a
     strict user-scope build of the operator surface.
     """
-    command = [sys.executable, "-m", "dev.docs.build", "--strict"]
+    command = [sys.executable, '-m', 'dev.docs.build', '--strict']
     if language == DEFAULT_SOURCE_LANGUAGE:
-        command += ["--out-dir", str(out_dir)]
+        command += ['--out-dir', str(out_dir)]
         return command
-    command += ["--scope", "user", "--language", language, "--out-dir", str(out_dir)]
+    command += ['--scope', 'user', '--language', language, '--out-dir', str(out_dir)]
     return command
-
 
 def _language_build_environment(language: str, *, check_sequences: bool) -> dict[str, str]:
     """Return the deploy build environment for one localized site root.
@@ -366,11 +278,11 @@ def _language_build_environment(language: str, *, check_sequences: bool) -> dict
     the documented opt-out; which root is decided by
     :func:`_language_build_environments`, never here.
     """
-    environment = {**_site_build_environment(), "CADRUMO_DOCS_BASE_URL": _language_site_url(language)}
+    environment = {**_site_build_environment(), 'CADRUMO_DOCS_BASE_URL': _language_site_url(language)}
     if not check_sequences:
-        environment[SEQUENCE_CHECK_SKIP_ENV] = "1"
+        _dp_mark('dev/deploy/docs_static_site.py:370:ifnot')
+        environment[SEQUENCE_CHECK_SKIP_ENV] = '1'
     return environment
-
 
 def _language_build_environments() -> tuple[tuple[str, dict[str, str]], ...]:
     """Return each site root paired with the environment it is built under.
@@ -381,19 +293,11 @@ def _language_build_environments() -> tuple[tuple[str, dict[str, str]], ...]:
     is the teeth: a future edit that skips the check on every root (silently
     dropping the gate from the whole deploy) cannot reach a published site.
     """
-    environments = tuple(
-        (language, _language_build_environment(language, check_sequences=index == 0))
-        for index, language in enumerate(_localized_languages())
-    )
+    environments = tuple(((language, _language_build_environment(language, check_sequences=index == 0)) for index, language in enumerate(_localized_languages())))
     checked = [language for language, environment in environments if SEQUENCE_CHECK_SKIP_ENV not in environment]
     if len(checked) != 1:
-        raise SystemExit(
-            f"The deploy must run the cli-sequence goldens check on exactly one site root; "
-            f"{len(checked)} root(s) would run it ({', '.join(checked) or 'none'}). "
-            "Refusing to publish a site whose CLI sequences were never checked against their goldens.",
-        )
+        raise SystemExit(f"The deploy must run the cli-sequence goldens check on exactly one site root; {len(checked)} root(s) would run it ({', '.join(checked) or 'none'}). Refusing to publish a site whose CLI sequences were never checked against their goldens.")
     return environments
-
 
 def _build_language_roots(repo_root: Path, html_root: Path) -> None:
     """Build every site root into its own subdirectory.
@@ -406,17 +310,9 @@ def _build_language_roots(repo_root: Path, html_root: Path) -> None:
     for language, environment in _language_build_environments():
         out_dir = html_root / language
         try:
-            _run(
-                _language_build_command(language, out_dir),
-                cwd=repo_root,
-                env=environment,
-                stream_output=True,
-            )
+            _run(_language_build_command(language, out_dir), cwd=repo_root, env=environment, stream_output=True)
         except SystemExit as exc:
-            raise SystemExit(
-                f"Localized docs build for {language!r} failed; refusing to publish ({exc.code}).",
-            ) from exc
-
+            raise SystemExit(f'Localized docs build for {language!r} failed; refusing to publish ({exc.code}).') from exc
 
 def _write_language_entry(html_root: Path) -> Path:
     """Write the language-agnostic entry served at ``/``.
@@ -437,48 +333,11 @@ def _write_language_entry(html_root: Path) -> Path:
     Returns:
         The path written, so the caller can assert on it.
     """
-    languages = ", ".join(f'"{language}"' for language in _localized_languages())
-    entry = html_root / "index.html"
-    entry.write_text(
-        "<!doctype html>\n"
-        '<html lang="es">\n<head>\n<meta charset="utf-8">\n'
-        '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
-        "<title>Cadrumo</title>\n"
-        # A language selector must never be the canonical result for a query;
-        # every localized root carries its own canonical URLs.
-        '<meta name="robots" content="noindex,follow">\n'
-        "<script>\n"
-        "(function () {\n"
-        f"  var roots = [{languages}];\n"
-        f'  var fallback = "{DEFAULT_SITE_LANGUAGE}";\n'
-        "  var cookie = document.cookie.match(/(?:^|;\\s*)cadrumo_docs_lang=([a-zA-Z-]+)/);\n"
-        "  var wanted = [];\n"
-        "  if (cookie) { wanted.push(cookie[1]); }\n"
-        "  var declared = navigator.languages || [navigator.language];\n"
-        "  for (var i = 0; i < declared.length; i++) {\n"
-        "    if (declared[i]) { wanted.push(declared[i]); }\n"
-        "  }\n"
-        "  wanted.push(fallback);\n"
-        "  for (var j = 0; j < wanted.length; j++) {\n"
-        '    var tag = String(wanted[j]).toLowerCase().split("-")[0];\n'
-        "    if (roots.indexOf(tag) >= 0) {\n"
-        '      window.location.replace(tag + "/");\n'
-        "      return;\n"
-        "    }\n"
-        "  }\n"
-        '  window.location.replace(fallback + "/");\n'
-        "})();\n"
-        "</script>\n"
-        "</head>\n<body>\n"
-        "<noscript>\n<ul>\n"
-        + "".join(f'<li><a href="{language}/">{language}</a></li>\n' for language in _localized_languages())
-        + "</ul>\n</noscript>\n</body>\n</html>\n",
-        encoding=_UTF_8,
-        newline="\n",
-    )
-    print(f"Wrote language entry: {entry}", flush=True)
+    languages = ', '.join((f'"{language}"' for language in _localized_languages()))
+    entry = html_root / 'index.html'
+    entry.write_text(f'<!doctype html>\n<html lang="es">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>Cadrumo</title>\n<meta name="robots" content="noindex,follow">\n<script>\n(function () {{\n  var roots = [{languages}];\n  var fallback = "{DEFAULT_SITE_LANGUAGE}";\n  var cookie = document.cookie.match(/(?:^|;\\s*)cadrumo_docs_lang=([a-zA-Z-]+)/);\n  var wanted = [];\n  if (cookie) {{ wanted.push(cookie[1]); }}\n  var declared = navigator.languages || [navigator.language];\n  for (var i = 0; i < declared.length; i++) {{\n    if (declared[i]) {{ wanted.push(declared[i]); }}\n  }}\n  wanted.push(fallback);\n  for (var j = 0; j < wanted.length; j++) {{\n    var tag = String(wanted[j]).toLowerCase().split("-")[0];\n    if (roots.indexOf(tag) >= 0) {{\n      window.location.replace(tag + "/");\n      return;\n    }}\n  }}\n  window.location.replace(fallback + "/");\n}})();\n</script>\n</head>\n<body>\n<noscript>\n<ul>\n' + ''.join((f'<li><a href="{language}/">{language}</a></li>\n' for language in _localized_languages())) + '</ul>\n</noscript>\n</body>\n</html>\n', encoding=_UTF_8, newline='\n')
+    print(f'Wrote language entry: {entry}', flush=True)
     return entry
-
 
 def _validate_language_entry(html_root: Path) -> None:
     """Require the apex entry to exist and to reach every published root.
@@ -494,22 +353,15 @@ def _validate_language_entry(html_root: Path) -> None:
     Every language root carries its own copies too, so neither check is the
     other's substitute.
     """
-    entry = html_root / "index.html"
+    entry = html_root / 'index.html'
     if not entry.is_file():
-        raise SystemExit(f"Language entry missing at {entry}; refusing to publish.")
+        raise SystemExit(f'Language entry missing at {entry}; refusing to publish.')
     body = entry.read_text(encoding=_UTF_8)
     unreachable = [language for language in _localized_languages() if f'"{language}"' not in body]
     if unreachable:
-        raise SystemExit(
-            f"Language entry does not route to {', '.join(unreachable)}; refusing to publish "
-            "a root that cannot reach every built language.",
-        )
+        raise SystemExit(f"Language entry does not route to {', '.join(unreachable)}; refusing to publish a root that cannot reach every built language.")
     if DEFAULT_SITE_LANGUAGE not in body:
-        raise SystemExit(
-            f"Language entry declares no {DEFAULT_SITE_LANGUAGE!r} fallback; a reader with no "
-            "stated preference would reach nothing.",
-        )
-
+        raise SystemExit(f'Language entry declares no {DEFAULT_SITE_LANGUAGE!r} fallback; a reader with no stated preference would reach nothing.')
 
 def _validate_language_roots(html_root: Path) -> None:
     """Require every localized site root to carry the complete required-artifact set.
@@ -521,250 +373,114 @@ def _validate_language_roots(html_root: Path) -> None:
     """
     for language in _localized_languages():
         root = html_root / language
-        label = f"Localized site root {language!r}"
+        label = f'Localized site root {language!r}'
         _require_artifacts_present(root, root_label=label)
         _require_valid_sitemap(root, expected_base_url=_language_site_url(language), root_label=label)
         _require_search_index(root, root_label=label)
 
-
 def _aws_base_command(aws: str) -> list[str]:
     """Return the shared AWS CLI command prefix."""
-    return [aws, "--no-cli-pager"]
-
+    return [aws, '--no-cli-pager']
 
 def _authenticated_account_id(aws: str, repo_root: Path) -> str:
     """Return the current account ID from the authenticated local AWS session."""
-    identity = _run(
-        [*_aws_base_command(aws), "sts", "get-caller-identity", "--output", "json"],
-        cwd=repo_root,
-    )
+    identity = _run([*_aws_base_command(aws), 'sts', 'get-caller-identity', '--output', 'json'], cwd=repo_root)
     try:
-        account_id = json.loads(identity.stdout)["Account"]
+        account_id = json.loads(identity.stdout)['Account']
     except (KeyError, TypeError, json.JSONDecodeError) as exc:
-        raise SystemExit("AWS did not return an account ID.") from exc
-    if not isinstance(account_id, str) or re.fullmatch(r"[0-9]{12}", account_id) is None:
-        raise SystemExit("AWS returned an invalid account ID.")
+        raise SystemExit('AWS did not return an account ID.') from exc
+    if not isinstance(account_id, str) or re.fullmatch('[0-9]{12}', account_id) is None:
+        raise SystemExit('AWS returned an invalid account ID.')
     return account_id
-
 
 def _issued_certificate_arn(aws: str, repo_root: Path) -> str:
     """Return the one issued us-east-1 ACM certificate for the Cadrumo host."""
-    listed = _run(
-        [
-            *_aws_base_command(aws),
-            "acm",
-            "list-certificates",
-            "--region",
-            STACK_REGION,
-            "--certificate-statuses",
-            "ISSUED",
-            "--output",
-            "json",
-        ],
-        cwd=repo_root,
-    )
+    listed = _run([*_aws_base_command(aws), 'acm', 'list-certificates', '--region', STACK_REGION, '--certificate-statuses', 'ISSUED', '--output', 'json'], cwd=repo_root)
     try:
-        certificates = json.loads(listed.stdout)["CertificateSummaryList"]
-        matches = [
-            certificate["CertificateArn"]
-            for certificate in certificates
-            if certificate["DomainName"].rstrip(".").lower() == CANONICAL_SITE_DOMAIN
-        ]
+        certificates = json.loads(listed.stdout)['CertificateSummaryList']
+        matches = [certificate['CertificateArn'] for certificate in certificates if certificate['DomainName'].rstrip('.').lower() == CANONICAL_SITE_DOMAIN]
     except (KeyError, TypeError, json.JSONDecodeError) as exc:
-        raise SystemExit("AWS did not return ACM certificate summaries.") from exc
+        raise SystemExit('AWS did not return ACM certificate summaries.') from exc
     if len(matches) != 1:
-        raise SystemExit(
-            "Expected exactly one issued "
-            f"{STACK_REGION} ACM certificate for {CANONICAL_SITE_DOMAIN}; found {len(matches)}.",
-        )
+        raise SystemExit(f'Expected exactly one issued {STACK_REGION} ACM certificate for {CANONICAL_SITE_DOMAIN}; found {len(matches)}.')
     return matches[0]
-
 
 def _provision_stack(aws: str, repo_root: Path, account_id: str, certificate_arn: str) -> None:
     """Create or update the fixed Cadrumo docs delivery stack."""
-    bucket = f"cadrumo-docs-{account_id}"
-    _run(
-        [
-            *_aws_base_command(aws),
-            "cloudformation",
-            "deploy",
-            "--region",
-            STACK_REGION,
-            "--stack-name",
-            STACK_NAME,
-            "--template-file",
-            "infra/docs-static-site.yaml",
-            "--parameter-overrides",
-            f"BucketName={bucket}",
-            f"CertificateArn={certificate_arn}",
-            f"SiteDomainName={CANONICAL_SITE_DOMAIN}",
-            "PriceClass=PriceClass_100",
-            "--no-fail-on-empty-changeset",
-        ],
-        cwd=repo_root,
-    )
-
+    bucket = f'cadrumo-docs-{account_id}'
+    _run([*_aws_base_command(aws), 'cloudformation', 'deploy', '--region', STACK_REGION, '--stack-name', STACK_NAME, '--template-file', 'infra/docs-static-site.yaml', '--parameter-overrides', f'BucketName={bucket}', f'CertificateArn={certificate_arn}', f'SiteDomainName={CANONICAL_SITE_DOMAIN}', 'PriceClass=PriceClass_100', '--no-fail-on-empty-changeset'], cwd=repo_root)
 
 def _print_stack_outputs(aws: str, repo_root: Path) -> None:
     """Print the fixed stack's outputs after a successful provision."""
-    _run(
-        [
-            *_aws_base_command(aws),
-            "cloudformation",
-            "describe-stacks",
-            "--region",
-            STACK_REGION,
-            "--stack-name",
-            STACK_NAME,
-            "--query",
-            "Stacks[0].Outputs",
-            "--output",
-            "json",
-        ],
-        cwd=repo_root,
-    )
-
+    _run([*_aws_base_command(aws), 'cloudformation', 'describe-stacks', '--region', STACK_REGION, '--stack-name', STACK_NAME, '--query', 'Stacks[0].Outputs', '--output', 'json'], cwd=repo_root)
 
 def _stack_target(aws: str, repo_root: Path) -> DeploymentTarget:
     """Read the deployment target from the approved CloudFormation stack."""
-    described = _run(
-        [
-            *_aws_base_command(aws),
-            "cloudformation",
-            "describe-stacks",
-            "--region",
-            STACK_REGION,
-            "--stack-name",
-            STACK_NAME,
-            "--output",
-            "json",
-        ],
-        cwd=repo_root,
-    )
+    described = _run([*_aws_base_command(aws), 'cloudformation', 'describe-stacks', '--region', STACK_REGION, '--stack-name', STACK_NAME, '--output', 'json'], cwd=repo_root)
     try:
-        stack = json.loads(described.stdout)["Stacks"][0]
-        outputs = {output["OutputKey"]: output["OutputValue"] for output in stack["Outputs"]}
-        target = DeploymentTarget(
-            bucket=outputs["DocsBucketName"],
-            distribution_id=outputs["DocsDistributionId"],
-        )
+        stack = json.loads(described.stdout)['Stacks'][0]
+        outputs = {output['OutputKey']: output['OutputValue'] for output in stack['Outputs']}
+        target = DeploymentTarget(bucket=outputs['DocsBucketName'], distribution_id=outputs['DocsDistributionId'])
     except (IndexError, KeyError, TypeError, json.JSONDecodeError) as exc:
-        raise SystemExit("CloudFormation stack does not expose the required Cadrumo docs outputs.") from exc
+        raise SystemExit('CloudFormation stack does not expose the required Cadrumo docs outputs.') from exc
     if _BUCKET_NAME_RE.fullmatch(target.bucket) is None:
-        raise SystemExit("CloudFormation returned an invalid documentation bucket name.")
+        raise SystemExit('CloudFormation returned an invalid documentation bucket name.')
     if _DISTRIBUTION_ID_RE.fullmatch(target.distribution_id) is None:
-        raise SystemExit("CloudFormation returned an invalid CloudFront distribution ID.")
+        raise SystemExit('CloudFormation returned an invalid CloudFront distribution ID.')
     return target
-
 
 def _verify_distribution_alias(aws: str, repo_root: Path, distribution_id: str) -> None:
     """Require the stack distribution to serve only the canonical Cadrumo host."""
-    described = _run(
-        [
-            *_aws_base_command(aws),
-            "cloudfront",
-            "get-distribution",
-            "--id",
-            distribution_id,
-            "--output",
-            "json",
-        ],
-        cwd=repo_root,
-    )
+    described = _run([*_aws_base_command(aws), 'cloudfront', 'get-distribution', '--id', distribution_id, '--output', 'json'], cwd=repo_root)
     try:
-        aliases = json.loads(described.stdout)["Distribution"]["DistributionConfig"]["Aliases"]
-        names = aliases.get("Items", [])
+        aliases = json.loads(described.stdout)['Distribution']['DistributionConfig']['Aliases']
+        names = _dp_get('dev/deploy/docs_static_site.py:676:get', aliases, 'Items', [])
     except (AttributeError, KeyError, TypeError, json.JSONDecodeError) as exc:
-        raise SystemExit("CloudFront did not return distribution aliases.") from exc
+        raise SystemExit('CloudFront did not return distribution aliases.') from exc
     if names != [CANONICAL_SITE_DOMAIN]:
-        raise SystemExit(f"CloudFront distribution aliases must be exactly [{CANONICAL_SITE_DOMAIN!r}].")
-
+        raise SystemExit(f'CloudFront distribution aliases must be exactly [{CANONICAL_SITE_DOMAIN!r}].')
 
 def _sync_site(aws: str, repo_root: Path, html_root: Path, bucket: str) -> None:
     """Synchronise only the generated documentation prefix."""
-    destination = f"s3://{bucket}/docs/"
-    command = [
-        *_aws_base_command(aws),
-        "s3",
-        "sync",
-        str(html_root),
-        destination,
-        "--delete",
-        "--cache-control",
-        _CACHE_CONTROL,
-    ]
+    destination = f's3://{bucket}/docs/'
+    command = [*_aws_base_command(aws), 's3', 'sync', str(html_root), destination, '--delete', '--cache-control', _CACHE_CONTROL]
     for pattern in _DOCTREE_EXCLUDES:
-        command.extend(["--exclude", pattern])
+        command.extend(['--exclude', pattern])
     _run(command, cwd=repo_root)
+_DOCS_INVALIDATION_PATHS: tuple[str, ...] = ('/docs/*',)
 
-
-_DOCS_INVALIDATION_PATHS: tuple[str, ...] = ("/docs/*",)
-
-
-def _invalidate_distribution_paths(
-    aws: str,
-    repo_root: Path,
-    distribution_id: str,
-    paths: Sequence[str],
-) -> None:
+def _invalidate_distribution_paths(aws: str, repo_root: Path, distribution_id: str, paths: Sequence[str]) -> None:
     """Invalidate the given published paths on the distribution and wait for completion.
 
     The documentation publisher invalidates its own subtree through this
     single create-invalidation, id-extract, and wait-for-completion sequence.
     """
-    created = _run(
-        [
-            *_aws_base_command(aws),
-            "cloudfront",
-            "create-invalidation",
-            "--distribution-id",
-            distribution_id,
-            "--paths",
-            *paths,
-            "--output",
-            "json",
-        ],
-        cwd=repo_root,
-    )
+    created = _run([*_aws_base_command(aws), 'cloudfront', 'create-invalidation', '--distribution-id', distribution_id, '--paths', *paths, '--output', 'json'], cwd=repo_root)
     try:
-        invalidation_id = json.loads(created.stdout)["Invalidation"]["Id"]
+        invalidation_id = json.loads(created.stdout)['Invalidation']['Id']
     except (KeyError, TypeError, json.JSONDecodeError) as exc:
-        raise SystemExit("CloudFront did not return an invalidation ID.") from exc
-    _run(
-        [
-            *_aws_base_command(aws),
-            "cloudfront",
-            "wait",
-            "invalidation-completed",
-            "--distribution-id",
-            distribution_id,
-            "--id",
-            invalidation_id,
-        ],
-        cwd=repo_root,
-    )
-
+        raise SystemExit('CloudFront did not return an invalidation ID.') from exc
+    _run([*_aws_base_command(aws), 'cloudfront', 'wait', 'invalidation-completed', '--distribution-id', distribution_id, '--id', invalidation_id], cwd=repo_root)
 
 def _endpoint_response(url: str) -> tuple[int, dict[str, str]]:
     """Return one public endpoint's unredirected HTTP status and headers."""
     parsed = urlsplit(url)
-    if parsed.scheme != "https" or parsed.hostname is None:
-        raise SystemExit(f"Endpoint check requires a complete HTTPS URL: {url}")
-    path = parsed.path or "/"
+    if parsed.scheme != 'https' or parsed.hostname is None:
+        raise SystemExit(f'Endpoint check requires a complete HTTPS URL: {url}')
+    path = _dp_or('dev/deploy/docs_static_site.py:753:or', lambda: parsed.path, lambda: '/')
     if parsed.query:
-        path = f"{path}?{parsed.query}"
+        path = f'{path}?{parsed.query}'
     connection = HTTPSConnection(parsed.hostname, port=parsed.port, timeout=_ENDPOINT_TIMEOUT_SECONDS)
     try:
-        connection.request("GET", path, headers={"User-Agent": "cadrumo-docs-delivery-check"})
+        connection.request('GET', path, headers={'User-Agent': 'cadrumo-docs-delivery-check'})
         response = connection.getresponse()
         headers = {name.lower(): value for name, value in response.getheaders()}
         response.read()
-        return response.status, headers
+        return (response.status, headers)
     except (HTTPException, TimeoutError, OSError) as exc:
-        raise SystemExit(f"Endpoint check could not reach {url}: {exc}") from exc
+        raise SystemExit(f'Endpoint check could not reach {url}: {exc}') from exc
     finally:
         connection.close()
-
 
 def _public_delivery_checks(target: DeploymentTarget) -> tuple[tuple[str, int], ...]:
     """Return the post-publish endpoint checks as ``(url, expected status)`` pairs.
@@ -773,14 +489,7 @@ def _public_delivery_checks(target: DeploymentTarget) -> tuple[tuple[str, int], 
     published surface is covered — every localized root among them — without
     reaching the network.
     """
-    return (
-        (f"{CANONICAL_DOCS_BASE_URL}/", 200),
-        *tuple((f"{_language_site_url(language)}/", 200) for language in _localized_languages()),
-        (_LEGACY_DOCS_URL, 308),
-        (f"{CANONICAL_DOCS_BASE_URL}/{_MISSING_DOCS_PATH}", 404),
-        (f"https://{target.bucket}.s3.{STACK_REGION}.amazonaws.com/docs/index.html", 403),
-    )
-
+    return ((f'{CANONICAL_DOCS_BASE_URL}/', 200), *tuple(((f'{_language_site_url(language)}/', 200) for language in _localized_languages())), (_LEGACY_DOCS_URL, 308), (f'{CANONICAL_DOCS_BASE_URL}/{_MISSING_DOCS_PATH}', 404), (f'https://{target.bucket}.s3.{STACK_REGION}.amazonaws.com/docs/index.html', 403))
 
 def _published_body(url: str) -> bytes:
     """Return one published artefact's body, under the same HTTPS guard as the status checks.
@@ -789,34 +498,32 @@ def _published_body(url: str) -> bytes:
     deliberately discard the body, so a content assertion needs its own read.
     """
     parsed = urlsplit(url)
-    if parsed.scheme != "https" or parsed.hostname is None:
-        raise SystemExit(f"Endpoint check requires a complete HTTPS URL: {url}")
-    path = parsed.path or "/"
+    if parsed.scheme != 'https' or parsed.hostname is None:
+        raise SystemExit(f'Endpoint check requires a complete HTTPS URL: {url}')
+    path = _dp_or('dev/deploy/docs_static_site.py:794:or', lambda: parsed.path, lambda: '/')
     connection = HTTPSConnection(parsed.hostname, port=parsed.port, timeout=_ENDPOINT_TIMEOUT_SECONDS)
     try:
-        connection.request("GET", path, headers={"User-Agent": "cadrumo-docs-delivery-check"})
+        connection.request('GET', path, headers={'User-Agent': 'cadrumo-docs-delivery-check'})
         response = connection.getresponse()
         body = response.read()
         if response.status != 200:
-            raise SystemExit(f"Published artefact is not served at {url}: HTTP {response.status}.")
+            raise SystemExit(f'Published artefact is not served at {url}: HTTP {response.status}.')
         return body
     except (HTTPException, TimeoutError, OSError) as exc:
-        raise SystemExit(f"Endpoint check could not reach {url}: {exc}") from exc
+        raise SystemExit(f'Endpoint check could not reach {url}: {exc}') from exc
     finally:
         connection.close()
-
 
 def _indexed_entry_counts(payload: bytes, *, origin: str) -> dict[str, int]:
     """Return ``{language: page_count}`` from a ``pagefind-entry.json`` body."""
     try:
         document = json.loads(payload)
     except json.JSONDecodeError as exc:
-        raise SystemExit(f"{origin} is not valid JSON: {exc}") from exc
-    languages = document.get("languages") if isinstance(document, dict) else None
+        raise SystemExit(f'{origin} is not valid JSON: {exc}') from exc
+    languages = document.get('languages') if isinstance(document, dict) else None
     if not isinstance(languages, dict) or not languages:
-        raise SystemExit(f"{origin} declares no index languages; it is not a Pagefind entry document.")
-    return {str(name): int(split["page_count"]) for name, split in languages.items()}
-
+        raise SystemExit(f'{origin} declares no index languages; it is not a Pagefind entry document.')
+    return {str(name): int(split['page_count']) for name, split in languages.items()}
 
 def _assert_served_index_matches_build(*, built: Path, served: bytes, label: str) -> None:
     """Require the served index to carry exactly what the validated build carried.
@@ -832,24 +539,13 @@ def _assert_served_index_matches_build(*, built: Path, served: bytes, label: str
     nothing read what it answered with.
     """
     if not built.is_file():
-        raise SystemExit(f"{label}: no built Pagefind entry at {built} to compare the published one against.")
-    expected = _indexed_entry_counts(built.read_bytes(), origin=f"{label} built entry {built}")
-    actual = _indexed_entry_counts(served, origin=f"{label} published entry")
+        raise SystemExit(f'{label}: no built Pagefind entry at {built} to compare the published one against.')
+    expected = _indexed_entry_counts(built.read_bytes(), origin=f'{label} built entry {built}')
+    actual = _indexed_entry_counts(served, origin=f'{label} published entry')
     if actual != expected:
-        raise SystemExit(
-            f"{label}: the published search index does not match the build that was validated. "
-            f"Built {expected}, published {actual}. A published count below the built one means the "
-            "upload is incomplete or a stale index is being served; either way a reader is searching "
-            "an index this publish never approved.",
-        )
+        raise SystemExit(f'{label}: the published search index does not match the build that was validated. Built {expected}, published {actual}. A published count below the built one means the upload is incomplete or a stale index is being served; either way a reader is searching an index this publish never approved.')
 
-
-def _verify_published_search_index(
-    html_root: Path,
-    *,
-    base_url: str = CANONICAL_DOCS_BASE_URL,
-    fetch: Callable[[str], bytes] = _published_body,
-) -> None:
+def _verify_published_search_index(html_root: Path, *, base_url: str=CANONICAL_DOCS_BASE_URL, fetch: Callable[[str], bytes]=_published_body) -> None:
     """Require every published root to serve the search index its build produced.
 
     Args:
@@ -858,21 +554,10 @@ def _verify_published_search_index(
         fetch: DI seam for the HTTPS body read, so the comparison can be proven
             against real built artefacts without standing up a TLS endpoint.
     """
-    roots: tuple[tuple[str, Path, str], ...] = (
-        (f"{base_url}/", html_root, "docs root"),
-        *tuple(
-            (f"{base_url}/{language}/", html_root / language, f"localized root {language!r}")
-            for language in _localized_languages()
-        ),
-    )
+    roots: tuple[tuple[str, Path, str], ...] = ((f'{base_url}/', html_root, 'docs root'), *tuple(((f'{base_url}/{language}/', html_root / language, f'localized root {language!r}') for language in _localized_languages())))
     for root_url, built_root, label in roots:
-        served = fetch(f"{root_url}pagefind/pagefind-entry.json")
-        _assert_served_index_matches_build(
-            built=built_root / "pagefind" / "pagefind-entry.json",
-            served=served,
-            label=label,
-        )
-
+        served = fetch(f'{root_url}pagefind/pagefind-entry.json')
+        _assert_served_index_matches_build(built=built_root / 'pagefind' / 'pagefind-entry.json', served=served, label=label)
 
 def _verify_public_delivery(target: DeploymentTarget) -> None:
     """Require the canonical, legacy, missing, and private-origin responses."""
@@ -881,20 +566,15 @@ def _verify_public_delivery(target: DeploymentTarget) -> None:
     for url, expected_status in checks:
         actual_status, headers = _endpoint_response(url)
         if actual_status != expected_status:
-            raise SystemExit(
-                f"Endpoint check failed for {url}: expected HTTP {expected_status}, received HTTP {actual_status}.",
-            )
+            raise SystemExit(f'Endpoint check failed for {url}: expected HTTP {expected_status}, received HTTP {actual_status}.')
         if url == _LEGACY_DOCS_URL:
             legacy_headers = headers
-    expected_location = f"{CANONICAL_DOCS_BASE_URL}/"
-    actual_location = legacy_headers.get("location") if legacy_headers is not None else None
+    expected_location = f'{CANONICAL_DOCS_BASE_URL}/'
+    actual_location = legacy_headers.get('location') if legacy_headers is not None else None
     if actual_location != expected_location:
-        raise SystemExit(
-            f"Legacy redirect check failed: expected Location {expected_location!r}, received {actual_location!r}.",
-        )
+        raise SystemExit(f'Legacy redirect check failed: expected Location {expected_location!r}, received {actual_location!r}.')
 
-
-def _require_authorized_publish_environment(*, environment: Mapping[str, str] | None = None) -> None:
+def _require_authorized_publish_environment(*, environment: Mapping[str, str] | None=None) -> None:
     """Permit an automated publish only from the provisioned delivery environment.
 
     A blanket continuous-integration refusal used to stand here, and it is
@@ -929,18 +609,12 @@ def _require_authorized_publish_environment(*, environment: Mapping[str, str] | 
             mutating real process state.
     """
     env = environment if environment is not None else os.environ
-    markers = tuple(name for name in _CI_MARKERS if name in env)
+    markers = tuple((name for name in _CI_MARKERS if name in env))
     if not markers:
         return
-    if env.get(_DEPLOY_ROLE_VARIABLE, "").strip():
+    if _dp_get('dev/deploy/docs_static_site.py:935:get', env, _DEPLOY_ROLE_VARIABLE, '').strip():
         return
-    raise SystemExit(
-        "Refusing Cadrumo documentation publish from an unprovisioned automated environment "
-        f"({', '.join(markers)}): {_DEPLOY_ROLE_VARIABLE} is unset or empty. The delivery "
-        "workflow supplies it from the protected environment once the operator has created "
-        "the deploy role. A local human publish sets no automation marker and is unaffected.",
-    )
-
+    raise SystemExit(f"Refusing Cadrumo documentation publish from an unprovisioned automated environment ({', '.join(markers)}): {_DEPLOY_ROLE_VARIABLE} is unset or empty. The delivery workflow supplies it from the protected environment once the operator has created the deploy role. A local human publish sets no automation marker and is unaffected.")
 
 def _provision(aws: str, repo_root: Path) -> int:
     """Provision the fixed Cadrumo documentation stack."""
@@ -949,7 +623,6 @@ def _provision(aws: str, repo_root: Path) -> int:
     _provision_stack(aws, repo_root, account_id, certificate_arn)
     _print_stack_outputs(aws, repo_root)
     return 0
-
 
 def _build_site_roots(repo_root: Path) -> Path:
     """Build the apex site, every language root, and the apex language entry.
@@ -966,7 +639,6 @@ def _build_site_roots(repo_root: Path) -> Path:
     _write_language_entry(html_root)
     return html_root
 
-
 def _validate_built_site(html_root: Path) -> None:
     """Run every validation a publish runs against the built tree before uploading.
 
@@ -982,8 +654,7 @@ def _validate_built_site(html_root: Path) -> None:
     _validate_language_entry(html_root)
     _validate_language_roots(html_root)
 
-
-def _dry_run(repo_root: Path, *, build: Callable[[Path], Path] = _build_site_roots) -> int:
+def _dry_run(repo_root: Path, *, build: Callable[[Path], Path]=_build_site_roots) -> int:
     """Build every site root and validate it exactly as a publish would, uploading nothing.
 
     Without this verb the whole build-and-validate prefix was reachable only
@@ -1004,15 +675,10 @@ def _dry_run(repo_root: Path, *, build: Callable[[Path], Path] = _build_site_roo
     """
     html_root = build(repo_root)
     _validate_built_site(html_root)
-    print(
-        f"Verified the built docs site at {html_root}: apex entry plus the "
-        f"{', '.join(_localized_languages())} roots. Uploaded nothing.",
-        flush=True,
-    )
+    print(f"Verified the built docs site at {html_root}: apex entry plus the {', '.join(_localized_languages())} roots. Uploaded nothing.", flush=True)
     return 0
 
-
-def _publish(aws: str, repo_root: Path, *, environment: Mapping[str, str] | None = None) -> int:
+def _publish(aws: str, repo_root: Path, *, environment: Mapping[str, str] | None=None) -> int:
     """Build, validate, upload, and invalidate the fixed Cadrumo documentation site.
 
     Args:
@@ -1033,39 +699,25 @@ def _publish(aws: str, repo_root: Path, *, environment: Mapping[str, str] | None
     _invalidate_distribution_paths(aws, repo_root, target.distribution_id, _DOCS_INVALIDATION_PATHS)
     _verify_public_delivery(target)
     _verify_published_search_index(html_root)
-    print(f"Published {CANONICAL_DOCS_BASE_URL}/", flush=True)
+    print(f'Published {CANONICAL_DOCS_BASE_URL}/', flush=True)
     return 0
 
-
-def main(argv: list[str] | None = None) -> int:
+def main(argv: list[str] | None=None) -> int:
     """Provision or publish the fixed Cadrumo documentation site."""
     parser = argparse.ArgumentParser(description=__doc__)
-    commands = parser.add_subparsers(dest="command", required=True)
-    provision = commands.add_parser("provision", help="Create or update the fixed docs stack.")
-    provision.add_argument(
-        "--confirm",
-        choices=("provision-cadrumo-docs",),
-        required=True,
-        help="Required literal acknowledgement for the local provisioning.",
-    )
-    publish = commands.add_parser("publish", help="Build and publish the fixed docs site.")
-    publish.add_argument(
-        "--confirm",
-        choices=("publish-cadrumo-docs",),
-        required=True,
-        help="Required literal acknowledgement for the local publishing.",
-    )
-    commands.add_parser("dry-run", help="Build and validate every site root without uploading.")
+    commands = parser.add_subparsers(dest='command', required=True)
+    provision = commands.add_parser('provision', help='Create or update the fixed docs stack.')
+    provision.add_argument('--confirm', choices=('provision-cadrumo-docs',), required=True, help='Required literal acknowledgement for the local provisioning.')
+    publish = commands.add_parser('publish', help='Build and publish the fixed docs site.')
+    publish.add_argument('--confirm', choices=('publish-cadrumo-docs',), required=True, help='Required literal acknowledgement for the local publishing.')
+    commands.add_parser('dry-run', help='Build and validate every site root without uploading.')
     args = parser.parse_args(argv)
-
     repo_root = _repo_root()
-    if args.command == "dry-run":
+    if args.command == 'dry-run':
         return _dry_run(repo_root)
-    aws = _required_executable("aws")
-    if args.command == "provision":
+    aws = _required_executable('aws')
+    if args.command == 'provision':
         return _provision(aws, repo_root)
     return _publish(aws, repo_root)
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     raise SystemExit(main())
