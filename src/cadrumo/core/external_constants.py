@@ -556,6 +556,16 @@ M347_CLAVE_C_THRESHOLD_EUR: Final[Decimal] = Decimal("300.51")
 #: euro equivalent is 3.005,06 € (the same figure the Modelo 347 floor carries). A good
 #: whose acquisition value is at or above this threshold may qualify; below it is
 #: excluded. Binding provision: Art. 108.Dos.5.º LIVA (Ley 37/1992).
+#:
+#: DECLARED, NOT YET APPLIED. Nothing compares a good against this figure. The
+#: bienes-de-inversión register carries ``art108_elegible`` as an
+#: operator-supplied boolean and stores ``cuota_soportada``, the input IVA
+#: borne, with no acquisition-value field to compare at all -- so eligibility is
+#: whatever the operator asserted, not what art. 108 derives. Applying the
+#: figure means adding that field and deriving eligibility instead of trusting
+#: the flag, which is a schema change and a decision about whether the product
+#: judges art. 108 or the operator does. Said here because a legally grounded
+#: threshold sitting in this file reads as enforced, and this one is not.
 IVA_BIEN_ESCASO_VALOR_UMBRAL_EUR: Final[Decimal] = Decimal("3005.06")
 
 #: IAE art. 82.1.c net-turnover exemption ceiling for Modelo 840 threshold

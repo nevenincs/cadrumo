@@ -117,13 +117,21 @@ def test_every_inspection_shape_satisfies_the_generated_artifact_contract() -> N
         StaticGeneratedArtifactInspection,
     )
 
-    required = tuple(sorted(name for name in vars(GeneratedArtifactInspection) if not name.startswith("_")))
+    # annotations AND vars: a Protocol declares some members as bare
+    # annotations (``modelo_id: str``) and others with a body, and
+    # ``vars`` alone sees only the second kind -- here that is one of eight
+    declared = set(GeneratedArtifactInspection.__annotations__) | set(vars(GeneratedArtifactInspection))
+    required = tuple(sorted(name for name in declared if not name.startswith("_")))
     assert len(required) >= 6, "the contract declares fewer members than expected; the derivation broke"
 
+    def absent(shape: type) -> list[str]:
+        provided = set(getattr(shape, "__annotations__", {})) | set(vars(shape))
+        return [member for member in required if member not in provided]
+
     missing = {
-        shape.__name__: [member for member in required if member not in shape.model_fields]
+        shape.__name__: absent(shape)
         for shape in (StaticGeneratedArtifactInspection, RegistryRevisionInspection)
-        if any(member not in shape.model_fields for member in required)
+        if absent(shape)
     }
 
     assert missing == {}, (

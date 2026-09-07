@@ -72,6 +72,7 @@ from ...domain.modelos.row_models import (
     Modelo349ClaveOperacionValue,
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
+    ModeloDetailRow,
 )
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -954,6 +955,14 @@ class ModeloWorkAmendOverride(BaseModel):
         return Decimal(self.value)
 
 
+#: How many detail rows one amendment may carry.
+#:
+#: An engineering bound on a journalled request, not a legal cardinality: no
+#: official record design caps the counterparties an M347 declares, so a limit
+#: near the override cap would refuse a lawful return from a busy gestoria.
+_MAX_AMENDMENT_DETAIL_ROWS: Final = 20_000
+
+
 class ModeloWorkAmendRequest(CredentialFreeOperationRequest):
     """One amendment: which baseline, which corrections, and why.
 
@@ -969,6 +978,26 @@ class ModeloWorkAmendRequest(CredentialFreeOperationRequest):
     overrides: Annotated[tuple[ModeloWorkAmendOverride, ...], Field(min_length=1, max_length=500)]
     reason: Annotated[str, Field(min_length=1, max_length=500)]
     m303_rectificativa_motive: M303RectificativaMotive | None = None
+
+    #: The rows this amendment declares, or ``None`` where it declares none.
+    #:
+    #: THREE STATES, NOT TWO, and the authority reads all three. For M184,
+    #: M232, M347 and M349 the per-counterpart rows ARE the declaration, so
+    #: ``None`` -- the caller having said nothing -- is refused rather than
+    #: guessed: a complementaria COMPLETES a return while a sustitutiva
+    #: REPLACES it (LGT art. 122.2 para. 2), and silence would be read
+    #: differently by each. An empty tuple is not that silence; it is the
+    #: positive statement that the period had no rows, and is accepted as one.
+    #: Every other modelo has no rows to declare, so ``None`` there is simply
+    #: its ordinary shape.
+    #:
+    #: Optional here rather than required because those other modelos are the
+    #: majority of this operation's traffic; the refusal that makes the
+    #: distinction binding lives with the authority that knows which modelo the
+    #: baseline belongs to, which this request does not carry.
+    detail_rows: (
+        Annotated[tuple[ModeloDetailRow, ...], Field(max_length=_MAX_AMENDMENT_DETAIL_ROWS)] | None
+    ) = None
 
     #: The operator this invocation acts as. The platform binds an actor at
     #: submission, never at composition, so baking one into a definition would
@@ -1016,6 +1045,7 @@ class ModeloWorkAmendExecutor:
             overrides={override.casilla_id: override.as_decimal() for override in payload.overrides},
             amendment_kind=payload.amendment_kind,
             m303_rectificativa_motive=payload.m303_rectificativa_motive,
+            detail_rows=payload.detail_rows,
             reason=payload.reason,
             actor=request.payload.actor,
         )
