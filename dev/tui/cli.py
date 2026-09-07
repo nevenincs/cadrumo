@@ -458,12 +458,25 @@ def render_command(
 @app.command("snapshot")
 def snapshot_command(
     name: Annotated[str, typer.Argument(help="Name to keep the current review under.")],
+    replace: Annotated[
+        bool,
+        typer.Option(
+            "--replace",
+            help="Discard an existing snapshot of this name. Destructive; refused by default.",
+        ),
+    ] = False,
 ) -> None:
     """Copy the canonical review aside so a later render can be diffed against it.
 
     The only sanctioned way to create a second run directory. Rendering itself
     always targets `runs/current`, so a named run can only ever be a
     deliberate snapshot of a review that actually happened.
+
+    A name already taken is REFUSED. Runs are gitignored and a full matrix
+    costs about twenty-five minutes, so an existing snapshot is the only
+    copy of the review it holds; overwriting it on a bare name collision
+    would destroy the evidence this verb exists to keep. ``--replace`` is
+    how an operator says the older review is finished with.
     """
     import shutil
 
@@ -477,6 +490,15 @@ def snapshot_command(
         raise typer.Exit(code=1)
 
     destination = run_directory(name)
+    if destination.exists() and not replace:
+        held = sum(1 for path in destination.rglob("*") if path.is_file())
+        _echo(
+            f"snapshot {name!r} already exists at {destination} and holds {held} file(s). "
+            "Nothing was written. Choose another name, or pass --replace to discard it."
+        )
+        raise typer.Exit(code=1)
+    # Re-checked rather than trusted: only the exact path the refusal was
+    # measured against is removed.
     if destination.exists():
         shutil.rmtree(destination)
     shutil.copytree(source, destination)
