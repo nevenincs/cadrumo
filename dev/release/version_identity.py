@@ -93,7 +93,7 @@ from typing import Final
 from packaging.version import InvalidVersion, Version
 
 from .._paths import REPO_ROOT, UTF_8
-from .burned_versions import BurnedVersionLedgerError, burn_reason, is_burned
+from .burned_versions import BurnedVersionLedgerError, burn_reason, canonical_version, is_burned
 
 _UTF_8: Final[str] = UTF_8
 _PROBE_TIMEOUT_S: Final[int] = 20
@@ -385,14 +385,24 @@ def pypi_projects_owning(
     endpoint: a ``file:`` or custom scheme would answer from the local disk,
     and a local file that opens is exactly the shape of "this version is
     already carried" with nothing having been asked of any index.
+
+    The question is asked about the release the candidate names, not about the
+    operator's spelling of it. An index stores one spelling per number and
+    answers 404 for the others, and a 404 here is read as "free" -- so asking
+    under a respelling is a clean answer about a version the index carries.
+    Canonicalising is done here rather than at the caller for the same reason
+    the ledger does it: a caller that forgets is not visible as a mistake.
     """
     scheme = urllib.parse.urlsplit(index_url).scheme
     if scheme not in _INDEX_SCHEMES:
         raise VersionIdentityError(f"index endpoint {index_url!r} is not an HTTP endpoint")
+    number = canonical_version(version)
+    if number is None:
+        raise VersionIdentityError(f"candidate version {version!r} is not a valid version")
     owning: list[str] = []
     for project in projects:
         request = urllib.request.Request(  # noqa: S310 - scheme checked above.
-            f"{index_url}/{project}/{version}/json",
+            f"{index_url}/{project}/{number}/json",
             headers={"Accept": "application/json"},
         )
         try:
@@ -495,12 +505,24 @@ def refs_owning(
     as one and both sides are normalised before they are compared -- see
     :func:`_object_name` for the branch name that would otherwise be exempted
     wholesale.
+
+    Ref names are matched as release numbers, not as strings. A ref carries
+    whatever spelling its author typed, so a literal comparison against the
+    candidate and its ``v``-prefixed form answers "nothing owns this" for
+    ``0.02.1``, ``0.2.1.0`` and a padded spelling alike -- the same silent pass
+    :func:`~dev.release.burned_versions.canonical_version` exists to close, in
+    the namespace where it means an existing release is invisible to the guard
+    dispatched to protect it. The observed name is what comes back, so a
+    refusal still shows the operator the ref as the forge spells it.
     """
     own = None if own_source_commit is None else _object_name(own_source_commit, label="own source commit")
+    candidate = canonical_version(version)
+    if candidate is None:
+        raise VersionIdentityError(f"candidate version {version!r} is not a valid version")
     owning: list[str] = []
     for entry in entries:
         name, _, target = entry.partition(" ")
-        if name not in {version, f"v{version}"}:
+        if canonical_version(name) != candidate:
             continue
         if own is not None and target.strip().casefold() == own:
             continue

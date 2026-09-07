@@ -69,16 +69,24 @@ class BurnedVersion:
     it is what a refusal shows an operator. ``canonical`` is the same number
     under :func:`canonical_version`, and it is the field every membership test
     compares.
+
+    ``canonical`` is a parsed :class:`~packaging.version.Version` rather than a
+    canonical string, because the identity being asserted is release identity
+    and PEP 440 does not express that as string equality: ``0.2.1.0`` and
+    ``0.2.1`` are one release, and each is its own canonical spelling, so a
+    comparison over canonical strings answers "different" for two spellings of
+    the same number. That answer is the same silent pass a raw-string
+    comparison gives, arrived at one step later.
     """
 
     version: str
     burned_on: date
     reason: str
-    canonical: str
+    canonical: Version
 
 
-def canonical_version(version: str) -> str | None:
-    """Return the PEP 440 canonical spelling of ``version``, or ``None`` if it is not one.
+def canonical_version(version: str) -> Version | None:
+    """Return the release ``version`` names, or ``None`` if it names none.
 
     Version identity is the rule this ledger turns on, so it is implemented
     here, at the boundary that owns the question, rather than at each caller. A
@@ -89,13 +97,20 @@ def canonical_version(version: str) -> str | None:
     answer is indistinguishable from a number nobody ever published: exactly
     the silent pass this ledger exists to make impossible.
 
+    The parsed number is returned rather than its canonical string, because the
+    canonical string is not the identity. PEP 440 keeps a trailing release zero
+    in the canonical spelling while comparing it away, so ``0.2.1.0`` and
+    ``0.2.1`` are one release wearing two canonical spellings, and a ledger
+    comparing spellings passes the second while burning the first. Returning
+    the number moves the comparison onto the rule the resolvers actually apply.
+
     ``None`` rather than a refusal, because asking whether an unparseable
     string is burned is a question with an answer -- no ledger entry can be
     that string, since :func:`read_ledger` refuses one -- and raising here
     would turn a membership query into an error path its callers do not have.
     """
     try:
-        return str(Version(version))
+        return Version(version)
     except InvalidVersion:
         return None
 
@@ -162,7 +177,7 @@ def read_ledger(path: Path) -> tuple[BurnedVersion, ...]:
     if not isinstance(payload, dict) or not isinstance(payload.get("burned"), list):
         raise BurnedVersionLedgerError("burned-version ledger must be an object carrying a 'burned' list")
     entries = tuple(_parse_entry(raw, index=index) for index, raw in enumerate(payload["burned"]))
-    seen: set[str] = set()
+    seen: set[Version] = set()
     for entry in entries:
         if entry.canonical in seen:
             raise BurnedVersionLedgerError(f"burned-version ledger lists {entry.version} more than once")

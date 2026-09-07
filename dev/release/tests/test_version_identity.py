@@ -303,6 +303,35 @@ def test_the_exemption_is_per_row_not_per_version() -> None:
     assert refs_owning(entries, _CLEAN, own_source_commit=_OURS) == (f"v{_CLEAN}",)
 
 
+@pytest.mark.parametrize(
+    "spelling",
+    ["0.02.1", "0.2.1.0", "v0.2.1", " 0.2.1 "],
+    ids=["leading-zero", "padded-release-segment", "v-prefix", "surrounding-space"],
+)
+def test_a_respelt_candidate_still_finds_the_ref_that_owns_it(spelling: str) -> None:
+    """A ref is matched as a release number, not as a string.
+
+    Measured against the comparison before this boundary owned the rule: with
+    the tag ``v0.2.1`` sitting on a stranger's commit, ``0.02.1``, ``0.2.1.0``
+    and ``" 0.2.1 "`` each answered "nothing owns this version". A resolver
+    reads all of them as the tag that is already there, so each was a spelling
+    that walked a publication past the namespace guard dispatched to stop it.
+    """
+    entries = [f"v0.2.1 {_THEIRS}"]
+
+    assert refs_owning(entries, spelling, own_source_commit=_OURS) == ("v0.2.1",)
+
+
+def test_an_unparseable_candidate_owns_nothing_by_refusing_rather_than_by_silence() -> None:
+    """A candidate that names no release cannot be compared, so it refuses.
+
+    Returning no owners would be indistinguishable from a clean namespace,
+    which is the answer that lets the publication proceed.
+    """
+    with pytest.raises(VersionIdentityError, match="not a valid version"):
+        refs_owning([f"v{_CLEAN} {_THEIRS}"], "not-a-version")
+
+
 def test_unrelated_versions_are_ignored_entirely() -> None:
     """A different version's ref is not this version's collision."""
     assert refs_owning([f"v0.4.0 {_THEIRS}"], _CLEAN, own_source_commit=_OURS) == ()
