@@ -6,10 +6,11 @@ tags:
 date: '2026-08-16'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:c8af71e3e11d859a61de74873d17b158242e4bca9207af3af7668d53d9a4c342'
+body_hash: 'sha256:40e2609e3555fba227dc78d2bb2ac7d4b4250428d36162d05463b979836b0d17'
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S128]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S129]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S80]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-ledger]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-m303-retired-revision-s39-audit]]'
@@ -102,6 +103,7 @@ related:
   - '[[2026-08-31-aeat-export-fragment-generator-authority-source-defect-adjudication-adr]]'
   - '[[2026-09-07-aeat-export-fragment-generator-authority-s128-source-defect-wiring-audit]]'
   - '[[2026-09-07-aeat-export-fragment-generator-authority-s129-candidate-staging-audit]]'
+  - '[[2026-09-07-aeat-export-fragment-generator-authority-s80-semantic-map-review-audit]]'
 ---
 
 # `aeat-export-fragment-generator-authority` feature index
@@ -196,12 +198,14 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-31-aeat-export-fragment-generator-authority-semantic-map-cannot-express-binding-rows-audit` - `aeat-export-fragment-generator-authority` audit: the generator's input schema is narrower than the registry it generates into
 - `2026-09-07-aeat-export-fragment-generator-authority-s128-source-defect-wiring-audit` - `aeat-export-fragment-generator-authority` audit: `S128 source-defect wiring review`
 - `2026-09-07-aeat-export-fragment-generator-authority-s129-candidate-staging-audit` - `aeat-export-fragment-generator-authority` audit: `S129 candidate staging review`
+- `2026-09-07-aeat-export-fragment-generator-authority-s80-semantic-map-review-audit` - `aeat-export-fragment-generator-authority` audit: `S80 Modelo 390 2023 semantic map review`
 
 ### exec
 
 - `2026-08-10-aeat-export-fragment-generator-authority-ledger` - `aeat-export-fragment-generator-authority` ledger
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S128` - Centralize hash-pinned source-defect declarations in one public pipeline-owned module, wire the operator CLI and generated-tree gate to that catalogue, prove the Modelo 390 render seam, extend temporal-coverage S32 to detect in-file revision enrolment lists, and reconcile S79's landed map and enrolment state without claiming publication.
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S129` - Define one shared candidate-staging boundary that excludes both generated export and superseded manual export_layouts authority, stages the required supplementary Orden closure, applies only an explicit count-pinned bootstrap retargeting of superseded construct members, and expands the authored M390 2022 construct to the generated layout's exact legal-reference closure; use the boundary in the operator CLI and enrolled drift gate, and prove the real bootstrap candidate validates without consulting either tree
+- `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S80` - Author and hand-review the Modelo 390 2023 exact-source semantic map and exhaustive source-bound render profile, bijecting all 541 numbered-page fixed anchors plus the separately governed 13-anchor auxiliary header for 554 parsed anchors total, reusing only unchanged source-anchor and owner adjudications and hand-reviewing every delta, and explicitly adjudicate the recurring hash-pinned 2023 Page 7 close-literal source defect through the accepted pipeline catalogue so the complete render remains exact
 
 ### plan
 
