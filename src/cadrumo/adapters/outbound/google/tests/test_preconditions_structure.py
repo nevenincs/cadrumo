@@ -26,10 +26,13 @@ def _constructed_model_names(source_path: Path) -> tuple[str, ...]:
 
 def test_google_modules_delegate_terminal_verdict_construction_to_application_owner() -> None:
     google_package = Path(__file__).parents[1]
+    swept = tuple(google_package.glob("*.py"))
+    assert swept, (
+        f"the sweep of {google_package} matched no module; a walk that reads nothing reports "
+        "no direct terminal-verdict construction because it reads no construction at all"
+    )
     direct_construction = tuple(
-        constructed
-        for source_path in google_package.glob("*.py")
-        for constructed in _constructed_model_names(source_path)
+        constructed for source_path in swept for constructed in _constructed_model_names(source_path)
     )
 
     assert direct_construction == ()
