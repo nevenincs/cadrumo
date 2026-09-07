@@ -142,9 +142,18 @@ def test_namespace_init_modules_document_intent_without_reexports(module_name: s
             sys.executable,
             "-c",
             (
-                "import importlib, json; "
+                "import importlib, json, __future__; "
                 f"module = importlib.import_module({module_name!r}); "
-                "print(json.dumps(sorted(name for name in vars(module) if not name.startswith('_'))))"
+                # `from __future__ import annotations` binds the name
+                # `annotations` in the module namespace, and it is a compiler
+                # directive rather than a re-export. Excluded by TYPE, not by
+                # name: a module genuinely re-exporting something called
+                # `annotations` is still caught.
+                "print(json.dumps(sorted("
+                "name for name, value in vars(module).items() "
+                "if not name.startswith('_') "
+                "and not isinstance(value, __future__._Feature)"
+                ")))"
             ),
         ],
         check=True,
