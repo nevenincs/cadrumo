@@ -14,7 +14,8 @@ related:
   - '[[2026-09-07-tuimodelo-satellite-families-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:5fe05e769aaa92a2cbfe1e2d5143a233c9dab2c5e37714bb48d04dbd9dc8d1f4'
+body_hash: 'sha256:c52b1dbbbef3a1720bec44efbc582fe5c7a0cc56c4d8c2e286f349cd5bff8ed6'
+  - "[[2026-09-07-tuimodelo-adapter-migration-adr]]"
 ---
 
 # `tuimodelo` plan
@@ -28,13 +29,14 @@ caller, the edit session's submit path is never called, and two of the twenty re
 operations are reachable from a full-screen surface. Seventy-seven of the seventy-nine
 classified modelo actions are pending.
 
-The ordering is forced rather than chosen. Nothing can be authorized until the session
-authorization matrix stops keying on operator-typed verb strings, so that leads. Nothing can be
-generated until presentation has a declared ordering, because the registry carries none and
-offsets place barely a third of the corpus. Nothing built becomes reachable until the workspace
-gains inter-destination navigation, which is the single gap keeping history, the editor,
-verification and every action surface unreachable simultaneously. Everything else follows those
-three.
+The ordering is forced rather than chosen, though not in the way a first reading suggested.
+Session authorization already works for a full-screen surface; what is stranded is the capability
+declaration, which sits inside the command-line package that the frontend is forbidden to import,
+and which the admission gate itself must read. That relocation therefore precedes the gate.
+Nothing can be generated until presentation has a declared ordering, because the registry carries
+none and offsets place barely a third of the corpus. Reachability is several gaps rather than
+one: five destinations resolve nowhere, the editor and history are not members of the closed
+destination alias at all, and the action screens are referenced only from tests.
 
 Two families that read as peripheral are inside the core loop and are scheduled accordingly: the
 carry-forward wallet, whose gate blocks the most-used modelo from being calculated, verified,
@@ -68,23 +70,26 @@ Extend the denominator so a delivered surface and its recorded classification mu
 
 Annotate absorbed rows with their new owner, publish the coverage baseline, and author the two migration decisions the adapter wave depends on.
 
-- [ ] `W01.P03.S08` - Annotate every absorbed source row with its new owner, re-authoring the rows here rather than attempting a transfer the verbs do not support; `.vault/plan`.
+- [ ] `W01.P03.S08` - Annotate each of the 25 open rows in the two source plans with its disposition here or its retention there, naming every row rather than referring to them collectively; `.vault/plan`.
 - [ ] `W01.P03.S09` - Correct the stale reopening condition that cites a retired receipt mechanism; `src/cadrumo/application/modelo/_edit_facade.py`.
 - [ ] `W01.P03.S10` - Author the lifecycle-vocabulary decision reconciling the adapter-derived work-unit state with the frontend lifecycle kind; `.vault/adr`.
 - [ ] `W01.P03.S11` - Author the capability-model decision placing the authorization and capability model outside the command-line package; `.vault/adr`.
 - [ ] `W01.P03.S12` - Publish the campaign coverage baseline as a standing artefact derived from the denominator; `dev/quality`.
+- [ ] `W01.P03.S141` - Reopen the edit capability projection under the surviving mechanism, replacing the retired condition it still cites, since every editor step routes through a seam nothing currently opens; `src/cadrumo/application/modelo/_edit_facade.py`.
+- [ ] `W01.P03.S142` - Relocate the capability projection out of the private underscore module to a public defining module, because a frontend import of it is otherwise forbidden by the architecture boundary; `src/cadrumo/application/modelo`.
+- [ ] `W01.P03.S128` - Open the sibling adapter-purity campaign for the residual violations this campaign does not take: 159 identified in total, roughly 40 here, leaving about 120 across the ledger, configuration and live lanes, and record that the ledger lane's prior owner is archived so the work is not orphaned twice; `.vault`.
 
 ## Wave `W02` - adapter to backend migration
 
-Make both adapters pure consumers. The session-authorization matrix keys on operator-typed verb strings, so no full-screen surface can be authorized until it moves; that leads. The modelo lane then relocates the policy it holds - history, casilla visibility, effective lifecycle state, override admissibility, the detail-row grammar with its intracommunity legal rule - and the frontend sheds the duplicate persistence wiring it already carries.
+Make both adapters pure consumers OF THE MODELO LANE. This wave does not make the command line a pure consumer overall: 159 adapter-boundary violations are identified across four lanes and this wave takes roughly 40 of them - the modelo lane, the shared capability declaration, and the frontend's own duplicate wiring. The residual 62 ledger, 52 configuration and 26 live rows belong to the sibling campaign recorded in W01. Session authorization already works for a full-screen surface and is not the blocker an earlier reading suggested; what is stranded is the capability declaration, which both adapters need and only one can reach.
 
 ### Phase `W02.P04` - authorization floor
 
-Move the session-authorization matrix and the capability model out of the command-line package, because a full-screen surface has no verb path and cannot be authorized while the question is posed in verb strings.
+Share the capability declaration both adapters need. The frontend already authorizes a session and admits per surface without any verb path, so authorization is not the blocker; the capability posture is, because it is declared inside the command-line package and the frontend is forbidden by import contract from reaching it.
 
-- [ ] `W02.P04.S13` - Re-key the session-authorization matrix off operator-typed verb strings onto an identity a full-screen surface can supply; `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`.
-- [ ] `W02.P04.S14` - Relocate the capability and authorization model out of the command-line package to a shared owner both adapters may consume; `src/cadrumo/entrypoints/cli/command_spec.py`.
-- [ ] `W02.P04.S15` - Prove a full-screen session can be authorized for a modelo surface without a verb path; `src/cadrumo/entrypoints/tui`.
+- [ ] `W02.P04.S13` - Share the interface capability declaration out of the command-line package so a full-screen surface can read a command's capability posture without importing the adapter; `src/cadrumo/entrypoints/cli/command_spec.py`.
+- [ ] `W02.P04.S14` - Relocate the capability model to a shared owner both adapters may consume, sequencing it before the denominator extension that reads it; `src/cadrumo/entrypoints/cli/command_spec.py`.
+- [ ] `W02.P04.S15` - Prove the per-surface admission path refuses and admits correctly for a modelo destination, since session authorization already works without a verb path and needs no change; `src/cadrumo/entrypoints/tui/launcher.py`.
 
 ### Phase `W02.P05` - relocate blocking read policy
 
@@ -94,14 +99,14 @@ Give history, casilla visibility, effective lifecycle state and cross-modelo bin
 - [ ] `W02.P05.S17` - Reconcile the relocated history vocabulary with the frontend lifecycle kind under the lifecycle-vocabulary decision; `src/cadrumo/application/modelo`.
 - [ ] `W02.P05.S18` - Move casilla visibility and effective work-unit state derivation out of the payload renderer into the application layer; `src/cadrumo/entrypoints/cli/_modelo_rendering.py`.
 - [ ] `W02.P05.S19` - Give the cross-modelo binding query an application owner that refuses rather than silently dropping modelos that fail; `src/cadrumo/application/modelo/binding_resolution.py`.
-- [ ] `W02.P05.S20` - Delete the dead history module rather than leaving it as a naming trap for an implementer; `src/cadrumo/application/filing/history_models.py`.
+- [ ] `W02.P05.S20` - Adjudicate the history model module rather than deleting it: it has no production writer but is imported by the custody-carry resolver, so establish whether it is retired with a custody migration or kept and typed; `src/cadrumo/application/filing/history_models.py`.
 
 ### Phase `W02.P06` - relocate blocking mutation and legal policy
 
 Move override admissibility, the detail-row grammar with its intracommunity rule, the aggregation write path, amendability, the spreadsheet staleness refusal and review-package assembly into the application layer.
 
 - [ ] `W02.P06.S21` - Move override admissibility out of the binding-resolve handler onto the same lock set the engine uses; `src/cadrumo/application/modelo/binding_resolution.py`.
-- [ ] `W02.P06.S22` - Relocate the detail-row vocabulary, row-class dispatch and decimal classification, including the intracommunity country-prefix rule keyed on filing year and period; `src/cadrumo/application/modelo`.
+- [ ] `W02.P06.S22` - Relocate the detail-row vocabulary, row-class dispatch and decimal classification, and relocate the intracommunity country-prefix rule only once its governing provision is cited, since it is filing-grade law currently carrying no authority reference; `src/cadrumo/application/modelo`.
 - [ ] `W02.P06.S23` - Move the aggregation write path off its adapter-resident modelo branch tree into a typed application use case; `src/cadrumo/application/aggregation`.
 - [ ] `W02.P06.S24` - Relocate the amendability rule and remove the re-declared evidence gate from the amendment wizard; `src/cadrumo/application/modelo/amendment_actions.py`.
 - [ ] `W02.P06.S25` - Give the spreadsheet round trip an application service and move its staleness refusal off the outbound adapter call; `src/cadrumo/application/storage/calc_sheets`.
@@ -117,6 +122,7 @@ Collapse duplicated election defaults, remove coerced zeroes and hardcoded avail
 - [ ] `W02.P07.S30` - Move idempotency classification and advisory selection for verify and file into the application layer; `src/cadrumo/application/modelo/filing_actions.py`.
 - [ ] `W02.P07.S31` - Give each modelo application use case its own repository defaults, following the pattern the history service already sets; `src/cadrumo/application/modelo`.
 - [ ] `W02.P07.S32` - Move ledger period-token applicability out of the adapter parser onto the period model; `src/cadrumo/core/period.py`.
+- [ ] `W02.P07.S149` - Author the adapter-purity detector that fails when policy moves back into an adapter, which this wave's closure condition requires and no step currently provides; `dev/quality`.
 
 ### Phase `W02.P08` - remove adapter duplication
 
@@ -149,6 +155,7 @@ Define the presentation declaration and generate it from export offsets and the 
 - [ ] `W03.P10.S43` - Publish and load the declaration through the validated registry authority, compiled and validated with the revision it describes; `src/cadrumo/domain/calculations/registry/authority.py`.
 - [ ] `W03.P10.S44` - Give the declaration a cache identity that includes the source state it was generated from; `src/cadrumo/domain/calculations/registry/loader_cache.py`.
 - [ ] `W03.P10.S45` - Review each generated declaration before publication, smallest fixed-width modelos first; `src/cadrumo/_data/registry`.
+- [ ] `W03.P10.S153` - Enrol a validator for the new declaration family in the registry dispatch, since a declaration family without one cannot fail closed; `src/cadrumo/domain/calculations/registry`.
 
 ### Phase `W03.P11` - modelo 100 seed
 
@@ -164,7 +171,7 @@ Declare row groups, resolve multi-position casillas, and correct the registry se
 - [ ] `W03.P12.S48` - Declare the rectangular slotted tables and the recoverable row families as typed row groups rather than per-slot scalars; `src/cadrumo/domain/calculations/registry`.
 - [ ] `W03.P12.S49` - Introduce the row-group type the frontend does not yet reference and render it; `src/cadrumo/entrypoints/tui/modelo/edit`.
 - [ ] `W03.P12.S50` - Give multi-position casillas a primary placement and declared aliases so one value is edited in one place; `src/cadrumo/domain/calculations/registry`.
-- [ ] `W03.P12.S51` - Correct the registry sections that misplace recargo boxes and break section contiguity; `src/cadrumo/_data/registry`.
+- [ ] `W03.P12.S51` - Correct the registry sections that misplace recargo boxes and break section contiguity, citing the official record design that establishes the correct placement; `src/cadrumo/_data/registry`.
 
 ### Phase `W03.P13` - coverage and stability gates
 
@@ -175,6 +182,7 @@ Publish declared and placed coverage, diff declarations across revisions, and ex
 - [ ] `W03.P13.S54` - Extend the accepted work review read model with the projection rather than introducing a second read model; `src/cadrumo/application/modelo/workspace_models.py`.
 - [ ] `W03.P13.S55` - Resolve an undeclared revision to an inspection-only projection that states why it is not editable; `src/cadrumo/application/modelo/workspace.py`.
 - [ ] `W03.P13.S56` - Re-measure the ordering fidelity claim against the official record design and record the reproducible figure; `dev/registry`.
+- [ ] `W03.P13.S148` - Measure the casilla-to-official-description join rate and record the reproducible figure, which the verification section demands and no other step provides; `dev/registry`.
 
 ## Wave `W04` - the reachability join
 
@@ -188,15 +196,18 @@ Give the modelo workspace a way to move between its own destinations and to carr
 - [ ] `W04.P14.S58` - Carry a work-unit selection past the selection terminus that currently ends the flow; `src/cadrumo/entrypoints/tui/modelo/view/controller.py`.
 - [ ] `W04.P14.S59` - Adopt the accepted host placements, keeping history under declarations and reconciliation under the authority-sync workspace; `src/cadrumo/entrypoints/tui`.
 - [ ] `W04.P14.S60` - Extend the modelo workspace in place under declarations rather than promoting it to a shell destination; `src/cadrumo/entrypoints/tui/modelo/view/models.py`.
+- [ ] `W04.P14.S143` - Admit the editor and history destinations into the closed destination alias, which does not currently contain them; `src/cadrumo/entrypoints/tui/modelo/routes.py`.
+- [ ] `W04.P14.S144` - Wire an action affordance so the six action screens are reachable by an operator rather than only from tests; `src/cadrumo/entrypoints/tui/modelo/actions.py`.
 
 ### Phase `W04.P15` - operation supervision
 
 Bring the modelo action family under the supervisor and thread the elections the frontend operation currently drops.
 
-- [ ] `W04.P15.S61` - Register operations for the modelo actions that have none, so a frontend mutation inherits journalling, leasing and cancellation; `src/cadrumo/application/modelo/operation_definitions.py`.
+- [ ] `W04.P15.S61` - Register operations for the modelo action identities that have none, working through the 25 the unregistered-operations tuple names, updating the dispatch table and the fixed-point authority atomically with each; `src/cadrumo/application/modelo/operation_definitions.py`.
 - [ ] `W04.P15.S62` - Thread the refund, payment, prior-domiciliation and product-identity elections through the export operation so both adapters emit the same declaration type; `src/cadrumo/application/modelo/operation_definitions.py`.
 - [ ] `W04.P15.S63` - Route modelo mutations through the host operation modal rather than submitting inline; `src/cadrumo/entrypoints/tui/modelo/action`.
 - [ ] `W04.P15.S64` - Register an operation for calculation, which the reconcile and projection surfaces both depend on; `src/cadrumo/application/modelo/operation_definitions.py`.
+- [ ] `W04.P15.S151` - Update the frontend dispatch table and the unregistered-operations authority together with each registration, since the fixed-point test pins both as canonical; `src/cadrumo/entrypoints/tui/modelo/actions.py`.
 
 ### Phase `W04.P16` - unstub and instrument
 
@@ -206,6 +217,26 @@ Populate the filing-history and evidence zones the frontend hardcodes as unavail
 - [ ] `W04.P16.S66` - Populate the authority evidence axis the workbench generation hardcodes as never captured; `src/cadrumo/application/workbench_generation.py`.
 - [ ] `W04.P16.S67` - Wire the modelo fixtures into the devtools harness so the modelo destinations become drivable; `src/cadrumo/entrypoints/tui/devtools/modelo_fixtures.py`.
 - [ ] `W04.P16.S68` - Enrol the modelo destinations in the visual-verification surface list and the coverage classification; `dev/tui`.
+- [ ] `W04.P16.S145` - Author the four-locale catalogue entries every new surface in this campaign requires, with real translations rather than key echoes; `src/cadrumo/locales`.
+- [ ] `W04.P16.S146` - Add a coverage classification entry for every full-screen class this campaign introduces, and sequence it so no surface lands unclassified; `dev/tui/_coverage.py`.
+- [ ] `W04.P16.S147` - Enrol each new surface in the visual-verification surface list and the devtools surface catalogue; `dev/tui`.
+
+### Phase `W04.P32` - filing history and lifecycle presentation
+
+Deliver the decision the filing-lifecycle record makes, which no other phase schedules. Its prerequisites are wired elsewhere in this wave; the presentation itself - three axes never merged, the obligation axis as the sole origin of a missed declaration, the next-action cell, sealed-revision display, amendment kind with its legal basis - has no home without this phase, and without it the campaign ships no history surface.
+
+- [ ] `W04.P32.S129` - Present the local filing axis and the authority submission axis as two columns that are never merged, so a local mark can never read as authority acceptance; `src/cadrumo/entrypoints/tui/declarations`.
+- [ ] `W04.P32.S130` - Derive the missed and upcoming states from the obligation axis, which is where they live, joining record and calendar projections by natural filing address; `src/cadrumo/application/modelo/declarations_workspace.py`.
+- [ ] `W04.P32.S131` - Render the next-action cell from the existing blocker-to-operator-action projection rather than from a status string; `src/cadrumo/entrypoints/tui/declarations`.
+- [ ] `W04.P32.S132` - Display revision state through the current-sealed state set so a superseded revision never renders as current; `src/cadrumo/entrypoints/tui/declarations/revisions.py`.
+- [ ] `W04.P32.S133` - Disclose amendment kind with the legal basis governing it, since the three kinds carry different operator consequences; `src/cadrumo/entrypoints/tui/declarations/filing_history.py`.
+- [ ] `W04.P32.S134` - Present filing as the two-part act it is, and discard as terminal and rename as cosmetic, matching the lifecycle the domain enforces; `src/cadrumo/entrypoints/tui/modelo/action`.
+- [ ] `W04.P32.S135` - Record the money-column deferral on the surface as a data gap, not a privacy one; `src/cadrumo/entrypoints/tui/declarations/filing_history.py`.
+- [ ] `W04.P32.S136` - Surface the filing-record and verification-report reads that no other step covers, listing and viewing each; `src/cadrumo/entrypoints/tui/declarations`.
+- [ ] `W04.P32.S137` - Surface the work status, revision and revisions reads against the sealed-state display rule; `src/cadrumo/entrypoints/tui/modelo/view`.
+- [ ] `W04.P32.S138` - Surface the workflow run reads and the resume affordance, or record them command-line only with a reason; `src/cadrumo/entrypoints/tui/modelo/view`.
+- [ ] `W04.P32.S139` - Surface the work dependencies read against the cross-period blocker projection; `src/cadrumo/entrypoints/tui/modelo/view/overview.py`.
+- [ ] `W04.P32.S140` - Dispose of the maritime exemption preview and the taxation comparison explicitly rather than leaving them unadjudicated; `dev/quality/modelo_workspace_action_denominator.py`.
 
 ## Wave `W05` - editing and calculation inputs
 
@@ -268,18 +299,19 @@ Give artefact movement a shared contract in both directions, wire the exporter t
 Introduce the typed destination vocabulary the backend lacks, capability-gated and shared by both adapters.
 
 - [ ] `W07.P22.S88` - Introduce the typed destination contract naming a transport, its artefact family, its capability gate and its availability; `src/cadrumo/application/export`.
-- [ ] `W07.P22.S89` - Choose a name distinct from the two existing meanings of destination in this codebase; `src/cadrumo/application/export`.
+- [ ] `W07.P22.S89` - Enumerate the closed destination set once the contract exists, deciding the membership this campaign supports rather than describing the set as closed without listing it; `src/cadrumo/application/export`.
 - [ ] `W07.P22.S90` - Enumerate the closed destination set rather than leaving it described as closed; `src/cadrumo/application/export`.
 
 ### Phase `W07.P23` - export surfaces
 
 Wire the built workbook exporter, add fichero preview through the existing seam, and stop silent overwrite.
 
-- [ ] `W07.P23.S91` - Wire the offline workbook exporter that is built, styled and has no production caller; `src/cadrumo/application/storage/calc_sheets/workbook_export.py`.
+- [ ] `W07.P23.S91` - Wire the offline workbook exporter that is built, styled and has no production caller, releasing it from the unconsumed-export and unused-symbol ratchets that currently name it; `src/cadrumo/application/storage/calc_sheets/workbook_export.py`.
 - [ ] `W07.P23.S92` - Expose a fichero preview through the existing payload-consumer arm of the export draft path; `src/cadrumo/application/filing/export.py`.
 - [ ] `W07.P23.S93` - Refuse an existing output file rather than silently overwriting it, and reconcile the contradictory path contract; `src/cadrumo/application/filing/export.py`.
 - [ ] `W07.P23.S94` - Refuse a revision with no renderable layout, stating the reason, and mark an unverified-completeness export as such on the artefact; `src/cadrumo/application/filing/export.py`.
 - [ ] `W07.P23.S95` - Add a bulk export-readiness query so a surface need not build a schema provider per coordinate; `src/cadrumo/application/filing/export.py`.
+- [ ] `W07.P23.S152` - Shrink the unconsumed-export and unused-symbol ratchet baselines by the entries the workbook wiring resolves; `dev/quality`.
 
 ### Phase `W07.P24` - supervised import
 
@@ -315,6 +347,7 @@ Deliver creation as an enrolled operation with its own result receipt, governing
 - [ ] `W08.P26.S109` - Present the law-selected revision without offering a choice, and mark an unresolvable or ambiguous revision unavailable with the resolver's reason; `src/cadrumo/entrypoints/tui/modelo`.
 - [ ] `W08.P26.S110` - Bring the calendar recovery action under this decision rather than leaving a second ungoverned creation path; `src/cadrumo/entrypoints/tui/declarations/controller.py`.
 - [ ] `W08.P26.S111` - Adjudicate each test, allowlist entry and assertion holding creation shut, retiring only those whose invariant the reopening replaces; `src/cadrumo/entrypoints/tui/modelo/tests`.
+- [ ] `W08.P26.S150` - Produce the conformance suite the parent decision requires alongside the execution record, since neither alone discharges the interface proof; `src/cadrumo/entrypoints/tui/modelo/tests`.
 
 ## Wave `W09` - satellite family dispositions
 
@@ -329,6 +362,7 @@ Deliver the wallet override, the withholding communication lifecycle and the rev
 - [ ] `W09.P27.S114` - Publish a recipient encryption key so the review exchange can be completed, before any surface presents it; `src/cadrumo/application/modelo`.
 - [ ] `W09.P27.S115` - Deliver a review-package catalogue so the exchange does not depend on operator-supplied paths; `src/cadrumo/application/modelo`.
 - [ ] `W09.P27.S116` - Deliver the guided review-exchange sequence once its key publication and catalogue exist; `src/cadrumo/entrypoints/tui/modelo`.
+- [ ] `W09.P27.S154` - Deliver the wallet seed and correct paths alongside the override, since the family has four rows and surfacing one does not dispose of the others; `src/cadrumo/entrypoints/tui/modelo`.
 
 ### Phase `W09.P28` - folded capabilities
 
@@ -338,6 +372,8 @@ Fold the census logbook and the registry-inspection reads into the surfaces that
 - [ ] `W09.P28.S118` - Fold the describe, casillas, casilla and formulas reads into the existing schema facet; `src/cadrumo/application/modelo/workspace_models.py`.
 - [ ] `W09.P28.S119` - Fold requires and readiness into the overview readiness panel; `src/cadrumo/entrypoints/tui/modelo/view/overview.py`.
 - [ ] `W09.P28.S120` - Fold the modelo listing into the work-unit picker; `src/cadrumo/entrypoints/tui/modelo/view/work_select.py`.
+- [ ] `W09.P28.S155` - Deliver the census alta, modificacion and baja writes with the alta-first and baja-terminal sequence guard, which is the family's defining behaviour; `src/cadrumo/entrypoints/tui/profile`.
+- [ ] `W09.P28.S156` - Fix the census certificate parser that refuses unconditionally, or declare the panel unavailable with that reason rather than shipping a surface that cannot be populated; `src/cadrumo/adapters/inbound/censo/parser.py`.
 
 ### Phase `W09.P29` - recorded closures
 
@@ -364,7 +400,6 @@ Prove every delivered surface across four locales, two themes and three geometri
 Submit the completed workbench to independent architecture, accessibility, security and scope review, and publish final coverage.
 
 - [ ] `W10.P31.S127` - Submit the completed workbench to independent architecture, user-experience, accessibility, security and scope review; `.vault/audit`.
-- [ ] `W10.P31.S128` - Record the residual adapter-purity rows outside this campaign as a sibling campaign with a named owner; `.vault`.
 
 ## Parallelization
 

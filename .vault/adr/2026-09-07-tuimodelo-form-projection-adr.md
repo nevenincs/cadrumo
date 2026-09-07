@@ -170,8 +170,9 @@ revision. This keeps one runtime authority rather than two.
 
 The declaration is produced by a development-time generator, not at runtime. The generator
 seeds order from export field offsets within record order where a fixed-width layout exists,
-and takes headings from the official record-design corpus, which already joins to casillas at
-better than ninety-five per cent. For modelo 100, which has no offsets and no export
+and takes headings from the official record-design corpus, whose casilla join rate is high but
+is recorded as an open measurement rather than an established figure. For modelo 100, which has
+no offsets and no export
 references, the generator seeds from the RentaWeb dictionary and schema path tree instead;
 this is a second seed into the same declaration format, not a second mechanism. Output is
 reviewed by a person before it ships, because the seeds are strong but not authoritative

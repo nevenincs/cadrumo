@@ -148,7 +148,7 @@ either collapse the two axes it protects or re-encode that collapse behind a der
 Only the two-axis presentation survives that constraint intact, and it does so without
 inventing anything — every axis it shows already exists and is already validated, and the
 next-action column is a projection the domain already computes with an import-time totality
-check over all 22 blockers (`2026-09-07-tuimodelo-reference`).
+check over all 21 blockers (`2026-09-07-tuimodelo-reference`).
 
 The option also resolves the brief's vocabulary problem rather than papering over it.
 "Missed" turns out to be an obligation fact, not a record fact, which is why it could never

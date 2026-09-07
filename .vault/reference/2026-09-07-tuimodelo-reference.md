@@ -131,8 +131,12 @@ The authoritative track is `WorkUnit` (`src/cadrumo/domain/modelos/work_unit.py:
 `CalculationRevision` (`src/cadrumo/domain/modelos/calculation_revision.py:595`) to
 `VerificationReport` (`verification_report.py:235`) to `ModeloRecord`
 (`filing_record.py:158`). A work unit is a content-addressed handle, so renaming does not
-change its identity. `application/filing/history_models.py` is dead code with an untyped
-status field and is a trap. Use `CURRENT_SEALED_REVISION_STATES`
+change its identity. `application/filing/history_models.py` has no production
+writer and an untyped status field, which makes it a trap for an implementer searching by
+name, but it is not dead: `history_repository.py` imports it and the custody-carry resolver
+at `src/cadrumo/adapters/persistence/storage/_profile_custody_carry.py:207` reaches it from
+production. It is correspondingly absent from the unreachable-module ratchet. Retiring it
+would require a stored-data custody migration. Use `CURRENT_SEALED_REVISION_STATES`
 (`calculation_revision.py:118`) for status display so a superseded revision never renders
 as current.
 
@@ -177,7 +181,7 @@ justificante bytes, revision against an AEAT-pulled filing, and the modelo 303 t
 `ModeloReconciliationReport` at `reconciliation.py:225` yields a binary verdict derived
 purely as match-if-no-diffs. Diffs carry field name, both values, kind, a three-member
 diff kind, and grounding references, with a validator refusing ungrounded value diffs.
-Advisories carry four codes with no severity field, no resolution action, and an English
+Advisories carry three constructed codes with no severity field, no resolution action, and an English
 prose message rather than a locale key.
 
 Verification exposes 30 verify-time gates plus 9 raising gates; registry predicates

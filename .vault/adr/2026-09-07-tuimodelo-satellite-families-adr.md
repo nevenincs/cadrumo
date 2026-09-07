@@ -101,8 +101,10 @@ honestly command-line work.
 
 ## Implementation
 
-Four families become first-class surfaces. The IVA wallet gains a balance view and a reachable
-override, presented from within the modelo 303 workspace where the gate actually blocks, because
+Four families become first-class surfaces. The IVA wallet gains a balance view and all three of
+its write paths - seed, correct and override - because a family of four rows is not disposed of
+by surfacing one of them, and an operator who can override but not correct is left with the
+blunter instrument. The override is presented from within the modelo 303 workspace where the gate actually blocks, because
 an override offered anywhere else asks the operator to leave the problem to solve it. Aggregate
 becomes a proper observation-entry surface for the four withholding modelos, replacing
 command-line JSON with a typed editor over the same replace-the-set semantics. The withholding
@@ -110,8 +112,12 @@ communication gains a small lifecycle surface plus the listing verb it is missin
 exchange gains a package catalogue and a guided sequence, but only after its key publication is
 fixed.
 
-Seven capabilities fold into surfaces already decided. The census logbook becomes a history
-panel on the taxpayer profile, where its subject already lives. The describe, casillas, casilla
+Seven capabilities fold into surfaces already decided. The census logbook becomes a panel on the
+taxpayer profile, where its subject already lives, and it carries its three write paths rather
+than reading only: alta, modificacion and baja are what make it a logbook, and the alta-first,
+baja-terminal sequence guard is the family's defining behaviour. Its parser refuses
+unconditionally today, so the panel declares itself unavailable with that reason until the
+parser is fixed rather than presenting an surface that can never be populated. The describe, casillas, casilla
 and formulas reads fold into the schema facet the workspace model already carries. Requires and
 readiness fold into the overview readiness panel. The modelo listing folds into the work-unit
 picker.
