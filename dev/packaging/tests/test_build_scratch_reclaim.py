@@ -3,8 +3,10 @@
 ``var/`` interleaves the two. The readiness gate reads its cohort, smoke and
 evidence trees out of the same directory a killed release build leaves a
 multi-hundred-megabyte clone in, so a sweep that is merely *effective* is a
-sweep that eventually deletes the input to a release. Every test here is a pair
-of that shape: the abandoned thing goes, and the thing beside it does not.
+sweep that eventually deletes the input to a release. The sweep cases here are
+pairs of that shape: the abandoned thing goes, and the thing beside it does not.
+Beside them sit the single-sided gates those pairs rest on -- name
+classification, mint identity, and the discovery that fixes what counts as live.
 
 Everything runs against a temporary ``var/`` built in ``tmp_path``. Nothing here
 reads, writes, or lists the contributor's real ``var/``.

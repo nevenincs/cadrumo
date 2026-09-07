@@ -191,11 +191,11 @@ def _write_json(path: Path, document: object) -> None:
 def _assert_oracle_evidence(*, tax_document: dict[str, object]) -> None:
     """Refuse a Homebrew keg whose installed CLI does not reproduce the oracle.
 
-    The CLI is the only executable this formula installs. ``cadrumo-mcp`` ships
-    shipped by the same wheel, though this lane exercises the command surface
-    carry — one distribution per formula — so there is no MCP leg to exercise
-    here; the harness is reached through pipx, the MCPB bundle, or the Claude
-    plugin, each of which runs the MCP oracle on its own acquisition path.
+    The formula installs the ``cadrumo`` distribution, which declares both the
+    ``aeat`` and ``cadrumo-mcp`` console scripts, so ``pip_install_and_link``
+    lands both in the keg. This lane asserts the CLI leg only; the MCP oracle is
+    exercised on the pipx, MCPB-bundle and Claude-plugin acquisition paths, each
+    against its own install.
     """
     if tax_document.get("target_value") != "23000.00":
         raise SystemExit(f"installed CLI oracle returned unexpected evidence: {tax_document!r}")
@@ -381,9 +381,8 @@ def run_homebrew_smoke(
             label="brew-prefix",
         ).stdout.strip()
         installed_prefix = Path(prefix_text).resolve(strict=True)
-        # The formula installs the `cadrumo` distribution alone, so `aeat` is the
-        # only executable it lands. `cadrumo-mcp` belongs to the sibling
-        # wheel; this lane proves the command surface only.
+        # The formula installs the `cadrumo` distribution, whose console scripts
+        # are `aeat` and `cadrumo-mcp`; this lane resolves the CLI leg only.
         aeat = (installed_prefix / "bin" / "aeat").resolve(strict=True)
         if not aeat.is_file() or not os.access(aeat, os.X_OK):
             raise SystemExit(f"installed Homebrew command is not executable: {aeat}")
