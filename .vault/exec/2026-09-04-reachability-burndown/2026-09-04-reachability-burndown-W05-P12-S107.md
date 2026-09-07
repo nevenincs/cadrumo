@@ -5,16 +5,11 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:34f98339730bb5825af28f1a5977e4c0043b6fa6d92169a2fd025e84fa7e4721'
+body_hash: 'sha256:d72c2fd2d83363bc571031e9d015cb19b927586fd7c02842c54eca4d32ec5d32'
 step_id: 'S107'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Remove the fifth findings-discarding narrowing (is_active_censo_modelo) and gate the whole class with dev/quality/narrowing_delegators
 

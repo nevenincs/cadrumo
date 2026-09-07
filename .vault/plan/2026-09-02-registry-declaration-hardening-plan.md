@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:12d5e8cabe9f97d39a83c3f0a6f84c8009dc19648e5d41542620cb22e5e3aa68'
+body_hash: 'sha256:23befe229ab2602ff34d714560e33af65876b604d35e245bfd484327916b9f91'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -1393,6 +1393,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S1024` - Retire the transient-tree naming site whose assertion was removed, leaving the declaration describing a walk that no longer names the snapshot; `dev/tests/test_tracked_content_excludes_transient_trees.py`.
 - [x] `W06.P13.S1025` - Delete the two cleaned files from the UTF-8 ratchet, which stood as silent pre-authorisations after their violations were fixed; `dev/tests/test_utf8_enrollment_inventory.py`.
 - [x] `W06.P13.S1026` - Record the retired generated-evidence population instead of leaving its vacuity guard permanently red, keeping the watch for the next artefact; `dev/tests/test_generated_evidence_is_gated.py`.
+- [x] `W06.P13.S1027` - Scope the invoice validation census to the module family after a peer split, instead of deleting the fourteen rows whose raises had moved; `dev/tests/test_invoice_iva_validation_owner_census.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

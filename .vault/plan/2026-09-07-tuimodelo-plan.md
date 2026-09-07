@@ -15,7 +15,7 @@ related:
   - '[[2026-09-07-tuimodelo-adapter-migration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:f7af8fc0dda492ebcdbee36882d4b53eb9c1f8639f201de9b61647bafeb952ad'
+body_hash: 'sha256:383852f79727564d00ec9b13c1108ff638f408eb5ef0767384886a2647a231bf'
 ---
 
 # `tuimodelo` plan
@@ -27,12 +27,18 @@ is joining capability that already exists rather than authoring new screens: six
 destinations are built and only one is reachable, six action request builders have no production
 caller, the edit session's submit path is never called, and two of the twenty registered
 operations are reachable from a full-screen surface. Seventy-four of the seventy-nine classified modelo actions are pending, being the
-forty-three read rows and the thirty-one mutation rows.
+forty-two read rows and the thirty-two mutation rows.
 
-The ordering is forced rather than chosen, though not in the way a first reading suggested.
-Session authorization already works for a full-screen surface; what is stranded is the capability
-declaration, which sits inside the command-line package that the frontend is forbidden to import,
-and which the admission gate itself must read. That relocation therefore precedes the gate.
+The ordering is forced rather than chosen, though not in the way a first reading suggested, and
+one leg of it has since been falsified by measurement. Session authorization already works for a
+full-screen surface. The capability declaration was described as stranded inside the command-line
+package and as something the admission gate must read, making its relocation a prerequisite of the
+gate. NEITHER HALF HELD. The gate lives in the development tree, which may import the command-line
+package freely, and it was extended to observe capability without any relocation at all. No
+full-screen module reads the declaration today, so nothing is waiting on it; the relocation was
+speculative and was reverted. It becomes real work only once a modelo surface actually needs a
+command's routing posture, at which point the declaration moves to the core ring rather than
+beside either adapter.
 Nothing can be generated until presentation has a declared ordering, because the registry carries
 none and offsets place barely a third of the corpus. Reachability is several gaps rather than
 one: five destinations resolve nowhere, the editor and history are not members of the closed
@@ -80,7 +86,7 @@ Annotate absorbed rows with their new owner, publish the coverage baseline, and 
 - [x] `W01.P03.S08` - Annotate each of the 25 open rows in the two source plans with its disposition here or its retention there, naming every row rather than referring to them collectively; `.vault/plan`.
 - [x] `W01.P03.S167` - Record the gate state this campaign starts from, including the size budget already failing on two of its own target files, so no wave mistakes an inherited red for one it caused SCOPE CORRECTED BY MEASUREMENT: the deliverable is a vault audit, not a file under the development audit tree. Searched first and found no cross-gate known-red registry anywhere in the repository; that tree holds only per-gate ratchet data that a gate reads, and NOTHING would consume a campaign baseline placed there, so it would be an inert artefact in a code tree. The code-stands-alone mandate separately forbids development code from carrying campaign state. The baseline is therefore recorded as an audit beside this campaign's other audit, which is the sanctioned home for a measured record.; `.vault/audit`.
 - [x] `W01.P03.S12` - Publish the campaign coverage baseline as a standing artefact derived from the denominator PREMISE CORRECTED BY MEASUREMENT: no artefact is published, because the standing artefact already exists. The classification table IS the coverage baseline -- the governing satellite-families decision states that every family keeps its row there carrying its disposition, reason and reopening condition, which is what makes a deferral auditable rather than a silence -- and the validator plus the contradiction rule already enforce it. A generated file beside it would rebuild the 1132-line denominator snapshot that commit 280ec80a67 deleted for being reproducible from the builder, in the one tree where nothing would consume it, in the shape two standing rules forbid as a frozen corpus count. WHAT WAS GENUINELY MISSING is arm coherence of the narrative fields: only the reason was validated, so the condition a row is SCHEDULED BY could contradict the arm it is scheduled AS. That hole was occupied by a live defect this campaign itself introduced one step earlier, and the reopening-condition vocabulary is now closed per arm and refused at construction.; `dev/quality`.
-- [ ] `W01.P03.S141` - Reopen the edit capability projection under the surviving mechanism, replacing the retired condition it still cites, since every editor step routes through a seam nothing currently opens; `src/cadrumo/application/modelo/_edit_facade.py`.
+- [x] `W01.P03.S141` - Reopen the edit capability projection under the surviving mechanism, replacing the retired condition it still cites, since every editor step routes through a seam nothing currently opens; `src/cadrumo/application/modelo/_edit_facade.py`.
 - [ ] `W01.P03.S142` - Relocate the capability projection out of the private underscore module to a public defining module, because a frontend import of it is otherwise forbidden by the architecture boundary; `src/cadrumo/application/modelo`.
 - [ ] `W01.P03.S128` - Open the sibling adapter-purity campaign for the residual violations, deriving the figure from the 159-row inventory rather than rounding it, and record that the ledger lane's prior owner is archived so the work is not orphaned twice; `.vault`.
 - [ ] `W01.P03.S166` - Shrink the unreachable-module ratchet by the capability module this phase's relocation frees, in the same commit as the relocation; `dev/quality/unreachable_module_ratchet.toml`.
