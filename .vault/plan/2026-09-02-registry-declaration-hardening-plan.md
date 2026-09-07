@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:21693b72c2351f683df798dd773af1f6d9fd6f0049875d533964655bcd4355ec'
+body_hash: 'sha256:4bf27e556862dbbf8d3eb1104e7403188f83f743eca824f9fae34d91311e6c0b'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -1141,7 +1141,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S283` - Rename the four development-tree test symbols that carried a plan step id, and redeem the pin that expected them; `dev/locales/tests/test_ledger_notice_action_conformance.py dev/registry/tests/test_modelo_303_semantic_maps.py dev/source_connectivity/tests/test_census_completeness.py dev/tests/test_suggestion_command_conformance.py dev/tests/test_campaign_marker_patterns.py`.
 - [x] `W06.P13.S284` - Remove the plan-step citations from the registry tooling prose, leaving only the detector fixtures that must carry them; `dev/registry/pipeline/_tree_check.py dev/registry/pipeline/_tree_publication.py dev/registry/pipeline/_tree_validation.py dev/registry/analysis/m303_semantic_census.py dev/registry/tests/test_record_design_intermediate_source_boundary.py`.
 - [x] `W06.P13.S285` - Give the marker scan module-scoped lint discrimination so an explained suppression is not read as campaign metadata; `dev/tests/_marker_metadata_patterns.py dev/tests/test_campaign_marker_patterns.py`.
-- [ ] `W06.P13.S286` - Replace the plan-phase owning_authority values in the workspace action denominator with a durable authority, coordinating with that surface's writer; `dev/quality/modelo_workspace_action_denominator.py`.
+- [ ] `W06.P13.S286` - Replace the plan-phase owning_authority values in the workspace action denominator with a durable authority, coordinating with that surface's writer COORDINATION NOTE FROM TUIMODELO, 2026-09-07: this row's subject has MOVED FILE and its scope is updated accordingly. The workspace action denominator was split into three modules so that row growth and gate growth stop sharing one size ceiling: the closed classification vocabulary now lives in `dev/quality/modelo_workspace_action_classification.py`, the reviewed row table in `dev/quality/modelo_workspace_action_classification_table.py`, and the gate itself keeps `dev/quality/modelo_workspace_action_denominator.py`. The owning_authority values this row replaces are row data, so they are now in the TABLE module. No value was changed by the split and no row was added or removed; the count remains 79. This is the coordination that plan's parallelization clause requires before either writer touches the module, recorded here rather than only in the moving campaign.; `dev/quality/modelo_workspace_action_classification_table.py`.
 - [x] `W06.P13.S287` - Remove three restatements from the plan prose and record the cross-Wave evidence dependency once; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S288` - Give the two superseded consolidated positions the forward pointers their precedence claims required; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S289` - Make the selection probe record the ambiguity its own retry was erasing, and re-ground the temporal criterion on the measured figure; `dev/registry/analysis/revision_selection_probe.py dev/registry/tests/test_revision_selection_probe.py`.
@@ -1396,6 +1396,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S1027` - Scope the invoice validation census to the module family after a peer split, instead of deleting the fourteen rows whose raises had moved; `dev/tests/test_invoice_iva_validation_owner_census.py`.
 - [x] `W06.P13.S1028` - Distinguish an uncaptured session from an idle one in the agent-eval measurement report, so a PASS verdict cannot render on evidence that never arrived; `dev/agent_eval/_report.py`.
 - [x] `W06.P13.S1029` - Pin the reason on the checkout-drift screen's empty-tree refusal, which passed on a git ls-tree plumbing failure and never reached the tracked-file guard it was named for; `dev/audit/tests/test_checkout_drift_screen.py`.
+- [x] `W06.P13.S1030` - Make the unreachable-module ratchet's declared_by check structural, so a module name surviving only in a comment or a docstring can no longer keep a spent disposition alive; `dev/quality/unreachable_module_ratchet.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

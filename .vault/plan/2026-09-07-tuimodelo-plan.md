@@ -15,7 +15,7 @@ related:
   - '[[2026-09-07-tuimodelo-adapter-migration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:be215dd05a086f4ae0dd574c05f4a7268e91471ead4a37b0b7ce2aacab20e5b5'
+body_hash: 'sha256:fa701aa5ae0070b428d73de3d85aa4b35c6b710a37778a2e3d494f2835a44cee'
 ---
 
 # `tuimodelo` plan
@@ -91,7 +91,7 @@ Annotate absorbed rows with their new owner, publish the coverage baseline, and 
 - [x] `W01.P03.S128` - Open the sibling adapter-purity campaign for the residual violations, deriving the figure from the 159-row inventory rather than rounding it, and record that the ledger lane's prior owner is archived so the work is not orphaned twice; `.vault`.
 - [x] `W01.P03.S166` - Shrink the unreachable-module ratchet by the capability module this phase's relocation frees, in the same commit as the relocation; `dev/quality/unreachable_module_ratchet.toml`.
 - [x] `W01.P03.S168` - Repair the locale co-landing hook, which flat-globs the locales root while the catalogues are sharded per locale, so its key set is empty and both its invariants short-circuit; `dev/locales/_colanding.py`.
-- [ ] `W01.P03.S169` - Wire the gates this plan closes on into the per-push lane, since the architecture check, the three ratchets, the denominator and the fixed-point authority are reachable only by manual dispatch today; `.github/workflows/ci.yml`.
+- [x] `W01.P03.S169` - Wire the gates this plan closes on into the per-push lane, since the architecture check, the three ratchets, the denominator and the fixed-point authority are reachable only by manual dispatch today; `.github/workflows/ci.yml`.
 
 ## Wave `W02` - adapter to backend migration
 

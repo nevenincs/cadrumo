@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:c84a8ee5fe2b46a709e1d727d3bbd6905ef5cfe49c158cf226065c22c4e1ad2f'
+body_hash: 'sha256:3478952a300eee17645c6fa88e833d3eac17986f2e58c4656fead3b7bcfae540'
 ---
 
 # `reachability-burndown` plan
@@ -207,6 +207,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S106` - Repair the dangling docstring reference the previous deletion left, which the reference ratchet caught and which a transient-looking red had already hinted at, then take the deferred custody-carry narrowing: it dropped the coverage manifest and the refusal beside it, since the live payload builder returns the rows with their namespace-coverage fact and raises when a full profile carries unclassified namespaces, so a caller reaching for the shorter name got rows where the product refuses. Point its five test consumers at the payload builder rather than the private helper it narrowed.; `src/cadrumo/domain/iva/place_of_supply.py,src/cadrumo/application/user_profile/custody_carry.py,src/cadrumo/application/user_profile/tests/test_custody_roundtrip.py,dev/quality/unused_symbol_ratchet.toml,dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S107` - Remove the fifth findings-discarding narrowing (is_active_censo_modelo) and gate the whole class with dev/quality/narrowing_delegators; `justfile`.
 - [x] `W05.P12.S108` - Retire the command_graph package-init alias, repoint its seven consumers to command_specs.COMMAND_GRAPH, and fix the owner-check silencing bug in the narrowing detector; `dev/agent_eval/_runner.py`.
+- [x] `W05.P12.S109` - Wire the eleven declared Modelo devtools fixtures into SURFACES, gate the unregistered-registry class, and classify the remaining orphaned-test clusters; `dev/audit/reachability_classification.toml`.
 
 ## Parallelization
 
