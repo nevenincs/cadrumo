@@ -705,12 +705,23 @@ operation:
       detach: Detach
       reject: Reject
     detail:
+      action_refused: Action refused
       cleanup_deadline: Cleanup deadline
       diagnostic: Diagnostic
       execution_deadline: Execution deadline
       phase: Phase
       receipt_refusal: Refusal
       receipt_result: Result
+    refusal:
+      cancellation_unavailable: Cancellation is not available right now. Try again shortly.
+      cancellation_unsupported: This operation cannot be cancelled once it has started.
+      operation_terminal: The operation has already finished, so there is nothing to cancel.
+      response_authority_unavailable: The response could not be recorded right now. Try again shortly.
+      response_not_pending: This operation is not waiting for a response.
+      stale_operation_revision: The operation moved on while you were deciding. Wait for the refresh and try again.
+      unknown_operation: This operation is no longer known to the backend.
+      unsupported_cancellation_version: This build cannot cancel that operation. Update Cadrumo.
+      unsupported_response_control_version: This build cannot answer that operation. Update Cadrumo.
     status:
       running: Running
 overview:
