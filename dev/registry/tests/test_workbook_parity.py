@@ -13,6 +13,9 @@ Run them through ``just test-workbook-parity``.
 
 from __future__ import annotations
 
+import re
+import subprocess
+import zipfile
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -35,6 +38,7 @@ from ..parity._workbook_parity import (
     WorkbookCellRef,
     WorkbookScanOptions,
     _BinaryXlsConversionError,
+    _subprocess_failure_detail,
     assert_workbook_scan_clean,
     compare_registry_to_workbook,
     convert_binary_xls_with_libreoffice,
@@ -605,3 +609,104 @@ def test_libreoffice_runner_rejects_explicit_missing_executable(tmp_path: Path) 
 
 def test_binary_xls_conversion_error_code_is_registered() -> None:
     assert issubclass(_BinaryXlsConversionError, RuntimeError)
+
+
+def _write_workbook_with_poisoned_row_attribute(path: Path, *, poisoned: str) -> None:
+    """Write a workbook whose ``<row r="...">`` XML attribute is unparsable content.
+
+    openpyxl's read-only streaming parser (``worksheet/_reader.py``) tries
+    ``int(attrs['r'])`` then ``float(attrs['r'])`` for a row's ``r`` attribute
+    and, failing both, raises a bare ``ValueError`` whose message embeds the
+    raw attribute text. That attribute is content this project does not
+    control -- it comes from whatever produced the xlsx file -- so it is a
+    concrete, reachable member of :func:`scan_workbook`'s broad ``except
+    Exception`` clause.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    workbook = Workbook()
+    worksheet = workbook.active
+    assert worksheet is not None
+    worksheet["A1"] = "hello"
+    workbook.save(path)
+
+    with zipfile.ZipFile(path, "r") as zin:
+        names = zin.namelist()
+        sheet_name = next(name for name in names if re.match(r"xl/worksheets/sheet\d+\.xml", name))
+        contents = {name: zin.read(name) for name in names}
+    sheet_xml = contents[sheet_name].decode("utf-8")
+    new_xml = sheet_xml.replace('<row r="1"', f'<row r="{poisoned}"', 1)
+    assert new_xml != sheet_xml, "fixture no longer matches the row attribute this test corrupts"
+    contents[sheet_name] = new_xml.encode("utf-8")
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as zout:
+        for name, data in contents.items():
+            zout.writestr(name, data)
+
+
+def test_scan_workbook_unexpected_error_does_not_carry_raw_workbook_content(tmp_path: Path) -> None:
+    poisoned = "SECRET-TAXPAYER-NIF-12345678Z-not-a-row-number"
+    workbook_path = tmp_path / "modelo_303" / "files" / "poisoned.xlsx"
+    _write_workbook_with_poisoned_row_attribute(workbook_path, poisoned=poisoned)
+
+    with pytest.raises(RegistryValidationError) as excinfo:
+        scan_workbook(workbook_path, root=tmp_path)
+
+    cause = excinfo.value.__cause__
+    assert isinstance(cause, ValueError)
+    assert poisoned in str(cause), "premise: openpyxl's own ValueError must actually carry the raw attribute text"
+    assert poisoned not in str(excinfo.value)
+    assert "ValueError" in str(excinfo.value)
+
+
+def test_scan_workbook_unexpected_error_bare_parse_error_is_positional_only(tmp_path: Path) -> None:
+    """The sibling shape of the same broad ``except Exception``: no content to leak.
+
+    Non-well-formed XML drives ``xml.etree.ElementTree`` into a ``ParseError``
+    that names only a line/column position, never the offending text -- unlike
+    the row-attribute ``ValueError`` above. Both are reachable through the same
+    clause, which is why that clause cannot be narrowed to a short allow-list.
+    """
+    workbook_path = tmp_path / "modelo_303" / "files" / "malformed.xlsx"
+    workbook_path.parent.mkdir(parents=True, exist_ok=True)
+    workbook = Workbook()
+    workbook.active["A1"] = "hello"  # type: ignore[index]
+    workbook.save(workbook_path)
+
+    with zipfile.ZipFile(workbook_path, "r") as zin:
+        names = zin.namelist()
+        sheet_name = next(name for name in names if re.match(r"xl/worksheets/sheet\d+\.xml", name))
+        contents = {name: zin.read(name) for name in names}
+    sheet_xml = contents[sheet_name].decode("utf-8")
+    new_xml = sheet_xml.replace("</sheetData>", "<unclosed", 1)
+    assert new_xml != sheet_xml
+    contents[sheet_name] = new_xml.encode("utf-8")
+    with zipfile.ZipFile(workbook_path, "w", zipfile.ZIP_DEFLATED) as zout:
+        for name, data in contents.items():
+            zout.writestr(name, data)
+
+    with pytest.raises(RegistryValidationError) as excinfo:
+        scan_workbook(workbook_path, root=tmp_path)
+
+    assert "ParseError" in str(excinfo.value)
+
+
+def test_subprocess_failure_detail_omits_raw_stdout_stderr_content() -> None:
+    exc = subprocess.CalledProcessError(
+        returncode=1,
+        cmd=["soffice", "--headless"],
+        output="C:/Users/some-real-user/AppData/Local/Temp/leaked.xlsx could not be read",
+        stderr="convert error: SECRET_TOKEN=abc123 at /home/some-real-user/.libreoffice/profile",
+    )
+    assert "some-real-user" in exc.stdout, "premise: CalledProcessError.stdout must actually carry the raw text"
+    assert "SECRET_TOKEN=abc123" in exc.stderr, "premise: CalledProcessError.stderr must actually carry the raw text"
+
+    detail = _subprocess_failure_detail(exc)
+
+    assert "some-real-user" not in detail
+    assert "SECRET_TOKEN" not in detail
+    assert detail == "exit code 1 (72 stdout chars, 79 stderr chars captured)"
+
+
+def test_subprocess_failure_detail_handles_completed_process_without_exception() -> None:
+    completed = subprocess.CompletedProcess(args=["soffice"], returncode=0, stdout="", stderr="")
+
+    assert _subprocess_failure_detail(completed) == "exit code 0 (0 stdout chars, 0 stderr chars captured)"
