@@ -177,6 +177,15 @@ _RECIPE_HEADER: Final = re.compile(r"^(?P<name>[a-z][\w-]*)\b[^:\n]*:(?![=])")
 #: A `just <recipe>` call, in a workflow `run:` or in another recipe's body.
 _JUST_CALL: Final = re.compile(r"\bjust\s+(?P<recipe>[a-z][\w-]*)")
 
+#: A `gh workflow run <file>.yml` call in a workflow `run:` block. This is a
+#: real edge between workflows and the ONLY kind this repository has: no
+#: workflow here declares `workflow_call` or `uses: ./.github/workflows/...`,
+#: so a dispatch-only workflow can still be reached automatically by another
+#: workflow pressing its button. Missing the edge over-reports the target as
+#: manual-only, which is the exact error this whole trigger model exists to
+#: avoid making in the other direction.
+_GH_WORKFLOW_RUN: Final = re.compile(r"\bgh\s+workflow\s+run\s+(?P<workflow>[\w.-]+\.ya?ml)")
+
 #: A bare `{{name}}` justfile interpolation. Deliberately narrow: an expression
 #: like `{{ if durations == "" { "" } else { ... } }}` does not match a bare
 #: identifier and is left exactly as written, per the rule that an unresolved
@@ -549,16 +558,53 @@ def _workflow_events(text: str) -> tuple[str, ...]:
     return ()
 
 
+def _dispatched_workflows(text: str) -> set[str]:
+    """Return the workflow filenames a ``gh workflow run`` in ``text`` presses."""
+    return {match.group("workflow") for match in _GH_WORKFLOW_RUN.finditer(_workflow_run_commands(text))}
+
+
 def workflow_triggers(root: Path) -> Mapping[str, tuple[str, ...]]:
-    """Return each workflow's events, keyed by its repository-relative path."""
+    """Return each workflow's EFFECTIVE events, keyed by repository-relative path.
+
+    Effective, not declared, and the difference is a whole workflow. A workflow
+    whose ``on:`` block is ``workflow_dispatch`` alone still runs on every push
+    that another workflow reacts to by pressing its button with
+    ``gh workflow run``. Reading only the ``on:`` block reports such a target as
+    manual-only, and everything it gates as unreached-in-practice, when a push
+    to the paths the dispatching workflow watches runs it every time.
+
+    Events therefore propagate along dispatch edges until nothing new is added.
+    A dispatched workflow gains the dispatcher's events because it is reached
+    exactly when the dispatcher is; it keeps its own ``workflow_dispatch`` too,
+    which remains true.
+    """
     workflow_dir = root / _WORKFLOW_DIR
     if not workflow_dir.is_dir():
         return MappingProxyType({})
+
+    events: dict[str, set[str]] = {}
+    dispatches: dict[str, set[str]] = {}
+    for workflow in scan_directory(workflow_dir, pattern="*.yml"):
+        text = workflow.read_text(encoding=_UTF_8)
+        events[workflow.name] = set(_workflow_events(text))
+        dispatches[workflow.name] = _dispatched_workflows(text)
+
+    changed = True
+    while changed:
+        changed = False
+        for name, targets in dispatches.items():
+            for target in targets:
+                if target not in events:
+                    # A dispatch of a workflow this directory does not hold is
+                    # reported by neither widening nor narrowing anything: an
+                    # invented entry would claim a lane source that is not here.
+                    continue
+                if not events[name] <= events[target]:
+                    events[target] |= events[name]
+                    changed = True
+
     return MappingProxyType(
-        {
-            f"{_WORKFLOW_DIR}/{workflow.name}": _workflow_events(workflow.read_text(encoding=_UTF_8))
-            for workflow in scan_directory(workflow_dir, pattern="*.yml")
-        },
+        {f"{_WORKFLOW_DIR}/{name}": tuple(sorted(found)) for name, found in events.items()},
     )
 
 
@@ -583,10 +629,11 @@ def ci_invoked_recipe_triggers(root: Path) -> Mapping[str, tuple[str, ...]]:
     if not workflow_dir.is_dir():
         return MappingProxyType({})
 
+    effective = workflow_triggers(root)
     accumulated: dict[str, set[str]] = {}
     for workflow in scan_directory(workflow_dir, pattern="*.yml"):
         text = workflow.read_text(encoding=_UTF_8)
-        events = set(_workflow_events(text))
+        events = set(effective.get(f"{_WORKFLOW_DIR}/{workflow.name}", ()))
         reached = _recipes_invoked_by(_workflow_run_commands(text))
         # Close over recipe-to-recipe calls until nothing new is reached.
         frontier = set(reached)
@@ -774,9 +821,10 @@ def declared_lanes(root: Path) -> tuple[Lane, ...]:
 
     workflow_dir = root / _WORKFLOW_DIR
     if workflow_dir.is_dir():
+        effective = workflow_triggers(root)
         for workflow in scan_directory(workflow_dir, pattern="*.yml"):
             text = workflow.read_text(encoding=_UTF_8)
-            events = _workflow_events(text)
+            events = effective.get(f"{_WORKFLOW_DIR}/{workflow.name}", ())
             lanes.extend(
                 replace(lane, triggers=events)
                 for lane in _pytest_invocations(
