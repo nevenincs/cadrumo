@@ -165,12 +165,6 @@ remedy_requires_decision = false
 # ---------------------------------------------------------------------------
 
 [[module]]
-name = "cadrumo.application.ledger.import_preparation"
-class = "superseded"
-evidence = "WITHDRAWN 2026-09-06: the module is deleted, and the ratchet is green. Re-tested against the live design rather than against its own docstring. The guard it performs -- refuse a blank, absent, non-file or unreadable import source before provider resolution, so a --provider auto run does not open a missing path through every candidate provider -- is already performed unconditionally INSIDE the action every caller reaches: _require_readable_source at src/cadrumo/application/ledger/actions_import.py:483, called first thing in import_ledger_source at line 339 and again from _validate_import_source at line 499. The two carry the same rationale in the same words, which is what the preparer's own docstring meant by mirroring the action's guard. So no caller could gain anything by routing through the preparer, and the TUI route host that entry named as the remedy would not have changed that: a prepared import is submitted to import_ledger_source like any other. The path-naming behaviour is where the two actually disagreed, and the live guard is the one in force -- it names the path deliberately so an operator can correct the argument, while the preparer's docstring forbade naming it. Directory expansion, the other half of turning an operator's entry into sources, is plan_ledger_import_sources at line 692. Nothing declared the module: not the error registry, not a dev check, not a contract. Its only reference in the tree was its own test, deleted with it."
-remedy_requires_decision = false
-
-[[module]]
 name = "cadrumo.domain.contabilidad"
 class = "staged-capability"
 evidence = "Added by commit b0305f2c3a, feat(domain): add the contabilidad cuenta and direccion with their tests. Company accounting facts a Modelo 200 filing is built from; its only non-test consumer so far is the error registry at core/errors/registry/_application_part2.py, which registers its error codes. Capability under construction, not an orphan."
@@ -179,6 +173,16 @@ evidence = "Added by commit b0305f2c3a, feat(domain): add the contabilidad cuent
 name = "cadrumo.domain.is_compensation"
 class = "staged-capability"
 evidence = "Landed alongside the contabilidad package from the same concurrent work. Impuesto sobre Sociedades compensacion, the stock of losses a company carries forward; its only non-test consumer is the error registry at core/errors/registry/_application_part2.py."
+
+# ---------------------------------------------------------------------------
+# superseded -- a reachable module already discharges the responsibility
+# ---------------------------------------------------------------------------
+
+[[module]]
+name = "cadrumo.application.ledger.import_preparation"
+class = "superseded"
+evidence = "WITHDRAWN 2026-09-06: the module is deleted, and the ratchet is green. Re-tested against the live design rather than against its own docstring. The guard it performs -- refuse a blank, absent, non-file or unreadable import source before provider resolution, so a --provider auto run does not open a missing path through every candidate provider -- is already performed unconditionally INSIDE the action every caller reaches: _require_readable_source at src/cadrumo/application/ledger/actions_import.py:483, called first thing in import_ledger_source at line 339 and again from _validate_import_source at line 499. The two carry the same rationale in the same words, which is what the preparer's own docstring meant by mirroring the action's guard. So no caller could gain anything by routing through the preparer, and the TUI route host that entry named as the remedy would not have changed that: a prepared import is submitted to import_ledger_source like any other. The path-naming behaviour is where the two actually disagreed, and the live guard is the one in force -- it names the path deliberately so an operator can correct the argument, while the preparer's docstring forbade naming it. Directory expansion, the other half of turning an operator's entry into sources, is plan_ledger_import_sources at line 692. Nothing declared the module: not the error registry, not a dev check, not a contract. Its only reference in the tree was its own test, deleted with it."
+remedy_requires_decision = false
 
 [[symbol_cluster]]
 name = "approval staleness with no persisted draft to go stale"
