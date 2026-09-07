@@ -115,7 +115,7 @@ import shlex
 import shutil
 import subprocess
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from types import MappingProxyType
 from typing import Final
@@ -159,6 +159,16 @@ UNSWEPT_TEST_DIRECTORIES: Final[Mapping[str, str]] = MappingProxyType({})
 
 #: Where lane declarations live. Anything else is not a lane.
 _WORKFLOW_DIR: Final[str] = ".github/workflows"
+
+#: Workflow events that fire only when somebody asks for them. A lane every one
+#: of whose reaching workflows is triggered solely by these is WIRED and
+#: UNREACHED-IN-PRACTICE: it exists, it is declared, CI can run it, and no push
+#: or pull request ever does. Its failure therefore cannot fail anything until
+#: an operator goes looking, which is a different and weaker guarantee than the
+#: one a green lane list implies. ``repository_dispatch`` is included on the
+#: same reasoning -- an external API call, not a change to this tree -- though
+#: no workflow here uses it today.
+MANUAL_TRIGGERS: Final[frozenset[str]] = frozenset({"workflow_dispatch", "repository_dispatch"})
 
 #: A justfile recipe header: a name at column zero, optional parameters and
 #: attributes, then a bare `:` -- never `:=`, which is a variable assignment.
@@ -264,6 +274,16 @@ class Lane:
     the invocation is written inline in a workflow. It is what makes
     :func:`ci_invoked_lanes` able to ask whether CI actually reaches a lane,
     rather than only whether the repository declares one.
+
+    ``triggers`` carries the workflow events that reach the lane -- the union
+    over every route, because a lane runs automatically when ANY route to it
+    does. It answers the question `recipe` cannot: a lane can be declared,
+    wired, and invoked by a workflow that only ever fires on
+    ``workflow_dispatch``, so nothing it would catch is caught until a person
+    asks. An empty tuple is NOT "manual"; it is "no workflow reaches this lane",
+    which is the separate finding :func:`ci_invoked_lanes` already reports by
+    dropping the lane. Keep the two apart: conflating them turns a lane CI never
+    runs into a lane CI runs on request.
     """
 
     source: str
@@ -271,6 +291,29 @@ class Lane:
     marker_expression: str | None
     recipe: str | None = None
     exclusions: tuple[str, ...] = ()
+    triggers: tuple[str, ...] = ()
+
+    @property
+    def runs_on_change(self) -> bool:
+        """Return whether some workflow reaching this lane fires from a change.
+
+        True for a lane any of whose reaching workflows carries a non-manual
+        event (``push``, ``pull_request``, ``release``, ``schedule``, ...).
+        False both for a manual-only lane and for a lane no workflow reaches, so
+        it is never the whole answer on its own -- pair it with
+        :attr:`is_manual_only`.
+        """
+        return any(event not in MANUAL_TRIGGERS for event in self.triggers)
+
+    @property
+    def is_manual_only(self) -> bool:
+        """Return whether CI reaches this lane but only when asked.
+
+        True exactly when the lane HAS reaching workflows and every event that
+        reaches it is in :data:`MANUAL_TRIGGERS`. A lane no workflow reaches is
+        False here, because its problem is the stronger, separately reported one.
+        """
+        return bool(self.triggers) and not self.runs_on_change
 
     def covers(self, relative_path: str) -> bool:
         """Return whether this lane's path scope reaches ``relative_path``.
@@ -482,36 +525,87 @@ def _workflow_run_commands(text: str) -> str:
     return "\n".join(commands)
 
 
-def ci_invoked_recipes(root: Path) -> frozenset[str]:
-    """Return every justfile recipe a workflow reaches, transitively.
+def _workflow_events(text: str) -> tuple[str, ...]:
+    """Return the event names in a workflow's ``on:`` block.
+
+    ``on`` is a YAML 1.1 boolean, so a safe-loaded workflow carries its trigger
+    block under the key ``True`` and NEVER under the string ``"on"``. Reading
+    ``document["on"]`` returns nothing for every workflow in this repository,
+    which would report each one as fired by no event at all -- and a
+    silently-empty trigger set is exactly the state this function exists to
+    detect, so the naive spelling would have hidden the finding while looking
+    like it made it.
+    """
+    document = yaml.safe_load(text)
+    if not isinstance(document, dict):
+        return ()
+    block = document.get("on", document.get(True))
+    if isinstance(block, str):
+        return (block,)
+    if isinstance(block, list):
+        return tuple(sorted(str(item) for item in block))
+    if isinstance(block, dict):
+        return tuple(sorted(str(key) for key in block))
+    return ()
+
+
+def workflow_triggers(root: Path) -> Mapping[str, tuple[str, ...]]:
+    """Return each workflow's events, keyed by its repository-relative path."""
+    workflow_dir = root / _WORKFLOW_DIR
+    if not workflow_dir.is_dir():
+        return MappingProxyType({})
+    return MappingProxyType(
+        {
+            f"{_WORKFLOW_DIR}/{workflow.name}": _workflow_events(workflow.read_text(encoding=_UTF_8))
+            for workflow in scan_directory(workflow_dir, pattern="*.yml")
+        },
+    )
+
+
+def ci_invoked_recipe_triggers(root: Path) -> Mapping[str, tuple[str, ...]]:
+    """Return every CI-invoked recipe mapped to the events that reach it.
 
     A recipe is CI-invoked when a workflow ``run:`` names it, or when a
     CI-invoked recipe's own body names it. The transitive step matters: the
     recipes workflows call are increasingly thin wrappers, and stopping at the
     first hop would report a delegated lane as unreached.
+
+    Events accumulate along that same closure, per workflow rather than over all
+    of them at once. A recipe reached from two workflows carries both event
+    sets, so it counts as automatic when EITHER route is -- the union is what
+    keeps a lane that a dispatch-only workflow merely also names from reading as
+    manual.
     """
     justfile = root / "justfile"
-    if not justfile.exists():
-        return frozenset()
-    bodies = _recipe_bodies(justfile.read_text(encoding=_UTF_8))
+    bodies = _recipe_bodies(justfile.read_text(encoding=_UTF_8)) if justfile.exists() else {}
 
-    reached: set[str] = set()
     workflow_dir = root / _WORKFLOW_DIR
-    if workflow_dir.is_dir():
-        for workflow in scan_directory(workflow_dir, pattern="*.yml"):
-            reached |= _recipes_invoked_by(_workflow_run_commands(workflow.read_text(encoding=_UTF_8)))
+    if not workflow_dir.is_dir():
+        return MappingProxyType({})
 
-    # Close over recipe-to-recipe calls until nothing new is reached.
-    frontier = set(reached)
-    while frontier:
-        nxt: set[str] = set()
-        for name in frontier:
-            for called in _recipes_invoked_by(bodies.get(name, "")):
-                if called not in reached:
-                    reached.add(called)
-                    nxt.add(called)
-        frontier = nxt
-    return frozenset(reached)
+    accumulated: dict[str, set[str]] = {}
+    for workflow in scan_directory(workflow_dir, pattern="*.yml"):
+        text = workflow.read_text(encoding=_UTF_8)
+        events = set(_workflow_events(text))
+        reached = _recipes_invoked_by(_workflow_run_commands(text))
+        # Close over recipe-to-recipe calls until nothing new is reached.
+        frontier = set(reached)
+        while frontier:
+            nxt: set[str] = set()
+            for name in frontier:
+                for called in _recipes_invoked_by(bodies.get(name, "")):
+                    if called not in reached:
+                        reached.add(called)
+                        nxt.add(called)
+            frontier = nxt
+        for name in reached:
+            accumulated.setdefault(name, set()).update(events)
+    return MappingProxyType({name: tuple(sorted(events)) for name, events in accumulated.items()})
+
+
+def ci_invoked_recipes(root: Path) -> frozenset[str]:
+    """Return every justfile recipe a workflow reaches, transitively."""
+    return frozenset(ci_invoked_recipe_triggers(root))
 
 
 def ci_invoked_lanes(root: Path) -> tuple[Lane, ...]:
@@ -526,10 +620,15 @@ def ci_invoked_lanes(root: Path) -> tuple[Lane, ...]:
     deploy-authority tests) were both declared, both healthy, and invoked by no
     workflow at all, so the declared-lane gate reported full coverage over
     tests CI had never once run.
+
+    Every returned lane carries the events that reach it, so a caller can ask
+    the weaker-guarantee question underneath: an invoked lane whose every route
+    is ``workflow_dispatch`` is wired but fires on no push, and its failure
+    cannot fail anything until a person goes looking. See
+    :attr:`Lane.is_manual_only`.
     """
-    resolved = declared_lanes(root)
     invoked = ci_invoked_recipes(root)
-    return tuple(lane for lane in resolved if lane.recipe is None or lane.recipe in invoked)
+    return tuple(lane for lane in declared_lanes(root) if lane.recipe is None or lane.recipe in invoked)
 
 
 def configured_testpaths(root: Path) -> tuple[str, ...]:
@@ -652,8 +751,20 @@ def resolved_recipe_commands(root: Path, recipe: str) -> tuple[str, ...]:
 
 
 def declared_lanes(root: Path) -> tuple[Lane, ...]:
-    """Return every lane declared by config, recipes, and workflows."""
+    """Return every lane declared by config, recipes, and workflows.
+
+    Triggers are attached HERE rather than only in :func:`ci_invoked_lanes`,
+    which keeps the invoked set a strict subset of the declared set -- the
+    invariant that says the two models differ by a filter and not by content.
+    Attaching them downstream instead made every recipe lane compare unequal
+    between the two functions, so the invoked set stopped being a subset at all
+    while both models were individually correct. A recipe no workflow reaches
+    carries an empty trigger tuple, which is the honest reading: no workflow
+    event reaches it, so neither :attr:`Lane.runs_on_change` nor
+    :attr:`Lane.is_manual_only` claims anything about it.
+    """
     testpaths = configured_testpaths(root)
+    recipe_triggers = ci_invoked_recipe_triggers(root)
     default_expression = configured_marker_expression(root)
     lanes: list[Lane] = []
 
@@ -664,27 +775,23 @@ def declared_lanes(root: Path) -> tuple[Lane, ...]:
     workflow_dir = root / _WORKFLOW_DIR
     if workflow_dir.is_dir():
         for workflow in scan_directory(workflow_dir, pattern="*.yml"):
+            text = workflow.read_text(encoding=_UTF_8)
+            events = _workflow_events(text)
             lanes.extend(
-                _pytest_invocations(
-                    workflow.read_text(encoding=_UTF_8),
+                replace(lane, triggers=events)
+                for lane in _pytest_invocations(
+                    text,
                     source=f"{_WORKFLOW_DIR}/{workflow.name}",
                     default_paths=testpaths,
-                ),
+                )
             )
 
     # A pathless invocation inherits both testpaths and the addopts expression.
     resolved: list[Lane] = []
     for lane in lanes:
         expression = lane.marker_expression if lane.marker_expression is not None else default_expression
-        resolved.append(
-            Lane(
-                source=lane.source,
-                paths=lane.paths,
-                marker_expression=expression,
-                recipe=lane.recipe,
-                exclusions=lane.exclusions,
-            ),
-        )
+        triggers = lane.triggers if lane.recipe is None else recipe_triggers.get(lane.recipe, ())
+        resolved.append(replace(lane, marker_expression=expression, triggers=triggers))
     return tuple(resolved)
 
 
