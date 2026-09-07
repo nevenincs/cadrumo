@@ -13,9 +13,9 @@ from ..command_spec import (
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
-    TuiCapability,
     ValueContract,
 )
+from ...tui_capability import TuiCapability
 from ._spec_policies import CALCULATION_READ, PROFILE_READ
 
 _OUTPUT_LANGUAGE = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))

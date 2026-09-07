@@ -967,12 +967,15 @@ evidence = "An immutable projection of every executable Ledger command, built fr
 
 [[symbol_cluster]]
 name = "public result projectors displaced by the CLI payload contract"
+area = "application/modelo"
 class = "superseded"
-area = "application"
-resolved = false
-remedy_requires_decision = true
-symbols = ["project_modelo_work_verify_result", "project_modelo_export_result", "project_modelo_edit_apply_result"]
-evidence = "The three PublicResultV1 models were moved out of this cluster: the audit stopped reporting them because the projectors below DO construct them, and a construction counts as a use even when the constructor is itself unreached -- transitive deadness the walk does not collapse. The projectors remain the finding. Three projectors, each a one-line construction of a matching PublicResultV1 model, and none is called anywhere in production, dev/ or tests; the models themselves are touched only by tests asserting on model_fields, never constructed. The live discharger is named rather than guessed: the command table declares the verify leaf result schema as DeferredTarget(cadrumo.entrypoints.cli._modelo_payloads, WorkVerifyResult), so the CLI publishes its own payload type and never routes through this layer. The two shapes agree on the four identity and status fields and diverge deliberately -- the CLI payload carries the resolved and missing casilla ids, the findings, run_at and verified_by, where the PublicResultV1 carries only counts -- so the payload schema is the richer contract and this is displacement rather than duplication. Nothing is exposed unprojected: the CLI never returns the PublicResultV1 shape at all. The remedy is withdrawal of the displaced layer together with the field-shape tests that pin it, which is an owner decision because the types are shipped and exported."
+resolved = true
+symbols = [
+  "project_modelo_work_verify_result",
+  "project_modelo_export_result",
+  "project_modelo_edit_apply_result",
+]
+evidence = "RESOLVED 2026-09-09 by deletion. Three projectors in src/cadrumo/application/modelo/operation_definitions.py, each a one-line construction of a matching PublicResultV1 model, none called anywhere in production, dev or tests, and each exported in __all__. The live discharger was named rather than guessed: the command table declares the verify leaf result schema as a DeferredTarget on cadrumo.entrypoints.cli._modelo_payloads, so the CLI publishes its own payload type and never routes through this layer, and the two shapes diverge deliberately -- the payload carries resolved and missing casilla ids, findings, run_at and verified_by where the PublicResultV1 carries only counts, which makes the payload the richer contract and this displacement rather than duplication. The models stay: each is bound as result_type on a live OperationDefinition, so deleting the projectors does not orphan them, which was checked before deleting rather than after. The audit reports 401 exact findings where it reported 404, and the symbol ratchet entry for the module was lowered from five to two in this same step."
 
 [[symbol_cluster]]
 name = "asset ledger persistence with no production writer or reader"

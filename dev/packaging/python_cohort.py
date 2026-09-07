@@ -194,7 +194,15 @@ def resolve(path, target):
     return value
 
 nodes = command_spec_nodes()
-probe_mode = os.environ.get("AEAT_COMMAND_SPEC_PROBE_MODE", "projection")
+# Required, not defaulted. The parent below drives four modes through this one
+# variable, and a default made an unset or renamed variable indistinguishable
+# from the first of them: every run would have measured the projection, the
+# three selected-path import budgets would have been silently skipped, and the
+# parent would have collected an empty `selected_path_deltas` without an error.
+# The sibling reads of AEAT_INSTALL_SITE and AEAT_DEPENDENCY_SITE are already
+# spelled this way; a KeyError here exits the probe non-zero and the parent
+# names the mode that failed.
+probe_mode = os.environ["AEAT_COMMAND_SPEC_PROBE_MODE"]
 identities = sorted((node.spec.key, node.path, node.spec.kind) for node in nodes)
 locales = sorted(
     (

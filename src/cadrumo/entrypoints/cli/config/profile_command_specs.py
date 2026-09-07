@@ -30,9 +30,9 @@ from ..command_spec import (
     RecoveryHandoffSpec,
     ResultSchemaSpec,
     SchemaState,
-    TuiCapability,
     ValueContract,
 )
+from ...tui_capability import TuiCapability
 from ..command_spec import translation_key as _key
 from ._spec_policies import (
     BOOTSTRAP_DESTRUCTIVE,

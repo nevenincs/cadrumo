@@ -32,7 +32,7 @@ from ...core.errors.hierarchy import CoreValidationError
 from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL
 from ...core.time.utc import parse_iso_datetime, validate_utc_aware
 from ...core.unit_proportion import is_unit_proportion
-from .enums import BusinessClassification
+from .enums import BusinessClassification, takes_business_share
 from .errors import TransactionValidationError
 from .raw_transaction import RawTransaction
 
@@ -96,10 +96,13 @@ def validate_business_pct_coupling(
 ) -> None:
     """Refuse a business share that disagrees with its classification.
 
-    A MIXED transaction must carry a share and any other classification must
-    not, which is the coupling every write path checks.
+    A share-bearing classification must carry a share and any other must not,
+    which is the coupling every write path checks. WHICH classifications bear
+    one is :func:`~domain.transactions.enums.takes_business_share`, read here
+    rather than spelled out, so this check and the command that offers the flag
+    cannot come to disagree about it.
     """
-    if state is BusinessClassification.MIXED:
+    if takes_business_share(state):
         if pct is None:
             raise TransactionValidationError("business_pct is required when classification is MIXED")
         if not is_unit_proportion(pct):

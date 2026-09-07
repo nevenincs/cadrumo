@@ -32,7 +32,12 @@ from ...core.prorrata_exclusions import Art104TresExclusion
 from ...core.prorrata_register import ProrrataRegisterRegime
 from ...domain.iva.prorrata import InputClassification
 from ...domain.iva.schema import EUMemberState, IvaCategory
-from ...domain.transactions.enums import BusinessClassification, TransactionDirection, is_classified
+from ...domain.transactions.enums import (
+    BusinessClassification,
+    TransactionDirection,
+    is_classified,
+    takes_business_share,
+)
 from ...domain.transactions.errors import TransactionValidationError
 from ._common import bad, current_workflow_state, emit_envelope, profile_to_taxpayer, transaction_catalogue_repo
 from ._date_parsing import _parse_iso_date
@@ -524,15 +529,18 @@ def ledger_classify(
         transaction_repository=transaction_repository,
         transaction_id=resolved_id,
     )
-    if classification is BusinessClassification.MIXED and business_pct is None:
-        # MIXED demands a proportion; surface the `--business-pct` flag
-        # directly rather than letting the patch validator's generic
-        # message route through the opaque boundary.
+    # WHICH classifications carry a share is the domain's answer, read rather
+    # than repeated: spelling `is MIXED` here made the same rule a second
+    # declaration, free to disagree with the coupling every write path checks.
+    # What stays here is the wording — naming `--business-pct` directly, rather
+    # than letting the patch validator's generic message route through the
+    # opaque CLI boundary.
+    if takes_business_share(classification) and business_pct is None:
         raise bad(tr("cli.ledger.classify.mixed_requires_business_pct"))
-    if classification is not BusinessClassification.MIXED and business_pct is not None:
-        # `--business-pct` only carries meaning for a MIXED row; a
-        # BUSINESS or PERSONAL classification is wholly business or
-        # wholly private. Refuse rather than silently dropping it.
+    if not takes_business_share(classification) and business_pct is not None:
+        # A share on a wholly-business or wholly-personal row is a
+        # contradiction rather than a refinement. Refuse rather than silently
+        # dropping it.
         raise bad(tr("cli.ledger.classify.business_pct_requires_mixed"))
     # A leaked `pydantic.ValidationError` (negative `--taxable-base`,
     # an illegal field combination) is otherwise wrapped by the generic

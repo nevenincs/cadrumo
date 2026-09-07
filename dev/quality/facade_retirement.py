@@ -71,6 +71,8 @@ from typing import Final
 
 from cadrumo.core.atomic_write import atomic_write_text
 
+from .unread_inputs import report_unread
+
 __all__ = [
     "NON_INERT_KINDS",
     "REFUSALS",
@@ -288,13 +290,15 @@ def facade_import_sites(
     """
     by_dotted = {package.dotted: package for package in packages}
     sites: list[ImportSite] = []
+    unread: list[str] = []
     for path in sorted(search_root.rglob("*.py")):
         if "__pycache__" in path.parts or ".venv" in path.parts or path.name == _INIT:
             continue
         try:
             source = path.read_text(encoding="utf-8")
             tree = ast.parse(source)
-        except (SyntaxError, UnicodeDecodeError, OSError):
+        except (SyntaxError, UnicodeDecodeError, OSError) as refusal:
+            unread.append(f"{path} ({refusal})")
             continue
         lines = source.splitlines()
         for node in ast.walk(tree):
@@ -324,6 +328,12 @@ def facade_import_sites(
                     consumer_package=".".join(_package_of(path)),
                 )
             )
+    report_unread(
+        "facade import-site scan",
+        "these modules were not read or parsed, so a forwarded import inside one is missing from "
+        "the worklist below and from the site count this tool prints",
+        unread,
+    )
     return tuple(sites)
 
 
