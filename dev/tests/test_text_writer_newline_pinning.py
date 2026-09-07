@@ -44,11 +44,41 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 SCAN_ROOTS: tuple[str, ...] = ("dev", "src/cadrumo", "packaging")
 
 #: Lowest plausible number of scanned modules. A green result below this floor
-#: would mean "nothing was checked" rather than "nothing is wrong". Live the
-#: walk scans 2,976 gated modules, so the previous floor of 700 let three
-#: quarters of the corpus disappear while the gate stayed green. A floor,
-#: not a pinned count: it fails only when the corpus SHRINKS past it.
+#: would mean "nothing was checked" rather than "nothing is wrong". Raised from
+#: 700, which let three quarters of the corpus disappear while the gate stayed
+#: green. A floor, not a pinned count: it fails only when the corpus SHRINKS
+#: past it. No live total is restated -- the one that stood here had drifted.
 MIN_SCANNED_MODULES = 2500
+
+#: Per-tree floors, because a single total cannot see ONE TREE leave. The
+#: headroom above the total floor is several hundred modules, and entrypoints,
+#: dev, adapters, core, tests and llm each fit inside it -- entrypoints carries
+#: two of the four findings this gate reports today, so the subtree holding
+#: half its offenders could stop being walked while the total stayed green.
+#: Keyed independently of the walk: a tree that drops out keeps its floor and
+#: reds at zero rather than disappearing along with the check. Each is set
+#: near two thirds of its live population. The tail below twenty modules
+#: (packaging, _data, the two loose files) carries no floor and is not
+#: guarded here.
+_MINIMUM_SCANNED_BY_TREE = {
+    "src/cadrumo/application": 493,
+    "src/cadrumo/domain": 365,
+    "src/cadrumo/entrypoints": 308,
+    "dev": 304,
+    "src/cadrumo/adapters": 251,
+    "src/cadrumo/core": 183,
+    "src/cadrumo/tests": 68,
+    "src/cadrumo/llm": 18,
+}
+
+
+def _scan_tree(name: str) -> str:
+    """Return the floored subtree a tracked module path belongs to."""
+    parts = name.split("/")
+    if parts[0] == "src":
+        return "/".join(parts[:3])
+    return parts[0]
+
 
 #: Writers that legitimately do not pin a terminator, keyed by
 #: ``(repository-relative path, qualified function name)`` with a stated reason.
@@ -243,6 +273,18 @@ def test_the_scan_corpus_did_not_collapse() -> None:
     assert len(unparseable) < 20, (
         f"{len(unparseable)} modules failed to parse and were skipped: {unparseable[:10]}; "
         "that many skips hollows out the gate"
+    )
+
+    walked = dict.fromkeys(_MINIMUM_SCANNED_BY_TREE, 0)
+    for name in _tracked_python_modules():
+        tree = _scan_tree(name)
+        if tree in walked:
+            walked[tree] += 1
+    starved = {tree: (walked[tree], floor) for tree, floor in _MINIMUM_SCANNED_BY_TREE.items() if walked[tree] < floor}
+    assert not starved, (
+        f"these source trees were walked below their floor {starved!r}; the total floor "
+        "above cannot see one tree leave, and a tree nobody walks reports no unpinned "
+        "writer because none was looked for"
     )
 
 

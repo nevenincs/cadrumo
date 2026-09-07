@@ -81,6 +81,23 @@ _UTF_8: Final[str] = "utf-8"
 _MODULE_VACUITY_FLOOR: Final[int] = 4_000
 _DATA_VACUITY_FLOOR: Final[int] = 10_000
 
+# A single total cannot see ONE PACKAGE leave. The module floor above sits
+# roughly nineteen hundred under the live count, and every package in the
+# product fits inside that slack -- application, the largest, is smaller than
+# the gap. A package dropped from the walk contributes no offender and the
+# total still clears, so the boundary would read absolute while the largest
+# body of code in the product went unread. Keyed independently of the walk:
+# a package that stops being scanned keeps its floor and reds at zero.
+_MINIMUM_MODULES_BY_PACKAGE: Final[dict[str, int]] = {
+    "application": 1249,
+    "domain": 924,
+    "entrypoints": 689,
+    "adapters": 558,
+    "core": 330,
+    "tests": 138,
+    "llm": 44,
+}
+
 
 # ---------------------------------------------------------------------------
 # Live-tree inputs
@@ -90,6 +107,25 @@ _DATA_VACUITY_FLOOR: Final[int] = 10_000
 def _live_modules() -> list[Path]:
     """Return every ``.py`` module in the product package."""
     return list(scan_directory(_PKG_ROOT, pattern="*.py", recursive=True, prune_directories=("__pycache__",)))
+
+
+def _assert_every_package_was_walked(modules: list[Path]) -> None:
+    """Refuse a scan that lost a whole package, which the total cannot see."""
+    walked = dict.fromkeys(_MINIMUM_MODULES_BY_PACKAGE, 0)
+    for module in modules:
+        head = module.relative_to(_PKG_ROOT).as_posix().split("/")[0]
+        if head in walked:
+            walked[head] += 1
+    starved = {
+        package: (walked[package], floor)
+        for package, floor in _MINIMUM_MODULES_BY_PACKAGE.items()
+        if walked[package] < floor
+    }
+    assert not starved, (
+        f"vacuity check: these packages were walked below their floor {starved!r}; "
+        "the total floor cannot see one package leave, and a package nobody walks "
+        "yields no offender because none was looked for"
+    )
 
 
 def _planted(root: Path, rel: str, body: str) -> Path:
@@ -129,6 +165,7 @@ def test_no_src_module_builds_a_governance_corpus_path() -> None:
         f"vacuity check: fewer than {_MODULE_VACUITY_FLOOR} modules were found under {_SRC_ROOT}; "
         "a hard-zero result from a collapsed scan reads as clean without being one"
     )
+    _assert_every_package_was_walked(modules)
     offenders = find_governance_path_violations(modules, src_root=_SRC_ROOT)
     assert offenders == [], (
         "modules under src/ build paths into the governance corpus (absolute one-way boundary):\n"
@@ -140,6 +177,7 @@ def test_no_src_prose_names_the_governance_corpus() -> None:
     """No comment, docstring or multi-line string under ``src/`` cites the corpus."""
     modules = _live_modules()
     assert len(modules) >= _MODULE_VACUITY_FLOOR, "vacuity check: the module scan collapsed"
+    _assert_every_package_was_walked(modules)
     offenders = find_governance_prose_violations(modules, src_root=_SRC_ROOT)
     assert offenders == [], (
         "prose under src/ names the governance corpus (awareness in any form is a violation):\n"

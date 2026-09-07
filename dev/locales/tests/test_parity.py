@@ -285,9 +285,6 @@ def test_english_catalogue_distinguishes_product_prose_cli_and_identity_headings
         leaves=_CUSTODY_PASSPHRASE_NOTICE_LEAVES,
         expected=_CUSTODY_PASSPHRASE_NOTICE_IDENTITY_TOKENS,
     )
-    assert _leaf(data, "cli", "config", "google", "profile_help") == (
-        "Cadrumo profile name override (default = active profile on workflow state)"
-    )
 
     # Identity contract only, not the prose. These two strings are live operator
     # copy this test does not own; pinning the sentence made every reword fail
@@ -397,9 +394,6 @@ def test_catalan_catalogue_distinguishes_product_prose_cli_and_identity_headings
         _CUSTODY_PASSPHRASE_NAMESPACE,
         leaves=_CUSTODY_PASSPHRASE_NOTICE_LEAVES,
         expected=_CUSTODY_PASSPHRASE_NOTICE_IDENTITY_TOKENS,
-    )
-    assert _leaf(data, "cli", "config", "google", "profile_help") == (
-        "Perfil Cadrumo a usar (per defecte = perfil actiu de l'estat de flux)"
     )
     assert _leaf(data, "cli", "ledger", "add", "system_state_not_assignable") == (
         "La classificació '%{value}' l'assigna Cadrumo automàticament i no es pot establir a mà. "

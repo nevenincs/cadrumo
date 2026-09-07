@@ -43,15 +43,45 @@ def test_pipeline_cli_registers_the_separate_check_and_publish_verbs() -> None:
     assert "publish" in result.output
 
 
-def test_pipeline_cli_refuses_an_undeclared_record_design_source_before_staging() -> None:
-    """An explicit source selector is checked against the revision, never guessed."""
+def test_pipeline_cli_refuses_a_bootstrap_source_absent_from_the_catalogue() -> None:
+    """An absent tree's bootstrap selector must resolve to a real catalogued source.
+
+    Modelo 200/2024 has no published export tree yet, so ``_prepare`` takes the
+    bootstrap branch before ``revision_render_inputs`` is ever reached. The
+    given ``source_ref`` is not any catalogued source at all, so this proves
+    the bootstrap guard in ``cli.py`` rather than the record-design guard in
+    ``render_check.py``.
+    """
     result = CliRunner().invoke(
         app,
         ["check", "200", "2024", "not-a-declared-source", "2024", "0A"],
     )
 
     assert result.exit_code == 1
-    assert "does not declare record-design source" in result.output
+    assert "no source 'not-a-declared-source' exists for bootstrap target selection" in result.output
+
+
+def test_pipeline_cli_refuses_a_catalogued_source_undeclared_as_this_revisions_record_design() -> None:
+    """A source that exists but is not a record-design source is refused by name.
+
+    Modelo 200's 2025-y-siguientes revision already has a published export
+    tree, so ``_prepare`` skips the bootstrap branch entirely and calls
+    ``revision_render_inputs`` directly. ``aeat-modelo-200-manual-2025`` is a
+    real catalogued source (``kind = "manual_pdf"``) and is one of this
+    revision's declared ``source_refs``, but it is not a record-design source,
+    so it can never satisfy this revision's record-design selector. This
+    reaches the ``render_check.py`` guard the bootstrap case above cannot.
+    """
+    result = CliRunner().invoke(
+        app,
+        ["check", "200", "2025-y-siguientes", "aeat-modelo-200-manual-2025", "2025", "0A"],
+    )
+
+    assert result.exit_code == 1
+    assert (
+        "200/2025-y-siguientes does not declare record-design source 'aeat-modelo-200-manual-2025'"
+        in result.output
+    )
 
 
 def test_bootstrap_target_refuses_unenrolled_source_digest() -> None:
