@@ -15,7 +15,7 @@ related:
   - '[[2026-09-07-quality-gate-zero-closure-blind-green-measurement-research]]'
   - '[[2026-09-07-quality-gate-zero-closure-gate-consumer-parser-blindness-audit]]'
 modified: '2026-09-07'
-body_hash: 'sha256:fb97d93cffe1a32e0361e31431c5d486cbd4a91e67174597a9e6ab3df6ed8337'
+body_hash: 'sha256:71a57310e3dcd9f8ce804b0487f187f3c1c5d2dc4c8fae9e1b60fb9aa18ee1ef'
 ---
 
 <!-- RETIRED: W01, W02, W03, W04, W05, W06, P01, P02, P03, P04, P05, P06, P07, P08, P09, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P21, P22, S01, S02, S03, S04, S05, S06, S07, S08, S09, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19, S20, S21, S22, S23, S24, S25, S26, S27, S28, S29, S30, S31, S32, S33, S34, S35, S36, S37, S38, S39, S40, S41, S42, S43, S44, S45, S46, S47, S48, S49, S50, S51, S52, S53, S54, S55, S56, S57, S58, S59, S60, S61, S62, S63, S64, S65, S66, S67, S68, S69, S70, S71, S72, S73, S74, S75, S76, S77, S78, S79, S80, S81, S82, S83, S84, S85, S86, S87, S88, S89, S90, S91, S92, S95, S96, S97, S98, S99, S100, S101, S102, S103 -->
@@ -76,7 +76,7 @@ One AST sweep per decidable class in dev/quality/, each exercised by a gate unde
 
 Flipping the ambient locale does not retire the locale-bound classes: it mirrors them, and it cannot reach a test that pins its own locale at the call site, which is one of the two sanctioned repairs. The condition is that every assertion in the locale detector's hit set passes under the ambient locale and under a second one, delivered as a parameterised re-run of the affected assertions rather than a CI lane, so no workflow surface is touched. The mechanism must be demonstrated failing before any repair it surfaces; a seeded instance removed once recorded is accepted, because the classes here were found by repairing them and a real unrepaired instance may not exist.
 
-- [ ] `W08.P25.S114` - Land the locale-bound assertion detector, joining each asserted literal against all four catalogues and enumerating the pinning forms from their declaration site rather than from observed usage -- _LANGUAGE_FLAGS, _LANGUAGE_FLAG_PREFIXES and the environment variable in language_argv.py, which together cover --lang and the spliced --flag=LANG spellings no test currently uses (Terra xhigh fixes and refactors); `dev/quality/`.
+- [x] `W08.P25.S114` - Land the locale-bound assertion detector, joining each asserted literal against all four catalogues and enumerating the pinning forms from their declaration site rather than from observed usage -- _LANGUAGE_FLAGS, _LANGUAGE_FLAG_PREFIXES and the environment variable in language_argv.py, which together cover --lang and the spliced --flag=LANG spellings no test currently uses (Terra xhigh fixes and refactors); `dev/quality/`.
 - [ ] `W08.P25.S115` - Deliver the both-locales condition over the locale detector's hit set as a parameterised re-run rather than a CI lane, since flipping the ambient locale only mirrors the vacuity and cannot reach a test that pins its own locale, and demonstrate it failing first -- preferring the live residual instance, else seeding synthetic in-memory source or an isolated fixture, never the shipped tree (Terra xhigh fixes and refactors); `dev/quality/, dev/quality/tests/`.
 - [ ] `W08.P25.S116` - Repair the locale-dependent assertions the axis surfaces, replacing each with the stable transport token it stood for or with an explicit locale pin, and reporting a removed redundant branch as a strengthening rather than a defect fixed (Terra xhigh fixes and refactors); `src/cadrumo/`.
 
