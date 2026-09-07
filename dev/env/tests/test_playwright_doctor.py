@@ -37,19 +37,20 @@ def test_remediation_never_recommends_the_wrong_browser_for_the_configured_chann
     assert "playwright install chromium" not in remediation
 
 
-@pytest.mark.external_tool
 def test_run_doctor_succeeds_for_a_real_provisioned_channel() -> None:
     """A real launch-and-close of an actually-provisioned channel exits 0.
 
-    Marked per function rather than per module: the browser binary is
-    installed by ``playwright install``, not by the dependency set, so this
-    is the marker's stated case -- heavy external tooling the dependency set
-    does not install -- and the default lane holds it out via
-    ``unit and not external_tool``. Without the marker it ran in that lane
-    and failed on any host that had not provisioned chromium, which is a red
-    that reports the host rather than the code. The three siblings stay in
-    the default lane: two never launch anything, and the bogus-channel case
-    fails its launch fast and asserts on that failure, so it needs no binary.
+    This launches a browser, so it fails on a host that has not run
+    ``playwright install`` -- a red that reports the host rather than the
+    code. ``external_tool`` looks like the answer and is NOT: it was tried
+    here and reverted. Exactly one declared lane covers this path, and its
+    expression is ``(unit or integration) and not resident_service and not
+    external_tool``, so the marker does not move the test to another lane --
+    it moves it to NO lane, and the reachability gate refuses that by name.
+    A test nobody runs reads as coverage and is not, which is the worse of
+    the two failures, so the host-dependent red stays until the real remedy
+    lands: a lane that names this path AND accepts the marker. That is a
+    justfile change, and the justfile is an operator decision.
     """
     exit_code = run_doctor(channel="chromium")
     assert exit_code == 0

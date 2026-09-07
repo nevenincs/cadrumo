@@ -33,6 +33,7 @@ from .._artifacts import (
     write_index,
     write_manifest,
 )
+from .._viewports import resolve as resolve_viewport
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -51,12 +52,13 @@ def _manifest(frames: tuple[RenderedFrame, ...] = ()) -> Manifest:
 
 
 def _rendered(surface: str, viewport: str, theme: str) -> RenderedFrame:
+    shape = resolve_viewport(viewport)
     return RenderedFrame(
         surface=surface,
-        viewport=viewport,
-        columns=120,
-        rows=40,
-        orientation="landscape",
+        viewport=shape.name,
+        columns=shape.columns,
+        rows=shape.rows,
+        orientation=shape.orientation,
         theme=theme,
         png="png/a.png",
         svg="svg/a.svg",

@@ -391,6 +391,16 @@ symbols = [
 ]
 evidence = "A findings-DISCARDING variant, deleted 2026-09-09. seed_carried_prior_definitiva_entry in src/cadrumo/application/prorrata_register/seed.py delegated to evaluate_carried_prior_definitiva_seed and returned only the seed, dropping the operator-facing blocker and advisory findings that explain why a seed did or did not resolve. Its own docstring said to call the other one when those findings are needed. Nothing called it -- not production, not dev, not tests -- while the evaluator carries three production references and is invoked by the register CLI, so the live path already keeps the findings. The two production docstrings that pointed readers at the discarding variant now name the evaluator. Same class as the calculate wrapper relocated earlier in this campaign: under no-silent-under-declaration the hazard is the existence of a shorter name that silently drops diagnostics, not its disuse. Found by a sweep for unreached one-line delegators whose target is reached elsewhere."
 
+[[symbol_cluster]]
+name = "place-of-supply nature narrowing its rule resolver displaced"
+area = "domain/iva"
+class = "superseded"
+resolved = true
+symbols = [
+  "required_supply_nature_for_rule",
+]
+evidence = "A one-line narrowing of a live sibling, deleted 2026-09-09. required_supply_nature_for_rule in src/cadrumo/domain/iva/place_of_supply.py returned place_of_supply_rule(rule_id, on=on).supply_nature and nothing else, while that rule resolver carries six production references. Its four consumers were all tests, now reading the field at the call site. Worth recording how it was nearly missed: a previous pass read its docstring, saw a Raises clause distinguishing a rule that is not grounded from one grounded and silent, and concluded it added behaviour. The clause documents what the CALLEE raises. Reading the body settled in one line what the docstring had argued the other way -- the same trap this campaign recorded when a module docstring argued for a duplicate guard the action already performed. Found by a sweep for unreached functions returning only part of a sibling's result, the body shape shared by three deletions before it."
+
 [[test_module]]
 name = "cadrumo.adapters.persistence.storage.sql.tests.test_secure_objects_schema_lineage"
 follows = "symbol"

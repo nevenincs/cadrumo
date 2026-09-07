@@ -22,10 +22,11 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Final
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .._paths import REPO_ROOT, UTF_8
 from ._inventory import InterfaceKind
+from ._viewports import VIEWPORTS, Orientation, ViewportName
 
 RUN_ROOT: Final[Path] = REPO_ROOT / ".tmp-tui-visual-inventory"
 """Where runs land. Gitignored: these are review artefacts, never durable."""
@@ -78,10 +79,10 @@ class RenderedFrame(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     surface: str
-    viewport: str
+    viewport: ViewportName
     columns: int
     rows: int
-    orientation: str
+    orientation: Orientation
     theme: str
     png: str
     svg: str
@@ -105,6 +106,28 @@ class RenderedFrame(BaseModel):
     missing_glyphs: tuple[str, ...] = ()
     """Characters the pinned raster font could not draw; a blank box in the
     PNG at one of these is a font gap, never a defect in the surface."""
+
+    @model_validator(mode="after")
+    def _geometry_matches_the_named_viewport(self) -> RenderedFrame:
+        """Refuse a frame whose grid contradicts the viewport it names.
+
+        ``columns``, ``rows`` and ``orientation`` are a SECOND statement of
+        what :data:`~dev.tui._viewports.VIEWPORTS` already decides for the
+        named viewport, kept in the record so the index reads without
+        resolving anything. A second statement with no owner is free to
+        disagree with the first, and a manifest saying ``small`` at 200x50
+        is a claim that no frame on disk supports.
+        """
+        shape = VIEWPORTS[self.viewport]
+        recorded = (self.columns, self.rows, self.orientation)
+        owned = (shape.columns, shape.rows, shape.orientation)
+        if recorded != owned:
+            message = (
+                f"frame {self.surface}/{self.viewport}/{self.theme} records {recorded}, "
+                f"but viewport {self.viewport} is {owned}"
+            )
+            raise ValueError(message)
+        return self
 
     @property
     def key(self) -> str:
@@ -170,7 +193,7 @@ class FailedFrame(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     surface: str
-    viewport: str
+    viewport: ViewportName
     theme: str
     kind: FrameFailureKind
     attempts: int = 1
@@ -193,7 +216,7 @@ class SkippedFrame(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     surface: str
-    viewport: str
+    viewport: ViewportName
     theme: str
     reason: str
 

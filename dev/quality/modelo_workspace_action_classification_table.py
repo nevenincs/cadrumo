@@ -619,15 +619,18 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
     ),
     "modelo.review_package.encrypt_for_recipient": modelo_action_classification(
         "modelo.review_package.encrypt_for_recipient",
-        ModeloWorkspaceActionDisposition.C1_OR_C2_READ_PENDING,
+        ModeloWorkspaceActionDisposition.C4_MUTATION_PENDING,
         command_key="app_modelo_review_package_encrypt_for_recipient",
-        write_route="none",
+        write_route="profile-bound",
         side_effects=("local-state",),
         has_action_catalogue_entry=False,
         tui_capability=TuiCapability.NOT_IMPLEMENTED,
         is_surface_dispatchable=False,
         owning_authority="tui-interface W05.P10/W05.P11",
-        reason="read-only query, not yet migrated to a C1 or C2 destination",
+        reason=(
+            "writes the collaboration audit event into the bucket event history, so it is a "
+            "direct-effect mutation rather than the read-only query this row once recorded"
+        ),
         evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
         reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
     ),

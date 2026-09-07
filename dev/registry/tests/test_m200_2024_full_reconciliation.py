@@ -158,6 +158,33 @@ def test_source_entry_collision_and_anchor_mutations_fail_closed() -> None:
         )
 
 
+def test_parse_source_refs_refuses_a_non_array_value() -> None:
+    """``_SOURCE_REFS_LINE`` (the caller's anchor) admits any single-line value, while
+    ``_SOURCE_REFS_BLOCK`` (parsed here) requires the value to open with ``[``. A
+    ``source_refs`` line that satisfies the former but not the latter must fail closed,
+    not be silently unreachable.
+    """
+    with pytest.raises(RegistryValidationError, match="is not a TOML array"):
+        subject._parse_source_refs(Path("probe.toml"), "source_refs = 'aeat-dr-200-2024'\n")
+
+
+def test_source_refs_anchor_that_is_not_array_shaped_fails_closed(tmp_path: Path) -> None:
+    """The same non-array shape, reached through the real file-scan entrypoint."""
+    casillas_root = tmp_path / "casillas"
+    shutil.copytree(bundled_path("registry", "aeat", "modelos", "200", "revisions", "2024", "casillas"), casillas_root)
+    path = casillas_root / "c00093.toml"
+    original = path.read_text(encoding="utf-8")
+    tampered = original.replace(
+        "source_refs = [\n    'aeat-dr-200-2024',\n    'aeat-modelo-200-manual-2024',\n]\n",
+        "source_refs = 'aeat-dr-200-2024'\n",
+    )
+    assert tampered != original, "fixture no longer contains the expected source_refs block"
+    path.write_text(tampered, encoding="utf-8", newline="\n")
+
+    with pytest.raises(RegistryValidationError, match="is not a TOML array"):
+        subject._read_m200_2024_casilla_records_at(casillas_root)
+
+
 def test_partition_and_catalogue_mutations_fail_closed() -> None:
     target = SimpleNamespace(
         id="2024",

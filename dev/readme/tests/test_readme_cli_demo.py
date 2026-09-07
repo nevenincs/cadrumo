@@ -18,6 +18,12 @@ def test_demo_authorities_use_only_cadrumo_product_paths_and_commands() -> None:
     assert prepare_cli_demo._CLI_BOOTSTRAP == "from cadrumo.entrypoints.cli import main; main()"
     assert render_cli_demo._CLI_BOOTSTRAP == prepare_cli_demo._CLI_BOOTSTRAP
     assert render_cli_demo.DISPLAY_COMMAND.startswith("aeat app quickfile ")
+    assert "aeat " + " ".join(render_cli_demo._CLI_ARGUMENTS) == render_cli_demo.DISPLAY_COMMAND, (
+        "the README shows DISPLAY_COMMAND but the demo runs _CLI_ARGUMENTS; a prefix check "
+        "cannot tell the two apart, so a reader would be given an invocation that was never "
+        f"the one demonstrated: shown {render_cli_demo.DISPLAY_COMMAND!r}, ran "
+        f"{'aeat ' + ' '.join(render_cli_demo._CLI_ARGUMENTS)!r}"
+    )
     assert prepare_cli_demo.DEMO_ROOT == REPO_ROOT / "var" / "readme-demo"
 
 

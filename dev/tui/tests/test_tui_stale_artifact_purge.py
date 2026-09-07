@@ -24,6 +24,7 @@ from .._artifacts import (
     stale_artifacts,
 )
 from .._viewports import DEFAULT_VIEWPORTS
+from .._viewports import resolve as resolve_viewport
 from ..cli import THEMES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -37,12 +38,13 @@ _THEMES = ("dark", "light")
 
 def _frame(surface: str, viewport: str, theme: str) -> RenderedFrame:
     stem = f"{surface}__{viewport}__{theme}"
+    shape = resolve_viewport(viewport)
     return RenderedFrame(
         surface=surface,
-        viewport=viewport,
-        columns=120,
-        rows=40,
-        orientation="landscape",
+        viewport=shape.name,
+        columns=shape.columns,
+        rows=shape.rows,
+        orientation=shape.orientation,
         theme=theme,
         png=f"png/{stem}.png",
         svg=f"svg/{stem}.svg",

@@ -224,7 +224,6 @@
 "cadrumo.domain.iva.flow" = 2
 "cadrumo.domain.iva.lookup" = 1
 "cadrumo.domain.iva.oss" = 3
-"cadrumo.domain.iva.place_of_supply" = 1
 "cadrumo.domain.iva.prorrata" = 4
 "cadrumo.domain.iva.recargo_equivalencia" = 1
 "cadrumo.domain.iva.refund_eligibility" = 1
