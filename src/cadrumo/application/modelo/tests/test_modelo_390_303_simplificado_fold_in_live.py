@@ -46,7 +46,7 @@ from ....domain.iva.regimen_simplificado_rows import (
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
-from ....domain.modelos.calculation_repository import upsert_calculation_revision
+from ....domain.modelos.calculation_repository import CalculationRevisionPersistenceError, upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS,
     CalculationRevision,
@@ -462,7 +462,7 @@ def test_m390_persists_exact_ten_value_handoff_from_one_filed_current_m303_4t_re
     provenance = tuple(
         item
         for item in result.revision.source_provenance
-        if item.binding_source is BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY
+        if item.resolved_binding_source is BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY
     )
     assert len(provenance) == 1
     assert provenance[0].fingerprint == handoff.digest
@@ -526,7 +526,7 @@ def test_m390_encrypted_calculation_catalogue_refuses_a_corrupted_populated_hand
         mutate=mutate,
     )
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(CalculationRevisionPersistenceError, match=r"^calculation-revision catalogue payload is invalid$"):
         calculations.load()
 
 

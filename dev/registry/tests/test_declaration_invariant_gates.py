@@ -603,17 +603,10 @@ def test_every_committed_export_tree_is_enrolled_in_its_reproduction_test(
 ) -> None:
     """No committed tree ships without a test that would notice it drifting.
 
-    The reproduction test enrols its targets in an explicit table, which is the
-    right design - discovery by convention hides a typo - and its cost is that a
-    row can be forgotten. Two were: `m210-2026-y-siguientes` and `m303-2022`
-    shipped committed bytes with no gate, and a drift in their records would
-    have failed nothing. They were found only because a separate report counted
-    the renderable population independently.
-
-    The containment holds one way only. A target may be enrolled without a
-    committed tree - modelo 390's `2022` is, deliberately, and its failure says
-    to publish it rather than retire the row - so this asserts that every
-    committed tree is enrolled and not that every enrolled target is committed.
+    Enrollment is derived from canonical provenance under each declared
+    revision, so publication itself supplies the subject and no hand-maintained
+    list can forget a new tree. This independent projection guards that
+    derivation against silently filtering a committed manifest.
     """
     from cadrumo.core.resources.bundled_data import bundled_path
 
@@ -631,9 +624,9 @@ def test_every_committed_export_tree_is_enrolled_in_its_reproduction_test(
     }
     assert committed, "no export tree is committed, so this gate checked nothing"
     enrolled = {(tree.modelo, tree.revision) for tree in _GENERATED_TREES}
-    assert not (committed - enrolled), (
-        "committed export trees with no reproduction target, so a drift in their records would fail "
-        f"nothing: {sorted(committed - enrolled)}"
+    assert committed == enrolled, (
+        "generated-tree reproduction enrollment differs from the provenance-attested registry projection: "
+        f"missing={sorted(committed - enrolled)}, extra={sorted(enrolled - committed)}"
     )
 
 

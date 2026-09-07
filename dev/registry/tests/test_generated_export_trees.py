@@ -11,9 +11,11 @@ That is a strictly weaker question -- it can say two directories differ, but it
 cannot say the tree is a VALID registry authority -- and it let trees be written
 without the pre-cutover proof that the generator already owned.
 
-Each generated modelo is enrolled as a row in :data:`_GENERATED_TREES`. A row
-whose published design contradicts itself consumes the pipeline-owned
-adjudication keyed by the source file it describes.
+Enrollment is projected from the validated registry and each published tree's
+canonical provenance manifest. A generated tree therefore enters this gate in
+the same change that publishes it; no second hand-maintained revision list can
+silently omit it. A tree whose published design contradicts itself consumes the
+pipeline-owned adjudication keyed by the source file it describes.
 """
 
 from __future__ import annotations
@@ -39,9 +41,17 @@ from cadrumo.domain.calculations.registry.loader import (
     load_registry_tree,
 )
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from cadrumo.domain.calculations.registry.temporal import (
+    coverage_assessment_horizon,
+    revision_selection_coordinates,
+)
 
 from ..pipeline._export_tree import ExportTreeTransportProfile, render_complete_export_tree
-from ..pipeline._provenance_manifest import ExportFragmentTarget
+from ..pipeline._provenance_manifest import (
+    ExportFragmentTarget,
+    export_fragment_provenance_path,
+    load_export_fragment_provenance_manifest,
+)
 from ..pipeline._record_design_ir import load_record_design_intermediate
 from ..pipeline._render_profile import (
     RenderProfileSourceEvidence,
@@ -87,78 +97,54 @@ class _GeneratedTree:
         return f"m{self.modelo}-{self.revision}"
 
 
-_GENERATED_TREES: tuple[_GeneratedTree, ...] = (
-    _GeneratedTree("210", "2025", "aeat-dr-210-2022", "2022", 2025, "0A"),
-    _GeneratedTree("210", "2026-y-siguientes", "aeat-dr-210-2026", "2026", 2026, "0A"),
-    _GeneratedTree("232", "2018-y-siguientes", "aeat-dr-232-2018", "2018", 2018, "0A"),
-    _GeneratedTree("232", "2016-2017", "aeat-dr-232-2016", "2016", 2016, "0A"),
-    _GeneratedTree("353", "2026-desde-02", "aeat-dr-353-2026", "2026", 2026, "02"),
-    _GeneratedTree("353", "2021-2025", "aeat-dr-353-2021-2025", "2021", 2021, "01"),
-    # Split at the 2023/2024 re-layout, where the 2024 design adds nine
-    # fields and revives DR32201 offset 1311 out of reserved space. The
-    # earlier 2022/2023 boundary is NOT split: no key pairs those two
-    # designs totally, so 2008-2022 still emits the 2023 layout.
-    _GeneratedTree("322", "2008-2022", "aeat-dr-322-2022", "2022", 2022, "01"),
-    _GeneratedTree("322", "2023", "aeat-dr-322-2023", "2023", 2023, "01"),
-    _GeneratedTree("322", "2024-2025", "aeat-dr-322-2024-2025", "2024", 2024, "01"),
-    _GeneratedTree("202", "2019-2022", "aeat-dr-202-2019", "2019", 2019, "1P"),
-    _GeneratedTree("202", "2023-2024", "aeat-dr-202-2023", "2023", 2023, "1P"),
-    _GeneratedTree("202", "2025-y-siguientes", "aeat-dr-202-2025", "2025", 2025, "1P"),
-    _GeneratedTree("151", "2015-2022", "aeat-dr-151-2015", "2015", 2015, "0A"),
-    _GeneratedTree("151", "2025-y-siguientes", "aeat-dr-151-2023", "2023", 2023, "0A"),
-    # Split at Orden HAC/1430/2025 art. cuarto, which introduces NUMERO TOTAL DE
-    # REGISTROS DE ENTIDAD at 221-229 of tipo 1 and is applicable for the first
-    # time to ejercicio 2025. One revision carries one layout, so the years
-    # before that boundary emit the 2023 design and the years after it the 2025.
-    _GeneratedTree("184", "2023-2024", "aeat-dr-184-2023-2024", "2023", 2024, "0A"),
-    _GeneratedTree("184", "2025-y-siguientes", "aeat-dr-184-2025", "2025", 2025, "0A"),
-    # Enrolled late, and its absence is why its map went stale unnoticed: 347 was
-    # published without a row here, so nothing compared its committed tree against a
-    # fresh render, and two anchors kept naming parent rows the parser had already
-    # descended past.
-    # Split at the 2024/2025 boundary. The 2011 epoch was derivable because
-    # 347's printed ordinal IS a box identity (unlike modelo 322, where it is
-    # a contiguous position); the 2008 and 2010 designs pair with nothing, so
-    # 2008-2010 still emits the 2011 layout and keeps reporting.
-    _GeneratedTree("347", "2011-2024", "aeat-dr-347-2011", "2011", 2011, "0A"),
-    _GeneratedTree("347", "2025-y-siguientes", "aeat-dr-347-2025", "2025", 2025, "0A"),
-    # Enrolled with the layout, not after it, which is the whole lesson of the 347
-    # entry above: a published tree that nothing compares against a fresh render
-    # is free to drift, and 347's map did exactly that unnoticed.
-    # The revision reads 2025-y-siguientes, not 2024: aeat-dr-200-2025 carries
-    # record_design_epoch "2025" and applies_from 2025-01-01, and 2025-y-siguientes is
-    # the only revision declaring it among its revision-level source_refs. Pairing that
-    # design with the ejercicio-2024 revision asserted the 2025 layout for 2024 -- the
-    # wrong-year pairing this row exists to catch. Revision 2024 has its own reviewed
-    # design (aeat-dr-200-2024, epoch 2024, applies_to 2024-12-31) and a full parsed
-    # mapping set, and owes an enrolment row of its own once its tree is rendered.
-    _GeneratedTree("200", "2025-y-siguientes", "aeat-dr-200-2025", "2025", 2025, "0A"),
-    _GeneratedTree("296", "2024-y-siguientes", "aeat-dr-296-2024", "2024", 2024, "0A"),
-    # Enrolled in the same change that authored the layout, per the m347 entry
-    # above. Modelo 185 is monthly, so its period is a month code rather than
-    # the annual "0A" every other row here carries.
-    _GeneratedTree("185", "2025-y-siguientes", "aeat-dr-185-2026", "2026", 2026, "01"),
-    # Enrolled with the layout. Modelo 222 is the consolidacion twin of 202 and
-    # shares its orden and its DR222_00 envelope grammar, so it carries 202's
-    # supporting-modelo needs too: the isolation must admit modelo 200, whose
-    # annual IS return these pagos fraccionados are instalments of.
-    _GeneratedTree("222", "2025-y-siguientes", "aeat-dr-222-2025", "2025", 2025, "1P"),
-    # The selected five source-bound M303 epochs.  The 2022 layout is out of
-    # scope here; the superseded 2023-y-siguientes revision is not a
-    # generated-tree fallback and must never re-enter this set.
-    _GeneratedTree("303", "2022", "aeat-dr-303-2022", "2022", 2022, "4T"),
-    _GeneratedTree("303", "2023", "aeat-dr-303-2023", "2023", 2023, "4T"),
-    _GeneratedTree("303", "2024-hasta-08-y-2t", "aeat-dr-303-2024-early", "2024-early", 2024, "2T"),
-    _GeneratedTree("303", "2024-desde-09-y-3t", "aeat-dr-303-2024-late", "2024-late", 2024, "3T"),
-    _GeneratedTree("303", "2025", "aeat-dr-303-2025", "2025", 2025, "4T"),
-    _GeneratedTree("303", "2026-y-siguientes", "aeat-dr-303-2026", "2026", 2026, "4T"),
-    # The four exact-source annual IVA summaries. The first two carry the two
-    # hash-pinned instances of the adjudicated page-seven source defect.
-    _GeneratedTree("390", "2022", "aeat-dr-390-2022", "2022", 2022, "0A"),
-    _GeneratedTree("390", "2023", "aeat-dr-390-2023", "2023", 2023, "0A"),
-    _GeneratedTree("390", "2024", "aeat-dr-390-2024", "2024", 2024, "0A"),
-    _GeneratedTree("390", "2025", "aeat-dr-390-2025", "2025", 2025, "0A"),
-)
+def _generated_trees() -> tuple[_GeneratedTree, ...]:
+    """Project every provenance-attested tree from validated registry authority."""
+    authority = bundled_authority()
+    assessment_horizon = coverage_assessment_horizon(authority.catalogues)
+    trees: list[_GeneratedTree] = []
+    for modelo in sorted(authority.modelos, key=lambda item: item.id):
+        for revision in sorted(modelo.revisions.values(), key=lambda item: item.id):
+            export_root = bundled_path(
+                "registry",
+                "aeat",
+                "modelos",
+                str(modelo.id),
+                "revisions",
+                str(revision.id),
+                "export",
+            )
+            manifest_path = export_fragment_provenance_path(export_root)
+            if not manifest_path.is_file():
+                continue
+            manifest = load_export_fragment_provenance_manifest(manifest_path.read_bytes())
+            if manifest.modelo != modelo.id or manifest.revision_id != revision.id:
+                raise AssertionError(
+                    "generated export provenance identity conflicts with its declared registry revision: "
+                    f"{manifest_path}",
+                )
+            coordinates = revision_selection_coordinates(
+                revision,
+                assessment_horizon=assessment_horizon,
+            )
+            if not coordinates:
+                raise AssertionError(f"generated tree {modelo.id}/{revision.id} has no law-selectable coordinate")
+            filing_year, period = coordinates[0]
+            trees.append(
+                _GeneratedTree(
+                    modelo=str(modelo.id),
+                    revision=str(revision.id),
+                    source_ref=str(manifest.source_ref),
+                    epoch=manifest.design_epoch,
+                    filing_year=filing_year,
+                    period=period,
+                )
+            )
+    if not trees:
+        raise AssertionError("validated registry declares no provenance-attested generated export tree")
+    return tuple(trees)
+
+
+_GENERATED_TREES = _generated_trees()
 
 
 def _isolated_authority(tree: _GeneratedTree, root: Path) -> Path:
