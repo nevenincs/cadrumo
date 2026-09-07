@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#cli-distribution-consolidation'
 date: '2026-09-02'
-modified: '2026-09-06'
+modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:c7aa7a732bcd16b3ebee5db3533be0de88692a451ec60afe753cbee09f5c74ec'
+body_hash: 'sha256:38a1fd02e14377e973383f280594f2c4a8d7c188ef397029030c6bb286b977eb'
 related:
   - '[[2026-09-02-cli-distribution-consolidation-P01-S01]]'
   - '[[2026-09-02-cli-distribution-consolidation-P01-S02]]'
@@ -53,6 +53,14 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-P09-S58]]'
   - '[[2026-09-02-cli-distribution-consolidation-P09-S60]]'
   - '[[2026-09-02-cli-distribution-consolidation-P09-S61]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P09-S62]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P09-S63]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P09-S64]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P09-S65]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P09-S66]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P09-S67]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P09-S68]]'
+  - '[[2026-09-02-cli-distribution-consolidation-P09-S69]]'
   - '[[2026-09-02-cli-distribution-consolidation-P10-S38]]'
   - '[[2026-09-02-cli-distribution-consolidation-P10-S40]]'
   - '[[2026-09-02-cli-distribution-consolidation-P10-S41]]'
@@ -152,6 +160,14 @@ Auto-generated index of all documents tagged with `#cli-distribution-consolidati
 - `2026-09-02-cli-distribution-consolidation-P11-S54` - Cover the test directory reachable only by naming one file, and discover the class
 - `2026-09-02-cli-distribution-consolidation-P09-S60` - Teach the installed oracle the recovery enrollment the product now requires
 - `2026-09-02-cli-distribution-consolidation-P09-S61` - Stop every packaging lane from re-running the whole packaging suite before it starts
+- `2026-09-02-cli-distribution-consolidation-P09-S62` - Give the campaign preflight an explicit selection the recipe guard can see
+- `2026-09-02-cli-distribution-consolidation-P09-S63` - Stop a quality sweep from running a repository rewrite when its test module is imported
+- `2026-09-02-cli-distribution-consolidation-P09-S64` - Make the installed payload attestation find the distribution it just installed
+- `2026-09-02-cli-distribution-consolidation-P09-S65` - Make a cohort built twice from one commit carry one identity
+- `2026-09-02-cli-distribution-consolidation-P09-S66` - Make three cross-platform test legs assert their contract instead of the host that ran them
+- `2026-09-02-cli-distribution-consolidation-P09-S67` - Stop the queue watchdog from cancelling a run on a single sample of a label-set handoff
+- `2026-09-02-cli-distribution-consolidation-P09-S68` - Repair the release automation that had never once completed a release
+- `2026-09-02-cli-distribution-consolidation-P09-S69` - Close the three cross-platform defects the serial wedge had been hiding
 
 ### plan
 

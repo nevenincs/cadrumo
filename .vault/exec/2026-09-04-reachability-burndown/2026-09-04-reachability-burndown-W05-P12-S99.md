@@ -5,16 +5,11 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:ef125bbd9140e0c7682c8400364eefb6b43b648d12321d27404dd739eef79377'
+body_hash: 'sha256:07fb9b5366dc52bad6322d82e22c060eecb28ddaefe6aa7233ca9bb9fee3b28b'
 step_id: 'S99'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Take the second entry on the hiding-rank worklist and test whether it is wirable rather than only annotatable: the filed-history scoping signal and the period-selection rows are both consumed from constants, and neither is a one-line fix, since the classifier needs an availability report the discovery model consumes without retaining and the row projector needs pair and selection state the capture stage does not carry up. Record what the wiring would require and state in both docstrings that they are declared and not yet reached, the empty selection table and the least-informative hedge being what an operator sees meanwhile.
 

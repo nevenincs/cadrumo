@@ -5,7 +5,7 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:cbe7255072fb5e32dd4b2225b01e8fc1d7860ef42ba6d8c0c1c9d2b387067f14'
+body_hash: 'sha256:908a1643f0a9de33f00fef8dade64e707e507c014d897d1ec95bbafa63d6aa0e'
 related:
   - "[[2026-09-07-tuimodelo-plan]]"
 ---
@@ -53,8 +53,11 @@ disposition whose reconsideration condition is the existence of one. Rebuilding 
 is a named hazard for this campaign.
 
 Live citations follow. In the modelo interface plan, `W01.P01.S96` names the retired receipt
-vocabulary as the subject of a rename, and `W06.P13.S93` asserts a C5 aggregate matrix across
-the cohort. In the workbench architecture plan, `W07.P17.S338` carries a C4 label as historical
+vocabulary as the subject of a rename. A third exclusion belongs beside the two recorded under
+the visibility finding below: the same amendment that retired these receipts expressly retained
+the cohort conformance matrices they used to attest, so `W06.P13.S93`, which proves C5's
+aggregate matrix, cites the retained half and is not a citation of the retired mechanism at all.
+In the workbench architecture plan, `W07.P17.S338` carries a C4 label as historical
 provenance for six modelo actions rather than as a gate. In production,
 `src/cadrumo/application/modelo/_edit_facade.py` carries the strongest surviving citation: its
 module prose at line 11 states that no C3 financial-operand dependency receipt is green yet and
@@ -107,19 +110,58 @@ further action beyond not being reopened.
 
 With the three mechanisms above enumerated, the closure condition that no row asserts a retired
 mechanism can be evaluated mechanically over the open rows of the three plans. The sweep is not a
-keyword search. Of the seven open rows matching the vocabulary of a retired mechanism, two are
-false positives resting on the exclusion above or on a live sibling family, two name a retired
-mechanism as the subject of its own removal, one is an already-annotated marker, and one carries
-a retired label as historical provenance. The count that matters for closure is the count of rows
-asserting a retired mechanism as a live gate, owner, or pending premise, and the production
-citation in the edit facade is the only unambiguous member.
+keyword search, and its arithmetic is stated in full because a class left unaccounted for is how
+the one row that matters goes missing. Seven open rows match the vocabulary of a retired
+mechanism, and they fall into four classes with nothing left over. Three are false positives.
+Two of those rest on the exclusions already stated, being the workbench architecture plan's
+`W07.P16.S93` on the log-shaped exclusion and `W07.P16.S340` on the live sibling receipt family.
+The third is the modelo interface plan's `W06.P13.S93`, and it is a false positive for a reason
+worth stating separately, below. Two name a retired mechanism as the subject of its own removal
+and are therefore the remedy rather than the assertion, being the modelo interface plan's
+`W01.P01.S96` and the workbench architecture plan's `W08.P30.S424`. One is an already-annotated
+retired-premise marker, `W06.P13.S73`. One carries a retired cohort label as historical
+provenance, `W07.P17.S338`.
+
+The third false positive is the one this audit most nearly got wrong, and the reason is the
+amendment's own shape. The 2026-08-28 amendment to the workspace-interface decision splits two
+things that a reader meets as one. It retires the five exit-receipt schemas, their validators,
+the shared proof type and the five minted reference artifacts outright. In the same passage it
+retains, verbatim, the source-tree conformance obligation those receipts used to attest,
+including C5's aggregate locale, geometry, theme, keyboard, non-colour, large-schema, refusal and
+route-action matrix together with the installed-root proof. So the receipt is retired and the
+matrix is not. `W06.P13.S93` proves the retained half. The cohort model itself also remains live
+and is relied on by this campaign's own accepted work-creator decision.
+
+The conclusion is therefore narrower than an earlier reading of this audit stated. No open plan
+row in any of the three plans asserts a retired mechanism. Exactly one live assertion blocks the
+wave's closure condition, and it is in production rather than in a plan: the unsatisfiable C3
+receipt condition in the edit facade.
 
 ## Recommendations
 
-Adjudicate the two modelo interface plan rows that assert the retired cohort as superseded,
-citing the retirement commit, rather than completing or deleting them. Completing them would
-require asserting a gate that no decision recognises, and deleting them would erase the evidence
-that the premise was retired rather than met. This is the campaign's `W01.P01.S02`.
+Amend the campaign's `W01.P01.S02` through the plan verbs, because measurement falsifies its
+premise. Neither modelo interface plan row is superseded, and neither may be adjudicated as
+though it were.
+
+`W01.P01.S96` is retained in place and blocked, with a named reopening condition: the registry
+facade census carries one reviewed row whose defining owner a promotion invalidated, and the
+three modules this row renames appear in that census 48 and 55 times, so the rename cannot land
+until that row names a real owner. Superseding it would strand a rename the amendment's own
+split still requires, because the modules it renames hold the retained conformance half rather
+than the retired receipts.
+
+`W06.P13.S93` is retained open on its own merits. Its subject is expressly preserved by the same
+amendment that retired the receipts, so there is nothing to supersede.
+
+The wave description carries the same falsified premise as the step and must be corrected in the
+same change, or the closure condition still reads against a fiction. Neither row is deleted, and
+the correction records the measurement rather than silently swapping the premise.
+
+Record, separately, that the coverage gap `W06.P13.S93` measured is unowned inside this campaign.
+The acceptance phase proves raster artefacts over viewports and themes and proves locale on its
+own terms, and neither covers keyboard, non-colour, large-schema, refusal or empty-state, nor
+names the shared operation modal, which belongs to the operations lane rather than the modelo
+lane. That gap stays with the interface plan; this campaign must not appear to have absorbed it.
 
 Reopen the edit-facade capability projection under the surviving mechanism, replacing the C3
 receipt condition it still cites. This is the campaign's `W01.P03.S141`, and this audit

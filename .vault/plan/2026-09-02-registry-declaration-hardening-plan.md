@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:cfd743f252f65e3d22c96533f48a776f6336c34fda08cc7df2bea3137a14095e'
+body_hash: 'sha256:628b8dbbd208641fb18b894a04d64e83cd6764aa7fb61d01157d14feeb39dbd0'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -1376,6 +1376,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S1007` - Refuse a missing parse root instead of filtering it out of the source-parse gate; `dev/tests/test_every_source_file_parses.py`.
 - [x] `W06.P13.S1008` - Announce the modules and data files the three governance-corpus scans skipped, splitting the deliberate binary skip from an unreadable file; `dev/quality/governance_corpus_scan.py`.
 - [x] `W06.P13.S1009` - Join the parse gate's deliberately independent prune list to the shared inventory's without reintroducing the import; `dev/tests/test_every_source_file_parses.py`.
+- [x] `W06.P13.S1010` - Refuse a redaction payload filename the corpus glob admits but the document-id pattern rejects, instead of dropping it from the reported population; `dev/audit/legal_excerpt_vintage_screen.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

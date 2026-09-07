@@ -145,6 +145,47 @@ with a stored-data migration and keeping it with a typed status, and this record
 which. The modelo history policy relocated out of the adapter becomes the single service both
 surfaces call.
 
+### Lifecycle vocabulary
+
+The relocation of history policy out of the adapter forces a reconciliation this record must
+settle before either surface renders a history, because two vocabularies describe the same
+lifecycle and neither is a subset of the other. The event taxonomy is the store's, and the
+sanitized lifecycle kind is the frontend's. Measured on the live tree, the store declares
+twenty-two modelo event types, the adapter's history handler admits eleven of them, and the
+sanitized lifecycle kind offers ten arms. Those three numbers do not reconcile by inspection, and
+the ways they fail to reconcile are each a different defect.
+
+Two lifecycle arms cannot be populated at all. The kinds meaning created and renamed have exactly
+one source event each, work-unit creation and work-unit rename, and the adapter's filter excludes
+both. A frontend enum that offers an arm its only supplier can never emit is a promise the
+product cannot keep, so the relocated service admits those two events and the arms become
+reachable.
+
+One admitted event has no arm to land in. Verification refusal is admitted by the adapter and has
+no sanitized kind, so a surface built on the kind alone would either drop it or fold it into the
+kind meaning verified. Both are forbidden: dropping it collapses a refusal into an absence, and
+folding it reports a refused verification as a passed one. The vocabulary therefore gains a
+refusal arm rather than the surface gaining a special case.
+
+Two admitted events belong to a different subject and must not be folded. The audit-verified and
+audit-exported events concern the evidence bundle, not the declaration, and mapping them onto the
+declaration's verified and exported arms would report evidence-bundle activity as declaration
+activity. They are carried with their own subject, or they are excluded from the declaration
+history and their exclusion is stated.
+
+The remaining excluded events are a scoping decision rather than a defect, and the decision is
+recorded so it is not re-litigated per surface. Live-evidence stamping, ledger-evidence
+recapture, reconciliation, the two wallet events and the four withholding-communication events
+are lifecycle facts about neighbouring subjects. They are admitted where the surface's subject is
+the work unit and its evidence, and excluded where it is the declaration's own filing lifecycle;
+either way the count admitted is derived from the taxonomy at call time rather than from a
+hand-maintained set, so a new event type cannot be silently dropped by a stale literal.
+
+The state axes stay separate from both. The work-unit state and the calculation-revision state
+are closed domain enumerations in the product's Spanish domain language, and the lifecycle kind
+is an event vocabulary. A state is what a thing currently is; a kind is what happened to it. This
+record does not merge them, and no surface may derive one from the other by string mapping.
+
 ## Rationale
 
 The knockout criterion is the accepted calendar-filing semantics: three of the four options

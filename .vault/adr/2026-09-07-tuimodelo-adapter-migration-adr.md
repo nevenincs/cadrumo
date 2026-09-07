@@ -138,6 +138,22 @@ persistence, and the handler reduces to a typed request, a service call and an e
 A detector accompanies the wave and fails when policy moves back into an adapter. Its absence is
 what would let a half-migrated wave present as complete.
 
+The relocation of the shared interface capability declaration needs no decision of its own, and
+this clause records that rather than leaving it to be inferred. The declaration is the second of
+the four groups above, so the boundary stated here already governs where it may live: it is a
+transport-adjacent declaration both adapters must read, it is not policy, and the reason it is
+stranded is placement rather than shape. A separate record would restate this boundary in
+narrower words and create a second authority over the same question. The relocation is therefore
+implementation under this decision, and the only constraint it inherits is the atomicity every
+relocation carries: the canonical definition, every consumer, every dynamic reference and the
+tests move together, with no transitional shim.
+
+The relocation does carry one ordering obligation, which belongs here because it follows from the
+boundary rather than from a plan's convenience. The action denominator imports the command-line
+package that declares the capability today, so the relocation must land before the denominator is
+extended to observe capability. Extending first would have the gate read a declaration through
+the very import the boundary exists to remove.
+
 ## Rationale
 
 Defining the boundary by shape rather than by list is what makes the wave executable. The
