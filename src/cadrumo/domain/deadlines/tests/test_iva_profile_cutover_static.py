@@ -145,8 +145,23 @@ def _profile_fact_paths(container: ast.Tuple | ast.List) -> frozenset[str]:
 
 
 def _iter_modules() -> Iterator[tuple[Path, ast.Module]]:
-    root = _source_root()
-    for path in scan_directory(root / "src" / "cadrumo", pattern="*.py", recursive=True):
+    """Yield every shipped module and its AST, refusing an empty walk.
+
+    Measured: with `_source_root()` pointed at a directory that does not exist
+    this yielded 0 modules silently, against 5,939 in the healthy tree, so the
+    cutover assertions held over nothing. A generator makes that worse than
+    usual -- a caller consuming an empty iterator sees a clean result, not an
+    error -- so the refusal is raised before the first yield.
+    """
+    package = _source_root() / "src" / "cadrumo"
+    modules = scan_directory(package, pattern="*.py", recursive=True, require_root=True)
+    if not modules:
+        message = (
+            f"the IVA-profile cutover walk reached no module under {package}; "
+            "a walk matching nothing cannot find a retired profile shape"
+        )
+        raise AssertionError(message)
+    for path in modules:
         yield path, ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
 
 
