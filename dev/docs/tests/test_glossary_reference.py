@@ -50,6 +50,12 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 # dev/docs/tests/test_glossary_reference.py -> parents[3] is the repo root.
 _REPO_ROOT = REPO_ROOT
 
+# Measured live against the real Handbook: 49 approved concepts, 49 rendered
+# entries, 89 term lines. The floor keeps the entry-population parity from
+# being satisfied by a collapsed render whose report agrees with a near-empty
+# page, which is the one way report-vs-page equality can hold vacuously.
+_MINIMUM_APPROVED_ENTRIES = 40
+
 
 def _load_handbook():
     from ..terminology_handbook.loader import load_terminology_handbook
@@ -85,6 +91,24 @@ def _rendered_term_lines(rst: str) -> set[str]:
     return {line[3:] for line in _glossary_body(rst) if _is_term_line(line)}
 
 
+def _rendered_entry_count(rst: str) -> int:
+    """The number of glossary entries the emitted page actually carries.
+
+    An entry is a maximal run of term lines -- the headword plus any admitted
+    aliases -- followed by its 6-space body. Counting those runs reads the entry
+    population out of the page a reader receives, which is a different thing
+    from the generator's account of how many entries it rendered.
+    """
+    entries = 0
+    previous = False
+    for line in _glossary_body(rst):
+        current = _is_term_line(line)
+        if current and not previous:
+            entries += 1
+        previous = current
+    return entries
+
+
 def test_only_approved_concepts_render_drafts_excluded() -> None:
     """The glossary renders approved concepts and excludes every draft.
 
@@ -97,7 +121,7 @@ def test_only_approved_concepts_render_drafts_excluded() -> None:
     approved = sum(1 for c in handbook.concepts if c.lifecycle is ConceptLifecycle.APPROVED)
     drafts = sum(1 for c in handbook.concepts if c.lifecycle is ConceptLifecycle.DRAFT)
 
-    _, result = render_glossary(_REPO_ROOT, handbook)
+    rst, result = render_glossary(_REPO_ROOT, handbook)
 
     assert isinstance(result, GlossaryResult)
     assert result.drafts_excluded == drafts
@@ -111,6 +135,22 @@ def test_only_approved_concepts_render_drafts_excluded() -> None:
         "with nothing deduplicated, every approved concept must reach the page. The bound "
         "here was previously <=, which absorbed a silently dropped concept as a smaller "
         f"number: {result.approved_rendered} rendered against {approved} approved"
+    )
+
+    # Everything above is the generator's account of its own work: ``rendered`` is
+    # incremented beside the ``entries.append`` that builds the page, so report and
+    # page are produced in the same breath and any entry lost downstream of that
+    # loop leaves the count truthfully reporting an entry the reader never gets.
+    # The agreement with the source above is a real claim and stays; this reads the
+    # entry population back out of the emitted page beside it.
+    assert result.approved_rendered >= _MINIMUM_APPROVED_ENTRIES, (
+        f"only {result.approved_rendered} approved concepts rendered, so the entry-population "
+        "parity below compares a near-empty page against a report that agrees with it"
+    )
+    assert _rendered_entry_count(rst) == result.approved_rendered, (
+        "the page carries a different number of glossary entries than the generator reports "
+        f"rendering: {_rendered_entry_count(rst)} emitted against {result.approved_rendered} "
+        "reported, so an approved concept dropped after the render loop reaches no reader"
     )
 
 

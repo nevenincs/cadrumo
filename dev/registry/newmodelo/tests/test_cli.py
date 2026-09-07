@@ -88,4 +88,5 @@ def test_cli_scaffold_rejects_malformed_modelo_id(tmp_path: Path) -> None:
     )
 
     assert result.exit_code == 1
-    assert "error:" in result.stdout.lower() or "error:" in (result.stderr or "").lower()
+    assert result.stdout == ""
+    assert "error:" in result.stderr.lower()
