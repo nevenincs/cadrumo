@@ -8,10 +8,13 @@ them was ever evaluated, which is indistinguishable from a passing lane in every
 report anyone reads.
 
 The check is deliberately a REACHABILITY property rather than an enrolment one.
-Lanes legitimately dispatch three different ways -- through the campaign lane
-registry, straight from a justfile recipe, or from a workflow step -- and
-demanding one of those would red the four lanes that correctly use another. What
-cannot be legitimate is a lane module reachable from none of them.
+A lane may dispatch through the campaign lane registry, straight from a justfile
+recipe, or from a workflow step. Today every lane but one reaches the registry
+and ``smoke_homebrew`` is dispatched from its own workflow, while no lane uses
+the justfile route at all -- so demanding registry enrolment would red one
+correctly wired lane, which is why the property stays reachability rather than
+enrolment. What cannot be legitimate is a lane module reachable from none of the
+three.
 
 No tally is pinned. The gate derives both sides at read time: the module set from
 the directory, the dispatched set from the dispatch surfaces. Adding a lane and
