@@ -32,6 +32,12 @@ class ScenarioOutcomeRow(BaseModel):
     narrations: int = Field(ge=0)
     elicitations: int = Field(ge=0)
     failures: tuple[str, ...] = ()
+    #: Whether a trajectory was matched for this session. The three counts
+    #: above are zero both when a session did nothing and when its capture
+    #: never arrived, and those are different facts: the first is a
+    #: measurement, the second is its absence. Defaulted True so a row
+    #: constructed from real evidence needs no ceremony.
+    evidence_captured: bool = True
 
     @model_validator(mode="after")
     def _failure_state_matches_pass_state(self) -> ScenarioOutcomeRow:
@@ -57,6 +63,11 @@ class MeasurementReport(BaseModel):
     tool_errors_total: int = Field(ge=0)
     unfaithful_narrations_total: int = Field(ge=0)
     rows: tuple[ScenarioOutcomeRow, ...] = ()
+    #: Rows whose session produced no captured trajectory. Every evidence
+    #: total below sums zeros for these, so without this figure a run that
+    #: captured nothing is indistinguishable from one that observed nothing
+    #: untoward.
+    scenarios_without_evidence: int = Field(ge=0, default=0)
 
     @model_validator(mode="after")
     def _aggregate_counts_match_rows(self) -> MeasurementReport:
@@ -72,6 +83,12 @@ class MeasurementReport(BaseModel):
             raise ValueError(
                 f"scenarios_passed is {self.scenarios_passed}, but {actual_passed} scenario rows passed",
             )
+        actual_uncaptured = sum(1 for row in self.rows if not row.evidence_captured)
+        if self.scenarios_without_evidence != actual_uncaptured:
+            raise ValueError(
+                f"scenarios_without_evidence is {self.scenarios_without_evidence}, but "
+                f"{actual_uncaptured} scenario rows carry no captured trajectory",
+            )
         return self
 
     @property
@@ -83,6 +100,16 @@ class MeasurementReport(BaseModel):
     def all_passed(self) -> bool:
         """True when at least one scenario ran, every scenario passed, and the invariants hold.
 
+        The same reasoning reaches one level further down. Both invariant
+        totals are sums over per-session evidence, so a run whose captures
+        never arrived holds them at zero for want of any observation, and
+        ``invariants_hold`` reads True. That run has ``scenarios_run > 0``,
+        so the guard below does not catch it, and a full slate of scores
+        that each stand on their own verdict would render ``Verdict: PASS``
+        over N scenarios nobody watched. Requiring every row to carry a
+        captured trajectory is what makes the zeros mean "observed none"
+        rather than "observed nothing".
+
         A run measuring ZERO scenarios is a legitimate report to construct
         (a harness invocation can genuinely exercise nothing), but it is
         NEVER a passing one: ``scenarios_passed == scenarios_run`` holds
@@ -90,7 +117,12 @@ class MeasurementReport(BaseModel):
         the operator-facing markdown's ``Verdict: PASS`` on evidence that
         certifies nothing rather than a clean result.
         """
-        return self.scenarios_run > 0 and self.invariants_hold and self.scenarios_passed == self.scenarios_run
+        return (
+            self.scenarios_run > 0
+            and self.scenarios_without_evidence == 0
+            and self.invariants_hold
+            and self.scenarios_passed == self.scenarios_run
+        )
 
 
 def _index_trajectories_by_session(
@@ -146,6 +178,7 @@ def _scenario_outcome_row(
         narrations=len(trajectory.narrations) if trajectory else 0,
         elicitations=len(trajectory.elicitations) if trajectory else 0,
         failures=score.failures,
+        evidence_captured=trajectory is not None,
     )
 
 
@@ -169,6 +202,7 @@ def build_measurement_report(
     rows = tuple(_scenario_outcome_row(score, by_session.get(score.session_id)) for score in scores)
     return MeasurementReport(
         scenarios_run=len(scores),
+        scenarios_without_evidence=sum(1 for row in rows if not row.evidence_captured),
         scenarios_passed=sum(1 for score in scores if score.passed),
         live_submit_attempts_total=sum(len(score.invariants.live_submit_attempts) for score in scores),
         handoff_faithfulness_blocks_total=sum(len(score.invariants.handoff_faithfulness_blocks) for score in scores),

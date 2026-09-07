@@ -206,23 +206,31 @@ def test_scaffold_force_bypasses_the_foreign_manifest_guard(tmp_path: Path) -> N
     assert result.written
 
 
-def test_scaffolded_tree_reaches_directory_mode_validation(tmp_path: Path) -> None:
-    """The scaffolded skeleton reaches semantic registry validation.
+def test_scaffolded_tree_is_refused_by_the_directory_mode_loader(tmp_path: Path) -> None:
+    """The scaffolded skeleton never passes as a loadable modelo tree.
 
-    The real directory loader can read the generated on-disk structure, then rejects its
-    deliberately incomplete TODO metadata. This proves the scaffold reaches semantic
-    validation rather than failing earlier on a malformed directory layout.
+    Measured, not assumed. A bare ``pytest.raises(RegistryLoadError)`` here once
+    let a docstring claim the refusal came from semantic ``ModeloDefinition``
+    validation of the manifest's TODO fields; against a real scaffolded tree it
+    does not. Every non-``casillas`` section fragment (formulas, bindings,
+    completeness_manifest, verification_expectations, export_layouts,
+    extraction_profiles, application_links) is scaffolded as guidance that is
+    entirely commented out, so ``_read_single_revision_table`` refuses the
+    first such fragment it reads for declaring no ``[revisions.<id>]`` table at
+    all -- a structural refusal, before the merged tree ever reaches the
+    manifest's own TODO placeholders. The ``match=`` pins that structural
+    reason directly so a change that made the scaffold reach semantic
+    validation instead -- or one that broke it in a third, new way -- would be
+    visible here rather than passing under a docstring that no longer
+    describes what fires.
     """
     from cadrumo.domain.calculations.registry.loader import load_modelo_directory
 
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
     manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
 
-    # The placeholder manifest/revision content is intentionally incomplete
-    # (TODO tax_domain, cadence, dates) and must not validate as-is: a scaffold
-    # that "passes" the loader with all-TODO content would be a false green.
     modelo_root = tmp_path / _THROWAWAY_MODELO_ID
-    with pytest.raises(RegistryLoadError):
+    with pytest.raises(RegistryLoadError, match=r"revision fragment must declare \[revisions\.<id>\]"):
         load_modelo_directory(modelo_root)
 
 

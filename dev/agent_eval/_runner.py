@@ -466,7 +466,7 @@ def _canonical_action_arguments(
     """
     from cadrumo.core.operator_action_enums import ActionArgumentStatus
     from cadrumo.core.product_identity import PRODUCT_IDENTITY
-    from cadrumo.entrypoints.cli import command_graph
+    from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 
     values: dict[str, object] = {}
     for binding in argument_bindings:
@@ -477,7 +477,7 @@ def _canonical_action_arguments(
             raise ValueError(f"canonical recovery has no concrete value for argument: {name}")
         values[name] = value
 
-    command = command_graph.resolve_path((PRODUCT_IDENTITY.cli_executable, *cli_path))
+    command = COMMAND_GRAPH.resolve_path((PRODUCT_IDENTITY.cli_executable, *cli_path))
     arguments: list[str] = []
     consumed: set[str] = set()
     for parameter in command.parameters:
