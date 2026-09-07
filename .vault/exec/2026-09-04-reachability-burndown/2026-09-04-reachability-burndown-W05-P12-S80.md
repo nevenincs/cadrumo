@@ -5,16 +5,11 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:c20cb151946c0d0f38317173d353ced98854330866ffee212d83398647e3c5d6'
+body_hash: 'sha256:f970be3d957d32349b0d08358c8d8e7a4beed463e1788710bf37f9483958941b'
 step_id: 'S80'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Test the previous step's lesson across every gate rather than only the one that bit, and adjudicate the period vocabulary: thirty-nine tree-scanning gates assert emptiness with no population floor, but none scans a path that no longer exists, so the false-green shape found in the lazy-facade gate did not repeat; the twelve missing literals are all synthetic fixture paths inside detector-teeth cases. Classify the scenario validator body as reached by the two harnesses its docstring names, and keep the period enumerator family whole on the symmetry argument.
 

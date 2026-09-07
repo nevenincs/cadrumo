@@ -5,16 +5,11 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:f5db84089d09da89532cc3ee9b9f809efe5f2b29b1adf64516bfe0e472cd06d3'
+body_hash: 'sha256:0ac3dcb09f275f6e43efbfe9b97e98e91bddb7efff3e9f482a459b1a11aaa899'
 step_id: 'S79'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Convert the lazy-facade gate from policing a retreating mechanism to asserting its absence, since removing the last shipped dispatch hook left it scanning only the test package's own permanent facade: its non-vacuity guard asserted merely that SOME lazy facade was found, which stayed true, so a gate written to protect shipped code was passing on a test helper exactly as its own docstring warned would happen. Assert that no shipped module defines a module-level __getattr__, keep the map-versus-TYPE_CHECKING agreement checks for the one permitted facade, and refuse if that facade ever stops being one.
 

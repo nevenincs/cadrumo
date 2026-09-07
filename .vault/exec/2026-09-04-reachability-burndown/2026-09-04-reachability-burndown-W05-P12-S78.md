@@ -5,16 +5,11 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:4163fe8be3f7c7dbc4942da25a477d940d99f557e7915d0eb21dc7ae6ea1dc89'
+body_hash: 'sha256:eb4caf3947aa7fb47415cec7221366665de00045a05c6b5313eaeb5ded33f8b8'
 step_id: 'S78'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Remove the module-level lazy attribute hook from the profile-key registry and the alias beside it: the hook resolved a PROFILE_KEYS attribute declared only under TYPE_CHECKING, no shipped module imported it, and its four test importers were racing the wizard registration the hook fires against, which the registry's own docstring already warned about; all four now call the call-time function production already used. The alias was a pure module-level restatement of the canonical classmethod. Keep the required half of the symmetric filtered view, whose optional half is live.
 
