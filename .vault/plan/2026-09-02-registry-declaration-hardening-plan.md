@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:515de8c00f0e7a3ab8892bb512801e9955f57482db96302046bc66c17a200934'
+body_hash: 'sha256:cd7844b8aa31570033a7d73491153b56cda2834599f44811d6cc319d55e62c14'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -1378,6 +1378,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S1009` - Join the parse gate's deliberately independent prune list to the shared inventory's without reintroducing the import; `dev/tests/test_every_source_file_parses.py`.
 - [x] `W06.P13.S1010` - Refuse a redaction payload filename the corpus glob admits but the document-id pattern rejects, instead of dropping it from the reported population; `dev/audit/legal_excerpt_vintage_screen.py`.
 - [x] `W06.P13.S1011` - Announce the modules the facade import-site scan could not read, so a missing worklist entry is visible in the count it prints; `dev/quality/facade_retirement.py`.
+- [x] `W06.P13.S1012` - Remove the facade import-site docstring's count, which described a tree that still held forwarding initialisers; `dev/quality/facade_retirement.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

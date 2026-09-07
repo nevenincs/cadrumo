@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:f0a18176496fc4c970519e1034c83ee88fc0715b34bd4f6147a9400977788a00'
+body_hash: 'sha256:06ca2d22f3ef9000b1b6384bf91a034930c2aa3b5a64a29bb9c2e0c5c06aad12'
 ---
 
 # `reachability-burndown` plan
@@ -200,6 +200,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S99` - Take the second entry on the hiding-rank worklist and test whether it is wirable rather than only annotatable: the filed-history scoping signal and the period-selection rows are both consumed from constants, and neither is a one-line fix, since the classifier needs an availability report the discovery model consumes without retaining and the row projector needs pair and selection state the capture stage does not carry up. Record what the wiring would require and state in both docstrings that they are declared and not yet reached, the empty selection table and the least-informative hedge being what an operator sees meanwhile.; `src/cadrumo/application/live/filed_data_capture.py,dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S100` - Take the top of the hiding-rank list, a port accessor in a module ninety-seven percent live, and settle it with the sibling comparison: its neighbours carry four, three and two production consumers while it carries zero and nothing reaches the port method under it either, which reads as a displaced facade and is not, because the operation is performed by an adapter calling list_keys on the repository it owns. Nothing at the application layer lists namespaces, so this is a port waiting for a consumer rather than one something replaced, and the accessor now says so.; `src/cadrumo/application/user_profile/custody_ports.py,dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S101` - Delete the three public result projectors the CLI payload contract displaced, since each is a one-line construction of a matching model, none is called in production, dev or tests, and the command table declares the verify leaf schema as a deferred target on the CLI payloads module so the richer payload is what ships. Check first that the models survive the deletion, which they do because each is bound as a result type on a live operation definition, and lower the symbol-ratchet entry in the same step rather than the next sweep.; `src/cadrumo/application/modelo/operation_definitions.py,dev/quality/unused_symbol_ratchet.toml,dev/audit/tests/test_ledger_citations_resolve.py,dev/audit/reachability_classification.toml`.
+- [x] `W05.P12.S102` - Establish that no deletable residue remains, every open decision now being should-be-live or staged rather than superseded, then sharpen the committed-custody entry with the sibling contrast that makes its consequence concrete: the CAS envelope replace directly below the unreached data-file replace carries two consumers because passphrase rotation performs it, same module and same design, so no product operation replaces a committed custody data file and a record needing correction has no guarded path to it.; `src/cadrumo/adapters/persistence/storage/custody/capsule.py,dev/audit/reachability_classification.toml`.
 
 ## Parallelization
 
