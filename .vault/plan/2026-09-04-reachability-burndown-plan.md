@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:db1ad83f13125a9468143458e99126e9adb510f29f6e39c1fa110928c3f17c88'
+body_hash: 'sha256:d3a31732223055cf7c9614d84947780f31a4a5ea706f6cef9bf41d0c03635157'
 ---
 
 # `reachability-burndown` plan
@@ -186,6 +186,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S85` - Wire the bucket output-language hint, which production read and nothing wrote: the hint answers the one question the encrypted preference cannot, which language to speak before the profile is unlocked, and the resolver falls back to it whenever no session is bound, so a language the operator chose during setup silently reverted to the settings default on every pre-login surface. Extend the custody port from read-only to read, write and clear, and mirror the preference from the sole fact-write door, which already special-cases the same path to invalidate the locale cache.; `src/cadrumo/application/user_profile/custody_ports.py,src/cadrumo/adapters/persistence/storage/profile_custody.py,src/cadrumo/application/user_profile/language_resolver.py,src/cadrumo/application/user_profile/fact_write.py,src/cadrumo/application/user_profile/tests/test_language_resolver.py,dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S86` - Sweep the shipped tree for the read-never-written shape the secure-store gate structurally cannot see, since a file-backed artefact is not a repository and the output-language hint slipped past it: pair same-module functions across seven verb oppositions and report where production uses one side only. Five pairs, four already carrying matching evidence in this ledger and the fifth not an exact finding at all, so the sweep found no unrecorded debt and no gate is warranted -- a fail-closed check over that population could only report symbols already adjudicated.; `dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S87` - Run the ledger's OWNING gates instead of the hand-rolled validation script this campaign had been substituting for them, and repair what they found: thirteen clusters authored here were missing the required area key, three clusters whose work was finished were never marked resolved, five had their symbols emptied although a cluster must name one, and two were step notes rather than symbol adjudications. Correct the collaboration-audit prose, whose claim that six emitters are unreached went stale when five were wired, and narrow the citation gate that had become unsatisfiable for a resolved entry.; `dev/audit/reachability_classification.toml,dev/audit/tests/test_ledger_citations_resolve.py`.
+- [x] `W05.P12.S88` - Close the orphaned-test coverage gap the owning gate reported once the schema repair let it run: fourteen test modules were neither entered nor under a classified module, so nobody had decided their fate, and each names in the audit output the module or symbol finding it exercises. Enter all fourteen as derivative entries anchored to what they follow, four of them under the compatibility-lifecycle module and two under the CRUD contract, the rest following an unused symbol.; `dev/audit/reachability_classification.toml`.
 
 ## Parallelization
 
