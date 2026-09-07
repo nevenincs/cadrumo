@@ -6,7 +6,7 @@ catalogue, emits one :class:`ProfileKey` per distinct
 the conditional `required_when_*` pair from the question's
 ``required`` and ``visible_when`` declarations. The function is
 import-time pure: it performs no file I/O, no environment lookups,
-and no side effects, so :data:`PROFILE_KEYS` can be assigned to its
+and no side effects, so the compiled profile-key tuple can be assigned to its
 output at module-load time.
 """
 

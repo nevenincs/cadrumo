@@ -52,6 +52,13 @@ class LedgerStaleFilingV1(BaseModel):
     work_unit_id: str
     changed_count: NonNegativeInt
     removed_count: NonNegativeInt
+    #: Whether the comparison behind this finding spanned every tax fact this
+    #: build knows can move a casilla. False means the filing was sealed under
+    #: an older fingerprint field set and was compared under that set, so the
+    #: counts are sound but narrower than today's. Reported, never acted on:
+    #: a narrow comparison is not evidence of drift, and treating it as drift
+    #: would restate every historical filing at once.
+    covers_current_fact_set: bool = True
 
 
 class StaleFilingPeriodV1(Protocol):
@@ -87,6 +94,8 @@ class StaleFilingWorkUnitLookupV1(Protocol):
     """
 
     def get(self, work_unit_id: str, /) -> StaleFilingWorkUnitV1 | None: ...
+
+
 def read_stale_ledger_filings(
     *,
     bucket_id: str,
@@ -126,6 +135,7 @@ def read_stale_ledger_filings(
                 work_unit_id=revision.work_unit_id,
                 changed_count=len(verdict.changed),
                 removed_count=len(verdict.removed),
+                covers_current_fact_set=verdict.covers_current_fact_set,
             )
         )
     return tuple(findings)

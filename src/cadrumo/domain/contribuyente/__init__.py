@@ -19,9 +19,12 @@ The root previously DEFINED the tax-residence models and the region parser as
 well as re-exporting fifty-odd names, which is why deleting an export map could
 not make it inert. Those now live in :mod:`tax_residence`.
 
-PROFILE_KEYS keeps its lazy resolution, which lives in :mod:`keys` and raises
-until the wizard catalogue registers the compiled keys -- a deliberate
-ordering contract, not an export map.
+The registry in :mod:`keys` raises until the wizard catalogue registers the
+compiled keys -- a deliberate ordering contract, not an export map. It is read
+through :func:`keys.profile_keys`, which resolves at call time; the module
+attribute that once offered the same tuple through a lazy ``__getattr__`` hook
+resolved at the IMPORTER's import time and so raced that registration, and no
+shipped module ever used it.
 """
 
 from __future__ import annotations

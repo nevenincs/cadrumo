@@ -3,7 +3,7 @@
 The wizard catalogue (``application/wizard/catalogue.py``) declares
 each ``WizardQuestion.profile_key`` as a canonical schema-TOML path
 (e.g. ``identity.tax_id``, ``preferences.output_language``).
-``compile_profile_keys`` produces :data:`PROFILE_KEYS` as a tuple of
+``compile_profile_keys`` produces :func:`~domain.contribuyente.keys.profile_keys` as a tuple of
 :class:`ProfileKey` records keyed by those canonical paths. The
 helpers in this module project a flat operator-supplied
 ``Mapping[str, str]`` over that registry and report which required
@@ -61,7 +61,7 @@ def _conditional_requirement_applies(values: Mapping[str, str], entry: ProfileKe
 
 
 def validate_profile_values(values: Mapping[str, str]) -> ProfileValidationResult:
-    """Validate ``values`` against :data:`PROFILE_KEYS`.
+    """Validate ``values`` against :func:`~domain.contribuyente.keys.profile_keys`.
 
     ``values`` is keyed by canonical schema path
     (``identity.tax_id``, ``preferences.output_language`` etc.).
@@ -97,7 +97,7 @@ def validate_profile_values(values: Mapping[str, str]) -> ProfileValidationResul
 
 
 def list_profile_key_records() -> tuple[ProfileKey, ...]:
-    """Return the full :data:`PROFILE_KEYS` tuple in registry order.
+    """Return the full :func:`~domain.contribuyente.keys.profile_keys` tuple in registry order.
 
     Each element is a :class:`ProfileKey` describing one profile field.
     """

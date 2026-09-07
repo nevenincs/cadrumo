@@ -699,6 +699,11 @@ def ledger_status(ctx: typer.Context, period: str | None = None, year: int | Non
                 f"revision={finding.calculation_revision_id}",
                 f"changed={finding.changed_count}",
                 f"removed={finding.removed_count}",
+                # Always emitted, so the line keeps a fixed arity for a reader
+                # that splits it. `false` says the comparison behind the counts
+                # was sound but narrower than today's fact set, not that
+                # anything additional drifted.
+                f"covers_current_fact_set={str(finding.covers_current_fact_set).lower()}",
             )
         )
         for finding in stale_filings
