@@ -22,6 +22,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests._os_keychain_hook import require_os_credential_store
+
 from ....core.bucket_pointer import BucketPointer, read_pointer
 from ....core.time.clock import now as _now
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -168,6 +170,7 @@ def test_registration_displaced_profile_keeps_no_resumable_material_after_the_ne
     variant that unlinks the receipt while leaving the key recoverable by any
     other route would satisfy a file-absence check and be the same defect.
     """
+    require_os_credential_store()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         first = _register("Displaced One", _PASSWORD_FIRST)
 
@@ -248,6 +251,7 @@ def test_a_completed_receipt_over_an_unrecognisable_pointer_still_revokes_its_re
     replaying it is idempotent, and running it is what keeps the classification
     fail-closed rather than merely permissive.
     """
+    require_os_credential_store()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         first = _register("Revoked One", _PASSWORD_FIRST)
         second = _register("Revoked Two", _PASSWORD_SECOND)

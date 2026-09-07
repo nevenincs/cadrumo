@@ -271,6 +271,7 @@ def test_a_retirement_that_cannot_complete_refuses_the_registration_in_its_own_w
     -- without it this case would be satisfied by a registration door that
     refuses unconditionally.
     """
+    require_os_credential_store()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         displaced = _register_in_separate_process(storage_root, "Obstructed One", _PASSWORD_DISPLACED)["profile_id"]
         _login_in_separate_process(storage_root, displaced, _PASSWORD_DISPLACED)

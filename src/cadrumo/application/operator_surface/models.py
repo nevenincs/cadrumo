@@ -66,7 +66,19 @@ class ModeloLifecycleStep(StrEnum):
 
 
 class FilingStatus(StrEnum):
-    """Canonical live-read filing token used by mounted live command families."""
+    """Declared live-read filing token, not yet read by any mounted family.
+
+    The sentence here used to say the token IS used by the mounted live command
+    families. No family reads it: outside this module the only true reference is
+    the locale-contract test, which imports it alongside the other
+    operator-surface models. A docstring asserting a wiring the tree does not
+    have is the kind of claim a reader has no way to check, and it outranked the
+    code for as long as it stood.
+
+    The token stays because the vocabulary it declares is the one a live family
+    would report against; whether to route those families through it or withdraw
+    it is an owner's call, and either way the sentence above is now the true one.
+    """
 
     FILED = "filed"
 
