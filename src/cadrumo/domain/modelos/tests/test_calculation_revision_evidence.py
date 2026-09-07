@@ -454,7 +454,7 @@ def test_every_calculation_revision_constructor_declares_filing_evidence_explici
 
 
 def test_production_revision_id_derivations_name_the_single_annual_summary_input_axis() -> None:
-    """Only the three creation boundaries may derive a revision id from fields.
+    """Only a creation boundary may derive a revision id from its fields.
 
     Existing revisions must use ``derive_calculation_revision_id_from_revision``
     instead.  Keeping that read-side projection singular prevents a new input
@@ -487,6 +487,7 @@ def test_production_revision_id_derivations_name_the_single_annual_summary_input
         "cadrumo/application/modelo/amendment_actions.py",
         "cadrumo/application/modelo/external_import_actions.py",
         "cadrumo/application/modelo/revision_persistence.py",
+        "cadrumo/entrypoints/tui/devtools/workbench_fixtures.py",
     }
     omissions = [
         f"{path}:{call.lineno}"

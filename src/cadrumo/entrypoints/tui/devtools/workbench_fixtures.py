@@ -419,6 +419,7 @@ def _declaration_catalogues(
         casilla_values={},
         filing_instance_evidence=None,
         source_provenance=(),
+        m303_regimen_simplificado_annual_summary_handoff=None,
     )
     filing_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
