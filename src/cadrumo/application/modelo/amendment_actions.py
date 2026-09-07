@@ -44,6 +44,7 @@ from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.casilla_id import CasillaId
 from ...core.identity import CalculationRevisionId
 from ...core.modelo import Modelo
@@ -80,6 +81,7 @@ from ...domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 from ...domain.modelos.filing_repository import upsert_filing_record
+from ...domain.modelos.ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
@@ -88,12 +90,17 @@ from ...domain.modelos.repository import upsert_work_unit
 from ...domain.modelos.row_models import DETAIL_ROW_BEARING_MODELOS, ModeloDetailRow
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ..aggregation.ledger_filing_snapshot import (
+    assert_evidence_covers_snapshot,
+    compute_ledger_filing_snapshot,
+)
 from ._amendment_kind_resolution import assert_amendment_kind_permitted as _assert_amendment_kind_permitted
 from ._amendment_kind_resolution import (
     assert_complementaria_liability_direction_permitted as _assert_complementaria_liability_direction_permitted,
 )
 from ._calculation_helpers import amendment_observations as _amendment_observations
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
+from ._ledger_anchor_capture import capture_revision_ledger_evidence
 from ._m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 from ._profile_export_binding import resolve_export_identity
 from ._registry_helpers import reject_incomplete_amendment_casillas as _reject_incomplete_amendment_casillas
@@ -292,6 +299,7 @@ def amend_modelo_revision[CasillaKey](
     filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
     justificante_repository: JustificanteRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueRepository | None = None,
     clock: datetime | None = None,
 ) -> ModeloRecord:
     """Build and file an amendment over an externally filed return.
@@ -477,7 +485,19 @@ def amend_modelo_revision[CasillaKey](
     )
 
     # Transition draft → verified-complete (operator opts in by calling amend).
-    verified_amendment = _verified_amendment_revision(amendment_draft, actor=actor, now=now)
+    ledger_snapshot, ledger_evidence = _amendment_ledger_anchor(
+        amendment_draft=amendment_draft,
+        work_unit=work_unit,
+        transaction_repository=transaction_repository,
+        now=now,
+    )
+    verified_amendment = _verified_amendment_revision(
+        amendment_draft,
+        actor=actor,
+        now=now,
+        ledger_filing_snapshot=ledger_snapshot,
+        ledger_filing_evidence=ledger_evidence,
+    )
     revisions = upsert_calculation_revision(revisions, verified_amendment, aggregate_context=aggregate_context)
 
     new_filing_id, new_filing, updated_filing_catalogue = _build_amendment_filing_updates(
@@ -575,9 +595,9 @@ def _build_amendment_draft_revision(
     address itself as a revision with none — and the ``upsert`` would then
     overwrite whatever already sat at that address.
 
-    ``ledger_filing_snapshot`` and ``ledger_filing_evidence`` remain absent:
-    they are captured at verify time by a collaborator this path never invokes,
-    so an amendment still carries no drift baseline.
+    ``ledger_filing_snapshot`` and ``ledger_filing_evidence`` are absent on the
+    DRAFT and supplied by :func:`_amendment_ledger_anchor` at the verify
+    transition, which is where the verify path captures them too.
     """
     return CalculationRevision.model_validate(
         {
@@ -638,11 +658,57 @@ def _build_amendment_filing_updates(
     return new_filing_id, new_filing, updated_filing_catalogue
 
 
+def _amendment_ledger_anchor(
+    *,
+    amendment_draft: CalculationRevision,
+    work_unit: WorkUnit,
+    transaction_repository: TransactionCatalogueRepository | None,
+    now: datetime,
+) -> tuple[LedgerFilingSnapshot, LedgerFilingEvidence] | tuple[None, None]:
+    """Capture the ledger facts an amendment is verified against, at amend time.
+
+    Verify anchors a revision to the ledger it was computed from, and an
+    amendment stands in for verify without ever calling it -- so an amended
+    return used to carry no anchor at all, and ``stale_filed_revisions`` skips
+    a revision whose snapshot is ``None``. An amended filing could therefore
+    never be reported stale, whatever its books did afterwards.
+
+    The capture is FRESH rather than inherited from the baseline. The
+    amendment is being filed now, against the ledger as it stands now, and
+    copying the baseline's anchor would assert that those older facts were the
+    ones checked -- backdating a claim by exactly the interval the amendment
+    exists to correct.
+
+    A revision with no contributing rows anchors to nothing, and says so with
+    ``None`` rather than an empty snapshot that would read as "checked, and
+    the ledger was empty".
+    """
+    if not amendment_draft.source_transaction_ids:
+        return (None, None)
+    tx_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
+    catalogue = tx_repo.load()
+    snapshot = compute_ledger_filing_snapshot(
+        source_transaction_ids=amendment_draft.source_transaction_ids,
+        catalogue=catalogue,
+        captured_at=now,
+    )
+    evidence = capture_revision_ledger_evidence(
+        revision=amendment_draft,
+        catalogue=catalogue,
+        snapshot_fingerprint=snapshot.snapshot_fingerprint,
+        captured_at=now,
+    )
+    assert_evidence_covers_snapshot(snapshot, evidence)
+    return (snapshot, evidence)
+
+
 def _verified_amendment_revision(
     amendment_draft: CalculationRevision,
     *,
     actor: str,
     now: datetime,
+    ledger_filing_snapshot: LedgerFilingSnapshot | None,
+    ledger_filing_evidence: LedgerFilingEvidence | None,
 ) -> CalculationRevision:
     return amendment_draft.model_copy(
         update={
@@ -650,6 +716,8 @@ def _verified_amendment_revision(
             "verified_at": now,
             "verified_by": actor.strip(),
             "updated_at": now,
+            "ledger_filing_snapshot": ledger_filing_snapshot,
+            "ledger_filing_evidence": ledger_filing_evidence,
         },
     )
 

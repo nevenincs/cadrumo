@@ -1,11 +1,13 @@
-"""Skip ``os_keychain`` cases on a host whose credential store refuses them.
+"""Shared credential-store probe for cases that cannot run without one.
 
-The marker already carries the per-case classification: a test wears it when it
-cannot reach its subject without a minted acceleration receipt, because
-``resume_profile_session`` leaves the login process-scoped and mints nothing
-when the keychain is unavailable. That classification was made per function
-rather than per module, so this hook adds no judgement of its own -- it asks
-only whether the host can do what those cases already declare they need.
+Call :func:`require_os_credential_store` as the first statement of a case whose
+subject is unreachable when the OS credential store refuses. It is deliberately
+NOT wired as an autouse fixture over the ``os_keychain`` marker: the marker says
+a case needs custody to reach its subject, not that it cannot run at all, and on
+a store-refusing host several marked cases still pass by asserting the refusal
+path. A blanket marker-keyed skip measured here turned 33 reds into 41 skips,
+discarding six live assertions and silencing one failure that was NOT the store.
+Per-case invocation keeps that from happening.
 
 The capability is a property of the LOGON SESSION, not of the dependency set.
 A headless CI runner and an agent's SSH network logon both select a real
@@ -33,7 +35,7 @@ import pytest
 
 _PROBE_SERVICE = "cadrumo-credential-store-probe"
 
-__all__ = ["apply", "os_credential_store_refusal"]
+__all__ = ["os_credential_store_refusal", "require_os_credential_store"]
 
 
 @lru_cache(maxsize=1)
@@ -70,14 +72,16 @@ def os_credential_store_refusal() -> str | None:
     return None
 
 
-def apply(node: pytest.Item) -> None:
-    """Skip one ``os_keychain`` node when the host's store is measurably shut.
+def require_os_credential_store() -> None:
+    """Skip THIS case on a measured refusal, never unconditionally.
 
-    A node without the marker is left untouched, so this can never silence a
-    red outside the set the project itself classified.
+    ``mint_profile_session`` has no file-store fallback: the persisted receipt
+    is split knowledge whose on-disk half is written only once the store has
+    taken the session key. A case whose subject needs a receipt that EXISTS
+    cannot reach it here, and a skip naming the measured reason is honest where
+    a red no code change can close is not. Pinning a null or file backend
+    instead would leave the mint asserting nothing about the writer it names.
     """
-    if node.get_closest_marker("os_keychain") is None:
-        return
     refusal = os_credential_store_refusal()
     if refusal is not None:
         pytest.skip(f"the OS credential store cannot custody a profile-session key on this host: {refusal}")

@@ -46,7 +46,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
@@ -66,7 +66,6 @@ from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.config import Settings
 from ...core.identity import CalculationRevisionId
-from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import ActionEvidenceProvenance
@@ -95,7 +94,7 @@ from ...domain.modelos.calculation_revision import (
     CalculationSourceIssue,
 )
 from ...domain.modelos.errors import ModeloValidationError
-from ...domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow, ManualFactBasisEntry
+from ...domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow
 from ...domain.modelos.participation_index import TransactionRevisionParticipation, upsert_transaction_participation
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -122,7 +121,6 @@ from ..aggregation import (
 )
 from ..aggregation.ledger_filing_snapshot import (
     assert_evidence_covers_snapshot,
-    compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
 )
 from ..calculations.cross_period_clean_state import CrossPeriodDependencyEvidence, CrossPeriodExpectedMemberSet
@@ -141,6 +139,7 @@ from ._attribution_received_advisory import _attribution_received_omission_advis
 from ._autonomic_deduccion_advisory import _madrid_nacimiento_adopcion_advisory_finding_for_work_unit
 from ._dt12_advisory import _dt12_reduccion_advisory_finding
 from ._dt12_antiquity_advisory import _dt12_antiquity_advisory_finding
+from ._ledger_anchor_capture import capture_revision_ledger_evidence
 from ._ledger_drift_gate import ledger_drift_findings
 from ._m210_agrupacion_renta import m210_agrupacion_renta_verification_findings
 from ._m210_convenio_lob_advisory import _m210_convenio_lob_advisory_finding
@@ -233,24 +232,6 @@ from .m303_regimen_simplificado_scope import m303_regimen_simplificado_annual_su
 # Retain pinned verification-actions test imports while consuming public helper contracts.
 
 
-def _normalised_observation_refs(observations: Iterable[CasillaObservation | None], field_name: str) -> tuple[str, ...]:
-    refs = tuple(
-        dict.fromkeys(
-            str(ref).strip()
-            for observation in observations
-            if observation is not None
-            for ref in getattr(observation, field_name)
-            if str(ref).strip()
-        ),
-    )
-    if not refs:
-        raise ModeloValidationError(
-            translated_message="errors.error.error_modelos_validation",
-            context={"field_name": field_name, "observation_present": False},
-        )
-    return refs
-
-
 def _optional_observation_refs(observations: Iterable[CasillaObservation | None], field_name: str) -> tuple[str, ...]:
     refs = tuple(
         dict.fromkeys(
@@ -262,44 +243,6 @@ def _optional_observation_refs(observations: Iterable[CasillaObservation | None]
         ),
     )
     return refs
-
-
-def _manual_fact_basis_entries(
-    input_values_by_casilla_id: Mapping[CasillaId, str],
-    observations: Iterable[CasillaObservation],
-    *,
-    m210_gross_income_source_mode: M210GrossIncomeSourceMode | None,
-) -> tuple[ManualFactBasisEntry, ...]:
-    """Project a revision's operator casilla inputs into manual fact-basis entries.
-
-    The ``input_values_by_casilla_id`` holds the caller-supplied (operator-entered) casilla
-    values that are not ledger-derived; each non-empty entry is part of the fact
-    basis a filing artefact must explain. Blank values are skipped (they carry no
-    fact). The M210 ledger-derived ``rendimientos_integros`` input is deliberately
-    excluded: it is present in the replay map so formula replay is exact, but its
-    fact basis is the fingerprinted transaction evidence rather than a manual
-    declaration.
-    """
-    observations_by_casilla_id = {observation.casilla_id: observation for observation in observations}
-    return tuple(
-        ManualFactBasisEntry(
-            casilla_id=casilla,
-            value=value,
-            legal_refs=_normalised_observation_refs(
-                (observations_by_casilla_id.get(casilla),),
-                "legal_refs",
-            ),
-            source_refs=_normalised_observation_refs(
-                (observations_by_casilla_id.get(casilla),),
-                "source_refs",
-            ),
-        )
-        for casilla, value in sorted(input_values_by_casilla_id.items())
-        if value.strip()
-        and not (
-            m210_gross_income_source_mode is M210GrossIncomeSourceMode.LEDGER and casilla == "rendimientos_integros"
-        )
-    )
 
 
 #: Stands in a finding fact whose subject genuinely does not exist, so the fact
@@ -1234,24 +1177,11 @@ def _persist_verified_revision_evidence(
         catalogue=catalogue,
         captured_at=now,
     )
-    evidence_legal_refs = (
-        _normalised_observation_refs(target.observations, "legal_refs") if target.source_transaction_ids else ()
-    )
-    evidence_source_refs = (
-        _normalised_observation_refs(target.observations, "source_refs") if target.source_transaction_ids else ()
-    )
-    filing_evidence = compute_ledger_filing_evidence(
-        source_transaction_ids=target.source_transaction_ids,
+    filing_evidence = capture_revision_ledger_evidence(
+        revision=target,
         catalogue=catalogue,
         snapshot_fingerprint=filing_snapshot.snapshot_fingerprint,
         captured_at=now,
-        legal_refs=evidence_legal_refs,
-        source_refs=evidence_source_refs,
-        manual_entries=_manual_fact_basis_entries(
-            target.input_values_by_casilla_id,
-            target.observations,
-            m210_gross_income_source_mode=target.m210_gross_income_source_mode,
-        ),
     )
     assert_evidence_covers_snapshot(filing_snapshot, filing_evidence)
     verified = target.model_copy(
@@ -1418,24 +1348,11 @@ def recapture_ledger_filing_evidence(
         for row in (target.ledger_filing_evidence.rows if target.ledger_filing_evidence is not None else ())
         if _row_carries_linked_evidence(row)
     }
-    evidence_legal_refs = (
-        _normalised_observation_refs(target.observations, "legal_refs") if target.source_transaction_ids else ()
-    )
-    evidence_source_refs = (
-        _normalised_observation_refs(target.observations, "source_refs") if target.source_transaction_ids else ()
-    )
-    recaptured = compute_ledger_filing_evidence(
-        source_transaction_ids=target.source_transaction_ids,
+    recaptured = capture_revision_ledger_evidence(
+        revision=target,
         catalogue=catalogue,
         snapshot_fingerprint=stored_snapshot.snapshot_fingerprint,
         captured_at=now,
-        legal_refs=evidence_legal_refs,
-        source_refs=evidence_source_refs,
-        manual_entries=_manual_fact_basis_entries(
-            target.input_values_by_casilla_id,
-            target.observations,
-            m210_gross_income_source_mode=target.m210_gross_income_source_mode,
-        ),
     )
     assert_evidence_covers_snapshot(stored_snapshot, recaptured)
     updated = target.model_copy(
