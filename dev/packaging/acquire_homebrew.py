@@ -3,8 +3,10 @@
 This post-publication check taps the public Homebrew tap, installs ``cadrumo``,
 proves the formula's declared source digests match the promoted cohort sdists,
 and repeats the grounded installed CLI tax-work oracle against the
-tap-installed command. The formula is CLI-only by scope: ``cadrumo-mcp`` ships
-shipped by the same wheel, but this lane exercises the command surface only.
+tap-installed command. The formula installs the ``cadrumo`` distribution, which
+declares both the ``aeat`` and ``cadrumo-mcp`` console scripts, so
+``pip_install_and_link`` lands both in the keg; this lane exercises the CLI
+surface only.
 It refuses instructively when ``brew`` is unavailable or the public tap does
 not yet carry the formula.
 """
