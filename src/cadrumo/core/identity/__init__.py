@@ -153,6 +153,23 @@ by sibling domains (notably :mod:`domain.invoices` for reconciliation
 models), the application ledger service, and the persistence adapters.
 """
 
+TransactionIdReference = Annotated[str, Field(min_length=1, max_length=64)]
+"""What an operator TYPES to name a ledger transaction: a full id or a prefix.
+
+The unresolved sibling of :data:`TransactionId`. Every operator-facing surface
+accepts this form -- a terminal names rows by the short display id
+``ledger list`` prints -- and resolves it through
+``application.ledger.id_resolution.resolve_transaction_id`` before anything is
+read or written. Only storage and the domain hold the resolved 64-character
+form, so a model that typed operator input as :data:`TransactionId` refuses a
+prefix before resolution can even be attempted.
+
+Bounded but deliberately not patterned. Emptiness, non-hex characters, no
+match and an ambiguous match are all the resolver's answers, each with its own
+localised refusal naming the collision candidates; a pattern here would
+pre-empt them with a validation error that says less.
+"""
+
 ModeloEditBaselineId = _Hex64Str
 """Hex-64 opaque identity of one admitted Modelo edit compare-and-swap baseline.
 
