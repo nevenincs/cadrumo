@@ -6,7 +6,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:3d00d0231076c6f8f3dad4fb9f25a8ce8492535d3b52338ef61490cfcf7ea584'
+body_hash: 'sha256:a9e9e03b295e34c67055be6085f60aab66defdaef5c3a54a3a097ec331476c12'
 related:
   - '[[2026-09-02-object-name-declustering-W01-P01-S01]]'
   - '[[2026-09-02-object-name-declustering-W01-P01-S02]]'
@@ -79,6 +79,7 @@ related:
   - '[[2026-09-07-object-name-declustering-s29-detector-review-audit]]'
   - '[[2026-09-07-object-name-declustering-s30-measurement-review-audit]]'
   - '[[2026-09-07-object-name-declustering-s31-teardown-authority-review-audit]]'
+  - '[[2026-09-07-object-name-declustering-s32-retained-transaction-disposition-blocker-classification-audit]]'
 ---
 
 # `object-name-declustering` feature index
@@ -121,6 +122,7 @@ Auto-generated index of all documents tagged with `#object-name-declustering`.
 - `2026-09-07-object-name-declustering-s29-detector-review-audit` - `object-name-declustering` audit: `S29 end-to-end churn detector review`
 - `2026-09-07-object-name-declustering-s30-measurement-review-audit` - `object-name-declustering` audit: `S30 receipt validity measurement review`
 - `2026-09-07-object-name-declustering-s31-teardown-authority-review-audit` - `object-name-declustering` audit: `S31 teardown authority implementation review`
+- `2026-09-07-object-name-declustering-s32-retained-transaction-disposition-blocker-classification-audit` - `object-name-declustering` audit: `S32 retained transaction disposition blocker classification`
 
 ### exec
 
