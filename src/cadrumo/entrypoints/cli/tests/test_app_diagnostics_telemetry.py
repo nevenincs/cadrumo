@@ -228,7 +228,7 @@ def test_telemetry_flush_rejects_an_unknown_tier(_isolated_backend: None) -> Non
         ["--format", "json", "app", "diagnostics", "telemetry", "status", "--tier", "not-a-real-tier"],
     )
     assert result.exit_code != 0
-    assert "off, crash_only, full" in result.output or "not-a-real-tier" in result.output
+    assert "off, crash_only, full" in result.output
 
 
 def test_telemetry_flush_dry_run_is_the_default_and_sends_nothing(_isolated_backend: None) -> None:

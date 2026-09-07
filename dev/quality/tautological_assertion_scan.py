@@ -8,14 +8,17 @@ with no operand at all. Naming the property rather than the instances is what
 lets the scan cover constructions nobody has written yet -- a list of forms
 only ever catches the forms someone thought of.
 
-WHAT THIS SCAN CANNOT DO, which matters more than what it can. This is the
-only member of the gate-integrity family a linter can catch. Every other
-instance in that family needed a person to ask what the assertion was ABOUT: a
-gate whose assertion is perfectly well-formed and simply irrelevant to its
-subject is indistinguishable, to any scan, from one that is on point. A green
-result here says no assertion is trivially true; it does not say any assertion
-is meaningful. Reading this gate as the general answer to gate integrity would
-reproduce the exact error it exists to record.
+Static reach is class-specific, not family-wide. Separate AST and catalogue
+detectors can decide subsuming disjunctions, self-echoing invocation tokens,
+and absence assertions bound to one locale. Corpus absence is only a diagnostic floor:
+runtime composition can emit a literal absent from source, so it cannot decide
+whether an absence assertion is blind.
+This scan owns only tautologies: assertions decided before their operands are
+understood. A gate whose assertion is well-formed and simply irrelevant to its
+subject remains indistinguishable to static analysis from one that is on point;
+mutation testing supplies empirical evidence for that semantic question. A
+green result here therefore says no assertion is trivially true, not that every
+assertion is meaningful.
 
 The reflexive comparisons are split by outcome rather than lumped together,
 because ``x == x`` and ``x != x`` fail differently: the first is an assertion

@@ -11,18 +11,19 @@ last test here, not the first, because on its own it proves nothing.
 
 from __future__ import annotations
 
+import locale
 from pathlib import Path
 
 import pytest
 
-from ..quality.tautological_assertion_scan import (
+from ..tautological_assertion_scan import (
     scan_paths_for_tautological_assertions,
     scan_tautological_assertions,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_ROOT = Path(__file__).resolve().parents[2]
+_ROOT = Path(__file__).resolve().parents[3]
 
 _FIXTURE = Path("fixture.py")
 
@@ -40,6 +41,7 @@ def _reasons(source: str) -> tuple[str, ...]:
         ("assert 'text'", "true before any operand is read"),
         ("assert (left, right)", "true before any operand is read"),
         ("assert [candidate]", "true before any operand is read"),
+        ("assert {'candidate': value}", "true before any operand is read"),
         ("assert False", "can never pass"),
         ("assert 0", "can never pass"),
         ("assert []", "can never pass"),
@@ -79,6 +81,24 @@ def test_the_scan_leaves_assertions_that_depend_on_their_operands(source: str) -
     assert _reasons(source) == (), f"{source!r} was wrongly reported as tautological"
 
 
+@pytest.mark.parametrize(
+    ("source", "expected_reason"),
+    [
+        (
+            "assert value or True",
+            "is an or-expression against the always-true True, so the rest of the expression cannot change the verdict",
+        ),
+        (
+            "assert isinstance(value, object)",
+            "asserts isinstance(..., object), which holds for every value in the language",
+        ),
+    ],
+)
+def test_gate_diagnostics_state_the_exact_decided_reason(source: str, expected_reason: str) -> None:
+    """A finding cannot pass review with a corrupted but partly matching explanation."""
+    assert _reasons(source) == (expected_reason,)
+
+
 def test_two_calls_that_merely_look_identical_are_not_reflexive() -> None:
     """``next(it) == next(it)`` is two evaluations, not one operand twice.
 
@@ -99,6 +119,20 @@ def test_a_finding_renders_as_an_openable_locator() -> None:
     assert rendered.startswith("fixture.py:2 "), rendered
 
 
+def test_path_sweep_preserves_utf8_decoding_and_source_attribution(tmp_path: Path) -> None:
+    """The real filesystem adapter decodes UTF-8 and reports the file it scanned."""
+    fixture = tmp_path / "utf8_tautology.py"
+    fixture.write_bytes("# café\nassert True\n".encode())
+    previous_locale = locale.setlocale(locale.LC_CTYPE)
+    try:
+        locale.setlocale(locale.LC_CTYPE, "C")
+        finding = scan_paths_for_tautological_assertions((fixture,))[0]
+    finally:
+        locale.setlocale(locale.LC_CTYPE, previous_locale)
+
+    assert finding.path == fixture
+
+
 def test_an_unparseable_module_is_skipped_rather_than_crashing_the_sweep() -> None:
     """A file being rewritten by another lane must not abort the whole scan.
 
@@ -113,12 +147,10 @@ def test_no_tautological_assertion_survives_in_the_repository() -> None:
     """The sweep itself. Meaningful only because the teeth above pass."""
     # Floored per ROOT, not in aggregate and not on mere non-emptiness. A bare
     # truthiness guard is satisfied by a single file, and either root satisfies
-    # it alone: measured here, ``src/cadrumo`` holds 5928 modules and ``dev``
-    # 1015, so one tree could vanish entirely -- ``rglob`` over a missing
-    # directory yields nothing and raises nothing -- while the sweep still
-    # reported clean over the other. The floors are deliberately far below the
-    # live counts: they exist to catch a collapse, and a tight floor would only
-    # have to be revised every time the tree grows.
+    # it alone: both roots are independently above the floor, so one could
+    # vanish entirely -- ``rglob`` over a missing directory yields nothing and
+    # raises nothing -- while the sweep still reported clean over the other.
+    # The floor exists to catch that collapse, not to ratchet a moving count.
     by_root = {root: tuple((_ROOT / root).rglob("*.py")) for root in ("src/cadrumo", "dev")}
     starved = {root: len(found) for root, found in by_root.items() if len(found) < 500}
     assert not starved, (
@@ -144,7 +176,9 @@ def test_a_skipped_module_is_announced_rather_than_read_as_clean(
     """
     assert scan_tautological_assertions(_FIXTURE, "def broken(:" + chr(10)) == ()
 
-    assert "does not parse and was not scanned" in capsys.readouterr().err
+    notice = capsys.readouterr().err
+    assert "does not parse and was not scanned" in notice
+    assert notice.endswith("\n")
 
 
 def test_a_module_that_parses_and_asserts_nothing_tautological_is_silent(
