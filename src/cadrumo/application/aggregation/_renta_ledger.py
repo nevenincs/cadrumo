@@ -76,7 +76,7 @@ from ...domain.user_profile.values import UserProfileRecord
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import fact_value, profile_fact_index
 from . import _shared_issue_reasons
-from ._currency_predicates import (
+from .currency_predicates import (
     effective_eur_amount,
     effective_eur_iva_amount,
     effective_eur_taxable_base,

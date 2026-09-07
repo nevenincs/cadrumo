@@ -30,7 +30,7 @@ from ...domain.iva.schema import (
 )
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.models import Transaction
-from ._currency_predicates import is_non_eur_without_conversion
+from .currency_predicates import is_non_eur_without_conversion
 from ._invoice_kind import invoice_kind_for_direction
 from .iva_ledger import (
     IvaLedgerAggregationIssue,

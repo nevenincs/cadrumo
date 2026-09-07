@@ -51,6 +51,7 @@ from ...domain.transactions.models import (
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...domain.usage_ratios.model import UsageRatioProfile
+from ..aggregation.currency_predicates import effective_eur_amount, is_non_eur_without_conversion
 from ..review.filter import LedgerReviewStatus
 from .actions_common import (
     EventSpec,
@@ -613,6 +614,7 @@ def summarize_manual_transactions(
     money_period = period
     income_total = Decimal("0")
     expense_total = Decimal("0")
+    unconverted_count = 0
     for item in transactions:
         if item.lifecycle_state is not TransactionLifecycleState.ACTIVE:
             continue
@@ -620,7 +622,17 @@ def summarize_manual_transactions(
             continue
         if money_period is not None and not money_period.contains(item.raw.value_date or item.raw.booked_date):
             continue
-        eur = abs(item.value_in_eur) if item.value_in_eur is not None else abs(item.raw.amount)
+        # A foreign row with no conversion applied has no EUR value to add.
+        # Falling back to `raw.amount` here added a foreign figure to a
+        # euro-denominated total at face value -- 1000 USD landing in the
+        # roll-up as 1000 EUR -- which is not an approximation but a different
+        # number wearing the wrong unit. Such rows are excluded and counted, so
+        # the operator sees that the total is partial rather than a total that
+        # is quietly wrong.
+        if is_non_eur_without_conversion(item):
+            unconverted_count += 1
+            continue
+        eur = abs(effective_eur_amount(item))
         if item.direction is TransactionDirection.INCOMING:
             income_total += eur
         elif item.direction is TransactionDirection.OUTGOING:
@@ -641,6 +653,7 @@ def summarize_manual_transactions(
         period=period,
         checked_transaction_count=checked,
         readiness_issue_count=issue_count,
+        unconverted_currency_count=unconverted_count,
         ready=ready,
     )
 

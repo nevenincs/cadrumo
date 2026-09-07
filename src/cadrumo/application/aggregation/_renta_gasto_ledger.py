@@ -62,7 +62,7 @@ from ...domain.transactions.models import OutOfWindowTransactionSummary, Transac
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.user_profile.values import UserProfileRecord
 from . import _shared_issue_reasons
-from ._currency_predicates import (
+from .currency_predicates import (
     effective_eur_iva_amount,
     effective_eur_taxable_base,
     is_non_eur_without_conversion,
