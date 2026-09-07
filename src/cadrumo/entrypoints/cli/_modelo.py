@@ -252,7 +252,7 @@ def work_history(
                 object_type=event.object_type,
                 object_id=event.object_id,
                 actor=event.actor,
-                payload=event.payload,
+                payload=dict(event.payload),
             )
             for event in history.events
         ],
@@ -472,11 +472,11 @@ def modelo_history(
     period: str | None = None,
 ) -> None:
     """Stream the bucket-event history for one modelo across all lifecycle stages."""
-    from ...application.modelo.history import assemble_modelo_history
+    from ...application.modelo.history import assemble_modelo_lifecycle_history
     from ._common import emit_envelope
     from ._modelo_payloads import ModeloHistoryResult, ModeloLifecycleEventPayload
 
-    matches = assemble_modelo_history(modelo, filing_year=year, period=period).events
+    matches = assemble_modelo_lifecycle_history(modelo, filing_year=year, period=period).events
 
     history_result = ModeloHistoryResult(
         modelo=modelo,

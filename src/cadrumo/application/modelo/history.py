@@ -7,7 +7,7 @@ supersessions, amendments, and discards.
 Two subjects are assembled here, and they are genuinely different queries
 rather than one query with a parameter. :func:`assemble_work_unit_history`
 narrows to a single :class:`~WorkUnit` and walks the object-scoped streams that
-belong to it. :func:`assemble_modelo_history` spans every work unit that filed
+belong to it. :func:`assemble_modelo_lifecycle_history` spans every work unit that filed
 one modelo, selecting on the ``modelo`` subject key events carry in their own
 payload. They share this module because they share a substrate, a projection
 row and an ordering; they are not layered on one another, because neither
@@ -45,7 +45,6 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import datetime
 
 from pydantic import BaseModel, Field, ValidationError
 
@@ -57,8 +56,7 @@ from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogue
 from ...core.identity import BucketId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.buckets.event import (
-    BucketActorLabel,
-    BucketEventId,
+    BucketEvent,
     BucketEventObjectType,
     BucketEventType,
     bucket_event_order_key,
@@ -81,34 +79,6 @@ from .work_addressing import (
 )
 
 
-class WorkUnitHistoryEvent(BaseModel):
-    """One projected :class:`cadrumo.domain.buckets.BucketEvent` row in a work-unit history stream.
-
-    Every field is copied straight off a validated
-    :class:`cadrumo.domain.buckets.BucketEvent`, so this projection carries the
-    identity aliases that event already declares rather than re-opening them as
-    free strings. A projection cannot honestly admit a value its own source
-    refuses: an ``event_id`` that is not a content address, or an actor the
-    event log has no way to record, describes a row that cannot exist.
-
-    ``actor`` is required for that reason and not by policy. Every emitter
-    supplies a label — a CLI command path or an automated-agent slug — because
-    :class:`cadrumo.domain.buckets.BucketEvent` types it as
-    :data:`cadrumo.domain.buckets.BucketActorLabel`, so there is no actorless
-    event to represent here.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    event_id: BucketEventId
-    occurred_at: datetime
-    event_type: BucketEventType
-    object_type: BucketEventObjectType
-    object_id: str = Field(min_length=1, max_length=128)
-    actor: BucketActorLabel
-    payload: dict[str, str] = Field(default_factory=dict)
-
-
 class WorkUnitHistory(BaseModel):
     """Chronologically ordered event timeline for one :class:`~WorkUnit`."""
 
@@ -116,7 +86,7 @@ class WorkUnitHistory(BaseModel):
 
     bucket_id: BucketId
     work_unit_id: WorkUnitId
-    events: tuple[WorkUnitHistoryEvent, ...] = Field(default_factory=tuple)
+    events: tuple[BucketEvent, ...] = Field(default_factory=tuple)
 
 
 def _select_history_work_unit(
@@ -142,15 +112,21 @@ def assemble_work_unit_history(
 
     Events are merged from object-scoped
     :class:`cadrumo.domain.buckets.BucketEvent` streams and ordered by
-    ``occurred_at`` ascending. The work unit itself is loaded to confirm it
+    :func:`bucket_event_order_key`. The work unit itself is loaded to confirm it
     exists (raising :class:`WorkUnitNotFoundError` if not) and to discover every
     :class:`CalculationRevision`, :class:`~VerificationReport`,
     and :class:`ModeloRecord` id that belongs to its lifecycle.
 
-    The returned :class:`WorkUnitHistoryEvent` rows copy event payloads into a
-    read model for ``aeat app modelo work history``. The function never writes to
-    repositories and never contacts AEAT; mutation and event emission stay with
-    the lifecycle services that produce the underlying records.
+    Rows are the validated :class:`cadrumo.domain.buckets.BucketEvent` values
+    themselves, not a restatement of them: a read model repeating that field set
+    can only lose constraints its source already enforces, and this one had
+    already dropped ``bucket_id``, ``payload_version`` and the content-address
+    derivation. ``aeat app modelo work history`` projects onto its own wire
+    schema at the entrypoint, which is where the loosening belongs.
+
+    The function never writes to repositories and never contacts AEAT; mutation
+    and event emission stay with the lifecycle services that produce the
+    underlying records.
 
     See Also:
         :meth:`cadrumo.domain.buckets.BucketEventHistoryCatalogue.for_object`:
@@ -235,23 +211,10 @@ def assemble_work_unit_history(
     # same-instant events would otherwise inherit it. Ordering on the shared
     # key keeps this projection identical to every other bucket-event view.
     collected.sort(key=bucket_event_order_key)
-    events = tuple(
-        WorkUnitHistoryEvent(
-            event_id=event.event_id,
-            occurred_at=event.occurred_at,
-            event_type=event.event_type,
-            object_type=event.object_type,
-            object_id=event.object_id,
-            actor=event.actor,
-            payload=dict(event.payload),
-        )
-        for event in collected
-    )
-
     return WorkUnitHistory(
         bucket_id=work_unit.bucket_id,
         work_unit_id=work_unit_id,
-        events=events,
+        events=tuple(collected),
     )
 
 
@@ -281,7 +244,7 @@ def admitted_modelo_history_event_types() -> frozenset[BucketEventType]:
     reports absence exactly as it reports emptiness.
 
     Admission by type is deliberately broad: it is
-    :func:`assemble_modelo_history`'s SUBJECT filter that selects, and an event
+    :func:`assemble_modelo_lifecycle_history`'s SUBJECT filter that selects, and an event
     carrying no ``modelo`` payload key self-excludes there. That division is
     what makes a newly declared event type impossible to drop by omission.
     """
@@ -306,7 +269,7 @@ def _event_filing_year(payload: Mapping[str, str]) -> str:
     return (payload.get("filing_year") or payload.get("year") or "").strip()
 
 
-class ModeloHistory(BaseModel):
+class ModeloLifecycleHistory(BaseModel):
     """Chronologically ordered event timeline for one modelo across every work unit.
 
     The sibling of :class:`WorkUnitHistory` at the other subject grain: that
@@ -320,17 +283,17 @@ class ModeloHistory(BaseModel):
     modelo: ModeloCode
     filing_year: int | None = None
     period: str | None = None
-    events: tuple[WorkUnitHistoryEvent, ...] = Field(default_factory=tuple)
+    events: tuple[BucketEvent, ...] = Field(default_factory=tuple)
 
 
-def assemble_modelo_history(
+def assemble_modelo_lifecycle_history(
     modelo: str,
     *,
     filing_year: int | None = None,
     period: str | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-) -> ModeloHistory:
-    """Return a :class:`ModeloHistory` covering every bucket event recorded against ``modelo``.
+) -> ModeloLifecycleHistory:
+    """Return a :class:`ModeloLifecycleHistory` covering every bucket event recorded against ``modelo``.
 
     Serves ``aeat app modelo history``. Admission is the taxonomy-derived set
     from :func:`admitted_modelo_history_event_types`; selection is the event
@@ -373,30 +336,18 @@ def assemble_modelo_history(
         collected.append(event)
 
     collected.sort(key=bucket_event_order_key)
-    return ModeloHistory(
+    return ModeloLifecycleHistory(
         modelo=subject,
         filing_year=filing_year,
         period=period,
-        events=tuple(
-            WorkUnitHistoryEvent(
-                event_id=event.event_id,
-                occurred_at=event.occurred_at,
-                event_type=event.event_type,
-                object_type=event.object_type,
-                object_id=event.object_id,
-                actor=event.actor,
-                payload=dict(event.payload),
-            )
-            for event in collected
-        ),
+        events=tuple(collected),
     )
 
 
 __all__ = [
-    "ModeloHistory",
+    "ModeloLifecycleHistory",
     "WorkUnitHistory",
-    "WorkUnitHistoryEvent",
     "admitted_modelo_history_event_types",
-    "assemble_modelo_history",
+    "assemble_modelo_lifecycle_history",
     "assemble_work_unit_history",
 ]
