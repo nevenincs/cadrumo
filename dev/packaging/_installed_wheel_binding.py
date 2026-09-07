@@ -1,19 +1,26 @@
 """Bind an installed CLI environment to the exact immutable root wheel payload."""
+
 from __future__ import annotations
+
 import hashlib
 import json
 import struct
 import subprocess
 import zipfile
 from pathlib import Path, PurePosixPath
+
 from .._paths import UTF_8
-_GENERATED_METADATA = frozenset({'INSTALLER', 'RECORD', 'REQUESTED', 'direct_url.json', 'uv_cache.json'})
-_PE_SIGNATURE_POINTER = 60
-_PE_SIGNATURE = b'PE\x00\x00'
+
+_GENERATED_METADATA = frozenset({"INSTALLER", "RECORD", "REQUESTED", "direct_url.json", "uv_cache.json"})
+
+# Portable-executable offsets used to project a Windows console launcher onto
+# the bytes its embedded script cannot influence. Fixed by the PE/COFF format.
+_PE_SIGNATURE_POINTER = 0x3C
+_PE_SIGNATURE = b"PE\0\0"
 _COFF_SECTION_COUNT_OFFSET = 6
 _COFF_OPTIONAL_SIZE_OFFSET = 20
 _COFF_HEADER_SIZE = 24
-_PE32_PLUS_MAGIC = 523
+_PE32_PLUS_MAGIC = 0x20B
 _PE32_DATA_DIRECTORY_OFFSET = 96
 _PE32_PLUS_DATA_DIRECTORY_OFFSET = 112
 _RESOURCE_DIRECTORY_INDEX = 2
@@ -22,11 +29,13 @@ _SECTION_HEADER_SIZE = 40
 _SECTION_NAME_SIZE = 8
 _SECTION_VIRTUAL_SIZE_OFFSET = 8
 _SECTION_RAW_SIZE_OFFSET = 16
-_RESOURCE_SECTION_NAME = b'.rsrc'
+_RESOURCE_SECTION_NAME = b".rsrc"
+
 
 def _projection_digest(rows: list[tuple[str, str]]) -> str:
-    payload = json.dumps(sorted(rows), ensure_ascii=False, separators=(',', ':')).encode(UTF_8)
+    payload = json.dumps(sorted(rows), ensure_ascii=False, separators=(",", ":")).encode(UTF_8)
     return hashlib.sha256(payload).hexdigest()
+
 
 def _launcher_stub_projection(image: bytes) -> bytes:
     """Project a Windows console launcher onto bytes its embedded script cannot change.
@@ -42,26 +51,36 @@ def _launcher_stub_projection(image: bytes) -> bytes:
     relocations, and the whole section layout including the resource section's
     address and file offset - compared exactly.
     """
-    signature = struct.unpack_from('<I', image, _PE_SIGNATURE_POINTER)[0]
-    if image[signature:signature + len(_PE_SIGNATURE)] != _PE_SIGNATURE:
-        raise RuntimeError('console entry-point launcher is not a portable executable')
-    section_count = struct.unpack_from('<H', image, signature + _COFF_SECTION_COUNT_OFFSET)[0]
-    optional_size = struct.unpack_from('<H', image, signature + _COFF_OPTIONAL_SIZE_OFFSET)[0]
+    signature = struct.unpack_from("<I", image, _PE_SIGNATURE_POINTER)[0]
+    if image[signature : signature + len(_PE_SIGNATURE)] != _PE_SIGNATURE:
+        raise RuntimeError("console entry-point launcher is not a portable executable")
+    section_count = struct.unpack_from("<H", image, signature + _COFF_SECTION_COUNT_OFFSET)[0]
+    optional_size = struct.unpack_from("<H", image, signature + _COFF_OPTIONAL_SIZE_OFFSET)[0]
     optional = signature + _COFF_HEADER_SIZE
-    magic = struct.unpack_from('<H', image, optional)[0]
-    directories = optional + (_PE32_PLUS_DATA_DIRECTORY_OFFSET if magic == _PE32_PLUS_MAGIC else _PE32_DATA_DIRECTORY_OFFSET)
+    magic = struct.unpack_from("<H", image, optional)[0]
+    directories = optional + (
+        _PE32_PLUS_DATA_DIRECTORY_OFFSET if magic == _PE32_PLUS_MAGIC else _PE32_DATA_DIRECTORY_OFFSET
+    )
     resource_size_field = directories + _RESOURCE_DIRECTORY_INDEX * _DATA_DIRECTORY_ENTRY_SIZE + 4
     table = optional + optional_size
     headers = (table + index * _SECTION_HEADER_SIZE for index in range(section_count))
-    resource = _dp_next('dev/packaging/_installed_wheel_binding.py:67:next', (header for header in headers if image[header:header + _SECTION_NAME_SIZE].rstrip(b'\x00') == _RESOURCE_SECTION_NAME), None)
+    resource = next(
+        (
+            header
+            for header in headers
+            if image[header : header + _SECTION_NAME_SIZE].rstrip(b"\0") == _RESOURCE_SECTION_NAME
+        ),
+        None,
+    )
     if resource is None:
-        raise RuntimeError('console entry-point launcher carries no embedded script resource')
-    raw_size, raw_offset = struct.unpack_from('<II', image, resource + _SECTION_RAW_SIZE_OFFSET)
+        raise RuntimeError("console entry-point launcher carries no embedded script resource")
+    raw_size, raw_offset = struct.unpack_from("<II", image, resource + _SECTION_RAW_SIZE_OFFSET)
     projected = bytearray(image)
-    struct.pack_into('<I', projected, resource_size_field, 0)
-    struct.pack_into('<I', projected, resource + _SECTION_VIRTUAL_SIZE_OFFSET, 0)
-    del projected[raw_offset:raw_offset + raw_size]
+    struct.pack_into("<I", projected, resource_size_field, 0)
+    struct.pack_into("<I", projected, resource + _SECTION_VIRTUAL_SIZE_OFFSET, 0)
+    del projected[raw_offset : raw_offset + raw_size]
     return bytes(projected)
+
 
 def sealed_wheel_payload_sha256(wheel: Path) -> str:
     """Return the canonical digest of immutable install payload members."""
@@ -73,6 +92,7 @@ def sealed_wheel_payload_sha256(wheel: Path) -> str:
                 continue
             rows.append((path.as_posix(), hashlib.sha256(archive.read(info)).hexdigest()))
     return _projection_digest(rows)
+
 
 def _existing_interpreter(interpreter: Path, *, cli: Path) -> Path:
     """Accept an absolute, existing interpreter path without dereferencing it.
@@ -89,61 +109,133 @@ def _existing_interpreter(interpreter: Path, *, cli: Path) -> Path:
     existence and otherwise left exactly as the launcher names it.
     """
     if not interpreter.is_absolute():
-        raise RuntimeError(f'installed CLI names a relative interpreter: {interpreter} ({cli})')
+        raise RuntimeError(f"installed CLI names a relative interpreter: {interpreter} ({cli})")
     if not interpreter.is_file():
-        raise RuntimeError(f'installed CLI names a missing interpreter: {interpreter} ({cli})')
+        raise RuntimeError(f"installed CLI names a missing interpreter: {interpreter} ({cli})")
     return interpreter
+
 
 def installed_python_for_cli(cli: Path) -> Path:
     """Resolve the interpreter that owns an installed console entry point."""
     resolved = cli.resolve(strict=True)
-    if resolved.suffix.lower() == '.exe':
-        return _existing_interpreter(resolved.parent / 'python.exe', cli=resolved)
+    if resolved.suffix.lower() == ".exe":
+        return _existing_interpreter(resolved.parent / "python.exe", cli=resolved)
     first_line = resolved.read_bytes().splitlines()[0].decode(UTF_8)
-    if not first_line.startswith('#!'):
-        raise RuntimeError(f'installed CLI has no absolute Python shebang: {resolved}')
-    interpreter = first_line[2:].strip().split(' ', 1)[0]
+    if not first_line.startswith("#!"):
+        raise RuntimeError(f"installed CLI has no absolute Python shebang: {resolved}")
+    interpreter = first_line[2:].strip().split(" ", 1)[0]
     return _existing_interpreter(Path(interpreter), cli=resolved)
+
 
 def installed_distribution_payload_sha256(cli: Path, distribution: str) -> str:
     """Hash one installed distribution through the executable-owning interpreter."""
     python = installed_python_for_cli(cli)
-    script = '\nimport hashlib, importlib.metadata, json\ngenerated = {"INSTALLER", "RECORD", "direct_url.json", "REQUESTED"}\ndist = importlib.metadata.distribution(__import__("sys").argv[1])\nrows = []\nfor item in dist.files or ():\n    path = item.as_posix()\n    if (\n        item.name in generated | {"uv_cache.json"}\n        or ".." in item.parts\n        or path.endswith(".pyc")\n        or "/__pycache__/" in path\n    ):\n        continue\n    resolved = dist.locate_file(item).resolve(strict=True)\n    if resolved.is_file():\n        rows.append((path, hashlib.sha256(resolved.read_bytes()).hexdigest()))\npayload = json.dumps(sorted(rows), ensure_ascii=False, separators=(",", ":")).encode("utf-8")\nprint(hashlib.sha256(payload).hexdigest())\n'
-    completed = subprocess.run([str(python), '-I', '-c', script, distribution], check=False, capture_output=True, text=True, encoding=UTF_8, errors='strict')
+    script = r"""
+import hashlib, importlib.metadata, json
+generated = {"INSTALLER", "RECORD", "direct_url.json", "REQUESTED"}
+dist = importlib.metadata.distribution(__import__("sys").argv[1])
+rows = []
+for item in dist.files or ():
+    path = item.as_posix()
+    if (
+        item.name in generated | {"uv_cache.json"}
+        or ".." in item.parts
+        or path.endswith(".pyc")
+        or "/__pycache__/" in path
+    ):
+        continue
+    resolved = dist.locate_file(item).resolve(strict=True)
+    if resolved.is_file():
+        rows.append((path, hashlib.sha256(resolved.read_bytes()).hexdigest()))
+payload = json.dumps(sorted(rows), ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+print(hashlib.sha256(payload).hexdigest())
+"""
+    completed = subprocess.run(  # noqa: S603 - interpreter is resolved from the installed CLI.
+        [str(python), "-I", "-c", script, distribution],
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding=UTF_8,
+        errors="strict",
+    )
     if completed.returncode != 0:
-        raise RuntimeError(f'could not attest installed cadrumo payload: {completed.stderr.strip()}')
+        raise RuntimeError(f"could not attest installed cadrumo payload: {completed.stderr.strip()}")
     digest = completed.stdout.strip()
     if len(digest) != 64:
-        raise RuntimeError(f'installed payload returned invalid digest: {digest!r}')
+        raise RuntimeError(f"installed payload returned invalid digest: {digest!r}")
     return digest
 
-def assert_installed_console_entry_point(executable: Path, *, distribution: str, entry_point: str, expected_value: str) -> None:
+
+def assert_installed_console_entry_point(
+    executable: Path,
+    *,
+    distribution: str,
+    entry_point: str,
+    expected_value: str,
+) -> None:
     """Resolve an entry point independently through the confined interpreter."""
     resolved = executable.resolve(strict=True)
     python = installed_python_for_cli(resolved)
-    launcher_name = f'{entry_point}.exe' if resolved.suffix.lower() == '.exe' else entry_point
+    launcher_name = f"{entry_point}.exe" if resolved.suffix.lower() == ".exe" else entry_point
     if resolved != (python.parent / launcher_name).resolve(strict=True):
-        raise RuntimeError('console entry point is not the confined environment launcher')
-    module_name, callable_name = expected_value.split(':', 1)
-    expected_script = f'#!{python}\n# -*- coding: utf-8 -*-\nimport sys\nfrom {module_name} import {callable_name}\nif __name__ == "__main__":\n    if sys.argv[0].endswith("-script.pyw"):\n        sys.argv[0] = sys.argv[0][:-11]\n    elif sys.argv[0].endswith(".exe"):\n        sys.argv[0] = sys.argv[0][:-4]\n    sys.exit({callable_name}())\n'.encode(UTF_8)
-    if resolved.suffix.lower() == '.exe':
+        raise RuntimeError("console entry point is not the confined environment launcher")
+    module_name, callable_name = expected_value.split(":", 1)
+    expected_script = (
+        f"#!{python}\n"
+        "# -*- coding: utf-8 -*-\n"
+        "import sys\n"
+        f"from {module_name} import {callable_name}\n"
+        'if __name__ == "__main__":\n'
+        '    if sys.argv[0].endswith("-script.pyw"):\n'
+        "        sys.argv[0] = sys.argv[0][:-11]\n"
+        '    elif sys.argv[0].endswith(".exe"):\n'
+        "        sys.argv[0] = sys.argv[0][:-4]\n"
+        f"    sys.exit({callable_name}())\n"
+    ).encode(UTF_8)
+    if resolved.suffix.lower() == ".exe":
         try:
             with zipfile.ZipFile(resolved) as launcher:
-                if launcher.namelist() != ['__main__.py'] or launcher.read('__main__.py') != expected_script:
-                    raise RuntimeError('console entry-point launcher semantics drifted')
-            peer_name = 'cadrumo-mcp.exe' if entry_point == 'aeat' else 'aeat.exe'
+                if launcher.namelist() != ["__main__.py"] or launcher.read("__main__.py") != expected_script:
+                    raise RuntimeError("console entry-point launcher semantics drifted")
+            peer_name = "cadrumo-mcp.exe" if entry_point == "aeat" else "aeat.exe"
             peer = resolved.with_name(peer_name).resolve(strict=True)
             if _launcher_stub_projection(resolved.read_bytes()) != _launcher_stub_projection(peer.read_bytes()):
-                raise RuntimeError('console entry-point launcher stub drifted')
+                raise RuntimeError("console entry-point launcher stub drifted")
         except (OSError, struct.error, zipfile.BadZipFile) as exc:
-            raise RuntimeError('console entry-point launcher is malformed') from exc
+            raise RuntimeError("console entry-point launcher is malformed") from exc
     elif resolved.read_bytes() != expected_script:
-        raise RuntimeError('console entry-point launcher semantics drifted')
-    script = '\nimport importlib, importlib.metadata, pathlib, sys\ndistribution, entry_name, expected = sys.argv[1:]\ndist = importlib.metadata.distribution(distribution)\nmatches = [ep for ep in dist.entry_points if ep.group == "console_scripts" and ep.name == entry_name]\nif len(matches) != 1 or matches[0].value != expected:\n    raise SystemExit("console entry-point metadata drifted")\nmodule = importlib.import_module(expected.split(":", 1)[0])\norigin = pathlib.Path(module.__file__).resolve(strict=True)\nsite_root = pathlib.Path(dist.locate_file("")).resolve(strict=True)\nif not origin.is_relative_to(site_root):\n    raise SystemExit("console entry-point module escaped installed distribution root")\ntarget = module\nfor component in expected.split(":", 1)[1].split("."):\n    target = getattr(target, component)\nif not callable(target):\n    raise SystemExit("console entry-point target is not callable")\n'
-    completed = subprocess.run([str(python), '-I', '-c', script, distribution, entry_point, expected_value], check=False, capture_output=True, text=True, encoding=UTF_8, errors='strict', timeout=15)
+        raise RuntimeError("console entry-point launcher semantics drifted")
+    script = r"""
+import importlib, importlib.metadata, pathlib, sys
+distribution, entry_name, expected = sys.argv[1:]
+dist = importlib.metadata.distribution(distribution)
+matches = [ep for ep in dist.entry_points if ep.group == "console_scripts" and ep.name == entry_name]
+if len(matches) != 1 or matches[0].value != expected:
+    raise SystemExit("console entry-point metadata drifted")
+module = importlib.import_module(expected.split(":", 1)[0])
+origin = pathlib.Path(module.__file__).resolve(strict=True)
+site_root = pathlib.Path(dist.locate_file("")).resolve(strict=True)
+if not origin.is_relative_to(site_root):
+    raise SystemExit("console entry-point module escaped installed distribution root")
+target = module
+for component in expected.split(":", 1)[1].split("."):
+    target = getattr(target, component)
+if not callable(target):
+    raise SystemExit("console entry-point target is not callable")
+"""
+    completed = subprocess.run(  # noqa: S603 - interpreter belongs to the confined installed environment.
+        [str(python), "-I", "-c", script, distribution, entry_point, expected_value],
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding=UTF_8,
+        errors="strict",
+        timeout=15,
+    )
     if completed.returncode != 0:
-        raise RuntimeError(f'installed console entry-point binding failed: {completed.stderr.strip()}')
+        raise RuntimeError(f"installed console entry-point binding failed: {completed.stderr.strip()}")
+
 
 def installed_wheel_payload_sha256(cli: Path) -> str:
     """Hash the installed ``cadrumo`` payload through the CLI-owning interpreter."""
-    return installed_distribution_payload_sha256(cli, 'cadrumo')
+    return installed_distribution_payload_sha256(cli, "cadrumo")

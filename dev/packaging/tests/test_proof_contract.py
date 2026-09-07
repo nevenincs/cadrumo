@@ -20,16 +20,30 @@ declares claims through its own ``declared_claims`` helper -- so the one lane
 whose name and whose declaration spelling both sit outside the convention was
 checked by neither the parametrize nor the declaration reader.
 """
+
 from __future__ import annotations
+
 import ast
 from pathlib import Path
+
 import pytest
+
 from cadrumo.core.directory_scan import iter_directory
-from .._proof_ledger import ProofContractError, record_proof, recorded_proofs, reset_proof_ledger
+
+from .._proof_ledger import (
+    ProofContractError,
+    record_proof,
+    recorded_proofs,
+    reset_proof_ledger,
+)
 from .._smoke_common import write_smoke_manifest
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
 _PACKAGING = Path(__file__).resolve().parents[1]
-_RECORDING_SUPPORT = ('_smoke_common.py', 'python_cohort.py')
+# Modules that record proofs on behalf of the forms that call them.
+_RECORDING_SUPPORT = ("_smoke_common.py", "python_cohort.py")
+
 
 def _unreachable_nodes(tree: ast.AST) -> set[int]:
     """Return the ids of every node the interpreter can never reach.
@@ -44,8 +58,8 @@ def _unreachable_nodes(tree: ast.AST) -> set[int]:
     dead: set[int] = set()
     terminators = (ast.Return, ast.Raise, ast.Continue, ast.Break)
     for node in ast.walk(tree):
-        for field in ('body', 'orelse', 'finalbody'):
-            block = _dp_getattr('dev/packaging/tests/test_proof_contract.py:62:getattr', node, field, None)
+        for field in ("body", "orelse", "finalbody"):
+            block = getattr(node, field, None)
             if not isinstance(block, list):
                 continue
             terminated = False
@@ -55,6 +69,7 @@ def _unreachable_nodes(tree: ast.AST) -> set[int]:
                 elif isinstance(statement, terminators):
                     terminated = True
     return dead
+
 
 def _recorded_claims(tree: ast.AST) -> set[str]:
     """Return every claim string a REACHABLE ``record_proof`` call can emit.
@@ -67,22 +82,57 @@ def _recorded_claims(tree: ast.AST) -> set[str]:
     by the gate.
     """
     dead = _unreachable_nodes(tree)
-    return {node.args[0].value for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and (node.func.id == 'record_proof') and node.args and isinstance(node.args[0], ast.Constant) and (id(node) not in dead)}
+    return {
+        node.args[0].value
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "record_proof"
+        and node.args
+        and isinstance(node.args[0], ast.Constant)
+        and id(node) not in dead
+    }
+
 
 def _declared_claims(tree: ast.AST) -> set[str]:
     """Return every claim string a form declares as its contract."""
     declared: set[str] = set()
     for node in ast.walk(tree):
-        targets = _dp_getattr('dev/packaging/tests/test_proof_contract.py:101:getattr', node, 'targets', [])
-        is_declared_assign = isinstance(node, ast.Assign) and any((_dp_getattr('dev/packaging/tests/test_proof_contract.py:103:getattr', target, 'id', '') == 'declared' for target in targets))
-        is_declared_kwarg = isinstance(node, ast.keyword) and node.arg == 'declared'
-        is_declared_extend = isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and (node.func.attr in {'insert', 'extend'}) and isinstance(node.func.value, ast.Name) and (node.func.value.id == 'declared')
-        is_declared_helper = isinstance(node, ast.FunctionDef) and node.name == 'declared_claims'
+        targets = getattr(node, "targets", [])
+        is_declared_assign = isinstance(node, ast.Assign) and any(
+            getattr(target, "id", "") == "declared" for target in targets
+        )
+        is_declared_kwarg = isinstance(node, ast.keyword) and node.arg == "declared"
+        is_declared_extend = (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr in {"insert", "extend"}
+            and isinstance(node.func.value, ast.Name)
+            and node.func.value.id == "declared"
+        )
+        # A lane may build its contract in a helper instead of at the call
+        # site. ``all_extra_smoke`` does, and reading only the two spellings
+        # above made its whole declaration invisible -- the lane passed this
+        # gate by declaring nothing the gate could see.
+        is_declared_helper = isinstance(node, ast.FunctionDef) and node.name == "declared_claims"
         if is_declared_assign or is_declared_kwarg or is_declared_extend or is_declared_helper:
+            # A helper's own docstring is prose about the contract, not a
+            # claim in it. Excluded by NODE identity rather than by value, so
+            # a docstring that happens to quote a real claim still leaves that
+            # claim declared wherever it is genuinely listed.
             leading = node.body[0] if isinstance(node, ast.FunctionDef) and node.body else None
-            skip = {id(leading.value)} if isinstance(leading, ast.Expr) and isinstance(leading.value, ast.Constant) else set()
-            declared |= {child.value for child in ast.walk(node) if isinstance(child, ast.Constant) and isinstance(child.value, str) and (id(child) not in skip)}
+            skip = (
+                {id(leading.value)}
+                if isinstance(leading, ast.Expr) and isinstance(leading.value, ast.Constant)
+                else set()
+            )
+            declared |= {
+                child.value
+                for child in ast.walk(node)
+                if isinstance(child, ast.Constant) and isinstance(child.value, str) and id(child) not in skip
+            }
     return declared
+
 
 def _support_claims() -> set[str]:
     """Return every claim the shared recording helpers can emit.
@@ -97,14 +147,24 @@ def _support_claims() -> set[str]:
     """
     claims: set[str] = set()
     for name in _RECORDING_SUPPORT:
-        claims |= _recorded_claims(ast.parse((_PACKAGING / name).read_text(encoding='utf-8')))
+        claims |= _recorded_claims(ast.parse((_PACKAGING / name).read_text(encoding="utf-8")))
     return claims
-_LANE_PATTERNS = ('smoke_*.py', '*_smoke.py')
+
+
+#: Both name orders a lane module in this package uses. ``smoke_*.py`` alone
+#: held eight of the nine and dropped ``all_extra_smoke``.
+_LANE_PATTERNS = ("smoke_*.py", "*_smoke.py")
+
 
 def _lane_modules() -> list[str]:
     """Return every packaging smoke-lane module name, in both name orders."""
     return sorted({path.name for pattern in _LANE_PATTERNS for path in iter_directory(_PACKAGING, pattern=pattern)})
+
+
+#: Below this the smoke-lane discovery has stopped finding its subject. A
+#: floor, not a pinned count: nine lanes ship today.
 _MINIMUM_SMOKE_LANES = 4
+
 
 def test_the_smoke_lane_corpus_is_discovered() -> None:
     """An empty parametrize does not fail the gate below - it DELETES it.
@@ -124,10 +184,19 @@ def test_the_smoke_lane_corpus_is_discovered() -> None:
     form could over-claim freely.
     """
     lanes = _lane_modules()
-    assert 'all_extra_smoke.py' in lanes, f'the lane corpus {lanes} omits `all_extra_smoke.py`, a campaign-registered lane that declares nine claims. A corpus defined by the majority name order silently excuses the minority one from the contract gate entirely.'
-    assert len(lanes) >= _MINIMUM_SMOKE_LANES, f'only {len(lanes)} smoke lane(s) were discovered under {_PACKAGING}; below this the claim gate parametrises over nothing and silently stops existing'
 
-@pytest.mark.parametrize('module', _lane_modules())
+    assert "all_extra_smoke.py" in lanes, (
+        f"the lane corpus {lanes} omits `all_extra_smoke.py`, a campaign-registered lane that "
+        "declares nine claims. A corpus defined by the majority name order silently excuses the "
+        "minority one from the contract gate entirely."
+    )
+    assert len(lanes) >= _MINIMUM_SMOKE_LANES, (
+        f"only {len(lanes)} smoke lane(s) were discovered under {_PACKAGING}; below this the "
+        "claim gate parametrises over nothing and silently stops existing"
+    )
+
+
+@pytest.mark.parametrize("module", _lane_modules())
 def test_every_declared_claim_has_an_assertion_that_records_it(module: str) -> None:
     """A form may not promise a proof no assertion anywhere can record.
 
@@ -135,17 +204,19 @@ def test_every_declared_claim_has_an_assertion_that_records_it(module: str) -> N
     a lane is ever built: the removed browser claim (a tracked shipped-data
     payload check that form never performed) fails here.
     """
-    tree = ast.parse((_PACKAGING / module).read_text(encoding='utf-8'))
+    tree = ast.parse((_PACKAGING / module).read_text(encoding="utf-8"))
     unbacked = sorted(_declared_claims(tree) - _recorded_claims(tree) - _support_claims())
-    assert not unbacked, f'{module} declares claims nothing records: {unbacked}'
+    assert not unbacked, f"{module} declares claims nothing records: {unbacked}"
+
 
 def test_manifest_checks_come_from_the_ledger_not_the_declaration(tmp_path: Path) -> None:
     """The written claims are what RAN, so an unrecorded claim cannot appear."""
     reset_proof_ledger()
-    record_proof('stdlib venv creation')
-    manifest_path = write_smoke_manifest(tmp_path, lane='probe', artifacts={}, declared=('stdlib venv creation',))
-    assert '"stdlib venv creation"' in manifest_path.read_text(encoding='utf-8')
+    record_proof("stdlib venv creation")
+    manifest_path = write_smoke_manifest(tmp_path, lane="probe", artifacts={}, declared=("stdlib venv creation",))
+    assert '"stdlib venv creation"' in manifest_path.read_text(encoding="utf-8")
     reset_proof_ledger()
+
 
 def test_a_declared_proof_that_never_ran_refuses_the_run(tmp_path: Path) -> None:
     """The declared half: a form that silently stops proving something fails loudly.
@@ -154,21 +225,28 @@ def test_a_declared_proof_that_never_ran_refuses_the_run(tmp_path: Path) -> None
     which is why both halves are required.
     """
     reset_proof_ledger()
-    record_proof('stdlib venv creation')
-    with pytest.raises(ProofContractError, match='never executed'):
-        write_smoke_manifest(tmp_path, lane='probe', artifacts={}, declared=('stdlib venv creation', 'a proof no assertion ran'))
-    assert not (tmp_path / 'packaging-smoke-manifest.json').exists(), 'nothing is written on refusal'
+    record_proof("stdlib venv creation")
+    with pytest.raises(ProofContractError, match="never executed"):
+        write_smoke_manifest(
+            tmp_path,
+            lane="probe",
+            artifacts={},
+            declared=("stdlib venv creation", "a proof no assertion ran"),
+        )
+    assert not (tmp_path / "packaging-smoke-manifest.json").exists(), "nothing is written on refusal"
     reset_proof_ledger()
+
 
 def test_the_ledger_is_order_preserving_and_deduplicated() -> None:
     """Claims read back in execution order; a repeated assertion records once."""
     reset_proof_ledger()
-    record_proof('second')
-    record_proof('first')
-    record_proof('second')
-    assert recorded_proofs() == ('second', 'first')
+    record_proof("second")
+    record_proof("first")
+    record_proof("second")
+    assert recorded_proofs() == ("second", "first")
     reset_proof_ledger()
     assert recorded_proofs() == ()
+
 
 def test_a_recording_after_a_return_does_not_back_a_claim() -> None:
     """Teeth for the reachability rule, on the exact shape that defeated it.
@@ -180,8 +258,16 @@ def test_a_recording_after_a_return_does_not_back_a_claim() -> None:
     environment build -- passed the author-time check that exists to catch
     exactly that.
     """
-    source = 'def build():\n    run()\n    return venv\n    record_proof("dead claim")\n\ndef live():\n    record_proof("live claim")\n'
-    assert _recorded_claims(ast.parse(source)) == {'live claim'}
+    source = (
+        "def build():\n"
+        "    run()\n"
+        "    return venv\n"
+        '    record_proof("dead claim")\n'
+        '\ndef live():\n    record_proof("live claim")\n'
+    )
+
+    assert _recorded_claims(ast.parse(source)) == {"live claim"}
+
 
 def test_a_recording_after_a_conditional_return_still_backs_its_claim() -> None:
     """The rule must not be wider than reachability, or it reports live code dead.
@@ -191,7 +277,9 @@ def test_a_recording_after_a_conditional_return_still_backs_its_claim() -> None:
     lane's real recordings would vanish and the gate would fail the whole tree.
     """
     source = 'def build():\n    if bad:\n        return None\n    record_proof("live claim")\n'
-    assert _recorded_claims(ast.parse(source)) == {'live claim'}
+
+    assert _recorded_claims(ast.parse(source)) == {"live claim"}
+
 
 def test_a_contract_built_in_a_helper_is_read_as_a_declaration() -> None:
     """``all_extra_smoke`` declares through a helper, and was invisible.
@@ -201,8 +289,17 @@ def test_a_contract_built_in_a_helper_is_read_as_a_declaration() -> None:
     see, so it satisfied the over-claim check by being unreadable rather than by
     being correct.
     """
-    source = 'def declared_claims(*, skip):\n    """Prose naming no claim."""\n    claims = ["wheel payload"]\n    if not skip:\n        claims.append("export closure")\n    return tuple(claims)\n'
-    assert _declared_claims(ast.parse(source)) == {'wheel payload', 'export closure'}
+    source = (
+        "def declared_claims(*, skip):\n"
+        '    """Prose naming no claim."""\n'
+        '    claims = ["wheel payload"]\n'
+        "    if not skip:\n"
+        '        claims.append("export closure")\n'
+        "    return tuple(claims)\n"
+    )
+
+    assert _declared_claims(ast.parse(source)) == {"wheel payload", "export closure"}
+
 
 def test_a_helper_docstring_is_prose_rather_than_a_declared_claim() -> None:
     """Otherwise every sentence in the helper's docstring becomes a promise.
@@ -211,4 +308,5 @@ def test_a_helper_docstring_is_prose_rather_than_a_declared_claim() -> None:
     stands without also dropping the same string where it is genuinely listed.
     """
     source = 'def declared_claims():\n    """wheel payload"""\n    return ("export closure",)\n'
-    assert _declared_claims(ast.parse(source)) == {'export closure'}
+
+    assert _declared_claims(ast.parse(source)) == {"export closure"}

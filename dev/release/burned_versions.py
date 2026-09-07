@@ -36,20 +36,30 @@ See Also:
     :func:`is_burned`
         The membership question the identity guard asks.
 """
+
 from __future__ import annotations
+
 import json
 from dataclasses import dataclass
 from datetime import date
 from functools import lru_cache
 from pathlib import Path
 from typing import Final
+
 from packaging.version import InvalidVersion, Version
+
 from .._paths import UTF_8
+
 _UTF_8: Final[str] = UTF_8
-LEDGER_PATH: Final[Path] = Path(__file__).resolve().parent / 'burned_versions.json'
+
+#: The committed ledger, beside this module so the data and its reader move
+#: together and neither can be deployed without the other.
+LEDGER_PATH: Final[Path] = Path(__file__).resolve().parent / "burned_versions.json"
+
 
 class BurnedVersionLedgerError(RuntimeError):
     """The ledger is missing, malformed, or self-inconsistent."""
+
 
 @dataclass(frozen=True, slots=True)
 class BurnedVersion:
@@ -68,10 +78,12 @@ class BurnedVersion:
     the same number. That answer is the same silent pass a raw-string
     comparison gives, arrived at one step later.
     """
+
     version: str
     burned_on: date
     reason: str
     canonical: Version
+
 
 def canonical_version(version: str) -> Version | None:
     """Return the release ``version`` names, or ``None`` if it names none.
@@ -100,8 +112,8 @@ def canonical_version(version: str) -> Version | None:
     try:
         return Version(version)
     except InvalidVersion:
-        _dp_mark('dev/release/burned_versions.py:114:except')
         return None
+
 
 def _parse_entry(raw: object, *, index: int) -> BurnedVersion:
     """Return one validated entry, refusing anything under-specified.
@@ -111,24 +123,27 @@ def _parse_entry(raw: object, *, index: int) -> BurnedVersion:
     future reader to delete it as noise.
     """
     if not isinstance(raw, dict):
-        raise BurnedVersionLedgerError(f'ledger entry {index} is not an object: {raw!r}')
-    missing = sorted({'version', 'burned_on', 'reason'} - set(raw))
+        raise BurnedVersionLedgerError(f"ledger entry {index} is not an object: {raw!r}")
+    missing = sorted({"version", "burned_on", "reason"} - set(raw))
     if missing:
-        raise BurnedVersionLedgerError(f'ledger entry {index} is missing {missing}')
-    version = raw['version']
-    reason = raw['reason']
+        raise BurnedVersionLedgerError(f"ledger entry {index} is missing {missing}")
+    version = raw["version"]
+    reason = raw["reason"]
     if not isinstance(version, str) or not version.strip():
-        raise BurnedVersionLedgerError(f'ledger entry {index} has an empty version')
+        raise BurnedVersionLedgerError(f"ledger entry {index} has an empty version")
     if not isinstance(reason, str) or not reason.strip():
-        raise BurnedVersionLedgerError(f'ledger entry {index} has an empty reason')
+        raise BurnedVersionLedgerError(f"ledger entry {index} has an empty reason")
     canonical = canonical_version(version)
     if canonical is None:
-        raise BurnedVersionLedgerError(f'ledger entry {index} has an unparseable version: {version!r}')
+        raise BurnedVersionLedgerError(f"ledger entry {index} has an unparseable version: {version!r}")
     try:
-        burned_on = date.fromisoformat(str(raw['burned_on']))
+        burned_on = date.fromisoformat(str(raw["burned_on"]))
     except ValueError as exc:
-        raise BurnedVersionLedgerError(f"ledger entry {index} has an unparseable burned_on: {raw['burned_on']!r}") from exc
+        raise BurnedVersionLedgerError(
+            f"ledger entry {index} has an unparseable burned_on: {raw['burned_on']!r}",
+        ) from exc
     return BurnedVersion(version=version, burned_on=burned_on, reason=reason, canonical=canonical)
+
 
 def read_ledger(path: Path) -> tuple[BurnedVersion, ...]:
     """Return every burned version recorded at ``path``, in ledger order.
@@ -156,18 +171,19 @@ def read_ledger(path: Path) -> tuple[BurnedVersion, ...]:
     try:
         payload = json.loads(path.read_text(encoding=_UTF_8))
     except FileNotFoundError as exc:
-        raise BurnedVersionLedgerError(f'burned-version ledger is absent at {path}') from exc
+        raise BurnedVersionLedgerError(f"burned-version ledger is absent at {path}") from exc
     except json.JSONDecodeError as exc:
-        raise BurnedVersionLedgerError(f'burned-version ledger is not valid JSON: {exc}') from exc
-    if not isinstance(payload, dict) or not isinstance(payload.get('burned'), list):
+        raise BurnedVersionLedgerError(f"burned-version ledger is not valid JSON: {exc}") from exc
+    if not isinstance(payload, dict) or not isinstance(payload.get("burned"), list):
         raise BurnedVersionLedgerError("burned-version ledger must be an object carrying a 'burned' list")
-    entries = tuple((_parse_entry(raw, index=index) for index, raw in enumerate(payload['burned'])))
+    entries = tuple(_parse_entry(raw, index=index) for index, raw in enumerate(payload["burned"]))
     seen: set[Version] = set()
     for entry in entries:
         if entry.canonical in seen:
-            raise BurnedVersionLedgerError(f'burned-version ledger lists {entry.version} more than once')
+            raise BurnedVersionLedgerError(f"burned-version ledger lists {entry.version} more than once")
         seen.add(entry.canonical)
     return entries
+
 
 @lru_cache(maxsize=1)
 def burned_versions() -> tuple[BurnedVersion, ...]:
@@ -178,6 +194,7 @@ def burned_versions() -> tuple[BurnedVersion, ...]:
     """
     return read_ledger(LEDGER_PATH)
 
+
 def is_burned(version: str) -> bool:
     """Return whether ``version`` may never be minted again.
 
@@ -187,7 +204,8 @@ def is_burned(version: str) -> bool:
     canonical = canonical_version(version)
     if canonical is None:
         return False
-    return any((entry.canonical == canonical for entry in burned_versions()))
+    return any(entry.canonical == canonical for entry in burned_versions())
+
 
 def burn_reason(version: str) -> str | None:
     """Return why ``version`` is burned, or ``None`` when it is not.
