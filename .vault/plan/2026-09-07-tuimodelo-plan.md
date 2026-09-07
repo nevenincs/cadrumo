@@ -15,7 +15,7 @@ related:
   - '[[2026-09-07-tuimodelo-adapter-migration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:7caddd97d710cbaa12e8cbbd7a68f51dbf40431a3d6035ec81c6e0fbc2f501a1'
+body_hash: 'sha256:1f6def61c9614b1de5f497e331cea5a43926f11c274f2fe433d45ea56533fde0'
 ---
 
 # `tuimodelo` plan
@@ -47,7 +47,7 @@ the only way an operator enters calculation inputs for four withholding modelos.
 
 ## Wave `W01` - governance hygiene and admission gate
 
-Clear the governance debt that blocks every later wave. A dead campaign still holds seven rows of the tui-architecture plan open against a gate that can never close, two tui-interface rows describe a retired mechanism, and the action denominator cannot yet prove admission because its drift check never observes a disposition or an interface capability. Nothing downstream can be scheduled honestly until scope is annotated, holds are adjudicated and the gate can fail in both directions.
+Clear the governance debt that blocks every later wave. A dead campaign still holds seven marked rows, five of them open, of the tui-architecture plan open against a gate that can never close, two tui-interface rows describe a retired mechanism, and the action denominator cannot yet prove admission because its drift check never observes a disposition or an interface capability. Nothing downstream can be scheduled honestly until scope is annotated, holds are adjudicated and the gate can fail in both directions.
 
 ### Phase `W01.P01` - adjudicate inherited holds
 
@@ -57,18 +57,18 @@ Resolve the five still-open rows an archived campaign left held and the rows who
 - [ ] `W01.P01.S02` - Adjudicate as superseded the two rows whose subject the accepted interface decision retired, citing the retirement commit rather than completing or deleting them; `.vault/plan/2026-08-11-tui-interface-plan.md`.
 - [ ] `W01.P01.S03` - Close the action-denominator row on its standing gate and correct the execution record that asserts a deleted snapshot document; `.vault/plan/2026-08-11-tui-interface-plan.md`.
 - [ ] `W01.P01.S11` - Confirm the capability relocation is fully governed by the migration boundary decision, and record that no separate capability-model record is needed; `.vault/adr/2026-09-07-tuimodelo-adapter-migration-adr.md`.
-- [ ] `W01.P01.S10` - Author the lifecycle-vocabulary decision reconciling the adapter-derived work-unit state with the frontend lifecycle kind, before the history relocation that must choose between them; `.vault/adr`.
+- [ ] `W01.P01.S10` - Author the lifecycle-vocabulary clause reconciling the adapter-derived work-unit state with the declarations lifecycle kind, as an amendment to the filing-lifecycle decision that owns lifecycle presentation; `.vault/adr/2026-09-07-tuimodelo-filing-lifecycle-adr.md`.
 
 ### Phase `W01.P02` - make the denominator an admission gate
 
 Extend the denominator so a delivered surface and its recorded classification must agree, and correct the specs that under-declare their write route.
 
+- [ ] `W01.P02.S13` - Share the interface capability declaration out of the command-line package so a full-screen surface can read a command's capability posture without importing the adapter; `src/cadrumo/entrypoints/cli/command_spec.py`.
+- [ ] `W01.P02.S14` - Relocate the capability model to a shared owner both adapters may consume, sequencing it before the denominator extension that reads it; `src/cadrumo/entrypoints/cli/command_spec.py`.
 - [ ] `W01.P02.S04` - Extend the observed action signature with interface capability and dispatchability so the gate can see a wired surface; `dev/quality/modelo_workspace_action_denominator.py`.
 - [ ] `W01.P02.S05` - Add delivered dispositions for reads and for mutations to the closed taxonomy, which today offers no arm a delivered mutation can occupy; `dev/quality/modelo_workspace_action_denominator.py`.
 - [ ] `W01.P02.S06` - Red the gate when a recorded disposition contradicts the observed shape, applying the rule to the command-graph and dispatch intersection only; `dev/quality/modelo_workspace_action_denominator.py`.
 - [ ] `W01.P02.S07` - Correct the two review-package specs that declare no write route while carrying local-state side effects and emitting events; `src/cadrumo/entrypoints/cli`.
-- [ ] `W01.P02.S13` - Share the interface capability declaration out of the command-line package so a full-screen surface can read a command's capability posture without importing the adapter; `src/cadrumo/entrypoints/cli/command_spec.py`.
-- [ ] `W01.P02.S14` - Relocate the capability model to a shared owner both adapters may consume, sequencing it before the denominator extension that reads it; `src/cadrumo/entrypoints/cli/command_spec.py`.
 
 ### Phase `W01.P03` - record campaign scope and outstanding decisions
 
@@ -79,11 +79,12 @@ Annotate absorbed rows with their new owner, publish the coverage baseline, and 
 - [ ] `W01.P03.S12` - Publish the campaign coverage baseline as a standing artefact derived from the denominator; `dev/quality`.
 - [ ] `W01.P03.S141` - Reopen the edit capability projection under the surviving mechanism, replacing the retired condition it still cites, since every editor step routes through a seam nothing currently opens; `src/cadrumo/application/modelo/_edit_facade.py`.
 - [ ] `W01.P03.S142` - Relocate the capability projection out of the private underscore module to a public defining module, because a frontend import of it is otherwise forbidden by the architecture boundary; `src/cadrumo/application/modelo`.
-- [ ] `W01.P03.S128` - Open the sibling adapter-purity campaign for the residual violations this campaign does not take: 159 identified in total, roughly 40 here, leaving about 120 across the ledger, configuration and live lanes, and record that the ledger lane's prior owner is archived so the work is not orphaned twice; `.vault`.
+- [ ] `W01.P03.S128` - Open the sibling adapter-purity campaign for the residual violations, deriving the figure from the 159-row inventory rather than rounding it, and record that the ledger lane's prior owner is archived so the work is not orphaned twice; `.vault`.
+- [ ] `W01.P03.S166` - Shrink the unreachable-module ratchet by the capability module this phase's relocation frees, in the same commit as the relocation; `dev/quality/unreachable_module_ratchet.toml`.
 
 ## Wave `W02` - adapter to backend migration
 
-Make both adapters pure consumers OF THE MODELO LANE. This wave does not make the command line a pure consumer overall: 159 adapter-boundary violations are identified across four lanes and this wave takes roughly 40 of them - the modelo lane, the shared capability declaration, and the frontend's own duplicate wiring. The residual 62 ledger, 52 configuration and 26 live rows belong to the sibling campaign recorded in W01. Session authorization already works for a full-screen surface and is not the blocker an earlier reading suggested; what is stranded is the capability declaration, which both adapters need and only one can reach.
+Make both adapters pure consumers OF THE MODELO LANE. This wave does not make the command line a pure consumer overall: 159 adapter-boundary violations are identified across four lanes and this wave takes roughly 40 of them - the modelo lane, the shared capability declaration, and the frontend's own duplicate wiring. The 159 identified violations divide 62 ledger, 52 configuration and profile, 26 live and overview, 18 modelo and 1 cross-lane. This campaign takes the 18 modelo rows, the 1 cross-lane row, the named correctness divergences that cross into other lanes, and two groups that sit outside the 159 entirely because the inventory scopes it to the command-line tree: the shared capability declaration and the frontend's own duplicated composition. The residual chartered to the sibling campaign is therefore 140 less the crossing rows this campaign takes, stated exactly in the chartering step rather than rounded. Session authorization already works for a full-screen surface and is not the blocker an earlier reading suggested; what is stranded is the capability declaration, which both adapters need and only one can reach.
 
 ### Phase `W02.P04` - authorization floor
 
@@ -124,7 +125,7 @@ Collapse duplicated election defaults, remove coerced zeroes and hardcoded avail
 - [ ] `W02.P07.S32` - Move ledger period-token applicability out of the adapter parser onto the period model; `src/cadrumo/core/period.py`.
 - [ ] `W02.P07.S149` - Author the adapter-purity detector that fails when policy moves back into an adapter, which this wave's closure condition requires and no step currently provides; `dev/quality`.
 - [ ] `W02.P07.S157` - Update the size-budget baseline for the modules this campaign rewrites, coordinating with the ten open refactor rows another plan holds on the same targets; `dev/audit/size_budget_baseline.json`.
-- [ ] `W02.P07.S160` - Charter the correctness divergences this phase repairs as a fourth group in the migration boundary, or move the rows that cross into the ledger, live and configuration lanes to the sibling campaign; `.vault/adr/2026-09-07-tuimodelo-adapter-migration-adr.md`.
+- [ ] `W02.P07.S160` - Reconcile the plan's residual arithmetic with the migration boundary decision, deriving the take and the remainder from the 159 rather than rounding either; `.vault/plan/2026-09-07-tuimodelo-plan.md`.
 
 ### Phase `W02.P08` - remove adapter duplication
 
@@ -153,13 +154,13 @@ Fix per-type parsing, construct the unsupported-kind refusal, and route labels t
 Define the presentation declaration and generate it from export offsets and the official record-design corpus, reviewed before publication.
 
 - [ ] `W03.P10.S41` - Define the presentation declaration: an ordered page and section tree, a placement per casilla with an explicit unplaced arm carrying a reason, an official heading per node, and row groups with cardinality; `src/cadrumo/domain/calculations/registry`.
+- [ ] `W03.P10.S148` - Measure the casilla-to-official-description join rate and record the reproducible figure, which the verification section demands and no other step provides; `dev/registry`.
+- [ ] `W03.P10.S56` - Re-measure the ordering fidelity claim against the official record design and record the reproducible figure; `dev/registry`.
 - [ ] `W03.P10.S42` - Build the development-time generator seeding order from export field offsets within record order and headings from the official record-design corpus; `dev/registry`.
+- [ ] `W03.P10.S153` - Enrol a validator for the new declaration family in the registry dispatch, since a declaration family without one cannot fail closed; `src/cadrumo/domain/calculations/registry`.
 - [ ] `W03.P10.S43` - Publish and load the declaration through the validated registry authority, compiled and validated with the revision it describes; `src/cadrumo/domain/calculations/registry/authority.py`.
 - [ ] `W03.P10.S44` - Give the declaration a cache identity that includes the source state it was generated from; `src/cadrumo/domain/calculations/registry/loader_cache.py`.
 - [ ] `W03.P10.S45` - Review each generated declaration before publication, smallest fixed-width modelos first; `src/cadrumo/_data/registry`.
-- [ ] `W03.P10.S153` - Enrol a validator for the new declaration family in the registry dispatch, since a declaration family without one cannot fail closed; `src/cadrumo/domain/calculations/registry`.
-- [ ] `W03.P10.S148` - Measure the casilla-to-official-description join rate and record the reproducible figure, which the verification section demands and no other step provides; `dev/registry`.
-- [ ] `W03.P10.S56` - Re-measure the ordering fidelity claim against the official record design and record the reproducible figure; `dev/registry`.
 
 ### Phase `W03.P11` - modelo 100 seed
 
@@ -200,6 +201,7 @@ Give the modelo workspace a way to move between its own destinations and to carr
 - [ ] `W04.P14.S60` - Extend the modelo workspace in place under declarations rather than promoting it to a shell destination; `src/cadrumo/entrypoints/tui/modelo/view/models.py`.
 - [ ] `W04.P14.S143` - Admit every new full-screen destination this campaign creates into the closed destination alias, changing the alias, the route table and the destination-count assertion atomically because the totality check runs at module scope and a partial edit is an import error; `src/cadrumo/entrypoints/tui/modelo/view/models.py`.
 - [ ] `W04.P14.S144` - Wire an action affordance so the six action screens are reachable by an operator rather than only from tests; `src/cadrumo/entrypoints/tui/modelo/actions.py`.
+- [ ] `W04.P14.S165` - Reconcile the destination factory signature with the screens being admitted, since the route table types a factory taking only a read session while the editor screen requires a controller and catalogues, and a second consumer calls it the same single-session way; `src/cadrumo/entrypoints/tui/modelo/routes.py`.
 
 ### Phase `W04.P15` - operation supervision
 
@@ -218,9 +220,9 @@ Populate the filing-history and evidence zones the frontend hardcodes as unavail
 - [ ] `W04.P16.S65` - Populate the filing-history zone the workbench generation hardcodes as unavailable, using the merge helper that already exists; `src/cadrumo/application/workbench_generation.py`.
 - [ ] `W04.P16.S66` - Populate the authority evidence axis the workbench generation hardcodes as never captured; `src/cadrumo/application/workbench_generation.py`.
 - [ ] `W04.P16.S67` - Wire the modelo fixtures into the devtools harness so the modelo destinations become drivable; `src/cadrumo/entrypoints/tui/devtools/modelo_fixtures.py`.
-- [ ] `W04.P16.S68` - Enrol the modelo destinations in the visual-verification surface list and the coverage classification; `dev/tui`.
-- [ ] `W04.P16.S145` - Author the locale catalogue entries for the surfaces this wave itself delivers, and record the co-landing obligation that binds every later wave; `src/cadrumo/locales`.
-- [ ] `W04.P16.S146` - Add coverage classification entries for the surfaces this wave itself delivers, and record the per-step obligation that binds every later wave; `dev/tui/_coverage.py`.
+- [ ] `W04.P16.S68` - Prove the reachable destination set equals the destination and dispatch tables, the invariant this campaign would otherwise break; `src/cadrumo/entrypoints/tui/modelo/tests`.
+- [ ] `W04.P16.S145` - Author the locale catalogue entries for the surfaces delivered up to this point, and record the co-landing obligation that binds every step in the campaign; `src/cadrumo/locales`.
+- [ ] `W04.P16.S146` - Add coverage classification entries for the surfaces delivered up to this point, and record the per-step obligation that binds every step in the campaign; `dev/tui/_coverage.py`.
 - [ ] `W04.P16.S147` - Enrol each new surface in the visual-verification surface list and the devtools surface catalogue, both of which live in the product tree because a development tool may not import the interface; `src/cadrumo/entrypoints/tui/devtools/surfaces.py`.
 - [ ] `W04.P16.S159` - Absorb the exactness invariant that the reachable destination set equals the destination and dispatch tables, since this campaign is what would break it; `dev/tui/tests`.
 
@@ -240,6 +242,7 @@ Deliver the decision the filing-lifecycle record makes, which no other phase sch
 - [ ] `W04.P32.S138` - Surface the workflow run reads and the resume affordance, or record them command-line only with a reason; `src/cadrumo/entrypoints/tui/modelo/view`.
 - [ ] `W04.P32.S139` - Surface the work dependencies read against the cross-period blocker projection; `src/cadrumo/entrypoints/tui/modelo/view/overview.py`.
 - [ ] `W04.P32.S140` - Dispose of the maritime exemption preview and the taxation comparison explicitly rather than leaving them unadjudicated; `dev/quality/modelo_workspace_action_denominator.py`.
+- [ ] `W04.P32.S164` - Name the reconciliation listing and the local filing-record observation rows explicitly, which are covered today only by implication; `dev/quality/modelo_workspace_action_denominator.py`.
 
 ## Wave `W05` - editing and calculation inputs
 
@@ -314,7 +317,7 @@ Wire the built workbook exporter, add fichero preview through the existing seam,
 - [ ] `W07.P23.S93` - Refuse an existing output file rather than silently overwriting it, and reconcile the contradictory path contract; `src/cadrumo/application/filing/export.py`.
 - [ ] `W07.P23.S94` - Refuse a revision with no renderable layout, stating the reason, and mark an unverified-completeness export as such on the artefact; `src/cadrumo/application/filing/export.py`.
 - [ ] `W07.P23.S95` - Add a bulk export-readiness query so a surface need not build a schema provider per coordinate; `src/cadrumo/application/filing/export.py`.
-- [ ] `W07.P23.S152` - Shrink the unconsumed-export, unused-symbol and unreachable-module ratchets by the entries this campaign resolves, including the capability module the relocation frees; `dev/quality`.
+- [ ] `W07.P23.S152` - Shrink the unconsumed-export and unused-symbol ratchets by the entries this wave itself resolves; `dev/quality`.
 - [ ] `W07.P23.S162` - Establish a golden byte corpus for the export layouts this campaign surfaces, since the proof roster is empty and no surface may claim byte correctness without one; `dev/registry/filing_export_proof.py`.
 - [ ] `W07.P23.S163` - Gate the byte-correctness prohibition so a surface cannot claim it while the corpus is empty; `dev/quality`.
 
@@ -379,7 +382,7 @@ Fold the census logbook and the registry-inspection reads into the surfaces that
 - [ ] `W09.P28.S120` - Fold the modelo listing into the work-unit picker; `src/cadrumo/entrypoints/tui/modelo/view/work_select.py`.
 - [ ] `W09.P28.S155` - Deliver the census alta, modificacion and baja writes with the alta-first and baja-terminal sequence guard, which is the family's defining behaviour; `src/cadrumo/entrypoints/tui/profile`.
 - [ ] `W09.P28.S156` - Fix the census certificate parser that refuses unconditionally, or declare the panel unavailable with that reason rather than shipping a surface that cannot be populated; `src/cadrumo/adapters/inbound/censo/parser.py`.
-- [ ] `W09.P28.S158` - Dispose of the modelo listing row explicitly by naming the work-unit picker that absorbs it; `dev/quality/modelo_workspace_action_denominator.py`.
+- [ ] `W09.P28.S158` - Dispose of the work-unit listing row explicitly, which is a different row from the modelo listing and is named by no other step; `dev/quality/modelo_workspace_action_denominator.py`.
 
 ### Phase `W09.P29` - recorded closures
 
@@ -417,7 +420,7 @@ W02 leads with the capability relocation, which W01's admission gate reads and w
 sits in W01 rather than behind it. The remaining phases are independent by lane only where they do
 not share a file; several do, and the file-ownership map governs rather than the lane label. W03 depends on W02
 only for the value-handling prerequisites in its first phase; its generator work is otherwise
-independent and may run alongside W02. W04 depends on W02 for authorization and on W03 for
+independent and may run alongside W02. W04 depends on W02 for the shared capability declaration and on W03 for
 anything that renders a projection, but its navigation phase depends on neither and is the
 earliest visible progress available.
 
@@ -432,7 +435,9 @@ classification entry. A step that authors operator-visible copy carries all four
 entries in the same commit, because the co-landing hook compares the change as it lands. A step
 that registers an operation updates the dispatch table and the fixed-point authority atomically
 with it. A step that resolves a ratcheted symbol or module shrinks that ratchet in the same commit.
-No later step can discharge these for an earlier one.
+No later step can discharge these for an earlier one. A campaign-level reconciliation step may
+still shrink a ratchet baseline once the entries it covers are all resolved, because that is a
+different act from a step failing to carry its own.
 
 Single-writer ownership is mandatory, not advisory. Seven worktrees are live against this
 repository and the head moved five times during a single research session. The denominator
@@ -463,9 +468,17 @@ enters through the supervisor.
 W05 through W09 close when their surfaces are reachable, their refusals are rendered rather than
 discarded, and their denominator rows carry a delivered disposition the gate accepts.
 
-W10 closes when the acceptance matrix passes in full - four locales, two themes, three
-geometries, with an omitted cell counted as a failure - no denominator row is unadjudicated, and
-independent review has reported.
+Every wave additionally closes only if the four per-change obligations held throughout it: each
+step that added a full-screen class carried its own coverage classification, each step that
+authored operator-visible copy carried all four locale entries in the same commit, each
+registration updated the dispatch table and fixed-point authority atomically, and each resolved
+ratchet entry was shrunk in the commit that resolved it. These are checked per commit, not at the
+wave boundary, because the gates behind them compare a change rather than a state.
+
+W10 closes when both acceptance gates pass in full - raster artefacts across the four default
+viewports and both themes, and the locale axis proven separately across the four shipped
+catalogues - with an omitted cell counted as a failure, no denominator row unadjudicated, and
+independent review reported.
 
 Two claims in the governing decisions are recorded as unproven and must be measured during
 execution rather than assumed: the ordering fidelity figure for the projection, and the

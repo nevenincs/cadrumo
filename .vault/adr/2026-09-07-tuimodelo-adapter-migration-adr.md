@@ -5,7 +5,7 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:117078ceb7444aa757c0130991ea09b58991fa2981a6a0eb6893e2bc35d1281e'
+body_hash: 'sha256:00c16fefa5d6e530e0d4bee7faeb2129b88dd09f91d24bc111447a862ac9baf5'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -81,8 +81,11 @@ judgement call made twice and the wave has no closure condition anyone can evalu
 ## Constraints
 
 - This campaign does not make the command line a pure consumer overall, and no record in this
-  cluster may claim that it does. At the migration wave's close roughly 120 violations remain
-  outside it.
+  cluster may claim that it does. Of the 159 identified violations only 19 sit in the lanes this
+  campaign chartered as its own, so the residual at the migration wave's close is 140 less the
+  named cross-lane rows taken here. The figure is derived, never rounded, and the two groups that
+  sit outside the 159 entirely — the shared capability declaration and the frontend's own
+  duplicated composition — are additional work rather than a deduction from it.
 - The residual must be chartered as a named campaign at the start of this one, not recorded at the
   end. Deferring the charter to a final step repeats, at campaign scale, the orphaning this
   campaign's first wave exists to repair at row scale.
@@ -168,7 +171,7 @@ the modelo lane and of nothing else when this campaign closes, and every record 
 subject must say so in those terms rather than the broader ones.
 
 A sibling campaign is created early and must find an owner. That is a real coordination cost, and
-the alternative is worse: roughly 120 violations, most of them already orphaned once, left with
+the alternative is worse: a residual of 140 less the crossing rows taken here, most of it already orphaned once, left with
 no home at all.
 
 One relocation may be blocked on evidence rather than on effort. If the intracommunity rule's

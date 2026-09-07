@@ -13,6 +13,8 @@ related:
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
   - "[[2026-08-10-casilla-schema-read-model-adr]]"
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
+  - "[[2026-09-07-tuimodelo-adapter-migration-adr]]"
+  - "[[2026-09-07-tuimodelo-reconcile-verify-adr]]"
 ---
 
 # `tuimodelo` adr: `declared form projection for schema-derived declaration surfaces` | (**status:** `proposed`)

@@ -11,6 +11,8 @@ related:
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
   - "[[2026-08-24-modelo-edit-contract-adr]]"
   - "[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]"
+  - "[[2026-09-07-tuimodelo-satellite-families-adr]]"
+  - "[[2026-09-07-tuimodelo-adapter-migration-adr]]"
 ---
 
 # `tuimodelo` adr: `period-driven declaration creator` | (**status:** `proposed`)

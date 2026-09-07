@@ -5,7 +5,7 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:d7817f6884e5ad7af66d07dd3a652980c8aa1f83cff482eca15c4c1c22119938'
+body_hash: 'sha256:b4689ddffdfdce6a1128255f71ab30f6b77131a21f3fd6d210bc25cd439d9627'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
@@ -178,7 +178,7 @@ implementation into a shared one, and it gives the migration wave a concrete acc
 test rather than an architectural argument.
 
 Rows will be wider than a single-status design and will need care at narrow terminal
-geometries, which the acceptance matrix already exercises across three widths. Operators
+geometries, which the acceptance gates already exercise across the four default viewports. Operators
 accustomed to a single status word will see two, and the interface must teach that
 distinction through labelling rather than assume it.
 
