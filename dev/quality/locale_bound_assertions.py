@@ -329,6 +329,17 @@ def _root_name(node: ast.expr) -> str | None:
     return node.id if isinstance(node, ast.Name) else None
 
 
+def _call_receiver_name(call: ast.Call) -> str | None:
+    """Return the root whose method produces a call result, never argument names."""
+    return _root_name(call.func.value) if isinstance(call.func, ast.Attribute) else None
+
+
+def _all_named_inputs_pinned(node: ast.expr, states: Mapping[str, bool]) -> bool:
+    """Whether a non-call expression is derived only from pinned named values."""
+    names = {child.id for child in ast.walk(node) if isinstance(child, ast.Name)}
+    return bool(names) and all(states.get(name, False) for name in names)
+
+
 def _pin_state_by_name(
     function: ast.FunctionDef | ast.AsyncFunctionDef,
     pinning: LanguagePinning,
@@ -364,13 +375,15 @@ def _pin_state_by_name(
                 and environment_states.get(keyword.value.id, False)
                 for keyword in value.keywords
             )
-            output_states[name] = direct or inherited_environment
+            receiver_name = _call_receiver_name(value)
+            inherited_receiver = receiver_name is not None and output_states.get(receiver_name, False)
+            output_states[name] = direct or inherited_environment or inherited_receiver
             environment_states[name] = bool(
                 isinstance(value.func, ast.Name) and value.func.id in pinned_environment_helpers
             )
             continue
         root_name = _root_name(value)
-        output_states[name] = root_name is not None and output_states.get(root_name, False)
+        output_states[name] = _all_named_inputs_pinned(value, output_states)
         environment_states[name] = _dict_has_environment_pin(value, pinning, supported_locales) or (
             root_name is not None and environment_states.get(root_name, False)
         )
