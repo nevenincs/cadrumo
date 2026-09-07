@@ -25,7 +25,6 @@
 "adapters/persistence/profile/inventory.py" = 3
 "adapters/persistence/profile/prorrata_register.py" = 1
 "adapters/persistence/storage/bucket/directory_layout.py" = 1
-"adapters/persistence/storage/bucket/output_language_hint.py" = 2
 "adapters/persistence/storage/custody/capsule.py" = 3
 "adapters/persistence/storage/custody/capsule_discovery.py" = 1
 "adapters/persistence/storage/custody/kdf_supervision.py" = 2
@@ -49,7 +48,6 @@
 "application/filing/_export_parity.py" = 1
 "application/filing/export_proof.py" = 2
 "application/filing/runtime.py" = 2
-"application/flows/checkpoint.py" = 1
 "application/flows/engine.py" = 1
 "application/invoices/bulk_import.py" = 1
 "application/ledger/extracted_document_cache.py" = 1
@@ -69,7 +67,7 @@
 "application/modelo/m303_regimen_simplificado_scope.py" = 1
 "application/modelo/operation_definitions.py" = 4
 "application/modelo/result_disposition_resolution.py" = 1
-"application/modelo/review_package_collab_audit.py" = 6
+"application/modelo/review_package_collab_audit.py" = 1
 "application/modelo/review_package_recipient_encryption.py" = 2
 "application/modelo/review_package_signing.py" = 1
 "application/modelo/work_addressing.py" = 2
@@ -120,14 +118,12 @@
 "core/observability/capture.py" = 1
 "core/observability/context.py" = 1
 "core/observability/store.py" = 1
-"core/optional_extras.py" = 1
 "core/period.py" = 3
 "core/presentation.py" = 1
 "core/product_identity.py" = 2
 "core/prorrata_exclusions.py" = 1
 "core/result_disposition.py" = 1
 "core/setup_answers.py" = 1
-"core/source_locator.py" = 1
 "core/storage_taxonomy.py" = 1
 "core/tipos_actividad.py" = 2
 "core/wizard_catalogue.py" = 2
@@ -162,7 +158,7 @@
 "domain/calculations/registry/withholding296_bindings.py" = 1
 "domain/calculations/registry/withholding_bindings.py" = 3
 "domain/contribuyente/constants.py" = 1
-"domain/contribuyente/keys.py" = 2
+"domain/contribuyente/keys.py" = 1
 "domain/contribuyente/marriage_facts.py" = 3
 "domain/invoices/decomposition.py" = 2
 "domain/invoices/enums.py" = 2
@@ -191,7 +187,7 @@
 "entrypoints/cli/_bootstrap_exempt.py" = 1
 "entrypoints/cli/_command_runtime.py" = 1
 "entrypoints/cli/_command_schema.py" = 1
-"entrypoints/cli/_tty.py" = 3
+"entrypoints/cli/_tty.py" = 2
 "entrypoints/cli/_windows_profile_secret_bootstrap.py" = 1
 "entrypoints/cli/command_api.py" = 2
 "entrypoints/cli/command_suggestions.py" = 3

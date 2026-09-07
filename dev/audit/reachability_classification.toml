@@ -372,6 +372,90 @@ live_seams = 0
 rule = "a production module reaches a symbol only when it from-imports the name, the import source is the defining module, and the name appears in its body"
 
 [[test_module]]
+name = "cadrumo.adapters.persistence.storage.sql.tests.test_secure_objects_schema_lineage"
+follows = "symbol"
+anchor = "cadrumo.adapters.persistence.storage.schema_lineage"
+subjects = 2
+
+[[test_module]]
+name = "cadrumo.application.operator_surface.tests.test_crud_contract"
+follows = "module"
+anchor = "cadrumo.application.operator_surface.crud_contract"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.application.operator_surface.tests.test_crud_registry"
+follows = "module"
+anchor = "cadrumo.application.operator_surface.crud_contract"
+subjects = 2
+
+[[test_module]]
+name = "cadrumo.application.user_profile.tests.test_custody_retryable_codes_are_declared"
+follows = "symbol"
+anchor = "cadrumo.core.errors.error_codes"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.core.tests.test_compatibility_lifecycle"
+follows = "module"
+anchor = "cadrumo.core.compatibility_lifecycle"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.core.tests.test_compatibility_lifecycle_gate"
+follows = "module"
+anchor = "cadrumo.core.compatibility_lifecycle"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.core.tests.test_persisted_format_enrolment_binding"
+follows = "module"
+anchor = "cadrumo.core.compatibility_lifecycle"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.core.tests.test_regenerable_persisted_format_floors"
+follows = "module"
+anchor = "cadrumo.core.compatibility_lifecycle"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.domain.contribuyente.tests.test_constants"
+follows = "symbol"
+anchor = "cadrumo.domain.contribuyente.constants"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.entrypoints.cli.tests.test_cli_resolution_cost_budget"
+follows = "symbol"
+anchor = "cadrumo.entrypoints.cli"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.entrypoints.cli.tests.test_machine_secret_channels_subprocess"
+follows = "symbol"
+anchor = "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.entrypoints.cli.tests.test_overview_explain_verb"
+follows = "symbol"
+anchor = "cadrumo.entrypoints.cli.command_api"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.entrypoints.cli.tests.test_resolution_defers_capabilities"
+follows = "symbol"
+anchor = "cadrumo.entrypoints.cli"
+subjects = 1
+
+[[test_module]]
+name = "cadrumo.entrypoints.cli.tests.test_state_free_capability_isolation"
+follows = "symbol"
+anchor = "cadrumo.entrypoints.cli"
+subjects = 1
+
+[[test_module]]
 name = "cadrumo.domain.contabilidad.tests.test_direccion"
 follows = "module"
 anchor = "cadrumo.domain.contabilidad"
