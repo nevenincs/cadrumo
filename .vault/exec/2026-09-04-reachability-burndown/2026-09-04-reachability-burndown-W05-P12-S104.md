@@ -5,12 +5,11 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:2311cf36e76abd132efd25bab0eec8dd830e83174f613e40e1bf7be522b3e059'
+body_hash: 'sha256:4f5af587e31cbd6e49a5c3bed1b357ce389b17012f2df2f899e73e7bd7ae108e'
 step_id: 'S104'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
 
 # Sweep for the shape the relation predicate turned out to be, an unreached one-line delegator whose target is reached elsewhere, and delete the one real hazard it finds: the prorrata seed variant returned only the seed and dropped the operator-facing blocker and advisory findings its own docstring said to use the other function for, nothing called it anywhere, and the evaluator it wrapped is invoked by the register CLI. Repoint the two production docstrings that pointed readers at the discarding variant.
 

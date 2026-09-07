@@ -49,10 +49,22 @@ honestly command-line work.
   publishes a recipient's encryption key has no caller anywhere, so a recipient cannot obtain
   the key material the address-book command requires. There is also no package catalogue; every
   verb takes an operator-supplied path (`2026-09-07-tuimodelo-reference`).
-- Two review-package rows declare no write route while carrying local-state side effects and
-  emitting bucket events. The denominator's drift check compares against the spec's own
-  declaration, so an under-declaring spec is invisible to it
+- CORRECTED BY MEASUREMENT: ONE review-package row, not two, declares no write route while
+  performing a profile-bound write. Both rows carry a local-state side effect, but only the
+  recipient-encryption row emits a bucket event, and it is that event -- written through the
+  bucket event history into the encrypted bucket store -- that makes its declaration false. The
+  feedback-encryption row only reads a bucket-scoped registry and writes a file to a path the
+  operator named, which the route vocabulary does not govern. The route field is write-scoped
+  only: of the identities carrying encrypted-facts, roughly half declare no write route while
+  reading bucket storage, so reading the vocabulary as a promise of uninitialised-installation
+  safety would mis-describe most of the read surface. The denominator's drift check compares
+  against the spec's own declaration, so an under-declaring spec is invisible to it
   (`2026-09-07-tuimodelo-reference`).
+- A SEPARATE under-declaration of the same class sits outside the review-package family and is
+  recorded here because this decision owns the class rather than the family: the telemetry flush
+  command performs network egress through an HTTP sink while declaring no network side effect.
+  The schema cannot catch it, because it validates that a declared network side effect carries its
+  capability and never that code performing egress declares one.
 - The evidence-bundle service has zero production callers and nothing writes its namespace, so
   all three audit verbs require an identifier an operator cannot obtain
   (`2026-09-07-tuimodelo-reference`).
