@@ -85,9 +85,23 @@ def _modules_under(directory: Path) -> list[Path]:
 
 
 def _public_python_files() -> list[Path]:
-    """Returns every scanned ``.py`` file across all guarded subpackages."""
+    """Returns every scanned ``.py`` file across all guarded subpackages.
+
+    Floored, because every assertion in this module has the shape
+    ``assert offenders == []`` over this corpus: an empty sweep reports the
+    same green as a clean one. A wrong root, a moved package, or a renamed
+    subdirectory would disarm the whole write-surface guard silently, and the
+    guard exists to prove the sanitiser has no write verbs at all.
+    """
     root = _project_root()
-    return [path for sub in _GUARDED_ROOTS for path in _modules_under(root / sub)]
+    scanned = [path for sub in _GUARDED_ROOTS for path in _modules_under(root / sub)]
+    if not scanned:
+        message = (
+            f"the write-surface sweep reached no module under {root} "
+            f"for {_GUARDED_ROOTS}; a scan matching nothing cannot find a forbidden verb"
+        )
+        raise AssertionError(message)
+    return scanned
 
 
 class TestPublicSurfaceCarriesNoForbiddenVerb:
