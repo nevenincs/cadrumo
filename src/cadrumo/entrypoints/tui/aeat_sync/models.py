@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Literal, Protocol
 
 from pydantic import BaseModel
@@ -22,6 +23,25 @@ type AeatSyncDestinationIdV1 = Literal[
     "aeat_sync.evidence_comparison",
     "aeat_sync.reconciliation",
 ]
+
+#: Which internal destination each public zone addresses.
+#:
+#: Declared here, beside the destination type, because both readers need it and
+#: neither can own it: ``routes`` imports ``controller`` for its resolver
+#: signature, so the controller cannot import ``routes`` back. The pairing lived
+#: in both modules instead, and the route gate checked zone coverage, zone
+#: ORDER, and destination coverage -- but never that a route's destination was
+#: the one the controller sends for that zone. Two consistent-looking halves
+#: could therefore disagree, and the operator would land on the wrong screen
+#: with every gate green.
+AEAT_SYNC_DESTINATION_BY_ZONE: Mapping[AeatSyncWorkspaceZone, AeatSyncDestinationIdV1] = {
+    AeatSyncWorkspaceZone.OVERVIEW: "aeat_sync.overview",
+    AeatSyncWorkspaceZone.CENSUS: "aeat_sync.census",
+    AeatSyncWorkspaceZone.FILED_DECLARATIONS: "aeat_sync.filed_declarations",
+    AeatSyncWorkspaceZone.NOTIFICATIONS: "aeat_sync.notifications",
+    AeatSyncWorkspaceZone.EVIDENCE_COMPARISON: "aeat_sync.evidence_comparison",
+    AeatSyncWorkspaceZone.RECONCILIATION: "aeat_sync.reconciliation",
+}
 
 
 class AeatSyncRouteTargetV1(BaseModel):
@@ -77,6 +97,7 @@ class AeatSyncNotificationDocumentHandoffV1(Protocol):
 
 
 __all__ = [
+    "AEAT_SYNC_DESTINATION_BY_ZONE",
     "AeatSyncDestinationIdV1",
     "AeatSyncNotificationDocumentHandoffV1",
     "AeatSyncOperationHandoffV1",

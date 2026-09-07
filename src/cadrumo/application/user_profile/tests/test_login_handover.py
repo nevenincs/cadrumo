@@ -26,6 +26,8 @@ from uuid import UUID
 import pytest
 from sqlalchemy.exc import DatabaseError as SqlDatabaseError
 
+from cadrumo.tests._os_keychain_hook import require_os_credential_store
+
 from ....adapters.persistence.storage.custody.acceleration_receipt import profile_session_path, resume_profile_session
 from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from ....adapters.persistence.storage.custody.errors import ProfileCustodyRecordError
@@ -1027,6 +1029,7 @@ def test_handover_leaves_no_resumable_session_material_for_the_retired_profile(t
     a variant that unlinks the receipt while leaving the key recoverable by any
     other route would satisfy a file-absence check and still be the same defect.
     """
+    require_os_credential_store()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         profile_a, profile_b = _register_two_profiles(storage_root)
 
