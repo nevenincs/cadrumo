@@ -60,6 +60,7 @@ from typing import Final
 from cadrumo.core.directory_scan import scan_directory
 
 from .._paths import REPO_ROOT, UTF_8
+from .unread_inputs import report_unread
 
 SRC_ROOT = REPO_ROOT / "src"
 PKG_ROOT = SRC_ROOT / "cadrumo"
@@ -1850,15 +1851,22 @@ def find_dev_path_reach_violations(
         src_root: Source root used to resolve relative paths.
     """
     violations: list[DevPathReachViolation] = []
+    unread: list[str] = []
     for path in py_files:
         rel = path.relative_to(src_root).as_posix()
         try:
             tree = ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
         except (OSError, SyntaxError, UnicodeDecodeError):
+            unread.append(rel)
             continue
         violations.extend(
             DevPathReachViolation(rel, lineno, form, detail) for lineno, form, detail in dev_path_hits(tree)
         )
+    report_unread(
+        "dev-path reach scan",
+        "a development-tree reference inside one of them would not be found",
+        unread,
+    )
     return sorted(violations, key=lambda v: (v.module_path, v.lineno, v.form, v.detail))
 
 
@@ -1967,12 +1975,14 @@ def find_dev_prose_violations(
         src_root: Source root used to resolve relative paths.
     """
     violations: list[DevProseViolation] = []
+    unread: list[str] = []
     for path in py_files:
         rel = path.relative_to(src_root).as_posix()
         try:
             source = path.read_text(encoding=_UTF_8)
             tree = ast.parse(source, filename=str(path))
         except (OSError, SyntaxError, UnicodeDecodeError):
+            unread.append(rel)
             continue
         for lineno, text in _prose_string_lines(tree):
             for token in text.split():
@@ -1984,6 +1994,11 @@ def find_dev_prose_violations(
                 if prose_token_names_dev_tree(token):
                     violations.append(DevProseViolation(rel, lineno, "comment", text.strip()))
                     break
+    report_unread(
+        "dev-prose scan",
+        "a development-tree mention inside one of them would not be found",
+        unread,
+    )
     return sorted(violations, key=lambda v: (v.module_path, v.lineno, v.source_kind))
 
 
