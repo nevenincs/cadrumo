@@ -53,9 +53,18 @@ class _WorkUnits:
 
 
 class _Verdict:
-    def __init__(self, *, changed: tuple[str, ...], removed: tuple[str, ...]) -> None:
+    def __init__(
+        self,
+        *,
+        changed: tuple[str, ...],
+        removed: tuple[str, ...],
+        covers_current_fact_set: bool = True,
+    ) -> None:
         self.changed = changed
         self.removed = removed
+        # Defaults to True as the real verdict does, so the coverage signal has
+        # to be asked for explicitly by the one test that is about it.
+        self.covers_current_fact_set = covers_current_fact_set
 
 
 class _Revision:
@@ -132,6 +141,30 @@ def test_a_revision_whose_work_unit_is_missing_is_excluded() -> None:
     )
 
     assert findings == ()
+
+
+def test_a_narrower_comparison_is_reported_without_becoming_a_second_drift() -> None:
+    """A filing sealed under an older fact set says so, and still reports its drift.
+
+    The coverage flag and the drift counts answer different questions. A
+    narrow comparison is not itself evidence that anything moved, so it rides
+    alongside the counts rather than inflating them.
+    """
+    revision = _Revision(revision_id="rev-1", work_unit_id="wu-1")
+
+    findings = read_stale_ledger_filings(
+        bucket_id=_BUCKET,
+        revisions={},
+        work_units=_WorkUnits({"wu-1": _WorkUnit(bucket_id=_BUCKET)}),
+        transactions=TransactionCatalogue(),
+        detector=_detector(
+            ((revision, _Verdict(changed=("a",), removed=(), covers_current_fact_set=False)),),
+        ),
+    )
+
+    assert findings[0].covers_current_fact_set is False
+    assert findings[0].changed_count == 1
+    assert findings[0].removed_count == 0
 
 
 def test_changed_and_removed_counts_are_carried_separately() -> None:

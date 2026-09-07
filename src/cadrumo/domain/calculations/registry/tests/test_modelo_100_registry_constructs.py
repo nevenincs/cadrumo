@@ -14,7 +14,7 @@ from .....core.casilla_id import CasillaId
 from .....tests.registry_snapshot import build_snapshot
 from ....contribuyente.family_profile import RentaFamilyProfile
 from ....contribuyente.family_types import RentaAscendantProfile, RentaDescendantProfile
-from ....contribuyente.keys import PROFILE_KEYS
+from ....contribuyente.keys import profile_keys as registered_profile_keys
 from ....contribuyente.tax_residence import TaxResidenceProfile
 from .._validate import RegistryValidator
 from .._validate_constructs import _CONSTRUCT_MEMBER_ATTRS
@@ -354,7 +354,7 @@ _FAMILY_ROW_BINDINGS: Mapping[str, tuple[str, str]] = {
 
 def test_modelo_100_personal_family_profile_bindings_target_profile_schema() -> None:
     snapshot = _modelo_100_snapshot()
-    profile_keys = {entry.key for entry in PROFILE_KEYS}
+    profile_keys = {entry.key for entry in registered_profile_keys()}
     bindings_by_id = {binding.id: binding for binding in snapshot.revision.bindings if binding.source == "profile"}
     casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
 

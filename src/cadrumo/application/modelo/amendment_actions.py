@@ -36,7 +36,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
 
@@ -44,6 +44,7 @@ from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.casilla_id import CasillaId
 from ...core.identity import CalculationRevisionId
 from ...core.modelo import Modelo
@@ -80,24 +81,32 @@ from ...domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 from ...domain.modelos.filing_repository import upsert_filing_record
+from ...domain.modelos.ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
 )
 from ...domain.modelos.repository import upsert_work_unit
+from ...domain.modelos.row_models import DETAIL_ROW_BEARING_MODELOS, ModeloDetailRow
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ..aggregation.ledger_filing_snapshot import (
+    assert_evidence_covers_snapshot,
+    compute_ledger_filing_snapshot,
+)
 from ._amendment_kind_resolution import assert_amendment_kind_permitted as _assert_amendment_kind_permitted
 from ._amendment_kind_resolution import (
     assert_complementaria_liability_direction_permitted as _assert_complementaria_liability_direction_permitted,
 )
 from ._calculation_helpers import amendment_observations as _amendment_observations
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
+from ._ledger_anchor_capture import capture_revision_ledger_evidence
 from ._m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 from ._profile_export_binding import resolve_export_identity
 from ._registry_helpers import reject_incomplete_amendment_casillas as _reject_incomplete_amendment_casillas
 from ._registry_helpers import reject_unknown_override_casillas as _reject_unknown_override_casillas
 from .action_errors import (
+    AmendmentDetailRowsRequiredError,
     AmendmentEvidenceMissingError,
     AmendmentM303RectificativaMotiveError,
     AmendmentTargetStateError,
@@ -282,6 +291,7 @@ def amend_modelo_revision[CasillaKey](
     overrides: Mapping[CasillaKey, Decimal],
     amendment_kind: CalculationRevisionAmendmentKind,
     m303_rectificativa_motive: M303RectificativaMotive | None = None,
+    detail_rows: Sequence[ModeloDetailRow] | None = None,
     reason: str,
     actor: str,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
@@ -289,6 +299,7 @@ def amend_modelo_revision[CasillaKey](
     filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
     justificante_repository: JustificanteRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueRepository | None = None,
     clock: datetime | None = None,
 ) -> ModeloRecord:
     """Build and file an amendment over an externally filed return.
@@ -386,6 +397,10 @@ def amend_modelo_revision[CasillaKey](
         amends_filing_record_id=baseline.filing_record_id,
         m303_rectificativa_motive=m303_rectificativa_motive,
     )
+    amendment_detail_rows = _require_amendment_detail_rows(
+        modelo=str(work_unit.modelo),
+        supplied=detail_rows,
+    )
     new_revision_id = derive_calculation_revision_id(
         work_unit_id=baseline.work_unit_id,
         input_values_by_casilla_id=baseline_revision.input_values_by_casilla_id,
@@ -399,6 +414,7 @@ def amend_modelo_revision[CasillaKey](
         filing_instance_evidence=baseline_revision.filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=None,
         amendment_identity=amendment_identity,
+        detail_rows=amendment_detail_rows,
     )
     if new_revision_id in revisions:
         raise CalculationRevisionStateError(
@@ -449,6 +465,7 @@ def amend_modelo_revision[CasillaKey](
         corrected_values=corrected_values,
         amendment_observations=amendment_observations,
         amendment_identity=amendment_identity,
+        detail_rows=amendment_detail_rows,
         reason=reason,
         now=now,
         filing_instance_evidence=filing_instance_evidence,
@@ -468,7 +485,19 @@ def amend_modelo_revision[CasillaKey](
     )
 
     # Transition draft → verified-complete (operator opts in by calling amend).
-    verified_amendment = _verified_amendment_revision(amendment_draft, actor=actor, now=now)
+    ledger_snapshot, ledger_evidence = _amendment_ledger_anchor(
+        amendment_draft=amendment_draft,
+        work_unit=work_unit,
+        transaction_repository=transaction_repository,
+        now=now,
+    )
+    verified_amendment = _verified_amendment_revision(
+        amendment_draft,
+        actor=actor,
+        now=now,
+        ledger_filing_snapshot=ledger_snapshot,
+        ledger_filing_evidence=ledger_evidence,
+    )
     revisions = upsert_calculation_revision(revisions, verified_amendment, aggregate_context=aggregate_context)
 
     new_filing_id, new_filing, updated_filing_catalogue = _build_amendment_filing_updates(
@@ -503,6 +532,32 @@ def amend_modelo_revision[CasillaKey](
     return new_filing
 
 
+def _require_amendment_detail_rows(
+    *,
+    modelo: str,
+    supplied: Sequence[ModeloDetailRow] | None,
+) -> tuple[ModeloDetailRow, ...]:
+    """Return the rows an amendment declares, refusing to guess them.
+
+    For a modelo whose rows constitute the declaration, ``None`` is not an
+    empty set: it is the caller having said nothing, and the two amendment
+    kinds would read that silence differently (LGT art. 122.2 para. 2). An
+    explicitly empty sequence IS an answer -- "this period had none" -- and is
+    accepted as one.
+
+    Every other modelo has no detail rows to declare, so ``None`` there is
+    simply their normal shape and yields the empty tuple.
+    """
+    if modelo not in DETAIL_ROW_BEARING_MODELOS:
+        return tuple(supplied or ())
+    if supplied is None:
+        raise AmendmentDetailRowsRequiredError(
+            translated_message="errors.refused.refused_modelo_amendment_detail_rows_required",
+            context={"modelo": modelo, "reason": "amendment_detail_rows_required"},
+        )
+    return tuple(supplied)
+
+
 def _build_amendment_draft_revision(
     *,
     new_revision_id: CalculationRevisionId,
@@ -511,6 +566,7 @@ def _build_amendment_draft_revision(
     corrected_values: dict[CasillaId, Decimal],
     amendment_observations: tuple[CasillaObservation, ...],
     amendment_identity: CalculationRevisionAmendmentIdentity,
+    detail_rows: tuple[ModeloDetailRow, ...],
     reason: str,
     now: datetime,
     filing_instance_evidence: FilingInstanceEvidence | None,
@@ -522,22 +578,26 @@ def _build_amendment_draft_revision(
     ``verified_at``, ``filed_at``, ``superseded_at`` and the discard trio must
     not inherit the baseline's.
 
-    ``detail_rows`` is a different case and is NOT settled. It is absent here,
-    and neither :func:`_verified_amendment_revision` nor
-    :func:`_filed_amendment_revision` recomputes anything — both are pure state
-    transitions — so an amended informational modelo (M347 counterparties, M349
-    operators, M184 members, M232 operaciones vinculadas) is filed declaring
-    none. Only M303 is gated on this path; nothing scopes the others away from
-    it.
+    ``detail_rows`` arrives already resolved, from
+    :func:`_require_amendment_detail_rows`. Neither
+    :func:`_verified_amendment_revision` nor :func:`_filed_amendment_revision`
+    recomputes anything — both are pure state transitions — so whatever is set
+    here is what an amended M347, M349, M184 or M232 declares. Defaulting it
+    silently filed those declaring no counterparties at all; inheriting the
+    baseline's rows would have been no better, because the amendment supplies
+    corrected aggregate totals and says nothing about which counterpart moved,
+    so inherited rows could contradict the totals filed beside them. The caller
+    states the rows instead.
 
-    Carrying the baseline's rows forward is not obviously right either: the
-    amendment supplies corrected aggregate casilla values and says nothing
-    about which counterpart moved, so inherited rows could contradict the
-    totals filed alongside them. Which of the two a complementaria should
-    declare is an owner's decision about filed content, so it is recorded here
-    rather than chosen silently. The same applies to ``ledger_filing_snapshot``
-    and ``ledger_filing_evidence``, captured at verify time by a collaborator
-    this path never invokes, so an amendment also carries no drift baseline.
+    It is threaded into ``derive_calculation_revision_id`` as well, and that is
+    not symmetry for its own sake: ``detail_rows`` is part of the revision's
+    content address, so a draft carrying rows the id was not derived over would
+    address itself as a revision with none — and the ``upsert`` would then
+    overwrite whatever already sat at that address.
+
+    ``ledger_filing_snapshot`` and ``ledger_filing_evidence`` are absent on the
+    DRAFT and supplied by :func:`_amendment_ledger_anchor` at the verify
+    transition, which is where the verify path captures them too.
     """
     return CalculationRevision.model_validate(
         {
@@ -556,6 +616,7 @@ def _build_amendment_draft_revision(
             "created_at": now,
             "updated_at": now,
             "amendment_identity": amendment_identity,
+            "detail_rows": detail_rows,
             "amendment_reason": reason.strip(),
             "filing_instance_evidence": filing_instance_evidence,
             "m303_regimen_simplificado_annual_summary_handoff": None,
@@ -597,11 +658,57 @@ def _build_amendment_filing_updates(
     return new_filing_id, new_filing, updated_filing_catalogue
 
 
+def _amendment_ledger_anchor(
+    *,
+    amendment_draft: CalculationRevision,
+    work_unit: WorkUnit,
+    transaction_repository: TransactionCatalogueRepository | None,
+    now: datetime,
+) -> tuple[LedgerFilingSnapshot, LedgerFilingEvidence] | tuple[None, None]:
+    """Capture the ledger facts an amendment is verified against, at amend time.
+
+    Verify anchors a revision to the ledger it was computed from, and an
+    amendment stands in for verify without ever calling it -- so an amended
+    return used to carry no anchor at all, and ``stale_filed_revisions`` skips
+    a revision whose snapshot is ``None``. An amended filing could therefore
+    never be reported stale, whatever its books did afterwards.
+
+    The capture is FRESH rather than inherited from the baseline. The
+    amendment is being filed now, against the ledger as it stands now, and
+    copying the baseline's anchor would assert that those older facts were the
+    ones checked -- backdating a claim by exactly the interval the amendment
+    exists to correct.
+
+    A revision with no contributing rows anchors to nothing, and says so with
+    ``None`` rather than an empty snapshot that would read as "checked, and
+    the ledger was empty".
+    """
+    if not amendment_draft.source_transaction_ids:
+        return (None, None)
+    tx_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
+    catalogue = tx_repo.load()
+    snapshot = compute_ledger_filing_snapshot(
+        source_transaction_ids=amendment_draft.source_transaction_ids,
+        catalogue=catalogue,
+        captured_at=now,
+    )
+    evidence = capture_revision_ledger_evidence(
+        revision=amendment_draft,
+        catalogue=catalogue,
+        snapshot_fingerprint=snapshot.snapshot_fingerprint,
+        captured_at=now,
+    )
+    assert_evidence_covers_snapshot(snapshot, evidence)
+    return (snapshot, evidence)
+
+
 def _verified_amendment_revision(
     amendment_draft: CalculationRevision,
     *,
     actor: str,
     now: datetime,
+    ledger_filing_snapshot: LedgerFilingSnapshot | None,
+    ledger_filing_evidence: LedgerFilingEvidence | None,
 ) -> CalculationRevision:
     return amendment_draft.model_copy(
         update={
@@ -609,6 +716,8 @@ def _verified_amendment_revision(
             "verified_at": now,
             "verified_by": actor.strip(),
             "updated_at": now,
+            "ledger_filing_snapshot": ledger_filing_snapshot,
+            "ledger_filing_evidence": ledger_filing_evidence,
         },
     )
 

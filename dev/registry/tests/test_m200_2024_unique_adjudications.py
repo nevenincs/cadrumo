@@ -66,11 +66,32 @@ def test_refuses_a_preconstructed_receipt_and_a_missing_manual_anchor(monkeypatc
         subject.compile_m200_2024_unique_authority()
 
 
-def test_withheld_01403_cannot_enter_the_unique_receipt(monkeypatch) -> None:
+def test_marking_01403_non_authoritative_drifts_the_closed_membership(monkeypatch) -> None:
+    """Withholding 01403 through the audit trail, not the closed-id set, is the only sanctioned route.
+
+    ``_require_closed_membership`` derives its "who is withheld" side from the audit rather than
+    trusting the closed 36-member id set to say so on its own; flipping 01403 non-authoritative
+    without also removing it from the closed set breaks that cross-check.
+    """
     audits = list(subject.audit_bundled_restorations())
     row = next(item for item in audits if item.casilla_id == "01403")
     audits[audits.index(row)] = replace(row, cross_revision_status="unique_non_authoritative")
     monkeypatch.setattr(subject, "audit_bundled_restorations", lambda: tuple(audits))
 
-    with pytest.raises(RegistryValidationError, match=r"source candidate membership drifted|must remain outside"):
+    with pytest.raises(RegistryValidationError, match="source candidate membership drifted"):
         subject.compile_m200_2024_unique_authority()
+
+
+def test_withheld_01403_cannot_enter_the_unique_receipt() -> None:
+    """01403 stays out only while it looks like a live, unresolved candidate.
+
+    This is the guard the closed-membership check above cannot reach: it fires whenever the audit
+    row stops backing the deliberate exclusion -- the row vanishes, is already flagged
+    non-authoritative through other means, carries no proposed value, or already agrees with the
+    current one -- so a change upstream that quietly resolves 01403 is not read as permission to
+    admit it.
+    """
+    audits = tuple(item for item in subject.audit_bundled_restorations() if item.casilla_id != "01403")
+
+    with pytest.raises(RegistryValidationError, match="must remain outside"):
+        subject._require_withheld_01403(audits=audits)

@@ -408,16 +408,6 @@ application:
         unsupported_filing_year: El ejercicio {filing_year} no está declarado como
           soportado. El registro declara {supported_filing_years}. Admita el ejercicio
           en {declaration} tras fundamentar sus requisitos.
-    errors:
-      import_failed: 'no se puede importar el modelo %{modelo}: %{detail}'
-      modelo_not_in_registry: el modelo %{modelo} no está presente en el registro
-        de cálculo
-      period_ejercicio_mismatch: 'modelo %{modelo}: no se puede canonicalizar el periodo
-        %{period} para el ejercicio %{ejercicio}'
-      unexpected_ejercicio: 'modelo %{modelo}: ejercicio inesperado %{ejercicio};
-        se requiere un año de cuatro dígitos'
-      unknown_severity_threshold: El umbral de severidad no es un nivel de severidad
-        conocido.
     export:
       errors:
         draft_not_approved: La exportación requiere un borrador aprobado.

@@ -15,6 +15,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from .. import _runner as runner_module
 from .._caveats import SPANISH_OPTIMISM_BIAS_CAVEAT
 from .._field_mapping import expand_document_slots, slots_unavailable_at
 from .._key import CorpusDocument, CorpusKey, CorpusKeyError
@@ -30,7 +31,12 @@ from .._result import (
     amounts_match,
     build_result_row,
 )
-from .._runner import HarnessReport, format_report, require_model_tier, verify_decimal_comparison_path
+from .._runner import (
+    HarnessReport,
+    format_report,
+    require_model_tier,
+    verify_decimal_comparison_path,
+)
 from .._scoring import FieldOutcome, FieldScoring, FieldVerdict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -394,6 +400,30 @@ def test_a_reference_point_recorded_at_a_baseline_tier_is_refused() -> None:
         )
 
 
+def test_a_reference_point_matching_more_than_its_denominator_is_refused() -> None:
+    """A matched count above the denominator is arithmetic nobody can act on.
+
+    Coverage showed this validator dark: the tier and caveat refusals beside it
+    were driven, this one never was, so the invariant held only by nobody having
+    written the row that breaks it.
+    """
+    with pytest.raises(ValidationError, match=r"matched exceeds the reported denominator"):
+        ReferencePoint(
+            label="x",
+            doc_id="DOC-1",
+            stage=PipelineStage.S1_TRANSCRIPTION,
+            engine_route=EngineRoute.GATED_CLOUD,
+            model_identity="m",
+            model_revision="r",
+            model_tier=ModelTier.UPPER_REFERENCE,
+            reported_matched=9,
+            reported_denominator=8,
+            fabricated=0,
+            elapsed_seconds=4.4,
+            caveats=("stated",),
+        )
+
+
 def test_a_reference_point_must_state_at_least_one_caveat() -> None:
     """An unqualified reference point is indistinguishable from a baseline."""
     with pytest.raises(ValidationError):
@@ -423,6 +453,23 @@ def test_amount_comparison_is_exact_decimal_within_the_keys_tolerance() -> None:
     assert amounts_match(Decimal("2420.00"), Decimal("2420.01"), tolerance_cents=1)
     assert not amounts_match(Decimal("2420.00"), Decimal("2420.02"), tolerance_cents=1)
     assert "exact decimal" in verify_decimal_comparison_path()
+
+
+def test_the_decimal_sanity_probe_refuses_when_the_probe_is_not_exact(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The sanity line must be able to fail, or it proves nothing by printing.
+
+    It is printed in every header as evidence that a cent tolerance means a cent,
+    and its own docstring says a failure would mean every amount figure above it
+    is untrustworthy. Coverage showed both of its refusals unexercised, so the
+    reassurance was unfalsifiable. Degrading the probe to binary floats is the
+    real failure shape: the same arithmetic the header claims is exact.
+    """
+    monkeypatch.setattr(runner_module, "FLOAT_SANITY_PROBE", (0.1, 0.2, 0.3))
+
+    with pytest.raises(HarnessRefusalError, match=r"decimal comparison path is not exact"):
+        verify_decimal_comparison_path()
 
 
 def test_a_report_refuses_rows_measured_against_a_different_key() -> None:

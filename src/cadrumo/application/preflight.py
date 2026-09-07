@@ -631,10 +631,14 @@ def probe_portal_registry_health(
     :func:`~domain.portals.evaluate_portal_drift`; this row reports the
     registered / recorded state, it does not perform a live probe.
 
-    With no recorded drift (the offline default) the row is ``OK``. A recorded
-    drift on a ``stable_protocol_grade`` (BOE-referenced) URL is an ``ERROR``;
-    a drift on a campaign-stable or volatile app-path URL is a ``WARN``
-    advisory, since those tiers are expected to rotate.
+    With no recorded drift the row is ``OK`` and reports
+    ``drift_evaluated: False``: no shipped surface reads a registered portal
+    URL, so the observation :func:`evaluate_portal_drift` compares against is
+    never produced, and a bare ``drift_count: 0`` would assert a zero the
+    product has never measured. A recorded drift on a ``stable_protocol_grade``
+    (BOE-referenced) URL is an ``ERROR``; a drift on a campaign-stable or
+    volatile app-path URL is a ``WARN`` advisory, since those tiers are
+    expected to rotate.
 
     Args:
         drift_events: Recorded portal-drift events to surface. Defaults to
@@ -658,15 +662,29 @@ def probe_portal_registry_health(
         )
 
     if not drift_events:
+        # "no drift recorded" and "drift never evaluated" are different facts,
+        # and today every run is the second: no shipped surface reads a
+        # registered portal URL, so nothing can observe the live value
+        # evaluate_portal_drift needs. Reporting drift_count 0 alone asserts a
+        # proven zero the product has never measured, which is the collapse
+        # no-silent-under-declaration refuses. The row stays OK -- the registry
+        # DID assemble, which is what this check owns -- and says the drift
+        # axis was not evaluated rather than that it came back clean.
         return _healthy_check(
             check="portal-registry:health",
             severity=HealthSeverity.OK,
-            facts={"portal_count": portal_count, "drift_count": 0, "stable_drift_present": False},
+            facts={
+                "portal_count": portal_count,
+                "drift_evaluated": False,
+                "drift_count": 0,
+                "stable_drift_present": False,
+            },
         )
 
     has_error = any(str(event.url_stability) in _PORTAL_DRIFT_ERROR_STABILITIES for event in drift_events)
     facts = {
         "portal_count": portal_count,
+        "drift_evaluated": True,
         "drift_count": len(drift_events),
         "stable_drift_present": has_error,
     }

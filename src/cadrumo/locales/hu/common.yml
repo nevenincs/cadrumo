@@ -994,7 +994,6 @@ transactions:
 tui:
   aeat_sync:
     action:
-      pull_comparison: Összehasonlítási bizonyítékok lekérése
       pull_filed: Benyújtott bevallások lekérése
       pull_filed_all: Összes benyújtott bevallás lekérése
       review_census: Nyilvántartás áttekintése
@@ -1227,7 +1226,6 @@ tui:
       aeat_evidence: AEAT-bizonyíték
       availability: Elérhetőség
       calculation: Aktuális számítás
-      calculation_revision: Számítási változat létrehozva
       current: Aktuális
       declaration: Bevallás
       destination: Cél
@@ -1304,7 +1302,6 @@ tui:
     account_fallback: Fiók
     action:
       context_across_records: Minden nyilvántartásra
-      label: Javasolt teendő megnyitása
       reason: A helyi áttekintés javaslata
     action_context: '%{label} - %{reason} · %{context}'
     address: Modelo %{modelo} · %{filing_year} · %{period}
@@ -1429,7 +1426,6 @@ tui:
       cancel: Mégse
       confirm: Importálás megerősítése
       confirming: Erősítse meg az előkészített importálást.
-      empty: Nincs elérhető előkészített importálás.
       failure: Az importálás nem fejezhető be.
       progress: Importálás folyamatban…
       prompt: Válasszon előkészített importálást.
@@ -1515,11 +1511,9 @@ tui:
       link_ledger: Főkönyvi rekord összekapcsolása
       list_filing_records: Benyújtási rekordok megtekintése
       list_notifications: Értesítések megtekintése
-      open_declaration: Bevallás megnyitása
-      open_ledger: Főkönyv megnyitása
+      list_work_revisions: Munkaverziók megtekintése
       review_ledger: Főkönyv áttekintése
       review_ledger_evidence: Főkönyvi bizonyíték áttekintése
-      review_undeclared: Be nem vallott tevékenység áttekintése
       validate_ledger: Főkönyv ellenőrzése
     destination:
       aeat_sync: AEAT-szinkronizálás megnyitása

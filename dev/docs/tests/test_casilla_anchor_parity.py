@@ -25,6 +25,9 @@ shape generalised to the casilla kind):
 
 from __future__ import annotations
 
+import html
+import re
+
 import pytest
 
 from ..._paths import REPO_ROOT
@@ -130,6 +133,77 @@ def test_duplicate_anchor_is_a_build_failure(projected: tuple[CasillaSearchRecor
     assert casilla_page_anchor(seed.modelo, seed.casilla_id) == casilla_page_anchor(seed.modelo, twin.casilla_id)
     with pytest.raises(CasillaReferenceError):
         render_casilla_reference(_REPO_ROOT, records=(seed, twin))
+
+
+_ID_ATTR_RE = re.compile(r'\bid="([^"]+)"')
+
+
+@pytest.fixture(scope="module")
+def stamped_ids_by_modelo(reference: CasillaReferenceResult) -> dict[str, set[str]]:
+    """``modelo -> every id the generator actually STAMPED into its page RST``.
+
+    Read out of ``page.rst`` with a regex over the emitted ``id="..."``
+    attributes, which is a different thing from ``page.anchors``: that tuple is
+    the generator's own report of what it meant to stamp. The two gates below
+    exist because a check whose expected side is produced by the code under test
+    is green by construction - a renderer that stamps one id and reports another
+    moves both sides of ``test_every_projected_casilla_target_resolves``
+    together and that gate never sees it.
+    """
+    return {page.modelo: set(_ID_ATTR_RE.findall(page.rst)) for page in reference.pages}
+
+
+def test_every_reported_anchor_is_stamped_in_the_emitted_page_rst(
+    reference: CasillaReferenceResult,
+    stamped_ids_by_modelo: dict[str, set[str]],
+) -> None:
+    """The generator's anchor inventory is witnessed by the RST it wrote.
+
+    ``page.anchors`` is what the renderer says it stamped; ``page.rst`` is what
+    a browser will resolve a ``#casilla-...`` fragment against. Only the second
+    can falsify the first. Without this, an id-scheme change confined to the
+    emitted markup leaves every casilla deep link dead with every gate green.
+    """
+    total = 0
+    unstamped: list[str] = []
+    for page in reference.pages:
+        stamped = stamped_ids_by_modelo[page.modelo]
+        for anchor in page.anchors:
+            total += 1
+            if anchor not in stamped:
+                unstamped.append(f"{page.output_relpath}: reported anchor {anchor!r} is not stamped in the page")
+    assert total > 1000, f"only {total} reported anchors; the inventory has stopped being substantive"
+    assert not unstamped, (
+        f"{len(unstamped)} reported casilla anchor(s) are absent from the emitted RST, so the deep "
+        "link resolves to nothing:\n" + "\n".join(f"  - {item}" for item in unstamped[:40])
+    )
+
+
+def test_every_reported_grounding_ref_appears_in_the_emitted_page_rst(
+    reference: CasillaReferenceResult,
+) -> None:
+    """Reported grounding is witnessed by the ref text present in the page RST.
+
+    The independent root for D6. ``rendered_legal_refs`` is a renderer
+    self-report, so comparing a record's ``legal_refs`` against it establishes
+    only that the renderer is self-consistent. A ref reaches the reader as the
+    escaped text of a raw ``<span>`` or the ``title`` of a resolved ``<a>``; if
+    neither spelling is in the page, the citation was dropped whatever the
+    inventory says.
+    """
+    checked = 0
+    missing: list[str] = []
+    for page in reference.pages:
+        for anchor, refs in page.rendered_legal_refs.items():
+            for ref in refs:
+                checked += 1
+                if html.escape(ref) not in page.rst and html.escape(ref, quote=True) not in page.rst:
+                    missing.append(f"{page.output_relpath}#{anchor}: ref {ref!r} reported but absent from the RST")
+    assert checked > 0, "no grounding refs reported at all; this gate measured nothing"
+    assert not missing, (
+        f"{len(missing)} reported legal ref(s) do not appear in the page the entry was rendered "
+        "into:\n" + "\n".join(f"  - {item}" for item in missing[:40])
+    )
 
 
 def test_reference_reports_real_counts(reference: CasillaReferenceResult) -> None:

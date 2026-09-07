@@ -9,16 +9,12 @@ import pytest
 
 from ..._paths import REPO_ROOT
 from ...ci.lane_reachability import resolve_just_executable
+from ..version_identity import PYPI_PROJECTS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _REPO_ROOT = REPO_ROOT
 _CAMPAIGN_SOURCE = _REPO_ROOT / "dev" / "packaging" / "campaign.py"
-_DISTRIBUTIONS = (
-    "cadrumo",
-    "cadrumo-data-manuals",
-    "cadrumo-data-official",
-)
 
 
 def _render_recipe(recipe: str, *args: str) -> str:
@@ -150,7 +146,7 @@ def test_release_rollback_names_every_yank_target_and_only_the_rollback_tag() ->
     """The rendered rollback guide covers all distributions and one named tag."""
     rendered = _render_recipe("release-rollback", "1.2.3")
 
-    for distribution in _DISTRIBUTIONS:
+    for distribution in PYPI_PROJECTS:
         assert f"https://pypi.org/manage/project/{distribution}/release/1.2.3/" in rendered
     assert "git push origin main" in rendered
     assert "git push origin refs/tags/v1.2.3-rollback" in rendered

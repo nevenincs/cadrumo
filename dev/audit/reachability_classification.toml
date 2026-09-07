@@ -150,15 +150,15 @@ evidence = "Consumed by cadrumo.application.flows copy, definition and line_fron
 
 [[module]]
 name = "cadrumo.application.wizard._registered_values"
-class = "orphaned"
-evidence = "No non-test consumer anywhere in src/cadrumo or dev/. A registered-values projection for the setup flow's review overview whose caller is gone; the ratchet names the wizard flow surfaces among the orphaned-domain cluster."
-remedy_requires_decision = true
+class = "deferred-by-ownership"
+evidence = "RECLASSIFIED 2026-09-08 from orphaned. The caller is not gone; it is inside the frozen TUI cluster. project_registered_values produces the registered_values mapping that src/cadrumo/entrypoints/tui/flows/app.py threads through FlowScreen and reads at line 1257 to fill the review overview's registered cell. Every link in that chain exists except the composition that would pass the mapping in: select_flow_frontend takes registered_values and has no shipped caller, and no module outside the TUI package references FlowScreen or run_flow_tui at all. The wizard is in-flight work owned elsewhere and cadrumo.entrypoints.tui is a frozen prefix in both ratchets, so wiring the composition is not this campaign's to do. The module ratchet could not reach this conclusion on its own: its transitive deferral is read from the live import graph, and a supplier whose consumer does not import it YET supplies nothing, which its own docstring states as a deliberate bound on the exemption. That is exactly the judgement this ledger exists to carry, and the ratchet's frozen_prefixes comment already names the shape -- the cluster's application-layer projections live outside the prefix because the dependency direction requires it."
+remedy_requires_decision = false
 
 [[module]]
 name = "cadrumo.domain.portals.drift"
-class = "should-be-live"
-evidence = "cadrumo.application.preflight.probe_portal_registry_health accepts drift_events and grades a drift by URL stability tier, but no production caller ever passes them: evaluate_portal_drift, the only producer, is reached solely by tests. The portal-registry:health row therefore always takes the offline default and always reports OK, so it cannot distinguish no-drift from drift-never-evaluated. The missing wiring is the defect."
-remedy_requires_decision = true
+class = "staged-capability"
+evidence = "REVERSED 2026-09-08. The entry said the missing wiring was the defect: probe_portal_registry_health accepts drift_events, no production caller passes them, so the portal-registry:health row always took the offline default. Re-tested against the live design and the premise is wrong. No shipped module reads PORTAL_REGISTRY at all except that health row, which only counts its entries, so nothing navigates to a registered portal URL and nothing can observe the live value evaluate_portal_drift compares against. The events are not un-passed, they are unobservable: the remedy is a live portal-read surface, which is product capability rather than wiring, and the module docstring says so -- the catalogue package performs no live AEAT access and this module only describes a divergence someone else observed. Staged capability. What WAS a defect is that the row reported a bare drift_count of zero, asserting a proven zero the product has never measured; it now reports drift_evaluated False beside it so a reader can tell no drift from never looked (src/cadrumo/application/preflight.py, covered by test_preflight.py with a control that the flag flips when an observation is supplied)."
+remedy_requires_decision = false
 
 # ---------------------------------------------------------------------------
 # staged-capability -- new domain packages landing from concurrent work
@@ -200,10 +200,63 @@ remedy_requires_decision = false
 [[symbol_cluster]]
 name = "diagnostics-discarding calculate wrapper only tests reach"
 class = "test-support"
+symbols = []
+evidence = "RESOLVED 2026-09-07 by relocation. calculate_modelo_revision_from_bucket_aggregation delegated straight to the _with_diagnostics variant and returned .revision, dropping the non-blocking source advisories, and all twenty-five of its call sites across ten modules were tests while the operator-facing CLI used the diagnostics variant. It now lives at src/cadrumo/tests/bucket_aggregation_calculate.py, so production has ONE way into the source mesh and that way returns the diagnostics with the revision rather than beside it. The hazard was its existence rather than its disuse: the shorter of two adjacent names is the one a future caller reaches for, and it was the one that silently lost the advisories. The shim forwards **kwargs instead of restating twenty-one parameters, because a second copy of the calculate signature could drift from the real one while still type-checking; the wrapper's own filing-repository default was redundant, since the diagnostics variant resolves the same default itself."
+remedy_requires_decision = false
+
+[[symbol_cluster]]
+name = "approval basis stamped against a catalogue the refresh never sees"
+class = "should-be-live"
+symbols = []
+evidence = "A defect this campaign CREATED, found by re-reading the two wirings together and proved by A/B. Persisting the approved draft gave the staleness lifecycle a subject, and recomputing the verdict in drafts_pending made the aged-out row reachable, but the workflow gate stamped the approval basis against a transient empty TransactionCatalogue while the review queue recomputes it from whatever the bucket holds. Those two disagree by construction in any bucket with a ledger, so every stored draft read as an aged-out approval the first time anyone opened the queue: a permanent high-severity row that is always wrong. The catalogue reaches approval as a fingerprint and nothing else, so approving against the bucket's own catalogue does not give the calculation revision's evidence a second owner; it makes the recorded digest mean what the refresh assumes it means. Fixed at src/cadrumo/application/modelo/workflow_gate.py and covered by test_a_freshly_approved_draft_is_not_immediately_stale in src/cadrumo/application/modelo/tests/test_file_flow_draft_persistence.py, which seeds a bucket transaction first: against an empty ledger the two digests agree by accident and the assertion holds however the basis is stamped. Reverting the fix reproduces TRANSACTION_CATALOGUE_CHANGED on a freshly approved draft."
+remedy_requires_decision = false
+
+[[symbol_cluster]]
+name = "empty-digest overrides for approvals against a sentinel bucket"
+class = "test-support"
 symbols = [
-  "calculate_modelo_revision_from_bucket_aggregation",
+  "empty_prior_filing_observations_fingerprint",
+  "empty_profile_activity_fingerprint",
 ]
-evidence = "A diagnostics-DISCARDING wrapper that no production path calls. calculate_modelo_revision_from_bucket_aggregation at src/cadrumo/application/modelo/calculation_actions.py delegates straight to calculate_modelo_revision_from_bucket_aggregation_with_diagnostics and returns .revision, dropping the non-blocking source diagnostics. Its own docstring names the operator-facing CLI calculate surface as a caller of the diagnostics variant, and a grep confirms that: the wrapper's twenty-five call sites are all tests, across ten modules in application/modelo, application/aggregation, application/calculations and dev/ci. So it is test ergonomics living on the production API, and under no-silent-under-declaration its existence is the hazard rather than its disuse: a future caller that picks the shorter name silently drops advisories. The remedy is relocation to the shared test-support home at src/cadrumo/tests/ rather than deletion, since the tests exercise real behaviour. Not done in this step: the move carries roughly twenty-five type imports into test support and touches ten peer-visible test modules, and the machine could not run those suites to validate it."
+evidence = "Deterministic-digest overrides whose only callers are src/cadrumo/application/filing/tests/test_approval_basis_integrity.py. Their own docstrings name the case they serve -- a test approving against a non-active or sentinel bucket with no prior observations -- so they are test ergonomics rather than product capability. Left where they are: unlike the calculate wrapper relocated earlier, these do not shadow a live entry point and cannot be reached by mistake in place of one, since compute_current_approval_basis and approve_draft take them only as explicit keyword overrides and self-load from the bucket otherwise."
+remedy_requires_decision = false
+
+[[symbol_cluster]]
+name = "lazy profile-key attribute and the alias beside it"
+class = "superseded"
+symbols = [
+  "__getattr__",
+  "get_profile_key",
+]
+evidence = "Removed 2026-09-07. keys.py carried a module-level __getattr__ resolving a PROFILE_KEYS attribute, declared only under TYPE_CHECKING and advertised in __all__ though no shipped module imported it. Its four importers were all tests, and the hook was actively harmful to them: from ... import PROFILE_KEYS fires the hook at the IMPORTER's import time, which is exactly the race the module's own profile_keys() docstring warns about, and two of the four bound it at module level. All four now call profile_keys(), which resolves at call time and is what production already used. get_profile_key went with it as a pure module-level alias of the canonical ProfileKey.from_key classmethod, with no caller but its own test. The package docstring claimed the lazy resolution was a deliberate ordering contract; the ordering contract is real and lives in the registration check, but the lazy attribute was not part of it."
+remedy_requires_decision = false
+
+[[symbol_cluster]]
+name = "required half of a symmetric profile-key view"
+class = "test-support"
+symbols = [
+  "required_profile_keys",
+]
+evidence = "Reached only by three test modules, and deliberately kept. It is the REQUIRED half of a symmetric pair whose OPTIONAL half, optional_profile_keys, is consumed in production by src/cadrumo/application/user_profile/keys_validation.py. Deleting one side of a symmetric filtered view leaves a registry that can report its optional keys and not its required ones, which is a worse surface than an unused function."
+remedy_requires_decision = false
+
+[[symbol_cluster]]
+name = "shared scenario validator body two harnesses reach"
+class = "harness-code"
+symbols = [
+  "hydrate_scenario_filing_period",
+]
+evidence = "The shared pydantic mode=before validator body its docstring describes, and both named consumers exist: dev/registry/parity/_parity_tapes.py:82 and src/cadrumo/domain/calculations/registry/tests/_scenarios.py:127. They are a dev harness and a registry scenario harness that cannot import each other, so the body is sited in core/period.py precisely to be reachable from both. The audit reports it because neither consumer is a declared entrypoint, which is the expected shape for a symbol whose whole purpose is to be shared by harnesses. Keep as sited. Worth recording that a first pass concluded it had no non-test consumer at all: the grep was truncated by head -4 and the four lines shown were all from one test module."
+remedy_requires_decision = false
+
+[[symbol_cluster]]
+name = "period vocabulary enumerators kept symmetric"
+class = "test-support"
+symbols = [
+  "accepted_period_codes",
+  "accepted_period_patterns",
+]
+evidence = "A coherent two-by-two family -- {registry, filing} x {codes, patterns} -- enumerating the period vocabulary. Consumers are cross-package tests: the declaracion parser's administrative-period routing test, core's own period test, and the registry selector token-parity test, which enumerates through accepted_period_codes so its coverage cannot drift from the accepted set. Kept whole. Deleting the members with the fewest callers would leave a vocabulary that can enumerate its registry codes but not its filing patterns, and the same asymmetry argument that kept required_profile_keys applies: half a symmetric view is a worse surface than an unused function."
 remedy_requires_decision = false
 
 # ---------------------------------------------------------------------------

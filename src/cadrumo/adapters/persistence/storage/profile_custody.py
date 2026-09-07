@@ -70,7 +70,11 @@ from ._kdf_salt import KDF_SALT_BYTES
 from .bucket.directory_layout import bucket_paths
 from .bucket.export_archive_header import ARCHIVE_SCHEMA_VERSION, ExportArchiveHeader
 from .bucket.lockfile import acquire_lock, release_lock
-from .bucket.output_language_hint import read_bucket_output_language_hint
+from .bucket.output_language_hint import (
+    clear_bucket_output_language_hint,
+    read_bucket_output_language_hint,
+    write_bucket_output_language_hint,
+)
 from .bucket.sealed_archive_reader import read_sealed_archive
 from .bucket.sealed_archive_writer import write_sealed_archive
 from .crypto.aead import EncryptedBlob, decrypt_record, encrypt_record
@@ -764,6 +768,19 @@ class _PersistenceProfileCustody:
 
     def read_output_language_hint(self, *, storage_root: Path, bucket_id: str) -> str | None:
         return read_bucket_output_language_hint(
+            storage_root=storage_root,
+            bucket_id=bucket_id,
+        )
+
+    def write_output_language_hint(self, *, storage_root: Path, bucket_id: str, language: object) -> bool:
+        return write_bucket_output_language_hint(
+            storage_root=storage_root,
+            bucket_id=bucket_id,
+            language=language,
+        )
+
+    def clear_output_language_hint(self, *, storage_root: Path, bucket_id: str) -> None:
+        clear_bucket_output_language_hint(
             storage_root=storage_root,
             bucket_id=bucket_id,
         )

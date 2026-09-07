@@ -96,8 +96,8 @@ def _declaring_surfaces() -> list[tuple[Path, Path]]:
         # Prune in place, so the walk never DESCENDS into a skipped tree. The
         # set is identical either way; the cost is not. Discarding these after
         # the walk still enumerates and stats every path inside them, and the
-        # excluded trees are the enormous ones: 700,590 paths visited to reach
-        # the 38,826 that are in scope.
+        # excluded trees are the enormous ones: 1,333,152 paths visited to
+        # reach the 38,973 that are in scope.
         subdirectories[:] = [name for name in subdirectories if name not in _SKIPPED_DIRECTORIES]
         for filename in filenames:
             if not (

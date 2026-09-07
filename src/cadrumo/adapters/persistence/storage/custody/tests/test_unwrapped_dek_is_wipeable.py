@@ -26,6 +26,8 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo.tests._os_keychain_hook import require_os_credential_store
+
 from ..acceleration_receipt import (
     delete_profile_session,
     mint_profile_session,
@@ -137,6 +139,7 @@ def test_the_resumed_key_is_a_buffer_whose_wipe_reaches_the_material(tmp_path: P
     store, and the resume unwraps it under that key. That is why the case
     carries the keychain marker rather than living in the default lane.
     """
+    require_os_credential_store()
     profile_id = uuid4()
     try:
         mint_profile_session(

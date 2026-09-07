@@ -409,15 +409,6 @@ application:
         unsupported_filing_year: L'exercici {filing_year} no està declarat com a suportat.
           El registre declara {supported_filing_years}. Admeteu l'exercici a {declaration}
           després de fonamentar-ne els requisits.
-    errors:
-      import_failed: 'no es pot importar el model %{modelo}: %{detail}'
-      modelo_not_in_registry: el model %{modelo} no és present al registre de càlcul
-      period_ejercicio_mismatch: 'model %{modelo}: no es pot canonicalitzar el període
-        %{period} per a l''exercici %{ejercicio}'
-      unexpected_ejercicio: 'model %{modelo}: exercici inesperat %{ejercicio}; cal
-        un any de quatre dígits'
-      unknown_severity_threshold: El llindar de severitat no és un nivell de severitat
-        conegut.
     export:
       errors:
         draft_not_approved: L'exportació requereix un esborrany aprovat.

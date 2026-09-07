@@ -21,6 +21,7 @@ import pytest
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core.period import Period
+from ....domain.buckets.event import BucketEvent, BucketEventObjectType
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile
@@ -60,6 +61,19 @@ def _unit(bucket_id: str, *, modelo: str = "130") -> WorkUnit:
     )
 
 
+def _work_unit_events(events: BucketEventHistoryRepository) -> tuple[BucketEvent, ...]:
+    """Return only the work-unit lifecycle events, ignoring fixture noise.
+
+    ``isolated_runtime_profile`` emits a ``profile.bucket.created`` event when
+    it builds the capsule, so an empty-history assertion fails on setup rather
+    than on behaviour. What these refusals actually claim is narrower and is
+    what this isolates: no lifecycle event was emitted FOR A WORK UNIT.
+    """
+    return tuple(
+        event for event in events.load().events.values() if event.object_type is BucketEventObjectType.WORK_UNIT
+    )
+
+
 @pytest.fixture
 def a_bound_repository(tmp_path: Path) -> Iterator[tuple[WorkUnitCatalogueRepository, BucketEventHistoryRepository]]:
     """Yield an A-bound catalogue repository holding both an A and a B unit."""
@@ -93,7 +107,7 @@ def test_rename_refuses_a_unit_owned_by_another_bucket(a_bound_repository) -> No
     stored = repo.load().get(foreign.work_unit_id)
     assert stored is not None
     assert stored.name == foreign.name
-    assert events.load().events == {}
+    assert _work_unit_events(events) == ()
 
 
 def test_discard_refuses_a_unit_owned_by_another_bucket(a_bound_repository) -> None:
@@ -107,7 +121,7 @@ def test_discard_refuses_a_unit_owned_by_another_bucket(a_bound_repository) -> N
     stored = repo.load().get(foreign.work_unit_id)
     assert stored is not None
     assert stored.state is not WorkUnitState.DESCARTADO
-    assert events.load().events == {}
+    assert _work_unit_events(events) == ()
 
 
 def test_same_bucket_lifecycle_still_works(a_bound_repository) -> None:

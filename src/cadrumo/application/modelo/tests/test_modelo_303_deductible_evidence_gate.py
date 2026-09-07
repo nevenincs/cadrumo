@@ -43,6 +43,7 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests import general_m303_filing_evidence
+from ....tests.bucket_aggregation_calculate import calculate_modelo_revision_from_bucket_aggregation
 from ....tests.env_scope import ready_clave_settings
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
@@ -54,7 +55,6 @@ from ...calculations.observations_repository import IvaWalletDecisionRepository
 from ...invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from ...ledger.actions_manual import attach_manual_transaction_evidence, link_manual_transaction_invoice
 from ...ledger.evidence import PurchaseInvoiceEvidenceService
-from ..calculation_actions import calculate_modelo_revision_from_bucket_aggregation
 from ..export import ModeloExportCommand, ModeloExportEvidenceMissingError, export_modelo_revision
 from ..filing_actions import ModeloFilingEvidenceMissingError, file_modelo_revision
 from ..verification_actions import (

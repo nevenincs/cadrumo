@@ -20,6 +20,8 @@ from uuid import UUID, uuid4
 import keyring
 import pytest
 
+from cadrumo.tests._os_keychain_hook import require_os_credential_store
+
 from ......core.errors.hierarchy import CoreValidationError
 from ......core.profile_session import ProfileSessionRefusalReason
 from ...custody.filesystem import (
@@ -568,6 +570,7 @@ class TestProfileSessionAcceleration:
 
     @pytest.mark.os_keychain
     def test_mint_uses_random_session_id_and_exact_keychain_account(self, tmp_path: Path) -> None:
+        require_os_credential_store()
         profile_id = _profile_id()
         first, _ = self._mint(tmp_path, profile_id)
         second, _ = self._mint(tmp_path, profile_id)
@@ -593,6 +596,7 @@ class TestProfileSessionAcceleration:
 
     @pytest.mark.os_keychain
     def test_mint_then_resume_binds_exact_current_envelope_metadata(self, tmp_path: Path) -> None:
+        require_os_credential_store()
         profile_id = _profile_id()
         record, dek = self._mint(tmp_path, profile_id)
         try:
@@ -611,6 +615,7 @@ class TestProfileSessionAcceleration:
 
     @pytest.mark.os_keychain
     def test_custody_rotation_revokes_old_receipt(self, tmp_path: Path) -> None:
+        require_os_credential_store()
         profile_id = _profile_id()
         record, _ = self._mint(tmp_path, profile_id)
         path = profile_session_path(storage_root=tmp_path, profile_id=profile_id)
@@ -637,6 +642,7 @@ class TestProfileSessionAcceleration:
 
     @pytest.mark.os_keychain
     def test_expired_receipt_removes_only_its_own_keychain_entry(self, tmp_path: Path) -> None:
+        require_os_credential_store()
         profile_id = _profile_id()
         record, _ = self._mint(tmp_path, profile_id)
         other_profile = _profile_id()
@@ -686,6 +692,7 @@ class TestProfileSessionAcceleration:
         it also carries the record PAST the idle-expiry check above, so a pass
         here cannot be an expiry refusal wearing the tamper name.
         """
+        require_os_credential_store()
         profile_id = _profile_id()
         record, _ = self._mint(tmp_path, profile_id)
         path = profile_session_path(storage_root=tmp_path, profile_id=profile_id)
@@ -717,6 +724,7 @@ class TestProfileSessionAcceleration:
 
     @pytest.mark.os_keychain
     def test_receipt_never_writes_plaintext_dek(self, tmp_path: Path) -> None:
+        require_os_credential_store()
         profile_id = _profile_id()
         record, dek = self._mint(tmp_path, profile_id)
         try:
@@ -821,6 +829,7 @@ def test_revocation_refuses_when_the_receipt_survives_the_clear(tmp_path: Path) 
     handle reproduces the refusal deterministically on Windows and is the
     ordinary case -- another process reading the file, or a backup agent.
     """
+    require_os_credential_store()
     profile_id = _profile_id()
     dek = secrets.token_bytes(32)
     record = mint_profile_session(
@@ -856,6 +865,7 @@ def test_revocation_returns_normally_when_the_receipt_is_cleared(tmp_path: Path)
     Without this the refusal above is satisfied by a revocation that raises
     unconditionally, which would break every logout.
     """
+    require_os_credential_store()
     profile_id = _profile_id()
     self_dek = secrets.token_bytes(32)
     mint_profile_session(

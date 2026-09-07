@@ -8,8 +8,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from decimal import Decimal
-from enum import StrEnum
-from typing import cast
+from enum import Enum, StrEnum, auto
+from typing import Final, cast
 
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.iva.flow import (
@@ -32,13 +32,48 @@ from ..aggregation import invoice_kind_for_direction
 from .preconditions import build_modelo_precondition_failure
 
 
+class _SchemaDrift(Enum):
+    """Marker for a stored enum value this build's enums no longer recognise."""
+
+    UNPARSEABLE = auto()
+
+
+#: Returned for a value that is present but uninterpretable, so a caller can
+#: tell "the row says something I cannot read" apart from "the row says
+#: nothing". Collapsing the two is what let an unreadable row leave this gate
+#: looking clean.
+_UNPARSEABLE: Final = _SchemaDrift.UNPARSEABLE
+
+
 def _enum_or_none[EnumT: StrEnum](enum_type: type[EnumT], value: str | None) -> EnumT | None:
+    """Parse an OPTIONAL stored enum value, treating absent and unreadable alike.
+
+    Kept for :attr:`LedgerEvidenceRow.iva_category`, whose absence is a real
+    state (an unclassified domestic row) rather than drift. Conflating the two
+    is safe only there, and only because both answers route to the same
+    direction-derived flow below rather than to an exemption.
+    """
     if value is None:
         return None
     try:
         return enum_type(value)
     except ValueError:
         return None
+
+
+def _enum_or_unparseable[EnumT: StrEnum](enum_type: type[EnumT], value: str) -> EnumT | _SchemaDrift:
+    """Parse a REQUIRED stored enum value, keeping "unreadable" distinguishable.
+
+    ``lifecycle_state``, ``business_classification`` and ``direction`` are
+    ``Field(min_length=1)`` on :class:`LedgerEvidenceRow`, so they are always
+    present. A value this build cannot parse is therefore not an absence and
+    not a default: it is schema drift, and the row's contribution to a filing
+    cannot be judged at all.
+    """
+    try:
+        return enum_type(value)
+    except ValueError:
+        return _UNPARSEABLE
 
 
 # ALT-EVIDENCE-GRADE-RATIONALE-LEDGER-GATE: deliberately looser, on the
@@ -75,15 +110,16 @@ def _row_has_linked_evidence(row: LedgerEvidenceRow) -> bool:
     revision finalized after that promotion can reach this gate carrying
     neither ``purchase_invoice_evidence_id`` nor ``invoice_id``. Tightening
     the ``attachment_ids`` copy therefore changes behaviour only for revisions
-    finalized BEFORE that promotion — and for those there is no way out: the
+    finalized BEFORE that promotion. That used to be a permanent dead end: the
     bundle is frozen and never recomputed, a finalized revision cannot be
     re-verified (the idempotent guard returns the existing granting report),
     and recalculating returns the same content-addressed revision because
-    attaching an invoice does not change any tax fact. That is a permanent
-    dead end, which is the failure class this surface's own campaign exists to
-    close. An unreachable divergence on the attachment axis is the cheaper of
-    the two; a reachable one on the invoice axis is not, which is why it is
-    closed rather than recorded.
+    attaching an invoice does not change any tax fact. It is no longer one --
+    ``recapture_ledger_filing_evidence`` re-bundles a sealed revision's
+    evidence over unchanged facts -- so the argument for keeping this axis
+    loose is now only its cost, not an unrecoverable operator. The divergence
+    stays recorded rather than closed on that basis, and the sibling gate above
+    no longer relies on it.
 
     The refusal message below says "purchase invoice evidence" while this test
     accepts any attachment, which reads as an overclaim. It is not one in
@@ -95,8 +131,7 @@ def _row_has_linked_evidence(row: LedgerEvidenceRow) -> bool:
     return bool(row.purchase_invoice_evidence_id) or bool(row.invoice_id) or bool(row.attachment_ids)
 
 
-def _row_flow(row: LedgerEvidenceRow) -> IvaFlowDirection | None:
-    direction = _enum_or_none(TransactionDirection, row.direction)
+def _row_flow(row: LedgerEvidenceRow, *, direction: TransactionDirection) -> IvaFlowDirection | None:
     invoice_kind = invoice_kind_for_direction(direction)
     if invoice_kind is None:
         return None
@@ -114,42 +149,61 @@ def _row_flow(row: LedgerEvidenceRow) -> IvaFlowDirection | None:
 def ledger_evidence_row_missing_deductible_iva_evidence(row: LedgerEvidenceRow) -> bool:
     """Return whether an evidence row claims deductible IVA without linked proof.
 
-    Four of the five paths below return ``False`` — "this row raises no gap" —
-    and only :func:`_row_has_linked_evidence` reaches that answer by evaluating
-    the question. The other three reach it because the row could not be judged:
-
     ``lifecycle_state``, ``business_classification``, ``direction`` and
     ``iva_category`` are persisted on :class:`LedgerEvidenceRow` as bare strings
-    so a frozen bundle round-trips through the strict persistence boundary. A
-    value this build's enums no longer recognise therefore becomes ``None``
-    through :func:`_enum_or_none`, and ``None is not ACTIVE`` and
-    ``None not in BUSINESS_BEARING_STATES`` are both true — so an
-    uninterpretable row leaves the gate as a clean one. An absent
-    ``iva_amount`` reads the same way, as a row claiming no deduction rather
-    than a row whose claim was never captured.
+    so a frozen bundle round-trips through the strict persistence boundary.
+    Parsing them back can fail, and this gate refuses rather than absolves when
+    it does: a row it cannot read is a row whose contribution to a filing it
+    cannot vouch for, and answering "no gap" there would let a Modelo 303
+    input-IVA deduction reach a filing with no documento justificativo behind
+    it (LIVA art. 97 enumerates what may support one; LGT art. 105.1 puts the
+    burden on the taxpayer).
 
-    That direction is fail-OPEN on a refusal gate: the missing-evidence
-    diagnostic does not fire, and a Modelo 303 input-IVA deduction can reach
-    a filing with no documento justificativo behind it (LIVA art. 97).
+    The order of the checks is load-bearing, because failing closed on a field
+    that could not decide anything would refuse rows that raise no question.
+    Each required field is consulted only while the row is still a candidate:
+    a parseably-inactive row is excluded before its direction is read, and a
+    row already carrying evidence is cleared before its cuota is. So the
+    unreadable-value refusals fire only where the unreadable value would
+    actually have decided the answer.
 
-    It is recorded rather than closed, and deliberately so — the divergence note
-    above this module's ``_row_has_linked_evidence`` explains that tightening
-    this gate can strand a finalized revision with no recovery path. Which of
-    the two harms to prefer is an owner's decision, not this function's; what
-    should not happen is the choice being made silently by an enum lookup.
+    An absent ``iva_amount`` on a row that reaches the last line is a gap, not
+    a zero. By then the row is active, business-bearing, on the deducible side
+    and carrying no evidence of any kind; a deduction-side claim whose cuota
+    was never captured is exactly the missing-input state
+    ``no-silent-under-declaration`` keeps distinct from a proven zero.
+
+    ``iva_category`` alone is still read through :func:`_enum_or_none`, because
+    its absence is a real state — an unclassified domestic row — and both
+    absence and drift route to the same direction-derived flow rather than to
+    an exemption, so neither can slip past on that axis.
+
+    Tightening this was gated on a recovery path existing, not on the argument
+    being sound: the note above :func:`_row_has_linked_evidence` explains that
+    a refusal here used to strand a finalized revision forever. It no longer
+    does. ``recapture_ledger_filing_evidence`` re-bundles a sealed revision's
+    evidence over unchanged facts without moving its content address, so a row
+    refused here can be answered by attaching the document and recapturing.
     """
-    lifecycle_state = _enum_or_none(TransactionLifecycleState, row.lifecycle_state)
+    lifecycle_state = _enum_or_unparseable(TransactionLifecycleState, row.lifecycle_state)
+    if lifecycle_state is _UNPARSEABLE:
+        return True
     if lifecycle_state is not TransactionLifecycleState.ACTIVE:
         return False
-    business_classification = _enum_or_none(BusinessClassification, row.business_classification)
+    business_classification = _enum_or_unparseable(BusinessClassification, row.business_classification)
+    if business_classification is _UNPARSEABLE:
+        return True
     if business_classification not in BUSINESS_BEARING_STATES:
         return False
-    if row.iva_amount is None or row.iva_amount <= Decimal("0"):
+    direction = _enum_or_unparseable(TransactionDirection, row.direction)
+    if direction is _UNPARSEABLE:
+        return True
+    flow = _row_flow(row, direction=direction)
+    if flow is None or not is_deducible_flow(flow):
         return False
     if _row_has_linked_evidence(row):
         return False
-    flow = _row_flow(row)
-    return flow is not None and is_deducible_flow(flow)
+    return row.iva_amount is None or row.iva_amount > Decimal("0")
 
 
 def deductible_iva_evidence_gap_transaction_ids(revision: CalculationRevision) -> tuple[str, ...]:

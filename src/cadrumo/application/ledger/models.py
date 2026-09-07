@@ -683,6 +683,12 @@ class LedgerStatusReport(BaseModel):
     period: Period | None = None
     checked_transaction_count: int = Field(default=0, ge=0)
     readiness_issue_count: int = Field(default=0, ge=0)
+    # Active business rows left OUT of the money roll-up because they are
+    # foreign-currency with no conversion applied. They have no EUR value to
+    # add, so the totals above are a total of everything else; a non-zero count
+    # says the picture is partial and which way to close it (convert the rows),
+    # rather than letting a foreign figure sit in a euro total at face value.
+    unconverted_currency_count: int = Field(default=0, ge=0)
     ready: bool | None = None
 
 

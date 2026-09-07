@@ -132,10 +132,8 @@ _DESTINATION_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "workbench.profile": "tui.search.destination.profile",
 }
 _ACTION_LOCALE_KEYS: Final[Mapping[str, str]] = {
-    "operator.declaration.open": "tui.search.action.open_declaration",
-    "operator.ledger.open": "tui.search.action.open_ledger",
-    "operator.not_declared.open": "tui.search.action.review_undeclared",
     "operator.profile.edit": "tui.search.action.edit_profile",
+    "operator.modelo.work.revisions": "tui.search.action.list_work_revisions",
     "operator.ledger.review": "tui.search.action.review_ledger",
     "operator.ledger.classify": "tui.search.action.classify_ledger",
     "operator.ledger.evidence.review.list": "tui.search.action.review_ledger_evidence",

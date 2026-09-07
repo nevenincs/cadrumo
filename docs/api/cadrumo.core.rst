@@ -6,9 +6,6 @@ cadrumo.core package
    :show-inheritance:
    :ignore-module-all:
 
-.. py:data:: CasillaId
-   :module: cadrumo.core
-
 
 Subpackages
 -----------

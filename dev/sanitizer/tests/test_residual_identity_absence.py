@@ -378,22 +378,60 @@ def test_advisory_kinds_are_excluded_from_the_blocking_tier() -> None:
     assert frozenset(ResidualKind) - {ResidualKind.EMAIL, ResidualKind.PHONE} == CHECKSUM_VERIFIED_KINDS
 
 
-@pytest.mark.parametrize(
-    ("shape_only", "kind"),
-    [
-        # Each body below is the shape its class matches, carrying a control
-        # character the AEAT algorithm does not produce for that body. The
-        # expected control for an all-zero NIF body is 'T' and for the CIF body
-        # 1234567 under kind 'B' it is '4', both derived from the published
-        # algorithm rather than from this scanner's output.
-        ("00000000X", ResidualKind.NIF_NIE),
-        ("K0000000X", ResidualKind.NIF_NIE),
-        ("B12345670", ResidualKind.CIF),
-        ("ESB12345670", ResidualKind.NIF_IVA),
-        ("ES00000000X", ResidualKind.NIF_IVA),
-        ("ES0000000000000000000000", ResidualKind.IBAN),
-    ],
+#: Shape-valid, checksum-invalid specimens, one per blocking class.
+#:
+#: Each body is the shape its class matches, carrying a control character the
+#: AEAT algorithm does not produce for that body. The expected control for an
+#: all-zero NIF body is 'T' and for the CIF body 1234567 under kind 'B' it is
+#: '4', both derived from the published algorithm rather than from this
+#: scanner's output.
+#:
+#: Hand-authored here, so it is an independent root from
+#: :data:`CHECKSUM_VERIFIED_KINDS`; the completeness gate below holds the two
+#: sides equal.
+_SHAPE_ONLY_SPECIMENS: tuple[tuple[str, ResidualKind], ...] = (
+    ("00000000X", ResidualKind.NIF_NIE),
+    ("K0000000X", ResidualKind.NIF_NIE),
+    ("B12345670", ResidualKind.CIF),
+    ("ESB12345670", ResidualKind.NIF_IVA),
+    ("ES00000000X", ResidualKind.NIF_IVA),
+    ("ES0000000000000000000000", ResidualKind.IBAN),
 )
+
+
+def test_the_shape_only_specimens_cover_exactly_the_blocking_tier() -> None:
+    """Every class :data:`CHECKSUM_VERIFIED_KINDS` blocks on has a refusal specimen.
+
+    The refusal check below is parametrised from a hand-authored table, so it
+    proves only that the classes SOMEONE listed reject their own shape. Its name
+    quantifies over every blocking class, and nothing tied the table to the set
+    that defines that tier: a fifth kind promoted into
+    :data:`CHECKSUM_VERIFIED_KINDS` would block the build on an arithmetic claim
+    no specimen had ever tested, and the quantified gate would stay green at four
+    classes out of five.
+
+    The two sides are independent roots -- the table is authored in this module,
+    the tier in :mod:`dev.sanitizer.residual_identity` -- so promoting a kind
+    without a specimen, or listing an advisory kind as though it blocked, moves
+    one side only and reddens here.
+    """
+    covered = {kind for _specimen, kind in _SHAPE_ONLY_SPECIMENS}
+
+    unspecimened = sorted(kind.value for kind in CHECKSUM_VERIFIED_KINDS - covered)
+    assert not unspecimened, (
+        f"blocking classes with no shape-only refusal specimen: {unspecimened}; "
+        "a class that fails the build on an arithmetic claim must be shown to "
+        "refuse a specimen of exactly its own shape"
+    )
+
+    non_blocking = sorted(kind.value for kind in covered - CHECKSUM_VERIFIED_KINDS)
+    assert not non_blocking, (
+        f"specimens claim {non_blocking} refuse their own shape, but these kinds "
+        "are advisory-tier and carry no checksum to refuse with"
+    )
+
+
+@pytest.mark.parametrize(("shape_only", "kind"), _SHAPE_ONLY_SPECIMENS)
 def test_every_blocking_class_is_admitted_by_arithmetic_and_not_by_shape(
     shape_only: str,
     kind: ResidualKind,

@@ -22,7 +22,7 @@ from ..release_cohort import build_release_cohort
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 #: Wall ceiling for the real double build. This test clones the source and
-#: builds the twelve-member cohort TWICE, entirely inside child processes, so
+#: builds the eleven-member cohort TWICE, entirely inside child processes, so
 #: it runs far past the repository's 300s default.
 #:
 #: It needs its own ceiling for a reason beyond simply being slow. When the

@@ -19,8 +19,6 @@ editor surface.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.i18n import Translatable as tr
@@ -28,9 +26,6 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.requirement import Requirement
 from .errors import ProfileKeysRegistrationError, ProfileValidationError
 from .normalise import normalise_key
-
-if TYPE_CHECKING:
-    PROFILE_KEYS: tuple[ProfileKey, ...]
 
 
 class ProfileKey(BaseModel):
@@ -139,12 +134,11 @@ def _profile_keys() -> tuple[ProfileKey, ...]:
 def profile_keys() -> tuple[ProfileKey, ...]:
     """Return the full registered :class:`ProfileKey` tuple, resolved at call time.
 
-    Unlike the :data:`PROFILE_KEYS` module attribute (resolved once, at
-    whatever moment a caller's ``from ... import PROFILE_KEYS`` statement
-    executes), this function always defers resolution to the moment it is
-    called. Callers that read the registry from inside a function body
-    (rather than at their own module-import time) should prefer this
-    function so they cannot race the wizard catalogue's registration.
+    Resolution is always deferred to the moment of the call. A module
+    attribute resolved through a lazy ``__getattr__`` hook used to offer the
+    same registry, but ``from ... import PROFILE_KEYS`` fired that hook at the
+    importer's own import time and so raced the wizard catalogue's
+    registration. This function is the only way in, and it cannot.
     """
     return _profile_keys()
 
@@ -152,29 +146,6 @@ def profile_keys() -> tuple[ProfileKey, ...]:
 def _by_key() -> dict[str, ProfileKey]:
     _profile_keys()
     return _BY_KEY_CACHE[0]
-
-
-def __getattr__(name: str) -> tuple[ProfileKey, ...]:
-    """Lazily resolve ``PROFILE_KEYS`` at first attribute access."""
-    if name == "PROFILE_KEYS":
-        return _profile_keys()
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-
-
-def get_profile_key(key: str) -> ProfileKey:
-    """Return the :class:`ProfileKey` for ``key``.
-
-    Performs canonical normalisation (strip / lowercase / dash-to-dot)
-    before the registry lookup so case-insensitive callers resolve to
-    the same entry as the canonical form.
-
-    Args:
-        key: Raw profile key string to look up.
-
-    Returns:
-        The matching :class:`ProfileKey` from the registry.
-    """
-    return ProfileKey.from_key(key)
 
 
 def required_profile_keys() -> tuple[ProfileKey, ...]:
@@ -192,9 +163,7 @@ def optional_profile_keys() -> tuple[ProfileKey, ...]:
 
 
 __all__ = [
-    "PROFILE_KEYS",
     "ProfileKey",
-    "get_profile_key",
     "optional_profile_keys",
     "profile_keys",
     "register_profile_keys",

@@ -144,8 +144,6 @@ _CORE_ABSENT_NAMES = {
 # the runtime embedding stack) and no longer resolves into the product closure,
 # so this entry now only tolerates it arriving transitively in a real built
 # environment rather than asserting that it does.
-# ``anyio`` is pulled into core by ``httpx`` (a base dependency) and is declared
-# in the ``agent`` extra because the stdio MCP server imports it directly.
 # ``pillow`` is pulled into core by the base ``pdfplumber`` and ``pikepdf`` PDF
 # dependencies and is pinned directly in the dev group for reproducible README
 # GIF generation.
@@ -158,7 +156,6 @@ _CORE_ABSENT_NAMES = {
 # a dev-only leak into core.
 _CORE_PRESENT_TRANSITIVE_NAMES = {
     "numpy",
-    "anyio",
     # mcp requires pywin32 on win32, so the harness dependency carries it into the
     # core export on Windows without the project declaring it.
     "pywin32",

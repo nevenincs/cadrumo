@@ -9,10 +9,9 @@ from ....core.i18n import Translatable as tr
 from ....core.requirement import Requirement
 from ..errors import ProfileKeysRegistrationError
 from ..keys import (
-    PROFILE_KEYS,
     ProfileKey,
-    get_profile_key,
     optional_profile_keys,
+    profile_keys,
     register_profile_keys,
     required_profile_keys,
 )
@@ -21,21 +20,21 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_registry_is_non_empty_and_unique() -> None:
-    assert len(PROFILE_KEYS) >= 1
-    keys = [entry.key for entry in PROFILE_KEYS]
+    assert len(profile_keys()) >= 1
+    keys = [entry.key for entry in profile_keys()]
     assert len(keys) == len(set(keys)), "every profile key must be unique"
 
 
 def test_required_and_optional_partition_covers_registry() -> None:
     required = required_profile_keys()
     optional = optional_profile_keys()
-    assert {entry.key for entry in required + optional} == {entry.key for entry in PROFILE_KEYS}
+    assert {entry.key for entry in required + optional} == {entry.key for entry in profile_keys()}
     assert all(entry.requirement is Requirement.REQUIRED for entry in required)
     assert all(entry.requirement is Requirement.OPTIONAL for entry in optional)
 
 
 def test_get_profile_key_returns_canonical_record() -> None:
-    entry = get_profile_key("identity.tax_id")
+    entry = ProfileKey.from_key("identity.tax_id")
     assert isinstance(entry, ProfileKey)
     assert entry.key == "identity.tax_id"
     assert entry.requirement is Requirement.REQUIRED
@@ -45,11 +44,11 @@ def test_get_profile_key_returns_canonical_record() -> None:
 
 def test_get_profile_key_raises_keyerror_for_unknown_key() -> None:
     with pytest.raises(KeyError, match=r"unknown profile key"):
-        get_profile_key("not.a.profile.key")
+        ProfileKey.from_key("not.a.profile.key")
 
 
 def test_every_entry_carries_authoritative_spanish_description() -> None:
-    for entry in PROFILE_KEYS:
+    for entry in profile_keys():
         assert entry.description.strip(), f"{entry.key}: missing description.es"
 
 
@@ -101,7 +100,7 @@ def test_spouse_tax_id_is_conditionally_required_for_joint_taxation() -> None:
     ``required_when_*`` pair so ``validate_profile_values`` promotes the
     key to required only while a joint declaration is declared."""
 
-    entry = get_profile_key("renta_spouse.tax_id")
+    entry = ProfileKey.from_key("renta_spouse.tax_id")
     assert entry.requirement is Requirement.OPTIONAL
     assert entry.required_when_key == "renta_filing.declaration_type"
     assert entry.required_when_value == "2"
@@ -122,7 +121,7 @@ def test_optional_spouse_keys_carry_no_conditional_requirement() -> None:
         "renta_spouse.birth_date",
         "renta_spouse.sex",
     ):
-        entry = get_profile_key(key)
+        entry = ProfileKey.from_key(key)
         assert entry.requirement is Requirement.OPTIONAL
         assert entry.required_when_key is None
         assert entry.required_when_value is None
@@ -147,10 +146,10 @@ def test_double_registration_with_conflicting_tuple_raises_profile_keys_registra
     """register_profile_keys must raise ProfileKeysRegistrationError when a
     second conflicting tuple is supplied.
 
-    The cache is already populated from the PROFILE_KEYS import above.
+    The cache is already populated from the profile_keys() import above.
     Supplying an empty tuple is guaranteed to differ from the real registry.
     """
-    assert PROFILE_KEYS, "pre-condition: registry must be non-empty"
+    assert profile_keys(), "pre-condition: registry must be non-empty"
     with pytest.raises(ProfileKeysRegistrationError):
         register_profile_keys(())  # empty tuple != real registry tuple
 
@@ -170,8 +169,8 @@ def test_renta_family_profile_keys_cover_official_scalar_family_fields() -> None
     assert expected.issubset({entry.key for entry in optional_profile_keys()})
     # `spouse.eu_eea_resident` is an optional boolean — no validator
     # requires it — so it carries no conditional-requirement pair.
-    assert get_profile_key("renta_spouse.eu_eea_resident").required_when_key is None
+    assert ProfileKey.from_key("renta_spouse.eu_eea_resident").required_when_key is None
     # The residence country IS required once the spouse is declared an
     # EU/EEA resident (SetupAnswers enforces the same invariant).
-    assert get_profile_key("renta_spouse.eu_eea_country").required_when_key == "renta_spouse.eu_eea_resident"
-    assert get_profile_key("renta_spouse.eu_eea_country").required_when_value == "true"
+    assert ProfileKey.from_key("renta_spouse.eu_eea_country").required_when_key == "renta_spouse.eu_eea_resident"
+    assert ProfileKey.from_key("renta_spouse.eu_eea_country").required_when_value == "true"

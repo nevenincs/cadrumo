@@ -2,7 +2,7 @@
 
 Importing :mod:`cadrumo.application.wizard` triggers the import-time
 ``register_profile_keys`` push (in ``cadrumo.application.wizard.compiler``) that
-populates :data:`cadrumo.domain.contribuyente.PROFILE_KEYS` from the compiled wizard
+populates the registered profile keys from the compiled wizard
 flows. ``test_modelo_100_registry`` imports ``PROFILE_KEYS`` at module load, which
 raises ``ProfileKeysRegistrationError`` if the keys were never registered — a
 global-state precondition that happens to hold in the full test suite (some peer

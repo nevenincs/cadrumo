@@ -78,9 +78,15 @@ _UTF_8: str = UTF_8_ENCODING
 # enumerates members.  These aliases are nevertheless intentional public API
 # and are referenced throughout the API prose and generated annotations.  Keep
 # the small ownership table here, beside the stub generator, so each alias gets
-# exactly one canonical ``py:data`` target at its public facade.
+# exactly one canonical ``py:data`` target at the module that RESOLVES it.
+#
+# ``py:data`` fabricates a target whether or not the object exists, so a key
+# naming a module that no longer resolves the name publishes a reference to
+# nothing while leaving the real alias undocumented.  Every entry therefore
+# re-derives its own condition against the imported module in
+# ``tests/test_manager.py`` rather than being trusted because it was written.
 _PUBLIC_DATA_ALIASES: dict[str, tuple[str, ...]] = {
-    "cadrumo.core": ("CasillaId",),
+    "cadrumo.core.casilla_id": ("CasillaId",),
     "cadrumo.core.identity": ("ContentDigest", "SubjectTaxId", "TaxIdIdentityToken"),
 }
 _PUBLIC_FUNCTION_ALIASES: dict[str, tuple[str, ...]] = {}

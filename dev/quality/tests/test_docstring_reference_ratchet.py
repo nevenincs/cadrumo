@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from ..docstring_reference_ratchet import count_dangling, evaluate
+from ..docstring_reference_ratchet import count_dangling, evaluate, main
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -85,3 +85,22 @@ def test_a_tree_matching_its_baseline_passes(tmp_path: Path) -> None:
     """The normal case, so the gate is not merely always-red."""
     root = _tree(tmp_path, known='"""Names :func:`absent_one`."""\n')
     assert evaluate(root, _baseline(tmp_path, known=1)).ok
+
+
+def test_a_clean_run_names_the_dangling_references_it_carries(capsys: pytest.CaptureFixture[str]) -> None:
+    """Green is not zero, and the passing path is the only one that can say so.
+
+    Every recorded module is an accepted dangling reference. A ratchet whose
+    accepted set is non-empty must not print nothing when it passes: silence
+    reads as "no dangling references anywhere", the opposite of what the
+    baseline means. The mutation that must trip this is returning 0 without
+    writing.
+    """
+    assert main() == 0
+
+    printed = capsys.readouterr().out
+    carried = count_dangling()
+    assert carried, "the baseline is empty; this case would pass vacuously"
+    assert str(sum(carried.values())) in printed
+    for path in carried:
+        assert path in printed

@@ -970,7 +970,6 @@ transactions:
 tui:
   aeat_sync:
     action:
-      pull_comparison: Pull comparison evidence
       pull_filed: Pull filed declarations
       pull_filed_all: Pull all filed declarations
       review_census: Review census
@@ -1202,7 +1201,6 @@ tui:
       aeat_evidence: AEAT evidence
       availability: Availability
       calculation: Current calculation
-      calculation_revision: Calculation revision created
       current: Current
       declaration: Declaration
       destination: Destination
@@ -1280,7 +1278,6 @@ tui:
     account_fallback: Account
     action:
       context_across_records: Across records
-      label: Open suggested task
       reason: Suggested by the local overview
     action_context: '%{label} - %{reason} · %{context}'
     address: Modelo %{modelo} · %{filing_year} · %{period}
@@ -1405,7 +1402,6 @@ tui:
       cancel: Cancel
       confirm: Confirm import
       confirming: Confirm the prepared import.
-      empty: No prepared import is available.
       failure: The import could not be completed.
       progress: Import in progress…
       prompt: Choose a prepared import.
@@ -1491,11 +1487,9 @@ tui:
       link_ledger: Link ledger record
       list_filing_records: View filing records
       list_notifications: View notifications
-      open_declaration: Open declaration
-      open_ledger: Open ledger
+      list_work_revisions: View work revisions
       review_ledger: Review ledger
       review_ledger_evidence: Review ledger evidence
-      review_undeclared: Review undeclared activity
       validate_ledger: Validate ledger
     destination:
       aeat_sync: Open AEAT Sync

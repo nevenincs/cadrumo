@@ -67,8 +67,27 @@ _MAPPINGS = REPO_ROOT / "dev" / "registry" / "mappings"
 #: Map entry kinds that write no casilla value: padding and constants.
 _VALUELESS_KINDS = frozenset({"filler", "literal"})
 #: Below these the walk found nothing and every assertion would be vacuous.
+#: They are anti-vacuity checks and nothing more: live the walk indexes over
+#: twenty thousand entries, so EVERY modelo family -- including the largest,
+#: which alone is most of the corpus -- fits inside the slack above these
+#: numbers. A family that stopped being mapped would leave both totals clear.
 _MINIMUM_ENTRIES = 1000
 _MINIMUM_RESOLVED = 500
+
+#: So the corpus is floored per FAMILY as well. A modelo whose maps stop
+#: being read contributes no entries, every export ref into it then reads as
+#: a hand-authored layout, and its casillas are never judged -- the same
+#: silent conversion of judged routings into unjudged ones the unread
+#: announcement above exists to prevent, arriving by a different route.
+#: A floor, not a pin: a new modelo raises the live count freely and only a
+#: family LEAVING reds. Not caught, stated rather than implied: a family
+#: that shrinks to a handful of entries still counts as present.
+_MINIMUM_MAPPED_FAMILIES = 17
+
+
+def _entry_family(export_field_id: str) -> str:
+    """Return the modelo family an export field id belongs to."""
+    return export_field_id.split("-", 1)[0].split(".", 1)[0]
 
 
 def _entry_kinds() -> dict[str, str]:
@@ -112,6 +131,13 @@ def _routed() -> tuple[list[tuple[str, str, str, str, str]], int]:
     """Return valueless routings, and how many refs were resolvable at all."""
     kinds = _entry_kinds()
     assert len(kinds) >= _MINIMUM_ENTRIES, f"only {len(kinds)} map entries indexed; the mappings tree was not read"
+    families = {_entry_family(field_id) for field_id in kinds}
+    assert len(families) >= _MINIMUM_MAPPED_FAMILIES, (
+        f"only {len(families)} modelo families contributed map entries against a floor of "
+        f"{_MINIMUM_MAPPED_FAMILIES}: {sorted(families)}; a family whose maps went unread "
+        "has every export ref into it read as a hand-authored layout and none of its "
+        "casillas judged, which the entry total above is far too loose to notice"
+    )
     offenders: list[tuple[str, str, str, str, str]] = []
     resolved = 0
     for modelo in bundled_authority().modelos:

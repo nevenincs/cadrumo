@@ -66,10 +66,9 @@
 "cadrumo.application.calculations.prorrata_regularizacion" = 1
 "cadrumo.application.corpus_search.terminology" = 1
 "cadrumo.application.filing._export_parity" = 1
-"cadrumo.application.filing.draft_review" = 5
+"cadrumo.application.filing.draft_review" = 3
 "cadrumo.application.filing.export_proof" = 2
 "cadrumo.application.filing.runtime" = 2
-"cadrumo.application.flows.checkpoint" = 1
 "cadrumo.application.flows.engine" = 1
 "cadrumo.application.invoices.catalogue_reads" = 2
 "cadrumo.application.invoices.bulk_import" = 1
@@ -85,7 +84,7 @@
 "cadrumo.application.modelo._calculation_modelo_adjustments" = 1
 "cadrumo.application.modelo._review_package_review_only_workspace" = 2
 "cadrumo.application.modelo._row_source_identity_replay" = 1
-"cadrumo.application.modelo.calculation_actions" = 2
+"cadrumo.application.modelo.calculation_actions" = 1
 "cadrumo.application.modelo.calculation_route" = 1
 "cadrumo.application.modelo.edit_models" = 5
 "cadrumo.application.modelo.edit_services" = 3
@@ -94,7 +93,7 @@
 "cadrumo.application.modelo.m303_regimen_simplificado_scope" = 1
 "cadrumo.application.modelo.operation_definitions" = 5
 "cadrumo.application.modelo.result_disposition_resolution" = 1
-"cadrumo.application.modelo.review_package_collab_audit" = 6
+"cadrumo.application.modelo.review_package_collab_audit" = 1
 "cadrumo.application.modelo.review_package_recipient_encryption" = 2
 "cadrumo.application.modelo.review_package_signing" = 1
 "cadrumo.application.modelo.work_addressing" = 2
@@ -156,7 +155,6 @@
 "cadrumo.core.observability.capture" = 1
 "cadrumo.core.observability.context" = 1
 "cadrumo.core.observability.store" = 1
-"cadrumo.core.optional_extras" = 1
 "cadrumo.core.paths" = 1
 "cadrumo.core.period" = 3
 "cadrumo.core.presentation" = 1
@@ -165,7 +163,6 @@
 "cadrumo.core.redaction.rules" = 1
 "cadrumo.core.result_disposition" = 1
 "cadrumo.core.setup_answers" = 1
-"cadrumo.core.source_locator" = 1
 "cadrumo.core.storage_taxonomy" = 1
 "cadrumo.core.time.clock" = 1
 "cadrumo.core.tipos_actividad" = 2
@@ -218,7 +215,7 @@
 "cadrumo.domain.calculations.registry.withholding296_bindings" = 2
 "cadrumo.domain.calculations.registry.withholding_bindings" = 3
 "cadrumo.domain.contribuyente.constants" = 1
-"cadrumo.domain.contribuyente.keys" = 3
+"cadrumo.domain.contribuyente.keys" = 1
 "cadrumo.domain.contribuyente.marriage_facts" = 3
 "cadrumo.domain.filing.protocols" = 1
 "cadrumo.domain.invoices.decomposition" = 2
@@ -257,10 +254,10 @@
 "cadrumo.entrypoints.cli._bootstrap_exempt" = 1
 "cadrumo.entrypoints.cli._command_runtime" = 1
 "cadrumo.entrypoints.cli._command_schema" = 1
-"cadrumo.entrypoints.cli._common" = 5
+"cadrumo.entrypoints.cli._common" = 3
 "cadrumo.entrypoints.cli._modelo_behavior_support" = 1
 
-"cadrumo.entrypoints.cli._tty" = 3
+"cadrumo.entrypoints.cli._tty" = 2
 "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap" = 1
 "cadrumo.entrypoints.cli.command_api" = 2
 "cadrumo.entrypoints.cli.command_suggestions" = 3

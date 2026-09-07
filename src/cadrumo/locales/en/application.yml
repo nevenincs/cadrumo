@@ -371,14 +371,6 @@ application:
         unsupported_filing_year: Filing year {filing_year} is not declared supported.
           The registry declares {supported_filing_years}. Admit the year in {declaration}
           after grounding its prerequisites.
-    errors:
-      import_failed: 'cannot import modelo %{modelo}: %{detail}'
-      modelo_not_in_registry: modelo %{modelo} is not present in the calculation registry
-      period_ejercicio_mismatch: 'modelo %{modelo}: cannot canonicalise period %{period}
-        for ejercicio %{ejercicio}'
-      unexpected_ejercicio: 'modelo %{modelo}: unexpected ejercicio %{ejercicio};
-        want four-digit year'
-      unknown_severity_threshold: The severity threshold is not a known severity level.
     export:
       errors:
         draft_not_approved: Export requires an approved draft.

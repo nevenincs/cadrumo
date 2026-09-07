@@ -70,11 +70,11 @@ from ....domain.deadlines.models import FiscalResidency, IVARegime, TaxpayerProf
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.verification_report import VerificationReport
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....tests.bucket_aggregation_calculate import calculate_modelo_revision_from_bucket_aggregation
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import ForeignAssetIngestObservation
-from ...modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation
 from ...modelo.verification_actions import verify_modelo_revision
 from ...modelo.work_lifecycle import create_work_unit
 from ..foreign_asset_redeclaration import modelo_720_evidence_observation

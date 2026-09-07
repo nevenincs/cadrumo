@@ -201,9 +201,9 @@ def test_default_currency_consumers_alias_core_constant() -> None:
             "_service module must import DEFAULT_CURRENCY from external_constants",
         ),
         (
-            "cadrumo.application.aggregation._currency_predicates",
+            "cadrumo.application.aggregation.currency_predicates",
             "DEFAULT_CURRENCY",
-            "_currency_predicates must import DEFAULT_CURRENCY from external_constants",
+            "currency_predicates must import DEFAULT_CURRENCY from external_constants",
         ),
     ):
         _assert_module_constant_identity(

@@ -277,9 +277,12 @@ def test_every_dev_initialiser_is_fully_inert() -> None:
     ``__init__.py`` forwards nothing and is still not a namespace marker, so a
     gate that only checked forwarding would pass it.
 
-    All 63 initialisers under ``dev`` satisfy this today. The stronger gate is
-    landable for the same reason the forwarding one is: the retirement made it
-    true.
+    EVERY initialiser under ``dev`` satisfies this today, re-derived rather
+    than recalled. The stronger gate is landable for the same reason the
+    forwarding one is: the retirement made it true. No count is restated --
+    the figure that stood here said 63 against a live 67 and read as current
+    while it drifted, and the claim is universal, so a count adds nothing it
+    does not also put at risk of going quietly false.
     """
     from ..facade_retirement import DEV_ROOT, non_inert_contents
 

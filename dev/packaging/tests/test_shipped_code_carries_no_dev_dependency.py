@@ -172,11 +172,11 @@ def test_the_gate_is_looking_at_something() -> None:
     )
 
     modules = _shipped_modules()
-    # Live the walk reaches 2,110 shipped modules, so `> 100` let 95% of the
+    # Live the walk reaches 2,122 shipped modules, so `> 100` let 95% of the
     # shipped tree go unscanned while this gate still reported no development
     # dependency anywhere. The floor is set from the walk's own shape: losing
     # `recursive=True` leaves exactly 1 module, and dropping the largest
-    # subpackage (application, 641) leaves 1,469. It deliberately does NOT
+    # subpackage (application, 651) leaves 1,471. It deliberately does NOT
     # catch losing a smaller subpackage alone - adapters is 295, and a floor
     # tight enough for that would sit 300 below live and red on any ordinary
     # removal. A floor, not a pinned count.

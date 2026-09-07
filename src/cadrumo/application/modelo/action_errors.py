@@ -150,6 +150,21 @@ def modelo_work_wizard_retry_exhausted_precondition(
     )
 
 
+class AmendmentDetailRowsRequiredError(ModeloError):
+    """Raised when an amendment omits detail rows that constitute the declaration.
+
+    For M184, M232, M347 and M349 the per-counterpart rows ARE the return, so
+    an amendment filed without them declares that there were none. That is a
+    substantive statement about the period, and the two amendment kinds make
+    opposite ones: LGT art. 122.2 para. 2 has a complementaria COMPLETE the
+    original (its rows are the ones being ADDED) while a sustitutiva REPLACES
+    it (its rows are the full corrected set). Nothing in the amendment call
+    distinguishes them, and inheriting the baseline's rows would silently pick
+    the second reading while the corrected aggregate totals were computed for
+    neither. So the operator states the rows rather than the code guessing.
+    """
+
+
 class AmendmentM303RectificativaMotiveError(ModeloError):
     """Raised when the closed M303 rectificativa motive is missing or inapplicable."""
 
@@ -193,6 +208,23 @@ class AmendmentComplementariaLiabilityDecreaseError(ModeloError):
 
 class StoredCalculationDriftError(ModeloError):
     """Raised when a persisted calculation revision has drifted from its content-addressed id."""
+
+
+class LedgerEvidenceRecaptureRefusedError(ModeloError):
+    """Raised when a sealed revision's evidence cannot be re-bundled from the live ledger.
+
+    Recapture exists to pick up evidence attached AFTER a revision was sealed —
+    an invoice linked to a row the filing gate refused — without disturbing the
+    facts the filing asserts. That is only sound while the tax facts themselves
+    are unchanged, because the revision's content address is derived from them
+    and the bundle is pegged to their fingerprint.
+
+    A moved row fingerprint therefore means something else happened: the ledger
+    drifted, and the revision no longer describes it. That is staleness, whose
+    remedy is a fresh calculation, not a re-bundle. Recapturing over it would
+    silently swap the fact basis underneath a sealed filing while leaving its
+    id and casilla values asserting the old one.
+    """
 
 
 class ExternalModeloImportError(ModeloError):
@@ -373,6 +405,7 @@ class WorkUnitRevisionDivergenceError(ModeloError):
 __all__ = [
     "WORKFLOW_GATE_LEGAL_REFS",
     "AmendmentComplementariaLiabilityDecreaseError",
+    "AmendmentDetailRowsRequiredError",
     "AmendmentEvidenceMissingError",
     "AmendmentKindNotPermittedError",
     "AmendmentOverrideCasillaError",
@@ -383,6 +416,7 @@ __all__ = [
     "CalculationRevisionStateError",
     "CasillaProvenanceMissingError",
     "ExternalModeloImportError",
+    "LedgerEvidenceRecaptureRefusedError",
     "ModeloAggregationBindingError",
     "ModeloApplicabilityFilterError",
     "ModeloChargeAccountMissingError",

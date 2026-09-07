@@ -30,10 +30,11 @@ that margin rather than pretending CPU-time is perfectly load-invariant.
 That same exclusion of wait-time is a HOLE as well as a virtue, which is why
 :func:`wall_advisory_message` also lives here. A test blocked on a wedged
 network mount burns almost no CPU, so converting a gate to CPU-time removes
-the only instrument that could ever notice it stalling. The conversions keep
-their wall threshold as a non-failing advisory rather than deleting it, and
-this module owns that emission for the same reason it owns the measurement:
-so the two sites cannot drift into two conventions.
+the only instrument that could ever notice it stalling. A conversion keeps its
+wall threshold as a non-failing advisory rather than deleting it, and this
+module owns that emission for the same reason it owns the measurement. One gate
+emits the advisory today, so nothing has drifted yet; the emission lives here so
+the second converted gate inherits this convention instead of inventing its own.
 """
 
 from __future__ import annotations

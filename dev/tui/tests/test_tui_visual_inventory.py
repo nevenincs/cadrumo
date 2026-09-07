@@ -231,6 +231,64 @@ def test_every_concrete_review_surface_has_a_stable_fixture_identity() -> None:
             assert classification.surface_id is None
 
 
+def test_a_fixture_identity_is_injective_over_the_concrete_census() -> None:
+    """A surface id must identify ONE screen, or it identifies nothing.
+
+    The sibling above asserts that every concrete interface HAS a surface id and
+    that the id is shaped like a slug. Neither assertion reads the id, so the
+    whole identity population is unconstrained: collapsing all 44
+    ``FIXTURE_NEEDED`` ids to the single literal ``"x"`` left every gate in this
+    module green, and so did merging just one screen onto a sibling's id. The
+    census count, the per-disposition counts and the classified-set equality all
+    range over INTERFACES, so they cannot see two interfaces sharing one review
+    identity -- which is the defect that makes a fixture, once written, silently
+    stand in for a screen nobody reviewed.
+
+    ``_coverage.check`` binds a COVERED id to a live harness surface, so those
+    five are already content-checked. The 44 awaiting fixtures have no artefact
+    to read back yet, so injectivity is the strongest claim available over them,
+    and it is asserted here at single-member granularity.
+
+    Reuse is sanctioned in exactly one shape: the App host that exists only to
+    paint its Screen shares that Screen's identity. Asserted as a rule about the
+    pair rather than as a list of the three live pairs, so a fourth such host is
+    a one-line classification edit and any other collision is a failure.
+    """
+    concrete = {
+        qualname: classification.surface_id
+        for qualname, classification in _coverage.CLASSIFICATIONS.items()
+        if classification.disposition
+        in {_coverage.InventoryDisposition.COVERED, _coverage.InventoryDisposition.FIXTURE_NEEDED}
+    }
+    # Vacuity floor: the loop below is a claim about collisions, and an empty or
+    # collapsed concrete census yields no collision and reads as clean. Live: 49.
+    assert len(concrete) >= 40, (
+        f"only {len(concrete)} concrete interface(s) carry a review identity; the "
+        "injectivity claim below ranges over almost none of the census"
+    )
+
+    by_id: dict[str, list[str]] = {}
+    for qualname, surface_id in concrete.items():
+        assert surface_id is not None
+        by_id.setdefault(surface_id, []).append(qualname)
+
+    collisions = []
+    for surface_id, qualnames in sorted(by_id.items()):
+        if len(qualnames) == 1:
+            continue
+        stems = {qualname.removesuffix("App").removesuffix("Screen") for qualname in qualnames}
+        if len(qualnames) == 2 and len(stems) == 1:
+            stem = next(iter(stems))
+            if set(qualnames) == {f"{stem}App", f"{stem}Screen"}:
+                continue
+        collisions.append(f"{surface_id}: {sorted(qualnames)}")
+    assert collisions == [], (
+        "a review identity is claimed by interfaces that are not one App/Screen "
+        "pair, so a fixture written for it reviews one screen and silently "
+        "answers for the others:\n  " + "\n  ".join(collisions)
+    )
+
+
 def test_every_derived_base_is_explicitly_classified_as_a_base() -> None:
     by_name = {interface.qualname: interface for interface in _inventory.scan()}
     abstract_bases = {

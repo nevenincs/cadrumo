@@ -59,6 +59,13 @@ class LedgerFilingSnapshot(BaseModel):
         snapshot_fingerprint: SHA-256 hex over the sorted ``(id, fingerprint)``
             pairs; the content address of the whole ledger state.
         captured_at: UTC timestamp the snapshot was taken.
+        fingerprint_field_set_version: Which set of tax facts the stored
+            fingerprints cover. A stored hash is only comparable against a
+            hash recomputed over the SAME fields, so this records which set
+            was in force when the snapshot was sealed. It defaults to ``1``
+            so a snapshot written before the field set was versioned reads
+            back as what it is, rather than being silently reinterpreted
+            under a wider set and reported stale.
     """
 
     model_config = _STRICT_FROZEN
@@ -66,6 +73,7 @@ class LedgerFilingSnapshot(BaseModel):
     rows: tuple[LedgerRowFingerprint, ...] = ()
     snapshot_fingerprint: SnapshotId
     captured_at: UtcInstant
+    fingerprint_field_set_version: int = 1
 
 
 class LedgerFilingStalenessVerdict(BaseModel):
@@ -76,6 +84,15 @@ class LedgerFilingStalenessVerdict(BaseModel):
         changed: Contributor ids whose live fingerprint differs from the snapshot.
         removed: Contributor ids absent from the live catalogue.
         unchanged: Contributor ids whose live fingerprint matches the snapshot.
+        covers_current_fact_set: Whether the compared fingerprints span every
+            tax fact this build knows can move a casilla. False means the
+            comparison was sound but NARROWER than today's: the snapshot was
+            sealed under an older field set and was compared under that set,
+            so ``unchanged`` means "unchanged in the facts that were being
+            watched", not "unchanged in every fact". Deliberately separate
+            from ``is_stale`` and non-blocking -- a narrow comparison is not
+            evidence of drift, and reporting it as drift would restate every
+            historical filing at once.
     """
 
     model_config = _STRICT_FROZEN
@@ -84,6 +101,7 @@ class LedgerFilingStalenessVerdict(BaseModel):
     changed: tuple[TransactionId, ...] = ()
     removed: tuple[TransactionId, ...] = ()
     unchanged: tuple[TransactionId, ...] = ()
+    covers_current_fact_set: bool = True
 
 
 def snapshot_fingerprint(rows: tuple[LedgerRowFingerprint, ...]) -> SnapshotId:
@@ -141,13 +159,16 @@ class LedgerEvidenceRow(BaseModel):
 
     The field set deliberately mirrors the fingerprint's rather than the
     transaction's, so evidence and staleness always describe the same facts.
-    That coupling is also how the fingerprint's known gap reaches this record:
-    ``recargo_amount``, ``deduction_fact_kind``, the prorrata declarations and
-    ``usage_ratio_id`` move a casilla and appear in neither, so the exported
-    evidence for a recargo-de-equivalencia purchase shows base and IVA with no
-    surcharge. Widening this record alone would break the mirror; the two move
-    together, and the fingerprint side is the one carrying the migration
-    constraint (see ``_FINGERPRINT_FIELDS`` in the application capture module).
+    The two therefore move together, and they did: ``recargo_amount``,
+    ``usage_ratio_id``, ``deduction_fact_kind`` and the prorrata declarations
+    were absent from both, so the exported evidence for a
+    recargo-de-equivalencia purchase showed base and IVA with no surcharge.
+    They are present in both now, under fingerprint field-set version 2 (see
+    ``_FINGERPRINT_FIELDS_V2`` in the application capture module).
+
+    A row bundled under version 1 carries them as ``None``, which is honest
+    rather than lossy: that capture genuinely did not record them, and
+    ``fingerprint_field_set_version`` on the owning bundle says so.
 
     Enum-valued facts are stored as their canonical string ``value`` (and dates as
     ISO-8601 strings) so the record roundtrips cleanly through the strict
@@ -173,7 +194,24 @@ class LedgerEvidenceRow(BaseModel):
     taxable_base: Decimal | None = None
     iva_rate: Decimal | None = None
     iva_amount: Decimal | None = None
+    # The recargo de equivalencia surcharge, carried beside base and cuota
+    # because it is a third settled amount on the same operation, not a
+    # derivation of them: a purchase from a retailer under the regime shows
+    # all three on the invoice, and evidence that omits it cannot explain the
+    # gross the row asserts.
+    recargo_amount: Decimal | None = None
     iva_category: str | None = None
+    # Deduction and prorrata declarations. Each moves a casilla in its own
+    # right -- the deduction fact kind decides whether input IVA is deductible
+    # at all, the art. 104.Tres exclusions decide what leaves the prorrata
+    # ratio, and the sector/reference pair says which regime a row was
+    # deducted under. Stored as canonical string values like the other enums.
+    usage_ratio_id: str | None = None
+    deduction_fact_kind: str | None = None
+    art_104_tres_exclusion: str | None = None
+    input_classification: str | None = None
+    prorrata_sector_id: str | None = None
+    prorrata_reference: str | None = None
     category_id: str | None = None
     irpf_category: str | None = None
     source_jurisdiction: CountryCodeAlpha2 | None = None
@@ -257,6 +295,10 @@ class LedgerFilingEvidence(BaseModel):
     rows: tuple[LedgerEvidenceRow, ...] = ()
     manual_entries: tuple[ManualFactBasisEntry, ...] = ()
     captured_at: UtcInstant
+    #: Mirrors the paired snapshot's field-set version. Carried here too
+    #: because this record is what an audit reader renders, and the fact
+    #: basis it shows is only as wide as the set that produced it.
+    fingerprint_field_set_version: int = 1
 
 
 __all__ = [

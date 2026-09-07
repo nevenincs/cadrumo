@@ -26,15 +26,30 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 def test_every_display_class_carries_exactly_one_weight() -> None:
     """The declared table maps every ``ResultDisplayClass`` member to one weight.
 
-    A class with no weight (or a table key that is not a member) is a gate
+    A class with no weight, or a table key that is no member, is a gate
     failure: the derivation authority must never produce a class the ranking
-    table cannot weigh.
+    table cannot weigh, and the table must not carry a key no class produces.
+
+    The key set is read off the declared table itself, never off a mapping
+    rebuilt by iterating the enum. A comprehension keyed
+    ``for member in ResultDisplayClass`` carries ``set(ResultDisplayClass)`` as
+    its key set unconditionally, so comparing those two compares the enum
+    against itself and holds for every table that exists. Reading the subject
+    off the table gives the two sides independent roots: narrowing the enum
+    strands a table key instead of moving both sides together, and a table key
+    that is no display class reds on sight.
     """
     from ..search_record import ResultDisplayClass
-    from ..unified_record import display_class_base_weight
+    from ..unified_record import _DISPLAY_CLASS_BASE_WEIGHT, display_class_base_weight
 
+    declared = set(_DISPLAY_CLASS_BASE_WEIGHT)
+    members = set(ResultDisplayClass)
+    assert declared == members, (
+        "the declared weight table and the display-class enum disagree:\n"
+        f"  classes carrying no weight: {sorted(c.name for c in members - declared)}\n"
+        f"  table keys that are no display class: {sorted(str(k) for k in declared - members)}"
+    )
     weights = {member: display_class_base_weight(member) for member in ResultDisplayClass}
-    assert set(weights) == set(ResultDisplayClass)
     assert all(0.0 <= weight <= 1.0 for weight in weights.values())
 
 

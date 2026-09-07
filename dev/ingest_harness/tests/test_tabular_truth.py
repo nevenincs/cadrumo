@@ -252,3 +252,26 @@ def test_an_unauthored_document_refuses() -> None:
     """A document with no authored truth names the authored set rather than returning empty."""
     with pytest.raises(TabularTruthError, match="no column-role truth is authored"):
         emission_from_roles("OP-NOT-a-real-document", [])
+
+
+def test_the_truth_document_lookup_refuses_an_unauthored_document() -> None:
+    """The guard fires before the corpus key is touched at all.
+
+    Its sibling emission lookup was already driven; these two were not, so the
+    same guard was proven at one of its three call sites and assumed at the
+    others. The refusal precedes the key access, which is why no key is needed
+    to reach it -- and that ordering is itself the claim: an unauthored document
+    is refused rather than sent to the corpus to fail there.
+    """
+    with pytest.raises(TabularTruthError, match="no column-role truth is authored"):
+        column_role_truth_document("OP-NOT-a-real-document", key=None)  # type: ignore[arg-type]
+
+
+def test_defensible_alternates_refuse_an_unauthored_document() -> None:
+    """Alternates are reported beside the score, so an unauthored id must refuse.
+
+    Returning empty here would read as no defensible alternate rather than as no
+    authored truth, and the two are different facts.
+    """
+    with pytest.raises(TabularTruthError, match="no column-role truth is authored"):
+        defensible_alternate_fields("OP-NOT-a-real-document", [])

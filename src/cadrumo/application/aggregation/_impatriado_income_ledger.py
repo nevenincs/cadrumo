@@ -60,7 +60,7 @@ from ...domain.transactions.models import OutOfWindowTransactionSummary, Transac
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
-from ._currency_predicates import effective_eur_amount, effective_eur_taxable_base, is_non_eur_without_conversion
+from .currency_predicates import effective_eur_amount, effective_eur_taxable_base, is_non_eur_without_conversion
 from ._grouping import fold_casilla_observations
 from ._models import CasillaAggregation, LedgerAggregationResultBase
 from .errors import AggregationPeriodError, AggregationValidationError, t

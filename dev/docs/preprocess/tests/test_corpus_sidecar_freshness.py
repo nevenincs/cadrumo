@@ -263,6 +263,58 @@ def test_sidecar_discovery_finds_the_committed_corpus() -> None:
         )
 
 
+def test_the_per_kind_floors_name_exactly_the_families_the_corpus_ships() -> None:
+    """Every source family in the corpus carries a floor, and every floor names one.
+
+    The floors above are checked one row at a time, and that loop walks the
+    ROSTER: it asks whether each listed family cleared its floor, never whether
+    the list is the corpus. Its verdict is therefore independent of membership
+    in either direction. Enumerated exhaustively over the 32 subsets of the five
+    listed families, against the corpus as committed and against a corpus
+    carrying a sixth family, the floor loop passes all 64 -- including the empty
+    roster, which checks nothing at all and reports a corpus reaching every
+    family in it.
+
+    So a sixth extractor family landing in ``_data/corpus`` is not merely
+    unfloored, it is unmeasured: the freshness, loadability and locality sweeps
+    iterate the population this gate measures, and each would report a clean
+    corpus having never opened a member of the new family, exactly as the
+    per-kind floors were introduced to prevent for the five that exist.
+
+    The two sides are independent roots. The floors are hand-authored in this
+    module; the families are derived from the committed corpus through the
+    production ``PreprocessOutput`` schema and the record's own declared
+    ``source_relpath``. Neither can be edited into agreement with the other.
+
+    The reverse direction -- a floor naming a family the corpus no longer ships
+    -- is already caught by the loop above, but only incidentally, and only
+    while every floor stays at one or more: a family at zero live sidecars
+    clears a floor of zero. That is asserted here rather than assumed, which is
+    what makes the incidental coverage a fact.
+    """
+    found, _ = _provenance_bearing_sidecars()
+    live = collections.Counter(_origin_kind(output) for _, output in found)
+
+    unfloored = sorted(set(live) - set(_MINIMUM_SIDECARS_BY_ORIGIN_KIND))
+    assert not unfloored, (
+        f"the corpus ships source families with no floor: {unfloored}; a family nobody "
+        "listed is never asserted non-empty, and the sweeps that iterate this population "
+        "would read clean having never opened one"
+    )
+
+    absent = sorted(set(_MINIMUM_SIDECARS_BY_ORIGIN_KIND) - set(live))
+    assert not absent, (
+        f"these families carry a floor but ship no sidecar at all: {absent}; a floor over "
+        "a family the corpus no longer contains measures nothing"
+    )
+
+    vacuous = sorted(kind for kind, floor in _MINIMUM_SIDECARS_BY_ORIGIN_KIND.items() if floor < 1)
+    assert not vacuous, (
+        f"these floors are satisfied by an absent family: {vacuous}; a floor of zero is what "
+        "would let a family leave the corpus without reddening the loop above"
+    )
+
+
 def test_every_committed_sidecar_loads() -> None:
     """Every sidecar claiming extractor provenance validates against the schema.
 

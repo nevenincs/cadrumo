@@ -23,7 +23,7 @@ import pytest
 
 from .._driver import DriverError, measure_structured_document, read_structured_draft
 from .._key import CorpusKey
-from .._result import EngineRoute, HarnessRefusalError, ModelTier, PipelineStage
+from .._result import EngineRoute, HarnessRefusalError, ModelTier, PipelineStage, Scored
 from .._runner import HarnessReport
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -78,6 +78,17 @@ def test_driving_a_real_document_produces_a_quotable_row(key: CorpusKey) -> None
     # matched alone, which a per-document expectation would be needed for.
     # This is a corpus-size floor, not the acceptance floor the route test
     # below rightly refuses to draw from a parser.
+    # `outcome` is `Scored | EmittedOnly`, and only `Scored` carries a
+    # denominator. `EmittedOnly` is returned for a document that authored no
+    # truth, which this test can reach because it takes the first READABLE
+    # document rather than a document chosen for having truth. Reading the
+    # count straight off the union raises AttributeError and reports a
+    # missing attribute, when what happened is that there was nothing to
+    # score -- the precise confusion `EmittedOnly` exists to prevent.
+    assert isinstance(row.outcome, Scored), (
+        f"{document.doc_id} produced no scorable outcome, so the corpus floor "
+        f"cannot be measured over it: {row.outcome.why_unscored}"
+    )
     assert row.outcome.scorable_field_count > 8, (
         f"the oracle scored only {row.outcome.scorable_field_count} fields for "
         f"{document.doc_id}, so this row quotes a measurement over almost nothing"

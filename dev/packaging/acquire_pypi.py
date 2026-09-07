@@ -7,7 +7,7 @@ cohort's installed wheel bytes match the promoted cohort digest byte-for-byte,
 and then repeats the grounded installed CLI tax-work oracle from that
 index-only environment.
 It refuses instructively when the index does not yet serve the promoted
-version (implements post-release-distribution plan row P03.S14).
+version.
 """
 
 from __future__ import annotations

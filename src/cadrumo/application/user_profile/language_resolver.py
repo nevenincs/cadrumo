@@ -11,11 +11,19 @@ when it composes profile persistence. That function registers
 from __future__ import annotations
 
 from ...core.i18n import register_profile_language_resolver
+from ...core.logging import get_logger
 from ...core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from .custody_ports import read_profile_output_language_hint
+from .custody_ports import (
+    clear_profile_output_language_hint,
+    read_profile_output_language_hint,
+    write_profile_output_language_hint,
+)
 from .login_session_port import profile_current_bucket_session
 
+_logger = get_logger(__name__)
+
 __all__ = [
+    "mirror_profile_output_language_hint",
     "register_language_resolver",
     "resolve_active_profile_output_language",
     "resolve_active_profile_output_language_hint",
@@ -81,3 +89,38 @@ def register_language_resolver() -> None:
     package-import side effect.
     """
     register_profile_language_resolver(resolve_active_profile_output_language)
+
+def mirror_profile_output_language_hint(bucket_id: str, language: str | None) -> None:
+    """Mirror a profile's language preference into its non-secret bucket hint.
+
+    The hint answers one question the encrypted preference cannot: which
+    language to speak BEFORE the profile is unlocked.
+    :func:`resolve_active_profile_output_language` falls back to it whenever no
+    bucket session is bound, and the reader fails soft on absence -- so while
+    nothing wrote the hint, that fallback always returned ``None`` and every
+    pre-login surface silently took the settings default, however deliberately
+    the operator had chosen a language during setup.
+
+    Clearing the preference clears the hint, so the two cannot disagree about
+    an absence. Failure is swallowed for the same reason the read is: this
+    mirrors a convenience, and a hint that could not be written must not fail
+    the fact write that owns the real value.
+    """
+    try:
+        from ...core.config import load_settings
+
+        trimmed = bucket_id.strip()
+        if not trimmed:
+            return
+        storage_root = load_settings().cadrumo_local_storage_root
+        if language is None or not str(language).strip():
+            clear_profile_output_language_hint(storage_root=storage_root, bucket_id=trimmed)
+            return
+        write_profile_output_language_hint(
+            storage_root=storage_root,
+            bucket_id=trimmed,
+            language=language,
+        )
+    except Exception:
+        _logger.debug("could not mirror the output-language hint", exc_info=True)
+

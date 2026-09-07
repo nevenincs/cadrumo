@@ -11,10 +11,20 @@ directories their packages own. A reader consulting the prose was told the
 coverage lived somewhere it does not. One list, read by the gate below, is
 the only kind that cannot go stale unnoticed.
 
-This file provides the real-behavior test that asserts every
-declared boundary has its roundtrip test file present on disk.  New
-boundaries must be registered here alongside a roundtrip test or the
-gate will fail.
+This file provides the real-behavior test that asserts every declared
+boundary has its roundtrip test file present on disk. The gate WALKS THE
+INVENTORY, so it catches a declared boundary whose test file has gone, and
+it cannot catch the opposite: a real persistence boundary never registered
+here is invisible to it, because an entry that does not exist is never
+visited. Registering a new boundary is a convention this gate relies on,
+not a rule it enforces -- the earlier wording promised the enforcement.
+
+Closing that half needs a mechanical definition of persistence boundary
+the tree can be walked for. The entries span repositories, sinks, a
+fixed-width codec and session stores across four packages, and no
+predicate separating them from their neighbours has been established. A
+gate built on a guessed predicate would report over a population nobody
+agreed to, which is why this half is named rather than approximated.
 """
 
 from __future__ import annotations

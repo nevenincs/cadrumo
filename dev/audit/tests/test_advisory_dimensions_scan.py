@@ -14,11 +14,14 @@ test that would routinely time out this lane.
 
 from __future__ import annotations
 
+import tempfile
+from pathlib import Path
+
 import pytest
 
 from ..._paths import REPO_ROOT
 from ..advisory import audit_checkout_drift, audit_dead_code
-from ..report import Status
+from ..report import Status, audit_layering
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -46,3 +49,27 @@ def test_audit_checkout_drift_returns_a_valid_dimension_against_the_live_tree() 
     assert dimension.report.status in {Status.RED, Status.AMBER, Status.GREEN}
     assert dimension.report.headline
     assert "scanned" in dimension.report.headline
+
+
+def test_audit_layering_reports_unavailable_rather_than_green_when_the_runner_cannot_run() -> None:
+    """A layering signal that could not be measured is AMBER, never GREEN.
+
+    The verdict axis carries no AMBER -- a contract is BROKEN or KEPT -- so
+    availability is the only AMBER this dimension can produce, and nothing
+    exercised it: audit_layering was reachable from the aggregator alone,
+    which is how its own docstring came to deny the state it returns.
+
+    Driven through a REAL failure rather than a substituted one: a working
+    directory that does not exist makes the production subprocess raise
+    OSError. The claim being pinned is that the shipped path degrades to
+    AMBER, and a stub standing in for the runner would not carry it.
+    """
+    missing_root = Path(tempfile.gettempdir()) / "cadrumo-layering-no-such-root"
+    assert not missing_root.exists(), missing_root
+
+    report = audit_layering(missing_root)
+
+    assert report.name == "layering"
+    assert report.status is Status.AMBER
+    assert "could not run" in report.headline
+    assert "unavailable" in report.headline

@@ -38,6 +38,7 @@ from .._records import (
     SanitizationWarning,
     ScrubbedSurface,
     TokenMap,
+    _ReplacementBase,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -213,6 +214,62 @@ def test_replacement_subclasses_reject_invalid_synthetic_values() -> None:
             assert wrapped.translated_message == expected_message, case_id
         else:
             assert re.search(expected_message, str(exc_info.value)), case_id
+
+
+def test_every_replacement_subclass_is_reached_by_the_case_tables() -> None:
+    """Every shipped Replacement subclass appears in the accept table, and every
+    validating one in the reject table.
+
+    The two tests above walk the CASE TABLES. That is the right traversal for
+    what each case asserts - a table-driven check of a pure validator, where the
+    table is the input space - but it is the wrong traversal for the claim the
+    test names make, which quantifies over *subclasses*. Driven by the table, the
+    loops can only ever construct the classes already listed: a tenth subclass
+    landing in ``_records`` with a broken synthetic validator is not merely
+    untested, it is unreached, and both tests stay green having never constructed
+    it once. Demonstrated by adding one: the accept loop passed unchanged.
+
+    So the coverage claim gets the traversal the case loops cannot have. The
+    population is ``_ReplacementBase.__subclasses__()``, read from the live class
+    hierarchy rather than restated here, and the two sides are independent roots:
+    the subclasses are declared in ``_records``, the cases in this module, and
+    neither can be edited into agreement with the other.
+
+    The reject table is anchored to a narrower and equally independent root - the
+    subclasses that declare their own ``synthetic`` field validator, read out of
+    pydantic's decorator metadata. A subclass with no validator of its own
+    (``AddressReplacement``, ``ArbitraryReplacement``) has no subclass-specific
+    rejection to demonstrate, so it is not required to carry a reject case. The
+    converse is permitted rather than required: a case that exercises a
+    ``_ReplacementBase`` constraint on a subclass that adds none is still a real
+    rejection, which is why only the validator-without-case direction fails.
+    """
+    subclasses = tuple(_ReplacementBase.__subclasses__())
+    assert len(subclasses) >= 9, (
+        f"only {len(subclasses)} Replacement subclass(es) were discovered; the coverage "
+        "assertions below quantify over this population, so a truncated one proves nothing"
+    )
+
+    accepted = {case[1].__name__ for case in _VALID_REPLACEMENT_CASES}
+    unaccepted = sorted(cls.__name__ for cls in subclasses if cls.__name__ not in accepted)
+    assert not unaccepted, (
+        f"these Replacement subclasses are never constructed with a valid synthetic value: "
+        f"{unaccepted}; the accept table bounds its own loop, so an unlisted subclass is "
+        "exercised by nobody while the test reads clean"
+    )
+
+    def _declares_synthetic_validator(cls: type) -> bool:
+        decorators = cls.__pydantic_decorators__.field_validators
+        return any("synthetic" in decorator.info.fields for decorator in decorators.values())
+
+    rejected = {case[1].__name__ for case in _INVALID_REPLACEMENT_CASES}
+    validating = tuple(cls for cls in subclasses if _declares_synthetic_validator(cls))
+    assert validating, "no subclass declares a synthetic validator; the reject anchor is empty"
+    unrejected = sorted(cls.__name__ for cls in validating if cls.__name__ not in rejected)
+    assert not unrejected, (
+        f"these Replacement subclasses validate their synthetic value but no case ever "
+        f"violates it: {unrejected}; the validator ships unproven"
+    )
 
 
 #: The sanitised bytes every SanitizationResult fixture below ships. The

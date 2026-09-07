@@ -48,7 +48,7 @@ from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.ecb_stub import ecb_csv_fetch
 from ...ledger.actions_import import import_ledger_transactions
-from .._currency_predicates import is_non_eur_without_conversion
+from ..currency_predicates import is_non_eur_without_conversion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

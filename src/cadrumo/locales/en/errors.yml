@@ -920,6 +920,11 @@ errors:
       lawfully decrease the taxpayer's declared liability before the autoliquidación
       rectificativa unification. Use the solicitud de rectificación procedure for
       a liability-decreasing correction instead.
+    refused_modelo_amendment_detail_rows_required: This modelo declares its detail
+      rows as the return itself, so an amendment must state them. Supply the rows
+      the amendment declares - only the added ones for a complementaria, the full
+      corrected set for a sustitutiva - or an empty set to declare that there are
+      none.
     refused_modelo_amendment_kind_not_permitted: The requested amendment kind is not
       legally available for the resolved filing period. The accepted kind set is listed
       in the error context.
@@ -932,6 +937,10 @@ errors:
       filter dispatch table.
     refused_modelo_charge_account_missing: A direct-debit filing was selected but
       no charge account is recorded.
+    refused_modelo_ledger_evidence_recapture: The evidence behind this filing cannot
+      be re-bundled because the contributing ledger rows have changed since it was
+      sealed. Recalculate the return instead; recapture only picks up evidence
+      attached to unchanged rows.
     refused_modelo_m303_rectificativa_motive: Modelo 303 rectificativa amendments
       require exactly one canonical motive on an applicable reviewed record design;
       the motive is forbidden elsewhere.

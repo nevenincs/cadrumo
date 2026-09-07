@@ -102,17 +102,19 @@ def _workflow_files() -> tuple[Path, ...]:
     """Every committed workflow, with the walk itself asserted.
 
     Both suffixes, because GitHub honours each and a workflow added as
-    ``.yaml`` would otherwise sit outside every gate in this module without
-    changing a single result. Sixteen ship today and none uses ``.yaml``, so
-    this is closing the door rather than reporting a breach.
+    ``.yaml`` would otherwise sit outside every gate that walks the directory
+    without changing a single result. Sixteen ship today and none uses
+    ``.yaml``, so this is closing the door rather than reporting a breach. The
+    named-workflow gates above read their three subjects by name and are not
+    widened by this.
 
-    The guards matter more than the widening: these gates assert that no
-    workflow does a forbidden thing, and an empty walk satisfies that
+    The guards matter more than the widening: the gates reading this walk assert
+    that no workflow does a forbidden thing, and an empty walk satisfies that
     perfectly while proving nothing at all.
     """
     assert _WORKFLOWS_DIR.is_dir(), (
         f"no workflow directory at {_WORKFLOWS_DIR}; a relocated root walks nothing and "
-        "every gate in this module would report the workflows clean"
+        "every gate reading this walk would report the workflows clean"
     )
 
     found = tuple(

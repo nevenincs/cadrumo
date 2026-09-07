@@ -74,13 +74,13 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....tests.bucket_aggregation_calculate import calculate_modelo_revision_from_bucket_aggregation
 from ....tests.env_scope import ready_clave_settings
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ...calculations.observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
 from ...invoices.catalogue_creation import build_catalogue_invoice
 from ..action_errors import ModeloCrossPeriodCleanStateError
-from ..calculation_actions import calculate_modelo_revision_from_bucket_aggregation
 from ..export import ModeloExportCommand, ModeloExportUnsupportedError, export_modelo_revision
 from ..filed_revision_observation import persist_filed_revision_observation
 from ..filing_actions import file_modelo_revision

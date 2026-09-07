@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ...core.hashing import sha256_hex
+from ...core.money.rounding import round_to_cents
 from ...domain.buckets.event import BucketEvent, BucketEventType
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
@@ -231,6 +232,7 @@ def _build_split_state(
         },
     )
 
+    child_eur_values = _split_child_eur_values(parent=parent, child_amounts=child_amounts)
     final_children = tuple(
         transaction.model_copy(
             update={
@@ -242,10 +244,13 @@ def _build_split_state(
                         *(other for other in child_ids if other != transaction.transaction_id),
                     ),
                 ),
+                "fx_rate": parent.fx_rate,
+                "value_in_eur": None if child_eur_values is None else child_eur_values[index],
             },
         )
-        for transaction in child_transactions_initial
+        for index, transaction in enumerate(child_transactions_initial)
     )
+    _require_split_preserves_eur_total(parent=parent, children=final_children)
 
     event = build_ledger_bucket_event(
         bucket_id=bucket_id,
@@ -487,6 +492,67 @@ def require_splittable_child_count(
         raise TransactionValidationError(
             "ledger split requires at least two children",
             context={"bucket_id": bucket_id, "transaction_id": transaction_id, "child_count": len(children)},
+        )
+
+
+def _split_child_eur_values(
+    *,
+    parent: Transaction,
+    child_amounts: tuple[Decimal, ...],
+) -> tuple[Decimal, ...] | None:
+    """Re-derive each child's EUR value from the PARENT's rate.
+
+    Splitting copied the parent's currency but not its conversion, so every
+    child of a converted foreign parent came out foreign-with-no-conversion.
+    Downstream that is not a rounding difference: the aggregation gates refuse
+    such a row outright, and the money roll-up now excludes it, so a split
+    silently removed the parent's value from every euro-denominated view of
+    the ledger.
+
+    The rate is taken VERBATIM rather than back-solved per child. The relation
+    is multiplicative -- ``amount * fx_rate = value_in_eur`` -- and
+    ``effective_eur_taxable_base`` multiplies each child's OWN base by that
+    child's rate, so giving a child a rate fitted to its rounded EUR value
+    would break ``gross == base + iva`` once re-expressed in euros. One rate,
+    applied to each child's amount, keeps every derived euro figure consistent.
+
+    The last child by index absorbs the residual. Rounding each child
+    independently cannot be relied on to re-sum to the parent's stored total,
+    and that total is the figure the filing already asserts, so the cents that
+    rounding cannot place go to one child rather than being lost. Returns
+    ``None`` for an unconverted parent, which has no conversion to distribute.
+    """
+    if parent.fx_rate is None or parent.value_in_eur is None:
+        return None
+    rounded = [round_to_cents(amount * parent.fx_rate) for amount in child_amounts]
+    rounded[-1] = parent.value_in_eur - sum(rounded[:-1], start=Decimal("0"))
+    return tuple(rounded)
+
+
+def _require_split_preserves_eur_total(
+    *,
+    parent: Transaction,
+    children: tuple[Transaction, ...],
+) -> None:
+    """Refuse a split whose children do not re-sum to the parent's EUR value.
+
+    The construction above already makes this hold arithmetically, so this
+    catches a future change that breaks it -- most plausibly a reordering that
+    pairs a child with another child's derived value. A split that quietly
+    changed the euro total would be indistinguishable from a correct one at
+    every later surface, which is why it is refused here rather than trusted.
+    """
+    if parent.value_in_eur is None:
+        return
+    total = sum((child.value_in_eur or Decimal("0") for child in children), start=Decimal("0"))
+    if total != parent.value_in_eur:
+        raise TransactionValidationError(
+            "ledger split children must re-sum to the parent's EUR value exactly",
+            context={
+                "parent_transaction_id": parent.transaction_id,
+                "parent_value_in_eur": str(parent.value_in_eur),
+                "child_value_total": str(total),
+            },
         )
 
 

@@ -994,6 +994,11 @@ errors:
       no puede disminuir legalmente la deuda declarada antes de la unificación de
       la autoliquidación rectificativa. Utilice el procedimiento de solicitud de rectificación
       para una corrección que reduzca la deuda.
+    refused_modelo_amendment_detail_rows_required: En este modelo los registros de
+      detalle son la propia declaración, por lo que una rectificación debe indicarlos.
+      Aporta los registros que declara la rectificación (solo los añadidos en una
+      complementaria, el conjunto corregido completo en una sustitutiva) o un conjunto
+      vacío para declarar que no hay ninguno.
     refused_modelo_amendment_kind_not_permitted: El tipo de rectificación solicitado
       no está legalmente disponible para el período de declaración resuelto. El conjunto
       de tipos aceptados figura en el contexto del error.
@@ -1007,6 +1012,10 @@ errors:
       la tabla de despacho de filtros.
     refused_modelo_charge_account_missing: Se ha elegido una domiciliacion pero no
       hay una cuenta de cargo registrada.
+    refused_modelo_ledger_evidence_recapture: No se puede volver a agrupar la evidencia
+      de esta declaración porque los apuntes contables que la sustentan han cambiado
+      desde que se selló. Vuelve a calcular la declaración; la recaptura solo recoge
+      evidencia adjuntada a apuntes sin cambios.
     refused_modelo_m303_rectificativa_motive: Las rectificativas del modelo 303 requieren
       exactamente un motivo canónico en un diseño de registro aplicable y revisado;
       el motivo está prohibido en los demás casos.

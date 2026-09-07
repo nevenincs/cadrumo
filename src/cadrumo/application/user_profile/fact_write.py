@@ -114,7 +114,29 @@ def apply_profile_fact_changes(
         from ...core.i18n import clear_output_language_cache
 
         clear_output_language_cache()
+        _mirror_output_language_hint(published)
     return published
+
+
+def _mirror_output_language_hint(published: UserProfileRecord) -> None:
+    """Carry the new preference into the bucket's non-secret language hint.
+
+    Sited at the sole fact-write door because that is the only place the
+    preference can change. The hint is what a pre-login surface reads when no
+    bucket session is bound; nothing wrote it, so that fallback always found
+    nothing and the operator's chosen language could not survive a lock.
+    """
+    from ...core.bucket_pointer import resolve_active_bucket_id
+    from .language_resolver import mirror_profile_output_language_hint
+    from .projections import record_to_path_values
+
+    bucket_id = resolve_active_bucket_id()
+    if bucket_id is None:
+        return
+    mirror_profile_output_language_hint(
+        bucket_id,
+        record_to_path_values(published).get(PROFILE_OUTPUT_LANGUAGE_PATH),
+    )
 
 
 def apply_manager_profile_field_mutation(

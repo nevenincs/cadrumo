@@ -19,8 +19,13 @@ from .._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-#: Per-suffix floors for the tracked census this gate reads. Live it reaches
-#: 6931 .py, 20495 .toml and 1769 .rst files; roughly three fifths of each.
+#: Per-suffix floors for the tracked census this gate reads, each set near
+#: three fifths of its live population when chosen. The exact live figures
+#: are deliberately NOT restated here. They drift with every commit, and
+#: the three that were recorded had ALL gone stale while still reading as
+#: current -- 6931/20495/1769 against a re-derived 6994/20496/1830 -- so a
+#: reader calibrating a floor against them would have been calibrating
+#: against fiction. The ratio is the durable claim; the counts are not.
 #: Stated per suffix rather than as one total because the total is dominated
 #: by .toml: every .py file could vanish from the census and a single total
 #: would still clear twenty thousand, while the forbidden name is a .py one

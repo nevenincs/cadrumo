@@ -441,9 +441,19 @@ def run_gate(repo_root: Path = REPO_ROOT, *, baseline_path: Path = BASELINE_PATH
 
 
 def main() -> int:
-    """Print the verdict; exit non-zero when the unreachable set moved."""
+    """Print the verdict; exit non-zero when the unreachable set moved.
+
+    A clean run reports too, on stdout. The intentional dispositions and the
+    deferred clusters are carried debt, and this module's contract is that they
+    remain REPORTED rather than disappearing into the actionable backlog -- but
+    the only path an operator normally sees is the clean one, and it used to
+    print nothing at all. A gate that says nothing when it passes teaches its
+    reader that green means empty, which is exactly what a ratchet over a
+    non-empty accepted set must not teach.
+    """
     verdict = run_gate()
     if verdict.is_clean:
+        sys.stdout.write(verdict.report() + "\n")
         return 0
     sys.stderr.write(verdict.report() + "\n")
     return 1

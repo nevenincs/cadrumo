@@ -394,14 +394,6 @@ application:
         unsupported_filing_year: 'A(z) {filing_year} adóév nincs támogatottként deklarálva.
           A registry a következőket deklarálja: {supported_filing_years}. Vegye fel
           az évet ide: {declaration}, miután megalapozta az előfeltételeit.'
-    errors:
-      import_failed: 'a(z) %{modelo} modell nem importálható: %{detail}'
-      modelo_not_in_registry: a(z) %{modelo} modell nincs jelen a számítási nyilvántartásban
-      period_ejercicio_mismatch: '%{modelo} modell: a(z) %{period} időszak nem kanonizálható
-        a(z) %{ejercicio} évhez'
-      unexpected_ejercicio: '%{modelo} modell: váratlan %{ejercicio} időszak; négyjegyű
-        év szükséges'
-      unknown_severity_threshold: A súlyossági küszöb nem ismert súlyossági szint.
     export:
       errors:
         draft_not_approved: Az exportáláshoz jóváhagyott piszkozat szükséges.

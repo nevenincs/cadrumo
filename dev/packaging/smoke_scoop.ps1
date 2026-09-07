@@ -581,8 +581,9 @@ function Invoke-HostSmoke {
             uninstall_preserved_persistence = $true
             reinstall_preserved_persistence = $true
             tax_evidence = $oracleEvidence.tax_evidence
-            # The manifest is CLI-only; cadrumo-mcp ships in the sibling
-            # cadrumo-harness distribution, which Scoop does not install.
+            # The manifest is CLI-only: its bin block shims aeat alone, so the
+            # cadrumo-mcp console script the same distribution declares is
+            # never exposed for this lane to drive.
             mcp_evidence = $null
         }
     }

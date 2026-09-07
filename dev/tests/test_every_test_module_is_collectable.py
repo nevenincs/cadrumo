@@ -44,6 +44,19 @@ _COLLECTED_TALLY = re.compile(r"(\d+)(?:/\d+)? tests? collected")
 #: magnitude above this, so ordinary churn cannot approach it.
 _MINIMUM_PLAUSIBLE_MODULE_COUNT: Final = 500
 
+#: Per-root floors, because the total above cannot see ONE ROOT leave. It
+#: guards a discovery that finds nothing; a discovery that finds only SOME
+#: roots clears it comfortably. Live, src carries the overwhelming majority
+#: of test modules and dev the rest, so losing src alone leaves dev's few
+#: hundred still above the total floor while the great bulk of the corpus
+#: goes uncollected and unchecked. Keyed independently of discovery: a root
+#: that stops being walked keeps its floor and reds at zero. packaging
+#: carries too few modules to floor meaningfully and deliberately has none.
+_MINIMUM_MODULES_BY_ROOT: Final = {
+    "src": 2280,
+    "dev": 361,
+}
+
 
 def discover_test_roots() -> tuple[Path, ...]:
     """Return every top-level directory that carries a git-tracked test module.
@@ -199,6 +212,22 @@ def test_discovery_finds_the_real_corpus() -> None:
 
     assert roots, "discovered no test roots at all"
     assert this_module in modules, f"discovery cannot see its own module {this_module}"
+
+    walked_by_root: dict[str, int] = dict.fromkeys(_MINIMUM_MODULES_BY_ROOT, 0)
+    for module in modules:
+        head = module.as_posix().split("/")[0]
+        if head in walked_by_root:
+            walked_by_root[head] += 1
+    starved = {
+        root: (walked_by_root[root], floor)
+        for root, floor in _MINIMUM_MODULES_BY_ROOT.items()
+        if walked_by_root[root] < floor
+    }
+    assert not starved, (
+        f"discovery reached these roots below their floor {starved!r}; the total floor "
+        "below cannot see one root leave, and a root nobody discovers has every module "
+        "in it go uncollected without a single error being reported"
+    )
     assert len(modules) >= _MINIMUM_PLAUSIBLE_MODULE_COUNT, (
         f"discovery found only {len(modules)} test modules, below the plausibility floor "
         f"of {_MINIMUM_PLAUSIBLE_MODULE_COUNT} — discovery is probably broken rather than the corpus shrunk"
