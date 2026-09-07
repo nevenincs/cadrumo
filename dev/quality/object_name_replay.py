@@ -17,7 +17,7 @@ from cadrumo.core.fsync import fsync_parent_dir
 from cadrumo.core.hashing import canonical_json_bytes, prefixed_digest, sha256_file
 from cadrumo.core.link_safety import is_link_like
 
-from ..audit.object_names import ObjectNameAuditResult, scan
+from ..audit.object_names import ObjectNameAuditResult, scan, to_json
 from .object_name_graph import OperationComponent, ReferenceKind
 from .object_name_manifest import ObjectNameGateCommand, ObjectNameRenameManifest, object_name_manifest_digest
 from .object_name_rehearsal import (
@@ -433,6 +433,9 @@ def replay_object_name_component(
     root = raw_root.resolve()
     if not (root / ".git").exists() or not (root / "src").is_dir() or not (root / "dev").is_dir():
         raise ObjectNameReplayError(f"live replay root is not a repository worktree: {root}")
+    current_inventory = scan((root / "src", root / "dev"), root)
+    if to_json(current_inventory)["inventory_digest"] != to_json(inventory)["inventory_digest"]:
+        raise ObjectNameReplayError("supplied current inventory differs from the fresh replay scan")
     if receipt.manifest_digest != object_name_manifest_digest(manifest):
         raise ObjectNameReplayError("receipt manifest digest differs from the supplied manifest")
     if (receipt.component_id, receipt.operation_ids) != (component.component_id, component.operation_ids):
@@ -447,7 +450,12 @@ def replay_object_name_component(
         raise ObjectNameReplayError("live transformation input bytes differ from the receipt")
 
     try:
-        exact = rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=root)
+        exact = rehearse_object_name_component(
+            manifest,
+            inventory=current_inventory,
+            component=component,
+            repo_root=root,
+        )
     except ObjectNameRehearsalError as exc:
         raise ObjectNameReplayError(f"exact preflight rehearsal refused replay: {exc}") from exc
     if (
@@ -591,7 +599,7 @@ def replay_object_name_component(
             root=root, expected=receipt.gate_outcomes, guarded_paths=frozenset(snapshot_paths)
         )
         after_inventory = scan((root / "src", root / "dev"), root)
-        if _finding_delta(inventory, after_inventory) != receipt.finding_delta:
+        if _finding_delta(current_inventory, after_inventory) != receipt.finding_delta:
             raise ObjectNameReplayError("post-apply object-name finding delta differs from the receipt")
         after_files = _snapshot(root, snapshot_paths)
         actual_changed = tuple(
