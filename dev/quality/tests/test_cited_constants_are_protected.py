@@ -48,9 +48,16 @@ def _comment_block_above(lines: list[str], lineno: int) -> str:
     return "\n".join(block)
 
 
-def _cited_constants() -> dict[str, str]:
-    """Return every module-level constant whose comment cites a provision."""
+def _cited_constants() -> tuple[dict[str, str], tuple[str, ...]]:
+    """Return the cited constants, and the modules this walk could not read.
+
+    The unread half is returned rather than dropped because these modules are
+    the SUBJECTS of the gate below, not its evidence. A module skipped here
+    contributes no constants, so a provision cited inside it is never checked
+    and the gate reports clean over ground it never walked. The population
+    floor cannot see that: it is satisfied by whatever survived."""
     found: dict[str, str] = {}
+    unread: list[str] = []
     for path in sorted(_PACKAGE_ROOT.rglob("*.py")):
         if "__pycache__" in path.parts or "tests" in path.parts:
             continue
@@ -58,6 +65,7 @@ def _cited_constants() -> dict[str, str]:
             text = path.read_text(encoding="utf-8")
             tree = ast.parse(text)
         except (OSError, SyntaxError, UnicodeDecodeError):
+            unread.append(path.relative_to(_PACKAGE_ROOT).as_posix())
             continue
         lines = text.splitlines()
         for node in tree.body:
@@ -70,7 +78,7 @@ def _cited_constants() -> dict[str, str]:
                 continue
             if _CITATION.search(_comment_block_above(lines, node.lineno)):
                 found[target.id] = path.relative_to(REPO_ROOT).as_posix()
-    return found
+    return found, tuple(unread)
 
 
 def _shipped_sources() -> list[str]:
@@ -107,16 +115,19 @@ def _adjudicated_names() -> set[str]:
 
 def test_the_scan_finds_cited_constants() -> None:
     """A scan finding none would make the assertion below vacuous."""
-    assert len(_cited_constants()) > 20
+    constants, _unread = _cited_constants()
+
+    assert len(constants) > 20
 
 
 def test_every_unused_cited_constant_is_adjudicated_by_name() -> None:
     """The direction the gate exists for: provenance standing unprotected."""
     adjudicated = _adjudicated_names()
     corpus = _shipped_sources()
+    constants, unread = _cited_constants()
     unprotected = sorted(
         f"{name} ({path})"
-        for name, path in _cited_constants().items()
+        for name, path in constants.items()
         if _production_uses(name, corpus) <= 1 and name not in adjudicated
     )
     assert not unprotected, (
@@ -124,6 +135,10 @@ def test_every_unused_cited_constant_is_adjudicated_by_name() -> None:
         "either an unenforced rule or captured research; name it in "
         "dev/audit/reachability_classification.toml rather than leaving it an "
         f"anonymous deletion candidate: {unprotected}"
+    )
+    assert not unread, (
+        "this gate could not read these shipped modules, so a provision cited "
+        f"inside one of them was never checked: {list(unread)}"
     )
 
 
