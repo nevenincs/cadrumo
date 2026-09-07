@@ -1103,7 +1103,7 @@ def test_profile_authority_has_no_legacy_tree_or_layout_oracle() -> None:
         for node in ast.walk(module)
         if isinstance(node, ast.ImportFrom) and node.level and node.module is not None
     }
-    assert local_imports == {"_record_design_ir", "_semantic_map_join"}
+    assert local_imports == {"_pydantic_error_detail", "_record_design_ir", "_semantic_map_join"}
     source_loader = next(
         node
         for node in module.body

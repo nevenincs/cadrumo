@@ -557,6 +557,7 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
             "ExportDraftAttribute",
         },
         "cadrumo.domain.calculations.registry.ids": {"ModeloId", "SourceRefId"},
+        "_pydantic_error_detail": {"validation_error_detail"},
         "_semantic_map": {"VariableEnvelopeSemantic", "SemanticMap", "SemanticMapEntry", "SemanticMapRecord"},
     }
     assert direct_imports == {("re", None)}
