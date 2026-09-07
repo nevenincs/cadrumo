@@ -32,7 +32,7 @@ from .producer_snapshot import (
 
 
 @dataclass(frozen=True)
-class SelectedAccountLexicalSet:
+class SelectedAccountLexicals:
     """Rendered lexical values for one selected bank account."""
 
     iban: str | None = None
@@ -44,7 +44,7 @@ class SelectedAccountLexicalSet:
 
 
 @dataclass(frozen=True)
-class M303ProfileLexicalSet:
+class M303ProfileLexicals:
     """Rendered lexical values for a Modelo 303 profile's enrolment facts."""
 
     redeme_enrolled: str | None = None
@@ -57,7 +57,7 @@ class M303ProfileLexicalSet:
 
 
 @dataclass(frozen=True)
-class M303FilingLexicalSet:
+class M303FilingLexicals:
     """Rendered lexical values for a Modelo 303 filing's period-specific facts."""
 
     joint_return_elected: str | None = None
@@ -73,7 +73,7 @@ class M303FilingLexicalSet:
 
 
 @dataclass(frozen=True)
-class M303ForalLexicalSet:
+class M303ForalLexicals:
     """Rendered lexical values for a Modelo 303 foral prorrata election."""
 
     prorrata_special_option: str | None
@@ -1042,11 +1042,11 @@ def m303_rectificativa_motive_producer_values(
     }
 
 
-def selected_account_lexicals(snapshot: FilingProducerSnapshot) -> SelectedAccountLexicalSet:
+def selected_account_lexicals(snapshot: FilingProducerSnapshot) -> SelectedAccountLexicals:
     """Project the snapshot's selected refund or charge account into its rendered lexicals."""
     selected = snapshot.selected_account
     if isinstance(selected, RefundAccountSelection):
-        return SelectedAccountLexicalSet(
+        return SelectedAccountLexicals(
             iban=selected.account.iban,
             swift_bic=selected.account.swift_bic,
             bank_name=selected.account.bank_name,
@@ -1055,17 +1055,17 @@ def selected_account_lexicals(snapshot: FilingProducerSnapshot) -> SelectedAccou
             bank_country_code=selected.account.bank_country_code,
         )
     if isinstance(selected, ChargeAccountSelection):
-        return SelectedAccountLexicalSet(iban=selected.account.iban)
-    return SelectedAccountLexicalSet()
+        return SelectedAccountLexicals(iban=selected.account.iban)
+    return SelectedAccountLexicals()
 
 
 def m303_profile_lexicals(
     iva_profile: ModeloIVAProfile | None,
     m303_facts: M303FilingFacts | None,
-) -> M303ProfileLexicalSet:
+) -> M303ProfileLexicals:
     """Project the Modelo 303 IVA profile and filing facts into rendered lexicals."""
     if iva_profile is None:
-        return M303ProfileLexicalSet()
+        return M303ProfileLexicals()
     period = m303_facts.period if m303_facts is not None else None
     a30 = (
         yes_no(iva_profile.hydrocarbon_deposit_advance_payment_deduction_entitled)
@@ -1074,7 +1074,7 @@ def m303_profile_lexicals(
         if period is not None
         else None
     )
-    return M303ProfileLexicalSet(
+    return M303ProfileLexicals(
         redeme_enrolled=yes_no(iva_profile.redeme_enrolled),
         exclusively_foral="1" if iva_profile.tax_territory is M303TaxTerritory.FORAL else "2",
         regime_composition_code={
@@ -1089,14 +1089,14 @@ def m303_profile_lexicals(
     )
 
 
-def m303_filing_lexicals(m303_facts: M303FilingFacts | None) -> M303FilingLexicalSet:
+def m303_filing_lexicals(m303_facts: M303FilingFacts | None) -> M303FilingLexicals:
     """Project the Modelo 303 filing facts into their rendered period-specific lexicals."""
     if m303_facts is None:
-        return M303FilingLexicalSet()
+        return M303FilingLexicals()
     transition = m303_facts.prorrata_transition
     insolvency = m303_facts.insolvency
     transition_applicable = transition.is_applicable
-    return M303FilingLexicalSet(
+    return M303FilingLexicals(
         joint_return_elected=yes_no(m303_facts.joint_return_elected),
         annual_volume_nonzero="1" if m303_facts.annual_volume_nonzero else None,
         recipient_of_cash_accounting_operations=yes_no(
@@ -1129,10 +1129,10 @@ def m303_filing_lexicals(m303_facts: M303FilingFacts | None) -> M303FilingLexica
     )
 
 
-def m303_foral_lexicals(m303_filing: M303FilingLexicalSet) -> M303ForalLexicalSet:
+def m303_foral_lexicals(m303_filing: M303FilingLexicals) -> M303ForalLexicals:
     """Project the Modelo 303 filing lexicals into the foral prorrata election lexicals."""
     value = "2" if m303_filing.prorrata_transition_applicable else None
-    return M303ForalLexicalSet(prorrata_special_option=value, prorrata_special_revocation=value)
+    return M303ForalLexicals(prorrata_special_option=value, prorrata_special_revocation=value)
 
 
 def yes_no(value: bool) -> str:
@@ -1144,10 +1144,10 @@ def m303_a30_entitlement_applicable(period: Period) -> bool:
 
 
 __all__ = [
-    "M303FilingLexicalSet",
-    "M303ForalLexicalSet",
-    "M303ProfileLexicalSet",
-    "SelectedAccountLexicalSet",
+    "M303FilingLexicals",
+    "M303ForalLexicals",
+    "M303ProfileLexicals",
+    "SelectedAccountLexicals",
     "filing_producer_values",
     "m303_filing_lexicals",
     "m303_foral_lexicals",
