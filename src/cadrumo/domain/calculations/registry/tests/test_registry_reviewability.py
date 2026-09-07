@@ -84,8 +84,22 @@ class _TomlSize:
 
 
 def _toml_sizes() -> list[_TomlSize]:
+    """Measure every shipped registry TOML, refusing an empty walk.
+
+    Measured: with `_REGISTRY_ROOT` pointed at a directory that does not exist
+    this returned 0 files silently, against 19,700 in the healthy tree, so the
+    reviewability limits held over nothing -- a declaration too long or too
+    wide to review would pass unseen.
+    """
+    scanned = scan_directory(_REGISTRY_ROOT, pattern="*.toml", recursive=True, require_root=True)
+    if not scanned:
+        message = (
+            f"the reviewability walk reached no registry TOML under {_REGISTRY_ROOT}; "
+            "a walk matching nothing cannot find an unreviewable declaration"
+        )
+        raise AssertionError(message)
     sizes: list[_TomlSize] = []
-    for path in scan_directory(_REGISTRY_ROOT, pattern="*.toml", recursive=True):
+    for path in scanned:
         lines = path.read_text(encoding="utf-8").splitlines()
         sizes.append(
             _TomlSize(
