@@ -251,7 +251,7 @@ live_cross_references = [
     "modelo-390-static-documentation",
     "modelo-390-filed-declarations-read",
 ]
-export_layouts = ["modelo-390-2022-fichero-boe"]
+export_layouts = ["generated-modelo-390-2022-fichero"]
 application_links = [
     "modelo-390-portal",
     "modelo-390-filing",

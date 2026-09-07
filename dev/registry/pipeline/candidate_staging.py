@@ -17,11 +17,14 @@ from typing import Final, Literal
 
 import rtoml
 
+from cadrumo.domain.calculations.registry.loader import load_modelo_directory
+
 __all__ = [
     "GeneratedExportBootstrapTarget",
     "generated_export_bootstrap_target",
     "ignore_export_authority_directories",
     "retarget_bootstrap_construct_export_layout",
+    "stage_continuity_metadata",
     "stage_generated_export_candidate",
     "stage_supplementary_orden_authority",
 ]
@@ -104,6 +107,52 @@ def stage_supplementary_orden_authority(
     """Copy supplementary Orden authority required by the staged modelo closure."""
     if "303" in modelos:
         shutil.copytree(source_root / "m303_orden_anual", candidate_root / "m303_orden_anual")
+
+
+def stage_continuity_metadata(
+    source_modelo_root: Path,
+    staging_root: Path,
+    *,
+    revision: str,
+) -> Path | None:
+    """Stage the transitive predecessor facts required by strict continuity."""
+    definition = load_modelo_directory(source_modelo_root)
+    selected = definition.revisions.get(revision)
+    if selected is None:
+        raise ValueError(f"modelo {definition.id} declares no revision {revision!r}")
+
+    pending = {str(item.from_revision) for item in selected.casilla_continuidad_evolutions}
+    predecessors: set[str] = set()
+    while pending:
+        predecessor_id = min(pending)
+        pending.remove(predecessor_id)
+        if predecessor_id == revision:
+            raise ValueError(f"revision {revision!r} continuity predecessor chain is cyclic")
+        if predecessor_id in predecessors:
+            continue
+        predecessor = definition.revisions.get(predecessor_id)
+        if predecessor is None:
+            raise ValueError(
+                f"revision {revision!r} continuity predecessor {predecessor_id!r} is not declared",
+            )
+        predecessors.add(predecessor_id)
+        pending.update(str(item.from_revision) for item in predecessor.casilla_continuidad_evolutions)
+
+    if not predecessors:
+        return None
+    metadata_modelo_root = staging_root / "continuity-metadata" / str(definition.id)
+    metadata_modelo_root.mkdir(parents=True)
+    shutil.copy2(source_modelo_root / "manifest.toml", metadata_modelo_root / "manifest.toml")
+    for predecessor_id in sorted(predecessors):
+        source_revision_root = source_modelo_root / "revisions" / predecessor_id
+        target_revision_root = metadata_modelo_root / "revisions" / predecessor_id
+        target_revision_root.mkdir(parents=True)
+        shutil.copy2(source_revision_root / "revision.toml", target_revision_root / "revision.toml")
+        for member in ("casillas", "casilla_continuidad_evolutions"):
+            source_member = source_revision_root / member
+            if source_member.is_dir():
+                shutil.copytree(source_member, target_revision_root / member)
+    return metadata_modelo_root
 
 
 def stage_generated_export_candidate(

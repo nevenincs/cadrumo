@@ -1,0 +1,720 @@
+[[revisions.2024.export_layouts]]
+id = 'generated-modelo-390-2024-fichero'
+
+[[revisions.2024.export_layouts.records]]
+id = 'modelo-390-page-05'
+record_type = 'page_05'
+order = 5
+encoding = 'iso-8859-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-05-864-operaciones-reg-simplificado-act-agricolas-y-ganader'
+offset = 864
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.864-880.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-cuota-derivada-regimen-simplif'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-05-881-operaciones-reg-simplificado-act-agricolas-y-ganader'
+offset = 881
+length = 2
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.881-882.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-codigo'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-05-883-operaciones-reg-simplificado-act-agricolas-y-ganader'
+offset = 883
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.883-899.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-volumen-ingresos'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-05-900-operaciones-reg-simplificado-act-agricolas-y-ganader'
+offset = 900
+length = 6
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.900-905.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-indice-cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 5
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-05-906-operaciones-reg-simplificado-act-agricolas-y-ganader'
+offset = 906
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.906-922.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-cuota-devengada'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-05-923-operaciones-reg-simplificado-act-agricolas-y-ganader'
+offset = 923
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.923-939.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-cuota-soportada'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-05-940-operaciones-reg-simplificado-act-agricolas-y-ganader'
+offset = 940
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.940-956.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-cuota-derivada-regimen-simplif'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-05-957-operaciones-reg-simplificado-act-agricolas-y-ganader'
+offset = 957
+length = 2
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.957-958.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-codigo'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-05-959-operaciones-reg-simplificado-act-agricolas-y-ganader'
+offset = 959
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.959-975.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-volumen-ingresos'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-05-976-operaciones-reg-simplificado-act-agricolas-y-ganader'
+offset = 976
+length = 6
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.976-981.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-indice-cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 5
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-05-982-operaciones-reg-simplificado-act-agricolas-y-ganader'
+offset = 982
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.982-998.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-cuota-devengada'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-05-999-operaciones-reg-simplificado-act-agricolas-y-ganader'
+offset = 999
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.999-1015.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-cuota-soportada'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-05-1016-operaciones-reg-simplificado-act-agricolas-y-ganader'
+offset = 1016
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.1016-1032.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-cuota-derivada-regimen-simpl'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-05-1033-operaciones-reg-simplificado-iva-devengado-suma-cuot'
+offset = 1033
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.1033-1049.operaciones-reg-simplificado-iva-devengado-suma-cuotas-actividades-no-agric-ganad-y-forest'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-05-1050-operaciones-reg-simplificado-iva-devengado-suma-cuot'
+offset = 1050
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.1050-1066.operaciones-reg-simplificado-iva-devengado-suma-cuotas-actividades-agric-ganad-y-forest'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-05-1067-operaciones-reg-simplificado-iva-devengado-en-adquis'
+offset = 1067
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.1067-1083.operaciones-reg-simplificado-iva-devengado-en-adquisiciones-intracomunitarias'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-05-1084-operaciones-reg-simplificado-iva-devengado-iva-deven'
+offset = 1084
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.1084-1100.operaciones-reg-simplificado-iva-devengado-iva-devengado-por-inversion-del-sujeto-pasivo'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-05-1101-operaciones-reg-simplificado-iva-devengado-iva-deven'
+offset = 1101
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.1101-1117.operaciones-reg-simplificado-iva-devengado-iva-devengado-en-entregas-de-activos-fijos'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-05-casilla-simplificado-total'
+offset = 1118
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.reconciliacion.devengada-simplificado-303'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-05-1135-operaciones-reg-simplificado-deducciones-iva-soporta'
+offset = 1135
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.1135-1151.operaciones-reg-simplificado-deducciones-iva-soportado-en-adquisicion-de-activos-fijos'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-05-1152-operaciones-reg-simplificado-deducciones-regularizac'
+offset = 1152
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.1152-1168.operaciones-reg-simplificado-deducciones-regularizacion-de-bienes-de-inversion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-05-1169-operaciones-reg-simplificado-deducciones-suma-de-ded'
+offset = 1169
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.1169-1185.operaciones-reg-simplificado-deducciones-suma-de-deducciones'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-05-1186-operaciones-reg-simplificado-resultado-regimen-simpl'
+offset = 1186
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.1186-1202.operaciones-reg-simplificado-resultado-regimen-simplificado'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-05-1203-operaciones-reg-simplificado-actividad-1-epigrafe-ia'
+offset = 1203
+length = 1
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.1203-1203.operaciones-reg-simplificado-actividad-1-epigrafe-iae-indicador-auxiliar-de-actividad-en-el-cas'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-05-1204-operaciones-reg-simplificado-actividad-2-epigrafe-ia'
+offset = 1204
+length = 1
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.1204-1204.operaciones-reg-simplificado-actividad-2-epigrafe-iae-indicador-auxiliar-de-actividad-en-el-cas'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-5-1205-operaciones-reg-simplificado-actividad-1-reduccion-aplicable-por-actividad-realizada-en-municipios-afectados-por-la-dana'
+offset = 1205
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.1205-1221.operaciones-reg-simplificado-actividad-1-reduccion-aplicable-por-actividad-realizada-en-municip'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-5-1222-operaciones-reg-simplificado-actividad-1-reducciones-total'
+offset = 1222
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.1222-1238.operaciones-reg-simplificado-actividad-1-reducciones-total'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-5-1239-operaciones-reg-simplificado-actividad-2-reduccion-aplicable-por-actividad-realizada-en-municipios-afectados-por-la-dana'
+offset = 1239
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.1239-1255.operaciones-reg-simplificado-actividad-2-reduccion-aplicable-por-actividad-realizada-en-municip'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-5-1256-operaciones-reg-simplificado-actividad-2-reducciones-total'
+offset = 1256
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.1256-1272.operaciones-reg-simplificado-actividad-2-reducciones-total'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-5-1273-operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-reduccion-aplicable-por-1273'
+offset = 1273
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.1273-1289.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-reduccion-aplicable-por-1273'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-5-1290-operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-reduccion-aplicable-por-1290'
+offset = 1290
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.1290-1306.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-reduccion-aplicable-por-1290'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-5-1307-operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-reduccion-aplicable-por-1307'
+offset = 1307
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.1307-1323.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-reduccion-aplicable-por-1307'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-5-1324-operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-reduccion-aplicable-por-1324'
+offset = 1324
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.1324-1340.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-reduccion-aplicable-por-1324'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-5-1341-operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-reduccion-aplicable-por-1341'
+offset = 1341
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2024.page_5.1341-1357.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-reduccion-aplicable-por-1341'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-05-reserved-1358'
+offset = 1358
+length = 150
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-05-close'
+offset = 1508
+length = 12
+kind = 'literal'
+literal = '</T39005000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-eha-3111-2009:art-1']
+source_refs = ['aeat-dr-390-2024']
+
+[revisions.2024.export_layouts.records.row_field_casilla_ids]

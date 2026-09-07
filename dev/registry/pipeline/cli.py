@@ -36,6 +36,7 @@ from ._tree_validation import GeneratedExportTreeValidationContext, validate_gen
 from .candidate_staging import (
     GeneratedExportBootstrapTarget,
     generated_export_bootstrap_target,
+    stage_continuity_metadata,
     stage_generated_export_candidate,
 )
 from .render_check import GeneratedExportBootstrapTransport, RevisionRenderInputs, revision_render_inputs
@@ -138,9 +139,9 @@ def _prepare(invocation: _Invocation, root: Path) -> _PreparedInvocation:
         filing_year=invocation.filing_year,
         period=invocation.period,
         supporting_modelos=_supporting_modelos(invocation.modelo),
-        continuity_metadata_modelo_root=_stage_continuity_metadata(
+        continuity_metadata_modelo_root=stage_continuity_metadata(
+            target_root / "modelos" / invocation.modelo,
             root,
-            modelo=invocation.modelo,
             revision=invocation.revision,
         ),
     )
@@ -165,30 +166,6 @@ def _supporting_modelos(modelo: str) -> frozenset[str]:
         for match in _SOURCE_MODELO_RE.finditer(path.read_text(encoding="utf-8"))
     }
     return frozenset(item for item in referenced - {modelo} if (modelos_root / item).is_dir())
-
-
-def _stage_continuity_metadata(root: Path, *, modelo: str, revision: str) -> Path | None:
-    """Stage only predecessor facts needed by the strict-continuity validator."""
-    source_modelo_root = bundled_path("registry", "aeat", "modelos", modelo)
-    definition = bundled_authority().modelo(modelo)
-    selected = definition.revisions.get(revision)
-    if selected is None:
-        raise ValueError(f"modelo {modelo} declares no revision {revision!r}")
-    predecessors = sorted({str(item.from_revision) for item in selected.casilla_continuidad_evolutions})
-    if not predecessors:
-        return None
-    staged_root = root / "continuity-metadata" / modelo
-    staged_root.mkdir(parents=True)
-    shutil.copy2(source_modelo_root / "manifest.toml", staged_root / "manifest.toml")
-    for predecessor in predecessors:
-        source_revision = source_modelo_root / "revisions" / predecessor
-        staged_revision = staged_root / "revisions" / predecessor
-        staged_revision.mkdir(parents=True)
-        shutil.copy2(source_revision / "revision.toml", staged_revision / "revision.toml")
-        for member in ("casillas", "casilla_continuidad_evolutions"):
-            if (source_revision / member).is_dir():
-                shutil.copytree(source_revision / member, staged_revision / member)
-    return staged_root
 
 
 def _stage_published_modelo(root: Path, *, modelo: str, revision: str) -> Path | None:
