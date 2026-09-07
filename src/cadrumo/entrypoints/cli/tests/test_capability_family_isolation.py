@@ -38,9 +38,9 @@ import pytest
 from pydantic import TypeAdapter
 
 from ....tests.cli_performance import IMPORT_FAMILY_PREFIXES
-from .. import command_graph
 from .._command_schema import CommandCapabilityClass
 from ..command_spec import Capability
+from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -108,7 +108,7 @@ _PROBE = textwrap.dedent(
 def _groups() -> dict[frozenset[Capability], list[list[str]]]:
     """Partition every live node by its exact capability declaration."""
     groups: dict[frozenset[Capability], list[list[str]]] = {}
-    for node in command_graph.nodes():
+    for node in COMMAND_GRAPH.nodes():
         groups.setdefault(frozenset(node.spec.policy.capabilities), []).append(list(node.path[1:]))
     return groups
 
@@ -157,7 +157,7 @@ def test_the_declarations_still_partition_every_live_node() -> None:
     """
     covered = sum(len(paths) for paths in _GROUPS.values())
 
-    assert covered == len(command_graph.nodes()), f"groups cover {covered} of {len(command_graph.nodes())} nodes"
+    assert covered == len(COMMAND_GRAPH.nodes()), f"groups cover {covered} of {len(COMMAND_GRAPH.nodes())} nodes"
     assert len(_GROUPS) >= 20, f"only {len(_GROUPS)} distinct declarations; the taxonomy may have collapsed"
 
 

@@ -83,7 +83,6 @@ CommandExecutionPolicy = _CommandExecutionPolicy
 
 app = _build_command_app(_COMMAND_GRAPH)
 _decorate_typer_app(app)
-command_graph = _COMMAND_GRAPH
 
 
 def full_command_tree() -> _TyCommand:
@@ -278,7 +277,6 @@ __all__ = [
     "CommandExecutionPolicy",
     "app",
     "command_execution_policy_for_cli_path",
-    "command_graph",
     "current_operator_surface_reconciliation",
     "main",
     "resolve_cli_precondition_action",

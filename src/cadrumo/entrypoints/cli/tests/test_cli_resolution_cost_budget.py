@@ -34,7 +34,7 @@ import textwrap
 
 import pytest
 
-from .. import command_graph
+from ..command_specs import COMMAND_GRAPH
 from .test_resolution_defers_capabilities import _RESOLUTION_LOADERS
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -99,7 +99,7 @@ def _budgeted_nodes() -> list[tuple[str, str]]:
     """
     return [
         ("/".join(node.path[1:]), node.spec.policy.performance)
-        for node in command_graph.nodes()
+        for node in COMMAND_GRAPH.nodes()
         # The graph ROOT has an empty path: it is the executable itself, not a
         # command anyone resolves, and an empty token is not addressable.
         if node.path[1:] and "/".join(node.path[1:]) not in _RESOLUTION_LOADERS
@@ -114,7 +114,7 @@ def bootstrap_floor() -> int:
 
 def test_every_performance_class_has_a_budget() -> None:
     """FIXTURE ANCHOR: an unbudgeted class would pass by having no rule."""
-    declared = {node.spec.policy.performance for node in command_graph.nodes()}
+    declared = {node.spec.policy.performance for node in COMMAND_GRAPH.nodes()}
     unbudgeted = sorted(declared - set(_CLASS_EXCESS_BUDGET))
 
     assert unbudgeted == [], f"these performance classes have no budget: {unbudgeted}"

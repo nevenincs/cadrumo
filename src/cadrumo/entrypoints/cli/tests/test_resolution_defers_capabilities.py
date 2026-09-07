@@ -28,7 +28,7 @@ from __future__ import annotations
 
 import pytest
 
-from .. import command_graph
+from ..command_specs import COMMAND_GRAPH
 from .test_capability_family_isolation import _loaded_families
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -58,7 +58,7 @@ _RESOLUTION_LOADERS: dict[str, str] = {
 
 
 def _all_paths() -> list[list[str]]:
-    return [list(node.path[1:]) for node in command_graph.nodes()]
+    return [list(node.path[1:]) for node in COMMAND_GRAPH.nodes()]
 
 
 def _deferring_paths() -> list[list[str]]:

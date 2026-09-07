@@ -16,7 +16,6 @@ from pydantic import ValidationError
 
 from ....application.export.tabular import ExportSerializationFormat
 from ....application.ledger.models import LedgerExportResult, LedgerExportRow
-from ....core.operator_action_enums import OperatorActionAxis
 from ....domain.categories.proportionality import ProportionalityKind
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.transactions.enums import BusinessClassification
@@ -101,6 +100,12 @@ def test_readiness_issue_payloads_keep_the_domain_detail_requirement() -> None:
     # reaching the requirement it is named for. The action axis is a
     # cross-period blocker concern and lives nowhere on a ledger issue.
     readiness = dict(shared)
+
+    # Stated, not assumed. The two are separate classes in separate
+    # modules, so nothing but this stops one gaining a field the other
+    # lacks -- which is exactly how the stale note above came to describe
+    # a shape that had never existed on either.
+    assert set(LedgerIssuePayload.model_fields) == set(LedgerPreflightIssuePayload.model_fields)
 
     assert LedgerPreflightIssuePayload.model_validate(shared).detail == "category required"
     assert LedgerIssuePayload.model_validate(readiness).detail == "category required"

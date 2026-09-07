@@ -33,8 +33,8 @@ import pytest
 from pydantic import TypeAdapter
 
 from ....tests.cli_performance import is_non_authoritative_artifact
-from .. import command_graph
 from ..command_spec import CommandSpec
+from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -95,7 +95,7 @@ def _has_only_optional_parameters(spec: CommandSpec) -> bool:
 def _side_effect_free_leaves() -> list[tuple[str, ...]]:
     return [
         node.path[1:]
-        for node in command_graph.nodes()
+        for node in COMMAND_GRAPH.nodes()
         if node.spec.kind == "leaf"
         and node.spec.policy.side_effects == frozenset({"none"})
         and _has_only_optional_parameters(node.spec)
