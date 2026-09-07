@@ -15,7 +15,7 @@ related:
   - '[[2026-09-07-quality-gate-zero-closure-blind-green-measurement-research]]'
   - '[[2026-09-07-quality-gate-zero-closure-gate-consumer-parser-blindness-audit]]'
 modified: '2026-09-07'
-body_hash: 'sha256:016d14cd04d4875448bc7cd1a3634e6fbc0c7794e59c4aad3ae539ad58d0c36b'
+body_hash: 'sha256:275ae722f3988c46f6c7bf0d0a852f8ea2edb27ed01d70ed3bf211a565f52048'
 ---
 
 <!-- RETIRED: W01, W02, W03, W04, W05, W06, P01, P02, P03, P04, P05, P06, P07, P08, P09, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P21, P22, S01, S02, S03, S04, S05, S06, S07, S08, S09, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19, S20, S21, S22, S23, S24, S25, S26, S27, S28, S29, S30, S31, S32, S33, S34, S35, S36, S37, S38, S39, S40, S41, S42, S43, S44, S45, S46, S47, S48, S49, S50, S51, S52, S53, S54, S55, S56, S57, S58, S59, S60, S61, S62, S63, S64, S65, S66, S67, S68, S69, S70, S71, S72, S73, S74, S75, S76, S77, S78, S79, S80, S81, S82, S83, S84, S85, S86, S87, S88, S89, S90, S91, S92, S95, S96, S97, S98, S99, S100, S101, S102, S103 -->
@@ -84,7 +84,7 @@ Flipping the ambient locale does not retire the locale-bound classes: it mirrors
 
 The void-assertion audit measured a population and also wrote the rule that closes it: an absence assertion in a module mentioning a taxonomy token either routes through the canonical accessor or carries a declaration naming its own site. Importing the population without the rule is what would leave this open forever, because the count is a floor the instrument cannot bound and the audit demonstrated its own blind spot by missing one of its sites. The population is re-measured only to scope the work; the conformance gate is what closes the class.
 
-- [ ] `W08.P26.S117` - Re-measure the absence-assertion population at the current revision to scope the work, recording the sampling frame and treating the figure as context rather than as a pass condition, since the 2026-08-04 numbers describe a tree that has moved (Luna max audit); `.vault/audit/`.
+- [x] `W08.P26.S117` - Re-measure the absence-assertion population at the current revision to scope the work, recording the sampling frame and treating the figure as context rather than as a pass condition, since the 2026-08-04 numbers describe a tree that has moved (Luna max audit); `.vault/audit/`.
 - [ ] `W08.P26.S118` - Close the class with the mechanism the source audit proposed: an absence assertion in a module mentioning a taxonomy token either routes through the canonical accessor or carries a site-naming declaration, enforced by a conformance gate that fails on both a stale declaration and an undeclared site (Terra xhigh fixes and refactors); `dev/quality/, dev/quality/tests/`.
 
 ### Phase `W08.P28` - verdict-layer blind green
