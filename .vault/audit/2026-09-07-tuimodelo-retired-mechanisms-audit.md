@@ -5,7 +5,7 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:908a1643f0a9de33f00fef8dade64e707e507c014d897d1ec95bbafa63d6aa0e'
+body_hash: 'sha256:4dbbc395b6f4fd0d4864b1609421b861d005635db3a6c296a7bb7b057af0df6f'
 related:
   - "[[2026-09-07-tuimodelo-plan]]"
 ---

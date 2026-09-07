@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:514bedc3b42a1a331b3fd4a3094304d051eac97526a4a6b53b0986479aaecf82'
+body_hash: 'sha256:bd18a676d2431d6f42fe9279a58a51045c51dcbe340976697313dee904b9b0f0'
 related:
   - '[[2026-08-11-tui-architecture-W02-P19-S124]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S128]]'
@@ -377,6 +377,9 @@ related:
   - '[[2026-08-11-tui-architecture-W08-P30-S486]]'
   - '[[2026-08-11-tui-architecture-W08-P30-S487]]'
   - '[[2026-08-11-tui-architecture-W08-P30-S488]]'
+  - '[[2026-08-11-tui-architecture-W08-P30-S489]]'
+  - '[[2026-08-11-tui-architecture-W08-P30-S491]]'
+  - '[[2026-08-11-tui-architecture-W08-P30-S492]]'
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-08-11-tui-architecture-ledger]]'
   - '[[2026-08-11-tui-architecture-plan]]'
@@ -1031,7 +1034,9 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W08-P30-S486` - Re-verify the five named targets that are not the parity prune still hold at current head after the concurrent writers commits, and record that regenerating the export trees would leave a large uncommitted generated diff in a shared worktree which is a second reason to leave that group to its owner
 - `2026-08-11-tui-architecture-W08-P30-S487` - Prepare the parity prune as a reviewable removal manifest without applying it, deriving the one hundred and thirty two keys and a per key verdict from the live authority owning each namespace, and confirm none of them is declared anywhere so the list cannot remove a key the product resolves
 - `2026-08-11-tui-architecture-W08-P30-S488` - Record that the scoop packaging suite returns a different verdict run to run on this host, since one unchanged command produced a pass a timeout an error set and another pass within an hour varying only by machine load, which makes a single red from it unreadable as evidence
-- `2026-09-07-tui-architecture-exec` - W08-P30-S489
+- `2026-08-11-tui-architecture-W08-P30-S489` - Close the codebase to locale parity gate by narrowing the removal manifest against the four authorities the first sweep missed, since the wizard descriptor walk and the identity contract read keys the source scan cannot see, then teach the manager to discover the wizard flow help key it builds by interpolation and retire the google profile option sample whose option the live command specs no longer declare
+- `2026-08-11-tui-architecture-W08-P30-S491` - Guard the twelve custody cases whose own body raises the keychain unavailable error behind the shared credential store probe, pairing each failure to its test through the junit report rather than a traceback dump, and leave the opaque handover assertions and the absent session action key error red because a marker keyed skip over all of them was measured to discard six passing cases
+- `2026-08-11-tui-architecture-W08-P30-S492` - Take the custody keychain lane from thirty three failures to two by diagnosing every case individually against its own locals refusal code or production log rather than the marker, guarding only those the store actually causes so the passing count never moves, and leaving the two that are not the store visible with their failing expressions recorded
 
 ### plan
 
