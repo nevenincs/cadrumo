@@ -472,42 +472,11 @@ def modelo_history(
     period: str | None = None,
 ) -> None:
     """Stream the bucket-event history for one modelo across all lifecycle stages."""
-    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ...domain.buckets.event import BucketEvent, BucketEventType
-
-    def _event_filing_year(payload: dict[str, str]) -> str:
-        return (payload.get("filing_year") or payload.get("year") or "").strip()
-
-    repo = BucketEventHistoryRepository()
-    catalogue = repo.load()
-    modelo_event_types = {
-        BucketEventType.MODELO_CALCULATION_CREATED,
-        BucketEventType.MODELO_VERIFICATION_PASSED,
-        BucketEventType.MODELO_VERIFICATION_REFUSED,
-        BucketEventType.MODELO_EXPORTED,
-        BucketEventType.MODELO_FILED,
-        BucketEventType.MODELO_FILED_SUPERSEDED,
-        BucketEventType.MODELO_AMENDED,
-        BucketEventType.MODELO_FILING_IMPORTED,
-        BucketEventType.MODELO_WORK_UNIT_DISCARDED,
-        BucketEventType.MODELO_AUDIT_VERIFIED,
-        BucketEventType.MODELO_AUDIT_EXPORTED,
-    }
-    matches: list[BucketEvent] = []
-    for event in catalogue.events.values():
-        if event.event_type not in modelo_event_types:
-            continue
-        payload_map = dict(event.payload)
-        if payload_map.get("modelo", "") != modelo:
-            continue
-        if year is not None and _event_filing_year(payload_map) != str(year):
-            continue
-        if period is not None and payload_map.get("period", "") != period:
-            continue
-        matches.append(event)
-    matches.sort(key=lambda e: e.occurred_at)
+    from ...application.modelo.history import assemble_modelo_history
     from ._common import emit_envelope
     from ._modelo_payloads import ModeloHistoryResult, ModeloLifecycleEventPayload
+
+    matches = assemble_modelo_history(modelo, filing_year=year, period=period).events
 
     history_result = ModeloHistoryResult(
         modelo=modelo,

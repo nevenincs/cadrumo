@@ -1,8 +1,17 @@
-"""Per-work-unit chronological history assembly.
+"""Chronological bucket-event history assembly at two subject grains.
 
-Surfaces a unified timeline of every event the operator's work unit
-emitted across its lifecycle: creation, renames, calculations,
-verifications, filings, supersessions, amendments, and discards.
+Surfaces a unified timeline of every event the operator's work emitted across
+its lifecycle: creation, renames, calculations, verifications, filings,
+supersessions, amendments, and discards.
+
+Two subjects are assembled here, and they are genuinely different queries
+rather than one query with a parameter. :func:`assemble_work_unit_history`
+narrows to a single :class:`~WorkUnit` and walks the object-scoped streams that
+belong to it. :func:`assemble_modelo_history` spans every work unit that filed
+one modelo, selecting on the ``modelo`` subject key events carry in their own
+payload. They share this module because they share a substrate, a projection
+row and an ordering; they are not layered on one another, because neither
+narrows to the other.
 
 The catalogue substrate is the bucket-scoped append-only event log loaded from
 :class:`BucketEventHistoryRepository`. Events scoped to a work unit land under
@@ -35,6 +44,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime
 
 from pydantic import BaseModel, Field, ValidationError
@@ -54,6 +64,7 @@ from ...domain.buckets.event import (
     bucket_event_order_key,
 )
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
@@ -244,8 +255,148 @@ def assemble_work_unit_history(
     )
 
 
+_MODELO_HISTORY_TAXONOMY_PREFIX = "MODELO_"
+"""Enum-member prefix naming the declared modelo bucket-event family.
+
+Keyed on the member NAME rather than the value string on purpose. Three
+:class:`BucketEventType` members carry values beginning ``modelo.036.`` while
+belonging to the declared CENSO family, so a value-prefix derivation would
+widen this history into censo territory -- a product decision, not a
+projection detail.
+"""
+
+
+def admitted_modelo_history_event_types() -> frozenset[BucketEventType]:
+    """Return every event type admissible into a per-modelo history, derived from the taxonomy.
+
+    Derived at call time from :class:`cadrumo.domain.buckets.BucketEventType`
+    rather than recorded as a literal set, because a literal one drifts
+    silently. The adapter this policy was lifted from held a hand-written set
+    admitting 11 of the 22 live members, and the drift was not theoretical:
+    ``MODELO_LIVE_EVIDENCE_STAMPED`` and ``MODELO_WORK_UNIT_CREATED`` both
+    carry the ``modelo``, ``filing_year`` and ``period`` payload keys this
+    history filters on and were both dropped, so the operator was shown a work
+    unit being discarded but never created, under a command documented as
+    covering every lifecycle stage. Nothing failed, because a stale literal
+    reports absence exactly as it reports emptiness.
+
+    Admission by type is deliberately broad: it is
+    :func:`assemble_modelo_history`'s SUBJECT filter that selects, and an event
+    carrying no ``modelo`` payload key self-excludes there. That division is
+    what makes a newly declared event type impossible to drop by omission.
+    """
+    return frozenset(
+        event_type for event_type in BucketEventType if event_type.name.startswith(_MODELO_HISTORY_TAXONOMY_PREFIX)
+    )
+
+
+def _event_filing_year(payload: Mapping[str, str]) -> str:
+    """Return the filing year a persisted event payload declares.
+
+    ``year`` is read as a fallback for ``filing_year``. No live emitter writes
+    it -- every module emitting a ``MODELO_*`` event writes ``filing_year`` --
+    but the bucket-event log is append-only and persisted, and the modelo
+    payload schema has already moved a version, so payloads written under the
+    older shape may still be on disk. The version constant records no migration
+    note either way, so the fallback is kept rather than dropped: losing a
+    persisted history row would be invisible to the operator, and an absence
+    that reports as an empty result is the failure this projection exists to
+    avoid.
+    """
+    return (payload.get("filing_year") or payload.get("year") or "").strip()
+
+
+class ModeloHistory(BaseModel):
+    """Chronologically ordered event timeline for one modelo across every work unit.
+
+    The sibling of :class:`WorkUnitHistory` at the other subject grain: that
+    one narrows to a single :class:`~WorkUnit` lifecycle, this one spans every
+    work unit that filed the same modelo, optionally narrowed to one filing
+    year and period.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    modelo: ModeloCode
+    filing_year: int | None = None
+    period: str | None = None
+    events: tuple[WorkUnitHistoryEvent, ...] = Field(default_factory=tuple)
+
+
+def assemble_modelo_history(
+    modelo: str,
+    *,
+    filing_year: int | None = None,
+    period: str | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+) -> ModeloHistory:
+    """Return a :class:`ModeloHistory` covering every bucket event recorded against ``modelo``.
+
+    Serves ``aeat app modelo history``. Admission is the taxonomy-derived set
+    from :func:`admitted_modelo_history_event_types`; selection is the event
+    payload's own ``modelo`` subject key, optionally narrowed by
+    ``filing_year`` and ``period``.
+
+    ``modelo`` is validated into :class:`ModeloCode` before anything is loaded,
+    so a malformed identifier is refused rather than answered with an empty
+    timeline. An empty result then means the modelo has no history, which is a
+    different fact from the identifier never having been able to have one.
+
+    Rows are ordered by :func:`bucket_event_order_key`, the shared total order
+    every other bucket-event view uses. ``occurred_at`` alone does not order
+    these events: emissions inside one operation share an instant by design, so
+    ties would fall through to catalogue mapping order and two readers could
+    render the operator different timelines with nothing invalid anywhere.
+
+    The function never writes to repositories and never contacts AEAT.
+
+    See Also:
+        :func:`assemble_work_unit_history`:
+            The same projection at the single-work-unit subject grain.
+    """
+    subject = ModeloCode(modelo)
+    repository = bucket_event_repository or BucketEventHistoryRepository()
+    admitted = admitted_modelo_history_event_types()
+    wanted_year = None if filing_year is None else str(filing_year)
+
+    collected = []
+    for event in repository.load().events.values():
+        if event.event_type not in admitted:
+            continue
+        payload = dict(event.payload)
+        if payload.get("modelo", "") != subject:
+            continue
+        if wanted_year is not None and _event_filing_year(payload) != wanted_year:
+            continue
+        if period is not None and payload.get("period", "") != period:
+            continue
+        collected.append(event)
+
+    collected.sort(key=bucket_event_order_key)
+    return ModeloHistory(
+        modelo=subject,
+        filing_year=filing_year,
+        period=period,
+        events=tuple(
+            WorkUnitHistoryEvent(
+                event_id=event.event_id,
+                occurred_at=event.occurred_at,
+                event_type=event.event_type,
+                object_type=event.object_type,
+                object_id=event.object_id,
+                actor=event.actor,
+                payload=dict(event.payload),
+            )
+            for event in collected
+        ),
+    )
+
+
 __all__ = [
+    "ModeloHistory",
     "WorkUnitHistory",
     "WorkUnitHistoryEvent",
+    "admitted_modelo_history_event_types",
+    "assemble_modelo_history",
     "assemble_work_unit_history",
 ]
