@@ -13,6 +13,7 @@ per-module size budget; the inventory, raster and coverage checks stay there.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -21,6 +22,7 @@ from PIL import Image
 from ..._paths import UTF_8
 from .._artifacts import (
     Manifest,
+    ManifestVersionError,
     RenderedFrame,
     digest,
     missing_artifacts,
@@ -456,3 +458,71 @@ def test_the_diff_refuses_a_run_whose_manifest_outlives_its_frames(
         diff_command(baseline="baseline", highlight=False)
     assert refusal.value.exit_code == 1
     assert not lost.exists(), "the refusal must not have repaired anything; it reports, it does not write"
+
+
+def _payload_of(tmp_path: Path, manifest: Manifest) -> tuple[Path, dict[str, object]]:
+    """Write ``manifest`` and hand back its path and its decoded payload."""
+    path = write_manifest(tmp_path, manifest)
+    return path, json.loads(path.read_text(encoding=UTF_8))
+
+
+def test_a_manifest_this_tool_wrote_is_read_back(tmp_path: Path) -> None:
+    """The positive half: the shape check must not refuse current output."""
+    manifest = _manifest(frames=(_rendered("status", "small", "dark"),))
+    write_manifest(tmp_path, manifest)
+
+    assert read_manifest(tmp_path) == manifest
+
+
+def test_a_manifest_written_before_a_defaulted_field_existed_is_refused(tmp_path: Path) -> None:
+    """The half a version integer cannot see, and did not see.
+
+    A field added with a default breaks nothing: every test that constructs a
+    manifest keeps passing, every committed run keeps loading, and pydantic
+    supplies the missing value in silence. So nothing makes the author bump
+    :data:`MANIFEST_SCHEMA_VERSION`, and a run written by the older shape is
+    then read as current -- which is precisely what the version exists to
+    prevent. The refusal is what makes the coupling hold without an author
+    remembering it.
+    """
+    path, payload = _payload_of(tmp_path, _manifest())
+    del payload["skipped"]
+    path.write_text(json.dumps(payload), encoding=UTF_8)
+
+    with pytest.raises(ManifestVersionError) as refusal:
+        read_manifest(tmp_path)
+    message = str(refusal.value)
+    assert "skipped" in message, "the refusal must name the field that moved"
+    assert "render" in message, "the refusal must say how to recover"
+
+
+def test_a_frame_written_before_a_defaulted_field_existed_is_refused(tmp_path: Path) -> None:
+    """The same omission one level down: a frame, not the manifest header."""
+    path, payload = _payload_of(tmp_path, _manifest(frames=(_rendered("status", "small", "dark"),)))
+    frames = payload["frames"]
+    assert isinstance(frames, list)
+    del frames[0]["missing_glyphs"]
+    path.write_text(json.dumps(payload), encoding=UTF_8)
+
+    with pytest.raises(ManifestVersionError) as refusal:
+        read_manifest(tmp_path)
+    assert "frames[0]" in str(refusal.value)
+
+
+def test_pydantic_alone_accepts_what_the_shape_check_refuses(tmp_path: Path) -> None:
+    """Anti-tautology: prove the refusal is the new join, not validation.
+
+    If pydantic already rejected these payloads the two tests above would pass
+    against a check that does nothing. It does not: a defaulted field simply
+    gets its default, which is the whole reason the omission was invisible.
+    """
+    _, payload = _payload_of(tmp_path, _manifest(frames=(_rendered("status", "small", "dark"),)))
+    del payload["skipped"]
+    frames = payload["frames"]
+    assert isinstance(frames, list)
+    del frames[0]["missing_glyphs"]
+
+    accepted = Manifest.model_validate(payload)
+
+    assert accepted.skipped == ()
+    assert accepted.frames[0].missing_glyphs == ()

@@ -111,8 +111,21 @@ def test_an_unparseable_module_is_skipped_rather_than_crashing_the_sweep() -> No
 
 def test_no_tautological_assertion_survives_in_the_repository() -> None:
     """The sweep itself. Meaningful only because the teeth above pass."""
-    paths = tuple(path for root in ("src/cadrumo", "dev") for path in (_ROOT / root).rglob("*.py"))
-    assert paths, "the sweep matched no modules at all, so it measured nothing"
+    # Floored per ROOT, not in aggregate and not on mere non-emptiness. A bare
+    # truthiness guard is satisfied by a single file, and either root satisfies
+    # it alone: measured here, ``src/cadrumo`` holds 5928 modules and ``dev``
+    # 1015, so one tree could vanish entirely -- ``rglob`` over a missing
+    # directory yields nothing and raises nothing -- while the sweep still
+    # reported clean over the other. The floors are deliberately far below the
+    # live counts: they exist to catch a collapse, and a tight floor would only
+    # have to be revised every time the tree grows.
+    by_root = {root: tuple((_ROOT / root).rglob("*.py")) for root in ("src/cadrumo", "dev")}
+    starved = {root: len(found) for root, found in by_root.items() if len(found) < 500}
+    assert not starved, (
+        f"the sweep did not reach every declared root, so a tautological assertion in the "
+        f"starved one would not appear below; modules found per root: {starved}"
+    )
+    paths = tuple(path for found in by_root.values() for path in found)
     findings = scan_paths_for_tautological_assertions(paths)
     assert not findings, "assertions decided without their operands:\n" + "\n".join(
         f"  {finding}" for finding in findings

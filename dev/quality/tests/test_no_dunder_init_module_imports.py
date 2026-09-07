@@ -45,7 +45,18 @@ from ..unread_inputs import report_unread
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_ROOTS: Final = ("src", "dev")
+#: Per-ROOT floors, not one aggregate. An aggregate floor cannot see a whole
+#: tree disappear: measured against this repository, ``src`` alone parses 6017
+#: modules and ``dev`` alone 1015, so EITHER root clears a combined floor of a
+#: thousand by itself and the other could vanish -- ``rglob`` on a missing
+#: directory yields nothing and raises nothing -- with the gate still green.
+#: The sibling collectability and newline gates keep per-root floors for this
+#: reason; this one did not, and the lane-visibility screen records the same
+#: loss actually happening when a tests tree moved.
+_MINIMUM_MODULES_BY_ROOT: Final = {
+    "src": 4000,
+    "dev": 700,
+}
 #: A generated baseline copy of the package tree; its contents are not authored here.
 _EXCLUDED_SEGMENT: Final = ".baseline-source-snapshot"
 
@@ -74,12 +85,12 @@ def _dunder_init_imports(tree: ast.AST) -> list[int]:
     return lines
 
 
-def _scan() -> tuple[list[str], int]:
-    """Return offending locations and the number of modules actually parsed."""
+def _scan() -> tuple[list[str], dict[str, int]]:
+    """Return offending locations and the modules actually parsed, per root."""
     offences: list[str] = []
     unparsed: list[str] = []
-    parsed = 0
-    for root in _ROOTS:
+    parsed = dict.fromkeys(_MINIMUM_MODULES_BY_ROOT, 0)
+    for root in _MINIMUM_MODULES_BY_ROOT:
         for path in (REPO_ROOT / root).rglob("*.py"):
             if _EXCLUDED_SEGMENT in path.as_posix():
                 continue
@@ -100,7 +111,7 @@ def _scan() -> tuple[list[str], int]:
                 # it, so it joins this announcement rather than ending the scan.
                 unparsed.append(f"{path} ({refusal})")
                 continue
-            parsed += 1
+            parsed[root] += 1
             offences.extend(f"{path.relative_to(REPO_ROOT).as_posix()}:{line}" for line in _dunder_init_imports(tree))
     report_unread(
         "dunder-init import scan",
@@ -115,7 +126,11 @@ def test_no_module_imports_a_package_through_dunder_init() -> None:
     """DISCRIMINATING: the spelling that executes a package body twice."""
     offences, parsed = _scan()
 
-    assert parsed > 1000, f"the scan reached only {parsed} modules; it is not covering the tree"
+    starved = {r: (parsed[r], f) for r, f in _MINIMUM_MODULES_BY_ROOT.items() if parsed[r] < f}
+    assert not starved, (
+        "the scan did not cover every declared root, so a forbidden import in the starved one "
+        f"would not appear below; (reached, floor) per root: {starved}"
+    )
     assert not offences, (
         "these imports name a submodule `__init__`, which re-executes the package body and "
         "repeats every import-time side effect; write `from <package> import <name>` instead: "

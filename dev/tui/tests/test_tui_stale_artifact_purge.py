@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 
 from .._artifacts import (
+    FRAME_ARTEFACT_KINDS,
     MAX_STALE_FILES_PER_PURGE,
     Manifest,
     RenderedFrame,
@@ -22,6 +23,8 @@ from .._artifacts import (
     purge_stale_artifacts,
     stale_artifacts,
 )
+from .._viewports import DEFAULT_VIEWPORTS
+from ..cli import THEMES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -152,5 +155,33 @@ def test_a_frame_that_vanishes_between_the_listing_and_the_unlink_is_survivable(
 
 
 def test_the_bound_is_one_surface_across_the_full_matrix() -> None:
-    """The number is derived, not chosen: 4 viewports x 2 themes x 3 files."""
-    assert len(_VIEWPORTS) * len(_THEMES) * 3 == MAX_STALE_FILES_PER_PURGE
+    """The number is derived, not chosen -- and derived from the LIVE matrix.
+
+    This assertion used to multiply the copies of the roster restated at the
+    top of this module, so it read as proof of the derivation while measuring
+    nothing but its own arithmetic. Adding a fifth default viewport left it
+    green with the bound still at 24, which is a bound that would refuse an
+    ordinary single-surface sweep. The rosters it names now are the ones the
+    renderer actually walks, so the omitted half of that edit goes red here.
+    """
+    matrix = len(DEFAULT_VIEWPORTS) * len(THEMES) * len(FRAME_ARTEFACT_KINDS)
+
+    assert matrix == MAX_STALE_FILES_PER_PURGE, (
+        f"the sweep bound is one surface's full matrix, now "
+        f"{len(DEFAULT_VIEWPORTS)} viewports x {len(THEMES)} themes x "
+        f"{len(FRAME_ARTEFACT_KINDS)} files = {matrix}, but "
+        f"MAX_STALE_FILES_PER_PURGE is still {MAX_STALE_FILES_PER_PURGE}"
+    )
+
+
+def test_the_local_rosters_still_stand_for_the_live_ones() -> None:
+    """The fixtures above restate the matrix; the restatement must stay true.
+
+    Every purge case here builds its files from ``_VIEWPORTS`` and ``_THEMES``
+    and then compares the sweep against ``MAX_STALE_FILES_PER_PURGE``, a
+    production number. If the live rosters move and these copies do not, the
+    cases keep passing while exercising a matrix the renderer no longer
+    produces -- green over something never measured.
+    """
+    assert _VIEWPORTS == DEFAULT_VIEWPORTS
+    assert _THEMES == THEMES

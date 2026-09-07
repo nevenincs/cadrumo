@@ -44,7 +44,9 @@ def _raised(model: type[BaseModel], payload: object) -> ValidationError:
 def test_field_level_error_names_its_location_and_message() -> None:
     exc = _raised(_FieldModel, {"name": "x", "count": "not-a-number"})
 
-    assert validation_error_detail(exc) == "count: Input should be a valid integer, unable to parse string as an integer"
+    assert (
+        validation_error_detail(exc) == "count: Input should be a valid integer, unable to parse string as an integer"
+    )
 
 
 def test_missing_field_error_names_its_location() -> None:
@@ -67,12 +69,12 @@ def test_model_level_coherence_error_never_carries_a_sibling_fields_value() -> N
     ``input_value=`` dump of the whole model); :func:`validation_error_detail`
     must not.
     """
-    secret = "nif-Z"
-    exc = _raised(_CoherenceModel, {"identity": secret, "flag": False})
+    probe_value = "nif-Z"
+    exc = _raised(_CoherenceModel, {"identity": probe_value, "flag": False})
 
-    assert secret in str(exc), "premise: the raw ValidationError must actually carry the secret"
+    assert probe_value in str(exc), "premise: the raw ValidationError must actually carry the value"
     assert validation_error_detail(exc) == "Value error, flag must be set"
-    assert secret not in validation_error_detail(exc)
+    assert probe_value not in validation_error_detail(exc)
 
 
 def test_detail_never_carries_pydantics_own_added_framing() -> None:

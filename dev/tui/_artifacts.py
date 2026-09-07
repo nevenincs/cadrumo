@@ -55,6 +55,11 @@ MANIFEST_SCHEMA_VERSION: Final[int] = 3
 than upgraded -- see :func:`read_manifest`."""
 INDEX_NAME: Final[str] = "index.md"
 
+FRAME_ARTEFACT_KINDS: Final[tuple[str, ...]] = ("png", "svg", "text")
+"""The three files one rendered frame writes, and the subdirectories holding
+them. Named once because two separate numbers are derived from it: the sweep
+walks these directories, and the purge bound below is a count of them."""
+
 MAX_STALE_FILES_PER_PURGE: Final[int] = 24
 """How many unclaimed files one purge may delete before it refuses.
 
@@ -292,7 +297,7 @@ def stale_artifacts(directory: Path, manifest: Manifest) -> tuple[Path, ...]:
     """
     claimed = {(directory / name).resolve() for frame in manifest.frames for name in (frame.png, frame.svg, frame.text)}
     found: list[Path] = []
-    for kind in ("png", "svg", "text"):
+    for kind in FRAME_ARTEFACT_KINDS:
         sub = directory / kind
         if not sub.is_dir():
             continue
@@ -483,6 +488,56 @@ class StaleArtifactPurgeRefusedError(RuntimeError):
     """
 
 
+_MANIFEST_ENTRY_MODELS: Final[dict[str, type[BaseModel]]] = {
+    "frames": RenderedFrame,
+    "interfaces": InterfaceRecord,
+    "failures": FailedFrame,
+    "skipped": SkippedFrame,
+}
+"""Every collection ``Manifest`` holds, and the model each entry must match."""
+
+
+def _defaulted_fields(model: type[BaseModel]) -> frozenset[str]:
+    """Field names a current manifest carries but pydantic would supply anyway.
+
+    ``model_dump_json`` emits every field, so a manifest this tool wrote
+    declares all of them. A manifest an OLDER shape wrote declares only the
+    fields that shape had, and the two cases part here. Omit a REQUIRED
+    field and validation refuses, loudly, on its own. Omit a field added
+    since with a DEFAULT and pydantic supplies the value in silence -- so
+    nothing breaks, nothing makes the author bump
+    :data:`MANIFEST_SCHEMA_VERSION`, and every stale run on disk then reads
+    as current. That is the one shape change a version integer cannot see,
+    and the only one this walk has to answer for.
+    """
+    return frozenset(name for name, field in model.model_fields.items() if not field.is_required())
+
+
+def _shape_refusal(payload: dict[str, object]) -> str | None:
+    """Why this payload was written by a foreign manifest shape, or ``None``.
+
+    Reports only DEFAULTED fields the payload omits. An unexpected field is
+    already refused by ``extra="forbid"`` on every model here, and a missing
+    required one by validation; both name the offending field, so repeating
+    either check would add nothing.
+    """
+    checks: list[tuple[str, frozenset[str], object]] = [
+        ("manifest", _defaulted_fields(Manifest), payload),
+    ]
+    for field, model in _MANIFEST_ENTRY_MODELS.items():
+        entries = payload.get(field)
+        if isinstance(entries, list):
+            expected = _defaulted_fields(model)
+            checks.extend((f"{field}[{index}]", expected, entry) for index, entry in enumerate(entries))
+    for where, expected, entry in checks:
+        if not isinstance(entry, dict):
+            continue
+        absent = sorted(expected - set(entry))
+        if absent:
+            return f"{where} declares no {', '.join(absent)}"
+    return None
+
+
 def read_manifest(directory: Path) -> Manifest:
     """Load the manifest a previous run wrote into ``directory``.
 
@@ -503,6 +558,16 @@ def read_manifest(directory: Path) -> Manifest:
         message = (
             f"run {directory.name!r} carries manifest schema {found!r}, "
             f"but this tool writes {MANIFEST_SCHEMA_VERSION}. "
+            f"Review runs are disposable: re-render it with "
+            f"`python -m dev.tui render --run {directory.name}`."
+        )
+        raise ManifestVersionError(message)
+
+    foreign = _shape_refusal(payload)
+    if foreign is not None:
+        message = (
+            f"run {directory.name!r} carries manifest schema {MANIFEST_SCHEMA_VERSION}, "
+            f"but was written by a different shape of it: {foreign}. "
             f"Review runs are disposable: re-render it with "
             f"`python -m dev.tui render --run {directory.name}`."
         )
@@ -584,6 +649,7 @@ def write_index(directory: Path, manifest: Manifest) -> Path:
 
 __all__ = [
     "DEFAULT_RUN_NAME",
+    "FRAME_ARTEFACT_KINDS",
     "INDEX_NAME",
     "MANIFEST_NAME",
     "MANIFEST_SCHEMA_VERSION",

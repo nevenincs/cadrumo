@@ -1482,8 +1482,7 @@ def _render_toml_bytes(relative_path: str, payload: Mapping[str, object]) -> byt
         # accessor here that separates the offending value from the message, so
         # this refusal names only the exception's type, never its rendered text.
         raise RegistryValidationError(
-            f"cannot serialize generated export TOML {relative_path!r}: "
-            f"{type(exc).__name__} refused the payload",
+            f"cannot serialize generated export TOML {relative_path!r}: {type(exc).__name__} refused the payload",
         ) from exc
     return rendered.encode("utf-8")
 

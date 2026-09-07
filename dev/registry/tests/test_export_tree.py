@@ -73,21 +73,21 @@ def test_toml_serialization_refusal_never_carries_the_offending_value() -> None:
     ``repr`` embeds that same string, proving the raw exception would carry
     it before pinning that the registry's own message never does.
     """
-    secret = "nif-Z-taxpayer-secret"
+    probe_value = "nif-Z-taxpayer-value"
 
     class _Unserializable:
         def __repr__(self) -> str:
-            return f"<unserializable secret={secret}>"
+            return f"<unserializable probe_value={probe_value}>"
 
     with pytest.raises(ValueError) as raw_excinfo:
         rtoml.dumps({"bad": _Unserializable()}, pretty=True, none_value=None)
-    assert secret in str(raw_excinfo.value), "premise: rtoml's own error must actually carry the secret"
+    assert probe_value in str(raw_excinfo.value), "premise: rtoml's own error must actually carry the value"
 
     with pytest.raises(RegistryValidationError) as excinfo:
         _export_tree._render_toml_bytes("generated/example.toml", {"bad": _Unserializable()})
 
     message = str(excinfo.value)
-    assert secret not in message
+    assert probe_value not in message
     assert "unserializable" not in message
     assert "cannot serialize generated export TOML" in message
     assert "generated/example.toml" in message

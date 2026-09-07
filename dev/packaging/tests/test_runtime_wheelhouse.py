@@ -20,6 +20,7 @@ from ..runtime_wheelhouse import (
     LockedWheel,
     RuntimeWheelhousePlan,
     _acquire_all,
+    _runtime_rows,
     _store_in_cache,
     extract_runtime_wheelhouse,
     grouped_wheel_requests,
@@ -143,6 +144,24 @@ def test_current_lock_selects_distinct_stable_runtime_wheels() -> None:
     assert "cp313-cp313" in plans["3.13"].platforms["linux-x86-64"]["cffi"]
     assert "cp314-cp314" in plans["3.14"].platforms["linux-x86-64"]["cffi"]
     assert {item["distribution"] for item in plans["3.15"].missing} == {"pydantic-core", "pyyaml"}
+
+
+def test_runtime_rows_come_only_from_the_canonical_inventory(tmp_path: Path) -> None:
+    """An unreadable inventory refuses instead of falling back to a stale literal."""
+    inventory = REPO_ROOT / "dev" / "ci" / "python-runtime-matrix.json"
+    staged = tmp_path / "dev" / "ci" / "python-runtime-matrix.json"
+    staged.parent.mkdir(parents=True)
+    staged.write_bytes(inventory.read_bytes())
+
+    assert _runtime_rows(tmp_path, None) == _runtime_rows(REPO_ROOT, None)
+
+    staged.unlink()
+    with pytest.raises(SystemExit, match="runtime inventory cannot drive wheelhouse construction"):
+        _runtime_rows(tmp_path, None)
+
+    staged.write_text('{"schema": "cadrumo.python-runtime-matrix.v1"}', encoding="utf-8")
+    with pytest.raises(SystemExit, match="runtime inventory cannot drive wheelhouse construction"):
+        _runtime_rows(tmp_path, None)
 
 
 def _locked_wheel(payload: bytes, url: str) -> LockedWheel:

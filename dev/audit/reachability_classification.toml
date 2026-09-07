@@ -1427,10 +1427,13 @@ evidence = "The only two symbols command_api DEFINES; everything else in its __a
 
 [[symbol_cluster]]
 name = "filed-history producers replaced by constant defaults"
-class = "should-be-live"
 area = "application/live"
-symbols = ["classify_register_scoping_signal", "filed_period_selection_rows"]
-evidence = "Two producers in a module that is otherwise half live -- twelve of its twenty-four exports are reached -- whose outputs are consumed downstream from a constant instead. classify_register_scoping_signal says what the offered modelo set suggests about its own scoping; filed_history_operation reads that through run.scoping_signal, and BOTH FiledHistoryOnboardingRun construction sites pass RegisterScopingSignal.INCONCLUSIVE, matching the field default, so the signal is always inconclusive and the classification is never computed. filed_period_selection_rows is the only producer of FiledPeriodSelectionRow; the run field defaults to an empty tuple, neither construction site fills it, and filed_history_operation projects selection_rows from run.selection_rows, so the operator is always shown none. The types are live and the plumbing is complete in both cases -- only the producer is unreached, which is why neither shows up as a missing consumer."
+class = "should-be-live"
+symbols = [
+  "classify_register_scoping_signal",
+  "filed_period_selection_rows",
+]
+evidence = "Two producers in src/cadrumo/application/live/filed_data_capture.py, a module that is ninety-five percent live, whose outputs are consumed downstream from a constant instead. classify_register_scoping_signal says what the offered modelo set suggests about its own scoping; both FiledHistoryOnboardingRun construction sites pass RegisterScopingSignal.INCONCLUSIVE literally, which is a hedge and so not untrue, but it is the LEAST informative hedge and the one reported even where this discriminator could say more. filed_period_selection_rows is the only producer of FiledPeriodSelectionRow; the run field defaults to an empty tuple, neither site fills it, and the operator's selection table is therefore always empty rather than showing what the sweep collapsed. Re-tested 2026-09-09 for whether this is a one-line wiring: it is not. The classifier needs the availability report, which FiledHistoryDiscoveryReport consumes and does not retain, and the row projector needs declarations_by_pair and selected, neither of which survives the capture stage. Both are model changes and stay open. Both docstrings now state that they are declared and not yet reached, and what the wiring would require."
 remedy_requires_decision = true
 
 [[symbol_cluster]]

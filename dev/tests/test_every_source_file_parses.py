@@ -134,8 +134,24 @@ def test_every_source_file_parses() -> None:
     batches -- one mechanical sweep produced three -- and a gate that reports
     only the first turns a single list into a serial rediscovery.
     """
-    scanned = sum(len(_python_files(root)) for root in _PARSED_ROOTS if root.is_dir())
-    assert scanned, "no source files were scanned; this gate would pass vacuously"
+    # Every declared root must EXIST and contribute, rather than be filtered out
+    # of the scan by ``is_dir()``. Filtering is how this measurement dies
+    # quietly: a root that moves is dropped, the remaining roots still make the
+    # total non-zero, and the gate reports a clean parse over a tree it no
+    # longer reaches. That exact loss is on record in this repository -- a
+    # census whose roster was filtered the same way silently became one root
+    # when the top-level tests tree moved under src. An aggregate guard cannot
+    # catch it either: measured here the roots hold 5928, 1015 and 6 modules,
+    # so the largest alone keeps any total-based check satisfied.
+    missing = tuple(str(root) for root in _PARSED_ROOTS if not root.is_dir())
+    assert not missing, (
+        "declared parse root(s) no longer exist, so this gate would report a clean parse "
+        f"over a tree it never reached: {missing}"
+    )
+    per_root = {str(root): len(_python_files(root)) for root in _PARSED_ROOTS}
+    empty = {name: count for name, count in per_root.items() if count == 0}
+    assert not empty, f"declared parse root(s) contributed no modules, so nothing in them was parsed: {empty}"
+    scanned = sum(per_root.values())
 
     failures = _syntax_failures()
     assert not failures, (
