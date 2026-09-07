@@ -306,8 +306,10 @@ _MINIMUM_WORKFLOWS = 8
 def _workflow_paths() -> list[Path]:
     """Every committed workflow, with the walk itself asserted.
 
-    Five gates in this module assert that NO workflow does some forbidden
-    thing. An empty directory satisfies every one of them, so the walk is
+    Five gates in this module quantify over this walk -- three that NO
+    workflow does some forbidden thing, two that EVERY workflow does a
+    required one. An empty directory satisfies all five, because a claim
+    over an empty set holds whichever direction it points, so the walk is
     guarded once here rather than trusted five times.
     """
     assert _WORKFLOWS_DIR.is_dir(), (

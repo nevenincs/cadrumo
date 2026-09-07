@@ -101,8 +101,10 @@ def test_ci_workflow_runs_canonical_cadrumo_commands_and_paths() -> None:
     assert "semgrep --config .semgrep/rules/ --error src/cadrumo/" in static_commands
     # The dev-tree workflow/tooling conformance gates run per-push here, via the
     # `test-dev-ci` recipe. The workflow names the recipe and the recipe owns the
-    # paths, because the justfile is the sole declaration site for every `dev/`
-    # lane; the substance of the invocation is pinned in the recipe, below.
+    # paths, so the per-push dev-tree selection has one declaration site; the
+    # substance of the invocation is pinned in the recipe, below. That is not yet
+    # true of every `dev/` lane: ci-full.yml still spells its own dev-tree paths
+    # and marker expression inline, and that copy has drifted from this recipe.
     assert "just test-dev-ci" in static_commands
     # The four cross-layer conformance gates (rule-surface, status-frontend,
     # self-referential-string, suggestion-command) run per-push here, via the
@@ -284,11 +286,14 @@ def test_the_dev_ci_recipe_carries_the_substance_the_workflow_delegates() -> Non
     """The workflow names a recipe, so the recipe is where the pin has to bite.
 
     Delegating the step to `just test-dev-ci` moves the paths and the marker
-    expression out of the workflow, which is the point -- the justfile is the
-    sole declaration site for every `dev/` lane. But a pin that only checked the
-    workflow says "a recipe is invoked" and nothing about what it does, so
-    emptying the recipe would pass it while running no gates at all. This asserts
-    the substance at its new home.
+    expression out of ci.yml, which is the point -- the recipe becomes the one
+    declaration site for the per-push dev-tree selection. It is not the sole
+    declaration site for every `dev/` lane: ci-full.yml's dev-tree step still
+    carries its own paths and marker expression, and that copy has already
+    drifted from this recipe. But a pin that only checked the workflow says "a
+    recipe is invoked" and nothing about what it does, so emptying the recipe
+    would pass it while running no gates at all. This asserts the substance at
+    its new home.
 
     Explicit -n 8, never -n auto: three runners share the machine (machine-aware
     sizing, test_machine_aware_load.py). The marker expression is explicit
