@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-06'
-modified: '2026-09-06'
+modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:8f9b82c70bc37382835ed13c196a9b312d4a8141083704d2f4b94b1d0aeca285'
+body_hash: 'sha256:496ac9a7c9484a64fe722047f75302e5f590f1f2676b5592bc72373872adb48a'
 step_id: 'S66'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Apply the declared optional-source-url distinction to the field that needed it: the model licence source url carried a bare string default of empty with no length bound at all, which is precisely the case the alias documents, so it now carries the alias and the thousand-and-twenty-four character bound applies where previously any length passed, while the empty string still validates so absence on the wire is unaffected
 

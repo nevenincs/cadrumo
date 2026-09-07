@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-06'
-modified: '2026-09-06'
+modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:659e265ff4e9191503c09afcfe9dee17c0c7ba97b2ae2e189db6d7e3e0be8523'
+body_hash: 'sha256:0b293e5d2bd632362139d93998f8872088bf1963d8b2f050f0c9f8dea863f7b5'
 step_id: 'S28'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Obtain the owner decisions the three blocked modules need, since classification is evidenced and none can be recorded without them: re-wire or withdraw the ledger import-preparation capability its contract still requires, and either record the decision the two staged domain packages are waiting on or withdraw them
 

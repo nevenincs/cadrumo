@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-06'
-modified: '2026-09-06'
+modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:864ec51e9254ffef642c77b9a0f3fe6867a559c12c51e8bc39a164b76e78a95a'
+body_hash: 'sha256:eaeac1be48b04fbb2baa7296545aabc016a91542cac9dd91e6d471938e39afea'
 step_id: 'S67'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Reverse the localizable-field union and sharpen the IVA escaso-valor threshold into an actionable owner decision: the four-kind literal is superseded because every site is deliberately narrower, the modelo key taking only title and official name, the casilla key taking the label-and-help sibling, and the revision key a single-member literal, so annotating anything with the union would widen a contract; and the art 108 exclusion figure cannot simply be wired because the register carries art108 eligibility as an operator-supplied boolean and holds no acquisition value to compare, storing the input IVA borne instead, making the remedy a schema change plus a decision on whether the product judges article 108 or the operator does
 

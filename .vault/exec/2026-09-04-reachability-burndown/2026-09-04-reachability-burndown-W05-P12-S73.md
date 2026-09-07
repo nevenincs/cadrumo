@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-06'
-modified: '2026-09-06'
+modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:765b2b78759717b405fd2a3c4aff781faf27ebe4167bc0d38f78c30d62cfa13e'
+body_hash: 'sha256:05532caab8fc226b266e14e6b91f58cac1086665bdccd5da34f3e2a84937b197'
 step_id: 'S73'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Finish the staleness chain by telling the operator WHICH of eight upstream axes moved: carry the stale reasons on the review item as stable enum tokens and render them through describe_stale_reason in the queue projection, which is the boundary where a catalogue key becomes words and therefore the only place a reason may be described. The item's own summary is a Translatable and cannot absorb rendered prose, which is why an earlier attempt to concatenate into it was reverted. Pair the projection assertion with a control row carrying no reasons.
 

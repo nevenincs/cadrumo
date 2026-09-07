@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-06'
-modified: '2026-09-06'
+modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:927d5289812a5c52f59ed6a154411ae6e4ecc50bcb1356e5a6da6ef4d7c01002'
+body_hash: 'sha256:a6987a01398b98dedba936f4355ee73fbcda5ca7df7886aecc00ab50e40b044a'
 step_id: 'S74'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete two dead duplicates of names that are live elsewhere in the CLI common module: load_transactions(state), whose live namesake is a different function in the review adapters, and a second copy of the operator-surface reconciliation ctx.meta key whose owning module both writes and reads it. The constant-agreement screen reports one name with one value in two modules without judgement, which is right for ordinary repetition and wrong for a meta-key protocol where writer and reader silently stop agreeing the moment one copy is edited.
 

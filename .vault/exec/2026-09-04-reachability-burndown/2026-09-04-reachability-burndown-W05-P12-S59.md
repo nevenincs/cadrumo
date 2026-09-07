@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-06'
-modified: '2026-09-06'
+modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:8c7e16ca63a673f2e8c2c8b83a801eae0aab9a824f8821202cb0126e9e07b10c'
+body_hash: 'sha256:a8ec0ad267ebca34e62f1fe97e14c47787d491c92b6e99df008c95fb4d33c97b'
 step_id: 'S59'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Begin re-testing the owner-decision backlog against the live design rather than adding to it, which reversed four entries in one pass: the certificate no-active-bucket error is superseded because the auth-configure error carries four production references including the certificate CLI beside a require-active-bucket helper at twenty-one; the two permitted-surface page types are superseded because the surface is carried whole as a bounded validated tuple of the live entry type rather than paginated; and the authentication-failure predicate is superseded because a port-boundary mapper collapses credential-shape and proof failures into a typed refusal across three modules, so the adapter-leak inference recorded earlier was wrong
 

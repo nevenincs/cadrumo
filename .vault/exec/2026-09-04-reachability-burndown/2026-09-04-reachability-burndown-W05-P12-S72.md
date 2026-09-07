@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-06'
-modified: '2026-09-06'
+modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:fc608fdf66a77b0cd3152d3dcf9e404fd90fd7f14a0c4fab5664f50c54936d1a'
+body_hash: 'sha256:d0c64a40c516b06b200177409a195c059daa7279001f4232b13c855b8178b60a'
 step_id: 'S72'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Make an aged-out approval actually reportable now that a persisted approved draft exists: have the review queue recompute an APROBADO draft's verdict before classifying it, which reaches refresh_review_status and makes the APROBACION_CADUCADA row the adapter already knew how to emit reachable for the first time. The refresh stays in memory because these adapters are pure readers and the verdict is derived state. A/B-confirm the new case fails without the wiring, and pair it with the control against a queue that reports every approval stale.
 

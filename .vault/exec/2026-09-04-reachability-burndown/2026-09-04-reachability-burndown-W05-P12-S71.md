@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-06'
-modified: '2026-09-06'
+modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:38811447bbd6782c59ff7bb8eeafa66aa52374bf5f6020349e3da4948a00b22f'
+body_hash: 'sha256:b62e71160a0eb9ff926a6e392ac6501a72eb440c842b1578c4f31f3fc9dc6e0c'
 step_id: 'S71'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Wire the one true persistence gap and retire the three false ones: the workflow gate's draft builder now saves the approved draft through ModeloDraftRepository, so the review queue's draft rows, the workspace summary count and the CLI draft lookup finally read a store the application fills, and the approval-staleness lifecycle has a subject. Extending the detector to follow repository accessors and to count replace_observations as a write cleared the other three, leaving the declaration empty; enrol the gate as a just recipe and assert the live tree inside the test lane so it can fail CI.
 

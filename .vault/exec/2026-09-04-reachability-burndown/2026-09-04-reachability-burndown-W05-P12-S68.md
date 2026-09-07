@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-06'
-modified: '2026-09-06'
+modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:53f1edc3f6229d1b6f5eab5c23f8c6b6c51691db647b2fa4e5520f8a10337300'
+body_hash: 'sha256:cf11df9fed166349721ec68c44d257bc40093c4ca8e5674f0077b15ebb1cca18'
 step_id: 'S68'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Re-test the remaining session port facades and reverse two: the idle-deadline advance is reached through the port object rather than the module-level facade, with the login session service calling the acceleration advance method and the storage adapter implementing it by the persisted-session advance, so the behaviour the facade wraps happens without it; and the persisted-session type guard narrows an untyped object that nothing supplies, because the adapter annotates the port directly on the functions that take and return it and constructs the concrete record itself
 

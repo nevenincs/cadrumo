@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-06'
-modified: '2026-09-06'
+modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:eb889ea2be5d3fd7b6e195b9ab394e2cdb6d476b4d6ec0ad693a01cd01993eb3'
+body_hash: 'sha256:a7034d4c37af7b586498c4bb72995942207f8098afc6eae4733a343a7f82fbd6'
 step_id: 'S69'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Re-test the remaining public types and reverse two more: the workspace version header is superseded because each concrete workspace model pins its own contract version as a single-value literal and one cross-checks a baseline against itself, a stronger guarantee than the shared pre-dispatch shape bounded only at one or more; and the modelo draft builder adapter is superseded because a different implementer of the same protocol is live, the workflow gate constructing a revision-backed draft builder and passing it as the filing draft builder the adapter factory requires, so a protocol with a live implementer under another name is supersession rather than unwired capability
 

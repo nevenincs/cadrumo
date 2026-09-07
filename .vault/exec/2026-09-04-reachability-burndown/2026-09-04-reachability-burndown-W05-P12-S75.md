@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-06'
-modified: '2026-09-06'
+modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:2f388ef9503d27ff9ab3e303858c5fdfc1f4dcaab44940cf4131af10240468cb'
+body_hash: 'sha256:3fcdbe343a5cc9e93d1d83a681a11e7afc45b14dde51cdf7032de2142e2e0a31'
 step_id: 'S75'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Relocate the diagnostics-discarding calculate wrapper to the shared test-support home, since its twenty-five call sites across ten modules are all tests while the operator-facing CLI uses the diagnostics variant, and a production entry point that drops non-blocking source advisories is the hazard rather than its disuse; the move carries roughly twenty-five type imports and touches peer-visible test modules, so it needs a machine that can run those suites.
 

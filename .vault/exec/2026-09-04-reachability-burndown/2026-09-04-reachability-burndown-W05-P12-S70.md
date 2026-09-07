@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-06'
-modified: '2026-09-06'
+modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:faf2321a0c346eeaeecd8ebdbf7c8570cda5c4e5d6989d3c5307ab608c36441e'
+body_hash: 'sha256:33d1c5928835eb318ec5d9602570a640289e7afaa144089e8864cb2e3b500ef4'
 step_id: 'S70'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Gate the defect class the draft-review findings belong to instead of adjudicating them one at a time: add dev/quality/secure_store_write_path.py, which separates read sites from write sites for every SecureBoundRepository in the shipped tree and fails on a store production reads that nothing fills. Four of twenty-four are read-never-written, including two withholding observation stores backing filing-grade aggregation sources, so an absent source reads as a zero; declare the four with their kind and rationale, and prove the detector with eighteen isolated-tree cases covering each binding shape, token-matched mutation, and a spent declaration.
 
