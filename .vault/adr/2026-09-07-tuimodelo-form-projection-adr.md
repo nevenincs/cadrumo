@@ -5,11 +5,14 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
+body_hash: 'sha256:f12d04a955c990b4eb3c8e4cbd060b5705b0507ac193de7d049c92800a2ec100'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
   - "[[2026-08-05-arch-remediation-registry-format-casilla-section-order-adr]]"
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
+  - "[[2026-08-10-casilla-schema-read-model-adr]]"
+  - "[[2026-08-24-tui-registry-api-gate-adr]]"
 ---
 
 # `tuimodelo` adr: `declared form projection for schema-derived declaration surfaces` | (**status:** `proposed`)
@@ -25,9 +28,15 @@ Generation needs an ordering and a grouping that the registry does not carry: th
 order, page, row or column field on a casilla, and the section tuple is untranslated and far
 finer than the printed form (`2026-09-07-tuimodelo-reference`). The obvious candidate —
 deriving order from fixed-width export offsets at runtime — is measurably right where it
-applies and measurably absent where it does not, and an accepted decision has already ruled
-on how presentation sequence must be expressed
-(`2026-08-05-arch-remediation-registry-format-casilla-section-order-adr`).
+applies and measurably absent where it does not.
+
+An accepted decision has already treated section order as an ungated presentational concern
+and, when it considered how a presentation sequence should be expressed, pointed at explicit
+data on the casilla or its export layout rather than an inferred one
+(`2026-08-05-arch-remediation-registry-format-casilla-section-order-adr`). That record was
+addressing fragment filenames and authoring conventions rather than runtime reads, so it
+constrains the shape of an answer without dictating one; this record decides the runtime
+question it left open.
 
 A decision is needed before any editing, review or reconcile surface is built, because all
 of them render the same projection and none can be specified until its shape and its
@@ -55,9 +64,16 @@ coverage are settled.
   over 40 modelos with extracted sidecars, and 95.9 per cent of casillas join to a verbatim
   official description; the extraction module is production code, not a development script
   (`2026-09-07-tuimodelo-reference`).
-- An accepted decision already requires that presentation sequence be declared as explicit
-  data, and records that the official record design is number-keyed rather than
-  section-contiguous (`2026-08-05-arch-remediation-registry-format-casilla-section-order-adr`).
+- An accepted decision names explicit data on the casilla or its export layout as the
+  sanctioned way to express a presentation sequence, and records that the official record
+  design is number-keyed rather than section-contiguous
+  (`2026-08-05-arch-remediation-registry-format-casilla-section-order-adr`).
+- A single modelo work review read model is already accepted as the one read model for this
+  surface, and its problem statement warns against re-deriving a second one
+  (`2026-08-10-casilla-schema-read-model-adr`).
+- Label honesty and the disclosure of an untranslated fallback are already owned by an
+  accepted amendment and are not reopened here
+  (`2026-08-24-tui-registry-api-gate-adr`).
 - Flattening repeated blocks into per-slot scalars is forbidden
   (`2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr`), which is exactly what naive
   offset ordering does to row-bearing records.
@@ -79,10 +95,12 @@ coverage are settled.
 
 ## Considered options
 
-1. **Runtime offset interpretation.** Rejected: it contradicts the accepted requirement that
-   presentation sequence be declared as explicit data, silently drops 61.8 per cent of
-   casillas, produces nothing at all for modelo 100, and would let a form reshuffle between
-   revisions with no gate able to notice.
+1. **Runtime offset interpretation.** Rejected on coverage and diffability, not on governance:
+   it silently drops 61.8 per cent of casillas, produces nothing at all for modelo 100, leaves
+   the form free to reshuffle between revisions with no gate able to notice, and infers row
+   structure from slot and offset semantics that the dual-keying decision deleted. It also sits
+   awkwardly with the accepted preference for explicit data, though that record was not ruling
+   on runtime reads.
 2. **Section tuple plus declaration order.** Rejected: declaration order is a filename sort,
    and the ordering it produces is uncorrelated with the official form.
 3. **Constructs as the grouping layer.** Rejected on measurement: 109 of 128 revisions
@@ -99,12 +117,20 @@ coverage are settled.
 
 ## Constraints
 
-- Bound by the accepted requirement that presentation sequence be declared as explicit data;
-  a runtime-derivation design is not available regardless of its accuracy.
 - Bound by the accepted dual-keying decision forbidding flattening of repeated blocks, so row
-  groups must be first-class rather than slot-scalars.
+  groups must be first-class rather than slot-scalars, and the generator may not reintroduce
+  the slot-and-offset inference that decision deleted.
 - Bound by the accepted workspace interface decision: the projection is an application read
   model and the frontend renders what it is given.
+- Bound to extend the accepted modelo work review read model rather than introduce a second
+  one. A parallel read model is the failure that record was written to prevent.
+- The declaration is a published artefact and must have a stated load path, a validator and a
+  cache identity that includes its source state. Without those it becomes a second runtime
+  authority beside the validated registry, which the registry authority flow forbids, and it
+  reproduces the stale-digest hazard the parent record documented.
+- Row groups are required by this decision but the row-group type is referenced by no
+  interface module today, so the type and its rendering are prerequisites rather than
+  assumptions.
 - Undeclared revisions must fail closed to inspection-only. On today's corpus that is a large
   fraction, and that fraction is the honest coverage number, not a defect to be papered over.
 - The value parser and the unsupported-kind refusal are prerequisites: an editor generated
@@ -120,10 +146,17 @@ coverage are settled.
 
 ## Implementation
 
-A declared presentation family becomes registry-adjacent generated data, one declaration per
-modelo revision. It names an ordered tree of pages and sections, assigns every casilla a
-placement within it, carries an official heading for each node, and declares repeated blocks
-as row groups with their cardinality.
+A declared presentation family becomes generated registry data, one declaration per modelo
+revision. It names an ordered tree of pages and sections, assigns every casilla a placement
+within it, carries an official heading for each node, and declares repeated blocks as row
+groups with their cardinality.
+
+It is published and loaded through the validated registry authority, alongside the revision it
+describes, and never read from disk by a consumer. It is compiled and validated with that
+revision, so a declaration referencing a casilla the revision does not define, or omitting one
+it does, fails before publication rather than at render time. Its cache identity includes the
+source state it was generated from, so a stale declaration cannot be served against a changed
+revision. This keeps one runtime authority rather than two.
 
 The declaration is produced by a development-time generator, not at runtime. The generator
 seeds order from export field offsets within record order where a fixed-width layout exists,
@@ -170,12 +203,18 @@ seed.
 
 ## Rationale
 
-The accepted explicit-data requirement is a knockout. Runtime offset interpretation is the
-option the evidence most flatters — a perfect rank correlation against the official design
-for modelo 303 — and it is still unavailable, because an accepted decision already ruled that
-presentation sequence must be declared rather than derived. Rather than treat that as an
-obstacle, the chosen design uses the measurement: offsets are exactly the right seed, and the
-generator is where a seed belongs.
+Coverage is the knockout, not governance. Runtime offset interpretation is the option the
+evidence most flatters — a perfect rank correlation against the official design for modelo
+303 — and it still fails, because offsets place barely a third of the corpus by casilla
+weight, place nothing at all for the flagship consumer form, and would drop the remainder with
+no diagnostic. An ordering mechanism that is exact where it applies and silent where it does
+not is not a mechanism for a filing-grade product.
+
+The accepted preference for explicit data points the same way without being decisive on its
+own: that record treated section order as an ungated presentational concern and was addressing
+authoring conventions rather than runtime reads. It is corroboration, not a prohibition, and
+this record should not be read as claiming otherwise. What the measurement shows is that
+offsets are exactly the right seed, and a generator is where a seed belongs.
 
 Declaring also fixes what runtime derivation could not. It gives modelo 100 a projection at
 all, by admitting a second seed into one format. It makes the 61.8 per cent unplaced

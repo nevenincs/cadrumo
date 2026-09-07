@@ -5,10 +5,12 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:c3bab1b5d072347e77dde92cc8d7ace25741813043e6a3bc72a072b0d6a992aa'
+body_hash: 'sha256:7225d407da973bcf1079b2cd737ac38e5afa94c7f950edd52dc495c49f4a03b8'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
+  - "[[2026-08-24-modelo-edit-contract-adr]]"
+  - "[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]"
 ---
 
 # `tuimodelo` adr: `period-driven declaration creator` | (**status:** `proposed`)
@@ -28,11 +30,18 @@ enrolled operation behind it, the atomic work-unit and creation-event write set,
 authoritative result and effect receipt, and the dependency and interface proofs
 (`2026-08-24-tui-modelo-workspace-interface-adr`).
 
-Two of those five clauses name a receipt mechanism that a later accepted decision retired
-outright, along with its schemas and validators (`2026-09-07-tuimodelo-reference`). This
-record therefore cannot discharge the deferral by satisfying its literal text, and must say
-what replaces the retired clauses rather than quietly ignoring them or rebuilding a
-mechanism the project removed.
+Two receipt families must be kept apart here, because conflating them is the easiest way to
+get this record wrong. The interface exit-receipt family was retired outright along with its
+schemas and validators. The edit-contract mutation result receipt was not: it is live,
+persisted encrypted, and accepted `2026-08-24-modelo-edit-contract-adr` requires every
+lifecycle mutation to declare both an atomic write set and a result receipt
+(`2026-09-07-tuimodelo-reference`). So one of the five clauses is undischargeable as written
+and one is a live obligation this record must meet rather than replace.
+
+The parent decision has also already spoken. Its 2026-08-28 amendment performed the
+interface-proof substitution and names the work-creation paragraph verbatim
+(`2026-08-24-tui-modelo-workspace-interface-adr`). This record adopts that amendment rather
+than re-deciding it.
 
 The decision is needed now because creation is the entry point to every other surface in the
 campaign. Reachability, editing, verification, export and history all address a work unit
@@ -40,14 +49,22 @@ that something must first create, and today only a separate command-line process
 
 ## Considerations
 
-- Creation is the single `DEFERRED` row among 79 classified action candidates, and the
-  denominator reds immediately if a new command appears
+- Creation is the single deferred row among 79 classified action candidates
   (`2026-09-07-tuimodelo-reference`).
-- The reopening clause predates the retirement of the exit-receipt family, so two of its
-  five required proofs name schemas that no longer exist
+- The action denominator as it stands is a scope enumerator, not an admission gate: its drift
+  check compares only four mechanical signature fields, and neither the recorded disposition
+  nor the observed interface capability is among them, so wiring a surface reds nothing. Its
+  closed taxonomy also has no arm a delivered mutation can move to
   (`2026-09-07-tuimodelo-reference`).
-- The surviving admission mechanism is the action denominator, explicitly retained because
-  it asserts implementation shape (`2026-09-07-tuimodelo-reference`).
+- The interface exit-receipt family is retired and rebuilding it is a named hazard; the
+  edit-contract mutation result receipt is live and required of lifecycle mutations
+  (`2026-09-07-tuimodelo-reference`).
+- The parent's 2026-08-28 amendment already substituted the interface proofs, and requires
+  both an execution record and a green conformance suite — not one or the other
+  (`2026-08-24-tui-modelo-workspace-interface-adr`).
+- Period-first creation already exists in the product as the calendar recovery action, so
+  this record governs an existing affordance rather than introducing one
+  (`2026-09-07-tuimodelo-reference`).
 - A modelo work wizard already exists in the application layer and renders as an ordinary
   flow screen, so guided creation needs no new frontend class
   (`2026-09-07-tuimodelo-reference`).
@@ -87,11 +104,21 @@ that something must first create, and today only a separate command-line process
 
 ## Constraints
 
-- Two of the five reopening clauses are undischargeable as written because the receipt
-  family they name was retired. This record substitutes the surviving denominator and the
-  operation registry's own result contract; it does not reconstruct the retired schemas.
+- The interface-proof clause is discharged by adopting the parent's 2026-08-28 amendment in
+  full, including both halves it requires. The retired exit-receipt schemas are not
+  reconstructed.
+- The result-receipt clause is a live obligation, not a retired one. Creation declares its own
+  result receipt under the edit contract's existing pattern; the supervisor's in-memory result
+  is not a substitute, because it does not survive the crash the receipt exists to prove
+  against. Amending that obligation would require amending the edit-contract decision openly.
+- The admission gate this record relies on does not yet exist in enforceable form. Extending
+  the denominator to observe interface capability and dispatchability, to carry a delivered
+  arm, and to red on a disposition that contradicts the observed shape is a prerequisite, not
+  an assumption.
 - Creation cannot be surfaced before it is enrolled as an operation, which is the same
   prerequisite the import wave carries.
+- The capability projection and the parent's mapped-result-destination conjunct apply to
+  creation and must be satisfied, not merely cited.
 - Depends on the accepted workspace interface decision, which owns destination admission
   and the cohort model, and which is stable in the areas relied on here.
 - Depends on the registry authority's revision resolver; no surface may select a revision by
@@ -123,22 +150,30 @@ the law and the filing context select, and offers no way to choose another. A mo
 period cannot resolve a revision, or resolves ambiguously, is presented as unavailable with
 the resolver's own reason rather than defaulted.
 
-Creation is an enrolled operation, so it inherits journalling, leasing, cancellation and the
-supervisor's result contract like every other mutation. Its write set is atomic across the
-work unit and its creation event: either both land or neither does. The operation's own
-typed result is the authoritative record of what happened, and it is what the surface
-renders on completion; this replaces the retired result-receipt clause of the reopening
-requirement.
+Creation is an enrolled operation, so it inherits journalling, leasing and cancellation like
+every other mutation. Its write set is atomic across the work unit and its creation event:
+either both land or neither does.
 
-Admission proof is the action denominator. Creation moves from the deferred disposition to
-an enrolled one in the same change that enrols the operation, and the denominator gate fails
-until the classification and the live shape agree. This replaces the retired dependency and
-interface receipt clauses: the proof that creation is properly admitted is that the standing
-gate accepts its new classification, not that a bespoke receipt schema was authored.
+Creation declares its own result receipt under the edit contract's existing pattern, persisted
+through the same encrypted boundary as other mutation receipts. The supervisor's typed result
+is what the surface renders on completion, but it is not the durable record: it does not
+survive the crash the receipt exists to prove against, and the accepted edit-contract decision
+requires an atomic write set and a result receipt together. Both are declared here.
 
-Presentation reuses the existing wizard definition through the ordinary flow renderer. No
-new full-screen class is introduced for the creator itself, which keeps it inside the
-already-enrolled flow ownership rather than adding a destination to a closed catalogue.
+Interface proof follows the parent's 2026-08-28 amendment as written, which means both halves
+it requires: an execution record and a green conformance suite. Neither alone discharges it.
+
+Admission proof is the extended action denominator. Creation moves from the deferred
+disposition to a delivered one in the same change that enrols the operation and wires the
+surface, and the gate reds while the recorded disposition and the observed shape disagree.
+That gate does not exist yet in enforceable form, and extending it is a prerequisite of this
+record rather than a property it may assume.
+
+Presentation reuses the existing wizard definition through the ordinary flow renderer, and
+governs the period-first creation affordance the calendar already offers as a recovery action
+rather than introducing a parallel one. No new full-screen class is introduced, which keeps
+creation inside the already-enrolled flow ownership rather than adding a destination to a
+closed catalogue.
 
 The sweep test that currently holds creation shut is retired in the same change that opens
 it, so the repository never contains both an open door and a test asserting it is closed.
@@ -160,13 +195,19 @@ Routing creation through the operation registry is the same argument that govern
 the sibling record: creation is a mutation, every other mutation is supervised, and the one
 exception would be the one without cancellation or a journal.
 
-The substitution for the retired clauses is the part of this record that most needs to be
-explicit. The reopening requirement asked for proofs in a currency the project has since
-withdrawn. Honouring its intent means asking what the retired receipts were for —
-demonstrating that a capability is admitted deliberately rather than by accident — and
-supplying the mechanism the project kept for exactly that purpose. Rebuilding the receipts
-would contradict an accepted decision and repeat a failure the corresponding audit
-identified by name.
+The receipt question is the part of this record that most needs to be explicit, because the
+tempting answer is wrong in both directions. Treating every receipt as retired would discard a
+live obligation and the crash proof it exists to give; treating every clause as binding would
+rebuild schemas an accepted decision removed and repeat a failure the corresponding audit
+named. The record therefore splits them: the interface proof follows the parent's own
+amendment, and the result receipt is declared under the pattern that is still in force and
+still persisted.
+
+The admission argument is stated as a prerequisite rather than a claim for the same reason.
+It would be easy to assert that the standing denominator proves admission; it does not, because
+its drift check never observes the disposition or the interface capability. Saying so, and
+scheduling the extension that makes it true, is the difference between a decision that can be
+verified and one that merely reads as if it could.
 
 ## Consequences
 
@@ -184,11 +225,17 @@ Enrolling creation as an operation is backend work that gates the surface and to
 registry other campaigns extend, so it needs the same single-writer coordination as the
 import enrolment.
 
-Discharging the deferral on substituted terms is a governance judgement, not a mechanical
-step. This record should be read with attention on that point during verification: if the
-substitution is wrong, the correct remedy is to amend the parent decision's reopening
-clause rather than to resurrect the retired receipts.
+The campaign inherits the denominator extension. Creation cannot be admitted provably until the
+gate observes interface capability and dispatchability and carries an arm a delivered mutation
+can occupy, and that module is claimed by another campaign's open row, so it needs single-writer
+coordination before either touches it.
 
-Retiring the sweep test removes a guard that has been holding a real invariant. Its
-replacement is the denominator classification, which is stronger, but the change must land
-atomically or the repository briefly asserts two contradictory things.
+Retiring the deferred-creation guard is not the single test edit it first appears to be. The
+door is held by several tests plus an allowlist plus a denominator assertion, and some of those
+assert invariants that should survive the reopening. Each must be adjudicated individually, and
+the reopening must land atomically with them or the repository briefly asserts two contradictory
+things.
+
+Governing an affordance that already exists carries its own risk: the calendar's recovery action
+must be brought under this decision rather than left as a second path, or the product will have
+two ways to create work with one of them ungoverned.

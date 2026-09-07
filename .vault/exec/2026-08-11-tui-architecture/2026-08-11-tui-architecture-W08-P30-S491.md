@@ -5,16 +5,11 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:7d31f7b223acb5cc62dc9359f1e7efb7822861669540c43be387ae446e7b4d83'
+body_hash: 'sha256:919a106d876b3785aaaf5369336a101df450ee86e39ba745b6a0c2d815e34b6a'
 step_id: 'S491'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Guard the twelve custody cases whose own body raises the keychain unavailable error behind the shared credential store probe, pairing each failure to its test through the junit report rather than a traceback dump, and leave the opaque handover assertions and the absent session action key error red because a marker keyed skip over all of them was measured to discard six passing cases
 
