@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -16,7 +15,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from cadrumo.core.directory_scan import scan_directory
 
 from .._paths import UTF_8
-from ._hashing import sha256_path
+from ._hashing import sha256_path, sha256_text
 
 _UTF_8: Final[str] = UTF_8
 _SCHEMA: Final[Literal["cadrumo.release-cohort.v1"]] = "cadrumo.release-cohort.v1"
@@ -192,8 +191,8 @@ def cohort_identifier(
         ensure_ascii=False,
         separators=(",", ":"),
         sort_keys=True,
-    ).encode(_UTF_8)
-    return hashlib.sha256(canonical).hexdigest()
+    )
+    return sha256_text(canonical)
 
 
 def artifact_record(

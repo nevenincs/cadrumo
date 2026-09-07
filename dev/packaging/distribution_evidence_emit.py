@@ -29,7 +29,6 @@ real captured value.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import re
 from datetime import UTC, datetime
@@ -40,7 +39,7 @@ from pydantic import JsonValue
 
 from .._paths import UTF_8
 from ._command import CommandResult
-from ._hashing import sha256_path
+from ._hashing import sha256_path, sha256_text
 from ._installed_wheel_binding import (
     assert_installed_console_entry_point,
     installed_distribution_payload_sha256,
@@ -250,7 +249,7 @@ def _assert_mcp_oracle_bound_to_cohort(*, cohort: LoadedReleaseCohort, mcp_evide
         expected_payload,
     ):
         raise EvidenceCohortBindingError("installed MCP server payload is not the exact sealed root wheel")
-    path_digest = hashlib.sha256(str(sibling_cli).encode(UTF_8)).hexdigest()
+    path_digest = sha256_text(str(sibling_cli))
     if frozenset(mcp_evidence.invoked_cli_sha256_by_command) != _MCP_ATTESTED_COMMAND_KEYS or set(
         mcp_evidence.invoked_cli_sha256_by_command.values()
     ) != {mcp_evidence.invoked_cli_sha256}:

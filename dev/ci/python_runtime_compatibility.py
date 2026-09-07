@@ -34,7 +34,7 @@ from typing import Any, Final, TypedDict, cast
 
 from .._paths import REPO_ROOT, UTF_8
 from ..packaging._command import CommandResult, run_command
-from ..packaging._hashing import sha256_path
+from ..packaging._hashing import sha256_path, sha256_text
 from ..packaging._smoke_common import (
     build_companion_wheels,
     build_sdist,
@@ -132,8 +132,8 @@ class CommandEvidence:
             started_at=result.started_at.isoformat(),
             completed_at=result.completed_at.isoformat(),
             exit_status=result.returncode,
-            stdout_sha256=hashlib.sha256(result.stdout.encode(_UTF_8)).hexdigest(),
-            stderr_sha256=hashlib.sha256(result.stderr.encode(_UTF_8)).hexdigest(),
+            stdout_sha256=sha256_text(result.stdout),
+            stderr_sha256=sha256_text(result.stderr),
         )
 
 

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import platform
 import re
@@ -21,7 +20,7 @@ from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 
 from .._paths import REPO_ROOT, UTF_8
 from ._command import CommandResult
-from ._hashing import sha256_path
+from ._hashing import sha256_path, sha256_text
 from .cohort_manifest import (
     ArtifactRecord,
     LoadedReleaseCohort,
@@ -56,8 +55,8 @@ def artifact_map_digest(artifacts: Mapping[str, str]) -> str:
         ensure_ascii=False,
         separators=(",", ":"),
         sort_keys=True,
-    ).encode(_UTF_8)
-    return hashlib.sha256(canonical).hexdigest()
+    )
+    return sha256_text(canonical)
 
 
 class EvidenceStatus(StrEnum):
@@ -218,8 +217,8 @@ class CommandTranscript(BaseModel):
             started_at=started_at,
             completed_at=completed_at,
             exit_status=exit_status,
-            stdout_sha256=hashlib.sha256(stdout.encode("utf-8")).hexdigest(),
-            stderr_sha256=hashlib.sha256(stderr.encode("utf-8")).hexdigest(),
+            stdout_sha256=sha256_text(stdout),
+            stderr_sha256=sha256_text(stderr),
             relevant_output=relevant_output,
         )
 
@@ -329,19 +328,19 @@ class DistributionEvidence(EvidenceIdentityPayload):
         return self
 
 
-def _canonical_json(document: Mapping[str, object]) -> bytes:
+def _canonical_json(document: Mapping[str, object]) -> str:
     return json.dumps(
         document,
         ensure_ascii=False,
         separators=(",", ":"),
         sort_keys=True,
-    ).encode(_UTF_8)
+    )
 
 
 def evidence_identifier(evidence: EvidenceIdentityPayload) -> str:
     """Return the SHA-256 identifier for all evidence content except its id."""
     document = evidence.model_dump(mode="json", exclude={"evidence_id"})
-    return hashlib.sha256(_canonical_json(document)).hexdigest()
+    return sha256_text(_canonical_json(document))
 
 
 def bind_cohort(cohort: LoadedReleaseCohort) -> CohortBinding:

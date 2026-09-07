@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import http.server
 import json
 import os
@@ -25,7 +24,7 @@ if not __package__:
 
 from .._paths import REPO_ROOT  # noqa: E402
 from ._command import CommandResult, run_command  # noqa: E402
-from ._hashing import sha256_path  # noqa: E402
+from ._hashing import sha256_path, sha256_text  # noqa: E402
 from .python_cohort import load_python_cohort  # noqa: E402
 
 _UTF_8: Final[str] = "utf-8"
@@ -65,10 +64,6 @@ class _QuietServer(http.server.ThreadingHTTPServer):
         client_address: tuple[str, int],
     ) -> None:
         """Ignore clients closing a completed or superseded Homebrew download."""
-
-
-def _text_sha256(value: str) -> str:
-    return hashlib.sha256(value.encode(_UTF_8)).hexdigest()
 
 
 def _run(
@@ -431,7 +426,7 @@ def run_homebrew_smoke(
         )
         tax_document = json.loads(tax_evidence.read_text(encoding=_UTF_8))
         aeat_sha256 = sha256_path(aeat)
-        aeat_path_sha256 = _text_sha256(str(aeat))
+        aeat_path_sha256 = sha256_text(str(aeat))
         _assert_oracle_evidence(tax_document=tax_document)
 
         evidence = {
