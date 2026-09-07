@@ -14,7 +14,13 @@ from .....tests import ast_for_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
-_DECLARACION_PACKAGE = Path(__file__).parent
+#: The declaracion package, not this tests directory. `Path(__file__).parent`
+#: named `declaracion/tests`, whose only non-test files are excluded by the
+#: filter below, so the sweep was effectively empty -- and `_PDF_PACKAGE`, being
+#: derived from it, resolved to `declaracion/pdf`, which does not exist. The
+#: inbound PDF adapter is a SIBLING. Five exception-hygiene assertions covered
+#: neither package.
+_DECLARACION_PACKAGE = Path(__file__).resolve().parent.parent
 _PDF_PACKAGE = _DECLARACION_PACKAGE.parent / "pdf"
 
 
