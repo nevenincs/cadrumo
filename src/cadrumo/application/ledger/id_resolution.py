@@ -34,6 +34,9 @@ the row that now carries the edited content.
 from __future__ import annotations
 
 from collections.abc import Iterable
+from typing import Annotated
+
+from pydantic import Field
 
 from ...core.hashing import HEX_ALPHABET
 from ...domain.transactions.errors import TransactionIdPrefixError
@@ -42,6 +45,21 @@ from .actions_common import transaction_modelo_source_ids
 
 MINIMUM_DISPLAY_ID_WIDTH = 8
 _FULL_ID_LENGTH = 64
+
+type TransactionIdReference = Annotated[str, Field(min_length=1, max_length=_FULL_ID_LENGTH)]
+"""What an operator TYPES to name a transaction: a full id or a prefix of one.
+
+Distinct from :data:`~core.identity.TransactionId`, which is the resolved
+64-character id a row actually has. Every operator-facing surface accepts the
+reference and resolves it; only storage and the domain hold the resolved form,
+and a model that typed an operator's input as the resolved id would refuse a
+prefix before :func:`resolve_transaction_id` could resolve one.
+
+Bounded but not patterned on purpose. Emptiness, non-hex characters, no match
+and an ambiguous match are all decided by :func:`resolve_transaction_id`, which
+answers each with its own localised refusal naming the collision candidates. A
+pattern here would pre-empt those with a validation error that says less.
+"""
 
 
 def compute_display_id_width(transaction_ids: Iterable[str]) -> int:
@@ -201,6 +219,7 @@ def resolve_lineage_transaction_id(prefix: str, catalogue: TransactionCatalogue)
 
 __all__ = [
     "MINIMUM_DISPLAY_ID_WIDTH",
+    "TransactionIdReference",
     "compute_display_id_width",
     "resolve_lineage_transaction_id",
     "resolve_transaction_id",
