@@ -703,7 +703,11 @@ def test_no_parallel_prorrata_implementation_exists() -> None:
 
     from pathlib import Path
 
-    repo_root = Path(__file__).resolve().parents[4]
+    # parents[5], not [4]: tests -> <area> -> domain -> cadrumo -> src -> repo.
+    # [4] lands on `src/`, so `src/cadrumo` beneath it is `src/src/cadrumo`,
+    # which does not exist -- and `scan_directory(require_root=False)` returns
+    # empty rather than raising, so this gate swept 0 of 5,907 files and passed.
+    repo_root = Path(__file__).resolve().parents[5]
     source_root = repo_root / "src" / "cadrumo"
     canonical_module = source_root / "domain" / "iva" / "prorrata.py"
 
@@ -738,7 +742,11 @@ def test_no_usage_ratios_to_prorrata_shim_exists() -> None:
 
     from pathlib import Path
 
-    repo_root = Path(__file__).resolve().parents[4]
+    # parents[5], not [4]: tests -> <area> -> domain -> cadrumo -> src -> repo.
+    # [4] lands on `src/`, so `src/cadrumo` beneath it is `src/src/cadrumo`,
+    # which does not exist -- and `scan_directory(require_root=False)` returns
+    # empty rather than raising, so this gate swept 0 of 5,907 files and passed.
+    repo_root = Path(__file__).resolve().parents[5]
     source_root = repo_root / "src" / "cadrumo"
 
     forbidden_patterns = (
@@ -781,7 +789,11 @@ def test_no_parallel_prorrata_cli_surface_exists() -> None:
 
     from pathlib import Path
 
-    repo_root = Path(__file__).resolve().parents[4]
+    # parents[5], not [4]: tests -> <area> -> domain -> cadrumo -> src -> repo.
+    # [4] lands on `src/`, so `src/cadrumo` beneath it is `src/src/cadrumo`,
+    # which does not exist -- and `scan_directory(require_root=False)` returns
+    # empty rather than raising, so this gate swept 0 of 5,907 files and passed.
+    repo_root = Path(__file__).resolve().parents[5]
     cli_root = repo_root / "src" / "cadrumo" / "entrypoints" / "cli"
 
     forbidden_command_decorations = (
