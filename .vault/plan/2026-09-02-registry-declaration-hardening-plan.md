@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:e7e03db179aa51cf7e018f04e6a09cb3179579987dbc765ffcc482d3b4d2c222'
+body_hash: 'sha256:ebe86fcdd1e65c468bd81c8121fc47294e4d2a49b1fd98ec257c011dbb4847ab'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -1387,6 +1387,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S1018` - Hold the provisioning-dependent playwright probe out of the default lane with a per-function external_tool marker; `dev/env/tests/test_playwright_doctor.py`.
 - [x] `W06.P13.S1019` - Revert the playwright external_tool marker that left the test in no lane, recording why the obvious fix is wrong; `dev/env/tests/test_playwright_doctor.py`.
 - [x] `W06.P13.S1020` - Join the README demo's displayed command to the argv it actually runs, which a prefix check could not distinguish; `dev/readme/tests/test_readme_cli_demo.py`.
+- [x] `W06.P13.S1021` - Invert the facade-discovery gate that demanded cadrumo.core still export, and floor its live-tree walk; `dev/tests/test_import_hygiene_scan.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 
