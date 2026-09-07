@@ -8,9 +8,9 @@ related:
   - '[[2026-09-02-object-name-declustering-adr]]'
   - '[[2026-09-02-object-name-declustering-research]]'
   - '[[2026-09-02-object-name-declustering-reference]]'
-modified: '2026-09-03'
+modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:11992711ec7194df961d6a5e1da3dc3150accca3b9ac21a9e058514e8608f21b'
+body_hash: 'sha256:b3381bcc9ad63ec01bc0c0d7353f66309caa9a231d9d9f673cc6d85c3206a813'
 ---
 
 <!-- RETIRED: S21, S22 -->
@@ -105,6 +105,26 @@ Demonstrate the workflow on one reviewed leaf component and record evidence befo
 - [x] `W03.P09.S25` - Build the sole rehearsal component exactly once from the hash-verified disposable snapshot; `dev/quality/object_name_rehearsal.py, dev/quality/object_name_declustering.py, dev/quality/tests/test_object_name_rehearsal.py, dev/quality/tests/test_object_name_declustering.py`.
 - [x] `W03.P09.S20` - Run the Justfile rehearsal and record scope, receipt, gate results, residual findings, and unchanged-live-tree proof; `.vault/audit/2026-09-02-object-name-declustering-pilot-rehearsal-audit.md`.
 - [x] `W03.P09.S26` - Apply the reviewed pilot receipt and verify the live finding reduction without compatibility residue; `dev/registry/generate_result_disposition_fragments.py, dev/registry/result_disposition_fragment_generator.py`.
+
+## Wave `W04` - receipt scope and teardown authority
+
+Reopen the S23 objective. The accepted ADR requires that finding identity survive unrelated movement while execution refuses concurrent byte changes, and the S23 review recorded at high severity that the objective was not achieved downstream of the validator. S24 was its closure step and its churn test perturbs a file outside the Python declaration census, so it cannot fail -- a high finding reported closed on a gate that is green because it cannot fail. Twenty-one refusals of one four-operation batch, none attributable to the renames, are the live evidence. This Wave carries the distinction through receipt generation and replay with a test that can fail, states the teardown invariant a cleanup path violated by reverting an apply whose gates all passed, and gives the retained transaction root a disposition path.
+
+### Phase `W04.P10` - receipt scope carried through replay
+
+Rehearsal records the current scanned inventory digest, replay compares it against a freshly scanned current inventory, and the authored inventory value stays bound only through the exact manifest digest. The remedy is the one the S23 review already wrote; what is missing is that it never reached receipt generation and replay, and that the test which should have caught it perturbs a non-Python file.
+
+- [ ] `W04.P10.S27` - Carry the S23 distinction through rehearsal: require the copied inventory to equal the supplied current inventory, record that current digest in the receipt, and leave the authored inventory value bound only through the exact manifest digest, since the receipt currently records the manifest value and refuses at the next mandatory phase whatever the validator tolerated (Terra xhigh fixes and refactors); `dev/quality/object_name_rehearsal.py, dev/quality/object_name_replay.py`.
+- [ ] `W04.P10.S28` - Require replay to compare the receipt inventory against a freshly scanned current inventory and the exact manifest digest, without also equating current inventory to the authored value, so unrelated declaration churn no longer invalidates a leaf operation whose own bytes and graph evidence are unchanged (Terra xhigh fixes and refactors); `dev/quality/object_name_replay.py`.
+- [ ] `W04.P10.S29` - Replace the vacuous churn test with one that can fail: perturb a real Python declaration so the current inventory digest actually moves, drive it through component derivation, rehearsal, receipt generation and replay preflight, and prove the case fails when receipt/current global-inventory equality is reintroduced, closing the end-to-end-churn-teeth gap S23 opened and S24 left standing (Luna max audit and mechanical); `dev/quality/tests/`.
+- [ ] `W04.P10.S30` - Measure the surviving validity window against live conditions, recording inventory-affecting commit rate, dirty-file count and cycle wall clock, and state plainly whether a rehearse-and-apply cycle can complete under concurrent development or whether the campaign requires an exclusive worktree (Luna max audit); `.vault/audit/`.
+
+### Phase `W04.P11` - teardown authority and transaction disposition
+
+State and enforce the invariant a cleanup path violated: removal of an artefact outside the unit of work is best-effort and may never convert a verified result into a failure, while removal whose success is semantically meaningful stays strict and says so. Then give the deliberately retained transaction root a recorded disposition, so `explicit operator inspection` resolves to an action rather than an accumulating directory.
+
+- [ ] `W04.P11.S31` - State the teardown invariant in the accepted record and enforce it at both verified-copy removal sites, distinguishing an artefact that is evidence from one that is litter, since a WinError 145 raised from a finally converted an apply whose six gates had all passed into a rolled-back failure (Sol architecture); `.vault/adr/, dev/quality/object_name_replay.py`.
+- [ ] `W04.P11.S32` - Give the retained transaction root a disposition path that verifies inertness before removal -- absent-paths empty and every backup byte-identical to both the live tree and the receipt baseline -- so operator inspection resolves to a recorded action, and dispose of the two roots outstanding from 2026-09-05 and 2026-09-06 (Terra xhigh fixes and refactors); `dev/quality/`.
 
 ## Parallelization
 

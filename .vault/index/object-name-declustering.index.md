@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#object-name-declustering'
 date: '2026-09-03'
-modified: '2026-09-03'
+modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:388885cdc1443e7dfbf0825b356b1dbffc6e51b35914fe7fc285d429e79f8cb7'
+body_hash: 'sha256:69dd724ccadbd51ee86e272ac985c86e7f751ddc9a68a4f37fcbf0263e2998b8'
 related:
   - '[[2026-09-02-object-name-declustering-W01-P01-S01]]'
   - '[[2026-09-02-object-name-declustering-W01-P01-S02]]'
@@ -64,6 +64,7 @@ related:
   - '[[2026-09-02-object-name-declustering-s24-scoped-receipt-review-audit]]'
   - '[[2026-09-03-object-name-declustering-final-code-review-audit]]'
   - '[[2026-09-03-object-name-declustering-s25-graph-cache-review-audit]]'
+  - '[[2026-09-07-object-name-declustering-receipt-scope-and-teardown-authority-audit]]'
 ---
 
 # `object-name-declustering` feature index
@@ -97,6 +98,7 @@ Auto-generated index of all documents tagged with `#object-name-declustering`.
 - `2026-09-02-object-name-declustering-s24-scoped-receipt-review-audit` - `object-name-declustering` audit: `S24 scoped receipt review`
 - `2026-09-03-object-name-declustering-final-code-review-audit` - `object-name-declustering` audit: `final code review`
 - `2026-09-03-object-name-declustering-s25-graph-cache-review-audit` - `object-name-declustering` audit: `S25 graph cache review`
+- `2026-09-07-object-name-declustering-receipt-scope-and-teardown-authority-audit` - `object-name-declustering` audit: `receipt scope and teardown authority`
 
 ### exec
 
