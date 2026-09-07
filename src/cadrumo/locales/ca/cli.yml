@@ -2048,8 +2048,6 @@ cli:
         registrat
       probe_help: Comprova l'accés a la carpeta configurada de Google Drive
       probe_read_only_help: Comprova Google Drive en mode només lectura
-      profile_help: Perfil Cadrumo a usar (per defecte = perfil actiu de l'estat de
-        flux)
       refresh_only_help: Ometre el consentiment i refrescar només una credencial existent
       register_help: Registrar un JSON de client OAuth Desktop de Cloud Console per
         al perfil actiu

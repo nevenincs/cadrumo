@@ -2033,8 +2033,6 @@ cli:
       probe_help: A beállított Google Drive mappa olvasási/írási hozzáférésének vizsgálata.
       probe_read_only_help: Google Drive vizsgálata csak olvasási módban (nincs írási
         kísérlet).
-      profile_help: 'AEAT-profilnév felülbírálása (alapértelmezés: a munkafolyamat-állapoton
-        aktív profil).'
       refresh_only_help: A hozzájárulási képernyő kihagyása és csak a meglévő hitelesítő
         adat megújítása.
       register_help: Cloud Console asztali OAuth ügyfél JSON regisztrálása az aktív

@@ -36,6 +36,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from datetime import date, datetime
+from typing import Final
 
 from pydantic import ValidationError
 
@@ -58,25 +59,40 @@ from ...domain.transactions.models import Transaction, TransactionCatalogue
 
 # Tax-relevant projection: (label, accessor). Order is fixed and canonical.
 #
-# INCOMPLETE, and knowingly so. Several fields that move a casilla are absent:
-# ``recargo_amount`` (M303 recargo de equivalencia), ``deduction_fact_kind``,
-# the prorrata declarations (``art_104_tres_exclusion``,
-# ``input_classification``, ``prorrata_sector_id``, ``prorrata_reference``) and
-# ``usage_ratio_id``. Measured, not inferred: two rows differing only in
-# ``recargo_amount`` hash identically, so ``diff_ledger_fingerprints`` files
-# them under ``unchanged`` and the staleness verdict reports that a filed
-# return still matches a ledger whose surcharge has since moved.
+# The field set is VERSIONED and append-only, and both halves of that matter.
 #
-# Extending this tuple is NOT a local change. ``LedgerFilingSnapshot`` stores
-# the computed hashes and carries no algorithm version, and
-# ``diff_ledger_fingerprints`` compares a stored hash against a freshly
-# recomputed one by equality. Adding a field therefore changes every recomputed
+# Append-only, because the accessor order feeds the canonical string that is
+# hashed: reordering or removing an entry silently changes every fingerprint a
+# version produces, which is the one thing a version number cannot rescue.
+#
+# Versioned, because a stored hash is only comparable against a hash recomputed
+# over the SAME fields. Widening the set in place would change every recomputed
 # hash, so every already-sealed snapshot would report every row as changed and
-# every historical filing as stale at once. Closing the gap needs a versioned
-# fingerprint (old snapshots compared under the field set they were written
-# with), which is an owner's decision about persisted filing records rather
-# than a widening of this tuple.
-_FINGERPRINT_FIELDS: tuple[tuple[str, str], ...] = (
+# every historical filing as stale at once -- a mass false alarm, not a
+# discovery. Each snapshot therefore records the version it was sealed under
+# and is compared under that version forever.
+#
+# V1 is the original set, kept verbatim. V2 adds the seven facts that move a
+# casilla and were absent: ``recargo_amount`` (M303 recargo de equivalencia),
+# ``usage_ratio_id``, ``deduction_fact_kind``, and the prorrata declarations
+# (``art_104_tres_exclusion``, ``input_classification``, ``prorrata_sector_id``,
+# ``prorrata_reference``).
+#
+# The six declaration fields are where the gap was REACHABLE, and that is worth
+# stating precisely because it is narrower than it first looks. ``Transaction``
+# enforces ``taxable_base + iva_amount + recargo_amount == gross``, so a
+# surcharge cannot move without moving an amount V1 already covered; a
+# recargo-only drift is invisible to a V1 hash but cannot exist in a valid
+# catalogue. The declarations carry no such identity: reclassifying a row's
+# ``input_classification`` changes what it deducts while every amount stays put,
+# so a V1 comparison filed it under ``unchanged`` and the verdict reported that
+# a filed return still matched a ledger whose deduction had since changed.
+#
+# A V1 snapshot is NOT upgraded by recomputation. Rehashing it under V2 would
+# assert that the wider facts were checked when the filing was sealed, which
+# nobody knows; the honest report is that its comparison is sound but narrower,
+# which is what ``covers_current_fact_set`` carries.
+_FINGERPRINT_FIELDS_V1: tuple[tuple[str, str], ...] = (
     ("booked_date", "raw.booked_date"),
     ("value_date", "raw.value_date"),
     ("amount", "raw.amount"),
@@ -103,6 +119,42 @@ _FINGERPRINT_FIELDS: tuple[tuple[str, str], ...] = (
     ("lifecycle_state", "lifecycle_state"),
 )
 
+_FINGERPRINT_FIELDS_V2: tuple[tuple[str, str], ...] = (
+    *_FINGERPRINT_FIELDS_V1,
+    ("recargo_amount", "recargo_amount"),
+    ("usage_ratio_id", "usage_ratio_id"),
+    ("deduction_fact_kind", "deduction_fact_kind"),
+    ("art_104_tres_exclusion", "art_104_tres_exclusion"),
+    ("input_classification", "input_classification"),
+    ("prorrata_sector_id", "prorrata_sector_id"),
+    ("prorrata_reference", "prorrata_reference"),
+)
+
+_FINGERPRINT_FIELD_SETS: Final[Mapping[int, tuple[tuple[str, str], ...]]] = {
+    1: _FINGERPRINT_FIELDS_V1,
+    2: _FINGERPRINT_FIELDS_V2,
+}
+
+#: The version every NEW snapshot is sealed under.
+CURRENT_FINGERPRINT_FIELD_SET_VERSION: Final = 2
+
+
+def _fingerprint_fields(field_set_version: int) -> tuple[tuple[str, str], ...]:
+    """Return the field set a given version fingerprints over.
+
+    Refuses an unknown version rather than falling back to the current one: a
+    snapshot claiming a version this build does not have was written by a
+    newer build, and comparing it under a narrower set would silently report
+    "unchanged" for facts this build cannot even see.
+    """
+    fields = _FINGERPRINT_FIELD_SETS.get(field_set_version)
+    if fields is None:
+        raise ModeloValidationError(
+            f"ledger fingerprint field-set version {field_set_version} is unknown to this build; "
+            f"known versions are {sorted(_FINGERPRINT_FIELD_SETS)}",
+        )
+    return fields
+
 
 def _normalise(value: object) -> str:
     if value is None:
@@ -124,15 +176,23 @@ def _resolve(transaction: Transaction, path: str) -> object:
     return target
 
 
-def row_fingerprint(transaction: Transaction) -> str:
+def row_fingerprint(
+    transaction: Transaction,
+    *,
+    field_set_version: int = CURRENT_FINGERPRINT_FIELD_SET_VERSION,
+) -> str:
     """Return the SHA-256 content fingerprint of one transaction's tax facts.
 
-    Covers the fields listed in :data:`_FINGERPRINT_FIELDS`, which is a subset
-    of the facts that can move a casilla rather than all of them — see the
-    note above that tuple for what is missing and why extending it is a
-    persisted-schema decision rather than a local edit.
+    Args:
+        transaction: The contributing row to fingerprint.
+        field_set_version: Which field set to hash over. Defaults to the
+            current one, which is what a NEW capture wants. A comparison
+            against a stored snapshot must pass that snapshot's own version
+            instead, or it compares two different questions and calls the
+            difference drift.
     """
-    canonical = "|".join(f"{label}={_normalise(_resolve(transaction, path))}" for label, path in _FINGERPRINT_FIELDS)
+    fields = _fingerprint_fields(field_set_version)
+    canonical = "|".join(f"{label}={_normalise(_resolve(transaction, path))}" for label, path in fields)
     return sha256_hex(canonical.encode("utf-8"))
 
 
@@ -167,6 +227,7 @@ def compute_ledger_filing_snapshot(
         rows=rows,
         snapshot_fingerprint=snapshot_fingerprint(rows),
         captured_at=captured_at,
+        fingerprint_field_set_version=CURRENT_FINGERPRINT_FIELD_SET_VERSION,
     )
 
 
@@ -237,7 +298,14 @@ def _evidence_row(
         taxable_base=transaction.taxable_base,
         iva_rate=transaction.iva_rate,
         iva_amount=transaction.iva_amount,
+        recargo_amount=transaction.recargo_amount,
         iva_category=_enum_value(transaction.iva_category),
+        usage_ratio_id=transaction.usage_ratio_id,
+        deduction_fact_kind=_enum_value(transaction.deduction_fact_kind),
+        art_104_tres_exclusion=_enum_value(transaction.art_104_tres_exclusion),
+        input_classification=_enum_value(transaction.input_classification),
+        prorrata_sector_id=transaction.prorrata_sector_id,
+        prorrata_reference=transaction.prorrata_reference,
         category_id=transaction.category_id,
         irpf_category=transaction.irpf_category,
         source_jurisdiction=transaction.source_jurisdiction,
@@ -311,6 +379,7 @@ def compute_ledger_filing_evidence(
         rows=rows,
         manual_entries=manual_entries,
         captured_at=captured_at,
+        fingerprint_field_set_version=CURRENT_FINGERPRINT_FIELD_SET_VERSION,
     )
 
 
@@ -362,17 +431,33 @@ def evaluate_ledger_filing_staleness(
 ) -> LedgerFilingStalenessVerdict:
     """Compare a filed snapshot against the current ledger state, returning a :class:`LedgerFilingStalenessVerdict`.
 
+    The comparator is selected HERE rather than inside
+    :func:`~domain.modelos.ledger_filing_snapshot.diff_ledger_fingerprints`,
+    which stays a pure equality diff over fingerprints it is handed. This is
+    the layer that knows which question a stored snapshot was asking, so it is
+    the layer that recomputes under the same one.
+
     Args:
         snapshot: The filed ledger snapshot.
         catalogue: The live :class:`TransactionCatalogue`.
     """
     index = _index(catalogue)
     current = {
-        row.transaction_id: row_fingerprint(index[row.transaction_id])
+        row.transaction_id: row_fingerprint(
+            index[row.transaction_id],
+            field_set_version=snapshot.fingerprint_field_set_version,
+        )
         for row in snapshot.rows
         if row.transaction_id in index
     }
-    return diff_ledger_fingerprints(snapshot, current)
+    verdict = diff_ledger_fingerprints(snapshot, current)
+    return verdict.model_copy(
+        update={
+            "covers_current_fact_set": (
+                snapshot.fingerprint_field_set_version == CURRENT_FINGERPRINT_FIELD_SET_VERSION
+            ),
+        },
+    )
 
 
 def stale_filed_revisions(

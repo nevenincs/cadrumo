@@ -1,7 +1,7 @@
 """Detector for divergence between the two declarations of "this profile fact is required".
 
 Two mechanisms answer that question and neither derives from the other. The
-profile schema (``schema.toml``) declares ``required`` per field. ``PROFILE_KEYS``
+profile schema (``schema.toml``) declares ``required`` per field. ``profile_keys()``
 is compiled from ``WIZARD_FLOWS`` and carries its own ``Requirement``.
 They disagree today, and reconciling them is deliberately out of scope here:
 doing so requires a conditional-requirement grammar the schema does not yet
@@ -108,16 +108,16 @@ def _schema_facts() -> tuple[set[str], set[str], dict[str, bool]]:
 def _key_facts() -> tuple[set[str], set[str]]:
     """Return every wizard key path and the subset the wizard marks REQUIRED.
 
-    ``PROFILE_KEYS`` is a lazily-resolved registry that refuses to be read before
+    ``profile_keys()`` is a lazily-resolved registry that refuses to be read before
     the wizard catalogue has pushed the compiled keys, so it is imported here
     rather than at module scope — after the registration call, never before.
     """
     ensure_profile_keys_registered()
     from ....core.requirement import Requirement
-    from ....domain.contribuyente.keys import PROFILE_KEYS
+    from ....domain.contribuyente.keys import profile_keys
 
-    paths = {entry.key for entry in PROFILE_KEYS}
-    required = {entry.key for entry in PROFILE_KEYS if entry.requirement is Requirement.REQUIRED}
+    paths = {entry.key for entry in profile_keys()}
+    required = {entry.key for entry in profile_keys() if entry.requirement is Requirement.REQUIRED}
     return paths, required
 
 

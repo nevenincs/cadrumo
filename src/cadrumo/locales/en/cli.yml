@@ -1904,8 +1904,6 @@ cli:
       logout_help: Clear the refresh token and metadata; preserve the registered client
       probe_help: Probe the configured Google Drive folder for read/write access
       probe_read_only_help: Probe Google Drive in read-only mode (no writes attempted)
-      profile_help: Cadrumo profile name override (default = active profile on workflow
-        state)
       refresh_only_help: Skip the consent screen and refresh an existing credential
         only
       register_help: Register a Cloud Console Desktop OAuth client JSON for the active

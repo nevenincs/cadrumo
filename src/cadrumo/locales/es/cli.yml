@@ -2065,8 +2065,6 @@ cli:
         registrado
       probe_help: Comprueba el acceso a la carpeta configurada de Google Drive
       probe_read_only_help: Comprueba Google Drive en modo solo lectura
-      profile_help: Perfil AEAT a usar (por defecto = perfil activo del estado de
-        flujo)
       refresh_only_help: Omitir el consentimiento y refrescar solo una credencial
         existente
       register_help: Registrar un JSON de cliente OAuth Desktop de Cloud Console para
