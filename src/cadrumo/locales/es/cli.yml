@@ -2855,11 +2855,13 @@ cli:
       help: Clasificar un movimiento del libro en el perfil activo
       id_help: Id del movimiento del libro a clasificar
       id_required: Se requiere un id de transacción cuando no se usa --file.
-      irpf_category_help: Identificador de categoría de IRPF. Las facturas profesionales
-        cobradas en neto usan actividad_economica; los alquileres pagados en neto
-        usan arrendamiento_local o arrendamiento_vivienda_afecto. Los derechos de
-        autor y los ingresos de SGAE pueden ser capital o actividad económica según
-        la actividad subyacente.
+      irpf_category_help: 'Identificador de categoría de IRPF. Las facturas
+        profesionales cobradas en neto usan actividad_economica; los alquileres
+        pagados en neto usan arrendamiento_local o arrendamiento_vivienda_afecto.
+        Royalties y los ingresos de SGAE son capital mobiliario según el art. 25.4
+        LIRPF cuando el contribuyente no es el autor, y actividad económica según el
+        art. 27 LIRPF cuando sí lo es y ejerce la actividad. Ejecute aeat app ledger
+        categories para ver el catálogo completo.'
       iva_amount_help: Importe de IVA
       iva_category_help: Categoría de IVA explícita para esta transacción (p. ej.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
@@ -2968,9 +2970,10 @@ cli:
       negative_amount: El --amount %{raw} debe ser una magnitud no negativa. Indica
         el importe sin signo y define el flujo con --direction (OUTGOING para salidas,
         INCOMING para entradas, INTERNAL_TRANSFER entre tus propias cuentas).
-      unknown_category: --category-id {category!r} no reconocido. Indica un identificador
-        de categoría sin prefijo, como {example!r}, no una clave compuesta ni con
-        prefijo de familia.
+      unknown_category: '--category-id {category!r} no reconocido. Indica un
+        identificador de categoría sin prefijo, como {example!r}, no una clave
+        compuesta ni con prefijo de familia. Ejecute aeat app ledger categories para
+        ver el catálogo reconocido.'
       unknown_provider: 'Proveedor de importación --provider {provider!r} desconocido.
         Proveedores reconocidos: {providers}.'
     exclude:

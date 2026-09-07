@@ -2810,10 +2810,12 @@ cli:
       help: Egyetlen főkönyvi tranzakció besorolása az aktív profilban.
       id_help: A besorolandó főkönyvi tranzakció azonosítója.
       id_required: Tranzakció-azonosító szükséges, ha a --file nincs megadva.
-      irpf_category_help: IRPF-kategória azonosítója. Nettó szakmai számlákhoz actividad_economica;
-        nettó bérleti díjhoz arrendamiento_local vagy arrendamiento_vivienda_afecto
-        tartozik. A jogdíj és a SGAE-bevétel az alapul szolgáló tevékenységtől függően
-        tőkejövedelem vagy gazdasági tevékenység lehet.
+      irpf_category_help: 'IRPF-kategória azonosítója. Nettó szakmai számlákhoz
+        actividad_economica; nettó bérleti díjakhoz arrendamiento_local vagy
+        arrendamiento_vivienda_afecto. A Royalties és az SGAE-bevétel capital
+        mobiliario a LIRPF 25.4. cikke szerint, ha az adózó nem a szerző, és
+        gazdasági tevékenység a LIRPF 27. cikke szerint, ha az, és folytatja a
+        tevékenységet. A teljes katalógushoz futtassa: aeat app ledger categories.'
       iva_amount_help: IVA-összeg.
       iva_category_help: Explicit IVA-kategória felülbírálat erre a tranzakcióra (pl.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
@@ -2921,9 +2923,10 @@ cli:
         Add meg az összeget előjel nélkül, és a folyást a --direction kapcsolóval
         állítsd be (OUTGOING kimenő, INCOMING bejövő, INTERNAL_TRANSFER saját számlák
         között).
-      unknown_category: 'Ismeretlen --category-id: {category!r}. Egyszerű kategóriaazonosítót
-        adjon meg, például {example!r}, ne kategóriacsalád-előtaggal ellátott vagy
-        összetett kulcsot.'
+      unknown_category: 'Ismeretlen --category-id: {category!r}. Egyszerű
+        kategóriaazonosítót adjon meg, például {example!r}, ne kategóriacsalád-
+        előtaggal ellátott vagy összetett kulcsot. A felismert katalógushoz
+        futtassa: aeat app ledger categories.'
       unknown_provider: 'Ismeretlen importálási --provider {provider!r}. Elismert
         szolgáltatók: {providers}.'
     exclude:

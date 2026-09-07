@@ -2629,10 +2629,12 @@ cli:
       help: Classify one ledger transaction in the active profile
       id_help: Ledger transaction id to classify
       id_required: A transaction id is required when --file is not provided.
-      irpf_category_help: IRPF category id. Net-paid professional invoices use actividad_economica;
-        net-paid rent uses arrendamiento_local or arrendamiento_vivienda_afecto. Royalties
-        and SGAE income may be capital or economic activity depending on the underlying
-        activity.
+      irpf_category_help: 'IRPF category id. Net-paid professional invoices use
+        actividad_economica; net-paid rents use arrendamiento_local or
+        arrendamiento_vivienda_afecto. Royalties and SGAE income are capital
+        mobiliario under LIRPF art. 25.4 when the taxpayer is not the author, and
+        actividad economica under LIRPF art. 27 when they are and carry on the
+        activity. Run aeat app ledger categories for the full catalogue.'
       iva_amount_help: IVA amount
       iva_category_help: Explicit IVA category override for this transaction (e.g.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
@@ -2735,8 +2737,9 @@ cli:
       negative_amount: The --amount %{raw} must be a non-negative magnitude. Pass
         the amount without a sign and set the flow with --direction (OUTGOING for
         money out, INCOMING for money in, INTERNAL_TRANSFER between your own accounts).
-      unknown_category: Unrecognised --category-id {category!r}. Supply a bare category
-        id such as {example!r}, not a family-prefixed or compound key.
+      unknown_category: 'Unrecognised --category-id {category!r}. Supply a bare
+        category id such as {example!r}, not a family-prefixed or compound key. Run
+        aeat app ledger categories for the recognised catalogue.'
       unknown_provider: 'Unknown import --provider {provider!r}. Recognised providers:
         {providers}.'
     exclude:
