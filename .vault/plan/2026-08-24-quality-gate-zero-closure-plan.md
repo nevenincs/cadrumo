@@ -15,7 +15,7 @@ related:
   - '[[2026-09-07-quality-gate-zero-closure-blind-green-measurement-research]]'
   - '[[2026-09-07-quality-gate-zero-closure-gate-consumer-parser-blindness-audit]]'
 modified: '2026-09-07'
-body_hash: 'sha256:ef6a3ba3673425b9277ad0daf48eb646cae1eaba446f8a018d2428c25d737e01'
+body_hash: 'sha256:fb97d93cffe1a32e0361e31431c5d486cbd4a91e67174597a9e6ab3df6ed8337'
 ---
 
 <!-- RETIRED: W01, W02, W03, W04, W05, W06, P01, P02, P03, P04, P05, P06, P07, P08, P09, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P21, P22, S01, S02, S03, S04, S05, S06, S07, S08, S09, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19, S20, S21, S22, S23, S24, S25, S26, S27, S28, S29, S30, S31, S32, S33, S34, S35, S36, S37, S38, S39, S40, S41, S42, S43, S44, S45, S46, S47, S48, S49, S50, S51, S52, S53, S54, S55, S56, S57, S58, S59, S60, S61, S62, S63, S64, S65, S66, S67, S68, S69, S70, S71, S72, S73, S74, S75, S76, S77, S78, S79, S80, S81, S82, S83, S84, S85, S86, S87, S88, S89, S90, S91, S92, S95, S96, S97, S98, S99, S100, S101, S102, S103 -->
@@ -70,7 +70,7 @@ One AST sweep per decidable class in dev/quality/, each exercised by a gate unde
 - [x] `W08.P24.S110` - Contract the proposed never-emitted-literal detector after the stricter real-tree corpus join demonstrates that source absence cannot distinguish blind assertions from valid runtime-produced guards, retaining the result as measurement evidence rather than shipping an exclusion-backed gate (Terra xhigh fixes and refactors); `.vault/audit/, dev/quality/`.
 - [x] `W08.P24.S111` - Land the self-echoing-token detector: an assertion keyed on a token the invocation itself supplies, which the refusal quotes back verbatim, cannot separate a retired surface from one that resolved and failed otherwise (Terra xhigh fixes and refactors); `dev/quality/`.
 - [x] `W08.P24.S112` - Give every detector a gate carrying a positive control that fires on a representative defect and an anti-vacuity floor that fails when the swept population collapses, refusing any detector that ships without both, and kill each detector's own gate with mutmut (Luna max audit and mechanical); `dev/quality/tests/`.
-- [ ] `W08.P24.S113` - Land the detector gates under dev/quality/tests/, which the per-push test-dev-ci path set already invokes, adding no lane and touching no workflow file so ci-lane-deconflation keeps sole ownership of that surface, and prove the existing lane runs them (Luna max audit and mechanical); `dev/quality/tests/`.
+- [x] `W08.P24.S113` - Land the detector gates under dev/quality/tests/, which the per-push test-dev-ci path set already invokes, adding no lane and touching no workflow file so ci-lane-deconflation keeps sole ownership of that surface, and prove the existing lane runs them (Luna max audit and mechanical); `dev/quality/tests/`.
 
 ### Phase `W08.P25` - the both-locales condition
 
