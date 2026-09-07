@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:a531ac17790d113b45610afcfc6c25cc3664d3f68d41413db99edb62725f0908'
+body_hash: 'sha256:3631dbcfe770daacf727a626d25005118988698b5441824e37c7c90d09ec61aa'
 ---
 
 # `reachability-burndown` plan
@@ -210,6 +210,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S109` - Wire the eleven declared Modelo devtools fixtures into SURFACES, gate the unregistered-registry class, and classify the remaining orphaned-test clusters; `dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S110` - Classify the five remaining open unreachable TUI modules: the operations door, the retained Home candidates, and the staged error/log presentation trio; `dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S111` - Wire the profile journey shell into the devtools surfaces with a schema-derived presentation fixture, closing its coverage gap; `src/cadrumo/entrypoints/tui/devtools/surfaces.py`.
+- [x] `W05.P12.S112` - Classify the censal review screen against the placeholder the product already shows, and ratchet the unrendered TUI interface set; `justfile`.
 
 ## Parallelization
 

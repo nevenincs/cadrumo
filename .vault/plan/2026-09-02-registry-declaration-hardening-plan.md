@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:81acee95e34cad29eb99c0df545d78bf0cf7a3282f6405755340ec949197b524'
+body_hash: 'sha256:6ccf9a79f50bb7b0966a00a186f23224ae0633ee84218698db39f0a1a5cf3751'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -1400,6 +1400,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S1031` - Strip three decayed corpus figures from dev prose, re-derived against each module's own population, removing the precision rather than resetting it; `dev/tests/test_every_source_file_parses.py, dev/audit/write_site_census.py, dev/quality/name_collision_census.py`.
 - [x] `W06.P13.S1032` - Strip four decayed figures from module_test_reach prose, including a headline unreached count that had fallen from forty-two to twelve and a self-contradicting module population quoted as both 352 and 356 in one file; `dev/quality/module_test_reach.py`.
 - [x] `W06.P13.S1033` - Remove the duplicated stale corpus pair from the write-site census test, closing the second home of a figure already proven decayed at its first; `dev/tests/test_write_site_census.py`.
+- [x] `W06.P13.S1034` - Retire a decayed floor ratio in the dunder-init gate whose prose still described a single floor of one thousand and a seven-to-one weakness after the floors became per-root; `dev/quality/tests/test_no_dunder_init_module_imports.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 
