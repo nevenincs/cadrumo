@@ -1533,11 +1533,9 @@ tui:
       link_ledger: Vincular registro del libro mayor
       list_filing_records: Ver presentaciones
       list_notifications: Ver notificaciones
-      open_declaration: Abrir declaración
-      open_ledger: Abrir libro mayor
+      list_work_revisions: Ver revisiones del trabajo
       review_ledger: Revisar libro mayor
       review_ledger_evidence: Revisar evidencia del libro mayor
-      review_undeclared: Revisar actividad no declarada
       validate_ledger: Validar libro mayor
     destination:
       aeat_sync: Abrir sincronización AEAT

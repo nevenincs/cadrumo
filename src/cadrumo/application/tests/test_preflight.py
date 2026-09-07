@@ -450,6 +450,7 @@ def test_portal_health_marks_the_drift_axis_evaluated_when_events_are_supplied()
         observed_url=str(entry.url).rstrip("/") + "/rotated-shell",
         detected_at=datetime(2026, 6, 30, tzinfo=UTC),
     )
+    assert drift is not None, "the rotated shell must diverge from the registered URL"
     row = probe_portal_registry_health(drift_events=(drift,))
 
     assert row.facts["drift_evaluated"] is True

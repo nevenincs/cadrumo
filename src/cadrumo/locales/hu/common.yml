@@ -1511,11 +1511,9 @@ tui:
       link_ledger: Főkönyvi rekord összekapcsolása
       list_filing_records: Benyújtási rekordok megtekintése
       list_notifications: Értesítések megtekintése
-      open_declaration: Bevallás megnyitása
-      open_ledger: Főkönyv megnyitása
+      list_work_revisions: Munkaverziók megtekintése
       review_ledger: Főkönyv áttekintése
       review_ledger_evidence: Főkönyvi bizonyíték áttekintése
-      review_undeclared: Be nem vallott tevékenység áttekintése
       validate_ledger: Főkönyv ellenőrzése
     destination:
       aeat_sync: AEAT-szinkronizálás megnyitása

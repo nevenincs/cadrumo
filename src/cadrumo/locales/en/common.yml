@@ -1487,11 +1487,9 @@ tui:
       link_ledger: Link ledger record
       list_filing_records: View filing records
       list_notifications: View notifications
-      open_declaration: Open declaration
-      open_ledger: Open ledger
+      list_work_revisions: View work revisions
       review_ledger: Review ledger
       review_ledger_evidence: Review ledger evidence
-      review_undeclared: Review undeclared activity
       validate_ledger: Validate ledger
     destination:
       aeat_sync: Open AEAT Sync

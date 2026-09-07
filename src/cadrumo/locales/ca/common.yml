@@ -1519,11 +1519,9 @@ tui:
       link_ledger: Enllaça el registre del llibre major
       list_filing_records: Mostra les presentacions
       list_notifications: Mostra les notificacions
-      open_declaration: Obre la declaració
-      open_ledger: Obre el llibre major
+      list_work_revisions: Mostra les revisions del treball
       review_ledger: Revisa el llibre major
       review_ledger_evidence: Revisa l'evidència del llibre major
-      review_undeclared: Revisa l'activitat no declarada
       validate_ledger: Valida el llibre major
     destination:
       aeat_sync: Obre la sincronització AEAT
