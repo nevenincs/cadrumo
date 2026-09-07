@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:3631dbcfe770daacf727a626d25005118988698b5441824e37c7c90d09ec61aa'
+body_hash: 'sha256:a1db7d4fc0302cd0ddf54d6ef5e1e2ca267cc6fc918fb02e9892e4e4fcc22573'
 ---
 
 # `reachability-burndown` plan
@@ -211,6 +211,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S110` - Classify the five remaining open unreachable TUI modules: the operations door, the retained Home candidates, and the staged error/log presentation trio; `dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S111` - Wire the profile journey shell into the devtools surfaces with a schema-derived presentation fixture, closing its coverage gap; `src/cadrumo/entrypoints/tui/devtools/surfaces.py`.
 - [x] `W05.P12.S112` - Classify the censal review screen against the placeholder the product already shows, and ratchet the unrendered TUI interface set; `justfile`.
+- [x] `W05.P12.S113` - Classify the last unadjudicated unreachable module and verify the duplication campaign closed on adjudicated residue; `dev/audit/reachability_classification.toml`.
 
 ## Parallelization
 

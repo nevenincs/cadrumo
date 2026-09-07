@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#registry-temporal-coverage'
 date: '2026-08-26'
-modified: '2026-09-01'
+modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:d534e4685bb8c474cf02889d644f647d5ef0001da0fcd78fda2a2a5e500eeef4'
+body_hash: 'sha256:e2d923dd74cfa259e77ade1bb0316a832acac332c9285016f27eb04db8f20650'
 related:
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-audit]]'
@@ -50,6 +50,7 @@ related:
   - '[[2026-08-31-registry-temporal-coverage-modelo-165-2023-layout-composite-research]]'
   - '[[2026-08-31-registry-temporal-coverage-reference]]'
   - '[[2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit]]'
+  - '[[2026-09-07-registry-temporal-coverage-enrolment-versus-declared-projection-research]]'
 ---
 
 # `registry-temporal-coverage` feature index
@@ -117,3 +118,4 @@ Auto-generated index of all documents tagged with `#registry-temporal-coverage`.
 - `2026-08-14-registry-temporal-coverage-research` - `registry-temporal-coverage` research: explicit support horizons and schema-family coverage
 - `2026-08-15-registry-temporal-coverage-acquisition-worklist-research` - `registry-temporal-coverage` research: `design corpus acquisition worklist`
 - `2026-08-31-registry-temporal-coverage-modelo-165-2023-layout-composite-research` - `registry-temporal-coverage` research: `Modelo 165 2023 layout composite`
+- `2026-09-07-registry-temporal-coverage-enrolment-versus-declared-projection-research` - `registry-temporal-coverage` research: `registry temporal coverage`
